@@ -1,0 +1,16 @@
+.installed.cfg
+bin
+develop-eggs
+build
+dist
+downloads
+eggs
+parts
+src/*.egg-info
+lib
+lib64
+*~
+*.log
+*.pot
+*.pyc
+local_settings.py
