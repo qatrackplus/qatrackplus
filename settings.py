@@ -1,4 +1,4 @@
-# Django settings for qatrack_ project.
+# Django settings for qatrack project.
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -100,7 +100,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
 )
 
-ROOT_URLCONF = 'qatrack_.urls'
+ROOT_URLCONF = 'qatrack.urls'
 
 TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
@@ -143,3 +143,7 @@ LOGGING = {
         },
     }
 }
+
+#local_settings contains anything that should be overridden 
+#based on site specific requirements (e.g. deployment, development etc)
+from local_settings import *

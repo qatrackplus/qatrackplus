@@ -3,6 +3,7 @@ bin
 develop-eggs
 build
 dist
+db/*
 downloads
 eggs
 parts
