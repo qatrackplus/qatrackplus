@@ -132,6 +132,9 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.humanize',
 
+    #qatrack specific
+    'qatrack.units',
+
 )
 
 # A sample logging configuration. The only tangible logging
@@ -162,6 +165,9 @@ LOGGING = {
         },
     }
 }
+
+#Testing settings
+TEST_RUNNER = 'django_coverage.coverage_runner.CoverageRunner'
 
 #local_settings contains anything that should be overridden
 #based on site specific requirements (e.g. deployment, development etc)
