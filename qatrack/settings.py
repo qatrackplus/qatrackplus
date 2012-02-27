@@ -117,6 +117,11 @@ TEEMPLATE_DIRS = (
 
 TEMPLATE_CONTEXT_PROCESSORS = DEFAULT_SETTINGS.TEMPLATE_CONTEXT_PROCESSORS
 
+FIXTURE_DIRS = (
+    'fixtures/',
+    'fixtures/dev/',
+)
+
 INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.auth',

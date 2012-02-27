@@ -17,3 +17,4 @@ lib64
 local_settings.py
 *.wpr
 *.wpu
+fixtures/dev
