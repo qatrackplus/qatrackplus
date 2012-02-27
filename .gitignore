@@ -15,3 +15,5 @@ lib64
 *.pot
 *.pyc
 local_settings.py
+*.wpr
+*.wpu
