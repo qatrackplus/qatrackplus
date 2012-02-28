@@ -1,3 +1,7 @@
 from django.db import models
 
-# Create your models here.
+#============================================================================
+class TaskList(models.Model):
+    """Container for a collection of QA Tasks
+
+    """
