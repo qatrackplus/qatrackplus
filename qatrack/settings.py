@@ -134,6 +134,8 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.humanize',
 
+    #qatrack specific
+    'qatrack.units',
     'registration',
     'pinax_theme_bootstrap',
 )
