@@ -1,0 +1,23 @@
+{% extends "theme_base.html" %}
+
+{% load i18n %}
+
+{% block extra_head %}
+{% endblock %}
+
+{% block nav %}
+    {% if user.is_authenticated %}
+        <ul>{% spaceless %}
+
+
+        {% endspaceless %}</ul>
+    {% endif %}
+{% endblock %}
+
+{% block footer %}
+    {% include "_footer.html" %}
+{% endblock %}
+
+{% block extra_body_base %}
+    {% block extra_body %}{% endblock %}
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "site_base.html" %}
+
+{% load bootstrap_tags %}
+
+{% block head_title %}Additional Info{% endblock %}
+
+{% block body %}
+    <h1>Additional Info</h1>
+    <p>Please fill out the following form so we know a little about you.</p>
+    
+    <form method="POST" action="">
+        <fieldset>
+            {% csrf_token %}
+            {{ form|as_bootstrap }}
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </div>
+        </fieldset>
+    </form>
+{% endblock %}

@@ -105,10 +105,12 @@ MIDDLEWARE_CLASSES = (
 
 ROOT_URLCONF = 'qatrack.urls'
 
+LOGIN_REDIRECT_URL = '/'
+
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'qatrack.wsgi.application'
 
-TEEMPLATE_DIRS = (
+TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
@@ -132,6 +134,8 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.humanize',
 
+    'registration',
+    'pinax_theme_bootstrap',
 )
 
 # A sample logging configuration. The only tangible logging
