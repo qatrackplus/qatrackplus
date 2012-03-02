@@ -28,7 +28,6 @@ class Modality(models.Model):
     type_choices = (("photon", "Photon"), ("electron", "Electron"),)
     type = models.CharField(_("Treatement modality type"), choices=type_choices, max_length=20)
     energy = models.FloatField(help_text=_("Nominal energy (in MV for photons and MeV for electrons"))
-    spectrum = models.CharField(help_text=_("Only required for brachytherapy"), max_length=50, blank=True, null=True)
 
     #---------------------------------------------------------------------------
     def __unicode__(self):
