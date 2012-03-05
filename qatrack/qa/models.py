@@ -27,11 +27,13 @@ class TaskList(models.Model):
     active = models.BooleanField(help_text=_("Uncheck to disable this list"), default=True)
     unit = models.ForeignKey(Unit)
 
+    task_list_items = models.ManyToManyField("TaskListItem", help_text=_("Which task list items does this list contain"))
+
     #for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)
-    created_by = models.ForeignKey(User, related_name="task_list_creator")
+    created_by = models.ForeignKey(User, related_name="task_list_creator", editable=False)
     modified = models.DateTimeField(auto_now=True)
-    modified_by = models.ForeignKey(User, related_name="task_list_modifier")
+    modified_by = models.ForeignKey(User, related_name="task_list_modifier", editable=False)
 
     #----------------------------------------------------------------------
     def __unicode__(self):
@@ -126,7 +128,6 @@ class TaskListItem(models.Model):
 
     order = models.IntegerField(null=True)  # display order in parent task list
 
-    task_lists = models.ManyToManyField(TaskList, help_text=_("Which task lists does this item belong to"))
 
     #for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)
@@ -134,6 +135,8 @@ class TaskListItem(models.Model):
     modified = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(User, related_name="task_list_item_modifier")
 
+    class Meta:
+        ordering = ("order", )
     #----------------------------------------------------------------------
     def __unicode__(self):
         """return display representation of object"""
