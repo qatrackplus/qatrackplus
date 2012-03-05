@@ -14,7 +14,7 @@ urlpatterns = patterns('',
     ),
 
     url(r'^accounts/', include('registration.urls')),
-    # url(r'^qatrack/', include('qatrack.foo.urls')),
+    url(r'^qa/', include('qatrack.qa.urls')),
 
     # Uncomment the admin/doc line below to enable admin documentation:
     #url(r'^admin/doc/', include('django.contrib.admindocs.urls')),

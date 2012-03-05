@@ -23,7 +23,7 @@ class TaskListItemAdminForm(forms.ModelForm):
             )
         return short_name
 
-
+#============================================================================
 class TaskListItemAdmin(admin.ModelAdmin):
     readonly_fields = ("order", )
     form = TaskListItemAdminForm
