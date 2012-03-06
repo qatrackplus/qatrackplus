@@ -27,7 +27,7 @@ class TaskList(models.Model):
     active = models.BooleanField(help_text=_("Uncheck to disable this list"), default=True)
     unit = models.ForeignKey(Unit)
 
-    task_list_items = models.ManyToManyField("TaskListItem", help_text=_("Which task list items does this list contain"))
+    task_list_items = models.ManyToManyField("TaskListItem", help_text=_("Which task list items does this list contain"), through="TaskListMembership")
 
     #for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)
@@ -154,3 +154,18 @@ class TaskListItemInstance(models.Model):
 
     task_list_instance = models.ForeignKey(TaskListInstance)
     task_list_item = models.ForeignKey(TaskListItem)
+
+#============================================================================
+class TaskListMembership(models.Model):
+    """
+    Model for keeping track of what :model:`TaskListItem` belong to which
+    :model:`TaskList`s and which order they are to be placed in
+    """
+
+    task_list_item = models.ForeignKey(TaskListItem)
+    task_list = models.ForeignKey(TaskList)
+    task_list_item_order = models.PositiveIntegerField(help_text="The order this test should be executed in")
+
+    #============================================================================
+    class Meta:
+        ordering = ("task_list_item_order", )

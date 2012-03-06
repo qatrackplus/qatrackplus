@@ -4,7 +4,7 @@ import django.forms as forms
 from django.utils.translation import ugettext as _
 
 from django.contrib import admin
-from models import TaskList, TaskListItem, Category
+from models import TaskList, TaskListItem, TaskListMembership, Category
 import qatrack.settings as settings
 import re
 
@@ -19,12 +19,19 @@ class CategoryAdmin(admin.ModelAdmin):
     prepopulated_fields =  {'slug': ('name',)}
 
 #============================================================================
-class TaskListMembershipInline(admin.StackedInline):
-    """
-    needed to enable many-to-many inlines
-    see https://docs.djangoproject.com/en/dev/ref/contrib/admin/#working-with-many-to-many-models
-    """
-    model = TaskList.task_list_items.through
+#class TaskListMembershipInline(admin.StackedInline):
+#    """
+#    needed to enable many-to-many inlines
+#    see https://docs.djangoproject.com/en/dev/ref/contrib/admin/#working-with-many-to-many-models
+#    """
+#    model = TaskList.task_list_items.through
+
+
+#============================================================================
+class TaskListMembershipInline(admin.TabularInline):
+    """Admin for managing task list item memberships"""
+    model = TaskListMembership
+    extra = 1
 
 #============================================================================
 class TaskListItemInline(admin.AllValuesFieldListFilter):
@@ -42,11 +49,12 @@ class TaskListItemInline(admin.AllValuesFieldListFilter):
 
 
 
+
 #============================================================================
 class TaskListAdmin(admin.ModelAdmin):
     prepopulated_fields =  {'slug': ('name',)}
     list_display = (title_case_name, "modified", "modified_by", "unit", "frequency", "active")
-    filter_horizontal= ("task_list_items", )
+    #filter_horizontal= ("task_list_items", )
 
     inlines = [TaskListMembershipInline]
     #exclude = ("task_list_items", )
@@ -56,7 +64,7 @@ class TaskListAdmin(admin.ModelAdmin):
             settings.STATIC_URL+"js/jquery-1.7.1.min.js",
             settings.STATIC_URL+"js/jquery-ui.min.js",
             settings.STATIC_URL+"js/collapsed_stacked_inlines.js",
-            settings.STATIC_URL+"js/drag_admin.js",
+            settings.STATIC_URL+"js/m2m_drag_admin.js",
         )
     #----------------------------------------------------------------------
     def save_model(self, request, obj, form, change):
