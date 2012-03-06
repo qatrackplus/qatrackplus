@@ -4,7 +4,7 @@ import django.forms as forms
 from django.utils.translation import ugettext as _
 
 from django.contrib import admin
-from models import TaskList, TaskListItem, TaskListMembership, Category
+import qatrack.qa.models as models
 import qatrack.settings as settings
 import re
 
@@ -18,26 +18,21 @@ class CategoryAdmin(admin.ModelAdmin):
     """QA categories admin"""
     prepopulated_fields =  {'slug': ('name',)}
 
-#============================================================================
-#class TaskListMembershipInline(admin.StackedInline):
-#    """
-#    needed to enable many-to-many inlines
-#    see https://docs.djangoproject.com/en/dev/ref/contrib/admin/#working-with-many-to-many-models
-#    """
-#    model = TaskList.task_list_items.through
-
 
 #============================================================================
 class TaskListMembershipInline(admin.TabularInline):
-    """Admin for managing task list item memberships"""
-    model = TaskListMembership
+    """Admin for managing task list item memberships
+    Needed to enable many-to-many inlines
+    see https://docs.djangoproject.com/en/dev/ref/contrib/admin/#working-with-many-to-many-models
+    """
+    model = models.TaskListMembership
     extra = 1
 
 #============================================================================
 class TaskListItemInline(admin.AllValuesFieldListFilter):
     """Inline editor for TaskListItems"""
     inlines = [TaskListMembershipInline]
-    model = TaskListItem
+    model = models.TaskListItem
     #----------------------------------------------------------------------
     def save_model(self, request, obj, form, change):
         """set user and modified date time"""
@@ -46,9 +41,6 @@ class TaskListItemInline(admin.AllValuesFieldListFilter):
             obj.created = datetime.datetime.now()
         obj.modified_by = request.user
         obj.save()
-
-
-
 
 #============================================================================
 class TaskListAdmin(admin.ModelAdmin):
@@ -91,10 +83,14 @@ class TaskListItemAdminForm(forms.ModelForm):
 
 #============================================================================
 class TaskListItemAdmin(admin.ModelAdmin):
-    readonly_fields = ("order", )
     form = TaskListItemAdminForm
 
+#============================================================================
+class ReferenceAdmin(admin.ModelAdmin):
+    """manage reference values for task list items"""
+    filter_horizontal = ("units", )
 
-admin.site.register([Category], CategoryAdmin)
-admin.site.register([TaskList],TaskListAdmin)
-admin.site.register([TaskListItem],TaskListItemAdmin)
+admin.site.register([models.Reference], ReferenceAdmin)
+admin.site.register([models.Category], CategoryAdmin)
+admin.site.register([models.TaskList],TaskListAdmin)
+admin.site.register([models.TaskListItem],TaskListItemAdmin)

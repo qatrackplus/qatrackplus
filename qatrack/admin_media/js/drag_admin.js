@@ -1,3 +1,7 @@
+/*Allows drag and drop reordering of many to many fields (related by intermediary models)
+in the admin. Starting point was http://djangosnippets.org/snippets/1053/
+*/
+
 $(document).ready(function() {
     $('div.inline-group').sortable({
         /*containment: 'parent',
@@ -19,25 +23,8 @@ $(document).ready(function() {
             if ($(this).find('input[id$=name]').val()) {
                     $(this).find('input[id$=order]').val(i+1);
             }
-    /*
-       .find('input[id$=order]').not("input[id$=__prefix__-order]").each(function(i){
-            $(this).val(i+1);*/
         });
     });
 
 });
 
-/*function on_sort(event,ui){
-    var orders =  $('input[name$="order"]');
-
-    for (var i=0; i < orders.length; i++){
-        orders.value = i;
-    }
-}
-$(document).ready(function(){
-    $( ".inline-group" ).sortable( {
-     update: on_sort
-    });
-    $( ".inline-group" ).disableSelection();
-    $('input[name$="order"]').attr({readonly:"readonly"});
-});*/

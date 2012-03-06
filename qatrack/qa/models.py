@@ -169,3 +169,26 @@ class TaskListMembership(models.Model):
     #============================================================================
     class Meta:
         ordering = ("task_list_item_order", )
+
+#============================================================================
+class Reference(models.Model):
+    """Reference values for various QA :model:`TaskListItem`s"""
+
+    TYPE_CHOICES = (("yes_no", "Yes / No"), ("numerical", "Numerical"), )
+
+
+    name = models.CharField(max_length=50, help_text=_("Enter a short name for this reference"))
+    ref_type = models.CharField(max_length=15, choices=TYPE_CHOICES)
+    value = models.FloatField(help_text=_("For Yes/No tests, enter 1 for Yes and 0 for No"))
+
+    units = models.ManyToManyField(Unit, help_text=_("Which units is this reference valid for"))
+    task_list_item = models.ForeignKey(TaskListItem, help_text=_("Which task list item is this reference for"))
+
+    #who created this reference
+    created = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(User,editable=False,related_name="reference_creators")
+
+    #who last modified this reference
+    modified = models.DateTimeField(auto_now=True)
+    modified_by = models.ForeignKey(User,editable=False,related_name="reference_modifiers")
+

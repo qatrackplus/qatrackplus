@@ -1,9 +1,11 @@
 /*
-Allows drag and drop reordering of many to many fields in the admin
-Starting point was http://djangosnippets.org/snippets/1053/
+Allows drag and drop reordering of many to many fields (related by intermediary models)
+in the admin. Starting point was http://djangosnippets.org/snippets/1053/
 */
 
 $(document).ready(function() {
+
+    /*set up dragabble membership list*/
     $('div.inline-group').sortable({
         containment: 'parent',
         zindex: 10,
@@ -17,6 +19,8 @@ $(document).ready(function() {
             });
         }
     });
+
+    /*change cursor to "move" when over table cells*/
     $('div.inline-related td').css('cursor', 'move');
 
     /*hides the ordering header*/
