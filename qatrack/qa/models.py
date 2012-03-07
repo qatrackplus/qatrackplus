@@ -115,7 +115,6 @@ class TaskListItem(models.Model):
     short_name = models.SlugField(max_length=25, help_text=_("A short variable name for this test (to be used in composite calculations)."))
     description = models.TextField(help_text=_("A concise description of what this task list item is for (optional)"))
     procedure = models.TextField(help_text=_("A short description of how to carry out this task"), blank=True, null=True)
-    active = models.BooleanField(help_text=_("Uncheck to deactivate this test"), default=True)
 
     task_type = models.CharField(
         max_length=10, choices=TASK_TYPE_CHOICES, default="boolean",
@@ -126,17 +125,17 @@ class TaskListItem(models.Model):
 
     category = models.ForeignKey(Category, help_text=_("Choose a category for this task"))
 
-    order = models.IntegerField(null=True)  # display order in parent task list
+    #order = models.IntegerField(null=True)  # display order in parent task list
 
 
     #for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)
-    created_by = models.ForeignKey(User, related_name="task_list_item_creator")
+    created_by = models.ForeignKey(User, editable=False, related_name="task_list_item_creator")
     modified = models.DateTimeField(auto_now=True)
-    modified_by = models.ForeignKey(User, related_name="task_list_item_modifier")
+    modified_by = models.ForeignKey(User, editable=False, related_name="task_list_item_modifier")
 
-    class Meta:
-        ordering = ("order", )
+    #class Meta:
+    #    ordering = ("order", )
     #----------------------------------------------------------------------
     def __unicode__(self):
         """return display representation of object"""
@@ -165,6 +164,8 @@ class TaskListMembership(models.Model):
     task_list_item = models.ForeignKey(TaskListItem)
     task_list = models.ForeignKey(TaskList)
     task_list_item_order = models.PositiveIntegerField(help_text="The order this test should be executed in")
+    reference = models.ForeignKey("Reference")
+    active = models.BooleanField(help_text=_("Uncheck to deactivate this test for this unit"), default=True)
 
     #============================================================================
     class Meta:
@@ -181,8 +182,8 @@ class Reference(models.Model):
     ref_type = models.CharField(max_length=15, choices=TYPE_CHOICES)
     value = models.FloatField(help_text=_("For Yes/No tests, enter 1 for Yes and 0 for No"))
 
-    units = models.ManyToManyField(Unit, help_text=_("Which units is this reference valid for"))
-    task_list_item = models.ForeignKey(TaskListItem, help_text=_("Which task list item is this reference for"))
+    #units = models.ManyToManyField(Unit, help_text=_("Which units is this reference valid for"))
+    #task_list_item = models.ForeignKey(TaskListItem, help_text=_("Which task list item is this reference for"))
 
     #who created this reference
     created = models.DateTimeField(auto_now_add=True)

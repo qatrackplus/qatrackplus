@@ -122,7 +122,8 @@ TEMPLATE_CONTEXT_PROCESSORS = DEFAULT_SETTINGS.TEMPLATE_CONTEXT_PROCESSORS
 
 FIXTURE_DIRS = (
     'fixtures/',
-    'fixtures/dev/',
+    'fixtures/dev/auth/',
+    'fixtures/dev/units/',
 )
 
 INSTALLED_APPS = (
