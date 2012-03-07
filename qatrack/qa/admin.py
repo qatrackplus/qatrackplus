@@ -26,6 +26,10 @@ class SaveUserMixin(object):
         super(SaveUserMixin, self).save_model(request, obj, form, change)
         #obj.save()
 
+#============================================================================
+class BasicSaveUserAdmin(SaveUserMixin, admin.ModelAdmin):
+    """manage reference values for task list items"""
+
 #----------------------------------------------------------------------
 def title_case_name(obj):
     return ("%s"%obj.name).title()
@@ -88,11 +92,9 @@ class TaskListItemAdminForm(forms.ModelForm):
 class TaskListItemAdmin(SaveUserMixin, admin.ModelAdmin):
     form = TaskListItemAdminForm
 
-#============================================================================
-class ReferenceAdmin(SaveUserMixin, admin.ModelAdmin):
-    """manage reference values for task list items"""
 
-admin.site.register([models.Reference], ReferenceAdmin)
+
+admin.site.register([models.Reference, models.Tolerance], BasicSaveUserAdmin)
 admin.site.register([models.Category], CategoryAdmin)
 admin.site.register([models.TaskList],TaskListAdmin)
 admin.site.register([models.TaskListItem],TaskListItemAdmin)

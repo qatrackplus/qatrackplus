@@ -154,22 +154,6 @@ class TaskListItemInstance(models.Model):
     task_list_instance = models.ForeignKey(TaskListInstance)
     task_list_item = models.ForeignKey(TaskListItem)
 
-#============================================================================
-class TaskListMembership(models.Model):
-    """
-    Model for keeping track of what :model:`TaskListItem` belong to which
-    :model:`TaskList`s and which order they are to be placed in
-    """
-
-    task_list_item = models.ForeignKey(TaskListItem)
-    task_list = models.ForeignKey(TaskList)
-    task_list_item_order = models.PositiveIntegerField(help_text="The order this test should be executed in")
-    reference = models.ForeignKey("Reference")
-    active = models.BooleanField(help_text=_("Uncheck to deactivate this test for this unit"), default=True)
-
-    #============================================================================
-    class Meta:
-        ordering = ("task_list_item_order", )
 
 #============================================================================
 class Reference(models.Model):
@@ -193,3 +177,42 @@ class Reference(models.Model):
     modified = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(User,editable=False,related_name="reference_modifiers")
 
+#============================================================================
+class Tolerance(models.Model):
+    """
+    Model/methods for checking whether a value lies within tolerance
+    and action levels
+    """
+    TYPE_CHOICES = (("absolute", "Absolute"),("percentage", "Percentage"),)
+    name = models.CharField(max_length=50, help_text="Enter a short name for this tolerance type")
+    type = models.CharField(max_length=20, help_text="Select whether this will be an absolute or relative tolerance criteria",choices=TYPE_CHOICES)
+    act_low = models.FloatField(verbose_name="Action Low", help_text="Absolute value of lower action level", null=True)
+    tol_low = models.FloatField(verbose_name="Tolerance Low", help_text="Absolute value of lower tolerance level", null=True)
+    tol_high = models.FloatField(verbose_name="Tolerance High", help_text="Absolute value of upper tolerance level", null=True)
+    act_high = models.FloatField(verbose_name="Action High", help_text="Absolute value of upper action level", null=True)
+
+    #who created this tolerance
+    created_date = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(User,editable=False,related_name="tolerance_creators")
+
+    #who last modified this tolerance
+    modified_date = models.DateTimeField(auto_now=True)
+    modified_by = models.ForeignKey(User,editable=False,related_name="tolerance_modifiers")
+
+#============================================================================
+class TaskListMembership(models.Model):
+    """
+    Model for keeping track of what :model:`TaskListItem` belong to which
+    :model:`TaskList`s and which order they are to be placed in
+    """
+
+    task_list_item = models.ForeignKey(TaskListItem)
+    task_list = models.ForeignKey(TaskList)
+    task_list_item_order = models.PositiveIntegerField(help_text="The order this test should be executed in")
+    reference = models.ForeignKey(Reference)
+    tolerance = models.ForeignKey(Tolerance)
+    active = models.BooleanField(help_text=_("Uncheck to deactivate this test for this unit"), default=True)
+
+    #============================================================================
+    class Meta:
+        ordering = ("task_list_item_order", )
