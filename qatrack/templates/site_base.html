@@ -1,16 +1,22 @@
 {% extends "theme_base.html" %}
 
 {% load i18n %}
-
 {% block extra_head %}
 {% endblock %}
 
 {% block nav %}
     {% if user.is_authenticated %}
-        <ul>{% spaceless %}
-
-
-        {% endspaceless %}</ul>
+        <ul class="nav">
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                    QA
+                    <b class="caret"></b>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a href="{% url qa_by_frequency 'daily' %}"><i class="icon-list"></i> Daily QA</a></li>
+                </ul>
+            </li>
+        </ul>
     {% endif %}
 {% endblock %}
 

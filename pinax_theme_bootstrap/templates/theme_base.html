@@ -3,7 +3,7 @@
 <html lang="{{ LANGUAGE_CODE }}">
     <head>
         <meta charset="utf-8" />
-        <title>{% block head_title_base %}{% if SITE_NAME %}{{ SITE_NAME }} : {% endif %}{% block head_title %}{% endblock %}{% endblock %}</title>
+        <title>{% block head_title_base %}{% if SITE_NAME %}{{ SITE_NAME }} : {% endif %}{% block head_title %}{% endblock %}{% endblock %}</title
         {% block viewport %}
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
         {% endblock %}
@@ -48,21 +48,9 @@
                 <div class="navbar-inner">
                     <div class="container">
                         {% block topbar %}
-                            <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-                                <span class="icon-bar"></span>
-                                <span class="icon-bar"></span>
-                                <span class="icon-bar"></span>
-                            </a>
                             {% block site_brand %}<a class="brand" href="{% url home %}">{{ SITE_NAME }}</a>{% endblock %}
                             <div class="nav-collapse">
-                                {% block nav %}
-                                    {% comment %}
-                                        <ul class="nav">
-                                            <li><a href="#tab_one">One</a></li>
-                                            <li><a href="#tab_two">Two</a></li>
-                                        </ul>
-                                    {% endcomment %}
-                                {% endblock %}
+                                {% block nav %}{% endblock %}
                                 {% block account_bar %}{% include "_account_bar.html" %}{% endblock %}
                             </div>
                         {% endblock %}

@@ -1,0 +1,30 @@
+{% extends "site_base.html" %}
+
+{% block body %}
+    <div class="container">
+        <h1>Morning QA</h1>
+
+
+        <h2>Daily QA Task Lists</h2>
+        {% for unit_type, unit_lists in unit_type_groups %}
+        <ul>
+            <li>{{ unit_type.name }}</li>
+
+            <ul>
+                {% for unit, task_lists in unit_lists %}
+                <li>{{unit.name}}</li>
+                <ul class=".row">
+                    {% for task_list in task_lists %}
+                    <li>
+                        <a href="#tasklist" title="Perform this qa task list">
+                            {{ task_list.name }}
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% endfor %}
+            </ul>
+        </ul>
+        {% endfor %}
+
+{% endblock %}

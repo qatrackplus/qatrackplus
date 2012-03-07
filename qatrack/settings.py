@@ -39,7 +39,7 @@ TIME_ZONE = 'America/Chicago'
 LANGUAGE_CODE = 'en-us'
 
 SITE_ID = 1
-
+SITE_NAME = "QATrack+"
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
 USE_I18N = True
@@ -118,7 +118,10 @@ TEMPLATE_DIRS = (
     os.path.join(PROJECT_ROOT,"templates"),
 )
 
-TEMPLATE_CONTEXT_PROCESSORS = DEFAULT_SETTINGS.TEMPLATE_CONTEXT_PROCESSORS
+TEMPLATE_CONTEXT_PROCESSORS = list(DEFAULT_SETTINGS.TEMPLATE_CONTEXT_PROCESSORS)
+TEMPLATE_CONTEXT_PROCESSORS += [
+    "context_processors.site",
+]
 
 FIXTURE_DIRS = (
     'fixtures/',
