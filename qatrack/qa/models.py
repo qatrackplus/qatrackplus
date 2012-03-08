@@ -72,10 +72,6 @@ class TaskListInstance(models.Model):
     def status(self):
         """return string with status of this qa instance"""
         return "Not Implemented"
-    #----------------------------------------------------------------------
-    def __unicode__(self):
-        """return display representation of object"""
-        return "TaskListInstance(%s)" % self.name
 
 
 #============================================================================

@@ -12,9 +12,10 @@
                 <th>Unit</th>
                 <th>Task List</th>
                 <th>{{ frequency|title }} QA Last Performed</th>
-                <th>QA Status</td>
+                <th>QA Status</th>
             </tr>
         </thead>
+        <tbody>
         {% for unit, task_lists in unit_lists %}
            {% for task_list in task_lists %}
             <tr>
@@ -31,6 +32,7 @@
             </tr>
             {% endfor %}
         {% endfor %}
+        </tbody>
     </table>
     {% endfor %}
 {% endblock %}

@@ -1,10 +1,14 @@
 import json
 from django.http import HttpResponse,HttpResponseRedirect
 from django.shortcuts import render,get_object_or_404
-from django.views.generic import TemplateView, ListView
-from models import TaskList
+from django.core.urlresolvers import reverse
+from django.views.generic import TemplateView, ListView, DetailView, CreateView
+from models import TaskList, TaskListItem, TaskListInstance, TaskListItemInstance, TaskListMembership
 from qatrack.units.models import Unit, UnitType
 
+import forms
+
+#TODO: Move location of qa/template.html templates (up one level)
 #----------------------------------------------------------------------
 def get_composite_context(request):
     """
@@ -53,6 +57,43 @@ def validate(request, task_list_id):
         return HttpResponse(json.dumps(response_dict),mimetype="application/json")
 
 
+#============================================================================
+class PerformQAView(CreateView):
+    """view for users to complete qa tasks"""
+    template_name = "qa/perform_task_list.html"
+    model = TaskListInstance
+    context_object_name = "task_list"
+    form_class = forms.TaskListInstanceForm
+
+    success_url = "/"
+    #----------------------------------------------------------------------
+    def get_form(self, form_class):
+        """"""
+        #form = super(PerformQAView, self).get_form(form_class)
+        self.task_list =  TaskList.objects.get(pk=self.kwargs["pk"])
+        form = forms.TaskListItemInstanceForm(instance=self.task_list)
+        self.form = form
+        return form
+
+
+    #----------------------------------------------------------------------
+    def get_context_data(self, **kwargs):
+        """add formset """
+        context = super(PerformQAView, self).get_context_data(**kwargs)
+        if self.request.POST:
+            context["tasklistitem_formset"] = forms.TaskListItemInstanceFormset(self.request.POST)
+        else:
+            formset = forms.TaskListItemInstanceFormset()
+            memberships = TaskListMembership.objects.filter(task_list=self.task_list, active=True)
+            item_forms = []
+            for m in memberships:
+                form = forms.TaskListItemInstanceForm(
+                    instance=m.task_list_item
+                )
+                item_forms.append(form)
+            formset.forms = item_forms
+            context["tasklistitem_formset"] = formset
+        return context
 
 #============================================================================
 class UnitFrequencyListView(ListView):
@@ -76,6 +117,8 @@ class UnitFrequencyListView(ListView):
         context["unit"] = self.unit
         context["frequency"] = self.args[0]
         return context
+
+
 #============================================================================
 class UnitGroupedFrequencyListView(ListView):
     """view for grouping all task lists with a certain frequency for all units"""
