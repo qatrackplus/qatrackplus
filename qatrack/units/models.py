@@ -10,6 +10,7 @@ class UnitType(models.Model):
     For example, your Elekta Linacs might form one group, and your Tomo's
     another.
 
+    TODO: improve model types
     """
 
     name = models.CharField(max_length=50, help_text=_("Name for this unit type"))

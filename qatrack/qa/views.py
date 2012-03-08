@@ -58,7 +58,7 @@ def validate(request, task_list_id):
 class UnitFrequencyListView(ListView):
     """list daily/monthly/annual task lists for a unit"""
 
-    context_object_name = "unit_tasklists"
+    context_object_name = "task_lists"
     template_name = "qa/frequency_list.html"
 
     #----------------------------------------------------------------------
@@ -67,9 +67,15 @@ class UnitFrequencyListView(ListView):
         return task lists for a specific frequency (daily/monthly etc)
         and specific unit
         """
-        unit = get_object_or_404(Unit, number=self.args[1])
-        return unit.tasklist_set.filter(frequency=self.args[0].lower())
-
+        self.unit = get_object_or_404(Unit, number=self.args[1])
+        return self.unit.tasklist_set.filter(frequency=self.args[0].lower())
+    #----------------------------------------------------------------------
+    def get_context_data(self, **kwargs):
+        """add unit to template context"""
+        context = super(UnitFrequencyListView, self).get_context_data(**kwargs)
+        context["unit"] = self.unit
+        context["frequency"] = self.args[0]
+        return context
 #============================================================================
 class UnitGroupedFrequencyListView(ListView):
     """view for grouping all task lists with a certain frequency for all units"""
@@ -90,6 +96,8 @@ class UnitGroupedFrequencyListView(ListView):
             unit_groups = [(u, self.object_list.filter(unit=u)) for u in unit_type.unit_set.all()]
             unit_type_groups.append((unit_type, unit_groups))
         context["unit_type_groups"] = unit_type_groups
+
+        context["frequency"] = self.args[0]
         return context
 
 

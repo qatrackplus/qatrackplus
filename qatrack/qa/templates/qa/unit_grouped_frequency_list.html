@@ -1,30 +1,36 @@
 {% extends "site_base.html" %}
 
 {% block body %}
-    <div class="container">
-        <h1>Morning QA</h1>
+    <h2>{{frequency|title}} QA Task Lists</h2>
+    {% for unit_type, unit_lists in unit_type_groups %}
+    <h3>{{unit_type.name}}</h3>
 
+    <table class="table table-bordered table-striped table-condensed">
 
-        <h2>Daily QA Task Lists</h2>
-        {% for unit_type, unit_lists in unit_type_groups %}
-        <ul>
-            <li>{{ unit_type.name }}</li>
-
-            <ul>
-                {% for unit, task_lists in unit_lists %}
-                <li>{{unit.name}}</li>
-                <ul class=".row">
-                    {% for task_list in task_lists %}
-                    <li>
-                        <a href="#tasklist" title="Perform this qa task list">
-                            {{ task_list.name }}
-                        </a>
-                    </li>
-                    {% endfor %}
-                </ul>
-                {% endfor %}
-            </ul>
-        </ul>
+        <thead>
+            <tr>
+                <th>Unit</th>
+                <th>Task List</th>
+                <th>{{ frequency|title }} QA Last Performed</th>
+                <th>QA Status</td>
+            </tr>
+        </thead>
+        {% for unit, task_lists in unit_lists %}
+           {% for task_list in task_lists %}
+            <tr>
+                <td>
+                    <a class="nav-list" href="{% url qa_by_frequency_unit frequency unit.number %}" title="Perform {{frequency}} QA for {{unit.name}}">
+                    {{unit.name}}
+                    </a>
+                </td>
+                {% with last_completed=task_list.last_completed_instance %}
+                <td>{{task_list.name|title}}</td>
+                <td>{{last_completed.created}}</td>
+                <td>{{last_completed.status}}</td>
+                {% endwith %}
+            </tr>
+            {% endfor %}
         {% endfor %}
-
+    </table>
+    {% endfor %}
 {% endblock %}

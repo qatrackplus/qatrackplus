@@ -4,6 +4,7 @@ from django.utils.translation import ugettext as _
 from qatrack.units.models import Unit
 
 
+
 #============================================================================
 class TaskList(models.Model):
     """Container for a collection of QA :model:`TaskListItem`s"""
@@ -36,6 +37,14 @@ class TaskList(models.Model):
     modified_by = models.ForeignKey(User, related_name="task_list_modifier", editable=False)
 
     #----------------------------------------------------------------------
+    def last_completed_instance(self):
+        """return the last instance of this task list that was performed"""
+
+        try:
+            return self.tasklistinstance_set.latest("created")
+        except self.DoesNotExist:
+            return None
+    #----------------------------------------------------------------------
     def __unicode__(self):
         """return display representation of object"""
         return "TaskList(%s)" % self.name
@@ -59,6 +68,10 @@ class TaskListInstance(models.Model):
     modified = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(User, related_name="task_list_instance_modifier")
 
+    #----------------------------------------------------------------------
+    def status(self):
+        """return string with status of this qa instance"""
+        return "Not Implemented"
     #----------------------------------------------------------------------
     def __unicode__(self):
         """return display representation of object"""

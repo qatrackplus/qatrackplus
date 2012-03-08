@@ -11,7 +11,7 @@ urlpatterns = patterns('',
         ListView.as_view(model=models.TaskList),
         name="task_lists"
     ),
-    url(r"^task_lists/(\w+)/(\d+)/$", views.UnitFrequencyListView.as_view()),
+    url(r"^task_lists/(\w+)/(\d+)/$", views.UnitFrequencyListView.as_view(), name="qa_by_frequency_unit"),
     url(r"^task_lists/(\w+)/$", views.UnitGroupedFrequencyListView.as_view(), name="qa_by_frequency"),
 
 )
