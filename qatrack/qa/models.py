@@ -60,13 +60,13 @@ class TaskListInstance(models.Model):
 
     """
 
-    task_list = models.ForeignKey(TaskList)
+    task_list = models.ForeignKey(TaskList, editable=False)
 
     #for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)
-    created_by = models.ForeignKey(User, related_name="task_list_instance_creator")
+    created_by = models.ForeignKey(User, editable=False, related_name="task_list_instance_creator")
     modified = models.DateTimeField(auto_now=True)
-    modified_by = models.ForeignKey(User, related_name="task_list_instance_modifier")
+    modified_by = models.ForeignKey(User, editable=False, related_name="task_list_instance_modifier")
 
     #----------------------------------------------------------------------
     def status(self):
@@ -86,6 +86,49 @@ class Status(models.Model):
     description = models.TextField(null=True, blank=True, help_text=_("Optional description of what this status should be used for"))
     trend = models.BooleanField(help_text=_("Indicate whether this data should be included for trending/analysis purposes"))
 
+#============================================================================
+class Reference(models.Model):
+    """Reference values for various QA :model:`TaskListItem`s"""
+
+    TYPE_CHOICES = (("yes_no", "Yes / No"), ("numerical", "Numerical"), )
+
+
+    name = models.CharField(max_length=50, help_text=_("Enter a short name for this reference"))
+    ref_type = models.CharField(max_length=15, choices=TYPE_CHOICES)
+    value = models.FloatField(help_text=_("For Yes/No tests, enter 1 for Yes and 0 for No"))
+
+    #units = models.ManyToManyField(Unit, help_text=_("Which units is this reference valid for"))
+    #task_list_item = models.ForeignKey(TaskListItem, help_text=_("Which task list item is this reference for"))
+
+    #who created this reference
+    created = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(User,editable=False,related_name="reference_creators")
+
+    #who last modified this reference
+    modified = models.DateTimeField(auto_now=True)
+    modified_by = models.ForeignKey(User,editable=False,related_name="reference_modifiers")
+
+#============================================================================
+class Tolerance(models.Model):
+    """
+    Model/methods for checking whether a value lies within tolerance
+    and action levels
+    """
+    TYPE_CHOICES = (("absolute", "Absolute"),("percentage", "Percentage"),)
+    name = models.CharField(max_length=50, help_text="Enter a short name for this tolerance type")
+    type = models.CharField(max_length=20, help_text="Select whether this will be an absolute or relative tolerance criteria",choices=TYPE_CHOICES)
+    act_low = models.FloatField(verbose_name="Action Low", help_text="Absolute value of lower action level", null=True)
+    tol_low = models.FloatField(verbose_name="Tolerance Low", help_text="Absolute value of lower tolerance level", null=True)
+    tol_high = models.FloatField(verbose_name="Tolerance High", help_text="Absolute value of upper tolerance level", null=True)
+    act_high = models.FloatField(verbose_name="Action High", help_text="Absolute value of upper action level", null=True)
+
+    #who created this tolerance
+    created_date = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(User,editable=False,related_name="tolerance_creators")
+
+    #who last modified this tolerance
+    modified_date = models.DateTimeField(auto_now=True)
+    modified_by = models.ForeignKey(User,editable=False,related_name="tolerance_modifiers")
 
 #============================================================================
 class Category(models.Model):
@@ -154,59 +197,22 @@ class TaskListItem(models.Model):
 class TaskListItemInstance(models.Model):
     """Measured instance of a :model:`TaskListItem`"""
 
-    passed = models.BooleanField(editable=False)
-    status = models.ForeignKey(Status)
+    #values set by user
     value = models.FloatField(help_text=_("For boolean TaskListItems a value of 0 equals False and any non zero equals True"), null=True)
     skipped = models.BooleanField(help_text=_("Was this test skipped for some reason (add comment)"))
     comment = models.TextField(help_text=_("Add a comment to this task"), null=True, blank=True)
 
-    task_list_instance = models.ForeignKey(TaskListInstance)
-    task_list_item = models.ForeignKey(TaskListItem)
+    #reference used
+    reference = models.ForeignKey(Reference, editable=False)
+    tolerance = models.ForeignKey(Tolerance, editable=False)
+
+    #values set during form processing
+    passed = models.BooleanField(editable=False)
+    status = models.ForeignKey(Status, editable=False)
+    task_list_instance = models.ForeignKey(TaskListInstance, editable=False)
+    task_list_item = models.ForeignKey(TaskListItem, editable=False)
 
 
-#============================================================================
-class Reference(models.Model):
-    """Reference values for various QA :model:`TaskListItem`s"""
-
-    TYPE_CHOICES = (("yes_no", "Yes / No"), ("numerical", "Numerical"), )
-
-
-    name = models.CharField(max_length=50, help_text=_("Enter a short name for this reference"))
-    ref_type = models.CharField(max_length=15, choices=TYPE_CHOICES)
-    value = models.FloatField(help_text=_("For Yes/No tests, enter 1 for Yes and 0 for No"))
-
-    #units = models.ManyToManyField(Unit, help_text=_("Which units is this reference valid for"))
-    #task_list_item = models.ForeignKey(TaskListItem, help_text=_("Which task list item is this reference for"))
-
-    #who created this reference
-    created = models.DateTimeField(auto_now_add=True)
-    created_by = models.ForeignKey(User,editable=False,related_name="reference_creators")
-
-    #who last modified this reference
-    modified = models.DateTimeField(auto_now=True)
-    modified_by = models.ForeignKey(User,editable=False,related_name="reference_modifiers")
-
-#============================================================================
-class Tolerance(models.Model):
-    """
-    Model/methods for checking whether a value lies within tolerance
-    and action levels
-    """
-    TYPE_CHOICES = (("absolute", "Absolute"),("percentage", "Percentage"),)
-    name = models.CharField(max_length=50, help_text="Enter a short name for this tolerance type")
-    type = models.CharField(max_length=20, help_text="Select whether this will be an absolute or relative tolerance criteria",choices=TYPE_CHOICES)
-    act_low = models.FloatField(verbose_name="Action Low", help_text="Absolute value of lower action level", null=True)
-    tol_low = models.FloatField(verbose_name="Tolerance Low", help_text="Absolute value of lower tolerance level", null=True)
-    tol_high = models.FloatField(verbose_name="Tolerance High", help_text="Absolute value of upper tolerance level", null=True)
-    act_high = models.FloatField(verbose_name="Action High", help_text="Absolute value of upper action level", null=True)
-
-    #who created this tolerance
-    created_date = models.DateTimeField(auto_now_add=True)
-    created_by = models.ForeignKey(User,editable=False,related_name="tolerance_creators")
-
-    #who last modified this tolerance
-    modified_date = models.DateTimeField(auto_now=True)
-    modified_by = models.ForeignKey(User,editable=False,related_name="tolerance_modifiers")
 
 #============================================================================
 class TaskListMembership(models.Model):

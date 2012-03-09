@@ -1,4 +1,5 @@
 {% extends "site_base.html" %}
+{% load qa_tags %}
 
 {% block body %}
 <h2>Perform {{form.instance.unit.name}} {{form.instance.name|title}} QA</h3>
@@ -31,8 +32,10 @@
 		</div>
     {% endif %}
 
-
-
+	<div>
+		Form: {{form}}
+	</div>
+	{{tasklistitem_formset.management_form}}
 	<table class="table table-bordered table-striped table-condensed">
 		<thead>
 			<tr>
@@ -47,8 +50,11 @@
 		</thead>
 		<tbody>
 		{% for item_form in tasklistitem_formset %}
-			{{item_form.instance.name}}
-			{{item_form}}
+			{{references.forloop.counter}}
+			{{item_form|as_qavalue}}
 		{% endfor %}
 	</table>
+	    <div class="actions">
+	<button type="submit" class="btn primary">Submit</button>
+</form>
 {% endblock %}

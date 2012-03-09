@@ -3,7 +3,7 @@ from django.http import HttpResponse,HttpResponseRedirect
 from django.shortcuts import render,get_object_or_404
 from django.core.urlresolvers import reverse
 from django.views.generic import TemplateView, ListView, DetailView, CreateView
-from models import TaskList, TaskListItem, TaskListInstance, TaskListItemInstance, TaskListMembership
+from models import TaskList, TaskListItem, TaskListInstance, TaskListItemInstance, TaskListMembership, Status
 from qatrack.units.models import Unit, UnitType
 
 import forms
@@ -71,28 +71,45 @@ class PerformQAView(CreateView):
         """"""
         #form = super(PerformQAView, self).get_form(form_class)
         self.task_list =  TaskList.objects.get(pk=self.kwargs["pk"])
-        form = forms.TaskListItemInstanceForm(instance=self.task_list)
+        task_list_instance = TaskListInstance(
+            task_list=self.task_list,
+            created_by=self.request.user,
+            modified_by=self.request.user
+        )
+        form = forms.TaskListInstanceForm(instance=task_list_instance)
         self.form = form
         return form
 
+    #----------------------------------------------------------------------
+    def form_valid(self, form):
+        """"""
+        return HttpResponse("/")
 
     #----------------------------------------------------------------------
     def get_context_data(self, **kwargs):
         """add formset """
         context = super(PerformQAView, self).get_context_data(**kwargs)
+        from django.forms.models import model_to_dict
         if self.request.POST:
             context["tasklistitem_formset"] = forms.TaskListItemInstanceFormset(self.request.POST)
         else:
-            formset = forms.TaskListItemInstanceFormset()
+
             memberships = TaskListMembership.objects.filter(task_list=self.task_list, active=True)
-            item_forms = []
-            for m in memberships:
-                form = forms.TaskListItemInstanceForm(
-                    instance=m.task_list_item
+            forms.TaskListItemInstanceFormset.extra = memberships.count()
+            formset = forms.TaskListItemInstanceFormset( )
+
+            #set up the instance for each form so task list item info is available
+            #also keep track of references and tolerances for convenience
+            refs, tols = [], []
+            for form, m in zip(formset.forms, memberships):
+                form.instance = TaskListItemInstance(
+                    task_list_item=m.task_list_item,
+                    reference=m.reference,
+                    tolerance=m.tolerance,
                 )
-                item_forms.append(form)
-            formset.forms = item_forms
+
             context["tasklistitem_formset"] = formset
+
         return context
 
 #============================================================================

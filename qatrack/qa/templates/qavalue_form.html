@@ -1,0 +1,51 @@
+<fieldset>
+	{% if form.non_field_errors %}
+	<tr class="error">
+		<td colspan="7">
+		<strong>
+		{% for e in form.non_field_errors %}
+			{{ e }}{% if not forloop.last %}<br/>{% endif %}
+		{% endfor %}
+		</strong>
+		</td>
+	</tr>
+	{% endif %}
+
+
+	{% for field in form %}
+		{% if field.errors %}
+			<tr>
+				<td colspan="7">
+				{% for error in field.errors %}
+					<span class="label warning">{{ error }}</span>
+				{% endfor %}
+				</td>
+			</tr>
+		{% endif %}
+	{% endfor %}
+
+	<tr class="">
+		<input type="hidden" class="" value="{{form.instance.task_list_item.short_name}}"/>
+		<input type="hidden" class="" value="{{form.instance.task_list_item.pk}}"/>
+		<input type="hidden" class="" value="{{form.instance.reference.value}}"/>
+		<td>{{form.instance.task_list_item.name}}</td>
+		<td>{{form.instance.task_list_item.category.name|title}}</td>
+		<td class="" title="{{form.value.help_text|safe}}">{{form.value}}</td>
+		<td class="" title="{{form.skipped.help_text|safe}}">{{form.skipped}}</td>
+		<td class="">Not Done</td>
+		<td class=""><a href="#" class="revealprocedure" title="Show procedure for this task"><i class="icon-book"/></a></td>
+		<td class=""><a href="#" class="revealcomment" title="Add comment for this task"><i class="icon-comment"/></a></td>
+	</tr>
+	<tr class="">
+		<td colspan="7">
+			{% if form.instance.task_list_item.procedure %}
+				{{form.instance.task_list_item.procedure}}
+			{% else %}
+				No procedure available
+			{% endif %}
+		</td>
+	</tr>
+	<tr class="">
+		<td colspan="7"  class="" title="{{form.comment.help_text|safe}}">{{form.comment}}</td>
+	</tr>
+</fieldset>
