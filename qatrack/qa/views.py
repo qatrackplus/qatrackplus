@@ -83,8 +83,13 @@ class PerformQAView(CreateView):
     #----------------------------------------------------------------------
     def form_valid(self, form):
         """"""
-        return HttpResponse("/")
-
+        return HttpResponseRedirect("/")
+    #----------------------------------------------------------------------
+    def form_invalid(self, form):
+        """"""
+        print "hah"
+        context = self.get_context_data()
+        return HttpResponseRedirect("/")
     #----------------------------------------------------------------------
     def get_context_data(self, **kwargs):
         """add formset """

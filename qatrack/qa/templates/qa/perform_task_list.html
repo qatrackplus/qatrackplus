@@ -50,7 +50,7 @@
 		</thead>
 		<tbody>
 		{% for item_form in tasklistitem_formset %}
-			{{references.forloop.counter}}
+
 			{{item_form|as_qavalue}}
 		{% endfor %}
 	</table>
