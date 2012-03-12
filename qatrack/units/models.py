@@ -16,7 +16,11 @@ class UnitType(models.Model):
     name = models.CharField(max_length=50, help_text=_("Name for this unit type"))
     vendor = models.CharField(max_length=50, help_text=_("e.g. Elekta"))
     model = models.CharField(max_length=50, help_text=_("Optional model name for this group (e.g. Beam Modulator)"), null=True, blank=True)
-
+    
+    #---------------------------------------------------------------------------
+    def __unicode__(self):
+        """Display more descriptive name"""
+        return "<UnitType(%s)>" % self.name
 
 #============================================================================
 class Modality(models.Model):
