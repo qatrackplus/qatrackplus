@@ -73,6 +73,14 @@ class TaskListInstance(models.Model):
         """return string with status of this qa instance"""
         return "Not Implemented"
 
+    #---------------------------------------------------------------------------
+    def __unicode__(self):
+        """more helpful interactive display name"""
+        if self.task_list:
+            return "TaskListInstance(task_list=%s)"%self.task_list.name
+        return "TaskListInstance(Empty)"
+        
+
 
 #============================================================================
 class Status(models.Model):
@@ -85,6 +93,10 @@ class Status(models.Model):
     name = models.CharField(max_length=25, help_text=_("Give a concice name for this status"))
     description = models.TextField(null=True, blank=True, help_text=_("Optional description of what this status should be used for"))
     trend = models.BooleanField(help_text=_("Indicate whether this data should be included for trending/analysis purposes"))
+    #---------------------------------------------------------------------------
+    def __unicode__(self):
+        """more helpful interactive display name"""
+        return "Status(%s)"%self.name
 
 #============================================================================
 class Reference(models.Model):
@@ -108,6 +120,11 @@ class Reference(models.Model):
     modified = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(User,editable=False,related_name="reference_modifiers")
 
+    #---------------------------------------------------------------------------
+    def __unicode__(self):
+        """more helpful interactive display name"""
+        return "Reference(%s)"%self.name
+    
 #============================================================================
 class Tolerance(models.Model):
     """
@@ -129,6 +146,11 @@ class Tolerance(models.Model):
     #who last modified this tolerance
     modified_date = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(User,editable=False,related_name="tolerance_modifiers")
+
+    #---------------------------------------------------------------------------
+    def __unicode__(self):
+        """more helpful interactive display name"""
+        return "Tolerance(%s)"%self.name
 
 #============================================================================
 class Category(models.Model):
@@ -213,6 +235,13 @@ class TaskListItemInstance(models.Model):
     task_list_item = models.ForeignKey(TaskListItem, editable=False)
 
 
+    #----------------------------------------------------------------------
+    def __unicode__(self):
+        """return display representation of object"""
+        if self.task_list_item:
+            return "TaskListItemInstance(item=%s)" % self.task_list_item.name
+        return "TaskListItemInstance(Empty)"
+        
 
 #============================================================================
 class TaskListMembership(models.Model):
@@ -231,3 +260,10 @@ class TaskListMembership(models.Model):
     #============================================================================
     class Meta:
         ordering = ("task_list_item_order", )
+    #---------------------------------------------------------------------------
+    def __unicode__(self):
+        """return display representation of object"""
+        if self.task_list_item and self.task_list:
+            return "TaskListMembership(list=%s, item=%s)" % (self.task_list.name, self.task_list_item.name)
+        return "TaskListMembership(Empty)"
+             
