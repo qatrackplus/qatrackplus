@@ -181,4 +181,7 @@ TEST_RUNNER = 'django_coverage.coverage_runner.CoverageRunner'
 
 #local_settings contains anything that should be overridden
 #based on site specific requirements (e.g. deployment, development etc)
-from local_settings import *
+try:
+    from local_settings import *
+except ImportError:
+    pass
