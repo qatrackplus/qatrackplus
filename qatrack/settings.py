@@ -126,8 +126,6 @@ TEMPLATE_CONTEXT_PROCESSORS += [
 
 FIXTURE_DIRS = (
     'fixtures/',
-    'fixtures/dev/auth/',
-    'fixtures/dev/units/',
 )
 
 INSTALLED_APPS = (

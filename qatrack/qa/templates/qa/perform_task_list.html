@@ -21,7 +21,7 @@
 		</div>
 	{% endif %}
 
-    {% if tasklistitem_formset.non_form_errors %}
+    {% if formset.non_form_errors %}
 		<div class="alert-message error">
 		{% for error in formset.non_form_errors %}
 
@@ -35,7 +35,7 @@
 	<div>
 		Form: {{form}}
 	</div>
-	{{tasklistitem_formset.management_form}}
+	{{formset.management_form}}
 	<table class="table table-bordered table-striped table-condensed">
 		<thead>
 			<tr>
@@ -49,8 +49,8 @@
 			</tr>
 		</thead>
 		<tbody>
-		{% for item_form in tasklistitem_formset %}
-
+		{% for item_form in formset %}
+					
 			{{item_form|as_qavalue}}
 		{% endfor %}
 	</table>

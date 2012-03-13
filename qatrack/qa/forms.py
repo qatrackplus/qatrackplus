@@ -1,25 +1,52 @@
 from django import forms
 
-from django.forms.models import inlineformset_factory
+from django.forms.models import inlineformset_factory, modelformset_factory, model_to_dict
 
-from models import TaskList, TaskListInstance, TaskListItemInstance, TaskListMembership
-
-
-#============================================================================
+import models
+            
+    
+    
+#=======================================================================================
 class TaskListItemInstanceForm(forms.ModelForm):
-    """form used for saving a task list item instance"""
+    """Model form for use in a formset of task_list_items within a tasklistinstance"""
+    
+    class Meta:
+        model = models.TaskListItemInstance
+    
+    #---------------------------------------------------------------------------
+    def set_initial_fks(self,fieldnames,item_models,initial_objs):
+        """limit a group of foreign key choices to given querysets and set to initial_objs"""
+        
+        for fieldname,model,initial_obj in zip(fieldnames,item_models,initial_objs):
+            self.fields[fieldname].queryset = model.objects.filter(pk=initial_obj.pk)
+            self.fields[fieldname].initial = initial_obj
+
+#=======================================================================================
+BaseTaskListItemInstanceFormset = forms.formsets.formset_factory(TaskListItemInstanceForm,extra=0)
+class TaskListItemInstanceFormset(BaseTaskListItemInstanceFormset):
+    """Formset for TaskListItemInstances"""
 
     #----------------------------------------------------------------------
-    class Meta:
-        model = TaskListItemInstance
+    def __init__(self,task_list,*args,**kwargs):
+        """prepopulate the reference, tolerance and task_list_item's for all forms in formset"""
 
-#inline formset for listing qa tasks
-TaskListItemInstanceFormset = inlineformset_factory(
-    TaskListInstance, TaskListItemInstance,
-    form=TaskListItemInstanceForm,
-    extra=0
-)
+        memberships = models.TaskListMembership.objects.filter(task_list=task_list, active=True)
+        
+        #since we don't know ahead of time how many task list items there are going to be
+        #we have to dynamically set extra for every form. Feels a bit hacky, but I'm not sure how else to do it.
+        self.extra = memberships.count()
+            
+        super(TaskListItemInstanceFormset,self).__init__(*args,**kwargs)
 
+        #prepopulate our form ref, tol and task_list_item data
+        #we need this stuff available on the page, but don't want the user to be able to
+        #modify these fields (i.e. they should be rendered as_hidden in templates
+        for form, m in zip(self.forms, memberships):
+            fieldnames = ("reference", "tolerance", "task_list_item",)
+            item_models = (models.Reference, models.Tolerance, models.TaskListItem,)
+            objects = (m.reference, m.tolerance, m.task_list_item,)
+            form.set_initial_fks(fieldnames,item_models,objects)
+            
 
 #============================================================================
 class TaskListInstanceForm(forms.ModelForm):
@@ -27,4 +54,4 @@ class TaskListInstanceForm(forms.ModelForm):
 
     #----------------------------------------------------------------------
     class Meta:
-        model = TaskListInstance
+        model = models.TaskListInstance

@@ -1,9 +1,11 @@
 import json
+from django.contrib import messages
 from django.http import HttpResponse,HttpResponseRedirect
 from django.shortcuts import render,get_object_or_404
 from django.core.urlresolvers import reverse
-from django.views.generic import TemplateView, ListView, DetailView, CreateView
-from models import TaskList, TaskListItem, TaskListInstance, TaskListItemInstance, TaskListMembership, Status
+from django.views.generic import TemplateView, ListView, DetailView, FormView
+from django.utils.translation import ugettext as _
+from qatrack.qa import models 
 from qatrack.units.models import Unit, UnitType
 
 import forms
@@ -51,70 +53,67 @@ def validate(request, task_list_id):
 
     #retrieve the task list item for the field that just changed
     try:
-        task_list = TaskList.objects.get(pk=task_list_id)
-    except (TypeError, ValueError, TaskList.DoesNotExist):
+        task_list = models.TaskList.objects.get(pk=task_list_id)
+    except (TypeError, ValueError, models.TaskList.DoesNotExist):
         response_dict['status'] = "Invalid Task List ID"
         return HttpResponse(json.dumps(response_dict),mimetype="application/json")
 
 
 #============================================================================
-class PerformQAView(CreateView):
-    """view for users to complete qa tasks"""
+class PerformQAView(FormView):
+    """view for users to complete a qa task list"""
     template_name = "qa/perform_task_list.html"
-    model = TaskListInstance
+
     context_object_name = "task_list"
     form_class = forms.TaskListInstanceForm
 
-    success_url = "/"
-    #----------------------------------------------------------------------
-    def get_form(self, form_class):
-        """"""
-        #form = super(PerformQAView, self).get_form(form_class)
-        self.task_list =  TaskList.objects.get(pk=self.kwargs["pk"])
-        task_list_instance = TaskListInstance(
-            task_list=self.task_list,
-            created_by=self.request.user,
-            modified_by=self.request.user
-        )
-        form = forms.TaskListInstanceForm(instance=task_list_instance)
-        self.form = form
-        return form
-
     #----------------------------------------------------------------------
     def form_valid(self, form):
-        """"""
-        return HttpResponseRedirect("/")
-    #----------------------------------------------------------------------
-    def form_invalid(self, form):
-        """"""
-        print "hah"
-        context = self.get_context_data()
-        return HttpResponseRedirect("/")
+        """add extra info to the task_list_intance and save all the task_list_items if valid"""
+        
+        context = self.get_context_data(form=form)
+        task_list = context["task_list"]
+        formset = context["formset"]        
+        
+        if formset.is_valid():
+            
+            #add extra info for task_list_instance
+            task_list_instance = form.save(commit=False)
+            task_list_instance.task_list = task_list
+            task_list_instance.created_by = self.request.user
+            task_list_instance.modified_by = self.request.user
+            task_list_instance.save()
+            
+            #all task list item values are validated so now add remaining fields manually and save
+            for item_form in formset:
+                obj = item_form.save(commit=False)
+                obj.task_list_instance = task_list_instance                
+                obj.status = models.Status.objects.get(name="unreviewed")
+                obj.passed = True
+                obj.save()
+
+            #let user know request succeeded and return to unit list
+            messages.success(self.request,_("Successfully submitted %s "% task_list.name))            
+            url = reverse("qa_by_frequency_unit",args=(task_list.frequency,task_list.unit.number))
+            return HttpResponseRedirect(url)
+        
+        #there was an error in one of the forms
+        return self.render_to_response(self.get_context_data(form=form))
+                    
     #----------------------------------------------------------------------
     def get_context_data(self, **kwargs):
-        """add formset """
+        """add formset and task list to our template context"""
         context = super(PerformQAView, self).get_context_data(**kwargs)
-        from django.forms.models import model_to_dict
+        
+        task_list =  get_object_or_404(models.TaskList,pk=self.kwargs["pk"])        
+        
         if self.request.POST:
-            context["tasklistitem_formset"] = forms.TaskListItemInstanceFormset(self.request.POST)
+            formset = forms.TaskListItemInstanceFormset(task_list,self.request.POST)
         else:
-
-            memberships = TaskListMembership.objects.filter(task_list=self.task_list, active=True)
-            forms.TaskListItemInstanceFormset.extra = memberships.count()
-            formset = forms.TaskListItemInstanceFormset( )
-
-            #set up the instance for each form so task list item info is available
-            #also keep track of references and tolerances for convenience
-            refs, tols = [], []
-            for form, m in zip(formset.forms, memberships):
-                form.instance = TaskListItemInstance(
-                    task_list_item=m.task_list_item,
-                    reference=m.reference,
-                    tolerance=m.tolerance,
-                )
-
-            context["tasklistitem_formset"] = formset
-
+            formset = forms.TaskListItemInstanceFormset(task_list)
+                
+        context.update({'task_list':task_list,'formset':formset})
+            
         return context
 
 #============================================================================
@@ -148,7 +147,7 @@ class UnitGroupedFrequencyListView(ListView):
     #----------------------------------------------------------------------
     def get_queryset(self):
         """grab all task lists with given frequency"""
-        return TaskList.objects.filter(frequency=self.args[0].lower())
+        return models.TaskList.objects.filter(frequency=self.args[0].lower())
     #----------------------------------------------------------------------
     def get_context_data(self, **kwargs):
         """add grouped objects to template context"""

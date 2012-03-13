@@ -76,9 +76,10 @@ class TaskListInstance(models.Model):
     #---------------------------------------------------------------------------
     def __unicode__(self):
         """more helpful interactive display name"""
-        if self.task_list:
+        try:
             return "TaskListInstance(task_list=%s)"%self.task_list.name
-        return "TaskListInstance(Empty)"
+        except:
+            return "TaskListInstance(Empty)"
         
 
 
@@ -93,6 +94,8 @@ class Status(models.Model):
     name = models.CharField(max_length=25, help_text=_("Give a concice name for this status"))
     description = models.TextField(null=True, blank=True, help_text=_("Optional description of what this status should be used for"))
     trend = models.BooleanField(help_text=_("Indicate whether this data should be included for trending/analysis purposes"))
+    class Meta:
+        verbose_name_plural = "statuses"
     #---------------------------------------------------------------------------
     def __unicode__(self):
         """more helpful interactive display name"""
@@ -225,22 +228,24 @@ class TaskListItemInstance(models.Model):
     comment = models.TextField(help_text=_("Add a comment to this task"), null=True, blank=True)
 
     #reference used
-    reference = models.ForeignKey(Reference, editable=False)
-    tolerance = models.ForeignKey(Tolerance, editable=False)
+    reference = models.ForeignKey(Reference)
+    tolerance = models.ForeignKey(Tolerance)
 
     #values set during form processing
     passed = models.BooleanField(editable=False)
     status = models.ForeignKey(Status, editable=False)
-    task_list_instance = models.ForeignKey(TaskListInstance, editable=False)
-    task_list_item = models.ForeignKey(TaskListItem, editable=False)
+    
+    task_list_instance = models.ForeignKey(TaskListInstance,editable=False)
+    task_list_item = models.ForeignKey(TaskListItem)
 
 
     #----------------------------------------------------------------------
     def __unicode__(self):
         """return display representation of object"""
-        if self.task_list_item:
+        try :
             return "TaskListItemInstance(item=%s)" % self.task_list_item.name
-        return "TaskListItemInstance(Empty)"
+        except :
+            return "TaskListItemInstance(Empty)"
         
 
 #============================================================================
@@ -263,7 +268,8 @@ class TaskListMembership(models.Model):
     #---------------------------------------------------------------------------
     def __unicode__(self):
         """return display representation of object"""
-        if self.task_list_item and self.task_list:
+        try:
             return "TaskListMembership(list=%s, item=%s)" % (self.task_list.name, self.task_list_item.name)
-        return "TaskListMembership(Empty)"
+        except:
+            return "TaskListMembership(Empty)"
              
