@@ -14,12 +14,21 @@
 {% endfor %}
 
 <tr class="qa-valuerow">
+    {% with ref=form.fields.reference.initial %}
+        <input type="hidden" class="qa-reference-val" value="{{ref.value}}"/>
+        <input type="hidden" class="qa-reference-pk" value="{{ref.pk}}"/>
+    {% endwith %}
 
-    <input type="hidden" class="qa-reference" value="{{form.fields.reference.initial.value}}"/>
-    <input type="hidden" class="qa-tolerance act_low" value="{{form.fields.tolerance.initial.act_low}}"/>
-    <input type="hidden" class="qa-tolerance tol_low" value="{{form.fields.tolerance.initial.tol_low}}"/>
-    <input type="hidden" class="qa-tolerance tol_high" value="{{form.fields.tolerance.initial.tol_high}}"/>
-    <input type="hidden" class="qa-tolerance act_high" value="{{form.fields.tolerance.initial.act_high}}"/>
+    {% with tol=form.fields.tolerance.initial %}
+        <input type="hidden" class="qa-tolerance act_low" value="{{tol.act_low}}"/>
+        <input type="hidden" class="qa-tolerance tol_low" value="{{tol.tol_low}}"/>
+        <input type="hidden" class="qa-tolerance tol_high" value="{{tol.tol_high}}"/>
+        <input type="hidden" class="qa-tolerance act_high" value="{{tol.act_high}}"/>
+        <input type="hidden" class="qa-tolerance-type" value="{{tol.type}}"/>
+        <input type="hidden" class="qa-tolerance-pk" value="{{tol.pk}}"/>
+
+    {% endwith %}
+
     <input type="hidden" class="qa-contextname" value="{{form.fields.task_list_item.initial.short_name}}"/>
     {{form.fields.reference.as_hidden}}
     {{form.tolerance.as_hidden}}

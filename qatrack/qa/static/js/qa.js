@@ -1,12 +1,41 @@
+/***************************************************************/
+//Set up the values we will need to do validation on data
+var validation_data = {};
+function initialize_qa(){
+
+    $(".qa-valuerow").each(function(order){
+        var context_name = $(this).find(".qa-contextname").val();
+        var qa_row = $(this);
+        var reference = {
+            value:parseFloat($(this).find(".qa-reference-val").val()),
+            pk:$(this).find(".qa-reference-pk").val()
+        };
+
+        var tolerances = {
+            act_low:parseFloat($(this).find(".act_low").val()),
+            tol_low:parseFloat($(this).find(".tol_low").val()),
+            tol_high:parseFloat($(this).find(".tol_high").val()),
+            act_high:parseFloat($(this).find(".act_high").val()),
+            type:$(this).find(".qa-tolerance-type").val(),
+            pk:$(this).find(".qa-tolerance-pk").val()
+
+        };
+
+        validation_data[context_name] = {
+            name:context_name,
+            tolerances:tolerances,
+            reference:reference
+        };
+
+    });
+}
 
 /***************************************************************/
 //main function for handling test validation
 function validate(initiator){
     console.log(initiator);
     console.log($("form input.qa-input"));
-    var validation_data = {
-
-    };
+    var name = initiator.parents("tr:first").find(".qa-contextname").val();
 }
 
 
@@ -49,6 +78,8 @@ function filter_by_category(){
 
 /****************************************************************/
 $(document).ready(function(){
+
+    initialize_qa();
 
     //hide all procedures and comments initially
     $(".qa-procedure, .qa-comment").hide();
