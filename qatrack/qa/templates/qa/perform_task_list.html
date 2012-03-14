@@ -39,7 +39,7 @@
 </div>
 <div class="row">
     <div class="span8">
-        <form class="nosubmit form-inline" id="qaform" method="POST" action="">
+        <form class="nosubmit form-inline" id="qa-form" method="POST" action="">
             {% csrf_token %}
 
             {# display any form errors up top #}
@@ -62,17 +62,17 @@
             {% endif %}
 
             {{formset.management_form}}
-            <table class="qatable table table-bordered table-striped table-condensed">
+            <table class="qa-table table table-bordered table-striped table-condensed">
                 <thead>
                     <tr>
-                        <th class="qaname">Name</th>
-                        <th class="qacategory">Category</th>
-                        <th class="qavalue">Value</th>
-                        <th class="qaskip">Skip</th>
-                        <th class="qatatus">Status</th>
-                        <th class="qashowproc">&nbsp;</th>
-                        <th class="qashowcmt">&nbsp;</th>
-                        <th class="qareference">Reference</th>
+                        <th class="qa-name">Name</th>
+                        <th class="qa-category">Category</th>
+                        <th class="qa-value">Value</th>
+                        <th class="qa-skip">Skip</th>
+                        <th class="qa-tatus">Status</th>
+                        <th class="qa-showproc">&nbsp;</th>
+                        <th class="qa-showcmt">&nbsp;</th>
+                        <th class="qa-reference">Reference</th>
                     </tr>
                 </thead>
                 <tbody>

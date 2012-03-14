@@ -6,7 +6,6 @@ from django.forms.widgets import RadioSelect
 import models
 
 
-
 #=======================================================================================
 class TaskListItemInstanceForm(forms.ModelForm):
     """Model form for use in a formset of task_list_items within a tasklistinstance"""
@@ -14,7 +13,6 @@ class TaskListItemInstanceForm(forms.ModelForm):
     value = forms.FloatField(required=False, widget=forms.widgets.TextInput(attrs={"class":"qainput"}))
     class Meta:
         model = models.TaskListItemInstance
-
 
     #----------------------------------------------------------------------
     def clean(self):

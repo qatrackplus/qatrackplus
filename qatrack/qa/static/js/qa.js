@@ -3,7 +3,7 @@
 //main function for handling test validation
 function validate(initiator){
     console.log(initiator);
-    console.log($("form input.qainput"));
+    console.log($("form input.qa-input"));
     var validation_data = {
 
     };
@@ -22,26 +22,26 @@ function filter_by_category(){
         ($.inArray("all",selected_categories) >= 0);
 
     if (show_all){
-        $(".qavaluerow").show();
-        $(".qacomment .qaprocedure").hide();
-        $(".qaskip input").attr("checked",false)
+        $(".qa-valuerow").show();
+        $(".qa-comment .qa-procedure").hide();
+        $(".qa-skip input").attr("checked",false)
         return;
     }
 
-    //loop over each qavalue row and show or hide related rows
-    $(".qavaluerow").each(function(e){
+    //loop over each qa-value row and show or hide related rows
+    $(".qa-valuerow").each(function(e){
 
-        var category = $(this).find("td.qacategory").text().toLowerCase();
+        var category = $(this).find("td.qa-category").text().toLowerCase();
 
         var to_toggle = $(this);
-        to_toggle.add($(this).nextUntil(".qavaluerow"));
-        to_toggle.add($(this).prevUntil(".qavaluerow"));
+        to_toggle.add($(this).nextUntil(".qa-valuerow"));
+        to_toggle.add($(this).prevUntil(".qa-valuerow"));
 
         if ($.inArray(category,selected_categories) < 0){
             $(this).find
             to_toggle.hide();
         }else{
-            $(this).find(".qaskip input").attr("checked",false)
+            $(this).find(".qa-skip input").attr("checked",false)
             to_toggle.show();
         }
     });
@@ -51,21 +51,21 @@ function filter_by_category(){
 $(document).ready(function(){
 
     //hide all procedures and comments initially
-    $(".qaprocedure, .qacomment").hide();
+    $(".qa-procedure, .qa-comment").hide();
 
     //enable toggle behaviour for boolean tests
-    $(".qaboolean").button();
+    $(".qa-boolean").button();
 
     //set tab index
     $("input:text, input:radio").each(function(i,e){ $(e).attr("tabindex", i) });
 
     //show procedures when clicked
-    $(".qashowproc a").click(function(){
+    $(".qa-showproc a").click(function(){
         $(this).parent().parent().next().slideToggle(1200);
     });
 
     //show comment when clicked
-    $(".qashowcmt a").click(function(){
+    $(".qa-showcmt a").click(function(){
       $(this).parent().parent().next().next().slideToggle(1200);
     });
 
