@@ -111,7 +111,13 @@ class PerformQAView(FormView):
         else:
             formset = forms.TaskListItemInstanceFormset(task_list)
 
-        context.update({'task_list':task_list,'formset':formset})
+        categories = models.Category.objects.all()
+
+        context.update({
+            'task_list':task_list,
+            'formset':formset,
+            'categories':categories,
+        })
 
         return context
 

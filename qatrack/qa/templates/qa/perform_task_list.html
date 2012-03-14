@@ -18,31 +18,49 @@
     </div>
 </div>
 <div class="row">
+    <div class="span12 form-vertical">
+        <div id="filters" class="well control-group">
+            <label for="category_filter" class="control-label">Filter by categories:</label>
+            <div class="controls">
+                <select id="category_filter" multiple="multiple" class="input-large">
+                    <option value="all">Show All</option>
+                    {% for category in categories %}
+                        <option value="{{category.name|lower}}">
+                            {{category.name|title}}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div id="admin_controls" class="span9">
+
+        </div>
+    </div>
+</div>
+<div class="row">
     <div class="span8">
         <form class="nosubmit form-inline" id="qaform" method="POST" action="">
             {% csrf_token %}
-        
+
             {# display any form errors up top #}
             {% if form.errors %}
-                <div class="alert-message error">        
+                <div class="alert-message error">
                     {% for field,errors in form.errors.items %}
                         {% for error in errors %}
-                            <tr class="error">
-                                <span class="help-block-inline">{{field}} - {{ error }}</span>
-                            </tr>
+                                <span class="error help-block-inline">{{field}} - {{ error }}</span>
                         {% endfor %}
                     {% endfor %}
                 </div>
             {% endif %}
-        
+
             {% if formset.non_form_errors %}
                 <div class="alert-message error">
                     {% for error in formset.non_form_errors %}
-                        <tr class="error"><span class="help-block-inline">{{ error }}</span></tr>
+                        <span class=" error help-block-inline">{{ error }}</span>
                     {% endfor %}
                 </div>
             {% endif %}
-        
+
             {{formset.management_form}}
             <table class="qatable table table-bordered table-striped table-condensed">
                 <thead>
@@ -58,7 +76,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                {% for item_form in formset %}					
+                {% for item_form in formset %}
                     {{item_form|as_qavalue}}
                 {% endfor %}
                 </tbody>
@@ -67,9 +85,6 @@
                 <button type="submit" class="btn primary">Submit</button>
             </div>
         </form>
-    </div>
-    <div class="history span4">
-        &nbsp;
     </div>
 </div>
 {% endblock %}

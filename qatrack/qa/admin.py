@@ -51,12 +51,6 @@ class TaskListMembershipInline(admin.TabularInline):
     extra = 1
 
 #============================================================================
-#class TaskListItemInline(SaveUserMixin, admin.AllValuesFieldListFilter):
-#    """Inline editor for TaskListItems"""
-#    inlines = [TaskListMembershipInline]
-#    model = models.TaskListItem
-
-#============================================================================
 class TaskListAdmin(SaveUserMixin, admin.ModelAdmin):
     prepopulated_fields =  {'slug': ('name',)}
     list_display = (title_case_name, "modified", "modified_by", "unit", "frequency", "active")
