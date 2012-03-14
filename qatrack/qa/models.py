@@ -80,26 +80,7 @@ class TaskListInstance(models.Model):
             return "TaskListInstance(task_list=%s)"%self.task_list.name
         except:
             return "TaskListInstance(Empty)"
-        
 
-
-#============================================================================
-class Status(models.Model):
-    """Available statuses for QA items
-
-    Can be used to indicate whether data should be included in trending,
-    requires action, should be ignored etc.
-    """
-
-    name = models.CharField(max_length=25, help_text=_("Give a concice name for this status"))
-    description = models.TextField(null=True, blank=True, help_text=_("Optional description of what this status should be used for"))
-    trend = models.BooleanField(help_text=_("Indicate whether this data should be included for trending/analysis purposes"))
-    class Meta:
-        verbose_name_plural = "statuses"
-    #---------------------------------------------------------------------------
-    def __unicode__(self):
-        """more helpful interactive display name"""
-        return "Status(%s)"%self.name
 
 #============================================================================
 class Reference(models.Model):
@@ -127,7 +108,7 @@ class Reference(models.Model):
     def __unicode__(self):
         """more helpful interactive display name"""
         return "Reference(%s)"%self.name
-    
+
 #============================================================================
 class Tolerance(models.Model):
     """
@@ -222,6 +203,20 @@ class TaskListItem(models.Model):
 class TaskListItemInstance(models.Model):
     """Measured instance of a :model:`TaskListItem`"""
 
+    UNREVIEWED = "unreviewed"
+    APPROVED = "approved"
+    SCRATCH = "scratch"
+    REJECTED = "rejected"
+
+    choices = (
+        (UNREVIEWED, "Unreviewed"),
+        (APPROVED, "Approved"),
+        (SCRATCH, "Scratch"),
+        (REJECTED, "Rejected"),
+    )
+
+    status = models.CharField(max_length=20, choices=choices, editable=False)
+
     #values set by user
     value = models.FloatField(help_text=_("For boolean TaskListItems a value of 0 equals False and any non zero equals True"), null=True)
     skipped = models.BooleanField(help_text=_("Was this test skipped for some reason (add comment)"))
@@ -231,10 +226,6 @@ class TaskListItemInstance(models.Model):
     reference = models.ForeignKey(Reference)
     tolerance = models.ForeignKey(Tolerance)
 
-    #values set during form processing
-    passed = models.BooleanField(editable=False)
-    status = models.ForeignKey(Status, editable=False)
-    
     task_list_instance = models.ForeignKey(TaskListInstance,editable=False)
     task_list_item = models.ForeignKey(TaskListItem)
 
@@ -246,7 +237,7 @@ class TaskListItemInstance(models.Model):
             return "TaskListItemInstance(item=%s)" % self.task_list_item.name
         except :
             return "TaskListItemInstance(Empty)"
-        
+
 
 #============================================================================
 class TaskListMembership(models.Model):
@@ -272,4 +263,3 @@ class TaskListMembership(models.Model):
             return "TaskListMembership(list=%s, item=%s)" % (self.task_list.name, self.task_list_item.name)
         except:
             return "TaskListMembership(Empty)"
-             
