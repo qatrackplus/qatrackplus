@@ -1,0 +1,17 @@
+input[type="text"].qainput {
+    width:75px;
+    height:12px;
+}
+
+.qatable td, .qatable th{
+    text-align:center;
+
+}
+.qatable td.qaname {
+    width:200px;
+    text-align:left;
+}
+ 
+tr.qacomment td, tr.qaprocedure td {
+    text-align:left;
+}

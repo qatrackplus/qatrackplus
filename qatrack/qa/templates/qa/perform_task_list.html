@@ -1,60 +1,75 @@
 {% extends "site_base.html" %}
+{% load staticfiles %}
+
+{% block extra_style %}
+    <link href="{% static "css/qa.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block extra_script %}
+    <script src="{% static "js/qa.js" %}"></script>
+{% endblock %}
+
 {% load qa_tags %}
 
 {% block body %}
-<h2>Perform {{form.instance.unit.name}} {{form.instance.name|title}} QA</h3>
-
-<form class="nosubmit" id="qaform" method="POST" action="">
-    {% csrf_token %}
-
-	{# display any form errors up top #}
-	{% if form.errors %}
-		<div class="alert-message error">
-
-		{% for field,errors in form.errors.items %}
-			{% for error in errors %}
-			<tr class="error">
-			<span class="help-block-inline">{{field}} - {{ error }}</span>
-			</tr>
-			{% endfor %}
-		{% endfor %}
-		</div>
-	{% endif %}
-
-    {% if formset.non_form_errors %}
-		<div class="alert-message error">
-		{% for error in formset.non_form_errors %}
-
-			<tr class="error">
-			<span class="help-block-inline">{{ error }}</span>
-			</tr>
-		{% endfor %}
-		</div>
-    {% endif %}
-
-	<div>
-		Form: {{form}}
-	</div>
-	{{formset.management_form}}
-	<table class="table table-bordered table-striped table-condensed">
-		<thead>
-			<tr>
-				<th>Name</th>
-				<th>Category</th>
-				<th>Value</th>
-				<th>Skipped</th>
-				<th>Pass/Fail</th>
-				<th>Procedure</th>
-				<th>Comment</th>
-			</tr>
-		</thead>
-		<tbody>
-		{% for item_form in formset %}
-					
-			{{item_form|as_qavalue}}
-		{% endfor %}
-	</table>
-	    <div class="actions">
-	<button type="submit" class="btn primary">Submit</button>
-</form>
+<div class="row">
+    <div class="span12">
+        <h2>Perform {{task_list.unit.name}} {{task_list.name|title}}</h3>
+    </div>
+</div>
+<div class="row">
+    <div class="span8">
+        <form class="nosubmit form-inline" id="qaform" method="POST" action="">
+            {% csrf_token %}
+        
+            {# display any form errors up top #}
+            {% if form.errors %}
+                <div class="alert-message error">        
+                    {% for field,errors in form.errors.items %}
+                        {% for error in errors %}
+                            <tr class="error">
+                                <span class="help-block-inline">{{field}} - {{ error }}</span>
+                            </tr>
+                        {% endfor %}
+                    {% endfor %}
+                </div>
+            {% endif %}
+        
+            {% if formset.non_form_errors %}
+                <div class="alert-message error">
+                    {% for error in formset.non_form_errors %}
+                        <tr class="error"><span class="help-block-inline">{{ error }}</span></tr>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        
+            {{formset.management_form}}
+            <table class="qatable table table-bordered table-striped table-condensed">
+                <thead>
+                    <tr>
+                        <th class="qaname">Name</th>
+                        <th class="qacategory">Category</th>
+                        <th class="qavalue">Value</th>
+                        <th class="qaskip">Skip</th>
+                        <th class="qatatus">Status</th>
+                        <th class="qashowproc">&nbsp;</th>
+                        <th class="qashowcmt">&nbsp;</th>
+                        <th class="qareference">Reference</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for item_form in formset %}					
+                    {{item_form|as_qavalue}}
+                {% endfor %}
+                </tbody>
+            </table>
+            <div class="actions">
+                <button type="submit" class="btn primary">Submit</button>
+            </div>
+        </form>
+    </div>
+    <div class="history span4">
+        &nbsp;
+    </div>
+</div>
 {% endblock %}

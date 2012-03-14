@@ -1,6 +1,7 @@
 from django import forms
 
 from django.forms.models import inlineformset_factory, modelformset_factory, model_to_dict
+from django.forms.widgets import RadioSelect
 
 import models
             
@@ -10,6 +11,7 @@ import models
 class TaskListItemInstanceForm(forms.ModelForm):
     """Model form for use in a formset of task_list_items within a tasklistinstance"""
     
+    value = forms.FloatField(required=True,widget=forms.widgets.TextInput(attrs={"class":"qainput"}))
     class Meta:
         model = models.TaskListItemInstance
     
@@ -26,6 +28,23 @@ BaseTaskListItemInstanceFormset = forms.formsets.formset_factory(TaskListItemIns
 class TaskListItemInstanceFormset(BaseTaskListItemInstanceFormset):
     """Formset for TaskListItemInstances"""
 
+    #---------------------------------------------------------------------------
+    def set_initial_data(self,form, membership):
+        """prepopulate our form ref, tol and task_list_item data"""
+
+        #we need this stuff available on the page, but don't want the user to be able to
+        #modify these fields (i.e. they should be rendered as_hidden in templates
+        fieldnames = ("reference", "tolerance", "task_list_item",)
+        item_models = (models.Reference, models.Tolerance, models.TaskListItem,)
+        objects = (membership.reference, membership.tolerance, membership.task_list_item,)
+        form.set_initial_fks(fieldnames,item_models,objects)
+    #---------------------------------------------------------------------------
+    def set_widgets(self,form,membership):
+        """add custom widget for boolean values"""
+        if membership.task_list_item.is_boolean():
+            attrs = form.fields["value"].widget.attrs
+            form.fields["value"].widget = RadioSelect(choices=[(0,"No"),(1,"Yes")])    
+            form.fields["value"].widget.attrs.update(attrs)
     #----------------------------------------------------------------------
     def __init__(self,task_list,*args,**kwargs):
         """prepopulate the reference, tolerance and task_list_item's for all forms in formset"""
@@ -38,14 +57,9 @@ class TaskListItemInstanceFormset(BaseTaskListItemInstanceFormset):
             
         super(TaskListItemInstanceFormset,self).__init__(*args,**kwargs)
 
-        #prepopulate our form ref, tol and task_list_item data
-        #we need this stuff available on the page, but don't want the user to be able to
-        #modify these fields (i.e. they should be rendered as_hidden in templates
-        for form, m in zip(self.forms, memberships):
-            fieldnames = ("reference", "tolerance", "task_list_item",)
-            item_models = (models.Reference, models.Tolerance, models.TaskListItem,)
-            objects = (m.reference, m.tolerance, m.task_list_item,)
-            form.set_initial_fks(fieldnames,item_models,objects)
+        for f, m in zip(self.forms, memberships):
+            self.set_initial_data(f,m)
+            self.set_widgets(f,m)
             
 
 #============================================================================

@@ -202,17 +202,17 @@ class TaskListItem(models.Model):
 
     category = models.ForeignKey(Category, help_text=_("Choose a category for this task"))
 
-    #order = models.IntegerField(null=True)  # display order in parent task list
-
-
     #for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, editable=False, related_name="task_list_item_creator")
     modified = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(User, editable=False, related_name="task_list_item_modifier")
 
-    #class Meta:
-    #    ordering = ("order", )
+    #---------------------------------------------------------------------------
+    def is_boolean(self):
+        """return True if this is a boolean test, otherwise False"""
+        return self.task_type == "boolean"
+
     #----------------------------------------------------------------------
     def __unicode__(self):
         """return display representation of object"""

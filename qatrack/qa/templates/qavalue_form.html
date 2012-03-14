@@ -15,40 +15,55 @@
     {% for field in form %}
         {% if field.errors %}
             <tr>
-                <td colspan="7">
+                <td colspan="2">&nbsp;</td>
+                <td>
                 {% for error in field.errors %}
-                    <span class="label warning">{{ error }}</span>
+                    <span class="alert-error">{{ error }}</span>
                 {% endfor %}
                 </td>
+                <td colspan="5">&nbsp;</td>
             </tr>
         {% endif %}
     {% endfor %}
 
-    <tr class="">
+    <tr class="qavaluerow">
             {{form.reference.as_hidden}}
             {{form.tolerance.as_hidden}}
             {{form.task_list_item.as_hidden}}
             {{form.task_list_instance.as_hidden}}
             {% with task_list_item=form.fields.task_list_item.initial %}
-                <td>{{task_list_item.name}}</td>
-                <td>{{task_list_item.category.name|title}}</td>
+                <td class="qaname">{{task_list_item.name}}</td>
+                <td class="qacategory">{{task_list_item.category.name|title}}</td>
+                <td class="qavalue" title="{{form.value.help_text|safe}}">
+                {% if task_list_item.is_boolean %}
+                    <span class="radio pull-left">{{form.value.0}}</span>
+                    <span class="radio pull-right">{{form.value.1}}</span>                    
+                {% else %}
+                     <span class="center span1">{{form.value}}</span>
+                {% endif %}
+                </td>
             {% endwith %}
-            <td class="" title="{{form.value.help_text|safe}}">{{form.value}}</td>
-            <td class="" title="{{form.skipped.help_text|safe}}">{{form.skipped}}</td>
-            <td class="">Not Done</td>
-            <td class=""><a href="#" class="revealprocedure" title="Show procedure for this task"><i class="icon-book"/></a></td>
-            <td class=""><a href="#" class="revealcomment" title="Add comment for this task"><i class="icon-comment"/></a></td>
+
+            <td class="qaskip" title="{{form.skipped.help_text|safe}}">{{form.skipped}}</td>
+            <td class="qastatus">Not Done</td>
+            <td class="qashowproc"><a href="#" class="revealprocedure" title="Show procedure for this task"><i class="icon-book"/></a></td>
+            <td class="qashowcmt"><a href="#" class="revealcomment" title="Add comment for this task"><i class="icon-comment"/></a></td>
+            <td class="qareference">{{form.fields.reference.initial.value}}</td>
     </tr>
-    <tr class="">
-        <td colspan="7">
+    <tr class="qaprocedure">
+        <td colspan="8">
+            <label class="label">Procedure:</label>
             {% if form.fields.task_list_item.initial %}
-                {{form.fields.task_list_item.initial.procedure}}
+                <em>{{form.fields.task_list_item.initial.procedure}}</em>
             {% else %}
                 No procedure available
             {% endif %}
         </td>
     </tr>
-    <tr class="">
-        <td colspan="7"  class="" title="{{form.comment.help_text|safe}}">{{form.comment}}</td>
+    <tr class="qacomment">
+        <td colspan="8"  class="" title="{{form.comment.help_text|safe}}">
+            <label class="label">Add Comment For Reviewer:</label>
+            {{form.comment}}
+        </td>
     </tr>
 </fieldset>
