@@ -5,7 +5,7 @@ from django.shortcuts import render,get_object_or_404
 from django.core.urlresolvers import reverse
 from django.views.generic import TemplateView, ListView, DetailView, FormView
 from django.utils.translation import ugettext as _
-from qatrack.qa import models 
+from qatrack.qa import models
 from qatrack.units.models import Unit, UnitType
 
 import forms
@@ -70,50 +70,49 @@ class PerformQAView(FormView):
     #----------------------------------------------------------------------
     def form_valid(self, form):
         """add extra info to the task_list_intance and save all the task_list_items if valid"""
-        
+
         context = self.get_context_data(form=form)
         task_list = context["task_list"]
-        formset = context["formset"]        
-        
+        formset = context["formset"]
+
         if formset.is_valid():
-            
+
             #add extra info for task_list_instance
             task_list_instance = form.save(commit=False)
             task_list_instance.task_list = task_list
             task_list_instance.created_by = self.request.user
             task_list_instance.modified_by = self.request.user
             task_list_instance.save()
-            
+
             #all task list item values are validated so now add remaining fields manually and save
             for item_form in formset:
                 obj = item_form.save(commit=False)
-                obj.task_list_instance = task_list_instance                
-                obj.status = models.Status.objects.get(name="unreviewed")
-                obj.passed = True
+                obj.task_list_instance = task_list_instance
+                obj.status = models.TaskListItemInstance.UNREVIEWED
                 obj.save()
 
             #let user know request succeeded and return to unit list
-            messages.success(self.request,_("Successfully submitted %s "% task_list.name))            
+            messages.success(self.request,_("Successfully submitted %s "% task_list.name))
             url = reverse("qa_by_frequency_unit",args=(task_list.frequency,task_list.unit.number))
             return HttpResponseRedirect(url)
-        
+
         #there was an error in one of the forms
         return self.render_to_response(self.get_context_data(form=form))
-                    
+
     #----------------------------------------------------------------------
     def get_context_data(self, **kwargs):
         """add formset and task list to our template context"""
         context = super(PerformQAView, self).get_context_data(**kwargs)
-        
-        task_list =  get_object_or_404(models.TaskList,pk=self.kwargs["pk"])        
-        
+
+        task_list =  get_object_or_404(models.TaskList,pk=self.kwargs["pk"])
+
         if self.request.POST:
             formset = forms.TaskListItemInstanceFormset(task_list,self.request.POST)
         else:
             formset = forms.TaskListItemInstanceFormset(task_list)
-                
+
         context.update({'task_list':task_list,'formset':formset})
-            
+
         return context
 
 #============================================================================
