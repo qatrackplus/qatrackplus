@@ -1,3 +1,4 @@
+
 /***************************************************************/
 //Set up the values we will need to do validation on data
 var validation_data = {};
@@ -32,13 +33,53 @@ function initialize_qa(){
 
 /***************************************************************/
 //main function for handling test validation
-function validate(initiator){
-    console.log(initiator);
-    console.log($("form input.qa-input"));
-    var name = initiator.parents("tr:first").find(".qa-contextname").val();
+function check_status(input_element){
+
+    check_item_status(input_element);
+
+
 }
 
+function set_invalid_input(input_element){
+    input_element.parents(".control-group").removeClass("success");
+    input_element.parents(".control-group").addClass("error");
+}
+function set_valid_input(input_element){
+    input_element.parents(".control-group").removeClass("error");
+    input_element.parents(".control-group").addClass("success");
+}
 
+function valid_input(input_element){
+    return (!isNaN(parseFloat(input_element.val())) && $.trim(input_element.val()) !== "") ;
+}
+//check a single qa items status
+function check_item_status(input_element){
+    var parent = input_element.parents("tr:first")
+    var qastatus = parent.find(".qa-status");
+    qastatus.removeClass("btn-danger btn-warning btn-success");
+    qastatus.text("Not Done");
+    if (!valid_input(input_element)){
+        set_invalid_input(input_element);
+        return;
+    }
+    set_valid_input(input_element);
+    var val = parseFloat(input_element.val())
+    var name = parent.find(".qa-contextname").val();
+    var tolerances = validation_data[name].tolerances;
+    var reference = validation_data[name].reference;
+    var result = QAUtils.test_tolerance(val,reference.value,tolerances);
+
+    qastatus.text(result.message);
+
+    if (result.gen_status === QAUtils.WITHIN_TOL){
+        qastatus.addClass("btn-success");
+    }else if(result.gen_status === QAUtils.TOLERANCE){
+        qastatus.addClass("btn-warning");
+    }else{
+        qastatus.addClass("btn-danger");
+    }
+
+}
 /***************************************************************/
 function filter_by_category(){
 
@@ -84,9 +125,6 @@ $(document).ready(function(){
     //hide all procedures and comments initially
     $(".qa-procedure, .qa-comment").hide();
 
-    //enable toggle behaviour for boolean tests
-    $(".qa-boolean").button();
-
     //set tab index
     $("input:text, input:radio").each(function(i,e){ $(e).attr("tabindex", i) });
 
@@ -101,7 +139,7 @@ $(document).ready(function(){
     });
 
     //anytime an input changes run validation
-    $("form input").change(function(){validate($(this))});
+    $("form input").change(function(){check_status($(this))});
 
     $("#category_filter").change(filter_by_category);
 

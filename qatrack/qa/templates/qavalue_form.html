@@ -13,7 +13,7 @@
     {% endif %}
 {% endfor %}
 
-<tr class="qa-valuerow">
+<tr class="control-group qa-valuerow">
     {% with ref=form.fields.reference.initial %}
         <input type="hidden" class="qa-reference-val" value="{{ref.value}}"/>
         <input type="hidden" class="qa-reference-pk" value="{{ref.pk}}"/>
@@ -26,7 +26,6 @@
         <input type="hidden" class="qa-tolerance act_high" value="{{tol.act_high}}"/>
         <input type="hidden" class="qa-tolerance-type" value="{{tol.type}}"/>
         <input type="hidden" class="qa-tolerance-pk" value="{{tol.pk}}"/>
-
     {% endwith %}
 
     <input type="hidden" class="qa-contextname" value="{{form.fields.task_list_item.initial.short_name}}"/>
@@ -35,12 +34,13 @@
     {{form.task_list_item.as_hidden}}
     {{form.task_list_instance.as_hidden}}
     {% with task_list_item=form.fields.task_list_item.initial %}
+        <input type="hidden" class="qa-tasktype" value="{{task_list_item.task_type}}"/>
         <td class="qa-name">{{task_list_item.name}}</td>
         <td class="qa-category">{{task_list_item.category.name|title}}</td>
-        <td class="qa-value" title="{{form.value.help_text|safe}}">
+        <td class="controls qa-value" title="{{form.value.help_text|safe}}">
         {% if task_list_item.is_boolean %}
-            <span class="radio pull-left">{{form.value.0}}</span>
-            <span class="radio pull-right">{{form.value.1}}</span>
+            <span class="pull-left">{{form.value.0}}</span>
+            <span class="pull-right">{{form.value.1}}</span>
         {% else %}
              <span class="center span1">{{form.value}}</span>
         {% endif %}

@@ -10,7 +10,7 @@ import models
 class TaskListItemInstanceForm(forms.ModelForm):
     """Model form for use in a formset of task_list_items within a tasklistinstance"""
 
-    value = forms.FloatField(required=False, widget=forms.widgets.TextInput(attrs={"class":"qainput"}))
+    value = forms.FloatField(required=False, widget=forms.widgets.TextInput(attrs={"class":"qa-input"}))
     class Meta:
         model = models.TaskListItemInstance
 
@@ -52,10 +52,23 @@ class TaskListItemInstanceFormset(BaseTaskListItemInstanceFormset):
         item_models = (models.Reference, models.Tolerance, models.TaskListItem,)
         objects = (membership.reference, membership.tolerance, membership.task_list_item,)
         form.set_initial_fks(fieldnames,item_models,objects)
-    #---------------------------------------------------------------------------
+        if membership.task_list_item.task_type == "constant":
+            form.fields["value"].widget.attrs.update({
+                "value":membership.task_list_item.constant_value,
+                "disabled":True,
+            })
+            for field in ("value", "skipped", "comment",):
+                form.fields[field].widget.attrs["disabled"] = True
+
+        if membership.task_list_item.task_type == "composite":
+            form.fields["value"].widget.attrs.update({
+                "disabled":True,
+            })
+#---------------------------------------------------------------------------
     def set_widgets(self,form,membership):
         """add custom widget for boolean values"""
         if membership.task_list_item.is_boolean():
+            #temp store attributes so they can be restored to reset widget
             attrs = form.fields["value"].widget.attrs
             form.fields["value"].widget = RadioSelect(choices=[(0,"No"),(1,"Yes")])
             form.fields["value"].widget.attrs.update(attrs)

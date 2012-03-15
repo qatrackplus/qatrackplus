@@ -6,6 +6,7 @@
 {% endblock %}
 
 {% block extra_script %}
+    <script src="{% static "js/qautils.js" %}"></script>
     <script src="{% static "js/qa.js" %}"></script>
 {% endblock %}
 
@@ -38,7 +39,7 @@
     </div>
 </div>
 <div class="row">
-    <div class="span8">
+    <div class="span12">
         <form class="nosubmit form-inline" id="qa-form" method="POST" action="">
             {% csrf_token %}
 
@@ -65,13 +66,13 @@
             <table class="qa-table table table-bordered table-striped table-condensed">
                 <thead>
                     <tr>
-                        <th class="qa-name">Name</th>
-                        <th class="qa-category">Category</th>
+                        <th class="span3 qa-name">Name</th>
+                        <th class="span2 qa-category">Category</th>
                         <th class="qa-value">Value</th>
                         <th class="qa-skip">Skip</th>
-                        <th class="qa-tatus">Status</th>
-                        <th class="qa-showproc">&nbsp;</th>
-                        <th class="qa-showcmt">&nbsp;</th>
+                        <th class="qa-status">Status</th>
+                        <th class="qa-showproc">Comment</th>
+                        <th class="qa-showcmt">Procedure</th>
                         <th class="qa-reference">Reference</th>
                     </tr>
                 </thead>
@@ -82,7 +83,7 @@
                 </tbody>
             </table>
             <div class="actions">
-                <button type="submit" class="btn primary">Submit</button>
+                <button type="submit" class="btn btn-primary">Submit QA Results</button>
             </div>
         </form>
     </div>
