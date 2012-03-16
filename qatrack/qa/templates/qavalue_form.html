@@ -29,7 +29,7 @@
     {% endwith %}
 
     <input type="hidden" class="qa-contextname" value="{{form.fields.task_list_item.initial.short_name}}"/>
-    {{form.fields.reference.as_hidden}}
+    {{form.reference.as_hidden}}
     {{form.tolerance.as_hidden}}
     {{form.task_list_item.as_hidden}}
     {{form.task_list_instance.as_hidden}}
