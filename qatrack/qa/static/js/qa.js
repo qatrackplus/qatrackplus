@@ -2,6 +2,8 @@
 /***************************************************************/
 //Set up the values we will need to do validation on data
 var validation_data = {};
+var composite_ids = {};
+
 function initialize_qa(){
 
     $(".qa-valuerow").each(function(order){
@@ -31,6 +33,13 @@ function initialize_qa(){
         };
 
     });
+
+    $('.qa-tasktype[value="composite"]').each(function(){
+        var row = $(this).parents(".qa-valuerow");
+        var item_id = row.find('input[name$="task_list_item"]').val();
+        var name = row.find('.qa-contextname').val();
+        composite_ids[name] = item_id;
+    });
 }
 
 function get_value_for_row(input_row_element){
@@ -53,10 +62,44 @@ function get_value_for_row(input_row_element){
 /***************************************************************/
 //main function for handling test validation
 function check_status(input_element){
+
     var parent = input_element.parents("tr:first");
     var name = parent.find(".qa-contextname").val();
+
+    //update the current value of the item that just changed and check tolerances
     validation_data[name].current_value = get_value_for_row(input_element.parents(".qa-valuerow"));
     check_item_status(input_element);
+
+}
+
+function calculate_composites(){
+    var composites = $('.qa-tasktype[value="composite"]');
+    if (composites.length <= 0){
+        return;
+    }
+
+    $.getJSON(
+        "/qa/composite/",
+        {
+            qavalues:JSON.stringify(validation_data),
+            composite_ids:JSON.stringify(composite_ids)
+        },
+        function(data){
+            if (data.success){
+                $.each(data.results,function(name,result){
+                    set_value_by_name(name,result.value);
+                });
+            }
+        }
+    );
+
+}
+
+function set_value_by_name(name, value){
+    var row = $('.qa-contextname[value="'+name+'"]').parents(".qa-valuerow");
+    var input = row.find(".qa-value input");
+    input.val(value);
+    check_item_status(input);
 
 }
 //check a single qa items status
@@ -109,6 +152,13 @@ function set_valid_input(input_element){
 
 function valid_input(input_element){
     return (!isNaN(parseFloat(input_element.val())) && $.trim(input_element.val()) !== "") ;
+}
+
+function full_validation(){
+    $("#qa-form input").each(function(){
+        check_item_status($(this));
+        calculate_composites();
+    });
 }
 /***************************************************************/
 function filter_by_category(){
@@ -169,7 +219,11 @@ $(document).ready(function(){
     });
 
     //anytime an input changes run validation
-    $("form input").change(function(){check_status($(this))});
+    $("form input").change(function(){
+        check_status($(this));
+        calculate_composites();
+    });
+
 
     $("#category_filter").change(filter_by_category);
 
@@ -190,6 +244,8 @@ $(document).ready(function(){
             return false;
         }
     });
+
+    full_validation();
 
 });
 

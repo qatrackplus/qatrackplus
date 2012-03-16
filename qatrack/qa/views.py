@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.http import HttpResponse,HttpResponseRedirect
 from django.shortcuts import render,get_object_or_404
 from django.core.urlresolvers import reverse
-from django.views.generic import TemplateView, ListView, DetailView, FormView
+from django.views.generic import TemplateView, ListView, DetailView, FormView, View
 from django.utils.translation import ugettext as _
 from qatrack.qa import models
 from qatrack.units.models import Unit, UnitType
@@ -11,52 +11,89 @@ from qatrack.units.models import Unit, UnitType
 import forms
 
 #TODO: Move location of qa/template.html templates (up one level)
-#----------------------------------------------------------------------
-def get_composite_context(request):
-    """
-    Take a request and return a dictionary containing floats of all test values
-    that were not skipped.  Note that the request must be made via GET
 
-    The request comes in with a dictionary of lists of the form
+class JSONResponseMixin(object):
+    """bare bones JSON response mixin taken from Django docs"""
+    def render_to_response(self, context):
+        "Returns a JSON response containing 'context' as payload"
+        return self.get_json_response(self.convert_context_to_json(context))
 
-    {
-        "mytest": [mytest_id, mytest_value, mytest_skipped],
-        "foo": [foo_id, foo_value, foo_skipped],
-        ...
-        "bar": [bar_id, bar_value, bar_skipped],
-    }
+    def get_json_response(self, content, **httpresponse_kwargs):
+        "Construct an `HttpResponse` object."
+        return HttpResponse(content, content_type='application/json', **httpresponse_kwargs)
 
-    e.g.{ "temperature": [123, 22.0, "false"], "wedge_output": [112, 0, "true"]}
-    TODO: give more information regarding the required format for the
-    request
+    def convert_context_to_json(self, context):
+        "Convert the context dictionary into a JSON object"
+        # Note: This is *EXTREMELY* naive; in reality, you'll need
+        # to do much more complex handling to ensure that arbitrary
+        # objects -- such as Django model instances or querysets
+        # -- can be serialized as JSON.
+        return json.dumps(context)
 
-    """
-
-    composite_calc_context = {}
-    for name,properties in request.GET.iterlists():
-        if name not in ("cur_val", "cur_id"):
-            id_,val,skipped = properties
-            if skipped != 'true':
-                try:
-                    composite_calc_context[name] = float(val)
-                except ValueError:
-                    pass
-    return composite_calc_context
-
-#----------------------------------------------------------------------
-def validate(request, task_list_id):
+#============================================================================
+class CompositeCalculation(JSONResponseMixin, View):
     """validate all qa items in the request for the :model:`TaskList` with id task_list_id"""
 
-    response_dict = {
-        'status': None,
-    }
+    #----------------------------------------------------------------------
+    def get_json_data(self,name):
+        """return python data from GET json data"""
+        json_string = self.request.GET.get(name)
+        if not json_string:
+            return
 
-    #retrieve the task list item for the field that just changed
-    try:
-        task_list = models.TaskList.objects.get(pk=task_list_id)
-    except (TypeError, ValueError, models.TaskList.DoesNotExist):
-        response_dict['status'] = "Invalid Task List ID"
-        return HttpResponse(json.dumps(response_dict),mimetype="application/json")
+        try:
+            return json.loads(json_string)
+        except (KeyError, ValueError):
+            return
+
+    #----------------------------------------------------------------------
+    def get(self,request, *args, **kwargs):
+        """calculate and return all composite values"""
+        self.values = self.get_json_data("qavalues")
+        if not self.values:
+            self.render_to_response({"success":False,"errors":["Invalid QA Values"]})
+
+        self.composite_ids = self.get_json_data("composite_ids")
+        if not self.composite_ids:
+            return self.render_to_response({"success":False,"errors":["No Valid Composite ID's"]})
+
+        #grab calculation procedures for all the composite tests
+        self.composite_items = models.TaskListItem.objects.filter(
+            pk__in=self.composite_ids.values()
+        ).values_list("short_name", "calculation_procedure")
+
+
+        results = {}
+        for name, procedure in self.composite_items:
+            #set up clean calculation context each time so there
+            #is no potential conflicts between different composite tests
+            self.set_calculation_context()
+            try:
+                exec procedure in self.calculation_context
+                results[name] = {
+                    'value':self.calculation_context.pop("result"),
+                    'error':None
+                }
+            except:
+                results[name] = {'value':None, 'error':"Invalid Test"}
+
+        return self.render_to_response({"success":True,"errors":[],"results":results})
+
+    #----------------------------------------------------------------------
+    def set_calculation_context(self):
+        """set up the environment that the composite test will be calculated in"""
+
+        #TODO: at the minimum we need to define some basic tests (mean, stddev etc)
+        self.calculation_context = {}
+
+        for short_name,info in self.values.iteritems():
+            val = info["current_value"]
+            if val is not None:
+                try:
+                    self.calculation_context[short_name] = float(val)
+                except ValueError:
+                    pass
+
 
 
 #============================================================================

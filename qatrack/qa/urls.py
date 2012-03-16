@@ -6,7 +6,7 @@ import models
 import views
 
 urlpatterns = patterns('',
-    url(r"^validate/([\d+])/$", views.validate, name="validate"),
+    url(r"^composite/$", views.CompositeCalculation.as_view(), name="composite"),
     url(r"^task_lists/$",
         ListView.as_view(model=models.TaskList),
         name="task_lists"
