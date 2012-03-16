@@ -1,1 +1,9 @@
 Django==1.4b1
+coverage==3.5.1
+django-appconf==0.5
+django-coverage==1.2.2
+django-registration==0.7
+logilab-astng==0.23.1
+logilab-common==0.57.1
+pep8==0.6.1
+pylint==0.25.1

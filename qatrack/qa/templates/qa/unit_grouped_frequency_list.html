@@ -1,0 +1,38 @@
+{% extends "site_base.html" %}
+
+{% block body %}
+    <h2>{{frequency|title}} QA Task Lists</h2>
+    {% for unit_type, unit_lists in unit_type_groups %}
+    <h3>{{unit_type.name}}</h3>
+
+    <table class="table table-bordered table-striped table-condensed">
+
+        <thead>
+            <tr>
+                <th>Unit</th>
+                <th>Task List</th>
+                <th>{{ frequency|title }} QA Last Performed</th>
+                <th>QA Status</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for unit, task_lists in unit_lists %}
+           {% for task_list in task_lists %}
+            <tr>
+                <td>
+                    <a class="nav-list" href="{% url qa_by_frequency_unit frequency unit.number %}" title="Perform {{frequency}} QA for {{unit.name}}">
+                    {{unit.name}}
+                    </a>
+                </td>
+                {% with last_completed=task_list.last_completed_instance %}
+                <td>{{task_list.name|title}}</td>
+                <td>{{last_completed.created}}</td>
+                <td>{{last_completed.status}}</td>
+                {% endwith %}
+            </tr>
+            {% endfor %}
+        {% endfor %}
+        </tbody>
+    </table>
+    {% endfor %}
+{% endblock %}

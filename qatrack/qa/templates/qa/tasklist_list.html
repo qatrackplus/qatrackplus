@@ -1,0 +1,12 @@
+{% extends "site_base.html" %}
+
+{% block body %}
+
+    <h2>Task Lists</h2>
+    <ul>
+        {% for task_list in object_list %}
+            <li>{{ task_list.name }}</li>
+        {% endfor %}
+    </ul>
+
+{% endblock %}

@@ -1,0 +1,29 @@
+input[type="text"].qa-input {
+    width:85px;
+    height:12px;
+    text-align:right;
+}
+
+.qa-table td.qa-value {
+    width:90px;
+}
+.qa-table td, .qa-table th{
+    text-align:center;
+
+}
+.qa-table td.qa-name {
+    min-width:200px;
+    text-align:left;
+}
+
+.qa-table td.qa-category {
+    min-width:200px;
+}
+
+tr.qa-comment td, tr.qa-procedure td {
+    text-align:left;
+}
+
+.;qa-reference, .qa-showproc, .qa-showcmt, .qa-skip, .qa-status {
+    width: 60px;
+}
