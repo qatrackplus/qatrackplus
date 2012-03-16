@@ -9,6 +9,9 @@ from qatrack.units.models import Unit, UnitType, Modality
 import json
 import qatrack.qa.views
 
+#NOTE THESE TESTS ARE OUT OF DATE AND DO NOT CORRESPOND TO THE CURRENT
+#VERSION OF QATRACK
+
 #============================================================================
 class QAValidationTest(TestCase):
     """Test class for testing validation views"""
