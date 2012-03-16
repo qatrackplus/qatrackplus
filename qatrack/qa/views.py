@@ -37,7 +37,7 @@ class CompositeCalculation(JSONResponseMixin, View):
     #----------------------------------------------------------------------
     def get_json_data(self,name):
         """return python data from GET json data"""
-        json_string = self.request.GET.get(name)
+        json_string = self.request.POST.get(name)
         if not json_string:
             return
 
@@ -47,8 +47,11 @@ class CompositeCalculation(JSONResponseMixin, View):
             return
 
     #----------------------------------------------------------------------
-    def get(self,request, *args, **kwargs):
-        """calculate and return all composite values"""
+    def post(self,request, *args, **kwargs):
+        """calculate and return all composite values
+        Note we use post here because the query strings can get very long and
+        we may run into browser limits with GET.
+        """
         self.values = self.get_json_data("qavalues")
         if not self.values:
             self.render_to_response({"success":False,"errors":["Invalid QA Values"]})

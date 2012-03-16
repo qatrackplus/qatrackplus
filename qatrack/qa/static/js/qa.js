@@ -58,20 +58,22 @@ function calculate_composites(){
         return;
     }
 
-    $.getJSON(
-        "/qa/composite/",
-        {
+    $.ajax({
+        url:"/qa/composite/",
+        type:"POST",
+        data:{
             qavalues:JSON.stringify(validation_data),
             composite_ids:JSON.stringify(composite_ids)
         },
-        function(data){
+        success: function(data){
             if (data.success){
                 $.each(data.results,function(name,result){
                     set_value_by_name(name,result.value);
                 });
             }
-        }
-    );
+        },
+        dataType:"json"
+    });
 
 }
 
