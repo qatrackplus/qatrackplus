@@ -25,7 +25,7 @@ var QAUtils = new function() {
     */
     this.percent_difference = function(measured, reference){
             //reference = 0. is a special case
-            if (Math.abs(reference.value) < this.EPSILON){
+            if (Math.abs(reference) < this.EPSILON){
                 return absolute_difference(measured,reference);
             }
             return 100.*(measured-reference)/reference;
@@ -35,13 +35,17 @@ var QAUtils = new function() {
             return measured - reference;
     };
 
-    this.test_tolerance = function(value, reference, tolerances){
+    this.test_tolerance = function(value, reference, tolerances, is_bool){
         //compare a value to a reference value and check whether it is
         //within tolerances or not.
         //Return an object with a 'diff' and 'result' value
         var diff;
         var status;
         var message;
+
+        if (is_bool){
+            return this.test_bool(value, reference)
+        }
 
         if (tolerances.type == this.RELATIVE){
             diff = this.percent_difference(value,reference);
@@ -75,6 +79,27 @@ var QAUtils = new function() {
         }
 
         return {status:status, gen_status:gen_status, diff:diff, message:message};
+    }
+
+    this.test_bool = function(value,reference){
+        var status, gen_status;
+        var diff = value-reference;
+        var message;
+
+        if (Math.abs(diff)> this.EPSILON){
+            if (reference > 0){
+                status = this.ACT_LOW;
+            }else{
+                status = this.ACT_HIGH;
+            }
+            message = "FAIL";
+            gen_status == this.ACTION;
+        }else{
+            message = "PASS";
+            gen_status = this.WITHIN_TOL;
+        }
+
+        return {status:status, gen_status:gen_status, diff:diff, message:message}
     }
 
 }();

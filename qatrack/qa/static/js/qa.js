@@ -22,7 +22,7 @@ function initialize_qa(){
 
         };
 
-        
+
         validation_data[context_name] = {
             name:context_name,
             tolerances:tolerances,
@@ -58,24 +58,33 @@ function check_status(input_element){
     validation_data[name].current_value = get_value_for_row(input_element.parents(".qa-valuerow"));
     check_item_status(input_element);
 
-
 }
 //check a single qa items status
 function check_item_status(input_element){
+
+
     var parent = input_element.parents("tr:first");
+    var name = parent.find(".qa-contextname").val();
+    var is_bool = parent.find(".qa-tasktype").val() === "boolean";
     var qastatus = parent.find(".qa-status");
+    var val = get_value_for_row(input_element.parents(".qa-valuerow"));
+
+    //remove any previous formatting
     qastatus.removeClass("btn-danger btn-warning btn-success");
     qastatus.text("Not Done");
-    if (!valid_input(input_element)){
+
+
+    //ensure numerical value and highlight input element appropriately
+    if (val === null){
         set_invalid_input(input_element);
         return;
     }
     set_valid_input(input_element);
-    var val = get_value_for_row(input_element.parents(".qa-valuerow"));
-    var name = parent.find(".qa-contextname").val();
+
+
     var tolerances = validation_data[name].tolerances;
     var reference = validation_data[name].reference;
-    var result = QAUtils.test_tolerance(val,reference.value,tolerances);
+    var result = QAUtils.test_tolerance(val,reference.value,tolerances, is_bool);
 
     qastatus.text(result.message);
 
