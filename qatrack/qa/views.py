@@ -1,9 +1,9 @@
 import json
 from django.contrib import messages
 from django.http import HttpResponse,HttpResponseRedirect
-from django.shortcuts import render,get_object_or_404
+from django.shortcuts import get_object_or_404
 from django.core.urlresolvers import reverse
-from django.views.generic import TemplateView, ListView, DetailView, FormView, View
+from django.views.generic import ListView, FormView, View
 from django.utils.translation import ugettext as _
 from qatrack.qa import models
 from qatrack.units.models import Unit, UnitType
@@ -15,15 +15,15 @@ import forms
 class JSONResponseMixin(object):
     """bare bones JSON response mixin taken from Django docs"""
     def render_to_response(self, context):
-        "Returns a JSON response containing 'context' as payload"
+        """Returns a JSON response containing 'context' as payload"""
         return self.get_json_response(self.convert_context_to_json(context))
 
     def get_json_response(self, content, **httpresponse_kwargs):
-        "Construct an `HttpResponse` object."
+        """Construct an `HttpResponse` object."""
         return HttpResponse(content, content_type='application/json', **httpresponse_kwargs)
 
     def convert_context_to_json(self, context):
-        "Convert the context dictionary into a JSON object"
+        """Convert the context dictionary into a JSON object"""
         # Note: This is *EXTREMELY* naive; in reality, you'll need
         # to do much more complex handling to ensure that arbitrary
         # objects -- such as Django model instances or querysets
@@ -93,8 +93,6 @@ class CompositeCalculation(JSONResponseMixin, View):
                     self.calculation_context[short_name] = float(val)
                 except ValueError:
                     pass
-
-
 
 #============================================================================
 class PerformQAView(FormView):
