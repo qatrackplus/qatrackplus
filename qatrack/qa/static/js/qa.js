@@ -22,39 +22,47 @@ function initialize_qa(){
 
         };
 
+        
         validation_data[context_name] = {
             name:context_name,
             tolerances:tolerances,
-            reference:reference
+            reference:reference,
+            current_value: get_value_for_row($(this))
         };
 
     });
 }
 
+function get_value_for_row(input_row_element){
+    if ($(input_row_element).find(".qa-tasktype").val() === "boolean"){
+        if ($(input_row_element).find(":checked").length > 0){
+            return parseFloat($(input_row_element).find(":checked").val());
+        }else{
+            return null;
+        }
+    }else {
+        var val = parseFloat(input_row_element.find(".qa-value input").val());
+        if (isNaN(val)){
+            return null;
+        }else{
+            return val;
+        }
+    }
+
+}
 /***************************************************************/
 //main function for handling test validation
 function check_status(input_element){
-
+    var parent = input_element.parents("tr:first");
+    var name = parent.find(".qa-contextname").val();
+    validation_data[name].current_value = get_value_for_row(input_element.parents(".qa-valuerow"));
     check_item_status(input_element);
 
 
 }
-
-function set_invalid_input(input_element){
-    input_element.parents(".control-group").removeClass("success");
-    input_element.parents(".control-group").addClass("error");
-}
-function set_valid_input(input_element){
-    input_element.parents(".control-group").removeClass("error");
-    input_element.parents(".control-group").addClass("success");
-}
-
-function valid_input(input_element){
-    return (!isNaN(parseFloat(input_element.val())) && $.trim(input_element.val()) !== "") ;
-}
 //check a single qa items status
 function check_item_status(input_element){
-    var parent = input_element.parents("tr:first")
+    var parent = input_element.parents("tr:first");
     var qastatus = parent.find(".qa-status");
     qastatus.removeClass("btn-danger btn-warning btn-success");
     qastatus.text("Not Done");
@@ -63,7 +71,7 @@ function check_item_status(input_element){
         return;
     }
     set_valid_input(input_element);
-    var val = parseFloat(input_element.val())
+    var val = get_value_for_row(input_element.parents(".qa-valuerow"));
     var name = parent.find(".qa-contextname").val();
     var tolerances = validation_data[name].tolerances;
     var reference = validation_data[name].reference;
@@ -79,6 +87,19 @@ function check_item_status(input_element){
         qastatus.addClass("btn-danger");
     }
 
+}
+
+function set_invalid_input(input_element){
+    input_element.parents(".control-group").removeClass("success");
+    input_element.parents(".control-group").addClass("error");
+}
+function set_valid_input(input_element){
+    input_element.parents(".control-group").removeClass("error");
+    input_element.parents(".control-group").addClass("success");
+}
+
+function valid_input(input_element){
+    return (!isNaN(parseFloat(input_element.val())) && $.trim(input_element.val()) !== "") ;
 }
 /***************************************************************/
 function filter_by_category(){
