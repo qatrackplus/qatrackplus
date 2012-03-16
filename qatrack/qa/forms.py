@@ -25,7 +25,7 @@ class TaskListItemInstanceForm(forms.ModelForm):
         if "value" in cleaned_data:
             value = cleaned_data["value"]
             if value is None and not skipped:
-                self._errors["value"] = self.error_class(["Value required (or skip)"])
+                self._errors["value"] = self.error_class(["Value required"])
                 del cleaned_data["value"]
         return cleaned_data
 
