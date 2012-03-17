@@ -100,7 +100,7 @@ class CompositeCalculation(JSONResponseMixin, View):
 #============================================================================
 class PerformQAView(FormView):
     """view for users to complete a qa task list"""
-    template_name = "qa/perform_task_list.html"
+    template_name = "perform_task_list.html"
 
     context_object_name = "task_list"
     form_class = forms.TaskListInstanceForm
@@ -164,7 +164,7 @@ class UnitFrequencyListView(ListView):
     """list daily/monthly/annual task lists for a unit"""
 
     context_object_name = "task_lists"
-    template_name = "qa/frequency_list.html"
+    template_name = "frequency_list.html"
 
     #----------------------------------------------------------------------
     def get_queryset(self):
@@ -186,7 +186,7 @@ class UnitFrequencyListView(ListView):
 #============================================================================
 class UnitGroupedFrequencyListView(ListView):
     """view for grouping all task lists with a certain frequency for all units"""
-    template_name = "qa/unit_grouped_frequency_list.html"
+    template_name = "unit_grouped_frequency_list.html"
     #----------------------------------------------------------------------
     def get_queryset(self):
         """grab all task lists with given frequency"""
