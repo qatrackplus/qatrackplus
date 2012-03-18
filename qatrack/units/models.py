@@ -44,7 +44,7 @@ class Modality(models.Model):
 
     class Meta:
         verbose_name_plural = "Modalities"
-
+        unique_together = [("type","energy")]
 
 #============================================================================
 class Unit(models.Model):
