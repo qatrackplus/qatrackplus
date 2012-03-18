@@ -15,7 +15,10 @@ class UnitType(models.Model):
 
     name = models.CharField(max_length=50, help_text=_("Name for this unit type"))
     vendor = models.CharField(max_length=50, help_text=_("e.g. Elekta"))
-    model = models.CharField(max_length=50, help_text=_("Optional model name for this group (e.g. Beam Modulator)"), null=True, blank=True)
+    model = models.CharField(max_length=50, help_text=_("Optional model number for this group (e.g. Beam Modulator)"), null=True, blank=True)
+    
+    class Meta:
+        unique_together = [("name","model")]
     
     #---------------------------------------------------------------------------
     def __unicode__(self):
@@ -34,6 +37,10 @@ class Modality(models.Model):
     type = models.CharField(_("Treatement modality type"), choices=type_choices, max_length=20)
     energy = models.FloatField(help_text=_("Nominal energy (in MV for photons and MeV for electrons"))
 
+    class Meta:
+        verbose_name_plural = "Modalities"
+        unique_together = [("type","energy")]
+
     #---------------------------------------------------------------------------
     def __unicode__(self):
         if self.type == "photon":
@@ -41,9 +48,6 @@ class Modality(models.Model):
         else:
             unit, particle = "MeV", "Electron"
         return "<Modality(%.1f%s,%s)>" % (self.energy, unit, particle)
-
-    class Meta:
-        verbose_name_plural = "Modalities"
 
 
 #============================================================================

@@ -89,7 +89,7 @@ class Reference(models.Model):
     TYPE_CHOICES = (("yes_no", "Yes / No"), ("numerical", "Numerical"), )
 
 
-    name = models.CharField(max_length=50, help_text=_("Enter a short name for this reference"))
+    name = models.CharField(unique=True, max_length=50, help_text=_("Enter a short name for this reference"))
     ref_type = models.CharField(max_length=15, choices=TYPE_CHOICES)
     value = models.FloatField(help_text=_("For Yes/No tests, enter 1 for Yes and 0 for No"))
 
@@ -116,12 +116,12 @@ class Tolerance(models.Model):
     and action levels
     """
     TYPE_CHOICES = (("absolute", "Absolute"),("percentage", "Percentage"),)
-    name = models.CharField(max_length=50, help_text="Enter a short name for this tolerance type")
-    type = models.CharField(max_length=20, help_text="Select whether this will be an absolute or relative tolerance criteria",choices=TYPE_CHOICES)
-    act_low = models.FloatField(verbose_name="Action Low", help_text="Absolute value of lower action level", null=True)
-    tol_low = models.FloatField(verbose_name="Tolerance Low", help_text="Absolute value of lower tolerance level", null=True)
-    tol_high = models.FloatField(verbose_name="Tolerance High", help_text="Absolute value of upper tolerance level", null=True)
-    act_high = models.FloatField(verbose_name="Action High", help_text="Absolute value of upper action level", null=True)
+    name = models.CharField(max_length=50, unique=True, help_text=_("Enter a short name for this tolerance type"))
+    type = models.CharField(max_length=20, help_text=_("Select whether this will be an absolute or relative tolerance criteria"),choices=TYPE_CHOICES)
+    act_low = models.FloatField(verbose_name="Action Low", help_text=_("Absolute value of lower action level"), null=True)
+    tol_low = models.FloatField(verbose_name="Tolerance Low", help_text=_("Absolute value of lower tolerance level"), null=True)
+    tol_high = models.FloatField(verbose_name="Tolerance High", help_text=_("Absolute value of upper tolerance level"), null=True)
+    act_high = models.FloatField(verbose_name="Action High", help_text=_("Absolute value of upper action level"), null=True)
 
     #who created this tolerance
     created_date = models.DateTimeField(auto_now_add=True)
@@ -258,6 +258,7 @@ class TaskListMembership(models.Model):
     #============================================================================
     class Meta:
         ordering = ("task_list_item_order", )
+        unique_together = [("task_list_item","task_list")]
     #---------------------------------------------------------------------------
     def __unicode__(self):
         """return display representation of object"""
