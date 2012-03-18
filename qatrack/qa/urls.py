@@ -4,6 +4,10 @@ from django.views.generic import ListView
 
 import models
 import views
+from qatrack.qa import api
+import api
+
+tlii_resource = api.TaskListItemInstanceResource()
 
 urlpatterns = patterns('',
     url(r"^composite/$", views.CompositeCalculation.as_view(), name="composite"),
@@ -15,5 +19,8 @@ urlpatterns = patterns('',
     url(r"^task_lists/(?P<pk>\d+)/$", views.PerformQAView.as_view(), name="perform_qa"),
     url(r"^task_lists/(\w+)/$", views.UnitGroupedFrequencyListView.as_view(), name="qa_by_frequency"),
 
+    #api urls
+    url(r"^api/",include(tlii_resource.urls)),
+    
 
 )

@@ -144,6 +144,8 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.humanize',
 
+    'tastypie',
+    
     #qatrack specific
     'qatrack.units',
     'qatrack.qa',
