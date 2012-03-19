@@ -83,7 +83,7 @@ def create_references():
         ("One Expected", "numerical", 1, bob),
         ("Output reference","numerical",100,bob),
         ("Standard T (deg C)", "numerical", 22,bob),
-        ("Standard P (mmHg)", "numerical", 760.3, bob),
+        ("Standard P (mmHg)", "numerical", 760, bob),
     )
     
     for name, rtype, value, user in refs:
@@ -201,12 +201,11 @@ def create_memberships():
         
     
     members = (
-        
-        ("sag_laser","Zero Expected", "+- 2mm/3mm"),
-        ("output","Output reference","+- 2%/3%"),
         ("temperature", "Standard T (deg C)", "Temperature Tol"),
         ("pressure", "Standard P (mmHg)", "Pressure Tol"),
         ("ftp", "One Expected", "+- 2%/3%"),
+        ("output","Output reference","+- 2%/3%"),        
+        ("sag_laser","Zero Expected", "+- 2mm/3mm"),
     )
     
     for order, (item_name, ref_name, tol_name) in enumerate(members):
@@ -229,7 +228,7 @@ def create_memberships():
             except django.db.IntegrityError:
                 pass 
     
-    
+
     
         
     
