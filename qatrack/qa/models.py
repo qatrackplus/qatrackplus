@@ -229,6 +229,14 @@ class TaskListItemInstance(models.Model):
     task_list_instance = models.ForeignKey(TaskListInstance,editable=False)
     task_list_item = models.ForeignKey(TaskListItem)
 
+    #----------------------------------------------------------------------
+    def save(self, *args, **kwargs):
+        """set status to unreviewed if not previously set"""
+        if not self.status:
+            self.status = self.UNREVIEWED
+        super(TaskListItemInstance,self).save(*args,**kwargs)
+
+
 
     #----------------------------------------------------------------------
     def __unicode__(self):
@@ -246,7 +254,7 @@ class TaskListMembership(models.Model):
     :model:`TaskList`s and which order they are to be placed in
     """
 
-    #TODO: need validation to ensure task list items short names are unique within 
+    #TODO: need validation to ensure task list items short names are unique within
     #a task list
     task_list_item = models.ForeignKey(TaskListItem)
     task_list = models.ForeignKey(TaskList)

@@ -4,10 +4,15 @@ from django.views.generic import ListView
 
 import models
 import views
-from qatrack.qa import api
-import api
 
-tlii_resource = api.TaskListItemInstanceResource()
+from qatrack.qa import api
+from tastypie.api import Api
+
+v1_api = Api(api_name="v1")
+v1_api.register(api.TaskListItemResource())
+v1_api.register(api.TaskListItemInstanceResource())
+v1_api.register(api.ReferenceResource())
+v1_api.register(api.ToleranceResource())
 
 urlpatterns = patterns('',
     url(r"^composite/$", views.CompositeCalculation.as_view(), name="composite"),
@@ -20,7 +25,7 @@ urlpatterns = patterns('',
     url(r"^task_lists/(\w+)/$", views.UnitGroupedFrequencyListView.as_view(), name="qa_by_frequency"),
 
     #api urls
-    url(r"^api/",include(tlii_resource.urls)),
-    
+    url(r"^api/",include(v1_api.urls)),
+
 
 )
