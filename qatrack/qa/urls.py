@@ -16,13 +16,14 @@ v1_api.register(api.ToleranceResource())
 
 urlpatterns = patterns('',
     url(r"^composite/$", views.CompositeCalculation.as_view(), name="composite"),
-    url(r"^task_lists/$",
-        ListView.as_view(model=models.TaskList),
-        name="task_lists"
-    ),
+
+    #performing qa
+    url(r"^task_lists/$",ListView.as_view(model=models.TaskList), name="task_lists" ),
     url(r"^task_lists/(\w+)/(\d+)/$", views.UnitFrequencyListView.as_view(), name="qa_by_frequency_unit"),
     url(r"^task_lists/(?P<pk>\d+)/$", views.PerformQAView.as_view(), name="perform_qa"),
     url(r"^task_lists/(\w+)/$", views.UnitGroupedFrequencyListView.as_view(), name="qa_by_frequency"),
+
+
 
     #api urls
     url(r"^api/",include(v1_api.urls)),
