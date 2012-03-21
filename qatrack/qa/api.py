@@ -22,7 +22,7 @@ class TaskListItemInstanceResource(ModelResource):
     tolerance = tastypie.fields.ToOneField("qatrack.qa.api.ToleranceResource","tolerance", full=True)
 
     class Meta:
-        queryset = models.TaskListItemInstance.objects.all()
+        #queryset = models.TaskListItemInstance.objects.all()
         resource_name = "values"
 
     #----------------------------------------------------------------------

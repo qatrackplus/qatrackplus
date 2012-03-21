@@ -11,8 +11,8 @@ class TaskListItemInstanceForm(forms.ModelForm):
     """Model form for use in a formset of task_list_items within a tasklistinstance"""
 
     value = forms.FloatField(required=False, widget=forms.widgets.TextInput(attrs={"class":"qa-input"}))
-    class Meta:
-        model = models.TaskListItemInstance
+    #class Meta:
+    #    model = models.TaskListItemInstance
 
     #----------------------------------------------------------------------
     def clean(self):
@@ -100,5 +100,5 @@ class TaskListInstanceForm(forms.ModelForm):
     """parent form for doing qa task list"""
 
     #----------------------------------------------------------------------
-    class Meta:
-        model = models.TaskListInstance
+    #class Meta:
+    #    model = models.TaskListInstance
