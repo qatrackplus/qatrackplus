@@ -6,8 +6,8 @@ from django.core import urlresolvers
 from django.contrib.contenttypes.models import ContentType
 
 from django.dispatch import receiver
-from django.db.models.signals import post_save
-
+from django.db.models.signals import post_save, m2m_changed
+from django.db.models import signals
 
 
 
@@ -18,10 +18,12 @@ from django.db.models.signals import post_save
 class Reference(models.Model):
     """Reference values for various QA :model:`TaskListItem`s"""
 
-    TYPE_CHOICES = (("yes_no", "Yes / No"), ("numerical", "Numerical"), )
+    BOOLEAN = "boolean"
+    NUMERICAL = "numerical"
+    TYPE_CHOICES = ((BOOLEAN, "Yes / No"), (NUMERICAL, "Numerical"), )
 
 
-    name = models.CharField(unique=True, max_length=50, help_text=_("Enter a short name for this reference"))
+    name = models.CharField(max_length=50, help_text=_("Enter a short name for this reference"))
     ref_type = models.CharField(max_length=15, choices=TYPE_CHOICES)
     value = models.FloatField(help_text=_("For Yes/No tests, enter 1 for Yes and 0 for No"))
 
@@ -36,10 +38,20 @@ class Reference(models.Model):
     modified = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(User,editable=False,related_name="reference_modifiers")
 
+
+
     #---------------------------------------------------------------------------
     def __unicode__(self):
         """more helpful interactive display name"""
-        return "Reference(%s)"%self.name
+        if self.ref_type == "yes_no":
+            if self.value == 1:
+                return "Reference(%s=Yes Expected)"%(self.name,)
+            elif self.value == 0:
+                return "Reference(%s=No Expected)"%(self.name,)
+            else:
+                return "Reference(%s=Invalid Boolean)"%(self.name,)
+
+        return "Reference(%s=%g)"%(self.name,self.value)
 
 #============================================================================
 class Tolerance(models.Model):
@@ -154,12 +166,11 @@ class TaskListItem(models.Model):
         """return display representation of object"""
         return "TaskListItem(%s)" % self.name
 
-
+#============================================================================
 class TaskListItemInfo(models.Model):
-
-    task_list_item = models.ForeignKey(TaskListItem)
     unit = models.ForeignKey(Unit)
-    reference = models.ForeignKey(Reference,null=True)
+    task_list_item = models.ForeignKey(TaskListItem)
+    reference = models.ForeignKey(Reference,verbose_name=_("Current Reference"),null=True,editable=False)
     tolerance = models.ForeignKey(Tolerance,null=True)
 
 
@@ -222,7 +233,6 @@ def new_unit_created(*args, **kwargs):
         unit_task_lists_freq.save()
 
 
-
 #============================================================================
 class UnitTaskLists(models.Model):
     """keeps track of which units should perform which task lists"""
@@ -251,8 +261,28 @@ class UnitTaskLists(models.Model):
         verbose_name_plural = _("Choose Unit Task Lists")
 
     #----------------------------------------------------------------------
+    def name(self):
+        return self.__unicode__()
+
+    #----------------------------------------------------------------------
     def __unicode__(self):
         return ("%s %s" %(self.unit.name, self.frequency)).title()
+
+#----------------------------------------------------------------------
+@receiver(m2m_changed, sender=UnitTaskLists.task_lists.through)
+def unit_task_list_change(*args,**kwargs):
+    """"""
+    if kwargs["action"] == "post_add":
+        unit_task_list = kwargs["instance"]
+        for task_list in unit_task_list.task_lists.all():
+            task_list_items = task_list.task_list_items.all()
+            for task_list_item in task_list_items:
+                TaskListItemInfo.objects.get_or_create(
+                    unit = unit_task_list.unit,
+                    task_list_item = task_list_item
+                )
+
+    print kwargs
 
 ##============================================================================
 #class TaskListItemInstance(models.Model):

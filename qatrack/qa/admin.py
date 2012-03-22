@@ -1,9 +1,11 @@
 import datetime
 
 import django.forms as forms
-from django.utils.translation import ugettext as _
+import django.db
 
+from django.utils.translation import ugettext as _
 from django.contrib import admin
+
 import qatrack.qa.models as models
 from qatrack.units.models import Unit
 import qatrack.settings as settings
@@ -41,13 +43,81 @@ class CategoryAdmin(admin.ModelAdmin):
     """QA categories admin"""
     prepopulated_fields =  {'slug': ('name',)}
 
+
+class ReferenceInline(admin.TabularInline):
+    model = models.Reference
+
 #============================================================================
+class TaskListItemInfoForm(forms.ModelForm):
+    reference_value = forms.FloatField(
+        label=_("Update current reference value"),
+        help_text=_("For Yes/No tests, enter 1 for Yes and 0 for No"),
+    )
+    reference_type = forms.ChoiceField(choices=models.Reference.TYPE_CHOICES)
+
+    #----------------------------------------------------------------------
+    def clean(self):
+        """make sure valid numbers are entered for boolean data"""
+        print self.cleaned_data
+        if "reference_value" not in self.cleaned_data:
+            return self.cleaned_data
+        ref_value = self.cleaned_data["reference_value"]
+        ref_type = self.cleaned_data["reference_type"]
+
+        if ref_type == models.Reference.BOOLEAN:
+            if int(ref_value) not in (0,1):
+                raise forms.ValidationError(_("Yes/No values must be 0 or 1"))
+
+        return self.cleaned_data
+
+    #tolerance_type = forms.ChoiceField(
+        #help_text=_("Select whether this will be an absolute or relative tolerance criteria"),
+        #choices=TYPE_CHOICES,
+    #)
+    #act_low = forms.FloatField(label=_("Lower Action Level"))
+    #tol_low = forms.FloatField(label=_("Lower Tolerance Level"))
+    #tol_high = forms.FloatField(label=_("Upper Tolerance Level"))
+    #act_high = forms.FloatField(label=_("Upper Action Level"))
+
+    class Meta:
+        model = models.TaskListItemInfo
+
+
 class TaskListItemInfoAdmin(admin.ModelAdmin):
     """"""
+    form = TaskListItemInfoForm
+    fields = (
+        "unit", "task_list_item",
+        "reference", "tolerance",
+        "reference_value", "reference_type",
+        #"tolerance_type", "act_low", "tol_low", "tol_high","act_high"
+    )
     list_display = ["task_list_item", "unit", "reference", "tolerance"]
     list_filter = ["task_list_item","unit"]
-    list_editable = ["reference","tolerance"]
+    readonly_fields = ("task_list_item","unit","reference")
 
+    def save_model(self, request, item_info, form, change):
+        ref = models.Reference(
+            value=form["reference_value"].value(),
+            ref_type = form["reference_type"].value(),
+            created_by = request.user,
+            modified_by = request.user,
+            name = "%s %s ref" % (item_info.unit.name,item_info.task_list_item.name)
+        )
+        ref.save()
+        item_info.reference = ref
+
+        #tolerances = ("act_low", "tol_low", "tol_high", "act_high")
+        #kwargs = dict([(x,form[x]) for x in tolerances])
+        #kwargs["type"] = forms["tolerance_type"],
+        #kwargs["name"] = "%s %s
+        #tolerance = models.Tolerance(
+            #act_low = form["act_low"].value(),
+            #tol_low = form["tol_low"].value(),
+            #tol_high =
+
+        #)
+        super(TaskListItemInfoAdmin,self).save_model(request,item_info,form,change)
 
 #============================================================================
 class TaskListAdmin(SaveUserMixin, admin.ModelAdmin):
@@ -101,19 +171,23 @@ class TaskListItemAdmin(SaveUserMixin, admin.ModelAdmin):
 class UnitTaskListAdmin(admin.ModelAdmin):
     readonly_fields = ("unit","frequency",)
     filter_horizontal = ("task_lists",)
-
+    list_display = ["name", "unit", "frequency"]
+    list_filter = ["unit", "frequency"]
     #----------------------------------------------------------------------
-    def save_model(self, request, unit_task_list, form, change):
+    def save_related(self, request, form, formsets, change):
         """create item info if just being created"""
-        super(UnitTaskListAdmin, self).save_model(request, unit_task_list, form, change)
+        super(UnitTaskListAdmin, self).save_related(request, form, formsets, change)
+        return
+        unit_task_list = form.instance()
+        for task_list in unit_task_list.task_lists.all():
+            task_list_items = task_list.task_list_items.all()
+            for task_list_item in task_list_items:
+                models.TaskListItemInfo.objects.get_or_create(
+                    unit = unit,
+                    task_list_item = task_list_item
+                )
 
-        #new = not change
-        #if new:
-        #    for unit in form.instance.units.all():
-        #        item_info = models.TaskListItemInfo(unit=unit, task_list_item=form.instance)
-        #        item_info.save()
-
-admin.site.register([models.Reference, models.Tolerance], BasicSaveUserAdmin)
+admin.site.register([models.Tolerance], BasicSaveUserAdmin)
 admin.site.register([models.Category], CategoryAdmin)
 admin.site.register([models.TaskList],TaskListAdmin)
 admin.site.register([models.TaskListItem],TaskListItemAdmin)
