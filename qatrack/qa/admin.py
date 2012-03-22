@@ -50,7 +50,7 @@ class ReferenceInline(admin.TabularInline):
 #============================================================================
 class TaskListItemInfoForm(forms.ModelForm):
     reference_value = forms.FloatField(
-        label=_("Update current reference value"),
+        label=_("Update reference"),
         help_text=_("For Yes/No tests, enter 1 for Yes and 0 for No"),
     )
     reference_type = forms.ChoiceField(choices=models.Reference.TYPE_CHOICES)
@@ -102,7 +102,7 @@ class TaskListItemInfoAdmin(admin.ModelAdmin):
             ref_type = form["reference_type"].value(),
             created_by = request.user,
             modified_by = request.user,
-            name = "%s %s ref" % (item_info.unit.name,item_info.task_list_item.name)
+            name = "%s %s" % (item_info.unit.name,item_info.task_list_item.name)
         )
         ref.save()
         item_info.reference = ref

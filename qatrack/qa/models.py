@@ -140,13 +140,13 @@ class TaskListItem(models.Model):
     #----------------------------------------------------------------------
     def set_references(self):
         """allow user to go to references"""
-        return ""
+
         url = "/admin/qa/tasklistiteminfo/?"
         item_filter = "task_list_item__id__exact=%d" % self.pk
 
         unit_filter = "unit__id__exact=%d"
-
-        urls = [(u.name, url+item_filter+"&"+ unit_filter%u.pk) for u in self.units.all()]
+        info_set = self.tasklistiteminfo_set.all()
+        urls = [(info.unit.name, url+item_filter+"&"+ unit_filter%info.unit.pk) for info in info_set]
         link = '<a href="%s">%s</a>'
         all_link = link%(url+item_filter,"All Units")
         links = [link % (url,name) for name,url in urls]
@@ -176,7 +176,7 @@ class TaskListItemInfo(models.Model):
 
     #============================================================================
     class Meta:
-        verbose_name_plural = "Set References"
+        verbose_name_plural = "Set References & Tolerances"
         unique_together = ["task_list_item","unit"]
 
 #============================================================================
