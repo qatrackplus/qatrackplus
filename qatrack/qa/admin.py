@@ -43,10 +43,6 @@ class CategoryAdmin(admin.ModelAdmin):
     """QA categories admin"""
     prepopulated_fields =  {'slug': ('name',)}
 
-
-class ReferenceInline(admin.TabularInline):
-    model = models.Reference
-
 #============================================================================
 class TaskListItemInfoForm(forms.ModelForm):
     reference_value = forms.FloatField(
@@ -55,12 +51,16 @@ class TaskListItemInfoForm(forms.ModelForm):
     )
     reference_type = forms.ChoiceField(choices=models.Reference.TYPE_CHOICES)
 
+    class Meta:
+        model = models.TaskListItemUnitInfo
+
     #----------------------------------------------------------------------
     def clean(self):
         """make sure valid numbers are entered for boolean data"""
-        print self.cleaned_data
+
         if "reference_value" not in self.cleaned_data:
             return self.cleaned_data
+
         ref_value = self.cleaned_data["reference_value"]
         ref_type = self.cleaned_data["reference_type"]
 
@@ -70,17 +70,7 @@ class TaskListItemInfoForm(forms.ModelForm):
 
         return self.cleaned_data
 
-    #tolerance_type = forms.ChoiceField(
-        #help_text=_("Select whether this will be an absolute or relative tolerance criteria"),
-        #choices=TYPE_CHOICES,
-    #)
-    #act_low = forms.FloatField(label=_("Lower Action Level"))
-    #tol_low = forms.FloatField(label=_("Lower Tolerance Level"))
-    #tol_high = forms.FloatField(label=_("Upper Tolerance Level"))
-    #act_high = forms.FloatField(label=_("Upper Action Level"))
 
-    class Meta:
-        model = models.TaskListItemInfo
 
 
 class TaskListItemInfoAdmin(admin.ModelAdmin):
@@ -90,13 +80,14 @@ class TaskListItemInfoAdmin(admin.ModelAdmin):
         "unit", "task_list_item",
         "reference", "tolerance",
         "reference_value", "reference_type",
-        #"tolerance_type", "act_low", "tol_low", "tol_high","act_high"
     )
     list_display = ["task_list_item", "unit", "reference", "tolerance"]
-    list_filter = ["task_list_item","unit"]
+    list_filter = ["unit","task_list_item__category"]
     readonly_fields = ("task_list_item","unit","reference")
 
+    #----------------------------------------------------------------------
     def save_model(self, request, item_info, form, change):
+        """create new reference when user updates value"""
         ref = models.Reference(
             value=form["reference_value"].value(),
             ref_type = form["reference_type"].value(),
@@ -106,35 +97,14 @@ class TaskListItemInfoAdmin(admin.ModelAdmin):
         )
         ref.save()
         item_info.reference = ref
-
-        #tolerances = ("act_low", "tol_low", "tol_high", "act_high")
-        #kwargs = dict([(x,form[x]) for x in tolerances])
-        #kwargs["type"] = forms["tolerance_type"],
-        #kwargs["name"] = "%s %s
-        #tolerance = models.Tolerance(
-            #act_low = form["act_low"].value(),
-            #tol_low = form["tol_low"].value(),
-            #tol_high =
-
-        #)
         super(TaskListItemInfoAdmin,self).save_model(request,item_info,form,change)
+
 
 #============================================================================
 class TaskListAdmin(SaveUserMixin, admin.ModelAdmin):
     prepopulated_fields =  {'slug': ('name',)}
     list_display = (title_case_name, "modified", "modified_by", "active")
     filter_horizontal= ("task_list_items", "sublists", )
-
-    #inlines = [TaskListMembershipInline]
-    #exclude = ("task_list_items", )
-
-    class Media:
-        js = (
-            settings.STATIC_URL+"js/jquery-1.7.1.min.js",
-            settings.STATIC_URL+"js/jquery-ui.min.js",
-            settings.STATIC_URL+"js/collapsed_stacked_inlines.js",
-            settings.STATIC_URL+"js/m2m_drag_admin.js",
-        )
 
 #============================================================================
 class TaskListItemAdminForm(forms.ModelForm):
@@ -151,45 +121,43 @@ class TaskListItemAdminForm(forms.ModelForm):
         return short_name
 
 #============================================================================
+class CompositeItemAdminForm(TaskListItemAdminForm):
+    RESULT_RE = re.compile("^result\s*=\s*[_0-9.a-zA-Z]+.*$",re.MULTILINE)
+    #hidden_fields = ("constant_value", "task_type")
+    class Meta:
+        exclude = ("constant_value", "task_type")
+    #----------------------------------------------------------------------
+    def clean_snippet(self):
+        """ensure there's a result defined in the snippet"""
+        snippet = self.cleaned_data["snippet"]
+        if not self.RESULT_RE.findall(snippet):
+            raise forms.ValidationError(
+                _('Snippet must contain a result line (e.g. result = my_var/another_var*2)')
+            )
+
+        return snippet
+
+#============================================================================
 class TaskListItemAdmin(SaveUserMixin, admin.ModelAdmin):
     form = TaskListItemAdminForm
     list_display = ["name","category", "task_type", "modified", "modified_by","set_references"]
-    #filter_horizontal = ("units",)
 
-    #----------------------------------------------------------------------
-    def save_related(self, request, form, formsets, change):
-        """create item info if just being created"""
-        super(TaskListItemAdmin, self).save_related(request, form, formsets, change)
+#============================================================================
+class CompositeTaskListItemAdmin(TaskListItemAdmin):
+    form = CompositeItemAdminForm
+    filter_horizontal = ("dependencies",)
 
-        #new = not change
-        #if new:
-        #    for unit in form.instance.units.all():
-        #        item_info = models.TaskListItemInfo(unit=unit, task_list_item=form.instance)
-        #        item_info.save()
-
-
+#============================================================================
 class UnitTaskListAdmin(admin.ModelAdmin):
     readonly_fields = ("unit","frequency",)
     filter_horizontal = ("task_lists",)
     list_display = ["name", "unit", "frequency"]
     list_filter = ["unit", "frequency"]
-    #----------------------------------------------------------------------
-    def save_related(self, request, form, formsets, change):
-        """create item info if just being created"""
-        super(UnitTaskListAdmin, self).save_related(request, form, formsets, change)
-        return
-        unit_task_list = form.instance()
-        for task_list in unit_task_list.task_lists.all():
-            task_list_items = task_list.task_list_items.all()
-            for task_list_item in task_list_items:
-                models.TaskListItemInfo.objects.get_or_create(
-                    unit = unit,
-                    task_list_item = task_list_item
-                )
 
 admin.site.register([models.Tolerance], BasicSaveUserAdmin)
 admin.site.register([models.Category], CategoryAdmin)
 admin.site.register([models.TaskList],TaskListAdmin)
 admin.site.register([models.TaskListItem],TaskListItemAdmin)
-admin.site.register([models.TaskListItemInfo],TaskListItemInfoAdmin)
+admin.site.register([ models.CompositeTaskListItem],CompositeTaskListItemAdmin)
+admin.site.register([models.TaskListItemUnitInfo],TaskListItemInfoAdmin)
 admin.site.register([models.UnitTaskLists],UnitTaskListAdmin)

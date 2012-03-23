@@ -10,21 +10,17 @@ from django.db.models.signals import post_save, m2m_changed
 from django.db.models import signals
 
 
-
-
-
-
 #============================================================================
 class Reference(models.Model):
     """Reference values for various QA :model:`TaskListItem`s"""
 
     BOOLEAN = "boolean"
     NUMERICAL = "numerical"
-    TYPE_CHOICES = ((BOOLEAN, "Yes / No"), (NUMERICAL, "Numerical"), )
+    TYPE_CHOICES = ((NUMERICAL, "Numerical"), (BOOLEAN, "Yes / No"))
 
 
     name = models.CharField(max_length=50, help_text=_("Enter a short name for this reference"))
-    ref_type = models.CharField(max_length=15, choices=TYPE_CHOICES)
+    ref_type = models.CharField(max_length=15, choices=TYPE_CHOICES,default="numerical")
     value = models.FloatField(help_text=_("For Yes/No tests, enter 1 for Yes and 0 for No"))
 
     #units = models.ManyToManyField(Unit, help_text=_("Which units is this reference valid for"))
@@ -105,12 +101,14 @@ class Category(models.Model):
 #============================================================================
 class TaskListItem(models.Model):
     """Task list item to be completed as part of a QA :model:`TaskList`"""
+    BOOLEAN = "boolean"
+    SIMPLE = "simple"
+    CONSTANT = "constant"
 
     TASK_TYPE_CHOICES = (
-        ("boolean", "Boolean"),
-        ("simple", "Simple Numerical"),
-        ("composite", "Composite"),
-        ("constant", "Constant"),
+        (BOOLEAN, "Boolean"),
+        (SIMPLE, "Simple Numerical"),
+        (CONSTANT, "Constant"),
     )
 
     name = models.CharField(max_length=256, help_text=_("Name for this task list item"))
@@ -123,7 +121,6 @@ class TaskListItem(models.Model):
         help_text=_("Indicate if this test is a %s" % (','.join(x[1].title() for x in TASK_TYPE_CHOICES)))
     )
     constant_value = models.FloatField(help_text=_("Only required for constant value types"), null=True, blank=True)
-    calculation_procedure = models.TextField(help_text=_("Snippet of Python code for calculating result of composite value tests"), blank=True, null=True)
 
     category = models.ForeignKey(Category, help_text=_("Choose a category for this task"))
 
@@ -135,11 +132,9 @@ class TaskListItem(models.Model):
     modified = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(User, editable=False, related_name="task_list_item_modifier")
 
-
-
     #----------------------------------------------------------------------
     def set_references(self):
-        """allow user to go to references"""
+        """allow user to go to references in admin interface"""
 
         url = "/admin/qa/tasklistiteminfo/?"
         item_filter = "task_list_item__id__exact=%d" % self.pk
@@ -164,13 +159,23 @@ class TaskListItem(models.Model):
     #----------------------------------------------------------------------
     def __unicode__(self):
         """return display representation of object"""
-        return "TaskListItem(%s)" % self.name
+
+        return "%s" % (self.name)
 
 #============================================================================
-class TaskListItemInfo(models.Model):
+class CompositeTaskListItem(TaskListItem):
+    """extended version of TaskListItem for composite tests"""
+    COMPOSITE = "composite"
+    dependencies = models.ManyToManyField(TaskListItem,related_name="tasklistitem_dependencies")
+    snippet = models.TextField(help_text=_(
+        "Enter a Python snippet for evaluation of this test. The snippet must define a variable called 'result'."
+    ))
+
+#============================================================================
+class TaskListItemUnitInfo(models.Model):
     unit = models.ForeignKey(Unit)
     task_list_item = models.ForeignKey(TaskListItem)
-    reference = models.ForeignKey(Reference,verbose_name=_("Current Reference"),null=True,editable=False)
+    reference = models.ForeignKey(Reference,verbose_name=_("Current Reference"),null=True)
     tolerance = models.ForeignKey(Tolerance,null=True)
 
 
@@ -217,6 +222,10 @@ class TaskList(models.Model):
 
 
 #----------------------------------------------------------------------
+#When a new Unit is created, this function will automatically
+#create a UnitTaskList object for each available frequency
+#so that it doesn't have to be done manually through the admin
+#interface
 @receiver(post_save,sender=Unit)
 def new_unit_created(*args, **kwargs):
     """Initialize UnitTaskLists for a new Unit"""
@@ -235,7 +244,7 @@ def new_unit_created(*args, **kwargs):
 
 #============================================================================
 class UnitTaskLists(models.Model):
-    """keeps track of which units should perform which task lists"""
+    """keeps track of which units should perform which task lists at a given frequency"""
 
     FREQUENCY_CHOICES = (
         ("daily", "Daily"),
@@ -271,18 +280,20 @@ class UnitTaskLists(models.Model):
 #----------------------------------------------------------------------
 @receiver(m2m_changed, sender=UnitTaskLists.task_lists.through)
 def unit_task_list_change(*args,**kwargs):
-    """"""
+    """Create TaskListItemInfo objects to hold references and tolerances
+    for all task list items in a task list that was just added to a Unit
+    """
     if kwargs["action"] == "post_add":
         unit_task_list = kwargs["instance"]
         for task_list in unit_task_list.task_lists.all():
             task_list_items = task_list.task_list_items.all()
             for task_list_item in task_list_items:
-                TaskListItemInfo.objects.get_or_create(
+                TaskListItemUnitInfo.objects.get_or_create(
                     unit = unit_task_list.unit,
-                    task_list_item = task_list_item
+                    task_list_item = task_list_item,
+                    reference=None, #set by user in Admin interface
+                    tolerance=None, #set by user in Admin interface
                 )
-
-    print kwargs
 
 ##============================================================================
 #class TaskListItemInstance(models.Model):
