@@ -143,16 +143,17 @@ class PerformQAView(FormView):
         context = super(PerformQAView, self).get_context_data(**kwargs)
 
         task_list =  get_object_or_404(models.TaskList,pk=self.kwargs["pk"])
-
+        unit = get_object_or_404(Unit,number=self.kwargs["unit"])
         if self.request.POST:
-            formset = forms.TaskListItemInstanceFormset(task_list,self.request.POST)
+            formset = forms.TaskListItemInstanceFormset(task_list,unit, self.request.POST)
         else:
-            formset = forms.TaskListItemInstanceFormset(task_list)
+            formset = forms.TaskListItemInstanceFormset(task_list, unit)
 
         categories = models.Category.objects.all()
 
         context.update({
             'task_list':task_list,
+            'unit':unit,
             'formset':formset,
             'categories':categories,
         })
@@ -172,42 +173,18 @@ class UnitFrequencyListView(ListView):
         return task lists for a specific frequency (daily/monthly etc)
         and specific unit
         """
-        self.unit = get_object_or_404(Unit, number=self.args[1])
-        return self.unit.tasklist_set.filter(frequency=self.args[0].lower())
-    #----------------------------------------------------------------------
-    def get_context_data(self, **kwargs):
-        """add unit to template context"""
-        context = super(UnitFrequencyListView, self).get_context_data(**kwargs)
-        context["unit"] = self.unit
-        context["frequency"] = self.args[0]
-        return context
+        return models.UnitTaskLists.objects.filter(unit__number=self.args[1],frequency=self.args[0].lower())
 
 
 #============================================================================
 class UnitGroupedFrequencyListView(ListView):
     """view for grouping all task lists with a certain frequency for all units"""
     template_name = "unit_grouped_frequency_list.html"
+    context_object_name = "unit_task_lists"
     #----------------------------------------------------------------------
     def get_queryset(self):
         """grab all task lists with given frequency"""
-        return models.TaskList.objects.filter(frequency=self.args[0].lower())
-    #----------------------------------------------------------------------
-    def get_context_data(self, **kwargs):
-        """add grouped objects to template context"""
-        context = super(UnitGroupedFrequencyListView, self).get_context_data(**kwargs)
-        unit_types = UnitType.objects.all()
-
-        #organize all task lists into unit type->unit->task list heirarchy
-        unit_type_groups = []
-        for unit_type in unit_types:
-            unit_groups = [(u, self.object_list.filter(unit=u)) for u in unit_type.unit_set.all()]
-            unit_type_groups.append((unit_type, unit_groups))
-        context["unit_type_groups"] = unit_type_groups
-
-        context["frequency"] = self.args[0]
-        return context
-
-
+        return models.UnitTaskLists.objects.filter(frequency=self.args[0].lower())
 
 
 

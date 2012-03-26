@@ -43,23 +43,26 @@ class TaskListItemInstanceFormset(BaseTaskListItemInstanceFormset):
     """Formset for TaskListItemInstances"""
 
     #----------------------------------------------------------------------
-    def __init__(self,task_list,*args,**kwargs):
+    def __init__(self,task_list, unit,*args,**kwargs):
         """prepopulate the reference, tolerance and task_list_item's for all forms in formset"""
 
-        memberships = models.TaskListMembership.objects.filter(task_list=task_list, active=True)
+        #memberships = models.TaskListMembership.objects.filter(task_list=task_list, active=True)
+        unit_infos = models.TaskListItemUnitInfo.objects.filter(
+            task_list = task_list, unit = unit
+        ).filter(active=True)
 
         #since we don't know ahead of time how many task list items there are going to be
         #we have to dynamically set extra for every form. Feels a bit hacky, but I'm not sure how else to do it.
-        self.extra = memberships.count()
+        self.extra = unit_infos.count()
 
         super(TaskListItemInstanceFormset,self).__init__(*args,**kwargs)
 
-        for f, m in zip(self.forms, memberships):
+        for f, info in zip(self.forms, unit_infos):
 
-            self.set_initial_fk_data(f,m)
-            self.set_widgets(f,m)
-            self.disable_read_only_fields(f,m)
-            self.set_constant_values(f,m)
+            self.set_initial_fk_data(f,info)
+            self.set_widgets(f,info)
+            self.disable_read_only_fields(f,info)
+            self.set_constant_values(f,info)
 
     #----------------------------------------------------------------------
     def disable_read_only_fields(self,form,membership):
@@ -100,5 +103,5 @@ class TaskListInstanceForm(forms.ModelForm):
     """parent form for doing qa task list"""
 
     #----------------------------------------------------------------------
-    #class Meta:
-    #    model = models.TaskListInstance
+    class Meta:
+        model = models.TaskListInstance

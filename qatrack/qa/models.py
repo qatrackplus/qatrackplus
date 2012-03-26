@@ -177,7 +177,7 @@ class TaskListItemUnitInfo(models.Model):
     task_list_item = models.ForeignKey(TaskListItem)
     reference = models.ForeignKey(Reference,verbose_name=_("Current Reference"),null=True)
     tolerance = models.ForeignKey(Tolerance,null=True)
-
+    active = models.BooleanField(default=True)
 
     #============================================================================
     class Meta:
@@ -245,14 +245,20 @@ def new_unit_created(*args, **kwargs):
 #============================================================================
 class UnitTaskLists(models.Model):
     """keeps track of which units should perform which task lists at a given frequency"""
+    DAILY = "daily"
+    WEEKLY = "weekly"
+    MONTHLY = "monthly"
+    SEMIANNUAL = "semiannual"
+    ANNUAL = "annual"
+    OTHER = "other"
 
     FREQUENCY_CHOICES = (
-        ("daily", "Daily"),
-        ("weekly", "Weekly"),
-        ("monthly", "Monthly"),
-        ("semiannual", "Semi-Ann."),
-        ("annual", "Annual"),
-        ("other", "Other"),
+        (DAILY, "Daily"),
+        (WEEKLY, "Weekly"),
+        (MONTHLY, "Monthly"),
+        (SEMIANNUAL, "Semi-Ann."),
+        (ANNUAL, "Annual"),
+        (OTHER, "Other"),
     )
 
     unit = models.ForeignKey(Unit,editable=False)
@@ -264,7 +270,6 @@ class UnitTaskLists(models.Model):
 
     task_lists = models.ManyToManyField(TaskList,null=True, blank=True)
 
-    #============================================================================
     class Meta:
         unique_together = ("frequency", "unit",)
         verbose_name_plural = _("Choose Unit Task Lists")
@@ -296,51 +301,51 @@ def unit_task_list_change(*args,**kwargs):
                 )
 
 ##============================================================================
-#class TaskListItemInstance(models.Model):
-    #"""Measured instance of a :model:`TaskListItem`"""
+class TaskListItemInstance(models.Model):
+    """Measured instance of a :model:`TaskListItem`"""
 
-    #UNREVIEWED = "unreviewed"
-    #APPROVED = "approved"
-    #SCRATCH = "scratch"
-    #REJECTED = "rejected"
+    UNREVIEWED = "unreviewed"
+    APPROVED = "approved"
+    SCRATCH = "scratch"
+    REJECTED = "rejected"
 
-    #choices = (
-        #(UNREVIEWED, "Unreviewed"),
-        #(APPROVED, "Approved"),
-        #(SCRATCH, "Scratch"),
-        #(REJECTED, "Rejected"),
-    #)
+    choices = (
+        (UNREVIEWED, "Unreviewed"),
+        (APPROVED, "Approved"),
+        (SCRATCH, "Scratch"),
+        (REJECTED, "Rejected"),
+    )
 
-    #status = models.CharField(max_length=20, choices=choices, editable=False)
+    status = models.CharField(max_length=20, choices=choices, editable=False)
 
-    ##values set by user
-    #value = models.FloatField(help_text=_("For boolean TaskListItems a value of 0 equals False and any non zero equals True"), null=True)
-    #skipped = models.BooleanField(help_text=_("Was this test skipped for some reason (add comment)"))
-    #comment = models.TextField(help_text=_("Add a comment to this task"), null=True, blank=True)
+    #values set by user
+    value = models.FloatField(help_text=_("For boolean TaskListItems a value of 0 equals False and any non zero equals True"), null=True)
+    skipped = models.BooleanField(help_text=_("Was this test skipped for some reason (add comment)"))
+    comment = models.TextField(help_text=_("Add a comment to this task"), null=True, blank=True)
 
-    ##reference used
-    #reference = models.ForeignKey(Reference)
-    #tolerance = models.ForeignKey(Tolerance)
+    #reference used
+    reference = models.ForeignKey(Reference)
+    tolerance = models.ForeignKey(Tolerance)
 
     #task_list_instance = models.ForeignKey(TaskListInstance,editable=False)
-    #task_list_item = models.ForeignKey(TaskListItem)
+    task_list_item = models.ForeignKey(TaskListItem)
 
-    ##----------------------------------------------------------------------
-    #def save(self, *args, **kwargs):
-        #"""set status to unreviewed if not previously set"""
-        #if not self.status:
-            #self.status = self.UNREVIEWED
-        #super(TaskListItemInstance,self).save(*args,**kwargs)
+    #----------------------------------------------------------------------
+    def save(self, *args, **kwargs):
+        """set status to unreviewed if not previously set"""
+        if not self.status:
+            self.status = self.UNREVIEWED
+        super(TaskListItemInstance,self).save(*args,**kwargs)
 
 
 
-    ##----------------------------------------------------------------------
-    #def __unicode__(self):
-        #"""return display representation of object"""
-        #try :
-            #return "TaskListItemInstance(item=%s)" % self.task_list_item.name
-        #except :
-            #return "TaskListItemInstance(Empty)"
+    #----------------------------------------------------------------------
+    def __unicode__(self):
+        """return display representation of object"""
+        try :
+            return "TaskListItemInstance(item=%s)" % self.task_list_item.name
+        except :
+            return "TaskListItemInstance(Empty)"
 
 
 ##============================================================================
@@ -374,32 +379,33 @@ def unit_task_list_change(*args,**kwargs):
 
 
 ##============================================================================
-#class TaskListInstance(models.Model):
-    #"""Container for a collection of QA :model:`TaskListItemInstance`s
+class TaskListInstance(models.Model):
+    """Container for a collection of QA :model:`TaskListItemInstance`s
 
-    #When a user completes a task list, a collection of :model:`TaskListItemInstance`s
-    #are created.  TaskListInstance acts as a containter for the collection
-    #of values so that they are grouped together and can be queried easily.
+    When a user completes a task list, a collection of :model:`TaskListItemInstance`s
+    are created.  TaskListInstance acts as a containter for the collection
+    of values so that they are grouped together and can be queried easily.
 
-    #"""
+    """
 
-    #task_list = models.ForeignKey(TaskList, editable=False)
+    task_list = models.ForeignKey(TaskList, editable=False)
+    unit = models.ForeignKey(Unit,editable=False)
 
-    ##for keeping a very basic history
-    #created = models.DateTimeField(auto_now_add=True)
-    #created_by = models.ForeignKey(User, editable=False, related_name="task_list_instance_creator")
-    #modified = models.DateTimeField(auto_now=True)
-    #modified_by = models.ForeignKey(User, editable=False, related_name="task_list_instance_modifier")
+    #for keeping a very basic history
+    created = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(User, editable=False, related_name="task_list_instance_creator")
+    modified = models.DateTimeField(auto_now=True)
+    modified_by = models.ForeignKey(User, editable=False, related_name="task_list_instance_modifier")
 
-    ##----------------------------------------------------------------------
-    #def status(self):
-        #"""return string with status of this qa instance"""
-        #return "Not Implemented"
+    #----------------------------------------------------------------------
+    def status(self):
+        """return string with status of this qa instance"""
+        return "Not Implemented"
 
-    ##---------------------------------------------------------------------------
-    #def __unicode__(self):
-        #"""more helpful interactive display name"""
-        #try:
-            #return "TaskListInstance(task_list=%s)"%self.task_list.name
-        #except:
-            #return "TaskListInstance(Empty)"
+    #---------------------------------------------------------------------------
+    def __unicode__(self):
+        """more helpful interactive display name"""
+        try:
+            return "TaskListInstance(task_list=%s)"%self.task_list.name
+        except:
+            return "TaskListInstance(Empty)"
