@@ -326,7 +326,7 @@ class TaskListItemInstance(models.Model):
     reference = models.ForeignKey(Reference)
     tolerance = models.ForeignKey(Tolerance)
 
-    #task_list_instance = models.ForeignKey(TaskListInstance,editable=False)
+    task_list_instance = models.ForeignKey("TaskListInstance",editable=False)
     task_list_item = models.ForeignKey(TaskListItem)
 
     #----------------------------------------------------------------------
@@ -364,6 +364,10 @@ class TaskListInstance(models.Model):
     modified = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(User, editable=False, related_name="task_list_instance_modifier")
 
+    class Meta:
+        ordering = ("created",)
+        get_latest_by = "created"
+
     #----------------------------------------------------------------------
     def status(self):
         """return string with status of this qa instance"""
@@ -387,6 +391,47 @@ class TaskListCycle(models.Model):
     task_lists = models.ManyToManyField(TaskList,through="TaskListCycleMembership")
     units = models.ManyToManyField(Unit)
 
+    #----------------------------------------------------------------------
+    def first(self):
+        """return first in order membership object for this cycle"""
+        return TaskListCycleMembership.objects.get(cycle=self, order=0)
+    #----------------------------------------------------------------------
+    def last_completed(self,unit):
+        """return the membership object of the last completed task_list
+        for this object.
+        """
+
+        try:
+            last_tli = TaskListInstance.objects.filter(
+                unit=unit,
+                task_list__in=self.task_lists.all()
+            ).latest()
+
+            last = TaskListCycleMembership.objects.get(
+                cycle=self,
+                task_list=last_tli.task_list
+            )
+
+        except:
+            last = None
+
+        return last
+    #----------------------------------------------------------------------
+    def next_for_unit(self,unit):
+        """return membership object containing next task list to be completed"""
+        last_completed = self.last_completed(unit)
+        if not last_completed:
+            return self.first()
+
+        ntask_lists = self.task_lists.count()
+        next_order = last_completed.order + 1
+
+        if next_order >= ntask_lists:
+            return self.first()
+
+        return TaskListCycleMembership.objects.get(cycle=self, order=next_order)
+
+
 
 #============================================================================
 class TaskListCycleMembership(models.Model):
@@ -396,6 +441,13 @@ class TaskListCycleMembership(models.Model):
     cycle = models.ForeignKey(TaskListCycle)
     order = models.IntegerField()
 
-    #============================================================================
     class Meta:
-        unique_together = (("order", "cycle"),)
+        ordering = ("order",)
+
+        #note this won't actually work because when saving multiple
+        #memberships they can have the same order temporarily
+        #unique_together = (("order", "cycle"),)
+
+    #----------------------------------------------------------------------
+    def last(self):
+        """return a """

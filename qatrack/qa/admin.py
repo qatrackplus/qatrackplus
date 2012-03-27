@@ -159,15 +159,21 @@ class UnitTaskListAdmin(admin.ModelAdmin):
 class TaskListCycleMembershipInline(admin.TabularInline):
 
     model = models.TaskListCycleMembership
-    extra = 1
+    extra = 0
 
 #============================================================================
 class TaskListCycleAdmin(admin.ModelAdmin):
     """Admin for daily task list cycles"""
     inlines = [TaskListCycleMembershipInline]
 
+    #============================================================================
     class Media:
-        js = ("m2m_drag_admin.js",)
+        js = (
+            settings.STATIC_URL+"js/jquery-1.7.1.min.js",
+            settings.STATIC_URL+"js/jquery-ui.min.js",
+            settings.STATIC_URL+"js/collapsed_stacked_inlines.js",
+            settings.STATIC_URL+"js/m2m_drag_admin.js",
+        )
 
 admin.site.register([models.Tolerance], BasicSaveUserAdmin)
 admin.site.register([models.Category], CategoryAdmin)

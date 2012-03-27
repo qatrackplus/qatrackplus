@@ -5,18 +5,18 @@ in the admin. Starting point was http://djangosnippets.org/snippets/1053/
 
 function set_order(grouping){
 
-            $(grouping).find('tr').each(function(i) {
-                if ($(grouping).find("option:selected").val()){
-                    $(grouping).find('input[id$=order]').val(i);
-                }
-            });
+    $(grouping).find('tr').each(function(i) {
+        if ($(this).find("option:selected").val()){
+            $(this).find('input[id$=order]').val(i);
+        }
+    });
 }
 
 $(document).ready(function() {
 
     /*set up dragabble membership list*/
     $('div.inline-group').sortable({
-        containment: 'parent',
+        containment: 'table',
         zindex: 10,
         items: 'tr[class*=dynamic-]',
         handle: 'td',
@@ -27,7 +27,7 @@ $(document).ready(function() {
     $('div.inline-related td').css('cursor', 'move');
 
     /*hides the ordering header*/
-    $('div.inline-related').find('th:contains("order")').hide();
+    $('div.inline-related').find('th:contains("Order")').hide();
 
     /*hides the ordering inputs*/
     $('div.inline-related').find('input[id$=order]').parent('td').hide();

@@ -132,6 +132,7 @@ TEMPLATE_CONTEXT_PROCESSORS += [
 #you can add more fixture
 FIXTURE_DIRS = (
     'fixtures/',
+    'fixtures/test/'
 )
 
 INSTALLED_APPS = (
