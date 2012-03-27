@@ -220,7 +220,6 @@ class TaskList(models.Model):
         """return display representation of object"""
         return "TaskList(%s)" % self.name
 
-
 #----------------------------------------------------------------------
 #When a new Unit is created, this function will automatically
 #create a UnitTaskList object for each available frequency
@@ -337,8 +336,6 @@ class TaskListItemInstance(models.Model):
             self.status = self.UNREVIEWED
         super(TaskListItemInstance,self).save(*args,**kwargs)
 
-
-
     #----------------------------------------------------------------------
     def __unicode__(self):
         """return display representation of object"""
@@ -348,37 +345,7 @@ class TaskListItemInstance(models.Model):
             return "TaskListItemInstance(Empty)"
 
 
-##============================================================================
-#class TaskListMembership(models.Model):
-    #"""
-    #Model for keeping track of what :model:`TaskListItem` belong to which
-    #:model:`TaskList`s and which order they are to be placed in
-    #"""
-
-    ##TODO: need validation to ensure task list items short names are unique within
-    ##a task list
-    #task_list_item = models.ForeignKey(TaskListItem)
-    #task_list = models.ForeignKey(TaskList)
-    #task_list_item_order = models.PositiveIntegerField(help_text="The order this test should be executed in")
-    #reference = models.ForeignKey(Reference)
-    #tolerance = models.ForeignKey(Tolerance)
-    #active = models.BooleanField(help_text=_("Uncheck to deactivate this test for this unit"), default=True)
-
-    ##============================================================================
-    #class Meta:
-        #ordering = ("task_list_item_order", )
-        #unique_together = [("task_list_item","task_list")]
-    ##---------------------------------------------------------------------------
-    #def __unicode__(self):
-        #"""return display representation of object"""
-        #try:
-            #return "TaskListMembership(list=%s, item=%s)" % (self.task_list.name, self.task_list_item.name)
-        #except:
-            #return "TaskListMembership(Empty)"
-
-
-
-##============================================================================
+#============================================================================
 class TaskListInstance(models.Model):
     """Container for a collection of QA :model:`TaskListItemInstance`s
 
@@ -409,3 +376,26 @@ class TaskListInstance(models.Model):
             return "TaskListInstance(task_list=%s)"%self.task_list.name
         except:
             return "TaskListInstance(Empty)"
+
+
+#============================================================================
+class TaskListCycle(models.Model):
+    """A basic model for creating a collection of task lists that cycle
+    based on the list that was last completed"""
+
+    name = models.CharField(max_length=256,help_text=_("The name for this task list cycle"))
+    task_lists = models.ManyToManyField(TaskList,through="TaskListCycleMembership")
+    units = models.ManyToManyField(Unit)
+
+
+#============================================================================
+class TaskListCycleMembership(models.Model):
+    """M2M model for ordering of task lists within cycle"""
+
+    task_list = models.ForeignKey(TaskList)
+    cycle = models.ForeignKey(TaskListCycle)
+    order = models.IntegerField()
+
+    #============================================================================
+    class Meta:
+        unique_together = (("order", "cycle"),)

@@ -154,6 +154,21 @@ class UnitTaskListAdmin(admin.ModelAdmin):
     list_display = ["name", "unit", "frequency"]
     list_filter = ["unit", "frequency"]
 
+
+#============================================================================
+class TaskListCycleMembershipInline(admin.TabularInline):
+
+    model = models.TaskListCycleMembership
+    extra = 1
+
+#============================================================================
+class TaskListCycleAdmin(admin.ModelAdmin):
+    """Admin for daily task list cycles"""
+    inlines = [TaskListCycleMembershipInline]
+
+    class Media:
+        js = ("m2m_drag_admin.js",)
+
 admin.site.register([models.Tolerance], BasicSaveUserAdmin)
 admin.site.register([models.Category], CategoryAdmin)
 admin.site.register([models.TaskList],TaskListAdmin)
@@ -161,3 +176,5 @@ admin.site.register([models.TaskListItem],TaskListItemAdmin)
 admin.site.register([ models.CompositeTaskListItem],CompositeTaskListItemAdmin)
 admin.site.register([models.TaskListItemUnitInfo],TaskListItemInfoAdmin)
 admin.site.register([models.UnitTaskLists],UnitTaskListAdmin)
+
+admin.site.register([models.TaskListCycle],TaskListCycleAdmin)
