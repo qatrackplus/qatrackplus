@@ -2,20 +2,20 @@
 
 {% block body %}
 
-    <h2>{{task_lists.0.unit.name}} {{task_lists.0.frequency|title}} Task Lists</h2>
+    <h2>{{unit_task_list.unit.name}} {{frequency|title}} Task Lists</h2>
 
     <table class="table table-bordered table-striped table-condensed span6">
 
         <thead>
             <tr>
                 <th>Task List</th>
-                <th>{{ task_lists.0.frequency|title }} QA Last Performed</th>
+                <th>{{ frequency|title }} QA Last Performed</th>
                 <th>QA Status</th>
                 <th>Perform</th>
             </tr>
         </thead>
         <tbody>
-        {% for task_list in task_lists %}
+        {% for task_list in unit_task_list.lists_and_cycles %}
             <tr>
                 <td>{{task_list.name|title}}</td>
                 {% with last_completed=task_list.last_completed_instance %}
@@ -27,7 +27,7 @@
                         <td><span class="btn-info disabled">New Task List</span></td>
                     {% endif %}
                  {% endwith %}
-                 <td><a href="{%url perform_qa task_list.pk task_list.unit.number %}">Perform</a></td>
+                 <td><a href="{%url perform_qa pk=task_list.pk unit=unit_task_list.unit.number %}">Perform</a></td>
             </tr>
         {% endfor %}
         </tbody>

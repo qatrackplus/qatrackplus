@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.http import HttpResponse,HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.core.urlresolvers import reverse
-from django.views.generic import ListView, FormView, View
+from django.views.generic import ListView, FormView, View, TemplateView
 from django.utils.translation import ugettext as _
 from qatrack.qa import models
 from qatrack.units.models import Unit, UnitType
@@ -161,30 +161,52 @@ class PerformQAView(FormView):
         return context
 
 #============================================================================
-class UnitFrequencyListView(ListView):
+class UnitFrequencyListView(TemplateView):
     """list daily/monthly/annual task lists for a unit"""
 
-    context_object_name = "task_lists"
     template_name = "frequency_list.html"
 
     #----------------------------------------------------------------------
-    def get_queryset(self):
+    def get_context_data(self,**kwargs):
         """
-        return task lists for a specific frequency (daily/monthly etc)
-        and specific unit
+        return task lists and cycles for a specific frequency
+        (daily/monthly etc)and specific unit
         """
-        return models.UnitTaskLists.objects.filter(unit__number=self.args[1],frequency=self.args[0].lower())
 
+        context = super(UnitFrequencyListView,self).get_context_data(**kwargs)
+        frequency = self.kwargs["frequency"].lower()
+        context["frequency"] = frequency
+
+        unit = self.kwargs["unit"]
+        context["unit_task_list"] = models.UnitTaskLists.objects.get(unit__number=unit,frequency=frequency)
+
+        return context
 
 #============================================================================
-class UnitGroupedFrequencyListView(ListView):
+class UnitGroupedFrequencyListView(TemplateView):
     """view for grouping all task lists with a certain frequency for all units"""
     template_name = "unit_grouped_frequency_list.html"
-    context_object_name = "unit_task_lists"
+
     #----------------------------------------------------------------------
-    def get_queryset(self):
-        """grab all task lists with given frequency"""
-        return models.UnitTaskLists.objects.filter(frequency=self.args[0].lower())
+    def get_context_data(self,**kwargs):
+        """grab all task lists and cycles with given frequency"""
+        context = super(UnitGroupedFrequencyListView,self).get_context_data(**kwargs)
+        frequency = self.kwargs["frequency"].lower()
+        context["frequency"] = frequency
+
+        unit_type_sets = []
+
+        for ut in UnitType.objects.all():
+            unit_type_set = []
+            for unit in Unit.objects.filter(type=ut):
+                unit_type_set.append(
+                    models.UnitTaskLists.objects.get(unit=unit, frequency=frequency)
+                )
+
+            unit_type_sets.append((ut,unit_type_set))
+
+        context["unit_type_list"] = unit_type_sets
+        return context
 
 
 

@@ -71,8 +71,7 @@ class TaskListItemInfoForm(forms.ModelForm):
         return self.cleaned_data
 
 
-
-
+#============================================================================
 class TaskListItemInfoAdmin(admin.ModelAdmin):
     """"""
     form = TaskListItemInfoForm
@@ -147,10 +146,12 @@ class CompositeTaskListItemAdmin(TaskListItemAdmin):
     form = CompositeItemAdminForm
     filter_horizontal = ("dependencies",)
 
+
+
 #============================================================================
 class UnitTaskListAdmin(admin.ModelAdmin):
     readonly_fields = ("unit","frequency",)
-    filter_horizontal = ("task_lists",)
+    filter_horizontal = ("task_lists","cycles",)
     list_display = ["name", "unit", "frequency"]
     list_filter = ["unit", "frequency"]
 

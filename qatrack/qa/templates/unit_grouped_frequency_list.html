@@ -1,40 +1,45 @@
 {% extends "site_base.html" %}
 
 {% block body %}
-    <h2>{{unit_task_lists.0.frequency|title}} QA Task Lists</h2>
+    <h2>{{frequency|title}} QA Task Lists</h2>
 
-    {% regroup unit_task_lists by unit.type as unit_lists %}
-
-    {% for unit_type in unit_lists %}
-        <h3>{{unit_type.grouper.name }}</h3>
+    {% for unit_type, unit_lists in unit_type_list %}
+        <h3>{{unit_type.name }}</h3>
 
         <table class="table table-bordered table-striped table-condensed">
 
             <thead>
                 <tr>
                     <th>Unit</th>
-                    <th>Task List</th>
-                    <th>{{ unit_task_lists.0.frequency|title }} QA Last Performed</th>
+                    <th>Task List/Cycle</th>
+                    <th>{{ frequency|title }} QA Last Performed</th>
                     <th>QA Status</th>
                 </tr>
             </thead>
             <tbody>
+                {% for unit_list in unit_lists %}
 
-                {% for unit_task_list in unit_type.list %}
-                    {% for task_list in unit_task_list.task_lists.all %}
+                    {# display all individual task lists #}
+                    {% for task_list in unit_list.lists_and_cycles %}
                         <tr>
                             <td>
-                                <a class="nav-list" href="{% url qa_by_frequency_unit unit_task_list.frequency unit_task_list.unit.number %}" title="Perform {{unit_task_list.frequency}} QA for {{unit_task_list.unit.name}}">
-                                    {{unit_task_list.unit.name}}
+                                <a class="nav-list" href="{% url qa_by_frequency_unit frequency unit_list.unit.number %}" title="Perform {{frequency}} QA for {{unit_list.unit.name}}">
+                                    {{unit_list.unit.name}}
                                 </a>
                             </td>
                             {% with last_completed=task_list.last_completed_instance %}
-                            <td>{{task_list.name|title}}</td>
-                            <td>{{last_completed.created}}</td>
-                            <td>{{last_completed.status}}</td>
+                                <td>{{task_list.name|title}}</td>
+                                {% if last_completed %}
+                                    <td>{{last_completed.created}}</td>
+                                    <td>{{last_completed.status}}</td>
+                                {% else %}
+                                    <td>New</td>
+                                    <td>New</td>
+                                {% endif %}
                             {% endwith %}
                         </tr>
                     {% endfor %}
+
                 {% endfor %}
             </tbody>
         </table>

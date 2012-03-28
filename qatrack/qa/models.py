@@ -9,6 +9,23 @@ from django.dispatch import receiver
 from django.db.models.signals import post_save, m2m_changed
 from django.db.models import signals
 
+#global frequency choices
+DAILY = "daily"
+WEEKLY = "weekly"
+MONTHLY = "monthly"
+SEMIANNUAL = "semiannual"
+ANNUAL = "annual"
+OTHER = "other"
+
+FREQUENCY_CHOICES = (
+    (DAILY, "Daily"),
+    (WEEKLY, "Weekly"),
+    (MONTHLY, "Monthly"),
+    (SEMIANNUAL, "Semi-Ann."),
+    (ANNUAL, "Annual"),
+    (OTHER, "Other"),
+)
+
 
 #============================================================================
 class Reference(models.Model):
@@ -170,6 +187,9 @@ class CompositeTaskListItem(TaskListItem):
     snippet = models.TextField(help_text=_(
         "Enter a Python snippet for evaluation of this test. The snippet must define a variable called 'result'."
     ))
+    #============================================================================
+    class Meta:
+        verbose_name_plural = _("Task list items (composite)")
 
 #============================================================================
 class TaskListItemUnitInfo(models.Model):
@@ -233,7 +253,7 @@ def new_unit_created(*args, **kwargs):
 
     unit = kwargs["instance"]
 
-    for freq,_ in UnitTaskLists.FREQUENCY_CHOICES:
+    for freq,_ in FREQUENCY_CHOICES:
         unit_task_lists_freq = UnitTaskLists(
             frequency = freq,
             unit = unit
@@ -242,23 +262,20 @@ def new_unit_created(*args, **kwargs):
 
 
 #============================================================================
+class UnitTaskListManager(models.Manager):
+    #----------------------------------------------------------------------
+    def by_unit(self,unit):
+        return self.get_query_set().filter(unit=unit)
+    #----------------------------------------------------------------------
+    def by_frequency(self,frequency):
+        return self.get_query_set().filter(frequency=frequency)
+    #----------------------------------------------------------------------
+    def by_unit_frequency(self,unit,frequency):
+        return self.by_frequency(frequency).filter(unit=unit)
+
+#============================================================================
 class UnitTaskLists(models.Model):
     """keeps track of which units should perform which task lists at a given frequency"""
-    DAILY = "daily"
-    WEEKLY = "weekly"
-    MONTHLY = "monthly"
-    SEMIANNUAL = "semiannual"
-    ANNUAL = "annual"
-    OTHER = "other"
-
-    FREQUENCY_CHOICES = (
-        (DAILY, "Daily"),
-        (WEEKLY, "Weekly"),
-        (MONTHLY, "Monthly"),
-        (SEMIANNUAL, "Semi-Ann."),
-        (ANNUAL, "Annual"),
-        (OTHER, "Other"),
-    )
 
     unit = models.ForeignKey(Unit,editable=False)
 
@@ -269,10 +286,31 @@ class UnitTaskLists(models.Model):
 
     task_lists = models.ManyToManyField(TaskList,null=True, blank=True)
 
+    cycles = models.ManyToManyField("TaskListCycle", null=True, blank=True)
+
+    objects = UnitTaskListManager()
+
     class Meta:
         unique_together = ("frequency", "unit",)
         verbose_name_plural = _("Choose Unit Task Lists")
 
+    #----------------------------------------------------------------------
+    def all_task_lists(self):
+        """return all task lists from task_lists and cycles """
+
+        task_lists = list(self.task_lists.all())
+
+        for cycle in self.cycles.all():
+            task_lists.extend(list(cycle.task_lists.all()))
+
+        return task_lists
+    #----------------------------------------------------------------------
+    def lists_and_cycles(self):
+        """"""
+        for task_list in self.task_lists.all():
+            yield task_list
+        for cycle in self.cycles.all():
+            yield cycle
     #----------------------------------------------------------------------
     def name(self):
         return self.__unicode__()
@@ -289,7 +327,7 @@ def unit_task_list_change(*args,**kwargs):
     """
     if kwargs["action"] == "post_add":
         unit_task_list = kwargs["instance"]
-        for task_list in unit_task_list.task_lists.all():
+        for task_list in unit_task_list.all_task_lists():
             task_list_items = task_list.task_list_items.all()
             for task_list_item in task_list_items:
                 TaskListItemUnitInfo.objects.get_or_create(
@@ -383,13 +421,39 @@ class TaskListInstance(models.Model):
 
 
 #============================================================================
+class CycleManager(models.Manager):
+    #----------------------------------------------------------------------
+    def by_unit(self,unit):
+        return self.get_query_set().filter(units__in=[unit])
+    #----------------------------------------------------------------------
+    def by_frequency(self,frequency):
+        return self.get_query_set().filter()
+    #----------------------------------------------------------------------
+    def by_unit_frequency(self,unit,frequency):
+        return self.get_query_set().filter(units__in=[unit],frequency=frequency)
+
+#============================================================================
 class TaskListCycle(models.Model):
     """A basic model for creating a collection of task lists that cycle
-    based on the list that was last completed"""
+    based on the list that was last completed
+
+    NOTE: Currently only supports daily rotation. Support for rotation
+    at different frequencies may be added sometime in the future.
+    """
 
     name = models.CharField(max_length=256,help_text=_("The name for this task list cycle"))
     task_lists = models.ManyToManyField(TaskList,through="TaskListCycleMembership")
+    frequency = models.CharField(max_length=10, choices=FREQUENCY_CHOICES, help_text=_("Frequency with which this task list is cycled"))
     units = models.ManyToManyField(Unit)
+    objects = CycleManager()
+
+    #----------------------------------------------------------------------
+    def __len__(self):
+        """return the number of task_lists"""
+        if self.pk:
+            return self.task_lists.count()
+        else:
+            return 0
 
     #----------------------------------------------------------------------
     def first(self):
@@ -430,7 +494,20 @@ class TaskListCycle(models.Model):
             return self.first()
 
         return TaskListCycleMembership.objects.get(cycle=self, order=next_order)
+    #----------------------------------------------------------------------
+    def last_completed_instance(self):
+        """return the last instance of this task list that was performed"""
 
+        try:
+            return TaskListInstance.objects.filter(
+                task_list__in = self.task_lists.all()
+            ).latest("created")
+        except self.DoesNotExist:
+            return None
+
+    #----------------------------------------------------------------------
+    def __unicode__(self):
+        return _(self.name)
 
 
 #============================================================================
@@ -448,6 +525,3 @@ class TaskListCycleMembership(models.Model):
         #memberships they can have the same order temporarily
         #unique_together = (("order", "cycle"),)
 
-    #----------------------------------------------------------------------
-    def last(self):
-        """return a """
