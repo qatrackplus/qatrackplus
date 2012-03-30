@@ -121,11 +121,13 @@ class TaskListItem(models.Model):
     BOOLEAN = "boolean"
     SIMPLE = "simple"
     CONSTANT = "constant"
+    COMPOSITE = "composite"
 
     TASK_TYPE_CHOICES = (
         (BOOLEAN, "Boolean"),
         (SIMPLE, "Simple Numerical"),
         (CONSTANT, "Constant"),
+        (COMPOSITE, "Composite"),
     )
 
     name = models.CharField(max_length=256, help_text=_("Name for this task list item"))
@@ -152,12 +154,12 @@ class TaskListItem(models.Model):
     #----------------------------------------------------------------------
     def set_references(self):
         """allow user to go to references in admin interface"""
-
-        url = "/admin/qa/tasklistiteminfo/?"
+        #/admin/qa/tasklistitemunitinfo/?unit__id__exact=1
+        url = "%s?"%urlresolvers.reverse("admin:qa_tasklistitemunitinfo_changelist")
         item_filter = "task_list_item__id__exact=%d" % self.pk
 
         unit_filter = "unit__id__exact=%d"
-        info_set = self.tasklistiteminfo_set.all()
+        info_set = self.tasklistitemunitinfo_set.all()
         urls = [(info.unit.name, url+item_filter+"&"+ unit_filter%info.unit.pk) for info in info_set]
         link = '<a href="%s">%s</a>'
         all_link = link%(url+item_filter,"All Units")
@@ -182,7 +184,6 @@ class TaskListItem(models.Model):
 #============================================================================
 class CompositeTaskListItem(TaskListItem):
     """extended version of TaskListItem for composite tests"""
-    COMPOSITE = "composite"
     dependencies = models.ManyToManyField(TaskListItem,related_name="tasklistitem_dependencies")
     snippet = models.TextField(help_text=_(
         "Enter a Python snippet for evaluation of this test. The snippet must define a variable called 'result'."
@@ -364,10 +365,6 @@ def task_list_change(*args,**kwargs):
         for utl in unit_task_lists:
             create_tasklistitemunitinfos(task_list,utl.unit)
 
-
-#----------------------------------------------------------------------
-def update_task_list_():
-    """"""
 
 ##============================================================================
 class TaskListItemInstance(models.Model):

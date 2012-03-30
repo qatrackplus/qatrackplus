@@ -27,7 +27,7 @@ class SaveUserMixin(object):
             obj.created = datetime.datetime.now()
         obj.modified_by = request.user
         super(SaveUserMixin, self).save_model(request, obj, form, change)
-        #obj.save()
+
 
 #============================================================================
 class BasicSaveUserAdmin(SaveUserMixin, admin.ModelAdmin):
@@ -98,12 +98,24 @@ class TaskListItemInfoAdmin(admin.ModelAdmin):
         item_info.reference = ref
         super(TaskListItemInfoAdmin,self).save_model(request,item_info,form,change)
 
+#============================================================================
+class TaskListAdminForm(forms.ModelForm):
+    """Form for handling validation of TaskList creation/editing"""
+    #----------------------------------------------------------------------
+    def clean_sublists(self,*args,**kwargs):
+        """Make sure a user doesn't try to add itself as sublist"""
+        sublists = self.cleaned_data["sublists"]
+        if self.instance in sublists:
+            raise django.forms.ValidationError("You can't add a list to its own sublists")
+
+        return sublists
 
 #============================================================================
 class TaskListAdmin(SaveUserMixin, admin.ModelAdmin):
     prepopulated_fields =  {'slug': ('name',)}
     list_display = (title_case_name, "modified", "modified_by", "active")
     filter_horizontal= ("task_list_items", "sublists", )
+    form = TaskListAdminForm
 
 #============================================================================
 class TaskListItemAdminForm(forms.ModelForm):
@@ -121,7 +133,7 @@ class TaskListItemAdminForm(forms.ModelForm):
 
 #============================================================================
 class CompositeItemAdminForm(TaskListItemAdminForm):
-    RESULT_RE = re.compile("^result\s*=\s*[_0-9.a-zA-Z]+.*$",re.MULTILINE)
+    RESULT_RE = re.compile("^result\s*=\s*[(_0-9.a-zA-Z]+.*$",re.MULTILINE)
     #hidden_fields = ("constant_value", "task_type")
     class Meta:
         exclude = ("constant_value", "task_type")
@@ -145,6 +157,10 @@ class TaskListItemAdmin(SaveUserMixin, admin.ModelAdmin):
 class CompositeTaskListItemAdmin(TaskListItemAdmin):
     form = CompositeItemAdminForm
     filter_horizontal = ("dependencies",)
+    #----------------------------------------------------------------------
+    def save_model(self,request,obj,form,change):
+        obj.task_type = models.CompositeTaskListItem.COMPOSITE
+        super(CompositeTaskListItemAdmin,self).save_model(request,obj,form,change)
 
 
 
