@@ -1,0 +1,43 @@
+[
+    {
+        "pk": 1,
+        "model": "units.unittype",
+        "fields": {
+            "model": "",
+            "vendor": "Accuray",
+            "name": "Tomotherapy"
+        }
+    },
+    {
+        "pk": 1,
+        "model": "units.modality",
+        "fields": {
+            "energy": 6.0,
+            "type": "photon"
+        }
+    },
+    {
+        "pk": 1,
+        "model": "units.unit",
+        "fields": {
+            "modalities": [
+                1
+            ],
+            "type": 1,
+            "number": 1,
+            "name": "Unit01"
+        }
+    },
+    {
+        "pk": 2,
+        "model": "units.unit",
+        "fields": {
+            "modalities": [
+                1
+            ],
+            "type": 1,
+            "number": 2,
+            "name": "Unit02"
+        }
+    }
+]

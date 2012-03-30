@@ -1,0 +1,28 @@
+[
+    {
+        "pk": 1,
+        "model": "qa.reference",
+        "fields": {
+            "modified_by": 1,
+            "name": "Ref 1",
+            "created": "2012-03-14T15:12:15.733Z",
+            "modified": "2012-03-14T15:12:15.733Z",
+            "created_by": 1,
+            "value": 1.0,
+            "ref_type": "numerical"
+        }
+    },
+    {
+        "pk": 2,
+        "model": "qa.reference",
+        "fields": {
+            "modified_by": 1,
+            "name": "Ref 2",
+            "created": "2012-03-14T15:12:29.214Z",
+            "modified": "2012-03-14T15:12:29.214Z",
+            "created_by": 1,
+            "value": 0.0,
+            "ref_type": "numerical"
+        }
+    }
+]

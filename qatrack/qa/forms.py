@@ -2,7 +2,7 @@ from django import forms
 
 from django.forms.models import inlineformset_factory, modelformset_factory, model_to_dict
 from django.forms.widgets import RadioSelect
-
+from django.contrib import messages
 import models
 
 
@@ -11,8 +11,8 @@ class TaskListItemInstanceForm(forms.ModelForm):
     """Model form for use in a formset of task_list_items within a tasklistinstance"""
 
     value = forms.FloatField(required=False, widget=forms.widgets.TextInput(attrs={"class":"qa-input"}))
-    #class Meta:
-    #    model = models.TaskListItemInstance
+    class Meta:
+        model = models.TaskListItemInstance
 
     #----------------------------------------------------------------------
     def clean(self):
@@ -34,6 +34,8 @@ class TaskListItemInstanceForm(forms.ModelForm):
         """limit a group of foreign key choices to given querysets and set to initial_objs"""
 
         for fieldname,model,initial_obj in zip(fieldnames,item_models,initial_objs):
+            if not initial_obj:
+                continue
             self.fields[fieldname].queryset = model.objects.filter(pk=initial_obj.pk)
             self.fields[fieldname].initial = initial_obj
 
@@ -46,18 +48,19 @@ class TaskListItemInstanceFormset(BaseTaskListItemInstanceFormset):
     def __init__(self,task_list, unit,*args,**kwargs):
         """prepopulate the reference, tolerance and task_list_item's for all forms in formset"""
 
-        #memberships = models.TaskListMembership.objects.filter(task_list=task_list, active=True)
-        unit_infos = models.TaskListItemUnitInfo.objects.filter(
-            task_list = task_list, unit = unit
-        ).filter(active=True)
+
+        items = task_list.all_items()
 
         #since we don't know ahead of time how many task list items there are going to be
         #we have to dynamically set extra for every form. Feels a bit hacky, but I'm not sure how else to do it.
-        self.extra = unit_infos.count()
+        self.extra = len(items)
 
         super(TaskListItemInstanceFormset,self).__init__(*args,**kwargs)
 
-        for f, info in zip(self.forms, unit_infos):
+        for f, item in zip(self.forms, items):
+            info = models.TaskListItemUnitInfo.objects.get(
+                task_list_item = item, unit = unit
+            )
 
             self.set_initial_fk_data(f,info)
             self.set_widgets(f,info)

@@ -236,6 +236,14 @@ class TaskList(models.Model):
         except self.DoesNotExist:
             return None
     #----------------------------------------------------------------------
+    def all_items(self):
+        """returns all task list items from this list and sublists"""
+        items = list(self.task_list_items.all())
+        for sublist in self.sublists.all():
+            items.extend(list(sublist.task_list_items.all()))
+
+        return items
+    #----------------------------------------------------------------------
     def __unicode__(self):
         """return display representation of object"""
         return "TaskList(%s)" % self.name
@@ -319,23 +327,47 @@ class UnitTaskLists(models.Model):
     def __unicode__(self):
         return ("%s %s" %(self.unit.name, self.frequency)).title()
 
+
+#----------------------------------------------------------------------
+def create_tasklistitemunitinfos(task_list,unit):
+    """Create TaskListItemUnitInfo objects to hold references and tolerances
+    for all task list items in a task list that was just added to a Unit
+    """
+
+    for task_list_item in task_list.all_items():
+        TaskListItemUnitInfo.objects.get_or_create(
+            unit = unit,
+            task_list_item = task_list_item,
+        )
+
 #----------------------------------------------------------------------
 @receiver(m2m_changed, sender=UnitTaskLists.task_lists.through)
 def unit_task_list_change(*args,**kwargs):
-    """Create TaskListItemInfo objects to hold references and tolerances
-    for all task list items in a task list that was just added to a Unit
+    """When a task list is assigned to a unit, ensure there is a
+    TaskListItemUnitInfo for every task_list_item/unit pair
     """
     if kwargs["action"] == "post_add":
-        unit_task_list = kwargs["instance"]
-        for task_list in unit_task_list.all_task_lists():
-            task_list_items = task_list.task_list_items.all()
-            for task_list_item in task_list_items:
-                TaskListItemUnitInfo.objects.get_or_create(
-                    unit = unit_task_list.unit,
-                    task_list_item = task_list_item,
-                    reference=None, #set by user in Admin interface
-                    tolerance=None, #set by user in Admin interface
-                )
+        utl = kwargs["instance"]
+        create_tasklistitemunitinfos(utl.task_list,utl.unit)
+#----------------------------------------------------------------------
+@receiver(m2m_changed, sender=TaskList.task_list_items.through)
+def task_list_change(*args,**kwargs):
+    """make sure there are UnitTaskListInfo infos for all task list items
+    Note that this can't be done in the TaskList.save method because the
+    many to many relationships are not updated until after the save method has
+    been executed. See http://stackoverflow.com/questions/1925383/issue-with-manytomany-relationships-not-updating-inmediatly-after-save
+    """
+
+    if kwargs["action"] == "post_add":
+        task_list = kwargs["instance"]
+        unit_task_lists = UnitTaskLists.objects.filter(task_lists=task_list)
+        for utl in unit_task_lists:
+            create_tasklistitemunitinfos(task_list,utl.unit)
+
+
+#----------------------------------------------------------------------
+def update_task_list_():
+    """"""
 
 ##============================================================================
 class TaskListItemInstance(models.Model):
