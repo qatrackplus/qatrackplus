@@ -26,13 +26,18 @@ FREQUENCY_CHOICES = (
     (OTHER, "Other"),
 )
 
+BOOLEAN = "boolean"
+NUMERICAL = "numerical"
+BOOLEAN = "boolean"
+SIMPLE = "simple"
+CONSTANT = "constant"
+COMPOSITE = "composite"
+
 
 #============================================================================
 class Reference(models.Model):
     """Reference values for various QA :model:`TaskListItem`s"""
 
-    BOOLEAN = "boolean"
-    NUMERICAL = "numerical"
     TYPE_CHOICES = ((NUMERICAL, "Numerical"), (BOOLEAN, "Yes / No"))
 
 
@@ -58,13 +63,13 @@ class Reference(models.Model):
         """more helpful interactive display name"""
         if self.ref_type == "yes_no":
             if self.value == 1:
-                return "Reference(%s=Yes Expected)"%(self.name,)
+                return self.name
             elif self.value == 0:
-                return "Reference(%s=No Expected)"%(self.name,)
+                return self.name
             else:
-                return "Reference(%s=Invalid Boolean)"%(self.name,)
+                return "%s (Invalid Boolean)"%(self.name,)
 
-        return "Reference(%s=%g)"%(self.name,self.value)
+        return "%s=%g"%(self.name,self.value)
 
 #============================================================================
 class Tolerance(models.Model):
@@ -118,11 +123,6 @@ class Category(models.Model):
 #============================================================================
 class TaskListItem(models.Model):
     """Task list item to be completed as part of a QA :model:`TaskList`"""
-    BOOLEAN = "boolean"
-    SIMPLE = "simple"
-    CONSTANT = "constant"
-    COMPOSITE = "composite"
-
     TASK_TYPE_CHOICES = (
         (BOOLEAN, "Boolean"),
         (SIMPLE, "Simple Numerical"),
@@ -131,8 +131,8 @@ class TaskListItem(models.Model):
     )
 
     name = models.CharField(max_length=256, help_text=_("Name for this task list item"))
-    short_name = models.SlugField(max_length=25, help_text=_("A short variable name for this test (to be used in composite calculations)."))
-    description = models.TextField(help_text=_("A concise description of what this task list item is for (optional)"))
+    short_name = models.SlugField(unique=True, max_length=25, help_text=_("A short variable name for this test (to be used in composite calculations)."))
+    description = models.TextField(help_text=_("A concise description of what this task list item is for (optional)"), blank=True,null=True)
     procedure = models.TextField(help_text=_("A short description of how to carry out this task"), blank=True, null=True)
 
     task_type = models.CharField(
@@ -142,6 +142,10 @@ class TaskListItem(models.Model):
     constant_value = models.FloatField(help_text=_("Only required for constant value types"), null=True, blank=True)
 
     category = models.ForeignKey(Category, help_text=_("Choose a category for this task"))
+
+    snippet = models.TextField(null=True, blank=True,help_text=_(
+        "For Composite Tests Only: Enter a Python snippet for evaluation of this test. The snippet must define a variable called 'result'."
+    ))
 
     #units = models.ManyToManyField(Unit,help_text=_("Choose which units this task should be performed on"))
 
@@ -181,23 +185,13 @@ class TaskListItem(models.Model):
 
         return "%s" % (self.name)
 
-#============================================================================
-class CompositeTaskListItem(TaskListItem):
-    """extended version of TaskListItem for composite tests"""
-    dependencies = models.ManyToManyField(TaskListItem,related_name="tasklistitem_dependencies")
-    snippet = models.TextField(help_text=_(
-        "Enter a Python snippet for evaluation of this test. The snippet must define a variable called 'result'."
-    ))
-    #============================================================================
-    class Meta:
-        verbose_name_plural = _("Task list items (composite)")
 
 #============================================================================
 class TaskListItemUnitInfo(models.Model):
     unit = models.ForeignKey(Unit)
     task_list_item = models.ForeignKey(TaskListItem)
-    reference = models.ForeignKey(Reference,verbose_name=_("Current Reference"),null=True)
-    tolerance = models.ForeignKey(Tolerance,null=True)
+    reference = models.ForeignKey(Reference,verbose_name=_("Current Reference"),null=True, blank=True)
+    tolerance = models.ForeignKey(Tolerance,null=True, blank=True)
     active = models.BooleanField(default=True)
 
     #============================================================================
@@ -244,6 +238,23 @@ class TaskList(models.Model):
             items.extend(list(sublist.task_list_items.all()))
 
         return items
+    #----------------------------------------------------------------------
+    def set_references(self):
+        """allow user to go to references in admin interface"""
+        #/admin/qa/tasklistitemunitinfo/?unit__id__exact=1
+        url = "%s?"%urlresolvers.reverse("admin:qa_tasklistitemunitinfo_changelist")
+        item_filter = "task_list_item__id__in=%s" % (','.join(["%d" % item.pk for item in self.all_items()]))
+
+        unit_filter = "unit__id__exact=%d"
+        unit_info_set = self.unittasklists_set.all()
+        urls = [(info.unit.name, url+item_filter+"&"+ unit_filter%info.unit.pk) for info in unit_info_set]
+        link = '<a href="%s">%s</a>'
+        links = [link % (url,name) for name,url in urls]
+
+        return ", ".join(links)
+    set_references.allow_tags = True
+    set_references.short_description = "Set references and tolerances for this list"
+
     #----------------------------------------------------------------------
     def __unicode__(self):
         """return display representation of object"""
@@ -320,6 +331,7 @@ class UnitTaskLists(models.Model):
             yield task_list
         for cycle in self.cycles.all():
             yield cycle
+
     #----------------------------------------------------------------------
     def name(self):
         return self.__unicode__()
@@ -349,7 +361,11 @@ def unit_task_list_change(*args,**kwargs):
     """
     if kwargs["action"] == "post_add":
         utl = kwargs["instance"]
-        create_tasklistitemunitinfos(utl.task_list,utl.unit)
+        for task_list in utl.task_lists.all():
+            create_tasklistitemunitinfos(task_list,utl.unit)
+        for cycle in utl.cycles.all():
+            for task_list in cycle.task_lists.all():
+                create_tasklistitemunitinfos(task_list,utl.unit)
 #----------------------------------------------------------------------
 @receiver(m2m_changed, sender=TaskList.task_list_items.through)
 def task_list_change(*args,**kwargs):
@@ -473,7 +489,10 @@ class TaskListCycle(models.Model):
     name = models.CharField(max_length=256,help_text=_("The name for this task list cycle"))
     task_lists = models.ManyToManyField(TaskList,through="TaskListCycleMembership")
     frequency = models.CharField(max_length=10, choices=FREQUENCY_CHOICES, help_text=_("Frequency with which this task list is cycled"))
-    units = models.ManyToManyField(Unit)
+
+    #TODO: remove me
+    units = models.ManyToManyField(Unit,blank=True,null=True)
+
     objects = CycleManager()
 
     #----------------------------------------------------------------------

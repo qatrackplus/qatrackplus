@@ -15,7 +15,7 @@
             </tr>
         </thead>
         <tbody>
-        {% for task_list in unit_task_list.lists_and_cycles %}
+        {% for task_list in unit_task_list.task_lists.all %}
             <tr>
                 <td>{{task_list.name|title}}</td>
                 {% with last_completed=task_list.last_completed_instance %}
@@ -30,6 +30,23 @@
                  <td><a href="{%url perform_qa pk=task_list.pk unit=unit_task_list.unit.number %}">Perform</a></td>
             </tr>
         {% endfor %}
+
+        {% for cycle_ in unit_task_list.cycles.all %}
+            <tr>
+                <td>{{cycle_.name|title}}</td>
+                {% with last_completed=cycle_.last_completed_instance %}
+                {% if last_completed %}
+                        <td>{{last_completed.created}}</td>
+                        <td>{{last_completed.status}}</td>
+                    {% else %}
+                        <td><span class="btn-info disabled">New Task List</span></td>
+                        <td><span class="btn-info disabled">New Task List</span></td>
+                    {% endif %}
+                 {% endwith %}
+                 <td><a href="{%url perform_qa pk=cycle_.pk unit=unit_task_list.unit.number%}?cycle=true">Perform</a></td>
+            </tr>
+        {% endfor %}
+
         </tbody>
     </table>
 {% endblock %}

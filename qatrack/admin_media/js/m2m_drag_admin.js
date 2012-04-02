@@ -4,10 +4,12 @@ in the admin. Starting point was http://djangosnippets.org/snippets/1053/
 */
 
 function set_order(grouping){
-
+    var order = 0;
     $(grouping).find('tr').each(function(i) {
+
         if ($(this).find("option:selected").val()){
-            $(this).find('input[id$=order]').val(i);
+            $(this).find('input[id$=order]').val(order);
+            order +=1;
         }
     });
 }

@@ -141,9 +141,15 @@ class PerformQAView(FormView):
     def get_context_data(self, **kwargs):
         """add formset and task list to our template context"""
         context = super(PerformQAView, self).get_context_data(**kwargs)
-
-        task_list =  get_object_or_404(models.TaskList,pk=self.kwargs["pk"])
         unit = get_object_or_404(Unit,number=self.kwargs["unit"])
+
+        if self.request.method.lower() == "get" and self.request.GET.has_key("cycle"):
+            cycle = get_object_or_404(models.TaskListCycle,pk=self.kwargs["pk"])
+            next_membership = cycle.next_for_unit(unit)
+            task_list = next_membership.task_list
+        else:
+            task_list =  get_object_or_404(models.TaskList,pk=self.kwargs["pk"])
+
         if self.request.POST:
             formset = forms.TaskListItemInstanceFormset(task_list,unit, self.request.POST)
         else:
