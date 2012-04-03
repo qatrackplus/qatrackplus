@@ -1,34 +1,130 @@
 [
     {
-        "pk": 1,
-        "model": "qa.tolerance",
+        "pk": 1, 
+        "model": "qa.tolerance", 
         "fields": {
-            "modified_date": "2012-03-14T15:12:52.302Z",
-            "modified_by": 1,
-            "name": "Tol 2mm/3mm",
-            "tol_high": 2.0,
-            "act_high": 3.0,
-            "created_by": 1,
-            "act_low": -3.0,
-            "tol_low": -2.0,
-            "created_date": "2012-03-14T15:12:52.302Z",
+            "modified_date": "2012-04-03T13:17:53.790Z", 
+            "modified_by": 2, 
+            "name": "Boolean Tolerance", 
+            "tol_high": 1e-10, 
+            "act_high": 1e-10, 
+            "created_by": 2, 
+            "act_low": -1e-10, 
+            "tol_low": -1e-10, 
+            "created_date": "2012-04-03T13:17:53.790Z", 
             "type": "absolute"
         }
-    },
+    }, 
     {
-        "pk": 2,
-        "model": "qa.tolerance",
+        "pk": 2, 
+        "model": "qa.tolerance", 
         "fields": {
-            "modified_date": "2012-03-14T15:13:14.749Z",
-            "modified_by": 1,
-            "name": "Tol 2%/3%",
-            "tol_high": 2.0,
-            "act_high": 3.0,
-            "created_by": 1,
-            "act_low": -3.0,
-            "tol_low": -2.0,
-            "created_date": "2012-03-14T15:13:14.749Z",
+            "modified_date": "2012-04-03T13:17:53.915Z", 
+            "modified_by": 2, 
+            "name": "+- 2mm/3mm", 
+            "tol_high": 2.0, 
+            "act_high": 3.0, 
+            "created_by": 2, 
+            "act_low": -3.0, 
+            "tol_low": -2.0, 
+            "created_date": "2012-04-03T13:17:53.915Z", 
+            "type": "absolute"
+        }
+    }, 
+    {
+        "pk": 3, 
+        "model": "qa.tolerance", 
+        "fields": {
+            "modified_date": "2012-04-03T13:17:54.024Z", 
+            "modified_by": 2, 
+            "name": "+2mm/3mm", 
+            "tol_high": 2.0, 
+            "act_high": 3.0, 
+            "created_by": 2, 
+            "act_low": 0.0, 
+            "tol_low": 0.0, 
+            "created_date": "2012-04-03T13:17:54.024Z", 
+            "type": "absolute"
+        }
+    }, 
+    {
+        "pk": 4, 
+        "model": "qa.tolerance", 
+        "fields": {
+            "modified_date": "2012-04-03T13:17:54.165Z", 
+            "modified_by": 2, 
+            "name": "+- 2%/3%", 
+            "tol_high": 2.0, 
+            "act_high": 3.0, 
+            "created_by": 2, 
+            "act_low": -3.0, 
+            "tol_low": -2.0, 
+            "created_date": "2012-04-03T13:17:54.165Z", 
             "type": "percentage"
+        }
+    }, 
+    {
+        "pk": 5, 
+        "model": "qa.tolerance", 
+        "fields": {
+            "modified_date": "2012-04-03T13:17:54.336Z", 
+            "modified_by": 2, 
+            "name": "+2%/3%", 
+            "tol_high": 2.0, 
+            "act_high": 3.0, 
+            "created_by": 2, 
+            "act_low": 0.0, 
+            "tol_low": 0.0, 
+            "created_date": "2012-04-03T13:17:54.321Z", 
+            "type": "percentage"
+        }
+    }, 
+    {
+        "pk": 6, 
+        "model": "qa.tolerance", 
+        "fields": {
+            "modified_date": "2012-04-03T13:17:54.445Z", 
+            "modified_by": 3, 
+            "name": "+- 2/2", 
+            "tol_high": 2.0, 
+            "act_high": 2.0, 
+            "created_by": 3, 
+            "act_low": -2.0, 
+            "tol_low": -2.0, 
+            "created_date": "2012-04-03T13:17:54.445Z", 
+            "type": "absolute"
+        }
+    }, 
+    {
+        "pk": 7, 
+        "model": "qa.tolerance", 
+        "fields": {
+            "modified_date": "2012-04-03T13:17:54.586Z", 
+            "modified_by": 3, 
+            "name": "Temperature Tol", 
+            "tol_high": 10.0, 
+            "act_high": 10.0, 
+            "created_by": 3, 
+            "act_low": -10.0, 
+            "tol_low": -10.0, 
+            "created_date": "2012-04-03T13:17:54.586Z", 
+            "type": "absolute"
+        }
+    }, 
+    {
+        "pk": 8, 
+        "model": "qa.tolerance", 
+        "fields": {
+            "modified_date": "2012-04-03T13:17:54.710Z", 
+            "modified_by": 3, 
+            "name": "Pressure Tol", 
+            "tol_high": 30.0, 
+            "act_high": 30.0, 
+            "created_by": 3, 
+            "act_low": -30.0, 
+            "tol_low": -30.0, 
+            "created_date": "2012-04-03T13:17:54.695Z", 
+            "type": "absolute"
         }
     }
 ]

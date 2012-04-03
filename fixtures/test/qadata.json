@@ -803,7 +803,7 @@
             "created": "2012-04-02T15:51:45.487Z", 
             "modified": "2012-04-02T15:51:45.487Z", 
             "created_by": 1, 
-            "snippet": "", 
+            "calculation_procedure": "", 
             "modified_by": 1, 
             "procedure": "Check the red Treatment Restrictions binder for any restrictions from the machine quality assurance or service programs and review all current restrictions.  It is the responsibility of the warm-up therapist to ensure that all therapists using that machine are aware of all restrictions. \r\n\r\nLog into the Elekta workstation.  Select Receive external prescription to put the machine in preparatory state.  Log on to MOSAIQ and select the morning warm-up patient (e.g. RUNIT05, WARM-UP). Enter the room and press the reset motors button on either the Linac or iView hand controls.    ", 
             "description": "En"
@@ -821,7 +821,7 @@
             "created": "2012-04-02T15:53:56.604Z", 
             "modified": "2012-04-02T15:53:56.604Z", 
             "created_by": 1, 
-            "snippet": "", 
+            "calculation_procedure": "", 
             "modified_by": 1, 
             "procedure": "Motion enablers on all three hand controls functional  Rotate gantry, verify that rotation stops when motion enabler is released. Repeat this test on the second unit hand control. Verify that panel motion is not possible unless the motion enablers on the XVI hand control are depressed.", 
             "description": "Motion enablers on all three hand controls functional "
@@ -839,7 +839,7 @@
             "created": "2012-04-02T15:54:47.405Z", 
             "modified": "2012-04-02T15:54:47.405Z", 
             "created_by": 1, 
-            "snippet": "", 
+            "calculation_procedure": "", 
             "modified_by": 1, 
             "procedure": "Verify that no treatment table motion is possible unless the motion enabler on the table control is depressed. Verify the motion enabler on both sides of the table.", 
             "description": ""
@@ -857,7 +857,7 @@
             "created": "2012-04-02T15:55:15.030Z", 
             "modified": "2012-04-02T15:55:15.030Z", 
             "created_by": 1, 
-            "snippet": "", 
+            "calculation_procedure": "", 
             "modified_by": 1, 
             "procedure": "With the treatment table locked, push laterally and longitudinally on the table top.  Verify that the table top does not move.", 
             "description": ""
@@ -875,7 +875,7 @@
             "created": "2012-04-02T15:56:16.664Z", 
             "modified": "2012-04-02T15:56:16.664Z", 
             "created_by": 1, 
-            "snippet": "", 
+            "calculation_procedure": "", 
             "modified_by": 1, 
             "procedure": "Verify that the two transverse laser lines (from patient left and right) and the two coronal laser lines are coincident within 1 mm at or near the machine isocenter and that all four lines are co-incident within 2 mm of their respective reference wall marks.", 
             "description": ""
@@ -893,7 +893,7 @@
             "created": "2012-04-02T15:56:54.402Z", 
             "modified": "2012-04-02T15:56:54.402Z", 
             "created_by": 1, 
-            "snippet": "", 
+            "calculation_procedure": "", 
             "modified_by": 1, 
             "procedure": "During gantry rotation, verify that pressing the motion stop button on the top of each of the three hand controls results in a Reset Motors interlock on the Inhibits page, and that no gantry motion is possible.  Press Reset Motors button to re-enable motion.", 
             "description": ""
@@ -911,7 +911,7 @@
             "created": "2012-04-02T15:58:42.327Z", 
             "modified": "2012-04-02T15:58:42.327Z", 
             "created_by": 1, 
-            "snippet": "", 
+            "calculation_procedure": "", 
             "modified_by": 1, 
             "procedure": "Rotate the gantry to 45o.  Use a film card held approximately at isocenter to visualize the laser lines.  Verify that the sagittal line from the ceiling laser is coincident (within 1 mm) with the sagittal laser and that the transverse line from the ceiling laser is coincident with both transverse laser lines from the lateral lasers (within 1 mm).", 
             "description": ""
@@ -929,7 +929,7 @@
             "created": "2012-04-02T15:59:27.650Z", 
             "modified": "2012-04-02T15:59:27.650Z", 
             "created_by": 1, 
-            "snippet": "", 
+            "calculation_procedure": "", 
             "modified_by": 1, 
             "procedure": "Verify that pushing the motion stops on each side of the couch results in a Reset Motors interlock on the Inhibits page, and that no treatment table or gantry motion is possible.  Pull out the motion stop buttons on the couch and press Reset Motors button to re-enable motion.", 
             "description": ""
@@ -947,7 +947,7 @@
             "created": "2012-04-02T16:00:19.232Z", 
             "modified": "2012-04-02T16:00:19.232Z", 
             "created_by": 1, 
-            "snippet": "", 
+            "calculation_procedure": "", 
             "modified_by": 1, 
             "procedure": " Confirm the functionality for each touchgaurd installed (collimator face, iView imaging panel, XVI imaging panel, XVI xray tube) as follows:\r\n\r\n    \u00b7        during gantry rotation press the touchgaurd and verify that gantry motion stops and the Touchguard interlock appears on the Inhibits page\r\n\r\n    \u00b7        release the touchguard and verify that the interlock clears and that gantry rotation is possible", 
             "description": ""
@@ -965,7 +965,7 @@
             "created": "2012-04-02T16:01:06.944Z", 
             "modified": "2012-04-02T16:01:06.944Z", 
             "created_by": 1, 
-            "snippet": "", 
+            "calculation_procedure": "", 
             "modified_by": 1, 
             "procedure": "Place the Checkmate QA dosimeter on the treatment couch and turn it ON.  Set the treatment gantry to 0\u00b0 and the collimator at 0\u00b0.  Place the Checkmate detector on the couch top with the digital display facing the in-room camera.  Adjust the height of the couch such that the surface of the Checkmate is aligned with the coronal lateral lasers.  Position the Checkmate by aligning the cross-hairs on its surface with the transverse lateral lasers and the sagittal laser.  Load a 20x20 cm field and verify that the field light cross hairs align with the Checkmate cross hairs to within 2 mm.", 
             "description": ""
@@ -983,7 +983,7 @@
             "created": "2012-04-02T16:01:45.931Z", 
             "modified": "2012-04-02T16:01:45.931Z", 
             "created_by": 1, 
-            "snippet": "", 
+            "calculation_procedure": "", 
             "modified_by": 1, 
             "procedure": "Record the distance to the Checkmate surface as shown by the ODI.  Verify that the ODI reads 100 (+/-) 0.5 cm.", 
             "description": ""
@@ -1001,7 +1001,7 @@
             "created": "2012-04-02T16:02:22.405Z", 
             "modified": "2012-04-02T16:02:22.405Z", 
             "created_by": 1, 
-            "snippet": "", 
+            "calculation_procedure": "", 
             "modified_by": 1, 
             "procedure": "  Verify that all four light field edges are within 2 mm of the 20x20 cm field indicated on the surface of the Checkmate.", 
             "description": ""
@@ -1019,7 +1019,7 @@
             "created": "2012-04-02T16:02:59.114Z", 
             "modified": "2012-04-02T16:02:59.114Z", 
             "created_by": 1, 
-            "snippet": "", 
+            "calculation_procedure": "", 
             "modified_by": 1, 
             "procedure": "Set the nominal field size to 10x10.  Verify that all four light field edges are within 2 mm of the 10x10 cm field indicated on the surface of the Checkmate.\r\n\r\nMove the Checkmate out of the radiation beam by rotating the table column. The Checkmate should not be in the radiation field while the beam is running.", 
             "description": ""
@@ -1037,7 +1037,7 @@
             "created": "2012-04-02T16:03:27.223Z", 
             "modified": "2012-04-02T16:03:27.223Z", 
             "created_by": 1, 
-            "snippet": "", 
+            "calculation_procedure": "", 
             "modified_by": 1, 
             "procedure": "Verify that the flowmeter indicates gas flow when the oxygen valve is turned on, that suction is heard when turned on, and all accessories are present.  Ensure the oxygen valve is turned off after the test.", 
             "description": ""
@@ -1055,7 +1055,7 @@
             "created": "2012-04-02T16:03:54.754Z", 
             "modified": "2012-04-02T16:03:54.754Z", 
             "created_by": 1, 
-            "snippet": "", 
+            "calculation_procedure": "", 
             "modified_by": 1, 
             "procedure": " As you leave the room, press the LPO button, and wait at least 30 seconds before closing the treatment room door.  Verify that the \u201cRoom Doors 1\u201d interlock has appeared and cannot be cleared from the console. ", 
             "description": ""
@@ -1073,7 +1073,7 @@
             "created": "2012-04-02T16:04:22.700Z", 
             "modified": "2012-04-02T16:04:22.700Z", 
             "created_by": 1, 
-            "snippet": "", 
+            "calculation_procedure": "", 
             "modified_by": 1, 
             "procedure": " In MOSAIQ select the first beam for the warm-up patient (10 MV for 500 MU).  Fully complete this beam delivery.  During beam delivery perform Test 17, 18, 19, 20 and warm-up the XVI x-ray tube.", 
             "description": ""
@@ -1091,7 +1091,7 @@
             "created": "2012-04-02T16:05:07.002Z", 
             "modified": "2012-04-02T16:05:07.002Z", 
             "created_by": 1, 
-            "snippet": "", 
+            "calculation_procedure": "", 
             "modified_by": 1, 
             "procedure": "Verify full functioning of the in-room cameras and intercom systems.  Intercom is tested by turning up the volume and verifying that machine sounds can be heard.", 
             "description": ""
@@ -1109,7 +1109,7 @@
             "created": "2012-04-02T16:05:34.274Z", 
             "modified": "2012-04-02T16:05:34.274Z", 
             "created_by": 1, 
-            "snippet": "", 
+            "calculation_procedure": "", 
             "modified_by": 1, 
             "procedure": "During beam on, verify that the console Audible Beam On Indicator is functional.  This should beep approximately once per second during beam on. ", 
             "description": ""
@@ -1127,7 +1127,7 @@
             "created": "2012-04-02T16:06:42.689Z", 
             "modified": "2012-04-02T16:06:42.689Z", 
             "created_by": 1, 
-            "snippet": "", 
+            "calculation_procedure": "", 
             "modified_by": 1, 
             "procedure": "Verify that the red light on the Primalarm outside the door is flashing when the beam is on.  Use the in-room camera system to verify that the red light on the Primalert in the treatment room is illuminated when the beam is on.   ", 
             "description": ""
@@ -1145,7 +1145,7 @@
             "created": "2012-04-02T16:07:09.852Z", 
             "modified": "2012-04-02T16:07:09.852Z", 
             "created_by": 1, 
-            "snippet": "", 
+            "calculation_procedure": "", 
             "modified_by": 1, 
             "procedure": "When beam is on the warning light over the door should be red BEAM ON, and green BEAM OFF when beam is off (General Division).  At the Civic Division (Unit 20), beam on is indicated by the \u201chand sign\u201d being illuminated.  Use the camera to verify that the Beam On Warning Lights inside the room are functional.", 
             "description": ""
@@ -1163,7 +1163,7 @@
             "created": "2012-04-02T16:07:37.607Z", 
             "modified": "2012-04-02T16:07:37.607Z", 
             "created_by": 1, 
-            "snippet": "", 
+            "calculation_procedure": "", 
             "modified_by": 1, 
             "procedure": "In MOSAIQ, select and run the second warm up beam (200 MU of 10 MV photons).  After a minimum of 30 MU\u2019s has been delivered, press INTERRUPT.  Verify that the beam is interrupted (Primalarm stops flashing, MU stops integrating) and the console displays INTERRUPT.", 
             "description": ""
@@ -1181,7 +1181,7 @@
             "created": "2012-04-02T16:08:07.572Z", 
             "modified": "2012-04-02T16:08:07.572Z", 
             "created_by": 1, 
-            "snippet": "", 
+            "calculation_procedure": "", 
             "modified_by": 1, 
             "procedure": "Resume the beam.  After an additional minimum of 30 MUs has run, press the TERMINATE button.  Verify that the beam terminates (Primalarm stops flashing, MU stops integrating). Press the Reset Motors button and finish running the 10 MV 200 MU beam.", 
             "description": ""
@@ -1199,7 +1199,7 @@
             "created": "2012-04-02T16:08:32.790Z", 
             "modified": "2012-04-02T16:08:32.790Z", 
             "created_by": 1, 
-            "snippet": "", 
+            "calculation_procedure": "", 
             "modified_by": 1, 
             "procedure": "Press START to resume the irradiation.  After an additional minimum of 30 MU\u2019s has been delivered, push open the treatment room door, and verify that an audible alarm sounds.", 
             "description": ""
@@ -1217,7 +1217,7 @@
             "created": "2012-04-02T16:09:00.841Z", 
             "modified": "2012-04-02T16:09:00.841Z", 
             "created_by": 1, 
-            "snippet": "", 
+            "calculation_procedure": "", 
             "modified_by": 1, 
             "procedure": "Verify that  opening the door during beam-on has interrupted the beam (Primalarm has stopped flashing).", 
             "description": ""
@@ -1235,7 +1235,7 @@
             "created": "2012-04-02T16:09:38.134Z", 
             "modified": "2012-04-02T16:09:38.134Z", 
             "created_by": 1, 
-            "snippet": "", 
+            "calculation_procedure": "", 
             "modified_by": 1, 
             "procedure": "Close the door and attempt to resume beam on.  Verify that the \u201cRoom Doors 1\u201d interlock has appeared and can not be cleared from the console.\r\n\r\nEnter the treatment room and reposition the Checkmate in the treatment beam by rotating the table column. Proceed with beam outputs tests.", 
             "description": ""
@@ -1253,7 +1253,7 @@
             "created": "2012-04-02T16:13:14.336Z", 
             "modified": "2012-04-02T16:26:26.490Z", 
             "created_by": 1, 
-            "snippet": "", 
+            "calculation_procedure": "", 
             "modified_by": 1, 
             "procedure": "Measure checkmate reading for 100MU of 10x10 open field", 
             "description": ""
@@ -1271,7 +1271,7 @@
             "created": "2012-04-02T16:14:17.677Z", 
             "modified": "2012-04-02T17:47:24.785Z", 
             "created_by": 1, 
-            "snippet": "", 
+            "calculation_procedure": "", 
             "modified_by": 1, 
             "procedure": "Record checkmate reading for 10MV beam, 100MU 10x10 open field.", 
             "description": ""
@@ -1289,7 +1289,7 @@
             "created": "2012-04-02T16:16:32.883Z", 
             "modified": "2012-04-02T16:16:32.883Z", 
             "created_by": 1, 
-            "snippet": "", 
+            "calculation_procedure": "", 
             "modified_by": 1, 
             "procedure": "Measure wedged output at col 0", 
             "description": ""
@@ -1307,7 +1307,7 @@
             "created": "2012-04-02T16:17:48.091Z", 
             "modified": "2012-04-02T16:17:48.091Z", 
             "created_by": 1, 
-            "snippet": "", 
+            "calculation_procedure": "", 
             "modified_by": 1, 
             "procedure": "Measure wedged output at collimator 180.", 
             "description": ""
@@ -1325,7 +1325,7 @@
             "created": "2012-04-02T16:23:13.951Z", 
             "modified": "2012-04-02T16:37:30.272Z", 
             "created_by": 1, 
-            "snippet": "result=(wedge_6mv_col0_10x10-wedge_6mv_col180_10x10)*2/(wedge_6mv_col0_10x10+wedge_6mv_col180_10x10)", 
+            "calculation_procedure": "result=(wedge_6mv_col0_10x10-wedge_6mv_col180_10x10)*2/(wedge_6mv_col0_10x10+wedge_6mv_col180_10x10)", 
             "modified_by": 1, 
             "procedure": "", 
             "description": ""
@@ -1343,7 +1343,7 @@
             "created": "2012-04-02T16:26:12.993Z", 
             "modified": "2012-04-02T16:37:07.474Z", 
             "created_by": 1, 
-            "snippet": "result=(wedge_6mv_col0_10x10+wedge_6mv_col180_10x10)/2./(open_field_10x10_6mv*4)", 
+            "calculation_procedure": "result=(wedge_6mv_col0_10x10+wedge_6mv_col180_10x10)/2./(open_field_10x10_6mv*4)", 
             "modified_by": 1, 
             "procedure": "", 
             "description": ""
@@ -1361,7 +1361,7 @@
             "created": "2012-04-02T16:29:16.891Z", 
             "modified": "2012-04-02T16:29:16.891Z", 
             "created_by": 1, 
-            "snippet": "", 
+            "calculation_procedure": "", 
             "modified_by": 1, 
             "procedure": "", 
             "description": ""
@@ -1379,7 +1379,7 @@
             "created": "2012-04-02T16:29:39.424Z", 
             "modified": "2012-04-02T16:32:43.016Z", 
             "created_by": 1, 
-            "snippet": "", 
+            "calculation_procedure": "", 
             "modified_by": 1, 
             "procedure": "", 
             "description": ""
@@ -1397,7 +1397,7 @@
             "created": "2012-04-02T16:31:54.017Z", 
             "modified": "2012-04-02T16:37:45.565Z", 
             "created_by": 1, 
-            "snippet": "result=(wedge_6mv_col90_10x10-wedge_6mv_col270_10x10)*2/(wedge_6mv_col90_10x10+wedge_6mv_col270_10x10)", 
+            "calculation_procedure": "result=(wedge_6mv_col90_10x10-wedge_6mv_col270_10x10)*2/(wedge_6mv_col90_10x10+wedge_6mv_col270_10x10)", 
             "modified_by": 1, 
             "procedure": "", 
             "description": ""
@@ -1415,7 +1415,7 @@
             "created": "2012-04-02T16:34:27.319Z", 
             "modified": "2012-04-02T16:34:27.319Z", 
             "created_by": 1, 
-            "snippet": "result=(wedge_6mv_col90_10x10+wedge_6mv_col270_10x10)/2./(open_field_10x10_6mv*4)", 
+            "calculation_procedure": "result=(wedge_6mv_col90_10x10+wedge_6mv_col270_10x10)/2./(open_field_10x10_6mv*4)", 
             "modified_by": 1, 
             "procedure": "", 
             "description": ""

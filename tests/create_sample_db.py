@@ -101,6 +101,7 @@ def create_tolerances():
     bob = django.contrib.auth.models.User.objects.get(username="bobw")
 
     tolerances = (
+        ("Boolean Tolerance", "absolute",-1e-10,-1e-10,1e-10,1e-10,bob),
         ("+- 2mm/3mm", "absolute",-3,-2,2,3,bob),
         ("+2mm/3mm", "absolute",0,0,2,3,bob),
         ("+- 2%/3%", "percentage", -3,-2,2,3, bob),

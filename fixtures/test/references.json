@@ -1,27 +1,92 @@
 [
     {
-        "pk": 1,
-        "model": "qa.reference",
+        "pk": 1, 
+        "model": "qa.reference", 
         "fields": {
-            "modified_by": 1,
-            "name": "Ref 1",
-            "created": "2012-03-14T15:12:15.733Z",
-            "modified": "2012-03-14T15:12:15.733Z",
-            "created_by": 1,
-            "value": 1.0,
+            "modified_by": 3, 
+            "name": "Yes Expected", 
+            "created": "2012-04-03T13:17:52.870Z", 
+            "modified": "2012-04-03T13:17:52.870Z", 
+            "created_by": 3, 
+            "value": 1.0, 
+            "ref_type": "yes_no"
+        }
+    }, 
+    {
+        "pk": 2, 
+        "model": "qa.reference", 
+        "fields": {
+            "modified_by": 3, 
+            "name": "No Expected", 
+            "created": "2012-04-03T13:17:52.980Z", 
+            "modified": "2012-04-03T13:17:52.980Z", 
+            "created_by": 3, 
+            "value": 0.0, 
+            "ref_type": "yes_no"
+        }
+    }, 
+    {
+        "pk": 3, 
+        "model": "qa.reference", 
+        "fields": {
+            "modified_by": 3, 
+            "name": "Zero Expected", 
+            "created": "2012-04-03T13:17:53.089Z", 
+            "modified": "2012-04-03T13:17:53.089Z", 
+            "created_by": 3, 
+            "value": 0.0, 
             "ref_type": "numerical"
         }
-    },
+    }, 
     {
-        "pk": 2,
-        "model": "qa.reference",
+        "pk": 4, 
+        "model": "qa.reference", 
         "fields": {
-            "modified_by": 1,
-            "name": "Ref 2",
-            "created": "2012-03-14T15:12:29.214Z",
-            "modified": "2012-03-14T15:12:29.214Z",
-            "created_by": 1,
-            "value": 0.0,
+            "modified_by": 2, 
+            "name": "One Expected", 
+            "created": "2012-04-03T13:17:53.198Z", 
+            "modified": "2012-04-03T13:17:53.213Z", 
+            "created_by": 2, 
+            "value": 1.0, 
+            "ref_type": "numerical"
+        }
+    }, 
+    {
+        "pk": 5, 
+        "model": "qa.reference", 
+        "fields": {
+            "modified_by": 2, 
+            "name": "Output reference", 
+            "created": "2012-04-03T13:17:53.323Z", 
+            "modified": "2012-04-03T13:17:53.338Z", 
+            "created_by": 2, 
+            "value": 100.0, 
+            "ref_type": "numerical"
+        }
+    }, 
+    {
+        "pk": 6, 
+        "model": "qa.reference", 
+        "fields": {
+            "modified_by": 2, 
+            "name": "Standard T (deg C)", 
+            "created": "2012-04-03T13:17:53.447Z", 
+            "modified": "2012-04-03T13:17:53.463Z", 
+            "created_by": 2, 
+            "value": 22.0, 
+            "ref_type": "numerical"
+        }
+    }, 
+    {
+        "pk": 7, 
+        "model": "qa.reference", 
+        "fields": {
+            "modified_by": 2, 
+            "name": "Standard P (mmHg)", 
+            "created": "2012-04-03T13:17:53.603Z", 
+            "modified": "2012-04-03T13:17:53.603Z", 
+            "created_by": 2, 
+            "value": 760.0, 
             "ref_type": "numerical"
         }
     }

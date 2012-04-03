@@ -143,7 +143,7 @@ class TaskListItem(models.Model):
 
     category = models.ForeignKey(Category, help_text=_("Choose a category for this task"))
 
-    snippet = models.TextField(null=True, blank=True,help_text=_(
+    calculation_procedure = models.TextField(null=True, blank=True,help_text=_(
         "For Composite Tests Only: Enter a Python snippet for evaluation of this test. The snippet must define a variable called 'result'."
     ))
 
