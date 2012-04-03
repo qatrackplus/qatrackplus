@@ -30,7 +30,7 @@ class CycleTest(TestCase):
             name = "test",
             short_name="test",
             description = "desc",
-            task_type = models.TaskListItem.SIMPLE,
+            task_type = models.SIMPLE,
             category = cat,
             created_by = self.user,
             modified_by = self.user,
