@@ -120,6 +120,7 @@ class PerformQAView(FormView):
             task_list_instance.task_list = task_list
             task_list_instance.created_by = self.request.user
             task_list_instance.modified_by = self.request.user
+            task_list_instance.unit = context["unit"]
             task_list_instance.save()
 
             #all task list item values are validated so now add remaining fields manually and save
@@ -131,11 +132,16 @@ class PerformQAView(FormView):
 
             #let user know request succeeded and return to unit list
             messages.success(self.request,_("Successfully submitted %s "% task_list.name))
-            url = reverse("qa_by_frequency_unit",args=(task_list.frequency,task_list.unit.number))
+
+            frequency = context.get("frequency")
+            if frequency:
+                url = reverse("qa_by_frequency_unit",args=(frequency,context["unit"].number))
+            else:
+                url = reverse("task_lists")
             return HttpResponseRedirect(url)
 
         #there was an error in one of the forms
-        return self.render_to_response(self.get_context_data(form=form))
+        return self.render_to_response(context)
 
     #----------------------------------------------------------------------
     def get_context_data(self, **kwargs):
@@ -143,11 +149,16 @@ class PerformQAView(FormView):
         context = super(PerformQAView, self).get_context_data(**kwargs)
         unit = get_object_or_404(Unit,number=self.kwargs["unit"])
 
-        if self.request.method.lower() == "get" and self.request.GET.has_key("cycle"):
+        context["frequency"] = self.request.GET.get("frequency")
+
+        if self.request.GET.has_key("cycle"):
             cycle = get_object_or_404(models.TaskListCycle,pk=self.kwargs["pk"])
             next_membership = cycle.next_for_unit(unit)
             task_list = next_membership.task_list
+            current_day = next_membership.order + 1
+            days = range(1,len(cycle)+1)
         else:
+            cycle, current_day,days = None, 1,[]
             task_list =  get_object_or_404(models.TaskList,pk=self.kwargs["pk"])
 
         if self.request.POST:
@@ -158,10 +169,14 @@ class PerformQAView(FormView):
         categories = models.Category.objects.all()
 
         context.update({
+            'current_day':current_day,
+            'days':days,
             'task_list':task_list,
             'unit':unit,
             'formset':formset,
             'categories':categories,
+            'unit':unit,
+            'cycle':cycle,
         })
 
         return context

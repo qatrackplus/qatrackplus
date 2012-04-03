@@ -18,12 +18,33 @@
         <h2>Perform {{task_list.unit.name}} {{task_list.name|title}}</h3>
     </div>
 </div>
+
 <div class="row">
-    <div class="span12 form-vertical">
-        <div id="filters" class="well control-group">
+
+    <div class="span6 well inline-block form-horizontal">
+
+        <div id="filters" class="control-group">
+            {% if days %}
+                <label for="category_filter" class="control-label">Choose Day:</label>
+
+                <div class="controls">
+                    <div class="input-append">
+                        <select id="cycle_day" class="input-medium">
+                            {% for day in days %}
+                                <option value="{{day}}" {% if day == current_day %}selected="selected"{% endif %}>
+                                    Day {{day}}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <button class="btn" type="button">Go!</button>
+                    </div>
+                </div>
+
+            {% endif %}
+
             <label for="category_filter" class="control-label">Filter by categories:</label>
             <div class="controls">
-                <select id="category_filter" multiple="multiple" class="input-large">
+                <select id="category_filter" multiple="multiple" class="input-medium">
                     <option value="all">Show All</option>
                     {% for category in categories %}
                         <option value="{{category.name|lower}}">
@@ -33,10 +54,13 @@
                 </select>
             </div>
         </div>
-        <div id="admin_controls" class="span9">
-
-        </div>
     </div>
+    {% if user.is_staff %}
+        <div id="admin_controls" class="inline-well well span5">
+            <h4>Admin Controls</h4>
+        </div>
+    {% endif %}
+
 </div>
 <div class="row">
     <div class="span12">
@@ -71,8 +95,8 @@
                         <th class="qa-value">Value</th>
                         <th class="qa-skip">Skip</th>
                         <th class="qa-status">Status</th>
-                        <th class="qa-showproc">Comment</th>
-                        <th class="qa-showcmt">Procedure</th>
+                        <th class="qa-showproc">Procedure</th>
+                        <th class="qa-showcmt">Comment</th>
                         <th class="qa-reference">Reference</th>
                     </tr>
                 </thead>

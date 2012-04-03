@@ -2,13 +2,6 @@
         "pk": 1,
         "model": "qa.tasklistcycle",
         "fields": {
-            "units": [
-                5,
-                6,
-                7,
-                8,
-                9
-            ],
             "frequency": "daily",
             "name": "Synergy Output Rotation"
         }

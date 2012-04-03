@@ -526,7 +526,7 @@
         "model": "qa.tasklistitem",
         "fields": {
             "category": 1,
-            "task_type": "simple",
+            "task_type": "composite",
             "constant_value": null,
             "name": "6MV Wedge Output Asymmetry (Col0/180)",
             "short_name": "wedge_6mv_asymmetry",

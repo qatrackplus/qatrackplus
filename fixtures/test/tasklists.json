@@ -86,45 +86,5 @@
             "slug": "synergy-day-2-outputs",
             "name": "Synergy Day 2 Outputs"
         }
-    },
-    {
-        "pk": 1,
-        "model": "qa.unittasklists",
-        "fields": {
-            "task_lists": [],
-            "frequency": "daily",
-            "unit": 1,
-            "cycles": []
-        }
-    },
-    {
-        "pk": 2,
-        "model": "qa.unittasklists",
-        "fields": {
-            "task_lists": [],
-            "frequency": "weekly",
-            "unit": 1,
-            "cycles": []
-        }
-    },
-    {
-        "pk": 3,
-        "model": "qa.unittasklists",
-        "fields": {
-            "task_lists": [],
-            "frequency": "monthly",
-            "unit": 1,
-            "cycles": []
-        }
-    },
-    {
-        "pk": 4,
-        "model": "qa.unittasklists",
-        "fields": {
-            "task_lists": [],
-            "frequency": "semiannual",
-            "unit": 1,
-            "cycles": []
-        }
     }
 ]

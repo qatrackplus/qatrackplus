@@ -26,13 +26,16 @@ FREQUENCY_CHOICES = (
     (OTHER, "Other"),
 )
 
+#task_types
 BOOLEAN = "boolean"
 NUMERICAL = "numerical"
-BOOLEAN = "boolean"
 SIMPLE = "simple"
 CONSTANT = "constant"
 COMPOSITE = "composite"
 
+#tolerance types
+ABSOLUTE = "absolute"
+PERCENT = "percent"
 
 #============================================================================
 class Reference(models.Model):
@@ -77,7 +80,7 @@ class Tolerance(models.Model):
     Model/methods for checking whether a value lies within tolerance
     and action levels
     """
-    TYPE_CHOICES = (("absolute", "Absolute"),("percentage", "Percentage"),)
+    TYPE_CHOICES = ((ABSOLUTE, "Absolute"),(PERCENT, "Percentage"),)
     name = models.CharField(max_length=50, unique=True, help_text=_("Enter a short name for this tolerance type"))
     type = models.CharField(max_length=20, help_text=_("Select whether this will be an absolute or relative tolerance criteria"),choices=TYPE_CHOICES)
     act_low = models.FloatField(verbose_name="Action Low", help_text=_("Absolute value of lower action level"), null=True)
@@ -172,6 +175,29 @@ class TaskListItem(models.Model):
         return "%s (%s)" %(all_link, ", ".join(links))
     set_references.allow_tags = True
     set_references.short_description = "Set references and tolerances for this item"
+
+    #----------------------------------------------------------------------
+    def unit_ref_tol(self,unit):
+        """return tuple of (act_low, tol_low, ref, tol_high, act_high)
+        where the act_*, tol_* and ref are the current tolerances and references
+        for this (task_list_item,unit) pair
+        """
+        unit_info = TaskListItemUnitInfo.objects.filter(unit=unit,task_list=self)
+        tol = unit_info.tolerance
+        ref = unit_info.reference
+
+        if tol:
+            tols = [tol.act_low, tol.tol_low, tol.tol_high, tol.act_high]
+        else:
+            tols = [None]*4
+
+        if ref:
+            val = ref.value
+        else:
+            val = None
+
+        return tols[:2]+[val]+tols[-2:]
+
 
 
     #---------------------------------------------------------------------------
@@ -406,8 +432,8 @@ class TaskListItemInstance(models.Model):
     comment = models.TextField(help_text=_("Add a comment to this task"), null=True, blank=True)
 
     #reference used
-    reference = models.ForeignKey(Reference)
-    tolerance = models.ForeignKey(Tolerance)
+    reference = models.ForeignKey(Reference,null=True, blank=True)
+    tolerance = models.ForeignKey(Tolerance, null=True, blank=True)
 
     task_list_instance = models.ForeignKey("TaskListInstance",editable=False)
     task_list_item = models.ForeignKey(TaskListItem)
@@ -489,9 +515,6 @@ class TaskListCycle(models.Model):
     name = models.CharField(max_length=256,help_text=_("The name for this task list cycle"))
     task_lists = models.ManyToManyField(TaskList,through="TaskListCycleMembership")
     frequency = models.CharField(max_length=10, choices=FREQUENCY_CHOICES, help_text=_("Frequency with which this task list is cycled"))
-
-    #TODO: remove me
-    units = models.ManyToManyField(Unit,blank=True,null=True)
 
     objects = CycleManager()
 

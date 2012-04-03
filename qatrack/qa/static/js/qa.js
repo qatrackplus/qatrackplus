@@ -107,6 +107,7 @@ function check_item_status(input_element){
     //check the value versus the reference
     var tolerances = validation_data[name].tolerances;
     var reference = validation_data[name].reference;
+
     var result = QAUtils.test_tolerance(val,reference.value,tolerances, is_bool);
 
     //update formatting with result
@@ -233,12 +234,12 @@ $(document).ready(function(){
 
     //show procedures when clicked
     $(".qa-showproc a").click(function(){
-        $(this).parent().parent().next().slideToggle(1200);
+        $(this).parent().parent().next().toggle(600);
     });
 
     //show comment when clicked
     $(".qa-showcmt a").click(function(){
-      $(this).parent().parent().next().next().slideToggle(1200);
+      $(this).parent().parent().next().next().toggle(600);
     });
 
     //anytime an input changes run validation
@@ -267,6 +268,15 @@ $(document).ready(function(){
             return false;
         }
     });
+
+    //automaticall unhide comment if test is being skipped
+    $(".qa-skip input").click(function(){
+        if ($(this).is(':checked')){
+            $(this).parent().parent().next().next().show(600);
+        }
+    });
+
+
 
     //run a full validation on page load
     full_validation();

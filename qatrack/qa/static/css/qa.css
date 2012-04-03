@@ -19,11 +19,18 @@ input[type="text"].qa-input {
 .qa-table td.qa-category {
     min-width:200px;
 }
+tr.qa-comment {
+    height:50px;
+}
 
 tr.qa-comment td, tr.qa-procedure td {
     text-align:left;
 }
 
-.;qa-reference, .qa-showproc, .qa-showcmt, .qa-skip, .qa-status {
+.qa-reference, .qa-showproc, .qa-showcmt, .qa-skip, .qa-status {
     width: 60px;
+}
+
+.inline-block {
+    display:inline-block;
 }

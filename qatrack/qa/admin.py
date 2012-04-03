@@ -91,15 +91,17 @@ class TaskListItemInfoAdmin(admin.ModelAdmin):
             ref_type = models.BOOLEAN
         else:
             ref_type = models.NUMERICAL
-        ref = models.Reference(
-            value=form["reference_value"].value(),
-            ref_type = ref_type,
-            created_by = request.user,
-            modified_by = request.user,
-            name = "%s %s" % (item_info.unit.name,item_info.task_list_item.name)
-        )
-        ref.save()
-        item_info.reference = ref
+        val = form["reference_value"].value()
+        if val not in ("", None):
+            ref = models.Reference(
+                value=val,
+                ref_type = ref_type,
+                created_by = request.user,
+                modified_by = request.user,
+                name = "%s %s" % (item_info.unit.name,item_info.task_list_item.name)
+            )
+            ref.save()
+            item_info.reference = ref
         super(TaskListItemInfoAdmin,self).save_model(request,item_info,form,change)
 
 #============================================================================

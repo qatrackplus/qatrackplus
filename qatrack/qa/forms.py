@@ -20,6 +20,11 @@ class TaskListItemInstanceForm(forms.ModelForm):
 
         cleaned_data = super(TaskListItemInstanceForm,self).clean()
         skipped = cleaned_data["skipped"]
+        comment = cleaned_data["comment"]
+
+        if skipped and not comment:
+            self._errors["skipped"] = self.error_class(["Please add comment when skipping"])
+            del cleaned_data["skipped"]
 
         #force user to enter value unless skipping test
         if "value" in cleaned_data:
