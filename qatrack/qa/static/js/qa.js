@@ -270,7 +270,7 @@ $(document).ready(function(){
             var idx = inputs.index(this);
 
             if (idx == inputs.length - 1) {
-                inputs[0].select()
+                inputs[0].select();
             } else {
                 inputs[idx + 1].focus(); //  handles submit buttons
                 inputs[idx + 1].select();

@@ -436,7 +436,9 @@ class TaskListItemInstance(models.Model):
     reference = models.ForeignKey(Reference,null=True, blank=True)
     tolerance = models.ForeignKey(Tolerance, null=True, blank=True)
 
-    task_list_instance = models.ForeignKey("TaskListInstance",editable=False,null=True,blank=True)
+    unit = models.ForeignKey(Unit,editable=False)
+
+    task_list_instance = models.ForeignKey("TaskListInstance",editable=False)
     task_list_item = models.ForeignKey(TaskListItem)
 
     work_completed = models.DateTimeField(default=datetime.datetime.now)

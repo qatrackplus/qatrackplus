@@ -9,10 +9,18 @@ from qatrack.qa import api
 from tastypie.api import Api
 
 v1_api = Api(api_name="v1")
-v1_api.register(api.TaskListItemResource())
-v1_api.register(api.TaskListItemInstanceResource())
-v1_api.register(api.ReferenceResource())
-v1_api.register(api.ToleranceResource())
+resources = [
+    api.TaskListItemResource(),
+    api.TaskListItemInstanceResource(),
+    api.ReferenceResource(),
+    api.ToleranceResource(),
+    api.UnitResource(),
+    api.ModalityResource(),
+    api.UnitTypeResource(),
+]
+for resource in resources:
+    v1_api.register(resource)
+
 
 urlpatterns = patterns('',
     url(r"^composite/$", views.CompositeCalculation.as_view(), name="composite"),
