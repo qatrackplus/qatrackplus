@@ -13,7 +13,7 @@ class TaskListItemInstanceForm(forms.ModelForm):
     value = forms.FloatField(required=False, widget=forms.widgets.TextInput(attrs={"class":"qa-input"}))
     class Meta:
         model = models.TaskListItemInstance
-
+        exclude = ("work_completed",)
     #----------------------------------------------------------------------
     def clean(self):
         """do some custom form validation"""
@@ -109,7 +109,19 @@ class TaskListItemInstanceFormset(BaseTaskListItemInstanceFormset):
 #============================================================================
 class TaskListInstanceForm(forms.ModelForm):
     """parent form for doing qa task list"""
+    input_formats = (
+        "%d-%m-%Y", "%d/%m/%Y",
+        "%d-%m-%y", "%d/%m/%y",
+    )
 
     #----------------------------------------------------------------------
     class Meta:
         model = models.TaskListInstance
+
+    #----------------------------------------------------------------------
+    def __init__(self,*args,**kwargs):
+        super(TaskListInstanceForm,self).__init__(*args,**kwargs)
+        self.fields["work_completed"].widget = forms.widgets.DateInput()
+        self.fields["work_completed"].widget.format = self.input_formats[0]
+        self.fields["work_completed"].input_formats = self.input_formats
+        self.fields["work_completed"].widget.attrs["readonly"] = True

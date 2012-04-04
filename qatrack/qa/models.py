@@ -1,3 +1,4 @@
+import datetime
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext as _
@@ -435,8 +436,16 @@ class TaskListItemInstance(models.Model):
     reference = models.ForeignKey(Reference,null=True, blank=True)
     tolerance = models.ForeignKey(Tolerance, null=True, blank=True)
 
-    task_list_instance = models.ForeignKey("TaskListInstance",editable=False)
+    task_list_instance = models.ForeignKey("TaskListInstance",editable=False,null=True,blank=True)
     task_list_item = models.ForeignKey(TaskListItem)
+
+    work_completed = models.DateTimeField(default=datetime.datetime.now)
+
+    #for keeping a very basic history
+    created = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(User, editable=False, related_name="task_list_item_instance_creator")
+    modified = models.DateTimeField(auto_now=True)
+    modified_by = models.ForeignKey(User, editable=False, related_name="task_list_item_instance_modifier")
 
     #----------------------------------------------------------------------
     def save(self, *args, **kwargs):
@@ -466,6 +475,8 @@ class TaskListInstance(models.Model):
 
     task_list = models.ForeignKey(TaskList, editable=False)
     unit = models.ForeignKey(Unit,editable=False)
+
+    work_completed = models.DateTimeField(default=datetime.datetime.now)
 
     #for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)

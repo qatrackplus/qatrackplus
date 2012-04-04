@@ -104,7 +104,7 @@ class PerformQAView(FormView):
 
     context_object_name = "task_list"
     form_class = forms.TaskListInstanceForm
-
+    task_list_fields_to_copy = ("unit", "work_completed", "created", "created_by", "modified", "modified_by",)
     #----------------------------------------------------------------------
     def form_valid(self, form):
         """add extra info to the task_list_intance and save all the task_list_items if valid"""
@@ -123,10 +123,13 @@ class PerformQAView(FormView):
             task_list_instance.unit = context["unit"]
             task_list_instance.save()
 
+
             #all task list item values are validated so now add remaining fields manually and save
             for item_form in formset:
                 obj = item_form.save(commit=False)
                 obj.task_list_instance = task_list_instance
+                for field in self.task_list_fields_to_copy:
+                    setattr(obj,field,getattr(task_list_instance,field))
                 obj.status = models.TaskListItemInstance.UNREVIEWED
                 obj.save()
 

@@ -3,11 +3,14 @@
 
 {% block extra_style %}
     <link href="{% static "css/qa.css" %}" rel="stylesheet">
+    <link href="{% static "datepicker/css/datepicker.css" %}" rel="stylesheet">
+
 {% endblock %}
 
 {% block extra_script %}
     <script src="{% static "js/qautils.js" %}"></script>
     <script src="{% static "js/qa.js" %}"></script>
+    <script src="{% static "datepicker/js/bootstrap-datepicker.js" %}"></script>
 {% endblock %}
 
 {% load qa_tags %}
@@ -67,6 +70,17 @@
     <div class="span12">
         <form class="nosubmit form-inline" id="qa-form" method="POST" action="">
             {% csrf_token %}
+			<div class="control-group">
+				<label for="work-completed" class="control-label">{{form.work_completed.label}}:</label>
+
+				<div class="controls">
+
+					<div class="input-append date" id="work-completed" data-date="{% now 'd-m-Y' %}" data-date-format="dd-mm-yyyy">
+						{{form.work_completed}}
+						<span class="add-on"><i class="icon-th"></i></span>
+					</div>
+				</div>
+			</div>
 
             {# display any form errors up top #}
             {% if form.errors %}

@@ -286,7 +286,7 @@ $(document).ready(function(){
         }
     });
 
-
+    $("#work-completed").datepicker();
 
     //run a full validation on page load
     full_validation();
