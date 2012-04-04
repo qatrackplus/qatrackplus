@@ -243,13 +243,16 @@ $(document).ready(function(){
     });
 
     //anytime an input changes run validation
-    $("form input").change(function(){
+    $("#qa-form input").change(function(){
         check_item_status($(this));
         calculate_composites();
     });
 
-
+    //run filter routine anytime user alters the categories
     $("#category_filter").change(filter_by_category);
+
+    //update the link for user to change cycles
+    $("#cycle-day").change(set_cycle_link);
 
     //prevent form submission when user hits enter key
     $(this).on("keypress","input", function(e) {

@@ -592,7 +592,7 @@ class TaskListCycleMembership(models.Model):
     class Meta:
         ordering = ("order",)
 
-        #note this won't actually work because when saving multiple
-        #memberships they can have the same order temporarily
+        #note the following won't actually work because when saving multiple
+        #memberships they can have the same order temporarily when orders are changed
         #unique_together = (("order", "cycle"),)
 

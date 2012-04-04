@@ -36,7 +36,7 @@
                                 </option>
                             {% endfor %}
                         </select>
-                        <button class="btn" type="button">Go!</button>
+                        <a href="" class="btn" type="button" id="change-task-list">Go</a>
                     </div>
                 </div>
 
@@ -86,6 +86,8 @@
                 </div>
             {% endif %}
 
+            <input type="hidden" name="task-list-id" id="task-list-id" value="{{task_list.pk}}"/>
+            <input type="hidden" name="cycle-id" id="cycle-id" value="{{cycle.id}}"/>
             {{formset.management_form}}
             <table class="qa-table table table-bordered table-striped table-condensed">
                 <thead>

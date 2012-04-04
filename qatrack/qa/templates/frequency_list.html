@@ -27,7 +27,7 @@
                         <td><span class="btn-info disabled">New Task List</span></td>
                     {% endif %}
                  {% endwith %}
-                 <td><a href="{%url perform_qa pk=task_list.pk unit=unit_task_list.unit.number %}?frequency={{unit_task_list.frequency}}">Perform</a></td>
+                 <td><a href="{%url perform_qa frequency=frequency type="task_list" pk=task_list.pk unit_number=unit_task_list.unit.number %}">Perform</a></td>
             </tr>
         {% endfor %}
 
@@ -43,7 +43,7 @@
                         <td><span class="btn-info disabled">New Task List</span></td>
                     {% endif %}
                  {% endwith %}
-                 <td><a href="{%url perform_qa pk=cycle_.pk unit=unit_task_list.unit.number%}?frequency={{unit_task_list.frequency}}&cycle=true">Perform</a></td>
+                 <td><a href="{%url perform_qa frequency=frequency type="cycle" pk=cycle_.pk unit_number=unit_task_list.unit.number%}">Perform</a></td>
             </tr>
         {% endfor %}
 

@@ -147,11 +147,11 @@ class PerformQAView(FormView):
     def get_context_data(self, **kwargs):
         """add formset and task list to our template context"""
         context = super(PerformQAView, self).get_context_data(**kwargs)
-        unit = get_object_or_404(Unit,number=self.kwargs["unit"])
+        unit = get_object_or_404(Unit,number=self.kwargs["unit_number"])
 
-        context["frequency"] = self.request.GET.get("frequency")
+        context["frequency"] = self.kwargs["frequency"]
 
-        if self.request.GET.has_key("cycle"):
+        if self.kwargs["type"] == "cycle":
             cycle = get_object_or_404(models.TaskListCycle,pk=self.kwargs["pk"])
             next_membership = cycle.next_for_unit(unit)
             task_list = next_membership.task_list
@@ -198,8 +198,8 @@ class UnitFrequencyListView(TemplateView):
         frequency = self.kwargs["frequency"].lower()
         context["frequency"] = frequency
 
-        unit = self.kwargs["unit"]
-        context["unit_task_list"] = models.UnitTaskLists.objects.get(unit__number=unit,frequency=frequency)
+        unit_number = self.kwargs["unit_number"]
+        context["unit_task_list"] = models.UnitTaskLists.objects.get(unit__number=unit_number,frequency=frequency)
 
         return context
 
