@@ -30,6 +30,7 @@
                 <div class="controls">
                     <div class="input-append">
                         <select id="cycle-day" class="input-medium">
+                            <option value="next">Next scheduled</option>
                             {% for day in days %}
                                 <option value="{{day}}" {% if day == current_day %}selected="selected"{% endif %}>
                                     Day {{day}}

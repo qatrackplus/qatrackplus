@@ -221,6 +221,15 @@ function filter_by_category(){
     });
 };
 
+/***************************************************************/
+//set link for cycle when user changes cycle day dropdown
+function set_cycle_link(){
+    var pathname = window.location.pathname;
+    var root = pathname.split(/(.+)\//);
+    var day = $("#cycle-day option:selected").val();
+    $("#change-task-list").attr("href",pathname+"?day="+day);
+}
+
 /****************************************************************/
 $(document).ready(function(){
 
