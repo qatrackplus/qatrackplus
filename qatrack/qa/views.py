@@ -1,6 +1,6 @@
 import json
 from django.contrib import messages
-from django.http import HttpResponse,HttpResponseRedirect
+from django.http import HttpResponse,HttpResponseRedirect, Http404
 from django.shortcuts import get_object_or_404
 from django.core.urlresolvers import reverse
 from django.views.generic import ListView, FormView, View, TemplateView
@@ -153,9 +153,23 @@ class PerformQAView(FormView):
 
         if self.kwargs["type"] == "cycle":
             cycle = get_object_or_404(models.TaskListCycle,pk=self.kwargs["pk"])
-            next_membership = cycle.next_for_unit(unit)
-            task_list = next_membership.task_list
-            current_day = next_membership.order + 1
+            day = self.request.GET.get("day")
+            if day == "next":
+                cycle_membership = cycle.next_for_unit(unit)
+            else:
+                try:
+                    order = int(day)-1
+                except (ValueError,TypeError):
+                    raise Http404
+
+                cycle_membership = get_object_or_404(
+                    models.TaskListCycleMembership,
+                    cycle = cycle,
+                    order=order,
+                )
+
+            task_list = cycle_membership.task_list
+            current_day = cycle_membership.order + 1
             days = range(1,len(cycle)+1)
         else:
             cycle, current_day,days = None, 1,[]

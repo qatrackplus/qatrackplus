@@ -20,8 +20,8 @@ urlpatterns = patterns('',
     #performing qa
     #url(r"^task_list/$",ListView.as_view(model=models.TaskList), name="task_lists" ),
     url(r"^(?P<frequency>\w+)/task_lists?/$", views.UnitGroupedFrequencyListView.as_view(), name="qa_by_frequency"),
-    url(r"^(?P<frequency>\w+)/(?P<type>task_lists?|cycles?)/(?P<pk>\d+)/(?P<unit_number>\d+)$", views.PerformQAView.as_view(), name="perform_qa"),
-    url(r"^(?P<frequency>\w+)/task_lists?/(?P<unit_number>\d+)/$", views.UnitFrequencyListView.as_view(), name="qa_by_frequency_unit"),
+    url(r"^(?P<frequency>\w+)/(?P<type>task_lists?|cycles?)/(?P<pk>\d+)/unit/(?P<unit_number>\d+)$", views.PerformQAView.as_view(), name="perform_qa"),
+    url(r"^(?P<frequency>\w+)/task_lists?/unit/(?P<unit_number>\d+)/$", views.UnitFrequencyListView.as_view(), name="qa_by_frequency_unit"),
 
     #api urls
     url(r"^api/",include(v1_api.urls)),

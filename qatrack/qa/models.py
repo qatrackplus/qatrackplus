@@ -513,6 +513,7 @@ class TaskListCycle(models.Model):
     """
 
     name = models.CharField(max_length=256,help_text=_("The name for this task list cycle"))
+
     task_lists = models.ManyToManyField(TaskList,through="TaskListCycleMembership")
     frequency = models.CharField(max_length=10, choices=FREQUENCY_CHOICES, help_text=_("Frequency with which this task list is cycled"))
 
@@ -554,6 +555,7 @@ class TaskListCycle(models.Model):
     #----------------------------------------------------------------------
     def next_for_unit(self,unit):
         """return membership object containing next task list to be completed"""
+
         last_completed = self.last_completed(unit)
         if not last_completed:
             return self.first()
@@ -565,6 +567,10 @@ class TaskListCycle(models.Model):
             return self.first()
 
         return TaskListCycleMembership.objects.get(cycle=self, order=next_order)
+    #----------------------------------------------------------------------
+    def membership_by_order(self,order):
+        """return membership for unit with given order"""
+        return TaskListCycleMembership.objects.get(cycle=self, order=order)
     #----------------------------------------------------------------------
     def last_completed_instance(self):
         """return the last instance of this task list that was performed"""
