@@ -127,6 +127,7 @@ class PerformQAView(FormView):
             for item_form in formset:
                 obj = item_form.save(commit=False)
                 obj.task_list_instance = task_list_instance
+                obj.unit = task_list_instance.unit
                 obj.status = models.TaskListItemInstance.UNREVIEWED
                 obj.save()
 
