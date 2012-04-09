@@ -1,0 +1,298 @@
+[
+    {
+        "pk": 1, 
+        "model": "units.unittype", 
+        "fields": {
+            "model": "Hi Art", 
+            "vendor": "Accuray", 
+            "name": "Tomotherapy"
+        }
+    }, 
+    {
+        "pk": 2, 
+        "model": "units.unittype", 
+        "fields": {
+            "model": "Beam Modulator", 
+            "vendor": "Elekta", 
+            "name": "BM"
+        }
+    }, 
+    {
+        "pk": 3, 
+        "model": "units.unittype", 
+        "fields": {
+            "model": "Synergy", 
+            "vendor": "Elekta", 
+            "name": "Synergy"
+        }
+    }, 
+    {
+        "pk": 4, 
+        "model": "units.unittype", 
+        "fields": {
+            "model": "Primus", 
+            "vendor": "Siemens", 
+            "name": "Primus"
+        }
+    }, 
+    {
+        "pk": 5, 
+        "model": "units.unittype", 
+        "fields": {
+            "model": "Cyberknife", 
+            "vendor": "Accuray", 
+            "name": "Cyberknife"
+        }
+    }, 
+    {
+        "pk": 1, 
+        "model": "units.modality", 
+        "fields": {
+            "energy": 6.0, 
+            "type": "photon"
+        }
+    }, 
+    {
+        "pk": 2, 
+        "model": "units.modality", 
+        "fields": {
+            "energy": 10.0, 
+            "type": "photon"
+        }
+    }, 
+    {
+        "pk": 3, 
+        "model": "units.modality", 
+        "fields": {
+            "energy": 15.0, 
+            "type": "photon"
+        }
+    }, 
+    {
+        "pk": 4, 
+        "model": "units.modality", 
+        "fields": {
+            "energy": 18.0, 
+            "type": "photon"
+        }
+    }, 
+    {
+        "pk": 5, 
+        "model": "units.modality", 
+        "fields": {
+            "energy": 6.0, 
+            "type": "electron"
+        }
+    }, 
+    {
+        "pk": 6, 
+        "model": "units.modality", 
+        "fields": {
+            "energy": 9.0, 
+            "type": "electron"
+        }
+    }, 
+    {
+        "pk": 7, 
+        "model": "units.modality", 
+        "fields": {
+            "energy": 11.0, 
+            "type": "electron"
+        }
+    }, 
+    {
+        "pk": 8, 
+        "model": "units.modality", 
+        "fields": {
+            "energy": 12.0, 
+            "type": "electron"
+        }
+    }, 
+    {
+        "pk": 9, 
+        "model": "units.modality", 
+        "fields": {
+            "energy": 13.0, 
+            "type": "electron"
+        }
+    }, 
+    {
+        "pk": 10, 
+        "model": "units.modality", 
+        "fields": {
+            "energy": 15.0, 
+            "type": "electron"
+        }
+    }, 
+    {
+        "pk": 11, 
+        "model": "units.modality", 
+        "fields": {
+            "energy": 17.0, 
+            "type": "electron"
+        }
+    }, 
+    {
+        "pk": 1, 
+        "model": "units.unit", 
+        "fields": {
+            "modalities": [
+                1
+            ], 
+            "type": 1, 
+            "number": 1, 
+            "name": "Unit01"
+        }
+    }, 
+    {
+        "pk": 2, 
+        "model": "units.unit", 
+        "fields": {
+            "modalities": [
+                1
+            ], 
+            "type": 1, 
+            "number": 2, 
+            "name": "Unit02"
+        }
+    }, 
+    {
+        "pk": 3, 
+        "model": "units.unit", 
+        "fields": {
+            "modalities": [
+                1, 
+                4, 
+                5, 
+                6, 
+                7, 
+                9, 
+                11
+            ], 
+            "type": 4, 
+            "number": 4, 
+            "name": "Unit04"
+        }
+    }, 
+    {
+        "pk": 5, 
+        "model": "units.unit", 
+        "fields": {
+            "modalities": [
+                1, 
+                2
+            ], 
+            "type": 3, 
+            "number": 5, 
+            "name": "Unit05"
+        }
+    }, 
+    {
+        "pk": 6, 
+        "model": "units.unit", 
+        "fields": {
+            "modalities": [
+                1, 
+                2
+            ], 
+            "type": 3, 
+            "number": 6, 
+            "name": "Unit06"
+        }
+    }, 
+    {
+        "pk": 4, 
+        "model": "units.unit", 
+        "fields": {
+            "modalities": [
+                1, 
+                4, 
+                5, 
+                6, 
+                7, 
+                9, 
+                11
+            ], 
+            "type": 4, 
+            "number": 7, 
+            "name": "Unit07"
+        }
+    }, 
+    {
+        "pk": 10, 
+        "model": "units.unit", 
+        "fields": {
+            "modalities": [
+                1, 
+                3
+            ], 
+            "type": 2, 
+            "number": 8, 
+            "name": "Unit08"
+        }
+    }, 
+    {
+        "pk": 11, 
+        "model": "units.unit", 
+        "fields": {
+            "modalities": [
+                1, 
+                3
+            ], 
+            "type": 2, 
+            "number": 9, 
+            "name": "Unit09"
+        }
+    }, 
+    {
+        "pk": 12, 
+        "model": "units.unit", 
+        "fields": {
+            "modalities": [
+                1
+            ], 
+            "type": 5, 
+            "number": 11, 
+            "name": "Cyberknife"
+        }
+    }, 
+    {
+        "pk": 7, 
+        "model": "units.unit", 
+        "fields": {
+            "modalities": [
+                1, 
+                2
+            ], 
+            "type": 3, 
+            "number": 21, 
+            "name": "Unit21"
+        }
+    }, 
+    {
+        "pk": 8, 
+        "model": "units.unit", 
+        "fields": {
+            "modalities": [
+                1, 
+                2
+            ], 
+            "type": 3, 
+            "number": 22, 
+            "name": "Unit22"
+        }
+    }, 
+    {
+        "pk": 9, 
+        "model": "units.unit", 
+        "fields": {
+            "modalities": [
+                1, 
+                2
+            ], 
+            "type": 3, 
+            "number": 23, 
+            "name": "Unit23"
+        }
+    }
+]

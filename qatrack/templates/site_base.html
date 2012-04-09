@@ -13,7 +13,9 @@
                     <b class="caret"></b>
                 </a>
                 <ul class="dropdown-menu">
-                    <li><a href="{% url qa_by_frequency 'daily' %}"><i class="icon-list"></i> Daily QA</a></li>
+                    {% for freq in QA_FREQUENCIES %}
+                        <li><a href="{% url qa_by_frequency freq.0 %}"><i class="icon-list"></i> {{freq.1}}</a></li>
+                    {% endfor %}
                 </ul>
             </li>
         </ul>

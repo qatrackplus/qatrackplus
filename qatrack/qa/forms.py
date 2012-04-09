@@ -2,7 +2,7 @@ from django import forms
 
 from django.forms.models import inlineformset_factory, modelformset_factory, model_to_dict
 from django.forms.widgets import RadioSelect
-
+from django.contrib import messages
 import models
 
 
@@ -13,13 +13,18 @@ class TaskListItemInstanceForm(forms.ModelForm):
     value = forms.FloatField(required=False, widget=forms.widgets.TextInput(attrs={"class":"qa-input"}))
     class Meta:
         model = models.TaskListItemInstance
-
+        exclude = ("work_completed",)
     #----------------------------------------------------------------------
     def clean(self):
         """do some custom form validation"""
 
         cleaned_data = super(TaskListItemInstanceForm,self).clean()
         skipped = cleaned_data["skipped"]
+        comment = cleaned_data["comment"]
+
+        if skipped and not comment:
+            self._errors["skipped"] = self.error_class(["Please add comment when skipping"])
+            del cleaned_data["skipped"]
 
         #force user to enter value unless skipping test
         if "value" in cleaned_data:
@@ -34,6 +39,8 @@ class TaskListItemInstanceForm(forms.ModelForm):
         """limit a group of foreign key choices to given querysets and set to initial_objs"""
 
         for fieldname,model,initial_obj in zip(fieldnames,item_models,initial_objs):
+            if not initial_obj:
+                continue
             self.fields[fieldname].queryset = model.objects.filter(pk=initial_obj.pk)
             self.fields[fieldname].initial = initial_obj
 
@@ -43,23 +50,27 @@ class TaskListItemInstanceFormset(BaseTaskListItemInstanceFormset):
     """Formset for TaskListItemInstances"""
 
     #----------------------------------------------------------------------
-    def __init__(self,task_list,*args,**kwargs):
+    def __init__(self,task_list, unit,*args,**kwargs):
         """prepopulate the reference, tolerance and task_list_item's for all forms in formset"""
 
-        memberships = models.TaskListMembership.objects.filter(task_list=task_list, active=True)
+
+        items = task_list.all_items()
 
         #since we don't know ahead of time how many task list items there are going to be
         #we have to dynamically set extra for every form. Feels a bit hacky, but I'm not sure how else to do it.
-        self.extra = memberships.count()
+        self.extra = len(items)
 
         super(TaskListItemInstanceFormset,self).__init__(*args,**kwargs)
 
-        for f, m in zip(self.forms, memberships):
+        for f, item in zip(self.forms, items):
+            info = models.TaskListItemUnitInfo.objects.get(
+                task_list_item = item, unit = unit
+            )
 
-            self.set_initial_fk_data(f,m)
-            self.set_widgets(f,m)
-            self.disable_read_only_fields(f,m)
-            self.set_constant_values(f,m)
+            self.set_initial_fk_data(f,info)
+            self.set_widgets(f,info)
+            self.disable_read_only_fields(f,info)
+            self.set_constant_values(f,info)
 
     #----------------------------------------------------------------------
     def disable_read_only_fields(self,form,membership):
@@ -98,7 +109,19 @@ class TaskListItemInstanceFormset(BaseTaskListItemInstanceFormset):
 #============================================================================
 class TaskListInstanceForm(forms.ModelForm):
     """parent form for doing qa task list"""
+    input_formats = (
+        "%d-%m-%Y", "%d/%m/%Y",
+        "%d-%m-%y", "%d/%m/%y",
+    )
 
     #----------------------------------------------------------------------
     class Meta:
         model = models.TaskListInstance
+
+    #----------------------------------------------------------------------
+    def __init__(self,*args,**kwargs):
+        super(TaskListInstanceForm,self).__init__(*args,**kwargs)
+        self.fields["work_completed"].widget = forms.widgets.DateInput()
+        self.fields["work_completed"].widget.format = self.input_formats[0]
+        self.fields["work_completed"].input_formats = self.input_formats
+        self.fields["work_completed"].widget.attrs["readonly"] = True

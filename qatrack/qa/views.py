@@ -1,9 +1,9 @@
 import json
 from django.contrib import messages
-from django.http import HttpResponse,HttpResponseRedirect
+from django.http import HttpResponse,HttpResponseRedirect, Http404
 from django.shortcuts import get_object_or_404
 from django.core.urlresolvers import reverse
-from django.views.generic import ListView, FormView, View
+from django.views.generic import ListView, FormView, View, TemplateView
 from django.utils.translation import ugettext as _
 from qatrack.qa import models
 from qatrack.units.models import Unit, UnitType
@@ -104,7 +104,7 @@ class PerformQAView(FormView):
 
     context_object_name = "task_list"
     form_class = forms.TaskListInstanceForm
-
+    task_list_fields_to_copy = ("unit", "work_completed", "created", "created_by", "modified", "modified_by",)
     #----------------------------------------------------------------------
     def form_valid(self, form):
         """add extra info to the task_list_intance and save all the task_list_items if valid"""
@@ -120,94 +120,131 @@ class PerformQAView(FormView):
             task_list_instance.task_list = task_list
             task_list_instance.created_by = self.request.user
             task_list_instance.modified_by = self.request.user
+            task_list_instance.unit = context["unit"]
             task_list_instance.save()
+
 
             #all task list item values are validated so now add remaining fields manually and save
             for item_form in formset:
                 obj = item_form.save(commit=False)
                 obj.task_list_instance = task_list_instance
+                for field in self.task_list_fields_to_copy:
+                    setattr(obj,field,getattr(task_list_instance,field))
                 obj.status = models.TaskListItemInstance.UNREVIEWED
                 obj.save()
 
             #let user know request succeeded and return to unit list
             messages.success(self.request,_("Successfully submitted %s "% task_list.name))
-            url = reverse("qa_by_frequency_unit",args=(task_list.frequency,task_list.unit.number))
+
+            frequency = context.get("frequency")
+            if frequency:
+                url = reverse("qa_by_frequency_unit",args=(frequency,context["unit"].number))
+            else:
+                url = reverse("task_lists")
             return HttpResponseRedirect(url)
 
         #there was an error in one of the forms
-        return self.render_to_response(self.get_context_data(form=form))
+        return self.render_to_response(context)
 
     #----------------------------------------------------------------------
     def get_context_data(self, **kwargs):
         """add formset and task list to our template context"""
         context = super(PerformQAView, self).get_context_data(**kwargs)
+        unit = get_object_or_404(Unit,number=self.kwargs["unit_number"])
 
-        task_list =  get_object_or_404(models.TaskList,pk=self.kwargs["pk"])
+        context["frequency"] = self.kwargs["frequency"]
+
+        if self.kwargs["type"] == "cycle":
+            cycle = get_object_or_404(models.TaskListCycle,pk=self.kwargs["pk"])
+            day = self.request.GET.get("day")
+            if day == "next":
+                cycle_membership = cycle.next_for_unit(unit)
+            else:
+                try:
+                    order = int(day)-1
+                except (ValueError,TypeError):
+                    raise Http404
+
+                cycle_membership = get_object_or_404(
+                    models.TaskListCycleMembership,
+                    cycle = cycle,
+                    order=order,
+                )
+
+            task_list = cycle_membership.task_list
+            current_day = cycle_membership.order + 1
+            days = range(1,len(cycle)+1)
+        else:
+            cycle, current_day,days = None, 1,[]
+            task_list =  get_object_or_404(models.TaskList,pk=self.kwargs["pk"])
 
         if self.request.POST:
-            formset = forms.TaskListItemInstanceFormset(task_list,self.request.POST)
+            formset = forms.TaskListItemInstanceFormset(task_list,unit, self.request.POST)
         else:
-            formset = forms.TaskListItemInstanceFormset(task_list)
+            formset = forms.TaskListItemInstanceFormset(task_list, unit)
 
         categories = models.Category.objects.all()
 
         context.update({
+            'current_day':current_day,
+            'days':days,
             'task_list':task_list,
+            'unit':unit,
             'formset':formset,
             'categories':categories,
+            'unit':unit,
+            'cycle':cycle,
         })
 
         return context
 
 #============================================================================
-class UnitFrequencyListView(ListView):
+class UnitFrequencyListView(TemplateView):
     """list daily/monthly/annual task lists for a unit"""
 
-    context_object_name = "task_lists"
     template_name = "frequency_list.html"
 
     #----------------------------------------------------------------------
-    def get_queryset(self):
+    def get_context_data(self,**kwargs):
         """
-        return task lists for a specific frequency (daily/monthly etc)
-        and specific unit
+        return task lists and cycles for a specific frequency
+        (daily/monthly etc)and specific unit
         """
-        self.unit = get_object_or_404(Unit, number=self.args[1])
-        return self.unit.tasklist_set.filter(frequency=self.args[0].lower())
-    #----------------------------------------------------------------------
-    def get_context_data(self, **kwargs):
-        """add unit to template context"""
-        context = super(UnitFrequencyListView, self).get_context_data(**kwargs)
-        context["unit"] = self.unit
-        context["frequency"] = self.args[0]
-        return context
 
+        context = super(UnitFrequencyListView,self).get_context_data(**kwargs)
+        frequency = self.kwargs["frequency"].lower()
+        context["frequency"] = frequency
+
+        unit_number = self.kwargs["unit_number"]
+        context["unit_task_list"] = models.UnitTaskLists.objects.get(unit__number=unit_number,frequency=frequency)
+
+        return context
 
 #============================================================================
-class UnitGroupedFrequencyListView(ListView):
+class UnitGroupedFrequencyListView(TemplateView):
     """view for grouping all task lists with a certain frequency for all units"""
     template_name = "unit_grouped_frequency_list.html"
-    #----------------------------------------------------------------------
-    def get_queryset(self):
-        """grab all task lists with given frequency"""
-        return models.TaskList.objects.filter(frequency=self.args[0].lower())
-    #----------------------------------------------------------------------
-    def get_context_data(self, **kwargs):
-        """add grouped objects to template context"""
-        context = super(UnitGroupedFrequencyListView, self).get_context_data(**kwargs)
-        unit_types = UnitType.objects.all()
 
-        #organize all task lists into unit type->unit->task list heirarchy
-        unit_type_groups = []
-        for unit_type in unit_types:
-            unit_groups = [(u, self.object_list.filter(unit=u)) for u in unit_type.unit_set.all()]
-            unit_type_groups.append((unit_type, unit_groups))
-        context["unit_type_groups"] = unit_type_groups
+    #----------------------------------------------------------------------
+    def get_context_data(self,**kwargs):
+        """grab all task lists and cycles with given frequency"""
+        context = super(UnitGroupedFrequencyListView,self).get_context_data(**kwargs)
+        frequency = self.kwargs["frequency"].lower()
+        context["frequency"] = frequency
 
-        context["frequency"] = self.args[0]
+        unit_type_sets = []
+
+        for ut in UnitType.objects.all():
+            unit_type_set = []
+            for unit in Unit.objects.filter(type=ut):
+                unit_type_set.append(
+                    models.UnitTaskLists.objects.get(unit=unit, frequency=frequency)
+                )
+
+            unit_type_sets.append((ut,unit_type_set))
+
+        context["unit_type_list"] = unit_type_sets
         return context
-
-
 
 
 

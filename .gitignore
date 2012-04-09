@@ -18,3 +18,4 @@ local_settings.py
 *.wpr
 *.wpu
 fixtures/dev
+questions_*

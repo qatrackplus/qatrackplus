@@ -1,4 +1,4 @@
-//for an explanation of this design pattery see:
+//for an explanation of this design pattern see:
 var QAUtils = new function() {
     this.ACT_LOW = "act_low";
     this.TOL_LOW = "tol_low";
@@ -9,7 +9,7 @@ var QAUtils = new function() {
     this.TOLERANCE = "tolerance";
     this.ACTION = "action";
 
-    this.RELATIVE = "relative";
+    this.PERCENT = "percent";
     this.ABSOLUTE = "absolute";
 
     this.EPSILON = 1E-10;
@@ -47,7 +47,16 @@ var QAUtils = new function() {
             return this.test_bool(value, reference)
         }
 
-        if (tolerances.type == this.RELATIVE){
+        if (!tolerances.type){
+            return {
+                status:this.WITHIN_TOL,
+                gen_status:this.WITHIN_TOL,
+                diff:"",
+                message: "OK"
+            };
+        }
+
+        if (tolerances.type == this.PERCENT){
             diff = this.percent_difference(value,reference);
             message = "(" + diff.toFixed(1)+")";
 

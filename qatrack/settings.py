@@ -19,7 +19,7 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'db/dev.db',                      # Or path to database file if using sqlite3.
+        'NAME': 'db/remodel.db',                      # Or path to database file if using sqlite3.
         'USER': '',                      # Not used with sqlite3.
         'PASSWORD': '',                  # Not used with sqlite3.
         'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
@@ -132,6 +132,7 @@ TEMPLATE_CONTEXT_PROCESSORS += [
 #you can add more fixture
 FIXTURE_DIRS = (
     'fixtures/',
+    'fixtures/test/'
 )
 
 INSTALLED_APPS = (
@@ -143,6 +144,8 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+
+    'tastypie',
 
     #qatrack specific
     'qatrack.units',

@@ -107,6 +107,7 @@ function check_item_status(input_element){
     //check the value versus the reference
     var tolerances = validation_data[name].tolerances;
     var reference = validation_data[name].reference;
+
     var result = QAUtils.test_tolerance(val,reference.value,tolerances, is_bool);
 
     //update formatting with result
@@ -220,6 +221,13 @@ function filter_by_category(){
     });
 };
 
+/***************************************************************/
+//set link for cycle when user changes cycle day dropdown
+function set_cycle_link(){
+    var day = $("#cycle-day option:selected").val();
+    $("#change-task-list").attr("href",window.location.pathname+"?day="+day);
+}
+
 /****************************************************************/
 $(document).ready(function(){
 
@@ -233,22 +241,25 @@ $(document).ready(function(){
 
     //show procedures when clicked
     $(".qa-showproc a").click(function(){
-        $(this).parent().parent().next().slideToggle(1200);
+        $(this).parent().parent().next().toggle(600);
     });
 
     //show comment when clicked
     $(".qa-showcmt a").click(function(){
-      $(this).parent().parent().next().next().slideToggle(1200);
+      $(this).parent().parent().next().next().toggle(600);
     });
 
     //anytime an input changes run validation
-    $("form input").change(function(){
+    $("#qa-form input").change(function(){
         check_item_status($(this));
         calculate_composites();
     });
 
-
+    //run filter routine anytime user alters the categories
     $("#category_filter").change(filter_by_category);
+
+    //update the link for user to change cycles
+    $("#cycle-day").change(set_cycle_link);
 
     //prevent form submission when user hits enter key
     $(this).on("keypress","input", function(e) {
@@ -259,7 +270,7 @@ $(document).ready(function(){
             var idx = inputs.index(this);
 
             if (idx == inputs.length - 1) {
-                inputs[0].select()
+                inputs[0].select();
             } else {
                 inputs[idx + 1].focus(); //  handles submit buttons
                 inputs[idx + 1].select();
@@ -267,6 +278,15 @@ $(document).ready(function(){
             return false;
         }
     });
+
+    //automaticall unhide comment if test is being skipped
+    $(".qa-skip input").click(function(){
+        if ($(this).is(':checked')){
+            $(this).parent().parent().next().next().show(600);
+        }
+    });
+
+    $("#work-completed").datepicker();
 
     //run a full validation on page load
     full_validation();
