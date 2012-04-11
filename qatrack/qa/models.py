@@ -381,6 +381,18 @@ def create_tasklistitemunitinfos(task_list,unit):
         )
 
 #----------------------------------------------------------------------
+@receiver(m2m_changed, sender=UnitTaskLists.cycles.through)
+def unit_cycle_change(*args,**kwargs):
+    """When a task list cycle is assigned to a unit, ensure there is a
+    TaskListItemUnitInfo for every task_list_item/unit pair
+    """
+    if kwargs["action"] == "post_add":
+        utl = kwargs["instance"]
+        for cycle in utl.cycles.all():
+            for task_list in cycle.task_lists.all():
+                create_tasklistitemunitinfos(task_list,utl.unit)
+
+#----------------------------------------------------------------------
 @receiver(m2m_changed, sender=UnitTaskLists.task_lists.through)
 def unit_task_list_change(*args,**kwargs):
     """When a task list is assigned to a unit, ensure there is a
@@ -390,9 +402,6 @@ def unit_task_list_change(*args,**kwargs):
         utl = kwargs["instance"]
         for task_list in utl.task_lists.all():
             create_tasklistitemunitinfos(task_list,utl.unit)
-        for cycle in utl.cycles.all():
-            for task_list in cycle.task_lists.all():
-                create_tasklistitemunitinfos(task_list,utl.unit)
 #----------------------------------------------------------------------
 @receiver(m2m_changed, sender=TaskList.task_list_items.through)
 def task_list_change(*args,**kwargs):
