@@ -5,6 +5,8 @@ import django.db
 
 from django.utils.translation import ugettext as _
 from django.contrib import admin
+from django.contrib.admin.templatetags.admin_static import static
+from django.utils.safestring import mark_safe
 
 import qatrack.qa.models as models
 from qatrack.units.models import Unit
@@ -104,9 +106,11 @@ class TaskListItemInfoAdmin(admin.ModelAdmin):
             item_info.reference = ref
         super(TaskListItemInfoAdmin,self).save_model(request,item_info,form,change)
 
+
 #============================================================================
 class TaskListAdminForm(forms.ModelForm):
     """Form for handling validation of TaskList creation/editing"""
+
     #----------------------------------------------------------------------
     def clean_sublists(self,*args,**kwargs):
         """Make sure a user doesn't try to add itself as sublist"""
@@ -117,12 +121,30 @@ class TaskListAdminForm(forms.ModelForm):
         return sublists
 
 #============================================================================
+class TaskListMembershipInline(admin.StackedInline):
+    """"""
+    model = models.TaskListMembership
+    extra = 1
+    template = "admin/qa/tasklistmembership/edit_inline/tabular.html"
+
+#============================================================================
 class TaskListAdmin(SaveUserMixin, admin.ModelAdmin):
     prepopulated_fields =  {'slug': ('name',)}
     list_display = (title_case_name, "set_references", "modified", "modified_by", "active")
     list_filter = ("active",)
     filter_horizontal= ("task_list_items", "sublists", )
     form = TaskListAdminForm
+    inlines = [TaskListMembershipInline]
+
+    #============================================================================
+    class Media:
+        js = (
+            settings.STATIC_URL+"js/jquery-1.7.1.min.js",
+            settings.STATIC_URL+"js/jquery-ui.min.js",
+            #settings.STATIC_URL+"js/collapsed_stacked_inlines.js",
+            settings.STATIC_URL+"js/m2m_drag_admin.js",
+        )
+
 
 #============================================================================
 class TaskListItemAdminForm(forms.ModelForm):

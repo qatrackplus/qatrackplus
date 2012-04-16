@@ -227,6 +227,20 @@ class TaskListItemUnitInfo(models.Model):
         unique_together = ["task_list_item","unit"]
 
 #============================================================================
+class TaskListMembership(models.Model):
+    """Keep track of ordering for tasklistitems within a task list"""
+    task_list = models.ForeignKey("TaskList")
+    task_list_item = models.ForeignKey(TaskListItem)
+    order = models.IntegerField()
+
+    class Meta:
+        ordering = ("order",)
+
+    #----------------------------------------------------------------------
+    def __unicode__(self):
+        return self.task_list_item.name
+
+#============================================================================
 class TaskList(models.Model):
     """Container for a collection of QA :model:`TaskListItem`s"""
 
@@ -236,7 +250,7 @@ class TaskList(models.Model):
 
     active = models.BooleanField(help_text=_("Uncheck to disable this list"), default=True)
 
-    task_list_items = models.ManyToManyField("TaskListItem", help_text=_("Which task list items does this list contain"))
+    task_list_items = models.ManyToManyField("TaskListItem", help_text=_("Which task list items does this list contain"),through=TaskListMembership)
 
     sublists = models.ManyToManyField("self",
         symmetrical=False,null=True, blank=True,
@@ -260,9 +274,9 @@ class TaskList(models.Model):
     #----------------------------------------------------------------------
     def all_items(self):
         """returns all task list items from this list and sublists"""
-        items = list(self.task_list_items.all())
+        items = [m.task_list_item for m in self.tasklistmembership_set.all()]
         for sublist in self.sublists.all():
-            items.extend(list(sublist.task_list_items.all()))
+            items.extend(sublist.all_items())
 
         return items
     #----------------------------------------------------------------------
