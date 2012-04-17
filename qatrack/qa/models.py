@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.utils.translation import ugettext as _
 from qatrack.units.models import Unit
 from django.core import urlresolvers
+from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
 
 from django.dispatch import receiver
@@ -266,7 +267,6 @@ class TaskList(models.Model):
     #----------------------------------------------------------------------
     def last_completed_instance(self):
         """return the last instance of this task list that was performed"""
-        self.
         try:
             return self.tasklistinstance_set.latest("created")
         except self.DoesNotExist:
@@ -613,7 +613,8 @@ class TaskListCycle(models.Model):
         return TaskListCycleMembership.objects.get(cycle=self, order=order)
     #----------------------------------------------------------------------
     def last_completed_instance(self):
-        """return the last instance of this task list that was performed"""
+        """return the last instance of this task list that was performed
+        or None if it has never been performed"""
 
         try:
             return TaskListInstance.objects.filter(

@@ -119,12 +119,15 @@ class TaskListAdminForm(forms.ModelForm):
             raise django.forms.ValidationError("You can't add a list to its own sublists")
 
         return sublists
+
+#============================================================================
 class TaskListItemInlineFormset(forms.models.BaseInlineFormSet):
 
     #----------------------------------------------------------------------
     def clean(self):
-        """"""
+        """Make sure there are no duplicated short_name's in a TaskList"""
         super(TaskListItemInlineFormset,self).clean()
+
         short_names = [f.instance.task_list_item.short_name for f in self.forms[:-self.extra]]
         duplicates = list(set([sn for sn in short_names if short_names.count(sn)>1]))
         if duplicates:
