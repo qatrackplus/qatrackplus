@@ -3,13 +3,17 @@
 
 {% block extra_style %}
     <link href="{% static "css/qa.css" %}" rel="stylesheet">
+    <link href="{% static "css/timePicker.css" %}" rel="stylesheet">
     <link href="{% static "datepicker/css/datepicker.css" %}" rel="stylesheet">
 
 {% endblock %}
 
 {% block extra_script %}
+
     <script src="{% static "js/qautils.js" %}"></script>
     <script src="{% static "js/qa.js" %}"></script>
+
+    <script src="{% static "js/jquery.timePicker.min.js" %}"></script>
     <script src="{% static "datepicker/js/bootstrap-datepicker.js" %}"></script>
 {% endblock %}
 
@@ -74,10 +78,12 @@
 				<label for="work-completed" class="control-label">{{form.work_completed.label}}:</label>
 
 				<div class="controls">
-
 					<div class="input-append date" id="work-completed" data-date="{% now 'd-m-Y' %}" data-date-format="dd-mm-yyyy">
 						{{form.work_completed}}
 						<span class="add-on"><i class="icon-th"></i></span>
+						{% for error in form.errors.work_completed %}
+							<span class="alert-error help-block-inline">{{ error }} {{form.work_completed.help_text}}</span>
+						{% endfor %}
 					</div>
 				</div>
 			</div>
@@ -86,9 +92,11 @@
             {% if form.errors %}
                 <div class="alert-message error">
                     {% for field,errors in form.errors.items %}
-                        {% for error in errors %}
-                                <span class="error help-block-inline">{{field}} - {{ error }}</span>
-                        {% endfor %}
+						{% if field != "work_completed" %}
+							{% for error in errors %}
+								<span class="alert-error help-block-inline ">{{ error }}</span>
+							{% endfor %}
+						{% endif %}
                     {% endfor %}
                 </div>
             {% endif %}
@@ -96,7 +104,7 @@
             {% if formset.non_form_errors %}
                 <div class="alert-message error">
                     {% for error in formset.non_form_errors %}
-                        <span class=" error help-block-inline">{{ error }}</span>
+                        <span class="alert-error help-block-inline">{{ error }}</span>
                     {% endfor %}
                 </div>
             {% endif %}

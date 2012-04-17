@@ -10,7 +10,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.dispatch import receiver
 from django.db.models.signals import post_save, m2m_changed
 from django.db.models import signals
-
+from qatrack import settings
 import re
 
 #global frequency choices
@@ -525,7 +525,9 @@ class TaskListItemInstance(models.Model):
     task_list_instance = models.ForeignKey("TaskListInstance",editable=False)
     task_list_item = models.ForeignKey(TaskListItem)
 
-    work_completed = models.DateTimeField(default=datetime.datetime.now)
+    work_completed = models.DateTimeField(default=datetime.datetime.now,
+        help_text=settings.DATETIME_HELP,
+    )
 
     #for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)
