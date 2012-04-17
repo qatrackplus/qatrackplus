@@ -266,7 +266,7 @@ class TaskList(models.Model):
     #----------------------------------------------------------------------
     def last_completed_instance(self):
         """return the last instance of this task list that was performed"""
-
+        self.
         try:
             return self.tasklistinstance_set.latest("created")
         except self.DoesNotExist:
@@ -419,8 +419,10 @@ def unit_task_list_change(*args,**kwargs):
 #----------------------------------------------------------------------
 @receiver(m2m_changed, sender=TaskList.task_list_items.through)
 def task_list_change(*args,**kwargs):
-    """make sure there are UnitTaskListInfo infos for all task list items
-    Note that this can't be done in the TaskList.save method because the
+    """make sure there are UnitTaskListInfo infos for all task list items (1)
+    and verify that there are no duplicate short names
+
+    (1) Note that this can't be done in the TaskList.save method because the
     many to many relationships are not updated until after the save method has
     been executed. See http://stackoverflow.com/questions/1925383/issue-with-manytomany-relationships-not-updating-inmediatly-after-save
     """
@@ -430,6 +432,8 @@ def task_list_change(*args,**kwargs):
         unit_task_lists = UnitTaskLists.objects.filter(task_lists=task_list)
         for utl in unit_task_lists:
             create_tasklistitemunitinfos(task_list,utl.unit)
+    elif kwargs["action"] == "pre_add":
+        task_list = kwargs["instance"]
 
 
 ##============================================================================

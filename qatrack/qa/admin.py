@@ -112,18 +112,34 @@ class TaskListAdminForm(forms.ModelForm):
     """Form for handling validation of TaskList creation/editing"""
 
     #----------------------------------------------------------------------
-    def clean_sublists(self,*args,**kwargs):
+    def clean_sublists(self):
         """Make sure a user doesn't try to add itself as sublist"""
         sublists = self.cleaned_data["sublists"]
         if self.instance in sublists:
             raise django.forms.ValidationError("You can't add a list to its own sublists")
 
         return sublists
+class TaskListItemInlineFormset(forms.models.BaseInlineFormSet):
+
+    #----------------------------------------------------------------------
+    def clean(self):
+        """"""
+        super(TaskListItemInlineFormset,self).clean()
+        short_names = [f.instance.task_list_item.short_name for f in self.forms[:-self.extra]]
+        duplicates = list(set([sn for sn in short_names if short_names.count(sn)>1]))
+        if duplicates:
+            raise forms.ValidationError(
+                "The following short_names are duplicated " + ",".join(duplicates)
+            )
+
+        return self.cleaned_data
+
 
 #============================================================================
-class TaskListMembershipInline(admin.StackedInline):
+class TaskListMembershipInline(admin.TabularInline):
     """"""
     model = models.TaskListMembership
+    formset = TaskListItemInlineFormset
     extra = 1
     template = "admin/qa/tasklistmembership/edit_inline/tabular.html"
 
