@@ -325,7 +325,7 @@ class TaskList(models.Model):
     def last_completed_instance(self):
         """return the last instance of this task list that was performed"""
         try:
-            return self.tasklistinstance_set.latest("created")
+            return self.tasklistinstance_set.latest("work_completed")
         except self.DoesNotExist:
             return None
     #----------------------------------------------------------------------
@@ -638,7 +638,7 @@ class TaskListCycle(models.Model):
             last_tli = TaskListInstance.objects.filter(
                 unit=unit,
                 task_list__in=self.task_lists.all()
-            ).latest()
+            ).latest("work_completed")
 
             last = TaskListCycleMembership.objects.get(
                 cycle=self,
