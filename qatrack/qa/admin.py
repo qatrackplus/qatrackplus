@@ -170,7 +170,12 @@ class TaskListItemAdmin(SaveUserMixin, admin.ModelAdmin):
     list_display = ["name","short_name","category", "task_type", "set_references"]
     list_filter = ["category","task_type"]
 
-
+    #============================================================================
+    class Media:
+        js = (
+            settings.STATIC_URL+"js/jquery-1.7.1.min.js",
+            settings.STATIC_URL+"js/tasklistitem_admin.js",
+        )
 
 #============================================================================
 class UnitTaskListAdmin(admin.ModelAdmin):
