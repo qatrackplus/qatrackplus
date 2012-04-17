@@ -76,7 +76,7 @@ class TaskListItemInstanceFormset(BaseTaskListItemInstanceFormset):
     def disable_read_only_fields(self,form,membership):
         """disable some fields for constant and composite tests"""
         if membership.task_list_item.task_type in ("constant", "composite",):
-            for field in ("value", "skipped", "comment",):
+            for field in ("value", ):
                 form.fields[field].widget.attrs["readonly"] = "readonly"
 
 
