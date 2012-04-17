@@ -11,6 +11,8 @@ from django.dispatch import receiver
 from django.db.models.signals import post_save, m2m_changed
 from django.db.models import signals
 
+import re
+
 #global frequency choices
 DAILY = "daily"
 WEEKLY = "weekly"
@@ -135,8 +137,11 @@ class TaskListItem(models.Model):
         (COMPOSITE, "Composite"),
     )
 
+    VARIABLE_RE = re.compile("^[a-zA-Z_]+[0-9a-zA-Z_]*$")
+    RESULT_RE = re.compile("^result\s*=\s*[(_0-9.a-zA-Z]+.*$",re.MULTILINE)
+
     name = models.CharField(max_length=256, help_text=_("Name for this task list item"))
-    short_name = models.SlugField(unique=True, max_length=25, help_text=_("A short variable name for this test (to be used in composite calculations)."))
+    short_name = models.SlugField(max_length=25, help_text=_("A short variable name for this test (to be used in composite calculations)."))
     description = models.TextField(help_text=_("A concise description of what this task list item is for (optional)"), blank=True,null=True)
     procedure = models.TextField(help_text=_("A short description of how to carry out this task"), blank=True, null=True)
 
@@ -206,6 +211,58 @@ class TaskListItem(models.Model):
     def is_boolean(self):
         """return True if this is a boolean test, otherwise False"""
         return self.task_type == "boolean"
+
+    #----------------------------------------------------------------------
+    def clean_calculation_procedure(self):
+        """make sure a valid calculation procedure"""
+        errors = []
+
+        if not self.calculation_procedure and self.task_type != COMPOSITE:
+            return
+
+        if self.calculation_procedure and self.task_type != COMPOSITE:
+            errors.append(_("Calculation procedure provided, but Task Type is not Composite"))
+
+        if not self.calculation_procedure and self.task_type == COMPOSITE:
+            errors.append(_("No calculation procedure provided, but Task Type is Composite"))
+
+
+        if not self.RESULT_RE.findall(self.calculation_procedure):
+            errors.append(_('Snippet must contain a result line (e.g. result = my_var/another_var*2)'))
+
+        if errors:
+            raise ValidationError({"calculation_procedure":errors})
+    #----------------------------------------------------------------------
+    def clean_constant_value(self):
+        """make sure a constant value is provided if TaskType is Constant"""
+        errors = []
+        if self.constant_value is not None and self.task_type != CONSTANT:
+            errors.append(_("Constant value provided, but Task Type is not constant"))
+
+        if self.constant_value is None and self.task_type == CONSTANT:
+            errors.append(_("Task Type is Constant but no constant value provided"))
+
+        if errors:
+            raise ValidationError({"constant_value":errors})
+
+    #----------------------------------------------------------------------
+    def clean_short_name(self):
+        """make sure short_name is valid"""
+        errors = []
+        if not self.VARIABLE_RE.match(self.short_name):
+            errors.append(_("Short names must contain only letters, numbers and underscores and start with a letter or underscore"))
+
+        if errors:
+            raise ValidationError({"short_name":errors})
+
+
+    #----------------------------------------------------------------------
+    def clean_fields(self,exclude=None):
+        """extra validation for TaskListItem's"""
+        super(TaskListItem,self).clean_fields(exclude)
+        self.clean_calculation_procedure()
+        self.clean_constant_value()
+        self.clean_short_name()
 
     #----------------------------------------------------------------------
     def __unicode__(self):
