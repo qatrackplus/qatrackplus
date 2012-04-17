@@ -30,7 +30,7 @@
                             {% with last_completed=task_list.last_completed_instance %}
                                 <td>{{task_list.name|title}}</td>
                                 {% if last_completed %}
-                                    <td>{{last_completed.created}}</td>
+                                    <td>{{last_completed.work_completed}}</td>
                                     <td>{{last_completed.status}}</td>
                                 {% else %}
                                     <td>New</td>

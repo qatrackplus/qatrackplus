@@ -3,6 +3,8 @@ from django import forms
 from django.forms.models import inlineformset_factory, modelformset_factory, model_to_dict
 from django.forms.widgets import RadioSelect
 from django.contrib import messages
+import qatrack.settings as settings
+
 import models
 
 
@@ -76,7 +78,7 @@ class TaskListItemInstanceFormset(BaseTaskListItemInstanceFormset):
     def disable_read_only_fields(self,form,membership):
         """disable some fields for constant and composite tests"""
         if membership.task_list_item.task_type in ("constant", "composite",):
-            for field in ("value", "skipped", "comment",):
+            for field in ("value", ):
                 form.fields[field].widget.attrs["readonly"] = "readonly"
 
 
@@ -109,10 +111,6 @@ class TaskListItemInstanceFormset(BaseTaskListItemInstanceFormset):
 #============================================================================
 class TaskListInstanceForm(forms.ModelForm):
     """parent form for doing qa task list"""
-    input_formats = (
-        "%d-%m-%Y", "%d/%m/%Y",
-        "%d-%m-%y", "%d/%m/%y",
-    )
 
     #----------------------------------------------------------------------
     class Meta:
@@ -121,7 +119,10 @@ class TaskListInstanceForm(forms.ModelForm):
     #----------------------------------------------------------------------
     def __init__(self,*args,**kwargs):
         super(TaskListInstanceForm,self).__init__(*args,**kwargs)
-        self.fields["work_completed"].widget = forms.widgets.DateInput()
-        self.fields["work_completed"].widget.format = self.input_formats[0]
-        self.fields["work_completed"].input_formats = self.input_formats
-        self.fields["work_completed"].widget.attrs["readonly"] = True
+        self.fields["work_completed"].widget = forms.widgets.DateTimeInput()
+        self.fields["work_completed"].widget.format = settings.INPUT_DATE_FORMATS[0]
+        self.fields["work_completed"].input_formats = settings.INPUT_DATE_FORMATS
+        self.fields["work_completed"].widget.attrs["title"] = settings.DATETIME_HELP
+        self.fields["work_completed"].help_text = settings.DATETIME_HELP
+
+        #self.fields["work_completed"].widget.attrs["readonly"] = True

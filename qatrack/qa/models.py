@@ -10,7 +10,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.dispatch import receiver
 from django.db.models.signals import post_save, m2m_changed
 from django.db.models import signals
-
+from qatrack import settings
 import re
 
 #global frequency choices
@@ -325,7 +325,7 @@ class TaskList(models.Model):
     def last_completed_instance(self):
         """return the last instance of this task list that was performed"""
         try:
-            return self.tasklistinstance_set.latest("created")
+            return self.tasklistinstance_set.latest("work_completed")
         except self.DoesNotExist:
             return None
     #----------------------------------------------------------------------
@@ -525,7 +525,9 @@ class TaskListItemInstance(models.Model):
     task_list_instance = models.ForeignKey("TaskListInstance",editable=False)
     task_list_item = models.ForeignKey(TaskListItem)
 
-    work_completed = models.DateTimeField(default=datetime.datetime.now)
+    work_completed = models.DateTimeField(default=datetime.datetime.now,
+        help_text=settings.DATETIME_HELP,
+    )
 
     #for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)
@@ -638,7 +640,7 @@ class TaskListCycle(models.Model):
             last_tli = TaskListInstance.objects.filter(
                 unit=unit,
                 task_list__in=self.task_lists.all()
-            ).latest()
+            ).latest("work_completed")
 
             last = TaskListCycleMembership.objects.get(
                 cycle=self,
