@@ -95,6 +95,9 @@ function check_item_status(input_element){
     qastatus.removeClass("btn-danger btn-warning btn-success");
     qastatus.text("Not Done");
 
+    if (parent.find(".qa-skip input").is(":checked")){
+        return;
+    }
 
     //ensure numerical value and highlight input element appropriately
     set_valid_input(input_element);

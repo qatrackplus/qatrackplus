@@ -4,11 +4,14 @@ from django.contrib.auth.models import User
 from django.utils.translation import ugettext as _
 from qatrack.units.models import Unit
 from django.core import urlresolvers
+from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
 
 from django.dispatch import receiver
 from django.db.models.signals import post_save, m2m_changed
 from django.db.models import signals
+
+import re
 
 #global frequency choices
 DAILY = "daily"
@@ -134,8 +137,11 @@ class TaskListItem(models.Model):
         (COMPOSITE, "Composite"),
     )
 
+    VARIABLE_RE = re.compile("^[a-zA-Z_]+[0-9a-zA-Z_]*$")
+    RESULT_RE = re.compile("^result\s*=\s*[(_0-9.a-zA-Z]+.*$",re.MULTILINE)
+
     name = models.CharField(max_length=256, help_text=_("Name for this task list item"))
-    short_name = models.SlugField(unique=True, max_length=25, help_text=_("A short variable name for this test (to be used in composite calculations)."))
+    short_name = models.SlugField(max_length=25, help_text=_("A short variable name for this test (to be used in composite calculations)."))
     description = models.TextField(help_text=_("A concise description of what this task list item is for (optional)"), blank=True,null=True)
     procedure = models.TextField(help_text=_("A short description of how to carry out this task"), blank=True, null=True)
 
@@ -207,6 +213,58 @@ class TaskListItem(models.Model):
         return self.task_type == "boolean"
 
     #----------------------------------------------------------------------
+    def clean_calculation_procedure(self):
+        """make sure a valid calculation procedure"""
+        errors = []
+
+        if not self.calculation_procedure and self.task_type != COMPOSITE:
+            return
+
+        if self.calculation_procedure and self.task_type != COMPOSITE:
+            errors.append(_("Calculation procedure provided, but Task Type is not Composite"))
+
+        if not self.calculation_procedure and self.task_type == COMPOSITE:
+            errors.append(_("No calculation procedure provided, but Task Type is Composite"))
+
+
+        if not self.RESULT_RE.findall(self.calculation_procedure):
+            errors.append(_('Snippet must contain a result line (e.g. result = my_var/another_var*2)'))
+
+        if errors:
+            raise ValidationError({"calculation_procedure":errors})
+    #----------------------------------------------------------------------
+    def clean_constant_value(self):
+        """make sure a constant value is provided if TaskType is Constant"""
+        errors = []
+        if self.constant_value is not None and self.task_type != CONSTANT:
+            errors.append(_("Constant value provided, but Task Type is not constant"))
+
+        if self.constant_value is None and self.task_type == CONSTANT:
+            errors.append(_("Task Type is Constant but no constant value provided"))
+
+        if errors:
+            raise ValidationError({"constant_value":errors})
+
+    #----------------------------------------------------------------------
+    def clean_short_name(self):
+        """make sure short_name is valid"""
+        errors = []
+        if not self.VARIABLE_RE.match(self.short_name):
+            errors.append(_("Short names must contain only letters, numbers and underscores and start with a letter or underscore"))
+
+        if errors:
+            raise ValidationError({"short_name":errors})
+
+
+    #----------------------------------------------------------------------
+    def clean_fields(self,exclude=None):
+        """extra validation for TaskListItem's"""
+        super(TaskListItem,self).clean_fields(exclude)
+        self.clean_calculation_procedure()
+        self.clean_constant_value()
+        self.clean_short_name()
+
+    #----------------------------------------------------------------------
     def __unicode__(self):
         """return display representation of object"""
 
@@ -227,6 +285,20 @@ class TaskListItemUnitInfo(models.Model):
         unique_together = ["task_list_item","unit"]
 
 #============================================================================
+class TaskListMembership(models.Model):
+    """Keep track of ordering for tasklistitems within a task list"""
+    task_list = models.ForeignKey("TaskList")
+    task_list_item = models.ForeignKey(TaskListItem)
+    order = models.IntegerField()
+
+    class Meta:
+        ordering = ("order",)
+
+    #----------------------------------------------------------------------
+    def __unicode__(self):
+        return self.task_list_item.name
+
+#============================================================================
 class TaskList(models.Model):
     """Container for a collection of QA :model:`TaskListItem`s"""
 
@@ -236,7 +308,7 @@ class TaskList(models.Model):
 
     active = models.BooleanField(help_text=_("Uncheck to disable this list"), default=True)
 
-    task_list_items = models.ManyToManyField("TaskListItem", help_text=_("Which task list items does this list contain"))
+    task_list_items = models.ManyToManyField("TaskListItem", help_text=_("Which task list items does this list contain"),through=TaskListMembership)
 
     sublists = models.ManyToManyField("self",
         symmetrical=False,null=True, blank=True,
@@ -252,7 +324,6 @@ class TaskList(models.Model):
     #----------------------------------------------------------------------
     def last_completed_instance(self):
         """return the last instance of this task list that was performed"""
-
         try:
             return self.tasklistinstance_set.latest("created")
         except self.DoesNotExist:
@@ -260,9 +331,9 @@ class TaskList(models.Model):
     #----------------------------------------------------------------------
     def all_items(self):
         """returns all task list items from this list and sublists"""
-        items = list(self.task_list_items.all())
+        items = [m.task_list_item for m in self.tasklistmembership_set.all()]
         for sublist in self.sublists.all():
-            items.extend(list(sublist.task_list_items.all()))
+            items.extend(sublist.all_items())
 
         return items
     #----------------------------------------------------------------------
@@ -405,8 +476,10 @@ def unit_task_list_change(*args,**kwargs):
 #----------------------------------------------------------------------
 @receiver(m2m_changed, sender=TaskList.task_list_items.through)
 def task_list_change(*args,**kwargs):
-    """make sure there are UnitTaskListInfo infos for all task list items
-    Note that this can't be done in the TaskList.save method because the
+    """make sure there are UnitTaskListInfo infos for all task list items (1)
+    and verify that there are no duplicate short names
+
+    (1) Note that this can't be done in the TaskList.save method because the
     many to many relationships are not updated until after the save method has
     been executed. See http://stackoverflow.com/questions/1925383/issue-with-manytomany-relationships-not-updating-inmediatly-after-save
     """
@@ -416,6 +489,8 @@ def task_list_change(*args,**kwargs):
         unit_task_lists = UnitTaskLists.objects.filter(task_lists=task_list)
         for utl in unit_task_lists:
             create_tasklistitemunitinfos(task_list,utl.unit)
+    elif kwargs["action"] == "pre_add":
+        task_list = kwargs["instance"]
 
 
 ##============================================================================
@@ -595,7 +670,8 @@ class TaskListCycle(models.Model):
         return TaskListCycleMembership.objects.get(cycle=self, order=order)
     #----------------------------------------------------------------------
     def last_completed_instance(self):
-        """return the last instance of this task list that was performed"""
+        """return the last instance of this task list that was performed
+        or None if it has never been performed"""
 
         try:
             return TaskListInstance.objects.filter(
