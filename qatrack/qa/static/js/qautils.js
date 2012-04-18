@@ -1,4 +1,3 @@
-//for an explanation of this design pattern see:
 var QAUtils = new function() {
     this.ACT_LOW = "act_low";
     this.TOL_LOW = "tol_low";
@@ -14,7 +13,8 @@ var QAUtils = new function() {
 
     this.EPSILON = 1E-10;
 
-
+    this.API_VERSION = "v1";
+    this.API_URL = "/qa/api/"+this.API_VERSION+"/";
 
     /***************************************************************/
     /* Tolerance functions
@@ -110,5 +110,51 @@ var QAUtils = new function() {
 
         return {status:status, gen_status:gen_status, diff:diff, message:message}
     }
+
+
+    /********************************************************************/
+    //API calls
+
+    this.call_api = function(url,method,data,callback){
+        $.ajax({
+            type:method,
+            url:url,
+            data:data,
+            success: function(result){
+                callback(result);
+            },
+            error: function(error){
+                return false;
+            }
+        });
+    }
+
+
+    //get resources for a given resource name
+    this.get_resources = function(resource_name,callback, data){
+
+        //make sure limit option is set
+        if (data == null){
+            data = {limit:0};
+        }else if (!data.hasOwnProperty("limit")){
+            data["limit"] = 0;
+        }
+
+        //default to json format
+        if (!data.hasOwnProperty("format")){
+            data["format"] = "json";
+        }
+
+        this.call_api(this.API_URL+resource_name,"GET",data,callback );
+    }
+
+    //values for a group of task_list_items
+    this.task_list_item_values = function(options,callback){
+        if (!options.hasOwnProperty("limit")){
+            options["limit"] = 0;
+        }
+        this.call_api(this.API_URL+"grouped_values","GET",options,callback );
+    }
+
 
 }();

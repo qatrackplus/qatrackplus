@@ -1,5 +1,6 @@
 import tastypie
-from tastypie.resources import ModelResource, ALL, ALL_WITH_RELATIONS
+from tastypie.resources import Resource, ModelResource, ALL, ALL_WITH_RELATIONS
+
 import qatrack.qa.models as models
 from qatrack.units.models import Unit,Modality, UnitType
 
@@ -33,7 +34,11 @@ class ToleranceResource(ModelResource):
         queryset = models.Tolerance.objects.all()
 
 
-
+#============================================================================
+class TaskListResource(ModelResource):
+    class Meta:
+        queryset = models.TaskList.objects.order_by("name").all()
+#============================================================================
 class TaskListItemInstanceResource(ModelResource):
     task_list_item = tastypie.fields.ToOneField("qatrack.qa.api.TaskListItemResource","task_list_item", full=True)
     reference = tastypie.fields.ToOneField("qatrack.qa.api.ReferenceResource","reference", full=True,null=True)
@@ -51,16 +56,61 @@ class TaskListItemInstanceResource(ModelResource):
 
         orm_filters = super(TaskListItemInstanceResource,self).build_filters(filters)
 
-        if "unit" in filters:
-            orm_filters["unit__number"] = filters["unit"]
+        if "units" in filters:
+            orm_filters["unit__number__in"] = filters["units"].split(',')
 
-        if "slug" in filters:
-            orm_filters["task_list_item__short_name"] = filters["slug"]
+        if "short_names" in filters:
+            orm_filters["task_list_item__short_name__in"] = filters["short_names"].split(',')
         elif "task_list_id" in filters:
             orm_filters["task_list_item__pk"] = filters["pk"]
-
         return orm_filters
 
+#============================================================================
+class ValueResource(Resource):
+    """"""
+    values = tastypie.fields.DictField()
+    units = tastypie.fields.ListField()
+    name = tastypie.fields.CharField()
+
+    #============================================================================
+    class Meta:
+        resource_name = "grouped_values"
+        allowed_methods = ["get"]
+    #----------------------------------------------------------------------
+    #def dehydrate_values(self,bundle):
+    #    return bundle.obj["values"]
+    #----------------------------------------------------------------------
+    def dehydrate_name(self,bundle):
+        return bundle.obj["name"]
+    #----------------------------------------------------------------------
+    def dehydrate_units(self,bundle):
+        return [x for x in bundle.obj["units"]]
+    #----------------------------------------------------------------------
+    def get_object_list(self,request):
+        """return organized values"""
+        objects = TaskListItemInstanceResource().obj_get_list(request)
+        short_names = objects.order_by("task_list_item__name").values_list("task_list_item__short_name",flat=True).distinct()
+        units = objects.order_by("unit__number").values_list("unit__number",flat=True).distinct()
+        self.dispatch
+        organized = []
+        for short_name in short_names:
+            by_unit = []
+            for unit in units:
+                data = [
+                    (x.work_completed.isoformat(),x.value) for x in objects.filter(
+                        task_list_item__short_name=short_name,
+                        unit__number = unit,
+                    ).order_by("work_completed")
+                ]
+                by_unit.append({"number":unit,"data":data})
+            organized.append({
+                'name':short_name,
+                'units':by_unit,
+            })
+        return organized
+    #----------------------------------------------------------------------
+    def obj_get_list(self,request=None,**kwargs):
+        return self.get_object_list(request)
 
 #============================================================================
 class TaskListItemResource(ModelResource):

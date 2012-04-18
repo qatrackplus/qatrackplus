@@ -246,6 +246,10 @@ class UnitGroupedFrequencyListView(TemplateView):
         context["unit_type_list"] = unit_type_sets
         return context
 
+#============================================================================
+class ChartView(TemplateView):
+    """view for creating charts/graphs from data"""
+    template_name = "charts.html"
 
 
 

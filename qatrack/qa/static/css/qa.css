@@ -35,6 +35,25 @@ tr.qa-comment td, tr.qa-procedure td {
     display:inline-block;
 }
 
+/* charting */
+.filtered-chart {
+    height:500px;
+}
+
+#trend-chart {
+    height:100%;
+}
+#filter-accordion{
+    height:100%;
+    overflow-y:auto;
+}
+.checkbox-container {
+    white-space:nowrap;
+    overflow-x: auto;
+    overflow-y:auto;
+    height:200px;
+}
+
 /* css for timepicker */
 .ui-timepicker-div .ui-widget-header { margin-bottom: 8px; }
 .ui-timepicker-div dl { text-align: left; }
