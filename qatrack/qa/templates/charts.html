@@ -18,67 +18,80 @@
     <script src="{% static "js/charts.js" %}"></script>
     <script src="{% static "js/dygraph-combined.js" %}"></script>
     <script src="{% static "js/jquery.flot.min.js" %}"></script>
+    <script src="{% static "js/jquery.flot.resize.js" %}"></script>
     <script src="{% static "datepicker/js/bootstrap-datepicker.js" %}"></script>
 {% endblock %}
 
 {% block body %}
 
-    <h2>Data Trending</h2>
-    <div class="row filtered-chart">
-        <div class="accordion span3" id="filter-accordion">
-            <div class="accordion-group">
-                <div class="accordion-heading">
-                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#filter-accordion" href="#date-collapse">
-                        Date Filter
-                    </a>
-                </div>
-                <div id="date-collapse" class="accordion-body collapse in">
-                    <div class="accordion-inner checkbox-container" id="dates-filter">
-
-                    </div>
-                </div>
-            </div>
-            <div class="accordion-group">
-                <div class="accordion-heading">
-                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#filter-accordion" href="#unit-collapse">
-                        Unit Filter
-                    </a>
-                </div>
-                <div id="unit-collapse" class="accordion-body collapse in">
-                    <div class="accordion-inner checkbox-container" id="units-filter">
-
-                    </div>
-                </div>
-            </div>
-
-            <div class="accordion-group">
-                <div class="accordion-heading">
-                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#filter-accordion" href="#task-list-collapse">
-                        Task List Filter
-                    </a>
-                </div>
-                <div id="task-list-collapse" class="accordion-body collapse in">
-                    <div class="accordion-inner checkbox-container" id="task-list-filter">
-
-                    </div>
-                </div>
-            </div>
-            <div class="accordion-group">
-                <div class="accordion-heading">
-                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#filter-accordion" href="#task-list-item-collapse">
-                        Task List Item Filter
-                    </a>
-                </div>
-                <div id="task-list-item-collapse" class="accordion-body collapse in">
-                    <div class="accordion-inner checkbox-container" id="task-list-item-filter">
-                    </div>
-                </div>
-            </div>
-
+    <div class="row-fluid">
+        <div class="span12">
+            <h2>Data Trending</h2>
         </div>
-        <div id="trend-chart" class="span6"></div>
-        <div id="chart-legend" class="span2"></div>
     </div>
+
+    <div class="row-fluid">
+        <div class="span3" >
+            <div class="accordion" id="filter-accordion">
+                <div class="accordion-group">
+                    <div class="accordion-heading">
+                        <a class="accordion-toggle" data-toggle="collapse" data-parent="#filter-accordion" href="#date-collapse">
+                            Date Filter
+                        </a>
+                    </div>
+                    <div id="date-collapse" class="accordion-body collapse in">
+                        <div class="accordion-inner checkbox-container" id="dates-filter">
+
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-group">
+                    <div class="accordion-heading">
+                        <a class="accordion-toggle" data-toggle="collapse" data-parent="#filter-accordion" href="#unit-collapse">
+                            Unit Filter
+                        </a>
+                    </div>
+                    <div id="unit-collapse" class="accordion-body collapse in">
+                        <div class="accordion-inner checkbox-container" id="units-filter">
+
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-group">
+                    <div class="accordion-heading">
+                        <a class="accordion-toggle" data-toggle="collapse" data-parent="#filter-accordion" href="#task-list-collapse">
+                            Task List Filter
+                        </a>
+                    </div>
+                    <div id="task-list-collapse" class="accordion-body collapse in">
+                        <div class="accordion-inner checkbox-container" id="task-list-filter">
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-group">
+                    <div class="accordion-heading">
+                        <a class="accordion-toggle" data-toggle="collapse" data-parent="#filter-accordion" href="#task-list-item-collapse">
+                            Task List Item Filter
+                        </a>
+                    </div>
+                    <div id="task-list-item-collapse" class="accordion-body collapse in">
+                        <div class="accordion-inner checkbox-container" id="task-list-item-filter">
+                        </div>
+                    </div>
+                </div>
+            </div> <!--end accordion-->
+
+        </div> <!--end filter container-->
+
+            <div id="trend-chart" class="span7"></div>
+
+        <div class="span2">
+            <div id="chart-legend" class="well"></div>
+            <div id="chart-options" class="well"></div>
+        </div> <!-- end controls-->
+    </div>
+
 
 
 {% endblock %}

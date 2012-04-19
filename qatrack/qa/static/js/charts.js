@@ -1,3 +1,7 @@
+var main_graph_data = [[[]]];
+var main_graph;
+var previous_point = null;
+
 /************************************************************************/
 //data returned from the API has dates in ISO string format and must be converted
 //to javascript dates
@@ -72,36 +76,44 @@ function setup_filters(){
             container:"#units-filter",
             resource_name:"unit",
             display_property:"name",
-            value_property:"number"
+            value_property:"number",
+            check_all:true
         },
         {
             container:"#task-list-filter",
             resource_name:"tasklist",
             display_property:"name",
-            value_property:"slug"
+            value_property:"slug",
+            check_all:false
         },
         {
             container:"#task-list-item-filter",
             resource_name:"tasklistitem",
             display_property:"name",
-            value_property:"short_name"
+            value_property:"short_name",
+            check_all:false
         }
     ];
 
-    $(filters).each(function(idx,element){
+    $(filters).each(function(idx,filter){
+        $(filter.container).html('<i class="icon-time"></i><em>Loading...</em>');
+
         /*set up task list item filters */
-        QAUtils.get_resources(element.resource_name,function(resources){
+        QAUtils.get_resources(filter.resource_name,function(resources){
             var options = "";
             $(resources.objects).each(function(index,resource){
-                var display = resource[element.display_property];
-                var value = resource[element.value_property];
-                options += '<label class="checkbox"><input type="checkbox" value="' + value + '">' + display + '</input></label>';
+                var display = resource[filter.display_property];
+                var value = resource[filter.value_property];
+                var checked = filter.check_all ? 'checked="checked"' : "";
+                var option = '<label class="checkbox"><input type="checkbox" ' + checked + ' value="' + value + '">' + display + '</input></label>';
+                options += option;
             });
 
-            $(element.container).html(options);
+            $(filter.container).html(options);
         });
 
     });
+
 
 }
 /*********************************************************************/
@@ -119,7 +131,6 @@ function show_tooltip(x, y, contents) {
     }).appendTo("body").fadeIn(200);
 }
 
-var previous_point = null;
 function on_hover(event, pos, item) {
 
     if (item) {
@@ -139,9 +150,10 @@ function on_hover(event, pos, item) {
         previousPoint = null;
     }
 }
+
+
 /**************************************************************************/
 $(document).ready(function(){
-    main_graph_data = [[[]]];
 
     //set up main chart and options
     main_graph = $.plot(
@@ -150,7 +162,7 @@ $(document).ready(function(){
         {
             xaxis:{
                 mode: "time",
-                timeformat: "%d/%m/%y"
+                timeformat: "%d/%b/%y"
             },
             legend:{
                 container:"#chart-legend"
@@ -169,4 +181,10 @@ $(document).ready(function(){
     $(".checkbox-container").change(update_chart);
     $(".collapse").collapse({selector:true,toggle:true});
     $("#task-list-item-collapse").collapse("show");
+
+    $(".nav-tabs a:first").tab('show');
+
+    $(window).resize = function(){
+        main_graph.resize();
+    }
 });
