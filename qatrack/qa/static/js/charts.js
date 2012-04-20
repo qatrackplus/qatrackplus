@@ -2,57 +2,9 @@ var task_list_data = {};
 var main_graph_series = [{}];
 var main_graph;
 var previous_point = null;
+var task_list_members = {}; //short names of task list items belonging to task lists
 
-/************************************************************************/
-//data returned from the API has dates in ISO string format and must be converted
-//to javascript dates
-function convert_data(data){
-    var converted = [];
-    $(data).each(function(idx,measured){
-        converted.push([Date.parse(measured.date),measured.value]);
-    });
-    return converted;
 
-}
-function convert(data){
-    var series = {
-        values:[],
-        references:[],
-        act_low:[],
-        tol_low:[],
-        tol_high:[],
-        act_high:[]
-    };
-    $(data).each(function(idx,measured){
-        var date = Date.parse(measured.date);
-        series.values.push([date,measured.value]);
-        series.references.push([date,measured.reference]);
-
-        var tol = measured.tolerance;
-        if (measured.tolerance.type == QAUtils.PERCENT){
-            tol = QAUtils.convert_tol_to_abs(measured.reference,measured.tolerance);
-        }
-        series.act_low.push([date,tol.act_low]);
-        series.tol_low.push([date,tol.tol_low]);
-        series.tol_high.push([date,tol.tol_high]);
-        series.act_high.push([date,tol.act_high]);
-    });
-    return series;
-}
-/*************************************************************************/
-//Take data from api and set up task_list_item data
-function process_data(data){
-    var processed = {};
-    $(data.objects).each(function(item_idx,task_list_item_data){
-        var name = task_list_item_data.name;
-        processed[name] = {};
-        $(task_list_item_data.units).each(function(unit_idx,unit){
-            processed[name][unit.number] = convert(unit.data);
-        });
-
-    });
-    return processed;
-}
 /*************************************************************************/
 //return all checked checkboxes within container
 function get_checked(container){
@@ -74,61 +26,74 @@ function get_filters(){
         to_date: $("#to-date").val()
     };
 }
-function next_color(){
-    var next = -1;
-    var get_next_color = function(){
-        next+=1;
-         return next;
-    };
-    return get_next_color;
-}
-function plot_task_list_item_curves(name,data,color_generator){
-    $.each(data,function(unit,series){
-        var create_name = function(type){return name+'_unit'+unit+"_"+type;}
+/*************************************************************************/
+//Convert a collection of plot values, refs, tols etc to a series that flot can show
+function convert_to_flot_series(idx,collection){
 
+    var series = [];
+
+    var create_name = function(type){return collection.short_name+'_unit'+collection.unit+"_"+type;}
+
+    var dates = $.map(collection.data.dates,Date.parse);
+
+    var tolerances = {act_low:[], tol_low:[], tol_high:[], act_high:[]}
+    $.each(collection.data.tolerances,function(idx,tol){
+        var ref = collection.data.references[idx];
+        var date = dates[idx];
+
+        if (tol.type === QAUtils.PERCENT){
+            tol = QAUtils.convert_tol_to_abs(ref,tol);
+        }
 
         $.each(["act_low","tol_low","tol_high","act_high"],function(idx,type){
-
-            var opts = {
-                id: create_name(type),
-                data:series[type],
-                lines: {show:true, lineWidth:0}
-            }
-
-            if (idx>0) {
-                opts["fillBetween"] = main_graph_series[main_graph_series.length-1].id;
-                opts.lines["fill"] = 0.2;
-                if ((idx===1 ) || (idx===3)){
-                    opts["color"] = QAUtils.TOL_COLOR;
-                }else{
-                    opts["color"] = QAUtils.OK_COLOR;
-                }
-            }
-
-            main_graph_series.push(opts);
+            tolerances[type].push([date,tol[type]]);
         });
-        var color = color_generator();
-        var val_name = create_name("values");
-        main_graph_series.push({
-            id: val_name,
-            label: name+"- Unit"+unit,
-            data:series.values,
-            points: {show:true, fill:0.2},
-            hoverable: true,
-            color:color
-        });
-
-        var ref_name = create_name("references");
-        main_graph_series.push({
-            id: ref_name,
-            data:series.references,
-            lines: {show:true,lineWidth:1},
-            points:{show:false},//true,symbol:dash,radius:5},
-            color:color,
-            shadowSize:0
-        });
-
     });
+
+    $.each(["act_low","tol_low","tol_high","act_high"],function(idx,type){
+        var vals = [];
+
+        var opts = {
+            id: create_name(type),
+            data:tolerances[type],
+            lines: {show:true, lineWidth:0}
+        }
+
+        if (idx>0) {
+            opts["fillBetween"] = series[series.length-1].id;
+            opts.lines["fill"] = 0.2;
+            if ((idx===1 ) || (idx===3)){
+                opts["color"] = QAUtils.TOL_COLOR;
+            }else{
+                opts["color"] = QAUtils.OK_COLOR;
+            }
+        }
+
+        series.push(opts);
+    });
+
+
+    var val_name = create_name("values");
+    series.push({
+        id: val_name,
+        label: collection.name+"- Unit"+collection.unit,
+        data:QAUtils.zip(dates,collection.data.values),
+        points: {show:true, fill:0.2},
+        hoverable: true,
+        color:idx
+    });
+
+    var ref_name = create_name("references");
+    series.push({
+        id: ref_name,
+        data:QAUtils.zip(dates,collection.data.references),
+        lines: {show:true,lineWidth:1},
+        points:{show:false},//true,symbol:dash,radius:5},
+        color:idx,
+        shadowSize:0
+    });
+
+    return series;
 }
 /*************************************************************************/
 //Do a full update of the chart
@@ -139,13 +104,16 @@ function update_chart(){
     if ((filters.units === "") || (filters.short_names === "")){
         return;
     }
-    var color_gen = next_color();
-    QAUtils.task_list_item_values(filters, function(data){
-        task_list_data = process_data(data);
+    QAUtils.task_list_item_values(filters, function(results_data){
+
         main_graph_series = [];
 
-        $.each(task_list_data,function(name,data){
-            plot_task_list_item_curves(name,data,color_gen)
+        $.each(results_data.objects,function(idx,collection){
+            var collection_series = convert_to_flot_series(idx,collection);
+            var ii;
+            for (ii=0; ii<collection_series.length;ii++){
+                main_graph_series.push(collection_series[ii]);
+            }
         });
 
         main_graph.setData(main_graph_series);
@@ -173,7 +141,7 @@ function setup_filters(){
             resource_name:"tasklist",
             display_property:"name",
             value_property:"slug",
-            check_all:false
+            check_all:true
         },
         {
             container:"#task-list-item-filter",
@@ -240,7 +208,19 @@ function on_hover(event, pos, item) {
     }
 }
 
+/************************************************************************/
+//populate global list of task list memberships
+function populate_task_list_members(){
 
+    QAUtils.get_resources("tasklist",function(task_lists){
+        $.each(task_lists.objects,function(idx,task_list){
+            task_list_members[task_list.slug] = [];
+            $.each(task_list.task_list_items,function(item_idx,item){
+                task_list_members[task_list.slug].push(item.short_name)
+            });
+        });
+    })
+}
 /**************************************************************************/
 $(document).ready(function(){
 
@@ -262,23 +242,20 @@ $(document).ready(function(){
             }
         }
     )
-
-
+    $(window).resize = function(){main_graph.resize();}
     $("#trend-chart").bind("plothover", on_hover);
 
+    //grab all the task list items, tasks, units etc from server
     setup_filters();
 
-    $(".checkbox-container").change(update_chart);
+    populate_task_list_members();
+
+    //update chart when a filter changes
+    $("#units-filter, #task-list-item-filter").change(update_chart);
+    $(".date").datepicker().on('changeDate',update_chart);
+
     $(".collapse").collapse({selector:true,toggle:true});
     $("#task-list-item-collapse").collapse("show");
 
-    $(".nav-tabs a:first").tab('show');
 
-    $(".date").datepicker().on('changeDate',update_chart);
-
-
-
-    $(window).resize = function(){
-        main_graph.resize();
-    }
 });

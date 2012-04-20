@@ -37,6 +37,7 @@ class ToleranceResource(ModelResource):
 
 #============================================================================
 class TaskListResource(ModelResource):
+    task_list_items = tastypie.fields.ToManyField("qatrack.qa.api.TaskListItemResource","task_list_items",full=True)
     class Meta:
         queryset = models.TaskList.objects.order_by("name").all()
 #============================================================================
@@ -128,53 +129,66 @@ def serialize_tasklistiteminstance(task_list_item_instance):
 #============================================================================
 class ValueResource(Resource):
     """"""
-    values = tastypie.fields.DictField()
-    units = tastypie.fields.ListField()
+    unit = tastypie.fields.IntegerField()
     name = tastypie.fields.CharField()
-
+    short_name = tastypie.fields.CharField()
+    data = tastypie.fields.DictField()
     #============================================================================
     class Meta:
         resource_name = "grouped_values"
         allowed_methods = ["get"]
     #----------------------------------------------------------------------
-    #def dehydrate_values(self,bundle):
-    #    return bundle.obj["values"]
+    def dehydrate_short_name(self,bundle):
+        return bundle.obj["short_name"]
     #----------------------------------------------------------------------
     def dehydrate_name(self,bundle):
         return bundle.obj["name"]
     #----------------------------------------------------------------------
-    def dehydrate_units(self,bundle):
-        unit_data = []
+    def dehydrate_unit(self,bundle):
+        return bundle.obj["unit"]
+    #----------------------------------------------------------------------
+    def dehydrate_data(self,bundle):
+        """"""
+        data = {
+            'values':[],
+            'references':[],
 
-        for unit in bundle.obj["units"]:
-            data = []
-            for task_list_item_instance in unit["data"]:
-                data.append(serialize_tasklistiteminstance(task_list_item_instance))
+            'tolerances':[],
+            'comments':[],
+            'dates':[],
+            'users':[]
+        }
+        for task_list_item_instance in bundle.obj["data"]:
+            instance = serialize_tasklistiteminstance(task_list_item_instance)
+            for prop in ('value','reference','date','user'):
+                data[prop+'s'].append(instance.get(prop,None))
+            data["tolerances"].append(instance["tolerance"])
+            #for tol in ("act_low","tol_low","tol_high","act_high"):
+            #    data[tol].append(instance['tolerance'].get(tol,None))
 
-            unit["data"] = data
-        return bundle.obj["units"]
+
+        return data
     #----------------------------------------------------------------------
     def get_object_list(self,request):
         """return organized values"""
         objects = TaskListItemInstanceResource().obj_get_list(request)
-        short_names = objects.order_by("task_list_item__name").values_list("task_list_item__short_name",flat=True).distinct()
+        names = objects.order_by("task_list_item__name").values_list("task_list_item__short_name","task_list_item__name").distinct()
         units = objects.order_by("unit__number").values_list("unit__number",flat=True).distinct()
         self.dispatch
         organized = []
-        for short_name in short_names:
-            by_unit = []
+        for short_name,name in names:
             for unit in units:
-                data = [
-                    x for x in objects.filter(
+                data = objects.filter(
                         task_list_item__short_name=short_name,
                         unit__number = unit,
-                    ).order_by("work_completed")
-                ]
-                by_unit.append({"number":unit,"data":data})
-            organized.append({
-                'name':short_name,
-                'units':by_unit,
-            })
+                ).order_by("work_completed")
+
+                organized.append({
+                    'short_name':short_name,
+                    'name':name,
+                    'unit':unit,
+                    'data':data,
+                })
         return organized
     #----------------------------------------------------------------------
     def obj_get_list(self,request=None,**kwargs):

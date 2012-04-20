@@ -169,5 +169,16 @@ var QAUtils = new function() {
         this.call_api(this.API_URL+"grouped_values","GET",options,callback );
     }
 
+    //*************************************************************
+    //General
+    this.zip = function(a1,a2){
+        var ii;
+        var zipped = [];
+        for (ii=0;ii<a1.length;ii++){
+            zipped.push([a1[ii],a2[ii]]);
+        }
+        return zipped;
+    }
+
 
 }();
