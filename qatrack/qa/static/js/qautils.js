@@ -1,4 +1,8 @@
 var QAUtils = new function() {
+    this.ACT_COLOR = "#da4f49";
+    this.TOL_COLOR = "#c67605";
+    this.OK_COLOR = "#5bb75b";
+
     this.ACT_LOW = "act_low";
     this.TOL_LOW = "tol_low";
     this.TOL_HIGH = "tol_high";
@@ -111,6 +115,15 @@ var QAUtils = new function() {
         return {status:status, gen_status:gen_status, diff:diff, message:message}
     }
 
+    //convert an percent difference to absolute based on reference
+    this.convert_tol_to_abs = function(ref,tol){
+        return {
+            act_low : ref*(100.+tol.act_low)/100.,
+            tol_low : ref*(100.+tol.tol_low)/100.,
+            tol_high : ref*(100.+tol.tol_high)/100.,
+            act_high : ref*(100.+tol.act_high)/100.
+        };
+    }
 
     /********************************************************************/
     //API calls

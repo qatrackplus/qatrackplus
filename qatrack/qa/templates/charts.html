@@ -14,11 +14,11 @@
     <![endif]-->
 
     <script src="{% static "js/qautils.js" %}"></script>
-    <script src="{% static "js/qa.js" %}"></script>
     <script src="{% static "js/charts.js" %}"></script>
     <script src="{% static "js/dygraph-combined.js" %}"></script>
     <script src="{% static "js/jquery.flot.min.js" %}"></script>
     <script src="{% static "js/jquery.flot.resize.js" %}"></script>
+    <script src="{% static "js/jquery.flot.fillbetween.js" %}"></script>
     <script src="{% static "datepicker/js/bootstrap-datepicker.js" %}"></script>
 {% endblock %}
 
@@ -40,8 +40,23 @@
                         </a>
                     </div>
                     <div id="date-collapse" class="accordion-body collapse in">
-                        <div class="accordion-inner checkbox-container" id="dates-filter">
+                        <div class="accordion-inner form-horizontal" id="dates-filter">
+							<label for="from-date-container" class="control-label-small">
+								From:
+							</label>
 
+							<div class="input-append date" id="from-date-container" data-date="{{from_date|date:'d-m-Y'}}" data-date-format="dd-mm-yyyy">
+								<input id="from-date" class="date-filter input-small" type="text" name="work_completed" value="{{from_date|date:'d-m-Y'}}" title="From Date in Format MM-DD-YY" />
+								<span class="add-on"><i class="icon-th"></i></span>
+							</div>
+
+							<label for="to-date-container" class="control-label-small">
+								To:
+							</label>
+							<div class="input-append date" id="to-date-container" data-date="{{to_date|date:'d-m-Y'}}" data-date-format="dd-mm-yyyy">
+								<input id="to-date" class="date-filter input-small" type="text" name="work_completed" value="{{to_date|date:'d-m-Y'}}" title="From Date in Format MM-DD-YY" />
+								<span class="add-on"><i class="icon-th"></i></span>
+							</div>
                         </div>
                     </div>
                 </div>

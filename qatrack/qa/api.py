@@ -1,3 +1,4 @@
+import datetime
 import tastypie
 from tastypie.resources import Resource, ModelResource, ALL, ALL_WITH_RELATIONS
 
@@ -47,6 +48,11 @@ class TaskListItemInstanceResource(ModelResource):
     class Meta:
         queryset = models.TaskListItemInstance.objects.all()
         resource_name = "values"
+        filtering = {
+
+            'task_list_item':ALL_WITH_RELATIONS,
+            'work_completed':ALL
+        }
 
     #----------------------------------------------------------------------
     def build_filters(self,filters=None):
@@ -59,11 +65,65 @@ class TaskListItemInstanceResource(ModelResource):
         if "units" in filters:
             orm_filters["unit__number__in"] = filters["units"].split(',')
 
+        if "from_date" in filters:
+            try:
+                orm_filters["work_completed__gte"] = datetime.datetime.strptime(filters["from_date"],"%d-%m-%Y")
+            except ValueError:
+                pass
+        if "to_date" in filters:
+            try:
+                orm_filters["work_completed__lte"] = datetime.datetime.strptime(filters["to_date"],"%d-%m-%Y")
+            except ValueError:
+                pass
+
         if "short_names" in filters:
-            orm_filters["task_list_item__short_name__in"] = filters["short_names"].split(',')
+            orm_filters["task_list_item__short_name__in"] = [x.strip() for x in filters["short_names"].split(',')]
         elif "task_list_id" in filters:
             orm_filters["task_list_item__pk"] = filters["pk"]
         return orm_filters
+
+#----------------------------------------------------------------------
+def serialize_tasklistiteminstance(task_list_item_instance):
+    """return a dictionary of task_list_item_instance properties"""
+    tlii = task_list_item_instance
+    info = {
+        'value':tlii.value,
+        'date':tlii.work_completed.isoformat(),
+        'save_date':tlii.created.isoformat(),
+        'comment':tlii.comment,
+        'status':tlii.status,
+        'reference':None,
+        'tolerance': {'type':None,'act_low':None,'tol_low':None,'tol_high':None,'act_high':None,},
+        'user':None,
+        'unit':None,
+        'task_list_item':None,
+    }
+    if tlii.reference:
+        info["reference"] = tlii.reference.value
+
+    if tlii.tolerance:
+        info['tolerance'] = {
+            'type':tlii.tolerance.type,
+            'act_low':tlii.tolerance.act_low,
+            'tol_low':tlii.tolerance.tol_low,
+            'tol_high':tlii.tolerance.tol_high,
+            'act_high':tlii.tolerance.act_high,
+        }
+
+    if tlii.task_list_item:
+        info["task_list_item"] = tlii.task_list_item.short_name
+
+    if tlii.unit:
+        info["unit"] = tlii.unit.number
+
+    if tlii.created_by:
+        info["user"] = tlii.created_by.username
+
+    if tlii.task_list_item:
+        info["task_list_item"] = tlii.task_list_item.short_name
+
+    return info
+
 
 #============================================================================
 class ValueResource(Resource):
@@ -84,7 +144,15 @@ class ValueResource(Resource):
         return bundle.obj["name"]
     #----------------------------------------------------------------------
     def dehydrate_units(self,bundle):
-        return [x for x in bundle.obj["units"]]
+        unit_data = []
+
+        for unit in bundle.obj["units"]:
+            data = []
+            for task_list_item_instance in unit["data"]:
+                data.append(serialize_tasklistiteminstance(task_list_item_instance))
+
+            unit["data"] = data
+        return bundle.obj["units"]
     #----------------------------------------------------------------------
     def get_object_list(self,request):
         """return organized values"""
@@ -97,7 +165,7 @@ class ValueResource(Resource):
             by_unit = []
             for unit in units:
                 data = [
-                    (x.work_completed.isoformat(),x.value) for x in objects.filter(
+                    x for x in objects.filter(
                         task_list_item__short_name=short_name,
                         unit__number = unit,
                     ).order_by("work_completed")
@@ -118,7 +186,9 @@ class TaskListItemResource(ModelResource):
 
     class Meta:
         queryset = models.TaskListItem.objects.all()
-
+        filtering = {
+            "short_name": ALL,
+        }
     #----------------------------------------------------------------------
     def build_filters(self,filters=None):
         """allow filtering by unit"""

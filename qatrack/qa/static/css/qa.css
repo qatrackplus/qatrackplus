@@ -35,6 +35,12 @@ tr.qa-comment td, tr.qa-procedure td {
     display:inline-block;
 }
 
+.control-label-small{
+    width:50px;
+    float: left;
+    padding-top: 5px;
+    text-align: right;
+}
 /* charting */
 .tab-pane{width:100%;height:100%;}
 .filtered-chart {
