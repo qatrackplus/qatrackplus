@@ -48,7 +48,10 @@ class CycleTest(TestCase):
                 modified_by = self.user,
             )
             task_list.save()
-            task_list.task_list_items.add(tli)
+            membership = models.TaskListMembership(task_list=task_list,
+                                task_list_item=tli, order=1)
+            membership.save()
+            # task_list.task_list_items.add(tli)
             task_list.save()
 
         self.cycle = models.TaskListCycle(name="test cycle")
@@ -79,12 +82,15 @@ class CycleTest(TestCase):
         for item in task_list.task_list_items.all():
             item_instance = models.TaskListItemInstance(
                 task_list_item=item,
+                unit=unit,
                 value=1.,
                 skipped=False,
                 task_list_instance=instance,
                 reference = models.Reference.objects.get(pk=1),
                 tolerance = models.Tolerance.objects.get(pk=1),
                 status=models.TaskListItemInstance.UNREVIEWED,
+                created_by=self.user,
+                modified_by=self.user
             )
             item_instance.save()
 
