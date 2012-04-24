@@ -41,6 +41,27 @@ COMPOSITE = "composite"
 ABSOLUTE = "absolute"
 PERCENT = "percent"
 
+
+#status choices
+UNREVIEWED = "unreviewed"
+APPROVED = "approved"
+SCRATCH = "scratch"
+REJECTED = "rejected"
+
+STATUS_CHOICES = (
+    (UNREVIEWED, "Unreviewed"),
+    (APPROVED, "Approved"),
+    (SCRATCH, "Scratch"),
+    (REJECTED, "Rejected"),
+)
+
+TASK_TYPE_CHOICES = (
+    (BOOLEAN, "Boolean"),
+    (SIMPLE, "Simple Numerical"),
+    (CONSTANT, "Constant"),
+    (COMPOSITE, "Composite"),
+)
+
 #============================================================================
 class Reference(models.Model):
     """Reference values for various QA :model:`TaskListItem`s"""
@@ -130,12 +151,6 @@ class Category(models.Model):
 #============================================================================
 class TaskListItem(models.Model):
     """Task list item to be completed as part of a QA :model:`TaskList`"""
-    TASK_TYPE_CHOICES = (
-        (BOOLEAN, "Boolean"),
-        (SIMPLE, "Simple Numerical"),
-        (CONSTANT, "Constant"),
-        (COMPOSITE, "Composite"),
-    )
 
     VARIABLE_RE = re.compile("^[a-zA-Z_]+[0-9a-zA-Z_]*$")
     RESULT_RE = re.compile("^result\s*=\s*[(_0-9.a-zA-Z]+.*$",re.MULTILINE)
@@ -497,19 +512,7 @@ def task_list_change(*args,**kwargs):
 class TaskListItemInstance(models.Model):
     """Measured instance of a :model:`TaskListItem`"""
 
-    UNREVIEWED = "unreviewed"
-    APPROVED = "approved"
-    SCRATCH = "scratch"
-    REJECTED = "rejected"
-
-    choices = (
-        (UNREVIEWED, "Unreviewed"),
-        (APPROVED, "Approved"),
-        (SCRATCH, "Scratch"),
-        (REJECTED, "Rejected"),
-    )
-
-    status = models.CharField(max_length=20, choices=choices, editable=False)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, editable=False)
 
     #values set by user
     value = models.FloatField(help_text=_("For boolean TaskListItems a value of 0 equals False and any non zero equals True"), null=True)

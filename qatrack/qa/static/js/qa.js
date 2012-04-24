@@ -1,3 +1,4 @@
+"use strict";
 //TODO: currently checking Skip on a boolean test marks it as passing
 
 /***************************************************************/

@@ -10,13 +10,19 @@ from tastypie.api import Api
 
 v1_api = Api(api_name="v1")
 resources = [
+    api.TaskListResource(),
     api.TaskListItemResource(),
     api.TaskListItemInstanceResource(),
+    api.ValueResource(),
+    api.FrequencyResource(),
+    api.StatusResource(),
     api.ReferenceResource(),
+    api.CategoryResource(),
     api.ToleranceResource(),
     api.UnitResource(),
     api.ModalityResource(),
     api.UnitTypeResource(),
+
 ]
 for resource in resources:
     v1_api.register(resource)
@@ -34,5 +40,6 @@ urlpatterns = patterns('',
     #api urls
     url(r"^api/",include(v1_api.urls)),
 
-
+    #review
+    url(r"charts/", views.ChartView.as_view(), name="charts"),
 )
