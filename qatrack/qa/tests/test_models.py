@@ -88,7 +88,7 @@ class CycleTest(TestCase):
                 task_list_instance=instance,
                 reference = models.Reference.objects.get(pk=1),
                 tolerance = models.Tolerance.objects.get(pk=1),
-                status=models.TaskListItemInstance.UNREVIEWED,
+                status=models.UNREVIEWED,
                 created_by=self.user,
                 modified_by=self.user
             )
