@@ -24,22 +24,31 @@ class UnitResource(ModelResource):
 
 #============================================================================
 class ReferenceResource(ModelResource):
-
     class Meta:
         queryset = models.Reference.objects.all()
 
 #============================================================================
 class ToleranceResource(ModelResource):
-
     class Meta:
         queryset = models.Tolerance.objects.all()
 
 
 #============================================================================
+class CategoryResource(ModelResource):
+    class Meta:
+        queryset = models.Category.objects.all()
+
+#============================================================================
 class TaskListResource(ModelResource):
     task_list_items = tastypie.fields.ToManyField("qatrack.qa.api.TaskListItemResource","task_list_items",full=True)
+    frequencies = tastypie.fields.ListField()
+
+    #----------------------------------------------------------------------
+    def dehydrate_frequencies(self,bundle):
+        return list(bundle.obj.unittasklists_set.values_list("frequency",flat=True).distinct())
     class Meta:
         queryset = models.TaskList.objects.order_by("name").all()
+
 #============================================================================
 class TaskListItemInstanceResource(ModelResource):
     task_list_item = tastypie.fields.ToOneField("qatrack.qa.api.TaskListItemResource","task_list_item", full=True)
@@ -76,6 +85,9 @@ class TaskListItemInstanceResource(ModelResource):
                 orm_filters["work_completed__lte"] = datetime.datetime.strptime(filters["to_date"],"%d-%m-%Y")
             except ValueError:
                 pass
+
+        if "review_status" in filters:
+            orm_filters["status__in"] = filters["review_status"].split(',')
 
         if "short_names" in filters:
             orm_filters["task_list_item__short_name__in"] = [x.strip() for x in filters["short_names"].split(',')]
@@ -125,10 +137,49 @@ def serialize_tasklistiteminstance(task_list_item_instance):
 
     return info
 
+#============================================================================
+class FrequencyResource(Resource):
+    """available tasklistitem frequencies"""
+    value = tastypie.fields.CharField()
+    display = tastypie.fields.CharField()
+    class Meta:
+        allowed_methods = ["get"]
+    #----------------------------------------------------------------------
+    def dehydrate_value(self,bundle):
+        return bundle.obj["value"]
+    #----------------------------------------------------------------------
+    def dehydrate_display(self,bundle):
+        return bundle.obj["display"]
+    #----------------------------------------------------------------------
+    def get_object_list(self):
+        return [{"value":x[0],"display":x[1]} for x in models.FREQUENCY_CHOICES]
+    #----------------------------------------------------------------------
+    def obj_get_list(self,request=None,**kwargs):
+        return self.get_object_list()
+
+#============================================================================
+class StatusResource(Resource):
+    """avaialable task list item statuses"""
+    value = tastypie.fields.CharField()
+    display = tastypie.fields.CharField()
+    class Meta:
+        allowed_methods = ["get"]
+    #----------------------------------------------------------------------
+    def dehydrate_value(self,bundle):
+        return bundle.obj["value"]
+    #----------------------------------------------------------------------
+    def dehydrate_display(self,bundle):
+        return bundle.obj["display"]
+    #----------------------------------------------------------------------
+    def get_object_list(self):
+        return [{"value":x[0],"display":x[1]} for x in models.STATUS_CHOICES]
+    #----------------------------------------------------------------------
+    def obj_get_list(self,request=None,**kwargs):
+        return self.get_object_list()
+
 
 #============================================================================
 class ValueResource(Resource):
-    """"""
     unit = tastypie.fields.IntegerField()
     name = tastypie.fields.CharField()
     short_name = tastypie.fields.CharField()
@@ -196,13 +247,15 @@ class ValueResource(Resource):
 
 #============================================================================
 class TaskListItemResource(ModelResource):
-    values = tastypie.fields.ToManyField(TaskListItemInstanceResource,"tasklistiteminstance_set")
-
+    #values = tastypie.fields.ToManyField(TaskListItemInstanceResource,"tasklistiteminstance_set")
+    category = tastypie.fields.ToOneField(CategoryResource,"category",full=True)
     class Meta:
         queryset = models.TaskListItem.objects.all()
         filtering = {
             "short_name": ALL,
         }
+    #    excludes = ["values"]
+
     #----------------------------------------------------------------------
     def build_filters(self,filters=None):
         """allow filtering by unit"""

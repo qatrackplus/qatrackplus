@@ -131,7 +131,7 @@ class PerformQAView(FormView):
                 obj.task_list_instance = task_list_instance
                 for field in self.task_list_fields_to_copy:
                     setattr(obj,field,getattr(task_list_instance,field))
-                obj.status = models.TaskListItemInstance.UNREVIEWED
+                obj.status = models.UNREVIEWED
                 obj.save()
 
             #let user know request succeeded and return to unit list
@@ -257,6 +257,14 @@ class ChartView(TemplateView):
         context = super(ChartView,self).get_context_data(**kwargs)
         context["from_date"] = datetime.date.today()-datetime.timedelta(days=365)
         context["to_date"] = datetime.date.today()+datetime.timedelta(days=1)
+        context["check_list_filters"] = [
+            ("Frequency","frequency"),
+            ("Review Status","review-status"),
+            ("Unit","unit"),
+            ("Category","category"),
+            ("Task List","task-list"),
+            ("Task List Item","task-list-item"),
+        ]
         return context
 
 

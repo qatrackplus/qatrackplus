@@ -9,9 +9,6 @@
 
 {% block extra_script %}
 
-    <!--[if lte IE 8]>
-    <script type="text/javascript" src=""{% static "js/excanvas.js" %}""></script>
-    <![endif]-->
 
     <script src="{% static "js/qautils.js" %}"></script>
     <script src="{% static "js/charts.js" %}"></script>
@@ -60,50 +57,59 @@
                         </div>
                     </div>
                 </div>
+
+				{% for display,filter_type in check_list_filters %}
                 <div class="accordion-group">
                     <div class="accordion-heading">
-                        <a class="accordion-toggle" data-toggle="collapse" data-parent="#filter-accordion" href="#unit-collapse">
-                            Unit Filter
+                        <a class="accordion-toggle" data-toggle="collapse" data-parent="#filter-accordion" href="#{{filter_type}}-collapse">
+                            {{display}} Filter
                         </a>
                     </div>
-                    <div id="unit-collapse" class="accordion-body collapse in">
-                        <div class="accordion-inner checkbox-container" id="units-filter">
+                    <div id="{{filter_type}}-collapse" class="accordion-body collapse in">
+                        <div class="accordion-inner checkbox-container" id="{{filter_type}}-filter">
 
                         </div>
                     </div>
                 </div>
 
-                <div class="accordion-group">
-                    <div class="accordion-heading">
-                        <a class="accordion-toggle" data-toggle="collapse" data-parent="#filter-accordion" href="#task-list-collapse">
-                            Task List Filter
-                        </a>
-                    </div>
-                    <div id="task-list-collapse" class="accordion-body collapse in">
-                        <div class="accordion-inner checkbox-container" id="task-list-filter">
-                        </div>
-                    </div>
-                </div>
-                <div class="accordion-group">
-                    <div class="accordion-heading">
-                        <a class="accordion-toggle" data-toggle="collapse" data-parent="#filter-accordion" href="#task-list-item-collapse">
-                            Task List Item Filter
-                        </a>
-                    </div>
-                    <div id="task-list-item-collapse" class="accordion-body collapse in">
-                        <div class="accordion-inner checkbox-container" id="task-list-item-filter">
-                        </div>
-                    </div>
-                </div>
+				{% endfor %}
             </div> <!--end accordion-->
 
         </div> <!--end filter container-->
 
-            <div id="trend-chart" class="span7"></div>
+            <div id="trend-chart"  class="span7"></div>
 
         <div class="span2">
-            <div id="chart-legend" class="well"></div>
-            <div id="chart-options" class="well"></div>
+			<div class="well">
+				<h4>Legend</h4>
+				<div id="chart-legend"></div>
+			</div>
+            <div id="chart-options" class="well form-horizontal">
+				<h4>Options</h4>
+				<div class="control-group chart-options">
+					<label class="control-label" for="chart-type">
+						Type:
+						<select id="chart-type" class="inline input-small">
+							<option value="basic">Basic</option>
+							<option value="basic">Control Chart</option>
+						</select>
+					</label>
+					<label class="control-label" for="show-lines">
+						Show Lines:
+						<input type="checkbox" id="show-lines"  />
+					</label>
+					<label class="control-label" for="show-references">
+						Show References:
+						<input type="checkbox" id="show-references" checked="checked" />
+					</label>
+					<label class="control-label" for="show-tolerances">
+						Show Tolerances:
+						<input type="checkbox" id="show-tolerances" checked="checked" />
+					</label>
+
+
+				</div>
+			</div>
         </div> <!-- end controls-->
     </div>
 
