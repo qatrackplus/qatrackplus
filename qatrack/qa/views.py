@@ -270,3 +270,17 @@ class ChartView(TemplateView):
 
 
 
+#============================================================================
+class ReviewView(TemplateView):
+    """view for grouping all task lists with a certain frequency for all units"""
+    template_name = "unit_grouped_frequency_list.html"
+
+    #----------------------------------------------------------------------
+    def get_context_data(self,**kwargs):
+        """grab all task lists and cycles with given frequency"""
+        context = super(ReviewView,self).get_context_data(**kwargs)
+
+        unit_type_sets = []
+
+        context["unit_type_list"] = unit_type_sets
+        return context
