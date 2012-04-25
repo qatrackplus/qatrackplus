@@ -237,9 +237,9 @@ class UnitGroupedFrequencyListView(TemplateView):
 
         for ut in UnitType.objects.all():
             unit_type_set = []
-            for unit in Unit.objects.filter(type=ut):
-                unit_type_set.append(
-                    models.UnitTaskLists.objects.get(unit=unit, frequency=frequency)
+            for unit in ut.unit_set.all():
+                unit_type_set.extend(
+                    unit.unittasklists_set.filter(frequency=frequency)
                 )
 
             unit_type_sets.append((ut,unit_type_set))
