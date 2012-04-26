@@ -37,6 +37,13 @@ SIMPLE = "simple"
 CONSTANT = "constant"
 COMPOSITE = "composite"
 
+TASK_TYPE_CHOICES = (
+    (BOOLEAN, "Boolean"),
+    (SIMPLE, "Simple Numerical"),
+    (CONSTANT, "Constant"),
+    (COMPOSITE, "Composite"),
+)
+
 #tolerance types
 ABSOLUTE = "absolute"
 PERCENT = "percent"
@@ -55,13 +62,20 @@ STATUS_CHOICES = (
     (REJECTED, "Rejected"),
 )
 
-TASK_TYPE_CHOICES = (
-    (BOOLEAN, "Boolean"),
-    (SIMPLE, "Simple Numerical"),
-    (CONSTANT, "Constant"),
-    (COMPOSITE, "Composite"),
+#pass fail choices
+NOT_DONE = "not_done"
+OK = "ok"
+TOLERANCE = "tolerance"
+ACTION = "action"
+
+PASS_FAIL_CHOICES = (
+    (NOT_DONE,"Not Done"),
+    (OK,"OK"),
+    (TOLERANCE,"Tolerance"),
+    (ACTION,"Action"),
 )
 
+EPSILON = 1E-10
 #============================================================================
 class Reference(models.Model):
     """Reference values for various QA :model:`TaskListItem`s"""
@@ -121,6 +135,40 @@ class Tolerance(models.Model):
     modified_date = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(User,editable=False,related_name="tolerance_modifiers")
 
+    #----------------------------------------------------------------------
+    def test_boolean(self,instance,reference):
+        """test a boolean instance against a reference"""
+        if abs(instance.value - reference.value) < EPSILON:
+            return OK
+        return ACTION
+    #----------------------------------------------------------------------
+    def difference(self,instance,reference):
+        """return difference between instance and reference"""
+        return instance.value - reference.value
+    #----------------------------------------------------------------------
+    def percent_difference(self,instance,reference):
+        """return percent difference between instance and reference"""
+        if (reference.value < EPSILON):
+            return self.difference(instance,reference)
+        return 100.*(instance.value-reference.value)/float(reference.value)
+    #----------------------------------------------------------------------
+    def test_instance(self,instance,reference):
+        """compare a value to reference and determine whether it passes/fails"""
+
+        if instance.task_list_item.is_boolean():
+            return self.test_boolean(instance,reference)
+
+        if self.type == ABSOLUTE:
+            diff = self.difference(instance,reference)
+        else:
+            diff = self.percent_difference(instance,reference)
+
+        if self.tol_low <= diff <= self.tol_high:
+            return OK
+        elif self.act_low <= diff <= self.tol_low or self.tol_high <= diff <= self.act_high:
+            return TOLERANCE
+
+        return ACTION
     #---------------------------------------------------------------------------
     def __unicode__(self):
         """more helpful interactive display name"""
@@ -197,6 +245,11 @@ class TaskListItem(models.Model):
         return "%s (%s)" %(all_link, ", ".join(links))
     set_references.allow_tags = True
     set_references.short_description = "Set references and tolerances for this item"
+
+    #----------------------------------------------------------------------
+    def is_boolean(self):
+        """Return whether or not this is a boolean test"""
+        return self.task_type == BOOLEAN
 
     #----------------------------------------------------------------------
     def unit_ref_tol(self,unit):
@@ -507,6 +560,9 @@ def task_list_change(*args,**kwargs):
     elif kwargs["action"] == "pre_add":
         task_list = kwargs["instance"]
 
+#----------------------------------------------------------------------
+def test_bool(value,reference):
+    """check whether a boolean value """
 
 ##============================================================================
 class TaskListItemInstance(models.Model):
@@ -514,10 +570,13 @@ class TaskListItemInstance(models.Model):
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, editable=False)
 
+    pass_fail = models.CharField(max_length=20, choices=PASS_FAIL_CHOICES,editable=False)
+
     #values set by user
     value = models.FloatField(help_text=_("For boolean TaskListItems a value of 0 equals False and any non zero equals True"), null=True)
     skipped = models.BooleanField(help_text=_("Was this test skipped for some reason (add comment)"))
     comment = models.TextField(help_text=_("Add a comment to this task"), null=True, blank=True)
+
 
     #reference used
     reference = models.ForeignKey(Reference,null=True, blank=True)
@@ -543,7 +602,16 @@ class TaskListItemInstance(models.Model):
         """set status to unreviewed if not previously set"""
         if not self.status:
             self.status = self.UNREVIEWED
+        self.calculate_pass_fail()
         super(TaskListItemInstance,self).save(*args,**kwargs)
+    #----------------------------------------------------------------------
+    def calculate_pass_fail(self):
+        """set pass/fail status of the current value"""
+
+        if self.skipped:
+            self.pass_fail = NOT_DONE
+        else:
+            self.pass_fail = self.tolerance.test_instance(self,self.reference)
 
     #----------------------------------------------------------------------
     def __unicode__(self):
@@ -582,7 +650,7 @@ class TaskListInstance(models.Model):
     #----------------------------------------------------------------------
     def status(self):
         """return string with status of this qa instance"""
-        return "Not Implemented"
+        return [(status,display,self.tasklistiteminstance_set.filter(pass_fail=status)) for status,display in PASS_FAIL_CHOICES]
 
     #---------------------------------------------------------------------------
     def __unicode__(self):

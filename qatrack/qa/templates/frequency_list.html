@@ -21,7 +21,13 @@
                 {% with last_completed=task_list.last_completed_instance %}
                 {% if last_completed %}
                         <td>{{last_completed.work_completed}}</td>
-                        <td>{{last_completed.status}}</td>
+                        <td>
+                            {% for status,display,tests in last_completed.status %}
+                                {% if tests.count > 0 %}
+                                <span class="{{status}}">{{tests.count}} {{display}}</span>
+                                {% endif %}
+                            {% endfor %}
+                        </td>
                     {% else %}
                         <td><span class="btn-info disabled">New Task List</span></td>
                         <td><span class="btn-info disabled">New Task List</span></td>
@@ -37,7 +43,13 @@
                 {% with last_completed=cycle_.last_completed_instance %}
                 {% if last_completed %}
                         <td>{{last_completed.work_completed}}</td>
-                        <td>{{last_completed.status}}</td>
+                        <td>
+                            {% for status,display,tests in last_completed.status %}
+                                {% if tests.count > 0 %}
+                                <span class="{{status}}">{{tests.count}} {{display}}</span>
+                                {% endif %}
+                            {% endfor %}
+                        </td>
                     {% else %}
                         <td><span class="btn-info disabled">New Task List</span></td>
                         <td><span class="btn-info disabled">New Task List</span></td>
