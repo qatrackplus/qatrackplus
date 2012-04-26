@@ -341,7 +341,7 @@ class TaskList(models.Model):
         """return the last instance of this task list that was performed"""
         try:
             return self.tasklistinstance_set.latest("work_completed")
-        except self.DoesNotExist:
+        except TaskListInstance.DoesNotExist:
             return None
     #----------------------------------------------------------------------
     def all_items(self):
