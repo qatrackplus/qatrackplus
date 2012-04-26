@@ -341,7 +341,7 @@ class TaskList(models.Model):
         """return the last instance of this task list that was performed"""
         try:
             return self.tasklistinstance_set.latest("work_completed")
-        except self.DoesNotExist:
+        except TaskListInstance.DoesNotExist:
             return None
     #----------------------------------------------------------------------
     def all_items(self):
@@ -428,15 +428,17 @@ class UnitTaskLists(models.Model):
         verbose_name_plural = _("Choose Unit Task Lists")
 
     #----------------------------------------------------------------------
-    def all_task_lists(self):
+    def all_task_lists(self,with_last_instance=False):
         """return all task lists from task_lists and cycles """
 
         task_lists = list(self.task_lists.all())
-
         for cycle in self.cycles.all():
             task_lists.extend(list(cycle.task_lists.all()))
 
-        return task_lists
+        if not with_last_instance:
+            return task_lists
+        else:
+            return [(tl,tl.last_completed_instance()) for tl in task_lists]
     #----------------------------------------------------------------------
     def lists_and_cycles(self):
         """"""
@@ -532,11 +534,16 @@ class TaskListItemInstance(models.Model):
         help_text=settings.DATETIME_HELP,
     )
 
+
     #for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, editable=False, related_name="task_list_item_instance_creator")
     modified = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(User, editable=False, related_name="task_list_item_instance_modifier")
+
+    #----------------------------------------------------------------------
+    def pass_fail(self):
+        """return w"""
 
     #----------------------------------------------------------------------
     def save(self, *args, **kwargs):

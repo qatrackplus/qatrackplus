@@ -273,14 +273,28 @@ class ChartView(TemplateView):
 #============================================================================
 class ReviewView(TemplateView):
     """view for grouping all task lists with a certain frequency for all units"""
-    template_name = "unit_grouped_frequency_list.html"
+    template_name = "review_all.html"
 
     #----------------------------------------------------------------------
     def get_context_data(self,**kwargs):
         """grab all task lists and cycles with given frequency"""
         context = super(ReviewView,self).get_context_data(**kwargs)
 
-        unit_type_sets = []
+        units = Unit.objects.all()
+        frequencies = models.FREQUENCY_CHOICES[:3]
+        unit_lists = []
+        for unit in units:
+            unit_list = []
+            for freq, _ in frequencies:
+                freq_list = []
+                unit_task_lists = unit.unittasklists_set.filter(frequency=freq)
 
-        context["unit_type_list"] = unit_type_sets
+                for utls in unit_task_lists:
+                    freq_list.extend(utls.all_task_lists(with_last_instance=True))
+
+                unit_list.append((freq,freq_list))
+            unit_lists.append((unit,unit_list))
+        context["unit_lists"] = unit_lists
+        context["units"] = units
+        context["routine_freq"] = frequencies
         return context

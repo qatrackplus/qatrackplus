@@ -68,6 +68,23 @@ tr.qa-comment td, tr.qa-procedure td {
     overflow-y:auto;
     height:200px;
 }
+#qa-review-grid h4,
+#qa-review-grid h5,
+#qa-review-grid em{
+    text-align: center;
+}
+#qa-review-grid .span12  > .row-fluid,
+#qa-review-grid .row-fluid .row-fluid{
+    border-bottom: 1px solid #CCC;
+}
+#qa-review-grid .row-fluid .row-fluid:last-child{
+    border-bottom: 0px;
+}
+
+#qa-review-grid .row-fluid > .span3:nth-child(even){
+    background-color: #f0f0f0;
+
+}
 
 /* css for timepicker */
 .ui-timepicker-div .ui-widget-header { margin-bottom: 8px; }
