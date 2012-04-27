@@ -8,7 +8,7 @@ from django.views.generic import ListView, FormView, View, TemplateView
 from django.utils.translation import ugettext as _
 from qatrack.qa import models
 from qatrack.units.models import Unit, UnitType
-
+from qatrack import settings
 import forms
 
 #TODO: Move location of qa/template.html templates (up one level)
@@ -273,7 +273,7 @@ class ChartView(TemplateView):
 #============================================================================
 class ReviewView(TemplateView):
     """view for grouping all task lists with a certain frequency for all units"""
-    template_name = "review_all.html"
+    template_name = "review_all_table.html"
 
     #----------------------------------------------------------------------
     def get_context_data(self,**kwargs):
@@ -294,6 +294,34 @@ class ReviewView(TemplateView):
 
                 unit_list.append((freq,freq_list))
             unit_lists.append((unit,unit_list))
+        context["table_headers"] = [
+            "Unit", "Frequency", "TaskList",
+            "Completed", "Due Date", "Status"
+        ]
+        fdisplay = dict(models.FREQUENCY_CHOICES)
+        table_data = []
+        for utl in models.UnitTaskLists.objects.all():
+            unit, frequency = utl.unit, utl.frequency
+            data = []
+
+            for task_list,last in utl.all_task_lists(with_last_instance=True):
+                last_done = "New List"
+                status = "New List"
+                if last is not None:
+                    last_done = last.work_completed.date()
+                    status = last.status()
+                data = [
+                    ("unit",unit.name),
+                    ("frequency",fdisplay[frequency]),
+                    ("task_list",task_list.name),
+                    ("last_done",last_done),
+                    ("due",models.due_date(utl.unit, task_list).date()),
+                    ("status",status),
+                ]
+            if data:
+                table_data.append(data)
+        context["data"] = table_data
+        context["unit_task_lists"] = models.UnitTaskLists.objects.all()
         context["unit_lists"] = unit_lists
         context["units"] = units
         context["routine_freq"] = frequencies

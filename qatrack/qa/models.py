@@ -29,6 +29,13 @@ FREQUENCY_CHOICES = (
     (ANNUAL, "Annual"),
     (OTHER, "Other"),
 )
+FREQUENCY_DELTAS = {
+    DAILY:datetime.timedelta(days=1),
+    WEEKLY:datetime.timedelta(weeks=1),
+    MONTHLY:datetime.timedelta(weeks=4),
+    SEMIANNUAL:datetime.timedelta(days=365/2),
+    ANNUAL:datetime.timedelta(days=365),
+}
 
 #task_types
 BOOLEAN = "boolean"
@@ -390,10 +397,10 @@ class TaskList(models.Model):
     modified_by = models.ForeignKey(User, related_name="task_list_modifier", editable=False)
 
     #----------------------------------------------------------------------
-    def last_completed_instance(self):
+    def last_completed_instance(self,unit):
         """return the last instance of this task list that was performed"""
         try:
-            return self.tasklistinstance_set.latest("work_completed")
+            return self.tasklistinstance_set.filter(unit=unit).latest("work_completed")
         except TaskListInstance.DoesNotExist:
             return None
     #----------------------------------------------------------------------
@@ -459,6 +466,20 @@ class UnitTaskListManager(models.Manager):
     def by_unit_frequency(self,unit,frequency):
         return self.by_frequency(frequency).filter(unit=unit)
 
+#----------------------------------------------------------------------
+def due_date(unit,task_list):
+    """return the next due date of a task_list for a given unit"""
+    unit_task_list = UnitTaskLists.objects.get(
+        unit = unit, task_lists__pk = task_list.pk
+    )
+    last_instance = task_list.last_completed_instance(unit)
+    delta = FREQUENCY_DELTAS[unit_task_list.frequency]
+    if last_instance:
+        return last_instance.work_completed + delta
+    return datetime.datetime.now()
+
+
+
 #============================================================================
 class UnitTaskLists(models.Model):
     """keeps track of which units should perform which task lists at a given frequency"""
@@ -491,7 +512,7 @@ class UnitTaskLists(models.Model):
         if not with_last_instance:
             return task_lists
         else:
-            return [(tl,tl.last_completed_instance()) for tl in task_lists]
+            return [(tl,tl.last_completed_instance(self.unit)) for tl in task_lists]
     #----------------------------------------------------------------------
     def lists_and_cycles(self):
         """"""
@@ -503,6 +524,9 @@ class UnitTaskLists(models.Model):
     #----------------------------------------------------------------------
     def name(self):
         return self.__unicode__()
+    #----------------------------------------------------------------------
+    def due(self):
+        """return the next due date for """
 
     #----------------------------------------------------------------------
     def __unicode__(self):
@@ -601,10 +625,6 @@ class TaskListItemInstance(models.Model):
     modified_by = models.ForeignKey(User, editable=False, related_name="task_list_item_instance_modifier")
 
     #----------------------------------------------------------------------
-    def pass_fail(self):
-        """return w"""
-
-    #----------------------------------------------------------------------
     def save(self, *args, **kwargs):
         """set status to unreviewed if not previously set"""
         if not self.status:
@@ -617,7 +637,7 @@ class TaskListItemInstance(models.Model):
 
         if self.skipped:
             self.pass_fail = NOT_DONE
-        else:
+        elif self.tolerance and self.reference:
             self.pass_fail = self.tolerance.test_instance(self,self.reference)
 
     #----------------------------------------------------------------------
@@ -655,9 +675,12 @@ class TaskListInstance(models.Model):
         get_latest_by = "created"
 
     #----------------------------------------------------------------------
-    def status(self):
+    def status(self,formatted=False):
         """return string with status of this qa instance"""
-        return [(status,display,self.tasklistiteminstance_set.filter(pass_fail=status)) for status,display in PASS_FAIL_CHOICES]
+        status = [(status,display,self.tasklistiteminstance_set.filter(pass_fail=status)) for status,display in PASS_FAIL_CHOICES]
+        if not formatted:
+            return status
+        return " ".join(["%d %s" %(s.count(),d) for _,d,s in status])
 
     #---------------------------------------------------------------------------
     def __unicode__(self):

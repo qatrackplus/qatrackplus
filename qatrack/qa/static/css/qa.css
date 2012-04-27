@@ -68,23 +68,31 @@ tr.qa-comment td, tr.qa-procedure td {
     overflow-y:auto;
     height:200px;
 }
-#qa-review-grid h4,
-#qa-review-grid h5,
-#qa-review-grid em{
-    text-align: center;
+
+#qa-review-table {
+    margin: 1em 0;
+    clear: both;
 }
-#qa-review-grid .span12  > .row-fluid,
-#qa-review-grid .row-fluid .row-fluid{
-    border-bottom: 1px solid #CCC;
-}
-#qa-review-grid .row-fluid .row-fluid:last-child{
-    border-bottom: 0px;
+#qa-review-table select,
+#qa-review-table input{
+    width:80px;
 }
 
-#qa-review-grid .row-fluid > .span3:nth-child(even){
-    background-color: #f0f0f0;
-
+table.table thead .sorting,
+table.table thead .sorting_asc,
+table.table thead .sorting_desc,
+table.table thead .sorting_asc_disabled,
+table.table thead .sorting_desc_disabled {
+    cursor: pointer;
+    *cursor: hand;
 }
+
+table.table thead .sorting { background: url('images/sort_both.png') no-repeat center right; }
+table.table thead .sorting_asc { background: url('images/sort_asc.png') no-repeat center right; }
+table.table thead .sorting_desc { background: url('images/sort_desc.png') no-repeat center right; }
+
+table.table thead .sorting_asc_disabled { background: url('images/sort_asc_disabled.png') no-repeat center right; }
+table.table thead .sorting_desc_disabled { background: url('images/sort_desc_disabled.png') no-repeat center right; }
 
 /* css for timepicker */
 .ui-timepicker-div .ui-widget-header { margin-bottom: 8px; }

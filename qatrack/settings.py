@@ -159,6 +159,7 @@ INSTALLED_APPS = (
     'qatrack.qa',
     'registration',
     'pinax_theme_bootstrap',
+    'data_tables',
 )
 
 # A sample logging configuration. The only tangible logging
