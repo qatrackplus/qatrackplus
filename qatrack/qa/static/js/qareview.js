@@ -221,17 +221,23 @@ function on_select_row(row){
 	}else{
 		$(row).children().css('background-color','#C3E6FF');
 		dt.fnOpen(row,create_task_list_table(sub_table_id),"qa-details");
-		init_item_table('#'+sub_table_id);
+
 		QAUtils.get_resources(
 			"tasklistinstance",
-			function(resources){
-				var task_list_instances = resources.objects;
-				if (task_list_instances.length>0){
 
-					//add row using latest task_list_instance
-					$.each(task_list_instances[0].item_instances,function(i,item_instance){
-						add_item_row($('#'+sub_table_id),item_instance,task_list_instances);
-					});
+			function(resources){
+
+				//ensure details table is still shown (i.e. it wasn't closed in
+				//in between the request and response
+				if ($(row).next().children(".qa-details").length > 0){
+					var task_list_instances = resources.objects;
+					if (task_list_instances.length>0){
+						init_item_table('#'+sub_table_id);
+						//add row using latest task_list_instance
+						$.each(task_list_instances[0].item_instances,function(i,item_instance){
+							add_item_row($('#'+sub_table_id),item_instance,task_list_instances);
+						});
+					}
 				}
 			},
 			{
