@@ -10,6 +10,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.dispatch import receiver
 from django.db.models.signals import post_save, m2m_changed
 from django.db.models import signals
+from django.utils import timezone
 from qatrack import settings
 import re
 
@@ -587,7 +588,7 @@ class TaskListItemInstance(models.Model):
     task_list_instance = models.ForeignKey("TaskListInstance",editable=False)
     task_list_item = models.ForeignKey(TaskListItem)
 
-    work_completed = models.DateTimeField(default=datetime.datetime.now,
+    work_completed = models.DateTimeField(default=timezone.now,
         help_text=settings.DATETIME_HELP,
     )
 
@@ -635,7 +636,7 @@ class TaskListInstance(models.Model):
     task_list = models.ForeignKey(TaskList, editable=False)
     unit = models.ForeignKey(Unit,editable=False)
 
-    work_completed = models.DateTimeField(default=datetime.datetime.now)
+    work_completed = models.DateTimeField(default=timezone.now)
 
     #for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)
