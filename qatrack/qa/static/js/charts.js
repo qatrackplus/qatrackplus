@@ -36,7 +36,7 @@ function convert_to_flot_series(idx,collection){
 
     var create_name = function(type){return collection.short_name+'_unit'+collection.unit+"_"+type;}
 
-    var dates = $.map(collection.data.dates,QAUtils.test);
+    var dates = $.map(collection.data.dates,QAUtils.get_time);
 
     var show_tolerances = $("#show-tolerances").is(":checked");
     var show_references = $("#show-references").is(":checked");

@@ -191,7 +191,7 @@ var QAUtils = new function() {
 
     this.intersection = function(a1,a2){
         return $(a1).filter(function(idx,elem){console.log(elem);return $.inArray(elem,a2)>=0;})
-    }
+    };
 
     //taken from http://n8v.enteuxis.org/2010/12/parsing-iso-8601-dates-in-javascript/
     this.parse_iso8601_date = function(s){
@@ -250,7 +250,7 @@ var QAUtils = new function() {
         return new Date(ms);
     };
 
-    this.test = function(s){
+    this.get_time = function(s){
         return QAUtils.parse_iso8601_date(s).getTime();
     };
 
