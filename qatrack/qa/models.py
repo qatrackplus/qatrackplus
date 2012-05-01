@@ -624,6 +624,10 @@ class TaskListItemInstance(models.Model):
     modified = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(User, editable=False, related_name="task_list_item_instance_modifier")
 
+    class Meta:
+        ordering = ("work_completed",)
+        get_latest_by = "work_completed"
+
     #----------------------------------------------------------------------
     def save(self, *args, **kwargs):
         """set status to unreviewed if not previously set"""
@@ -671,8 +675,8 @@ class TaskListInstance(models.Model):
     modified_by = models.ForeignKey(User, editable=False, related_name="task_list_instance_modifier")
 
     class Meta:
-        ordering = ("created",)
-        get_latest_by = "created"
+        ordering = ("work_completed",)
+        get_latest_by = "work_completed"
 
     #----------------------------------------------------------------------
     def status(self,formatted=False):

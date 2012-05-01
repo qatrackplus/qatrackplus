@@ -69,30 +69,32 @@ tr.qa-comment td, tr.qa-procedure td {
     height:200px;
 }
 
-#qa-review-table {
+#qa-task-list-table,
+#qa-item-review-table{
     margin: 1em 0;
     clear: both;
 }
-#qa-review-table select,
-#qa-review-table input{
+#qa-task-list-table select,
+#qa-task-list-table input,
+#qa-item-review-table select,
+#qa-item-review-table input{
     width:80px;
 }
 
-table.table thead .sorting,
-table.table thead .sorting_asc,
-table.table thead .sorting_desc,
-table.table thead .sorting_asc_disabled,
-table.table thead .sorting_desc_disabled {
-    cursor: pointer;
-    *cursor: hand;
+.sub-table th{
+    font-weight: normal;
+    font-style:italic;
+}
+.sub-table th.name-col{
+    width:250px;
+}
+.sub-table th.ref-col {
+    width:150px;
+}
+.sub-table th.history-col{
+    width:150px;
 }
 
-table.table thead .sorting { background: url('images/sort_both.png') no-repeat center right; }
-table.table thead .sorting_asc { background: url('images/sort_asc.png') no-repeat center right; }
-table.table thead .sorting_desc { background: url('images/sort_desc.png') no-repeat center right; }
-
-table.table thead .sorting_asc_disabled { background: url('images/sort_asc_disabled.png') no-repeat center right; }
-table.table thead .sorting_desc_disabled { background: url('images/sort_desc_disabled.png') no-repeat center right; }
 
 /* css for timepicker */
 .ui-timepicker-div .ui-widget-header { margin-bottom: 8px; }

@@ -19,8 +19,13 @@ class UnitTypeResource(ModelResource):
 class UnitResource(ModelResource):
     modalities = tastypie.fields.ToManyField("qatrack.qa.api.ModalityResource","modalities",full=True)
     type = tastypie.fields.ToOneField("qatrack.qa.api.UnitTypeResource","type",full=True)
+
     class Meta:
         queryset = Unit.objects.order_by("number").all()
+        filtering = {
+            "number": ALL_WITH_RELATIONS,
+            "name":ALL,
+        }
 
 #============================================================================
 class ReferenceResource(ModelResource):
@@ -43,26 +48,31 @@ class TaskListResource(ModelResource):
     task_list_items = tastypie.fields.ToManyField("qatrack.qa.api.TaskListItemResource","task_list_items",full=True)
     frequencies = tastypie.fields.ListField()
 
+    class Meta:
+        queryset = models.TaskList.objects.order_by("name").all()
+        filtering = {
+            "pk":ALL,
+            "slug":ALL,
+            "name":ALL,
+        }
     #----------------------------------------------------------------------
     def dehydrate_frequencies(self,bundle):
         return list(bundle.obj.unittasklists_set.values_list("frequency",flat=True).distinct())
-    class Meta:
-        queryset = models.TaskList.objects.order_by("name").all()
 
 #============================================================================
 class TaskListItemInstanceResource(ModelResource):
-    task_list_item = tastypie.fields.ToOneField("qatrack.qa.api.TaskListItemResource","task_list_item", full=True)
-    reference = tastypie.fields.ToOneField("qatrack.qa.api.ReferenceResource","reference", full=True,null=True)
-    tolerance = tastypie.fields.ToOneField("qatrack.qa.api.ToleranceResource","tolerance", full=True,null=True)
+    task_list_item = tastypie.fields.ForeignKey("qatrack.qa.api.TaskListItemResource","task_list_item", full=True)
+    reference = tastypie.fields.ForeignKey("qatrack.qa.api.ReferenceResource","reference", full=True,null=True)
+    tolerance = tastypie.fields.ForeignKey("qatrack.qa.api.ToleranceResource","tolerance", full=True,null=True)
 
     class Meta:
         queryset = models.TaskListItemInstance.objects.all()
         resource_name = "values"
         filtering = {
-
             'task_list_item':ALL_WITH_RELATIONS,
             'work_completed':ALL
         }
+        ordering= ["work_completed"]
 
     #----------------------------------------------------------------------
     def build_filters(self,filters=None):
@@ -91,8 +101,8 @@ class TaskListItemInstanceResource(ModelResource):
 
         if "short_names" in filters:
             orm_filters["task_list_item__short_name__in"] = [x.strip() for x in filters["short_names"].split(',')]
-        elif "task_list_id" in filters:
-            orm_filters["task_list_item__pk"] = filters["pk"]
+        #elif "task_list_item_id" in filters:
+        #    orm_filters["task_list_item__pk"] = filters["pk"]
         return orm_filters
 
 #----------------------------------------------------------------------
@@ -253,6 +263,7 @@ class TaskListItemResource(ModelResource):
         queryset = models.TaskListItem.objects.all()
         filtering = {
             "short_name": ALL,
+            "id":ALL
         }
     #    excludes = ["values"]
 
@@ -267,3 +278,17 @@ class TaskListItemResource(ModelResource):
         if "unit" in filters:
             orm_filters["task_list_instance__task_list__unit__number"] = filters["unit"]
         return orm_filters
+
+#============================================================================
+class TaskListInstanceResource(ModelResource):
+    unit = tastypie.fields.ForeignKey(UnitResource,"unit",full=True)
+    task_list = tastypie.fields.ForeignKey(TaskListResource,"task_list",full=True)
+    item_instances = tastypie.fields.ToManyField(TaskListItemInstanceResource,"tasklistiteminstance_set",full=True)
+    class Meta:
+        queryset = models.TaskListInstance.objects.all()
+        filtering = {
+            "unit":ALL_WITH_RELATIONS,
+            "task_list": ALL_WITH_RELATIONS
+        }
+
+        ordering= ["work_completed"]

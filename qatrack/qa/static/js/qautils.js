@@ -9,9 +9,15 @@ var QAUtils = new function() {
     this.TOL_HIGH = "tol_high";
     this.ACT_HIGH = "act_high";
 
+    this.TOL_TYPES = [this.ACT_LOW,this.TOL_LOW,this.ACT_HIGH,this.TOL_HIGH];
+
     this.WITHIN_TOL = "ok";
     this.TOLERANCE = "tolerance";
     this.ACTION = "action";
+
+    this.WITHIN_TOL_DISP =  "OK";
+    this.TOLERANCE_DISP = "TOL";
+    this.ACTION_DISP = "ACT";
 
     this.PERCENT = "percent";
     this.ABSOLUTE = "absolute";
@@ -28,6 +34,7 @@ var QAUtils = new function() {
     this.SCRATCH = "scratch";
     this.REJECTED = "rejected";
 
+    this.MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
     /***************************************************************/
     /* Tolerance functions
@@ -126,6 +133,9 @@ var QAUtils = new function() {
 
     //convert an percent difference to absolute based on reference
     this.convert_tol_to_abs = function(ref,tol){
+        if (tol.type == this.ABSOLUTE){
+            return tol;
+        }
         return {
             act_low : ref*(100.+tol.act_low)/100.,
             tol_low : ref*(100.+tol.tol_low)/100.,
@@ -133,6 +143,26 @@ var QAUtils = new function() {
             act_high : ref*(100.+tol.act_high)/100.
         };
     };
+
+    //return an appropriate display for a given pass_fail status
+    this.qa_displays = {};
+    this.qa_displays[this.ACTION] = this.ACTION_DISP;
+    this.qa_displays[this.TOLERANCE] = this.TOLERANCE_DISP;
+    this.qa_displays[this.WITHIN_TOL] = this.WITHIN_TOL_DISP;
+    this.qa_display = function(pass_fail){
+        return this.qa_displays[pass_fail] || "";
+    }
+
+    //return an appropriate colour for a given pass_fail status
+    this.qa_colors = {};
+    this.qa_colors[this.ACTION] = this.ACT_COLOR;
+    this.qa_colors[this.TOLERANCE] = this.TOL_COLOR
+    this.qa_colors[this.WITHIN_TOL] = this.OK_COLOR;
+
+    this.qa_color = function(pass_fail){
+        return this.qa_colors[pass_fail] || "";
+
+    }
 
     /********************************************************************/
     //API calls
@@ -250,8 +280,5 @@ var QAUtils = new function() {
         return new Date(ms);
     };
 
-    this.test = function(s){
-        return QAUtils.parse_iso8601_date(s).getTime();
-    };
 
 }();

@@ -11,6 +11,7 @@
     <script src="{% static "js/jquery.flot.min.js" %}"></script>
     <script src="{% static "js/jquery.flot.resize.js" %}"></script>
     <script src="{% static "js/jquery.flot.fillbetween.js" %}"></script>
+    <script src="{% static "js/jquery.sparkline.min.js" %}"></script>
 
 	<script src="{% static "js/qautils.js" %}"></script>
 	<script src="{% static "js/qareview.js" %}"></script>
@@ -29,12 +30,12 @@
         </div>
     </div>
     <div class="row-fluid" >
-        <div class="span6 container form-inline">
-            <table class="table table-condensed table-bordered table-striped" id="qa-review-table">
+        <div class="span12 container form-inline">
+            <table class="table table-condensed table-bordered table-striped" id="qa-task-list-table">
                 <thead>
                     <tr>
                         {% for header in table_headers %}
-                            <th>{{header}}</th>
+							<th>{{header}}</th>
                         {% endfor %}
 					</tr>
                 </thead>
@@ -42,8 +43,8 @@
                 <tbody>
 
                     {% for row in data %}
-                        <tr class="{% cycle 'odd' 'even' %}">
-                            {% for prop,val in row %}
+                        <tr class="{% cycle 'odd' 'even' %}" {% for k,v in row.info.items %} data-{{k}}="{{v}}" {% endfor %} >
+                            {% for prop,val in row.attrs %}
                                 <td>
                                     {% if prop == "status" %}
                                         {% for status,display,tests in val %}
@@ -69,5 +70,6 @@
             </table>
         </div>
     </div>
+
 
 {% endblock body %}

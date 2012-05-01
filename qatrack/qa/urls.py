@@ -13,6 +13,7 @@ resources = [
     api.TaskListResource(),
     api.TaskListItemResource(),
     api.TaskListItemInstanceResource(),
+    api.TaskListInstanceResource(),
     api.ValueResource(),
     api.FrequencyResource(),
     api.StatusResource(),

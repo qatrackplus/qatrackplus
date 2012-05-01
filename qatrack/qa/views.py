@@ -295,8 +295,9 @@ class ReviewView(TemplateView):
                 unit_list.append((freq,freq_list))
             unit_lists.append((unit,unit_list))
         context["table_headers"] = [
-            "Unit", "Frequency", "TaskList",
-            "Completed", "Due Date", "Status"
+            "Unit", "Frequency", "Task List",
+            "Completed", "Due Date", "Status",
+            "Review Status"
         ]
         fdisplay = dict(models.FREQUENCY_CHOICES)
         table_data = []
@@ -305,19 +306,32 @@ class ReviewView(TemplateView):
             data = []
 
             for task_list,last in utl.all_task_lists(with_last_instance=True):
-                last_done = "New List"
-                status = "New List"
+                last_done, status,rview = ["New List"]*3
                 if last is not None:
                     last_done = last.work_completed.date()
                     status = last.status()
-                data = [
-                    ("unit",unit.name),
-                    ("frequency",fdisplay[frequency]),
-                    ("task_list",task_list.name),
-                    ("last_done",last_done),
-                    ("due",models.due_date(utl.unit, task_list).date()),
-                    ("status",status),
-                ]
+                    reviewed = last.tasklistiteminstance_set.exclude(status=models.UNREVIEWED).count()
+                    total = last.tasklistiteminstance_set.count()
+                    review = "%d / %d" %(reviewed,total)
+
+                data = {
+                    "info": {
+                        "unit_number":unit.number,
+                        "task_list_id":task_list.pk,
+                        "frequency":frequency,
+                    },
+                    "attrs": [
+                        #(name, obj, display)
+                        ("unit",unit.name),
+                        ("frequency",fdisplay[frequency]),
+                        ("task_list",task_list.name),
+                        ("last_done",last_done),
+                        ("due",models.due_date(utl.unit, task_list).date()),
+                        ("status",status),
+                        ("review_status",review),
+                    ]
+                }
+
             if data:
                 table_data.append(data)
         context["data"] = table_data
