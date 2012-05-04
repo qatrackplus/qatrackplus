@@ -1,9 +1,11 @@
+var HISTORY_INSTANCE_LIMIT = 5;
+
 /**************************************************************************/
 function init_task_list_table(){
 	var review_table = $('#qa-task-list-table').dataTable( {
 		"sDom": "<'row-fluid'<'span6'><'span6'>r>t<'row-fluid'<'span3'><'span3' l><'span6'p>>",
 
-		"bStateSave":true, //save filter/sort state between page loads
+		"bStateSave":false, //save filter/sort state between page loads
 		"bFilter":true,
 		"bPaginate": false,
 		"bLengthChange":true,
@@ -39,20 +41,13 @@ function init_task_list_table(){
 
 }
 /**************************************************************************/
-function init_item_table(table_id){
-	return $(table_id).dataTable( {
-		"sDom": "<'row-fluid'<'span12't>>",
-		"bFilter":false,
-		"bPaginate": false,
-		"bLengthChange":true,
-	} );
-
-}
-
-
+//creates the html table to hold the task list items from a task list
 function create_task_list_table(id){
-	var headers = '<tr><th class="name-col">Name</th><th>Status</th><th>Type</th><th>Comment</th><th>Pass/Fail</th><th>Value</th><th class="ref-col">Ref/Tol</th><th class="history-col">History</th><th>Review URL</th></tr>';
+	var headers = '<tr><th class="name-col">Name</th><th>Type</th><th>Comment</th><th>Pass/Fail</th><th>Value</th><th class="ref-col">Ref/Tol</th><th class="history-col">History</th><th>Review URL</th></tr>';
 	var elements = [
+		'<div class="review-button-container ">',
+		'<button data-toggle="button" data-loading-text="Updating..." class="pull-right btn toggle-review-status">Toggle Review Status</button>',
+		'</div>',
 		'<table class="table table-bordered table-condensed sub-table" id="'+id+'">',
 		'<thead>',headers,'</thead>',
 		'<tbody></tbody>',
@@ -62,8 +57,9 @@ function create_task_list_table(id){
 
 	return elements.join("");
 }
-
-function create_spark_line(spark_id,instance,task_list_instances){
+/**************************************************************************/
+//generate a spark line in the provided container for a given task list item
+function create_spark_line(container,task_list_item,task_list_instances){
 	//find historical values for this item
 	var vals = [], refs = [], dates=[];
 	var tols = {act_high:[],act_low:[],tol_high:[],tol_low:[]};
@@ -71,17 +67,17 @@ function create_spark_line(spark_id,instance,task_list_instances){
 	$.each(task_list_instances.reverse(),function(i,tl_instance){
 		//above is reverse since query was ordered by -work_complete
 		$.each(tl_instance.item_instances,function(j,item_instance){
-			if (item_instance.task_list_item.id === instance.task_list_item.id){
+			if (item_instance.task_list_item.id === task_list_item.id){
 				dates.push(QAUtils.parse_iso8601_date(item_instance.work_completed))
 				vals.push(item_instance.value)
 
-				if (typeof item_instance.reference === "object"){
+				if (item_instance.reference !== null){
 					refs.push(item_instance.reference.value);
 				}else{
 					refs.push(null);
 				}
 
-				if (typeof item_instance.tolerance === "object" && typeof item_instance.reference === "object"){
+				if ((item_instance.tolerance !== null) && (item_instance.reference !== null)){
 					var tol = QAUtils.convert_tol_to_abs(item_instance.reference.value,item_instance.tolerance);
 					$.each(QAUtils.TOL_TYPES,function(i,tol_type){
 						tols[tol_type].push(tol[tol_type]);
@@ -113,10 +109,13 @@ function create_spark_line(spark_id,instance,task_list_instances){
 		Math.max.apply(Math,vals.filter(is_number))
 	);
 
+	if (Math.abs(chart_max-chart_min) < QAUtils.EPSILON){
+		chart_max *= 1.1;
+		chart_min *= 0.9;
+	}
 	var formatter = function(sparkline,options,fields){
 		var cur  = sparkline.getCurrentRegionFields();
-		var date = [cur.x.getDate(), QAUtils.MONTHS[cur.x.getMonth()], cur.x.getFullYear()];
-		return "<div>("+date.join(" ")+","+cur.y+")</div>";
+		return "<div>("+QAUtils.format_date(cur.x)+","+cur.y+")</div>";
 
 	};
 
@@ -138,19 +137,19 @@ function create_spark_line(spark_id,instance,task_list_instances){
 	spark_opts["lineWidth"] = 1;
 	spark_opts["spotColor"] = false;
 	spark_opts["lineColor"] = QAUtils.OK_COLOR;
-	$('#'+spark_id).sparkline(refs,spark_opts);
+	/*container.sparkline(refs,spark_opts);
 
 	spark_opts['composite']=true;
 	spark_opts["lineColor"] = QAUtils.TOL_COLOR;
-	$('#'+spark_id).sparkline(tols[QAUtils.TOL_LOW],spark_opts);
+	container.sparkline(tols[QAUtils.TOL_LOW],spark_opts);
 
-	$('#'+spark_id).sparkline(tols[QAUtils.TOL_HIGH],spark_opts);
+	container.sparkline(tols[QAUtils.TOL_HIGH],spark_opts);
 
 	spark_opts["lineColor"] = QAUtils.ACT_COLOR;
-	$('#'+spark_id).sparkline(tols[QAUtils.ACT_LOW],spark_opts);
+	container.sparkline(tols[QAUtils.ACT_LOW],spark_opts);
 
-	$('#'+spark_id).sparkline(tols[QAUtils.ACT_HIGH],spark_opts);
-
+	container.sparkline(tols[QAUtils.ACT_HIGH],spark_opts);
+*/
 	spark_opts["spotColor"] = "blue";
 	spark_opts["valueSpots"] = true;
 	spark_opts["lineColor"] = "blue";
@@ -160,104 +159,233 @@ function create_spark_line(spark_id,instance,task_list_instances){
 	spark_opts["highlightLineColor"] = "blue";
 	spark_opts["tooltipFormatter"]=formatter;
 
-	$('#'+spark_id).sparkline(vals,spark_opts);
-
-
-}
-function add_item_row(parent,instance,task_list_instances){
-	var dt = $(parent).dataTable();
-	var item = instance.task_list_item;
-	var val = instance.value;
-	var tol = "";
-	if ((instance.tolerance !== null) && (instance.reference !== null)){
-		var t = instance.tolerance;
-		var v = instance.reference.value;
-		tol = [t.act_low,t.tol_low, v, t.tol_high, t.act_high].join(" < ");
-	}else if (instance.reference !== null){
-		tol = instance.reference.value;
+	if (vals.length < 2){
+		container.html("<em>Not enough data</em>");
+	}else{
+		container.sparkline(vals,spark_opts);
 	}
+}
+
+function update_item_status(item_status_select){
+	var id = $(item_status_select).attr("id").split('-')[0];
+	var value = $(item_status_select).val();
+	QAUtils.set_item_instance_status(id,value,function(response){console.log(response);});
+}
+
+function add_item_row(parent,instance,task_list_instances){
+
+	var data = [];
+
+	var item = instance.task_list_item;
+	data.push(item.name);
+	data.push(item.category.name);
+
+	var comment = instance.comment ? '<a title="'+instance.comment+'">View Comment</a>' : "<em>no comment</em>";;
+	data.push(comment)
+
+
+	var pass_fail;
+	if (QAUtils.instance_has_ref_tol(instance)){
+		pass_fail = '<span class="pass-fail">'+QAUtils.qa_display(instance.pass_fail)+'</span>';
+	}else{
+		pass_fail = '<span class="pass-fail">No Reference</span>';
+	}
+	data.push(pass_fail)
+
+	var val = instance.value || "";
+	data.push(val)
+
+	var ref_tol = QAUtils.format_ref_tol(instance.reference, instance.tolerance);
+	data.push(ref_tol)
 
 	var spark_id = 'id-'+instance.id;
 	var spark = '<span id="'+spark_id+'" class="sparklines"></span>';
+	data.push(spark);
 
-	var comment = "<em>no comment</em>";
-	if (instance.comment){
-		comment = '<a title="'+instance.comment+'">View Comment</a>';
+	var review_link = QAUtils.unit_item_chart_link(instance.unit,item,"Details");
+	data.push(review_link);
+
+	$(parent).dataTable().fnAddData(data);
+	var item_row = $(parent).find("tbody tr:first");
+
+	create_spark_line($("#"+spark_id),instance.task_list_item,task_list_instances);
+
+
+	//set color Pass/Fail column based on test
+	var pass_fail_td = item_row.find("span.pass-fail").parent();
+	pass_fail_td.css("background-color",QAUtils.qa_color(instance.pass_fail));
+
+	return item_row;
+}
+
+function update_task_list_instance_status(is_already_reviewed,instance,container){
+
+	var complete;
+	if (reviewed){
+		button.attr("data-loading-text","Unreviewing...")
+		button.attr("data-complete-text","Mark Reviewed")
+	}else{
+		button.attr("data-loading-text","Marking Reviewed...")
+		button.attr("data-complete-text","Unreviewed")
 	}
 
-	dt.fnAddData([
-		item.name,
-		instance.status,
-		item.category.name,
-		comment,
-		'<span class="pass-fail">'+QAUtils.qa_display(instance.pass_fail)+'</span>',
-		val,
-		tol,
-		spark,
-		'<a href="#">Review</a>'
-	]);
+	button.button("loading");
 
-	create_spark_line(spark_id,instance,task_list_instances);
+	update_review_status(row,function(instance){
+		button.button(instance.review_status);
+	});
 
-	var pass_fail_td = $(parent).find("tbody tr:last td span.pass-fail").parent();
-	pass_fail_td.css("background-color",QAUtils.qa_color(instance.pass_fail));
+}
+
+function close_details(task_list_row,data_table){
+	//clean up details table
+	//task_list_row.children().css('background-color','');
+	data_table.fnClose(task_list_row[0]);
+}
+function open_details(task_list_row,data_table){
+
+	//highlight task list row to ensure it is easily identified as open
+	//task_list_row.children().css('background-color','#C3E6FF');
+
+	var unit_number = task_list_row.attr("data-unit_number");
+	var task_list_id = task_list_row.attr("data-task_list_id");
+	var frequency = task_list_row.attr("data-frequency");
+	var sub_table_id = 'task-list-'+task_list_id+'-unit-'+unit_number;
+
+	data_table.fnOpen(task_list_row.get(0),create_task_list_table(sub_table_id),"qa-details");
+
+	$("#"+sub_table_id).dataTable( {
+		"sDom": "<'row-fluid'<'span12't>>",
+		"bFilter":false,
+		"bPaginate": false,
+		"bLengthChange":true,
+	} );
+
+}
+function update_row_color(row){
+	var reviewed = $(row).find("td.review_status").hasClass(QAUtils.APPROVED);
+	$(row).removeClass("alert-info").removeClass("alert-success");
+	if (reviewed){
+		$(row).addClass("alert-success");
+	}else{
+		$(row).addClass("alert-info");
+	}
+}
+function set_task_list_review_status(row,user,date){
+	var status = "Unreviewed";
+	var review_button = $(row).next("tr").find(".btn").button();
+	var review_cell = 	$(row).find("td.review_status");
+	var cls = QAUtils.UNREVIEWED;
+	if (user && date){
+		date = QAUtils.parse_iso8601_date(date);
+		status = "Reviewed by "+ user;
+		status+= " on " + QAUtils.format_date(date,true);
+		cls = QAUtils.APPROVED;
+	}
+
+	review_cell.html(status).removeClass(QAUtils.UNREVIEWED).removeClass(QAUtils.APPROVED);
+	review_cell.addClass(cls);
+	update_row_color(row);
+
+}
+
+function display_task_list_details(container,task_list_instances){
+
+	var latest = task_list_instances[0];
+	var details_table = container.children().find("table");
+	var parent_row = container.parent().prev();
+	var review_button = container.find(".btn");
+	var item_instance_uris = [];
+	var unreview_text = "Unreview List";
+	var review_text = "Mark List as Reviewed";
+
+	//add row using latest task_list_instance
+	$.each(latest.item_instances,function(i,item_instance){
+		add_item_row(details_table,item_instance,task_list_instances);
+		item_instance_uris.push(item_instance.resource_uri);
+	});
+
+
+	if (latest.review_status.length > 0){
+		review_button.text(unreview_text);
+		review_button.button("toggle");
+	}else{
+		review_button.text(review_text);
+	}
+
+	review_button.click(function(event){
+		review_button.button("loading");
+		var reviewed =$(event.currentTarget).hasClass("active");
+		var review_status;
+		var button_text;
+		var review_user;
+		var review_date;
+
+		if (reviewed){
+			//since we're already approved user wants to unnaprove
+			review_status = QAUtils.UNREVIEWED;
+			button_text = review_text;
+		}else{
+			review_status = QAUtils.APPROVED;
+			button_text = unreview_text;
+			review_user = "you";
+			review_date = (new Date()).toISOString();
+
+		}
+
+		QAUtils.set_item_instances_status(item_instance_uris,review_status,function(results,status){
+			//status successfully updated
+			review_button.button("complete");
+			review_button.attr("data-complete-text",button_text).text(button_text);
+			set_task_list_review_status(parent_row,	review_user,review_date);
+		});
+	});
 
 }
 /**************************************************************************/
-function on_select_row(row){
+function on_select_task_list(task_list_row){
 
-	var dt = $("#qa-task-list-table").dataTable();
+	var task_lists_data_table = $("#qa-task-list-table").dataTable();
+	var table_is_closing = task_list_row.next().children(".qa-details").length > 0;
 
-
-
-	var unit_number = $(row).attr("data-unit_number");
-	var task_list_id = $(row).attr("data-task_list_id");
-	var frequency = $(row).attr("data-frequency");
-	var sub_table_id = 'task-list-'+task_list_id+'-unit-'+unit_number;
-
-	if ($(row).next().children(".qa-details").length > 0){
-		$(row).children().css('background-color','');
-		dt.fnClose(row);
+	if (table_is_closing){
+		close_details(task_list_row, task_lists_data_table);
 	}else{
-		$(row).children().css('background-color','#C3E6FF');
-		dt.fnOpen(row,create_task_list_table(sub_table_id),"qa-details");
 
+		task_list_row.children("td:last").append('<span class="pull-right"><em>Loading...</em></span>');
 		QAUtils.get_resources(
 			"tasklistinstance",
 
 			function(resources){
+				task_list_row.children("td:last").children("span").remove();
+				var task_list_instances = resources.objects;
 
-				//ensure details table is still shown (i.e. it wasn't closed in
-				//in between the request and response
-				if ($(row).next().children(".qa-details").length > 0){
-					var task_list_instances = resources.objects;
-					if (task_list_instances.length>0){
-						init_item_table('#'+sub_table_id);
-						//add row using latest task_list_instance
-						$.each(task_list_instances[0].item_instances,function(i,item_instance){
-							add_item_row($('#'+sub_table_id),item_instance,task_list_instances);
-						});
-					}
+				//make sure we got results from server & user hasn't closed table
+				if (task_list_instances.length > 0){
+				    open_details(task_list_row, task_lists_data_table);
+					var details_container = task_list_row.next().children(".qa-details");
+					display_task_list_details(details_container,task_list_instances);
 				}
 			},
 			{
-				task_list:task_list_id,
-				unit__number:unit_number,
-				frequency:frequency,
+				task_list:task_list_row.attr("data-task_list_id"),
+				unit__number:task_list_row.attr("data-unit_number"),
+				frequency:task_list_row.attr("data-frequency"),
 				order_by:"-work_completed",
-				limit:5
+				limit:HISTORY_INSTANCE_LIMIT
 			}
 		);
 	}
-
 }
 /**************************************************************************/
 $(document).ready(function(){
 	init_task_list_table();
 	//init_item_table();
-
+	$("#qa-task-list-table tbody tr").each(function(idx,row){
+		update_row_color(row);
+	});
 	$("#qa-task-list-table tbody tr").click(function(event){
-		on_select_row(event.currentTarget);
+		on_select_task_list($(event.currentTarget));
 	});
 
 	//on_select_row($("#qa-task-list-table tbody tr").first());

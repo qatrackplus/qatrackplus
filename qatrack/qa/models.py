@@ -1,4 +1,3 @@
-import datetime
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext as _
@@ -10,6 +9,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.dispatch import receiver
 from django.db.models.signals import post_save, m2m_changed
 from django.db.models import signals
+from django.utils import timezone
 from qatrack import settings
 import re
 
@@ -30,11 +30,11 @@ FREQUENCY_CHOICES = (
     (OTHER, "Other"),
 )
 FREQUENCY_DELTAS = {
-    DAILY:datetime.timedelta(days=1),
-    WEEKLY:datetime.timedelta(weeks=1),
-    MONTHLY:datetime.timedelta(weeks=4),
-    SEMIANNUAL:datetime.timedelta(days=365/2),
-    ANNUAL:datetime.timedelta(days=365),
+    DAILY:timezone.timedelta(days=1),
+    WEEKLY:timezone.timedelta(weeks=1),
+    MONTHLY:timezone.timedelta(weeks=4),
+    SEMIANNUAL:timezone.timedelta(days=365/2),
+    ANNUAL:timezone.timedelta(days=365),
 }
 
 #task_types
@@ -476,7 +476,7 @@ def due_date(unit,task_list):
     delta = FREQUENCY_DELTAS[unit_task_list.frequency]
     if last_instance:
         return last_instance.work_completed + delta
-    return datetime.datetime.now()
+    return timezone.now()
 
 
 
@@ -613,7 +613,7 @@ class TaskListItemInstance(models.Model):
     task_list_instance = models.ForeignKey("TaskListInstance",editable=False)
     task_list_item = models.ForeignKey(TaskListItem)
 
-    work_completed = models.DateTimeField(default=datetime.datetime.now,
+    work_completed = models.DateTimeField(default=timezone.now,
         help_text=settings.DATETIME_HELP,
     )
 
@@ -666,7 +666,7 @@ class TaskListInstance(models.Model):
     task_list = models.ForeignKey(TaskList, editable=False)
     unit = models.ForeignKey(Unit,editable=False)
 
-    work_completed = models.DateTimeField(default=datetime.datetime.now)
+    work_completed = models.DateTimeField(default=timezone.now)
 
     #for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)
@@ -679,9 +679,16 @@ class TaskListInstance(models.Model):
         get_latest_by = "work_completed"
 
     #----------------------------------------------------------------------
-    def status(self,formatted=False):
-        """return string with status of this qa instance"""
+    def pass_fail_status(self,formatted=False):
+        """return string with pass fail status of this qa instance"""
         status = [(status,display,self.tasklistiteminstance_set.filter(pass_fail=status)) for status,display in PASS_FAIL_CHOICES]
+        if not formatted:
+            return status
+        return " ".join(["%d %s" %(s.count(),d) for _,d,s in status])
+    #----------------------------------------------------------------------
+    def status(self,formatted=False):
+        """return string with review status of this qa instance"""
+        status = [(status,display,self.tasklistiteminstance_set.filter(status=status)) for status,display in STATUS_CHOICES]
         if not formatted:
             return status
         return " ".join(["%d %s" %(s.count(),d) for _,d,s in status])

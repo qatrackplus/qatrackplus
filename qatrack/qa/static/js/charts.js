@@ -36,7 +36,7 @@ function convert_to_flot_series(idx,collection){
 
     var create_name = function(type){return collection.short_name+'_unit'+collection.unit+"_"+type;}
 
-    var dates = $.map(collection.data.dates,QAUtils.test);
+    var dates = $.map(collection.data.dates,QAUtils.parse_iso8601_date);
 
     var show_tolerances = $("#show-tolerances").is(":checked");
     var show_references = $("#show-references").is(":checked");
@@ -291,7 +291,28 @@ function filter_task_list_items(){
     $("#task-list-item-filter").html(options);
 
 }
+/**************************************************************************/
+//set initial options based on url hash
+function set_options_from_url(){
+    var options = QAUtils.options_from_url_hash(document.location.hash);
 
+    $.each(options,function(key,value){
+        switch(key){
+            case  "task_list_item" :
+                $("#task-list-item-filter input").attr("checked",false);
+                $("#task-list-item-filter input[value="+value+"]").attr("checked","checked");
+            break;
+            case "unit":
+                $("#unit-filter input").attr("checked",false);
+                $("#unit-filter input[value="+value+"]").attr("checked","checked");
+                break;
+            default:
+                break;
+        }
+
+    });
+    update_chart();
+}
 /**************************************************************************/
 $(document).ready(function(){
 
@@ -316,8 +337,12 @@ $(document).ready(function(){
     $(window).resize = function(){main_graph.resize();}
     $("#trend-chart").bind("plothover", on_hover);
 
+
+    //filters are populated asynchronously so we need to wait until that's done
+    //before final initialization
     var after_init = function(){
         filter_task_list_items();
+        set_options_from_url();
     }
     var async_finished = 0;
     var total_async_tasks = 2;
@@ -343,6 +368,7 @@ $(document).ready(function(){
 
     $(".collapse").collapse({selector:true,toggle:true});
     $("#task-list-item-collapse").collapse("show");
+
 
 
 });

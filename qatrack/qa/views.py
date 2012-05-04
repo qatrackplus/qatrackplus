@@ -1,11 +1,11 @@
 import json
-import datetime
 from django.contrib import messages
 from django.http import HttpResponse,HttpResponseRedirect, Http404
 from django.shortcuts import get_object_or_404
 from django.core.urlresolvers import reverse
 from django.views.generic import ListView, FormView, View, TemplateView
 from django.utils.translation import ugettext as _
+from django.utils import timezone
 from qatrack.qa import models
 from qatrack.units.models import Unit, UnitType
 from qatrack import settings
@@ -255,8 +255,8 @@ class ChartView(TemplateView):
     def get_context_data(self,**kwargs):
         """add default dates to context"""
         context = super(ChartView,self).get_context_data(**kwargs)
-        context["from_date"] = datetime.date.today()-datetime.timedelta(days=365)
-        context["to_date"] = datetime.date.today()+datetime.timedelta(days=1)
+        context["from_date"] = timezone.now().date()-timezone.timedelta(days=365)
+        context["to_date"] = timezone.now().date()+timezone.timedelta(days=1)
         context["check_list_filters"] = [
             ("Frequency","frequency"),
             ("Review Status","review-status"),
@@ -306,13 +306,15 @@ class ReviewView(TemplateView):
             data = []
 
             for task_list,last in utl.all_task_lists(with_last_instance=True):
-                last_done, status,rview = ["New List"]*3
+                last_done, status = ["New List"]*2
+                review = ()
                 if last is not None:
                     last_done = last.work_completed.date()
-                    status = last.status()
+                    status = last.pass_fail_status()
                     reviewed = last.tasklistiteminstance_set.exclude(status=models.UNREVIEWED).count()
                     total = last.tasklistiteminstance_set.count()
-                    review = "%d / %d" %(reviewed,total)
+                    if total == reviewed:
+                        review = (last.modified_by,last.modified)
 
                 data = {
                     "info": {
@@ -327,13 +329,13 @@ class ReviewView(TemplateView):
                         ("task_list",task_list.name),
                         ("last_done",last_done),
                         ("due",models.due_date(utl.unit, task_list).date()),
-                        ("status",status),
+                        ("pass_fail_status",status),
                         ("review_status",review),
                     ]
                 }
 
-            if data:
-                table_data.append(data)
+                if data:
+                    table_data.append(data)
         context["data"] = table_data
         context["unit_task_lists"] = models.UnitTaskLists.objects.all()
         context["unit_lists"] = unit_lists
