@@ -1,7 +1,8 @@
-import datetime
 import tastypie
 from tastypie.resources import Resource, ModelResource, ALL, ALL_WITH_RELATIONS
-
+from tastypie.authentication import BasicAuthentication
+from tastypie.authorization import DjangoAuthorization
+from tastypie.utils import timezone
 import qatrack.qa.models as models
 from qatrack.units.models import Unit,Modality, UnitType
 
@@ -19,8 +20,13 @@ class UnitTypeResource(ModelResource):
 class UnitResource(ModelResource):
     modalities = tastypie.fields.ToManyField("qatrack.qa.api.ModalityResource","modalities",full=True)
     type = tastypie.fields.ToOneField("qatrack.qa.api.UnitTypeResource","type",full=True)
+
     class Meta:
         queryset = Unit.objects.order_by("number").all()
+        filtering = {
+            "number": ALL_WITH_RELATIONS,
+            "name":ALL,
+        }
 
 #============================================================================
 class ReferenceResource(ModelResource):
@@ -43,26 +49,37 @@ class TaskListResource(ModelResource):
     task_list_items = tastypie.fields.ToManyField("qatrack.qa.api.TaskListItemResource","task_list_items",full=True)
     frequencies = tastypie.fields.ListField()
 
+    class Meta:
+        queryset = models.TaskList.objects.order_by("name").all()
+        filtering = {
+            "pk":ALL,
+            "slug":ALL,
+            "name":ALL,
+        }
     #----------------------------------------------------------------------
     def dehydrate_frequencies(self,bundle):
         return list(bundle.obj.unittasklists_set.values_list("frequency",flat=True).distinct())
-    class Meta:
-        queryset = models.TaskList.objects.order_by("name").all()
 
 #============================================================================
 class TaskListItemInstanceResource(ModelResource):
-    task_list_item = tastypie.fields.ToOneField("qatrack.qa.api.TaskListItemResource","task_list_item", full=True)
-    reference = tastypie.fields.ToOneField("qatrack.qa.api.ReferenceResource","reference", full=True,null=True)
-    tolerance = tastypie.fields.ToOneField("qatrack.qa.api.ToleranceResource","tolerance", full=True,null=True)
+    task_list_item = tastypie.fields.ForeignKey("qatrack.qa.api.TaskListItemResource","task_list_item", full=True)
+    reference = tastypie.fields.ForeignKey("qatrack.qa.api.ReferenceResource","reference", full=True,null=True)
+    tolerance = tastypie.fields.ForeignKey("qatrack.qa.api.ToleranceResource","tolerance", full=True,null=True)
+    unit = tastypie.fields.ForeignKey(UnitResource,"unit",full=True);
 
     class Meta:
         queryset = models.TaskListItemInstance.objects.all()
         resource_name = "values"
+        allowed_methods = ["get","patch","put"]
+        always_return_data = True
         filtering = {
-
             'task_list_item':ALL_WITH_RELATIONS,
-            'work_completed':ALL
+            'work_completed':ALL,
+            'id':ALL,
         }
+        ordering= ["work_completed"]
+        authentication = BasicAuthentication()
+        authorization = DjangoAuthorization()
 
     #----------------------------------------------------------------------
     def build_filters(self,filters=None):
@@ -77,12 +94,12 @@ class TaskListItemInstanceResource(ModelResource):
 
         if "from_date" in filters:
             try:
-                orm_filters["work_completed__gte"] = datetime.datetime.strptime(filters["from_date"],"%d-%m-%Y")
+                orm_filters["work_completed__gte"] = timezone.datetime.datetime.strptime(filters["from_date"],"%d-%m-%Y")
             except ValueError:
                 pass
         if "to_date" in filters:
             try:
-                orm_filters["work_completed__lte"] = datetime.datetime.strptime(filters["to_date"],"%d-%m-%Y")
+                orm_filters["work_completed__lte"] = timezone.datetime.datetime.strptime(filters["to_date"],"%d-%m-%Y")
             except ValueError:
                 pass
 
@@ -91,9 +108,28 @@ class TaskListItemInstanceResource(ModelResource):
 
         if "short_names" in filters:
             orm_filters["task_list_item__short_name__in"] = [x.strip() for x in filters["short_names"].split(',')]
-        elif "task_list_id" in filters:
-            orm_filters["task_list_item__pk"] = filters["pk"]
+        #elif "task_list_item_id" in filters:
+        #    orm_filters["task_list_item__pk"] = filters["pk"]
         return orm_filters
+
+    #----------------------------------------------------------------------
+    def is_authorized(self,request,obj=None):
+        auth =super(TaskListItemInstanceResource,self).is_authorized(request,obj)
+        return auth
+
+    #----------------------------------------------------------------------
+    def dehydrate_work_compl_eted(self,bundle):
+        """make sure Z is appended to work_completed UTC datetimes"""
+        return bundle
+        if bundle.request.method == "GET":
+            wc = bundle.obj.work_completed
+            iso = wc.isoformat()
+            if wc.tzname() == "UTC" and iso[-1] != "Z":
+                iso += "Z"
+            return iso
+        else:
+            return bundle.obj.work_completed
+
 
 #----------------------------------------------------------------------
 def serialize_tasklistiteminstance(task_list_item_instance):
@@ -253,6 +289,7 @@ class TaskListItemResource(ModelResource):
         queryset = models.TaskListItem.objects.all()
         filtering = {
             "short_name": ALL,
+            "id":ALL
         }
     #    excludes = ["values"]
 
@@ -267,3 +304,31 @@ class TaskListItemResource(ModelResource):
         if "unit" in filters:
             orm_filters["task_list_instance__task_list__unit__number"] = filters["unit"]
         return orm_filters
+
+#============================================================================
+class TaskListInstanceResource(ModelResource):
+    unit = tastypie.fields.ForeignKey(UnitResource,"unit",full=True)
+    task_list = tastypie.fields.ForeignKey(TaskListResource,"task_list",full=True)
+    item_instances = tastypie.fields.ToManyField(TaskListItemInstanceResource,"tasklistiteminstance_set",full=True)
+    review_status = tastypie.fields.ListField()
+
+    class Meta:
+        queryset = models.TaskListInstance.objects.all()
+        filtering = {
+            "unit":ALL_WITH_RELATIONS,
+            "task_list": ALL_WITH_RELATIONS
+        }
+
+        ordering= ["work_completed"]
+
+    #----------------------------------------------------------------------
+    def dehydrate_review_status(self,bundle):
+        reviewed = bundle.obj.tasklistiteminstance_set.exclude(status=models.UNREVIEWED).count()
+        total = bundle.obj.tasklistiteminstance_set.count()
+        if total == reviewed:
+            #ugly
+            item = bundle.obj.tasklistiteminstance_set.latest()
+            review = (item.modified_by,item.modified)
+        else:
+            review = ()
+        return review

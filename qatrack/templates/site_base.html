@@ -1,6 +1,7 @@
 {% extends "theme_base.html" %}
 
 {% load i18n %}
+{% load l10n %}
 {% block extra_head %}
 {% endblock %}
 
@@ -18,15 +19,19 @@
                     {% endfor %}
                 </ul>
             </li>
+            {% if user.is_staff %}
+
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                     Review
                     <b class="caret"></b>
                 </a>
                 <ul class="dropdown-menu">
+                    <li><a href="{% url  review %}"><i class="icon-check"></i>Review QA</a>
                     <li><a href="{% url charts %}"><i class="icon-picture"></i>Trending</a>
                 </ul>
             </li>
+            {% endif %}
         </ul>
     {% endif %}
 {% endblock %}

@@ -1,14 +1,14 @@
 import json
-import datetime
 from django.contrib import messages
 from django.http import HttpResponse,HttpResponseRedirect, Http404
 from django.shortcuts import get_object_or_404
 from django.core.urlresolvers import reverse
 from django.views.generic import ListView, FormView, View, TemplateView
 from django.utils.translation import ugettext as _
+from django.utils import timezone
 from qatrack.qa import models
 from qatrack.units.models import Unit, UnitType
-
+from qatrack import settings
 import forms
 
 #TODO: Move location of qa/template.html templates (up one level)
@@ -255,8 +255,8 @@ class ChartView(TemplateView):
     def get_context_data(self,**kwargs):
         """add default dates to context"""
         context = super(ChartView,self).get_context_data(**kwargs)
-        context["from_date"] = datetime.date.today()-datetime.timedelta(days=365)
-        context["to_date"] = datetime.date.today()+datetime.timedelta(days=1)
+        context["from_date"] = timezone.now().date()-timezone.timedelta(days=365)
+        context["to_date"] = timezone.now().date()+timezone.timedelta(days=1)
         context["check_list_filters"] = [
             ("Frequency","frequency"),
             ("Review Status","review-status"),
@@ -270,3 +270,75 @@ class ChartView(TemplateView):
 
 
 
+#============================================================================
+class ReviewView(TemplateView):
+    """view for grouping all task lists with a certain frequency for all units"""
+    template_name = "review_all_table.html"
+
+    #----------------------------------------------------------------------
+    def get_context_data(self,**kwargs):
+        """grab all task lists and cycles with given frequency"""
+        context = super(ReviewView,self).get_context_data(**kwargs)
+
+        units = Unit.objects.all()
+        frequencies = models.FREQUENCY_CHOICES[:3]
+        unit_lists = []
+        for unit in units:
+            unit_list = []
+            for freq, _ in frequencies:
+                freq_list = []
+                unit_task_lists = unit.unittasklists_set.filter(frequency=freq)
+
+                for utls in unit_task_lists:
+                    freq_list.extend(utls.all_task_lists(with_last_instance=True))
+
+                unit_list.append((freq,freq_list))
+            unit_lists.append((unit,unit_list))
+        context["table_headers"] = [
+            "Unit", "Frequency", "Task List",
+            "Completed", "Due Date", "Status",
+            "Review Status"
+        ]
+        fdisplay = dict(models.FREQUENCY_CHOICES)
+        table_data = []
+        for utl in models.UnitTaskLists.objects.all():
+            unit, frequency = utl.unit, utl.frequency
+            data = []
+
+            for task_list,last in utl.all_task_lists(with_last_instance=True):
+                last_done, status = ["New List"]*2
+                review = ()
+                if last is not None:
+                    last_done = last.work_completed.date()
+                    status = last.pass_fail_status()
+                    reviewed = last.tasklistiteminstance_set.exclude(status=models.UNREVIEWED).count()
+                    total = last.tasklistiteminstance_set.count()
+                    if total == reviewed:
+                        review = (last.modified_by,last.modified)
+
+                data = {
+                    "info": {
+                        "unit_number":unit.number,
+                        "task_list_id":task_list.pk,
+                        "frequency":frequency,
+                    },
+                    "attrs": [
+                        #(name, obj, display)
+                        ("unit",unit.name),
+                        ("frequency",fdisplay[frequency]),
+                        ("task_list",task_list.name),
+                        ("last_done",last_done),
+                        ("due",models.due_date(utl.unit, task_list).date()),
+                        ("pass_fail_status",status),
+                        ("review_status",review),
+                    ]
+                }
+
+                if data:
+                    table_data.append(data)
+        context["data"] = table_data
+        context["unit_task_lists"] = models.UnitTaskLists.objects.all()
+        context["unit_lists"] = unit_lists
+        context["units"] = units
+        context["routine_freq"] = frequencies
+        return context

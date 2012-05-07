@@ -1,4 +1,3 @@
-import datetime
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext as _
@@ -30,6 +29,13 @@ FREQUENCY_CHOICES = (
     (ANNUAL, "Annual"),
     (OTHER, "Other"),
 )
+FREQUENCY_DELTAS = {
+    DAILY:timezone.timedelta(days=1),
+    WEEKLY:timezone.timedelta(weeks=1),
+    MONTHLY:timezone.timedelta(weeks=4),
+    SEMIANNUAL:timezone.timedelta(days=365/2),
+    ANNUAL:timezone.timedelta(days=365),
+}
 
 #task_types
 BOOLEAN = "boolean"
@@ -391,10 +397,10 @@ class TaskList(models.Model):
     modified_by = models.ForeignKey(User, related_name="task_list_modifier", editable=False)
 
     #----------------------------------------------------------------------
-    def last_completed_instance(self):
+    def last_completed_instance(self,unit):
         """return the last instance of this task list that was performed"""
         try:
-            return self.tasklistinstance_set.latest("work_completed")
+            return self.tasklistinstance_set.filter(unit=unit).latest("work_completed")
         except TaskListInstance.DoesNotExist:
             return None
     #----------------------------------------------------------------------
@@ -460,6 +466,20 @@ class UnitTaskListManager(models.Manager):
     def by_unit_frequency(self,unit,frequency):
         return self.by_frequency(frequency).filter(unit=unit)
 
+#----------------------------------------------------------------------
+def due_date(unit,task_list):
+    """return the next due date of a task_list for a given unit"""
+    unit_task_list = UnitTaskLists.objects.get(
+        unit = unit, task_lists__pk = task_list.pk
+    )
+    last_instance = task_list.last_completed_instance(unit)
+    delta = FREQUENCY_DELTAS[unit_task_list.frequency]
+    if last_instance:
+        return last_instance.work_completed + delta
+    return timezone.now()
+
+
+
 #============================================================================
 class UnitTaskLists(models.Model):
     """keeps track of which units should perform which task lists at a given frequency"""
@@ -482,15 +502,17 @@ class UnitTaskLists(models.Model):
         verbose_name_plural = _("Choose Unit Task Lists")
 
     #----------------------------------------------------------------------
-    def all_task_lists(self):
+    def all_task_lists(self,with_last_instance=False):
         """return all task lists from task_lists and cycles """
 
         task_lists = list(self.task_lists.all())
-
         for cycle in self.cycles.all():
             task_lists.extend(list(cycle.task_lists.all()))
 
-        return task_lists
+        if not with_last_instance:
+            return task_lists
+        else:
+            return [(tl,tl.last_completed_instance(self.unit)) for tl in task_lists]
     #----------------------------------------------------------------------
     def lists_and_cycles(self):
         """"""
@@ -502,6 +524,9 @@ class UnitTaskLists(models.Model):
     #----------------------------------------------------------------------
     def name(self):
         return self.__unicode__()
+    #----------------------------------------------------------------------
+    def due(self):
+        """return the next due date for """
 
     #----------------------------------------------------------------------
     def __unicode__(self):
@@ -592,11 +617,16 @@ class TaskListItemInstance(models.Model):
         help_text=settings.DATETIME_HELP,
     )
 
+
     #for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, editable=False, related_name="task_list_item_instance_creator")
     modified = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(User, editable=False, related_name="task_list_item_instance_modifier")
+
+    class Meta:
+        ordering = ("work_completed",)
+        get_latest_by = "work_completed"
 
     #----------------------------------------------------------------------
     def save(self, *args, **kwargs):
@@ -611,7 +641,7 @@ class TaskListItemInstance(models.Model):
 
         if self.skipped:
             self.pass_fail = NOT_DONE
-        else:
+        elif self.tolerance and self.reference:
             self.pass_fail = self.tolerance.test_instance(self,self.reference)
 
     #----------------------------------------------------------------------
@@ -645,13 +675,23 @@ class TaskListInstance(models.Model):
     modified_by = models.ForeignKey(User, editable=False, related_name="task_list_instance_modifier")
 
     class Meta:
-        ordering = ("created",)
-        get_latest_by = "created"
+        ordering = ("work_completed",)
+        get_latest_by = "work_completed"
 
     #----------------------------------------------------------------------
-    def status(self):
-        """return string with status of this qa instance"""
-        return [(status,display,self.tasklistiteminstance_set.filter(pass_fail=status)) for status,display in PASS_FAIL_CHOICES]
+    def pass_fail_status(self,formatted=False):
+        """return string with pass fail status of this qa instance"""
+        status = [(status,display,self.tasklistiteminstance_set.filter(pass_fail=status)) for status,display in PASS_FAIL_CHOICES]
+        if not formatted:
+            return status
+        return " ".join(["%d %s" %(s.count(),d) for _,d,s in status])
+    #----------------------------------------------------------------------
+    def status(self,formatted=False):
+        """return string with review status of this qa instance"""
+        status = [(status,display,self.tasklistiteminstance_set.filter(status=status)) for status,display in STATUS_CHOICES]
+        if not formatted:
+            return status
+        return " ".join(["%d %s" %(s.count(),d) for _,d,s in status])
 
     #---------------------------------------------------------------------------
     def __unicode__(self):

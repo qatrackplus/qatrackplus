@@ -124,5 +124,5 @@ class TaskListInstanceForm(forms.ModelForm):
         self.fields["work_completed"].input_formats = settings.INPUT_DATE_FORMATS
         self.fields["work_completed"].widget.attrs["title"] = settings.DATETIME_HELP
         self.fields["work_completed"].help_text = settings.DATETIME_HELP
-
+        self.fields["work_completed"].localize = True
         #self.fields["work_completed"].widget.attrs["readonly"] = True

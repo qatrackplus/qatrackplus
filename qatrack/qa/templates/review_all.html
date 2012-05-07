@@ -1,0 +1,76 @@
+{% extends "site_base.html" %}
+
+{% load staticfiles %}
+
+{% block extra_style %}
+    <link href="{% static "css/qa.css" %}" rel="stylesheet">
+{% endblock extra_style %}
+
+{% block body %}
+    <div class="row-fluid">
+        <div class="span12">
+            <h2>Overall QA Program Status</h2>
+        </div>
+    </div>
+    <div class="row-fluid" id="qa-review-grid">
+        <div class="span12">
+            <div class="row-fluid">
+                <div class="span1">
+                    <h4>Unit</h4>
+                </div>
+                {% for freq,freq_display in routine_freq %}
+                    <div class="span3">
+                        <h4>{{freq_display}}</h4>
+                        <div class="row-fluid">
+                            <div class="span4">
+                                <h5>TaskList</h5>
+                            </div>
+                            <div class="span4">
+                                <h5>Last Completed</h5>
+                            </div>
+                            <div class="span4 qa-status">
+                                <h5>Status</h5>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            {% for unit, unit_freq_lists in unit_lists %}
+                <div class="row-fluid">
+                    <div class="span1">
+                        <strong>{{unit.name}}</strong>
+                    </div>
+                    {% for freq, freq_list in unit_freq_lists %}
+                        <div class="span3">
+                                {% if freq_list %}
+                                {% for task_list, instance in freq_list%}
+                            <div class="row-fluid">
+
+                                    <div class="span4">
+                                        {{task_list.name}}
+                                    </div>
+                                    <div class="span4">
+                                        {{instance.work_completed}}
+                                    </div>
+                                    <div class="span4">
+                                        {{instance.status}}
+                                    </div>
+                            </div>
+
+                                {% endfor %}
+                                {% else %}
+                                <div class="row-fluid">
+                                    <em class="span12">
+                                        Nothing to report
+                                    </em>
+                                </div>
+                                {% endif %}
+                        </div>
+
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+{% endblock body %}
