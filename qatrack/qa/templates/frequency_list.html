@@ -1,4 +1,9 @@
 {% extends "site_base.html" %}
+{% load staticfiles %}
+
+{% block extra_style %}
+    <link href="{% static "css/qa.css" %}" rel="stylesheet">
+{% endblock %}
 
 {% block body %}
 
@@ -15,46 +20,44 @@
             </tr>
         </thead>
         <tbody>
-        {% for task_list in unit_task_list.task_lists.all %}
+        {% for task_list, last_completed in unit_task_list.task_lists_and_last_complete %}
             <tr>
                 <td>{{task_list.name|title}}</td>
-                {% with last_completed=task_list.last_completed_instance %}
+
                 {% if last_completed %}
-                        <td>{{last_completed.work_completed}}</td>
-                        <td>
-                            {% for status,display,tests in last_completed.status %}
-                                {% if tests.count > 0 %}
-                                <span class="{{status}}">{{tests.count}} {{display}}</span>
-                                {% endif %}
-                            {% endfor %}
-                        </td>
-                    {% else %}
-                        <td><span class="btn-info disabled">New Task List</span></td>
-                        <td><span class="btn-info disabled">New Task List</span></td>
-                    {% endif %}
-                 {% endwith %}
+                    <td>{{last_completed.work_completed}}</td>
+                    <td>
+                        {% for status,display,tests in last_completed.pass_fail_status %}
+                            {% if tests.count > 0 %}
+                            <span class="label {{status}}">{{tests.count}} {{display}}</span>
+                            {% endif %}
+                        {% endfor %}
+                    </td>
+                {% else %}
+                    <td><span class="btn-info disabled">New Task List</span></td>
+                    <td><span class="btn-info disabled">New Task List</span></td>
+                {% endif %}
+
                  <td><a href="{%url perform_qa frequency=frequency type="task_list" pk=task_list.pk unit_number=unit_task_list.unit.number %}">Perform</a></td>
             </tr>
         {% endfor %}
 
-        {% for cycle_ in unit_task_list.cycles.all %}
+        {% for cycle_, last_completed in unit_task_list.cycles_and_last_complete %}
             <tr>
                 <td>{{cycle_.name|title}}</td>
-                {% with last_completed=cycle_.last_completed_instance %}
                 {% if last_completed %}
-                        <td>{{last_completed.work_completed}}</td>
-                        <td>
-                            {% for status,display,tests in last_completed.status %}
-                                {% if tests.count > 0 %}
-                                <span class="{{status}}">{{tests.count}} {{display}}</span>
-                                {% endif %}
-                            {% endfor %}
-                        </td>
-                    {% else %}
-                        <td><span class="btn-info disabled">New Task List</span></td>
-                        <td><span class="btn-info disabled">New Task List</span></td>
-                    {% endif %}
-                 {% endwith %}
+                    <td>{{last_completed.work_completed}}</td>
+                    <td>
+                        {% for status,display,tests in last_completed.pass_fail_status %}
+                            {% if tests.count > 0 %}
+                            <span class="label {{status}}">{{tests.count}} {{display}}</span>
+                            {% endif %}
+                        {% endfor %}
+                    </td>
+                {% else %}
+                    <td><span class="btn-info disabled">New Task List</span></td>
+                    <td><span class="btn-info disabled">New Task List</span></td>
+                {% endif %}
                  <td><a href="{%url perform_qa frequency=frequency type="cycle" pk=cycle_.pk unit_number=unit_task_list.unit.number%}?day=next">Perform</a></td>
             </tr>
         {% endfor %}

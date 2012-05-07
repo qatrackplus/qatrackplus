@@ -1,9 +1,9 @@
 var QAUtils = new function() {
 
-    this.ACT_COLOR = "#da4f49";
-    this.TOL_COLOR = "#faa732";
-    this.OK_COLOR = "#5bb75b";
-	this.NOT_DONE_COLOR = "#d9edf7";
+    this.ACT_COLOR = "#b94a48";
+    this.TOL_COLOR = "#f89406";
+    this.OK_COLOR = "#468847";
+	this.NOT_DONE_COLOR = "#3a87ad";
 
     this.ACT_LOW = "act_low";
     this.TOL_LOW = "tol_low";

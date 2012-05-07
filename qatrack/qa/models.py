@@ -74,12 +74,14 @@ NOT_DONE = "not_done"
 OK = "ok"
 TOLERANCE = "tolerance"
 ACTION = "action"
+NO_TOL = "no_tol"
 
 PASS_FAIL_CHOICES = (
     (NOT_DONE,"Not Done"),
     (OK,"OK"),
     (TOLERANCE,"Tolerance"),
     (ACTION,"Action"),
+    (NO_TOL,"No Tol Set"),
 )
 
 EPSILON = 1E-10
@@ -514,6 +516,17 @@ class UnitTaskLists(models.Model):
         else:
             return [(tl,tl.last_completed_instance(self.unit)) for tl in task_lists]
     #----------------------------------------------------------------------
+    def task_lists_and_last_complete(self):
+        return [(tl,tl.last_completed_instance(self.unit)) for tl in self.task_lists.all()]
+    #----------------------------------------------------------------------
+    def cycles_and_last_complete(self):
+        """return all cycle objects and last complete instance of each cycle"""
+        return [(c,c.last_completed_instance(self.unit)) for c in self.cycles.all()]
+    #----------------------------------------------------------------------
+    def task_lists_cycles_and_last_complete(self):
+        """return all cycle objects and last complete instance of each cycle"""
+        return self.task_lists_and_last_complete() + self.cycles_and_last_complete()
+    #----------------------------------------------------------------------
     def lists_and_cycles(self):
         """"""
         for task_list in self.task_lists.all():
@@ -641,9 +654,11 @@ class TaskListItemInstance(models.Model):
 
         if self.skipped:
             self.pass_fail = NOT_DONE
-        elif self.tolerance and self.reference:
+        elif self.tolerance:
             self.pass_fail = self.tolerance.test_instance(self,self.reference)
-
+        else:
+            #no tolerance set
+            self.pass_fail = NO_TOL
     #----------------------------------------------------------------------
     def __unicode__(self):
         """return display representation of object"""
@@ -783,14 +798,15 @@ class TaskListCycle(models.Model):
         """return membership for unit with given order"""
         return TaskListCycleMembership.objects.get(cycle=self, order=order)
     #----------------------------------------------------------------------
-    def last_completed_instance(self):
+    def last_completed_instance(self, unit):
         """return the last instance of this task list that was performed
-        or None if it has never been performed"""
+        for a given Unit or None if it has never been performed"""
 
         try:
             return TaskListInstance.objects.filter(
-                task_list__in = self.task_lists.all()
-            ).latest("created")
+                unit=unit,
+                task_list__in=self.task_lists.all()
+            ).latest("work_completed")
         except self.DoesNotExist:
             return None
 

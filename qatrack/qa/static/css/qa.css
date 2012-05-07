@@ -41,6 +41,21 @@ tr.qa-comment td, tr.qa-procedure td {
     padding-top: 5px;
     text-align: right;
 }
+
+/*QA Status Spans*/
+span.no_tol, span.not_done {
+    background-color:#3a87ad;
+}
+span.ok {
+    background-color:#468847;
+}
+span.action {
+    background-color:#b94a48;
+}
+span.tolerance {
+    background-color: #f89406;
+}
+
 /* charting */
 .tab-pane{width:100%;height:100%;}
 .filtered-chart {
