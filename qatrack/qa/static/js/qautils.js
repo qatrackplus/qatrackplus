@@ -274,6 +274,10 @@ var QAUtils = new function() {
         return $(a1).filter(function(idx,elem){return $.inArray(elem,a2)>=0;})
     };
 
+	this.is_number = function(n){
+		return !isNaN(parseFloat(n)) && isFinite(n)
+	};
+
 	this.options_from_url_hash = function(hash){
 		var options = {};
 		if (hash[0] == "#"){

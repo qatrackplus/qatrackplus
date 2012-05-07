@@ -1,6 +1,7 @@
 var HISTORY_INSTANCE_LIMIT = 5;
 
 /**************************************************************************/
+//Initialize sortable/filterable task list table data types
 function init_task_list_table(){
 	var review_table = $('#qa-task-list-table').dataTable( {
 		"sDom": "<'row-fluid'<'span6'><'span6'>r>t<'row-fluid'<'span3'><'span3' l><'span6'p>>",
@@ -8,34 +9,26 @@ function init_task_list_table(){
 		"bStateSave":false, //save filter/sort state between page loads
 		"bFilter":true,
 		"bPaginate": false,
-		"bLengthChange":true,
-		"iDisplayLength":100,
-		"sPaginationType": "bootstrap",
-		"oLanguage": {
-			"sLengthMenu": "_MENU_ per page",
-			"sInfo": "_START_ to _END_ of _TOTAL_"
-		},
 		aoColumns: [
-			null,
-			null,
-			null,
-			{"sType":"day-month-year-sort"},
-			{"sType":"day-month-year-sort"},
-			null,
-			null
+			null, //Unit
+			null, //Freq
+			null,  // Task list name
+			{"sType":"day-month-year-sort"}, //date completed
+			{"sType":"day-month-year-sort"}, //due date
+			null, //status of task list items
+			null  //review status of list
 		]
 
 	} ).columnFilter({
 
 		aoColumns: [
-			{type: "select"},
-			{type: "select"},
-			{type: "text" },
-			{type: "text" },
-			{type: "text" },
-			{ type: "text" },
-			null
-
+			{type: "select"}, //Unit
+			{type: "select"}, //Freq
+			{type: "text" }, // Task list name
+			{type: "text" }, //date completed
+			{type: "text" }, //due date
+			{ type: "text" }, //status of task list items
+			null //review status of list
 		]
 	});
 
@@ -94,34 +87,42 @@ function create_spark_line(container,task_list_item,task_list_instances){
 
 	});
 
-
-	var is_number = function(n){return !isNaN(parseFloat(n)) && isFinite(n)};
-
 	var chart_min = Math.min(
-		Math.min.apply(Math,tols["act_low"].filter(is_number)),
-		Math.min.apply(Math,refs.filter(is_number)),
-		Math.min.apply(Math,vals.filter(is_number))
+		Math.min.apply(Math,tols["act_low"].filter(QAUtils.is_number)),
+		Math.min.apply(Math,refs.filter(QAUtils.is_number)),
+		Math.min.apply(Math,vals.filter(QAUtils.is_number))
 	);
 
 	var chart_max = Math.max(
-		Math.max.apply(Math,tols["act_high"].filter(is_number)),
-		Math.max.apply(Math,refs.filter(is_number)),
-		Math.max.apply(Math,vals.filter(is_number))
+		Math.max.apply(Math,tols["act_high"].filter(QAUtils.is_number)),
+		Math.max.apply(Math,refs.filter(QAUtils.is_number)),
+		Math.max.apply(Math,vals.filter(QAUtils.is_number))
 	);
 
-	if (Math.abs(chart_max-chart_min) < QAUtils.EPSILON){
-		chart_max *= 1.1;
-		chart_min *= 0.9;
-	}
 	var formatter = function(sparkline,options,fields){
 		var cur  = sparkline.getCurrentRegionFields();
-		return "<div>("+QAUtils.format_date(cur.x)+","+cur.y+")</div>";
+		var idx = dates.indexOf(cur.x);
+		var tooltip = "<div><strong>"+QAUtils.format_date(cur.x)+" = "+cur.y+"</strong>";
+		if (idx >= 0){
+
+			tooltip += "<br/>(A Lo, T Lo,  Ref, T Hi, A Hi) = ";
+			tooltip += [
+				 tols.act_low[idx],tols.tol_low[idx],
+				 refs[idx],
+				 tols.tol_high[idx],tols.act_high[idx]
+			].join(", ");
+			tooltip += "</div>";
+
+		}else{
+			tooltip = "<div>("+QAUtils.format_date(cur.x)+","+cur.y+")</div>";
+		}
+		return tooltip;
 
 	};
 
 	var spark_opts = {
-		width:"100%",
-		height:"20px",
+		width:container.parent().width(),
+		height:container.parent().height(),
 		defaultPixelsPerValue:1,
 		xvalues:dates,
 		chartRangeMin: chart_min,
@@ -131,25 +132,16 @@ function create_spark_line(container,task_list_item,task_list_instances){
 		highlightLineColor:null,
 		minSpotColor:"",
 		maxSpotColor:"",
+		spotColor:false,
 		tooltipFormatter:function(){return "";}
 	}
 
-	spark_opts["lineWidth"] = 1;
-	spark_opts["spotColor"] = false;
-	spark_opts["lineColor"] = QAUtils.OK_COLOR;
-	/*container.sparkline(refs,spark_opts);
-
-	spark_opts['composite']=true;
-	spark_opts["lineColor"] = QAUtils.TOL_COLOR;
-	container.sparkline(tols[QAUtils.TOL_LOW],spark_opts);
-
-	container.sparkline(tols[QAUtils.TOL_HIGH],spark_opts);
 
 	spark_opts["lineColor"] = QAUtils.ACT_COLOR;
 	container.sparkline(tols[QAUtils.ACT_LOW],spark_opts);
-
+	spark_opts['composite']=true;
 	container.sparkline(tols[QAUtils.ACT_HIGH],spark_opts);
-*/
+
 	spark_opts["spotColor"] = "blue";
 	spark_opts["valueSpots"] = true;
 	spark_opts["lineColor"] = "blue";
@@ -166,23 +158,18 @@ function create_spark_line(container,task_list_item,task_list_instances){
 	}
 }
 
-function update_item_status(item_status_select){
-	var id = $(item_status_select).attr("id").split('-')[0];
-	var value = $(item_status_select).val();
-	QAUtils.set_item_instance_status(id,value,function(response){console.log(response);});
-}
-
+/************************************************************************/
+//add a row to a details table for the input item instance
 function add_item_row(parent,instance,task_list_instances){
 
-	var data = [];
-
 	var item = instance.task_list_item;
+
+	var data = [];
 	data.push(item.name);
 	data.push(item.category.name);
 
 	var comment = instance.comment ? '<a title="'+instance.comment+'">View Comment</a>' : "<em>no comment</em>";;
 	data.push(comment)
-
 
 	var pass_fail;
 	if (QAUtils.instance_has_ref_tol(instance)){
@@ -210,7 +197,6 @@ function add_item_row(parent,instance,task_list_instances){
 
 	create_spark_line($("#"+spark_id),instance.task_list_item,task_list_instances);
 
-
 	//set color Pass/Fail column based on test
 	var pass_fail_td = item_row.find("span.pass-fail").parent();
 	pass_fail_td.css("background-color",QAUtils.qa_color(instance.pass_fail));
@@ -218,34 +204,14 @@ function add_item_row(parent,instance,task_list_instances){
 	return item_row;
 }
 
-function update_task_list_instance_status(is_already_reviewed,instance,container){
-
-	var complete;
-	if (reviewed){
-		button.attr("data-loading-text","Unreviewing...")
-		button.attr("data-complete-text","Mark Reviewed")
-	}else{
-		button.attr("data-loading-text","Marking Reviewed...")
-		button.attr("data-complete-text","Unreviewed")
-	}
-
-	button.button("loading");
-
-	update_review_status(row,function(instance){
-		button.button(instance.review_status);
-	});
-
-}
-
+/************************************************************************/
+//remove instance details row below input task_list_row for a given data_table
 function close_details(task_list_row,data_table){
-	//clean up details table
-	//task_list_row.children().css('background-color','');
 	data_table.fnClose(task_list_row[0]);
 }
+/************************************************************************/
+//open task list instance details row below input task_list_row for a given data_table
 function open_details(task_list_row,data_table){
-
-	//highlight task list row to ensure it is easily identified as open
-	//task_list_row.children().css('background-color','#C3E6FF');
 
 	var unit_number = task_list_row.attr("data-unit_number");
 	var task_list_id = task_list_row.attr("data-task_list_id");
@@ -261,21 +227,29 @@ function open_details(task_list_row,data_table){
 		"bLengthChange":true,
 	} );
 
+	return task_list_row.next().children(".qa-details")
 }
+
+/************************************************************************/
+//update row color based on its review status
 function update_row_color(row){
-	var reviewed = $(row).find("td.review_status").hasClass(QAUtils.APPROVED);
-	$(row).removeClass("alert-info").removeClass("alert-success");
+	var reviewed = row.find("td.review_status").hasClass(QAUtils.APPROVED);
+	row.removeClass("alert-info").removeClass("alert-success");
 	if (reviewed){
-		$(row).addClass("alert-success");
+		row.addClass("alert-success");
 	}else{
-		$(row).addClass("alert-info");
+		row.addClass("alert-info");
 	}
 }
+/************************************************************************/
+//update review status displayed for a given row
 function set_task_list_review_status(row,user,date){
+
 	var status = "Unreviewed";
-	var review_button = $(row).next("tr").find(".btn").button();
-	var review_cell = 	$(row).find("td.review_status");
+	var review_button = row.next("tr").find(".btn").button();
+	var review_cell = 	row.find("td.review_status");
 	var cls = QAUtils.UNREVIEWED;
+
 	if (user && date){
 		date = QAUtils.parse_iso8601_date(date);
 		status = "Reviewed by "+ user;
@@ -286,9 +260,10 @@ function set_task_list_review_status(row,user,date){
 	review_cell.html(status).removeClass(QAUtils.UNREVIEWED).removeClass(QAUtils.APPROVED);
 	review_cell.addClass(cls);
 	update_row_color(row);
-
 }
 
+/************************************************************************/
+//display all the task list items from the the task list instance
 function display_task_list_details(container,task_list_instances){
 
 	var latest = task_list_instances[0];
@@ -330,7 +305,6 @@ function display_task_list_details(container,task_list_instances){
 			button_text = unreview_text;
 			review_user = "you";
 			review_date = (new Date()).toISOString();
-
 		}
 
 		QAUtils.set_item_instances_status(item_instance_uris,review_status,function(results,status){
@@ -343,6 +317,8 @@ function display_task_list_details(container,task_list_instances){
 
 }
 /**************************************************************************/
+//when user selects a row either close it if it's already open or
+//open it and load details from server
 function on_select_task_list(task_list_row){
 
 	var task_lists_data_table = $("#qa-task-list-table").dataTable();
@@ -353,6 +329,16 @@ function on_select_task_list(task_list_row){
 	}else{
 
 		task_list_row.children("td:last").append('<span class="pull-right"><em>Loading...</em></span>');
+
+		var instance_options ={
+			task_list:task_list_row.attr("data-task_list_id"),
+			unit__number:task_list_row.attr("data-unit_number"),
+			frequency:task_list_row.attr("data-frequency"),
+			order_by:"-work_completed",
+			limit:HISTORY_INSTANCE_LIMIT
+		}
+
+		//fetch resources from server and then display them
 		QAUtils.get_resources(
 			"tasklistinstance",
 
@@ -362,33 +348,26 @@ function on_select_task_list(task_list_row){
 
 				//make sure we got results from server & user hasn't closed table
 				if (task_list_instances.length > 0){
-				    open_details(task_list_row, task_lists_data_table);
-					var details_container = task_list_row.next().children(".qa-details");
+				    var details_container = open_details(task_list_row, task_lists_data_table);
 					display_task_list_details(details_container,task_list_instances);
 				}
 			},
-			{
-				task_list:task_list_row.attr("data-task_list_id"),
-				unit__number:task_list_row.attr("data-unit_number"),
-				frequency:task_list_row.attr("data-frequency"),
-				order_by:"-work_completed",
-				limit:HISTORY_INSTANCE_LIMIT
-			}
+			instance_options
 		);
 	}
 }
 /**************************************************************************/
 $(document).ready(function(){
+
 	init_task_list_table();
-	//init_item_table();
+
 	$("#qa-task-list-table tbody tr").each(function(idx,row){
-		update_row_color(row);
+		update_row_color($(row));
 	});
+
 	$("#qa-task-list-table tbody tr").click(function(event){
 		on_select_task_list($(event.currentTarget));
 	});
-
-	//on_select_row($("#qa-task-list-table tbody tr").first());
 
 
 });
