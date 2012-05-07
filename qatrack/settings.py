@@ -53,15 +53,14 @@ USE_L10N = True
 # If you set this to False, Django will not use timezone-aware datetimes.
 USE_TZ = True
 
-DATETIME_FORMAT = "j N Y, P"
-DATE_FORMAT = "j N Y"
-#TASTYPIE_DATETIME_FORMATTING = "iso-8601"
+FORMAT_MODULE_PATH = "qatrack.formats"
+
 INPUT_DATE_FORMATS = (
     "%d-%m-%Y %H:%M", "%d/%m/%Y %H:%M",
     "%d-%m-%y %H:%M", "%d/%m/%y %H:%M",
 )
 
-DATETIME_HELP = "Format MM-DD-YY HH:MM (HH:MM is 24h time e.g. 14:30)"
+DATETIME_HELP = "Format DD-MM-YY hh:mm (hh:mm is 24h time e.g. 14:30)"
 
 #  Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
