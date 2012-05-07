@@ -201,7 +201,7 @@ function filter_by_category(){
 
     if (show_all){
         $(".qa-valuerow").show();
-        $(".qa-comment .qa-procedure").hide();
+        $(".qa-comment").hide();
         $(".qa-skip input").attr("checked",false)
         return;
     }
@@ -237,20 +237,15 @@ $(document).ready(function(){
 
     initialize_qa();
 
-    //hide all procedures and comments initially
-    $(".qa-procedure, .qa-comment").hide();
+    //hide all  comments initially
+    $(".qa-comment").hide();
 
     //set tab index
     $("input:text, input:radio").each(function(i,e){ $(e).attr("tabindex", i) });
 
-    //show procedures when clicked
-    $(".qa-showproc a").click(function(){
-        $(this).parent().parent().next().toggle(600);
-    });
-
     //show comment when clicked
     $(".qa-showcmt a").click(function(){
-      $(this).parent().parent().next().next().toggle(600);
+      $(this).parent().parent().next().toggle(600);
     });
 
     //anytime an input changes run validation

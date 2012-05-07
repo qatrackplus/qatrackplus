@@ -49,19 +49,9 @@
 
     <td class="qa-skip" title="{{form.skipped.help_text|safe}}">{{form.skipped}}</td>
     <td class="qa-status">Not Done</td>
-    <td class="qa-showproc"><a href="#" class="revealprocedure" title="Show procedure for this task"><i class="icon-book"/></a></td>
+    <td class="qa-showproc"><a href="{{form.fields.task_list_item.initial.procedure}}" class="revealprocedure" title="Show procedure for this task" target="_blank"><i class="icon-book"/></a></td>
     <td class="qa-showcmt"><a href="#" class="revealcomment" title="Add comment for this task"><i class="icon-comment"/></a></td>
     <td class="qa-reference">{{form.fields.reference.initial.value}}</td>
-</tr>
-<tr class="qa-procedure">
-    <td colspan="8">
-        <label class="label">Procedure:</label>
-        {% if form.fields.task_list_item.initial %}
-            <em>{{form.fields.task_list_item.initial.procedure}}</em>
-        {% else %}
-            No procedure available
-        {% endif %}
-    </td>
 </tr>
 <tr class="qa-comment">
     <td colspan="8"  class="" title="{{form.comment.help_text|safe}}">
