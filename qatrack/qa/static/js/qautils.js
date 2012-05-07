@@ -25,6 +25,9 @@ var QAUtils = new function() {
     this.PERCENT = "percent";
     this.ABSOLUTE = "absolute";
 
+	this.NUMERICAL = "numerical";
+	this.BOOLEAN = "boolean";
+
     //value equality tolerance
     this.EPSILON = 1E-10;
 
@@ -159,7 +162,16 @@ var QAUtils = new function() {
 		if ((tolerance !== null) && (reference !== null)){
 			t = tolerance;
 			v = reference.value;
-			s = [t.act_low,t.tol_low, v, t.tol_high, t.act_high].join(" < ");
+
+			if (reference.ref_type == this.BOOLEAN){
+				if (Math.abs(reference.value - 1.) < this.EPSILON){
+					s = "Yes Expected";
+				}else{
+					s = "No Expected";
+				}
+			}else{
+				s = [t.act_low,t.tol_low, v, t.tol_high, t.act_high].join(" < ");
+			}
 		}else if (reference !== null){
 			s = reference.value.toString();
 		}else{
@@ -169,6 +181,19 @@ var QAUtils = new function() {
 		return s;
 
     }
+
+	//return a string representation of an instance value
+	this.format_instance_value= function(instance){
+		var s;
+		if (instance.skipped){
+			s = "<em>Skipped</em>";
+		}else if (instance.task_list_item.task_type == this.BOOLEAN){
+			s = Math.abs(instance.value -1.) < this.EPSILON ? "Yes" : "No";
+		}else{
+			s = instance.value.toString();
+		}
+		return s;
+	}
 
     //return an appropriate display for a given pass_fail status
     this.qa_displays = {};

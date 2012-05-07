@@ -50,7 +50,7 @@
 										<td class="{{prop}}">
                                         {% for status,display,tests in val %}
                                             {% if tests.count > 0 %}
-                                            <span class="{{status}}">{{tests.count}} {{display}}</span>
+                                            <span class="label {{status}}">{{tests.count}} {{display}}</span>
                                             {% endif %}
                                         {% endfor %}
 										</td>

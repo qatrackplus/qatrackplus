@@ -165,7 +165,7 @@ function add_item_row(parent,instance,task_list_instances){
 	var item = instance.task_list_item;
 
 	var data = [];
-	data.push(item.name);
+	data.push("<strong>"+item.name+"</strong>");
 	data.push(item.category.name);
 
 	var comment = instance.comment ? '<a title="'+instance.comment+'">Hover for Comment</a>' : "<em>no comment</em>";;
@@ -179,7 +179,7 @@ function add_item_row(parent,instance,task_list_instances){
 	}
 	data.push(pass_fail)
 
-	var val = instance.value || "";
+	var val = QAUtils.format_instance_value(instance);
 	data.push(val)
 
 	var ref_tol = QAUtils.format_ref_tol(instance.reference, instance.tolerance);
@@ -200,7 +200,7 @@ function add_item_row(parent,instance,task_list_instances){
 	//set color Pass/Fail column based on test
 	var pass_fail_td = item_row.find("span.pass-fail").parent();
 	pass_fail_td.css("background-color",QAUtils.qa_color(instance.pass_fail));
-
+	pass_fail_td.addClass("label");
 	return item_row;
 }
 

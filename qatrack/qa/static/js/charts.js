@@ -172,7 +172,7 @@ function setup_filters(on_complete){
             display_property:"display",
             value_property:"value",
             check_all:false,
-            to_check:[QAUtils.APPROVED]
+            to_check:[QAUtils.APPROVED, QAUtils.UNREVIEWED]
         }
 
 
