@@ -227,18 +227,21 @@ function open_details(task_list_row,data_table){
 		"bLengthChange":true,
 	} );
 
-	return task_list_row.next().children(".qa-details")
+	var details = task_list_row.next().children(".qa-details");
+	details.find("table").css("background-color","whiteSmoke");
+	return details;
 }
 
 /************************************************************************/
 //update row color based on its review status
 function update_row_color(row){
-	var reviewed = row.find("td.review_status").hasClass(QAUtils.APPROVED);
-	row.removeClass("alert-info").removeClass("alert-success");
+	var review_td = row.find("td.review_status");
+	var reviewed = review_td.hasClass(QAUtils.APPROVED);
+	review_td.removeClass("alert-info").removeClass("alert-success");
 	if (reviewed){
-		row.addClass("alert-success");
+		review_td.addClass("alert-success");
 	}else{
-		row.addClass("alert-info");
+		review_td.addClass("alert-info");
 	}
 }
 /************************************************************************/

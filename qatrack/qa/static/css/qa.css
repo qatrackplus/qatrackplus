@@ -95,7 +95,10 @@ span.tolerance {
 #qa-item-review-table input{
     width:80px;
 }
-
+#qa-task-list-table > tbody > tr.odd,
+#qa-task-list-table > tbody > tr.even{
+    cursor: hand; cursor: pointer;
+}
 .sub-table th{
     font-weight: normal;
     font-style:italic;
