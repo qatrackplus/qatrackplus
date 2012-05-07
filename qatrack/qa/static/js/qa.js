@@ -261,7 +261,7 @@ $(document).ready(function(){
 
     //only allow numerical characters on input
     $(".qa-input").keyup(function(e){
-        this.value = this.value.replace(/[^0-9\.]/g,'');
+        this.value = this.value.replace(/[^0-9\.eE]/g,'');
     });
 
     //run filter routine anytime user alters the categories
