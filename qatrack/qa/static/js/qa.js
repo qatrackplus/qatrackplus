@@ -259,6 +259,11 @@ $(document).ready(function(){
         calculate_composites();
     });
 
+    //only allow numerical characters on input
+    $(".qa-input").keyup(function(e){
+        this.value = this.value.replace(/[^0-9\.]/g,'');
+    });
+
     //run filter routine anytime user alters the categories
     $("#category_filter").change(filter_by_category);
 
