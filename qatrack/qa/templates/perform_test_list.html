@@ -18,7 +18,7 @@
 {% block body %}
 <div class="row">
     <div class="span12">
-        <h2>Perform {{task_list.unit.name}} {{task_list.name|title}}</h3>
+        <h2>Perform {{test_list.unit.name}} {{test_list.name|title}}</h3>
     </div>
 </div>
 
@@ -40,7 +40,7 @@
                                 </option>
                             {% endfor %}
                         </select>
-                        <a href="" class="btn" type="button" id="change-task-list">Go</a>
+                        <a href="" class="btn" type="button" id="change-test-list">Go</a>
                     </div>
                 </div>
 
@@ -105,7 +105,7 @@
                 </div>
             {% endif %}
 
-            <input type="hidden" name="task-list-id" id="task-list-id" value="{{task_list.pk}}"/>
+            <input type="hidden" name="test-list-id" id="test-list-id" value="{{test_list.pk}}"/>
             <input type="hidden" name="cycle-id" id="cycle-id" value="{{cycle.id}}"/>
             {{formset.management_form}}
             <table class="qa-table table table-bordered table-striped table-condensed">
@@ -122,8 +122,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                {% for item_form in formset %}
-                    {{item_form|as_qavalue}}
+                {% for test_form in formset %}
+                    {{test_form|as_qavalue}}
                 {% endfor %}
                 </tbody>
             </table>

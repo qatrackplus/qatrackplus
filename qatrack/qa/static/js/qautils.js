@@ -1,3 +1,5 @@
+"use strict";
+
 var QAUtils = new function() {
 
     this.ACT_COLOR = "#b94a48";
@@ -71,7 +73,7 @@ var QAUtils = new function() {
         //within tolerances or not.
         //Return an object with a 'diff' and 'result' value
         var diff;
-        var status;
+        var status, gen_status;
         var message;
 
         if (is_bool){
@@ -163,7 +165,7 @@ var QAUtils = new function() {
 			t = tolerance;
 			v = reference.value;
 
-			if (reference.ref_type == this.BOOLEAN){
+			if (reference.type == this.BOOLEAN){
 				if (Math.abs(reference.value - 1.) < this.EPSILON){
 					s = "Yes Expected";
 				}else{
@@ -187,7 +189,7 @@ var QAUtils = new function() {
 		var s;
 		if (instance.skipped){
 			s = "<em>Skipped</em>";
-		}else if (instance.task_list_item.task_type == this.BOOLEAN){
+		}else if (instance.test.type == this.BOOLEAN){
 			s = Math.abs(instance.value -1.) < this.EPSILON ? "Yes" : "No";
 		}else{
 			s = instance.value.toString();
@@ -245,7 +247,7 @@ var QAUtils = new function() {
     };
 
     //update all instances in instance_uris with a given status
-    this.set_item_instances_status = function(instance_uris,status,callback){
+    this.set_test_instances_status = function(instance_uris,status,callback){
         var objects = $.map(instance_uris,function(uri){
             return {resource_uri:uri,status:status}
         });
@@ -276,8 +278,8 @@ var QAUtils = new function() {
         this.call_api(this.API_URL+resource_name,"GET",data,callback );
     };
 
-    //values for a group of task_list_items
-    this.task_list_item_values = function(options,callback){
+    //values for a group of tests
+    this.test_values = function(options,callback){
         if (!options.hasOwnProperty("limit")){
             options["limit"] = 0;
         }
@@ -318,15 +320,15 @@ var QAUtils = new function() {
 	};
 
 
-	this.unit_item_chart_url = function(unit,item){
+	this.unit_test_chart_url = function(unit,test){
 		var unit_option = 'unit'+this.OPTION_DELIM+unit.number;
-		var item_option = 'task_list_item'+this.OPTION_DELIM+item.short_name;
-		return this.CHARTS_URL+'#'+[unit_option,item_option].join(this.OPTION_SEP);
+		var test_option = 'test'+this.OPTION_DELIM+test.short_name;
+		return this.CHARTS_URL+'#'+[unit_option,test_option].join(this.OPTION_SEP);
 	};
-	this.unit_item_chart_link = function(unit,item,text,title){
-		var url = this.unit_item_chart_url(unit,item);
+	this.unit_test_chart_link = function(unit,test,text,title){
+		var url = this.unit_test_chart_url(unit,test);
 		if (title === undefined){
-			title = ["View Data for", unit.name, item.name, "data"].join(" ");
+			title = ["View Data for", unit.name, test.name, "data"].join(" ");
 		}
 		return '<a href="'+url+'" title="'+title+'">'+text+'</a>';
 	};

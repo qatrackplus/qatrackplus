@@ -273,7 +273,7 @@ class ChartView(TemplateView):
 #============================================================================
 class ReviewView(TemplateView):
     """view for grouping all test lists with a certain frequency for all units"""
-    template_name = "review_all_table.html"
+    template_name = "review_all.html"
 
     #----------------------------------------------------------------------
     def get_context_data(self,**kwargs):

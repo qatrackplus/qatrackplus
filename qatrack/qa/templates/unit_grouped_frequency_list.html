@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block body %}
-    <h2>{{frequency|title}} QA Task Lists</h2>
+    <h2>{{frequency|title}} QA Test Lists</h2>
 
     {% for unit_type, unit_lists in unit_type_list %}
         <h3>{{unit_type.name }}</h3>
@@ -15,7 +15,7 @@
             <thead>
                 <tr>
                     <th>Unit</th>
-                    <th>Task List/Cycle</th>
+                    <th>Test List/Cycle</th>
                     <th>{{ frequency|title }} QA Last Performed</th>
                     <th>QA Status</th>
                 </tr>
@@ -23,15 +23,15 @@
             <tbody>
                 {% for unit_list in unit_lists %}
 
-                    {# display all individual task lists #}
-                    {% for task_list, last_completed in unit_list.task_lists_cycles_and_last_complete %}
+                    {# display all individual test lists #}
+                    {% for test_list, last_completed in unit_list.test_lists_cycles_and_last_complete %}
                         <tr>
                             <td>
                                 <a class="nav-list" href="{% url qa_by_frequency_unit frequency unit_list.unit.number %}" title="Perform {{frequency}} QA for {{unit_list.unit.name}}">
                                     {{unit_list.unit.name}}
                                 </a>
                             </td>
-                            <td>{{task_list.name|title}}</td>
+                            <td>{{test_list.name|title}}</td>
                             {% if last_completed %}
                                 <td>{{last_completed.work_completed}}</td>
                                 <td>

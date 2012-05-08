@@ -7,7 +7,7 @@ var validation_data = {};
 var composite_ids = {};
 
 /***************************************************************/
-//set the intitial values, tolerances & refs for all of our task list items
+//set the intitial values, tolerances & refs for all of our tests
 function initialize_qa(){
 
     $(".qa-valuerow").each(function(order){
@@ -43,18 +43,18 @@ function initialize_qa(){
 
 
     //store ids and names for all composite tests
-    $('.qa-tasktype[value="composite"]').each(function(){
+    $('.qa-testtype[value="composite"]').each(function(){
         var row = $(this).parents(".qa-valuerow");
-        var item_id = row.find('input[name$="task_list_item"]').val();
+        var test_id = row.find('input[name$="test_list_test"]').val();
         var name = row.find('.qa-contextname').val();
-        composite_ids[name] = item_id;
+        composite_ids[name] = test_id;
     });
 }
 /***************************************************************/
 //Perform Ajax calls to calculate all composite values
 function calculate_composites(){
 
-    var composites = $('.qa-tasktype[value="composite"]');
+    var composites = $('.qa-testtype[value="composite"]');
     if (composites.length <= 0){
         return;
     }
@@ -80,15 +80,15 @@ function calculate_composites(){
 
 /***************************************************************/
 //Check the tolerances for a single input and format appropriately
-function check_item_status(input_element){
+function check_test_status(input_element){
 
     var parent = input_element.parents("tr:first");
     var name = parent.find(".qa-contextname").val();
-    var is_bool = parent.find(".qa-tasktype").val() === "boolean";
+    var is_bool = parent.find(".qa-testtype").val() === "boolean";
     var qastatus = parent.find(".qa-status");
     var val = get_value_for_row(input_element.parents(".qa-valuerow"));
 
-    //update the current value of the item that just changed and check tolerances
+    //update the current value of the test that just changed and check tolerances
     validation_data[name].current_value = val;
 
     //remove any previous formatting
@@ -128,7 +128,7 @@ function check_item_status(input_element){
 /***************************************************************/
 //Take an qavaluerow and return the value of the input contained within it
 function get_value_for_row(input_row_element){
-    if ($(input_row_element).find(".qa-tasktype").val() === "boolean"){
+    if ($(input_row_element).find(".qa-testtype").val() === "boolean"){
         if ($(input_row_element).find(":checked").length > 0){
             return parseFloat($(input_row_element).find(":checked").val());
         }else{
@@ -156,7 +156,7 @@ function set_value_by_name(name, value){
     var row = $('.qa-contextname[value="'+name+'"]').parents(".qa-valuerow");
     var input = row.find(".qa-value input");
     input.val(value);
-    check_item_status(input);
+    check_test_status(input);
 }
 
 /***************************************************************/
@@ -182,7 +182,7 @@ function valid_input(input_element){
 //perform a full validation of all data (for example on page load after submit)
 function full_validation(){
     $("#qa-form .qa-input").each(function(){
-        check_item_status($(this));
+        check_test_status($(this));
         calculate_composites();
     });
 }
@@ -229,7 +229,7 @@ function filter_by_category(){
 //set link for cycle when user changes cycle day dropdown
 function set_cycle_link(){
     var day = $("#cycle-day option:selected").val();
-    $("#change-task-list").attr("href",window.location.pathname+"?day="+day);
+    $("#change-test-list").attr("href",window.location.pathname+"?day="+day);
 }
 
 /****************************************************************/
@@ -250,7 +250,7 @@ $(document).ready(function(){
 
     //anytime an input changes run validation
     $("#qa-form input").change(function(){
-        check_item_status($(this));
+        check_test_status($(this));
         calculate_composites();
     });
 

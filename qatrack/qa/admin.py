@@ -97,7 +97,7 @@ class TestInfoAdmin(admin.ModelAdmin):
         if val not in ("", None):
             ref = models.Reference(
                 value=val,
-                ref_type = ref_type,
+                type = ref_type,
                 created_by = request.user,
                 modified_by = request.user,
                 name = "%s %s" % (test_info.unit.name,test_info.test.name)

@@ -1,9 +1,9 @@
 var HISTORY_INSTANCE_LIMIT = 5;
 
 /**************************************************************************/
-//Initialize sortable/filterable task list table data types
-function init_task_list_table(){
-	var review_table = $('#qa-task-list-table').dataTable( {
+//Initialize sortable/filterable test list table data types
+function init_test_list_table(){
+	var review_table = $('#qa-test-list-table').dataTable( {
 		"sDom": "<'row-fluid'<'span6'><'span6'>r>t<'row-fluid'<'span3'><'span3' l><'span6'p>>",
 
 		"bStateSave":false, //save filter/sort state between page loads
@@ -12,10 +12,10 @@ function init_task_list_table(){
 		aoColumns: [
 			null, //Unit
 			null, //Freq
-			null,  // Task list name
+			null,  // Test list name
 			{"sType":"day-month-year-sort"}, //date completed
 			{"sType":"day-month-year-sort"}, //due date
-			null, //status of task list items
+			null, //status of test list tests
 			null  //review status of list
 		]
 
@@ -24,18 +24,18 @@ function init_task_list_table(){
 		aoColumns: [
 			{type: "select"}, //Unit
 			{type: "select"}, //Freq
-			{type: "text" }, // Task list name
+			{type: "text" }, // Test list name
 			{type: "text" }, //date completed
 			{type: "text" }, //due date
-			{ type: "text" }, //status of task list items
+			{ type: "text" }, //status of test list tests
 			null //review status of list
 		]
 	});
 
 }
 /**************************************************************************/
-//creates the html table to hold the task list items from a task list
-function create_task_list_table(id){
+//creates the html table to hold the tests from a test list
+function create_test_list_table(id){
 	var headers = '<tr><th class="name-col">Name</th><th>Type</th><th>Comment</th><th>Pass/Fail</th><th>Value</th><th class="ref-col">Ref/Tol</th><th class="history-col">History</th><th>Review URL</th></tr>';
 	var elements = [
 		'<div class="review-button-container ">',
@@ -51,27 +51,27 @@ function create_task_list_table(id){
 	return elements.join("");
 }
 /**************************************************************************/
-//generate a spark line in the provided container for a given task list item
-function create_spark_line(container,task_list_item,task_list_instances){
-	//find historical values for this item
+//generate a spark line in the provided container for a given test
+function create_spark_line(container,test,test_list_instances){
+	//find historical values for this test
 	var vals = [], refs = [], dates=[];
 	var tols = {act_high:[],act_low:[],tol_high:[],tol_low:[]};
 
-	$.each(task_list_instances.reverse(),function(i,tl_instance){
+	$.each(test_list_instances.reverse(),function(i,tl_instance){
 		//above is reverse since query was ordered by -work_complete
-		$.each(tl_instance.item_instances,function(j,item_instance){
-			if (item_instance.task_list_item.id === task_list_item.id){
-				dates.push(QAUtils.parse_iso8601_date(item_instance.work_completed))
-				vals.push(item_instance.value)
+		$.each(tl_instance.test_instances,function(j,test_instance){
+			if (test_instance.test.id === test.id){
+				dates.push(QAUtils.parse_iso8601_date(test_instance.work_completed))
+				vals.push(test_instance.value)
 
-				if (item_instance.reference !== null){
-					refs.push(item_instance.reference.value);
+				if (test_instance.reference !== null){
+					refs.push(test_instance.reference.value);
 				}else{
 					refs.push(null);
 				}
 
-				if ((item_instance.tolerance !== null) && (item_instance.reference !== null)){
-					var tol = QAUtils.convert_tol_to_abs(item_instance.reference.value,item_instance.tolerance);
+				if ((test_instance.tolerance !== null) && (test_instance.reference !== null)){
+					var tol = QAUtils.convert_tol_to_abs(test_instance.reference.value,test_instance.tolerance);
 					$.each(QAUtils.TOL_TYPES,function(i,tol_type){
 						tols[tol_type].push(tol[tol_type]);
 					});
@@ -159,14 +159,14 @@ function create_spark_line(container,task_list_item,task_list_instances){
 }
 
 /************************************************************************/
-//add a row to a details table for the input item instance
-function add_item_row(parent,instance,task_list_instances){
+//add a row to a details table for the input test instance
+function add_test_row(parent,instance,test_list_instances){
 
-	var item = instance.task_list_item;
+	var test = instance.test;
 
 	var data = [];
-	data.push("<strong>"+item.name+"</strong>");
-	data.push(item.category.name);
+	data.push("<strong>"+test.name+"</strong>");
+	data.push(test.category.name);
 
 	var comment = instance.comment ? '<a title="'+instance.comment+'">Hover for Comment</a>' : "<em>no comment</em>";;
 	data.push(comment)
@@ -189,36 +189,36 @@ function add_item_row(parent,instance,task_list_instances){
 	var spark = '<span id="'+spark_id+'" class="sparklines"></span>';
 	data.push(spark);
 
-	var review_link = QAUtils.unit_item_chart_link(instance.unit,item,"Details");
+	var review_link = QAUtils.unit_test_chart_link(instance.unit,test,"Details");
 	data.push(review_link);
 
 	$(parent).dataTable().fnAddData(data);
-	var item_row = $(parent).find("tbody tr:first");
+	var test_row = $(parent).find("tbody tr:first");
 
-	create_spark_line($("#"+spark_id),instance.task_list_item,task_list_instances);
+	create_spark_line($("#"+spark_id),instance.test,test_list_instances);
 
 	//set color Pass/Fail column based on test
-	var pass_fail_td = item_row.find("span.pass-fail").parent();
+	var pass_fail_td = test_row.find("span.pass-fail").parent();
 	pass_fail_td.css("background-color",QAUtils.qa_color(instance.pass_fail));
 	pass_fail_td.addClass("label");
-	return item_row;
+	return test_row;
 }
 
 /************************************************************************/
-//remove instance details row below input task_list_row for a given data_table
-function close_details(task_list_row,data_table){
-	data_table.fnClose(task_list_row[0]);
+//remove instance details row below input test_list_row for a given data_table
+function close_details(test_list_row,data_table){
+	data_table.fnClose(test_list_row[0]);
 }
 /************************************************************************/
-//open task list instance details row below input task_list_row for a given data_table
-function open_details(task_list_row,data_table){
+//open test list instance details row below input test_list_row for a given data_table
+function open_details(test_list_row,data_table){
 
-	var unit_number = task_list_row.attr("data-unit_number");
-	var task_list_id = task_list_row.attr("data-task_list_id");
-	var frequency = task_list_row.attr("data-frequency");
-	var sub_table_id = 'task-list-'+task_list_id+'-unit-'+unit_number;
+	var unit_number = test_list_row.attr("data-unit_number");
+	var test_list_id = test_list_row.attr("data-test_list_id");
+	var frequency = test_list_row.attr("data-frequency");
+	var sub_table_id = 'test-list-'+test_list_id+'-unit-'+unit_number;
 
-	data_table.fnOpen(task_list_row.get(0),create_task_list_table(sub_table_id),"qa-details");
+	data_table.fnOpen(test_list_row.get(0),create_test_list_table(sub_table_id),"qa-details");
 
 	$("#"+sub_table_id).dataTable( {
 		"sDom": "<'row-fluid'<'span12't>>",
@@ -227,7 +227,7 @@ function open_details(task_list_row,data_table){
 		"bLengthChange":true,
 	} );
 
-	var details = task_list_row.next().children(".qa-details");
+	var details = test_list_row.next().children(".qa-details");
 	details.find("table").css("background-color","whiteSmoke");
 	return details;
 }
@@ -246,7 +246,7 @@ function update_row_color(row){
 }
 /************************************************************************/
 //update review status displayed for a given row
-function set_task_list_review_status(row,user,date){
+function set_test_list_review_status(row,user,date){
 
 	var status = "Unreviewed";
 	var review_button = row.next("tr").find(".btn").button();
@@ -266,21 +266,21 @@ function set_task_list_review_status(row,user,date){
 }
 
 /************************************************************************/
-//display all the task list items from the the task list instance
-function display_task_list_details(container,task_list_instances){
+//display all the tests from the the test list instance
+function display_test_list_details(container,test_list_instances){
 
-	var latest = task_list_instances[0];
+	var latest = test_list_instances[0];
 	var details_table = container.children().find("table");
 	var parent_row = container.parent().prev();
 	var review_button = container.find(".btn");
-	var item_instance_uris = [];
+	var test_instance_uris = [];
 	var unreview_text = "Unreview List";
 	var review_text = "Mark List as Reviewed";
 
-	//add row using latest task_list_instance
-	$.each(latest.item_instances,function(i,item_instance){
-		add_item_row(details_table,item_instance,task_list_instances);
-		item_instance_uris.push(item_instance.resource_uri);
+	//add row using latest test_list_instance
+	$.each(latest.test_instances,function(i,test_instance){
+		add_test_row(details_table,test_instance,test_list_instances);
+		test_instance_uris.push(test_instance.resource_uri);
 	});
 
 
@@ -310,11 +310,11 @@ function display_task_list_details(container,task_list_instances){
 			review_date = (new Date()).toISOString();
 		}
 
-		QAUtils.set_item_instances_status(item_instance_uris,review_status,function(results,status){
+		QAUtils.set_test_instances_status(test_instance_uris,review_status,function(results,status){
 			//status successfully updated
 			review_button.button("complete");
 			review_button.attr("data-complete-text",button_text).text(button_text);
-			set_task_list_review_status(parent_row,	review_user,review_date);
+			set_test_list_review_status(parent_row,	review_user,review_date);
 		});
 	});
 
@@ -322,37 +322,37 @@ function display_task_list_details(container,task_list_instances){
 /**************************************************************************/
 //when user selects a row either close it if it's already open or
 //open it and load details from server
-function on_select_task_list(task_list_row){
+function on_select_test_list(test_list_row){
 
-	var task_lists_data_table = $("#qa-task-list-table").dataTable();
-	var table_is_closing = task_list_row.next().children(".qa-details").length > 0;
+	var test_lists_data_table = $("#qa-test-list-table").dataTable();
+	var table_is_closing = test_list_row.next().children(".qa-details").length > 0;
 
 	if (table_is_closing){
-		close_details(task_list_row, task_lists_data_table);
+		close_details(test_list_row, test_lists_data_table);
 	}else{
 
-		task_list_row.children("td:last").append('<span class="pull-right"><em>Loading...</em></span>');
+		test_list_row.children("td:last").append('<span class="pull-right"><em>Loading...</em></span>');
 
 		var instance_options ={
-			task_list:task_list_row.attr("data-task_list_id"),
-			unit__number:task_list_row.attr("data-unit_number"),
-			frequency:task_list_row.attr("data-frequency"),
+			test_list:test_list_row.attr("data-test_list_id"),
+			unit__number:test_list_row.attr("data-unit_number"),
+			frequency:test_list_row.attr("data-frequency"),
 			order_by:"-work_completed",
 			limit:HISTORY_INSTANCE_LIMIT
 		}
 
 		//fetch resources from server and then display them
 		QAUtils.get_resources(
-			"tasklistinstance",
+			"testlistinstance",
 
 			function(resources){
-				task_list_row.children("td:last").children("span").remove();
-				var task_list_instances = resources.objects;
+				test_list_row.children("td:last").children("span").remove();
+				var test_list_instances = resources.objects;
 
 				//make sure we got results from server & user hasn't closed table
-				if (task_list_instances.length > 0){
-				    var details_container = open_details(task_list_row, task_lists_data_table);
-					display_task_list_details(details_container,task_list_instances);
+				if (test_list_instances.length > 0){
+				    var details_container = open_details(test_list_row, test_lists_data_table);
+					display_test_list_details(details_container,test_list_instances);
 				}
 			},
 			instance_options
@@ -362,14 +362,14 @@ function on_select_task_list(task_list_row){
 /**************************************************************************/
 $(document).ready(function(){
 
-	init_task_list_table();
+	init_test_list_table();
 
-	$("#qa-task-list-table tbody tr").each(function(idx,row){
+	$("#qa-test-list-table tbody tr").each(function(idx,row){
 		update_row_color($(row));
 	});
 
-	$("#qa-task-list-table tbody tr").click(function(event){
-		on_select_task_list($(event.currentTarget));
+	$("#qa-test-list-table tbody tr").click(function(event){
+		on_select_test_list($(event.currentTarget));
 	});
 
 

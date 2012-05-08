@@ -1,10 +1,10 @@
 /*
 
-Only show relevant fields for TaskListItemAdmin
+Only show relevant fields for TestListItemAdmin
 
 */
-function toggle_task_type(){
-    var val = $("#id_task_type").find("option:selected").val();
+function toggle_test_type(){
+    var val = $("#id_test_type").find("option:selected").val();
 
     if (val == "constant"){
         $(".field-constant_value").show();
@@ -19,6 +19,6 @@ function toggle_task_type(){
 }
 
 $(document).ready(function() {
-    $("#id_task_type").change(toggle_task_type);
-    toggle_task_type();
+    $("#id_test_type").change(toggle_test_type);
+    toggle_test_type();
 });
