@@ -193,7 +193,8 @@ function add_item_row(parent,instance,task_list_instances){
 	data.push(review_link);
 
 	$(parent).dataTable().fnAddData(data);
-	var item_row = $(parent).find("tbody tr:first");
+	var item_row = parent.find("#"+spark_id).parent().parent();
+
 
 	create_spark_line($("#"+spark_id),instance.task_list_item,task_list_instances);
 
