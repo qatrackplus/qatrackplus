@@ -1,10 +1,10 @@
 [
     {
         "pk": 1,
-        "model": "qa.tasklistitem",
+        "model": "qa.test",
         "fields": {
             "category": 2,
-            "task_type": "boolean",
+            "type": "boolean",
             "constant_value": null,
             "name": "Machine Restriction Check",
             "short_name": "restriction_check",
@@ -19,10 +19,10 @@
     },
     {
         "pk": 2,
-        "model": "qa.tasklistitem",
+        "model": "qa.test",
         "fields": {
             "category": 2,
-            "task_type": "boolean",
+            "type": "boolean",
             "constant_value": null,
             "name": "Motion enablers on all three hand controls functional",
             "short_name": "hand_motion_enablers",
@@ -37,10 +37,10 @@
     },
     {
         "pk": 3,
-        "model": "qa.tasklistitem",
+        "model": "qa.test",
         "fields": {
             "category": 2,
-            "task_type": "boolean",
+            "type": "boolean",
             "constant_value": null,
             "name": "Motion enablers on table control functional",
             "short_name": "table_motion_enablers",
@@ -55,10 +55,10 @@
     },
     {
         "pk": 4,
-        "model": "qa.tasklistitem",
+        "model": "qa.test",
         "fields": {
             "category": 2,
-            "task_type": "boolean",
+            "type": "boolean",
             "constant_value": null,
             "name": "Table brakes functional",
             "short_name": "table_brakes",
@@ -73,10 +73,10 @@
     },
     {
         "pk": 5,
-        "model": "qa.tasklistitem",
+        "model": "qa.test",
         "fields": {
             "category": 2,
-            "task_type": "boolean",
+            "type": "boolean",
             "constant_value": null,
             "name": "Verify Lateral Lasers",
             "short_name": "lateral_lasers",
@@ -91,10 +91,10 @@
     },
     {
         "pk": 6,
-        "model": "qa.tasklistitem",
+        "model": "qa.test",
         "fields": {
             "category": 2,
-            "task_type": "boolean",
+            "type": "boolean",
             "constant_value": null,
             "name": "Motion stops on all three hand controls functional ",
             "short_name": "hand_motion_stops",
@@ -109,10 +109,10 @@
     },
     {
         "pk": 7,
-        "model": "qa.tasklistitem",
+        "model": "qa.test",
         "fields": {
             "category": 2,
-            "task_type": "boolean",
+            "type": "boolean",
             "constant_value": null,
             "name": "Verify sagittal/ceiling lasers  ",
             "short_name": "sag_ceiling_lasers",
@@ -127,10 +127,10 @@
     },
     {
         "pk": 8,
-        "model": "qa.tasklistitem",
+        "model": "qa.test",
         "fields": {
             "category": 2,
-            "task_type": "boolean",
+            "type": "boolean",
             "constant_value": null,
             "name": "Motion Stops on Treatment Table Functional ",
             "short_name": "table_motion_stops",
@@ -145,10 +145,10 @@
     },
     {
         "pk": 9,
-        "model": "qa.tasklistitem",
+        "model": "qa.test",
         "fields": {
             "category": 2,
-            "task_type": "boolean",
+            "type": "boolean",
             "constant_value": null,
             "name": "Touchguards functional ",
             "short_name": "touchguards",
@@ -163,10 +163,10 @@
     },
     {
         "pk": 10,
-        "model": "qa.tasklistitem",
+        "model": "qa.test",
         "fields": {
             "category": 2,
-            "task_type": "boolean",
+            "type": "boolean",
             "constant_value": null,
             "name": "Crosswires within 2 mm of lasers ",
             "short_name": "crosswires_lasers",
@@ -181,10 +181,10 @@
     },
     {
         "pk": 11,
-        "model": "qa.tasklistitem",
+        "model": "qa.test",
         "fields": {
             "category": 2,
-            "task_type": "simple",
+            "type": "simple",
             "constant_value": null,
             "name": "Record ODI value on Checkmate Turn on the ODI light",
             "short_name": "odi_value",
@@ -199,10 +199,10 @@
     },
     {
         "pk": 12,
-        "model": "qa.tasklistitem",
+        "model": "qa.test",
         "fields": {
             "category": 2,
-            "task_type": "boolean",
+            "type": "boolean",
             "constant_value": null,
             "name": "20x20 light field within \u00b1 2 mm ",
             "short_name": "light_field_20x20",
@@ -217,10 +217,10 @@
     },
     {
         "pk": 13,
-        "model": "qa.tasklistitem",
+        "model": "qa.test",
         "fields": {
             "category": 2,
-            "task_type": "boolean",
+            "type": "boolean",
             "constant_value": null,
             "name": "10x10 light field within \u00b1 2 mm",
             "short_name": "light_field_10x10",
@@ -235,10 +235,10 @@
     },
     {
         "pk": 14,
-        "model": "qa.tasklistitem",
+        "model": "qa.test",
         "fields": {
             "category": 2,
-            "task_type": "boolean",
+            "type": "boolean",
             "constant_value": null,
             "name": "Oxygen functional",
             "short_name": "oxygen",
@@ -253,10 +253,10 @@
     },
     {
         "pk": 15,
-        "model": "qa.tasklistitem",
+        "model": "qa.test",
         "fields": {
             "category": 2,
-            "task_type": "boolean",
+            "type": "boolean",
             "constant_value": null,
             "name": "LPO Timeout functional  ",
             "short_name": "lpo_timeout",
@@ -271,10 +271,10 @@
     },
     {
         "pk": 16,
-        "model": "qa.tasklistitem",
+        "model": "qa.test",
         "fields": {
             "category": 2,
-            "task_type": "boolean",
+            "type": "boolean",
             "constant_value": null,
             "name": "Run warm-up beam ",
             "short_name": "warm_up_beam",
@@ -289,10 +289,10 @@
     },
     {
         "pk": 17,
-        "model": "qa.tasklistitem",
+        "model": "qa.test",
         "fields": {
             "category": 2,
-            "task_type": "boolean",
+            "type": "boolean",
             "constant_value": null,
             "name": "Audiovisual monitor functional ",
             "short_name": "av_monitor",
@@ -307,10 +307,10 @@
     },
     {
         "pk": 18,
-        "model": "qa.tasklistitem",
+        "model": "qa.test",
         "fields": {
             "category": 2,
-            "task_type": "boolean",
+            "type": "boolean",
             "constant_value": null,
             "name": "Audible Beam On Indicator at console functional.  ",
             "short_name": "audible_beam_indicator",
@@ -325,10 +325,10 @@
     },
     {
         "pk": 19,
-        "model": "qa.tasklistitem",
+        "model": "qa.test",
         "fields": {
             "category": 2,
-            "task_type": "boolean",
+            "type": "boolean",
             "constant_value": null,
             "name": "Independent Radiation Monitors functional ",
             "short_name": "ind_rad_mons",
@@ -343,10 +343,10 @@
     },
     {
         "pk": 20,
-        "model": "qa.tasklistitem",
+        "model": "qa.test",
         "fields": {
             "category": 2,
-            "task_type": "boolean",
+            "type": "boolean",
             "constant_value": null,
             "name": "Beam-on Warning Lights functional   ",
             "short_name": "beam_on_warning_light",
@@ -361,10 +361,10 @@
     },
     {
         "pk": 21,
-        "model": "qa.tasklistitem",
+        "model": "qa.test",
         "fields": {
             "category": 2,
-            "task_type": "boolean",
+            "type": "boolean",
             "constant_value": null,
             "name": "Beam Interrupt button functional",
             "short_name": "beam_interrupt_button",
@@ -379,10 +379,10 @@
     },
     {
         "pk": 22,
-        "model": "qa.tasklistitem",
+        "model": "qa.test",
         "fields": {
             "category": 2,
-            "task_type": "boolean",
+            "type": "boolean",
             "constant_value": null,
             "name": "Beam Terminate button functional  ",
             "short_name": "beam_terminate_button",
@@ -397,10 +397,10 @@
     },
     {
         "pk": 23,
-        "model": "qa.tasklistitem",
+        "model": "qa.test",
         "fields": {
             "category": 2,
-            "task_type": "boolean",
+            "type": "boolean",
             "constant_value": null,
             "name": "Door Open Alarm functional",
             "short_name": "door_open_alarm",
@@ -415,10 +415,10 @@
     },
     {
         "pk": 24,
-        "model": "qa.tasklistitem",
+        "model": "qa.test",
         "fields": {
             "category": 2,
-            "task_type": "boolean",
+            "type": "boolean",
             "constant_value": null,
             "name": "Door Interlock functional ",
             "short_name": "door_interlock",
@@ -433,10 +433,10 @@
     },
     {
         "pk": 25,
-        "model": "qa.tasklistitem",
+        "model": "qa.test",
         "fields": {
             "category": 2,
-            "task_type": "boolean",
+            "type": "boolean",
             "constant_value": null,
             "name": "LPO System functional ",
             "short_name": "lpo_system",
@@ -451,10 +451,10 @@
     },
     {
         "pk": 26,
-        "model": "qa.tasklistitem",
+        "model": "qa.test",
         "fields": {
             "category": 1,
-            "task_type": "simple",
+            "type": "simple",
             "constant_value": null,
             "name": "6MV 100MU 10x10 Open Field",
             "short_name": "open_field_10x10_6mv",
@@ -469,10 +469,10 @@
     },
     {
         "pk": 27,
-        "model": "qa.tasklistitem",
+        "model": "qa.test",
         "fields": {
             "category": 1,
-            "task_type": "simple",
+            "type": "simple",
             "constant_value": null,
             "name": "10MV 100MU 10x10 Open Field",
             "short_name": "open_field_10x10_10mv",
@@ -487,10 +487,10 @@
     },
     {
         "pk": 28,
-        "model": "qa.tasklistitem",
+        "model": "qa.test",
         "fields": {
             "category": 1,
-            "task_type": "simple",
+            "type": "simple",
             "constant_value": null,
             "name": "400 MU, 6MV 10x10, wedge in, col=0",
             "short_name": "wedge_6mv_col0_10x10",
@@ -505,10 +505,10 @@
     },
     {
         "pk": 29,
-        "model": "qa.tasklistitem",
+        "model": "qa.test",
         "fields": {
             "category": 1,
-            "task_type": "simple",
+            "type": "simple",
             "constant_value": null,
             "name": "6MV 400MU 10x10, wedge_in, col=180",
             "short_name": "wedge_6mv_col180_10x10",
@@ -523,10 +523,10 @@
     },
     {
         "pk": 30,
-        "model": "qa.tasklistitem",
+        "model": "qa.test",
         "fields": {
             "category": 1,
-            "task_type": "composite",
+            "type": "composite",
             "constant_value": null,
             "name": "6MV Wedge Output Asymmetry (Col0/180)",
             "short_name": "wedge_6mv_asymmetry",
@@ -541,10 +541,10 @@
     },
     {
         "pk": 31,
-        "model": "qa.tasklistitem",
+        "model": "qa.test",
         "fields": {
             "category": 1,
-            "task_type": "composite",
+            "type": "composite",
             "constant_value": null,
             "name": "6MV Wedge Factor (Col0/180)",
             "short_name": "wedge_factor_6mv",
@@ -559,10 +559,10 @@
     },
     {
         "pk": 32,
-        "model": "qa.tasklistitem",
+        "model": "qa.test",
         "fields": {
             "category": 1,
-            "task_type": "simple",
+            "type": "simple",
             "constant_value": null,
             "name": "6MV 400MU 10x10, wedge_in, col=90",
             "short_name": "wedge_6mv_col90_10x10",
@@ -577,10 +577,10 @@
     },
     {
         "pk": 33,
-        "model": "qa.tasklistitem",
+        "model": "qa.test",
         "fields": {
             "category": 1,
-            "task_type": "simple",
+            "type": "simple",
             "constant_value": null,
             "name": "6MV 400MU 10x10, wedge_in, col=270",
             "short_name": "wedge_6mv_col270_10x10",
@@ -595,10 +595,10 @@
     },
     {
         "pk": 34,
-        "model": "qa.tasklistitem",
+        "model": "qa.test",
         "fields": {
             "category": 1,
-            "task_type": "composite",
+            "type": "composite",
             "constant_value": null,
             "name": "6MV Wedge Output Asymmetry (Col90/270)",
             "short_name": "wedge_6mv_asymmetry_col90",
@@ -613,10 +613,10 @@
     },
     {
         "pk": 35,
-        "model": "qa.tasklistitem",
+        "model": "qa.test",
         "fields": {
             "category": 1,
-            "task_type": "composite",
+            "type": "composite",
             "constant_value": null,
             "name": "6MV Wedge Factor (Col90/270)",
             "short_name": "wedge_factor_6mv_col270",

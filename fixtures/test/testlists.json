@@ -1,7 +1,7 @@
 [
     {
         "pk": 1,
-        "model": "qa.tasklist",
+        "model": "qa.testlist",
         "fields": {
             "modified_by": 1,
             "description": "Safety checks for Elekta Synergy models.",
@@ -10,7 +10,7 @@
             "created_by": 1,
             "sublists": [],
             "active": true,
-            "task_list_items": [
+            "tests": [
                 1,
                 2,
                 3,
@@ -43,7 +43,7 @@
     },
     {
         "pk": 2,
-        "model": "qa.tasklist",
+        "model": "qa.testlist",
         "fields": {
             "modified_by": 1,
             "description": "Output measurements for Day 1 of Elekta Synergy morning qa cycle.",
@@ -52,7 +52,7 @@
             "created_by": 1,
             "sublists": [],
             "active": true,
-            "task_list_items": [
+            "tests": [
                 26,
                 27,
                 28,
@@ -66,7 +66,7 @@
     },
     {
         "pk": 3,
-        "model": "qa.tasklist",
+        "model": "qa.testlist",
         "fields": {
             "modified_by": 1,
             "description": "Day 2 output checks for Synergy units",
@@ -75,7 +75,7 @@
             "created_by": 1,
             "sublists": [],
             "active": true,
-            "task_list_items": [
+            "tests": [
                 26,
                 27,
                 32,

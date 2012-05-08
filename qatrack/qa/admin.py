@@ -33,7 +33,7 @@ class SaveUserMixin(object):
 
 #============================================================================
 class BasicSaveUserAdmin(SaveUserMixin, admin.ModelAdmin):
-    """manage reference values for task list items"""
+    """manage reference values for tests"""
 
 #----------------------------------------------------------------------
 def title_case_name(obj):
@@ -46,7 +46,7 @@ class CategoryAdmin(admin.ModelAdmin):
     prepopulated_fields =  {'slug': ('name',)}
 
 #============================================================================
-class TaskListItemInfoForm(forms.ModelForm):
+class TestInfoForm(forms.ModelForm):
     reference_value = forms.FloatField(
         label=_("Update reference"),
         help_text=_("For Yes/No tests, enter 1 for Yes and 0 for No"),
@@ -55,7 +55,7 @@ class TaskListItemInfoForm(forms.ModelForm):
     #reference_type = forms.ChoiceField(choices=models.Reference.TYPE_CHOICES)
 
     class Meta:
-        model = models.TaskListItemUnitInfo
+        model = models.UnitTestInfo
 
     #----------------------------------------------------------------------
     def clean(self):
@@ -66,7 +66,7 @@ class TaskListItemInfoForm(forms.ModelForm):
 
         ref_value = self.cleaned_data["reference_value"]
 
-        if self.instance.task_list_item.task_type == models.BOOLEAN:
+        if self.instance.test.type == models.BOOLEAN:
             if int(ref_value) not in (0,1):
                 raise forms.ValidationError(_("Yes/No values must be 0 or 1"))
 
@@ -74,22 +74,22 @@ class TaskListItemInfoForm(forms.ModelForm):
 
 
 #============================================================================
-class TaskListItemInfoAdmin(admin.ModelAdmin):
+class TestInfoAdmin(admin.ModelAdmin):
     """"""
-    form = TaskListItemInfoForm
+    form = TestInfoForm
     fields = (
-        "unit", "task_list_item",
+        "unit", "test",
         "reference", "tolerance",
         "reference_value",
     )
-    list_display = ["task_list_item", "unit", "reference", "tolerance"]
-    list_filter = ["unit","task_list_item__category"]
-    readonly_fields = ("task_list_item","unit","reference")
+    list_display = ["test", "unit", "reference", "tolerance"]
+    list_filter = ["unit","test__category"]
+    readonly_fields = ("test","unit","reference")
 
     #----------------------------------------------------------------------
-    def save_model(self, request, item_info, form, change):
+    def save_model(self, request, test_info, form, change):
         """create new reference when user updates value"""
-        if form.instance.task_list_item.task_type == models.BOOLEAN:
+        if form.instance.test.type == models.BOOLEAN:
             ref_type = models.BOOLEAN
         else:
             ref_type = models.NUMERICAL
@@ -100,16 +100,16 @@ class TaskListItemInfoAdmin(admin.ModelAdmin):
                 ref_type = ref_type,
                 created_by = request.user,
                 modified_by = request.user,
-                name = "%s %s" % (item_info.unit.name,item_info.task_list_item.name)
+                name = "%s %s" % (test_info.unit.name,test_info.test.name)
             )
             ref.save()
-            item_info.reference = ref
-        super(TaskListItemInfoAdmin,self).save_model(request,item_info,form,change)
+            test_info.reference = ref
+        super(TestInfoAdmin,self).save_model(request,test_info,form,change)
 
 
 #============================================================================
-class TaskListAdminForm(forms.ModelForm):
-    """Form for handling validation of TaskList creation/editing"""
+class TestListAdminForm(forms.ModelForm):
+    """Form for handling validation of TestList creation/editing"""
 
     #----------------------------------------------------------------------
     def clean_sublists(self):
@@ -121,14 +121,14 @@ class TaskListAdminForm(forms.ModelForm):
         return sublists
 
 #============================================================================
-class TaskListItemInlineFormset(forms.models.BaseInlineFormSet):
+class TestInlineFormset(forms.models.BaseInlineFormSet):
 
     #----------------------------------------------------------------------
     def clean(self):
-        """Make sure there are no duplicated short_name's in a TaskList"""
-        super(TaskListItemInlineFormset,self).clean()
+        """Make sure there are no duplicated short_name's in a TestList"""
+        super(TestInlineFormset,self).clean()
 
-        short_names = [f.instance.task_list_item.short_name for f in self.forms[:-self.extra]]
+        short_names = [f.instance.test.short_name for f in self.forms[:-self.extra]]
         duplicates = list(set([sn for sn in short_names if short_names.count(sn)>1]))
         if duplicates:
             raise forms.ValidationError(
@@ -139,21 +139,21 @@ class TaskListItemInlineFormset(forms.models.BaseInlineFormSet):
 
 
 #============================================================================
-class TaskListMembershipInline(admin.TabularInline):
+class TestListMembershipInline(admin.TabularInline):
     """"""
-    model = models.TaskListMembership
-    formset = TaskListItemInlineFormset
+    model = models.TestListMembership
+    formset = TestInlineFormset
     extra = 1
-    template = "admin/qa/tasklistmembership/edit_inline/tabular.html"
+    template = "admin/qa/testlistmembership/edit_inline/tabular.html"
 
 #============================================================================
-class TaskListAdmin(SaveUserMixin, admin.ModelAdmin):
+class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
     prepopulated_fields =  {'slug': ('name',)}
     list_display = (title_case_name, "set_references", "modified", "modified_by", "active")
     list_filter = ("active",)
-    filter_horizontal= ("task_list_items", "sublists", )
-    form = TaskListAdminForm
-    inlines = [TaskListMembershipInline]
+    filter_horizontal= ("tests", "sublists", )
+    form = TestListAdminForm
+    inlines = [TestListMembershipInline]
 
     #============================================================================
     class Media:
@@ -166,35 +166,35 @@ class TaskListAdmin(SaveUserMixin, admin.ModelAdmin):
 
 
 #============================================================================
-class TaskListItemAdmin(SaveUserMixin, admin.ModelAdmin):
-    list_display = ["name","short_name","category", "task_type", "set_references"]
-    list_filter = ["category","task_type"]
+class TestAdmin(SaveUserMixin, admin.ModelAdmin):
+    list_display = ["name","short_name","category", "type", "set_references"]
+    list_filter = ["category","type"]
 
     #============================================================================
     class Media:
         js = (
             settings.STATIC_URL+"js/jquery-1.7.1.min.js",
-            settings.STATIC_URL+"js/tasklistitem_admin.js",
+            settings.STATIC_URL+"js/test_admin.js",
         )
 
 #============================================================================
-class UnitTaskListAdmin(admin.ModelAdmin):
+class UnitTestListAdmin(admin.ModelAdmin):
     readonly_fields = ("unit","frequency",)
-    filter_horizontal = ("task_lists","cycles",)
+    filter_horizontal = ("test_lists","cycles",)
     list_display = ["name", "unit", "frequency"]
     list_filter = ["unit", "frequency"]
 
 
 #============================================================================
-class TaskListCycleMembershipInline(admin.TabularInline):
+class TestListCycleMembershipInline(admin.TabularInline):
 
-    model = models.TaskListCycleMembership
+    model = models.TestListCycleMembership
     extra = 0
 
 #============================================================================
-class TaskListCycleAdmin(admin.ModelAdmin):
-    """Admin for daily task list cycles"""
-    inlines = [TaskListCycleMembershipInline]
+class TestListCycleAdmin(admin.ModelAdmin):
+    """Admin for daily test list cycles"""
+    inlines = [TestListCycleMembershipInline]
 
     #============================================================================
     class Media:
@@ -207,9 +207,9 @@ class TaskListCycleAdmin(admin.ModelAdmin):
 
 admin.site.register([models.Tolerance], BasicSaveUserAdmin)
 admin.site.register([models.Category], CategoryAdmin)
-admin.site.register([models.TaskList],TaskListAdmin)
-admin.site.register([models.TaskListItem],TaskListItemAdmin)
-admin.site.register([models.TaskListItemUnitInfo],TaskListItemInfoAdmin)
-admin.site.register([models.UnitTaskLists],UnitTaskListAdmin)
+admin.site.register([models.TestList],TestListAdmin)
+admin.site.register([models.Test],TestAdmin)
+admin.site.register([models.UnitTestInfo],TestInfoAdmin)
+admin.site.register([models.UnitTestLists],UnitTestListAdmin)
 
-admin.site.register([models.TaskListCycle],TaskListCycleAdmin)
+admin.site.register([models.TestListCycle],TestListCycleAdmin)

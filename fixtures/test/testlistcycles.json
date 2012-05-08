@@ -1,6 +1,6 @@
 [    {
         "pk": 1,
-        "model": "qa.tasklistcycle",
+        "model": "qa.testlistcycle",
         "fields": {
             "frequency": "daily",
             "name": "Synergy Output Rotation"
@@ -8,20 +8,20 @@
     },
     {
         "pk": 1,
-        "model": "qa.tasklistcyclemembership",
+        "model": "qa.testlistcyclemembership",
         "fields": {
             "cycle": 1,
             "order": 0,
-            "task_list": 2
+            "test_list": 2
         }
     },
     {
         "pk": 2,
-        "model": "qa.tasklistcyclemembership",
+        "model": "qa.testlistcyclemembership",
         "fields": {
             "cycle": 1,
             "order": 1,
-            "task_list": 3
+            "test_list": 3
         }
     }
 ]

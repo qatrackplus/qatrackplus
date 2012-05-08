@@ -33,7 +33,7 @@ class JSONResponseMixin(object):
 
 #============================================================================
 class CompositeCalculation(JSONResponseMixin, View):
-    """validate all qa items in the request for the :model:`TaskList` with id task_list_id"""
+    """validate all qa tests in the request for the :model:`TestList` with id test_list_id"""
 
     #----------------------------------------------------------------------
     def get_json_data(self,name):
@@ -62,13 +62,13 @@ class CompositeCalculation(JSONResponseMixin, View):
             return self.render_to_response({"success":False,"errors":["No Valid Composite ID's"]})
 
         #grab calculation procedures for all the composite tests
-        self.composite_items = models.TaskListItem.objects.filter(
+        self.composite_tests = models.Test.objects.filter(
             pk__in=self.composite_ids.values()
         ).values_list("short_name", "calculation_procedure")
 
 
         results = {}
-        for name, procedure in self.composite_items:
+        for name, procedure in self.composite_tests:
             #set up clean calculation context each time so there
             #is no potential conflicts between different composite tests
             self.set_calculation_context()
@@ -100,48 +100,48 @@ class CompositeCalculation(JSONResponseMixin, View):
 
 #============================================================================
 class PerformQAView(FormView):
-    """view for users to complete a qa task list"""
-    template_name = "perform_task_list.html"
+    """view for users to complete a qa test list"""
+    template_name = "perform_test_list.html"
 
-    context_object_name = "task_list"
-    form_class = forms.TaskListInstanceForm
-    task_list_fields_to_copy = ("unit", "work_completed", "created", "created_by", "modified", "modified_by",)
+    context_object_name = "test_list"
+    form_class = forms.TestListInstanceForm
+    test_list_fields_to_copy = ("unit", "work_completed", "created", "created_by", "modified", "modified_by",)
     #----------------------------------------------------------------------
     def form_valid(self, form):
-        """add extra info to the task_list_intance and save all the task_list_items if valid"""
+        """add extra info to the test_list_intance and save all the tests if valid"""
 
         context = self.get_context_data(form=form)
-        task_list = context["task_list"]
+        test_list = context["test_list"]
         formset = context["formset"]
 
         if formset.is_valid():
 
-            #add extra info for task_list_instance
-            task_list_instance = form.save(commit=False)
-            task_list_instance.task_list = task_list
-            task_list_instance.created_by = self.request.user
-            task_list_instance.modified_by = self.request.user
-            task_list_instance.unit = context["unit"]
-            task_list_instance.save()
+            #add extra info for test_list_instance
+            test_list_instance = form.save(commit=False)
+            test_list_instance.test_list = test_list
+            test_list_instance.created_by = self.request.user
+            test_list_instance.modified_by = self.request.user
+            test_list_instance.unit = context["unit"]
+            test_list_instance.save()
 
 
-            #all task list item values are validated so now add remaining fields manually and save
-            for item_form in formset:
-                obj = item_form.save(commit=False)
-                obj.task_list_instance = task_list_instance
-                for field in self.task_list_fields_to_copy:
-                    setattr(obj,field,getattr(task_list_instance,field))
+            #all test values are validated so now add remaining fields manually and save
+            for test_form in formset:
+                obj = test_form.save(commit=False)
+                obj.test_list_instance = test_list_instance
+                for field in self.test_list_fields_to_copy:
+                    setattr(obj,field,getattr(test_list_instance,field))
                 obj.status = models.UNREVIEWED
                 obj.save()
 
             #let user know request succeeded and return to unit list
-            messages.success(self.request,_("Successfully submitted %s "% task_list.name))
+            messages.success(self.request,_("Successfully submitted %s "% test_list.name))
 
             frequency = context.get("frequency")
             if frequency:
                 url = reverse("qa_by_frequency_unit",args=(frequency,context["unit"].number))
             else:
-                url = reverse("task_lists")
+                url = reverse("test_lists")
             return HttpResponseRedirect(url)
 
         #there was an error in one of the forms
@@ -149,14 +149,14 @@ class PerformQAView(FormView):
 
     #----------------------------------------------------------------------
     def get_context_data(self, **kwargs):
-        """add formset and task list to our template context"""
+        """add formset and test list to our template context"""
         context = super(PerformQAView, self).get_context_data(**kwargs)
         unit = get_object_or_404(Unit,number=self.kwargs["unit_number"])
 
         context["frequency"] = self.kwargs["frequency"]
 
         if self.kwargs["type"] == "cycle":
-            cycle = get_object_or_404(models.TaskListCycle,pk=self.kwargs["pk"])
+            cycle = get_object_or_404(models.TestListCycle,pk=self.kwargs["pk"])
             day = self.request.GET.get("day")
             if day == "next":
                 cycle_membership = cycle.next_for_unit(unit)
@@ -167,29 +167,29 @@ class PerformQAView(FormView):
                     raise Http404
 
                 cycle_membership = get_object_or_404(
-                    models.TaskListCycleMembership,
+                    models.TestListCycleMembership,
                     cycle = cycle,
                     order=order,
                 )
 
-            task_list = cycle_membership.task_list
+            test_list = cycle_membership.test_list
             current_day = cycle_membership.order + 1
             days = range(1,len(cycle)+1)
         else:
             cycle, current_day,days = None, 1,[]
-            task_list =  get_object_or_404(models.TaskList,pk=self.kwargs["pk"])
+            test_list =  get_object_or_404(models.TestList,pk=self.kwargs["pk"])
 
         if self.request.POST:
-            formset = forms.TaskListItemInstanceFormset(task_list,unit, self.request.POST)
+            formset = forms.TestInstanceFormset(test_list,unit, self.request.POST)
         else:
-            formset = forms.TaskListItemInstanceFormset(task_list, unit)
+            formset = forms.TestInstanceFormset(test_list, unit)
 
         categories = models.Category.objects.all()
 
         context.update({
             'current_day':current_day,
             'days':days,
-            'task_list':task_list,
+            'test_list':test_list,
             'unit':unit,
             'formset':formset,
             'categories':categories,
@@ -201,14 +201,14 @@ class PerformQAView(FormView):
 
 #============================================================================
 class UnitFrequencyListView(TemplateView):
-    """list daily/monthly/annual task lists for a unit"""
+    """list daily/monthly/annual test lists for a unit"""
 
     template_name = "frequency_list.html"
 
     #----------------------------------------------------------------------
     def get_context_data(self,**kwargs):
         """
-        return task lists and cycles for a specific frequency
+        return test lists and cycles for a specific frequency
         (daily/monthly etc)and specific unit
         """
 
@@ -217,18 +217,18 @@ class UnitFrequencyListView(TemplateView):
         context["frequency"] = frequency
 
         unit_number = self.kwargs["unit_number"]
-        context["unit_task_list"] = models.UnitTaskLists.objects.get(unit__number=unit_number,frequency=frequency)
+        context["unit_test_list"] = models.UnitTestLists.objects.get(unit__number=unit_number,frequency=frequency)
 
         return context
 
 #============================================================================
 class UnitGroupedFrequencyListView(TemplateView):
-    """view for grouping all task lists with a certain frequency for all units"""
+    """view for grouping all test lists with a certain frequency for all units"""
     template_name = "unit_grouped_frequency_list.html"
 
     #----------------------------------------------------------------------
     def get_context_data(self,**kwargs):
-        """grab all task lists and cycles with given frequency"""
+        """grab all test lists and cycles with given frequency"""
         context = super(UnitGroupedFrequencyListView,self).get_context_data(**kwargs)
         frequency = self.kwargs["frequency"].lower()
         context["frequency"] = frequency
@@ -239,7 +239,7 @@ class UnitGroupedFrequencyListView(TemplateView):
             unit_type_set = []
             for unit in ut.unit_set.all():
                 unit_type_set.extend(
-                    unit.unittasklists_set.filter(frequency=frequency)
+                    unit.unittestlists_set.filter(frequency=frequency)
                 )
 
             unit_type_sets.append((ut,unit_type_set))
@@ -262,8 +262,8 @@ class ChartView(TemplateView):
             ("Review Status","review-status"),
             ("Unit","unit"),
             ("Category","category"),
-            ("Task List","task-list"),
-            ("Task List Item","task-list-item"),
+            ("Test List","test-list"),
+            ("Test","test"),
         ]
         return context
 
@@ -272,12 +272,12 @@ class ChartView(TemplateView):
 
 #============================================================================
 class ReviewView(TemplateView):
-    """view for grouping all task lists with a certain frequency for all units"""
+    """view for grouping all test lists with a certain frequency for all units"""
     template_name = "review_all_table.html"
 
     #----------------------------------------------------------------------
     def get_context_data(self,**kwargs):
-        """grab all task lists and cycles with given frequency"""
+        """grab all test lists and cycles with given frequency"""
         context = super(ReviewView,self).get_context_data(**kwargs)
 
         units = Unit.objects.all()
@@ -287,48 +287,48 @@ class ReviewView(TemplateView):
             unit_list = []
             for freq, _ in frequencies:
                 freq_list = []
-                unit_task_lists = unit.unittasklists_set.filter(frequency=freq)
+                unit_test_lists = unit.unittestlists_set.filter(frequency=freq)
 
-                for utls in unit_task_lists:
-                    freq_list.extend(utls.all_task_lists(with_last_instance=True))
+                for utls in unit_test_lists:
+                    freq_list.extend(utls.all_test_lists(with_last_instance=True))
 
                 unit_list.append((freq,freq_list))
             unit_lists.append((unit,unit_list))
         context["table_headers"] = [
-            "Unit", "Frequency", "Task List",
+            "Unit", "Frequency", "Test List",
             "Completed", "Due Date", "Status",
             "Review Status"
         ]
         fdisplay = dict(models.FREQUENCY_CHOICES)
         table_data = []
-        for utl in models.UnitTaskLists.objects.all():
+        for utl in models.UnitTestLists.objects.all():
             unit, frequency = utl.unit, utl.frequency
             data = []
 
-            for task_list,last in utl.all_task_lists(with_last_instance=True):
+            for test_list,last in utl.all_test_lists(with_last_instance=True):
                 last_done, status = ["New List"]*2
                 review = ()
                 if last is not None:
                     last_done = last.work_completed.date()
                     status = last.pass_fail_status()
-                    reviewed = last.tasklistiteminstance_set.exclude(status=models.UNREVIEWED).count()
-                    total = last.tasklistiteminstance_set.count()
+                    reviewed = last.testinstance_set.exclude(status=models.UNREVIEWED).count()
+                    total = last.testinstance_set.count()
                     if total == reviewed:
                         review = (last.modified_by,last.modified)
 
                 data = {
                     "info": {
                         "unit_number":unit.number,
-                        "task_list_id":task_list.pk,
+                        "test_list_id":test_list.pk,
                         "frequency":frequency,
                     },
                     "attrs": [
                         #(name, obj, display)
                         ("unit",unit.name),
                         ("frequency",fdisplay[frequency]),
-                        ("task_list",task_list.name),
+                        ("test_list",test_list.name),
                         ("last_done",last_done),
-                        ("due",models.due_date(utl.unit, task_list).date()),
+                        ("due",models.due_date(utl.unit, test_list).date()),
                         ("pass_fail_status",status),
                         ("review_status",review),
                     ]
@@ -337,7 +337,7 @@ class ReviewView(TemplateView):
                 if data:
                     table_data.append(data)
         context["data"] = table_data
-        context["unit_task_lists"] = models.UnitTaskLists.objects.all()
+        context["unit_test_lists"] = models.UnitTestLists.objects.all()
         context["unit_lists"] = unit_lists
         context["units"] = units
         context["routine_freq"] = frequencies

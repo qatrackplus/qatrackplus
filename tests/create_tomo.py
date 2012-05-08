@@ -67,17 +67,17 @@ tomo_morning = (
 def create_task_list_items():
     """"""
     user = django.contrib.auth.models.User.objects.get(pk=1)
-    for item in tomo_morning:
-        if len(item) > 3:
+    for test in tomo_morning:
+        if len(test) > 3:
             continue
         else:
-            tli = models.TaskListItem(
-                name = item[0],
-                short_name = item[1],
-                description = item[0],
+            tli = models.Test(
+                name = test[0],
+                short_name = test[1],
+                description = test[0],
                 procedure = "",
                 task_type = "numerical",
-                category = models.Category.objects.get(slug=item[2]),
+                category = models.Category.objects.get(slug=test[2]),
                 created_by = user,
                 modified_by = user,
             )
