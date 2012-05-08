@@ -192,13 +192,13 @@ function add_test_row(parent,instance,test_list_instances){
 	var review_link = QAUtils.unit_test_chart_link(instance.unit,test,"Details");
 	data.push(review_link);
 
-	$(parent).dataTable().fnAddData(data);
-	var test_row = $(parent).find("tbody tr:first");
+	var row_idx = parent.dataTable().fnAddData(data)[0];
+	var test_row = parent.find("#"+spark_id).parent().parent();
 
 	create_spark_line($("#"+spark_id),instance.test,test_list_instances);
 
 	//set color Pass/Fail column based on test
-	var pass_fail_td = test_row.find("span.pass-fail").parent();
+	var pass_fail_td = test_row.find("span.pass-fail");
 	pass_fail_td.css("background-color",QAUtils.qa_color(instance.pass_fail));
 	pass_fail_td.addClass("label");
 	return test_row;
@@ -239,24 +239,24 @@ function update_row_color(row){
 	var reviewed = review_td.hasClass(QAUtils.APPROVED);
 	review_td.removeClass("alert-info").removeClass("alert-success");
 	if (reviewed){
-		review_td.addClass("alert-success");
+		review_td.find("span").addClass("alert-success");
 	}else{
-		review_td.addClass("alert-info");
+		review_td.find("span").addClass("alert-info");
 	}
 }
 /************************************************************************/
 //update review status displayed for a given row
 function set_test_list_review_status(row,user,date){
 
-	var status = "Unreviewed";
+	var status = '<span class="label label-info">Unreviewed</span>';
 	var review_button = row.next("tr").find(".btn").button();
 	var review_cell = 	row.find("td.review_status");
 	var cls = QAUtils.UNREVIEWED;
 
 	if (user && date){
 		date = QAUtils.parse_iso8601_date(date);
-		status = "Reviewed by "+ user;
-		status+= " on " + QAUtils.format_date(date,true);
+		status = '<span class="label label-success">Reviewed by '+ user;
+		status+= " on " + QAUtils.format_date(date,true)+'</span>';
 		cls = QAUtils.APPROVED;
 	}
 
@@ -346,7 +346,7 @@ function on_select_test_list(test_list_row){
 			"testlistinstance",
 
 			function(resources){
-				test_list_row.children("td:last").children("span").remove();
+				test_list_row.children("td:last").children("span:last").remove();
 				var test_list_instances = resources.objects;
 
 				//make sure we got results from server & user hasn't closed table
