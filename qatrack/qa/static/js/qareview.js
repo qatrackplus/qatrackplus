@@ -198,7 +198,7 @@ function add_item_row(parent,instance,task_list_instances){
 	create_spark_line($("#"+spark_id),instance.task_list_item,task_list_instances);
 
 	//set color Pass/Fail column based on test
-	var pass_fail_td = item_row.find("span.pass-fail").parent();
+	var pass_fail_td = item_row.find("span.pass-fail");
 	pass_fail_td.css("background-color",QAUtils.qa_color(instance.pass_fail));
 	pass_fail_td.addClass("label");
 	return item_row;
@@ -239,24 +239,24 @@ function update_row_color(row){
 	var reviewed = review_td.hasClass(QAUtils.APPROVED);
 	review_td.removeClass("alert-info").removeClass("alert-success");
 	if (reviewed){
-		review_td.addClass("alert-success");
+		review_td.find("span").addClass("alert-success");
 	}else{
-		review_td.addClass("alert-info");
+		review_td.find("span").addClass("alert-info");
 	}
 }
 /************************************************************************/
 //update review status displayed for a given row
 function set_task_list_review_status(row,user,date){
 
-	var status = "Unreviewed";
+	var status = '<span class="label label-info">Unreviewed</span>';
 	var review_button = row.next("tr").find(".btn").button();
 	var review_cell = 	row.find("td.review_status");
 	var cls = QAUtils.UNREVIEWED;
 
 	if (user && date){
 		date = QAUtils.parse_iso8601_date(date);
-		status = "Reviewed by "+ user;
-		status+= " on " + QAUtils.format_date(date,true);
+		status = '<span class="label label-success">Reviewed by '+ user;
+		status+= " on " + QAUtils.format_date(date,true)+'</span>';
 		cls = QAUtils.APPROVED;
 	}
 
@@ -346,7 +346,7 @@ function on_select_task_list(task_list_row){
 			"tasklistinstance",
 
 			function(resources){
-				task_list_row.children("td:last").children("span").remove();
+				task_list_row.children("td:last").children("span:last").remove();
 				var task_list_instances = resources.objects;
 
 				//make sure we got results from server & user hasn't closed table

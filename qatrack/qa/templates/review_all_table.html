@@ -57,11 +57,11 @@
 									{% elif prop == "review_status" %}
 										{% if val %}
 											<td class="{{prop}} approved">
-												Reviewed by {{val.0}} on {{val.1}}
+												<span class="label label-success">Reviewed by {{val.0}} on {{val.1}}
 											</td>
 										{% else %}
 											<td class="{{prop}} unreviewed">
-											Unreviewed
+											<span class="label label-info">Unreviewed</label>
 											</td>
 										{% endif %}
 

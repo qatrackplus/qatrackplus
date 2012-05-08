@@ -16,11 +16,13 @@ var QAUtils = new function() {
     this.TOLERANCE = "tolerance";
     this.ACTION = "action";
 	this.NOT_DONE = "not_done";
+	this.NO_TOL = "no_tol";
 
     this.WITHIN_TOL_DISP =  "OK";
     this.TOLERANCE_DISP = "TOL";
     this.ACTION_DISP = "ACT";
 	this.NOT_DONE_DISP = "Not Done";
+	this.NO_TOL_DISP = "No Tol Set";
 
     this.PERCENT = "percent";
     this.ABSOLUTE = "absolute";
@@ -201,6 +203,7 @@ var QAUtils = new function() {
     this.qa_displays[this.TOLERANCE] = this.TOLERANCE_DISP;
     this.qa_displays[this.WITHIN_TOL] = this.WITHIN_TOL_DISP;
 	this.qa_displays[this.NOT_DONE] = this.NOT_DONE_DISP;
+	this.qa_displays[this.NO_TOL] = this.NO_TOL_DISP;
     this.qa_display = function(pass_fail){
         return this.qa_displays[pass_fail.toLowerCase()] || "";
     }
@@ -211,6 +214,7 @@ var QAUtils = new function() {
     this.qa_colors[this.TOLERANCE] = this.TOL_COLOR
     this.qa_colors[this.WITHIN_TOL] = this.OK_COLOR;
 	this.qa_colors[this.NOT_DONE] = this.NOT_DONE_COLOR;
+	this.qa_colors[this.NO_TOL] = this.NOT_DONE_COLOR;
 	this.qa_colors[""] = this.NOT_DONE_COLOR;
     this.qa_color = function(pass_fail){
         return this.qa_colors[pass_fail.toLowerCase()] || "";
