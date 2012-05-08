@@ -215,7 +215,7 @@ class TaskListItem(models.Model):
     name = models.CharField(max_length=256, help_text=_("Name for this task list item"))
     short_name = models.SlugField(max_length=25, help_text=_("A short variable name for this test (to be used in composite calculations)."))
     description = models.TextField(help_text=_("A concise description of what this task list item is for (optional)"), blank=True,null=True)
-    procedure = models.CharField(max_length=512,help_text=_("Link to document describing how to perform this test"), blank=True, null=True)
+    procedure = models.URLField(max_length=512,help_text=_("Link to document describing how to perform this test"), blank=True, null=True)
 
     task_type = models.CharField(
         max_length=10, choices=TASK_TYPE_CHOICES, default="boolean",
