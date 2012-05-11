@@ -19,6 +19,17 @@ input[type="text"].qa-input {
 .qa-table td.qa-category {
     min-width:200px;
 }
+tr.col-group th{
+    border-bottom:1px solid #ddd;
+    text-align:center;
+}
+#data-container {
+    padding-top:20px;
+}
+#data-table th{
+    text-align:center;
+}
+
 tr.qa-comment {
     height:50px;
 }

@@ -1,5 +1,4 @@
 var task_list_data = {};
-var main_graph_series = [{}];
 var main_graph;
 var previous_point = null;
 var task_list_members = {}; //short names of task list items belonging to task lists
@@ -104,18 +103,70 @@ function convert_to_flot_series(idx,collection){
     return series;
 }
 /*************************************************************************/
+//create data table for retrieved data items
+function create_data_table(collections){
+    var table = $("#data-table");
+
+    var headers = ['<tr class="col-group">'];
+    var max_length = 0;
+    $.each(collections,function(idx,collection){
+        var unit = "Unit"+(collection.unit < 10 ? "0" :"")+collection.unit;
+        headers.push('<th colspan="2">'+unit+" - " + collection.name+'</th>');
+        max_length = Math.max(collection.data.dates.length,max_length);
+    });
+    headers.push("</tr>");
+    headers.push('<tr >');
+    var cols = [];
+    $.each(collections,function(idx,collection){
+        headers.push('<th>Date</th><th class="col-group">Values</th>');
+        cols.push({"sType":"day-month-year-sort"});
+        cols.push(null);
+    });
+    headers.push("</tr>");
+    table.find("thead").html(headers.join(""));
+
+    var data_table = table.dataTable();
+    data_table.fnDestroy();
+    table.find("tbody").html("");
+    data_table = table.dataTable({
+        "aoColumns":cols,
+		"sDom": "<'row-fluid'<'span6'><'span6'>r>t<'row-fluid'<'span6'l><'span6'p>><'row-fluid'<'span6'i><'span6'>>",
+		"sPaginationType": "bootstrap"
+    });
+    var rows = [];
+
+    var row_idx;
+    var date;
+    for (row_idx=0; row_idx< max_length; row_idx++){
+        var row = [];
+        $.each(collections, function(idx,collection){
+            if (collection.data.dates[row_idx] !== undefined){
+                date = QAUtils.parse_iso8601_date(collection.data.dates[row_idx]);
+                row.push(QAUtils.format_date(date));
+                row.push(collection.data.values[row_idx]);
+            }else{
+                row.push("");
+                row.push("");
+            }
+        });
+        rows.push(row);
+    }
+    data_table.fnAddData(rows);
+
+}
+/*************************************************************************/
 //Do a full update of the chart
 //Currently everything is re-requested and re-drawn which isn't very efficient
-function update_chart(){
+function update(){
 
     var filters = get_filters();
     if ((filters.units === "") || (filters.short_names === "")){
         return;
     }
     QAUtils.task_list_item_values(filters, function(results_data){
+        create_data_table(results_data.objects);
 
-        main_graph_series = [];
-
+        var main_graph_series = [];
         $.each(results_data.objects,function(idx,collection){
             var collection_series = convert_to_flot_series(idx,collection);
             var ii;
@@ -311,7 +362,7 @@ function set_options_from_url(){
         }
 
     });
-    update_chart();
+    update();
 }
 /**************************************************************************/
 $(document).ready(function(){
@@ -319,7 +370,7 @@ $(document).ready(function(){
     //set up main chart and options
     main_graph = $.plot(
         $("#trend-chart"),
-        main_graph_series,
+        [{}],
         {
             xaxis:{
                 mode: "time",
@@ -358,13 +409,13 @@ $(document).ready(function(){
     populate_task_list_members(update_count);
 
     //update chart when a data filter changes
-    $("#unit-filter, #task-list-item-filter, #review-status-filter").change(update_chart);
+    $("#unit-filter, #task-list-item-filter, #review-status-filter").change(update);
 
     $("#task-list-filter, #category-filter, #frequency-filter").change(filter_task_list_items);
 
-    $(".chart-options").change(update_chart);
+    $(".chart-options").change(update);
 
-    $(".date").datepicker().on('changeDate',update_chart);
+    $(".date").datepicker().on('changeDate',update);
 
     $(".collapse").collapse({selector:true,toggle:true});
     $("#task-list-item-collapse").collapse("show");

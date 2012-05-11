@@ -5,9 +5,15 @@
 {% block extra_style %}
     <link href="{% static "css/qa.css" %}" rel="stylesheet">
     <link href="{% static "datepicker/css/datepicker.css" %}" rel="stylesheet">
+    <link href="{% static "data_tables/css/DT_bootstrap.css" %}" rel="stylesheet">
 {% endblock %}
 
 {% block extra_script %}
+    <script src="{% static "data_tables/js/jquery.dataTables.js" %}"></script>
+    <script src="{% static "data_tables/js/jquery.dataTables.columnFilter.js" %}"></script>
+	<script src="{% static "data_tables/js/DT_bootstrap.js" %}"></script>
+	<script src="{% static "data_tables/js/DT_sort.js" %}"></script>
+
 	<script src="{% static "js/qautils.js" %}"></script>
     <script src="{% static "js/charts.js" %}"></script>
     <script src="{% static "js/jquery.flot.min.js" %}"></script>
@@ -73,8 +79,25 @@
             </div> <!--end accordion-->
 
         </div> <!--end filter container-->
+		<div class="span7">
+			<div class="row-fluid">
+				<div id="trend-chart"  class="span12"></div>
+			</div>
+			<div class="row-fluid">
 
-            <div id="trend-chart"  class="span7"></div>
+				<div id="data-container"  class="span12">
+					<div class="well">
+						<h3>Raw Data</h3>
+						<span class="pull-right"><a><i class="icon-download"></i> Export to csv</a></span>
+						<table id="data-table" class="table table-bordered table-condensed table-striped">
+							<thead></thead>
+							<tbody></tbody>
+							<tfoot></tfoot>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
 
         <div class="span2">
 			<div class="well">
