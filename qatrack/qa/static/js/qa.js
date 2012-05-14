@@ -45,7 +45,7 @@ function initialize_qa(){
     //store ids and names for all composite tests
     $('.qa-testtype[value="composite"]').each(function(){
         var row = $(this).parents(".qa-valuerow");
-        var test_id = row.find('input[name$="test_list_test"]').val();
+        var test_id = row.find('input[name$="-test"]').val();
         var name = row.find('.qa-contextname').val();
         composite_ids[name] = test_id;
     });

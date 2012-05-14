@@ -587,11 +587,11 @@ def test_added_to_list(*args,**kwargs):
     been executed. See http://stackoverflow.com/questions/1925383/issue-with-manytomany-relationships-not-updating-inmediatly-after-save
     """
 
-    if kwargs["created"]:
-        tlm = kwargs["instance"]
-        unit_test_lists = UnitTestLists.objects.filter(test_lists=tlm.test_list)
-        for utl in unit_test_lists:
-            UnitTestInfo.objects.get_or_create(unit=utl.unit, test=tlm.test)
+
+    tlm = kwargs["instance"]
+    unit_test_lists = UnitTestLists.objects.filter(test_lists=tlm.test_list)
+    for utl in unit_test_lists:
+        UnitTestInfo.objects.get_or_create(unit=utl.unit, test=tlm.test)
 
 
 ##============================================================================

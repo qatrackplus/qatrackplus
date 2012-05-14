@@ -10,6 +10,7 @@ from qatrack.qa import models
 from qatrack.units.models import Unit, UnitType
 from qatrack import settings
 import forms
+import math
 
 #TODO: Move location of qa/template.html templates (up one level)
 
@@ -73,7 +74,8 @@ class CompositeCalculation(JSONResponseMixin, View):
             #is no potential conflicts between different composite tests
             self.set_calculation_context()
             try:
-                exec procedure in self.calculation_context
+                code = compile(procedure,"<string>","exec")
+                exec code in self.calculation_context
                 results[name] = {
                     'value':self.calculation_context.pop("result"),
                     'error':None
@@ -87,8 +89,9 @@ class CompositeCalculation(JSONResponseMixin, View):
     def set_calculation_context(self):
         """set up the environment that the composite test will be calculated in"""
 
-        #TODO: at the minimum we need to define some basic tests (mean, stddev etc)
-        self.calculation_context = {}
+        self.calculation_context = {
+            'math':math,
+        }
 
         for short_name,info in self.values.iteritems():
             val = info["current_value"]
