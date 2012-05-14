@@ -19,7 +19,7 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'db/remodel.db',                      # Or path to database file if using sqlite3.
+        'NAME': 'db/reorg.db',                      # Or path to database file if using sqlite3.
         'USER': '',                      # Not used with sqlite3.
         'PASSWORD': '',                  # Not used with sqlite3.
         'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
@@ -113,7 +113,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'middleware.login_required.LoginRequiredMiddleware',
+    'qatrack.middleware.login_required.LoginRequiredMiddleware',
 )
 
 ROOT_URLCONF = 'qatrack.urls'
@@ -132,7 +132,7 @@ TEMPLATE_DIRS = (
 
 TEMPLATE_CONTEXT_PROCESSORS = list(DEFAULT_SETTINGS.TEMPLATE_CONTEXT_PROCESSORS)
 TEMPLATE_CONTEXT_PROCESSORS += [
-    "context_processors.site",
+    "qatrack.context_processors.site",
 ]
 
 #you can add more fixture
@@ -154,11 +154,11 @@ INSTALLED_APPS = (
     'tastypie',
 
     #qatrack specific
+    #'qatrack.qatrack_tags',
     'qatrack.units',
     'qatrack.qa',
-    'registration',
-    'pinax_theme_bootstrap',
-    'data_tables',
+    'qatrack.theme_bootstrap',
+    'qatrack.data_tables',
 )
 
 # A sample logging configuration. The only tangible logging

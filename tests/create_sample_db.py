@@ -149,7 +149,7 @@ def create_task_lists():
 
     for name,slug,desc,freq,act,units,user in task_lists:
         for unit in units:
-            tl = models.TaskList(
+            tl = models.TestList(
                 name="%s %s"%(unit.name,name),
                 slug="%s_%s"%(unit.name,slug),
                 description=desc,
@@ -180,9 +180,9 @@ def create_task_list_items():
     )
 
     for name, slug, desc, proc, ttype,calc, cat,user in task_list_items:
-        if models.TaskListItem.objects.filter(short_name=slug).count()>0:
+        if models.Test.objects.filter(short_name=slug).count()>0:
             continue
-        tli = models.TaskListItem(
+        tli = models.Test(
             name=name,
             short_name=slug,
             description=desc,
@@ -200,7 +200,7 @@ def create_task_list_items():
 #----------------------------------------------------------------------
 def create_memberships():
     tomos = Unit.objects.filter(type__name="Tomotherapy")
-    task_lists = models.TaskList.objects.filter(unit__in=tomos)
+    task_lists = models.TestList.objects.filter(unit__in=tomos)
 
 
     members = (
@@ -213,13 +213,13 @@ def create_memberships():
 
 
     for order, (item_name, ref_name, tol_name) in enumerate(members):
-        item = models.TaskListItem.objects.get(short_name=item_name)
+        test = models.Test.objects.get(short_name=item_name)
         ref = models.Reference.objects.get(name=ref_name)
         tol = models.Tolerance.objects.get(name=tol_name)
 
         for task_list in task_lists:
-            m = models.TaskListMembership(
-                task_list_item=item,
+            m = models.TestListMembership(
+                task_list_item=test,
                 task_list=task_list,
                 task_list_item_order = order,
                 reference = ref,
@@ -234,16 +234,16 @@ def create_memberships():
 
 #----------------------------------------------------------------------
 def create_data():
-    tomo_morning = models.TaskList.objects.get(slug="Unit01_tomo_morning")
+    tomo_morning = models.TestList.objects.get(slug="Unit01_tomo_morning")
     bob = django.contrib.auth.models.User.objects.get(username="bobw")
-    task_lists = models.TaskList.objects.all()
+    task_lists = models.TestList.objects.all()
 
     for task_list in task_lists:
         print task_list
         for i in range(10):
             print i
             date = datetime.datetime.today() + datetime.timedelta(hours=24*i)
-            task_list_instance = models.TaskListInstance(
+            task_list_instance = models.TestListInstance(
                 task_list=task_list,
                 created=date,
                 modified=date,
@@ -252,8 +252,8 @@ def create_data():
             )
             task_list_instance.save()
 
-            for membership in task_list.tasklistmembership_set.all():
-                tli = membership.task_list_item
+            for membership in task_list.testlistmembership_set.all():
+                tli = membership.test
                 ref = membership.reference
                 tol = membership.tolerance
                 if tli.is_boolean():
@@ -262,7 +262,7 @@ def create_data():
                         value = not value
                 else:
                     value = random.gauss(ref.value,tol.tol_high/2.3548)
-                instance = models.TaskListItemInstance(
+                instance = models.TestInstance(
                     skipped=False,
                     value = value,
                     reference=ref,

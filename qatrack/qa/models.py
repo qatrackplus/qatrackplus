@@ -37,14 +37,14 @@ FREQUENCY_DELTAS = {
     ANNUAL:timezone.timedelta(days=365),
 }
 
-#task_types
+#test_types
 BOOLEAN = "boolean"
 NUMERICAL = "numerical"
 SIMPLE = "simple"
 CONSTANT = "constant"
 COMPOSITE = "composite"
 
-TASK_TYPE_CHOICES = (
+TEST_TYPE_CHOICES = (
     (BOOLEAN, "Boolean"),
     (SIMPLE, "Simple Numerical"),
     (CONSTANT, "Constant"),
@@ -55,6 +55,15 @@ TASK_TYPE_CHOICES = (
 ABSOLUTE = "absolute"
 PERCENT = "percent"
 
+TOL_TYPE_CHOICES = (
+    (ABSOLUTE, "Absolute"),
+    (PERCENT, "Percentage"),
+)
+
+REF_TYPE_CHOICES = (
+    (NUMERICAL, "Numerical"),
+    (BOOLEAN, "Yes / No")
+)
 
 #status choices
 UNREVIEWED = "unreviewed"
@@ -87,17 +96,11 @@ PASS_FAIL_CHOICES = (
 EPSILON = 1E-10
 #============================================================================
 class Reference(models.Model):
-    """Reference values for various QA :model:`TaskListItem`s"""
-
-    TYPE_CHOICES = ((NUMERICAL, "Numerical"), (BOOLEAN, "Yes / No"))
-
+    """Reference values for various QA :model:`Test`s"""
 
     name = models.CharField(max_length=50, help_text=_("Enter a short name for this reference"))
-    ref_type = models.CharField(max_length=15, choices=TYPE_CHOICES,default="numerical")
+    type = models.CharField(max_length=15, choices=REF_TYPE_CHOICES,default="numerical")
     value = models.FloatField(help_text=_("For Yes/No tests, enter 1 for Yes and 0 for No"))
-
-    #units = models.ManyToManyField(Unit, help_text=_("Which units is this reference valid for"))
-    #task_list_item = models.ForeignKey(TaskListItem, help_text=_("Which task list item is this reference for"))
 
     #who created this reference
     created = models.DateTimeField(auto_now_add=True)
@@ -107,12 +110,10 @@ class Reference(models.Model):
     modified = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(User,editable=False,related_name="reference_modifiers")
 
-
-
     #---------------------------------------------------------------------------
     def __unicode__(self):
         """more helpful interactive display name"""
-        if self.ref_type == "yes_no":
+        if self.type == "yes_no":
             if self.value == 1:
                 return self.name
             elif self.value == 0:
@@ -128,9 +129,8 @@ class Tolerance(models.Model):
     Model/methods for checking whether a value lies within tolerance
     and action levels
     """
-    TYPE_CHOICES = ((ABSOLUTE, "Absolute"),(PERCENT, "Percentage"),)
     name = models.CharField(max_length=50, unique=True, help_text=_("Enter a short name for this tolerance type"))
-    type = models.CharField(max_length=20, help_text=_("Select whether this will be an absolute or relative tolerance criteria"),choices=TYPE_CHOICES)
+    type = models.CharField(max_length=20, help_text=_("Select whether this will be an absolute or relative tolerance criteria"),choices=TOL_TYPE_CHOICES)
     act_low = models.FloatField(verbose_name="Action Low", help_text=_("Absolute value of lower action level"), null=True)
     tol_low = models.FloatField(verbose_name="Tolerance Low", help_text=_("Absolute value of lower tolerance level"), null=True)
     tol_high = models.FloatField(verbose_name="Tolerance High", help_text=_("Absolute value of upper tolerance level"), null=True)
@@ -164,7 +164,7 @@ class Tolerance(models.Model):
     def test_instance(self,instance,reference):
         """compare a value to reference and determine whether it passes/fails"""
 
-        if instance.task_list_item.is_boolean():
+        if instance.test.is_boolean():
             return self.test_boolean(instance,reference)
 
         if self.type == ABSOLUTE:
@@ -185,7 +185,7 @@ class Tolerance(models.Model):
 
 #============================================================================
 class Category(models.Model):
-    """A model used for categorizing :model:`TaskListItem`s"""
+    """A model used for categorizing :model:`Test`s"""
 
     name = models.CharField(max_length=256, unique=True)
     slug = models.SlugField(
@@ -206,67 +206,66 @@ class Category(models.Model):
 
 
 #============================================================================
-class TaskListItem(models.Model):
-    """Task list item to be completed as part of a QA :model:`TaskList`"""
+class Test(models.Model):
+    """Test to be completed as part of a QA :model:`TestList`"""
 
     VARIABLE_RE = re.compile("^[a-zA-Z_]+[0-9a-zA-Z_]*$")
     RESULT_RE = re.compile("^result\s*=\s*[(_0-9.a-zA-Z]+.*$",re.MULTILINE)
 
-    name = models.CharField(max_length=256, help_text=_("Name for this task list item"))
+    name = models.CharField(max_length=256, help_text=_("Name for this test"))
     short_name = models.SlugField(max_length=25, help_text=_("A short variable name for this test (to be used in composite calculations)."))
-    description = models.TextField(help_text=_("A concise description of what this task list item is for (optional)"), blank=True,null=True)
+    description = models.TextField(help_text=_("A concise description of what this test is for (optional)"), blank=True,null=True)
     procedure = models.URLField(max_length=512,help_text=_("Link to document describing how to perform this test"), blank=True, null=True)
 
-    task_type = models.CharField(
-        max_length=10, choices=TASK_TYPE_CHOICES, default="boolean",
-        help_text=_("Indicate if this test is a %s" % (','.join(x[1].title() for x in TASK_TYPE_CHOICES)))
+    type = models.CharField(
+        max_length=10, choices=TEST_TYPE_CHOICES, default="boolean",
+        help_text=_("Indicate if this test is a %s" % (','.join(x[1].title() for x in TEST_TYPE_CHOICES)))
     )
+
     constant_value = models.FloatField(help_text=_("Only required for constant value types"), null=True, blank=True)
 
-    category = models.ForeignKey(Category, help_text=_("Choose a category for this task"))
+    category = models.ForeignKey(Category, help_text=_("Choose a category for this test"))
 
     calculation_procedure = models.TextField(null=True, blank=True,help_text=_(
         "For Composite Tests Only: Enter a Python snippet for evaluation of this test. The snippet must define a variable called 'result'."
     ))
 
-    #units = models.ManyToManyField(Unit,help_text=_("Choose which units this task should be performed on"))
-
     #for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)
-    created_by = models.ForeignKey(User, editable=False, related_name="task_list_item_creator")
+    created_by = models.ForeignKey(User, editable=False, related_name="test_creator")
     modified = models.DateTimeField(auto_now=True)
-    modified_by = models.ForeignKey(User, editable=False, related_name="task_list_item_modifier")
+    modified_by = models.ForeignKey(User, editable=False, related_name="test_modifier")
 
     #----------------------------------------------------------------------
     def set_references(self):
         """allow user to go to references in admin interface"""
-        #/admin/qa/tasklistitemunitinfo/?unit__id__exact=1
-        url = "%s?"%urlresolvers.reverse("admin:qa_tasklistitemunitinfo_changelist")
-        item_filter = "task_list_item__id__exact=%d" % self.pk
+
+        url = "%s?"%urlresolvers.reverse("admin:qa_unittestinfo_changelist")
+        test_filter = "test__id__exact=%d" % self.pk
 
         unit_filter = "unit__id__exact=%d"
-        info_set = self.tasklistitemunitinfo_set.all()
-        urls = [(info.unit.name, url+item_filter+"&"+ unit_filter%info.unit.pk) for info in info_set]
+        info_set = self.unittestinfo_set.all()
+        urls = [(info.unit.name, url+test_filter+"&"+ unit_filter%info.unit.pk) for info in info_set]
         link = '<a href="%s">%s</a>'
-        all_link = link%(url+item_filter,"All Units")
+        all_link = link%(url+test_filter,"All Units")
         links = [link % (url,name) for name,url in urls]
 
         return "%s (%s)" %(all_link, ", ".join(links))
     set_references.allow_tags = True
-    set_references.short_description = "Set references and tolerances for this item"
+    set_references.short_description = "Set references and tolerances for this test"
 
     #----------------------------------------------------------------------
     def is_boolean(self):
         """Return whether or not this is a boolean test"""
-        return self.task_type == BOOLEAN
+        return self.type == BOOLEAN
 
     #----------------------------------------------------------------------
     def unit_ref_tol(self,unit):
         """return tuple of (act_low, tol_low, ref, tol_high, act_high)
         where the act_*, tol_* and ref are the current tolerances and references
-        for this (task_list_item,unit) pair
+        for this (test,unit) pair
         """
-        unit_info = TaskListItemUnitInfo.objects.filter(unit=unit,task_list=self)
+        unit_info = UnitTestInfo.objects.filter(unit=unit,test_list=self)
         tol = unit_info.tolerance
         ref = unit_info.reference
 
@@ -287,21 +286,21 @@ class TaskListItem(models.Model):
     #---------------------------------------------------------------------------
     def is_boolean(self):
         """return True if this is a boolean test, otherwise False"""
-        return self.task_type == "boolean"
+        return self.type == "boolean"
 
     #----------------------------------------------------------------------
     def clean_calculation_procedure(self):
         """make sure a valid calculation procedure"""
         errors = []
 
-        if not self.calculation_procedure and self.task_type != COMPOSITE:
+        if not self.calculation_procedure and self.type != COMPOSITE:
             return
 
-        if self.calculation_procedure and self.task_type != COMPOSITE:
-            errors.append(_("Calculation procedure provided, but Task Type is not Composite"))
+        if self.calculation_procedure and self.type != COMPOSITE:
+            errors.append(_("Calculation procedure provided, but Test Type is not Composite"))
 
-        if not self.calculation_procedure and self.task_type == COMPOSITE:
-            errors.append(_("No calculation procedure provided, but Task Type is Composite"))
+        if not self.calculation_procedure and self.type == COMPOSITE:
+            errors.append(_("No calculation procedure provided, but Test Type is Composite"))
 
 
         if not self.RESULT_RE.findall(self.calculation_procedure):
@@ -311,13 +310,13 @@ class TaskListItem(models.Model):
             raise ValidationError({"calculation_procedure":errors})
     #----------------------------------------------------------------------
     def clean_constant_value(self):
-        """make sure a constant value is provided if TaskType is Constant"""
+        """make sure a constant value is provided if TestType is Constant"""
         errors = []
-        if self.constant_value is not None and self.task_type != CONSTANT:
-            errors.append(_("Constant value provided, but Task Type is not constant"))
+        if self.constant_value is not None and self.type != CONSTANT:
+            errors.append(_("Constant value provided, but Test Type is not constant"))
 
-        if self.constant_value is None and self.task_type == CONSTANT:
-            errors.append(_("Task Type is Constant but no constant value provided"))
+        if self.constant_value is None and self.type == CONSTANT:
+            errors.append(_("Test Type is Constant but no constant value provided"))
 
         if errors:
             raise ValidationError({"constant_value":errors})
@@ -335,8 +334,8 @@ class TaskListItem(models.Model):
 
     #----------------------------------------------------------------------
     def clean_fields(self,exclude=None):
-        """extra validation for TaskListItem's"""
-        super(TaskListItem,self).clean_fields(exclude)
+        """extra validation for Tests"""
+        super(Test,self).clean_fields(exclude)
         self.clean_calculation_procedure()
         self.clean_constant_value()
         self.clean_short_name()
@@ -349,9 +348,9 @@ class TaskListItem(models.Model):
 
 
 #============================================================================
-class TaskListItemUnitInfo(models.Model):
+class UnitTestInfo(models.Model):
     unit = models.ForeignKey(Unit)
-    task_list_item = models.ForeignKey(TaskListItem)
+    test = models.ForeignKey(Test)
     reference = models.ForeignKey(Reference,verbose_name=_("Current Reference"),null=True, blank=True)
     tolerance = models.ForeignKey(Tolerance,null=True, blank=True)
     active = models.BooleanField(default=True)
@@ -359,13 +358,13 @@ class TaskListItemUnitInfo(models.Model):
     #============================================================================
     class Meta:
         verbose_name_plural = "Set References & Tolerances"
-        unique_together = ["task_list_item","unit"]
+        unique_together = ["test","unit"]
 
 #============================================================================
-class TaskListMembership(models.Model):
-    """Keep track of ordering for tasklistitems within a task list"""
-    task_list = models.ForeignKey("TaskList")
-    task_list_item = models.ForeignKey(TaskListItem)
+class TestListMembership(models.Model):
+    """Keep track of ordering for tests within a test list"""
+    test_list = models.ForeignKey("TestList")
+    test = models.ForeignKey(Test)
     order = models.IntegerField()
 
     class Meta:
@@ -373,19 +372,19 @@ class TaskListMembership(models.Model):
 
     #----------------------------------------------------------------------
     def __unicode__(self):
-        return self.task_list_item.name
+        return self.test.name
 
 #============================================================================
-class TaskList(models.Model):
-    """Container for a collection of QA :model:`TaskListItem`s"""
+class TestList(models.Model):
+    """Container for a collection of QA :model:`Test`s"""
 
     name = models.CharField(max_length=256)
     slug = models.SlugField(unique=True, help_text=_("A short unique name for use in the URL of this list"))
-    description = models.TextField(help_text=_("A concise description of this task checklist"))
+    description = models.TextField(help_text=_("A concise description of this test checklist"))
 
     active = models.BooleanField(help_text=_("Uncheck to disable this list"), default=True)
 
-    task_list_items = models.ManyToManyField("TaskListItem", help_text=_("Which task list items does this list contain"),through=TaskListMembership)
+    tests = models.ManyToManyField("Test", help_text=_("Which tests does this list contain"),through=TestListMembership)
 
     sublists = models.ManyToManyField("self",
         symmetrical=False,null=True, blank=True,
@@ -394,35 +393,35 @@ class TaskList(models.Model):
 
     #for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)
-    created_by = models.ForeignKey(User, related_name="task_list_creator", editable=False)
+    created_by = models.ForeignKey(User, related_name="test_list_creator", editable=False)
     modified = models.DateTimeField(auto_now=True)
-    modified_by = models.ForeignKey(User, related_name="task_list_modifier", editable=False)
+    modified_by = models.ForeignKey(User, related_name="test_list_modifier", editable=False)
 
     #----------------------------------------------------------------------
     def last_completed_instance(self,unit):
-        """return the last instance of this task list that was performed"""
+        """return the last instance of this test list that was performed"""
         try:
-            return self.tasklistinstance_set.filter(unit=unit).latest("work_completed")
-        except TaskListInstance.DoesNotExist:
+            return self.testlistinstance_set.filter(unit=unit).latest("work_completed")
+        except TestListInstance.DoesNotExist:
             return None
     #----------------------------------------------------------------------
-    def all_items(self):
-        """returns all task list items from this list and sublists"""
-        items = [m.task_list_item for m in self.tasklistmembership_set.all()]
+    def all_tests(self):
+        """returns all tests from this list and sublists"""
+        tests = [m.test for m in self.testlistmembership_set.all()]
         for sublist in self.sublists.all():
-            items.extend(sublist.all_items())
+            tests.extend(sublist.all_tests())
 
-        return items
+        return tests
     #----------------------------------------------------------------------
     def set_references(self):
         """allow user to go to references in admin interface"""
-        #/admin/qa/tasklistitemunitinfo/?unit__id__exact=1
-        url = "%s?"%urlresolvers.reverse("admin:qa_tasklistitemunitinfo_changelist")
-        item_filter = "task_list_item__id__in=%s" % (','.join(["%d" % item.pk for item in self.all_items()]))
+        #/admin/qa/unittestinfo/?unit__id__exact=1
+        url = "%s?"%urlresolvers.reverse("admin:qa_unittestinfo_changelist")
+        test_filter = "test__id__in=%s" % (','.join(["%d" % test.pk for test in self.all_tests()]))
 
         unit_filter = "unit__id__exact=%d"
-        unit_info_set = self.unittasklists_set.all()
-        urls = [(info.unit.name, url+item_filter+"&"+ unit_filter%info.unit.pk) for info in unit_info_set]
+        unit_info_set = self.unittestlists_set.all()
+        urls = [(info.unit.name, url+test_filter+"&"+ unit_filter%info.unit.pk) for info in unit_info_set]
         link = '<a href="%s">%s</a>'
         links = [link % (url,name) for name,url in urls]
 
@@ -433,31 +432,31 @@ class TaskList(models.Model):
     #----------------------------------------------------------------------
     def __unicode__(self):
         """return display representation of object"""
-        return "TaskList(%s)" % self.name
+        return "TestList(%s)" % self.name
 
 #----------------------------------------------------------------------
 #When a new Unit is created, this function will automatically
-#create a UnitTaskList object for each available frequency
+#create a UnitTestList object for each available frequency
 #so that it doesn't have to be done manually through the admin
 #interface
 @receiver(post_save,sender=Unit)
 def new_unit_created(*args, **kwargs):
-    """Initialize UnitTaskLists for a new Unit"""
+    """Initialize UnitTestLists for a new Unit"""
     if not kwargs["created"]:
         return
 
     unit = kwargs["instance"]
 
     for freq,_ in FREQUENCY_CHOICES:
-        unit_task_lists_freq = UnitTaskLists(
+        unit_test_lists_freq = UnitTestLists(
             frequency = freq,
             unit = unit
         )
-        unit_task_lists_freq.save()
+        unit_test_lists_freq.save()
 
 
 #============================================================================
-class UnitTaskListManager(models.Manager):
+class UnitTestListManager(models.Manager):
     #----------------------------------------------------------------------
     def by_unit(self,unit):
         return self.get_query_set().filter(unit=unit)
@@ -469,13 +468,13 @@ class UnitTaskListManager(models.Manager):
         return self.by_frequency(frequency).filter(unit=unit)
 
 #----------------------------------------------------------------------
-def due_date(unit,task_list):
-    """return the next due date of a task_list for a given unit"""
-    unit_task_list = UnitTaskLists.objects.get(
-        unit = unit, task_lists__pk = task_list.pk
+def due_date(unit,test_list):
+    """return the next due date of a test_list for a given unit"""
+    unit_test_list = UnitTestLists.objects.get(
+        unit = unit, test_lists__pk = test_list.pk
     )
-    last_instance = task_list.last_completed_instance(unit)
-    delta = FREQUENCY_DELTAS[unit_task_list.frequency]
+    last_instance = test_list.last_completed_instance(unit)
+    delta = FREQUENCY_DELTAS[unit_test_list.frequency]
     if last_instance:
         return last_instance.work_completed + delta
     return timezone.now()
@@ -483,8 +482,8 @@ def due_date(unit,task_list):
 
 
 #============================================================================
-class UnitTaskLists(models.Model):
-    """keeps track of which units should perform which task lists at a given frequency"""
+class UnitTestLists(models.Model):
+    """keeps track of which units should perform which test lists at a given frequency"""
 
     unit = models.ForeignKey(Unit,editable=False)
 
@@ -493,44 +492,44 @@ class UnitTaskLists(models.Model):
         help_text=_("Frequency with which this test is to be performed")
     )
 
-    task_lists = models.ManyToManyField(TaskList,null=True, blank=True)
+    test_lists = models.ManyToManyField(TestList,null=True, blank=True)
 
-    cycles = models.ManyToManyField("TaskListCycle", null=True, blank=True)
+    cycles = models.ManyToManyField("TestListCycle", null=True, blank=True)
 
-    objects = UnitTaskListManager()
+    objects = UnitTestListManager()
 
     class Meta:
         unique_together = ("frequency", "unit",)
-        verbose_name_plural = _("Choose Unit Task Lists")
+        verbose_name_plural = _("Choose Unit Test Lists")
 
     #----------------------------------------------------------------------
-    def all_task_lists(self,with_last_instance=False):
-        """return all task lists from task_lists and cycles """
+    def all_test_lists(self,with_last_instance=False):
+        """return all test lists from test_lists and cycles """
 
-        task_lists = list(self.task_lists.all())
+        test_lists = list(self.test_lists.all())
         for cycle in self.cycles.all():
-            task_lists.extend(list(cycle.task_lists.all()))
+            test_lists.extend(list(cycle.test_lists.all()))
 
         if not with_last_instance:
-            return task_lists
+            return test_lists
         else:
-            return [(tl,tl.last_completed_instance(self.unit)) for tl in task_lists]
+            return [(tl,tl.last_completed_instance(self.unit)) for tl in test_lists]
     #----------------------------------------------------------------------
-    def task_lists_and_last_complete(self):
-        return [(tl,tl.last_completed_instance(self.unit)) for tl in self.task_lists.all()]
+    def test_lists_and_last_complete(self):
+        return [(tl,tl.last_completed_instance(self.unit)) for tl in self.test_lists.all()]
     #----------------------------------------------------------------------
     def cycles_and_last_complete(self):
         """return all cycle objects and last complete instance of each cycle"""
         return [(c,c.last_completed_instance(self.unit)) for c in self.cycles.all()]
     #----------------------------------------------------------------------
-    def task_lists_cycles_and_last_complete(self):
+    def test_lists_cycles_and_last_complete(self):
         """return all cycle objects and last complete instance of each cycle"""
-        return self.task_lists_and_last_complete() + self.cycles_and_last_complete()
+        return self.test_lists_and_last_complete() + self.cycles_and_last_complete()
     #----------------------------------------------------------------------
     def lists_and_cycles(self):
         """"""
-        for task_list in self.task_lists.all():
-            yield task_list
+        for test_list in self.test_lists.all():
+            yield test_list
         for cycle in self.cycles.all():
             yield cycle
 
@@ -547,74 +546,71 @@ class UnitTaskLists(models.Model):
 
 
 #----------------------------------------------------------------------
-def create_tasklistitemunitinfos(task_list,unit):
-    """Create TaskListItemUnitInfo objects to hold references and tolerances
-    for all task list items in a task list that was just added to a Unit
+def create_unittestinfos(test_list,unit):
+    """Create UnitTestInfo objects to hold references and tolerances
+    for all tests in a test list that was just added to a Unit
     """
 
-    for task_list_item in task_list.all_items():
-        TaskListItemUnitInfo.objects.get_or_create(
-            unit = unit,
-            task_list_item = task_list_item,
-        )
+    for test in test_list.all_tests():
+        UnitTestInfo.objects.get_or_create(unit = unit,test = test)
 
 #----------------------------------------------------------------------
-@receiver(m2m_changed, sender=UnitTaskLists.cycles.through)
+@receiver(m2m_changed, sender=UnitTestLists.cycles.through)
 def unit_cycle_change(*args,**kwargs):
-    """When a task list cycle is assigned to a unit, ensure there is a
-    TaskListItemUnitInfo for every task_list_item/unit pair
+    """When a test list cycle is assigned to a unit, ensure there is a
+    UnitTestInfo for every test/unit pair
     """
     if kwargs["action"] == "post_add":
         utl = kwargs["instance"]
         for cycle in utl.cycles.all():
-            for task_list in cycle.task_lists.all():
-                create_tasklistitemunitinfos(task_list,utl.unit)
+            for test_list in cycle.test_lists.all():
+                create_unittestinfos(test_list,utl.unit)
 
 #----------------------------------------------------------------------
-@receiver(m2m_changed, sender=UnitTaskLists.task_lists.through)
-def unit_task_list_change(*args,**kwargs):
-    """When a task list is assigned to a unit, ensure there is a
-    TaskListItemUnitInfo for every task_list_item/unit pair
+@receiver(m2m_changed, sender=UnitTestLists.test_lists.through)
+def unit_test_list_change(*args,**kwargs):
+    """When a test list is assigned to a unit, ensure there is a
+    UnitTestInfo for every test/unit pair
     """
     if kwargs["action"] == "post_add":
         utl = kwargs["instance"]
-        for task_list in utl.task_lists.all():
-            create_tasklistitemunitinfos(task_list,utl.unit)
+        for test_list in utl.test_lists.all():
+            create_unittestinfos(test_list,utl.unit)
 #----------------------------------------------------------------------
-@receiver(m2m_changed, sender=TaskList.task_list_items.through)
-def task_list_change(*args,**kwargs):
-    """make sure there are UnitTaskListInfo infos for all task list items (1)
+@receiver(m2m_changed, sender=TestList.tests.through)
+def test_list_change(*args,**kwargs):
+    """make sure there are UnitTestListInfo infos for all tests (1)
     and verify that there are no duplicate short names
 
-    (1) Note that this can't be done in the TaskList.save method because the
+    (1) Note that this can't be done in the TestList.save method because the
     many to many relationships are not updated until after the save method has
     been executed. See http://stackoverflow.com/questions/1925383/issue-with-manytomany-relationships-not-updating-inmediatly-after-save
     """
 
     if kwargs["action"] == "post_add":
-        task_list = kwargs["instance"]
-        unit_task_lists = UnitTaskLists.objects.filter(task_lists=task_list)
-        for utl in unit_task_lists:
-            create_tasklistitemunitinfos(task_list,utl.unit)
+        test_list = kwargs["instance"]
+        unit_test_lists = UnitTestLists.objects.filter(test_lists=test_list)
+        for utl in unit_test_lists:
+            create_unittestinfos(test_list,utl.unit)
     elif kwargs["action"] == "pre_add":
-        task_list = kwargs["instance"]
+        test_list = kwargs["instance"]
 
 #----------------------------------------------------------------------
 def test_bool(value,reference):
     """check whether a boolean value """
 
 ##============================================================================
-class TaskListItemInstance(models.Model):
-    """Measured instance of a :model:`TaskListItem`"""
+class TestInstance(models.Model):
+    """Measured instance of a :model:`Test`"""
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, editable=False)
 
     pass_fail = models.CharField(max_length=20, choices=PASS_FAIL_CHOICES,editable=False)
 
     #values set by user
-    value = models.FloatField(help_text=_("For boolean TaskListItems a value of 0 equals False and any non zero equals True"), null=True)
+    value = models.FloatField(help_text=_("For boolean Tests a value of 0 equals False and any non zero equals True"), null=True)
     skipped = models.BooleanField(help_text=_("Was this test skipped for some reason (add comment)"))
-    comment = models.TextField(help_text=_("Add a comment to this task"), null=True, blank=True)
+    comment = models.TextField(help_text=_("Add a comment to this test"), null=True, blank=True)
 
 
     #reference used
@@ -623,8 +619,8 @@ class TaskListItemInstance(models.Model):
 
     unit = models.ForeignKey(Unit,editable=False)
 
-    task_list_instance = models.ForeignKey("TaskListInstance",editable=False)
-    task_list_item = models.ForeignKey(TaskListItem)
+    test_list_instance = models.ForeignKey("TestListInstance",editable=False)
+    test = models.ForeignKey(Test)
 
     work_completed = models.DateTimeField(default=timezone.now,
         help_text=settings.DATETIME_HELP,
@@ -633,9 +629,9 @@ class TaskListItemInstance(models.Model):
 
     #for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)
-    created_by = models.ForeignKey(User, editable=False, related_name="task_list_item_instance_creator")
+    created_by = models.ForeignKey(User, editable=False, related_name="test_instance_creator")
     modified = models.DateTimeField(auto_now=True)
-    modified_by = models.ForeignKey(User, editable=False, related_name="task_list_item_instance_modifier")
+    modified_by = models.ForeignKey(User, editable=False, related_name="test_instance_modifier")
 
     class Meta:
         ordering = ("work_completed",)
@@ -647,7 +643,7 @@ class TaskListItemInstance(models.Model):
         if not self.status:
             self.status = self.UNREVIEWED
         self.calculate_pass_fail()
-        super(TaskListItemInstance,self).save(*args,**kwargs)
+        super(TestInstance,self).save(*args,**kwargs)
     #----------------------------------------------------------------------
     def calculate_pass_fail(self):
         """set pass/fail status of the current value"""
@@ -663,31 +659,31 @@ class TaskListItemInstance(models.Model):
     def __unicode__(self):
         """return display representation of object"""
         try :
-            return "TaskListItemInstance(item=%s)" % self.task_list_item.name
+            return "TestInstance(test=%s)" % self.test.name
         except :
-            return "TaskListItemInstance(Empty)"
+            return "TestInstance(Empty)"
 
 
 #============================================================================
-class TaskListInstance(models.Model):
-    """Container for a collection of QA :model:`TaskListItemInstance`s
+class TestListInstance(models.Model):
+    """Container for a collection of QA :model:`TestInstance`s
 
-    When a user completes a task list, a collection of :model:`TaskListItemInstance`s
-    are created.  TaskListInstance acts as a containter for the collection
+    When a user completes a test list, a collection of :model:`TestInstance`s
+    are created.  TestListInstance acts as a containter for the collection
     of values so that they are grouped together and can be queried easily.
 
     """
 
-    task_list = models.ForeignKey(TaskList, editable=False)
+    test_list = models.ForeignKey(TestList, editable=False)
     unit = models.ForeignKey(Unit,editable=False)
 
     work_completed = models.DateTimeField(default=timezone.now)
 
     #for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)
-    created_by = models.ForeignKey(User, editable=False, related_name="task_list_instance_creator")
+    created_by = models.ForeignKey(User, editable=False, related_name="test_list_instance_creator")
     modified = models.DateTimeField(auto_now=True)
-    modified_by = models.ForeignKey(User, editable=False, related_name="task_list_instance_modifier")
+    modified_by = models.ForeignKey(User, editable=False, related_name="test_list_instance_modifier")
 
     class Meta:
         ordering = ("work_completed",)
@@ -696,14 +692,14 @@ class TaskListInstance(models.Model):
     #----------------------------------------------------------------------
     def pass_fail_status(self,formatted=False):
         """return string with pass fail status of this qa instance"""
-        status = [(status,display,self.tasklistiteminstance_set.filter(pass_fail=status)) for status,display in PASS_FAIL_CHOICES]
+        status = [(status,display,self.testinstance_set.filter(pass_fail=status)) for status,display in PASS_FAIL_CHOICES]
         if not formatted:
             return status
         return " ".join(["%d %s" %(s.count(),d) for _,d,s in status])
     #----------------------------------------------------------------------
     def status(self,formatted=False):
         """return string with review status of this qa instance"""
-        status = [(status,display,self.tasklistiteminstance_set.filter(status=status)) for status,display in STATUS_CHOICES]
+        status = [(status,display,self.testinstance_set.filter(status=status)) for status,display in STATUS_CHOICES]
         if not formatted:
             return status
         return " ".join(["%d %s" %(s.count(),d) for _,d,s in status])
@@ -712,9 +708,9 @@ class TaskListInstance(models.Model):
     def __unicode__(self):
         """more helpful interactive display name"""
         try:
-            return "TaskListInstance(task_list=%s)"%self.task_list.name
+            return "TestListInstance(test_list=%s)"%self.test_list.name
         except:
-            return "TaskListInstance(Empty)"
+            return "TestListInstance(Empty)"
 
 
 #============================================================================
@@ -730,48 +726,48 @@ class CycleManager(models.Manager):
         return self.get_query_set().filter(units__in=[unit],frequency=frequency)
 
 #============================================================================
-class TaskListCycle(models.Model):
-    """A basic model for creating a collection of task lists that cycle
+class TestListCycle(models.Model):
+    """A basic model for creating a collection of test lists that cycle
     based on the list that was last completed
 
     NOTE: Currently only supports daily rotation. Support for rotation
     at different frequencies may be added sometime in the future.
     """
 
-    name = models.CharField(max_length=256,help_text=_("The name for this task list cycle"))
+    name = models.CharField(max_length=256,help_text=_("The name for this test list cycle"))
 
-    task_lists = models.ManyToManyField(TaskList,through="TaskListCycleMembership")
-    frequency = models.CharField(max_length=10, choices=FREQUENCY_CHOICES, help_text=_("Frequency with which this task list is cycled"))
+    test_lists = models.ManyToManyField(TestList,through="TestListCycleMembership")
+    frequency = models.CharField(max_length=10, choices=FREQUENCY_CHOICES, help_text=_("Frequency with which this test list is cycled"))
 
     objects = CycleManager()
 
     #----------------------------------------------------------------------
     def __len__(self):
-        """return the number of task_lists"""
+        """return the number of test_lists"""
         if self.pk:
-            return self.task_lists.count()
+            return self.test_lists.count()
         else:
             return 0
 
     #----------------------------------------------------------------------
     def first(self):
         """return first in order membership object for this cycle"""
-        return TaskListCycleMembership.objects.get(cycle=self, order=0)
+        return TestListCycleMembership.objects.get(cycle=self, order=0)
     #----------------------------------------------------------------------
     def last_completed(self,unit):
-        """return the membership object of the last completed task_list
+        """return the membership object of the last completed test_list
         for this object.
         """
 
         try:
-            last_tli = TaskListInstance.objects.filter(
+            last_tli = TestListInstance.objects.filter(
                 unit=unit,
-                task_list__in=self.task_lists.all()
+                test_list__in=self.test_lists.all()
             ).latest("work_completed")
 
-            last = TaskListCycleMembership.objects.get(
+            last = TestListCycleMembership.objects.get(
                 cycle=self,
-                task_list=last_tli.task_list
+                test_list=last_tli.test_list
             )
 
         except:
@@ -780,32 +776,32 @@ class TaskListCycle(models.Model):
         return last
     #----------------------------------------------------------------------
     def next_for_unit(self,unit):
-        """return membership object containing next task list to be completed"""
+        """return membership object containing next test list to be completed"""
 
         last_completed = self.last_completed(unit)
         if not last_completed:
             return self.first()
 
-        ntask_lists = self.task_lists.count()
+        ntest_lists = self.test_lists.count()
         next_order = last_completed.order + 1
 
-        if next_order >= ntask_lists:
+        if next_order >= ntest_lists:
             return self.first()
 
-        return TaskListCycleMembership.objects.get(cycle=self, order=next_order)
+        return TestListCycleMembership.objects.get(cycle=self, order=next_order)
     #----------------------------------------------------------------------
     def membership_by_order(self,order):
         """return membership for unit with given order"""
-        return TaskListCycleMembership.objects.get(cycle=self, order=order)
+        return TestListCycleMembership.objects.get(cycle=self, order=order)
     #----------------------------------------------------------------------
     def last_completed_instance(self, unit):
-        """return the last instance of this task list that was performed
+        """return the last instance of this test list that was performed
         for a given Unit or None if it has never been performed"""
 
         try:
-            return TaskListInstance.objects.filter(
+            return TestListInstance.objects.filter(
                 unit=unit,
-                task_list__in=self.task_lists.all()
+                test_list__in=self.test_lists.all()
             ).latest("work_completed")
         except self.DoesNotExist:
             return None
@@ -816,11 +812,11 @@ class TaskListCycle(models.Model):
 
 
 #============================================================================
-class TaskListCycleMembership(models.Model):
-    """M2M model for ordering of task lists within cycle"""
+class TestListCycleMembership(models.Model):
+    """M2M model for ordering of test lists within cycle"""
 
-    task_list = models.ForeignKey(TaskList)
-    cycle = models.ForeignKey(TaskListCycle)
+    test_list = models.ForeignKey(TestList)
+    cycle = models.ForeignKey(TestListCycle)
     order = models.IntegerField()
 
     class Meta:

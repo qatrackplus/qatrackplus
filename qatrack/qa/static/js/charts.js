@@ -1,7 +1,9 @@
-var task_list_data = {};
+"use strict";
+
+var test_list_data = {};
 var main_graph;
 var previous_point = null;
-var task_list_members = {}; //short names of task list items belonging to task lists
+var test_list_members = {}; //short names of test list tests belonging to test lists
 
 
 /*************************************************************************/
@@ -16,7 +18,7 @@ function get_checked(container){
 /*************************************************************************/
 //get all filters for data request
 function get_filters(){
-    var short_names = get_checked("#task-list-item-filter");
+    var short_names = get_checked("#test-filter");
     var units = get_checked("#unit-filter");
     var review_status = get_checked("#review-status-filter");
     return {
@@ -176,7 +178,7 @@ function update(){
     if ((filters.units === "") || (filters.short_names === "")){
         return;
     }
-    QAUtils.task_list_item_values(filters, function(results_data,status,jqXHR,url){
+    QAUtils.test_values(filters, function(results_data,status,jqXHR,url){
         create_data_table(results_data.objects,url);
 
         var main_graph_series = [];
@@ -209,8 +211,8 @@ function setup_filters(on_complete){
             to_check : ["all"]
         },
         {
-            container:"#task-list-filter",
-            resource_name:"tasklist",
+            container:"#test-list-filter",
+            resource_name:"testlist",
             display_property:"name",
             value_property:"slug",
             to_check : ["all"]
@@ -245,7 +247,7 @@ function setup_filters(on_complete){
     $(filters).each(function(idx,filter){
         $(filter.container).html('<i class="icon-time"></i><em>Loading...</em>');
 
-        /*set up task list item filters */
+        /*set up test list test filters */
         QAUtils.get_resources(filter.resource_name,function(resources){
             var options = "";
             $(resources.objects).each(function(index,resource){
@@ -294,65 +296,65 @@ function show_tooltip(x, y, contents) {
     }).appendTo("body").fadeIn(200);
 }
 
-function on_hover(event, pos, item) {
+function on_hover(event, pos, test) {
 
-    if (item) {
-        if (previous_point != item.dataIndex) {
+    if (test) {
+        if (previous_point != test.dataIndex) {
 
-            previous_point = item.dataIndex;
+            previous_point = test.dataIndex;
 
             $("#tooltip").remove();
-            var x = new Date(item.datapoint[0]);
-            var y = item.datapoint[1].toFixed(2);
+            var x = new Date(test.datapoint[0]);
+            var y = test.datapoint[1].toFixed(2);
 
-            show_tooltip(item.pageX, item.pageY, item.series.label + " of " + x + " = " + y);
+            show_tooltip(test.pageX, test.pageY, test.series.label + " of " + x + " = " + y);
         }
     }
     else {
         $("#tooltip").remove();
-        previousPoint = null;
+        previous_point = null;
     }
 }
 
 /************************************************************************/
-//populate global list of task list memberships
-function populate_task_list_members(on_complete){
+//populate global list of test list memberships
+function populate_test_list_members(on_complete){
 
-    QAUtils.get_resources("tasklist",function(task_lists){
-        $.each(task_lists.objects,function(idx,task_list){
-            task_list_members[task_list.slug] = task_list;
+    QAUtils.get_resources("testlist",function(test_lists){
+        $.each(test_lists.objects,function(idx,test_list){
+            test_list_members[test_list.slug] = test_list;
         });
-        //signal we've finished all our tasks
-        var counter=1, ntasks=1
-        on_complete(counter,ntasks);
+        //signal we've finished all our tests
+        var counter=1, ntests=1
+        on_complete(counter,ntests);
     })
 }
 /*************************************************************************/
-//filter the task list items based on user choices
-function filter_task_list_items(){
-    var task_lists = get_checked("#task-list-filter");
-    var task_list_items = [];
+//filter the test list tests based on user choices
+function filter_tests(){
+    var test_lists = get_checked("#test-list-filter");
+    var tests = [];
     var categories = get_checked("#category-filter");
     var frequencies = get_checked("#frequency-filter");
 
     var options = "";
-    $.each(task_list_members,function(name,task_list){
+    $.each(test_list_members,function(name,test_list){
 
-        if ($.inArray(name,task_lists)>=0){
-            $.each(task_list.task_list_items,function(idx,item){
+        if ($.inArray(name,test_lists)>=0){
+            $.each(test_list.tests,function(idx,test){
                 if (
-                    ($.inArray(item.category.slug,categories)>=0) &&
-                    (QAUtils.intersection(frequencies,task_list.frequencies).length>0)
+                    ($.inArray(test.category.slug,categories)>=0) &&
+                    (QAUtils.intersection(frequencies,test_list.frequencies).length>0)
                 ){
 
-                    task_list_items.push(item);
-                    options += '<label class="checkbox"><input type="checkbox"' + ' value="' + item.short_name + '">' + item.name + '</input></label>';
+                    tests.push(test);
+                    options += '<label class="checkbox"><input type="checkbox"' + ' value="' + test.short_name + '">' + test.name + '</input></label>';
                 }
             });
         }
 
     });
-    $("#task-list-item-filter").html(options);
+    $("#test-filter").html(options);
 
 }
 /**************************************************************************/
@@ -362,9 +364,9 @@ function set_options_from_url(){
 
     $.each(options,function(key,value){
         switch(key){
-            case  "task_list_item" :
-                $("#task-list-item-filter input").attr("checked",false);
-                $("#task-list-item-filter input[value="+value+"]").attr("checked","checked");
+            case  "test" :
+                $("#test-filter input").attr("checked",false);
+                $("#test-filter input[value="+value+"]").attr("checked","checked");
             break;
             case "unit":
                 $("#unit-filter input").attr("checked",false);
@@ -405,8 +407,10 @@ $(document).ready(function(){
     //filters are populated asynchronously so we need to wait until that's done
     //before final initialization
     var after_init = function(){
-        filter_task_list_items();
+        filter_tests();
         set_options_from_url();
+        $("#test-collapse").collapse("show");
+
     }
     var async_finished = 0;
     var total_async_tasks = 2;
@@ -417,21 +421,21 @@ $(document).ready(function(){
         }
     };
 
-    //grab all the task list items, tasks, units etc from server
+    //grab all the test list tests, tests, units etc from server
     setup_filters(update_count);
-    populate_task_list_members(update_count);
+    populate_test_list_members(update_count);
 
     //update chart when a data filter changes
-    $("#unit-filter, #task-list-item-filter, #review-status-filter").change(update);
+    $("#unit-filter, #test-filter, #review-status-filter").change(update);
 
-    $("#task-list-filter, #category-filter, #frequency-filter").change(filter_task_list_items);
+    $("#test-list-filter, #category-filter, #frequency-filter").change(filter_tests);
 
     $(".chart-options").change(update);
 
     $(".date").datepicker().on('changeDate',update);
 
     $(".collapse").collapse({selector:true,toggle:true});
-    $("#task-list-item-collapse").collapse("show");
+
 
 
 

@@ -2,8 +2,25 @@
 
 {% load staticfiles %}
 
+{% block extra_script %}
+    <script src="{% static "data_tables/js/jquery.dataTables.js" %}"></script>
+    <script src="{% static "data_tables/js/jquery.dataTables.columnFilter.js" %}"></script>
+	<script src="{% static "data_tables/js/DT_bootstrap.js" %}"></script>
+	<script src="{% static "data_tables/js/DT_sort.js" %}"></script>
+
+    <script src="{% static "js/jquery.flot.min.js" %}"></script>
+    <script src="{% static "js/jquery.flot.resize.js" %}"></script>
+    <script src="{% static "js/jquery.flot.fillbetween.js" %}"></script>
+    <script src="{% static "js/jquery.sparkline.min.js" %}"></script>
+
+	<script src="{% static "js/qautils.js" %}"></script>
+	<script src="{% static "js/qareview.js" %}"></script>
+
+{% endblock %}
+
 {% block extra_style %}
     <link href="{% static "css/qa.css" %}" rel="stylesheet">
+    <link href="{% static "data_tables/css/DT_bootstrap.css" %}" rel="stylesheet">
 {% endblock extra_style %}
 
 {% block body %}
@@ -12,65 +29,62 @@
             <h2>Overall QA Program Status</h2>
         </div>
     </div>
-    <div class="row-fluid" id="qa-review-grid">
-        <div class="span12">
-            <div class="row-fluid">
-                <div class="span1">
-                    <h4>Unit</h4>
-                </div>
-                {% for freq,freq_display in routine_freq %}
-                    <div class="span3">
-                        <h4>{{freq_display}}</h4>
-                        <div class="row-fluid">
-                            <div class="span4">
-                                <h5>TaskList</h5>
-                            </div>
-                            <div class="span4">
-                                <h5>Last Completed</h5>
-                            </div>
-                            <div class="span4 qa-status">
-                                <h5>Status</h5>
-                            </div>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-            {% for unit, unit_freq_lists in unit_lists %}
-                <div class="row-fluid">
-                    <div class="span1">
-                        <strong>{{unit.name}}</strong>
-                    </div>
-                    {% for freq, freq_list in unit_freq_lists %}
-                        <div class="span3">
-                                {% if freq_list %}
-                                {% for task_list, instance in freq_list%}
-                            <div class="row-fluid">
+    <div class="row-fluid" >
+        <div class="span12 container form-inline">
+            <table class="table table-condensed table-bordered table-striped" id="qa-test-list-table">
+                <thead>
+                    <tr>
+                        {% for header in table_headers %}
+							<th>{{header}}</th>
+                        {% endfor %}
+					</tr>
+                </thead>
 
-                                    <div class="span4">
-                                        {{task_list.name}}
-                                    </div>
-                                    <div class="span4">
-                                        {{instance.work_completed}}
-                                    </div>
-                                    <div class="span4">
-                                        {{instance.status}}
-                                    </div>
-                            </div>
+                <tbody>
 
-                                {% endfor %}
-                                {% else %}
-                                <div class="row-fluid">
-                                    <em class="span12">
-                                        Nothing to report
-                                    </em>
-                                </div>
-                                {% endif %}
-                        </div>
+                    {% for row in data %}
+                        <tr class="{% cycle 'odd' 'even' %}" {% for k,v in row.info.items %} data-{{k}}="{{v}}" {% endfor %} >
+                            {% for prop,val in row.attrs %}
 
+                                    {% if prop == "pass_fail_status" %}
+										<td class="{{prop}}">
+                                        {% for status,display,tests in val %}
+                                            {% if tests.count > 0 %}
+                                            <span class="label {{status}}">{{tests.count}} {{display}}</span>
+                                            {% endif %}
+                                        {% endfor %}
+										</td>
+									{% elif prop == "review_status" %}
+										{% if val %}
+											<td class="{{prop}} approved">
+												<span class="label label-success">Reviewed by {{val.0}} on {{val.1}}
+											</td>
+										{% else %}
+											<td class="{{prop}} unreviewed">
+												<span class="label label-info">Unreviewed</label>
+											</td>
+										{% endif %}
+
+                                    {% else %}
+										<td class="{{prop}}">
+                                        {{val}}
+										</td>
+                                    {% endif %}
+                                </td>
+                            {% endfor %}
+                        </tr>
                     {% endfor %}
-                </div>
-            {% endfor %}
+                </tbody>
+				<tfoot>
+                    <tr>
+                        {% for header in table_headers %}
+                            <th>{{header}}</th>
+                        {% endfor %}
+					</tr>
+				</tfoot>
+            </table>
         </div>
     </div>
+
 
 {% endblock body %}

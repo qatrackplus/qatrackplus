@@ -26,20 +26,20 @@ class CycleTest(TestCase):
         self.user = User.objects.get(pk=1)
         cat = models.Category.objects.get(pk=1)
 
-        tli = models.TaskListItem(
+        test = models.Test(
             name = "test",
             short_name="test",
             description = "desc",
-            task_type = models.SIMPLE,
+            type = models.SIMPLE,
             category = cat,
             created_by = self.user,
             modified_by = self.user,
         )
 
-        tli.save()
+        test.save()
 
         for i in range(1,self.NLISTS+1):
-            task_list = models.TaskList(
+            test_list = models.TestList(
                 name="test %d"%i,
                 slug="test %d"%i,
                 description="blah",
@@ -47,52 +47,51 @@ class CycleTest(TestCase):
                 created_by = self.user,
                 modified_by = self.user,
             )
-            task_list.save()
-            membership = models.TaskListMembership(task_list=task_list,
-                                task_list_item=tli, order=1)
+            test_list.save()
+            membership = models.TestListMembership(test_list=test_list,
+                                test=test, order=1)
             membership.save()
-            # task_list.task_list_items.add(tli)
-            task_list.save()
+            test_list.save()
 
-        self.cycle = models.TaskListCycle(name="test cycle")
+        self.cycle = models.TestListCycle(name="test cycle")
         self.cycle.save()
         self.cycle.units = Unit.objects.all()
         self.cycle.save()
-        task_lists = models.TaskList.objects.all()
+        test_lists = models.TestList.objects.all()
 
-        for order,tl in enumerate(task_lists):
-            membership = models.TaskListCycleMembership(
-                task_list = tl,
+        for order,tl in enumerate(test_lists):
+            membership = models.TestListCycleMembership(
+                test_list = tl,
                 order = order,
                 cycle = self.cycle
             )
             membership.save()
 
     #----------------------------------------------------------------------
-    def get_instance_for_task_list(self,task_list,unit):
+    def get_instance_for_test_list(self,test_list,unit):
         """"""
-        instance = models.TaskListInstance(
-            task_list=task_list,
+        instance = models.TestListInstance(
+            test_list=test_list,
             unit=unit,
             created_by=self.user,
             modified_by=self.user
         )
         instance.save()
 
-        for item in task_list.task_list_items.all():
-            item_instance = models.TaskListItemInstance(
-                task_list_item=item,
+        for test in test_list.tests.all():
+            test_instance = models.TestInstance(
+                test=test,
                 unit=unit,
                 value=1.,
                 skipped=False,
-                task_list_instance=instance,
+                test_list_instance=instance,
                 reference = models.Reference.objects.get(pk=1),
                 tolerance = models.Tolerance.objects.get(pk=1),
                 status=models.UNREVIEWED,
                 created_by=self.user,
                 modified_by=self.user
             )
-            item_instance.save()
+            test_instance.save()
 
         instance.save()
         return instance
@@ -105,9 +104,9 @@ class CycleTest(TestCase):
     def test_last_for_unit(self):
 
         unit = self.cycle.units.all()[0]
-        task_list = self.cycle.first().task_list
-        instance = self.get_instance_for_task_list(task_list,unit)
-        membership = models.TaskListCycleMembership.objects.get(
+        test_list = self.cycle.first().test_list
+        instance = self.get_instance_for_test_list(test_list,unit)
+        membership = models.TestListCycleMembership.objects.get(
             cycle=self.cycle,order=0
         )
         self.assertEqual(membership,self.cycle.last_completed(unit))
@@ -117,8 +116,8 @@ class CycleTest(TestCase):
         unit = self.cycle.units.all()[0]
 
         #perform a full cycle ensuring a wrap
-        nlist = self.cycle.task_lists.count()
-        memberships = models.TaskListCycleMembership.objects.filter(
+        nlist = self.cycle.test_lists.count()
+        memberships = models.TestListCycleMembership.objects.filter(
             cycle=self.cycle
         ).order_by("order")
 
@@ -128,8 +127,8 @@ class CycleTest(TestCase):
             next_ = self.cycle.next_for_unit(unit)
             self.assertEqual(next_, expected)
 
-            #now perform the task list
-            self.get_instance_for_task_list(next_.task_list,unit)
+            #now perform the test list
+            self.get_instance_for_test_list(next_.test_list,unit)
 
         #confirm that we have wrapped around to the beginning again
         next_ =  self.cycle.next_for_unit(unit)

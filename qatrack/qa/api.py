@@ -105,12 +105,12 @@ class CategoryResource(ModelResource):
         queryset = models.Category.objects.all()
 
 #============================================================================
-class TaskListResource(ModelResource):
-    task_list_items = tastypie.fields.ToManyField("qatrack.qa.api.TaskListItemResource","task_list_items",full=True)
+class TestListResource(ModelResource):
+    tests = tastypie.fields.ToManyField("qatrack.qa.api.TestResource","tests",full=True)
     frequencies = tastypie.fields.ListField()
 
     class Meta:
-        queryset = models.TaskList.objects.order_by("name").all()
+        queryset = models.TestList.objects.order_by("name").all()
         filtering = {
             "pk":ALL,
             "slug":ALL,
@@ -118,22 +118,22 @@ class TaskListResource(ModelResource):
         }
     #----------------------------------------------------------------------
     def dehydrate_frequencies(self,bundle):
-        return list(bundle.obj.unittasklists_set.values_list("frequency",flat=True).distinct())
+        return list(bundle.obj.unittestlists_set.values_list("frequency",flat=True).distinct())
 
 #============================================================================
-class TaskListItemInstanceResource(ModelResource):
-    task_list_item = tastypie.fields.ForeignKey("qatrack.qa.api.TaskListItemResource","task_list_item", full=True)
+class TestInstanceResource(ModelResource):
+    test = tastypie.fields.ForeignKey("qatrack.qa.api.TestResource","test", full=True)
     reference = tastypie.fields.ForeignKey("qatrack.qa.api.ReferenceResource","reference", full=True,null=True)
     tolerance = tastypie.fields.ForeignKey("qatrack.qa.api.ToleranceResource","tolerance", full=True,null=True)
     unit = tastypie.fields.ForeignKey(UnitResource,"unit",full=True);
 
     class Meta:
-        queryset = models.TaskListItemInstance.objects.all()
+        queryset = models.TestInstance.objects.all()
         resource_name = "values"
         allowed_methods = ["get","patch","put"]
         always_return_data = True
         filtering = {
-            'task_list_item':ALL_WITH_RELATIONS,
+            'test':ALL_WITH_RELATIONS,
             'work_completed':ALL,
             'id':ALL,
         }
@@ -147,7 +147,7 @@ class TaskListItemInstanceResource(ModelResource):
         if filters is None:
             filters = {}
 
-        orm_filters = super(TaskListItemInstanceResource,self).build_filters(filters)
+        orm_filters = super(TestInstanceResource,self).build_filters(filters)
 
         if "units" in filters:
             orm_filters["unit__number__in"] = filters["units"].split(',')
@@ -167,62 +167,62 @@ class TaskListItemInstanceResource(ModelResource):
             orm_filters["status__in"] = filters["review_status"].split(',')
 
         if "short_names" in filters:
-            orm_filters["task_list_item__short_name__in"] = [x.strip() for x in filters["short_names"].split(',')]
-        #elif "task_list_item_id" in filters:
-        #    orm_filters["task_list_item__pk"] = filters["pk"]
+            orm_filters["test__short_name__in"] = [x.strip() for x in filters["short_names"].split(',')]
+        #elif "test_id" in filters:
+        #    orm_filters["test__pk"] = filters["pk"]
         return orm_filters
 
     #----------------------------------------------------------------------
     def is_authorized(self,request,obj=None):
-        auth =super(TaskListItemInstanceResource,self).is_authorized(request,obj)
+        auth =super(TestInstanceResource,self).is_authorized(request,obj)
         return auth
 
 
 #----------------------------------------------------------------------
-def serialize_tasklistiteminstance(task_list_item_instance):
-    """return a dictionary of task_list_item_instance properties"""
-    tlii = task_list_item_instance
+def serialize_testinstance(test_instance):
+    """return a dictionary of test_instance properties"""
+    ti = test_instance
     info = {
-        'value':tlii.value,
-        'date':tlii.work_completed.isoformat(),
-        'save_date':tlii.created.isoformat(),
-        'comment':tlii.comment,
-        'status':tlii.status,
+        'value':ti.value,
+        'date':ti.work_completed.isoformat(),
+        'save_date':ti.created.isoformat(),
+        'comment':ti.comment,
+        'status':ti.status,
         'reference':None,
         'tolerance': {'type':None,'act_low':None,'tol_low':None,'tol_high':None,'act_high':None,},
         'user':None,
         'unit':None,
-        'task_list_item':None,
+        'test':None,
     }
-    if tlii.reference:
-        info["reference"] = tlii.reference.value
+    if ti.reference:
+        info["reference"] = ti.reference.value
 
-    if tlii.tolerance:
+    if ti.tolerance:
         info['tolerance'] = {
-            'type':tlii.tolerance.type,
-            'act_low':tlii.tolerance.act_low,
-            'tol_low':tlii.tolerance.tol_low,
-            'tol_high':tlii.tolerance.tol_high,
-            'act_high':tlii.tolerance.act_high,
+            'type':ti.tolerance.type,
+            'act_low':ti.tolerance.act_low,
+            'tol_low':ti.tolerance.tol_low,
+            'tol_high':ti.tolerance.tol_high,
+            'act_high':ti.tolerance.act_high,
         }
 
-    if tlii.task_list_item:
-        info["task_list_item"] = tlii.task_list_item.short_name
+    if ti.test:
+        info["test"] = ti.test.short_name
 
-    if tlii.unit:
-        info["unit"] = tlii.unit.number
+    if ti.unit:
+        info["unit"] = ti.unit.number
 
-    if tlii.created_by:
-        info["user"] = tlii.created_by.username
+    if ti.created_by:
+        info["user"] = ti.created_by.username
 
-    if tlii.task_list_item:
-        info["task_list_item"] = tlii.task_list_item.short_name
+    if ti.test:
+        info["test"] = ti.test.short_name
 
     return info
 
 #============================================================================
 class FrequencyResource(Resource):
-    """available tasklistitem frequencies"""
+    """available test frequencies"""
     value = tastypie.fields.CharField()
     display = tastypie.fields.CharField()
     class Meta:
@@ -242,7 +242,7 @@ class FrequencyResource(Resource):
 
 #============================================================================
 class StatusResource(Resource):
-    """avaialable task list item statuses"""
+    """avaialable test statuses"""
     value = tastypie.fields.CharField()
     display = tastypie.fields.CharField()
     class Meta:
@@ -294,8 +294,8 @@ class ValueResource(Resource):
             'dates':[],
             'users':[]
         }
-        for task_list_item_instance in bundle.obj["data"]:
-            instance = serialize_tasklistiteminstance(task_list_item_instance)
+        for test_instance in bundle.obj["data"]:
+            instance = serialize_testinstance(test_instance)
             for prop in ('value','reference','date','user'):
                 data[prop+'s'].append(instance.get(prop,None))
             data["tolerances"].append(instance["tolerance"])
@@ -305,15 +305,15 @@ class ValueResource(Resource):
     #----------------------------------------------------------------------
     def get_object_list(self,request):
         """return organized values"""
-        objects = TaskListItemInstanceResource().obj_get_list(request)
-        names = objects.order_by("task_list_item__name").values_list("task_list_item__short_name","task_list_item__name").distinct()
+        objects = TestInstanceResource().obj_get_list(request)
+        names = objects.order_by("test__name").values_list("test__short_name","test__name").distinct()
         units = objects.order_by("unit__number").values_list("unit__number",flat=True).distinct()
         self.dispatch
         organized = []
         for short_name,name in names:
             for unit in units:
                 data = objects.filter(
-                        task_list_item__short_name=short_name,
+                        test__short_name=short_name,
                         unit__number = unit,
                 ).order_by("work_completed")
 
@@ -330,11 +330,11 @@ class ValueResource(Resource):
 
 
 #============================================================================
-class TaskListItemResource(ModelResource):
-    #values = tastypie.fields.ToManyField(TaskListItemInstanceResource,"tasklistiteminstance_set")
+class TestResource(ModelResource):
+
     category = tastypie.fields.ToOneField(CategoryResource,"category",full=True)
     class Meta:
-        queryset = models.TaskListItem.objects.all()
+        queryset = models.Test.objects.all()
         filtering = {
             "short_name": ALL,
             "id":ALL
@@ -347,36 +347,36 @@ class TaskListItemResource(ModelResource):
         if filters is None:
             filters = {}
 
-        orm_filters = super(TaskListItemResource,self).build_filters(filters)
+        orm_filters = super(TestResource,self).build_filters(filters)
 
         if "unit" in filters:
-            orm_filters["task_list_instance__task_list__unit__number"] = filters["unit"]
+            orm_filters["test_instance__test_list__unit__number"] = filters["unit"]
         return orm_filters
 
 #============================================================================
-class TaskListInstanceResource(ModelResource):
+class TestListInstanceResource(ModelResource):
     unit = tastypie.fields.ForeignKey(UnitResource,"unit",full=True)
-    task_list = tastypie.fields.ForeignKey(TaskListResource,"task_list",full=True)
-    item_instances = tastypie.fields.ToManyField(TaskListItemInstanceResource,"tasklistiteminstance_set",full=True)
+    test_list = tastypie.fields.ForeignKey(TestListResource,"test_list",full=True)
+    test_instances = tastypie.fields.ToManyField(TestInstanceResource,"testinstance_set",full=True)
     review_status = tastypie.fields.ListField()
 
     class Meta:
-        queryset = models.TaskListInstance.objects.all()
+        queryset = models.TestListInstance.objects.all()
         filtering = {
             "unit":ALL_WITH_RELATIONS,
-            "task_list": ALL_WITH_RELATIONS
+            "test_list": ALL_WITH_RELATIONS
         }
 
         ordering= ["work_completed"]
 
     #----------------------------------------------------------------------
     def dehydrate_review_status(self,bundle):
-        reviewed = bundle.obj.tasklistiteminstance_set.exclude(status=models.UNREVIEWED).count()
-        total = bundle.obj.tasklistiteminstance_set.count()
+        reviewed = bundle.obj.testinstance_set.exclude(status=models.UNREVIEWED).count()
+        total = bundle.obj.testinstance_set.count()
         if total == reviewed:
             #ugly
-            item = bundle.obj.tasklistiteminstance_set.latest()
-            review = (item.modified_by,item.modified)
+            test = bundle.obj.testinstance_set.latest()
+            review = (test.modified_by,test.modified)
         else:
             review = ()
         return review

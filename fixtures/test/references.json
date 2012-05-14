@@ -9,7 +9,7 @@
             "modified": "2012-04-03T13:17:52.870Z", 
             "created_by": 3, 
             "value": 1.0, 
-            "ref_type": "yes_no"
+            "type": "yes_no"
         }
     }, 
     {
@@ -22,7 +22,7 @@
             "modified": "2012-04-03T13:17:52.980Z", 
             "created_by": 3, 
             "value": 0.0, 
-            "ref_type": "yes_no"
+            "type": "yes_no"
         }
     }, 
     {
@@ -35,7 +35,7 @@
             "modified": "2012-04-03T13:17:53.089Z", 
             "created_by": 3, 
             "value": 0.0, 
-            "ref_type": "numerical"
+            "type": "numerical"
         }
     }, 
     {
@@ -48,7 +48,7 @@
             "modified": "2012-04-03T13:17:53.213Z", 
             "created_by": 2, 
             "value": 1.0, 
-            "ref_type": "numerical"
+            "type": "numerical"
         }
     }, 
     {
@@ -61,7 +61,7 @@
             "modified": "2012-04-03T13:17:53.338Z", 
             "created_by": 2, 
             "value": 100.0, 
-            "ref_type": "numerical"
+            "type": "numerical"
         }
     }, 
     {
@@ -74,7 +74,7 @@
             "modified": "2012-04-03T13:17:53.463Z", 
             "created_by": 2, 
             "value": 22.0, 
-            "ref_type": "numerical"
+            "type": "numerical"
         }
     }, 
     {
@@ -87,7 +87,7 @@
             "modified": "2012-04-03T13:17:53.603Z", 
             "created_by": 2, 
             "value": 760.0, 
-            "ref_type": "numerical"
+            "type": "numerical"
         }
     }
 ]

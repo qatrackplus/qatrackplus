@@ -9,18 +9,18 @@ import models
 
 
 #=======================================================================================
-class TaskListItemInstanceForm(forms.ModelForm):
-    """Model form for use in a formset of task_list_items within a tasklistinstance"""
+class TestInstanceForm(forms.ModelForm):
+    """Model form for use in a formset of tests within a testlistinstance"""
 
     value = forms.FloatField(required=False, widget=forms.widgets.TextInput(attrs={"class":"qa-input"}))
     class Meta:
-        model = models.TaskListItemInstance
+        model = models.TestInstance
         exclude = ("work_completed",)
     #----------------------------------------------------------------------
     def clean(self):
         """do some custom form validation"""
 
-        cleaned_data = super(TaskListItemInstanceForm,self).clean()
+        cleaned_data = super(TestInstanceForm,self).clean()
         skipped = cleaned_data["skipped"]
         comment = cleaned_data["comment"]
 
@@ -37,37 +37,35 @@ class TaskListItemInstanceForm(forms.ModelForm):
         return cleaned_data
 
     #---------------------------------------------------------------------------
-    def set_initial_fks(self,fieldnames,item_models,initial_objs):
+    def set_initial_fks(self,fieldnames,test_models,initial_objs):
         """limit a group of foreign key choices to given querysets and set to initial_objs"""
 
-        for fieldname,model,initial_obj in zip(fieldnames,item_models,initial_objs):
+        for fieldname,model,initial_obj in zip(fieldnames,test_models,initial_objs):
             if not initial_obj:
                 continue
             self.fields[fieldname].queryset = model.objects.filter(pk=initial_obj.pk)
             self.fields[fieldname].initial = initial_obj
 
 #=======================================================================================
-BaseTaskListItemInstanceFormset = forms.formsets.formset_factory(TaskListItemInstanceForm,extra=0)
-class TaskListItemInstanceFormset(BaseTaskListItemInstanceFormset):
-    """Formset for TaskListItemInstances"""
+BaseTestInstanceFormset = forms.formsets.formset_factory(TestInstanceForm,extra=0)
+class TestInstanceFormset(BaseTestInstanceFormset):
+    """Formset for TestInstances"""
 
     #----------------------------------------------------------------------
-    def __init__(self,task_list, unit,*args,**kwargs):
-        """prepopulate the reference, tolerance and task_list_item's for all forms in formset"""
+    def __init__(self,test_list, unit,*args,**kwargs):
+        """prepopulate the reference, tolerance and tests for all forms in formset"""
 
 
-        items = task_list.all_items()
+        tests = test_list.all_tests()
 
-        #since we don't know ahead of time how many task list items there are going to be
+        #since we don't know ahead of time how many tests there are going to be
         #we have to dynamically set extra for every form. Feels a bit hacky, but I'm not sure how else to do it.
-        self.extra = len(items)
+        self.extra = len(tests)
 
-        super(TaskListItemInstanceFormset,self).__init__(*args,**kwargs)
+        super(TestInstanceFormset,self).__init__(*args,**kwargs)
 
-        for f, item in zip(self.forms, items):
-            info = models.TaskListItemUnitInfo.objects.get(
-                task_list_item = item, unit = unit
-            )
+        for f, test in zip(self.forms, tests):
+            info = models.UnitTestInfo.objects.get(test=test, unit=unit)
 
             self.set_initial_fk_data(f,info)
             self.set_widgets(f,info)
@@ -77,31 +75,31 @@ class TaskListItemInstanceFormset(BaseTaskListItemInstanceFormset):
     #----------------------------------------------------------------------
     def disable_read_only_fields(self,form,membership):
         """disable some fields for constant and composite tests"""
-        if membership.task_list_item.task_type in ("constant", "composite",):
+        if membership.test.type in ("constant", "composite",):
             for field in ("value", ):
                 form.fields[field].widget.attrs["readonly"] = "readonly"
 
 
     #---------------------------------------------------------------------------
     def set_initial_fk_data(self,form, membership):
-        """prepopulate our form ref, tol and task_list_item data"""
+        """prepopulate our form ref, tol and test data"""
 
         #we need this stuff available on the page, but don't want the user to be able to
         #modify these fields (i.e. they should be rendered as_hidden in templates
-        fieldnames = ("reference", "tolerance", "task_list_item",)
-        item_models = (models.Reference, models.Tolerance, models.TaskListItem,)
-        objects = (membership.reference, membership.tolerance, membership.task_list_item,)
-        form.set_initial_fks(fieldnames,item_models,objects)
+        fieldnames = ("reference", "tolerance", "test",)
+        test_models = (models.Reference, models.Tolerance, models.Test,)
+        objects = (membership.reference, membership.tolerance, membership.test,)
+        form.set_initial_fks(fieldnames,test_models,objects)
     #----------------------------------------------------------------------
     def set_constant_values(self,form,membership):
-        """set values for constant items"""
-        if membership.task_list_item.task_type == "constant":
-            form.fields["value"].initial = membership.task_list_item.constant_value
+        """set values for constant tests"""
+        if membership.test.type == "constant":
+            form.fields["value"].initial = membership.test.constant_value
 
     #---------------------------------------------------------------------------
     def set_widgets(self,form,membership):
         """add custom widget for boolean values"""
-        if membership.task_list_item.is_boolean():
+        if membership.test.is_boolean():
             #temp store attributes so they can be restored to reset widget
             attrs = form.fields["value"].widget.attrs
             form.fields["value"].widget = RadioSelect(choices=[(0,"No"),(1,"Yes")])
@@ -109,16 +107,16 @@ class TaskListItemInstanceFormset(BaseTaskListItemInstanceFormset):
 
 
 #============================================================================
-class TaskListInstanceForm(forms.ModelForm):
-    """parent form for doing qa task list"""
+class TestListInstanceForm(forms.ModelForm):
+    """parent form for doing qa test list"""
 
     #----------------------------------------------------------------------
     class Meta:
-        model = models.TaskListInstance
+        model = models.TestListInstance
 
     #----------------------------------------------------------------------
     def __init__(self,*args,**kwargs):
-        super(TaskListInstanceForm,self).__init__(*args,**kwargs)
+        super(TestListInstanceForm,self).__init__(*args,**kwargs)
         self.fields["work_completed"].widget = forms.widgets.DateTimeInput()
         self.fields["work_completed"].widget.format = settings.INPUT_DATE_FORMATS[0]
         self.fields["work_completed"].input_formats = settings.INPUT_DATE_FORMATS
