@@ -576,28 +576,23 @@ def unit_test_list_change(*args,**kwargs):
         utl = kwargs["instance"]
         for test_list in utl.test_lists.all():
             create_unittestinfos(test_list,utl.unit)
+
 #----------------------------------------------------------------------
-@receiver(m2m_changed, sender=TestList.tests)
-def test_list_change(*args,**kwargs):
-    """make sure there are UnitTestListInfo infos for all tests (1)
-    and verify that there are no duplicate short names
+@receiver(post_save, sender=TestListMembership)
+def test_added_to_list(*args,**kwargs):
+    """make sure there are UnitTestInfo objects for all tests (1)
 
     (1) Note that this can't be done in the TestList.save method because the
     many to many relationships are not updated until after the save method has
     been executed. See http://stackoverflow.com/questions/1925383/issue-with-manytomany-relationships-not-updating-inmediatly-after-save
     """
 
-    if kwargs["action"] == "post_add":
-        test_list = kwargs["instance"]
-        unit_test_lists = UnitTestLists.objects.filter(test_lists=test_list)
+    if kwargs["created"]:
+        tlm = kwargs["instance"]
+        unit_test_lists = UnitTestLists.objects.filter(test_lists=tlm.test_list)
         for utl in unit_test_lists:
-            create_unittestinfos(test_list,utl.unit)
-    elif kwargs["action"] == "pre_add":
-        test_list = kwargs["instance"]
+            UnitTestInfo.objects.get_or_create(unit=utl.unit, test=tlm.test)
 
-#----------------------------------------------------------------------
-def test_bool(value,reference):
-    """check whether a boolean value """
 
 ##============================================================================
 class TestInstance(models.Model):
