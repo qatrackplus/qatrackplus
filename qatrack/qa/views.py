@@ -342,3 +342,15 @@ class ReviewView(TemplateView):
         context["units"] = units
         context["routine_freq"] = frequencies
         return context
+
+from api import ValueResource
+#============================================================================
+class ExportToCSV(View):
+    """A simple api wrapper to give exported api data a filename for downloads"""
+
+    #----------------------------------------------------------------------
+    def get(self,request, *args, **kwargs):
+        """takes request, passes it to api and returns a file"""
+        response = ValueResource().get_list(request)
+        response["Content-Disposition"] = 'attachment; filename=exported_data.csv'
+        return response

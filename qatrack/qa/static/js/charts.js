@@ -102,20 +102,25 @@ function convert_to_flot_series(idx,collection){
     }
     return series;
 }
+
+
 /*************************************************************************/
 //create data table for retrieved data items
-function create_data_table(collections){
+function create_data_table(collections,url){
     var table = $("#data-table");
-
+	$("#export-csv").attr("href","export/?"+url.replace(QAUtils.API_URL,"").replace("?","&")+"&format=csv");
     var headers = ['<tr class="col-group">'];
     var max_length = 0;
+
+	//create table headers for each test item name
     $.each(collections,function(idx,collection){
         var unit = "Unit"+(collection.unit < 10 ? "0" :"")+collection.unit;
         headers.push('<th colspan="2">'+unit+" - " + collection.name+'</th>');
         max_length = Math.max(collection.data.dates.length,max_length);
     });
-    headers.push("</tr>");
-    headers.push('<tr >');
+    headers.push("</tr><tr>");
+
+	//add date and value columns under each test item name
     var cols = [];
     $.each(collections,function(idx,collection){
         headers.push('<th>Date</th><th class="col-group">Values</th>');
@@ -123,16 +128,24 @@ function create_data_table(collections){
         cols.push(null);
     });
     headers.push("</tr>");
+
     table.find("thead").html(headers.join(""));
 
+
+	//now turn html table into functional data table
     var data_table = table.dataTable();
     data_table.fnDestroy();
     table.find("tbody").html("");
     data_table = table.dataTable({
         "aoColumns":cols,
-		"sDom": "<'row-fluid'<'span6'><'span6'>r>t<'row-fluid'<'span6'l><'span6'p>><'row-fluid'<'span6'i><'span6'>>",
-		"sPaginationType": "bootstrap"
-    });
+		"sDom": "T<'row-fluid'<'span6'><'span6'>r>t<'row-fluid'<'span6'l><'span6'p>><'row-fluid'<'span6'i><'span6'>>",
+		"sPaginationType": "bootstrap",
+		"oTableTools": {
+            "aButtons": [
+                "csv"
+            ]
+        }
+	});
     var rows = [];
 
     var row_idx;
@@ -163,8 +176,8 @@ function update(){
     if ((filters.units === "") || (filters.short_names === "")){
         return;
     }
-    QAUtils.task_list_item_values(filters, function(results_data){
-        create_data_table(results_data.objects);
+    QAUtils.task_list_item_values(filters, function(results_data,status,jqXHR,url){
+        create_data_table(results_data.objects,url);
 
         var main_graph_series = [];
         $.each(results_data.objects,function(idx,collection){

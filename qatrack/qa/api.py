@@ -1,3 +1,7 @@
+import csv
+import StringIO
+from qatrack.formats.en.formats import DATETIME_FORMAT
+import django.utils.dateformat as dateformat
 import tastypie
 from tastypie.resources import Resource, ModelResource, ALL, ALL_WITH_RELATIONS
 from tastypie.authentication import BasicAuthentication
@@ -5,16 +9,72 @@ from tastypie.authorization import DjangoAuthorization
 from tastypie.utils import timezone
 import qatrack.qa.models as models
 from qatrack.units.models import Unit,Modality, UnitType
+from tastypie.serializers import Serializer
+
+def csv_date(dt):
+    return dateformat.format(timezone.make_naive(dt),DATETIME_FORMAT)
+
+class ValueResourceCSVSerializer(Serializer):
+
+    formats = ['json', 'jsonp', 'csv']
+    content_types = {
+        'json': 'application/json',
+        'jsonp': 'text/javascript',
+        'csv': 'text/csv',
+    }
+    columns = [
+        ("Dates","dates",),
+        ("Values","values",),
+        ("Act Low","tolerances","act_low"),
+        ("Tol Low","tolerances","tol_low"),
+        ("Reference","references",),
+        ("Tol High","tolerances","tol_high"),
+        ("Act High","tolerances","act_high"),
+        ("Tol Type","tolerances","type"),
+        ("Comment","comment",),
+        ("Username","user","username"),
+    ]
+
+    #----------------------------------------------------------------------
+    def instances_to_csv(self,instances):
+        rows = [[x[0] for x in self.columns]]
+        for i in instances:
+            tol_type = ""
+            al, tl, th, ah = "","","",""
+            if i.tolerance:
+                al, tl = i.tolerance.act_low,i.tolerance.tol_low
+                ah, th = i.tolerance.act_high,i.tolerance.tol_high
+                tol_type = i.tolerance.type
+            r = ""
+            if i.reference:
+                r = i.reference.value
+
+            rows.append([csv_date(i.work_completed),i.value,al,tl,r,th,ah,tol_type,i.comment,i.created_by.username])
+
+        return rows
+    #----------------------------------------------------------------------
+    def to_csv(self, data, options=None):
+        options = options or {}
+
+        csv_data = StringIO.StringIO()
+        writer = csv.writer(csv_data)
+
+        for item in data["objects"]:
+            headers  = ["Unit:","Unit%02d" %item.data["unit"],"Test:",item.data["name"]]
+            column = [headers] + self.instances_to_csv(item.obj["data"])
+            writer.writerows(column)
+
+        return csv_data.getvalue()
 
 #============================================================================
 class ModalityResource(ModelResource):
     class Meta:
         queryset = Modality.objects.order_by("type").all()
+
 #============================================================================
 class UnitTypeResource(ModelResource):
     class Meta:
         queryset = UnitType.objects.order_by("name").all()
-
 
 #============================================================================
 class UnitResource(ModelResource):
@@ -117,19 +177,6 @@ class TaskListItemInstanceResource(ModelResource):
         auth =super(TaskListItemInstanceResource,self).is_authorized(request,obj)
         return auth
 
-    #----------------------------------------------------------------------
-    def dehydrate_work_compl_eted(self,bundle):
-        """make sure Z is appended to work_completed UTC datetimes"""
-        return bundle
-        if bundle.request.method == "GET":
-            wc = bundle.obj.work_completed
-            iso = wc.isoformat()
-            if wc.tzname() == "UTC" and iso[-1] != "Z":
-                iso += "Z"
-            return iso
-        else:
-            return bundle.obj.work_completed
-
 
 #----------------------------------------------------------------------
 def serialize_tasklistiteminstance(task_list_item_instance):
@@ -220,8 +267,10 @@ class ValueResource(Resource):
     name = tastypie.fields.CharField()
     short_name = tastypie.fields.CharField()
     data = tastypie.fields.DictField()
+
     #============================================================================
     class Meta:
+        serializer = ValueResourceCSVSerializer()
         resource_name = "grouped_values"
         allowed_methods = ["get"]
     #----------------------------------------------------------------------
@@ -250,8 +299,6 @@ class ValueResource(Resource):
             for prop in ('value','reference','date','user'):
                 data[prop+'s'].append(instance.get(prop,None))
             data["tolerances"].append(instance["tolerance"])
-            #for tol in ("act_low","tol_low","tol_high","act_high"):
-            #    data[tol].append(instance['tolerance'].get(tol,None))
 
 
         return data
@@ -280,6 +327,7 @@ class ValueResource(Resource):
     #----------------------------------------------------------------------
     def obj_get_list(self,request=None,**kwargs):
         return self.get_object_list(request)
+
 
 #============================================================================
 class TaskListItemResource(ModelResource):

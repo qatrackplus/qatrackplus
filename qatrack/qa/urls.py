@@ -42,6 +42,7 @@ urlpatterns = patterns('',
     url(r"^api/",include(v1_api.urls)),
 
     #review
-    url(r"review/", views.ReviewView.as_view(), name="review"),
-    url(r"charts/", views.ChartView.as_view(), name="charts"),
+    url(r"review/$", views.ReviewView.as_view(), name="review"),
+    url(r"charts/$", views.ChartView.as_view(), name="charts"),
+    url(r"^charts/export/$",views.ExportToCSV.as_view()),
 )

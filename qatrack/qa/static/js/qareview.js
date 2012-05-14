@@ -340,7 +340,7 @@ function on_select_task_list(task_list_row){
 			frequency:task_list_row.attr("data-frequency"),
 			order_by:"-work_completed",
 			limit:HISTORY_INSTANCE_LIMIT
-		}
+		};
 
 		//fetch resources from server and then display them
 		QAUtils.get_resources(

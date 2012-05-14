@@ -235,7 +235,7 @@ var QAUtils = new function() {
             contentType:"application/json",
             dataType:"json",
             success: function(result,status,jqXHR){
-                callback(result,status, jqXHR);
+                callback(result,status, jqXHR,this.url);
             },
             error: function(error){
                 console.log(error);
