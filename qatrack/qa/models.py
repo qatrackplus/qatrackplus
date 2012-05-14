@@ -577,7 +577,7 @@ def unit_test_list_change(*args,**kwargs):
         for test_list in utl.test_lists.all():
             create_unittestinfos(test_list,utl.unit)
 #----------------------------------------------------------------------
-@receiver(m2m_changed, sender=TestList.tests.through)
+@receiver(m2m_changed, sender=TestList.tests)
 def test_list_change(*args,**kwargs):
     """make sure there are UnitTestListInfo infos for all tests (1)
     and verify that there are no duplicate short names

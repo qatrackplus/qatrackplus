@@ -139,6 +139,94 @@ class CycleTest(TestCase):
         self.assertEqual(self.NLISTS,len(self.cycle))
 
 
+class UnitTestListTests(TestCase):
+
+    fixtures = [
+        "test/units",
+        "test/categories",
+        "test/references",
+        "test/tolerances",
+        "test/users",
+    ]
+    NLISTS = 2
+    #----------------------------------------------------------------------
+    def setUp(self):
+
+        self.user = User.objects.get(pk=1)
+        cat = models.Category.objects.get(pk=1)
+        self.unit = Unit.objects.get(pk=1)
+
+        self.test1 = models.Test(
+            name = "test1",
+            short_name="test1",
+            description = "desc",
+            type = models.SIMPLE,
+            category = cat,
+            created_by = self.user,
+            modified_by = self.user,
+        )
+
+        self.test1.save()
+
+
+        self.test2 = models.Test(
+            name = "test2",
+            short_name="test2",
+            description = "desc",
+            type = models.SIMPLE,
+            category = cat,
+            created_by = self.user,
+            modified_by = self.user,
+        )
+        self.test2.save()
+
+        self.test_list = models.TestList(
+            name="test list",
+            slug="test list",
+            description="blah",
+            active=True,
+            created_by = self.user,
+            modified_by = self.user,
+        )
+        self.test_list.save()
+        membership = models.TestListMembership(test_list=self.test_list, test=self.test1, order=1)
+        membership.save()
+        self.test_list.save()
+
+        #get daily task list for unit
+        self.utl = models.UnitTestLists.objects.get(
+            unit = self.unit,
+            frequency = models.DAILY,
+        )
+
+        self.utl.save()
+        self.utl.test_lists.add(self.test_list)
+        self.utl.save()
+    #----------------------------------------------------------------------
+    def test_first_added(self):
+        """"""
+        unit_test_info = models.UnitTestInfo.objects.get(
+            unit=self.unit,
+            test = self.test1
+        )
+    #----------------------------------------------------------------------
+    def test_add_to_existing(self):
+        """"""
+        membership = models.TestListMembership(
+            test_list=self.test_list,
+            test=self.test2,
+            order=2
+        )
+        membership.save()
+        self.test_list.save()
+
+        unit_test_info = models.UnitTestInfo.objects.get(
+            unit=self.unit,
+            test = self.test2
+        )
+
+
+
 
 if __name__ == "__main__":
     setup_test_environment()
