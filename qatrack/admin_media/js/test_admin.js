@@ -4,7 +4,7 @@ Only show relevant fields for TestListItemAdmin
 
 */
 function toggle_test_type(){
-    var val = $("#id_test_type").find("option:selected").val();
+    var val = $("#id_type").find("option:selected").val();
 
     if (val == "constant"){
         $(".field-constant_value").show();
@@ -19,6 +19,6 @@ function toggle_test_type(){
 }
 
 $(document).ready(function() {
-    $("#id_test_type").change(toggle_test_type);
+    $("#id_type").change(toggle_test_type);
     toggle_test_type();
 });
