@@ -11,6 +11,7 @@ from django.db.models.signals import post_save, m2m_changed
 from django.db.models import signals
 from django.utils import timezone
 from qatrack import settings
+from qatrack.qagroups.models import GroupProfile
 import re
 
 #global frequency choices
@@ -391,6 +392,8 @@ class TestList(models.Model):
         help_text=_("Choose any sublists that should be performed as part of this list.")
     )
 
+    assigned_to = models.ForeignKey(GroupProfile,help_text = _("QA group that this test list should nominally be performed by"),null=True)
+
     #for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, related_name="test_list_creator", editable=False)
@@ -733,6 +736,8 @@ class TestListCycle(models.Model):
 
     test_lists = models.ManyToManyField(TestList,through="TestListCycleMembership")
     frequency = models.CharField(max_length=10, choices=FREQUENCY_CHOICES, help_text=_("Frequency with which this test list is cycled"))
+
+    assigned_to = models.ForeignKey(GroupProfile,help_text = _("QA group that this test list should nominally be performed by"),null=True)
 
     objects = CycleManager()
 

@@ -163,7 +163,7 @@ INSTALLED_APPS = (
     #'qatrack.qatrack_tags',
 
     'qatrack.units',
-    'qatrack.qa_groups',
+    'qatrack.qagroups',
     'qatrack.qa',
     'qatrack.theme_bootstrap',
     'qatrack.data_tables',

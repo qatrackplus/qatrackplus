@@ -9,7 +9,7 @@ from django.utils import timezone
 from qatrack.qa import models
 from qatrack.units.models import Unit, UnitType
 from qatrack import settings
-from qatrack.qa_groups.models import QAGroup
+from qatrack.qagroups.models import GroupProfile
 import forms
 import math
 
@@ -42,9 +42,9 @@ class UserHome(RedirectView):
         """guess redirect url based on user permissions"""
         groups = self.request.user.groups.all()
         if groups.count()>0:
-            qagroup = QAGroup.objects.filter(group__name=groups[0].name)
-            if qagroup.count()>0:
-                return qagroup[0].homepage
+            profile = groups[0].groupprofile
+            if profile:
+                return profile.homepage
         return "/"
 
 #============================================================================
