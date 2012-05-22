@@ -30,6 +30,11 @@ for resource in resources:
 
 
 urlpatterns = patterns('',
+
+    #redirect based on user
+    url(r"^user_home/$", views.UserHome.as_view(),name="user_home"),
+
+    #view for composite calculations via ajax
     url(r"^composite/$", views.CompositeCalculation.as_view(), name="composite"),
 
     #performing qa

@@ -13,7 +13,10 @@ urlpatterns = patterns('',
         }, name='home'
     ),
 
+    url(r'^accounts/logout/$', 'django.contrib.auth.views.logout',{'next_page': '/login/'}),
+
     url(r'^accounts/', include('registration.urls')),
+
     url(r'^qa/', include('qatrack.qa.urls')),
 
     # Uncomment the admin/doc line below to enable admin documentation:
@@ -21,4 +24,5 @@ urlpatterns = patterns('',
 
     # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),
+
 )

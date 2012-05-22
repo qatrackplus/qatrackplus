@@ -3,12 +3,13 @@ from django.contrib import messages
 from django.http import HttpResponse,HttpResponseRedirect, Http404
 from django.shortcuts import get_object_or_404
 from django.core.urlresolvers import reverse
-from django.views.generic import ListView, FormView, View, TemplateView
+from django.views.generic import ListView, FormView, View, TemplateView, RedirectView
 from django.utils.translation import ugettext as _
 from django.utils import timezone
 from qatrack.qa import models
 from qatrack.units.models import Unit, UnitType
 from qatrack import settings
+from qatrack.qa_groups.models import QAGroup
 import forms
 import math
 
@@ -31,6 +32,20 @@ class JSONResponseMixin(object):
         # objects -- such as Django model instances or querysets
         # -- can be serialized as JSON.
         return json.dumps(context)
+
+#============================================================================
+class UserHome(RedirectView):
+    """redirect a user to their appropriate home page"""
+
+    #----------------------------------------------------------------------
+    def get_redirect_url(self,**kwargs):
+        """guess redirect url based on user permissions"""
+        groups = self.request.user.groups.all()
+        if groups.count()>0:
+            qagroup = QAGroup.objects.filter(group__name=groups[0].name)
+            if qagroup.count()>0:
+                return qagroup[0].homepage
+        return "/"
 
 #============================================================================
 class CompositeCalculation(JSONResponseMixin, View):

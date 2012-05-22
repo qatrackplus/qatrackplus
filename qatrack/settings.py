@@ -119,7 +119,11 @@ MIDDLEWARE_CLASSES = (
 
 ROOT_URLCONF = 'qatrack.urls'
 
-LOGIN_REDIRECT_URL = '/'
+LOGIN_EXEMPT_URLS = [
+    r"^accounts/",
+]
+LOGIN_REDIRECT_URL = '/qa/user_home'
+ACCOUNT_ACTIVATION_DAYS = 7
 
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'qatrack.wsgi.application'
@@ -153,14 +157,23 @@ INSTALLED_APPS = (
     'django.contrib.humanize',
 
     'tastypie',
+    'registration',
 
     #qatrack specific
     #'qatrack.qatrack_tags',
+
     'qatrack.units',
+    'qatrack.qa_groups',
     'qatrack.qa',
     'qatrack.theme_bootstrap',
     'qatrack.data_tables',
 )
+
+EMAIL_HOST = "" #e.g. 'smtp.gmail.com'
+EMAIL_HOST_USER = '' # e.g. "randle.taylor@gmail.com"
+EMAIL_HOST_PASSWORD = 'your_password_here'
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
