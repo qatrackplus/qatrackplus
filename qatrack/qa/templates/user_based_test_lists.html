@@ -1,0 +1,67 @@
+{% extends "site_base.html" %}
+
+{% load staticfiles %}
+
+{% block extra_script %}
+    <script src="{% static "data_tables/js/jquery.dataTables.js" %}"></script>
+    <script src="{% static "data_tables/js/jquery.dataTables.columnFilter.js" %}"></script>
+	<script src="{% static "data_tables/js/DT_bootstrap.js" %}"></script>
+	<script src="{% static "data_tables/js/DT_sort.js" %}"></script>
+
+	<script src="{% static "js/qautils.js" %}"></script>
+	<script src="{% static "js/user_home.js" %}"></script>
+
+{% endblock %}
+
+{% block extra_style %}
+    <link href="{% static "css/qa.css" %}" rel="stylesheet">
+    <link href="{% static "data_tables/css/DT_bootstrap.css" %}" rel="stylesheet">
+{% endblock extra_style %}
+
+{% block body %}
+    <div class="row-fluid">
+        <div class="span12">
+            <h2>{% if group %}{{group.name|title}}{% else %}All{%endif%} QA Lists</h2>
+        </div>
+    </div>
+    <div class="row-fluid" >
+        <div class="span12 container form-inline">
+            <table class="table table-condensed table-bordered table-striped" id="qa-test-list-table">
+                <thead>
+                    <tr>
+                        {% for header in table_headers %}
+							<th>{{header}}</th>
+                        {% endfor %}
+						<th>Perform</th>
+					</tr>
+                </thead>
+
+                <tbody>
+
+                    {% for utl, test_list,last_done,due in test_lists %}
+                        <tr class="{% cycle 'odd' 'even' %}" >
+							<td>{{utl.unit.name}}</td>
+							<td>{{utl.frequency.title}}</td>
+							<td>{{test_list.name}}</td>
+							<td>{{last_done}}</td>
+							<td>{{due}}</td>
+							<td>
+								<a href="{%url perform_qa frequency=utl.frequency type="test_list" pk=test_list.pk unit_number=utl.unit.number %}">Perform</a>
+							</td>
+						</tr>
+                    {% endfor %}
+                </tbody>
+				<tfoot>
+                    <tr>
+                        {% for header in table_headers %}
+                            <th>{{header}}</th>
+                        {% endfor %}
+						<th>&nbsp;</th>
+					</tr>
+				</tfoot>
+            </table>
+        </div>
+    </div>
+
+
+{% endblock body %}

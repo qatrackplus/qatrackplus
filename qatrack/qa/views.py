@@ -155,12 +155,7 @@ class PerformQAView(FormView):
             #let user know request succeeded and return to unit list
             messages.success(self.request,_("Successfully submitted %s "% test_list.name))
 
-            frequency = context.get("frequency")
-            if frequency:
-                url = reverse("qa_by_frequency_unit",args=(frequency,context["unit"].number))
-            else:
-                url = reverse("test_lists")
-            return HttpResponseRedirect(url)
+            return HttpResponseRedirect(reverse("user_home"))
 
         #there was an error in one of the forms
         return self.render_to_response(context)
@@ -263,6 +258,67 @@ class UnitGroupedFrequencyListView(TemplateView):
             unit_type_sets.append((ut,unit_type_set))
 
         context["unit_type_list"] = unit_type_sets
+        return context
+
+#============================================================================
+class UserBasedTestLists(TemplateView):
+    """show all lists currently assigned to the groups this member is a part of"""
+
+    template_name = "user_based_test_lists.html"
+
+    #----------------------------------------------------------------------
+    def get_context_data(self,**kwargs):
+        """set frequencies and lists"""
+        context = super(UserBasedTestLists,self).get_context_data(**kwargs)
+
+        test_lists = []
+        test_cycles = []
+
+        utls = models.UnitTestLists.objects.all()
+
+        if self.request.user.groups.count() >= 0:
+            group = self.request.user.groups.all()[0]
+
+            for utl in utls.filter(test_lists__assigned_to = group.groupprofile):
+                for tl in utl.test_lists.filter(assigned_to=group.groupprofile):
+                    last_done = None
+                    last = tl.last_completed_instance(utl.unit)
+                    if last:
+                        last_done = last.work_completed
+
+                    due_date = models.due_date(utl.unit,tl)
+                    test_lists.append((utl,tl,last_done,due_date))
+
+            for utl in utls.filter(cycles__assigned_to = group.groupprofile):
+                for cycle_ in utl.cycles.filter(assigned_to=group.groupprofile):
+                    last_done = None
+                    last = cycle_.last_completed_instance(utl.unit)
+                    if last:
+                        last_done = last.work_completed
+
+                    next_tl = cycle_.next_for_unit(utl.unit)
+                    due_date = models.due_date(utl.unit,next_tl)
+                    test_lists.append((utl,next_tl,last_done,due_date))
+
+        else:
+            group = None
+            for utl in utls:
+                for tl in utl.test_lists.all():
+                    due_date = models.due_date(utl.unit,tl)
+                    test_lists.append((utl,tl,due_date))
+
+            for utl in utls.all():
+                for cycle_ in utl.cycles.all():
+                    next_tl = cycle_.next_for_unit(utl.unit)
+                    due_date = models.due_date(utl.unit,next_tl)
+                    test_lists.append((utl,next_tl,due_date))
+
+
+        table_headers = ["Unit","Frequency","Test List", "Last Done", "Due Date"]
+
+        context["table_headers"] = table_headers
+        context["group"] = group
+        context["test_lists"] = test_lists
         return context
 
 #============================================================================

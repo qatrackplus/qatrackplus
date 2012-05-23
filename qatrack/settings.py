@@ -115,7 +115,11 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'qatrack.middleware.login_required.LoginRequiredMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 )
+
+#for django-debug-toolbar
+INTERNAL_IPS = ('127.0.0.1',)
 
 ROOT_URLCONF = 'qatrack.urls'
 
@@ -158,7 +162,7 @@ INSTALLED_APPS = (
 
     'tastypie',
     'registration',
-
+    'debug_toolbar',
     #qatrack specific
     #'qatrack.qatrack_tags',
 
