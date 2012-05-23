@@ -39,12 +39,12 @@
                 <tbody>
 
                     {% for utl, test_list,last_done,due in test_lists %}
-                        <tr class="{% cycle 'odd' 'even' %}" >
+                        <tr class="{% cycle 'odd' 'even' %} has-due-date" data-due="{{due.isoformat}}" data-frequency="{{utl.frequency}}">
 							<td>{{utl.unit.name}}</td>
 							<td>{{utl.frequency.title}}</td>
 							<td>{{test_list.name}}</td>
-							<td>{{last_done}}</td>
-							<td>{{due}}</td>
+							<td>{% if last_done %}{{last_done}}{%else%}New Test{%endif%}</td>
+							<td><span class="label due-status">{% if due %}{{due}}{%else%}New Test{%endif%}</span></td>
 							<td>
 								<a href="{%url perform_qa frequency=utl.frequency type="test_list" pk=test_list.pk unit_number=utl.unit.number %}">Perform</a>
 							</td>

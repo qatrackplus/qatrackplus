@@ -47,6 +47,17 @@ var QAUtils = new function() {
     this.SCRATCH = "scratch";
     this.REJECTED = "rejected";
 
+
+	this.DUE = this.TOLERANCE;
+	this.OVERDUE = this.ACTION;
+	this.NOT_DUE = this.WITHIN_TOL;
+	this.DAILY = "daily";
+	this.WEEKLY = "weekly";
+	this.MONTHLY = "monthly";
+	this.SEMIANNUAL = "semiannual";
+	this.ANNUAL = "annual";
+	this.OTHER = "other";
+
     this.MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
 
@@ -408,6 +419,57 @@ var QAUtils = new function() {
         }
         return date.join(" ");
     };
+	this.milliseconds_to_days = function(ms){
+		return ms/(1000*60*60*24);
+	}
+	this.compare_due_date_delta = function(delta,due,overdue){
+		if (delta >= overdue ){
+			return this.OVERDUE;
+		}else if (delta >= due){
+			return this.DUE;
+		}
+		return this.NOT_DUE;
+	}
+	this.due_status = function(due_date,frequency){
 
+		var today = new Date();
+		var delta_time = due_date - today; //in ms
+
+		var delta_days = Math.abs(this.milliseconds_to_days(delta_time));
+		var due,overdue;
+
+		if (frequency === this.DAILY){
+			due = 1;
+			overdue = 1;
+		}else if (frequency === this.WEEKLY){
+			due = 7;
+			overdue = 9;
+		}else if (frequency === this.MONTHLY){
+			due = 28;
+			overdue = 35;
+		}else if (frequency === this.SEMIANNUAL){
+			due = 180;
+			overdue = 210;
+		}else if (frequency === this.ANNUAL){
+			due = 300;
+			overdue = 420;
+		}
+
+		return this.compare_due_date_delta(delta_days,due,overdue);
+	};
+
+	this.set_due_status_color = function(elem,due_date,frequency){
+		var color;
+		var status;
+
+		if (due_date === null){
+			color = this.NOT_DONE_COLOR;
+		}else{
+			status = this.due_status(due_date,frequency);
+			color = this.qa_color(status);
+		}
+
+		$(elem).css("background-color",color);
+	}
 
 }();

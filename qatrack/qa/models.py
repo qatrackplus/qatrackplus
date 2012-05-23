@@ -480,7 +480,7 @@ def due_date(unit,test_list):
     delta = FREQUENCY_DELTAS[unit_test_list.frequency]
     if last_instance:
         return last_instance.work_completed + delta
-    return timezone.now()
+    return None
 
 
 
