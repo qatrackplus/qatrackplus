@@ -14,7 +14,7 @@ function init_test_list_table(){
 			null, //Freq
 			null,  // Test list name
 			{"sType":"day-month-year-sort"}, //date completed
-			{"sType":"day-month-year-sort"}, //due date
+			{"sType":"span-day-month-year-sort"}, //due date
 			null, //status of test list tests
 			null  //review status of list
 		]
@@ -372,5 +372,14 @@ $(document).ready(function(){
 		on_select_test_list($(event.currentTarget));
 	});
 
+	$("tbody tr.has-due-date").each(function(idx,row){
+		var date_string = $(this).data("due");
+		var due_date = null;
+		if (date_string !== ""){
+			due_date = QAUtils.parse_iso8601_date(date_string);
+		}
+		var freq = $(this).data("frequency");
+		QAUtils.set_due_status_color($(this).find(".due-status"),due_date,freq);
+	});
 
 });

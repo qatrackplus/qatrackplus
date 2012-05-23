@@ -1,2 +1,2 @@
-DATETIME_FORMAT = "j N Y, P"
+DATETIME_FORMAT = "j N Y g:i A"
 DATE_FORMAT = "j N Y"

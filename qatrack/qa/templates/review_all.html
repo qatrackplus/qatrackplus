@@ -43,7 +43,7 @@
                 <tbody>
 
                     {% for row in data %}
-                        <tr class="{% cycle 'odd' 'even' %}" {% for k,v in row.info.items %} data-{{k}}="{{v}}" {% endfor %} >
+                        <tr class="{% cycle 'odd' 'even' %} has-due-date" {% for k,v in row.info.items %} data-{{k}}="{{v}}" {% endfor %} >
                             {% for prop,val in row.attrs %}
 
                                     {% if prop == "pass_fail_status" %}
@@ -64,6 +64,14 @@
 												<span class="label label-info">Unreviewed</label>
 											</td>
 										{% endif %}
+									{% elif prop  == "due"%}
+										<td class="{{prop}} unreviewed">
+											<span class="label due-status">{% if val %}{{val.date}}{%else%}New Test{%endif%}</span>
+										</td>
+									{% elif prop  == "last_done"%}
+										<td class="{{prop}} unreviewed">
+											{% if val %}{{val}}{%else%}New Test{%endif%}
+										</td>
 
                                     {% else %}
 										<td class="{{prop}}">

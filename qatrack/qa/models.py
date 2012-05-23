@@ -479,7 +479,7 @@ def due_date(unit,test_list):
     last_instance = test_list.last_completed_instance(unit)
     delta = FREQUENCY_DELTAS[unit_test_list.frequency]
     if last_instance:
-        return last_instance.work_completed + delta
+        return (last_instance.work_completed + delta)
     return None
 
 

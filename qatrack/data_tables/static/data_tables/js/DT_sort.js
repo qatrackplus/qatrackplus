@@ -96,3 +96,15 @@ jQuery.fn.dataTableExt.oSort['day-month-year-sort-desc'] = function(a,b) {
     b = new Date(b);
     return ((a < b) ? 1 : ((a > b) ?  -1 : 0));
 };
+
+jQuery.fn.dataTableExt.oSort['span-day-month-year-sort-asc']  = function(a,b) {
+    a = new Date($(a).text());
+    b = new Date($(b).text());
+    return ((a < b) ? -1 : ((a > b) ?  1 : 0));
+};
+
+jQuery.fn.dataTableExt.oSort['span-day-month-year-sort-desc'] = function(a,b) {
+    a = new Date($(a).text());
+    b = new Date($(b).text());
+    return ((a < b) ? 1 : ((a > b) ?  -1 : 0));
+};

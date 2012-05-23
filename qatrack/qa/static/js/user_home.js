@@ -12,7 +12,7 @@ function init_test_list_table(){
 			null, //Freq
 			null,  // Test list name
 			{"sType":"day-month-year-sort"}, //date completed
-			{"sType":"day-month-year-sort"}, //due date
+			{"sType":"span-day-month-year-sort"}, //due date
 			null, //perform link
 		]
 

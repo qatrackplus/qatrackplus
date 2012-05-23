@@ -383,18 +383,20 @@ class ReviewView(TemplateView):
                 last_done, status = ["New List"]*2
                 review = ()
                 if last is not None:
-                    last_done = last.work_completed.date()
+                    last_done = last.work_completed
                     status = last.pass_fail_status()
                     reviewed = last.testinstance_set.exclude(status=models.UNREVIEWED).count()
                     total = last.testinstance_set.count()
                     if total == reviewed:
                         review = (last.modified_by,last.modified)
 
+                due_date = models.due_date(utl.unit, test_list)
                 data = {
                     "info": {
                         "unit_number":unit.number,
                         "test_list_id":test_list.pk,
                         "frequency":frequency,
+                        "due":due_date.isoformat() if due_date else ""
                     },
                     "attrs": [
                         #(name, obj, display)
@@ -402,7 +404,7 @@ class ReviewView(TemplateView):
                         ("frequency",fdisplay[frequency]),
                         ("test_list",test_list.name),
                         ("last_done",last_done),
-                        ("due",models.due_date(utl.unit, test_list).date()),
+                        ("due",due_date),
                         ("pass_fail_status",status),
                         ("review_status",review),
                     ]
