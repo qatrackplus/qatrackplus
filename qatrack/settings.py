@@ -115,7 +115,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'qatrack.middleware.login_required.LoginRequiredMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
+    #'debug_toolbar.middleware.DebugToolbarMiddleware',
 )
 
 #for django-debug-toolbar
@@ -162,7 +162,7 @@ INSTALLED_APPS = (
 
     'tastypie',
     'registration',
-    'debug_toolbar',
+    #'debug_toolbar',
     #qatrack specific
     #'qatrack.qatrack_tags',
 

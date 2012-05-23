@@ -276,7 +276,7 @@ class UserBasedTestLists(TemplateView):
 
         utls = models.UnitTestLists.objects.all()
 
-        if self.request.user.groups.count() >= 0:
+        if self.request.user.groups.count() > 0:
             group = self.request.user.groups.all()[0]
 
             for utl in utls.filter(test_lists__assigned_to = group.groupprofile):
