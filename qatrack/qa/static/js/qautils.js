@@ -38,7 +38,7 @@ var QAUtils = new function() {
     this.API_VERSION = "v1";
     this.API_URL = "/qa/api/"+this.API_VERSION+"/";
 	this.CHARTS_URL = "/qa/charts/";
-	this.OPTION_DELIM = ":";
+	this.OPTION_DELIM = "=";
 	this.OPTION_SEP = "&";
 
 
