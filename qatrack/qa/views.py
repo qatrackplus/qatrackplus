@@ -272,14 +272,15 @@ class UserBasedTestLists(TemplateView):
         context = super(UserBasedTestLists,self).get_context_data(**kwargs)
 
         user_test_lists = []
+
         group = None
         utls = models.UnitTestLists.objects.all()
-
         if self.request.user.groups.count() > 0:
             group = self.request.user.groups.all()[0]
             utls = utls.filter(test_lists__assigned_to = group.groupprofile)
 
         for utl in utls:
+
             test_lists = utl.test_lists
             cycles = utl.cycles
             if group:
@@ -292,9 +293,7 @@ class UserBasedTestLists(TemplateView):
                     next_tl = tl.next_for_unit(utl.unit)
 
                 last = tl.last_completed_instance(utl.unit)
-                last_done = None
-                if last:
-                    last_done = last.work_completed
+                last_done = last.work_completed if last else None
 
                 due_date = models.due_date(utl.unit,next_tl)
                 user_test_lists.append((utl,next_tl,last_done,due_date))
