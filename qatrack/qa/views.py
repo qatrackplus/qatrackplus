@@ -271,54 +271,39 @@ class UserBasedTestLists(TemplateView):
         """set frequencies and lists"""
         context = super(UserBasedTestLists,self).get_context_data(**kwargs)
 
-        test_lists = []
-        test_cycles = []
-
+        user_test_lists = []
+        group = None
         utls = models.UnitTestLists.objects.all()
 
         if self.request.user.groups.count() > 0:
             group = self.request.user.groups.all()[0]
+            utls = utls.filter(test_lists__assigned_to = group.groupprofile)
 
-            for utl in utls.filter(test_lists__assigned_to = group.groupprofile):
-                for tl in utl.test_lists.filter(assigned_to=group.groupprofile):
-                    last_done = None
-                    last = tl.last_completed_instance(utl.unit)
-                    if last:
-                        last_done = last.work_completed
+        for utl in utls:
+            test_lists = utl.test_lists
+            cycles = utl.cycles
+            if group:
+                test_lists = test_lists.filter(assigned_to=group.groupprofile)
+                cycles = utl.cycles.filter(assigned_to=group.groupprofile)
 
-                    due_date = models.due_date(utl.unit,tl)
-                    test_lists.append((utl,tl,last_done,due_date))
+            for tl in list(test_lists.all())+list(cycles.all()):
+                next_tl = tl
+                if isinstance(tl, models.TestListCycle):
+                    next_tl = tl.next_for_unit(utl.unit)
 
-            for utl in utls.filter(cycles__assigned_to = group.groupprofile):
-                for cycle_ in utl.cycles.filter(assigned_to=group.groupprofile):
-                    last_done = None
-                    last = cycle_.last_completed_instance(utl.unit)
-                    if last:
-                        last_done = last.work_completed
+                last = tl.last_completed_instance(utl.unit)
+                last_done = None
+                if last:
+                    last_done = last.work_completed
 
-                    next_tl = cycle_.next_for_unit(utl.unit)
-                    due_date = models.due_date(utl.unit,next_tl)
-                    test_lists.append((utl,next_tl,last_done,due_date))
-
-        else:
-            group = None
-            for utl in utls:
-                for tl in utl.test_lists.all():
-                    due_date = models.due_date(utl.unit,tl)
-                    test_lists.append((utl,tl,due_date))
-
-            for utl in utls.all():
-                for cycle_ in utl.cycles.all():
-                    next_tl = cycle_.next_for_unit(utl.unit)
-                    due_date = models.due_date(utl.unit,next_tl)
-                    test_lists.append((utl,next_tl,due_date))
-
+                due_date = models.due_date(utl.unit,next_tl)
+                user_test_lists.append((utl,next_tl,last_done,due_date))
 
         table_headers = ["Unit","Frequency","Test List", "Last Done", "Due Date"]
 
         context["table_headers"] = table_headers
         context["group"] = group
-        context["test_lists"] = test_lists
+        context["test_lists"] = user_test_lists
         return context
 
 #============================================================================
