@@ -72,6 +72,9 @@ class TestInstanceFormset(BaseTestInstanceFormset):
             self.disable_read_only_fields(f,info)
             self.set_constant_values(f,info)
 
+            #paste on history...
+            f.history = test.history_for_unit(unit.number)
+
     #----------------------------------------------------------------------
     def disable_read_only_fields(self,form,membership):
         """disable some fields for constant and composite tests"""
@@ -109,7 +112,7 @@ class TestInstanceFormset(BaseTestInstanceFormset):
 #============================================================================
 class TestListInstanceForm(forms.ModelForm):
     """parent form for doing qa test list"""
-
+    status = forms.ChoiceField(choices=models.STATUS_CHOICES)
     #----------------------------------------------------------------------
     class Meta:
         model = models.TestListInstance

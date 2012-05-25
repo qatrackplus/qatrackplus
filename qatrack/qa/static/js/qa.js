@@ -1,5 +1,4 @@
 "use strict";
-//TODO: currently checking Skip on a boolean test marks it as passing
 
 /***************************************************************/
 //Set up the values we will need to do validation on data
@@ -202,7 +201,7 @@ function filter_by_category(){
     if (show_all){
         $(".qa-valuerow").show();
         $(".qa-comment").hide();
-        $(".qa-skip input").attr("checked",false)
+        $(".qa-skip input").attr("checked",false);
         return;
     }
 
@@ -216,10 +215,12 @@ function filter_by_category(){
         to_toggle.add($(this).prevUntil(".qa-valuerow"));
 
         if ($.inArray(category,selected_categories) < 0){
-            $(this).find
+            $(this).find(".qa-skip input").attr("checked",true);
+            $(this).next().find("textarea").val("Category not performed");
             to_toggle.hide();
         }else{
-            $(this).find(".qa-skip input").attr("checked",false)
+            $(this).find(".qa-skip input").attr("checked",false);
+            $(this).next().find("textarea").val("");
             to_toggle.show();
         }
     });

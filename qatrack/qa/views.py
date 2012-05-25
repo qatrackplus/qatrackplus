@@ -149,7 +149,10 @@ class PerformQAView(FormView):
                 obj.test_list_instance = test_list_instance
                 for field in self.test_list_fields_to_copy:
                     setattr(obj,field,getattr(test_list_instance,field))
-                obj.status = models.UNREVIEWED
+                if form.fields.has_key("status"):
+                    obj.status = form["status"].value()
+                else:
+                    obj.status = models.UNREVIEWED
                 obj.save()
 
             #let user know request succeeded and return to unit list
@@ -208,6 +211,7 @@ class PerformQAView(FormView):
             'categories':categories,
             'unit':unit,
             'cycle':cycle,
+            'include_admin':self.request.user.is_staff,
         })
 
         return context

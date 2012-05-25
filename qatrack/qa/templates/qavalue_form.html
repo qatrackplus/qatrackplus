@@ -14,43 +14,58 @@
 {% endfor %}
 
 <tr class="control-group qa-valuerow">
-    {% with ref=form.fields.reference.initial %}
+    {% with ref=form.fields.reference.initial  tol=form.fields.tolerance.initial%}
         <input type="hidden" class="qa-reference-val" value="{{ref.value}}"/>
         <input type="hidden" class="qa-reference-pk" value="{{ref.pk}}"/>
-    {% endwith %}
-
-    {% with tol=form.fields.tolerance.initial %}
         <input type="hidden" class="qa-tolerance act_low" value="{{tol.act_low}}"/>
         <input type="hidden" class="qa-tolerance tol_low" value="{{tol.tol_low}}"/>
         <input type="hidden" class="qa-tolerance tol_high" value="{{tol.tol_high}}"/>
         <input type="hidden" class="qa-tolerance act_high" value="{{tol.act_high}}"/>
         <input type="hidden" class="qa-tolerance-type" value="{{tol.type}}"/>
         <input type="hidden" class="qa-tolerance-pk" value="{{tol.pk}}"/>
-    {% endwith %}
 
-    <input type="hidden" class="qa-contextname" value="{{form.fields.test.initial.short_name}}"/>
-    {{form.reference.as_hidden}}
-    {{form.tolerance.as_hidden}}
-    {{form.test.as_hidden}}
-    {{form.test_list_instance.as_hidden}}
-    {% with test=form.fields.test.initial %}
-        <input type="hidden" class="qa-testtype" value="{{test.type}}"/>
-        <td class="qa-name qa-showproc"><a href="{{form.fields.test.initial.procedure}}" class="revealprocedure" title="Show procedure for this test" target="_blank">{{test.name}}</a></td>
-        <td class="qa-category">{{test.category.name|title}}</td>
-        <td class="controls qa-value" title="{{form.value.help_text|safe}}">
-        {% if test.is_boolean %}
-            <span class="pull-left">{{form.value.0}}</span>
-            <span class="pull-right">{{form.value.1}}</span>
-        {% else %}
-             <span class="center span1">{{form.value}}</span>
+        <input type="hidden" class="qa-contextname" value="{{form.fields.test.initial.short_name}}"/>
+        {{form.reference.as_hidden}}
+        {{form.tolerance.as_hidden}}
+        {{form.test.as_hidden}}
+        {{form.test_list_instance.as_hidden}}
+        {% with test=form.fields.test.initial %}
+            <input type="hidden" class="qa-testtype" value="{{test.type}}"/>
+            <td class="qa-name qa-showproc"><a href="{{form.fields.test.initial.procedure}}" class="revealprocedure" title="Show procedure for this test" target="_blank">{{test.name}}</a></td>
+            <td class="qa-category">{{test.category.name|title}}</td>
+            <td class="controls qa-value" title="{{form.value.help_text|safe}}">
+            {% if test.is_boolean %}
+                <span class="pull-left">{{form.value.0}}</span>
+                <span class="pull-right">{{form.value.1}}</span>
+            {% else %}
+                 <span class="center span1">{{form.value}}</span>
+            {% endif %}
+            </td>
+        {% endwith %}
+
+        <td class="qa-skip" title="{{form.skipped.help_text|safe}}">{{form.skipped}}</td>
+        <td class="qa-status">Not Done</td>
+        <td class="qa-showcmt"><a href="#" class="revealcomment" title="Add comment for this test"><i class="icon-comment"/></a></td>
+		{% if include_admin %}
+			<td class="qa-reference">
+				{% if not ref %}
+					<span>No Ref</span>
+				{% else %}
+					{% if tol.type == "percent" %}
+						<span title="{{tol.act_low}}% &le; {{tol.tol_low}}% &le; {{ref.value}} &le; {{tol.tol_high}}% &le; {{tol.act_high}}%">{{ref.value}}</span>
+					{% else %}
+						<span title="{{tol.act_low}} &le; {{tol.tol_low}} &le; {{ref.value}} &le; {{tol.tol_high}} &le; {{tol.act_high}}">{{ref.value}}</span>
+					{% endif %}
+				{% endif %}
+			</td>
+			<td class="qa-history">
+				{% for d,v,pf,s in form.history %}
+					<span class="label {{pf}} history-value" title="{{d}} - {{s}}">{{v}}</span>
+				{% endfor %}
+			</td>
         {% endif %}
-        </td>
-    {% endwith %}
 
-    <td class="qa-skip" title="{{form.skipped.help_text|safe}}">{{form.skipped}}</td>
-    <td class="qa-status">Not Done</td>
-    <td class="qa-showcmt"><a href="#" class="revealcomment" title="Add comment for this test"><i class="icon-comment"/></a></td>
-    <td class="qa-reference">{{form.fields.reference.initial.value}}</td>
+    {% endwith %}
 </tr>
 <tr class="qa-comment">
     <td colspan="8"  class="" title="{{form.comment.help_text|safe}}">

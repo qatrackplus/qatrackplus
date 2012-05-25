@@ -375,8 +375,11 @@ class TestListInstanceResource(ModelResource):
         total = bundle.obj.testinstance_set.count()
         if total == reviewed:
             #ugly
-            test = bundle.obj.testinstance_set.latest()
-            review = (test.modified_by,test.modified)
+            try:
+                test = bundle.obj.testinstance_set.latest()
+                review = (test.modified_by,test.modified)
+            except models.TestInstance.DoesNotExist:
+                review = ()
         else:
             review = ()
         return review

@@ -342,6 +342,11 @@ class Test(models.Model):
         self.clean_short_name()
 
     #----------------------------------------------------------------------
+    def history_for_unit(self,unit_number,number=5):
+        hist = self.testinstance_set.filter(unit__number=unit_number).order_by("-work_completed")
+        return [(x.work_completed,x.value, x.pass_fail, x.status) for x in reversed(hist[:5])]
+
+    #----------------------------------------------------------------------
     def __unicode__(self):
         """return display representation of object"""
 

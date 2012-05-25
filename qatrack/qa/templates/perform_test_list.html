@@ -11,6 +11,7 @@
     <script src="{% static "js/qautils.js" %}"></script>
     <script src="{% static "js/qa.js" %}"></script>
     <script src="{% static "datepicker/js/bootstrap-datepicker.js" %}"></script>
+
 {% endblock %}
 
 {% load qa_tags %}
@@ -23,66 +24,66 @@
 </div>
 
 <div class="row">
-
-    <div class="span6 well inline-block form-horizontal">
-
-        <div id="filters" class="control-group">
-            {% if days %}
-                <label for="category_filter" class="control-label">Choose Day:</label>
-
-                <div class="controls">
-                    <div class="input-append">
-                        <select id="cycle-day" class="input-medium">
-                            <option value="next">Next scheduled</option>
-                            {% for day in days %}
-                                <option value="{{day}}" {% if day == current_day %}selected="selected"{% endif %}>
-                                    Day {{day}}
-                                </option>
-                            {% endfor %}
-                        </select>
-                        <a href="" class="btn" type="button" id="change-test-list">Go</a>
-                    </div>
-                </div>
-
-            {% endif %}
-
-            <label for="category_filter" class="control-label">Filter by categories:</label>
-            <div class="controls">
-                <select id="category_filter" multiple="multiple" class="input-medium">
-                    <option value="all">Show All</option>
-                    {% for category in categories %}
-                        <option value="{{category.name|lower}}">
-                            {{category.name|title}}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-        </div>
-    </div>
-    {% if user.is_staff %}
-        <div id="admin_controls" class="inline-well well span5">
-            <h4>Admin Controls</h4>
-        </div>
-    {% endif %}
-
-</div>
-<div class="row">
     <div class="span12">
         <form class="nosubmit form-inline" id="qa-form" method="POST" action="">
             {% csrf_token %}
-			<div class="control-group">
-				<label for="work-completed" class="control-label">{{form.work_completed.label}}:</label>
+			{% if include_admin %}
 
-				<div class="controls">
+	        <div id="admin_controls" class="well controls">
+				<h4>Admin Controls</h4>
+				<label for="category_filter" class="control-label">
+					<div>Filter by categories:</div>
+					<div>
+						<select id="category_filter" multiple="multiple" class="input-medium">
+							<option value="all">Show All</option>
+							{% for category in categories %}
+								<option value="{{category.name|lower}}">
+									{{category.name|title}}
+								</option>
+							{% endfor %}
+						</select>
+					</div>
+				</label>
+
+				<label for="work-completed" class="control-label">
+					<div>{{form.work_completed.label}}:</div>
 					<div class="input-append date" id="work-completed" data-date="{% now 'd-m-Y' %}" data-date-format="dd-mm-yyyy">
-						{{form.work_completed}}
-						<span class="add-on"><i class="icon-th"></i></span>
+						{{form.work_completed}}<span class="add-on"><i class="icon-th"></i></span>
 						{% for error in form.errors.work_completed %}
 							<span class="alert-error help-block-inline">{{ error }} {{form.work_completed.help_text}}</span>
 						{% endfor %}
 					</div>
-				</div>
-			</div>
+				</label>
+
+				<label for="status" class="control-label">
+					<div>{{form.status.label}}:</div>
+					<div>
+						{{form.status}}
+						{% for error in form.errors.status %}
+							<span class="alert-error help-block-inline">{{ error }} {{form.status.help_text}}</span>
+						{% endfor %}
+					</div>
+				</label>
+
+
+				<label for="cycle-day" class="control-group" >
+					<div>
+						Choose Day:
+					</div>
+					<div class="input-append">
+						<select id="cycle-day" class="input-medium" {% if not days %}disabled="disabled"{%endif%}>
+							<option value="next">Next scheduled</option>
+							{% for day in days %}
+								<option value="{{day}}" {% if day == current_day %}selected="selected"{% endif %}>
+									Day {{day}}
+								</option>
+							{% endfor %}
+						</select><a href="#" class="btn add-on" type="button" {% if not days %}id="change-test-list"{%endif%}>Go</a>
+					</div>
+				</label>
+
+	        </div>
+			{% endif %}
 
             {# display any form errors up top #}
             {% if form.errors %}
@@ -117,12 +118,15 @@
                         <th class="qa-skip">Skip</th>
                         <th class="qa-status">Status</th>
                         <th class="qa-showcmt">Comment</th>
-                        <th class="qa-reference">Reference</th>
+						{% if include_admin %}
+							<th class="qa-reference">Reference</th>
+							<th class="qa-history">History</th>
+					    {% endif %}
                     </tr>
                 </thead>
                 <tbody>
                 {% for test_form in formset %}
-                    {{test_form|as_qavalue}}
+                    {{test_form|as_qavalue:include_admin}}
                 {% endfor %}
                 </tbody>
             </table>
