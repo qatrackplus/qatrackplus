@@ -216,7 +216,7 @@ class Test(models.Model):
     name = models.CharField(max_length=256, help_text=_("Name for this test"))
     short_name = models.SlugField(max_length=25, help_text=_("A short variable name for this test (to be used in composite calculations)."))
     description = models.TextField(help_text=_("A concise description of what this test is for (optional)"), blank=True,null=True)
-    procedure = models.URLField(max_length=512,help_text=_("Link to document describing how to perform this test"), blank=True, null=True)
+    procedure = models.CharField(max_length=512,help_text=_("Link to document describing how to perform this test"), blank=True, null=True)
 
     type = models.CharField(
         max_length=10, choices=TEST_TYPE_CHOICES, default="boolean",
@@ -340,6 +340,11 @@ class Test(models.Model):
         self.clean_calculation_procedure()
         self.clean_constant_value()
         self.clean_short_name()
+
+    #----------------------------------------------------------------------
+    def history_for_unit(self,unit_number,number=5):
+        hist = self.testinstance_set.filter(unit__number=unit_number).order_by("-work_completed")
+        return [(x.work_completed,x.value, x.pass_fail, x.status) for x in reversed(hist[:5])]
 
     #----------------------------------------------------------------------
     def __unicode__(self):
@@ -636,7 +641,7 @@ class TestInstance(models.Model):
     def save(self, *args, **kwargs):
         """set status to unreviewed if not previously set"""
         if not self.status:
-            self.status = self.UNREVIEWED
+            self.status = UNREVIEWED
         self.calculate_pass_fail()
         super(TestInstance,self).save(*args,**kwargs)
     #----------------------------------------------------------------------

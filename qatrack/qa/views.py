@@ -140,6 +140,8 @@ class PerformQAView(FormView):
             test_list_instance.created_by = self.request.user
             test_list_instance.modified_by = self.request.user
             test_list_instance.unit = context["unit"]
+            if test_list_instance.work_completed is None:
+                test_list_instance.work_completed = timezone.now()
             test_list_instance.save()
 
 
@@ -149,7 +151,10 @@ class PerformQAView(FormView):
                 obj.test_list_instance = test_list_instance
                 for field in self.test_list_fields_to_copy:
                     setattr(obj,field,getattr(test_list_instance,field))
-                obj.status = models.UNREVIEWED
+                if form.fields.has_key("status"):
+                    obj.status = form["status"].value()
+                else:
+                    obj.status = models.UNREVIEWED
                 obj.save()
 
             #let user know request succeeded and return to unit list
@@ -166,7 +171,8 @@ class PerformQAView(FormView):
         context = super(PerformQAView, self).get_context_data(**kwargs)
         unit = get_object_or_404(Unit,number=self.kwargs["unit_number"])
 
-        context["frequency"] = self.kwargs["frequency"]
+        include_admin = self.request.user.is_staff
+
 
         if self.kwargs["type"] == "cycle":
             cycle = get_object_or_404(models.TestListCycle,pk=self.kwargs["pk"])
@@ -200,6 +206,7 @@ class PerformQAView(FormView):
         categories = models.Category.objects.all()
 
         context.update({
+            'frequency':self.kwargs["frequency"],
             'current_day':current_day,
             'days':days,
             'test_list':test_list,
@@ -208,6 +215,7 @@ class PerformQAView(FormView):
             'categories':categories,
             'unit':unit,
             'cycle':cycle,
+            'include_admin':include_admin
         })
 
         return context

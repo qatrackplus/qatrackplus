@@ -6,7 +6,7 @@ register = template.Library()
 
 
 @register.filter
-def as_qavalue(form):
+def as_qavalue(form, include_admin):
     template = get_template("qavalue_form.html")
-    c = Context({"form": form})
+    c = Context({"form": form,"include_admin":include_admin})
     return template.render(c)

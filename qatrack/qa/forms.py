@@ -72,6 +72,9 @@ class TestInstanceFormset(BaseTestInstanceFormset):
             self.disable_read_only_fields(f,info)
             self.set_constant_values(f,info)
 
+            #paste on history...
+            f.history = test.history_for_unit(unit.number)
+
     #----------------------------------------------------------------------
     def disable_read_only_fields(self,form,membership):
         """disable some fields for constant and composite tests"""
@@ -109,6 +112,8 @@ class TestInstanceFormset(BaseTestInstanceFormset):
 #============================================================================
 class TestListInstanceForm(forms.ModelForm):
     """parent form for doing qa test list"""
+    status = forms.ChoiceField(choices=models.STATUS_CHOICES,required=False)
+    work_completed = forms.DateTimeField(required=False)
 
     #----------------------------------------------------------------------
     class Meta:
@@ -123,4 +128,3 @@ class TestListInstanceForm(forms.ModelForm):
         self.fields["work_completed"].widget.attrs["title"] = settings.DATETIME_HELP
         self.fields["work_completed"].help_text = settings.DATETIME_HELP
         self.fields["work_completed"].localize = True
-        #self.fields["work_completed"].widget.attrs["readonly"] = True

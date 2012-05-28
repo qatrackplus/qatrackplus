@@ -8,31 +8,54 @@ tr.qa-comment td, tr.qa-procedure td {
     text-align:left;
 }
 
-.qa-reference, .qa-showproc, .qa-showcmt, .qa-skip, .qa-status {
+.qa-showcmt, .qa-status {
     width: 60px;
 }
+.qa-skip {
+    width:40px;
+}
+.qa-reference {
+    width:80px;
 
+}
 input[type="text"].qa-input {
     width:85px;
     height:12px;
     text-align:right;
 }
-
+.qa-table td {
+    font-size:0.9em;
+    padding-bottom:2px;
+}
 .qa-table td.qa-value {
-    width:90px;
+    width:70px;
 }
 .qa-table td, .qa-table th{
     text-align:center;
 
 }
+.qa-table td.qa-category{
+    min-width: 140px;
+}
 .qa-table td.qa-name {
-    min-width:200px;
+    min-width:300px;
     text-align:left;
 }
-
-.qa-table td.qa-category {
-    min-width:200px;
+#qa-form div.well{
+    padding:4px;
+    padding-bottom:0px;
+    margin-bottom:0px;
 }
+.qa-history{
+    min-width:300px;
+}
+.history-value {
+    display:inline-block;
+
+    width: 40px;
+    margin-right: 1px; /*fix ie inline block bug*/
+}
+
 /**************************************************/
 /* Trending                                       */
 .tab-pane{width:100%;height:100%;}
