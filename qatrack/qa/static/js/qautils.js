@@ -89,7 +89,7 @@ var QAUtils = new function() {
         var status, gen_status;
         var message;
 
-		if (isNaN(reference.value) || (!tolerances.type)){
+		if (isNaN(reference) || (!tolerances.type)){
             return {
                 status:this.NO_TOL,
                 gen_status:this.NO_TOL,
