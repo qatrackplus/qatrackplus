@@ -3,6 +3,7 @@ from django import forms
 from django.forms.models import inlineformset_factory, modelformset_factory, model_to_dict
 from django.forms.widgets import RadioSelect
 from django.contrib import messages
+from django.utils import timezone
 import qatrack.settings as settings
 
 import models
@@ -126,5 +127,7 @@ class TestListInstanceForm(forms.ModelForm):
         self.fields["work_completed"].widget.format = settings.INPUT_DATE_FORMATS[0]
         self.fields["work_completed"].input_formats = settings.INPUT_DATE_FORMATS
         self.fields["work_completed"].widget.attrs["title"] = settings.DATETIME_HELP
+        self.fields["work_completed"].initial = timezone.now()
         self.fields["work_completed"].help_text = settings.DATETIME_HELP
         self.fields["work_completed"].localize = True
+
