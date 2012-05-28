@@ -92,7 +92,7 @@ function check_test_status(input_element){
     validation_data[name].current_value = val;
 
     //remove any previous formatting
-    qastatus.removeClass("btn-danger btn-warning btn-success");
+    qastatus.removeClass("btn-danger btn-warning btn-success btn-info");
     qastatus.text("Not Done");
 
     if (parent.find(".qa-skip input").is(":checked")){
@@ -120,8 +120,10 @@ function check_test_status(input_element){
         qastatus.addClass("btn-success");
     }else if(result.gen_status === QAUtils.TOLERANCE){
         qastatus.addClass("btn-warning");
-    }else{
+    }else if(result.gen_status === QAUtils.ACTION){
         qastatus.addClass("btn-danger");
+    }else{
+        qastatus.addClass("btn-info");
     }
 }
 

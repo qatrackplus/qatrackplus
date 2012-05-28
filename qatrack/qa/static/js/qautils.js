@@ -89,17 +89,17 @@ var QAUtils = new function() {
         var status, gen_status;
         var message;
 
+		if (isNaN(reference.value) || (!tolerances.type)){
+            return {
+                status:this.NO_TOL,
+                gen_status:this.NO_TOL,
+                diff:"",
+                message: this.NO_TOL_DISP
+            };
+		}
+
         if (is_bool){
             return this.test_bool(value, reference)
-        }
-
-        if (!tolerances.type){
-            return {
-                status:this.WITHIN_TOL,
-                gen_status:this.WITHIN_TOL,
-                diff:"",
-                message: this.WITHIN_TOL_DISP
-            };
         }
 
         if (tolerances.type == this.PERCENT){
