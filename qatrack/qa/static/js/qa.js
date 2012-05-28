@@ -235,6 +235,26 @@ function set_cycle_link(){
     $("#change-test-list").attr("href",window.location.pathname+"?day="+day);
 }
 
+/***************************************************************/
+function confirm_leave_page(){
+    var confirm_msg = "If you leave this page now you will lose all entered values.";
+    var inp_type;
+    var inputs = $(".qa-input");
+    var inp;
+    var inp_idx;
+
+    for (inp_idx=0; inp_idx < inputs.length; inp_idx++){
+        inp = $(inputs[inp_idx]);
+        inp_type = inp.attr("type")
+        if ((inp_type === "radio") && inp.is(":checked")){
+            return confirm_msg;
+        }else if((inp_type === "text") && (inp.val() !== "")){
+            return confirm_msg;
+        }else if((inp_type !== "radio") && (inp_type !== "text")){
+            return "Unknown input type";
+        }
+    }
+}
 /****************************************************************/
 $(document).ready(function(){
 
@@ -286,6 +306,15 @@ $(document).ready(function(){
         }
     });
 
+    //make sure user actually want's to go back
+    //this is here to help mitigate the risk that a user hits back or backspace key
+    //by accident and completely hoses all the information they've entered during
+    //a qa session
+    $(window).bind("beforeunload",confirm_leave_page);
+    $("#qa-form").submit(function(){
+        $(window).unbind("beforeunload")
+    });
+
     //automaticall unhide comment if test is being skipped
     $(".qa-skip input").click(function(){
         if ($(this).is(':checked')){
@@ -297,6 +326,7 @@ $(document).ready(function(){
 
     //run a full validation on page load
     full_validation();
+
 
 });
 
