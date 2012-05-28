@@ -72,7 +72,7 @@ var QAUtils = new function() {
     this.percent_difference = function(measured, reference){
         //reference = 0. is a special case
         if (Math.abs(reference) < this.EPSILON){
-            return absolute_difference(measured,reference);
+            return this.absolute_difference(measured,reference);
         }
         return 100.*(measured-reference)/reference;
     };
@@ -89,7 +89,7 @@ var QAUtils = new function() {
         var status, gen_status;
         var message;
 
-		if (isNaN(reference) || (!tolerances.type)){
+		if ( !this.is_number(reference) || !tolerances.type){
             return {
                 status:this.NO_TOL,
                 gen_status:this.NO_TOL,
@@ -99,10 +99,10 @@ var QAUtils = new function() {
 		}
 
         if (is_bool){
-            return this.test_bool(value, reference)
+            return this.test_bool(value, reference);
         }
 
-        if (tolerances.type == this.PERCENT){
+        if (tolerances.type === this.PERCENT){
             diff = this.percent_difference(value,reference);
             message = "(" + diff.toFixed(1)+")";
 
@@ -148,18 +148,18 @@ var QAUtils = new function() {
                 status = this.ACT_HIGH;
             }
             message = "FAIL";
-            gen_status == this.ACTION;
+            gen_status = this.ACTION;
         }else{
             message = "PASS";
             gen_status = this.WITHIN_TOL;
         }
 
-        return {status:status, gen_status:gen_status, diff:diff, message:message}
+        return {status:status, gen_status:gen_status, diff:diff, message:message};
     };
 
     //convert an percent difference to absolute based on reference
     this.convert_tol_to_abs = function(ref,tol){
-        if (tol.type == this.ABSOLUTE){
+        if (tol.type === this.ABSOLUTE){
             return tol;
         }
         return {
@@ -178,7 +178,7 @@ var QAUtils = new function() {
 			t = tolerance;
 			v = reference.value;
 
-			if (reference.type == this.BOOLEAN){
+			if (reference.type === this.BOOLEAN){
 				if (Math.abs(reference.value - 1.) < this.EPSILON){
 					s = "Yes Expected";
 				}else{
@@ -195,20 +195,20 @@ var QAUtils = new function() {
 
 		return s;
 
-    }
+    };
 
 	//return a string representation of an instance value
 	this.format_instance_value= function(instance){
 		var s;
 		if (instance.skipped){
 			s = "<em>Skipped</em>";
-		}else if (instance.test.type == this.BOOLEAN){
+		}else if (instance.test.type === this.BOOLEAN){
 			s = Math.abs(instance.value -1.) < this.EPSILON ? "Yes" : "No";
 		}else{
 			s = instance.value.toString();
 		}
 		return s;
-	}
+	};
 
     //return an appropriate display for a given pass_fail status
     this.qa_displays = {};
@@ -219,12 +219,12 @@ var QAUtils = new function() {
 	this.qa_displays[this.NO_TOL] = this.NO_TOL_DISP;
     this.qa_display = function(pass_fail){
         return this.qa_displays[pass_fail.toLowerCase()] || "";
-    }
+    };
 
     //return an appropriate colour for a given pass_fail status
     this.qa_colors = {};
     this.qa_colors[this.ACTION] = this.ACT_COLOR;
-    this.qa_colors[this.TOLERANCE] = this.TOL_COLOR
+    this.qa_colors[this.TOLERANCE] = this.TOL_COLOR;
     this.qa_colors[this.WITHIN_TOL] = this.OK_COLOR;
 	this.qa_colors[this.NOT_DONE] = this.NOT_DONE_COLOR;
 	this.qa_colors[this.NO_TOL] = this.NOT_DONE_COLOR;
@@ -232,7 +232,7 @@ var QAUtils = new function() {
     this.qa_color = function(pass_fail){
         return this.qa_colors[pass_fail.toLowerCase()] || "";
 
-    }
+    };
     /********************************************************************/
     //AJAX calls
 
@@ -254,8 +254,8 @@ var QAUtils = new function() {
                 console.log(error);
                 var msg = "Something went wrong with your request:\n    ";
                 var props = ["responseText","status","statusText"];
-                var err_vals = $.map(props,function(prop){return prop+": "+error[prop]})
-                msg += err_vals.join("\n    ")
+                var err_vals = $.map(props,function(prop){return prop+": "+error[prop];});
+                msg += err_vals.join("\n    ");
                 alert(msg);
             }
         });
@@ -264,7 +264,7 @@ var QAUtils = new function() {
     //update all instances in instance_uris with a given status
     this.set_test_instances_status = function(instance_uris,status,callback){
         var objects = $.map(instance_uris,function(uri){
-            return {resource_uri:uri,status:status}
+            return {resource_uri:uri,status:status};
         });
 
         this.call_api(
@@ -272,14 +272,14 @@ var QAUtils = new function() {
             "PATCH",
             JSON.stringify({objects:objects}),
             callback
-        )
+        );
     };
 
     //get resources for a given resource name
     this.get_resources = function(resource_name,callback, data){
 
         //make sure limit option is set
-        if (data == null){
+        if (data === null || data === undefined){
             data = {limit:0};
         }else if (!data.hasOwnProperty("limit")){
             data["limit"] = 0;
@@ -313,16 +313,16 @@ var QAUtils = new function() {
     };
 
     this.intersection = function(a1,a2){
-        return $(a1).filter(function(idx,elem){return $.inArray(elem,a2)>=0;})
+        return $(a1).filter(function(idx,elem){return $.inArray(elem,a2)>=0;});
     };
 
 	this.is_number = function(n){
-		return !isNaN(parseFloat(n)) && isFinite(n)
+		return !isNaN(parseFloat(n)) && isFinite(n);
 	};
 
 	this.options_from_url_hash = function(hash){
 		var options = {};
-		if (hash[0] == "#"){
+		if (hash[0] === "#"){
 			hash = hash.substring(1,hash.length);
 		}
 		var that = this;
@@ -349,7 +349,7 @@ var QAUtils = new function() {
 	};
 
 	this.instance_has_ref_tol = function(instance){
-		return (instance.reference !== null) && (instance.reference !== null);
+		return (instance.reference !== null) && (instance.tolerance !== null);
 	};
 
 	//*********************************************************************
@@ -380,7 +380,8 @@ var QAUtils = new function() {
 
         // parse strings, leading zeros into proper ints
         var a = [1,2,3,4,5,6,10,11];
-        for (var i in a) {
+		var i;
+        for (i in a) {
             d[a[i]] = parseInt(d[a[i]], 10);
         }
         d[7] = parseFloat(d[7]);
@@ -396,12 +397,12 @@ var QAUtils = new function() {
         }
 
         // if there's a timezone, calculate it
-        if (d[8] != "Z" && d[10]) {
+        if (d[8] !== "Z" && d[10]) {
             var offset = d[10] * 60 * 60 * 1000;
             if (d[11]) {
                 offset += d[11] * 60 * 1000;
             }
-            if (d[9] == "-") {
+            if (d[9] === "-") {
                 ms -= offset;
             }
             else {
@@ -421,7 +422,7 @@ var QAUtils = new function() {
     };
 	this.milliseconds_to_days = function(ms){
 		return ms/(1000*60*60*24);
-	}
+	};
 	this.compare_due_date_delta = function(delta,due,overdue){
 		if (delta >= overdue ){
 			return this.OVERDUE;
@@ -429,7 +430,7 @@ var QAUtils = new function() {
 			return this.DUE;
 		}
 		return this.NOT_DUE;
-	}
+	};
 	this.due_status = function(due_date,frequency){
 
 		var today = new Date();
@@ -470,6 +471,6 @@ var QAUtils = new function() {
 		}
 
 		$(elem).css("background-color",color);
-	}
+	};
 
 }();

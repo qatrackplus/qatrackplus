@@ -1,5 +1,4 @@
 "use strict";
-
 var test_list_data = {};
 var main_graph;
 var previous_point = null;
@@ -35,7 +34,7 @@ function convert_to_flot_series(idx,collection){
 
     var series = [];
 
-    var create_name = function(type){return collection.short_name+'_unit'+collection.unit+"_"+type;}
+    var create_name = function(type){return collection.short_name+'_unit'+collection.unit+"_"+type;};
 
     var dates = $.map(collection.data.dates,QAUtils.parse_iso8601_date);
 
@@ -64,7 +63,7 @@ function convert_to_flot_series(idx,collection){
                 id: create_name(type),
                 data:tolerances[type],
                 lines: {show:true, lineWidth:0,steps:true}
-            }
+            };
 
             if (idx>0) {
                 opts["fillBetween"] = series[series.length-1].id;
@@ -252,6 +251,7 @@ function setup_filters(on_complete){
         /*set up test list test filters */
         QAUtils.get_resources(filter.resource_name,function(resources){
             var options = "";
+			var checked;
             $(resources.objects).each(function(index,resource){
                 var display = resource[filter.display_property];
                 var value = resource[filter.value_property];
@@ -262,9 +262,9 @@ function setup_filters(on_complete){
                         (filter.to_check[0] === "all")
                     )
                 ){
-                    var checked = 'checked="checked"';
+                    checked = 'checked="checked"';
                 }else{
-                    var checked = filter.check_all ? 'checked="checked"' : "";
+                    checked = filter.check_all ? 'checked="checked"' : "";
                 }
                 options += '<label class="checkbox"><input type="checkbox" ' + checked + ' value="' + value + '">' + display + '</input></label>';
             });
@@ -303,7 +303,7 @@ function show_tooltip(x, y, contents) {
 function on_hover(event, pos, test) {
 
     if (test) {
-        if (previous_point != test.dataIndex) {
+        if (previous_point !== test.dataIndex) {
 
             previous_point = test.dataIndex;
 
@@ -329,9 +329,9 @@ function populate_test_list_members(on_complete){
             test_list_members[test_list.slug] = test_list;
         });
         //signal we've finished all our tests
-        var counter=1, ntests=1
+        var counter=1, ntests=1;
         on_complete(counter,ntests);
-    })
+    });
 }
 /*************************************************************************/
 //filter the test list tests based on user choices
@@ -403,8 +403,9 @@ $(document).ready(function(){
                 hoverable:true
             }
         }
-    )
-    $(window).resize = function(){main_graph.resize();}
+    );
+
+    $(window).resize = function(){main_graph.resize();};
     $("#trend-chart").bind("plothover", on_hover);
 
 
@@ -415,7 +416,8 @@ $(document).ready(function(){
         set_options_from_url();
         $("#test-collapse").collapse("show");
 
-    }
+    };
+
     var async_finished = 0;
     var total_async_tasks = 2;
     var update_count = function(){
