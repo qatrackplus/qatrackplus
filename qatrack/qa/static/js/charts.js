@@ -244,8 +244,10 @@ function setup_filters(on_complete){
 
     ];
     var ajax_counter =0;
+
     $(filters).each(function(idx,filter){
-        $(filter.container).html('<i class="icon-time"></i><em>Loading...</em>');
+		var toggle = $(filter.container).parent().parent().find(".accordion-toggle");
+		toggle.html('<i class="icon-time"></i>'+toggle.html()+'<em>Loading...</em>');
 
         /*set up test list test filters */
         QAUtils.get_resources(filter.resource_name,function(resources){
@@ -268,6 +270,8 @@ function setup_filters(on_complete){
             });
 
             $(filter.container).html(options);
+
+			toggle.find("i, em").remove();
 
             //signal when we've completed all async calls
             ajax_counter += 1;
