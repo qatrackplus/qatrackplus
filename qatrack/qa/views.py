@@ -296,15 +296,15 @@ class UserBasedTestLists(TemplateView):
                 cycles = utl.cycles.filter(assigned_to=group.groupprofile)
 
             for tl in list(test_lists.all())+list(cycles.all()):
-                next_tl = tl
+                next_tl, list_type = tl, "test_list"
                 if isinstance(tl, models.TestListCycle):
                     next_tl = tl.next_for_unit(utl.unit)
-
+                    list_type = "cycle"
                 last = tl.last_completed_instance(utl.unit)
                 last_done = last.work_completed if last else None
 
                 due_date = models.due_date(utl.unit,next_tl)
-                user_test_lists.append((utl,next_tl,last_done,due_date))
+                user_test_lists.append((utl,next_tl,last_done,due_date,list_type))
 
         table_headers = ["Unit","Frequency","Test List", "Last Done", "Due Date"]
 
