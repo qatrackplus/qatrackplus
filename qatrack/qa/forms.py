@@ -112,7 +112,9 @@ class TestInstanceFormset(BaseTestInstanceFormset):
 #============================================================================
 class TestListInstanceForm(forms.ModelForm):
     """parent form for doing qa test list"""
-    status = forms.ChoiceField(choices=models.STATUS_CHOICES)
+    status = forms.ChoiceField(choices=models.STATUS_CHOICES,required=False)
+    work_completed = forms.DateTimeField(required=False)
+
     #----------------------------------------------------------------------
     class Meta:
         model = models.TestListInstance
@@ -126,4 +128,3 @@ class TestListInstanceForm(forms.ModelForm):
         self.fields["work_completed"].widget.attrs["title"] = settings.DATETIME_HELP
         self.fields["work_completed"].help_text = settings.DATETIME_HELP
         self.fields["work_completed"].localize = True
-        #self.fields["work_completed"].widget.attrs["readonly"] = True

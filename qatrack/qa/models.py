@@ -644,7 +644,7 @@ class TestInstance(models.Model):
     def save(self, *args, **kwargs):
         """set status to unreviewed if not previously set"""
         if not self.status:
-            self.status = self.UNREVIEWED
+            self.status = UNREVIEWED
         self.calculate_pass_fail()
         super(TestInstance,self).save(*args,**kwargs)
     #----------------------------------------------------------------------
