@@ -43,7 +43,13 @@
 							<tr class="{% cycle 'odd' 'even' %} has-due-date" data-due="{{due.isoformat}}" data-frequency="{{utl.frequency}}">
 								<td>{{utl.unit.name}}</td>
 								<td>{{utl.frequency.title}}</td>
-								<td>{{test_list.name}}</td>
+								<td>
+									{% if list_type = "cycle" %}
+										{{test_list.cycle.name}}
+									{% else %}
+										{{test_list.name}}
+									{% endif %}
+								</td>
 								<td>{% if last_done %}{{last_done}}{%else%}New Test{%endif%}</td>
 								<td><span class="label due-status">{% if due %}{{due.date}}{%else%}New Test{%endif%}</span></td>
 								<td>

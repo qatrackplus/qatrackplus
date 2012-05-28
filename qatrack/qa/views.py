@@ -177,7 +177,7 @@ class PerformQAView(FormView):
         if self.kwargs["type"] == "cycle":
             cycle = get_object_or_404(models.TestListCycle,pk=self.kwargs["pk"])
             day = self.request.GET.get("day")
-            if day == "next":
+            if day == "next" or day is None:
                 cycle_membership = cycle.next_for_unit(unit)
             else:
                 try:
