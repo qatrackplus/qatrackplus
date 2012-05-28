@@ -478,10 +478,21 @@ class UnitTestListManager(models.Manager):
 #----------------------------------------------------------------------
 def due_date(unit,test_list):
     """return the next due date of a test_list for a given unit"""
-    unit_test_list = UnitTestLists.objects.get(
-        unit = unit, test_lists__pk = test_list.pk
-    )
-    last_instance = test_list.last_completed_instance(unit)
+
+    if None in  (unit, test_list,):
+        return None
+
+    try:
+        unit_test_list = UnitTestLists.objects.get(
+            unit = unit, test_lists__pk = test_list.pk
+        )
+    except UnitTestLists.DoesNotExist:
+        return None
+
+    if hasattr(test_list,"cycle"):
+        last_instance = test_list.cycle.last_completed_instance(unit)
+    else:
+        last_instance = test_list.last_completed_instance(unit)
     delta = FREQUENCY_DELTAS[unit_test_list.frequency]
     if last_instance:
         return (last_instance.work_completed + delta)
@@ -583,6 +594,7 @@ def unit_test_list_change(*args,**kwargs):
             create_unittestinfos(test_list,utl.unit)
 
 #----------------------------------------------------------------------
+@receiver(post_save, sender="TestListCycleMembership")
 @receiver(post_save, sender=TestListMembership)
 def test_added_to_list(*args,**kwargs):
     """make sure there are UnitTestInfo objects for all tests (1)
@@ -754,7 +766,10 @@ class TestListCycle(models.Model):
     #----------------------------------------------------------------------
     def first(self):
         """return first in order membership object for this cycle"""
-        return TestListCycleMembership.objects.get(cycle=self, order=0)
+        try:
+            return TestListCycleMembership.objects.get(cycle=self, order=0)
+        except TestListCycleMembership.DoesNotExist:
+            return None
     #----------------------------------------------------------------------
     def last_completed(self,unit):
         """return the membership object of the last completed test_list
@@ -789,12 +804,18 @@ class TestListCycle(models.Model):
 
         if next_order >= ntest_lists:
             return self.first()
-
-        return TestListCycleMembership.objects.get(cycle=self, order=next_order)
+        try:
+            return TestListCycleMembership.objects.get(cycle=self, order=next_order)
+        except TestListCycleMembership.DoesNotExist:
+            return None
     #----------------------------------------------------------------------
     def membership_by_order(self,order):
         """return membership for unit with given order"""
-        return TestListCycleMembership.objects.get(cycle=self, order=order)
+        try:
+            return TestListCycleMembership.objects.get(cycle=self, order=order)
+        except TestListCycleMembership.DoesNotExist:
+            return None
+
     #----------------------------------------------------------------------
     def last_completed_instance(self, unit):
         """return the last instance of this test list that was performed
@@ -805,7 +826,7 @@ class TestListCycle(models.Model):
                 unit=unit,
                 test_list__in=self.test_lists.all()
             ).latest("work_completed")
-        except self.DoesNotExist:
+        except TestListInstance.DoesNotExist:
             return None
 
     #----------------------------------------------------------------------
@@ -828,3 +849,18 @@ class TestListCycleMembership(models.Model):
         #memberships they can have the same order temporarily when orders are changed
         #unique_together = (("order", "cycle"),)
 
+@receiver(post_save, sender=TestListCycleMembership)
+def test_added_to_list(*args,**kwargs):
+    """make sure there are UnitTestInfo objects for all tests (1)
+
+    (1) Note that this can't be done in the TestList.save method because the
+    many to many relationships are not updated until after the save method has
+    been executed. See http://stackoverflow.com/questions/1925383/issue-with-manytomany-relationships-not-updating-inmediatly-after-save
+    """
+
+
+    tlm = kwargs["instance"]
+    unit_test_lists = UnitTestLists.objects.filter(test_lists=tlm.test_list)
+    for utl in unit_test_lists:
+        for test in tlm.test_list.tests.all():
+            UnitTestInfo.objects.get_or_create(unit=utl.unit, test=test)

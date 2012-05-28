@@ -27,10 +27,12 @@
     <div class="span12">
         <form class="nosubmit form-inline" id="qa-form" method="POST" action="">
             {% csrf_token %}
-			{% if include_admin %}
+			{% if include_admin or days%}
+
 
 	        <div id="admin_controls" class="well controls">
 				<h4>Admin Controls</h4>
+				{% if include_admin %}
 				<label for="category_filter" class="control-label">
 					<div>Filter by categories:</div>
 					<div>
@@ -64,8 +66,8 @@
 						{% endfor %}
 					</div>
 				</label>
-
-
+				{% endif %}
+				{% if days %}
 				<label for="cycle-day" class="control-group" >
 					<div>
 						Choose Day:
@@ -81,7 +83,7 @@
 						</select><a href="#" class="btn add-on" type="button" {% if not days %}id="change-test-list"{%endif%}>Go</a>
 					</div>
 				</label>
-
+				{% endif %}
 	        </div>
 			{% endif %}
 
