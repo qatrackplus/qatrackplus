@@ -594,7 +594,6 @@ def unit_test_list_change(*args,**kwargs):
             create_unittestinfos(test_list,utl.unit)
 
 #----------------------------------------------------------------------
-@receiver(post_save, sender="TestListCycleMembership")
 @receiver(post_save, sender=TestListMembership)
 def test_added_to_list(*args,**kwargs):
     """make sure there are UnitTestInfo objects for all tests (1)
@@ -850,7 +849,7 @@ class TestListCycleMembership(models.Model):
         #unique_together = (("order", "cycle"),)
 
 @receiver(post_save, sender=TestListCycleMembership)
-def test_added_to_list(*args,**kwargs):
+def test_added_to_cycle_member(*args,**kwargs):
     """make sure there are UnitTestInfo objects for all tests (1)
 
     (1) Note that this can't be done in the TestList.save method because the
