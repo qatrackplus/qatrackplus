@@ -159,7 +159,7 @@ class Tolerance(models.Model):
     def percent_difference(self,instance,reference):
         """return percent difference between instance and reference"""
         if (reference.value < EPSILON):
-            return self.difference(instance,reference)
+            raise ValueError("Tried to calculate percent diff with a zero reference value")
         return 100.*(instance.value-reference.value)/float(reference.value)
     #----------------------------------------------------------------------
     def test_instance(self,instance,reference):
@@ -266,7 +266,8 @@ class Test(models.Model):
         where the act_*, tol_* and ref are the current tolerances and references
         for this (test,unit) pair
         """
-        unit_info = UnitTestInfo.objects.filter(unit=unit,test_list=self)
+
+        unit_info = UnitTestInfo.objects.get(unit=unit,test=self)
         tol = unit_info.tolerance
         ref = unit_info.reference
 
@@ -281,13 +282,6 @@ class Test(models.Model):
             val = None
 
         return tols[:2]+[val]+tols[-2:]
-
-
-
-    #---------------------------------------------------------------------------
-    def is_boolean(self):
-        """return True if this is a boolean test, otherwise False"""
-        return self.type == "boolean"
 
     #----------------------------------------------------------------------
     def clean_calculation_procedure(self):
@@ -365,6 +359,15 @@ class UnitTestInfo(models.Model):
     class Meta:
         verbose_name_plural = "Set References & Tolerances"
         unique_together = ["test","unit"]
+    #----------------------------------------------------------------------
+    def clean(self):
+        """extra validation for Tests"""
+        super(UnitTestInfo,self).clean()
+        if None not in (self.reference, self.tolerance):
+            if self.tolerance.type == PERCENT and self.reference.value < EPSILON:
+                msg = _("Percentage based tolerances can not be used with reference value of zero (0)")
+                raise ValidationError(msg)
+
 
 #============================================================================
 class TestListMembership(models.Model):
