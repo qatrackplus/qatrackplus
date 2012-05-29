@@ -165,7 +165,7 @@ INSTALLED_APPS = (
     #'debug_toolbar',
     #qatrack specific
     #'qatrack.qatrack_tags',
-
+    'qatrack.accounts',
     'qatrack.units',
     'qatrack.qagroups',
     'qatrack.qa',

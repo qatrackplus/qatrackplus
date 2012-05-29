@@ -20,3 +20,4 @@ local_settings.py
 fixtures/dev
 questions_*
 qatrack/static
+ldap.debug
