@@ -1,4 +1,5 @@
 from django.core.urlresolvers import reverse
+from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.test.client import Client
 from django.test.utils import setup_test_environment
@@ -8,7 +9,7 @@ from django.contrib.auth.models import User
 from qatrack.qa import models
 from qatrack.units.models import Unit
 
-def create_basic_test(name):
+def create_basic_test(name,test_type=models.SIMPLE):
 
     cat = models.Category.objects.get(pk=1)
 
@@ -18,7 +19,7 @@ def create_basic_test(name):
         name = name,
         short_name=name,
         description = "foo",
-        type = models.SIMPLE,
+        type = test_type,
         category = cat,
         created_by = user,
         modified_by = user,
@@ -312,8 +313,36 @@ class RefTolTests(TestCase):
             self.assertEqual(models.ACTION,test)
     #----------------------------------------------------------------------
     def test_absolute(self):
-        """"""
-        pass
+
+        test = models.Test(type=models.SIMPLE)
+        ti = models.TestInstance(test=test)
+        ref = models.Reference(type=models.NUMERICAL,value=100.)
+        tol = models.Tolerance(
+            type=models.ABSOLUTE,
+            act_low = -3,
+            tol_low = -2,
+            tol_high=  2,
+            act_high=  3,
+        )
+        tests = (
+            (models.ACTION,96),
+            (models.ACTION,-100),
+            (models.ACTION,1E99),
+            (models.ACTION,103.1),
+            (models.TOLERANCE,97),
+            (models.TOLERANCE,97.5),
+            (models.TOLERANCE,102.1),
+            (models.TOLERANCE,103),
+            (models.OK,100),
+            (models.OK,102),
+            (models.OK,98),
+        )
+
+        for result,val in tests:
+            ti.value = val
+            r = tol.test_instance(ti,ref)
+            self.assertEqual(result,r)
+
     #----------------------------------------------------------------------
     def test_percent(self):
 
@@ -363,7 +392,7 @@ class RefTolTests(TestCase):
 
     #----------------------------------------------------------------------
     def test_create_unittestinfo_invalid(self):
-        from django.core.exceptions import ValidationError
+
 
         cat = models.Category.objects.get(pk=1)
         unit = Unit.objects.get(pk=1)
@@ -472,6 +501,62 @@ class TestTests(TestCase):
             test.unit_ref_tol(utl.unit),
             [t.act_low,t.tol_low,None,t.tol_high,t.act_high]
         )
+
+    #----------------------------------------------------------------------
+    def test_invalid_calc_procedure(self):
+
+        test = models.Test(type=models.SIMPLE)
+
+        #don't need to check if not composite
+        self.assertIsNone(test.clean_calculation_procedure())
+
+        #calc procedure but test type not compsite
+        test.calculation_procedure = "foo"
+        with self.assertRaises(ValidationError):
+            test.clean_calculation_procedure()
+
+        test.type = models.COMPOSITE
+
+        #no result line defined
+        with self.assertRaises(ValidationError):
+            test.clean_calculation_procedure()
+
+        invalid_calc_procedures = (
+            "resul t = a + b",
+            "_result = a + b",
+            "0result = a+b",
+            " result = a + b",
+            "result_=foo",
+        )
+
+        for icp in invalid_calc_procedures:
+            test.calculation_procedure = icp
+            with self.assertRaises(ValidationError):
+                test.clean_calculation_procedure()
+
+    #----------------------------------------------------------------------
+    def test_valid_calc_procedure(self):
+        test = models.Test(type=models.SIMPLE)
+        test.type = models.COMPOSITE
+
+        valid_calc_procedures = (
+            "result = a + b",
+            "result = 42",
+            """foo = a + b
+result = foo + bar""",
+            """foo = a + b
+result = foo + bar
+
+    """
+        )
+        for vcp in valid_calc_procedures:
+            test.calculation_procedure = vcp
+            try:
+                test.clean_calculation_procedure()
+            except:
+                print vcp
+                raise
+
 
 if __name__ == "__main__":
     setup_test_environment()
