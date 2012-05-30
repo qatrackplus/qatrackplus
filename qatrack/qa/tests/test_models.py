@@ -531,8 +531,12 @@ class TestTests(TestCase):
 
         for icp in invalid_calc_procedures:
             test.calculation_procedure = icp
-            with self.assertRaises(ValidationError):
+            try:
+                msg = ""
                 test.clean_calculation_procedure()
+            except ValidationError:
+                msg = icp
+            self.assertTrue(len(msg)>0,msg)
 
     #----------------------------------------------------------------------
     def test_valid_calc_procedure(self):
