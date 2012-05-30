@@ -503,7 +503,7 @@ def due_date(unit,test_list):
     delta = FREQUENCY_DELTAS[unit_test_list.frequency]
     if last_instance:
         return (last_instance.work_completed + delta)
-    return None
+
 
 
 
@@ -551,17 +551,49 @@ class UnitTestLists(models.Model):
     def test_lists_cycles_and_last_complete(self):
         """return all cycle objects and last complete instance of each cycle"""
         return self.test_lists_and_last_complete() + self.cycles_and_last_complete()
-    #----------------------------------------------------------------------
-    def lists_and_cycles(self):
-        """"""
-        for test_list in self.test_lists.all():
-            yield test_list
-        for cycle in self.cycles.all():
-            yield cycle
 
     #----------------------------------------------------------------------
     def name(self):
         return self.__unicode__()
+    #----------------------------------------------------------------------
+    def clean_test_lists(self):
+        """ensure test list is only set for one frequency for a given unit"""
+        errors = []
+
+        for test_list in self.test_lists.all():
+            utls = UnitTestLists.objects.filter(
+                unit=self.unit,
+                test_lists__pk=test_list.pk
+            )
+            if utls.count()>1:
+                freq = dict(FREQUENCY_CHOICES)[utls[0].frequency]
+                msg = _("This test is already performed on a %s basis for this unit" % freq)
+                errors.append(msg)
+        if errors:
+            raise ValidationError({"test_lists":errors})
+    #----------------------------------------------------------------------
+    def clean_cycles(self):
+        """ensure cycle is only set for one frequency for a given unit"""
+        errors = []
+        for cycle in self.cycles.all():
+            utls = UnitTestLists.objects.filter(
+                unit=self.unit,
+                cycles__pk=cycle.pk
+            )
+            if utls.count()>1:
+                freq = dict(FREQUENCY_CHOICES)[utls[0].frequency]
+                msg = _("This cycle is already performed on a %s basis for this unit" % freq)
+                errors.append(msg)
+        if errors:
+            raise ValidationError({"cycles":errors})
+
+    #----------------------------------------------------------------------
+    def clean_fields(self,exclude=None):
+
+        super(UnitTestLists,self).clean_fields(exclude)
+        self.clean_test_lists()
+        self.clean_cycles()
+
 
     #----------------------------------------------------------------------
     def __unicode__(self):
@@ -713,14 +745,14 @@ class TestListInstance(models.Model):
         status = [(status,display,self.testinstance_set.filter(pass_fail=status)) for status,display in PASS_FAIL_CHOICES]
         if not formatted:
             return status
-        return " ".join(["%d %s" %(s.count(),d) for _,d,s in status])
+        return ", ".join(["%d %s" %(s.count(),d) for _,d,s in status])
     #----------------------------------------------------------------------
     def status(self,formatted=False):
         """return string with review status of this qa instance"""
         status = [(status,display,self.testinstance_set.filter(status=status)) for status,display in STATUS_CHOICES]
         if not formatted:
             return status
-        return " ".join(["%d %s" %(s.count(),d) for _,d,s in status])
+        return ", ".join(["%d %s" %(s.count(),d) for _,d,s in status])
 
     #---------------------------------------------------------------------------
     def __unicode__(self):
@@ -730,18 +762,6 @@ class TestListInstance(models.Model):
         except:
             return "TestListInstance(Empty)"
 
-
-#============================================================================
-class CycleManager(models.Manager):
-    #----------------------------------------------------------------------
-    def by_unit(self,unit):
-        return self.get_query_set().filter(units__in=[unit])
-    #----------------------------------------------------------------------
-    def by_frequency(self,frequency):
-        return self.get_query_set().filter()
-    #----------------------------------------------------------------------
-    def by_unit_frequency(self,unit,frequency):
-        return self.get_query_set().filter(units__in=[unit],frequency=frequency)
 
 #============================================================================
 class TestListCycle(models.Model):
@@ -759,7 +779,6 @@ class TestListCycle(models.Model):
 
     assigned_to = models.ForeignKey(GroupProfile,help_text = _("QA group that this test list should nominally be performed by"),null=True)
 
-    objects = CycleManager()
 
     #----------------------------------------------------------------------
     def __len__(self):
@@ -810,10 +829,8 @@ class TestListCycle(models.Model):
 
         if next_order >= ntest_lists:
             return self.first()
-        try:
-            return TestListCycleMembership.objects.get(cycle=self, order=next_order)
-        except TestListCycleMembership.DoesNotExist:
-            return None
+
+        return TestListCycleMembership.objects.get(cycle=self, order=next_order)
     #----------------------------------------------------------------------
     def membership_by_order(self,order):
         """return membership for unit with given order"""
@@ -826,7 +843,6 @@ class TestListCycle(models.Model):
     def last_completed_instance(self, unit):
         """return the last instance of this test list that was performed
         for a given Unit or None if it has never been performed"""
-
         try:
             return TestListInstance.objects.filter(
                 unit=unit,

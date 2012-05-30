@@ -108,12 +108,15 @@ class CycleTest(TestCase):
         test_lists = models.TestList.objects.all()
 
         for order,tl in enumerate(test_lists):
+
             membership = models.TestListCycleMembership(
                 test_list = tl,
                 order = order,
                 cycle = self.cycle
             )
             membership.save()
+            if order == 0:
+                self.first_membership = membership
 
     #----------------------------------------------------------------------
     def get_instance_for_test_list(self,test_list,unit):
@@ -158,6 +161,16 @@ class CycleTest(TestCase):
             cycle=self.cycle,order=0
         )
         self.assertEqual(membership,self.cycle.last_completed(unit))
+        self.assertEqual(None,self.cycle.last_completed(self.cycle.units.all()[1]))
+    #----------------------------------------------------------------------
+    def test_last_instance_for_unit(self):
+
+        unit = self.cycle.units.all()[0]
+        test_list = self.cycle.first().test_list
+        instance = self.get_instance_for_test_list(test_list,unit)
+        self.assertEqual(instance,self.cycle.last_completed_instance(unit))
+        self.assertEqual(None,self.cycle.last_completed_instance(self.cycle.units.all()[1]))
+
     #----------------------------------------------------------------------
     def test_next_for_unit(self):
 
@@ -182,9 +195,20 @@ class CycleTest(TestCase):
         next_ =  self.cycle.next_for_unit(unit)
         self.assertEqual(next_,memberships[0])
 
+
     #----------------------------------------------------------------------
     def test_length(self):
         self.assertEqual(self.NLISTS,len(self.cycle))
+        self.assertEqual(0,len(models.TestListCycle()))
+    #----------------------------------------------------------------------
+    def test_first(self):
+        self.assertEqual(self.cycle.first(),self.first_membership)
+        self.assertEqual(None,models.TestListCycle().first())
+    #----------------------------------------------------------------------
+    def test_membership_by_order(self):
+        self.assertEqual(self.cycle.membership_by_order(0),self.first_membership)
+        self.assertEqual(None,self.cycle.membership_by_order(100))
+
 
 
 class UnitTestListTests(TestCase):
@@ -391,51 +415,12 @@ class RefTolTests(TestCase):
             )
 
     #----------------------------------------------------------------------
-    def test_create_unittestinfo_invalid(self):
+    def test_skipped(self):
+        tol = models.Tolerance(type=models.PERCENT,)
+        ti = models.TestInstance(skipped=True)
+        ti.calculate_pass_fail()
+        self.assertEqual(models.NOT_DONE,ti.pass_fail)
 
-
-        cat = models.Category.objects.get(pk=1)
-        unit = Unit.objects.get(pk=1)
-        user = User.objects.get(pk=1)
-        test1 = models.Test(
-            name = "test1",
-            short_name="test1",
-            description = "desc",
-            type = models.SIMPLE,
-            category = cat,
-            created_by = user,
-            modified_by = user,
-        )
-
-        test1.save()
-
-        test_list = models.TestList(
-            name="test list",
-            slug="test list",
-            description="blah",
-            active=True,
-            created_by = user,
-            modified_by = user,
-        )
-        test_list.save()
-
-        membership = models.TestListMembership(test_list=test_list, test=test1, order=1)
-        membership.save()
-        test_list.save()
-
-        #get daily task list for unit
-        utl = models.UnitTestLists.objects.get(unit = unit, frequency = models.DAILY,)
-        utl.test_lists.add(test_list)
-        utl.save()
-
-        unit_test_info = models.UnitTestInfo.objects.get(
-            unit=unit,
-            test = test1
-        )
-        unit_test_info.reference = models.Reference(type=models.NUMERICAL,value=0)
-        unit_test_info.tolerance = models.Tolerance(type=models.PERCENT)
-
-        self.assertRaises(ValidationError,unit_test_info.clean)
 
 
 
@@ -646,6 +631,53 @@ result = foo + bar
         db_hist = test.history_for_unit(utl.unit.number,number=2)
         self.assertListEqual(sorted(history)[:2],db_hist)
 
+    #----------------------------------------------------------------------
+    def test_create_unittestinfo_invalid(self):
+
+
+        cat = models.Category.objects.get(pk=1)
+        unit = Unit.objects.get(pk=1)
+        user = User.objects.get(pk=1)
+        test1 = models.Test(
+            name = "test1",
+            short_name="test1",
+            description = "desc",
+            type = models.SIMPLE,
+            category = cat,
+            created_by = user,
+            modified_by = user,
+        )
+
+        test1.save()
+
+        test_list = models.TestList(
+            name="test list",
+            slug="test list",
+            description="blah",
+            active=True,
+            created_by = user,
+            modified_by = user,
+        )
+        test_list.save()
+
+        membership = models.TestListMembership(test_list=test_list, test=test1, order=1)
+        membership.save()
+        test_list.save()
+
+        #get daily task list for unit
+        utl = models.UnitTestLists.objects.get(unit = unit, frequency = models.DAILY,)
+        utl.test_lists.add(test_list)
+        utl.save()
+
+        unit_test_info = models.UnitTestInfo.objects.get(
+            unit=unit,
+            test = test1
+        )
+        unit_test_info.reference = models.Reference(type=models.NUMERICAL,value=0)
+        unit_test_info.tolerance = models.Tolerance(type=models.PERCENT)
+
+        self.assertRaises(ValidationError,unit_test_info.clean)
+
 #============================================================================
 class TestTestList(TestCase):
 
@@ -758,6 +790,62 @@ class TestNewUnitCreated(TestCase):
             models.UnitTestLists.objects.get(unit=u,frequency=freq).pk
         )
 
+class TestDueDates(TestCase):
+    fixtures = [
+        "test/units",
+        "test/categories",
+        "test/references",
+        "test/tolerances",
+        "test/users",
+    ]
+
+    #----------------------------------------------------------------------
+    def test_due_date_for_test_list(self):
+        test,test_list,utl, unit_test_info = create_basic_test("test")
+        utls = models.UnitTestLists.objects.by_unit(utl.unit)
+        tli = models.TestListInstance(
+            test_list=test_list,
+            unit=utl.unit,
+            created_by=test.created_by,
+            modified_by=test.created_by,
+        )
+        now = timezone.now()
+        tli.work_completed = now
+        tli.save()
+
+        delta = models.FREQUENCY_DELTAS[utl.frequency]
+        due = models.due_date(utl.unit,test_list)
+        self.assertEqual(now+delta,due)
+
+        self.assertIsNone(models.due_date(None,test_list))
+        self.assertIsNone(models.due_date(utl.unit,None))
+        self.assertIsNone(models.due_date(Unit.objects.get(pk=2),test_list))
+
+    #----------------------------------------------------------------------
+    def test_due_date_for_cycle(self):
+        cycle = models.TestListCycle(name="foo",frequency=models.DAILY)
+        cycle.save()
+        test,test_list,utl, unit_test_info = create_basic_test("test 1")
+        m1 = models.TestListCycleMembership(cycle=cycle,test_list=test_list,order=0)
+        m1.save()
+
+        utls = models.UnitTestLists.objects.by_unit(utl.unit)
+        tli = models.TestListInstance(
+            test_list=test_list,
+            unit=utl.unit,
+            created_by=test.created_by,
+            modified_by=test.created_by,
+        )
+        now = timezone.now()
+        tli.work_completed = now
+        tli.save()
+
+        delta = models.FREQUENCY_DELTAS[utl.frequency]
+        due = models.due_date(utl.unit,m1)
+        self.assertEqual(now+delta,due)
+
+
+#============================================================================
 class TestUnitTestLists(TestCase):
     fixtures = [
         "test/units",
@@ -768,21 +856,183 @@ class TestUnitTestLists(TestCase):
     ]
 
     #----------------------------------------------------------------------
-    def test_due_date(self):
-        test,test_list,utl, unit_test_info = create_basic_test("test")
+    def test_all_test_lists(self):
+        test,test_list,utl, unit_test_info = create_basic_test("test 1")
+        test2,test_list2,utl2, unit_test_info2 = create_basic_test("test 2")
 
+        #remove tl2 to confirm it is re-added by cycle
+        utl.test_lists.remove(test_list2)
+
+        cycle = models.TestListCycle(name="foo",frequency=models.DAILY)
+        cycle.save()
+        m1 = models.TestListCycleMembership(cycle=cycle,test_list=test_list2,order=0)
+        m1.save()
+
+        utl.cycles.add(cycle)
+        utl.save()
+
+        self.assertSetEqual(set(utl.all_test_lists()),set([test_list,test_list2]))
+
+        #test with_last_instance
+        now = timezone.now()
         tli = models.TestListInstance(
             test_list=test_list,
             unit=utl.unit,
             created_by=test.created_by,
             modified_by=test.created_by,
+            work_completed = now,
         )
-        tli.work_completed = timezone.now()
-
         tli.save()
 
-        due = models.due_date(utl.unit,test_list)
-        print due
+        tli2 = models.TestListInstance(
+            test_list=test_list2,
+            unit=utl.unit,
+            created_by=test.created_by,
+            modified_by=test.created_by,
+            work_completed = now
+        )
+        tli2.save()
+
+        self.assertSetEqual(
+            set(utl.all_test_lists(True)),
+            set([(test_list,tli),(test_list2,tli2)])
+        )
+
+        self.assertSetEqual(
+            set(utl.test_lists_cycles_and_last_complete()),
+            set([(test_list,tli),(cycle,tli2)])
+        )
+
+    #----------------------------------------------------------------------
+    def test_name(self):
+        test,test_list,utl, unit_test_info = create_basic_test("test 1")
+        self.assertEqual(str(utl),utl.name())
+
+    #----------------------------------------------------------------------
+    def test_clean_test_lists(self):
+
+        test,test_list,utl, unit_test_info = create_basic_test("test 1")
+        utl2 = models.UnitTestLists.objects.get(unit=utl.unit,frequency=models.MONTHLY)
+        with self.assertRaises(ValidationError):
+            utl2.test_lists.add(test_list)
+            utl2.clean_test_lists()
+
+    #----------------------------------------------------------------------
+    def test_clean_cycles(self):
+
+        test,test_list,utl, unit_test_info = create_basic_test("test 1")
+
+        cycle = models.TestListCycle(name="foo",frequency=models.DAILY)
+        cycle.save()
+        utl.cycles.add(cycle)
+        utl.save()
+
+        utl2 = models.UnitTestLists.objects.get(unit=utl.unit,frequency=models.MONTHLY)
+        with self.assertRaises(ValidationError):
+            utl2.cycles.add(cycle)
+            utl2.clean_cycles()
+    #----------------------------------------------------------------------
+    def test_valid(self):
+        test,test_list,utl, unit_test_info = create_basic_test("test 1")
+        utl.clean_fields()
+
+        #remove test from 2 so we can add it to 3 and make sure it validates
+        test2,test_list2,utl2, unit_test_info2 = create_basic_test("test 2")
+        utl2.test_lists.remove(test_list2)
+
+        utl3 = models.UnitTestLists.objects.get(unit=utl.unit,frequency=models.MONTHLY)
+        utl3.test_lists.add(test_list2)
+        utl3.clean_fields()
+
+#============================================================================
+class TestTestListInstance(TestCase):
+    fixtures = [
+        "test/units",
+        "test/categories",
+        "test/references",
+        "test/tolerances",
+        "test/users",
+    ]
+
+    #----------------------------------------------------------------------
+    def test_pass_fail_status(self):
+        tests = []
+        test_lists = []
+        utls = []
+        utis = []
+        ref = models.Reference(type=models.NUMERICAL,value=100.)
+        tol = models.Tolerance(
+            type=models.PERCENT,
+            act_low = -3,
+            tol_low = -2,
+            tol_high=  2,
+            act_high=  3,
+        )
+
+        for i in range(5):
+            test,tl,utl,uti = create_basic_test("test %d"%i)
+            tests.append(test)
+            test_lists.append(tl)
+            utls.append(utl)
+            utis.append(uti)
+
+
+        for i,test in enumerate(tests[1:]):
+            m = models.TestListMembership(test_list=test_lists[0],test=test,order=i+1)
+            m.save()
+
+        now = timezone.now()
+        tli = models.TestListInstance(
+            test_list=test_lists[0],
+            unit=utls[0].unit,
+            created_by=tests[0].created_by,
+            modified_by=tests[0].created_by,
+            work_completed = now
+        )
+        tli.save()
+
+        values = [None, None,96,97,100]
+        statuses = [None,models.UNREVIEWED,models.SCRATCH,models.APPROVED, models.REJECTED]
+        tis = []
+        for i,(v,s,test) in enumerate(zip(values,statuses,tests)):
+            ti = models.TestInstance(
+                test=test,
+                value=v,
+                unit=utls[0].unit,
+                test_list_instance = tli,
+                created_by=test.created_by,
+                modified_by=test.created_by,
+                work_completed = now,
+                tolerance=tol,
+                reference=ref,
+                status = s
+            )
+            if i == 0:
+                ti.skipped = True
+            elif i == 1:
+                ti.tolerance = None
+                ti.reference = None
+
+            ti.save()
+
+        pf_status = tli.pass_fail_status()
+        for pass_fail, _, tests in pf_status:
+            self.assertTrue(len(tests)==1)
+
+        formatted = "1 Not Done, 1 OK, 1 Tolerance, 1 Action, 1 No Tol Set"
+        self.assertEqual(tli.pass_fail_status(True),formatted)
+
+        statuses = tli.status()
+        for i,(status, _, tests) in enumerate(statuses):
+
+            if i == 0:
+                self.assertTrue(len(tests)==2)
+            else:
+                self.assertTrue(len(tests)==1)
+
+        formatted = "2 Unreviewed, 1 Approved, 1 Scratch, 1 Rejected"
+        self.assertEqual(tli.status(True),formatted)
+
 
 if __name__ == "__main__":
     setup_test_environment()
