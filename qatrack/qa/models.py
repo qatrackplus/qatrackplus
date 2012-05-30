@@ -336,9 +336,13 @@ class Test(models.Model):
         self.clean_short_name()
 
     #----------------------------------------------------------------------
-    def history_for_unit(self,unit_number,number=5):
-        hist = self.testinstance_set.filter(unit__number=unit_number).order_by("-work_completed")
-        return [(x.work_completed,x.value, x.pass_fail, x.status) for x in reversed(hist[:5])]
+    def history_for_unit(self,unit,number=5):
+        if isinstance(unit,Unit):
+            unit_number = unit.number
+        else:
+            unit_number = unit
+        hist = self.testinstance_set.filter(unit__number=unit_number).order_by("work_completed")
+        return [(x.work_completed,x.value, x.pass_fail, x.status) for x in hist[:number]]
 
     #----------------------------------------------------------------------
     def __unicode__(self):

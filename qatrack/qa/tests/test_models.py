@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.test.client import Client
 from django.test.utils import setup_test_environment
-from django.utils import unittest
+from django.utils import unittest,timezone
 
 from django.contrib.auth.models import User
 from qatrack.qa import models
@@ -435,8 +435,8 @@ class RefTolTests(TestCase):
         unit_test_info.reference = models.Reference(type=models.NUMERICAL,value=0)
         unit_test_info.tolerance = models.Tolerance(type=models.PERCENT)
 
-        with self.assertRaises(ValidationError):
-            unit_test_info.clean()
+        self.assertRaises(ValidationError,unit_test_info.clean)
+
 
 
 
@@ -512,14 +512,12 @@ class TestTests(TestCase):
 
         #calc procedure but test type not compsite
         test.calculation_procedure = "foo"
-        with self.assertRaises(ValidationError):
-            test.clean_calculation_procedure()
+        self.assertRaises(ValidationError, test.clean_calculation_procedure)
 
         test.type = models.COMPOSITE
 
         #no result line defined
-        with self.assertRaises(ValidationError):
-            test.clean_calculation_procedure()
+        self.assertRaises(ValidationError, test.clean_calculation_procedure)
 
         invalid_calc_procedures = (
             "resul t = a + b",
@@ -527,21 +525,22 @@ class TestTests(TestCase):
             "0result = a+b",
             " result = a + b",
             "result_=foo",
+            "",
+            "foo = a +b",
         )
 
         for icp in invalid_calc_procedures:
             test.calculation_procedure = icp
             try:
-                msg = ""
+                msg = "Passed but should have failed:\n %s" % icp
                 test.clean_calculation_procedure()
             except ValidationError:
-                msg = icp
-            self.assertTrue(len(msg)>0,msg)
+                msg = ""
+            self.assertTrue(len(msg)==0,msg=msg)
 
     #----------------------------------------------------------------------
     def test_valid_calc_procedure(self):
-        test = models.Test(type=models.SIMPLE)
-        test.type = models.COMPOSITE
+        test = models.Test(type=models.COMPOSITE)
 
         valid_calc_procedures = (
             "result = a + b",
@@ -556,11 +555,96 @@ result = foo + bar
         for vcp in valid_calc_procedures:
             test.calculation_procedure = vcp
             try:
+                msg = ""
                 test.clean_calculation_procedure()
-            except:
-                print vcp
-                raise
+            except ValidationError:
+                msg = "Failed but should have passed:\n %s" % vcp
+            self.assertTrue(len(msg)==0,msg=msg)
+    #----------------------------------------------------------------------
+    def test_constant_val(self):
+        test = models.Test(type=models.SIMPLE)
+        test.constant_value = 1
+        self.assertRaises(ValidationError,test.clean_constant_value)
 
+        test.constant_value = None
+        test.type = models.CONSTANT
+        self.assertRaises(ValidationError,test.clean_constant_value)
+
+    #----------------------------------------------------------------------
+    def test_short_name(self):
+
+        test = models.Test(type=models.SIMPLE)
+        invalid = ( "0 foo", "foo ", " foo" "foo bar", "foo*bar", "%foo", "foo$" )
+
+        for i in invalid:
+            test.short_name = i
+            try:
+                msg = "Short name should have failed but passed: %s" % i
+                test.clean_short_name()
+            except ValidationError:
+                msg = ""
+
+            self.assertTrue(len(msg)==0, msg=msg)
+
+        valid = ("foo", "f6oo", "foo6","_foo","foo_","foo_bar",)
+        for v in valid:
+            test.short_name = v
+            try:
+                msg = ""
+                test.clean_short_name()
+            except ValidationError:
+                msg = "Short name should have passed but failed: %s" % v
+            self.assertTrue(len(msg)==0, msg=msg)
+    #----------------------------------------------------------------------
+    def test_clean_fields(self):
+        test,test_list,utl, unit_test_info = create_basic_test("test")
+        test.clean_fields()
+
+    #----------------------------------------------------------------------
+    def test_history(self):
+        test,test_list,utl, unit_test_info = create_basic_test("test")
+        td = timezone.timedelta
+        now = timezone.now()
+
+        #values purposely created out of order to make sure history
+        #returns in correct order (i.e. ordered by date)
+        history = [
+            (now+td(days=4), 5, models.NO_TOL, models.UNREVIEWED),
+            (now+td(days=1), 5, models.NO_TOL, models.UNREVIEWED),
+            (now+td(days=3), 6, models.NO_TOL, models.UNREVIEWED),
+            (now+td(days=2), 7, models.NO_TOL, models.UNREVIEWED),
+        ]
+        for wc, val, _, _ in history:
+            tli = models.TestListInstance(
+                test_list=test_list,
+                unit=utl.unit,
+                created_by=test.created_by,
+                modified_by=test.created_by,
+            )
+            tli.work_completed = wc
+
+            tli.save()
+            ti1 = models.TestInstance(
+                test=test,
+                value=val,
+                unit=utl.unit,
+                test_list_instance = tli,
+                created_by=test.created_by,
+                modified_by=test.created_by,
+                work_completed = wc
+            )
+            ti1.save()
+
+        db_hist = test.history_for_unit(utl.unit)
+        self.assertListEqual(sorted(history),db_hist)
+
+        #test works correctly for just unit num
+        db_hist = test.history_for_unit(utl.unit.number)
+        self.assertListEqual(sorted(history),db_hist)
+
+        #test returns correct number of results
+        db_hist = test.history_for_unit(utl.unit.number,number=2)
+        self.assertListEqual(sorted(history)[:2],db_hist)
 
 if __name__ == "__main__":
     setup_test_environment()
