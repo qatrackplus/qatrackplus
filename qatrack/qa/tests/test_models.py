@@ -7,7 +7,7 @@ from django.utils import unittest,timezone
 
 from django.contrib.auth.models import User
 from qatrack.qa import models
-from qatrack.units.models import Unit
+from qatrack.units.models import Unit, UnitType, Modality
 
 def create_basic_test(name,test_type=models.SIMPLE):
 
@@ -645,6 +645,144 @@ result = foo + bar
         #test returns correct number of results
         db_hist = test.history_for_unit(utl.unit.number,number=2)
         self.assertListEqual(sorted(history)[:2],db_hist)
+
+#============================================================================
+class TestTestList(TestCase):
+
+    fixtures = [
+        "test/units",
+        "test/categories",
+        "test/references",
+        "test/tolerances",
+        "test/users",
+    ]
+
+    #----------------------------------------------------------------------
+    def test_last_completed(self):
+        test,test_list,utl, unit_test_info = create_basic_test("test")
+        td = timezone.timedelta
+        now = timezone.now()
+        last_completed_date = now+td(days=3)
+
+        self.assertIsNone(test_list.last_completed_instance(utl.unit))
+
+        #values purposely created out of order to make sure correct
+        #last completed instance is returned correctly
+        history = [
+            (now+td(days=1), 5, models.NO_TOL, models.UNREVIEWED),
+            (last_completed_date, 6, models.NO_TOL, models.UNREVIEWED),
+            (now+td(days=2), 7, models.NO_TOL, models.UNREVIEWED),
+        ]
+        for wc, val, _, _ in history:
+            tli = models.TestListInstance(
+                test_list=test_list,
+                unit=utl.unit,
+                created_by=test.created_by,
+                modified_by=test.created_by,
+            )
+            tli.work_completed = wc
+
+            tli.save()
+            ti1 = models.TestInstance(
+                test=test,
+                value=val,
+                unit=utl.unit,
+                test_list_instance = tli,
+                created_by=test.created_by,
+                modified_by=test.created_by,
+                work_completed = wc
+            )
+            ti1.save()
+
+        last = test_list.last_completed_instance(utl.unit)
+        self.assertEqual(last.work_completed,last_completed_date)
+    #----------------------------------------------------------------------
+    def test_sublist(self):
+        test,test_list,utl, unit_test_info = create_basic_test("test")
+        sub_test,sub_test_list,sub_utl, sub_unit_test_info = create_basic_test("sub test")
+
+        test_list.sublists.add(sub_test_list)
+        test_list.save()
+        self.assertListEqual([test,sub_test],test_list.all_tests())
+    #----------------------------------------------------------------------
+    def test_set_references(self):
+        test,test_list,utl, unit_test_info = create_basic_test("test")
+        set_ref_link = test_list.set_references()
+        self.client.login(username="testuser",password="password")
+        import re
+        for url in re.findall('href="(.*?)"',set_ref_link):
+            response = self.client.get(url)
+            self.assertEqual(response.status_code,200)
+
+
+#============================================================================
+class TestNewUnitCreated(TestCase):
+    fixtures = [
+        "test/units",
+        "test/categories",
+        "test/references",
+        "test/tolerances",
+        "test/users",
+    ]
+
+    #----------------------------------------------------------------------
+    def test_create(self):
+        u = Unit(number=99,name="test unit")
+        u.type = UnitType.objects.get(pk=1)
+        u.save()
+        u.modalities.add(Modality.objects.get(pk=1))
+        u.save()
+
+        utls = models.UnitTestLists.objects.filter(unit=u)
+        freqs = utls.values_list("frequency",flat=True)
+        self.assertSetEqual(set(freqs),set([x[0] for x in models.FREQUENCY_CHOICES]))
+    #----------------------------------------------------------------------
+    def test_retrieve_by_unit(self):
+        unit = Unit.objects.get(pk=1)
+        utls = models.UnitTestLists.objects.by_unit(unit).all()
+        freqs = utls.values_list("frequency",flat=True)
+        self.assertSetEqual(set(freqs),set([x[0] for x in models.FREQUENCY_CHOICES]))
+    #----------------------------------------------------------------------
+    def test_retrieve_by_frequency(self):
+        all_units = set(Unit.objects.all())
+        for freq,_ in models.FREQUENCY_CHOICES:
+            utls = models.UnitTestLists.objects.by_frequency(freq).all()
+            units = [x.unit for x in utls]
+            self.assertSetEqual(set(units),all_units)
+    #----------------------------------------------------------------------
+    def test_retrieve_by_unit_frequency(self):
+        u = Unit.objects.get(pk=1)
+        freq = models.DAILY
+        self.assertEqual(
+            models.UnitTestLists.objects.by_unit_frequency(u,freq)[0].pk,
+            models.UnitTestLists.objects.get(unit=u,frequency=freq).pk
+        )
+
+class TestUnitTestLists(TestCase):
+    fixtures = [
+        "test/units",
+        "test/categories",
+        "test/references",
+        "test/tolerances",
+        "test/users",
+    ]
+
+    #----------------------------------------------------------------------
+    def test_due_date(self):
+        test,test_list,utl, unit_test_info = create_basic_test("test")
+
+        tli = models.TestListInstance(
+            test_list=test_list,
+            unit=utl.unit,
+            created_by=test.created_by,
+            modified_by=test.created_by,
+        )
+        tli.work_completed = timezone.now()
+
+        tli.save()
+
+        due = models.due_date(utl.unit,test_list)
+        print due
 
 if __name__ == "__main__":
     setup_test_environment()

@@ -430,7 +430,7 @@ class TestList(models.Model):
     #----------------------------------------------------------------------
     def set_references(self):
         """allow user to go to references in admin interface"""
-        #/admin/qa/unittestinfo/?unit__id__exact=1
+
         url = "%s?"%urlresolvers.reverse("admin:qa_unittestinfo_changelist")
         test_filter = "test__id__in=%s" % (','.join(["%d" % test.pk for test in self.all_tests()]))
 
