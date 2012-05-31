@@ -364,7 +364,8 @@ class TestListInstanceResource(ModelResource):
         queryset = models.TestListInstance.objects.all()
         filtering = {
             "unit":ALL_WITH_RELATIONS,
-            "test_list": ALL_WITH_RELATIONS
+            "test_list": ALL_WITH_RELATIONS,
+            "id":ALL,
         }
 
         ordering= ["work_completed"]

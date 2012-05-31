@@ -267,24 +267,31 @@ function set_test_list_review_status(row,user,date){
 
 /************************************************************************/
 //display all the tests from the the test list instance
-function display_test_list_details(container,test_list_instances){
+function display_test_list_details(container,instance_id,test_list_instances){
+	var idx,to_review;
+	for (idx = 0; idx < test_list_instances.length; idx+=1){
+		if (test_list_instances[idx].id === instance_id){
+			to_review = test_list_instances[idx];
+			break;
+		}
+	}
 
-	var latest = test_list_instances[0];
 	var details_table = container.children().find("table");
 	var parent_row = container.parent().prev();
+	var test_list_instance_id = parent_row.find("select").val();
 	var review_button = container.find(".btn");
 	var test_instance_uris = [];
 	var unreview_text = "Unreview List";
 	var review_text = "Mark List as Reviewed";
 
-	//add row using latest test_list_instance
-	$.each(latest.test_instances,function(i,test_instance){
+	//add row using to_review test_list_instance
+	$.each(to_review.test_instances,function(i,test_instance){
 		add_test_row(details_table,test_instance,test_list_instances);
 		test_instance_uris.push(test_instance.resource_uri);
 	});
 
 
-	if (latest.review_status.length > 0){
+	if (to_review.review_status.length > 0){
 		review_button.text(unreview_text);
 		review_button.button("toggle");
 	}else{
@@ -314,10 +321,20 @@ function display_test_list_details(container,test_list_instances){
 			//status successfully updated
 			review_button.button("complete");
 			review_button.attr("data-complete-text",button_text).text(button_text);
-			set_test_list_review_status(parent_row,	review_user,review_date);
+			//set_test_list_review_status(parent_row,	review_user,review_date);
 		});
 	});
 
+}
+function on_show_hide(test_list_row){
+	var test_lists_data_table = $("#qa-test-list-table").dataTable();
+	var table_is_closing = details_shown(test_list_row);
+
+	if (table_is_closing){
+		close_details(test_list_row, test_lists_data_table);
+	}else{
+		on_select_test_list(test_list_row);
+	}
 }
 /**************************************************************************/
 //when user selects a row either close it if it's already open or
@@ -325,40 +342,42 @@ function display_test_list_details(container,test_list_instances){
 function on_select_test_list(test_list_row){
 
 	var test_lists_data_table = $("#qa-test-list-table").dataTable();
-	var table_is_closing = test_list_row.next().children(".qa-details").length > 0;
 
-	if (table_is_closing){
-		close_details(test_list_row, test_lists_data_table);
-	}else{
+	test_list_row.children("td:last").append('<span class="pull-right"><em>Loading...</em></span>');
+	var instance_id = test_list_row.find(".instance-id").val();
+	var instance_options ={
+		test_list:test_list_row.attr("data-test_list_id"),
+		unit__number:test_list_row.attr("data-unit_number"),
+		frequency:test_list_row.attr("data-frequency"),
+		order_by:"work_completed",
+		id__lte:instance_id,
+		limit:HISTORY_INSTANCE_LIMIT
+	};
 
-		test_list_row.children("td:last").append('<span class="pull-right"><em>Loading...</em></span>');
+	//fetch resources from server and then display them
+	QAUtils.get_resources(
+		"testlistinstance",
 
-		var instance_options ={
-			test_list:test_list_row.attr("data-test_list_id"),
-			unit__number:test_list_row.attr("data-unit_number"),
-			frequency:test_list_row.attr("data-frequency"),
-			order_by:"-work_completed",
-			limit:HISTORY_INSTANCE_LIMIT
-		};
+		function(resources){
+			test_list_row.children("td:last").children("span:last").remove();
+			var test_list_instances = resources.objects;
 
-		//fetch resources from server and then display them
-		QAUtils.get_resources(
-			"testlistinstance",
+			//make sure we got results from server & user hasn't closed table
+			if (test_list_instances.length > 0){
+				var details_container = open_details(test_list_row, test_lists_data_table);
+				display_test_list_details(details_container,instance_id,test_list_instances);
+			}
+		},
+		instance_options
+	);
 
-			function(resources){
-				test_list_row.children("td:last").children("span:last").remove();
-				var test_list_instances = resources.objects;
-
-				//make sure we got results from server & user hasn't closed table
-				if (test_list_instances.length > 0){
-				    var details_container = open_details(test_list_row, test_lists_data_table);
-					display_test_list_details(details_container,test_list_instances);
-				}
-			},
-			instance_options
-		);
-	}
 }
+
+/**************************************************************************/
+function details_shown(test_list_row){
+	return test_list_row.next().children(".qa-details").length > 0;
+};
+
 /**************************************************************************/
 $(document).ready(function(){
 
@@ -368,10 +387,17 @@ $(document).ready(function(){
 		update_row_color($(row));
 	});
 
-	$("#qa-test-list-table tbody tr").click(function(event){
-		on_select_test_list($(event.currentTarget));
+	$("#qa-test-list-table tbody tr .show-hide").click(function(event){
+		on_show_hide($(event.currentTarget).parents("tr"));
 	});
 
+	$("select.instance-id").change(function(event){
+		var test_list_row = $(event.currentTarget).parents("tr");
+		if (details_shown(test_list_row)){
+			on_select_test_list(test_list_row);
+		}
+
+	});
 	$("tbody tr.has-due-date").each(function(idx,row){
 		var date_string = $(this).data("due");
 		var due_date = null;

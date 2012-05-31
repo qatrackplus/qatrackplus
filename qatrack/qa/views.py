@@ -373,6 +373,10 @@ class ReviewView(TemplateView):
 
             for test_list,last in utl.all_test_lists(with_last_instance=True):
                 last_done, status = ["New List"]*2
+                unreviewed = models.TestListInstance.objects.awaiting_review().filter(
+                    test_list = test_list,
+                    unit = unit
+                )
                 review = ()
                 if last is not None:
                     last_done = last.work_completed
@@ -399,7 +403,8 @@ class ReviewView(TemplateView):
                         ("due",due_date),
                         ("pass_fail_status",status),
                         ("review_status",review),
-                    ]
+                    ],
+                    "unreviewed":unreviewed,
                 }
 
                 if data:

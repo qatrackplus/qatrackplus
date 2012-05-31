@@ -60,15 +60,21 @@
                                         {% endfor %}
 										</td>
 									{% elif prop == "review_status" %}
-										{% if val %}
-											<td class="{{prop}} approved">
-												<span class="label label-success">Reviewed by {{val.0}} on {{val.1}}
-											</td>
-										{% else %}
-											<td class="{{prop}} unreviewed">
-												<span class="label label-info">Unreviewed</label>
-											</td>
-										{% endif %}
+										<td class="{{prop}} unreviewed">
+											{% if row.unreviewed.count == 0 %}
+												<span class="label label-success">0 Unreviewed</span>
+											{% else %}
+												<span class="label label-warning"> {{row.unreviewed.count}} Unreviewed</span>
+												<div class="input-append">
+													<select class="input-medium instance-id">
+														{% for ur in row.unreviewed %}
+															<option value="{{ur.pk}}">{{ur.work_completed}}</option>
+														{% endfor %}
+													</select><span class="add-on show-hide">Show/Hide</span>
+												</div>
+											{% endif %}
+
+										</td>
 									{% elif prop  == "due"%}
 										<td class="{{prop}} unreviewed">
 											<span class="label due-status">{% if val %}{{val.date}}{%else%}New Test{%endif%}</span>
