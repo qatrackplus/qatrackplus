@@ -4,6 +4,8 @@
 
 {% block extra_script %}
     <script src="{% static "data_tables/js/jquery.dataTables.js" %}"></script>
+
+	{# http://jquery-datatables-column-filter.googlecode.com/svn/trunk/index.html #}
     <script src="{% static "data_tables/js/jquery.dataTables.columnFilter.js" %}"></script>
 	<script src="{% static "data_tables/js/DT_bootstrap.js" %}"></script>
 	<script src="{% static "data_tables/js/DT_sort.js" %}"></script>
@@ -34,6 +36,13 @@
                         {% endfor %}
 						<th>Perform</th>
 					</tr>
+                    <tr>
+                        {% for header in table_headers %}
+                            <th>{{header}}</th>
+                        {% endfor %}
+						<td>&nbsp;</td>
+					</tr>
+
                 </thead>
 
                 <tbody>

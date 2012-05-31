@@ -17,7 +17,7 @@ function init_test_list_table(){
 		]
 
 	} ).columnFilter({
-
+		sPlaceHolder: "head:after",
 		aoColumns: [
 			{type: "select"}, //Unit
 			{type: "select"}, //Freq

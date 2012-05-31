@@ -439,8 +439,10 @@ class TestList(models.Model):
         urls = [(info.unit.name, url+test_filter+"&"+ unit_filter%info.unit.pk) for info in unit_info_set]
         link = '<a href="%s">%s</a>'
         links = [link % (url,name) for name,url in urls]
-
-        return ", ".join(links)
+        if links:
+            return ", ".join(links)
+        else:
+            return "<em>Currently not assigned to any units</em>"
     set_references.allow_tags = True
     set_references.short_description = "Set references and tolerances for this list"
 

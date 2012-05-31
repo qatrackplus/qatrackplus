@@ -32,6 +32,9 @@ var QAUtils = new function() {
 	this.NUMERICAL = "numerical";
 	this.BOOLEAN = "boolean";
 
+	this.NUMERIC_WHITELIST_REGEX = /[^0-9\.eE\-]/g;
+	this.NUMERIC_REGEX = /^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$/;
+
     //value equality tolerance
     this.EPSILON = 1E-10;
 

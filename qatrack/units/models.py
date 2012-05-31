@@ -47,7 +47,7 @@ class Modality(models.Model):
             unit, particle = "MV", "Photon"
         else:
             unit, particle = "MeV", "Electron"
-        return "<Modality(%.1f%s,%s)>" % (self.energy, unit, particle)
+        return "<Modality(%.2f%s,%s)>" % (self.energy, unit, particle)
 
 
 #============================================================================

@@ -746,6 +746,12 @@ class TestTestList(TestCase):
             response = self.client.get(url)
             self.assertEqual(response.status_code,200)
 
+        utl.delete()
+
+        unassigned = "<em>Currently not assigned to any units</em>"
+        self.assertEqual(unassigned,test_list.set_references())
+
+
 
 #============================================================================
 class TestNewUnitCreated(TestCase):

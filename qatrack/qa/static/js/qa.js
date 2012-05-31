@@ -279,7 +279,15 @@ $(document).ready(function(){
 
     //only allow numerical characters on input
     $(".qa-input").keyup(function(e){
-        this.value = this.value.replace(/[^0-9\.eE]/g,'');
+        //whitelist characters
+        this.value = this.value.replace(QAUtils.NUMERIC_WHITELIST_REGEX,'');
+
+        //color input if not valid
+        if (!QAUtils.NUMERIC_REGEX.test(this.value)){
+            $(this).css("background-color",QAUtils.ACT_COLOR);
+        }else{
+            $(this).css("background-color","");
+        }
     });
 
     //run filter routine anytime user alters the categories
