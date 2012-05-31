@@ -720,7 +720,7 @@ class TestInstance(models.Model):
 class TestListInstanceManager(models.Manager):
     #----------------------------------------------------------------------
     def awaiting_review(self):
-        return TestInstance.objects.filter(status=UNREVIEWED).values("test_list_instance")
+        return self.get_query_set().filter(testinstance__status=UNREVIEWED)
 
 #============================================================================
 class TestListInstance(models.Model):
