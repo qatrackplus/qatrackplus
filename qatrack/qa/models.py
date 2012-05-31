@@ -717,6 +717,12 @@ class TestInstance(models.Model):
 
 
 #============================================================================
+class TestListInstanceManager(models.Manager):
+    #----------------------------------------------------------------------
+    def awaiting_review(self):
+        return TestInstance.objects.filter(status=UNREVIEWED).values("test_list_instance")
+
+#============================================================================
 class TestListInstance(models.Model):
     """Container for a collection of QA :model:`TestInstance`s
 
@@ -737,6 +743,7 @@ class TestListInstance(models.Model):
     modified = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(User, editable=False, related_name="test_list_instance_modifier")
 
+    objects = TestListInstanceManager()
     class Meta:
         ordering = ("work_completed",)
         get_latest_by = "work_completed"
