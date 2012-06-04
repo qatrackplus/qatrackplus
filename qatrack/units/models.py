@@ -60,6 +60,10 @@ class Unit(models.Model):
 
     number = models.PositiveIntegerField(null=False, unique=True, help_text=_("A unique number for this unit"))
     name = models.CharField(max_length=256, help_text=_("The display name for this unit"))
+    serial_number = models.CharField(max_length=256, null=True, blank=True,help_text=_("Optional serial number"))
+    location = models.CharField(max_length=256, null=True, blank=True, help_text=_("Optional location information"))
+    install_date = models.DateField(null=True, blank=True, help_text = _("Optional install date"))
+
     type = models.ForeignKey(UnitType)
 
     modalities = models.ManyToManyField(Modality)
