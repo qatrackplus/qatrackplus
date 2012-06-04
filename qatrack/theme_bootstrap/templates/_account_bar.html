@@ -7,7 +7,7 @@
                 {% elif user.groups.count > 0 %}
                     {{user.groups.all.0.name}} ::
                 {% endif %}
-                {{ user }}
+                <span id="username">{{ user }}</span>
                 <b class="caret"></b>
             </a>
             <ul class="dropdown-menu">

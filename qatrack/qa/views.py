@@ -362,8 +362,8 @@ class ReviewView(TemplateView):
             unit_lists.append((unit,unit_list))
         context["table_headers"] = [
             "Unit", "Frequency", "Test List",
-            "Completed", "Due Date", "Status",
-            "Review Status"
+            "Completed", "Due Date", "Last Session Status",
+            "Review Status", "History",
         ]
         fdisplay = dict(models.FREQUENCY_CHOICES)
         table_data = []
@@ -377,6 +377,10 @@ class ReviewView(TemplateView):
                     test_list = test_list,
                     unit = unit
                 )
+                history = models.TestListInstance.objects.filter(
+                    test_list=test_list,
+                    unit=unit
+                ).order_by("-work_completed")[:10]
                 review = ()
                 if last is not None:
                     last_done = last.work_completed
@@ -403,6 +407,7 @@ class ReviewView(TemplateView):
                         ("due",due_date),
                         ("pass_fail_status",status),
                         ("review_status",review),
+                        ("history",history),
                     ],
                     "unreviewed":unreviewed,
                 }

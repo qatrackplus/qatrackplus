@@ -493,7 +493,7 @@ def due_date(unit,test_list):
 
     try:
         unit_test_list = UnitTestLists.objects.get(
-            unit = unit, test_lists__pk = test_list.pk
+            unit = unit, test_lists = test_list
         )
     except UnitTestLists.DoesNotExist:
         return None
@@ -720,7 +720,7 @@ class TestInstance(models.Model):
 class TestListInstanceManager(models.Manager):
     #----------------------------------------------------------------------
     def awaiting_review(self):
-        return self.get_query_set().filter(testinstance__status=UNREVIEWED).order_by("work_completed")
+        return self.get_query_set().filter(testinstance__status=UNREVIEWED).distinct().order_by("work_completed")
 
 #============================================================================
 class TestListInstance(models.Model):

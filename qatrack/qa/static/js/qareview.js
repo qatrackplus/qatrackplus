@@ -16,7 +16,9 @@ function init_test_list_table(){
 			{"sType":"day-month-year-sort"}, //date completed
 			{"sType":"span-day-month-year-sort"}, //due date
 			null, //status of test list tests
-			null  //review status of list
+			null,  //review status of list
+			null  //history
+
 		]
 
 	} ).columnFilter({
@@ -28,20 +30,32 @@ function init_test_list_table(){
 			{type: "text" }, //date completed
 			{type: "text" }, //due date
 			{ type: "text" }, //status of test list tests
-			null //review status of list
+			null, //review status of list
+			null  //history
+
 		]
 	});
 
+	return review_table;
 }
 /**************************************************************************/
 //creates the html table to hold the tests from a test list
 function create_test_list_table(id){
 	var headers = '<tr><th class="name-col">Name</th><th>Type</th><th>Comment</th><th>Pass/Fail</th><th>Value</th><th class="ref-col">Ref/Tol</th><th class="history-col">History</th><th>Review URL</th></tr>';
+	var status_options =[[null,""]];
+	var i,status;
+	for (i=0; i < QAUtils.STATUSES.length; i += 1){
+		status = QAUtils.STATUSES[i];
+		status_options.push([status, QAUtils.STATUS_DISPLAYS[status]]);
+	}
 	var elements = [
-		'<div class="review-button-container ">',
-		'<button data-toggle="button" data-loading-text="Updating..." class="pull-right btn toggle-review-status">Toggle Review Status</button>',
+		'<div class="review-status-container ">',
+		'<span class="label review-user"></span>',
+
+		'<button data-loading-text="Updating..." class="pull-right btn update-review-status"></button>',
+		QAUtils.make_select("","pull-right review-status",status_options),
 		'</div>',
-		'<table class="table table-bordered table-condensed sub-table" id="'+id+'">',
+		'<table class="table table-bordered table-condensed table-striped sub-table" id="'+id+'">',
 		'<thead>',headers,'</thead>',
 		'<tbody></tbody>',
 		'<tfoot>',headers,'</tfoot>',
@@ -227,22 +241,21 @@ function open_details(test_list_row,data_table){
 		"bLengthChange":true,
 	} );
 
-	var details = test_list_row.next().children(".qa-details");
-	details.find("table").css("background-color","whiteSmoke");
-	return details;
+	return test_list_row.next().children(".qa-details");
 }
 
 /************************************************************************/
 //update row color based on its review status
 function update_row_color(row){
-	var review_td = row.find("td.review_status");
+/*	var review_td = row.find("td.review_status");
+	var review_count = parseInt(review_td.find(".unreviewed-count").text());
 	var reviewed = review_td.hasClass(QAUtils.APPROVED);
-	review_td.removeClass("alert-info").removeClass("alert-success");
-	if (reviewed){
-		review_td.find("span").addClass("alert-success");
+	review_td.removeClass("label-info").removeClass("label-success");
+	if (review_count===0){
+		review_td.find("span").addClass("label-success");
 	}else{
-		review_td.find("span").addClass("alert-info");
-	}
+		review_td.find("span").addClass("label-warning");
+	}*/
 }
 /************************************************************************/
 //update review status displayed for a given row
@@ -275,66 +288,105 @@ function display_test_list_details(container,instance_id,test_list_instances){
 			break;
 		}
 	}
-
+	container.css('background-color',QAUtils.REVIEW_COLOR);
 	var details_table = container.children().find("table");
-	var parent_row = container.parent().prev();
-	var test_list_instance_id = parent_row.find("select").val();
+	var test_row = container.parent().prev();
+	var test_list_instance_id = test_row.find("select.instance-id").val();
 	var review_button = container.find(".btn");
 	var test_instance_uris = [];
 	var unreview_text = "Unreview List";
 	var review_text = "Mark List as Reviewed";
-
+	var button_text = "Update";
+	review_button.text(button_text);
 	//add row using to_review test_list_instance
 	$.each(to_review.test_instances,function(i,test_instance){
 		add_test_row(details_table,test_instance,test_list_instances);
 		test_instance_uris.push(test_instance.resource_uri);
 	});
 
-
-	if (to_review.review_status.length > 0){
-		review_button.text(unreview_text);
-		review_button.button("toggle");
+	var status = container.find("select .review-status");
+	status.removeClass("unreviewed reviewed");
+	if (to_review.review_status){
+		status.addClass("reviewed");
 	}else{
-		review_button.text(review_text);
+		status.addClass("unreviewed");
 	}
 
 	review_button.click(function(event){
 		review_button.button("loading");
 		var reviewed =$(event.currentTarget).hasClass("active");
-		var review_status;
-		var button_text;
+		var review_status = container.find(".review-status").val();
+
 		var review_user;
 		var review_date;
-
+		var change_amount;
+		var select_class;
 		if (reviewed){
 			//since we're already approved user wants to unnaprove
-			review_status = QAUtils.UNREVIEWED;
-			button_text = review_text;
+			change_amount = 1;
+			select_class="unreviewed";
+			review_user = "Not reviewed";
+			review_date = "";
+
 		}else{
-			review_status = QAUtils.APPROVED;
-			button_text = unreview_text;
-			review_user = "you";
-			review_date = (new Date()).toISOString();
+			change_amount = -1;
+			select_class = "reviewed";
 		}
 
 		QAUtils.set_test_instances_status(test_instance_uris,review_status,function(results,status){
+
+			change_review_count(change_amount,test_row);
+			change_review_count(change_amount,$(".nav"));
+
+			var opt = test_row.find("select.instance-id option:selected");
+			opt.removeClass("reviewed").removeClass("unreviewed");
+			opt.text(opt.text().replace("*",""));
+
+			if (!reviewed){
+				opt.addClass("unreviewed");
+				opt.text("*"+opt.text()+"*");
+			}else{
+				opt.addClass("reviewed");
+			}
+
 			//status successfully updated
 			review_button.button("complete");
 			review_button.attr("data-complete-text",button_text).text(button_text);
-			//set_test_list_review_status(parent_row,	review_user,review_date);
+			//set_test_list_review_status(test_row,	review_user,review_date);
+			set_review_status(container.find(".review-status-container"));
 		});
 	});
 
 }
-function on_show_hide(test_list_row){
-	var test_lists_data_table = $("#qa-test-list-table").dataTable();
-	var table_is_closing = details_shown(test_list_row);
+function set_review_status(container){
 
-	if (table_is_closing){
-		close_details(test_list_row, test_lists_data_table);
+	var reviewed = container.find(".review-status").hasClass("reviewed");
+	var test_row = container.parent().prev();
+	var user = container.find(".review-user");
+
+	user.removeClass("label-warning label-success");
+
+	if (!reviewed){
+		user.addClass("label-warning");
+		user.text("Not reviewed");
 	}else{
-		on_select_test_list(test_list_row);
+		user.addClass("label-success");
+		user.text("Reviewed by :: "+$("#username").text() + " on " + QAUtils.format_date(new Date(), true));
 	}
+
+}
+/***************************************************************************/
+//locate unreviewed count spans within 'container' and increase/decrease
+//their value by 'amount' and set their appearance according to status
+function change_review_count(amount, container){
+	container.find(".unreviewed-count").each(function(i,e){
+
+		var new_val = parseInt($(e).text()) + amount;
+		var new_class = new_val == 0 ? "label-success" : "label-warning";
+
+		$(e).text(new_val).parent().removeClass("label-info label-success").addClass(new_class);
+
+	});
 }
 /**************************************************************************/
 //when user selects a row either close it if it's already open or
@@ -349,7 +401,7 @@ function on_select_test_list(test_list_row){
 		test_list:test_list_row.attr("data-test_list_id"),
 		unit__number:test_list_row.attr("data-unit_number"),
 		frequency:test_list_row.attr("data-frequency"),
-		order_by:"work_completed",
+		order_by:"-work_completed",
 		id__lte:instance_id,
 		limit:HISTORY_INSTANCE_LIMIT
 	};
@@ -366,6 +418,7 @@ function on_select_test_list(test_list_row){
 			if (test_list_instances.length > 0){
 				var details_container = open_details(test_list_row, test_lists_data_table);
 				display_test_list_details(details_container,instance_id,test_list_instances);
+				set_review_status(details_container.find(".review-status-container"));
 			}
 		},
 		instance_options
@@ -381,19 +434,19 @@ function details_shown(test_list_row){
 /**************************************************************************/
 $(document).ready(function(){
 
-	init_test_list_table();
+
+	var test_lists_data_table = init_test_list_table();
 
 	$("#qa-test-list-table tbody tr").each(function(idx,row){
-		update_row_color($(row));
-	});
-
-	$("#qa-test-list-table tbody tr .show-hide").click(function(event){
-		on_show_hide($(event.currentTarget).parents("tr"));
+		change_review_count(0,$(row));
 	});
 
 	$("select.instance-id").change(function(event){
+
 		var test_list_row = $(event.currentTarget).parents("tr");
-		if (details_shown(test_list_row)){
+		if ($(event.currentTarget).val() === "hide"){
+			close_details(test_list_row, test_lists_data_table);
+		}else{
 			on_select_test_list(test_list_row);
 		}
 
