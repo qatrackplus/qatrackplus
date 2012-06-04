@@ -655,8 +655,12 @@ def test_added_to_list(*args,**kwargs):
 class TestInstance(models.Model):
     """Measured instance of a :model:`Test`"""
 
+    #review status
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, editable=False)
+    review_date = models.DateTimeField(null=True, blank=True, help_text = settings.DEBUG)
+    reviewed_by = models.ForeignKey(User,null=True, blank=True)
 
+    #did test pass or fail (or was skipped etc)
     pass_fail = models.CharField(max_length=20, choices=PASS_FAIL_CHOICES,editable=False)
 
     #values set by user
@@ -671,9 +675,13 @@ class TestInstance(models.Model):
 
     unit = models.ForeignKey(Unit,editable=False)
 
-    test_list_instance = models.ForeignKey("TestListInstance",editable=False)
+    #keep track if this test was performed as part of a test list
+    test_list_instance = models.ForeignKey("TestListInstance",editable=False, null=True, blank=True)
+
+    #which test is being performed
     test = models.ForeignKey(Test)
 
+    #when was the work actually performed
     work_completed = models.DateTimeField(default=timezone.now,
         help_text=settings.DATETIME_HELP,
     )
