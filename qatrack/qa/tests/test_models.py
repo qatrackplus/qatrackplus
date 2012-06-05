@@ -50,7 +50,7 @@ def create_basic_test(name,test_type=models.SIMPLE):
     utl.test_lists.add(test_list)
     utl.save()
 
-    unit_test_info = models.UnitTestInfo.objects.get(
+    unit_test_info = models.UnitTestAssignment.objects.get(
         unit=unit,
         test = test
     )
@@ -277,7 +277,7 @@ class UnitTestListTests(TestCase):
     #----------------------------------------------------------------------
     def test_first_added(self):
         """"""
-        unit_test_info = models.UnitTestInfo.objects.get(
+        unit_test_info = models.UnitTestAssignment.objects.get(
             unit=self.unit,
             test = self.test1
         )
@@ -292,7 +292,7 @@ class UnitTestListTests(TestCase):
         membership.save()
         self.test_list.save()
 
-        unit_test_info = models.UnitTestInfo.objects.get(
+        unit_test_info = models.UnitTestAssignment.objects.get(
             unit=self.unit,
             test = self.test2
         )
@@ -669,7 +669,7 @@ result = foo + bar
         utl.test_lists.add(test_list)
         utl.save()
 
-        unit_test_info = models.UnitTestInfo.objects.get(
+        unit_test_info = models.UnitTestAssignment.objects.get(
             unit=unit,
             test = test1
         )

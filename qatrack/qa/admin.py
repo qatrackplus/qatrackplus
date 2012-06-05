@@ -55,7 +55,7 @@ class TestInfoForm(forms.ModelForm):
     #reference_type = forms.ChoiceField(choices=models.Reference.TYPE_CHOICES)
 
     class Meta:
-        model = models.UnitTestInfo
+        model = models.UnitTestAssignment
 
     #----------------------------------------------------------------------
     def clean(self):
@@ -213,7 +213,7 @@ admin.site.register([models.Tolerance], BasicSaveUserAdmin)
 admin.site.register([models.Category], CategoryAdmin)
 admin.site.register([models.TestList],TestListAdmin)
 admin.site.register([models.Test],TestAdmin)
-admin.site.register([models.UnitTestInfo],TestInfoAdmin)
+admin.site.register([models.UnitTestAssignment],TestInfoAdmin)
 admin.site.register([models.UnitTestLists],UnitTestListAdmin)
 
 admin.site.register([models.TestListCycle],TestListCycleAdmin)

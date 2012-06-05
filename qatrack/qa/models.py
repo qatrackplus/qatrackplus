@@ -241,11 +241,11 @@ class Test(models.Model):
     def set_references(self):
         """allow user to go to references in admin interface"""
 
-        url = "%s?"%urlresolvers.reverse("admin:qa_unittestinfo_changelist")
+        url = "%s?"%urlresolvers.reverse("admin:qa_unittestassignment_changelist")
         test_filter = "test__id__exact=%d" % self.pk
 
         unit_filter = "unit__id__exact=%d"
-        info_set = self.unittestinfo_set.all()
+        info_set = self.unittestassignment_set.all()
         urls = [(info.unit.name, url+test_filter+"&"+ unit_filter%info.unit.pk) for info in info_set]
         link = '<a href="%s">%s</a>'
         all_link = link%(url+test_filter,"All Units")
@@ -267,7 +267,7 @@ class Test(models.Model):
         for this (test,unit) pair
         """
 
-        unit_info = UnitTestInfo.objects.get(unit=unit,test=self)
+        unit_info = UnitTestAssignment.objects.get(unit=unit,test=self)
         tol = unit_info.tolerance
         ref = unit_info.reference
 
@@ -352,7 +352,7 @@ class Test(models.Model):
 
 
 #============================================================================
-class UnitTestInfo(models.Model):
+class UnitTestAssignment(models.Model):
     unit = models.ForeignKey(Unit)
     test = models.ForeignKey(Test)
     reference = models.ForeignKey(Reference,verbose_name=_("Current Reference"),null=True, blank=True)
@@ -366,7 +366,7 @@ class UnitTestInfo(models.Model):
     #----------------------------------------------------------------------
     def clean(self):
         """extra validation for Tests"""
-        super(UnitTestInfo,self).clean()
+        super(UnitTestAssignment,self).clean()
         if None not in (self.reference, self.tolerance):
             if self.tolerance.type == PERCENT and self.reference.value < EPSILON:
                 msg = _("Percentage based tolerances can not be used with reference value of zero (0)")
@@ -431,7 +431,7 @@ class TestList(models.Model):
     def set_references(self):
         """allow user to go to references in admin interface"""
 
-        url = "%s?"%urlresolvers.reverse("admin:qa_unittestinfo_changelist")
+        url = "%s?"%urlresolvers.reverse("admin:qa_unittestassignment_changelist")
         test_filter = "test__id__in=%s" % (','.join(["%d" % test.pk for test in self.all_tests()]))
 
         unit_filter = "unit__id__exact=%d"
@@ -603,13 +603,13 @@ class UnitTestLists(models.Model):
 
 
 #----------------------------------------------------------------------
-def create_unittestinfos(test_list,unit):
+def create_unittestassignments(test_list,unit):
     """Create UnitTestInfo objects to hold references and tolerances
     for all tests in a test list that was just added to a Unit
     """
 
     for test in test_list.all_tests():
-        UnitTestInfo.objects.get_or_create(unit = unit,test = test)
+        UnitTestAssignment.objects.get_or_create(unit = unit,test = test)
 
 #----------------------------------------------------------------------
 @receiver(m2m_changed, sender=UnitTestLists.cycles.through)
@@ -621,7 +621,7 @@ def unit_cycle_change(*args,**kwargs):
         utl = kwargs["instance"]
         for cycle in utl.cycles.all():
             for test_list in cycle.test_lists.all():
-                create_unittestinfos(test_list,utl.unit)
+                create_unittestassignments(test_list,utl.unit)
 
 #----------------------------------------------------------------------
 @receiver(m2m_changed, sender=UnitTestLists.test_lists.through)
@@ -632,7 +632,7 @@ def unit_test_list_change(*args,**kwargs):
     if kwargs["action"] == "post_add":
         utl = kwargs["instance"]
         for test_list in utl.test_lists.all():
-            create_unittestinfos(test_list,utl.unit)
+            create_unittestassignments(test_list,utl.unit)
 
 #----------------------------------------------------------------------
 @receiver(post_save, sender=TestListMembership)
@@ -648,7 +648,7 @@ def test_added_to_list(*args,**kwargs):
     tlm = kwargs["instance"]
     unit_test_lists = UnitTestLists.objects.filter(test_lists=tlm.test_list)
     for utl in unit_test_lists:
-        UnitTestInfo.objects.get_or_create(unit=utl.unit, test=tlm.test)
+        UnitTestAssignment.objects.get_or_create(unit=utl.unit, test=tlm.test)
 
 
 ##============================================================================
@@ -902,4 +902,4 @@ def test_added_to_cycle_member(*args,**kwargs):
     unit_test_lists = UnitTestLists.objects.filter(test_lists=tlm.test_list)
     for utl in unit_test_lists:
         for test in tlm.test_list.tests.all():
-            UnitTestInfo.objects.get_or_create(unit=utl.unit, test=test)
+            UnitTestAssignment.objects.get_or_create(unit=utl.unit, test=test)
