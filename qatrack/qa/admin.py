@@ -11,6 +11,7 @@ from django.utils.safestring import mark_safe
 import qatrack.qa.models as models
 from qatrack.units.models import Unit
 import qatrack.settings as settings
+import os
 import re
 
 #============================================================================
@@ -74,7 +75,7 @@ class TestInfoForm(forms.ModelForm):
 
 
 #============================================================================
-class TestInfoAdmin(admin.ModelAdmin):
+class UnitTestAssignmentAdmin(admin.ModelAdmin):
     """"""
     form = TestInfoForm
     fields = (
@@ -84,7 +85,7 @@ class TestInfoAdmin(admin.ModelAdmin):
     )
     list_display = ["test", "unit", "reference", "tolerance"]
     list_filter = ["unit","test__category"]
-    readonly_fields = ("test","unit","reference")
+    readonly_fields = ("reference",)
 
     #----------------------------------------------------------------------
     def save_model(self, request, test_info, form, change):
@@ -104,7 +105,7 @@ class TestInfoAdmin(admin.ModelAdmin):
             )
             ref.save()
             test_info.reference = ref
-        super(TestInfoAdmin,self).save_model(request,test_info,form,change)
+        super(UnitTestAssignmentAdmin,self).save_model(request,test_info,form,change)
 
 
 #============================================================================
@@ -117,6 +118,13 @@ class TestListAdminForm(forms.ModelForm):
         sublists = self.cleaned_data["sublists"]
         if self.instance in sublists:
             raise django.forms.ValidationError("You can't add a list to its own sublists")
+
+        if self.instance.testlist_set.count() > 0 and len(sublists) > 0:
+            msg = "Sublists can't be nested more than 1 level deep."
+            msg += " This list is already a member of %s and therefore"
+            msg += " can't have sublists of it's own."
+            msg = msg % ", ".join([str(x) for x in self.instance.testlist_set.all()])
+            raise django.forms.ValidationError(msg)
 
         return sublists
 
@@ -153,8 +161,8 @@ class TestListMembershipInline(admin.TabularInline):
 #============================================================================
 class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
     prepopulated_fields =  {'slug': ('name',)}
-    list_display = (title_case_name, "set_references", "modified", "modified_by", "active")
-    list_filter = ("active",)
+    list_display = (title_case_name, "set_references", "modified", "modified_by",)
+
     filter_horizontal= ("tests", "sublists", )
     form = TestListAdminForm
     inlines = [TestListMembershipInline]
@@ -182,12 +190,12 @@ class TestAdmin(SaveUserMixin, admin.ModelAdmin):
         )
 
 #============================================================================
-class UnitTestListAdmin(admin.ModelAdmin):
-    readonly_fields = ("unit","frequency",)
-    filter_horizontal = ("test_lists","cycles",)
+class UnitTestListAssignmentAdmin(admin.ModelAdmin):
+    #readonly_fields = ("unit","frequency",)
+    #filter_horizontal = ("test_lists","cycles",)
     list_display = ["name", "unit", "frequency"]
     list_filter = ["unit", "frequency"]
-
+    change_form_template = "admin/treenav/menuitem/change_form.html"
 
 #============================================================================
 class TestListCycleMembershipInline(admin.TabularInline):
@@ -213,7 +221,7 @@ admin.site.register([models.Tolerance], BasicSaveUserAdmin)
 admin.site.register([models.Category], CategoryAdmin)
 admin.site.register([models.TestList],TestListAdmin)
 admin.site.register([models.Test],TestAdmin)
-admin.site.register([models.UnitTestAssignment],TestInfoAdmin)
-admin.site.register([models.UnitTestLists],UnitTestListAdmin)
+admin.site.register([models.UnitTestAssignment],UnitTestAssignmentAdmin)
+admin.site.register([models.UnitTestListAssignment],UnitTestListAssignmentAdmin)
 
 admin.site.register([models.TestListCycle],TestListCycleAdmin)

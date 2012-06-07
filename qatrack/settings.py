@@ -137,6 +137,7 @@ TEMPLATE_DIRS = (
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
     os.path.join(PROJECT_ROOT,"templates"),
+    os.path.join(PROJECT_ROOT,"genericdropdown/templates"),
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = list(DEFAULT_SETTINGS.TEMPLATE_CONTEXT_PROCESSORS)
@@ -162,6 +163,7 @@ INSTALLED_APPS = (
 
     'tastypie',
     'registration',
+    'genericdropdown',
     #'debug_toolbar',
     #qatrack specific
     #'qatrack.qatrack_tags',

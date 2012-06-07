@@ -40,7 +40,7 @@ urlpatterns = patterns('',
 
     #performing qa
     url(r"^(?P<frequency>\w+)/test_lists?/$", views.UnitGroupedFrequencyListView.as_view(), name="qa_by_frequency"),
-    url(r"^(?P<frequency>\w+)/(?P<type>test_lists?|cycles?)/(?P<pk>\d+)/unit/(?P<unit_number>\d+)$", views.PerformQAView.as_view(), name="perform_qa"),
+    url(r"^(?P<pk>\d+)$", views.PerformQAView.as_view(), name="perform_qa"),
     url(r"^(?P<frequency>\w+)/test_lists?/unit/(?P<unit_number>\d+)/$", views.UnitFrequencyListView.as_view(), name="qa_by_frequency_unit"),
 
     #api urls

@@ -139,7 +139,7 @@ class PerformQAView(FormView):
             test_list_instance.test_list = test_list
             test_list_instance.created_by = self.request.user
             test_list_instance.modified_by = self.request.user
-            test_list_instance.unit = context["unit"]
+            test_list_instance.unit = context["unit_test_list"].unit
             if test_list_instance.work_completed is None:
                 test_list_instance.work_completed = timezone.now()
             test_list_instance.save()
@@ -169,52 +169,40 @@ class PerformQAView(FormView):
     def get_context_data(self, **kwargs):
         """add formset and test list to our template context"""
         context = super(PerformQAView, self).get_context_data(**kwargs)
-        unit = get_object_or_404(Unit,number=self.kwargs["unit_number"])
+        utla = get_object_or_404(models.UnitTestListAssignment,pk=self.kwargs["pk"])
 
         include_admin = self.request.user.is_staff
 
+        day = self.request.GET.get("day","next")
+        try:
+            day = int(day)
+            test_list = utla.tests_object.get_list(day=day)
+        except ValueError:
+            test_list = utla.tests_object.next_for_unit(utla.unit)
 
-        if self.kwargs["type"] == "cycle":
-            cycle = get_object_or_404(models.TestListCycle,pk=self.kwargs["pk"])
-            day = self.request.GET.get("day")
-            if day == "next" or day is None:
-                cycle_membership = cycle.next_for_unit(unit)
-            else:
-                try:
-                    order = int(day)-1
-                except (ValueError,TypeError):
-                    raise Http404
+        days = range(1,len(utla.tests_object)+1)
 
-                cycle_membership = get_object_or_404(
-                    models.TestListCycleMembership,
-                    cycle = cycle,
-                    order=order,
-                )
+        cycle_membership = models.TestListCycleMembership.objects.filter(
+            test_list = test_list,
+            cycle = utla.tests_object
+        )
 
-            test_list = cycle_membership.test_list
-            current_day = cycle_membership.order + 1
-            days = range(1,len(cycle)+1)
-        else:
-            cycle, current_day,days = None, 1,[]
-            test_list =  get_object_or_404(models.TestList,pk=self.kwargs["pk"])
+        current_day = 1
+        if cycle_membership:
+            current_day = cycle_membership[0].order + 1
 
         if self.request.POST:
-            formset = forms.TestInstanceFormset(test_list,unit, self.request.POST)
+            formset = forms.TestInstanceFormset(test_list,utla.unit, self.request.POST)
         else:
-            formset = forms.TestInstanceFormset(test_list, unit)
-
-        categories = models.Category.objects.all()
+            formset = forms.TestInstanceFormset(test_list, utla.unit)
 
         context.update({
-            'frequency':self.kwargs["frequency"],
+            'unit_test_list':utla,
             'current_day':current_day,
             'days':days,
             'test_list':test_list,
-            'unit':unit,
             'formset':formset,
-            'categories':categories,
-            'unit':unit,
-            'cycle':cycle,
+            'categories':models.Category.objects.all(),
             'include_admin':include_admin
         })
 
@@ -238,7 +226,7 @@ class UnitFrequencyListView(TemplateView):
         context["frequency"] = frequency
 
         unit_number = self.kwargs["unit_number"]
-        context["unit_test_list"] = models.UnitTestLists.objects.get(unit__number=unit_number,frequency=frequency)
+        context["unit_test_list"] = models.UnitTestListAssignment.objects.get(unit__number=unit_number,frequency=frequency)
 
         return context
 
@@ -279,38 +267,13 @@ class UserBasedTestLists(TemplateView):
         """set frequencies and lists"""
         context = super(UserBasedTestLists,self).get_context_data(**kwargs)
 
-        user_test_lists = []
+        groups = self.request.user.groups.all()
+        utlas = models.UnitTestListAssignment.objects.all()
+        if groups.count() > 0:
+            utlas = utlas.filter(assigned_to__in = self.request.user.groups.all())
 
-        group = None
-        utls = models.UnitTestLists.objects.all()
-        if self.request.user.groups.count() > 0:
-            group = self.request.user.groups.all()[0]
-            utls = utls.filter(test_lists__assigned_to = group.groupprofile)
-
-        for utl in utls:
-
-            test_lists = utl.test_lists
-            cycles = utl.cycles
-            if group:
-                test_lists = test_lists.filter(assigned_to=group.groupprofile)
-                cycles = utl.cycles.filter(assigned_to=group.groupprofile)
-
-            for tl in list(test_lists.all())+list(cycles.all()):
-                next_tl, list_type = tl, "test_list"
-                if isinstance(tl, models.TestListCycle):
-                    next_tl = tl.next_for_unit(utl.unit)
-                    list_type = "cycle"
-                last = tl.last_completed_instance(utl.unit)
-                last_done = last.work_completed if last else None
-
-                due_date = models.due_date(utl.unit,next_tl)
-                user_test_lists.append((utl,next_tl,last_done,due_date,list_type))
-
-        table_headers = ["Unit","Frequency","Test List", "Last Done", "Due Date"]
-
-        context["table_headers"] = table_headers
-        context["group"] = group
-        context["test_lists"] = user_test_lists
+        context["groups"] = groups
+        context["test_list_assignments"] = utlas
         return context
 
 #============================================================================
@@ -367,7 +330,7 @@ class ReviewView(TemplateView):
         ]
         fdisplay = dict(models.FREQUENCY_CHOICES)
         table_data = []
-        for utl in models.UnitTestLists.objects.all():
+        for utl in models.UnitTestListAssignment.objects.all():
             unit, frequency = utl.unit, utl.frequency
             data = []
 
@@ -415,7 +378,7 @@ class ReviewView(TemplateView):
                 if data:
                     table_data.append(data)
         context["data"] = table_data
-        context["unit_test_lists"] = models.UnitTestLists.objects.all()
+        context["unit_test_lists"] = models.UnitTestListAssignment.objects.all()
         context["unit_lists"] = unit_lists
         context["units"] = units
         context["routine_freq"] = frequencies
