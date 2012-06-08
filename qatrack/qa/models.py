@@ -75,6 +75,7 @@ SCRATCH = "scratch"
 REJECTED = "rejected"
 RETURN_TO_SERVICE = "returntoservice"
 
+EXCLUDE_STATUSES = (SCRATCH,REJECTED,)
 STATUS_CHOICES = (
     (UNREVIEWED, "Unreviewed"),
     (APPROVED, "Approved"),
@@ -384,7 +385,7 @@ class UnitTestAssignment(models.Model):
             unit = self.unit,
             test = self.test,
         ).exclude(
-            status__in = (REJECTED, SCRATCH,),
+            status__in = EXCLUDE_STATUSES
         ).order_by("-work_completed")
 
         if last_instance:
@@ -449,6 +450,9 @@ class TestList(models.Model):
         """Return the list following the input list"""
         return self
     #----------------------------------------------------------------------
+    def first(self):
+        return self
+    #----------------------------------------------------------------------
     def set_references(self):
         """allow user to go to references in admin interface"""
 
@@ -457,7 +461,7 @@ class TestList(models.Model):
 
         unit_filter = "unit__id__exact=%d"
 
-        unit_assignments = UnitTestListAssignment.objects.test_lists().filter(object_id=self.pk)
+        unit_assignments = UnitTestCollectionAssignment.objects.test_lists().filter(object_id=self.pk)
 
         urls = [(info.unit.name, url+test_filter+"&"+ unit_filter%info.unit.pk) for info in unit_assignments]
         link = '<a href="%s">%s</a>'
@@ -499,7 +503,7 @@ class UnitTestListManager(models.Manager):
 
 
 #============================================================================
-class UnitTestListAssignment(models.Model):
+class UnitTestCollectionAssignment(models.Model):
     """keeps track of which units should perform which test lists at a given frequency"""
 
     unit = models.ForeignKey(Unit)
@@ -526,18 +530,35 @@ class UnitTestListAssignment(models.Model):
     def due_date(self):
         """return the next due date of this Unit/TestList pair
 
-        due date is calculated as minimum due date of all tests making up this list
+        due date for a TestList is calculated as minimum due date of all tests
+        making up this list.
+
+        due date for a TestCycle is calculated as the maximum of the due
+        dates for its member TestLists
         """
 
-        unit_test_assignments = UnitTestAssignment.objects.filter(
-            unit=self.unit,
-            test__in = self.tests_object.all_tests()
-        )
+        if not hasattr(self.tests_object, "test_lists",):
+            all_lists = [self.tests_object]
+        else:
+            all_lists = self.tests_object.test_lists.all()
 
-        due_dates = [uta.due_date() for uta in unit_test_assignments]
-        due_dates = [dd for dd in due_dates if dd is not None]
-        if due_dates:
-            return min(due_dates)
+        list_due_dates = []
+
+        for test_list in all_lists:
+
+            unit_test_assignments = UnitTestAssignment.objects.filter(
+                unit=self.unit,
+                test__in = test_list.all_tests()
+            )
+
+            due_dates = [uta.due_date() for uta in unit_test_assignments]
+            due_dates = [dd for dd in due_dates if dd is not None]
+
+            if due_dates:
+                list_due_dates.append(min(due_dates))
+
+        if list_due_dates:
+            return max(list_due_dates)
 
     #----------------------------------------------------------------------
     def last_done_date(self):
@@ -548,15 +569,32 @@ class UnitTestListAssignment(models.Model):
     #----------------------------------------------------------------------
     def last_completed_instance(self):
         """return the last instance of this test list that was performed"""
+
         try:
-            return self.tests_object.testlistinstance_set.filter(unit=self.unit).latest("work_completed")
+            all_lists = self.tests_object.test_lists.all()
+        except AttributeError:
+            all_lists = [self.tests_object]
+
+        try:
+            q = TestListInstance.objects.filter(
+                test_list__in = all_lists,
+                unit = self.unit,
+            ).latest("work_completed")
+
+            return q
         except TestListInstance.DoesNotExist:
             return None
+
 
     #----------------------------------------------------------------------
     def next_list(self):
         """return next list to be completed from tests_object"""
-        return self.tests_object.next_list(self.last_completed_instance())
+
+        last_instance = self.last_completed_instance()
+        if not last_instance:
+            return self.tests_object.first()
+
+        return self.tests_object.next_list(last_instance.test_list)
     #----------------------------------------------------------------------
     def name(self):
         return self.__unicode__()
@@ -612,7 +650,7 @@ def update_unit_test_assignments(test_list):
     else:
         parent_pks = parents.values_list("pk",flat=True)
 
-    utlas = UnitTestListAssignment.objects.filter(
+    utlas = UnitTestCollectionAssignment.objects.filter(
         object_id__in= parent_pks,
         content_type = ContentType.objects.get(app_label="qa",model="testlist"),
     )
@@ -625,7 +663,7 @@ def update_unit_test_assignments(test_list):
             create_unit_test_assignment(utla, test)
 
 #----------------------------------------------------------------------
-@receiver(post_save, sender=UnitTestListAssignment)
+@receiver(post_save, sender=UnitTestCollectionAssignment)
 def list_assigned_to_unit(*args,**kwargs):
     """UnitTestListAssignment was saved.  Create UnitTestAssignments
     for all Tests. (Case 1 from above)"""
@@ -838,42 +876,6 @@ class TestListCycle(models.Model):
             return TestListCycleMembership.objects.get(cycle=self, order=0).test_list
         except TestListCycleMembership.DoesNotExist:
             return None
-    #----------------------------------------------------------------------
-    def last_completed(self,unit):
-        """return the membership object of the last completed test_list
-        for this object.
-        """
-
-        try:
-            last_tli = TestListInstance.objects.filter(
-                unit=unit,
-                test_list__in=self.test_lists.all()
-            ).latest("work_completed")
-
-            last = TestListCycleMembership.objects.get(
-                cycle=self,
-                test_list=last_tli.test_list
-            )
-
-        except:
-            last = None
-
-        return last
-    #----------------------------------------------------------------------
-    def next_for_unit(self,unit):
-        """return next test list to be completed"""
-
-        last_completed = self.last_completed(unit)
-        if not last_completed:
-            return self.first()
-
-        ntest_lists = self.test_lists.count()
-        next_order = last_completed.order + 1
-
-        if next_order >= ntest_lists:
-            return self.first()
-        membership = TestListCycleMembership.objects.get(cycle=self, order=next_order)
-        return membership.test_list
 
     #----------------------------------------------------------------------
     def membership_by_order(self,order):
@@ -884,39 +886,37 @@ class TestListCycle(models.Model):
             return None
 
     #----------------------------------------------------------------------
-    def last_completed_instance(self, unit):
-        """return the last instance of this test list that was performed
-        for a given Unit or None if it has never been performed"""
-        try:
-            return TestListInstance.objects.filter(
-                unit=unit,
-                test_list__in=self.test_lists.all()
-            ).latest("work_completed")
-        except TestListInstance.DoesNotExist:
-            return None
-
-    #----------------------------------------------------------------------
     def all_tests(self):
         """return all test members of cycle members"""
         all_tests = []
-        query = []
+        query = None
         for test_list in self.test_lists.all():
             if not query:
                 query = test_list.all_tests()
             else:
                 query |= test_list.all_tests()
-
-        return query.distinct()
+        if query:
+            return query.distinct()
     #----------------------------------------------------------------------
     def get_list(self,day=0):
-        """"""
-        membership = TestListCycleMembership.objects.get(
-            cycle=self,
-            order=day,
-        )
+        """get test list for given day"""
+        try:
+            membership = self.testlistcyclemembership_set.get(order=day)
+            return membership.test_list
+        except TestListCycleMembership.DoesNotExist:
+            return None
+    #----------------------------------------------------------------------
+    def next_list(self, test_list):
+        """return list folling input list in cycle order"""
+        if not test_list:
+            return self.first()
 
-        return membership.test_list
+        inp_membership = self.testlistcyclemembership_set.get(test_list=test_list)
 
+        if inp_membership.order >= (len(self) - 1):
+            return self.first()
+
+        return self.testlistcyclemembership_set.get(order=inp_membership.order+1).test_list
 
     #----------------------------------------------------------------------
     def __unicode__(self):

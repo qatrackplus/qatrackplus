@@ -222,6 +222,6 @@ admin.site.register([models.Category], CategoryAdmin)
 admin.site.register([models.TestList],TestListAdmin)
 admin.site.register([models.Test],TestAdmin)
 admin.site.register([models.UnitTestAssignment],UnitTestAssignmentAdmin)
-admin.site.register([models.UnitTestListAssignment],UnitTestListAssignmentAdmin)
+admin.site.register([models.UnitTestCollectionAssignment],UnitTestListAssignmentAdmin)
 
 admin.site.register([models.TestListCycle],TestListCycleAdmin)

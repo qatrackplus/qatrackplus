@@ -169,7 +169,7 @@ class PerformQAView(FormView):
     def get_context_data(self, **kwargs):
         """add formset and test list to our template context"""
         context = super(PerformQAView, self).get_context_data(**kwargs)
-        utla = get_object_or_404(models.UnitTestListAssignment,pk=self.kwargs["pk"])
+        utla = get_object_or_404(models.UnitTestCollectionAssignment,pk=self.kwargs["pk"])
 
         include_admin = self.request.user.is_staff
 
@@ -226,7 +226,7 @@ class UnitFrequencyListView(TemplateView):
         context["frequency"] = frequency
 
         unit_number = self.kwargs["unit_number"]
-        context["unit_test_list"] = models.UnitTestListAssignment.objects.get(unit__number=unit_number,frequency=frequency)
+        context["unit_test_list"] = models.UnitTestCollectionAssignment.objects.get(unit__number=unit_number,frequency=frequency)
 
         return context
 
@@ -268,7 +268,7 @@ class UserBasedTestLists(TemplateView):
         context = super(UserBasedTestLists,self).get_context_data(**kwargs)
 
         groups = self.request.user.groups.all()
-        utlas = models.UnitTestListAssignment.objects.all()
+        utlas = models.UnitTestCollectionAssignment.objects.all()
         if groups.count() > 0:
             utlas = utlas.filter(assigned_to__in = self.request.user.groups.all())
 
@@ -330,7 +330,7 @@ class ReviewView(TemplateView):
         ]
         fdisplay = dict(models.FREQUENCY_CHOICES)
         table_data = []
-        for utl in models.UnitTestListAssignment.objects.all():
+        for utl in models.UnitTestCollectionAssignment.objects.all():
             unit, frequency = utl.unit, utl.frequency
             data = []
 
@@ -378,7 +378,7 @@ class ReviewView(TemplateView):
                 if data:
                     table_data.append(data)
         context["data"] = table_data
-        context["unit_test_lists"] = models.UnitTestListAssignment.objects.all()
+        context["unit_test_lists"] = models.UnitTestCollectionAssignment.objects.all()
         context["unit_lists"] = unit_lists
         context["units"] = units
         context["routine_freq"] = frequencies
