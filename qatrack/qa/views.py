@@ -169,7 +169,7 @@ class PerformQAView(FormView):
     def get_context_data(self, **kwargs):
         """add formset and test list to our template context"""
         context = super(PerformQAView, self).get_context_data(**kwargs)
-        utla = get_object_or_404(models.UnitTestCollectionAssignment,pk=self.kwargs["pk"])
+        utla = get_object_or_404(models.UnitTestCollection,pk=self.kwargs["pk"])
 
         include_admin = self.request.user.is_staff
 
@@ -178,7 +178,7 @@ class PerformQAView(FormView):
             day = int(day)
             test_list = utla.tests_object.get_list(day=day)
         except ValueError:
-            test_list = utla.tests_object.next_for_unit(utla.unit)
+            test_list = utla.next_list()
 
         days = range(1,len(utla.tests_object)+1)
 
@@ -226,7 +226,7 @@ class UnitFrequencyListView(TemplateView):
         context["frequency"] = frequency
 
         unit_number = self.kwargs["unit_number"]
-        context["unit_test_list"] = models.UnitTestCollectionAssignment.objects.get(unit__number=unit_number,frequency=frequency)
+        context["unit_test_collections"] = models.UnitTestCollection.objects.filter(unit__number=unit_number,frequency=frequency)
 
         return context
 
@@ -248,7 +248,7 @@ class UnitGroupedFrequencyListView(TemplateView):
             unit_type_set = []
             for unit in ut.unit_set.all():
                 unit_type_set.extend(
-                    unit.unittestlists_set.filter(frequency=frequency)
+                    unit.unittestcollection_set.filter(frequency=frequency)
                 )
 
             unit_type_sets.append((ut,unit_type_set))
@@ -257,7 +257,7 @@ class UnitGroupedFrequencyListView(TemplateView):
         return context
 
 #============================================================================
-class UserBasedTestLists(TemplateView):
+class UserBasedTestCollections(TemplateView):
     """show all lists currently assigned to the groups this member is a part of"""
 
     template_name = "user_based_test_lists.html"
@@ -265,10 +265,10 @@ class UserBasedTestLists(TemplateView):
     #----------------------------------------------------------------------
     def get_context_data(self,**kwargs):
         """set frequencies and lists"""
-        context = super(UserBasedTestLists,self).get_context_data(**kwargs)
+        context = super(UserBasedTestCollections,self).get_context_data(**kwargs)
 
         groups = self.request.user.groups.all()
-        utlas = models.UnitTestCollectionAssignment.objects.all()
+        utlas = models.UnitTestCollection.objects.all()
         if groups.count() > 0:
             utlas = utlas.filter(assigned_to__in = self.request.user.groups.all())
 
@@ -309,20 +309,6 @@ class ReviewView(TemplateView):
         """grab all test lists and cycles with given frequency"""
         context = super(ReviewView,self).get_context_data(**kwargs)
 
-        units = Unit.objects.all()
-        frequencies = models.FREQUENCY_CHOICES[:3]
-        unit_lists = []
-        for unit in units:
-            unit_list = []
-            for freq, _ in frequencies:
-                freq_list = []
-                unit_test_lists = unit.unittestlists_set.filter(frequency=freq)
-
-                for utls in unit_test_lists:
-                    freq_list.extend(utls.all_test_lists(with_last_instance=True))
-
-                unit_list.append((freq,freq_list))
-            unit_lists.append((unit,unit_list))
         context["table_headers"] = [
             "Unit", "Frequency", "Test List",
             "Completed", "Due Date", "Last Session Status",
@@ -330,58 +316,46 @@ class ReviewView(TemplateView):
         ]
         fdisplay = dict(models.FREQUENCY_CHOICES)
         table_data = []
-        for utl in models.UnitTestCollectionAssignment.objects.all():
-            unit, frequency = utl.unit, utl.frequency
+        for utl in models.UnitTestCollection.objects.all():
+
             data = []
 
-            for test_list,last in utl.all_test_lists(with_last_instance=True):
-                last_done, status = ["New List"]*2
-                unreviewed = models.TestListInstance.objects.awaiting_review().filter(
-                    test_list = test_list,
-                    unit = unit
-                )
-                history = models.TestListInstance.objects.filter(
-                    test_list=test_list,
-                    unit=unit
-                ).order_by("-work_completed")[:10]
-                review = ()
-                if last is not None:
-                    last_done = last.work_completed
-                    status = last.pass_fail_status()
-                    reviewed = last.testinstance_set.exclude(status=models.UNREVIEWED).count()
-                    total = last.testinstance_set.count()
-                    if total == reviewed:
-                        review = (last.modified_by,last.modified)
+            last = utl.last_completed_instance()
+            status = "New List"
+            review = ()
 
-                due_date = models.due_date(utl.unit, test_list)
-                data = {
-                    "info": {
-                        "unit_number":unit.number,
-                        "test_list_id":test_list.pk,
-                        "frequency":frequency,
-                        "due":due_date.isoformat() if due_date else ""
-                    },
-                    "attrs": [
-                        #(name, obj, display)
-                        ("unit",unit.name),
-                        ("frequency",fdisplay[frequency]),
-                        ("test_list",test_list.name),
-                        ("last_done",last_done),
-                        ("due",due_date),
-                        ("pass_fail_status",status),
-                        ("review_status",review),
-                        ("history",history),
-                    ],
-                    "unreviewed":unreviewed,
-                }
+            if last is not None:
+                status = last.pass_fail_status()
+                reviewed_count = last.testinstance_set.exclude(status=models.UNREVIEWED).count()
+                total = last.testinstance_set.count()
+                if total == reviewed_count:
+                    review = (last.modified_by,last.modified)
 
-                if data:
-                    table_data.append(data)
+
+            due_date = utl.due_date()
+            data = {
+                "info": {
+                    "unit_number":utl.unit.number,
+                    "tests_object_id":utl.tests_object.pk,
+                    "frequency":utl.frequency,
+                    "due":due_date.isoformat() if due_date else ""
+                },
+                "attrs": [
+                    ("unit",utl.unit.name),
+                    ("frequency",fdisplay[utl.frequency]),
+                    ("test_list",utl.tests_object.name),
+                    ("last_done",utl.last_done_date()),
+                    ("due",due_date),
+                    ("pass_fail_status",status),
+                    ("review_status",review),
+                    ("history",utl.history()),
+                ],
+                "unreviewed":utl.unreviewed_test_list_instances(),
+            }
+
+            if data:
+                table_data.append(data)
         context["data"] = table_data
-        context["unit_test_lists"] = models.UnitTestCollectionAssignment.objects.all()
-        context["unit_lists"] = unit_lists
-        context["units"] = units
-        context["routine_freq"] = frequencies
         return context
 
 from api import ValueResource

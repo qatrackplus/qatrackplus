@@ -212,11 +212,11 @@ class Test(models.Model):
     def set_references(self):
         """allow user to go to references in admin interface"""
 
-        url = "%s?"%urlresolvers.reverse("admin:qa_unittestassignment_changelist")
+        url = "%s?"%urlresolvers.reverse("admin:qa_unittestinfo_changelist")
         test_filter = "test__id__exact=%d" % self.pk
 
         unit_filter = "unit__id__exact=%d"
-        info_set = self.unittestassignment_set.all()
+        info_set = self.unittestinfo_set.all()
         urls = [(info.unit.name, url+test_filter+"&"+ unit_filter%info.unit.pk) for info in info_set]
         link = '<a href="%s">%s</a>'
         all_link = link%(url+test_filter,"All Units")
@@ -238,7 +238,7 @@ class Test(models.Model):
         for this (test,unit) pair
         """
 
-        unit_info = UnitTestAssignment.objects.get(unit=unit,test=self)
+        unit_info = UnitTestInfo.objects.get(unit=unit,test=self)
         tol = unit_info.tolerance
         ref = unit_info.reference
 
@@ -330,7 +330,7 @@ def on_test_save(*args, **kwargs):
     if test.type is not BOOLEAN:
         return
 
-    unit_assignments = UnitTestAssignment.objects.filter(test = test)
+    unit_assignments = UnitTestInfo.objects.filter(test = test)
 
     for ua in unit_assignments:
         if ua.reference and ua.reference.value not in (0.,1.,):
@@ -339,7 +339,7 @@ def on_test_save(*args, **kwargs):
 
 
 #============================================================================
-class UnitTestAssignment(models.Model):
+class UnitTestInfo(models.Model):
     unit = models.ForeignKey(Unit)
     test = models.ForeignKey(Test)
 
@@ -363,7 +363,7 @@ class UnitTestAssignment(models.Model):
     def clean(self):
         """extra validation for Tests"""
 
-        super(UnitTestAssignment,self).clean()
+        super(UnitTestInfo,self).clean()
         if None not in (self.reference, self.tolerance):
             if self.tolerance.type == PERCENT and abs(self.reference.value) < EPSILON:
                 msg = _("Percentage based tolerances can not be used with reference value of zero (0)")
@@ -409,39 +409,22 @@ class TestListMembership(models.Model):
 
 
 #============================================================================
-class TestList(models.Model):
-    """Container for a collection of QA :model:`Test`s"""
+class TestCollectionInterface(models.Model):
+    """abstract base class for Tests collection (i.e. TestList's and TestListCycles"""
 
     name = models.CharField(max_length=256)
     slug = models.SlugField(unique=True, help_text=_("A short unique name for use in the URL of this list"))
     description = models.TextField(help_text=_("A concise description of this test checklist"))
 
-    tests = models.ManyToManyField("Test", help_text=_("Which tests does this list contain"),through=TestListMembership)
-
-    sublists = models.ManyToManyField("self",
-        symmetrical=False,null=True, blank=True,
-        help_text=_("Choose any sublists that should be performed as part of this list.")
-    )
-
     #for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)
-    created_by = models.ForeignKey(User, related_name="test_list_creator", editable=False)
+    created_by = models.ForeignKey(User, related_name="%(app_label)s_%(class)s_created", editable=False)
     modified = models.DateTimeField(auto_now=True)
-    modified_by = models.ForeignKey(User, related_name="test_list_modifier", editable=False)
+    modified_by = models.ForeignKey(User, related_name="%(app_label)s_%(class)s_modified", editable=False)
 
-    #----------------------------------------------------------------------
-    def all_tests(self):
-        """returns all tests from this list and sublists"""
-        q1 = Q(testlistmembership__test_list__in = self.sublists.all())
-        q2 = Q(testlistmembership__test_list = self)
-        return Test.objects.filter(q1|q2).distinct()
-    #----------------------------------------------------------------------
-    def ordered_tests(self):
-        """return list of all tests/sublist tests in order"""
-        tests = [m.test for m in self.testlistmembership_set.all()]
-        for sublist in self.sublists.all():
-            tests.extend(sublist.all_tests())
-        return tests
+    class Meta:
+        abstract = True
+
     #----------------------------------------------------------------------
     def get_list(self,day=0):
         return self
@@ -453,15 +436,50 @@ class TestList(models.Model):
     def first(self):
         return self
     #----------------------------------------------------------------------
+    def all_tests(self):
+        """returns all tests from this list and sublists"""
+        return Test.objects.filter(
+            testlistmembership__test_list__in = self.all_lists()
+        ).distinct()
+    #----------------------------------------------------------------------
+    def content_type(self):
+        """return content type of this object"""
+        return ContentType.objects.get_for_model(self)
+
+
+
+#============================================================================
+class TestList(TestCollectionInterface):
+    """Container for a collection of QA :model:`Test`s"""
+
+    tests = models.ManyToManyField("Test", help_text=_("Which tests does this list contain"),through=TestListMembership)
+
+    sublists = models.ManyToManyField("self",
+        symmetrical=False,null=True, blank=True,
+        help_text=_("Choose any sublists that should be performed as part of this list.")
+    )
+
+    #----------------------------------------------------------------------
+    def all_lists(self):
+        """return query for self and all sublists"""
+        return TestList.objects.filter(pk=self.pk) | self.sublists.all()
+    #----------------------------------------------------------------------
+    def ordered_tests(self):
+        """return list of all tests/sublist tests in order"""
+        tests = [m.test for m in self.testlistmembership_set.all()]
+        for sublist in self.sublists.all():
+            tests.extend(sublist.all_tests())
+        return tests
+    #----------------------------------------------------------------------
     def set_references(self):
         """allow user to go to references in admin interface"""
 
-        url = "%s?"%urlresolvers.reverse("admin:qa_unittestassignment_changelist")
+        url = "%s?"%urlresolvers.reverse("admin:qa_unittestinfo_changelist")
         test_filter = "test__id__in=%s" % (','.join(["%d" % test.pk for test in self.all_tests()]))
 
         unit_filter = "unit__id__exact=%d"
 
-        unit_assignments = UnitTestCollectionAssignment.objects.test_lists().filter(object_id=self.pk)
+        unit_assignments = UnitTestCollection.objects.test_lists().filter(object_id=self.pk)
 
         urls = [(info.unit.name, url+test_filter+"&"+ unit_filter%info.unit.pk) for info in unit_assignments]
         link = '<a href="%s">%s</a>'
@@ -503,7 +521,7 @@ class UnitTestListManager(models.Manager):
 
 
 #============================================================================
-class UnitTestCollectionAssignment(models.Model):
+class UnitTestCollection(models.Model):
     """keeps track of which units should perform which test lists at a given frequency"""
 
     unit = models.ForeignKey(Unit)
@@ -546,7 +564,7 @@ class UnitTestCollectionAssignment(models.Model):
 
         for test_list in all_lists:
 
-            unit_test_assignments = UnitTestAssignment.objects.filter(
+            unit_test_assignments = UnitTestInfo.objects.filter(
                 unit=self.unit,
                 test__in = test_list.all_tests()
             )
@@ -585,6 +603,28 @@ class UnitTestCollectionAssignment(models.Model):
         except TestListInstance.DoesNotExist:
             return None
 
+    #----------------------------------------------------------------------
+    def unreviewed_test_list_instances(self):
+        """return a query set of all TestListInstances for this object that have not been fully reviewed"""
+        return TestListInstance.objects.awaiting_review().filter(
+            unit = self.unit,
+            test_list__in = self.tests_object.all_lists()
+        )
+    #----------------------------------------------------------------------
+    def unreviewed_test_instances(self):
+        """return query set of all TestInstances for this object"""
+        return TestInstance.objects.filter(
+            unit = self.unit,
+            test__in = self.tests_object.all_tests()
+        )
+
+    #----------------------------------------------------------------------
+    def history(self,num_instances=10):
+        """returns the last num_instances performed for this object"""
+        return TestListInstance.objects.filter(
+            unit=self.unit,
+            test_list__in = self.tests_object.all_lists()
+        ).order_by("-work_completed")[:num_instances]
 
     #----------------------------------------------------------------------
     def next_list(self):
@@ -605,29 +645,29 @@ class UnitTestCollectionAssignment(models.Model):
 
 
 
-#There are three cases when we might reguire a new UnitTestAssignment
+#There are three cases when we might reguire a new UnitTestCollection
 #to be created:
-#  1)  When a TestList is assigned to a Unit through a UnitTestListAssignment
+#  1)  When a TestList is assigned to a Unit through a UnitTestCollection
 #      all Tests from the TestList and all its sub-TestLists must have a
 #      UnitTestAssignmnent created
 #  2a) When a Test is added to a TestList we must find all Units
-#      that TestList is performed on and create a UnitTestAssignment
+#      that TestList is performed on and create a UnitTestCollection
 #  2b) When a Test is added to a TestList.sublist we e must find all Units
-#      that TestList is performed on and create a UnitTestAssignment
+#      that TestList is performed on and create a UnitTestCollection
 #  3)  When a TestList added to a TestList.sublist we must find all Units
-#      that TestList is performed on and create UnitTestAssignments for
+#      that TestList is performed on and create UnitTestCollections for
 #      all Tests in the sub-TestList
 #
-#  Case 1) can be handled by the post_save signal of UnitTestAssignment
+#  Case 1) can be handled by the post_save signal of UnitTestCollection
 #  Case 2a & 2b) can be handled by the post_save signal of TestListMembership
 #  Case 3) can be handled by the m2m_changed signal of TestList.sublists.through
 #----------------------------------------------------------------------
 def create_unit_test_assignment(unit_test_list_assignment, test):
-    """create UnitTestAssignment for the input UnitTestListAssignment and Test"""
+    """create UnitTestCollection for the input UnitTestCollection and Test"""
 
     utla = unit_test_list_assignment
 
-    uta, created = UnitTestAssignment.objects.get_or_create(
+    uta, created = UnitTestInfo.objects.get_or_create(
         unit = utla.unit,
         test = test,
         frequency = utla.frequency
@@ -641,16 +681,15 @@ def create_unit_test_assignment(unit_test_list_assignment, test):
 #----------------------------------------------------------------------
 def update_unit_test_assignments(test_list):
     """find out which units this test_list is assigned to and make
-    sure there are UnitTestAssignments for each Unit, Test pair"""
+    sure there are UnitTestCollections for each Unit, Test pair"""
 
+    parent_pks =[test_list.pk]
+    if hasattr(test_list, "testlist_set"):
+        parents = test_list.testlist_set.all()
+        if parents.count() > 0:
+            parent_pks = parents.values_list("pk",flat=True)
 
-    parents = test_list.testlist_set.all()
-    if parents.count() == 0:
-        parent_pks =[test_list.pk]
-    else:
-        parent_pks = parents.values_list("pk",flat=True)
-
-    utlas = UnitTestCollectionAssignment.objects.filter(
+    utlas = UnitTestCollection.objects.filter(
         object_id__in= parent_pks,
         content_type = ContentType.objects.get(app_label="qa",model="testlist"),
     )
@@ -658,14 +697,14 @@ def update_unit_test_assignments(test_list):
     all_tests = test_list.all_tests()
 
     for utla in utlas:
-        need_utas = all_tests.exclude(unittestassignment__unit = utla.unit)
+        need_utas = all_tests.exclude(unittestinfo__unit = utla.unit)
         for test in need_utas:
             create_unit_test_assignment(utla, test)
 
 #----------------------------------------------------------------------
-@receiver(post_save, sender=UnitTestCollectionAssignment)
+@receiver(post_save, sender=UnitTestCollection)
 def list_assigned_to_unit(*args,**kwargs):
-    """UnitTestListAssignment was saved.  Create UnitTestAssignments
+    """UnitTestCollection was saved.  Create UnitTestCollections
     for all Tests. (Case 1 from above)"""
 
     update_unit_test_assignments(kwargs["instance"].tests_object)
@@ -674,7 +713,7 @@ def list_assigned_to_unit(*args,**kwargs):
 @receiver(post_save, sender=TestListMembership)
 def test_added_to_list(*args,**kwargs):
     """Test was added to a list (or sublist). Find all units this list
-    is performed on and create UnitTestAssignment for the Unit, Test pair.
+    is performed on and create UnitTestCollection for the Unit, Test pair.
     Covers case 2a & 2b.
     """
     update_unit_test_assignments(kwargs["instance"].test_list)
@@ -850,7 +889,7 @@ class TestListInstance(models.Model):
 
 
 #============================================================================
-class TestListCycle(models.Model):
+class TestListCycle(TestCollectionInterface):
     """A basic model for creating a collection of test lists that cycle
     based on the list that was last completed
 
@@ -858,7 +897,7 @@ class TestListCycle(models.Model):
     at different frequencies may be added sometime in the future.
     """
 
-    name = models.CharField(max_length=256,help_text=_("The name for this test list cycle"))
+    #name = models.CharField(max_length=256,help_text=_("The name for this test list cycle"))
     test_lists = models.ManyToManyField(TestList,through="TestListCycleMembership")
 
     #----------------------------------------------------------------------
@@ -884,11 +923,20 @@ class TestListCycle(models.Model):
             return TestListCycleMembership.objects.get(cycle=self, order=order)
         except TestListCycleMembership.DoesNotExist:
             return None
-
+    #----------------------------------------------------------------------
+    def all_lists(self):
+        """return queryset for all children lists of this cycle"""
+        query = None
+        for test_list in self.test_lists.all():
+            if not query:
+                query = test_list.all_lists()
+            else:
+                query |= test_list.all_lists()
+        if query:
+            return query.distinct()
     #----------------------------------------------------------------------
     def all_tests(self):
         """return all test members of cycle members"""
-        all_tests = []
         query = None
         for test_list in self.test_lists.all():
             if not query:
@@ -949,7 +997,7 @@ class TestListCycleMembership(models.Model):
 
 
     #tlm = kwargs["instance"]
-    #unit_test_lists = UnitTestListAssignment.objects.filter(test_lists=tlm.test_list)
+    #unit_test_lists = UnitTestCollection.objects.filter(test_lists=tlm.test_list)
     #for utl in unit_test_lists:
         #for test in tlm.test_list.tests.all():
-            #UnitTestAssignment.objects.get_or_create(unit=utl.unit, test=test)
+            #UnitTestCollection.objects.get_or_create(unit=utl.unit, test=test)

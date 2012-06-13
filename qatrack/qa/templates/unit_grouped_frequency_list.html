@@ -1,5 +1,6 @@
 {% extends "site_base.html" %}
 {% load staticfiles %}
+{% load qa_tags %}
 {% block extra_style %}
     <link href="{% static "css/qa.css" %}" rel="stylesheet">
 {% endblock %}
@@ -9,48 +10,7 @@
 
     {% for unit_type, unit_lists in unit_type_list %}
         <h3>{{unit_type.name }}</h3>
-
-        <table class="table table-bordered table-striped table-condensed">
-
-            <thead>
-                <tr>
-                    <th>Unit</th>
-                    <th>Test List/Cycle</th>
-                    <th>{{ frequency|title }} QA Last Performed</th>
-                    <th>QA Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for unit_list in unit_lists %}
-
-                    {# display all individual test lists #}
-                    {% for test_list, last_completed in unit_list.test_lists_cycles_and_last_complete %}
-                        <tr>
-                            <td>
-                                <a class="nav-list" href="{% url qa_by_frequency_unit frequency unit_list.unit.number %}" title="Perform {{frequency}} QA for {{unit_list.unit.name}}">
-                                    {{unit_list.unit.name}}
-                                </a>
-                            </td>
-                            <td>{{test_list.name|title}}</td>
-                            {% if last_completed %}
-                                <td>{{last_completed.work_completed}}</td>
-                                <td>
-                                    {% for status,display,tests in last_completed.pass_fail_status %}
-                                        {% if tests.count > 0 %}
-                                        <span class="label {{status}}">{{tests.count}} {{display}}</span>
-                                        {% endif %}
-                                    {% endfor %}
-                                </td>
-                            {% else %}
-                                <td>New</td>
-                                <td>New</td>
-                            {% endif %}
-                       </tr>
-                    {% endfor %}
-
-                {% endfor %}
-            </tbody>
-        </table>
+		{{unit_lists|as_unittestcollections_table}}
     {% endfor %}
 
 {% endblock body %}

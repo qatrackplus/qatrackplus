@@ -67,7 +67,7 @@ class TestInstanceFormset(BaseTestInstanceFormset):
 
         for f, test in zip(self.forms, tests):
             print test
-            info = models.UnitTestAssignment.objects.get(test=test, unit=unit)
+            info = models.UnitTestInfo.objects.get(test=test, unit=unit)
 
             self.set_initial_fk_data(f,info)
             self.set_widgets(f,info)

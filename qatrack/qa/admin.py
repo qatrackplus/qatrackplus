@@ -56,7 +56,7 @@ class TestInfoForm(forms.ModelForm):
     #reference_type = forms.ChoiceField(choices=models.Reference.TYPE_CHOICES)
 
     class Meta:
-        model = models.UnitTestAssignment
+        model = models.UnitTestInfo
 
     #----------------------------------------------------------------------
     def clean(self):
@@ -75,7 +75,7 @@ class TestInfoForm(forms.ModelForm):
 
 
 #============================================================================
-class UnitTestAssignmentAdmin(admin.ModelAdmin):
+class UnitTestInfoAdmin(admin.ModelAdmin):
     """"""
     form = TestInfoForm
     fields = (
@@ -105,7 +105,7 @@ class UnitTestAssignmentAdmin(admin.ModelAdmin):
             )
             ref.save()
             test_info.reference = ref
-        super(UnitTestAssignmentAdmin,self).save_model(request,test_info,form,change)
+        super(UnitTestInfoAdmin,self).save_model(request,test_info,form,change)
 
 
 #============================================================================
@@ -119,7 +119,7 @@ class TestListAdminForm(forms.ModelForm):
         if self.instance in sublists:
             raise django.forms.ValidationError("You can't add a list to its own sublists")
 
-        if self.instance.testlist_set.count() > 0 and len(sublists) > 0:
+        if self.instance.pk and self.instance.testlist_set.count() > 0 and len(sublists) > 0:
             msg = "Sublists can't be nested more than 1 level deep."
             msg += " This list is already a member of %s and therefore"
             msg += " can't have sublists of it's own."
@@ -190,10 +190,10 @@ class TestAdmin(SaveUserMixin, admin.ModelAdmin):
         )
 
 #============================================================================
-class UnitTestListAssignmentAdmin(admin.ModelAdmin):
+class UnitTestCollectionAdmin(admin.ModelAdmin):
     #readonly_fields = ("unit","frequency",)
     #filter_horizontal = ("test_lists","cycles",)
-    list_display = ["name", "unit", "frequency"]
+    list_display = ["tests_object", "unit", "frequency"]
     list_filter = ["unit", "frequency"]
     change_form_template = "admin/treenav/menuitem/change_form.html"
 
@@ -204,7 +204,7 @@ class TestListCycleMembershipInline(admin.TabularInline):
     extra = 0
 
 #============================================================================
-class TestListCycleAdmin(admin.ModelAdmin):
+class TestListCycleAdmin(SaveUserMixin, admin.ModelAdmin):
     """Admin for daily test list cycles"""
     inlines = [TestListCycleMembershipInline]
 
@@ -221,7 +221,7 @@ admin.site.register([models.Tolerance], BasicSaveUserAdmin)
 admin.site.register([models.Category], CategoryAdmin)
 admin.site.register([models.TestList],TestListAdmin)
 admin.site.register([models.Test],TestAdmin)
-admin.site.register([models.UnitTestAssignment],UnitTestAssignmentAdmin)
-admin.site.register([models.UnitTestCollectionAssignment],UnitTestListAssignmentAdmin)
+admin.site.register([models.UnitTestInfo],UnitTestInfoAdmin)
+admin.site.register([models.UnitTestCollection],UnitTestCollectionAdmin)
 
 admin.site.register([models.TestListCycle],TestListCycleAdmin)

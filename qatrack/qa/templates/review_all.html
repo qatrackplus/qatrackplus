@@ -65,17 +65,16 @@
 										</td>
 									{% elif prop == "history" %}
 										<td class="{{prop}}">
-
-												<select class="input-medium instance-id">
-													<option value="hide">Hidden</option>
-													{% for h in val %}
-														{% if h in row.unreviewed %}
-															<option value="{{h.pk}}" class="unreviewed">* {{h.work_completed}} *</option>
-														{% else %}
-															<option value="{{h.pk}}" class="reviewed">{{h.work_completed}}</option>
-														{% endif %}
-													{% endfor %}
-												</select>
+											<select class="input-medium instance-id">
+												<option value="hide">Hidden</option>
+												{% for h in val %}
+													{% if h in row.unreviewed %}
+														<option value="{{h.pk}}" class="unreviewed">* {{h.work_completed}} *</option>
+													{% else %}
+														<option value="{{h.pk}}" class="reviewed">{{h.work_completed}}</option>
+													{% endif %}
+												{% endfor %}
+											</select>
 										</td>
 
 									{% elif prop  == "due"%}
