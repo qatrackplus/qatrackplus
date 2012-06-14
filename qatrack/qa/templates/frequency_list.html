@@ -2,14 +2,10 @@
 {% load staticfiles %}
 {% load qa_tags %}
 
-{% block extra_style %}
-    <link href="{% static "css/qa.css" %}" rel="stylesheet">
-{% endblock %}
-
 {% block body %}
 
-    <h2>{{unit_test_collections.0.unit.name}} {{frequency|title}} Test Lists</h2>
+    <h2>{{unittestcollections.0.unit.name}} {{frequency|title}} Test Lists</h2>
 
-    {{unit_test_collections|as_unittestcollections_table}}
+    {{unittestcollections|as_unittestcollections_table}}
 
 {% endblock %}

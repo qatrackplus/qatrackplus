@@ -1,4 +1,5 @@
 import json
+from api import ValueResource
 from django.contrib import messages
 from django.http import HttpResponse,HttpResponseRedirect, Http404
 from django.shortcuts import get_object_or_404
@@ -33,19 +34,6 @@ class JSONResponseMixin(object):
         # -- can be serialized as JSON.
         return json.dumps(context)
 
-#============================================================================
-class UserHome(RedirectView):
-    """redirect a user to their appropriate home page"""
-
-    #----------------------------------------------------------------------
-    def get_redirect_url(self,**kwargs):
-        """guess redirect url based on user permissions"""
-        groups = self.request.user.groups.all()
-        if groups.count()>0:
-            profile = groups[0].groupprofile
-            if profile:
-                return profile.homepage
-        return "/"
 
 #============================================================================
 class CompositeCalculation(JSONResponseMixin, View):
@@ -209,72 +197,49 @@ class PerformQAView(FormView):
         return context
 
 #============================================================================
-class UnitFrequencyListView(TemplateView):
+class UnitFrequencyListView(ListView):
     """list daily/monthly/annual test lists for a unit"""
 
     template_name = "frequency_list.html"
+    context_object_name = "unittestcollections"
 
     #----------------------------------------------------------------------
-    def get_context_data(self,**kwargs):
-        """
-        return test lists and cycles for a specific frequency
-        (daily/monthly etc)and specific unit
-        """
-
-        context = super(UnitFrequencyListView,self).get_context_data(**kwargs)
-        frequency = self.kwargs["frequency"].lower()
-        context["frequency"] = frequency
-
-        unit_number = self.kwargs["unit_number"]
-        context["unit_test_collections"] = models.UnitTestCollection.objects.filter(unit__number=unit_number,frequency=frequency)
-
-        return context
+    def get_queryset(self):
+        """filter queryset by frequency"""
+        return models.UnitTestCollection.objects.filter(
+            frequency=self.kwargs["frequency"],
+            unit__number=self.kwargs["unit_number"],
+        )
 
 #============================================================================
-class UnitGroupedFrequencyListView(TemplateView):
+class UnitGroupedFrequencyListView(ListView):
     """view for grouping all test lists with a certain frequency for all units"""
     template_name = "unit_grouped_frequency_list.html"
+    context_object_name = "unittestcollections"
 
     #----------------------------------------------------------------------
-    def get_context_data(self,**kwargs):
-        """grab all test lists and cycles with given frequency"""
-        context = super(UnitGroupedFrequencyListView,self).get_context_data(**kwargs)
-        frequency = self.kwargs["frequency"].lower()
-        context["frequency"] = frequency
-
-        unit_type_sets = []
-
-        for ut in UnitType.objects.all():
-            unit_type_set = []
-            for unit in ut.unit_set.all():
-                unit_type_set.extend(
-                    unit.unittestcollection_set.filter(frequency=frequency)
-                )
-
-            unit_type_sets.append((ut,unit_type_set))
-
-        context["unit_type_list"] = unit_type_sets
-        return context
+    def get_queryset(self):
+        """filter queryset by frequency"""
+        return models.UnitTestCollection.objects.filter(
+            frequency=self.kwargs["frequency"],
+        )
 
 #============================================================================
-class UserBasedTestCollections(TemplateView):
+class UserBasedTestCollections(ListView):
     """show all lists currently assigned to the groups this member is a part of"""
 
     template_name = "user_based_test_lists.html"
+    context_object_name = "unittestcollections"
 
     #----------------------------------------------------------------------
-    def get_context_data(self,**kwargs):
-        """set frequencies and lists"""
-        context = super(UserBasedTestCollections,self).get_context_data(**kwargs)
-
+    def get_queryset(self):
+        """filter based on user groups"""
         groups = self.request.user.groups.all()
         utlas = models.UnitTestCollection.objects.all()
         if groups.count() > 0:
             utlas = utlas.filter(assigned_to__in = self.request.user.groups.all())
-
-        context["groups"] = groups
-        context["test_list_assignments"] = utlas
-        return context
+            utlas|= utlas.filter(assigned_to = None)
+        return utlas
 
 #============================================================================
 class ChartView(TemplateView):
@@ -297,68 +262,14 @@ class ChartView(TemplateView):
         return context
 
 
-
-
 #============================================================================
-class ReviewView(TemplateView):
+class ReviewView(ListView):
     """view for grouping all test lists with a certain frequency for all units"""
     template_name = "review_all.html"
-
-    #----------------------------------------------------------------------
-    def get_context_data(self,**kwargs):
-        """grab all test lists and cycles with given frequency"""
-        context = super(ReviewView,self).get_context_data(**kwargs)
-
-        context["table_headers"] = [
-            "Unit", "Frequency", "Test List",
-            "Completed", "Due Date", "Last Session Status",
-            "Review Status", "History",
-        ]
-        fdisplay = dict(models.FREQUENCY_CHOICES)
-        table_data = []
-        for utl in models.UnitTestCollection.objects.all():
-
-            data = []
-
-            last = utl.last_completed_instance()
-            status = "New List"
-            review = ()
-
-            if last is not None:
-                status = last.pass_fail_status()
-                reviewed_count = last.testinstance_set.exclude(status=models.UNREVIEWED).count()
-                total = last.testinstance_set.count()
-                if total == reviewed_count:
-                    review = (last.modified_by,last.modified)
+    model = models.UnitTestCollection
+    context_object_name = "unittestcollections"
 
 
-            due_date = utl.due_date()
-            data = {
-                "info": {
-                    "unit_number":utl.unit.number,
-                    "tests_object_id":utl.tests_object.pk,
-                    "frequency":utl.frequency,
-                    "due":due_date.isoformat() if due_date else ""
-                },
-                "attrs": [
-                    ("unit",utl.unit.name),
-                    ("frequency",fdisplay[utl.frequency]),
-                    ("test_list",utl.tests_object.name),
-                    ("last_done",utl.last_done_date()),
-                    ("due",due_date),
-                    ("pass_fail_status",status),
-                    ("review_status",review),
-                    ("history",utl.history()),
-                ],
-                "unreviewed":utl.unreviewed_test_list_instances(),
-            }
-
-            if data:
-                table_data.append(data)
-        context["data"] = table_data
-        return context
-
-from api import ValueResource
 #============================================================================
 class ExportToCSV(View):
     """A simple api wrapper to give exported api data a filename for downloads"""

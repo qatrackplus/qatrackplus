@@ -31,17 +31,15 @@ for resource in resources:
 
 urlpatterns = patterns('',
 
-    #redirect based on user
-    #url(r"^user_home/$", views.UserHome.as_view(),name="user_home"),
-    url(r"^user_home/$", views.UserBasedTestCollections.as_view(),name="user_home"),
+    url(r"^(user_home/)?$", views.UserBasedTestCollections.as_view(),name="user_home"),
 
     #view for composite calculations via ajax
     url(r"^composite/$", views.CompositeCalculation.as_view(), name="composite"),
 
     #performing qa
-    url(r"^(?P<frequency>\w+)/test_lists?/$", views.UnitGroupedFrequencyListView.as_view(), name="qa_by_frequency"),
+    url(r"^(?P<frequency>\w+)/$", views.UnitGroupedFrequencyListView.as_view(), name="qa_by_frequency"),
     url(r"^(?P<pk>\d+)$", views.PerformQAView.as_view(), name="perform_qa"),
-    url(r"^(?P<frequency>\w+)/test_lists?/unit/(?P<unit_number>\d+)/$", views.UnitFrequencyListView.as_view(), name="qa_by_frequency_unit"),
+    url(r"^(?P<frequency>\w+)/unit/(?P<unit_number>\d+)/$", views.UnitFrequencyListView.as_view(), name="qa_by_frequency_unit"),
 
     #api urls
     url(r"^api/",include(v1_api.urls)),

@@ -473,7 +473,7 @@ class TestTestList(BaseQATestCase):
 
         last = self.unit_test_list_assign.last_completed_instance()
 
-        unreviewed = self.unit_test_list_assign.unreviewed_test_list_instances()
+        unreviewed = self.unit_test_list_assign.unreviewed_instances()
         self.assertEqual(set(unreviewed), set(models.TestListInstance.objects.all()))
 
         unreviewed_tests = self.unit_test_list_assign.unreviewed_test_instances()

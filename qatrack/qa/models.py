@@ -40,6 +40,7 @@ FREQUENCY_DELTAS = {
     ANNUAL:timezone.timedelta(days=365),
 }
 
+
 #test_types
 BOOLEAN = "boolean"
 NUMERICAL = "numerical"
@@ -99,6 +100,20 @@ PASS_FAIL_CHOICES = (
     (NO_TOL,"No Tol Set"),
 )
 
+#due date choices
+NOT_DUE = OK
+DUE = TOLERANCE
+OVERDUE = ACTION
+NEWLIST = NOT_DONE
+
+DUE_INTERVALS = {
+    DAILY:{DUE:1,OVERDUE:1},
+    WEEKLY:{DUE:7,OVERDUE:9},
+    MONTHLY:{DUE:28,OVERDUE:35},
+    SEMIANNUAL:{DUE:180,OVERDUE:210},
+    ANNUAL:{DUE:300,OVERDUE:420},
+    OTHER:{DUE:None,OVERDUE:None},
+}
 EPSILON = 1E-10
 #============================================================================
 class Reference(models.Model):
@@ -541,7 +556,7 @@ class UnitTestCollection(models.Model):
     objects = UnitTestListManager()
 
     class Meta:
-        unique_together = ("frequency", "content_type","object_id",)
+        unique_together = ("unit", "frequency", "content_type","object_id",)
         verbose_name_plural = _("Assign Test Lists to Units")
 
     #----------------------------------------------------------------------
@@ -579,6 +594,25 @@ class UnitTestCollection(models.Model):
             return max(list_due_dates)
 
     #----------------------------------------------------------------------
+    def due_status(self):
+        print "here"
+        due = self.due_date()
+        print due
+        if due is None:
+            return NOT_DUE
+
+        due_interval = DUE_INTERVALS[self.frequency]
+        day_delta = (due - timezone.now()).days
+
+        if day_delta >= due_interval[OVERDUE]:
+
+            return OVERDUE
+        elif day_delta >= due_interval[DUE]:
+            return DUE
+
+        return NOT_DUE
+
+    #----------------------------------------------------------------------
     def last_done_date(self):
         """return date this test list was last performed"""
         last = self.last_completed_instance()
@@ -604,7 +638,7 @@ class UnitTestCollection(models.Model):
             return None
 
     #----------------------------------------------------------------------
-    def unreviewed_test_list_instances(self):
+    def unreviewed_instances(self):
         """return a query set of all TestListInstances for this object that have not been fully reviewed"""
         return TestListInstance.objects.awaiting_review().filter(
             unit = self.unit,
