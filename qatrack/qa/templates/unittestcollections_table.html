@@ -1,0 +1,53 @@
+{% load qa_tags %}
+{% if not unittestcollections %}
+<table class="table table-bordered table-striped table-condensed">
+	<tbody><tr><td><em>No test lists to display</em></td></tr></tbody>
+</table>
+{% else %}
+
+<table class="table table-bordered table-striped table-condensed {% if filter_table %}test-collection-table{% endif %}">
+
+	<thead>
+		{% include "unittestcollections_table_headers.html"%}
+		{% if filter_table %}
+			{% include "unittestcollections_table_headers.html"%}
+		{% endif %}
+	</thead>
+	<tbody>
+		{% for utc in unittestcollections %}
+
+			{# display all individual test lists #}
+			<tr>
+				<td>
+					<a class="nav-list" href="{% url qa_by_frequency_unit utc.frequency utc.unit.number %}" title="Perform {{frequency}} QA for {{utc.unit.name}}">
+						{{utc.unit.name}}
+					</a>
+				</td>
+				<td>{{utc.tests_object.name|title}}</td>
+				{% with utc.last_completed_instance as last_completed %}
+					{% if  last_completed %}
+						<td>{{last_completed.work_completed}}</td>
+						<td>{{utc|as_due_date}}</td>
+						<td>
+							{% for status,display,tests in last_completed.pass_fail_status %}
+								{% if tests.count > 0 %}
+									<span class="label {{status}}">{{tests.count}} {{display}}</span>
+								{% endif %}
+							{% endfor %}
+						</td>
+					{% else %}
+						<td>New List</td>
+						<td>New List</td>
+						<td>New List</td>
+					{% endif %}
+				{% endwith %}
+				<td>{{utc.assigned_to.group.name}}</td>
+				<td><a href="{%url perform_qa utc.pk%}?day=next">Perform</a></td>
+		   </tr>
+		{% endfor %}
+	</tbody>
+	<tfoot>
+		{% include "unittestcollections_table_headers.html"%}
+	</tfoot>
+</table>
+{% endif %}

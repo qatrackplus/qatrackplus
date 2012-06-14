@@ -66,6 +66,7 @@ class TestInstanceFormset(BaseTestInstanceFormset):
         super(TestInstanceFormset,self).__init__(*args,**kwargs)
 
         for f, test in zip(self.forms, tests):
+            print test
             info = models.UnitTestInfo.objects.get(test=test, unit=unit)
 
             self.set_initial_fk_data(f,info)

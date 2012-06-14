@@ -493,6 +493,7 @@ var QAUtils = new function() {
 	this.make_select = function(id,cls,options){
 		var l = [];
 		var idx;
+
 		l.push('<select id="'+id+'" class="'+cls+'">');
 		for (idx = 0; idx < options.length; idx +=1){
 			l.push('<option value="'+options[idx][0]+'">'+options[idx][1]+'</option>');

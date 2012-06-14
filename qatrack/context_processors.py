@@ -2,7 +2,7 @@ from django.conf import settings
 from django.contrib.sites.models import Site
 
 from qatrack.qa.models import (
-    UnitTestLists,
+    UnitTestCollection,
     FREQUENCY_CHOICES,
     TestListInstance,
 )

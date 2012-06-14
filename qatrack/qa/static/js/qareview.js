@@ -38,22 +38,25 @@ function init_test_list_table(){
 
 	return review_table;
 }
-/**************************************************************************/
-//creates the html table to hold the tests from a test list
-function create_test_list_table(id){
-	var headers = '<tr><th class="name-col">Name</th><th>Type</th><th>Comment</th><th>Pass/Fail</th><th>Value</th><th class="ref-col">Ref/Tol</th><th class="history-col">History</th><th>Review URL</th></tr>';
+function make_status_select(){
 	var status_options =[[null,""]];
 	var i,status;
 	for (i=0; i < QAUtils.STATUSES.length; i += 1){
 		status = QAUtils.STATUSES[i];
 		status_options.push([status, QAUtils.STATUS_DISPLAYS[status]]);
 	}
+	return QAUtils.make_select("","input-medium pull-right review-status",status_options)
+}
+/**************************************************************************/
+//creates the html table to hold the tests from a test list
+function create_test_list_table(id){
+	var headers = '<tr><th class="name-col">Name</th><th>Type</th><th>Comment</th><th>Pass/Fail</th><th>Value</th><th class="ref-col">Ref/Tol</th><th class="history-col">History</th><th>Review URL</th><th>Review Status</th></tr>';
 	var elements = [
 		'<div class="review-status-container ">',
 		'<span class="label review-user"></span>',
 
 		'<button data-loading-text="Updating..." class="pull-right btn update-review-status"></button>',
-		QAUtils.make_select("","pull-right review-status",status_options),
+		make_status_select(),
 		'</div>',
 		'<table class="table table-bordered table-condensed table-striped sub-table" id="'+id+'">',
 		'<thead>',headers,'</thead>',
@@ -206,6 +209,8 @@ function add_test_row(parent,instance,test_list_instances){
 	var review_link = QAUtils.unit_test_chart_link(instance.unit,test,"Details");
 	data.push(review_link);
 
+	data.push(make_status_select());
+
 	$(parent).dataTable().fnAddData(data);
 	var test_row = parent.find("#"+spark_id).parent().parent();
 
@@ -228,7 +233,7 @@ function close_details(test_list_row,data_table){
 function open_details(test_list_row,data_table){
 
 	var unit_number = test_list_row.attr("data-unit_number");
-	var test_list_id = test_list_row.attr("data-test_list_id");
+	var test_list_id = test_list_row.find(".instance-id").find("option:selected").data("test_list_id");
 	var frequency = test_list_row.attr("data-frequency");
 	var sub_table_id = 'test-list-'+test_list_id+'-unit-'+unit_number;
 
@@ -398,7 +403,7 @@ function on_select_test_list(test_list_row){
 	test_list_row.children("td:last").append('<span class="pull-right"><em>Loading...</em></span>');
 	var instance_id = test_list_row.find(".instance-id").val();
 	var instance_options ={
-		test_list:test_list_row.attr("data-test_list_id"),
+		test_list:test_list_row.find(".instance-id").find("option:selected").data("test_list_id"),
 		unit__number:test_list_row.attr("data-unit_number"),
 		frequency:test_list_row.attr("data-frequency"),
 		order_by:"-work_completed",
@@ -431,9 +436,21 @@ function details_shown(test_list_row){
 	return test_list_row.next().children(".qa-details").length > 0;
 };
 
+function set_due_status_colors(){
+
+	$("tbody tr.has-due-date").each(function(idx,row){
+		var date_string = $(this).data("due-date");
+		var due_date = null;
+		if (date_string !== ""){
+			due_date = QAUtils.parse_iso8601_date(date_string);
+		}
+		var freq = $(this).data("frequency");
+		QAUtils.set_due_status_color($(this).find(".due-status"),due_date,freq);
+	});
+
+}
 /**************************************************************************/
 $(document).ready(function(){
-
 
 	var test_lists_data_table = init_test_list_table();
 
@@ -450,15 +467,6 @@ $(document).ready(function(){
 			on_select_test_list(test_list_row);
 		}
 
-	});
-	$("tbody tr.has-due-date").each(function(idx,row){
-		var date_string = $(this).data("due");
-		var due_date = null;
-		if (date_string !== ""){
-			due_date = QAUtils.parse_iso8601_date(date_string);
-		}
-		var freq = $(this).data("frequency");
-		QAUtils.set_due_status_color($(this).find(".due-status"),due_date,freq);
 	});
 
 });

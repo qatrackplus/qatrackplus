@@ -1,27 +1,8 @@
 {% extends "site_base.html" %}
 
 {% load staticfiles %}
+{% load qa_tags %}
 
-{% block extra_script %}
-    <script src="{% static "data_tables/js/jquery.dataTables.js" %}"></script>
-    <script src="{% static "data_tables/js/jquery.dataTables.columnFilter.js" %}"></script>
-	<script src="{% static "data_tables/js/DT_bootstrap.js" %}"></script>
-	<script src="{% static "data_tables/js/DT_sort.js" %}"></script>
-
-    <script src="{% static "js/jquery.flot.min.js" %}"></script>
-    <script src="{% static "js/jquery.flot.resize.js" %}"></script>
-    <script src="{% static "js/jquery.flot.fillbetween.js" %}"></script>
-    <script src="{% static "js/jquery.sparkline.min.js" %}"></script>
-
-	<script src="{% static "js/qautils.js" %}"></script>
-	<script src="{% static "js/qareview.js" %}"></script>
-
-{% endblock %}
-
-{% block extra_style %}
-    <link href="{% static "css/qa.css" %}" rel="stylesheet">
-    <link href="{% static "data_tables/css/DT_bootstrap.css" %}" rel="stylesheet">
-{% endblock extra_style %}
 
 {% block body %}
     <div class="row-fluid">
@@ -34,79 +15,91 @@
             <table class="table table-condensed table-bordered table-striped" id="qa-test-list-table">
                 <thead>
                     <tr>
-                        {% for header in table_headers %}
-							<th>{{header}}</th>
-                        {% endfor %}
+						<th>Unit</th>
+						<th>Frequency</th>
+						<th>Test List</th>
+						<th>Completed</th>
+						<th>Due Date</th>
+						<th>Last Session Status</th>
+						<th>Review Status</th>
+						<th>History</th>
 					</tr>
                     <tr>
-                        {% for header in table_headers %}
-							<th>{{header}}</th>
-                        {% endfor %}
+						<th>Unit</th>
+						<th>Frequency</th>
+						<th>Test List</th>
+						<th>Completed</th>
+						<th>Due Date</th>
+						<th>Last Session Status</th>
+						<th>Review Status</th>
+						<th>History</th>
 					</tr>
                 </thead>
 
                 <tbody>
 
-                    {% for row in data %}
-                        <tr class="{% cycle 'odd' 'even' %} has-due-date" {% for k,v in row.info.items %} data-{{k}}="{{v}}" {% endfor %} >
-                            {% for prop,val in row.attrs %}
+                    {% for utc in unittestcollections %}
+                        <tr class="{% cycle 'odd' 'even' %} has-due-date" {{utc|as_data_attributes}}>
+							<td>{{utc.unit.name}}</td>
+							<td>{{utc.frequency|title}}</td>
+							<td>{{utc.tests_object.name}}</td>
+							<td>
+								{% with utc.last_completed_date as lc_date %}
+									{% if lc_date %}
+										lc_date
+									{% else %}
+										New List
+									{% endif %}
+								{% endwith %}
+							</td>
+							<td>{{utc|as_due_date}}</td>
+							<td class="pass_fail_status">
+								{{utc.last_completed_instance|as_pass_fail_status}}
+							</td>
+							<td class="review_status">
+								{{utc|as_unreviewed_count}}
+							</td>
 
-                                    {% if prop == "pass_fail_status" %}
-										<td class="{{prop}}">
-                                        {% for status,display,tests in val %}
-                                            {% if tests.count > 0 %}
-                                            <span class="label {{status}}">{{tests.count}} {{display}}</span>
-                                            {% endif %}
-                                        {% endfor %}
-										</td>
-									{% elif prop == "review_status" %}
-										<td class="{{prop}}">
-											<span class="label unreviewed-count-wrapper"><span class="unreviewed-count">{{row.unreviewed.count}}</span> Unreviewed</span>
-										</td>
-									{% elif prop == "history" %}
-										<td class="{{prop}}">
-
-												<select class="input-medium instance-id">
-													<option value="hide">Hidden</option>
-													{% for h in val %}
-														{% if h in row.unreviewed %}
-															<option value="{{h.pk}}" class="unreviewed">* {{h.work_completed}} *</option>
-														{% else %}
-															<option value="{{h.pk}}" class="reviewed">{{h.work_completed}}</option>
-														{% endif %}
-													{% endfor %}
-												</select>
-										</td>
-
-									{% elif prop  == "due"%}
-										<td class="{{prop}}">
-											<span class="label due-status">{% if val %}{{val.date}}{%else%}New Test List{%endif%}</span>
-										</td>
-									{% elif prop  == "last_done"%}
-										<td class="{{prop}}">
-											{% if val %}{{val}}{%else%}New Test List{%endif%}
-										</td>
-
-                                    {% else %}
-										<td class="{{prop}}">
-                                        {{val}}
-										</td>
-                                    {% endif %}
-                                </td>
-                            {% endfor %}
+							<td class="history">
+								{% with utc.unreviewed as unreviewed %}
+									<select class="input-medium instance-id">
+										<option value="hide">Hidden</option>
+										{% for h in utc.history %}
+											{% if h in unreviewed %}
+												<option data-test_list_id="{{h.test_list.pk}}" value="{{h.pk}}" class="unreviewed">* {{h.work_completed}} *</option>
+											{% else %}
+												<option data-test_list_id="{{h.test_list.pk}}" value="{{h.pk}}" class="reviewed">{{h.work_completed}}</option>
+											{% endif %}
+										{% endfor %}
+									</select>
+								{% endwith %}
+							</td>
                         </tr>
                     {% endfor %}
                 </tbody>
 				<tfoot>
                     <tr>
-                        {% for header in table_headers %}
-                            <th>{{header}}</th>
-                        {% endfor %}
+						<th>Unit</th>
+						<th>Frequency</th>
+						<th>Test List</th>
+						<th>Completed</th>
+						<th>Due Date</th>
+						<th>Last Session Status</th>
+						<th>Review Status</th>
+						<th>History</th>
 					</tr>
 				</tfoot>
             </table>
         </div>
     </div>
 
-
 {% endblock body %}
+
+{% block end_body_extra_script %}
+    <script src="{% static "js/jquery.flot.min.js" %}"></script>
+    <script src="{% static "js/jquery.flot.resize.js" %}"></script>
+    <script src="{% static "js/jquery.flot.fillbetween.js" %}"></script>
+    <script src="{% static "js/jquery.sparkline.min.js" %}"></script>
+
+	<script src="{% static "js/qareview.js" %}"></script>
+{% endblock end_body_extra_script %}

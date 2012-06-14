@@ -20,7 +20,7 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'db/reorg.db',                      # Or path to database file if using sqlite3.
+        'NAME': 'db/default.db',                      # Or path to database file if using sqlite3.
         'USER': '',                      # Not used with sqlite3.
         'PASSWORD': '',                  # Not used with sqlite3.
         'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
@@ -137,6 +137,7 @@ TEMPLATE_DIRS = (
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
     os.path.join(PROJECT_ROOT,"templates"),
+    os.path.join(PROJECT_ROOT,"genericdropdown/templates"),
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = list(DEFAULT_SETTINGS.TEMPLATE_CONTEXT_PROCESSORS)
@@ -162,6 +163,7 @@ INSTALLED_APPS = (
 
     'tastypie',
     'registration',
+    'genericdropdown',
     #'debug_toolbar',
     #qatrack specific
     #'qatrack.qatrack_tags',
