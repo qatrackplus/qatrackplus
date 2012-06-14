@@ -55,7 +55,7 @@ def as_data_attributes(unit_test_collection):
         "id":utc.pk,
         "unit_number":utc.unit.number,
     }
-
+    print " ".join(['data-%s=%s' % (k,v) for k,v in attrs.items() if v])
     return " ".join(['data-%s=%s' % (k,v) for k,v in attrs.items() if v])
 
 

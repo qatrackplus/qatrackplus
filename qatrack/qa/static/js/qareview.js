@@ -194,9 +194,9 @@ function close_details(test_list_row,data_table){
 //open test list instance details row below input test_list_row for a given data_table
 function open_details(test_list_row,data_table){
 
-	var unit_number = test_list_row.attr("data-unit_number");
+	var unit_number = test_list_row.data("unit_number");
 	var test_list_id = test_list_row.find(".instance-id").find("option:selected").data("test_list_id");
-	var frequency = test_list_row.attr("data-frequency");
+	var frequency = test_list_row.data("frequency");
 	var sub_table_id = 'test-list-'+test_list_id+'-unit-'+unit_number;
 
 	data_table.fnOpen(test_list_row.get(0),create_test_list_table(sub_table_id),"qa-details");
@@ -318,7 +318,7 @@ function display_test_list_details(container,instance_id,test_list_instances){
 
 			//status successfully updated
 			review_button.button("complete");
-			review_button.attr("data-complete-text",button_text).text(button_text);
+			review_button.data("complete-text",button_text).text(button_text);
 			//set_test_list_review_status(test_row,	review_user,review_date);
 			set_review_status(container.find(".review-status-container"));
 		});
@@ -360,14 +360,14 @@ function change_review_count(amount, container){
 //open it and load details from server
 function on_select_test_list(test_list_row){
 
-	var review_table = $(".review_table").dataTable();
+	var review_table = $(".review-table").dataTable();
 
 	test_list_row.children("td:last").append('<span class="pull-right"><em>Loading...</em></span>');
 	var instance_id = test_list_row.find(".instance-id").val();
 	var instance_options ={
 		test_list:test_list_row.find(".instance-id").find("option:selected").data("test_list_id"),
-		unit__number:test_list_row.attr("data-unit_number"),
-		frequency:test_list_row.attr("data-frequency"),
+		unit__number:test_list_row.data("unit_number"),
+		frequency:test_list_row.data("frequency"),
 		order_by:"-work_completed",
 		id__lte:instance_id,
 		limit:HISTORY_INSTANCE_LIMIT
