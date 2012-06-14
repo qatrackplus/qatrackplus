@@ -1,6 +1,6 @@
 /**************************************************************************/
 //Initialize sortable/filterable test list table data types
-function init_test_list_tables(){
+function init_test_collection_tables(){
 	$('.test-collection-table').each(function(idx,table){
 		$(table).dataTable( {
 			"sDom": "t<'row-fluid'<'span3'><'span3' l><'span6'p>>",
@@ -27,12 +27,12 @@ function init_test_list_tables(){
 					{type: "text" }, // Test list name
 					{type: "text" }, //date completed
 					{type: "text" }, //due date
-					null,//assigned to
+					{type: "select"},//assigned to
 					null, //perform link
 				]
 		});
 
-		$(table).find("select, input").addClass("input-medium");
+		$(table).find("select, input").addClass("input-small");
 
 	});
 
@@ -41,7 +41,7 @@ function init_test_list_tables(){
 /**************************************************************************/
 $(document).ready(function(){
 
-	init_test_list_tables();
+	init_test_collection_tables();
 
 	$(".test-collection-table tbody tr.has-due-date").each(function(idx,row){
 		var date_string = $(this).data("due");

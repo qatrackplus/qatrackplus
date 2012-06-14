@@ -1,0 +1,5 @@
+{% for status,display,tests in instance.pass_fail_status %}
+	{% if tests.count > 0 %}
+	<span class="label {{status}}">{{tests.count}} {{display}}</span>
+	{% endif %}
+{% endfor %}

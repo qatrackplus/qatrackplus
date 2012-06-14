@@ -3,26 +3,6 @@
 {% load staticfiles %}
 {% load qa_tags %}
 
-{% block extra_script %}
-    <script src="{% static "data_tables/js/jquery.dataTables.js" %}"></script>
-    <script src="{% static "data_tables/js/jquery.dataTables.columnFilter.js" %}"></script>
-	<script src="{% static "data_tables/js/DT_bootstrap.js" %}"></script>
-	<script src="{% static "data_tables/js/DT_sort.js" %}"></script>
-
-    <script src="{% static "js/jquery.flot.min.js" %}"></script>
-    <script src="{% static "js/jquery.flot.resize.js" %}"></script>
-    <script src="{% static "js/jquery.flot.fillbetween.js" %}"></script>
-    <script src="{% static "js/jquery.sparkline.min.js" %}"></script>
-
-	<script src="{% static "js/qautils.js" %}"></script>
-	<script src="{% static "js/qareview.js" %}"></script>
-
-{% endblock %}
-
-{% block extra_style %}
-    <link href="{% static "css/qa.css" %}" rel="stylesheet">
-    <link href="{% static "data_tables/css/DT_bootstrap.css" %}" rel="stylesheet">
-{% endblock extra_style %}
 
 {% block body %}
     <div class="row-fluid">
@@ -113,5 +93,13 @@
         </div>
     </div>
 
-
 {% endblock body %}
+
+{% block end_body_extra_script %}
+    <script src="{% static "js/jquery.flot.min.js" %}"></script>
+    <script src="{% static "js/jquery.flot.resize.js" %}"></script>
+    <script src="{% static "js/jquery.flot.fillbetween.js" %}"></script>
+    <script src="{% static "js/jquery.sparkline.min.js" %}"></script>
+
+	<script src="{% static "js/qareview.js" %}"></script>
+{% endblock end_body_extra_script %}

@@ -237,8 +237,7 @@ class UserBasedTestCollections(ListView):
         groups = self.request.user.groups.all()
         utlas = models.UnitTestCollection.objects.all()
         if groups.count() > 0:
-            utlas = utlas.filter(assigned_to__in = self.request.user.groups.all())
-            utlas|= utlas.filter(assigned_to = None)
+            utlas = utlas.filter(assigned_to__in = [None]+list(groups))
         return utlas
 
 #============================================================================

@@ -4,23 +4,16 @@
 {% load qa_tags %}
 
 {% block body %}
-	{% if not unittestcollections %}
-		<em>No lists assigned to your groups.</em>
-	{% else %}
-		{% regroup unittestcollections by assigned_to as qagroup_assignments %}
-		<div class="row-fluid">
-			<div class="span12">
-				{% for qagroup in qagroup_assignments %}
-					<h2>QA Lists for {{qagroup.grouper.group.name}} {% if not forloop.last %}, {%endif%}</h2>
-				{% endfor %}
-				{% for qagroup in qagroup_assignments %}
-					<h4>QA Lists for {{qagroup.grouper.group.name}}</h4>
-					{{ qagroup.list|as_unittestcollections_table}}
-				{% endfor %}
+	<div class="row-fluid">
+		<div class="span12">
+			<h2>QA Lists Assigned to Your Groups</h2>
 
-			</div>
+			{% if not unittestcollections %}
+				<em>No lists assigned to your groups.</em>
+			{% else %}
+				{{ unittestcollections|as_unittestcollections_table}}
+			{% endif %}
 		</div>
-
-	{% endif %}
+	</div>
 
 {% endblock body %}
