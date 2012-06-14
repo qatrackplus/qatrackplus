@@ -12,10 +12,17 @@ def as_qavalue(form, include_admin):
     return template.render(c)
 
 @register.filter
-def as_unittestcollections_table(unit_lists, filter_table=True):
+def as_unittestcollections_table(unit_lists, table_type="datatable"):
 
     template = get_template("unittestcollections_table.html")
-    c = Context({"unittestcollections":unit_lists, "filter_table":filter_table})
+
+    filter_table = table_type in ("review","datatable")
+
+    c = Context({
+        "unittestcollections":unit_lists,
+        "filter_table":filter_table,
+        "table_type":table_type,
+    })
     return template.render(c)
 
 #----------------------------------------------------------------------
@@ -44,10 +51,11 @@ def as_data_attributes(unit_test_collection):
     due_date = utc.due_date()
     attrs = {
         "frequency": utc.frequency,
-        "due_date": due_date.isoformat() if due_date else None,
+        "due_date": due_date.isoformat() if due_date else "",
         "id":utc.pk,
         "unit_number":utc.unit.number,
     }
-    return " ".join(['data-%s=%s' % (k,v) for k,v in attrs.items()])
+
+    return " ".join(['data-%s=%s' % (k,v) for k,v in attrs.items() if v])
 
 

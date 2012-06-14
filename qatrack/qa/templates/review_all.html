@@ -10,96 +10,14 @@
             <h2>Overall QA Program Status</h2>
         </div>
     </div>
+
     <div class="row-fluid" >
         <div class="span12 container form-inline">
-            <table class="table table-condensed table-bordered table-striped" id="qa-test-list-table">
-                <thead>
-                    <tr>
-						<th>Unit</th>
-						<th>Frequency</th>
-						<th>Test List</th>
-						<th>Completed</th>
-						<th>Due Date</th>
-						<th>Last Session Status</th>
-						<th>Review Status</th>
-						<th>History</th>
-					</tr>
-                    <tr>
-						<th>Unit</th>
-						<th>Frequency</th>
-						<th>Test List</th>
-						<th>Completed</th>
-						<th>Due Date</th>
-						<th>Last Session Status</th>
-						<th>Review Status</th>
-						<th>History</th>
-					</tr>
-                </thead>
-
-                <tbody>
-
-                    {% for utc in unittestcollections %}
-                        <tr class="{% cycle 'odd' 'even' %} has-due-date" {{utc|as_data_attributes}}>
-							<td>{{utc.unit.name}}</td>
-							<td>{{utc.frequency|title}}</td>
-							<td>{{utc.tests_object.name}}</td>
-							<td>
-								{% with utc.last_completed_date as lc_date %}
-									{% if lc_date %}
-										lc_date
-									{% else %}
-										New List
-									{% endif %}
-								{% endwith %}
-							</td>
-							<td>{{utc|as_due_date}}</td>
-							<td class="pass_fail_status">
-								{{utc.last_completed_instance|as_pass_fail_status}}
-							</td>
-							<td class="review_status">
-								{{utc|as_unreviewed_count}}
-							</td>
-
-							<td class="history">
-								{% with utc.unreviewed as unreviewed %}
-									<select class="input-medium instance-id">
-										<option value="hide">Hidden</option>
-										{% for h in utc.history %}
-											{% if h in unreviewed %}
-												<option data-test_list_id="{{h.test_list.pk}}" value="{{h.pk}}" class="unreviewed">* {{h.work_completed}} *</option>
-											{% else %}
-												<option data-test_list_id="{{h.test_list.pk}}" value="{{h.pk}}" class="reviewed">{{h.work_completed}}</option>
-											{% endif %}
-										{% endfor %}
-									</select>
-								{% endwith %}
-							</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-				<tfoot>
-                    <tr>
-						<th>Unit</th>
-						<th>Frequency</th>
-						<th>Test List</th>
-						<th>Completed</th>
-						<th>Due Date</th>
-						<th>Last Session Status</th>
-						<th>Review Status</th>
-						<th>History</th>
-					</tr>
-				</tfoot>
-            </table>
-        </div>
-    </div>
-
+			{{unittestcollections|as_unittestcollections_table:"review"}}
+		</div>
+	</div>
 {% endblock body %}
 
 {% block end_body_extra_script %}
-    <script src="{% static "js/jquery.flot.min.js" %}"></script>
-    <script src="{% static "js/jquery.flot.resize.js" %}"></script>
-    <script src="{% static "js/jquery.flot.fillbetween.js" %}"></script>
-    <script src="{% static "js/jquery.sparkline.min.js" %}"></script>
-
 	<script src="{% static "js/qareview.js" %}"></script>
 {% endblock end_body_extra_script %}

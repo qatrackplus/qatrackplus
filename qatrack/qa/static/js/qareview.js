@@ -1,43 +1,5 @@
 var HISTORY_INSTANCE_LIMIT = 5;
 
-/**************************************************************************/
-//Initialize sortable/filterable test list table data types
-function init_test_list_table(){
-	var review_table = $('#qa-test-list-table').dataTable( {
-		"sDom": "<'row-fluid'<'span6'><'span6'>r>t<'row-fluid'<'span3'><'span3' l><'span6'p>>",
-
-		"bStateSave":false, //save filter/sort state between page loads
-		"bFilter":true,
-		"bPaginate": false,
-		aoColumns: [
-			null, //Unit
-			null, //Freq
-			null,  // Test list name
-			{"sType":"day-month-year-sort"}, //date completed
-			{"sType":"span-day-month-year-sort"}, //due date
-			null, //status of test list tests
-			null,  //review status of list
-			null  //history
-
-		]
-
-	} ).columnFilter({
-		sPlaceHolder: "head:after",
-		aoColumns: [
-			{type: "select"}, //Unit
-			{type: "select"}, //Freq
-			{type: "text" }, // Test list name
-			{type: "text" }, //date completed
-			{type: "text" }, //due date
-			{ type: "text" }, //status of test list tests
-			null, //review status of list
-			null  //history
-
-		]
-	});
-
-	return review_table;
-}
 function make_status_select(){
 	var status_options =[[null,""]];
 	var i,status;
@@ -398,7 +360,7 @@ function change_review_count(amount, container){
 //open it and load details from server
 function on_select_test_list(test_list_row){
 
-	var test_lists_data_table = $("#qa-test-list-table").dataTable();
+	var review_table = $(".review_table").dataTable();
 
 	test_list_row.children("td:last").append('<span class="pull-right"><em>Loading...</em></span>');
 	var instance_id = test_list_row.find(".instance-id").val();
@@ -421,7 +383,7 @@ function on_select_test_list(test_list_row){
 
 			//make sure we got results from server & user hasn't closed table
 			if (test_list_instances.length > 0){
-				var details_container = open_details(test_list_row, test_lists_data_table);
+				var details_container = open_details(test_list_row, review_table);
 				display_test_list_details(details_container,instance_id,test_list_instances);
 				set_review_status(details_container.find(".review-status-container"));
 			}
@@ -452,9 +414,9 @@ function set_due_status_colors(){
 /**************************************************************************/
 $(document).ready(function(){
 
-	var test_lists_data_table = init_test_list_table();
+	var review_table = $(".review-table");
 
-	$("#qa-test-list-table tbody tr").each(function(idx,row){
+	review_table.find("tbody tr").each(function(idx,row){
 		change_review_count(0,$(row));
 	});
 
@@ -462,7 +424,7 @@ $(document).ready(function(){
 
 		var test_list_row = $(event.currentTarget).parents("tr");
 		if ($(event.currentTarget).val() === "hide"){
-			close_details(test_list_row, test_lists_data_table);
+			close_details(test_list_row, review_table);
 		}else{
 			on_select_test_list(test_list_row);
 		}
