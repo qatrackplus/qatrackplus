@@ -32,7 +32,7 @@
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                     Review
                     <span title="There are currently {{AWAITING_REVIEW}} QA Sessions waiting to be reviewed" class="label {% if AWAITING_REVIEW == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
-                        <span class="unreviewed-count">{{AWAITING_REVIEW}}</span>
+                        <span class="total-unreviewed-count">{{AWAITING_REVIEW}}</span>
                     </span>
                     <b class="caret"></b>
                 </a>
@@ -42,7 +42,7 @@
                             <i class="icon-check"></i>
                             Review QA
                             <span title="There are currently {{AWAITING_REVIEW}} QA Sessions waiting to be reviewed" class="label {% if AWAITING_REVIEW == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
-                                <span class="unreviewed-count">{{AWAITING_REVIEW}}</span>
+                                <span class="total-unreviewed-count">{{AWAITING_REVIEW}}</span>
                             </span>
                         </a>
                     </li>

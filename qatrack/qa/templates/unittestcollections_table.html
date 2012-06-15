@@ -45,18 +45,18 @@
 					</td>
 
 					<td class="history">
-						{% with utc.unreviewed as unreviewed %}
-							<select class="input-medium instance-id">
-								<option value="hide">Hidden</option>
-								{% for h in utc.history %}
-									{% if h in unreviewed %}
-										<option data-test_list_id="{{h.test_list.pk}}" value="{{h.pk}}" class="unreviewed">* {{h.work_completed}} *</option>
-									{% else %}
-										<option data-test_list_id="{{h.test_list.pk}}" value="{{h.pk}}" class="reviewed">{{h.work_completed}}</option>
-									{% endif %}
-								{% endfor %}
-							</select>
-						{% endwith %}
+						<select class="pull-right input-medium instance-id">
+							<option value="hide">Hidden</option>
+							{% for h in utc.history %}
+
+								{% if h.unreviewed_instances.count %}
+									<option data-test_list_id="{{h.test_list.pk}}" value="{{h.pk}}" class="unreviewed">* {{h.work_completed}} *</option>
+								{% else %}
+									<option data-test_list_id="{{h.test_list.pk}}" value="{{h.pk}}" class="reviewed">{{h.work_completed}}</option>
+								{% endif %}
+
+							{% endfor %}
+						</select>
 					</td>
 
 				{% else %}

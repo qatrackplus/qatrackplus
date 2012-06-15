@@ -50,13 +50,15 @@ var QAUtils = new function() {
     this.APPROVED = "approved";
     this.SCRATCH = "scratch";
     this.REJECTED = "rejected";
-	this.STATUSES = [this.UNREVIEWED, this.APPROVED, this.SCRATCH, this.REJECTED];
+	this.RETURN_TO_SERVICE = "returntoservice";
+	this.STATUSES = [this.UNREVIEWED, this.APPROVED, this.SCRATCH, this.REJECTED, this.RETURN_TO_SERVICE];
 
 	this.STATUS_DISPLAYS = {};
 	this.STATUS_DISPLAYS[this.UNREVIEWED] = "Unreviewed";
 	this.STATUS_DISPLAYS[this.APPROVED] = "Approved";
 	this.STATUS_DISPLAYS[this.SCRATCH] = "Scratch";
 	this.STATUS_DISPLAYS[this.REJECTED] = "Rejected";
+	this.STATUS_DISPLAYS[this.RETURN_TO_SERVICE] = "Return To Service";
 
 
 	this.DUE = this.TOLERANCE;

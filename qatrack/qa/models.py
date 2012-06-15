@@ -912,7 +912,9 @@ class TestListInstance(models.Model):
         if not formatted:
             return status
         return ", ".join(["%d %s" %(s.count(),d) for _,d,s in status])
-
+    #----------------------------------------------------------------------
+    def unreviewed_instances(self):
+        return self.testinstance_set.filter(status=UNREVIEWED)
     #---------------------------------------------------------------------------
     def __unicode__(self):
         """more helpful interactive display name"""
