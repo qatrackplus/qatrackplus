@@ -1,0 +1,15 @@
+<tr>
+	<th>Unit</th>
+	<th>Frequency</th>
+	<th>Test List/Cycle</th>
+	<th>Last Performed</th>
+	<th>Due Date</th>
+	<th>QA Status</th>
+	{% if table_type = "review" %}
+		<th>Review Status</th>
+		<th>History</th>
+	{% else %}
+		<th>Assigned To</th>
+		<th>Perform</th>
+	{% endif %}
+</tr>

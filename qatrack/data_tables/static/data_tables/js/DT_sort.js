@@ -88,23 +88,36 @@ jQuery.fn.dataTableExt.oSort['monthYear-sort-desc'] = function(a,b) {
 jQuery.fn.dataTableExt.oSort['day-month-year-sort-asc']  = function(a,b) {
     a = new Date(a);
     b = new Date(b);
+    if ((a.toString().toLowerCase() === "invalid date") && (b.toString().toLowerCase() !== "invalid date")){
+        return 1;
+    }else if ((a.toString().toLowerCase() !== "invalid date") && (b.toString().toLowerCase() === "invalid date")){
+        return -1;
+    }else if ((a.toString().toLowerCase() === "invalid date") && (b.toString().toLowerCase() === "invalid date")){
+        return 0;
+    }
+
     return ((a < b) ? -1 : ((a > b) ?  1 : 0));
 };
 
 jQuery.fn.dataTableExt.oSort['day-month-year-sort-desc'] = function(a,b) {
+
     a = new Date(a);
     b = new Date(b);
+
+    if ((a.toString().toLowerCase() === "invalid date") && (b.toString().toLowerCase() !== "invalid date")){
+        return -1;
+    }else if ((a.toString().toLowerCase() !== "invalid date") && (b.toString().toLowerCase() === "invalid date")){
+        return 1;
+    }else if ((a.toString().toLowerCase() === "invalid date") && (b.toString().toLowerCase() === "invalid date")){
+        return 0;
+    }
     return ((a < b) ? 1 : ((a > b) ?  -1 : 0));
 };
 
 jQuery.fn.dataTableExt.oSort['span-day-month-year-sort-asc']  = function(a,b) {
-    a = new Date($(a).text());
-    b = new Date($(b).text());
-    return ((a < b) ? -1 : ((a > b) ?  1 : 0));
+    return jQuery.fn.dataTableExt.oSort['day-month-year-sort-asc']($(a).text(),$(b).text());
 };
 
 jQuery.fn.dataTableExt.oSort['span-day-month-year-sort-desc'] = function(a,b) {
-    a = new Date($(a).text());
-    b = new Date($(b).text());
-    return ((a < b) ? 1 : ((a > b) ?  -1 : 0));
+    return jQuery.fn.dataTableExt.oSort['day-month-year-sort-desc']($(a).text(),$(b).text());
 };

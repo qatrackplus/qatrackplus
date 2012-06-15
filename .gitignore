@@ -11,6 +11,7 @@ src/*.egg-info
 lib
 lib64
 *~
+*.debug
 *.log
 *.pot
 *.pyc

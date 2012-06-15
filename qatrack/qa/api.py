@@ -107,7 +107,7 @@ class CategoryResource(ModelResource):
 #============================================================================
 class TestListResource(ModelResource):
     tests = tastypie.fields.ToManyField("qatrack.qa.api.TestResource","tests",full=True)
-    frequencies = tastypie.fields.ListField()
+    #frequencies = tastypie.fields.ListField()
 
     class Meta:
         queryset = models.TestList.objects.order_by("name").all()
@@ -117,16 +117,18 @@ class TestListResource(ModelResource):
             "name":ALL,
         }
     #----------------------------------------------------------------------
-    def dehydrate_frequencies(self,bundle):
-        return list(bundle.obj.unittestlists_set.values_list("frequency",flat=True).distinct())
+    #def dehydrate_frequencies(self,bundle):
+    #
+    #return list(bundle.obj.unittestcollection_set.values_list("frequency",flat=True).distinct())
 
 #============================================================================
 class TestInstanceResource(ModelResource):
     test = tastypie.fields.ForeignKey("qatrack.qa.api.TestResource","test", full=True)
     reference = tastypie.fields.ForeignKey("qatrack.qa.api.ReferenceResource","reference", full=True,null=True)
     tolerance = tastypie.fields.ForeignKey("qatrack.qa.api.ToleranceResource","tolerance", full=True,null=True)
-    unit = tastypie.fields.ForeignKey(UnitResource,"unit",full=True);
 
+    unit = tastypie.fields.ForeignKey(UnitResource,"unit",full=True);
+    reviewed_by = tastypie.fields.CharField()
     class Meta:
         queryset = models.TestInstance.objects.all()
         resource_name = "values"
@@ -140,6 +142,10 @@ class TestInstanceResource(ModelResource):
         ordering= ["work_completed"]
         authentication = BasicAuthentication()
         authorization = DjangoAuthorization()
+    #----------------------------------------------------------------------
+    def dehydrate_reviewed_by(self,bundle):
+        if bundle.obj.reviewed_by:
+            return bundle.obj.reviewed_by.username
 
     #----------------------------------------------------------------------
     def build_filters(self,filters=None):
@@ -193,6 +199,7 @@ def serialize_testinstance(test_instance):
         'user':None,
         'unit':None,
         'test':None,
+        'reviewed_by':None
     }
     if ti.reference:
         info["reference"] = ti.reference.value
@@ -214,6 +221,9 @@ def serialize_testinstance(test_instance):
 
     if ti.created_by:
         info["user"] = ti.created_by.username
+
+    if ti.reviewed_by:
+        info["reviewed_by"] = ti.reviewed_by.username
 
     if ti.test:
         info["test"] = ti.test.short_name
@@ -364,7 +374,8 @@ class TestListInstanceResource(ModelResource):
         queryset = models.TestListInstance.objects.all()
         filtering = {
             "unit":ALL_WITH_RELATIONS,
-            "test_list": ALL_WITH_RELATIONS
+            "test_list": ALL_WITH_RELATIONS,
+            "id":ALL,
         }
 
         ordering= ["work_completed"]

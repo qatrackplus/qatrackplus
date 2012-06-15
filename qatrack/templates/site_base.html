@@ -2,7 +2,12 @@
 
 {% load i18n %}
 {% load l10n %}
-{% block extra_head %}
+{% load staticfiles %}
+
+{% block extra_style %}
+    <link href="{% static "css/qa.css" %}" rel="stylesheet">
+    <link href="{% static "data_tables/css/DT_bootstrap.css" %}" rel="stylesheet">
+	{% block page_style %}{% endblock %}
 {% endblock %}
 
 {% block nav %}
@@ -26,23 +31,43 @@
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                     Review
-                    <span title="There are currently {{AWAITING_REVIEW}} QA Sessions waiting to be reviewed" class="label {% if AWAITING_REVIEW == 0%}label-success{%else%}label-warning{%endif%} awaiting-review">{{AWAITING_REVIEW}}</span>
+                    <span title="There are currently {{AWAITING_REVIEW}} QA Sessions waiting to be reviewed" class="label {% if AWAITING_REVIEW == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                        <span class="total-unreviewed-count">{{AWAITING_REVIEW}}</span>
+                    </span>
                     <b class="caret"></b>
                 </a>
                 <ul class="dropdown-menu">
-                    <li><a href="{% url  review %}"><i class="icon-check"></i>Review QA <span title="There are currently {{AWAITING_REVIEW}} QA Sessions waiting to be reviewed" class="label {% if AWAITING_REVIEW == 0%}label-success{%else%}label-warning{%endif%} awaiting-review">{{AWAITING_REVIEW}}</span></a></li>
+                    <li>
+                        <a href="{% url  review %}">
+                            <i class="icon-check"></i>
+                            Review QA
+                            <span title="There are currently {{AWAITING_REVIEW}} QA Sessions waiting to be reviewed" class="label {% if AWAITING_REVIEW == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                                <span class="total-unreviewed-count">{{AWAITING_REVIEW}}</span>
+                            </span>
+                        </a>
+                    </li>
                     <li><a href="{% url charts %}"><i class="icon-picture"></i>Trending</a></li>
                 </ul>
             </li>
             {% endif %}
         </ul>
     {% endif %}
+
 {% endblock %}
 
 {% block footer %}
     {% include "_footer.html" %}
 {% endblock %}
 
-{% block extra_body_base %}
-    {% block extra_body %}{% endblock %}
+{% block extra_body %}
+	{% block end_body_script_base %}
+		<script src="{% static "data_tables/js/jquery.dataTables.js" %}"></script>
+		{# http://jquery-datatables-column-filter.googlecode.com/svn/trunk/index.html #}
+		<script src="{% static "data_tables/js/jquery.dataTables.columnFilter.js" %}"></script>
+		<script src="{% static "data_tables/js/DT_bootstrap.js" %}"></script>
+		<script src="{% static "data_tables/js/DT_sort.js" %}"></script>
+		<script src="{% static "js/qautils.js" %}"></script>
+		<script src="{% static "js/base.js" %}"></script>
+		{% block end_body_extra_script %}{%endblock%}
+	{% endblock end_body_script_base%}
 {% endblock %}

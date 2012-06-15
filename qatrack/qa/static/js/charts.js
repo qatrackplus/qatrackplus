@@ -47,9 +47,8 @@ function convert_to_flot_series(idx,collection){
             var ref = collection.data.references[idx];
             var date = dates[idx];
 
-            if (tol.type === QAUtils.PERCENT){
-                tol = QAUtils.convert_tol_to_abs(ref,tol);
-            }
+
+			tol = QAUtils.convert_tol_to_abs(ref,tol);
 
             $.each(["act_low","tol_low","tol_high","act_high"],function(idx,type){
                 tolerances[type].push([date,tol[type]]);

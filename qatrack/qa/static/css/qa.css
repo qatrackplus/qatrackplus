@@ -135,14 +135,13 @@ span.tolerance {
     margin: 1em 0;
     clear: both;
 }
-#qa-test-list-table select,
+#qa-test-list-table thead select,
 #qa-test-list-table input,
 #qa-test-review-table select,
 #qa-test-review-table input{
     width:80px;
 }
-#qa-test-list-table > tbody > tr.odd,
-#qa-test-list-table > tbody > tr.even{
+.show-hide{
     cursor: hand; cursor: pointer;
 }
 .sub-table th{
@@ -159,8 +158,13 @@ span.tolerance {
     width:150px;
 }
 
-
-
+/*td.qa-details,
+td.qa-details:hover{
+    background-color:#D9EDF7;
+}*/
+option.unreviewed {
+    background-color:#D9EDF7;
+}
 /* css for timepicker */
 .ui-timepicker-div .ui-widget-header { margin-bottom: 8px; }
 .ui-timepicker-div dl { text-align: left; }

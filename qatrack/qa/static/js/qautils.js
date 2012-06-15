@@ -6,6 +6,7 @@ var QAUtils = new function() {
     this.TOL_COLOR = "#f89406";
     this.OK_COLOR = "#468847";
 	this.NOT_DONE_COLOR = "#3a87ad";
+	this.REVIEW_COLOR = "#D9EDF7";
 
     this.ACT_LOW = "act_low";
     this.TOL_LOW = "tol_low";
@@ -49,6 +50,15 @@ var QAUtils = new function() {
     this.APPROVED = "approved";
     this.SCRATCH = "scratch";
     this.REJECTED = "rejected";
+	this.RETURN_TO_SERVICE = "returntoservice";
+	this.STATUSES = [this.UNREVIEWED, this.APPROVED, this.SCRATCH, this.REJECTED, this.RETURN_TO_SERVICE];
+
+	this.STATUS_DISPLAYS = {};
+	this.STATUS_DISPLAYS[this.UNREVIEWED] = "Unreviewed";
+	this.STATUS_DISPLAYS[this.APPROVED] = "Approved";
+	this.STATUS_DISPLAYS[this.SCRATCH] = "Scratch";
+	this.STATUS_DISPLAYS[this.REJECTED] = "Rejected";
+	this.STATUS_DISPLAYS[this.RETURN_TO_SERVICE] = "Return To Service";
 
 
 	this.DUE = this.TOLERANCE;
@@ -160,16 +170,22 @@ var QAUtils = new function() {
         return {status:status, gen_status:gen_status, diff:diff, message:message};
     };
 
-    //convert an percent difference to absolute based on reference
-    this.convert_tol_to_abs = function(ref,tol){
+    //convert a tolerance from relative to absolute values based on reference
+    this.convert_tol_to_abs = function(ref_val,tol){
         if (tol.type === this.ABSOLUTE){
-            return tol;
+			return {
+				act_low  : ref_val + tol.act_low,
+				tol_low  : ref_val + tol.tol_low,
+				tol_high : ref_val + tol.tol_high,
+				act_high : ref_val +tol.act_high
+			};
         }
+
         return {
-            act_low : ref*(100.+tol.act_low)/100.,
-            tol_low : ref*(100.+tol.tol_low)/100.,
-            tol_high : ref*(100.+tol.tol_high)/100.,
-            act_high : ref*(100.+tol.act_high)/100.
+            act_low : ref_val*(100.+tol.act_low)/100.,
+            tol_low : ref_val*(100.+tol.tol_low)/100.,
+            tol_high : ref_val*(100.+tol.tol_high)/100.,
+            act_high : ref_val*(100.+tol.act_high)/100.
         };
     };
 
@@ -178,7 +194,7 @@ var QAUtils = new function() {
 		var t,v,s;
 
 		if ((tolerance !== null) && (reference !== null)){
-			t = tolerance;
+			t = this.convert_tol_to_abs(reference.value,tolerance);
 			v = reference.value;
 
 			if (reference.type === this.BOOLEAN){
@@ -188,7 +204,7 @@ var QAUtils = new function() {
 					s = "No Expected";
 				}
 			}else{
-				s = [t.act_low,t.tol_low, v, t.tol_high, t.act_high].join(" < ");
+				s = [t.act_low,t.tol_low, v, t.tol_high, t.act_high].join(" &le; ");
 			}
 		}else if (reference !== null){
 			s = reference.value.toString();
@@ -475,5 +491,18 @@ var QAUtils = new function() {
 
 		$(elem).css("background-color",color);
 	};
+
+	this.make_select = function(id,cls,options){
+		var l = [];
+		var idx;
+
+		l.push('<select id="'+id+'" class="'+cls+'">');
+		for (idx = 0; idx < options.length; idx +=1){
+			l.push('<option value="'+options[idx][0]+'">'+options[idx][1]+'</option>');
+		}
+		l.push("</select>");
+
+		return l.join("");
+	}
 
 }();
