@@ -7,7 +7,6 @@ from django.core import urlresolvers
 from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
-
 from django.dispatch import receiver
 from django.db.models.signals import pre_save,post_save, m2m_changed
 from django.db.models import signals
@@ -287,6 +286,9 @@ class Test(models.Model):
         if not self.RESULT_RE.findall(self.calculation_procedure):
             errors.append(_('Snippet must contain a result line (e.g. result = my_var/another_var*2)'))
 
+        if self.calculation_procedure.find("__") >= 0:
+            errors.append(_('No double underscore methods allowed in calculations'))
+            
         if errors:
             raise ValidationError({"calculation_procedure":errors})
     #----------------------------------------------------------------------
@@ -430,6 +432,12 @@ class TestCollectionInterface(models.Model):
     name = models.CharField(max_length=256)
     slug = models.SlugField(unique=True, help_text=_("A short unique name for use in the URL of this list"))
     description = models.TextField(help_text=_("A concise description of this test checklist"))
+
+    assigned_to = generic.GenericRelation(
+        "UnitTestCollection", 
+        content_type_field="content_type", 
+        object_id_field="object_id",
+    )
 
     #for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)
@@ -595,9 +603,7 @@ class UnitTestCollection(models.Model):
 
     #----------------------------------------------------------------------
     def due_status(self):
-        print "here"
         due = self.due_date()
-        print due
         if due is None:
             return NOT_DUE
 
@@ -605,7 +611,6 @@ class UnitTestCollection(models.Model):
         day_delta = (due - timezone.now()).days
 
         if day_delta >= due_interval[OVERDUE]:
-
             return OVERDUE
         elif day_delta >= due_interval[DUE]:
             return DUE

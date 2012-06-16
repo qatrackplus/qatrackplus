@@ -217,6 +217,10 @@ class TestListCycleAdmin(SaveUserMixin, admin.ModelAdmin):
             settings.STATIC_URL+"js/m2m_drag_admin.js",
         )
 
+        
+        
+    
+    
 admin.site.register([models.Tolerance], BasicSaveUserAdmin)
 admin.site.register([models.Category], CategoryAdmin)
 admin.site.register([models.TestList],TestListAdmin)
@@ -225,3 +229,5 @@ admin.site.register([models.UnitTestInfo],UnitTestInfoAdmin)
 admin.site.register([models.UnitTestCollection],UnitTestCollectionAdmin)
 
 admin.site.register([models.TestListCycle],TestListCycleAdmin)
+
+admin.site.register([models.TestListInstance,models.TestInstance], admin.ModelAdmin)
