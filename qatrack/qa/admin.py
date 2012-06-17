@@ -48,16 +48,28 @@ class CategoryAdmin(admin.ModelAdmin):
 
 #============================================================================
 class TestInfoForm(forms.ModelForm):
-    reference_value = forms.FloatField(
-        label=_("Update reference"),
-        help_text=_("For Yes/No tests, enter 1 for Yes and 0 for No"),
-        required=False,
-    )
-    #reference_type = forms.ChoiceField(choices=models.Reference.TYPE_CHOICES)
+    reference_value = forms.FloatField(label=_("Update reference"),required=False,)
+    test_type = forms.CharField(required=False)
 
     class Meta:
         model = models.UnitTestInfo
 
+    def __init__(self, *args, **kwargs):
+        super(TestInfoForm, self).__init__(*args, **kwargs)
+        self.fields['test_type'].widget.attrs['readonly'] = "readonly"
+        #self.fields['test_type'].widget.attrs['disabled'] = "disabled"
+        
+        
+        if self.instance and self.instance.test.type in (models.BOOLEAN, models.MULTIPLE_CHOICE):
+            tt = self.instance.test.type
+            i = [x[0] for x in models.TEST_TYPE_CHOICES].index(tt)
+            self.fields["test_type"].initial = models.TEST_TYPE_CHOICES[i][1]
+                        
+            if tt == models.BOOLEAN:
+                self.fields["reference_value"].widget = forms.Select(choices=[(0,"No"),(1,"Yes")])                
+            elif tt == models.MULTIPLE_CHOICE:
+                self.fields["reference_value"].widget = forms.Select(choices=self.instance.test.get_choices())
+                
     #----------------------------------------------------------------------
     def clean(self):
         """make sure valid numbers are entered for boolean data"""
@@ -67,10 +79,12 @@ class TestInfoForm(forms.ModelForm):
 
         ref_value = self.cleaned_data["reference_value"]
 
-        if self.instance.test.type == models.BOOLEAN:
-            if int(ref_value) not in (0,1):
+        if self.instance.test.type == models.BOOLEAN and int(ref_value) not in (0,1):
                 raise forms.ValidationError(_("Yes/No values must be 0 or 1"))
 
+        if self.instance.test.type in (models.BOOLEAN, models.MULTIPLE_CHOICE):
+            if self.cleaned_data["tolerance"] is not None:
+                raise forms.ValidationError(_("Please leave tolerance field blank for boolean and multiple choice test types"))
         return self.cleaned_data
 
 
@@ -79,13 +93,13 @@ class UnitTestInfoAdmin(admin.ModelAdmin):
     """"""
     form = TestInfoForm
     fields = (
-        "unit", "test",
+        "unit", "test","test_type",
         "reference", "tolerance",
         "reference_value",
     )
     list_display = ["test", "unit", "reference", "tolerance"]
     list_filter = ["unit","test__category"]
-    readonly_fields = ("reference",)
+    readonly_fields = ("reference","test", "unit",)
 
     #----------------------------------------------------------------------
     def save_model(self, request, test_info, form, change):

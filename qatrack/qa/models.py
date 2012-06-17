@@ -46,10 +46,12 @@ NUMERICAL = "numerical"
 SIMPLE = "simple"
 CONSTANT = "constant"
 COMPOSITE = "composite"
+MULTIPLE_CHOICE = "multchoice"
 
 TEST_TYPE_CHOICES = (
     (BOOLEAN, "Boolean"),
     (SIMPLE, "Simple Numerical"),
+    (MULTIPLE_CHOICE,"Multiple Choice"),
     (CONSTANT, "Constant"),
     (COMPOSITE, "Composite"),
 )
@@ -120,7 +122,7 @@ class Reference(models.Model):
 
     name = models.CharField(max_length=50, help_text=_("Enter a short name for this reference"))
     type = models.CharField(max_length=15, choices=REF_TYPE_CHOICES,default="numerical")
-    value = models.FloatField(help_text=_("For Yes/No tests, enter 1 for Yes and 0 for No"))
+    value = models.FloatField(help_text=_("Enter the reference value for this test."))
 
     #who created this reference
     created = models.DateTimeField(auto_now_add=True)
@@ -203,14 +205,15 @@ class Test(models.Model):
     description = models.TextField(help_text=_("A concise description of what this test is for (optional)"), blank=True,null=True)
     procedure = models.CharField(max_length=512,help_text=_("Link to document describing how to perform this test"), blank=True, null=True)
 
+    category = models.ForeignKey(Category, help_text=_("Choose a category for this test"))
+
     type = models.CharField(
         max_length=10, choices=TEST_TYPE_CHOICES, default=SIMPLE,
         help_text=_("Indicate if this test is a %s" % (','.join(x[1].title() for x in TEST_TYPE_CHOICES)))
     )
 
+    choices = models.CharField(max_length=2048,help_text=_("Comma seperated list of choices for multipel choice test types"),null=True,blank=True)
     constant_value = models.FloatField(help_text=_("Only required for constant value types"), null=True, blank=True)
-
-    category = models.ForeignKey(Category, help_text=_("Choose a category for this test"))
 
     calculation_procedure = models.TextField(null=True, blank=True,help_text=_(
         "For Composite Tests Only: Enter a Python snippet for evaluation of this test. The snippet must define a variable called 'result'."
@@ -267,21 +270,24 @@ class Test(models.Model):
             val = None
 
         return tols[:2]+[val]+tols[-2:]
+    #---------------------------------------------------------------------------
+    def check_test_type(self,field, test_type,display):
+        """check that correct test type is set"""
+        errors = []
+        if field is not None and self.type != test_type:
+            errors.append(_("%s value provided, but Test Type is not %s" % (display,display)))
 
+        if field is None and self.type == test_type:
+            errors.append(_("Test Type is %s but no %s value provided" % (display, display)))
+        return errors
     #----------------------------------------------------------------------
     def clean_calculation_procedure(self):
         """make sure a valid calculation procedure"""
-        errors = []
 
         if not self.calculation_procedure and self.type != COMPOSITE:
             return
 
-        if self.calculation_procedure and self.type != COMPOSITE:
-            errors.append(_("Calculation procedure provided, but Test Type is not Composite"))
-
-        if not self.calculation_procedure and self.type == COMPOSITE:
-            errors.append(_("No calculation procedure provided, but Test Type is Composite"))
-
+        errors = self.check_test_type(self.calculation_procedure,COMPOSITE,"Composite")
 
         if not self.RESULT_RE.findall(self.calculation_procedure):
             errors.append(_('Snippet must contain a result line (e.g. result = my_var/another_var*2)'))
@@ -294,16 +300,23 @@ class Test(models.Model):
     #----------------------------------------------------------------------
     def clean_constant_value(self):
         """make sure a constant value is provided if TestType is Constant"""
-        errors = []
-        if self.constant_value is not None and self.type != CONSTANT:
-            errors.append(_("Constant value provided, but Test Type is not constant"))
-
-        if self.constant_value is None and self.type == CONSTANT:
-            errors.append(_("Test Type is Constant but no constant value provided"))
-
+        errors = self.check_test_type(self.constant_value,CONSTANT, "Constant")
         if errors:
             raise ValidationError({"constant_value":errors})
-
+    #---------------------------------------------------------------------------
+    def clean_choices(self):
+        """make sure choices provided if TestType is MultipleChoice"""
+        errors = self.check_test_type(self.choices,MULTIPLE_CHOICE,"Multiple Choice")
+        if self.type is not MULTIPLE_CHOICE:
+            return
+        choices = self.choices.split(",")
+        if len(choices) <= 1:
+            errors.append("You must give more than 1 choice for a multiple choice test")
+        else:
+            self.choices = ",".join([x.strip() for x in choices])
+        if errors:
+            raise ValidationError({"choices":errors})
+        
     #----------------------------------------------------------------------
     def clean_short_name(self):
         """make sure short_name is valid"""
@@ -321,8 +334,13 @@ class Test(models.Model):
         self.clean_calculation_procedure()
         self.clean_constant_value()
         self.clean_short_name()
-
-
+        self.clean_choices()
+    #---------------------------------------------------------------------------
+    def get_choices(self):
+        """return choices for multiple choice tests"""
+        if self.type == MULTIPLE_CHOICE:
+            cs = self.choices.split(",")
+            return zip(range(len(cs)),cs)
     #----------------------------------------------------------------------
     def history_for_unit(self,unit,number=5):
         if isinstance(unit,Unit):

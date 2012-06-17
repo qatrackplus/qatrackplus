@@ -1,7 +1,7 @@
 from django import forms
 
 from django.forms.models import inlineformset_factory, modelformset_factory, model_to_dict
-from django.forms.widgets import RadioSelect
+from django.forms.widgets import RadioSelect, Select
 from django.contrib import messages
 from django.utils import timezone
 import qatrack.settings as settings
@@ -66,7 +66,6 @@ class TestInstanceFormset(BaseTestInstanceFormset):
         super(TestInstanceFormset,self).__init__(*args,**kwargs)
 
         for f, test in zip(self.forms, tests):
-            print test
             info = models.UnitTestInfo.objects.get(test=test, unit=unit)
 
             self.set_initial_fk_data(f,info)
@@ -104,11 +103,16 @@ class TestInstanceFormset(BaseTestInstanceFormset):
     #---------------------------------------------------------------------------
     def set_widgets(self,form,membership):
         """add custom widget for boolean values"""
+
+        #temp store attributes so they can be restored to reset widget
+        attrs = form.fields["value"].widget.attrs
+        
         if membership.test.is_boolean():
-            #temp store attributes so they can be restored to reset widget
-            attrs = form.fields["value"].widget.attrs
             form.fields["value"].widget = RadioSelect(choices=[(0,"No"),(1,"Yes")])
-            form.fields["value"].widget.attrs.update(attrs)
+        elif membership.test.type == models.MULTIPLE_CHOICE:
+            form.fields["value"].widget = Select(choices=membership.test.get_choices())
+        form.fields["value"].widget.attrs.update(attrs)
+            
 
 
 #============================================================================

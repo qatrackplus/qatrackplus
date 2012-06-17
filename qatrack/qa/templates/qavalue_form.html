@@ -34,12 +34,12 @@
             <td class="qa-name qa-showproc"><a href="{{form.fields.test.initial.procedure}}" class="revealprocedure" title="Show procedure for this test" target="_blank">{{test.name}}</a></td>
             <td class="qa-category">{{test.category.name|title}}</td>
             <td class="controls qa-value" title="{{form.value.help_text|safe}}">
-            {% if test.is_boolean %}
-                <span class="pull-left">{{form.value.0}}</span>
-                <span class="pull-right">{{form.value.1}}</span>
-            {% else %}
-                 <span class="center span1">{{form.value}}</span>
-            {% endif %}
+				{% if test.is_boolean %}
+					<span class="pull-left">{{form.value.0}}</span>
+					<span class="pull-right">{{form.value.1}}</span>
+				{% else %}
+					 <span class="center span1">{{form.value}}</span>
+				{% endif %}
             </td>
         {% endwith %}
 
