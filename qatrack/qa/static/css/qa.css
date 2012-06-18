@@ -144,6 +144,12 @@ span.tolerance {
 .show-hide{
     cursor: hand; cursor: pointer;
 }
+.sub-table-container {
+    background-color:#D9EDF7;
+}
+.sub-table {
+    background-color: #F9F9F9;
+}
 .sub-table th{
     font-weight: normal;
     font-style:italic;

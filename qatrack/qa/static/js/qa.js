@@ -83,7 +83,7 @@ function check_test_status(input_element){
 
     var parent = input_element.parents("tr:first");
     var name = parent.find(".qa-contextname").val();
-    var is_bool = parent.find(".qa-testtype").val() === "boolean";
+    var test_type = parent.find(".qa-testtype").val();
     var qastatus = parent.find(".qa-status");
     var val = get_value_for_row(input_element.parents(".qa-valuerow"));
 
@@ -111,7 +111,7 @@ function check_test_status(input_element){
     var tolerances = validation_data[name].tolerances;
     var reference = validation_data[name].reference;
 
-    var result = QAUtils.test_tolerance(val,reference.value,tolerances, is_bool);
+    var result = QAUtils.test_tolerance(val,reference.value,tolerances, test_type);
 
     //update formatting with result
     qastatus.text(result.message);
@@ -129,14 +129,24 @@ function check_test_status(input_element){
 /***************************************************************/
 //Take an qavaluerow and return the value of the input contained within it
 function get_value_for_row(input_row_element){
-    if ($(input_row_element).find(".qa-testtype").val() === "boolean"){
+    var test_type = $(input_row_element).find(".qa-testtype").val();
+    var val;
+    if (test_type === QAUtils.BOOLEAN){
         if ($(input_row_element).find(":checked").length > 0){
             return parseFloat($(input_row_element).find(":checked").val());
         }else{
             return null;
         }
+    }else if (test_type === QAUtils.MULTIPLE_CHOICE){
+        val = $(input_row_element).find(":selected").val();
+        if (val !== ""){
+            return parseFloat(val);
+        }else{
+            return null;
+        }
+    
     }else {
-        var val = input_row_element.find(".qa-value input").val();
+        val = input_row_element.find(".qa-value input").val();
         if ($.trim(val) === ""){
             return "";
         }
@@ -182,7 +192,7 @@ function valid_input(input_element){
 /***************************************************************/
 //perform a full validation of all data (for example on page load after submit)
 function full_validation(){
-    $("#qa-form .qa-input").each(function(){
+    $(".qa-input").each(function(){
         check_test_status($(this));
         calculate_composites();
     });
@@ -264,7 +274,7 @@ $(document).ready(function(){
     $(".qa-comment").hide();
 
     //set tab index
-    $("input:text, input:radio").each(function(i,e){ $(e).attr("tabindex", i) });
+    $(".qa-input").each(function(i,e){ $(e).attr("tabindex", i) });
 
     //show comment when clicked
     $(".qa-showcmt a").click(function(){
@@ -272,7 +282,7 @@ $(document).ready(function(){
     });
 
     //anytime an input changes run validation
-    $("#qa-form input").change(function(){
+    $(".qa-input").change(function(){
         check_test_status($(this));
         calculate_composites();
     });

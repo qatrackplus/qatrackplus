@@ -854,7 +854,7 @@ class TestInstance(models.Model):
 
             self.pass_fail = NOT_DONE
 
-        elif self.test.type == BOOLEAN and self.reference:
+        elif self.test.type in  (BOOLEAN, MULTIPLE_CHOICE) and self.reference:
 
             diff = abs(self.reference.value - self.value)
 

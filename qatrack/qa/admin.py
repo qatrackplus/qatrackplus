@@ -100,7 +100,14 @@ class UnitTestInfoAdmin(admin.ModelAdmin):
     list_display = ["test", "unit", "reference", "tolerance"]
     list_filter = ["unit","test__category"]
     readonly_fields = ("reference","test", "unit",)
-
+    
+    #---------------------------------------------------------------------------
+    def has_add_permission(self,request):
+        """unittestinfo's are created automatically"""
+        return False
+    def has_delete_permission(self,request):
+        """unittestinfo's are deleted automatically when test lists removed from unit"""
+        return False
     #----------------------------------------------------------------------
     def save_model(self, request, test_info, form, change):
         """create new reference when user updates value"""

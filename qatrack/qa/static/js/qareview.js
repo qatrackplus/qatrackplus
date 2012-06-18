@@ -164,7 +164,7 @@ function add_test_row(parent,instance,test_list_instances){
 	data.push(comment)
 
 	var pass_fail;
-	if (QAUtils.instance_has_ref_tol(instance)){
+	if (QAUtils.instance_has_ref_tol(instance) || test.type === QAUtils.BOOLEAN || test.type === QAUtils.MULTIPLE_CHOICE){
 		pass_fail = '<span class="pass-fail">'+QAUtils.qa_display(instance.pass_fail)+'</span>';
 	}else{
 		pass_fail = '<span class="pass-fail">No Reference</span>';
@@ -240,7 +240,7 @@ function display_test_list_details(container,instance_id,test_list_instances){
 		}
 	}
 
-	container.css('background-color',QAUtils.REVIEW_COLOR);
+	container.addClass("sub-table-container");//css('background-color',QAUtils.REVIEW_COLOR);
 
 	//add row using to_review test_list_instance
 	$.each(to_review.test_instances,function(i,test_instance){
@@ -364,7 +364,7 @@ function on_select_test_list(test_list_row){
 	var review_table = $(".review-table").dataTable();
 
 	test_list_row.children("td:last").append('<span class="pull-right"><em>Loading...</em></span>');
-	var instance_id = test_list_row.find(".instance-id").val();
+	var instance_id = parseInt(test_list_row.find(".instance-id").val());
 	var instance_options ={
 		test_list:test_list_row.find(".instance-id").find("option:selected").data("test_list_id"),
 		unit__number:test_list_row.data("unit_number"),

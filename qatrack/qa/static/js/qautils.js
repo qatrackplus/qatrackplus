@@ -32,6 +32,7 @@ var QAUtils = new function() {
 
 	this.NUMERICAL = "numerical";
 	this.BOOLEAN = "boolean";
+	this.MULTIPLE_CHOICE = "multchoice";
 
 	this.NUMERIC_WHITELIST_REGEX = /[^0-9\.eE\-]/g;
 	this.NUMERIC_REGEX = /^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$/;
@@ -94,13 +95,17 @@ var QAUtils = new function() {
         return measured - reference;
     };
 
-    this.test_tolerance = function(value, reference, tolerances, is_bool){
+    this.test_tolerance = function(value, reference, tolerances, test_type){
         //compare a value to a reference value and check whether it is
         //within tolerances or not.
         //Return an object with a 'diff' and 'result' value
         var diff;
         var status, gen_status;
         var message;
+
+        if ((test_type === this.BOOLEAN) || (test_type === this.MULTIPLE_CHOICE)){
+            return this.test_multi(value, reference);
+        }
 
 		if ( !this.is_number(reference) || !tolerances.type){
             return {
@@ -111,9 +116,6 @@ var QAUtils = new function() {
             };
 		}
 
-        if (is_bool){
-            return this.test_bool(value, reference);
-        }
 
         if (tolerances.type === this.PERCENT){
             diff = this.percent_difference(value,reference);
@@ -149,7 +151,7 @@ var QAUtils = new function() {
         return {status:status, gen_status:gen_status, diff:diff, message:message};
     };
 
-    this.test_bool = function(value,reference){
+    this.test_multi = function(value,reference){
         var status, gen_status;
         var diff = value-reference;
         var message;

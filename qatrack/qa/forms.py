@@ -110,7 +110,7 @@ class TestInstanceFormset(BaseTestInstanceFormset):
         if membership.test.is_boolean():
             form.fields["value"].widget = RadioSelect(choices=[(0,"No"),(1,"Yes")])
         elif membership.test.type == models.MULTIPLE_CHOICE:
-            form.fields["value"].widget = Select(choices=membership.test.get_choices())
+            form.fields["value"].widget = Select(choices=[("","")]+membership.test.get_choices())
         form.fields["value"].widget.attrs.update(attrs)
             
 
