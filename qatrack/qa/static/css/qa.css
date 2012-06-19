@@ -73,6 +73,13 @@ input[type="text"].qa-input {
 #chart-options {
     height:188px;
 }
+.please-wait {
+  margin-bottom: 2px;
+  border: 1px solid #e5e5e5;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+}
 
 #filter-accordion{
     height:100%;

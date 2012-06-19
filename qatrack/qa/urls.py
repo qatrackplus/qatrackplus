@@ -36,6 +36,7 @@ urlpatterns = patterns('',
     #view for composite calculations via ajax
     url(r"^composite/$", views.CompositeCalculation.as_view(), name="composite"),
 
+
     #api urls
     url(r"^api/",include(v1_api.urls)),
 
@@ -43,6 +44,8 @@ urlpatterns = patterns('',
     url(r"review/$", views.ReviewView.as_view(), name="review"),
     url(r"charts/$", views.ChartView.as_view(), name="charts"),
     url(r"^charts/export/$",views.ExportToCSV.as_view()),
+    #generating control chart images
+    url(r"^charts/control_chart.png$", views.ControlChartImage.as_view(), name="control_chart"),
 
     #performing qa
     url(r"^(?P<frequency>\w+)/$", views.UnitGroupedFrequencyListView.as_view(), name="qa_by_frequency"),

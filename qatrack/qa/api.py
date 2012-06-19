@@ -107,7 +107,7 @@ class CategoryResource(ModelResource):
 #============================================================================
 class TestListResource(ModelResource):
     tests = tastypie.fields.ToManyField("qatrack.qa.api.TestResource","tests",full=True)
-    #frequencies = tastypie.fields.ListField()
+    frequencies = tastypie.fields.ListField()
 
     class Meta:
         queryset = models.TestList.objects.order_by("name").all()
@@ -117,9 +117,8 @@ class TestListResource(ModelResource):
             "name":ALL,
         }
     #----------------------------------------------------------------------
-    #def dehydrate_frequencies(self,bundle):
-    #
-    #return list(bundle.obj.unittestcollection_set.values_list("frequency",flat=True).distinct())
+    def dehydrate_frequencies(self,bundle):
+        return list(bundle.obj.assigned_to.values_list("frequency",flat=True).distinct())
 
 #============================================================================
 class TestInstanceResource(ModelResource):

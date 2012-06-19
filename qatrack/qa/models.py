@@ -294,7 +294,7 @@ class Test(models.Model):
 
         if self.calculation_procedure.find("__") >= 0:
             errors.append(_('No double underscore methods allowed in calculations'))
-            
+
         if errors:
             raise ValidationError({"calculation_procedure":errors})
     #----------------------------------------------------------------------
@@ -316,7 +316,7 @@ class Test(models.Model):
             self.choices = ",".join([x.strip() for x in choices])
         if errors:
             raise ValidationError({"choices":errors})
-        
+
     #----------------------------------------------------------------------
     def clean_short_name(self):
         """make sure short_name is valid"""
@@ -353,7 +353,6 @@ class Test(models.Model):
     #----------------------------------------------------------------------
     def __unicode__(self):
         """return display representation of object"""
-
         return "%s" % (self.name)
 
 #============================================================================
@@ -452,8 +451,8 @@ class TestCollectionInterface(models.Model):
     description = models.TextField(help_text=_("A concise description of this test checklist"))
 
     assigned_to = generic.GenericRelation(
-        "UnitTestCollection", 
-        content_type_field="content_type", 
+        "UnitTestCollection",
+        content_type_field="content_type",
         object_id_field="object_id",
     )
 

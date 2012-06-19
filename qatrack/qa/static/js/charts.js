@@ -107,10 +107,15 @@ function convert_to_flot_series(idx,collection){
 /*************************************************************************/
 //create data table for retrieved data items
 function create_data_table(collections,url){
+
     var table = $("#data-table");
 	$("#export-csv").attr("href","export/?"+url.replace(QAUtils.API_URL,"").replace("?","&")+"&format=csv");
     var headers = ['<tr class="col-group">'];
     var max_length = 0;
+
+	if (collections.length === 0){
+		return;
+	}
 
 	//create table headers for each test item name
     $.each(collections,function(idx,collection){
@@ -167,31 +172,68 @@ function create_data_table(collections,url){
     data_table.fnAddData(rows);
 
 }
+
+var waiting_timeout = null;
+function check_cc_loaded(){
+
+	if ($("#control-chart-container img").height()>100){
+		$("#control-chart-container div.please-wait").remove();
+		clearInterval(waiting_timeout);
+		$("#chart-type, #gen-control-chart").enable(true);
+
+	}
+}
+
 /*************************************************************************/
 //Do a full update of the chart
 //Currently everything is re-requested and re-drawn which isn't very efficient
 function update(){
 
-    var filters = get_filters();
-    if ((filters.units === "") || (filters.short_names === "")){
-        return;
-    }
-    QAUtils.test_values(filters, function(results_data,status,jqXHR,url){
-        create_data_table(results_data.objects,url);
+	var type = $("#chart-type").find(":selected").val();
 
-        var main_graph_series = [];
-        $.each(results_data.objects,function(idx,collection){
-            var collection_series = convert_to_flot_series(idx,collection);
-            var ii;
-            for (ii=0; ii<collection_series.length;ii++){
-                main_graph_series.push(collection_series[ii]);
-            }
-        });
 
-        main_graph.setData(main_graph_series);
-        main_graph.setupGrid();
-        main_graph.draw();
-    });
+	if (type === "control"){
+		$("#chart-type, #gen-control-chart").enable(false);
+		$("#control-chart-container, .control-chart-option").show();
+		$("#trend-chart-container, .basic-option").hide();
+		$("#control-chart-container img").remove();
+		$("#control-chart-container").append("<img/>");
+
+		$("#control-chart-container").append('<div class="please-wait"><em>Please wait for control chart to be generated...this could take a few minutes.</em></div>');
+		waiting_timeout = setInterval("check_cc_loaded()",250);
+		var chart_src_url = get_control_chart_url();
+		$("#control-chart-container img").attr("src",chart_src_url);
+
+	}else{
+		$("#control-chart-container, .control-chart-option").hide();
+		$("#trend-chart-container, .basic-option").show();
+
+		$("#control-chart-container img").attr("src","");
+
+		var filters = get_filters();
+		if ((filters.units === "") || (filters.short_names === "")){
+			return;
+		}
+		$("#chart-type").enable(false);
+		QAUtils.test_values(filters, function(results_data,status,jqXHR,url){
+			create_data_table(results_data.objects,url);
+
+			var main_graph_series = [];
+			$.each(results_data.objects,function(idx,collection){
+				var collection_series = convert_to_flot_series(idx,collection);
+				var ii;
+				for (ii=0; ii<collection_series.length;ii++){
+					main_graph_series.push(collection_series[ii]);
+				}
+			});
+
+			main_graph.setData(main_graph_series);
+			main_graph.setupGrid();
+			main_graph.draw();
+			$("#chart-type").enable(true);
+
+		});
+	}
 
 }
 
@@ -382,8 +424,39 @@ function set_options_from_url(){
     });
     update();
 }
+
+function get_control_chart_options(){
+	return {
+		n_baseline_subgroups:$("#n-baseline-subgroups").val(),
+		subgroup_size:$("#subgroup-size").val(),
+		fit_data:$("#include-fit").is(":checked")
+	};
+}
+function get_control_chart_url(){
+	var filters = get_filters();
+	var cc_options = get_control_chart_options();
+
+	var	props = [
+		"width="+$("#charts-container").width(),
+		"height="+$("#trend-chart").height(),
+		"timestamp="+ new Date().getTime()
+	];
+
+	$.each(filters,function(k,v){
+		props.push(k+"="+v);
+	});
+
+	$.each(get_control_chart_options(),function(k,v){
+		props.push(k+"="+v);
+	});
+
+
+	return "/qa/charts/control_chart.png?"+props.join("&");
+}
 /**************************************************************************/
 $(document).ready(function(){
+
+	$("#control-chart-container").hide();
 
     //set up main chart and options
     main_graph = $.plot(
@@ -403,7 +476,7 @@ $(document).ready(function(){
             }
         }
     );
-
+	$(".control-chart-option").hide();
     $(window).resize = function(){main_graph.resize();};
     $("#trend-chart").bind("plothover", on_hover);
 
@@ -431,17 +504,21 @@ $(document).ready(function(){
     populate_test_list_members(update_count);
 
     //update chart when a data filter changes
-    $("#unit-filter, #test-filter, #review-status-filter").change(update);
+    $("#unit-filter, #test-filter, #review-status-filter").change(function(){
+		if($("#chart-type").find(":selected").val() !== "control"){
+			update()
+		}
+	});
 
     $("#test-list-filter, #category-filter, #frequency-filter").change(filter_tests);
 
-    $(".chart-options").change(update);
+	$("#chart-type").change(update);
+    $(".basic-option").change(update);
+	$("#gen-control-chart").click(update);
 
     $(".date").datepicker().on('changeDate',update);
 
     $(".collapse").collapse({selector:true,toggle:true});
-
-
 
 
 });

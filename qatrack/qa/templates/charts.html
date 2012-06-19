@@ -9,17 +9,13 @@
 {% endblock %}
 
 {% block extra_script %}
-    <script src="{% static "data_tables/js/jquery.dataTables.js" %}"></script>
-    <script src="{% static "data_tables/js/jquery.dataTables.columnFilter.js" %}"></script>
-	<script src="{% static "data_tables/js/DT_bootstrap.js" %}"></script>
-	<script src="{% static "data_tables/js/DT_sort.js" %}"></script>
-
-	<script src="{% static "js/qautils.js" %}"></script>
-    <script src="{% static "js/charts.js" %}"></script>
     <script src="{% static "js/jquery.flot.min.js" %}"></script>
+	<script src="{% static "js/jquery.flot.image.js" %}"></script>
     <script src="{% static "js/jquery.flot.resize.js" %}"></script>
     <script src="{% static "js/jquery.flot.fillbetween.js" %}"></script>
+
     <script src="{% static "datepicker/js/bootstrap-datepicker.js" %}"></script>
+    <script src="{% static "js/charts.js" %}"></script>
 {% endblock %}
 
 {% block body %}
@@ -79,10 +75,15 @@
             </div> <!--end accordion-->
 
         </div> <!--end filter container-->
-		<div class="span7">
-			<div class="row-fluid">
+		<div class="span7" id="charts-container">
+			<div id="trend-chart-container" class="row-fluid">
 				<div id="trend-chart"  class="span12"></div>
 			</div>
+
+			<div id="control-chart-container" class="row-fluid">
+				<img src="" class="span12" alt="Control chart for data"/>
+			</div>
+
 		</div>
 
         <div class="span2">
@@ -97,20 +98,38 @@
 						Type:
 						<select id="chart-type" class="inline input-small">
 							<option value="basic">Basic</option>
-							<option value="basic">Control Chart</option>
+							<option value="control">Control Chart</option>
 						</select>
 					</label>
-					<label class="control-label" for="show-lines">
+
+					<label class="control-label  basic-option" for="show-lines">
 						Show Lines:
 						<input type="checkbox" id="show-lines"  />
 					</label>
-					<label class="control-label" for="show-references">
+					<label class="control-label  basic-option" for="show-references">
 						Show References:
 						<input type="checkbox" id="show-references" checked="checked" />
 					</label>
-					<label class="control-label" for="show-tolerances">
+					<label class="control-label  basic-option" for="show-tolerances">
 						Show Tolerances:
 						<input type="checkbox" id="show-tolerances" checked="checked" />
+					</label>
+
+					<label title="Set the subgroup size" class="control-label  control-chart-option" for="subgroup-size">
+						SG Size:
+						<input type="number" min="1" step="1" value ="1" id="subgroup-size"  class="input-mini"/>
+					</label>
+					<label title="Set the number of subgroups for the baseline" class="control-label control-chart-option" for="n-baseline-subgroups">
+						# SG's:
+						<input type="number" min="2" step="1" value ="2" id="n-baseline-subgroups" class="input-mini" />
+					</label>
+					<label title="Include a gaussian fit to histogrammed data (slow)" class="control-label  control-chart-option" for="include-fit">
+						Include Fit:
+						<input type="checkbox" id="include-fit"/>
+					</label>
+
+					<label class="control-label control-chart-option" for="gen-control-chart">
+						<button class="btn" id="gen-control-chart">Generate Chart</button>
 					</label>
 
 

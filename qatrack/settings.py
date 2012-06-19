@@ -60,7 +60,7 @@ INPUT_DATE_FORMATS = (
     "%d-%m-%Y %H:%M", "%d/%m/%Y %H:%M",
     "%d-%m-%y %H:%M", "%d/%m/%y %H:%M",
 )
-
+SIMPLE_DATE_FORMAT = "%d-%m-%Y"
 DATETIME_HELP = "Format DD-MM-YY hh:mm (hh:mm is 24h time e.g. 14:30)"
 
 #  Absolute filesystem path to the directory that will hold user-uploaded files.

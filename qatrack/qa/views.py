@@ -13,6 +13,21 @@ from qatrack import settings
 from qatrack.qagroups.models import GroupProfile
 import forms
 import math
+import os
+import textwrap
+
+CONTROL_CHART_AVAILABLE = True
+try:
+    from qatrack.qa.control_chart import control_chart
+    from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+    from matplotlib.figure import Figure
+    from matplotlib.dates import DateFormatter
+
+    import numpy
+    import datetime
+
+except ImportError:
+    CONTROL_CHART_AVAILABLE = False
 
 #TODO: Move location of qa/template.html templates (up one level)
 
@@ -34,6 +49,129 @@ class JSONResponseMixin(object):
         # -- can be serialized as JSON.
         return json.dumps(context)
 
+
+#============================================================================
+class ControlChartImage(View):
+    """Return a control chart image from given qa data"""
+    #----------------------------------------------------------------------
+    def get_dates(self):
+        """try to parse from_date & to_date from GET parameters"""
+
+        from_date = self.request.GET.get("from_date",None)
+        to_date = self.request.GET.get("to_date",None)
+
+        try:
+            to_date = timezone.datetime.strptime(to_date,settings.SIMPLE_DATE_FORMAT)
+        except:
+            to_date = timezone.datetime.now()
+
+        try:
+            from_date = timezone.datetime.strptime(from_date,settings.SIMPLE_DATE_FORMAT)
+        except:
+            from_date = to_date - timezone.timedelta(days=30)
+
+        return from_date,to_date
+    #----------------------------------------------------------------------
+    def get_test(self):
+        """return first requested test for control chart others are ignored"""
+        return self.request.GET.get("short_names","").split(",")[0]
+    #----------------------------------------------------------------------
+    def get_units(self):
+        """return first unit requested, others are ignored"""
+        return self.request.GET.get("units","").split(",")[0]
+    #----------------------------------------------------------------------
+    def get_data(self):
+        """grab data to create control chart from"""
+        from_date, to_date = self.get_dates()
+
+        test = self.get_test()
+
+        unit = self.get_units()
+
+        if not all([from_date,to_date,test,unit]):
+            return [], []
+
+        data = models.TestInstance.objects.filter(
+            test__short_name = test,
+            work_completed__gte = from_date,
+            work_completed__lte = to_date,
+            unit__number = unit,
+        ).order_by("work_completed").values_list("work_completed","value")
+
+        if data.count()>0:
+            return zip(*data)
+        return [],[]
+
+    #----------------------------------------------------------------------
+    def get(self,request):
+        return self.render_to_response({})
+    #----------------------------------------------------------------------
+    def get_float_from_request(self,param,default):
+        try:
+            v = float(self.request.GET.get(param,default))
+        except:
+            v = default
+        return v
+    #----------------------------------------------------------------------
+    def get_int_from_request(self,param,default):
+        try:
+            v = int(self.request.GET.get(param,default))
+        except:
+            v = default
+        return v
+    #----------------------------------------------------------------------
+    def render_to_response(self,context):
+
+
+        if not CONTROL_CHART_AVAILABLE:
+            im = open(os.path.join(settings.PROJECT_ROOT,"qa","static","img","control_charts_not_available.png"),"rb").read()
+            return HttpResponse(im,mimetype="image/png")
+
+
+        fig=Figure(dpi=72,facecolor="white")
+        dpi = fig.get_dpi()
+        fig.set_size_inches(
+            self.get_float_from_request("width",700)/dpi,
+            self.get_float_from_request("height",480)/dpi,
+        )
+        canvas=FigureCanvas(fig)
+
+        dates,data = self.get_data()
+
+        n_baseline_subgroups = self.get_int_from_request("n_baseline_subgroups",1)
+
+        subgroup_size = self.get_int_from_request("subgroup_size",2)
+        if subgroup_size <1 or subgroup_size >100:
+            subgroup_size = 1
+
+        include_fit = self.request.GET.get("fit_data",False)
+        if include_fit == "true":
+            include_fit = True
+
+
+        response = HttpResponse(mimetype="image/png")
+        if n_baseline_subgroups < 1 or n_baseline_subgroups > len(data)/subgroup_size:
+            fig.text(0.1,0.9,"Not enough data for control chart", fontsize=20)
+            canvas.print_png(response)
+        else:
+            try:
+                control_chart.display(fig, numpy.array(data), subgroup_size, n_baseline_subgroups, fit = include_fit,dates=dates)
+                fig.autofmt_xdate()
+
+                canvas.print_png(response)
+
+            except RuntimeError as e:
+                fig.clf()
+                msg = "There was a problem generating your control chart:\n"
+                fig.text(0.1,0.9,"\n".join(textwrap.wrap(e.message,40)) , fontsize=12)
+                canvas.print_png(response)
+            except Exception as e:
+                msg = "There was a problem generating your control chart:\n"
+                fig.clf()
+                fig.text(0.1,0.9,"\n".join(textwrap.wrap(str(e),40)) , fontsize=12)
+                canvas.print_png(response)
+
+        return response
 
 #============================================================================
 class CompositeCalculation(JSONResponseMixin, View):

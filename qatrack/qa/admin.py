@@ -58,18 +58,18 @@ class TestInfoForm(forms.ModelForm):
         super(TestInfoForm, self).__init__(*args, **kwargs)
         self.fields['test_type'].widget.attrs['readonly'] = "readonly"
         #self.fields['test_type'].widget.attrs['disabled'] = "disabled"
-        
-        
+
+
         if self.instance and self.instance.test.type in (models.BOOLEAN, models.MULTIPLE_CHOICE):
             tt = self.instance.test.type
             i = [x[0] for x in models.TEST_TYPE_CHOICES].index(tt)
             self.fields["test_type"].initial = models.TEST_TYPE_CHOICES[i][1]
-                        
+
             if tt == models.BOOLEAN:
-                self.fields["reference_value"].widget = forms.Select(choices=[(0,"No"),(1,"Yes")])                
+                self.fields["reference_value"].widget = forms.Select(choices=[(0,"No"),(1,"Yes")])
             elif tt == models.MULTIPLE_CHOICE:
                 self.fields["reference_value"].widget = forms.Select(choices=self.instance.test.get_choices())
-                
+
     #----------------------------------------------------------------------
     def clean(self):
         """make sure valid numbers are entered for boolean data"""
@@ -100,7 +100,7 @@ class UnitTestInfoAdmin(admin.ModelAdmin):
     list_display = ["test", "unit", "reference", "tolerance"]
     list_filter = ["unit","test__category"]
     readonly_fields = ("reference","test", "unit",)
-    
+
     #---------------------------------------------------------------------------
     def has_add_permission(self,request):
         """unittestinfo's are created automatically"""
@@ -224,6 +224,7 @@ class TestListCycleMembershipInline(admin.TabularInline):
     model = models.TestListCycleMembership
     extra = 0
 
+
 #============================================================================
 class TestListCycleAdmin(SaveUserMixin, admin.ModelAdmin):
     """Admin for daily test list cycles"""
@@ -238,10 +239,10 @@ class TestListCycleAdmin(SaveUserMixin, admin.ModelAdmin):
             settings.STATIC_URL+"js/m2m_drag_admin.js",
         )
 
-        
-        
-    
-    
+
+
+
+
 admin.site.register([models.Tolerance], BasicSaveUserAdmin)
 admin.site.register([models.Category], CategoryAdmin)
 admin.site.register([models.TestList],TestListAdmin)
