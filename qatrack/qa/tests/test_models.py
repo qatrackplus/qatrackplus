@@ -484,7 +484,7 @@ class TestTestList(BaseQATestCase):
 
         self.assertEqual(last.work_completed,last_completed_date)
 
-        self.assertEqual(list(self.unit_test_list_assign.history()),list(reversed(models.TestListInstance.objects.all())))
+        self.assertEqual(list(self.unit_test_list_assign.history()),list(models.TestListInstance.objects.all()))
     #----------------------------------------------------------------------
     def test_sublist(self):
         sub_test = models.Test(
@@ -832,7 +832,7 @@ class CycleTest(BaseQATestCase):
     def test_history(self):
         i1 = self.get_instance_for_test_list(self.cycle.first(),self.unit)
         i2 = self.get_instance_for_test_list(self.cycle.next_list(i1.test_list),self.unit)
-        self.assertEqual(list(self.unit_test_list_assign.history()),[i2,i1])
+        self.assertEqual(list(self.unit_test_list_assign.history()),[i1,i2])
     #----------------------------------------------------------------------
     def test_next_for_unit(self):
 

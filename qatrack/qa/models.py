@@ -423,7 +423,7 @@ class UnitTestInfo(models.Model):
             test = self.test,
         ).exclude(
             status__in = EXCLUDE_STATUSES
-        ).order_by("-work_completed")
+        ).order_by("-work_completed","-pk")
 
         if last_instance:
             delta = FREQUENCY_DELTAS[self.frequency]
@@ -680,10 +680,10 @@ class UnitTestCollection(models.Model):
     #----------------------------------------------------------------------
     def history(self,num_instances=10):
         """returns the last num_instances performed for this object"""
-        return TestListInstance.objects.filter(
+        return reversed(TestListInstance.objects.filter(
             unit=self.unit,
             test_list__in = self.tests_object.all_lists()
-        ).order_by("-work_completed")[:num_instances]
+        ).order_by("-work_completed","-pk")[:num_instances])
 
     #----------------------------------------------------------------------
     def next_list(self):

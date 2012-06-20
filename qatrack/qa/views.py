@@ -96,7 +96,7 @@ class ControlChartImage(View):
             work_completed__gte = from_date,
             work_completed__lte = to_date,
             unit__number = unit,
-        ).order_by("work_completed").values_list("work_completed","value")
+        ).order_by("work_completed","pk").values_list("work_completed","value")
 
         if data.count()>0:
             return zip(*data)

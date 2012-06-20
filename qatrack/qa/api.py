@@ -324,7 +324,7 @@ class ValueResource(Resource):
                 data = objects.filter(
                         test__short_name=short_name,
                         unit__number = unit,
-                ).order_by("work_completed")
+                ).order_by("work_completed","pk")
 
                 organized.append({
                     'short_name':short_name,
@@ -377,7 +377,7 @@ class TestListInstanceResource(ModelResource):
             "id":ALL,
         }
 
-        ordering= ["work_completed"]
+        ordering= ["work_completed","id"]
 
     #----------------------------------------------------------------------
     def dehydrate_review_status(self,bundle):

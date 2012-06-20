@@ -369,7 +369,7 @@ function on_select_test_list(test_list_row){
 		test_list:test_list_row.find(".instance-id").find("option:selected").data("test_list_id"),
 		unit__number:test_list_row.data("unit_number"),
 		frequency:test_list_row.data("frequency"),
-		order_by:"-work_completed",
+		order_by:["-work_completed","-id"],
 		id__lte:instance_id,
 		limit:HISTORY_INSTANCE_LIMIT
 	};

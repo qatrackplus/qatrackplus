@@ -271,6 +271,7 @@ var QAUtils = new function() {
             success: function(result,status,jqXHR){
                 callback(result,status, jqXHR,this.url);
             },
+			traditional:true,
             error: function(error){
                 console.log(error);
                 var msg = "Something went wrong with your request:\n    ";
