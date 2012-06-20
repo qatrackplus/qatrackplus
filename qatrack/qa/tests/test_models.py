@@ -361,10 +361,10 @@ result = foo + bar
         #values purposely created out of order to make sure history
         #returns in correct order (i.e. ordered by date)
         history = [
-            (now+td(days=4), 5, models.NO_TOL, models.UNREVIEWED),
-            (now+td(days=1), 5, models.NO_TOL, models.UNREVIEWED),
-            (now+td(days=3), 6, models.NO_TOL, models.UNREVIEWED),
-            (now+td(days=2), 7, models.NO_TOL, models.UNREVIEWED),
+            (now+td(days=4), 5., models.NO_TOL, models.UNREVIEWED),
+            (now+td(days=1), 5., models.NO_TOL, models.UNREVIEWED),
+            (now+td(days=3), 6., models.NO_TOL, models.UNREVIEWED),
+            (now+td(days=2), 7., models.NO_TOL, models.UNREVIEWED),
         ]
         for wc, val, _, _ in history:
             ti1 = models.TestInstance(
@@ -378,15 +378,18 @@ result = foo + bar
             ti1.save()
 
         db_hist = self.test.history_for_unit(self.unit)
-        self.assertListEqual(sorted(history),db_hist)
+
+        sorted_hist = list(sorted(history))
+
+        self.assertListEqual(sorted_hist,db_hist)
 
         #test works correctly for just unit num
         db_hist = self.test.history_for_unit(self.unit.number)
-        self.assertListEqual(sorted(history),db_hist)
+        self.assertListEqual(sorted_hist,db_hist)
 
         #test returns correct number of results
         db_hist = self.test.history_for_unit(self.unit.number,number=2)
-        self.assertListEqual(sorted(history)[:2],db_hist)
+        self.assertListEqual(sorted_hist[-2:],db_hist)
 
 
 #============================================================================

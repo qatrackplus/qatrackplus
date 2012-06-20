@@ -343,12 +343,15 @@ class Test(models.Model):
             return zip(range(len(cs)),cs)
     #----------------------------------------------------------------------
     def history_for_unit(self,unit,number=5):
+        """return last 'number' of instances for this test performed on input unit
+        list is ordered in ascending dates
+        """
         if isinstance(unit,Unit):
             unit_number = unit.number
         else:
             unit_number = unit
-        hist = self.testinstance_set.filter(unit__number=unit_number).order_by("work_completed")
-        return [(x.work_completed,x.value, x.pass_fail, x.status) for x in hist[:number]]
+        hist = self.testinstance_set.filter(unit__number=unit_number).order_by("-work_completed","-pk")
+        return [(x.work_completed,x.value, x.pass_fail, x.status) for x in reversed(hist[:number])]
 
     #----------------------------------------------------------------------
     def __unicode__(self):
