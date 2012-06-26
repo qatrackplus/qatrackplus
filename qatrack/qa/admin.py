@@ -105,7 +105,7 @@ class UnitTestInfoAdmin(admin.ModelAdmin):
     def has_add_permission(self,request):
         """unittestinfo's are created automatically"""
         return False
-    def has_delete_permission(self,request):
+    def has_delete_permission_(self,request, obj=None):
         """unittestinfo's are deleted automatically when test lists removed from unit"""
         return False
     #----------------------------------------------------------------------
