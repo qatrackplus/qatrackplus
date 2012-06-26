@@ -60,7 +60,7 @@ class TestInfoForm(forms.ModelForm):
         #self.fields['test_type'].widget.attrs['disabled'] = "disabled"
 
 
-        if self.instance and self.instance.test.type in (models.BOOLEAN, models.MULTIPLE_CHOICE):
+        if self.instance:
             tt = self.instance.test.type
             i = [x[0] for x in models.TEST_TYPE_CHOICES].index(tt)
             self.fields["test_type"].initial = models.TEST_TYPE_CHOICES[i][1]
