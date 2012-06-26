@@ -127,6 +127,7 @@ LOGIN_EXEMPT_URLS = [
     r"^accounts/",
 ]
 LOGIN_REDIRECT_URL = '/qa/user_home'
+LOGIN_URL = "/accounts/login/"
 ACCOUNT_ACTIVATION_DAYS = 7
 
 # Python dotted path to the WSGI application used by Django's runserver.
