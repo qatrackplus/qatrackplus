@@ -2,9 +2,9 @@
 import django.conf.global_settings as DEFAULT_SETTINGS
 import os
 
-DEBUG = True
+DEBUG = False #True
 #TEMPLATE_DEBUG = DEBUG
-TEMPLATE_DEBUG = True
+TEMPLATE_DEBUG = False#True
 
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
@@ -137,7 +137,7 @@ TEMPLATE_DIRS = (
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
     os.path.join(PROJECT_ROOT,"templates"),
-    os.path.join(PROJECT_ROOT,"genericdropdown/templates"),
+    "genericdropdown/templates",
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = list(DEFAULT_SETTINGS.TEMPLATE_CONTEXT_PROCESSORS)
@@ -218,4 +218,6 @@ TEST_RUNNER = 'django_coverage.coverage_runner.CoverageRunner'
 try:
     from local_settings import *
 except ImportError:
+    raise
     pass
+
