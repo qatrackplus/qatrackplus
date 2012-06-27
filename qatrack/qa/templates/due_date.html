@@ -1,7 +1,7 @@
 <span class="label due-status {{unit_test_collection.due_status}}">
     {% with unit_test_collection.due_date as due_date %}
         {% if due_date %}
-            {{due_date}}
+            {{due_date.date}}
         {%else%}
             New Test List
         {%endif%}
