@@ -364,7 +364,7 @@ function on_select_test_list(test_list_row){
 	var review_table = $(".review-table").dataTable();
 
 	test_list_row.children("td:last").append('<span class="pull-right"><em>Loading...</em></span>');
-	var instance_id = parseInt(test_list_row.find(".instance-id").val());
+	var instance_id = test_list_row.find(".instance-id").val();
 	var instance_options ={
 		test_list:test_list_row.find(".instance-id").find("option:selected").data("test_list_id"),
 		unit__number:test_list_row.data("unit_number"),
@@ -398,24 +398,26 @@ function on_select_test_list(test_list_row){
 /**************************************************************************/
 $(document).ready(function(){
 
-	//user changed the selected instance for a TestCollection
-	$("select.instance-id").change(function(event){
-		var test_list_row = $(event.currentTarget).parents("tr");
-		if ($(event.currentTarget).val() === "hide"){
-			close_details(test_list_row);
-		}else{
-			on_select_test_list(test_list_row);
-		}
-	});
+	$.when(QAUtils.init()).done(function(){
 
-	//(de)select checkboxes for child tests when user clicks on header checkbox
-	$("input.toggle_children").live("change",function(e){
-		$(this).closest(".qa-details").find("input.test-selected, input.toggle_children").attr("checked",$(this).is(":checked"))
-	});
+		//user changed the selected instance for a TestCollection
+		$("select.instance-id").change(function(event){
+			var test_list_row = $(event.currentTarget).parents("tr");
+			if ($(event.currentTarget).val() === "hide"){
+				close_details(test_list_row);
+			}else{
+				on_select_test_list(test_list_row);
+			}
+		});
 
-	//user updated review status of tests
-	$(".update-review-status").live("click",function(){
-		update_statuses_for_collection($(this).closest(".qa-details"))
-	});
+		//(de)select checkboxes for child tests when user clicks on header checkbox
+		$("input.toggle_children").live("change",function(e){
+			$(this).closest(".qa-details").find("input.test-selected, input.toggle_children").attr("checked",$(this).is(":checked"))
+		});
 
+		//user updated review status of tests
+		$(".update-review-status").live("click",function(){
+			update_statuses_for_collection($(this).closest(".qa-details"))
+		});
+	});
 });

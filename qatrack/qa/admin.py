@@ -239,7 +239,10 @@ class TestListCycleAdmin(SaveUserMixin, admin.ModelAdmin):
             settings.STATIC_URL+"js/m2m_drag_admin.js",
         )
 
-
+#============================================================================
+class FrequencyAdmin(admin.ModelAdmin):
+    prepopulated_fields =  {'slug': ('name',)}
+    model = models.Frequency
 
 
 
@@ -251,5 +254,5 @@ admin.site.register([models.UnitTestInfo],UnitTestInfoAdmin)
 admin.site.register([models.UnitTestCollection],UnitTestCollectionAdmin)
 
 admin.site.register([models.TestListCycle],TestListCycleAdmin)
-
+admin.site.register([models.Frequency], FrequencyAdmin)
 admin.site.register([models.TestListInstance,models.TestInstance], admin.ModelAdmin)

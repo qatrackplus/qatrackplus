@@ -16,28 +16,28 @@ from qatrack.qagroups.models import GroupProfile
 import re
 
 #global frequency choices
-DAILY = "daily"
-WEEKLY = "weekly"
-MONTHLY = "monthly"
-SEMIANNUAL = "semiannual"
-ANNUAL = "annual"
-OTHER = "other"
+#DAILY = "daily"
+#WEEKLY = "weekly"
+#MONTHLY = "monthly"
+#SEMIANNUAL = "semiannual"
+#ANNUAL = "annual"
+#OTHER = "other"
 
-FREQUENCY_CHOICES = (
-    (DAILY, "Daily"),
-    (WEEKLY, "Weekly"),
-    (MONTHLY, "Monthly"),
-    (SEMIANNUAL, "Semi-Ann."),
-    (ANNUAL, "Annual"),
-    (OTHER, "Other"),
-)
-FREQUENCY_DELTAS = {
-    DAILY:timezone.timedelta(days=1),
-    WEEKLY:timezone.timedelta(weeks=1),
-    MONTHLY:timezone.timedelta(weeks=4),
-    SEMIANNUAL:timezone.timedelta(days=365/2),
-    ANNUAL:timezone.timedelta(days=365),
-}
+#FREQUENCY_CHOICES = (
+    #(DAILY, "Daily"),
+    #(WEEKLY, "Weekly"),
+    #(MONTHLY, "Monthly"),
+    #(SEMIANNUAL, "Semi-Ann."),
+    #(ANNUAL, "Annual"),
+    #(OTHER, "Other"),
+#)
+#FREQUENCY_DELTAS = {
+    #DAILY:timezone.timedelta(days=1),
+    #WEEKLY:timezone.timedelta(weeks=1),
+    #MONTHLY:timezone.timedelta(weeks=4),
+    #SEMIANNUAL:timezone.timedelta(days=365/2),
+    #ANNUAL:timezone.timedelta(days=365),
+#}
 
 
 #test_types
@@ -107,15 +107,54 @@ DUE = TOLERANCE
 OVERDUE = ACTION
 NEWLIST = NOT_DONE
 
-DUE_INTERVALS = {
-    DAILY:{DUE:1,OVERDUE:1},
-    WEEKLY:{DUE:7,OVERDUE:9},
-    MONTHLY:{DUE:28,OVERDUE:35},
-    SEMIANNUAL:{DUE:180,OVERDUE:210},
-    ANNUAL:{DUE:300,OVERDUE:420},
-    OTHER:{DUE:None,OVERDUE:None},
-}
+#DUE_INTERVALS = {
+    #DAILY:{DUE:1,OVERDUE:1},
+    #WEEKLY:{DUE:7,OVERDUE:9},
+    #MONTHLY:{DUE:28,OVERDUE:35},
+    #SEMIANNUAL:{DUE:180,OVERDUE:210},
+    #ANNUAL:{DUE:300,OVERDUE:420},
+    #OTHER:{DUE:None,OVERDUE:None},
+#}
+
 EPSILON = 1E-10
+
+#============================================================================
+class FrequencyManager(models.Manager):
+    #----------------------------------------------------------------------
+    def frequency_choices(self):
+        return self.get_query_set().values_list("slug","name")
+
+
+#============================================================================
+class Frequency(models.Model):
+    """Frequencies for performing QA tasks with configurable due dates"""
+
+    name = models.CharField(max_length=50, help_text=_("Display name for this frequency"))
+
+    slug = models.SlugField(
+        max_length=50, unique=True,
+        help_text=_("Unique identifier made of lowercase characters and underscores for this frequency")
+    )
+
+    nominal_interval = models.PositiveIntegerField(help_text=_("Nominal number of days between test completions"))
+    due_interval = models.PositiveIntegerField(help_text=_("How many days since last completed until a test with this frequency is shown as due"))
+    overdue_interval = models.PositiveIntegerField(help_text=_("How many days since last completed until a test with this frequency is shown as over due"))
+
+    objects = FrequencyManager()
+
+    class Meta:
+        verbose_name_plural = "frequencies"
+
+    #----------------------------------------------------------------------
+    def nominal_delta(self):
+        """return datetime delta for nominal interval"""
+        if self.nominal_interval is not None:
+            return timezone.timedelta(days=self.nominal_interval)
+    #----------------------------------------------------------------------
+    def __unicode__(self):
+        return "<Frequency(%s)>" % (self.name)
+
+
 #============================================================================
 class Reference(models.Model):
     """Reference values for various QA :model:`Test`s"""
@@ -380,10 +419,7 @@ class UnitTestInfo(models.Model):
     unit = models.ForeignKey(Unit)
     test = models.ForeignKey(Test)
 
-    frequency = models.CharField(
-        max_length=10, choices=FREQUENCY_CHOICES,
-        help_text=_("Frequency with which this test list is to be performed")
-    )
+    frequency = models.ForeignKey(Frequency, help_text=_("Frequency with which this test is to be performed"))
 
     reference = models.ForeignKey(Reference,verbose_name=_("Current Reference"),null=True, blank=True)
     tolerance = models.ForeignKey(Tolerance,null=True, blank=True)
@@ -426,8 +462,7 @@ class UnitTestInfo(models.Model):
         ).order_by("-work_completed","-pk")
 
         if last_instance:
-            delta = FREQUENCY_DELTAS[self.frequency]
-            return (last_instance[0].work_completed + delta)
+            return (last_instance[0].work_completed + self.frequency.nominal_delta())
 
 
 #============================================================================
@@ -569,10 +604,7 @@ class UnitTestCollection(models.Model):
 
     unit = models.ForeignKey(Unit)
 
-    frequency = models.CharField(
-        max_length=10, choices=FREQUENCY_CHOICES,
-        help_text=_("Frequency with which this test is to be performed")
-    )
+    frequency = models.ForeignKey(Frequency, help_text=_("Frequency with which this test list is to be performed"))
 
     assigned_to = models.ForeignKey(GroupProfile,help_text = _("QA group that this test list should nominally be performed by"),null=True)
     active = models.BooleanField(help_text=_("Uncheck to disable this test on this unit"), default=True)
@@ -623,16 +655,15 @@ class UnitTestCollection(models.Model):
 
     #----------------------------------------------------------------------
     def due_status(self):
-        due = self.due_date()
-        if due is None:
+        last_done = self.last_done_date()
+        if last_done is None:
             return NOT_DUE
 
-        due_interval = DUE_INTERVALS[self.frequency]
-        day_delta = (due - timezone.now()).days
+        day_delta = (timezone.now().date()-last_done.date()).days
 
-        if day_delta >= due_interval[OVERDUE]:
+        if day_delta >= self.frequency.overdue_interval:
             return OVERDUE
-        elif day_delta >= due_interval[DUE]:
+        elif day_delta >= self.frequency.due_interval:
             return DUE
 
         return NOT_DUE

@@ -3,7 +3,7 @@ from django.contrib.sites.models import Site
 
 from qatrack.qa.models import (
     UnitTestCollection,
-    FREQUENCY_CHOICES,
+    Frequency,
     TestListInstance,
 )
 
@@ -15,6 +15,6 @@ def site(request):
         'SITE_URL': site.domain,
 
         #QA Specific
-        'QA_FREQUENCIES' : FREQUENCY_CHOICES,
+        'QA_FREQUENCIES' : Frequency.objects.frequency_choices(),
         'AWAITING_REVIEW': TestListInstance.objects.awaiting_review().count(),
     }

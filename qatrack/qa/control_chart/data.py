@@ -1,7 +1,5 @@
 # (c) Dan La Russa & Randy Taylor
 import matplotlib
-matplotlib.use("Agg")
-matplotlib.interactive(True)
 
 import matplotlib.pyplot as plt
 

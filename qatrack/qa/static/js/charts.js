@@ -260,8 +260,8 @@ function setup_filters(on_complete){
         {
             container:"#frequency-filter",
             resource_name:"frequency",
-            display_property:"display",
-            value_property:"value",
+            display_property:"name",
+            value_property:"slug",
             to_check : ["all"]
         },
         {

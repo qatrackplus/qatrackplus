@@ -230,24 +230,10 @@ def serialize_testinstance(test_instance):
     return info
 
 #============================================================================
-class FrequencyResource(Resource):
-    """available test frequencies"""
-    value = tastypie.fields.CharField()
-    display = tastypie.fields.CharField()
+class FrequencyResource(ModelResource):
     class Meta:
-        allowed_methods = ["get"]
-    #----------------------------------------------------------------------
-    def dehydrate_value(self,bundle):
-        return bundle.obj["value"]
-    #----------------------------------------------------------------------
-    def dehydrate_display(self,bundle):
-        return bundle.obj["display"]
-    #----------------------------------------------------------------------
-    def get_object_list(self):
-        return [{"value":x[0],"display":x[1]} for x in models.FREQUENCY_CHOICES]
-    #----------------------------------------------------------------------
-    def obj_get_list(self,request=None,**kwargs):
-        return self.get_object_list()
+        queryset = models.Frequency.objects.all()
+
 
 #============================================================================
 class StatusResource(Resource):

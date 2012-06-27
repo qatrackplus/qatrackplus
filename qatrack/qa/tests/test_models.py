@@ -196,12 +196,22 @@ class BaseQATestCase(TestCase):
 
         self.ref = models.Reference.objects.get(pk=1)
         self.tol = models.Tolerance.objects.get(pk=1)
+
+        self.daily = models.Frequency(
+            name="Daily",
+            slug="daily",
+            nominal_interval=1,
+            due_interval=1,
+            overdue_interval=1,
+        )
+        self.daily.save()
+
         self.unit_test_assign = models.UnitTestInfo(
             unit = self.unit,
             test = self.test,
             reference = self.ref,
             tolerance = self.tol,
-            frequency = models.DAILY
+            frequency = self.daily
         )
         self.unit_test_assign.save()
 
@@ -209,7 +219,7 @@ class BaseQATestCase(TestCase):
             unit = self.unit,
             object_id = self.test_list.pk,
             content_type = ContentType.objects.get(app_label="qa", model="testlist"),
-            frequency = models.DAILY
+            frequency = self.daily
         )
         self.unit_test_list_assign.save()
 
@@ -564,7 +574,7 @@ class TestTestList(BaseQATestCase):
         utls = models.UnitTestCollection.objects.by_unit(self.unit).all()
         self.unit_test_list_assign.delete()
         assignments = []
-        for freq, _ in models.FREQUENCY_CHOICES:
+        for freq in models.Frequency.objects.all():
             unit_test_list_assign = models.UnitTestCollection(
                 unit = self.unit,
                 object_id = self.test_list.pk,
@@ -575,13 +585,13 @@ class TestTestList(BaseQATestCase):
             assignments.append(unit_test_list_assign)
 
         utls = models.UnitTestCollection.objects.by_unit(self.unit).all()
-        freqs = utls.values_list("frequency",flat=True)
-        self.assertSetEqual(set(freqs),set([x[0] for x in models.FREQUENCY_CHOICES]))
+        #freqs = utls.values_list("frequency",flat=True)
+        #self.assertSetEqual(set(freqs),set([x[0] for x in models.Frequency.objects.frequency_choices()]))
 
-        utls = models.UnitTestCollection.objects.by_frequency(models.DAILY)
+        utls = models.UnitTestCollection.objects.by_frequency(self.daily)
         self.assertEqual(utls.count(),1)
 
-        utls = models.UnitTestCollection.objects.by_unit_frequency(self.unit,models.DAILY)
+        utls = models.UnitTestCollection.objects.by_unit_frequency(self.unit,self.daily)
         self.assertEqual(utls.count(),1)
 
         self.assertEqual(
@@ -612,16 +622,15 @@ class TestTestList(BaseQATestCase):
         ti.save()
 
 
-
         due = self.unit_test_list_assign.due_date()
-        self.assertEqual(due,ti.work_completed+models.FREQUENCY_DELTAS[models.DAILY])
+        self.assertEqual(due,ti.work_completed+self.daily.nominal_delta())
 
 
         tlm = models.TestListMembership(test_list=self.test_list,test=self.test2,order=1)
         tlm.save()
 
         due = self.unit_test_list_assign.due_date()
-        self.assertEqual(due,ti.work_completed+models.FREQUENCY_DELTAS[models.DAILY])
+        self.assertEqual(due,ti.work_completed+self.daily.nominal_delta())
 
         ti2 = models.TestInstance(
             test=self.test2,
@@ -785,7 +794,7 @@ class CycleTest(BaseQATestCase):
             unit = self.unit,
             object_id = self.cycle.pk,
             content_type = ContentType.objects.get(app_label="qa", model="testlistcycle"),
-            frequency = models.DAILY
+            frequency = self.daily
         )
 
     #----------------------------------------------------------------------
@@ -902,16 +911,15 @@ class CycleTest(BaseQATestCase):
         ti.save()
 
 
-
         due = self.unit_test_list_assign.due_date()
-        self.assertEqual(due,ti.work_completed+models.FREQUENCY_DELTAS[models.DAILY])
+        self.assertEqual(due,ti.work_completed+self.daily.nominal_delta())
 
 
         tlm = models.TestListMembership(test_list=self.test_list,test=self.test2,order=1)
         tlm.save()
 
         due = self.unit_test_list_assign.due_date()
-        self.assertEqual(due,ti.work_completed+models.FREQUENCY_DELTAS[models.DAILY])
+        self.assertEqual(due,ti.work_completed+self.daily.nominal_delta())
 
         ti2 = models.TestInstance(
             test=self.test2,

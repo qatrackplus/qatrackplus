@@ -49,13 +49,15 @@ def as_due_date(unit_test_collection):
 def as_data_attributes(unit_test_collection):
     utc = unit_test_collection
     due_date = utc.due_date()
+    last_done = utc.last_done_date()
     attrs = {
-        "frequency": utc.frequency,
+        "frequency": utc.frequency.slug,
         "due_date": due_date.isoformat() if due_date else "",
+        "last_done":last_done.isoformat() if last_done else "",
         "id":utc.pk,
         "unit_number":utc.unit.number,
     }
-    print " ".join(['data-%s=%s' % (k,v) for k,v in attrs.items() if v])
+
     return " ".join(['data-%s=%s' % (k,v) for k,v in attrs.items() if v])
 
 

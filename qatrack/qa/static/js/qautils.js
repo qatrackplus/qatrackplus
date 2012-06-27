@@ -65,15 +65,10 @@ var QAUtils = new function() {
 	this.DUE = this.TOLERANCE;
 	this.OVERDUE = this.ACTION;
 	this.NOT_DUE = this.WITHIN_TOL;
-	this.DAILY = "daily";
-	this.WEEKLY = "weekly";
-	this.MONTHLY = "monthly";
-	this.SEMIANNUAL = "semiannual";
-	this.ANNUAL = "annual";
-	this.OTHER = "other";
 
     this.MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
+	this.FREQUENCIES = {};  //initialized from api
 
 
     /***************************************************************/
@@ -259,10 +254,8 @@ var QAUtils = new function() {
 
     /********************************************************************/
     //API calls
-
-
     this.call_api = function(url,method,data,callback){
-        $.ajax({
+        return $.ajax({
             type:method,
             url:url,
             data:data,
@@ -289,7 +282,7 @@ var QAUtils = new function() {
             return {resource_uri:uri,status:status};
         });
 
-        this.call_api(
+        return this.call_api(
             this.API_URL+"values/",
             "PATCH",
             JSON.stringify({objects:objects}),
@@ -312,7 +305,7 @@ var QAUtils = new function() {
             data["format"] = "json";
         }
 
-        this.call_api(this.API_URL+resource_name,"GET",data,callback );
+	    return this.call_api(this.API_URL+resource_name,"GET",data,callback );
     };
 
     //values for a group of tests
@@ -320,7 +313,7 @@ var QAUtils = new function() {
         if (!options.hasOwnProperty("limit")){
             options["limit"] = 0;
         }
-        this.call_api(this.API_URL+"grouped_values","GET",options,callback );
+        return this.call_api(this.API_URL+"grouped_values","GET",options,callback );
     };
 
     //*************************************************************
@@ -453,32 +446,18 @@ var QAUtils = new function() {
 		}
 		return this.NOT_DUE;
 	};
-	this.due_status = function(due_date,frequency){
+	this.due_status = function(last_done,test_frequency){
+		last_done.setHours(0,0,0,0)
 
-		var today = new Date();
-		var delta_time = due_date - today; //in ms
+		var today = new Date().setHours(0,0,0,0);
+		var delta_time = last_done - today; //in ms
 
-		var delta_days = Math.abs(this.milliseconds_to_days(delta_time));
+		var delta_days = Math.floor(Math.abs(this.milliseconds_to_days(delta_time)));
 		var due,overdue;
 
-		if (frequency === this.DAILY){
-			due = 1;
-			overdue = 1;
-		}else if (frequency === this.WEEKLY){
-			due = 7;
-			overdue = 9;
-		}else if (frequency === this.MONTHLY){
-			due = 28;
-			overdue = 35;
-		}else if (frequency === this.SEMIANNUAL){
-			due = 180;
-			overdue = 210;
-		}else if (frequency === this.ANNUAL){
-			due = 300;
-			overdue = 420;
-		}
+		var frequency = this.FREQUENCIES[test_frequency];
 
-		return this.compare_due_date_delta(delta_days,due,overdue);
+		return this.compare_due_date_delta(delta_days,frequency.due_interval,frequency.overdue_interval);
 	};
 
 	this.set_due_status_color = function(elem,due_date,frequency){
@@ -506,6 +485,23 @@ var QAUtils = new function() {
 		l.push("</select>");
 
 		return l.join("");
-	}
+	};
 
+
+	//call using $.when() before using QAUTils in any scripts
+	//e.g. in a script where you want to use QAUTils you would do
+	// $.when(QAUTils.init()).done(function(){
+	//	   do_things_requiring_QAUtils();
+	//})
+	this.init = function(){
+		var that = this;
+
+		return this.get_resources("frequency",function(results){
+			$.each(results.objects,function(idx,freq){
+				that.FREQUENCIES[freq.slug] = freq;
+			});
+		});
+
+	};
 }();
+
