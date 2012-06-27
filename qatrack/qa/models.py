@@ -15,30 +15,6 @@ from qatrack import settings
 from qatrack.qagroups.models import GroupProfile
 import re
 
-#global frequency choices
-#DAILY = "daily"
-#WEEKLY = "weekly"
-#MONTHLY = "monthly"
-#SEMIANNUAL = "semiannual"
-#ANNUAL = "annual"
-#OTHER = "other"
-
-#FREQUENCY_CHOICES = (
-    #(DAILY, "Daily"),
-    #(WEEKLY, "Weekly"),
-    #(MONTHLY, "Monthly"),
-    #(SEMIANNUAL, "Semi-Ann."),
-    #(ANNUAL, "Annual"),
-    #(OTHER, "Other"),
-#)
-#FREQUENCY_DELTAS = {
-    #DAILY:timezone.timedelta(days=1),
-    #WEEKLY:timezone.timedelta(weeks=1),
-    #MONTHLY:timezone.timedelta(weeks=4),
-    #SEMIANNUAL:timezone.timedelta(days=365/2),
-    #ANNUAL:timezone.timedelta(days=365),
-#}
-
 
 #test_types
 BOOLEAN = "boolean"
@@ -106,15 +82,6 @@ NOT_DUE = OK
 DUE = TOLERANCE
 OVERDUE = ACTION
 NEWLIST = NOT_DONE
-
-#DUE_INTERVALS = {
-    #DAILY:{DUE:1,OVERDUE:1},
-    #WEEKLY:{DUE:7,OVERDUE:9},
-    #MONTHLY:{DUE:28,OVERDUE:35},
-    #SEMIANNUAL:{DUE:180,OVERDUE:210},
-    #ANNUAL:{DUE:300,OVERDUE:420},
-    #OTHER:{DUE:None,OVERDUE:None},
-#}
 
 EPSILON = 1E-10
 
