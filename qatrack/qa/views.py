@@ -163,12 +163,12 @@ class ControlChartImage(View):
             except RuntimeError as e:
                 fig.clf()
                 msg = "There was a problem generating your control chart:\n"
-                fig.text(0.1,0.9,"\n".join(textwrap.wrap(e.message,40)) , fontsize=12)
+                fig.text(0.1,0.9,"\n".join(textwrap.wrap(msg+e.message,40)) , fontsize=12)
                 canvas.print_png(response)
             except Exception as e:
                 msg = "There was a problem generating your control chart:\n"
                 fig.clf()
-                fig.text(0.1,0.9,"\n".join(textwrap.wrap(str(e),40)) , fontsize=12)
+                fig.text(0.1,0.9,"\n".join(textwrap.wrap(msg+str(e),40)) , fontsize=12)
                 canvas.print_png(response)
 
         return response

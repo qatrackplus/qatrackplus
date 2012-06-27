@@ -118,7 +118,7 @@ class TestListResource(ModelResource):
         }
     #----------------------------------------------------------------------
     def dehydrate_frequencies(self,bundle):
-        return list(bundle.obj.assigned_to.values_list("frequency",flat=True).distinct())
+        return list(bundle.obj.assigned_to.values_list("frequency__slug",flat=True).distinct())
 
 #============================================================================
 class TestInstanceResource(ModelResource):

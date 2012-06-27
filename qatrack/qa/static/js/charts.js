@@ -203,6 +203,11 @@ function update(){
 		waiting_timeout = setInterval("check_cc_loaded()",250);
 		var chart_src_url = get_control_chart_url();
 		$("#control-chart-container img").attr("src",chart_src_url);
+		var test_name = $("#test-filter :checked:first").parent().text();
+		var unit_name = $("#unit-filter :checked:first").parent().text();
+		main_graph.setData({});
+		main_graph.draw();
+		$("#chart-legend").html("Control chart for <strong>" + test_name + "</strong> on <strong>" + unit_name + "</strong>");
 
 	}else{
 		$("#control-chart-container, .control-chart-option").hide();
