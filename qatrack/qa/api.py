@@ -159,12 +159,16 @@ class TestInstanceResource(ModelResource):
 
         if "from_date" in filters:
             try:
-                orm_filters["work_completed__gte"] = timezone.datetime.datetime.strptime(filters["from_date"],"%d-%m-%Y")
+                orm_filters["work_completed__gte"] = timezone.make_aware(
+                    timezone.datetime.datetime.strptime(filters["from_date"],"%d-%m-%Y")
+                )
             except ValueError:
                 pass
         if "to_date" in filters:
             try:
-                orm_filters["work_completed__lte"] = timezone.datetime.datetime.strptime(filters["to_date"],"%d-%m-%Y")
+                orm_filters["work_completed__lte"] = timezone.make_aware(
+                    timezone.datetime.datetime.strptime(filters["to_date"],"%d-%m-%Y")
+                )
             except ValueError:
                 pass
 
