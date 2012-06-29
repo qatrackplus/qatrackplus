@@ -197,7 +197,7 @@ function set_chart_url(){
 	});
 
 	document.location.hash = "#"+options.join(QAUtils.OPTION_SEP);
-
+	$("#chart-url").val(document.location);
 }
 /*************************************************************************/
 //Do a full update of the chart
