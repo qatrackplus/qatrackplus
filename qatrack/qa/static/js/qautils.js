@@ -350,8 +350,8 @@ var QAUtils = new function() {
 
 
 	this.unit_test_chart_url = function(unit,test){
-		var unit_option = 'units'+this.OPTION_DELIM+unit.number;
-		var test_option = 'short_names'+this.OPTION_DELIM+test.short_name;
+		var unit_option = 'unit'+this.OPTION_DELIM+unit.number;
+		var test_option = 'short_name'+this.OPTION_DELIM+test.short_name;
 		return this.CHARTS_URL+'#'+[unit_option,test_option].join(this.OPTION_SEP);
 	};
 	this.unit_test_chart_link = function(unit,test,text,title){

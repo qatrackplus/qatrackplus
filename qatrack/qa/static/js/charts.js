@@ -23,8 +23,8 @@ function get_filters(){
     return {
         short_name: $(short_names).get(),
         unit: $(units).get(),
-        from_date: $("#from-date").val(),
-        to_date: $("#to-date").val(),
+        from_date: [$("#from-date").val()],
+        to_date: [$("#to-date").val()],
         status: $(review_status).get()
     };
 }
@@ -185,13 +185,13 @@ function check_cc_loaded(){
 }
 
 function set_chart_url(){
-	return;
+
 	var filters = get_filters();
 
 	var options = [];
 
 	$.each(filters,function(key,values){
-		$.each(values.split(","),function(idx,value){
+		$.each(values,function(idx,value){
 			options.push(key+QAUtils.OPTION_DELIM+value)
 		});
 	});

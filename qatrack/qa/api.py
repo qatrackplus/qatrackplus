@@ -154,7 +154,7 @@ class TestInstanceResource(ModelResource):
         if filters is None:
             filters = {}
 
-        orm_filters = super(TestInstanceResource,self).build_filters(filters)
+        orm_filters = super(TestInstanceResource,self).build_filters()
 
 
         filters_requiring_processing = (
@@ -165,10 +165,8 @@ class TestInstanceResource(ModelResource):
         )
 
         for field,filter_string,filter_type in filters_requiring_processing:
-            if field not in filters:
-                continue
 
-            value = filters.pop(field)
+            value = filters.pop(field,[])
 
             if filter_type == "date":
                 try:
@@ -181,7 +179,8 @@ class TestInstanceResource(ModelResource):
 
         #non specfic list filters
         for key in filters:
-            orm_filters["%s__in"%key] = filters.getlist(key)
+            if key in self.Meta.filtering:
+                orm_filters["%s__in"%key] = filters.getlist(key)
 
         return orm_filters
 
