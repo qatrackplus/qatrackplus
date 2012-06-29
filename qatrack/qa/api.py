@@ -137,6 +137,8 @@ class TestInstanceResource(ModelResource):
             'test':ALL_WITH_RELATIONS,
             'work_completed':ALL,
             'id':ALL,
+            'unit':ALL_WITH_RELATIONS,
+            'status':ALL,
         }
         ordering= ["work_completed"]
         authentication = BasicAuthentication()
@@ -154,31 +156,33 @@ class TestInstanceResource(ModelResource):
 
         orm_filters = super(TestInstanceResource,self).build_filters(filters)
 
-        if "units" in filters:
-            orm_filters["unit__number__in"] = filters["units"].split(',')
 
-        if "from_date" in filters:
-            try:
-                orm_filters["work_completed__gte"] = timezone.make_aware(
-                    timezone.datetime.datetime.strptime(filters["from_date"],"%d-%m-%Y")
-                )
-            except ValueError:
-                pass
-        if "to_date" in filters:
-            try:
-                orm_filters["work_completed__lte"] = timezone.make_aware(
-                    timezone.datetime.datetime.strptime(filters["to_date"],"%d-%m-%Y")
-                )
-            except ValueError:
-                pass
+        filters_requiring_processing = (
+            ("from_date","work_completed__gte","date"),
+            ("to_date","work_completed__lte","date"),
+            ("unit","unit__number__in",None),
+            ("short_name","test__short_name__in",None),
+        )
 
-        if "review_status" in filters:
-            orm_filters["status__in"] = filters["review_status"].split(',')
+        for field,filter_string,filter_type in filters_requiring_processing:
+            if field not in filters:
+                continue
 
-        if "short_names" in filters:
-            orm_filters["test__short_name__in"] = [x.strip() for x in filters["short_names"].split(',')]
-        #elif "test_id" in filters:
-        #    orm_filters["test__pk"] = filters["pk"]
+            value = filters.pop(field)
+
+            if filter_type == "date":
+                try:
+                    value = timezone.datetime.datetime.strptime(value[0],"%d-%m-%Y")
+                    value = timezone.make_aware(value)
+                except ValueError:
+                    pass
+
+            orm_filters[filter_string] = value
+
+        #non specfic list filters
+        for key in filters:
+            orm_filters["%s__in"%key] = filters.getlist(key)
+
         return orm_filters
 
     #----------------------------------------------------------------------

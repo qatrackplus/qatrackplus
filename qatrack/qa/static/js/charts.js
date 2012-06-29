@@ -21,11 +21,11 @@ function get_filters(){
     var units = get_checked("#unit-filter");
     var review_status = get_checked("#review-status-filter");
     return {
-        short_names: $(short_names).get().join(','),
-        units: $(units).get().join(','),
+        short_name: $(short_names).get(),
+        unit: $(units).get(),
         from_date: $("#from-date").val(),
         to_date: $("#to-date").val(),
-        review_status: $(review_status).get().join(',')
+        status: $(review_status).get()
     };
 }
 /*************************************************************************/
@@ -184,6 +184,21 @@ function check_cc_loaded(){
 	}
 }
 
+function set_chart_url(){
+	return;
+	var filters = get_filters();
+
+	var options = [];
+
+	$.each(filters,function(key,values){
+		$.each(values.split(","),function(idx,value){
+			options.push(key+QAUtils.OPTION_DELIM+value)
+		});
+	});
+
+	document.location.hash = "#"+options.join(QAUtils.OPTION_SEP);
+
+}
 /*************************************************************************/
 //Do a full update of the chart
 //Currently everything is re-requested and re-drawn which isn't very efficient
@@ -191,6 +206,7 @@ function update(){
 
 	var type = $("#chart-type").find(":selected").val();
 
+	set_chart_url();
 
 	if (type === "control"){
 		$("#chart-type, #gen-control-chart").enable(false);
@@ -216,7 +232,7 @@ function update(){
 		$("#control-chart-container img").attr("src","");
 
 		var filters = get_filters();
-		if ((filters.units === "") || (filters.short_names === "")){
+		if ((filters.units === "") || (filters.short_name === "")){
 			return;
 		}
 		$("#chart-type").enable(false);
@@ -411,15 +427,17 @@ function filter_tests(){
 //set initial options based on url hash
 function set_options_from_url(){
     var options = QAUtils.options_from_url_hash(document.location.hash);
-
-    $.each(options,function(key,value){
+	$("#test-filter input").attr("checked",false);
+	$("#unit-filter input").attr("checked",false);
+	var key,value;
+    $.each(options,function(idx,option){
+		key = option[0];
+		value = option[1];
         switch(key){
-            case  "test" :
-                $("#test-filter input").attr("checked",false);
+            case  "short_name" :
                 $("#test-filter input[value="+value+"]").attr("checked","checked");
             break;
             case "unit":
-                $("#unit-filter input").attr("checked",false);
                 $("#unit-filter input[value="+value+"]").attr("checked","checked");
                 break;
             default:
