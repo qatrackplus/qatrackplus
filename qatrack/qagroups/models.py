@@ -9,6 +9,7 @@ class GroupProfile(models.Model):
     #note I used a CharField here so that you can use relative paths
     #for urls (e.g. /qa/daily/test_lists rather than http://localhost/qa/daily/test_lists)
     homepage = models.CharField(max_length=512,help_text=_("Link to where this user should be redirected after login (e.g. /user_home or /qa/review)"),default="/user_home")
+
     #----------------------------------------------------------------------
     def __unicode__(self):
         return "<GroupProfile(%s)>"%(self.group.name)

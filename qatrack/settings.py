@@ -173,7 +173,15 @@ INSTALLED_APPS = (
     'qatrack.qa',
     'qatrack.theme_bootstrap',
     'qatrack.data_tables',
+    'qatrack.notifications',
 )
+
+EMAIL_ON_TOLERANCE_TESTS = True
+EMAIL_ON_FAILING_TESTS = True
+EMAIL_NOTIFICATION_TEMPLATE = "notification_email.txt"
+EMAIL_NOTIFICATION_SENDER = "qatrack"
+EMAIL_NOTIFICATION_SUBJECT = "QATrack+ Test Status Notification"
+
 
 EMAIL_HOST = "" #e.g. 'smtp.gmail.com'
 EMAIL_HOST_USER = '' # e.g. "randle.taylor@gmail.com"

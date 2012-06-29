@@ -787,7 +787,7 @@ class TestInstance(models.Model):
 
     #review status
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, editable=False)
-    review_date = models.DateTimeField(null=True, blank=True, help_text = settings.DEBUG)
+    review_date = models.DateTimeField(null=True, blank=True)
     reviewed_by = models.ForeignKey(User,null=True, blank=True)
 
     #did test pass or fail (or was skipped etc)
@@ -938,6 +938,12 @@ class TestListInstance(models.Model):
     #----------------------------------------------------------------------
     def unreviewed_instances(self):
         return self.testinstance_set.filter(status=UNREVIEWED)
+    #----------------------------------------------------------------------
+    def tolerance_tests(self):
+        return self.testinstance_set.filter(pass_fail=TOLERANCE)
+    #----------------------------------------------------------------------
+    def failing_tests(self):
+        return self.testinstance_set.filter(pass_fail=ACTION)
     #---------------------------------------------------------------------------
     def __unicode__(self):
         """more helpful interactive display name"""
@@ -945,6 +951,7 @@ class TestListInstance(models.Model):
             return "TestListInstance(test_list=%s)"%self.test_list.name
         except:
             return "TestListInstance(Empty)"
+
 
 
 #============================================================================
@@ -1045,18 +1052,3 @@ class TestListCycleMembership(models.Model):
         #memberships they can have the same order temporarily when orders are changed
         #unique_together = (("order", "cycle"),)
 
-#@receiver(post_save, sender=TestListCycleMembership)
-#def test_added_to_cycle_member(*args,**kwargs):
-    #"""make sure there are UnitTestInfo objects for all tests (1)
-
-    #(1) Note that this can't be done in the TestList.save method because the
-    #many to many relationships are not updated until after the save method has
-    #been executed. See http://stackoverflow.com/questions/1925383/issue-with-manytomany-relationships-not-updating-inmediatly-after-save
-    #"""
-
-
-    #tlm = kwargs["instance"]
-    #unit_test_lists = UnitTestCollection.objects.filter(test_lists=tlm.test_list)
-    #for utl in unit_test_lists:
-        #for test in tlm.test_list.tests.all():
-            #UnitTestCollection.objects.get_or_create(unit=utl.unit, test=test)

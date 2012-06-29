@@ -268,8 +268,9 @@ class PerformQAView(FormView):
             test_list_instance.unit = context["unit_test_list"].unit
             if test_list_instance.work_completed is None:
                 test_list_instance.work_completed = timezone.now()
-            test_list_instance.save()
 
+
+            test_list_instance.save()
 
             #all test values are validated so now add remaining fields manually and save
             for test_form in formset:
@@ -282,6 +283,11 @@ class PerformQAView(FormView):
                 else:
                     obj.status = models.UNREVIEWED
                 obj.save()
+
+
+            #save again so that we get a save signal generated after we have added
+            #the test instances
+            test_list_instance.save()
 
             #let user know request succeeded and return to unit list
             messages.success(self.request,_("Successfully submitted %s "% test_list.name))
