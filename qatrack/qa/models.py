@@ -46,21 +46,6 @@ REF_TYPE_CHOICES = (
     (BOOLEAN, "Yes / No")
 )
 
-#status choices
-UNREVIEWED = "unreviewed"
-APPROVED = "approved"
-SCRATCH = "scratch"
-REJECTED = "rejected"
-RETURN_TO_SERVICE = "returntoservice"
-
-EXCLUDE_STATUSES = (SCRATCH,REJECTED,)
-STATUS_CHOICES = (
-    (UNREVIEWED, "Unreviewed"),
-    (APPROVED, "Approved"),
-    (RETURN_TO_SERVICE,"Return To Service"),
-    (SCRATCH, "Scratch"),
-    (REJECTED, "Rejected"),
-)
 
 #pass fail choices
 NOT_DONE = "not_done"
@@ -120,6 +105,77 @@ class Frequency(models.Model):
     #----------------------------------------------------------------------
     def __unicode__(self):
         return "<Frequency(%s)>" % (self.name)
+
+
+#============================================================================
+class StatusManager(models.Manager):
+    """manager for TestInstanceStatus"""
+
+    #----------------------------------------------------------------------
+    def default(self):
+        """return the default TestInstanceStatus"""
+        return self.get_query_set().get(is_default=True)
+
+class TestInstanceStatus(models.Model):
+    """Configurable statuses for QA Tests"""
+
+    name = models.CharField(max_length=50,help_text=_("Display name for this status type"),unique=True)
+    slug = models.SlugField(
+        max_length=50, unique=True,
+        help_text=_("Unique identifier made of lowercase characters and underscores for this status")
+    )
+
+    is_default = models.BooleanField(
+        default=False,
+        help_text=_("Check to make this status the default for new Test Instances")
+    )
+
+    requires_review = models.BooleanField(
+        default=False,
+        help_text=_("Check to indicate that Test Instances with this status require further review"),
+    )
+    requires_comment =  models.BooleanField(
+        default = False,
+        help_text=_("Check to force users to add a comment to the Test Instances when setting to this status type."),
+    )
+
+    export_by_default = models.BooleanField(
+        default = True,
+        help_text=_("Check to indicate whether tests with this status should be exported by default (e.g. for graphing/control charts)"),
+    )
+
+    valid = models.BooleanField(
+        default=True,
+        help_text=_("If unchecked, data with this status will not be exported and the TestInstance will not be considered a valid completed Test")
+    )
+
+    objects = StatusManager()
+
+
+    class Meta:
+        verbose_name_plural = "statuses"
+
+
+    #----------------------------------------------------------------------
+    def save(self, *args, **kwargs):
+        """set status to unreviewed if not previously set"""
+        try:
+            cur_default = TestInstanceStatus.objects.default()
+            if self.is_default is True:
+                cur_default.is_default = False
+                cur_default.save()
+                self.is_default = True
+        except self.DoesNotExist:
+            self.is_default = True
+
+        super(TestInstanceStatus,self).save(*args,**kwargs)
+
+
+    #---------------------------------------------------------------------------
+    def __unicode__(self):
+        """more helpful interactive display name"""
+        return "<Status(%s)>"%self.name
+
 
 
 #============================================================================
@@ -421,11 +477,9 @@ class UnitTestInfo(models.Model):
     def due_date(self):
         """return the due date for this unit test list assignment"""
 
-        last_instance = TestInstance.objects.filter(
+        last_instance = TestInstance.valid_objects.filter(
             unit = self.unit,
             test = self.test,
-        ).exclude(
-            status__in = EXCLUDE_STATUSES
         ).order_by("-work_completed","-pk")
 
         if last_instance:
@@ -781,12 +835,20 @@ def sublist_changed(*args,**kwargs):
     """when a sublist changes"""
     update_unit_test_assignments(kwargs["instance"])
 
-##============================================================================
+#============================================================================
+class ValidTestInstanceManager(models.Manager):
+    """manager for TestInstances with valid status"""
+    #----------------------------------------------------------------------
+    def get_query_set(self):
+        return super(ValidTestInstanceManager,self).get_query_set().filter(status__valid=True)
+
+
+#============================================================================
 class TestInstance(models.Model):
     """Measured instance of a :model:`Test`"""
 
     #review status
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, editable=False)
+    status = models.ForeignKey(TestInstanceStatus)
     review_date = models.DateTimeField(null=True, blank=True, help_text = settings.DEBUG)
     reviewed_by = models.ForeignKey(User,null=True, blank=True)
 
@@ -823,15 +885,17 @@ class TestInstance(models.Model):
     modified = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(User, editable=False, related_name="test_instance_modifier")
 
+    objects = models.Manager()
+    valid_objects = ValidTestInstanceManager()
+
     class Meta:
         ordering = ("work_completed",)
         get_latest_by = "work_completed"
 
     #----------------------------------------------------------------------
     def save(self, *args, **kwargs):
-        """set status to unreviewed if not previously set"""
-        if not self.status:
-            self.status = UNREVIEWED
+        """set pass fail status on save"""
+
         self.calculate_pass_fail()
         super(TestInstance,self).save(*args,**kwargs)
 
@@ -893,7 +957,7 @@ class TestInstance(models.Model):
 class TestListInstanceManager(models.Manager):
     #----------------------------------------------------------------------
     def awaiting_review(self):
-        return self.get_query_set().filter(testinstance__status=UNREVIEWED).distinct().order_by("work_completed")
+        return self.get_query_set().filter(testinstance__status__requires_review=True).distinct().order_by("work_completed")
 
 #============================================================================
 class TestListInstance(models.Model):
@@ -931,13 +995,13 @@ class TestListInstance(models.Model):
     #----------------------------------------------------------------------
     def status(self,formatted=False):
         """return string with review status of this qa instance"""
-        status = [(status,display,self.testinstance_set.filter(status=status)) for status,display in STATUS_CHOICES]
+        status = [(status,self.testinstance_set.filter(status=status)) for status in TestInstanceStatus.objects.all()]
         if not formatted:
             return status
-        return ", ".join(["%d %s" %(s.count(),d) for _,d,s in status])
+        return ", ".join(["%d %s" %(s.count(),test_status.name) for test_status,s in status])
     #----------------------------------------------------------------------
     def unreviewed_instances(self):
-        return self.testinstance_set.filter(status=UNREVIEWED)
+        return self.testinstance_set.filter(status__requires_review=True)
     #---------------------------------------------------------------------------
     def __unicode__(self):
         """more helpful interactive display name"""

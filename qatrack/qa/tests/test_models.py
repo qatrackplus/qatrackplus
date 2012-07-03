@@ -223,6 +223,14 @@ class BaseQATestCase(TestCase):
         )
         self.unit_test_list_assign.save()
 
+        self.unreviewed = models.TestInstanceStatus(
+            name="Unreviewed",
+            slug="unreviewed",
+            is_default=True,
+            requires_review=True
+        )
+        self.unreviewed.save()
+
 
 #============================================================================
 class TestTests(BaseQATestCase):
@@ -368,13 +376,14 @@ result = foo + bar
         td = timezone.timedelta
         now = timezone.now()
 
+
         #values purposely created out of order to make sure history
         #returns in correct order (i.e. ordered by date)
         history = [
-            (now+td(days=4), 5., models.NO_TOL, models.UNREVIEWED),
-            (now+td(days=1), 5., models.NO_TOL, models.UNREVIEWED),
-            (now+td(days=3), 6., models.NO_TOL, models.UNREVIEWED),
-            (now+td(days=2), 7., models.NO_TOL, models.UNREVIEWED),
+            (now+td(days=4), 5., models.NO_TOL, self.unreviewed),
+            (now+td(days=1), 5., models.NO_TOL, self.unreviewed),
+            (now+td(days=3), 6., models.NO_TOL, self.unreviewed),
+            (now+td(days=2), 7., models.NO_TOL, self.unreviewed),
         ]
         for wc, val, _, _ in history:
             ti1 = models.TestInstance(
@@ -383,7 +392,8 @@ result = foo + bar
                 unit=self.unit,
                 created_by=self.test.created_by,
                 modified_by=self.test.created_by,
-                work_completed = wc
+                work_completed = wc,
+                status=self.unreviewed
             )
             ti1.save()
 
@@ -459,9 +469,9 @@ class TestTestList(BaseQATestCase):
         #values purposely created out of order to make sure correct
         #last completed instance is returned correctly
         history = [
-            (now+td(days=1), 5, models.NO_TOL, models.UNREVIEWED),
-            (last_completed_date, 6, models.NO_TOL, models.UNREVIEWED),
-            (now+td(days=2), 7, models.NO_TOL, models.UNREVIEWED),
+            (now+td(days=1), 5, models.NO_TOL, self.unreviewed),
+            (last_completed_date, 6, models.NO_TOL, self.unreviewed),
+            (now+td(days=2), 7, models.NO_TOL, self.unreviewed),
         ]
         for wc, val, _, _ in history:
             tli = models.TestListInstance(
@@ -480,7 +490,8 @@ class TestTestList(BaseQATestCase):
                 test_list_instance = tli,
                 created_by=self.test.created_by,
                 modified_by=self.test.created_by,
-                work_completed = wc
+                work_completed = wc,
+                status=self.unreviewed
             )
             ti1.save()
 
@@ -617,6 +628,7 @@ class TestTestList(BaseQATestCase):
             unit=self.unit,
             created_by=self.test.created_by,
             modified_by=self.test.created_by,
+            status=self.unreviewed
         )
         ti.work_completed = now
         ti.save()
@@ -637,6 +649,7 @@ class TestTestList(BaseQATestCase):
             unit=self.unit,
             created_by=self.test.created_by,
             modified_by=self.test.created_by,
+            status=self.unreviewed
         )
         ti2.work_completed = now-timezone.timedelta(days=3)
         ti2.save()
@@ -664,7 +677,7 @@ class TestTestList(BaseQATestCase):
         self.test.delete()
         self.test_list_membership.delete()
 
-        for i in range(len(models.STATUS_CHOICES)+1):
+        for i in range(6):
             test = models.Test(
                 name = "name2",
                 short_name="name2",
@@ -698,10 +711,9 @@ class TestTestList(BaseQATestCase):
         self.assertEqual(tli.work_completed,self.unit_test_list_assign.last_done_date())
 
         values = [None, None,96,97,100,100]
-        statuses = [None] + [x[0] for x in models.STATUS_CHOICES]
-        self.assertEqual(len(values),len(statuses))
+
         tis = []
-        for i,(v,s,test) in enumerate(zip(values,statuses,tests)):
+        for i,(v,test) in enumerate(zip(values,tests)):
             ti = models.TestInstance(
                 test=test,
                 value=v,
@@ -712,7 +724,7 @@ class TestTestList(BaseQATestCase):
                 work_completed = now,
                 tolerance=tol,
                 reference=ref,
-                status = s
+                status = self.unreviewed
             )
             if i == 0:
                 ti.skipped = True
@@ -724,6 +736,7 @@ class TestTestList(BaseQATestCase):
 
         pf_status = tli.pass_fail_status()
         for pass_fail, _, tests in pf_status:
+
             if pass_fail == models.OK:
                 self.assertTrue(len(tests)==2)
             else:
@@ -734,15 +747,6 @@ class TestTestList(BaseQATestCase):
 
         statuses = tli.status()
 
-        for i,(status, _, tests) in enumerate(statuses):
-
-            if i == 0:
-                self.assertTrue(len(tests)==2)
-            else:
-                self.assertTrue(len(tests)==1)
-
-        formatted = "2 Unreviewed, 1 Approved, 1 Return To Service, 1 Scratch, 1 Rejected"
-        self.assertEqual(tli.status(True),formatted)
     #----------------------------------------------------------------------
     def test_content_type(self):
         self.assertEqual(ContentType.objects.get_for_model(models.TestList),self.test_list.content_type())
@@ -817,7 +821,7 @@ class CycleTest(BaseQATestCase):
                 test_list_instance=instance,
                 reference = models.Reference.objects.get(pk=1),
                 tolerance = models.Tolerance.objects.get(pk=1),
-                status=models.UNREVIEWED,
+                status=self.unreviewed,
                 created_by=self.user,
                 modified_by=self.user
             )
@@ -906,6 +910,7 @@ class CycleTest(BaseQATestCase):
             unit=self.unit,
             created_by=self.test.created_by,
             modified_by=self.test.created_by,
+            status=self.unreviewed
         )
         ti.work_completed = now
         ti.save()
@@ -926,6 +931,7 @@ class CycleTest(BaseQATestCase):
             unit=self.unit,
             created_by=self.test.created_by,
             modified_by=self.test.created_by,
+            status=self.unreviewed
         )
         ti2.work_completed = now+timezone.timedelta(days=3)
         ti2.save()
