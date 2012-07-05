@@ -125,7 +125,7 @@ class TestInstanceResource(ModelResource):
     test = tastypie.fields.ForeignKey("qatrack.qa.api.TestResource","test", full=True)
     reference = tastypie.fields.ForeignKey("qatrack.qa.api.ReferenceResource","reference", full=True,null=True)
     tolerance = tastypie.fields.ForeignKey("qatrack.qa.api.ToleranceResource","tolerance", full=True,null=True)
-
+    status = tastypie.fields.ForeignKey("qatrack.qa.api.StatusResource","status",full=True)
     unit = tastypie.fields.ForeignKey(UnitResource,"unit",full=True);
     reviewed_by = tastypie.fields.CharField()
     class Meta:

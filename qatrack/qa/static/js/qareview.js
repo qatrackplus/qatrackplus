@@ -3,12 +3,11 @@ var HISTORY_INSTANCE_LIMIT = 5;
 /************************************************************************/
 //create a dropdown element for different review statuses
 function make_status_select(){
-	var status_options =[[null,""]];
+	var status_options =[["",""]];
 	var i,status;
-	for (i=0; i < QAUtils.STATUSES.length; i += 1){
-		status = QAUtils.STATUSES[i];
-		status_options.push([status, QAUtils.STATUS_DISPLAYS[status]]);
-	}
+	$.each(QAUtils.STATUSES, function(idx,status){
+		status_options.push([status.slug, status.name]);
+	});
 	return QAUtils.make_select("","input-medium pull-right status-update-value",status_options)
 }
 /**************************************************************************/
@@ -144,10 +143,15 @@ function create_spark_line(container,test,test_list_instances){
 //return review status span for input instance
 function create_review_status(instance){
 	var title = "";
-	if (instance.reviewed){
+	if (!instance.status.review_required){
 		title = 'title="Reviewed by '+instance.reviewed_by+' on '+instance.review_date+'"';
 	}
-	return '<span class="label label-info review-status '+instance.status+'" '+title+'>'+QAUtils.STATUS_DISPLAYS[instance.status]+'</span>';
+	var review_class = "reviewed";
+	if (instance.status.requires_review){
+		review_class = "unreviewed";
+	}
+
+	return '<span class="label label-info review-status '+review_class+'" '+title+'>'+instance.status.name+'</span>';
 }
 
 /************************************************************************/
@@ -269,8 +273,13 @@ function get_selected_test_data_elements(container,data_element){
 //set the review status for all input test rows
 function set_review_status_for_rows(rows,status){
 	var labels = rows.find(".label.review-status");
-	labels.removeClass(QAUtils.STATUSES.join(" ")).addClass(status);
-	labels.text(QAUtils.STATUS_DISPLAYS[status]);
+	labels.removeClass("unreviewed reviewed")
+	if (status.requires_review){
+		labels.addClass("unreviewed");
+	}else{
+		labels.addClass("reviewed");
+	}
+	labels.text(status.name);
 }
 
 /**************************************************************************/
@@ -286,7 +295,7 @@ function update_collection_review_status(container){
 
 	var collection_row = container.parent().prev();
 	var opt = collection_row.find("select.instance-id option:selected");
-	opt.removeClass("reviewed").removeClass("unreviewed");
+	opt.removeClass("reviewed unreviewed");
 	opt.text(opt.text().replace("*",""));
 
 	if (unreviewed.length > 0){
@@ -304,7 +313,12 @@ function update_collection_review_status(container){
 //tests and then update appropriate review statuses
 function update_statuses_for_collection(container){
 
-	var new_status = container.find(".status-update-value").val();
+	var new_status = QAUtils.STATUSES[container.find(".status-update-value").val()];
+
+	if (!new_status){
+		return;
+	}
+
 	var uris = get_selected_test_data_elements(container,"instance_uri");
 	var button = container.find(".update-review-status");
 	var button_text = button.text();
@@ -313,7 +327,7 @@ function update_statuses_for_collection(container){
 
 		button.button("loading");
 
-		QAUtils.set_test_instances_status(uris,new_status,function(results,status){
+		QAUtils.set_test_instances_status(uris,new_status.resource_uri,function(results,status){
 
 			if (status === "success"){
 				set_review_status_for_rows(get_selected_test_rows(container),new_status);

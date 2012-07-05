@@ -47,28 +47,15 @@ var QAUtils = new function() {
 	this.OPTION_SEP = "&";
 
 
-    this.UNREVIEWED = "unreviewed";
-    this.APPROVED = "approved";
-    this.SCRATCH = "scratch";
-    this.REJECTED = "rejected";
-	this.RETURN_TO_SERVICE = "returntoservice";
-	this.STATUSES = [this.UNREVIEWED, this.APPROVED, this.SCRATCH, this.REJECTED, this.RETURN_TO_SERVICE];
-
-	this.STATUS_DISPLAYS = {};
-	this.STATUS_DISPLAYS[this.UNREVIEWED] = "Unreviewed";
-	this.STATUS_DISPLAYS[this.APPROVED] = "Approved";
-	this.STATUS_DISPLAYS[this.SCRATCH] = "Scratch";
-	this.STATUS_DISPLAYS[this.REJECTED] = "Rejected";
-	this.STATUS_DISPLAYS[this.RETURN_TO_SERVICE] = "Return To Service";
-
-
 	this.DUE = this.TOLERANCE;
 	this.OVERDUE = this.ACTION;
 	this.NOT_DUE = this.WITHIN_TOL;
 
     this.MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-	this.FREQUENCIES = {};  //initialized from api
+	//initialized from api
+	this.FREQUENCIES = {};
+	this.STATUSES = {};
 
 
     /***************************************************************/
@@ -494,6 +481,12 @@ var QAUtils = new function() {
 	//})
 	this.init = function(){
 		var that = this;
+
+		this.get_resources("status",function(results){
+			$.each(results.objects,function(idx,status){
+				that.STATUSES[status.slug] = status;
+			});
+		});
 
 		return this.get_resources("frequency",function(results){
 			$.each(results.objects,function(idx,freq){
