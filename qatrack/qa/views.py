@@ -163,12 +163,12 @@ class ControlChartImage(View):
             except RuntimeError as e:
                 fig.clf()
                 msg = "There was a problem generating your control chart:\n"
-                fig.text(0.1,0.9,"\n".join(textwrap.wrap(e.message,40)) , fontsize=12)
+                fig.text(0.1,0.9,"\n".join(textwrap.wrap(msg+e.message,40)) , fontsize=12)
                 canvas.print_png(response)
             except Exception as e:
                 msg = "There was a problem generating your control chart:\n"
                 fig.clf()
-                fig.text(0.1,0.9,"\n".join(textwrap.wrap(str(e),40)) , fontsize=12)
+                fig.text(0.1,0.9,"\n".join(textwrap.wrap(msg+str(e),40)) , fontsize=12)
                 canvas.print_png(response)
 
         return response
@@ -266,6 +266,7 @@ class PerformQAView(FormView):
             test_list_instance.created_by = self.request.user
             test_list_instance.modified_by = self.request.user
             test_list_instance.unit = context["unit_test_list"].unit
+
             if test_list_instance.work_completed is None:
                 test_list_instance.work_completed = timezone.now()
 
@@ -275,13 +276,18 @@ class PerformQAView(FormView):
             #all test values are validated so now add remaining fields manually and save
             for test_form in formset:
                 obj = test_form.save(commit=False)
+
                 obj.test_list_instance = test_list_instance
                 for field in self.test_list_fields_to_copy:
                     setattr(obj,field,getattr(test_list_instance,field))
+
+                obj.status = models.TestInstanceStatus.objects.default()
                 if form.fields.has_key("status"):
-                    obj.status = form["status"].value()
-                else:
-                    obj.status = models.UNREVIEWED
+
+                    status_pk = form["status"].value()
+                    if status_pk:
+                        obj.status = models.TestInstanceStatus.objects.get(pk=status_pk)
+
                 obj.save()
 
 
@@ -300,7 +306,16 @@ class PerformQAView(FormView):
     #----------------------------------------------------------------------
     def get_context_data(self, **kwargs):
         """add formset and test list to our template context"""
+
         context = super(PerformQAView, self).get_context_data(**kwargs)
+
+        if models.TestInstanceStatus.objects.default() is None:
+            messages.add_message(
+                self.request,messages.ERROR,
+                "Admin Error: There must be a default status defined before performing QA"
+            )
+            return context
+
         utla = get_object_or_404(models.UnitTestCollection,pk=self.kwargs["pk"])
 
         include_admin = self.request.user.is_staff
@@ -353,6 +368,7 @@ class UnitFrequencyListView(ListView):
         return models.UnitTestCollection.objects.filter(
             frequency__slug=self.kwargs["frequency"],
             unit__number=self.kwargs["unit_number"],
+            active=True,
         )
 
 #============================================================================
@@ -367,6 +383,7 @@ class UnitGroupedFrequencyListView(ListView):
 
         return models.UnitTestCollection.objects.filter(
             frequency__slug=self.kwargs["frequency"],
+            active=True,
         )
 
 #============================================================================
@@ -380,7 +397,7 @@ class UserBasedTestCollections(ListView):
     def get_queryset(self):
         """filter based on user groups"""
         groups = self.request.user.groups.all()
-        utlas = models.UnitTestCollection.objects.all()
+        utlas = models.UnitTestCollection.objects.filter(active=True)
         if groups.count() > 0:
             utlas = utlas.filter(assigned_to__in = [None]+list(groups))
         return utlas

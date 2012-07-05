@@ -118,14 +118,14 @@ class TestListResource(ModelResource):
         }
     #----------------------------------------------------------------------
     def dehydrate_frequencies(self,bundle):
-        return list(bundle.obj.assigned_to.values_list("frequency",flat=True).distinct())
+        return list(bundle.obj.assigned_to.values_list("frequency__slug",flat=True).distinct())
 
 #============================================================================
 class TestInstanceResource(ModelResource):
     test = tastypie.fields.ForeignKey("qatrack.qa.api.TestResource","test", full=True)
     reference = tastypie.fields.ForeignKey("qatrack.qa.api.ReferenceResource","reference", full=True,null=True)
     tolerance = tastypie.fields.ForeignKey("qatrack.qa.api.ToleranceResource","tolerance", full=True,null=True)
-
+    status = tastypie.fields.ForeignKey("qatrack.qa.api.StatusResource","status",full=True)
     unit = tastypie.fields.ForeignKey(UnitResource,"unit",full=True);
     reviewed_by = tastypie.fields.CharField()
     class Meta:
@@ -137,6 +137,8 @@ class TestInstanceResource(ModelResource):
             'test':ALL_WITH_RELATIONS,
             'work_completed':ALL,
             'id':ALL,
+            'unit':ALL_WITH_RELATIONS,
+            'status':ALL_WITH_RELATIONS,
         }
         ordering= ["work_completed"]
         authentication = BasicAuthentication()
@@ -152,29 +154,34 @@ class TestInstanceResource(ModelResource):
         if filters is None:
             filters = {}
 
-        orm_filters = super(TestInstanceResource,self).build_filters(filters)
+        orm_filters = super(TestInstanceResource,self).build_filters()
 
-        if "units" in filters:
-            orm_filters["unit__number__in"] = filters["units"].split(',')
 
-        if "from_date" in filters:
-            try:
-                orm_filters["work_completed__gte"] = timezone.datetime.datetime.strptime(filters["from_date"],"%d-%m-%Y")
-            except ValueError:
-                pass
-        if "to_date" in filters:
-            try:
-                orm_filters["work_completed__lte"] = timezone.datetime.datetime.strptime(filters["to_date"],"%d-%m-%Y")
-            except ValueError:
-                pass
+        filters_requiring_processing = (
+            ("from_date","work_completed__gte","date"),
+            ("to_date","work_completed__lte","date"),
+            ("unit","unit__number__in",None),
+            ("short_name","test__short_name__in",None),
+        )
 
-        if "review_status" in filters:
-            orm_filters["status__in"] = filters["review_status"].split(',')
+        for field,filter_string,filter_type in filters_requiring_processing:
 
-        if "short_names" in filters:
-            orm_filters["test__short_name__in"] = [x.strip() for x in filters["short_names"].split(',')]
-        #elif "test_id" in filters:
-        #    orm_filters["test__pk"] = filters["pk"]
+            value = filters.pop(field,[])
+
+            if filter_type == "date":
+                try:
+                    value = timezone.datetime.datetime.strptime(value[0],"%d-%m-%Y")
+                    value = timezone.make_aware(value)
+                except ValueError:
+                    pass
+
+            orm_filters[filter_string] = value
+
+        #non specfic list filters
+        for key in filters:
+            if key in self.Meta.filtering:
+                orm_filters["%s__in"%key] = filters.getlist(key)
+
         return orm_filters
 
     #----------------------------------------------------------------------
@@ -236,24 +243,10 @@ class FrequencyResource(ModelResource):
 
 
 #============================================================================
-class StatusResource(Resource):
+class StatusResource(ModelResource):
     """avaialable test statuses"""
-    value = tastypie.fields.CharField()
-    display = tastypie.fields.CharField()
     class Meta:
-        allowed_methods = ["get"]
-    #----------------------------------------------------------------------
-    def dehydrate_value(self,bundle):
-        return bundle.obj["value"]
-    #----------------------------------------------------------------------
-    def dehydrate_display(self,bundle):
-        return bundle.obj["display"]
-    #----------------------------------------------------------------------
-    def get_object_list(self):
-        return [{"value":x[0],"display":x[1]} for x in models.STATUS_CHOICES]
-    #----------------------------------------------------------------------
-    def obj_get_list(self,request=None,**kwargs):
-        return self.get_object_list()
+        queryset = models.TestInstanceStatus.objects.all()
 
 
 #============================================================================
@@ -367,7 +360,7 @@ class TestListInstanceResource(ModelResource):
 
     #----------------------------------------------------------------------
     def dehydrate_review_status(self,bundle):
-        reviewed = bundle.obj.testinstance_set.exclude(status=models.UNREVIEWED).count()
+        reviewed = bundle.obj.testinstance_set.exclude(status__requires_review=True).count()
         total = bundle.obj.testinstance_set.count()
         if total == reviewed:
             #ugly

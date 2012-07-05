@@ -47,28 +47,15 @@ var QAUtils = new function() {
 	this.OPTION_SEP = "&";
 
 
-    this.UNREVIEWED = "unreviewed";
-    this.APPROVED = "approved";
-    this.SCRATCH = "scratch";
-    this.REJECTED = "rejected";
-	this.RETURN_TO_SERVICE = "returntoservice";
-	this.STATUSES = [this.UNREVIEWED, this.APPROVED, this.SCRATCH, this.REJECTED, this.RETURN_TO_SERVICE];
-
-	this.STATUS_DISPLAYS = {};
-	this.STATUS_DISPLAYS[this.UNREVIEWED] = "Unreviewed";
-	this.STATUS_DISPLAYS[this.APPROVED] = "Approved";
-	this.STATUS_DISPLAYS[this.SCRATCH] = "Scratch";
-	this.STATUS_DISPLAYS[this.REJECTED] = "Rejected";
-	this.STATUS_DISPLAYS[this.RETURN_TO_SERVICE] = "Return To Service";
-
-
 	this.DUE = this.TOLERANCE;
 	this.OVERDUE = this.ACTION;
 	this.NOT_DUE = this.WITHIN_TOL;
 
     this.MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-	this.FREQUENCIES = {};  //initialized from api
+	//initialized from api
+	this.FREQUENCIES = {};
+	this.STATUSES = {};
 
 
     /***************************************************************/
@@ -336,15 +323,14 @@ var QAUtils = new function() {
 	};
 
 	this.options_from_url_hash = function(hash){
-		var options = {};
+		var options = [];
 		if (hash[0] === "#"){
 			hash = hash.substring(1,hash.length);
 		}
 		var that = this;
-
 		$.each(hash.split(this.OPTION_SEP),function(i,elem){
 			var k_v = elem.split(that.OPTION_DELIM);
-			options[k_v[0]] = k_v[1];
+			options.push([k_v[0],k_v[1]]);
 		});
 		return options;
 	};
@@ -352,7 +338,7 @@ var QAUtils = new function() {
 
 	this.unit_test_chart_url = function(unit,test){
 		var unit_option = 'unit'+this.OPTION_DELIM+unit.number;
-		var test_option = 'test'+this.OPTION_DELIM+test.short_name;
+		var test_option = 'short_name'+this.OPTION_DELIM+test.short_name;
 		return this.CHARTS_URL+'#'+[unit_option,test_option].join(this.OPTION_SEP);
 	};
 	this.unit_test_chart_link = function(unit,test,text,title){
@@ -495,6 +481,12 @@ var QAUtils = new function() {
 	//})
 	this.init = function(){
 		var that = this;
+
+		this.get_resources("status",function(results){
+			$.each(results.objects,function(idx,status){
+				that.STATUSES[status.slug] = status;
+			});
+		});
 
 		return this.get_resources("frequency",function(results){
 			$.each(results.objects,function(idx,freq){
