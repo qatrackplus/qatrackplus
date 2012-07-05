@@ -114,7 +114,10 @@ class StatusManager(models.Manager):
     #----------------------------------------------------------------------
     def default(self):
         """return the default TestInstanceStatus"""
-        return self.get_query_set().get(is_default=True)
+        try:
+            return self.get_query_set().get(is_default=True)
+        except TestInstanceStatus.DoesNotExist:
+            return
 
 class TestInstanceStatus(models.Model):
     """Configurable statuses for QA Tests"""
@@ -159,14 +162,13 @@ class TestInstanceStatus(models.Model):
     #----------------------------------------------------------------------
     def save(self, *args, **kwargs):
         """set status to unreviewed if not previously set"""
-        try:
-            cur_default = TestInstanceStatus.objects.default()
-            if self.is_default is True:
-                cur_default.is_default = False
-                cur_default.save()
-                self.is_default = True
-        except self.DoesNotExist:
+
+        cur_default = TestInstanceStatus.objects.default()
+        if cur_default is None:
             self.is_default = True
+        elif self.is_default:
+            cur_default.is_default = False
+            cur_default.save()
 
         super(TestInstanceStatus,self).save(*args,**kwargs)
 

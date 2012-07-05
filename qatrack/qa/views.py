@@ -300,7 +300,16 @@ class PerformQAView(FormView):
     #----------------------------------------------------------------------
     def get_context_data(self, **kwargs):
         """add formset and test list to our template context"""
+
         context = super(PerformQAView, self).get_context_data(**kwargs)
+
+        if models.TestInstanceStatus.objects.default() is None:
+            messages.add_message(
+                self.request,messages.ERROR,
+                "Admin Error: There must be a default status defined before performing QA"
+            )
+            return context
+
         utla = get_object_or_404(models.UnitTestCollection,pk=self.kwargs["pk"])
 
         include_admin = self.request.user.is_staff
