@@ -279,10 +279,14 @@ class PerformQAView(FormView):
                 obj.test_list_instance = test_list_instance
                 for field in self.test_list_fields_to_copy:
                     setattr(obj,field,getattr(test_list_instance,field))
+
+                obj.status = models.TestInstanceStatus.objects.default()
                 if form.fields.has_key("status"):
-                    obj.status = models.TestInstanceStatus.objects.get(pk=form["status"].value())
-                else:
-                    obj.status = models.TestInstanceStatus.objects.default()
+
+                    status_pk = form["status"].value()
+                    if status_pk:
+                        obj.status = models.TestInstanceStatus.objects.get(pk=status_pk)
+
                 obj.save()
 
             #let user know request succeeded and return to unit list
