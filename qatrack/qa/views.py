@@ -347,6 +347,7 @@ class UnitFrequencyListView(ListView):
         return models.UnitTestCollection.objects.filter(
             frequency__slug=self.kwargs["frequency"],
             unit__number=self.kwargs["unit_number"],
+            active=True,
         )
 
 #============================================================================
@@ -361,6 +362,7 @@ class UnitGroupedFrequencyListView(ListView):
 
         return models.UnitTestCollection.objects.filter(
             frequency__slug=self.kwargs["frequency"],
+            active=True,
         )
 
 #============================================================================
@@ -374,7 +376,7 @@ class UserBasedTestCollections(ListView):
     def get_queryset(self):
         """filter based on user groups"""
         groups = self.request.user.groups.all()
-        utlas = models.UnitTestCollection.objects.all()
+        utlas = models.UnitTestCollection.objects.filter(active=True)
         if groups.count() > 0:
             utlas = utlas.filter(assigned_to__in = [None]+list(groups))
         return utlas
