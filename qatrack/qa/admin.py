@@ -244,6 +244,10 @@ class FrequencyAdmin(admin.ModelAdmin):
     prepopulated_fields =  {'slug': ('name',)}
     model = models.Frequency
 
+#============================================================================
+class StatusAdmin(admin.ModelAdmin):
+    prepopulated_fields =  {'slug': ('name',)}
+    model = models.TestInstanceStatus
 
 
 admin.site.register([models.Tolerance], BasicSaveUserAdmin)
@@ -255,4 +259,5 @@ admin.site.register([models.UnitTestCollection],UnitTestCollectionAdmin)
 
 admin.site.register([models.TestListCycle],TestListCycleAdmin)
 admin.site.register([models.Frequency], FrequencyAdmin)
+admin.site.register([models.TestInstanceStatus], StatusAdmin)
 admin.site.register([models.TestListInstance,models.TestInstance], admin.ModelAdmin)

@@ -266,6 +266,7 @@ class PerformQAView(FormView):
             test_list_instance.created_by = self.request.user
             test_list_instance.modified_by = self.request.user
             test_list_instance.unit = context["unit_test_list"].unit
+
             if test_list_instance.work_completed is None:
                 test_list_instance.work_completed = timezone.now()
             test_list_instance.save()
@@ -274,13 +275,18 @@ class PerformQAView(FormView):
             #all test values are validated so now add remaining fields manually and save
             for test_form in formset:
                 obj = test_form.save(commit=False)
+
                 obj.test_list_instance = test_list_instance
                 for field in self.test_list_fields_to_copy:
                     setattr(obj,field,getattr(test_list_instance,field))
+
+                obj.status = models.TestInstanceStatus.objects.default()
                 if form.fields.has_key("status"):
-                    obj.status = form["status"].value()
-                else:
-                    obj.status = models.UNREVIEWED
+
+                    status_pk = form["status"].value()
+                    if status_pk:
+                        obj.status = models.TestInstanceStatus.objects.get(pk=status_pk)
+
                 obj.save()
 
             #let user know request succeeded and return to unit list

@@ -16,7 +16,7 @@ class TestInstanceForm(forms.ModelForm):
     value = forms.FloatField(required=False, widget=forms.widgets.TextInput(attrs={"class":"qa-input"}))
     class Meta:
         model = models.TestInstance
-        exclude = ("work_completed",)
+        exclude = ("work_completed","status")
     #----------------------------------------------------------------------
     def clean(self):
         """do some custom form validation"""
@@ -35,6 +35,7 @@ class TestInstanceForm(forms.ModelForm):
             if value is None and not skipped:
                 self._errors["value"] = self.error_class(["Value required"])
                 del cleaned_data["value"]
+
         return cleaned_data
 
     #---------------------------------------------------------------------------
@@ -90,8 +91,8 @@ class TestInstanceFormset(BaseTestInstanceFormset):
 
         #we need this stuff available on the page, but don't want the user to be able to
         #modify these fields (i.e. they should be rendered as_hidden in templates
-        fieldnames = ("reference", "tolerance", "test",)
-        test_models = (models.Reference, models.Tolerance, models.Test,)
+        fieldnames = ("reference", "tolerance", "test")
+        test_models = (models.Reference, models.Tolerance, models.Test)
         objects = (membership.reference, membership.tolerance, membership.test,)
         form.set_initial_fks(fieldnames,test_models,objects)
     #----------------------------------------------------------------------
@@ -106,19 +107,24 @@ class TestInstanceFormset(BaseTestInstanceFormset):
 
         #temp store attributes so they can be restored to reset widget
         attrs = form.fields["value"].widget.attrs
-        
+
         if membership.test.is_boolean():
             form.fields["value"].widget = RadioSelect(choices=[(0,"No"),(1,"Yes")])
         elif membership.test.type == models.MULTIPLE_CHOICE:
             form.fields["value"].widget = Select(choices=[("","")]+membership.test.get_choices())
         form.fields["value"].widget.attrs.update(attrs)
-            
+
 
 
 #============================================================================
 class TestListInstanceForm(forms.ModelForm):
     """parent form for doing qa test list"""
-    status = forms.ChoiceField(choices=models.STATUS_CHOICES,required=False)
+    status = forms.ModelChoiceField(
+        queryset=models.TestInstanceStatus.objects,
+        initial=models.TestInstanceStatus.objects,
+        required=False
+    )
+
     work_completed = forms.DateTimeField(required=False)
 
     #----------------------------------------------------------------------
@@ -135,4 +141,8 @@ class TestListInstanceForm(forms.ModelForm):
         self.fields["work_completed"].initial = timezone.now()
         self.fields["work_completed"].help_text = settings.DATETIME_HELP
         self.fields["work_completed"].localize = True
+
+        #self.fields["status"].widget = Select(
+            #choices=[(s.pk,s.name) for s in models.TestInstanceStatus.objects.all().order_by("-is_default")],
+        #)
 

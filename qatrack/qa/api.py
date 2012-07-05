@@ -125,7 +125,7 @@ class TestInstanceResource(ModelResource):
     test = tastypie.fields.ForeignKey("qatrack.qa.api.TestResource","test", full=True)
     reference = tastypie.fields.ForeignKey("qatrack.qa.api.ReferenceResource","reference", full=True,null=True)
     tolerance = tastypie.fields.ForeignKey("qatrack.qa.api.ToleranceResource","tolerance", full=True,null=True)
-
+    status = tastypie.fields.ForeignKey("qatrack.qa.api.StatusResource","status",full=True)
     unit = tastypie.fields.ForeignKey(UnitResource,"unit",full=True);
     reviewed_by = tastypie.fields.CharField()
     class Meta:
@@ -138,7 +138,7 @@ class TestInstanceResource(ModelResource):
             'work_completed':ALL,
             'id':ALL,
             'unit':ALL_WITH_RELATIONS,
-            'status':ALL,
+            'status':ALL_WITH_RELATIONS,
         }
         ordering= ["work_completed"]
         authentication = BasicAuthentication()
@@ -243,24 +243,10 @@ class FrequencyResource(ModelResource):
 
 
 #============================================================================
-class StatusResource(Resource):
+class StatusResource(ModelResource):
     """avaialable test statuses"""
-    value = tastypie.fields.CharField()
-    display = tastypie.fields.CharField()
     class Meta:
-        allowed_methods = ["get"]
-    #----------------------------------------------------------------------
-    def dehydrate_value(self,bundle):
-        return bundle.obj["value"]
-    #----------------------------------------------------------------------
-    def dehydrate_display(self,bundle):
-        return bundle.obj["display"]
-    #----------------------------------------------------------------------
-    def get_object_list(self):
-        return [{"value":x[0],"display":x[1]} for x in models.STATUS_CHOICES]
-    #----------------------------------------------------------------------
-    def obj_get_list(self,request=None,**kwargs):
-        return self.get_object_list()
+        queryset = models.TestInstanceStatus.objects.all()
 
 
 #============================================================================
@@ -374,7 +360,7 @@ class TestListInstanceResource(ModelResource):
 
     #----------------------------------------------------------------------
     def dehydrate_review_status(self,bundle):
-        reviewed = bundle.obj.testinstance_set.exclude(status=models.UNREVIEWED).count()
+        reviewed = bundle.obj.testinstance_set.exclude(status__requires_review=True).count()
         total = bundle.obj.testinstance_set.count()
         if total == reviewed:
             #ugly
