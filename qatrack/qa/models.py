@@ -96,7 +96,7 @@ class FrequencyManager(models.Manager):
 class Frequency(models.Model):
     """Frequencies for performing QA tasks with configurable due dates"""
 
-    name = models.CharField(max_length=50, help_text=_("Display name for this frequency"))
+    name = models.CharField(max_length=50, unique=True, help_text=_("Display name for this frequency"))
 
     slug = models.SlugField(
         max_length=50, unique=True,
