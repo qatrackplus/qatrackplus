@@ -85,6 +85,11 @@ var QAUtils = new function() {
         var status, gen_status;
         var message;
 
+
+        if ((test_type === this.BOOLEAN) || (test_type === this.MULTIPLE_CHOICE)){
+            return this.test_multi(value, reference);
+        }
+
 		if ( !this.is_number(reference) || !tolerances.type){
             return {
                 status:this.NO_TOL,
@@ -93,10 +98,6 @@ var QAUtils = new function() {
                 message: this.NO_TOL_DISP
             };
 		}
-
-        if ((test_type === this.BOOLEAN) || (test_type === this.MULTIPLE_CHOICE)){
-            return this.test_multi(value, reference);
-        }
 
         if (tolerances.type === this.PERCENT){
             diff = this.percent_difference(value,reference);
@@ -133,6 +134,15 @@ var QAUtils = new function() {
     };
 
     this.test_multi = function(value,reference){
+		if ( !this.is_number(reference)){
+            return {
+                status:this.NO_TOL,
+                gen_status:this.NO_TOL,
+                diff:"",
+                message: this.NO_TOL_DISP
+            };
+		}
+
         var status, gen_status;
         var diff = value-reference;
         var message;
