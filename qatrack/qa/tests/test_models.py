@@ -873,7 +873,7 @@ class CycleTest(BaseQATestCase):
         )
 
     #----------------------------------------------------------------------
-    def get_instance_for_test_list(self,test_list,unit):
+    def get_instance_for_list(self,test_list,unit):
         """"""
         instance = models.TestListInstance(
             test_list=test_list,
@@ -910,12 +910,12 @@ class CycleTest(BaseQATestCase):
 
         unit = self.cycle.units.all()[0]
         test_list = self.cycle.first()
-        instance = self.get_instance_for_test_list(test_list,unit)
+        instance = self.get_instance_for_list(test_list,unit)
         self.assertEqual(instance,self.unit_test_list_assign.last_completed_instance())
     #----------------------------------------------------------------------
     def test_history(self):
-        i1 = self.get_instance_for_test_list(self.cycle.first(),self.unit)
-        i2 = self.get_instance_for_test_list(self.cycle.next_list(i1.test_list),self.unit)
+        i1 = self.get_instance_for_list(self.cycle.first(),self.unit)
+        i2 = self.get_instance_for_list(self.cycle.next_list(i1.test_list),self.unit)
         self.assertEqual(list(self.unit_test_list_assign.history()),[i1,i2])
     #----------------------------------------------------------------------
     def test_next_for_unit(self):
@@ -935,7 +935,7 @@ class CycleTest(BaseQATestCase):
             self.assertEqual(next_, expected.test_list)
 
             #now perform the test list
-            self.get_instance_for_test_list(next_,unit)
+            self.get_instance_for_list(next_,unit)
 
         #confirm that we have wrapped around to the beginning again
         next_ =  self.unit_test_list_assign.next_list()

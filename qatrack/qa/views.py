@@ -10,7 +10,6 @@ from django.utils import timezone
 from qatrack.qa import models
 from qatrack.units.models import Unit, UnitType
 from qatrack import settings
-from qatrack.qagroups.models import GroupProfile
 import forms
 import math
 import os

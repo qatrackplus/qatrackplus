@@ -154,18 +154,18 @@ class TestInlineFormset(forms.models.BaseInlineFormSet):
 
     #----------------------------------------------------------------------
     def clean(self):
-        """Make sure there are no duplicated short_name's in a TestList"""
+        """Make sure there are no duplicated slugs in a TestList"""
         super(TestInlineFormset,self).clean()
 
         if not hasattr(self,"cleaned_data"):
             #something else went wrong already
             return {}
 
-        short_names = [f.instance.test.short_name for f in self.forms[:-self.extra]]
-        duplicates = list(set([sn for sn in short_names if short_names.count(sn)>1]))
+        slugs = [f.instance.test.slug for f in self.forms[:-self.extra]]
+        duplicates = list(set([sn for sn in slug if slugs.count(sn)>1]))
         if duplicates:
             raise forms.ValidationError(
-                "The following short_names are duplicated " + ",".join(duplicates)
+                "The following macro names are duplicated " + ",".join(duplicates)
             )
 
         return self.cleaned_data
@@ -200,7 +200,7 @@ class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
 
 #============================================================================
 class TestAdmin(SaveUserMixin, admin.ModelAdmin):
-    list_display = ["name","short_name","category", "type", "set_references"]
+    list_display = ["name","slug","category", "type", "set_references"]
     list_filter = ["category","type"]
 
     #============================================================================

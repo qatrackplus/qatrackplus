@@ -343,7 +343,7 @@ class Test(models.Model):
         return tols[:2]+[val]+tols[-2:]
     #---------------------------------------------------------------------------
     def check_test_type(self,field, test_type,display):
-        """check that correct test type is set"""
+        #"""check that correct test type is set"""
         errors = []
         if field is not None and self.type != test_type:
             errors.append(_("%s value provided, but Test Type is not %s" % (display,display)))
