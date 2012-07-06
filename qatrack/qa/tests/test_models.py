@@ -9,19 +9,90 @@ from django.utils import unittest,timezone
 
 from django.contrib.auth.models import User
 from qatrack.qa import models
+from qatrack.qa import *
 from qatrack.units.models import Unit, UnitType, Modality
 
 import re
 
+#----------------------------------------------------------------------
+def create_user(is_staff=False,is_superuser=False):
+    """"""
+    u = User(username="testuser",is_staff=is_staff,is_superuser=is_superuser)
+    u.save()
+    return u
+
+#============================================================================
+class TestFrequencyManager(TestCase):
+    #----------------------------------------------------------------------
+    def test_choices(self):
+
+        intervals = (
+            ("Daily","daily",1,1,1),
+            ("Weekly","weekly",7,7,9),
+            ("Monthly","monthly",28,28,35),
+        )
+        for t,s,nom,due,overdue in intervals:
+            f = models.Frequency(
+                name=t,slug=s,
+                nominal_interval=nom, due_interval=due, overdue_interval=overdue
+            )
+            f.save()
+        self.assertEqual([(x[1],x[0]) for x in intervals], list(models.Frequency.objects.frequency_choices()))
+
+#============================================================================
+class TestFrequency(TestCase):
+    #----------------------------------------------------------------------
+    def test_nominal_delta(self):
+
+        intervals = (
+            ("Daily","daily",1,1,1),
+            ("Weekly","weekly",7,7,9),
+            ("Monthly","monthly",28,28,35),
+        )
+        for t,s,nom,due,overdue in intervals:
+            f = models.Frequency(
+                name=t,slug=s,
+                nominal_interval=nom, due_interval=due, overdue_interval=overdue
+            )
+            expected_delta = timezone.timedelta(days=nom)
+            self.assertEqual(expected_delta,f.nominal_delta())
+
+class TestStatus(TestCase):
+    #----------------------------------------------------------------------
+    def test_save_without_default(self):
+        """If there's only one status type force it to be default on save"""
+        self.assertIsNone(models.TestInstanceStatus.objects.default())
+        status = models.TestInstanceStatus(name="foo",slug="foo",is_default=False,)
+        status.save()
+        self.assertEqual(status,models.TestInstanceStatus.objects.default())
+    #----------------------------------------------------------------------
+    def test_new_default(self):
+        status = models.TestInstanceStatus(name="foo",slug="foo",is_default=True,)
+        status.save()
+
+        new_status = models.TestInstanceStatus(name="bar",slug="bar",is_default=True,)
+        new_status.save()
+
+        defaults = models.TestInstanceStatus.objects.filter(is_default=True)
+        self.assertEqual(list(defaults),[new_status])
+
+#============================================================================
+class TestReference(TestCase):
+
+    #----------------------------------------------------------------------
+    def test_invalid_value(self):
+        u = create_user()
+        r = models.Reference(
+            name="bool",type=models.BOOLEAN,value=3,
+            created_by=u, modified_by=u
+        )
+        self.assertRaises(ValidationError,r.clean_fields)
+
+
+
 #============================================================================
 class TestRefTols(TestCase):
     """make sure references/tolerance and pass/fail are operating correctly"""
-
-    fixtures = [
-        "test/units",
-        "test/categories",
-        "test/users",
-    ]
 
     #----------------------------------------------------------------------
     def test_bool(self):

@@ -2,7 +2,6 @@ from django.db import models
 from django.db.models import Q
 from django.contrib.auth.models import User, Group
 from django.utils.translation import ugettext as _
-from qatrack.units.models import Unit
 from django.core import urlresolvers
 from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
@@ -11,12 +10,14 @@ from django.dispatch import receiver
 from django.db.models.signals import pre_save,post_save, m2m_changed
 from django.db.models import signals
 from django.utils import timezone
+
 from qatrack import settings
+from qatrack.units.models import Unit
 
 import re
 
 
-#test_types
+
 BOOLEAN = "boolean"
 NUMERICAL = "numerical"
 SIMPLE = "simple"
@@ -32,8 +33,6 @@ TEST_TYPE_CHOICES = (
     (COMPOSITE, "Composite"),
 )
 
-
-
 #tolerance types
 ABSOLUTE = "absolute"
 PERCENT = "percent"
@@ -43,9 +42,11 @@ TOL_TYPE_CHOICES = (
     (PERCENT, "Percentage"),
 )
 
+#reference types
 REF_TYPE_CHOICES = (
     (NUMERICAL, "Numerical"),
-    (BOOLEAN, "Yes / No")
+    (BOOLEAN, "Yes / No"),
+    (MULTIPLE_CHOICE,"Multiple Choice"),
 )
 
 
@@ -63,6 +64,7 @@ PASS_FAIL_CHOICES = (
     (ACTION,"Action"),
     (NO_TOL,"No Tol Set"),
 )
+
 
 #due date choices
 NOT_DUE = OK
@@ -198,13 +200,16 @@ class Reference(models.Model):
     modified = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(User,editable=False,related_name="reference_modifiers")
 
+    #----------------------------------------------------------------------
+    def clean_fields(self):
+        if self.type is BOOLEAN and self.value not in (0,1):
+            raise ValidationError({"value":["Boolean values must be 0 or 1"]})
+
     #---------------------------------------------------------------------------
     def __unicode__(self):
-        """more helpful interactive display name"""
+        """more helpful display name"""
         if self.type == "yes_no":
-            if self.value == 1:
-                return self.name
-            elif self.value == 0:
+            if self.value in (0, 1):
                 return self.name
             else:
                 return "%s (Invalid Boolean)"%(self.name,)
