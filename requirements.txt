@@ -5,7 +5,6 @@ django-coverage==1.2.2
 django-debug-toolbar==0.9.4
 django-extensions==0.8
 -e git+https://github.com/peppelorum/Django-genericdropdown.git#egg=django-genericdropdown
-django-registration==0.8
 -e git+https://github.com/toastdriven/django-tastypie.git#egg=django-tastypie
 logilab-astng==0.23.1
 logilab-common==0.57.1
