@@ -180,11 +180,11 @@ def create_task_list_items():
     )
 
     for name, slug, desc, proc, ttype,calc, cat,user in task_list_items:
-        if models.Test.objects.filter(short_name=slug).count()>0:
+        if models.Test.objects.filter(slug=slug).count()>0:
             continue
         tli = models.Test(
             name=name,
-            short_name=slug,
+            slug=slug,
             description=desc,
             procedure=proc,
             task_type=ttype,
@@ -213,7 +213,7 @@ def create_memberships():
 
 
     for order, (item_name, ref_name, tol_name) in enumerate(members):
-        test = models.Test.objects.get(short_name=item_name)
+        test = models.Test.objects.get(slug=item_name)
         ref = models.Reference.objects.get(name=ref_name)
         tol = models.Tolerance.objects.get(name=tol_name)
 

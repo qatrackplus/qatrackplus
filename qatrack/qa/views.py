@@ -74,7 +74,7 @@ class ControlChartImage(View):
     #----------------------------------------------------------------------
     def get_test(self):
         """return first requested test for control chart others are ignored"""
-        return self.request.GET.get("short_names","").split(",")[0]
+        return self.request.GET.get("slugs","").split(",")[0]
     #----------------------------------------------------------------------
     def get_units(self):
         """return first unit requested, others are ignored"""
@@ -92,7 +92,7 @@ class ControlChartImage(View):
             return [], []
 
         data = models.TestInstance.objects.filter(
-            test__short_name = test,
+            test__slug = test,
             work_completed__gte = from_date,
             work_completed__lte = to_date,
             unit__number = unit,
@@ -206,7 +206,7 @@ class CompositeCalculation(JSONResponseMixin, View):
         #grab calculation procedures for all the composite tests
         self.composite_tests = models.Test.objects.filter(
             pk__in=self.composite_ids.values()
-        ).values_list("short_name", "calculation_procedure")
+        ).values_list("slug", "calculation_procedure")
 
 
         results = {}
@@ -234,11 +234,11 @@ class CompositeCalculation(JSONResponseMixin, View):
             'math':math,
         }
 
-        for short_name,info in self.values.iteritems():
+        for slug,info in self.values.iteritems():
             val = info["current_value"]
             if val is not None:
                 try:
-                    self.calculation_context[short_name] = float(val)
+                    self.calculation_context[slug] = float(val)
                 except ValueError:
                     pass
 

@@ -228,7 +228,7 @@ class BaseQATestCase(TestCase):
 
         self.test = models.Test(
             name = "name",
-            short_name="name",
+            slug="name",
             description = "desc",
             type = models.SIMPLE,
             category = self.cat,
@@ -239,7 +239,7 @@ class BaseQATestCase(TestCase):
 
         self.test2 = models.Test(
             name = "name2",
-            short_name="name2",
+            slug="name2",
             description = "desc2",
             type = models.SIMPLE,
             category = self.cat,
@@ -415,15 +415,15 @@ result = foo + bar
         self.assertRaises(ValidationError,test.clean_constant_value)
 
     #----------------------------------------------------------------------
-    def test_short_name(self):
+    def test_slug(self):
 
         invalid = ( "0 foo", "foo ", " foo" "foo bar", "foo*bar", "%foo", "foo$" )
 
         for i in invalid:
-            self.test.short_name = i
+            self.test.slug = i
             try:
                 msg = "Short name should have failed but passed: %s" % i
-                self.test.clean_short_name()
+                self.test.clean_slug()
             except ValidationError:
                 msg = ""
 
@@ -431,10 +431,10 @@ result = foo + bar
 
         valid = ("foo", "f6oo", "foo6","_foo","foo_","foo_bar",)
         for v in valid:
-            self.test.short_name = v
+            self.test.slug = v
             try:
                 msg = ""
-                self.test.clean_short_name()
+                self.test.clean_slug()
             except ValidationError:
                 msg = "Short name should have passed but failed: %s" % v
             self.assertTrue(len(msg)==0, msg=msg)
@@ -581,7 +581,7 @@ class TestTestList(BaseQATestCase):
     def test_sublist(self):
         sub_test = models.Test(
             name = "sub",
-            short_name="sub",
+            slug="sub",
             description = "desc",
             type = models.SIMPLE,
             category = self.cat,
@@ -616,7 +616,7 @@ class TestTestList(BaseQATestCase):
 
         sub_test2 = models.Test(
             name = "sub2",
-            short_name="sub2",
+            slug="sub2",
             description = "desc",
             type = models.SIMPLE,
             category = self.cat,
@@ -751,7 +751,7 @@ class TestTestList(BaseQATestCase):
         for i in range(6):
             test = models.Test(
                 name = "name2",
-                short_name="name2",
+                slug="name2",
                 description = "desc2",
                 type = models.SIMPLE,
                 category = self.cat,

@@ -272,7 +272,7 @@ class Test(models.Model):
     RESULT_RE = re.compile("^result\s*=\s*[(_0-9.a-zA-Z]+.*$",re.MULTILINE)
 
     name = models.CharField(max_length=256, help_text=_("Name for this test"))
-    short_name = models.SlugField(max_length=25, help_text=_("A short variable name for this test (to be used in composite calculations)."))
+    slug = models.SlugField(verbose_name="Macro name", max_length=25, help_text=_("A short variable name for this test (to be used in composite calculations)."))
     description = models.TextField(help_text=_("A concise description of what this test is for (optional)"), blank=True,null=True)
     procedure = models.CharField(max_length=512,help_text=_("Link to document describing how to perform this test"), blank=True, null=True)
 
@@ -389,14 +389,14 @@ class Test(models.Model):
             raise ValidationError({"choices":errors})
 
     #----------------------------------------------------------------------
-    def clean_short_name(self):
-        """make sure short_name is valid"""
+    def clean_slug(self):
+        """make sure slug is valid"""
         errors = []
-        if not self.VARIABLE_RE.match(self.short_name):
-            errors.append(_("Short names must contain only letters, numbers and underscores and start with a letter or underscore"))
+        if not self.VARIABLE_RE.match(self.slug):
+            errors.append(_("Macro names must contain only letters, numbers and underscores and start with a letter or underscore"))
 
         if errors:
-            raise ValidationError({"short_name":errors})
+            raise ValidationError({"slug":errors})
 
     #----------------------------------------------------------------------
     def clean_fields(self,exclude=None):
@@ -404,7 +404,7 @@ class Test(models.Model):
         super(Test,self).clean_fields(exclude)
         self.clean_calculation_procedure()
         self.clean_constant_value()
-        self.clean_short_name()
+        self.clean_slug()
         self.clean_choices()
     #---------------------------------------------------------------------------
     def get_choices(self):

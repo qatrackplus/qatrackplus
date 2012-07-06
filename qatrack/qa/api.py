@@ -161,7 +161,7 @@ class TestInstanceResource(ModelResource):
             ("from_date","work_completed__gte","date"),
             ("to_date","work_completed__lte","date"),
             ("unit","unit__number__in",None),
-            ("short_name","test__short_name__in",None),
+            ("slug","test__slug__in",None),
         )
 
         for field,filter_string,filter_type in filters_requiring_processing:
@@ -220,7 +220,7 @@ def serialize_testinstance(test_instance):
         }
 
     if ti.test:
-        info["test"] = ti.test.short_name
+        info["test"] = ti.test.slug
 
     if ti.unit:
         info["unit"] = ti.unit.number
@@ -232,7 +232,7 @@ def serialize_testinstance(test_instance):
         info["reviewed_by"] = ti.reviewed_by.username
 
     if ti.test:
-        info["test"] = ti.test.short_name
+        info["test"] = ti.test.slug
 
     return info
 
@@ -253,7 +253,7 @@ class StatusResource(ModelResource):
 class ValueResource(Resource):
     unit = tastypie.fields.IntegerField()
     name = tastypie.fields.CharField()
-    short_name = tastypie.fields.CharField()
+    slug = tastypie.fields.CharField()
     data = tastypie.fields.DictField()
 
     #============================================================================
@@ -262,8 +262,8 @@ class ValueResource(Resource):
         resource_name = "grouped_values"
         allowed_methods = ["get"]
     #----------------------------------------------------------------------
-    def dehydrate_short_name(self,bundle):
-        return bundle.obj["short_name"]
+    def dehydrate_slug(self,bundle):
+        return bundle.obj["slug"]
     #----------------------------------------------------------------------
     def dehydrate_name(self,bundle):
         return bundle.obj["name"]
@@ -294,19 +294,19 @@ class ValueResource(Resource):
     def get_object_list(self,request):
         """return organized values"""
         objects = TestInstanceResource().obj_get_list(request)
-        names = objects.order_by("test__name").values_list("test__short_name","test__name").distinct()
+        names = objects.order_by("test__name").values_list("test__slug","test__name").distinct()
         units = objects.order_by("unit__number").values_list("unit__number",flat=True).distinct()
         self.dispatch
         organized = []
-        for short_name,name in names:
+        for slug,name in names:
             for unit in units:
                 data = objects.filter(
-                        test__short_name=short_name,
+                        test__slug=slug,
                         unit__number = unit,
                 ).order_by("work_completed","pk")
 
                 organized.append({
-                    'short_name':short_name,
+                    'slug':slug,
                     'name':name,
                     'unit':unit,
                     'data':data,
@@ -324,7 +324,7 @@ class TestResource(ModelResource):
     class Meta:
         queryset = models.Test.objects.all()
         filtering = {
-            "short_name": ALL,
+            "slug": ALL,
             "id":ALL
         }
     #    excludes = ["values"]

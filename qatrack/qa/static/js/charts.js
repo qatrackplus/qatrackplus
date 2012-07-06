@@ -17,11 +17,11 @@ function get_checked(container){
 /*************************************************************************/
 //get all filters for data request
 function get_filters(){
-    var short_names = get_checked("#test-filter");
+    var slugs = get_checked("#test-filter");
     var units = get_checked("#unit-filter");
     var review_status = get_checked("#review-status-filter");
     return {
-        short_name: $(short_names).get(),
+        slug: $(slugs).get(),
         unit: $(units).get(),
         from_date: [$("#from-date").val()],
         to_date: [$("#to-date").val()],
@@ -34,7 +34,7 @@ function convert_to_flot_series(idx,collection){
 
     var series = [];
 
-    var create_name = function(type){return collection.short_name+'_unit'+collection.unit+"_"+type;};
+    var create_name = function(type){return collection.slug+'_unit'+collection.unit+"_"+type;};
 
     var dates = $.map(collection.data.dates,QAUtils.parse_iso8601_date);
 
@@ -232,7 +232,7 @@ function update(){
 		$("#control-chart-container img").attr("src","");
 
 		var filters = get_filters();
-		if ((filters.units === "") || (filters.short_name === "")){
+		if ((filters.units === "") || (filters.slug === "")){
 			return;
 		}
 		$("#chart-type").enable(false);
@@ -411,7 +411,7 @@ function filter_tests(){
                 ){
 
                     tests.push(test);
-                    options += '<label class="checkbox"><input type="checkbox"' + ' value="' + test.short_name + '">' + test.name + '</input></label>';
+                    options += '<label class="checkbox"><input type="checkbox"' + ' value="' + test.slug + '">' + test.name + '</input></label>';
                 }
             });
         }
@@ -440,7 +440,7 @@ function set_options_from_url(){
 		key = option[0];
 		value = option[1];
         switch(key){
-            case  "short_name" :
+            case  "slug" :
                 $("#test-filter input[value="+value+"]").attr("checked","checked");
             break;
             case "unit":

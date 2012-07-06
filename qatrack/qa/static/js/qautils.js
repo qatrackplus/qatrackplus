@@ -347,7 +347,7 @@ var QAUtils = new function() {
 
 	this.unit_test_chart_url = function(unit,test){
 		var unit_option = 'unit'+this.OPTION_DELIM+unit.number;
-		var test_option = 'short_name'+this.OPTION_DELIM+test.short_name;
+		var test_option = 'slug'+this.OPTION_DELIM+test.slug;
 		return this.CHARTS_URL+'#'+[unit_option,test_option].join(this.OPTION_SEP);
 	};
 	this.unit_test_chart_link = function(unit,test,text,title){

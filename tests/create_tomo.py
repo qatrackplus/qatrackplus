@@ -73,7 +73,7 @@ def create_task_list_items():
         else:
             tli = models.Test(
                 name = test[0],
-                short_name = test[1],
+                slug = test[1],
                 description = test[0],
                 procedure = "",
                 task_type = "numerical",
