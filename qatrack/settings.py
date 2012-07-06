@@ -162,12 +162,11 @@ INSTALLED_APPS = (
     'django.contrib.humanize',
 
     'tastypie',
-    'registration',
+
     'genericdropdown',
     #'debug_toolbar',
-    #qatrack specific
-    #'qatrack.qatrack_tags',
 
+    #qatrack specific
     'qatrack.units',
     'qatrack.qa',
     'qatrack.theme_bootstrap',
