@@ -1,6 +1,6 @@
 from django.db import models
 from django.db.models import Q
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.utils.translation import ugettext as _
 from qatrack.units.models import Unit
 from django.core import urlresolvers
@@ -12,7 +12,7 @@ from django.db.models.signals import pre_save,post_save, m2m_changed
 from django.db.models import signals
 from django.utils import timezone
 from qatrack import settings
-from qatrack.qagroups.models import GroupProfile
+
 import re
 
 
@@ -453,7 +453,7 @@ class UnitTestInfo(models.Model):
 
     active = models.BooleanField(help_text=_("Uncheck to disable this test on this unit"), default=True)
 
-    assigned_to = models.ForeignKey(GroupProfile,help_text = _("QA group that this test list should nominally be performed by"),null=True, blank=True)
+    assigned_to = models.ForeignKey(Group,help_text = _("QA group that this test list should nominally be performed by"),null=True, blank=True)
 
     #============================================================================
     class Meta:
@@ -631,7 +631,7 @@ class UnitTestCollection(models.Model):
 
     frequency = models.ForeignKey(Frequency, help_text=_("Frequency with which this test list is to be performed"))
 
-    assigned_to = models.ForeignKey(GroupProfile,help_text = _("QA group that this test list should nominally be performed by"),null=True)
+    assigned_to = models.ForeignKey(Group,help_text = _("QA group that this test list should nominally be performed by"),null=True)
     active = models.BooleanField(help_text=_("Uncheck to disable this test on this unit"), default=True)
 
     limit = Q(app_label = 'qa', model = 'testlist') | Q(app_label = 'qa', model = 'testlistcycle')
