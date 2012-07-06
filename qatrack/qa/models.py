@@ -32,6 +32,8 @@ TEST_TYPE_CHOICES = (
     (COMPOSITE, "Composite"),
 )
 
+
+
 #tolerance types
 ABSOLUTE = "absolute"
 PERCENT = "percent"

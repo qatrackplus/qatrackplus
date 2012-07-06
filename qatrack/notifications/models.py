@@ -1,20 +1,33 @@
 from django.db import models
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, User
 from django.utils.translation import ugettext as _
 
+from qatrack.qa.models import TestInstanceStatus
+
+
+#----------------------------------------------------------------------
+def users_subscribed_to_failures():
+    return User.objects.filter(
+        groups__notificationsubscription_set__notify_on_failure=True
+    ).distinct()
+
+
+TOLERANCE = 10
+ACTION = 20
+
+WARNING_LEVELS = (
+    (TOLERANCE,"Notify on Tolerance or Action"),
+    (ACTION,"Notify on Test at Action level only"),
+)
 
 #============================================================================
-#class NotificationSubscriptions(models.Model):
+class NotificationSubscription(models.Model):
 
-    #group = models.ForeignKey(Group)
+    group = models.ForeignKey(Group,unique=True)
 
-    #notification_types = models.Mul
+    warning_level = models.IntegerField(choices=WARNING_LEVELS)
 
-    #notify_on_tolerance = models.BooleanField(
-        #help_text = _("Should this group be notified about tests at tolerance?")
-    #)
-
-    #notify_on_failure = models.BooleanField(
-        #help_text = _("Should this group be notified about failing tests?")
-    #)
+    #----------------------------------------------------------------------
+    def __unicode__(self):
+        return "<NotificationSubscription(%s)>"%self.group.name
 

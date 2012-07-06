@@ -10,9 +10,8 @@ Failing Tests
 {% for test_instance in failing_tests %}
     Test  : {{test_instance.test.name}}
     Value : {{test_instance.value}}
-    Ref.  : {{test_instance.reference.value}}
-    Tol.  : {{test_instance.tolerance.act_low}} <= {{test_instance.tolerance.tol_low}} <= {{test_instance.tolerance.tol_high}} <= {{test_instance.tolerance.act_high}}
-
+    Ref.  : {{test_instance.reference.value}}{% if test_instance.test.type == "simple" or test_instance.test.type == "composite" %}
+    Tol.  : {{test_instance.tolerance.act_low}} <= {{test_instance.tolerance.tol_low}} <= {{test_instance.tolerance.tol_high}} <= {{test_instance.tolerance.act_high}}{% endif %}
 {% endfor %}
 {% endif %}
 
