@@ -85,10 +85,6 @@ var QAUtils = new function() {
         var status, gen_status;
         var message;
 
-        if ((test_type === this.BOOLEAN) || (test_type === this.MULTIPLE_CHOICE)){
-            return this.test_multi(value, reference);
-        }
-
 		if ( !this.is_number(reference) || !tolerances.type){
             return {
                 status:this.NO_TOL,
@@ -98,6 +94,9 @@ var QAUtils = new function() {
             };
 		}
 
+        if ((test_type === this.BOOLEAN) || (test_type === this.MULTIPLE_CHOICE)){
+            return this.test_multi(value, reference);
+        }
 
         if (tolerances.type === this.PERCENT){
             diff = this.percent_difference(value,reference);
@@ -473,6 +472,17 @@ var QAUtils = new function() {
 		return l.join("");
 	};
 
+
+	this.default_exported_statuses = function(){
+		var exported = [];
+		var status;
+		for (status in this.STATUSES){
+			if (this.STATUSES[status].export_by_default){
+				exported.push(status)
+			}
+		}
+		return exported;
+	};
 
 	//call using $.when() before using QAUTils in any scripts
 	//e.g. in a script where you want to use QAUTils you would do

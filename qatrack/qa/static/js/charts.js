@@ -296,10 +296,9 @@ function setup_filters(on_complete){
         {
             container:"#review-status-filter",
             resource_name:"status",
-            display_property:"display",
-            value_property:"value",
-            check_all:false,
-            to_check:[QAUtils.APPROVED, QAUtils.UNREVIEWED]
+            display_property:"name",
+            value_property:"slug",
+            to_check:QAUtils.default_exported_statuses()
         }
 
 
@@ -319,10 +318,8 @@ function setup_filters(on_complete){
                 var value = resource[filter.value_property];
 
                 if (
-                    (filter.to_check.length >= 0) && (
-                        ($.inArray(value,filter.to_check)>=0) ||
-                        (filter.to_check[0] === "all")
-                    )
+                    (filter.to_check.length >= 0) &&
+					(($.inArray(value,filter.to_check)>=0) || (filter.to_check[0] === "all"))
                 ){
                     checked = 'checked="checked"';
                 }else{
@@ -427,8 +424,17 @@ function filter_tests(){
 //set initial options based on url hash
 function set_options_from_url(){
     var options = QAUtils.options_from_url_hash(document.location.hash);
-	$("#test-filter input").attr("checked",false);
-	$("#unit-filter input").attr("checked",false);
+	var f,o;
+	var clear_if_option_exists = ["unit", "test"];
+	for (f in clear_if_option_exists){
+		for (o in options){
+			if (clear_if_option_exists[f] == options[o][0]){
+				$("#"+clear_if_option_exists[f]+"-filter input").attr("checked",false);
+				break;
+			}
+		}
+	}
+
 	var key,value;
     $.each(options,function(idx,option){
 		key = option[0];
