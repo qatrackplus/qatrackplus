@@ -1,6 +1,11 @@
 # Django settings for qatrack project.
 import django.conf.global_settings as DEFAULT_SETTINGS
 import os
+try:
+    import coverage
+    coverage.start()
+except ImportError:
+    pass
 
 DEBUG = False
 TEMPLATE_DEBUG = False

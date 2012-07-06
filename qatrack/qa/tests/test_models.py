@@ -1,5 +1,3 @@
-import coverage
-coverage.start()
 from django.db import IntegrityError
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
