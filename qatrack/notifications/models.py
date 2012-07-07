@@ -1,8 +1,9 @@
+# this import has to be here so that the signal handlers get registered
+import handlers
+
 from django.db import models
 from django.contrib.auth.models import Group, User
 from django.utils.translation import ugettext as _
-
-from qatrack.qa.models import TestInstanceStatus
 
 
 #----------------------------------------------------------------------
