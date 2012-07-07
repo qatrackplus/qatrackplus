@@ -1,0 +1,19 @@
+{% extends "site_base.html" %}
+
+{% load staticfiles %}
+{% load qa_tags %}
+
+{% block body %}
+	<div class="row-fluid">
+		<div class="span12">
+			<h2>QA Lists Assigned to Your Groups</h2>
+
+			{% if not unittestcollections %}
+				<em>No lists assigned to your groups.</em>
+			{% else %}
+				{{ unittestcollections|as_unittestcollections_table}}
+			{% endif %}
+		</div>
+	</div>
+
+{% endblock body %}

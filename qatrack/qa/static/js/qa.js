@@ -1,4 +1,4 @@
-//TODO: currently checking Skip on a boolean test marks it as passing
+"use strict";
 
 /***************************************************************/
 //Set up the values we will need to do validation on data
@@ -6,7 +6,7 @@ var validation_data = {};
 var composite_ids = {};
 
 /***************************************************************/
-//set the intitial values, tolerances & refs for all of our task list items
+//set the intitial values, tolerances & refs for all of our tests
 function initialize_qa(){
 
     $(".qa-valuerow").each(function(order){
@@ -42,18 +42,18 @@ function initialize_qa(){
 
 
     //store ids and names for all composite tests
-    $('.qa-tasktype[value="composite"]').each(function(){
+    $('.qa-testtype[value="composite"]').each(function(){
         var row = $(this).parents(".qa-valuerow");
-        var item_id = row.find('input[name$="task_list_item"]').val();
+        var test_id = row.find('input[name$="-test"]').val();
         var name = row.find('.qa-contextname').val();
-        composite_ids[name] = item_id;
+        composite_ids[name] = test_id;
     });
 }
 /***************************************************************/
 //Perform Ajax calls to calculate all composite values
 function calculate_composites(){
 
-    var composites = $('.qa-tasktype[value="composite"]');
+    var composites = $('.qa-testtype[value="composite"]');
     if (composites.length <= 0){
         return;
     }
@@ -79,21 +79,24 @@ function calculate_composites(){
 
 /***************************************************************/
 //Check the tolerances for a single input and format appropriately
-function check_item_status(input_element){
+function check_test_status(input_element){
 
     var parent = input_element.parents("tr:first");
     var name = parent.find(".qa-contextname").val();
-    var is_bool = parent.find(".qa-tasktype").val() === "boolean";
+    var test_type = parent.find(".qa-testtype").val();
     var qastatus = parent.find(".qa-status");
     var val = get_value_for_row(input_element.parents(".qa-valuerow"));
 
-    //update the current value of the item that just changed and check tolerances
+    //update the current value of the test that just changed and check tolerances
     validation_data[name].current_value = val;
 
     //remove any previous formatting
-    qastatus.removeClass("btn-danger btn-warning btn-success");
+    qastatus.removeClass("btn-danger btn-warning btn-success btn-info");
     qastatus.text("Not Done");
 
+    if (parent.find(".qa-skip input").is(":checked")){
+        return;
+    }
 
     //ensure numerical value and highlight input element appropriately
     set_valid_input(input_element);
@@ -107,7 +110,8 @@ function check_item_status(input_element){
     //check the value versus the reference
     var tolerances = validation_data[name].tolerances;
     var reference = validation_data[name].reference;
-    var result = QAUtils.test_tolerance(val,reference.value,tolerances, is_bool);
+
+    var result = QAUtils.test_tolerance(val,reference.value,tolerances, test_type);
 
     //update formatting with result
     qastatus.text(result.message);
@@ -115,22 +119,34 @@ function check_item_status(input_element){
         qastatus.addClass("btn-success");
     }else if(result.gen_status === QAUtils.TOLERANCE){
         qastatus.addClass("btn-warning");
-    }else{
+    }else if(result.gen_status === QAUtils.ACTION){
         qastatus.addClass("btn-danger");
+    }else{
+        qastatus.addClass("btn-info");
     }
 }
 
 /***************************************************************/
 //Take an qavaluerow and return the value of the input contained within it
 function get_value_for_row(input_row_element){
-    if ($(input_row_element).find(".qa-tasktype").val() === "boolean"){
+    var test_type = $(input_row_element).find(".qa-testtype").val();
+    var val;
+    if (test_type === QAUtils.BOOLEAN){
         if ($(input_row_element).find(":checked").length > 0){
             return parseFloat($(input_row_element).find(":checked").val());
         }else{
             return null;
         }
+    }else if (test_type === QAUtils.MULTIPLE_CHOICE){
+        val = $(input_row_element).find(":selected").val();
+        if (val !== ""){
+            return parseFloat(val);
+        }else{
+            return null;
+        }
+    
     }else {
-        var val = input_row_element.find(".qa-value input").val();
+        val = input_row_element.find(".qa-value input").val();
         if ($.trim(val) === ""){
             return "";
         }
@@ -151,7 +167,7 @@ function set_value_by_name(name, value){
     var row = $('.qa-contextname[value="'+name+'"]').parents(".qa-valuerow");
     var input = row.find(".qa-value input");
     input.val(value);
-    check_item_status(input);
+    check_test_status(input);
 }
 
 /***************************************************************/
@@ -176,8 +192,8 @@ function valid_input(input_element){
 /***************************************************************/
 //perform a full validation of all data (for example on page load after submit)
 function full_validation(){
-    $("#qa-form .qa-input").each(function(){
-        check_item_status($(this));
+    $(".qa-input").each(function(){
+        check_test_status($(this));
         calculate_composites();
     });
 }
@@ -196,8 +212,8 @@ function filter_by_category(){
 
     if (show_all){
         $(".qa-valuerow").show();
-        $(".qa-comment .qa-procedure").hide();
-        $(".qa-skip input").attr("checked",false)
+        $(".qa-comment").hide();
+        $(".qa-skip input").attr("checked",false);
         return;
     }
 
@@ -211,44 +227,84 @@ function filter_by_category(){
         to_toggle.add($(this).prevUntil(".qa-valuerow"));
 
         if ($.inArray(category,selected_categories) < 0){
-            $(this).find
+            $(this).find(".qa-skip input").attr("checked",true);
+            $(this).next().find("textarea").val("Category not performed");
             to_toggle.hide();
         }else{
-            $(this).find(".qa-skip input").attr("checked",false)
+            $(this).find(".qa-skip input").attr("checked",false);
+            $(this).next().find("textarea").val("");
             to_toggle.show();
         }
     });
 };
 
+/***************************************************************/
+//set link for cycle when user changes cycle day dropdown
+function set_cycle_link(){
+    var day = $("#cycle-day option:selected").val();
+    $("#change-test-list").attr("href",window.location.pathname+"?day="+day);
+}
+
+/***************************************************************/
+function confirm_leave_page(){
+    var confirm_msg = "If you leave this page now you will lose all entered values.";
+    var inp_type;
+    var inputs = $(".qa-input");
+    var inp;
+    var inp_idx;
+
+    for (inp_idx=0; inp_idx < inputs.length; inp_idx++){
+        inp = $(inputs[inp_idx]);
+        inp_type = inp.attr("type")
+        if ((inp_type === "radio") && inp.is(":checked")){
+            return confirm_msg;
+        }else if((inp_type === "text") && (inp.val() !== "")){
+            return confirm_msg;
+        }else if((inp_type !== "radio") && (inp_type !== "text")){
+            return "Unknown input type";
+        }
+    }
+}
 /****************************************************************/
 $(document).ready(function(){
 
     initialize_qa();
 
-    //hide all procedures and comments initially
-    $(".qa-procedure, .qa-comment").hide();
+    //hide all  comments initially
+    $(".qa-comment").hide();
 
     //set tab index
-    $("input:text, input:radio").each(function(i,e){ $(e).attr("tabindex", i) });
-
-    //show procedures when clicked
-    $(".qa-showproc a").click(function(){
-        $(this).parent().parent().next().slideToggle(1200);
-    });
+    $(".qa-input").each(function(i,e){ $(e).attr("tabindex", i) });
 
     //show comment when clicked
     $(".qa-showcmt a").click(function(){
-      $(this).parent().parent().next().next().slideToggle(1200);
+      $(this).parent().parent().next().toggle(600);
     });
 
     //anytime an input changes run validation
-    $("form input").change(function(){
-        check_item_status($(this));
+    $(".qa-input").change(function(){
+        check_test_status($(this));
         calculate_composites();
     });
 
+    //only allow numerical characters on input
+    $(".qa-input").keyup(function(e){
+        //whitelist characters
+        this.value = this.value.replace(QAUtils.NUMERIC_WHITELIST_REGEX,'');
 
+        //color input if not valid
+        if (!QAUtils.NUMERIC_REGEX.test(this.value)){
+            $(this).css("background-color",QAUtils.ACT_COLOR);
+        }else{
+            $(this).css("background-color","");
+        }
+    });
+
+    //run filter routine anytime user alters the categories
     $("#category_filter").change(filter_by_category);
+
+    //update the link for user to change cycles
+    $("#cycle-day").change(set_cycle_link);
 
     //prevent form submission when user hits enter key
     $(this).on("keypress","input", function(e) {
@@ -259,7 +315,7 @@ $(document).ready(function(){
             var idx = inputs.index(this);
 
             if (idx == inputs.length - 1) {
-                inputs[0].select()
+                inputs[0].select();
             } else {
                 inputs[idx + 1].focus(); //  handles submit buttons
                 inputs[idx + 1].select();
@@ -268,8 +324,27 @@ $(document).ready(function(){
         }
     });
 
+    //make sure user actually want's to go back
+    //this is here to help mitigate the risk that a user hits back or backspace key
+    //by accident and completely hoses all the information they've entered during
+    //a qa session
+    $(window).bind("beforeunload",confirm_leave_page);
+    $("#qa-form").submit(function(){
+        $(window).unbind("beforeunload")
+    });
+
+    //automaticall unhide comment if test is being skipped
+    $(".qa-skip input").click(function(){
+        if ($(this).is(':checked')){
+            $(this).parent().parent().next().next().show(600);
+        }
+    });
+
+    $("#work-completed").datepicker();
+
     //run a full validation on page load
     full_validation();
+
 
 });
 

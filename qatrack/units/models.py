@@ -16,7 +16,10 @@ class UnitType(models.Model):
     name = models.CharField(max_length=50, help_text=_("Name for this unit type"))
     vendor = models.CharField(max_length=50, help_text=_("e.g. Elekta"))
     model = models.CharField(max_length=50, help_text=_("Optional model name for this group (e.g. Beam Modulator)"), null=True, blank=True)
-    
+
+    class Meta:
+        unique_together = [("name","model")]
+
     #---------------------------------------------------------------------------
     def __unicode__(self):
         """Display more descriptive name"""
@@ -34,16 +37,17 @@ class Modality(models.Model):
     type = models.CharField(_("Treatement modality type"), choices=type_choices, max_length=20)
     energy = models.FloatField(help_text=_("Nominal energy (in MV for photons and MeV for electrons"))
 
+    class Meta:
+        verbose_name_plural = "Modalities"
+        unique_together = [("type","energy")]
+
     #---------------------------------------------------------------------------
     def __unicode__(self):
         if self.type == "photon":
             unit, particle = "MV", "Photon"
         else:
             unit, particle = "MeV", "Electron"
-        return "<Modality(%.1f%s,%s)>" % (self.energy, unit, particle)
-
-    class Meta:
-        verbose_name_plural = "Modalities"
+        return "<Modality(%.2f%s,%s)>" % (self.energy, unit, particle)
 
 
 #============================================================================
@@ -56,6 +60,10 @@ class Unit(models.Model):
 
     number = models.PositiveIntegerField(null=False, unique=True, help_text=_("A unique number for this unit"))
     name = models.CharField(max_length=256, help_text=_("The display name for this unit"))
+    serial_number = models.CharField(max_length=256, null=True, blank=True,help_text=_("Optional serial number"))
+    location = models.CharField(max_length=256, null=True, blank=True, help_text=_("Optional location information"))
+    install_date = models.DateField(null=True, blank=True, help_text = _("Optional install date"))
+
     type = models.ForeignKey(UnitType)
 
     modalities = models.ManyToManyField(Modality)

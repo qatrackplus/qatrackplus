@@ -2,8 +2,9 @@
 import django.conf.global_settings as DEFAULT_SETTINGS
 import os
 
-DEBUG = True
-TEMPLATE_DEBUG = DEBUG
+DEBUG = False #True
+#TEMPLATE_DEBUG = DEBUG
+TEMPLATE_DEBUG = False#True
 
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
@@ -19,7 +20,7 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'db/dev.db',                      # Or path to database file if using sqlite3.
+        'NAME': 'db/default.db',                      # Or path to database file if using sqlite3.
         'USER': '',                      # Not used with sqlite3.
         'PASSWORD': '',                  # Not used with sqlite3.S
         'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
@@ -34,7 +35,7 @@ DATABASES = {
 # timezone as the operating system.
 # If running in a Windows environment this must be set to the same as your
 # system time zone.
-TIME_ZONE = 'America/Chicago'
+TIME_ZONE = 'America/Toronto'
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
@@ -48,13 +49,19 @@ USE_I18N = True
 
 # If you set this to False, Django will not format dates, numbers and
 # calendars according to the current locale
-USE_L10N = False
+USE_L10N = True
 
 # If you set this to False, Django will not use timezone-aware datetimes.
 USE_TZ = True
 
-DATETIME_FORMAT = "j N Y, P"
-DATE_FORMAT = "j N Y"
+FORMAT_MODULE_PATH = "qatrack.formats"
+
+INPUT_DATE_FORMATS = (
+    "%d-%m-%Y %H:%M", "%d/%m/%Y %H:%M",
+    "%d-%m-%y %H:%M", "%d/%m/%y %H:%M",
+)
+SIMPLE_DATE_FORMAT = "%d-%m-%Y"
+DATETIME_HELP = "Format DD-MM-YY hh:mm (hh:mm is 24h time e.g. 14:30)"
 
 #  Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
@@ -107,11 +114,21 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'qatrack.middleware.login_required.LoginRequiredMiddleware',
+    #'debug_toolbar.middleware.DebugToolbarMiddleware',
 )
+
+#for django-debug-toolbar
+INTERNAL_IPS = ('127.0.0.1',)
 
 ROOT_URLCONF = 'qatrack.urls'
 
-LOGIN_REDIRECT_URL = '/'
+LOGIN_EXEMPT_URLS = [
+    r"^accounts/",
+]
+LOGIN_REDIRECT_URL = '/qa/user_home'
+LOGIN_URL = "/accounts/login/"
+ACCOUNT_ACTIVATION_DAYS = 7
 
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'qatrack.wsgi.application'
@@ -121,16 +138,18 @@ TEMPLATE_DIRS = (
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
     os.path.join(PROJECT_ROOT,"templates"),
+    "genericdropdown/templates",
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = list(DEFAULT_SETTINGS.TEMPLATE_CONTEXT_PROCESSORS)
 TEMPLATE_CONTEXT_PROCESSORS += [
-    "context_processors.site",
+    "qatrack.context_processors.site",
 ]
 
 #you can add more fixture
 FIXTURE_DIRS = (
     'fixtures/',
+    'fixtures/test/'
 )
 
 INSTALLED_APPS = (
@@ -143,12 +162,25 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.humanize',
 
-    #qatrack specific
-    'qatrack.units',
-    'qatrack.qa',
+    'tastypie',
     'registration',
-    'pinax_theme_bootstrap',
+    'genericdropdown',
+    #'debug_toolbar',
+    #qatrack specific
+    #'qatrack.qatrack_tags',
+
+    'qatrack.units',
+    'qatrack.qagroups',
+    'qatrack.qa',
+    'qatrack.theme_bootstrap',
+    'qatrack.data_tables',
 )
+
+EMAIL_HOST = "" #e.g. 'smtp.gmail.com'
+EMAIL_HOST_USER = '' # e.g. "randle.taylor@gmail.com"
+EMAIL_HOST_PASSWORD = 'your_password_here'
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to

@@ -1,0 +1,79 @@
+{% load staticfiles %}
+{% load qa_tags %}
+{% if not unittestcollections %}
+<table class="table table-bordered table-striped table-condensed">
+	<tbody><tr><td><em>No test lists to display</em></td></tr></tbody>
+</table>
+{% else %}
+
+<table class="table table-bordered table-striped table-condensed {% if filter_table %}test-collection-table{% endif %} {{table_type}}-table">
+
+	<thead>
+		{% include "unittestcollections_table_headers.html"%}
+		{% if filter_table %}
+			{% include "unittestcollections_table_headers.html"%}
+		{% endif %}
+	</thead>
+	<tbody>
+		{% for utc in unittestcollections %}
+
+			{# display all individual test lists #}
+			<tr class="{% cycle 'odd' 'even' %} has-due-date" {{utc|as_data_attributes}}>
+				<td>
+					<a class="nav-list" href="{% url qa_by_frequency_unit utc.frequency utc.unit.number %}" title="Perform {{frequency}} QA for {{utc.unit.name}}">
+						{{utc.unit.name}}
+					</a>
+				</td>
+				<td>{{utc.frequency|title}}</td>
+				<td>{{utc.tests_object.name|title}}</td>
+				{% with utc.last_completed_instance as last_completed %}
+					{% if  last_completed %}
+						<td>{{last_completed.work_completed}}</td>
+						<td>{{utc|as_due_date}}</td>
+						<td class="pass_fail_status">
+							{{utc.last_completed_instance|as_pass_fail_status}}
+						</td>
+					{% else %}
+						<td>New List</td>
+						<td>New List</td>
+						<td>New List</td>
+					{% endif %}
+				{% endwith %}
+				{% if table_type = "review" %}
+					<td class="review_status">
+						{{utc|as_unreviewed_count}}
+					</td>
+
+					<td class="history">
+						<select class="pull-right input-medium instance-id">
+							<option value="hide">Hidden</option>
+							{% for h in utc.history %}
+
+								{% if h.unreviewed_instances.count %}
+									<option data-test_list_id="{{h.test_list.pk}}" value="{{h.pk}}" class="unreviewed">* {{h.work_completed}} *</option>
+								{% else %}
+									<option data-test_list_id="{{h.test_list.pk}}" value="{{h.pk}}" class="reviewed">{{h.work_completed}}</option>
+								{% endif %}
+
+							{% endfor %}
+						</select>
+					</td>
+
+				{% else %}
+					<td>{{utc.assigned_to.group.name}}</td>
+					<td><a href="{%url perform_qa utc.pk%}?day=next">Perform</a></td>
+				{% endif %}
+		   </tr>
+		{% endfor %}
+	</tbody>
+	<tfoot>
+		{% include "unittestcollections_table_headers.html"%}
+	</tfoot>
+	{% if table_type = "review" %}
+		<script src="{% static "js/jquery.flot.min.js" %}"></script>
+		<script src="{% static "js/jquery.flot.resize.js" %}"></script>
+		<script src="{% static "js/jquery.flot.fillbetween.js" %}"></script>
+		<script src="{% static "js/jquery.sparkline.min.js" %}"></script>
+	{% endif %}
+</table>
+{% endif %}

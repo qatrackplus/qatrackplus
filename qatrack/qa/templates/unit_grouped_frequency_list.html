@@ -1,0 +1,17 @@
+{% extends "site_base.html" %}
+{% load staticfiles %}
+{% load qa_tags %}
+
+{% block body %}
+    <h2>{{unittestcollections.0.frequency|title}} QA Test Lists</h2>
+	{% if not unittestcollections %}
+		<em>There are no test lists defined with this frequency</em>
+	{% else %}
+		{% regroup unittestcollections by unit.type as unit_type_list %}
+
+		{% for unit_type in unit_type_list %}
+			<h3>{{unit_type.grouper.name }}</h3>
+			{{unit_type.list|as_unittestcollections_table}}
+		{% endfor %}
+	{% endif %}
+{% endblock body %}

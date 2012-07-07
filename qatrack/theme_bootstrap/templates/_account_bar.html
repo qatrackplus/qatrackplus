@@ -1,0 +1,27 @@
+<ul class="nav pull-right">
+    {% if user.is_authenticated %}
+        <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                {% if user.is_superuser %}
+                    Administrators ::
+                {% elif user.groups.count > 0 %}
+                    {{user.groups.all.0.name}} ::
+                {% endif %}
+                <span id="username">{{ user }}</span>
+                <b class="caret"></b>
+            </a>
+            <ul class="dropdown-menu">
+                {% comment %}
+                <li><a href="{% url acct_email %}"><i class="icon-user"></i> Account</a></li>
+                {% endcomment %}
+                {% if user.is_staff %}
+                    <li><a href="{% url admin:index %}"><i class="icon-cog"></i> Admin</a></li>
+                {% endif %}
+                <li class="divider"></li>
+                <li><a href="{% url auth_logout %}"><i class="icon-off"></i> Log out</a></li>
+            </ul>
+        </li>
+    {% else %}
+        <li><a href="{% url auth_login %}">Log in</a></li>
+    {% endif %}
+</ul>
