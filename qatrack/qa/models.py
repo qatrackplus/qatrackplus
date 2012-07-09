@@ -704,7 +704,7 @@ class UnitTestCollection(models.Model):
 
             return q
         except TestListInstance.DoesNotExist:
-            return TestListInstance.objects.get_empty_query_set()
+            return None
 
     #----------------------------------------------------------------------
     def unreviewed_instances(self):
@@ -722,12 +722,12 @@ class UnitTestCollection(models.Model):
         )
 
     #----------------------------------------------------------------------
-    def history(self,num_instances=10):
+    def history(self,number=10):
         """returns the last num_instances performed for this object"""
         return reversed(TestListInstance.objects.filter(
             unit=self.unit,
             test_list__in = self.tests_object.all_lists()
-        ).order_by("-work_completed","-pk")[:num_instances])
+        ).order_by("-work_completed","-pk")[:number])
 
     #----------------------------------------------------------------------
     def next_list(self):
@@ -1038,7 +1038,7 @@ class TestListCycle(TestCollectionInterface):
         try:
             return TestListCycleMembership.objects.get(cycle=self, order=0).test_list
         except TestListCycleMembership.DoesNotExist:
-            return TestList.objects.get_empty_query_set()
+            return None
 
     #----------------------------------------------------------------------
     def all_lists(self):
@@ -1063,7 +1063,7 @@ class TestListCycle(TestCollectionInterface):
             membership = self.testlistcyclemembership_set.get(order=day)
             return membership.test_list
         except TestListCycleMembership.DoesNotExist:
-            return TestList.objects.get_empty_query_set()
+            return None
     #----------------------------------------------------------------------
     def next_list(self, test_list):
         """return list folling input list in cycle order"""
