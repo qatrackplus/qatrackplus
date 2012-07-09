@@ -111,7 +111,7 @@ class Frequency(models.Model):
         """return datetime delta for nominal interval"""
         if self.due_interval is not None:
             return timezone.timedelta(days=self.due_interval)
-        
+
     #----------------------------------------------------------------------
     def __unicode__(self):
         return "<Frequency(%s)>" % (self.name)
@@ -448,7 +448,7 @@ class UnitTestInfo(models.Model):
                 raise ValidationError(msg)
 
         if self.test.type == BOOLEAN:
-            
+
             if self.reference is not None and self.reference.value not in (0., 1.):
                 msg = _("Test type is BOOLEAN but reference value is not 0 or 1")
                 raise ValidationError(msg)
@@ -573,7 +573,7 @@ class TestList(TestCollectionInterface):
         urls = [(info.unit.name, url+test_filter+"&"+ unit_filter%info.unit.pk) for info in unit_assignments]
         link = '<a href="%s">%s</a>'
         links = [link % (url,name) for name,url in urls]
-        
+
         if links:
             return ", ".join(links)
         else:
@@ -643,7 +643,7 @@ class UnitTestCollection(models.Model):
 
         if hasattr(self.tests_object, "test_lists",):
             #collection of test lists (e.g. a cycle)
-            all_lists = self.tests_object.test_lists.all()            
+            all_lists = self.tests_object.test_lists.all()
         else:
             #bare test_list
             all_lists = [self.tests_object]
@@ -651,7 +651,6 @@ class UnitTestCollection(models.Model):
         list_due_dates = []
 
         for test_list in all_lists:
-
             unit_test_assignments = UnitTestInfo.objects.filter(
                 unit=self.unit,
                 test__in = test_list.all_tests()
@@ -788,13 +787,15 @@ def update_unit_test_assignments(test_list):
 
     parent_pks =[test_list.pk]
     if hasattr(test_list, "testlist_set"):
+
         parents = test_list.testlist_set.all()
+
         if parents.count() > 0:
             parent_pks = parents.values_list("pk",flat=True)
 
     utlas = UnitTestCollection.objects.filter(
         object_id__in= parent_pks,
-        content_type = ContentType.objects.get(app_label="qa",model="testlist"),
+        content_type = ContentType.objects.get_for_model(test_list),
     )
 
     all_tests = test_list.all_tests()
