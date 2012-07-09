@@ -75,7 +75,7 @@ class TestInstanceFormset(BaseTestInstanceFormset):
             self.set_constant_values(f,info)
 
             #paste on history...
-            f.history = test.history_for_unit(unit.number)
+            f.history = info.history()
 
     #----------------------------------------------------------------------
     def disable_read_only_fields(self,form,membership):

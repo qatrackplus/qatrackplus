@@ -106,6 +106,12 @@ class Frequency(models.Model):
         """return datetime delta for nominal interval"""
         if self.nominal_interval is not None:
             return timezone.timedelta(days=self.nominal_interval)
+    #---------------------------------------------------------------------------
+    def due_delta(self):
+        """return datetime delta for nominal interval"""
+        if self.due_interval is not None:
+            return timezone.timedelta(days=self.due_interval)
+        
     #----------------------------------------------------------------------
     def __unicode__(self):
         return "<Frequency(%s)>" % (self.name)
@@ -319,28 +325,6 @@ class Test(models.Model):
         """Return whether or not this is a boolean test"""
         return self.type == BOOLEAN
 
-    #----------------------------------------------------------------------
-    def ref_tol_for_unit(self,unit):
-        """return tuple of (act_low, tol_low, ref, tol_high, act_high)
-        where the act_*, tol_* and ref are the current tolerances and references
-        for this (test,unit) pair
-        """
-
-        unit_info = UnitTestInfo.objects.get(unit=unit,test=self)
-        tol = unit_info.tolerance
-        ref = unit_info.reference
-
-        if tol:
-            tols = [tol.act_low, tol.tol_low, tol.tol_high, tol.act_high]
-        else:
-            tols = [None]*4
-
-        if ref:
-            val = ref.value
-        else:
-            val = None
-
-        return tols[:2]+[val]+tols[-2:]
     #---------------------------------------------------------------------------
     def check_test_type(self,field, test_type,display):
         #"""check that correct test type is set"""
@@ -359,7 +343,7 @@ class Test(models.Model):
             return
 
         errors = self.check_test_type(self.calculation_procedure,COMPOSITE,"Composite")
-
+        self.calculation_procedure = str(self.calculation_procedure)
         if not self.RESULT_RE.findall(self.calculation_procedure):
             errors.append(_('Snippet must contain a result line (e.g. result = my_var/another_var*2)'))
 
@@ -380,11 +364,11 @@ class Test(models.Model):
         errors = self.check_test_type(self.choices,MULTIPLE_CHOICE,"Multiple Choice")
         if self.type is not MULTIPLE_CHOICE:
             return
-        choices = self.choices.split(",")
+        choices = [x.strip() for x in self.choices.split(",") if x.strip()]
         if len(choices) <= 1:
             errors.append("You must give more than 1 choice for a multiple choice test")
         else:
-            self.choices = ",".join([x.strip() for x in choices])
+            self.choices = ",".join(choices)
         if errors:
             raise ValidationError({"choices":errors})
 
@@ -412,17 +396,6 @@ class Test(models.Model):
         if self.type == MULTIPLE_CHOICE:
             cs = self.choices.split(",")
             return zip(range(len(cs)),cs)
-    #----------------------------------------------------------------------
-    def history_for_unit(self,unit,number=5):
-        """return last 'number' of instances for this test performed on input unit
-        list is ordered in ascending dates
-        """
-        if isinstance(unit,Unit):
-            unit_number = unit.number
-        else:
-            unit_number = unit
-        hist = self.testinstance_set.filter(unit__number=unit_number).order_by("-work_completed","-pk")
-        return [(x.work_completed,x.value, x.pass_fail, x.status) for x in reversed(hist[:number])]
 
     #----------------------------------------------------------------------
     def __unicode__(self):
@@ -474,14 +447,15 @@ class UnitTestInfo(models.Model):
                 msg = _("Percentage based tolerances can not be used with reference value of zero (0)")
                 raise ValidationError(msg)
 
-        if self.reference is not None and self.test.type == BOOLEAN:
-            if self.reference.value not in (0., 1.):
+        if self.test.type == BOOLEAN:
+            
+            if self.reference is not None and self.reference.value not in (0., 1.):
                 msg = _("Test type is BOOLEAN but reference value is not 0 or 1")
                 raise ValidationError(msg)
 
-        if self.tolerance is not None and self.test.type == BOOLEAN:
-            msg = _("Please leave tolerance blank for boolean tests")
-            raise ValidationError(msg)
+            if self.tolerance is not None:
+                msg = _("Please leave tolerance blank for boolean tests")
+                raise ValidationError(msg)
     #----------------------------------------------------------------------
     def due_date(self):
         """return the due date for this unit test list assignment"""
@@ -492,8 +466,15 @@ class UnitTestInfo(models.Model):
         ).order_by("-work_completed","-pk")
 
         if last_instance:
-            return (last_instance[0].work_completed + self.frequency.nominal_delta())
+            return (last_instance[0].work_completed + self.frequency.due_delta())
 
+    #----------------------------------------------------------------------
+    def history(self,number=5):
+        """return last 'number' of instances for this test performed on input unit
+        list is ordered in ascending dates
+        """
+        hist = self.test.testinstance_set.filter(unit=self.unit).order_by("-work_completed","-pk")
+        return [(x.work_completed,x.value, x.pass_fail, x.status) for x in reversed(hist[:number])]
 
 #============================================================================
 class TestListMembership(models.Model):
@@ -592,7 +573,7 @@ class TestList(TestCollectionInterface):
         urls = [(info.unit.name, url+test_filter+"&"+ unit_filter%info.unit.pk) for info in unit_assignments]
         link = '<a href="%s">%s</a>'
         links = [link % (url,name) for name,url in urls]
-
+        
         if links:
             return ", ".join(links)
         else:
@@ -660,10 +641,12 @@ class UnitTestCollection(models.Model):
         dates for its member TestLists
         """
 
-        if not hasattr(self.tests_object, "test_lists",):
-            all_lists = [self.tests_object]
+        if hasattr(self.tests_object, "test_lists",):
+            #collection of test lists (e.g. a cycle)
+            all_lists = self.tests_object.test_lists.all()            
         else:
-            all_lists = self.tests_object.test_lists.all()
+            #bare test_list
+            all_lists = [self.tests_object]
 
         list_due_dates = []
 

@@ -1,6 +1,8 @@
 from django.db import models
 from django.utils.translation import ugettext as _
 
+PHOTON = "photon"
+ELECTRON = "electron"
 
 #==========================================================================
 class UnitType(models.Model):
@@ -33,7 +35,7 @@ class Modality(models.Model):
 
     """
 
-    type_choices = (("photon", "Photon"), ("electron", "Electron"),)
+    type_choices = ((PHOTON, "Photon"), (ELECTRON, "Electron"),)
     type = models.CharField(_("Treatement modality type"), choices=type_choices, max_length=20)
     energy = models.FloatField(help_text=_("Nominal energy (in MV for photons and MeV for electrons"))
 
