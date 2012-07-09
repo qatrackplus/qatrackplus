@@ -144,7 +144,7 @@ class TestInstanceStatus(models.Model):
     )
 
     requires_review = models.BooleanField(
-        default=False,
+        default=True,
         help_text=_("Check to indicate that Test Instances with this status require further review"),
     )
     requires_comment =  models.BooleanField(
@@ -668,6 +668,7 @@ class UnitTestCollection(models.Model):
     #----------------------------------------------------------------------
     def due_status(self):
         last_done = self.last_done_date()
+
         if last_done is None:
             return NOT_DUE
 
@@ -703,7 +704,7 @@ class UnitTestCollection(models.Model):
 
             return q
         except TestListInstance.DoesNotExist:
-            return None
+            return TestListInstance.objects.get_empty_query_set()
 
     #----------------------------------------------------------------------
     def unreviewed_instances(self):
@@ -1037,37 +1038,24 @@ class TestListCycle(TestCollectionInterface):
         try:
             return TestListCycleMembership.objects.get(cycle=self, order=0).test_list
         except TestListCycleMembership.DoesNotExist:
-            return None
+            return TestList.objects.get_empty_query_set()
 
-    #----------------------------------------------------------------------
-    def membership_by_order(self,order):
-        """return membership for unit with given order"""
-        try:
-            return TestListCycleMembership.objects.get(cycle=self, order=order)
-        except TestListCycleMembership.DoesNotExist:
-            return None
     #----------------------------------------------------------------------
     def all_lists(self):
         """return queryset for all children lists of this cycle"""
-        query = None
+        query = TestList.objects.get_empty_query_set()
         for test_list in self.test_lists.all():
-            if not query:
-                query = test_list.all_lists()
-            else:
-                query |= test_list.all_lists()
-        if query:
-            return query.distinct()
+            query |= test_list.all_lists()
+
+        return query.distinct()
+
     #----------------------------------------------------------------------
     def all_tests(self):
         """return all test members of cycle members"""
-        query = None
+        query = Test.objects.get_empty_query_set()
         for test_list in self.test_lists.all():
-            if not query:
-                query = test_list.all_tests()
-            else:
-                query |= test_list.all_tests()
-        if query:
-            return query.distinct()
+            query |= test_list.all_tests()
+        return query.distinct()
     #----------------------------------------------------------------------
     def get_list(self,day=0):
         """get test list for given day"""
@@ -1075,7 +1063,7 @@ class TestListCycle(TestCollectionInterface):
             membership = self.testlistcyclemembership_set.get(order=day)
             return membership.test_list
         except TestListCycleMembership.DoesNotExist:
-            return None
+            return TestList.objects.get_empty_query_set()
     #----------------------------------------------------------------------
     def next_list(self, test_list):
         """return list folling input list in cycle order"""
