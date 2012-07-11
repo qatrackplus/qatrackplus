@@ -12,7 +12,6 @@
         </tr>
     {% endif %}
 {% endfor %}
-
 <tr class="control-group qa-valuerow">
     {% with ref=form.instance.reference  tol=form.instance.tolerance %}
         <input type="hidden" class="qa-reference-val" value="{{ref.value}}"/>
@@ -25,8 +24,10 @@
         <input type="hidden" class="qa-tolerance-pk" value="{{tol.pk}}"/>
 
         <input type="hidden" class="qa-contextname" value="{{form.instance.test.slug}}"/>
-
         {{form.test_list_instance.as_hidden}}
+		{{form.test.as_hidden}}
+		{{form.reference.as_hidden}}
+		{{form.tolerance.as_hidden}}
         {% with test=form.instance.test %}
             <input type="hidden" class="qa-testtype" value="{{test.type}}"/>
             <td class="qa-name qa-showproc"><a href="{{test.procedure}}" class="revealprocedure" title="Show procedure for this test" target="_blank">{{test.name}}</a></td>
