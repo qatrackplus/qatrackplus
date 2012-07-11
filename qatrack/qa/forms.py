@@ -115,13 +115,20 @@ class TestInstanceFormset(BaseTestInstanceFormset):
         form.fields["value"].widget.attrs.update(attrs)
 
 
+#============================================================================
+class TestListInstanceForm2:
+    """"""
+    #----------------------------------------------------------------------
+    class Meta:
+        model = models.TestListInstance
+
 
 #============================================================================
 class TestListInstanceForm(forms.ModelForm):
     """parent form for doing qa test list"""
     status = forms.ModelChoiceField(
         queryset=models.TestInstanceStatus.objects,
-        initial=models.TestInstanceStatus.objects,
+        initial=models.TestInstanceStatus.objects.default,
         required=False
     )
 

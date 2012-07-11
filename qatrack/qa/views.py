@@ -241,6 +241,67 @@ class CompositeCalculation(JSONResponseMixin, View):
                 except ValueError:
                     pass
 
+
+#============================================================================
+class PerformQAView2(FormView):
+    """view for users to complete a qa test list"""
+    template_name = "perform_test_list2.html"
+    context_object_name = "test_list_instance"
+    form_class = forms.TestListInstanceForm2
+
+
+    #----------------------------------------------------------------------
+    def create_new_test_list_instance(self):
+        """generate a new test list instance for the user to fill in values for"""
+        day = self.request.GET.get("day","next")
+        self.test_list_instance = models.TestListInstance(
+            test_list   = self.test_list,
+            unit        = self.unit_test_list.unit,
+            created_by  = self.request.user,
+            modified_by = self.request.user,
+        )
+        self.test_list_instance.save()
+    #----------------------------------------------------------------------
+    def add_test_instances(self):
+        """create new test instances"""
+
+        for test in self.test_list.tests():
+            unit_test_info = models.UnitTestInfo.objects.get(
+                test      = test,
+                unit      = self.unit_test_list.unit,
+                frequency = self.unit_test_list.frequency,
+            )
+
+            ti = models.TestInstance(
+                test      = test,
+                status    = models.TestInstanceStatus.objects.default(),
+                reference = unit_test_info.reference,
+                tolerance = unit_test_info.tolerance,
+                unit      = unit_test_info.unit,
+                created_by  = self.request.user,
+                modified_by = self.request.user,
+                in_progress = self.test_list_instance.in_progress,
+            )
+            ti.save()
+
+    #----------------------------------------------------------------------
+    def get(self,*args,**kwargs):
+        """perform qa"""
+
+        self.unit_test_list = get_object_or_404(models.UnitTestCollection,pk=self.kwargs["pk"])
+        self.test_list = unit_test_list.get_list(self.request.GET.get("day",None))
+        self.create_new_test_list_instance()
+        self.add_test_instances()
+
+    #----------------------------------------------------------------------
+    def get_initial(self):
+        """populate intial form data"""
+        return forms.model_to_dict(self.test_list_instance)
+    #----------------------------------------------------------------------
+    def get_success_url(self):
+        return reverse("user_home")
+
+
 #============================================================================
 class PerformQAView(FormView):
     """view for users to complete a qa test list"""
