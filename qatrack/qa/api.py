@@ -11,6 +11,8 @@ import qatrack.qa.models as models
 from qatrack.units.models import Unit,Modality, UnitType
 from tastypie.serializers import Serializer
 
+DATE_FILTER_FORMAT = "%d-%m-%Y"
+
 def csv_date(dt):
     return dateformat.format(timezone.make_naive(dt),DATETIME_FORMAT)
 
@@ -157,25 +159,28 @@ class TestInstanceResource(ModelResource):
         orm_filters = super(TestInstanceResource,self).build_filters()
 
 
+        today = timezone.timezone.now()
+        last_year = today-timezone.timezone.timedelta(days=365)
         filters_requiring_processing = (
-            ("from_date","work_completed__gte","date"),
-            ("to_date","work_completed__lte","date"),
-            ("unit","unit__number__in",None),
-            ("slug","test__slug__in",None),
+            ("from_date","work_completed__gte","date",today.strftime(DATE_FILTER_FORMAT)),
+            ("to_date","work_completed__lte","date",last_year.strftime(DATE_FILTER_FORMAT)),
+            ("unit","unit__number__in",None,[]),
+            ("slug","test__slug__in",None,[]),
         )
 
-        for field,filter_string,filter_type in filters_requiring_processing:
+        for field,filter_string,filter_type,default in filters_requiring_processing:
 
-            value = filters.pop(field,[])
+            value = filters.pop(field,default)
 
             if filter_type == "date":
                 try:
-                    value = timezone.datetime.datetime.strptime(value[0],"%d-%m-%Y")
+                    value = timezone.datetime.datetime.strptime(value[0],DATE_FILTER_FORMAT)
                     value = timezone.make_aware(value)
-                except ValueError:
+                    orm_filters[filter_string] = value
+                except (ValueError, IndexError, TypeError):
                     pass
-
-            orm_filters[filter_string] = value
+            else:
+                orm_filters[filter_string] = value
 
         #non specfic list filters
         for key in filters:

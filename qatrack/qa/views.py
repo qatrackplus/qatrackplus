@@ -29,7 +29,6 @@ try:
 except ImportError:
     CONTROL_CHART_AVAILABLE = False
 
-#TODO: Move location of qa/template.html templates (up one level)
 
 class JSONResponseMixin(object):
     """bare bones JSON response mixin taken from Django docs"""
@@ -106,16 +105,9 @@ class ControlChartImage(View):
     def get(self,request):
         return self.render_to_response({})
     #----------------------------------------------------------------------
-    def get_float_from_request(self,param,default):
+    def get_number_from_request(self,param,default,dtype=float):
         try:
-            v = float(self.request.GET.get(param,default))
-        except:
-            v = default
-        return v
-    #----------------------------------------------------------------------
-    def get_int_from_request(self,param,default):
-        try:
-            v = int(self.request.GET.get(param,default))
+            v = dtype(self.request.GET.get(param,default))
         except:
             v = default
         return v
@@ -131,16 +123,16 @@ class ControlChartImage(View):
         fig=Figure(dpi=72,facecolor="white")
         dpi = fig.get_dpi()
         fig.set_size_inches(
-            self.get_float_from_request("width",700)/dpi,
-            self.get_float_from_request("height",480)/dpi,
+            self.get_number_from_request("width",700)/dpi,
+            self.get_number_from_request("height",480)/dpi,
         )
         canvas=FigureCanvas(fig)
 
         dates,data = self.get_data()
 
-        n_baseline_subgroups = self.get_int_from_request("n_baseline_subgroups",1)
+        n_baseline_subgroups = self.get_number_from_request("n_baseline_subgroups",1,dtype=int)
 
-        subgroup_size = self.get_int_from_request("subgroup_size",2)
+        subgroup_size = self.get_number_from_request("subgroup_size",2,dtype=int)
         if subgroup_size <1 or subgroup_size >100:
             subgroup_size = 1
 
@@ -343,7 +335,7 @@ class PerformQAView(CreateView):
 
     #----------------------------------------------------------------------
     def get_context_data(self,**kwargs):
-        context = super(PerformQAView2,self).get_context_data(**kwargs)
+        context = super(PerformQAView,self).get_context_data(**kwargs)
 
         self.unit_test_list = get_object_or_404(models.UnitTestCollection,pk=self.kwargs["pk"])
         self.test_list = self.unit_test_list.get_list(self.request.GET.get("day",None))
@@ -376,7 +368,7 @@ class PerformQAView(CreateView):
         current_day = 1
         if cycle_membership:
             current_day = cycle_membership[0].order + 1
-        
+
         context["formset"] = formset
         context["include_admin"] = self.request.user.is_staff
         context['categories'] = models.Category.objects.all()

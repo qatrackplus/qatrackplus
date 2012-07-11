@@ -743,7 +743,7 @@ class UnitTestCollection(models.Model):
         """return next list to be completed from tests_object"""
         try:
             return self.tests_object.get_list(int(day))
-        except ValueError:
+        except (ValueError,TypeError):
             return self.next_list()
     #----------------------------------------------------------------------
     def name(self):
