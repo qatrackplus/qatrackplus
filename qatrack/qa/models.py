@@ -739,6 +739,13 @@ class UnitTestCollection(models.Model):
 
         return self.tests_object.next_list(last_instance.test_list)
     #----------------------------------------------------------------------
+    def get_list(self,day=None):
+        """return next list to be completed from tests_object"""
+        try:
+            return self.tests_object.get_list(int(day))
+        except (ValueError,TypeError):
+            return self.next_list()
+    #----------------------------------------------------------------------
     def name(self):
         return self.__unicode__()
 
@@ -842,9 +849,9 @@ class TestInstance(models.Model):
     """Measured instance of a :model:`Test`"""
 
     #review status
-    status = models.ForeignKey(TestInstanceStatus)
-    review_date = models.DateTimeField(null=True, blank=True)
-    reviewed_by = models.ForeignKey(User,null=True, blank=True)
+    status = models.ForeignKey(TestInstanceStatus,editable=False)
+    review_date = models.DateTimeField(null=True, blank=True,editable=False)
+    reviewed_by = models.ForeignKey(User,null=True, blank=True,editable=False)
 
     #did test pass or fail (or was skipped etc)
     pass_fail = models.CharField(max_length=20, choices=PASS_FAIL_CHOICES,editable=False)
@@ -867,11 +874,13 @@ class TestInstance(models.Model):
     #which test is being performed
     test = models.ForeignKey(Test)
 
+    work_started = models.DateTimeField(auto_now_add=True,editable=False)
+
     #when was the work actually performed
     work_completed = models.DateTimeField(default=timezone.now,
         help_text=settings.DATETIME_HELP,
     )
-
+    in_progress = models.BooleanField(default=True,editable=False)
 
     #for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)
@@ -966,7 +975,10 @@ class TestListInstance(models.Model):
     test_list = models.ForeignKey(TestList, editable=False)
     unit = models.ForeignKey(Unit,editable=False)
 
+    work_started = models.DateTimeField(auto_now_add=True,editable=False)
     work_completed = models.DateTimeField(default=timezone.now)
+
+    in_progress = models.BooleanField(default=True, editable=False)
 
     #for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)

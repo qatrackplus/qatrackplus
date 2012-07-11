@@ -238,7 +238,7 @@ function open_details(test_list_row,data_table){
 function display_test_list_details(container,instance_id,test_list_instances){
 	var idx,to_review;
 	for (idx = 0; idx < test_list_instances.length; idx+=1){
-		if (test_list_instances[idx].id === instance_id){
+		if (parseInt(test_list_instances[idx].id) === parseInt(instance_id)){
 			to_review = test_list_instances[idx];
 			break;
 		}

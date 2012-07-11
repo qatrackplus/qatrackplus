@@ -37,91 +37,46 @@ class TestInstanceForm(forms.ModelForm):
                 del cleaned_data["value"]
 
         return cleaned_data
-
     #---------------------------------------------------------------------------
-    def set_initial_fks(self,fieldnames,test_models,initial_objs):
-        """limit a group of foreign key choices to given querysets and set to initial_objs"""
+    def setup_form(self):
+        """do initialization once instance is set"""
+        if self.instance is None:
+            return 
+        self.set_value_widget()
+        self.disable_read_only_fields()
+        self.set_constant_values()
+    #---------------------------------------------------------------------------
+    def set_value_widget(self):
+        """add custom widget for boolean values (after form has been """
 
-        for fieldname,model,initial_obj in zip(fieldnames,test_models,initial_objs):
-            if not initial_obj:
-                continue
-            self.fields[fieldname].queryset = model.objects.filter(pk=initial_obj.pk)
-            self.fields[fieldname].initial = initial_obj
+        #temp store attributes so they can be restored to reset widget
+        attrs = self.fields["value"].widget.attrs
+        
+        if self.instance.test.is_boolean():
+            self.fields["value"].widget = RadioSelect(choices=[(0,"No"),(1,"Yes")])
+        elif self.instance.test.type == models.MULTIPLE_CHOICE:
+            self.fields["value"].widget = Select(choices=[("","")]+self.instance.test.get_choices())
+        self.fields["value"].widget.attrs.update(attrs)
+    #----------------------------------------------------------------------
+    def disable_read_only_fields(self):
+        """disable some fields for constant and composite tests"""
+        if self.instance.test.type in (models.CONSTANT,models.COMPOSITE,):
+            self.fields["value"].widget.attrs["readonly"] = "readonly"
+    #----------------------------------------------------------------------        
+    def set_constant_values(self):
+        """set values for constant tests"""
+        if self.instance.test.type == models.CONSTANT:
+            self.initial["value"] = self.instance.test.constant_value
 
 #=======================================================================================
 BaseTestInstanceFormset = forms.formsets.formset_factory(TestInstanceForm,extra=0)
-class TestInstanceFormset(BaseTestInstanceFormset):
-    """Formset for TestInstances"""
-
-    #----------------------------------------------------------------------
-    def __init__(self,test_list, unit,*args,**kwargs):
-        """prepopulate the reference, tolerance and tests for all forms in formset"""
-
-
-        tests = test_list.all_tests()
-
-        #since we don't know ahead of time how many tests there are going to be
-        #we have to dynamically set extra for every form. Feels a bit hacky, but I'm not sure how else to do it.
-        self.extra = len(tests)
-
-        super(TestInstanceFormset,self).__init__(*args,**kwargs)
-
-        for f, test in zip(self.forms, tests):
-            info = models.UnitTestInfo.objects.get(test=test, unit=unit)
-
-            self.set_initial_fk_data(f,info)
-            self.set_widgets(f,info)
-            self.disable_read_only_fields(f,info)
-            self.set_constant_values(f,info)
-
-            #paste on history...
-            f.history = info.history()
-
-    #----------------------------------------------------------------------
-    def disable_read_only_fields(self,form,membership):
-        """disable some fields for constant and composite tests"""
-        if membership.test.type in ("constant", "composite",):
-            for field in ("value", ):
-                form.fields[field].widget.attrs["readonly"] = "readonly"
-
-
-    #---------------------------------------------------------------------------
-    def set_initial_fk_data(self,form, membership):
-        """prepopulate our form ref, tol and test data"""
-
-        #we need this stuff available on the page, but don't want the user to be able to
-        #modify these fields (i.e. they should be rendered as_hidden in templates
-        fieldnames = ("reference", "tolerance", "test")
-        test_models = (models.Reference, models.Tolerance, models.Test)
-        objects = (membership.reference, membership.tolerance, membership.test,)
-        form.set_initial_fks(fieldnames,test_models,objects)
-    #----------------------------------------------------------------------
-    def set_constant_values(self,form,membership):
-        """set values for constant tests"""
-        if membership.test.type == "constant":
-            form.fields["value"].initial = membership.test.constant_value
-
-    #---------------------------------------------------------------------------
-    def set_widgets(self,form,membership):
-        """add custom widget for boolean values"""
-
-        #temp store attributes so they can be restored to reset widget
-        attrs = form.fields["value"].widget.attrs
-
-        if membership.test.is_boolean():
-            form.fields["value"].widget = RadioSelect(choices=[(0,"No"),(1,"Yes")])
-        elif membership.test.type == models.MULTIPLE_CHOICE:
-            form.fields["value"].widget = Select(choices=[("","")]+membership.test.get_choices())
-        form.fields["value"].widget.attrs.update(attrs)
-
-
 
 #============================================================================
 class TestListInstanceForm(forms.ModelForm):
     """parent form for doing qa test list"""
     status = forms.ModelChoiceField(
         queryset=models.TestInstanceStatus.objects,
-        initial=models.TestInstanceStatus.objects,
+        initial=models.TestInstanceStatus.objects.default,
         required=False
     )
 
@@ -142,7 +97,4 @@ class TestListInstanceForm(forms.ModelForm):
         self.fields["work_completed"].help_text = settings.DATETIME_HELP
         self.fields["work_completed"].localize = True
 
-        #self.fields["status"].widget = Select(
-            #choices=[(s.pk,s.name) for s in models.TestInstanceStatus.objects.all().order_by("-is_default")],
-        #)
 

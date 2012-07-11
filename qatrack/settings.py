@@ -2,8 +2,8 @@
 import django.conf.global_settings as DEFAULT_SETTINGS
 import os
 
-DEBUG = False
-TEMPLATE_DEBUG = False
+DEBUG = True
+TEMPLATE_DEBUG = True
 
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
@@ -125,7 +125,7 @@ ROOT_URLCONF = 'qatrack.urls'
 LOGIN_EXEMPT_URLS = [
     r"^accounts/",
 ]
-LOGIN_REDIRECT_URL = '/qa/user_home'
+LOGIN_REDIRECT_URL = '/qa/'
 LOGIN_URL = "/accounts/login/"
 ACCOUNT_ACTIVATION_DAYS = 7
 
@@ -218,7 +218,8 @@ LOGGING = {
 }
 
 #Testing settings
-TEST_RUNNER = 'django_coverage.coverage_runner.CoverageRunner'
+#TEST_RUNNER = 'django_coverage.coverage_runner.CoverageRunner'
+COVERAGE_ADDITIONAL_MODULES = ["qatrack.tests"]
 
 #local_settings contains anything that should be overridden
 #based on site specific requirements (e.g. deployment, development etc)
