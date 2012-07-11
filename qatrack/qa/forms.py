@@ -8,6 +8,7 @@ import qatrack.settings as settings
 
 import models
 
+BOOL_CHOICES = [(0,"No"),(1,"Yes")]
 
 #=======================================================================================
 class TestInstanceForm(forms.ModelForm):
@@ -41,7 +42,7 @@ class TestInstanceForm(forms.ModelForm):
     def setup_form(self):
         """do initialization once instance is set"""
         if self.instance is None:
-            return 
+            return
         self.set_value_widget()
         self.disable_read_only_fields()
         self.set_constant_values()
@@ -51,9 +52,9 @@ class TestInstanceForm(forms.ModelForm):
 
         #temp store attributes so they can be restored to reset widget
         attrs = self.fields["value"].widget.attrs
-        
+
         if self.instance.test.is_boolean():
-            self.fields["value"].widget = RadioSelect(choices=[(0,"No"),(1,"Yes")])
+            self.fields["value"].widget = RadioSelect(choices=BOOL_CHOICES)
         elif self.instance.test.type == models.MULTIPLE_CHOICE:
             self.fields["value"].widget = Select(choices=[("","")]+self.instance.test.get_choices())
         self.fields["value"].widget.attrs.update(attrs)
@@ -62,7 +63,7 @@ class TestInstanceForm(forms.ModelForm):
         """disable some fields for constant and composite tests"""
         if self.instance.test.type in (models.CONSTANT,models.COMPOSITE,):
             self.fields["value"].widget.attrs["readonly"] = "readonly"
-    #----------------------------------------------------------------------        
+    #----------------------------------------------------------------------
     def set_constant_values(self):
         """set values for constant tests"""
         if self.instance.test.type == models.CONSTANT:

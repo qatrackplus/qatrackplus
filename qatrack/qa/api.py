@@ -9,9 +9,10 @@ from tastypie.authorization import DjangoAuthorization
 from tastypie.utils import timezone
 import qatrack.qa.models as models
 from qatrack.units.models import Unit,Modality, UnitType
+from qatrack import settings
 from tastypie.serializers import Serializer
 
-DATE_FILTER_FORMAT = "%d-%m-%Y"
+
 
 def csv_date(dt):
     return dateformat.format(timezone.make_naive(dt),DATETIME_FORMAT)
@@ -162,8 +163,8 @@ class TestInstanceResource(ModelResource):
         today = timezone.timezone.now()
         last_year = today-timezone.timezone.timedelta(days=365)
         filters_requiring_processing = (
-            ("from_date","work_completed__gte","date",today.strftime(DATE_FILTER_FORMAT)),
-            ("to_date","work_completed__lte","date",last_year.strftime(DATE_FILTER_FORMAT)),
+            ("from_date","work_completed__gte","date",today.strftime(settings.SIMPLE_DATE_FORMAT)),
+            ("to_date","work_completed__lte","date",last_year.strftime(settings.SIMPLE_DATE_FORMAT)),
             ("unit","unit__number__in",None,[]),
             ("slug","test__slug__in",None,[]),
         )
@@ -174,7 +175,7 @@ class TestInstanceResource(ModelResource):
 
             if filter_type == "date":
                 try:
-                    value = timezone.datetime.datetime.strptime(value[0],DATE_FILTER_FORMAT)
+                    value = timezone.datetime.datetime.strptime(value[0],settings.SIMPLE_DATE_FORMAT)
                     value = timezone.make_aware(value)
                     orm_filters[filter_string] = value
                 except (ValueError, IndexError, TypeError):

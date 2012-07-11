@@ -73,11 +73,11 @@ class ControlChartImage(View):
     #----------------------------------------------------------------------
     def get_test(self):
         """return first requested test for control chart others are ignored"""
-        return self.request.GET.get("slugs","").split(",")[0]
+        return self.request.GET.get("slug","").split(",")[0]
     #----------------------------------------------------------------------
     def get_units(self):
         """return first unit requested, others are ignored"""
-        return self.request.GET.get("units","").split(",")[0]
+        return self.request.GET.get("unit","").split(",")[0]
     #----------------------------------------------------------------------
     def get_data(self):
         """grab data to create control chart from"""
@@ -130,7 +130,7 @@ class ControlChartImage(View):
 
         dates,data = self.get_data()
 
-        n_baseline_subgroups = self.get_number_from_request("n_baseline_subgroups",1,dtype=int)
+        n_baseline_subgroups = self.get_number_from_request("n_baseline_subgroups",2,dtype=int)
 
         subgroup_size = self.get_number_from_request("subgroup_size",2,dtype=int)
         if subgroup_size <1 or subgroup_size >100:
@@ -152,15 +152,11 @@ class ControlChartImage(View):
 
                 canvas.print_png(response)
 
-            except RuntimeError as e:
+            except (RuntimeError,OverflowError) as e:
                 fig.clf()
                 msg = "There was a problem generating your control chart:\n"
-                fig.text(0.1,0.9,"\n".join(textwrap.wrap(msg+e.message,40)) , fontsize=12)
-                canvas.print_png(response)
-            except Exception as e:
-                msg = "There was a problem generating your control chart:\n"
-                fig.clf()
-                fig.text(0.1,0.9,"\n".join(textwrap.wrap(msg+str(e),40)) , fontsize=12)
+                msg += e.message
+                fig.text(0.1,0.9,"\n".join(textwrap.wrap(msg,40)) , fontsize=12)
                 canvas.print_png(response)
 
         return response
@@ -182,14 +178,14 @@ class CompositeCalculation(JSONResponseMixin, View):
             return
 
     #----------------------------------------------------------------------
-    def post(self,request, *args, **kwargs):
+    def post(self,*args, **kwargs):
         """calculate and return all composite values
         Note we use post here because the query strings can get very long and
         we may run into browser limits with GET.
         """
         self.values = self.get_json_data("qavalues")
         if not self.values:
-            self.render_to_response({"success":False,"errors":["Invalid QA Values"]})
+            return self.render_to_response({"success":False,"errors":["Invalid QA Values"]})
 
         self.composite_ids = self.get_json_data("composite_ids")
         if not self.composite_ids:
@@ -238,7 +234,7 @@ class CompositeCalculation(JSONResponseMixin, View):
 #============================================================================
 class PerformQAView(CreateView):
     """view for users to complete a qa test list"""
-    template_name = "perform_test_list2.html"
+    template_name = "perform_test_list.html"
     form_class = forms.TestListInstanceForm
 
     TEST_LIST_TO_TEST_TRANSFER_FIELDS = (
@@ -350,6 +346,7 @@ class PerformQAView(CreateView):
                 self.request.FILES,
             )
         else:
+
             formset = TestInstanceFormset()
             for subform, (ti,hist) in zip(formset.forms,self.test_instances):
                 subform.initial = forms.model_to_dict(ti)
