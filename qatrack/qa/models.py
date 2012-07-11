@@ -849,9 +849,9 @@ class TestInstance(models.Model):
     """Measured instance of a :model:`Test`"""
 
     #review status
-    status = models.ForeignKey(TestInstanceStatus)
-    review_date = models.DateTimeField(null=True, blank=True)
-    reviewed_by = models.ForeignKey(User,null=True, blank=True)
+    status = models.ForeignKey(TestInstanceStatus,editable=False)
+    review_date = models.DateTimeField(null=True, blank=True,editable=False)
+    reviewed_by = models.ForeignKey(User,null=True, blank=True,editable=False)
 
     #did test pass or fail (or was skipped etc)
     pass_fail = models.CharField(max_length=20, choices=PASS_FAIL_CHOICES,editable=False)

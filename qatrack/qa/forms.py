@@ -116,12 +116,14 @@ class TestInstanceFormset(BaseTestInstanceFormset):
 
 
 #============================================================================
-class TestListInstanceForm2:
-    """"""
+class TestListInstanceForm2(forms.ModelForm):
     #----------------------------------------------------------------------
     class Meta:
         model = models.TestListInstance
 
+TestInstanceFormset2 = inlineformset_factory(models.TestListInstance,models.TestInstance)
+
+forms.formsets.formset_factory(TestInstanceForm,extra=0)
 
 #============================================================================
 class TestListInstanceForm(forms.ModelForm):
