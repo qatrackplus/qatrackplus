@@ -2,7 +2,7 @@ import ldap
 from qatrack import settings
 from django.contrib.auth.models import User, Group
 
-#Adapted from http://djangosnippets.org/snippets/901/
+#stripped down version of http://djangosnippets.org/snippets/901/
 class ActiveDirectoryGroupMembershipSSLBackend:
 
     #----------------------------------------------------------------------
