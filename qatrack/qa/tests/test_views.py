@@ -27,7 +27,6 @@ class TestURLS(TestCase):
     #---------------------------------------------------------------------------
     def returns_200(self,url,method="get"):
         return getattr(self.client,method)(url).status_code == 200
-
     #---------------------------------------------------------------------------
     def test_home(self):
         self.assertTrue(self.returns_200("/"))
@@ -55,7 +54,6 @@ class TestURLS(TestCase):
     #---------------------------------------------------------------------------
     def test_unit_group_frequency(self):
         self.assertTrue(self.returns_200("/qa/daily/"))
-
     #---------------------------------------------------------------------------
     def test_perform(self):
         utils.create_status()
@@ -337,7 +335,7 @@ class TestPerformQA(TestCase):
 
         self.url = reverse("perform_qa",kwargs={"pk":self.unit_test_list.pk})
         self.client.login(username="user",password="password")
-
+        self.user = User.objects.get(username="user")
     #----------------------------------------------------------------------
     def test_test_forms_present(self):
         response = self.client.get(self.url)
@@ -474,6 +472,12 @@ class TestPerformQA(TestCase):
         #new user is not staff so admin should not be included
         response = self.client.get(self.url)
         self.assertFalse(response.context["include_admin"])
+    #----------------------------------------------------------------------
+    def test_no_status(self):
+        from django.contrib import messages
+        models.TestInstanceStatus.objects.all().delete()
+        response = self.client.get(self.url)
+        self.assertTrue(len(list(response.context['messages']))==1)
 
 
 if __name__ == "__main__":

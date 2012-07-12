@@ -332,6 +332,12 @@ class PerformQAView(CreateView):
     def get_context_data(self,**kwargs):
         context = super(PerformQAView,self).get_context_data(**kwargs)
 
+        if models.TestInstanceStatus.objects.default() is None:
+            messages.error(
+                self.request,"There must be at least one Test Status defined before performing a TestList"
+            )
+            return context
+
         self.unit_test_list = get_object_or_404(models.UnitTestCollection,pk=self.kwargs["pk"])
         self.test_list = self.unit_test_list.get_list(self.request.GET.get("day",None))
         self.create_new_test_list_instance()
@@ -340,12 +346,8 @@ class PerformQAView(CreateView):
         TestInstanceFormset = self.create_formset_class()
 
         if self.request.method == "POST":
-            formset = TestInstanceFormset(
-                self.request.POST,
-                self.request.FILES,
-            )
+            formset = TestInstanceFormset(self.request.POST,self.request.FILES,)
         else:
-
             formset = TestInstanceFormset()
             for subform, (ti,hist) in zip(formset.forms,self.test_instances):
                 subform.initial = forms.model_to_dict(ti)
