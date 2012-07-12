@@ -22,10 +22,9 @@ try:
     from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
     from matplotlib.figure import Figure
     from matplotlib.dates import DateFormatter
-
     import numpy
-    import datetime
-
+    import warnings
+    warnings.filterwarnings("error",category=RuntimeWarning)
 except ImportError:
     CONTROL_CHART_AVAILABLE = False
 
@@ -61,11 +60,13 @@ class ControlChartImage(View):
 
         try:
             to_date = timezone.datetime.strptime(to_date,settings.SIMPLE_DATE_FORMAT)
+            to_date = timezone.make_aware(to_date,timezone.get_current_timezone())
         except:
-            to_date = timezone.datetime.now()
+            to_date = timezone.now()
 
         try:
             from_date = timezone.datetime.strptime(from_date,settings.SIMPLE_DATE_FORMAT)
+            from_date = timezone.make_aware(from_date,timezone.get_current_timezone())
         except:
             from_date = to_date - timezone.timedelta(days=30)
 
@@ -152,7 +153,7 @@ class ControlChartImage(View):
 
                 canvas.print_png(response)
 
-            except (RuntimeError,OverflowError) as e:
+            except (RuntimeError,OverflowError, RuntimeWarning) as e:
                 fig.clf()
                 msg = "There was a problem generating your control chart:\n"
                 msg += e.message

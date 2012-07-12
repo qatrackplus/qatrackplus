@@ -14,12 +14,17 @@ def binwidth(x, maxBins = None):
         maxBins = 500   # must be larger than minBins
 
     span = np.max(x) - np.min(x)
+
+    if span == 0:
+        return 1.
+
     numOfBins = np.linspace(minBins, maxBins, maxBins - minBins + 1)
     C =  np.zeros( len(numOfBins) )
 
     for i in np.arange(0, len(numOfBins)):
         k, edges = np.histogram(x, bins = numOfBins[i])
         C[i] = get_cost_func(k, span, numOfBins[i])
+
 
     minCindex = np.where( C == np.min(C) )[0][0]
     optBinWidth = span / numOfBins[minCindex]

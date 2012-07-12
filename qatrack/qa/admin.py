@@ -1,5 +1,3 @@
-import datetime
-
 import django.forms as forms
 import django.db
 
@@ -7,6 +5,7 @@ from django.utils.translation import ugettext as _
 from django.contrib import admin
 from django.contrib.admin.templatetags.admin_static import static
 from django.utils.safestring import mark_safe
+from django.utils import timezone
 
 import qatrack.qa.models as models
 from qatrack.units.models import Unit
@@ -27,7 +26,7 @@ class SaveUserMixin(object):
         """set user and modified date time"""
         if not obj.pk:
             obj.created_by = request.user
-            obj.created = datetime.datetime.now()
+            obj.created = timezone.now()
         obj.modified_by = request.user
         super(SaveUserMixin, self).save_model(request, obj, form, change)
 

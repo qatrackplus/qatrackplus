@@ -18,6 +18,7 @@ class TestInstanceForm(forms.ModelForm):
     class Meta:
         model = models.TestInstance
         exclude = ("work_completed","status")
+
     #----------------------------------------------------------------------
     def clean(self):
         """do some custom form validation"""
@@ -41,11 +42,10 @@ class TestInstanceForm(forms.ModelForm):
     #---------------------------------------------------------------------------
     def setup_form(self):
         """do initialization once instance is set"""
-        if self.instance is None:
-            return
-        self.set_value_widget()
-        self.disable_read_only_fields()
-        self.set_constant_values()
+        if hasattr(self.instance,"test"):
+            self.set_value_widget()
+            self.disable_read_only_fields()
+            self.set_constant_values()
     #---------------------------------------------------------------------------
     def set_value_widget(self):
         """add custom widget for boolean values (after form has been """
@@ -70,7 +70,7 @@ class TestInstanceForm(forms.ModelForm):
             self.initial["value"] = self.instance.test.constant_value
 
 #=======================================================================================
-BaseTestInstanceFormset = forms.formsets.formset_factory(TestInstanceForm,extra=0)
+BaseTestInstanceFormset = forms.formsets.formset_factory(TestInstanceForm,extra=0,can_delete=False)
 
 #============================================================================
 class TestListInstanceForm(forms.ModelForm):

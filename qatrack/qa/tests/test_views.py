@@ -1,24 +1,16 @@
-from django.db import IntegrityError
-from django.contrib.contenttypes.models import ContentType
+from django.contrib.auth.models import User, Group
 from django.core.urlresolvers import reverse
-from django.core.exceptions import ValidationError
 from django.test import TestCase
-from django.test.client import Client, RequestFactory
+from django.test.client import RequestFactory
 from django.test.utils import setup_test_environment
 from django.utils import unittest,timezone
-
-from django.contrib.auth.models import User, Group
 from qatrack.qa import models,views,forms
-from qatrack.units.models import Unit, UnitType, Modality, ELECTRON, PHOTON
 from qatrack import settings
 
 import django.forms
-
-import datetime
 import json
-import random
-import re
 import os
+import random
 import utils
 
 #====================================================================================
@@ -29,6 +21,7 @@ class TestURLS(TestCase):
     def setUp(self):
         u = utils.create_user()
         self.client.login(username="user",password="password")
+        utils.create_group()
     #---------------------------------------------------------------------------
     def returns_200(self,url,method="get"):
         return getattr(self.client,method)(url).status_code == 200
@@ -80,7 +73,7 @@ class TestControlChartImage(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
         self.old_cc_available = views.CONTROL_CHART_AVAILABLE
-        print views.CONTROL_CHART_AVAILABLE
+
         self.view = views.ControlChartImage.as_view()
         self.url = reverse("control_chart")
     #----------------------------------------------------------------------
@@ -102,6 +95,7 @@ class TestControlChartImage(TestCase):
     def test_not_enough_data(self):
         request = self.factory.get(self.url)
         response =  self.view(request)
+
         self.assertTrue(response.get("content-type"),"image/png")
     #----------------------------------------------------------------------
     def test_baseline_subgroups(self):
@@ -134,10 +128,12 @@ class TestControlChartImage(TestCase):
         test = utils.create_test()
         unit = utils.create_unit()
         status = utils.create_status()
-        yesterday = datetime.date.today()-datetime.timedelta(days=1)
-        tomorrow = yesterday+datetime.timedelta(days=2)
+        yesterday = timezone.datetime.today()-timezone.timedelta(days=1)
+        yesterday = timezone.make_aware(yesterday,timezone.get_current_timezone())
+        tomorrow = yesterday+timezone.timedelta(days=2)
 
         url = self.make_url(test.slug,unit.number,yesterday,yesterday)
+
         request = self.factory.get(url)
         response =  self.view(request)
         self.assertTrue(response.get("content-type"),"image/png")
@@ -147,12 +143,11 @@ class TestControlChartImage(TestCase):
         for n in (1,1,8,90):
             for x in range(n):
                 utils.create_test_instance(
-                    value=random.gauss(1,1),
+                    value=random.gauss(1,0.5),
                     test=test,
                     unit=unit,
                     status=status
                 )
-
 
 
             request = self.factory.get(url)
@@ -164,8 +159,9 @@ class TestControlChartImage(TestCase):
         test = utils.create_test()
         unit = utils.create_unit()
         status = utils.create_status()
-        yesterday = datetime.date.today()-datetime.timedelta(days=1)
-        tomorrow = yesterday+datetime.timedelta(days=2)
+        yesterday = timezone.datetime.today()-timezone.timedelta(days=1)
+        yesterday = timezone.make_aware(yesterday,timezone.get_current_timezone())
+        tomorrow = yesterday+timezone.timedelta(days=2)
 
         url = self.make_url(test.slug,unit.number,yesterday,yesterday)
         request = self.factory.get(url)
@@ -369,7 +365,7 @@ class TestPerformQA(TestCase):
         idx = self.tests.index(self.t_bool)
         widget = response.context["formset"].forms[idx].fields["value"].widget
 
-        self.assertTrue( isinstance(widget,django.forms.RadioSelect))
+        self.assertIsInstance(widget,django.forms.RadioSelect)
         self.assertEqual(widget.choices,forms.BOOL_CHOICES )
     #----------------------------------------------------------------------
     def test_mult_choice_widget(self):
@@ -380,35 +376,104 @@ class TestPerformQA(TestCase):
         self.assertTrue( isinstance(widget,django.forms.Select))
         self.assertEqual(widget.choices,[('',''),(0,'c1'),(1,'c2'),(2,'c3')])
     #---------------------------------------------------------------------------
-    def test_perform(self):
-        """"""
-        #work_completed:11-07-2012 00:10
-        #status:1
-        #form-TOTAL_FORMS:5
-        #form-INITIAL_FORMS:0
-        #form-MAX_NUM_FORMS:
-        #form-0-test:1
-        #form-0-reference:8
-        #form-0-tolerance:
-        #form-0-value:1
-        #form-0-comment:
-        #form-1-test:2
-        #form-1-reference:9
-        #form-1-tolerance:
-        #form-1-value:0
-        #form-1-comment:
-        #form-2-test:11
-        #form-2-reference:10
-        #form-2-tolerance:2
-        #form-2-value:99
-        #form-2-comment:
-        #form-3-test:36
-        #form-3-reference:
-        #form-3-tolerance:
-        #form-3-value:100.0
-        #form-3-comment:
-        #form-4-test:37
-        #form-4-reference:
-        #form-4-tolerance:
-        #form-4-value:20
-        #form-4-comment:        
+    def test_perform_valid(self):
+        data = {
+
+            "work_completed":"11-07-2012 00:10",
+            "status":self.status.pk,
+            "form-TOTAL_FORMS":len(self.tests),
+            "form-INITIAL_FORMS":"0",
+            "form-MAX_NUM_FORMS":"",
+        }
+
+        for test_idx, test in enumerate(self.tests):
+            data["form-%d-test" % test_idx] = test.pk
+            data["form-%d-value"%test_idx] =  1
+            data["form-%d-comment"%test_idx]= ""
+
+
+        response = self.client.post(self.url,data=data)
+
+        #user is redirected if form submitted successfully
+        self.assertEqual(response.status_code,302)
+    #---------------------------------------------------------------------------
+    def test_perform_invalid(self):
+        data = {
+
+            "work_completed":"11-07-2012 00:10",
+            "status":self.status.pk,
+            "form-TOTAL_FORMS":len(self.tests),
+            "form-INITIAL_FORMS":"0",
+            "form-MAX_NUM_FORMS":"",
+        }
+
+        for test_idx, test in enumerate(self.tests):
+            data["form-%d-test" % test_idx] = test.pk
+            data["form-%d-comment"%test_idx]= ""
+
+
+        response = self.client.post(self.url,data=data)
+
+        #no values sent so there should be form errors and a 200 status
+        self.assertEqual(response.status_code,200)
+
+        for f in response.context["formset"].forms:
+            self.assertTrue(len(f.errors)>0)
+    #---------------------------------------------------------------------------
+    def test_skipped(self):
+        data = {
+            "work_completed":"11-07-2012 00:10",
+            "status":self.status.pk,
+            "form-TOTAL_FORMS":len(self.tests),
+            "form-INITIAL_FORMS":"0",
+            "form-MAX_NUM_FORMS":"",
+        }
+
+        for test_idx, test in enumerate(self.tests):
+            data["form-%d-test" % test_idx] = test.pk
+            data["form-%d-skipped" % test_idx] = "true"
+            data["form-%d-comment"%test_idx]= ""
+
+        response = self.client.post(self.url,data=data)
+
+        #skipped but no comment so there should be form errors and a 200 status
+        self.assertEqual(response.status_code,200)
+
+        for f in response.context["formset"].forms:
+            self.assertTrue(len(f.errors)>0)
+
+    #----------------------------------------------------------------------
+    def test_cycle(self):
+        tl1 = utils.create_test_list(name="tl1")
+        tl2 = utils.create_test_list(name="tl2")
+        cycle = utils.create_cycle(test_lists=[tl1,tl2])
+        utc = utils.create_unit_test_collection(
+            test_collection=cycle,
+            unit=self.unit_test_list.unit,
+            frequency=self.unit_test_list.frequency,
+        )
+        url = reverse("perform_qa",kwargs={"pk":utc.pk})
+
+        response = self.client.get(url)
+        self.assertListEqual(response.context["days"],[1,2])
+        self.assertEqual(response.context["current_day"],1)
+
+    #----------------------------------------------------------------------
+    def test_include_admin(self):
+
+        #orig user is staff so admin should be included
+        response = self.client.get(self.url)
+        self.assertTrue(response.context["include_admin"])
+
+        u2 = utils.create_user(is_staff=False,is_superuser=False,uname="u2")
+        self.client.logout()
+        self.client.login(username="u2",password="password")
+
+        #new user is not staff so admin should not be included
+        response = self.client.get(self.url)
+        self.assertFalse(response.context["include_admin"])
+
+
+if __name__ == "__main__":
+    setup_test_environment()
+    unittest.main()
