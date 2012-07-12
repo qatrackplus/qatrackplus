@@ -20,7 +20,6 @@ import random
 import re
 import os
 import utils
-import django_webtest
 
 #====================================================================================
 class TestURLS(TestCase):
@@ -81,6 +80,7 @@ class TestControlChartImage(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
         self.old_cc_available = views.CONTROL_CHART_AVAILABLE
+        print views.CONTROL_CHART_AVAILABLE
         self.view = views.ControlChartImage.as_view()
         self.url = reverse("control_chart")
     #----------------------------------------------------------------------
@@ -379,3 +379,36 @@ class TestPerformQA(TestCase):
 
         self.assertTrue( isinstance(widget,django.forms.Select))
         self.assertEqual(widget.choices,[('',''),(0,'c1'),(1,'c2'),(2,'c3')])
+    #---------------------------------------------------------------------------
+    def test_perform(self):
+        """"""
+        #work_completed:11-07-2012 00:10
+        #status:1
+        #form-TOTAL_FORMS:5
+        #form-INITIAL_FORMS:0
+        #form-MAX_NUM_FORMS:
+        #form-0-test:1
+        #form-0-reference:8
+        #form-0-tolerance:
+        #form-0-value:1
+        #form-0-comment:
+        #form-1-test:2
+        #form-1-reference:9
+        #form-1-tolerance:
+        #form-1-value:0
+        #form-1-comment:
+        #form-2-test:11
+        #form-2-reference:10
+        #form-2-tolerance:2
+        #form-2-value:99
+        #form-2-comment:
+        #form-3-test:36
+        #form-3-reference:
+        #form-3-tolerance:
+        #form-3-value:100.0
+        #form-3-comment:
+        #form-4-test:37
+        #form-4-reference:
+        #form-4-tolerance:
+        #form-4-value:20
+        #form-4-comment:        
