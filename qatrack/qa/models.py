@@ -460,7 +460,7 @@ class UnitTestInfo(models.Model):
     def due_date(self):
         """return the due date for this unit test list assignment"""
 
-        last_instance = TestInstance.valid_objects.filter(
+        last_instance = TestInstance.objects.valid().filter(
             unit = self.unit,
             test = self.test,
         ).order_by("-work_completed","-pk")
@@ -697,7 +697,7 @@ class UnitTestCollection(models.Model):
             all_lists = [self.tests_object]
 
         try:
-            q = TestListInstance.objects.filter(
+            q = TestListInstance.objects.complete().filter(
                 test_list__in = all_lists,
                 unit = self.unit,
             ).latest("work_completed")
@@ -716,7 +716,7 @@ class UnitTestCollection(models.Model):
     #----------------------------------------------------------------------
     def unreviewed_test_instances(self):
         """return query set of all TestInstances for this object"""
-        return TestInstance.objects.filter(
+        return TestInstance.objects.complete().filter(
             unit = self.unit,
             test__in = self.tests_object.all_tests()
         )
@@ -724,7 +724,7 @@ class UnitTestCollection(models.Model):
     #----------------------------------------------------------------------
     def history(self,number=10):
         """returns the last num_instances performed for this object"""
-        return reversed(TestListInstance.objects.filter(
+        return reversed(TestListInstance.objects.complete().filter(
             unit=self.unit,
             test_list__in = self.tests_object.all_lists()
         ).order_by("-work_completed","-pk")[:number])
@@ -837,12 +837,17 @@ def sublist_changed(*args,**kwargs):
     update_unit_test_assignments(kwargs["instance"])
 
 #============================================================================
-class ValidTestInstanceManager(models.Manager):
-    """manager for TestInstances with valid status"""
-    #----------------------------------------------------------------------
-    def get_query_set(self):
-        return super(ValidTestInstanceManager,self).get_query_set().filter(status__valid=True)
+class TestInstanceManager(models.Manager):
 
+    #----------------------------------------------------------------------
+    def in_progress(self):
+        return super(TestInstanceManager,self).filter(in_progress=True)
+    #----------------------------------------------------------------------
+    def complete(self):
+        return models.Manager.get_query_set(self).filter(in_progress=False)
+    #----------------------------------------------------------------------
+    def valid(self):
+        return self.complete().filter(status__valid=True)
 
 #============================================================================
 class TestInstance(models.Model):
@@ -880,7 +885,7 @@ class TestInstance(models.Model):
     work_completed = models.DateTimeField(default=timezone.now,
         help_text=settings.DATETIME_HELP,
     )
-    in_progress = models.BooleanField(default=True,editable=False)
+    in_progress = models.BooleanField(default=False,editable=False)
 
     #for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)
@@ -888,8 +893,7 @@ class TestInstance(models.Model):
     modified = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(User, editable=False, related_name="test_instance_modifier")
 
-    objects = models.Manager()
-    valid_objects = ValidTestInstanceManager()
+    objects = TestInstanceManager()
 
     class Meta:
         ordering = ("work_completed",)
@@ -958,9 +962,16 @@ class TestInstance(models.Model):
 
 #============================================================================
 class TestListInstanceManager(models.Manager):
+
     #----------------------------------------------------------------------
     def awaiting_review(self):
-        return self.get_query_set().filter(testinstance__status__requires_review=True).distinct().order_by("work_completed")
+        return self.complete().filter(testinstance__status__requires_review=True).distinct().order_by("work_completed")
+    #----------------------------------------------------------------------
+    def in_progress(self):
+        return super(TestListInstanceManager,self).get_query_set().filter(in_progress=True)
+    #----------------------------------------------------------------------
+    def complete(self):
+        return super(TestListInstanceManager,self).get_query_set().filter(in_progress=False)
 
 #============================================================================
 class TestListInstance(models.Model):
@@ -978,7 +989,7 @@ class TestListInstance(models.Model):
     work_started = models.DateTimeField(auto_now_add=True,editable=False)
     work_completed = models.DateTimeField(default=timezone.now)
 
-    in_progress = models.BooleanField(default=True, editable=False)
+    in_progress = models.BooleanField(default=False, editable=False)
 
     #for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)

@@ -852,6 +852,14 @@ class TestTestInstance(TestCase):
         ti = models.TestInstance(skipped=True)
         ti.calculate_pass_fail()
         self.assertEqual(models.NOT_DONE,ti.pass_fail)
+    #----------------------------------------------------------------------
+    def test_in_progress(self):
+        ti = utils.create_test_instance()
+        ti.in_progress = True
+        ti.save()
+
+        self.assertEqual(models.TestInstance.objects.in_progress()[0],ti)
+
 
 #============================================================================
 class TestTestListInstance(TestCase):
@@ -926,6 +934,14 @@ class TestTestListInstance(TestCase):
     #----------------------------------------------------------------------
     def test_failing_tests(self):
         self.assertEqual(1,self.test_list_instance.tolerance_tests().count())
+    #----------------------------------------------------------------------
+    def test_in_progress(self):
+        self.test_list_instance.in_progress = True
+        self.test_list_instance.save()
+        self.assertEqual(
+            models.TestListInstance.objects.in_progress()[0],
+            self.test_list_instance
+        )
 
 
 if __name__ == "__main__":

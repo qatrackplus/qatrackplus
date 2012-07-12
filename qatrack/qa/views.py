@@ -23,8 +23,6 @@ try:
     from matplotlib.figure import Figure
     from matplotlib.dates import DateFormatter
     import numpy
-    import warnings
-    warnings.filterwarnings("error",category=RuntimeWarning)
 except ImportError:
     CONTROL_CHART_AVAILABLE = False
 
@@ -91,7 +89,7 @@ class ControlChartImage(View):
         if not all([from_date,to_date,test,unit]):
             return [], []
 
-        data = models.TestInstance.objects.filter(
+        data = models.TestInstance.objects.complete().filter(
             test__slug = test,
             work_completed__gte = from_date,
             work_completed__lte = to_date,
@@ -153,7 +151,7 @@ class ControlChartImage(View):
 
                 canvas.print_png(response)
 
-            except (RuntimeError,OverflowError, RuntimeWarning) as e:
+            except (RuntimeError,OverflowError) as e:
                 fig.clf()
                 msg = "There was a problem generating your control chart:\n"
                 msg += e.message

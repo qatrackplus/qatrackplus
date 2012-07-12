@@ -21,7 +21,9 @@ class TestURLS(TestCase):
     def setUp(self):
         u = utils.create_user()
         self.client.login(username="user",password="password")
-        utils.create_group()
+        g = utils.create_group()
+        u.groups.add(g)
+        u.save()
     #---------------------------------------------------------------------------
     def returns_200(self,url,method="get"):
         return getattr(self.client,method)(url).status_code == 200
