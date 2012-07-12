@@ -132,7 +132,7 @@ class TestInstanceResource(ModelResource):
     unit = tastypie.fields.ForeignKey(UnitResource,"unit",full=True);
     reviewed_by = tastypie.fields.CharField()
     class Meta:
-        queryset = models.TestInstance.objects.all()
+        queryset = models.TestInstance.objects.complete().all()
         resource_name = "values"
         allowed_methods = ["get","patch","put"]
         always_return_data = True
@@ -355,7 +355,7 @@ class TestListInstanceResource(ModelResource):
     review_status = tastypie.fields.ListField()
 
     class Meta:
-        queryset = models.TestListInstance.objects.all()
+        queryset = models.TestListInstance.objects.complete().all()
         filtering = {
             "unit":ALL_WITH_RELATIONS,
             "test_list": ALL_WITH_RELATIONS,
