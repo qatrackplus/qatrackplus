@@ -166,8 +166,8 @@ INSTALLED_APPS = (
     'genericdropdown',
     'django_coverage',
     #'debug_toolbar',
-
     #qatrack specific
+    'qatrack.accounts',
     'qatrack.units',
     'qatrack.qa',
     'qatrack.theme_bootstrap',
