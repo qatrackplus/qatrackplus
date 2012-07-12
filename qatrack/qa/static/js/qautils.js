@@ -6,6 +6,7 @@ var QAUtils = new function() {
     this.TOL_COLOR = "#f89406";
     this.OK_COLOR = "#468847";
 	this.NOT_DONE_COLOR = "#3a87ad";
+	this.REVIEW_COLOR = "#D9EDF7";
 
     this.ACT_LOW = "act_low";
     this.TOL_LOW = "tol_low";
@@ -31,6 +32,10 @@ var QAUtils = new function() {
 
 	this.NUMERICAL = "numerical";
 	this.BOOLEAN = "boolean";
+	this.MULTIPLE_CHOICE = "multchoice";
+
+	this.NUMERIC_WHITELIST_REGEX = /[^0-9\.eE\-]/g;
+	this.NUMERIC_REGEX = /^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$/;
 
     //value equality tolerance
     this.EPSILON = 1E-10;
@@ -42,24 +47,15 @@ var QAUtils = new function() {
 	this.OPTION_SEP = "&";
 
 
-    this.UNREVIEWED = "unreviewed";
-    this.APPROVED = "approved";
-    this.SCRATCH = "scratch";
-    this.REJECTED = "rejected";
-
-
 	this.DUE = this.TOLERANCE;
 	this.OVERDUE = this.ACTION;
 	this.NOT_DUE = this.WITHIN_TOL;
-	this.DAILY = "daily";
-	this.WEEKLY = "weekly";
-	this.MONTHLY = "monthly";
-	this.SEMIANNUAL = "semiannual";
-	this.ANNUAL = "annual";
-	this.OTHER = "other";
 
     this.MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
+	//initialized from api
+	this.FREQUENCIES = {};
+	this.STATUSES = {};
 
 
     /***************************************************************/
@@ -81,13 +77,18 @@ var QAUtils = new function() {
         return measured - reference;
     };
 
-    this.test_tolerance = function(value, reference, tolerances, is_bool){
+    this.test_tolerance = function(value, reference, tolerances, test_type){
         //compare a value to a reference value and check whether it is
         //within tolerances or not.
         //Return an object with a 'diff' and 'result' value
         var diff;
         var status, gen_status;
         var message;
+
+
+        if ((test_type === this.BOOLEAN) || (test_type === this.MULTIPLE_CHOICE)){
+            return this.test_multi(value, reference);
+        }
 
 		if ( !this.is_number(reference) || !tolerances.type){
             return {
@@ -97,10 +98,6 @@ var QAUtils = new function() {
                 message: this.NO_TOL_DISP
             };
 		}
-
-        if (is_bool){
-            return this.test_bool(value, reference);
-        }
 
         if (tolerances.type === this.PERCENT){
             diff = this.percent_difference(value,reference);
@@ -136,7 +133,16 @@ var QAUtils = new function() {
         return {status:status, gen_status:gen_status, diff:diff, message:message};
     };
 
-    this.test_bool = function(value,reference){
+    this.test_multi = function(value,reference){
+		if ( !this.is_number(reference)){
+            return {
+                status:this.NO_TOL,
+                gen_status:this.NO_TOL,
+                diff:"",
+                message: this.NO_TOL_DISP
+            };
+		}
+
         var status, gen_status;
         var diff = value-reference;
         var message;
@@ -157,16 +163,22 @@ var QAUtils = new function() {
         return {status:status, gen_status:gen_status, diff:diff, message:message};
     };
 
-    //convert an percent difference to absolute based on reference
-    this.convert_tol_to_abs = function(ref,tol){
+    //convert a tolerance from relative to absolute values based on reference
+    this.convert_tol_to_abs = function(ref_val,tol){
         if (tol.type === this.ABSOLUTE){
-            return tol;
+			return {
+				act_low  : ref_val + tol.act_low,
+				tol_low  : ref_val + tol.tol_low,
+				tol_high : ref_val + tol.tol_high,
+				act_high : ref_val +tol.act_high
+			};
         }
+
         return {
-            act_low : ref*(100.+tol.act_low)/100.,
-            tol_low : ref*(100.+tol.tol_low)/100.,
-            tol_high : ref*(100.+tol.tol_high)/100.,
-            act_high : ref*(100.+tol.act_high)/100.
+            act_low : ref_val*(100.+tol.act_low)/100.,
+            tol_low : ref_val*(100.+tol.tol_low)/100.,
+            tol_high : ref_val*(100.+tol.tol_high)/100.,
+            act_high : ref_val*(100.+tol.act_high)/100.
         };
     };
 
@@ -175,7 +187,7 @@ var QAUtils = new function() {
 		var t,v,s;
 
 		if ((tolerance !== null) && (reference !== null)){
-			t = tolerance;
+			t = this.convert_tol_to_abs(reference.value,tolerance);
 			v = reference.value;
 
 			if (reference.type === this.BOOLEAN){
@@ -185,7 +197,7 @@ var QAUtils = new function() {
 					s = "No Expected";
 				}
 			}else{
-				s = [t.act_low,t.tol_low, v, t.tol_high, t.act_high].join(" < ");
+				s = [t.act_low,t.tol_low, v, t.tol_high, t.act_high].join(" &le; ");
 			}
 		}else if (reference !== null){
 			s = reference.value.toString();
@@ -238,10 +250,8 @@ var QAUtils = new function() {
 
     /********************************************************************/
     //API calls
-
-
     this.call_api = function(url,method,data,callback){
-        $.ajax({
+        return $.ajax({
             type:method,
             url:url,
             data:data,
@@ -250,6 +260,7 @@ var QAUtils = new function() {
             success: function(result,status,jqXHR){
                 callback(result,status, jqXHR,this.url);
             },
+			traditional:true,
             error: function(error){
                 console.log(error);
                 var msg = "Something went wrong with your request:\n    ";
@@ -267,7 +278,7 @@ var QAUtils = new function() {
             return {resource_uri:uri,status:status};
         });
 
-        this.call_api(
+        return this.call_api(
             this.API_URL+"values/",
             "PATCH",
             JSON.stringify({objects:objects}),
@@ -290,7 +301,7 @@ var QAUtils = new function() {
             data["format"] = "json";
         }
 
-        this.call_api(this.API_URL+resource_name,"GET",data,callback );
+	    return this.call_api(this.API_URL+resource_name,"GET",data,callback );
     };
 
     //values for a group of tests
@@ -298,7 +309,7 @@ var QAUtils = new function() {
         if (!options.hasOwnProperty("limit")){
             options["limit"] = 0;
         }
-        this.call_api(this.API_URL+"grouped_values","GET",options,callback );
+        return this.call_api(this.API_URL+"grouped_values","GET",options,callback );
     };
 
     //*************************************************************
@@ -321,15 +332,14 @@ var QAUtils = new function() {
 	};
 
 	this.options_from_url_hash = function(hash){
-		var options = {};
+		var options = [];
 		if (hash[0] === "#"){
 			hash = hash.substring(1,hash.length);
 		}
 		var that = this;
-
 		$.each(hash.split(this.OPTION_SEP),function(i,elem){
 			var k_v = elem.split(that.OPTION_DELIM);
-			options[k_v[0]] = k_v[1];
+			options.push([k_v[0],k_v[1]]);
 		});
 		return options;
 	};
@@ -337,7 +347,7 @@ var QAUtils = new function() {
 
 	this.unit_test_chart_url = function(unit,test){
 		var unit_option = 'unit'+this.OPTION_DELIM+unit.number;
-		var test_option = 'test'+this.OPTION_DELIM+test.short_name;
+		var test_option = 'slug'+this.OPTION_DELIM+test.slug;
 		return this.CHARTS_URL+'#'+[unit_option,test_option].join(this.OPTION_SEP);
 	};
 	this.unit_test_chart_link = function(unit,test,text,title){
@@ -431,32 +441,18 @@ var QAUtils = new function() {
 		}
 		return this.NOT_DUE;
 	};
-	this.due_status = function(due_date,frequency){
+	this.due_status = function(last_done,test_frequency){
+		last_done.setHours(0,0,0,0)
 
-		var today = new Date();
-		var delta_time = due_date - today; //in ms
+		var today = new Date().setHours(0,0,0,0);
+		var delta_time = last_done - today; //in ms
 
-		var delta_days = Math.abs(this.milliseconds_to_days(delta_time));
+		var delta_days = Math.floor(Math.abs(this.milliseconds_to_days(delta_time)));
 		var due,overdue;
 
-		if (frequency === this.DAILY){
-			due = 1;
-			overdue = 1;
-		}else if (frequency === this.WEEKLY){
-			due = 7;
-			overdue = 9;
-		}else if (frequency === this.MONTHLY){
-			due = 28;
-			overdue = 35;
-		}else if (frequency === this.SEMIANNUAL){
-			due = 180;
-			overdue = 210;
-		}else if (frequency === this.ANNUAL){
-			due = 300;
-			overdue = 420;
-		}
+		var frequency = this.FREQUENCIES[test_frequency];
 
-		return this.compare_due_date_delta(delta_days,due,overdue);
+		return this.compare_due_date_delta(delta_days,frequency.due_interval,frequency.overdue_interval);
 	};
 
 	this.set_due_status_color = function(elem,due_date,frequency){
@@ -473,4 +469,51 @@ var QAUtils = new function() {
 		$(elem).css("background-color",color);
 	};
 
+	this.make_select = function(id,cls,options){
+		var l = [];
+		var idx;
+
+		l.push('<select id="'+id+'" class="'+cls+'">');
+		for (idx = 0; idx < options.length; idx +=1){
+			l.push('<option value="'+options[idx][0]+'">'+options[idx][1]+'</option>');
+		}
+		l.push("</select>");
+
+		return l.join("");
+	};
+
+
+	this.default_exported_statuses = function(){
+		var exported = [];
+		var status;
+		for (status in this.STATUSES){
+			if (this.STATUSES[status].export_by_default){
+				exported.push(status)
+			}
+		}
+		return exported;
+	};
+
+	//call using $.when() before using QAUTils in any scripts
+	//e.g. in a script where you want to use QAUTils you would do
+	// $.when(QAUTils.init()).done(function(){
+	//	   do_things_requiring_QAUtils();
+	//})
+	this.init = function(){
+		var that = this;
+
+		this.get_resources("status",function(results){
+			$.each(results.objects,function(idx,status){
+				that.STATUSES[status.slug] = status;
+			});
+		});
+
+		return this.get_resources("frequency",function(results){
+			$.each(results.objects,function(idx,freq){
+				that.FREQUENCIES[freq.slug] = freq;
+			});
+		});
+
+	};
 }();
+

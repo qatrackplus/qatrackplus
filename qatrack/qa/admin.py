@@ -1,5 +1,3 @@
-import datetime
-
 import django.forms as forms
 import django.db
 
@@ -7,10 +5,12 @@ from django.utils.translation import ugettext as _
 from django.contrib import admin
 from django.contrib.admin.templatetags.admin_static import static
 from django.utils.safestring import mark_safe
+from django.utils import timezone
 
 import qatrack.qa.models as models
 from qatrack.units.models import Unit
 import qatrack.settings as settings
+import os
 import re
 
 #============================================================================
@@ -26,7 +26,7 @@ class SaveUserMixin(object):
         """set user and modified date time"""
         if not obj.pk:
             obj.created_by = request.user
-            obj.created = datetime.datetime.now()
+            obj.created = timezone.now()
         obj.modified_by = request.user
         super(SaveUserMixin, self).save_model(request, obj, form, change)
 
@@ -47,15 +47,27 @@ class CategoryAdmin(admin.ModelAdmin):
 
 #============================================================================
 class TestInfoForm(forms.ModelForm):
-    reference_value = forms.FloatField(
-        label=_("Update reference"),
-        help_text=_("For Yes/No tests, enter 1 for Yes and 0 for No"),
-        required=False,
-    )
-    #reference_type = forms.ChoiceField(choices=models.Reference.TYPE_CHOICES)
+    reference_value = forms.FloatField(label=_("Update reference"),required=False,)
+    test_type = forms.CharField(required=False)
 
     class Meta:
         model = models.UnitTestInfo
+
+    def __init__(self, *args, **kwargs):
+        super(TestInfoForm, self).__init__(*args, **kwargs)
+        self.fields['test_type'].widget.attrs['readonly'] = "readonly"
+        #self.fields['test_type'].widget.attrs['disabled'] = "disabled"
+
+
+        if self.instance:
+            tt = self.instance.test.type
+            i = [x[0] for x in models.TEST_TYPE_CHOICES].index(tt)
+            self.fields["test_type"].initial = models.TEST_TYPE_CHOICES[i][1]
+
+            if tt == models.BOOLEAN:
+                self.fields["reference_value"].widget = forms.Select(choices=[(0,"No"),(1,"Yes")])
+            elif tt == models.MULTIPLE_CHOICE:
+                self.fields["reference_value"].widget = forms.Select(choices=self.instance.test.get_choices())
 
     #----------------------------------------------------------------------
     def clean(self):
@@ -66,26 +78,35 @@ class TestInfoForm(forms.ModelForm):
 
         ref_value = self.cleaned_data["reference_value"]
 
-        if self.instance.test.type == models.BOOLEAN:
-            if int(ref_value) not in (0,1):
+        if self.instance.test.type == models.BOOLEAN and int(ref_value) not in (0,1):
                 raise forms.ValidationError(_("Yes/No values must be 0 or 1"))
 
+        if self.instance.test.type in (models.BOOLEAN, models.MULTIPLE_CHOICE):
+            if self.cleaned_data["tolerance"] is not None:
+                raise forms.ValidationError(_("Please leave tolerance field blank for boolean and multiple choice test types"))
         return self.cleaned_data
 
 
 #============================================================================
-class TestInfoAdmin(admin.ModelAdmin):
+class UnitTestInfoAdmin(admin.ModelAdmin):
     """"""
     form = TestInfoForm
     fields = (
-        "unit", "test",
+        "unit", "test","test_type",
         "reference", "tolerance",
         "reference_value",
     )
     list_display = ["test", "unit", "reference", "tolerance"]
     list_filter = ["unit","test__category"]
-    readonly_fields = ("test","unit","reference")
+    readonly_fields = ("reference","test", "unit",)
 
+    #---------------------------------------------------------------------------
+    def has_add_permission(self,request):
+        """unittestinfo's are created automatically"""
+        return False
+    def has_delete_permission_(self,request, obj=None):
+        """unittestinfo's are deleted automatically when test lists removed from unit"""
+        return False
     #----------------------------------------------------------------------
     def save_model(self, request, test_info, form, change):
         """create new reference when user updates value"""
@@ -104,7 +125,7 @@ class TestInfoAdmin(admin.ModelAdmin):
             )
             ref.save()
             test_info.reference = ref
-        super(TestInfoAdmin,self).save_model(request,test_info,form,change)
+        super(UnitTestInfoAdmin,self).save_model(request,test_info,form,change)
 
 
 #============================================================================
@@ -118,6 +139,13 @@ class TestListAdminForm(forms.ModelForm):
         if self.instance in sublists:
             raise django.forms.ValidationError("You can't add a list to its own sublists")
 
+        if self.instance.pk and self.instance.testlist_set.count() > 0 and len(sublists) > 0:
+            msg = "Sublists can't be nested more than 1 level deep."
+            msg += " This list is already a member of %s and therefore"
+            msg += " can't have sublists of it's own."
+            msg = msg % ", ".join([str(x) for x in self.instance.testlist_set.all()])
+            raise django.forms.ValidationError(msg)
+
         return sublists
 
 #============================================================================
@@ -125,18 +153,18 @@ class TestInlineFormset(forms.models.BaseInlineFormSet):
 
     #----------------------------------------------------------------------
     def clean(self):
-        """Make sure there are no duplicated short_name's in a TestList"""
+        """Make sure there are no duplicated slugs in a TestList"""
         super(TestInlineFormset,self).clean()
 
         if not hasattr(self,"cleaned_data"):
             #something else went wrong already
             return {}
 
-        short_names = [f.instance.test.short_name for f in self.forms[:-self.extra]]
-        duplicates = list(set([sn for sn in short_names if short_names.count(sn)>1]))
+        slugs = [f.instance.test.slug for f in self.forms[:-self.extra]]
+        duplicates = list(set([sn for sn in slugs if slugs.count(sn)>1]))
         if duplicates:
             raise forms.ValidationError(
-                "The following short_names are duplicated " + ",".join(duplicates)
+                "The following macro names are duplicated " + ",".join(duplicates)
             )
 
         return self.cleaned_data
@@ -153,8 +181,8 @@ class TestListMembershipInline(admin.TabularInline):
 #============================================================================
 class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
     prepopulated_fields =  {'slug': ('name',)}
-    list_display = (title_case_name, "set_references", "modified", "modified_by", "active")
-    list_filter = ("active",)
+    list_display = (title_case_name, "set_references", "modified", "modified_by",)
+
     filter_horizontal= ("tests", "sublists", )
     form = TestListAdminForm
     inlines = [TestListMembershipInline]
@@ -171,7 +199,7 @@ class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
 
 #============================================================================
 class TestAdmin(SaveUserMixin, admin.ModelAdmin):
-    list_display = ["name","short_name","category", "type", "set_references"]
+    list_display = ["name","slug","category", "type", "set_references"]
     list_filter = ["category","type"]
 
     #============================================================================
@@ -182,12 +210,12 @@ class TestAdmin(SaveUserMixin, admin.ModelAdmin):
         )
 
 #============================================================================
-class UnitTestListAdmin(admin.ModelAdmin):
-    readonly_fields = ("unit","frequency",)
-    filter_horizontal = ("test_lists","cycles",)
-    list_display = ["name", "unit", "frequency"]
+class UnitTestCollectionAdmin(admin.ModelAdmin):
+    #readonly_fields = ("unit","frequency",)
+    #filter_horizontal = ("test_lists","cycles",)
+    list_display = ["tests_object", "unit", "frequency"]
     list_filter = ["unit", "frequency"]
-
+    change_form_template = "admin/treenav/menuitem/change_form.html"
 
 #============================================================================
 class TestListCycleMembershipInline(admin.TabularInline):
@@ -195,8 +223,9 @@ class TestListCycleMembershipInline(admin.TabularInline):
     model = models.TestListCycleMembership
     extra = 0
 
+
 #============================================================================
-class TestListCycleAdmin(admin.ModelAdmin):
+class TestListCycleAdmin(SaveUserMixin, admin.ModelAdmin):
     """Admin for daily test list cycles"""
     inlines = [TestListCycleMembershipInline]
 
@@ -209,11 +238,25 @@ class TestListCycleAdmin(admin.ModelAdmin):
             settings.STATIC_URL+"js/m2m_drag_admin.js",
         )
 
+#============================================================================
+class FrequencyAdmin(admin.ModelAdmin):
+    prepopulated_fields =  {'slug': ('name',)}
+    model = models.Frequency
+
+#============================================================================
+class StatusAdmin(admin.ModelAdmin):
+    prepopulated_fields =  {'slug': ('name',)}
+    model = models.TestInstanceStatus
+
+
 admin.site.register([models.Tolerance], BasicSaveUserAdmin)
 admin.site.register([models.Category], CategoryAdmin)
 admin.site.register([models.TestList],TestListAdmin)
 admin.site.register([models.Test],TestAdmin)
-admin.site.register([models.UnitTestInfo],TestInfoAdmin)
-admin.site.register([models.UnitTestLists],UnitTestListAdmin)
+admin.site.register([models.UnitTestInfo],UnitTestInfoAdmin)
+admin.site.register([models.UnitTestCollection],UnitTestCollectionAdmin)
 
 admin.site.register([models.TestListCycle],TestListCycleAdmin)
+admin.site.register([models.Frequency], FrequencyAdmin)
+admin.site.register([models.TestInstanceStatus], StatusAdmin)
+admin.site.register([models.TestListInstance,models.TestInstance], admin.ModelAdmin)

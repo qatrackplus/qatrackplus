@@ -3,7 +3,6 @@ import django.conf.global_settings as DEFAULT_SETTINGS
 import os
 
 DEBUG = True
-#TEMPLATE_DEBUG = DEBUG
 TEMPLATE_DEBUG = True
 
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
@@ -20,7 +19,7 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'db/reorg.db',                      # Or path to database file if using sqlite3.
+        'NAME': 'db/default.db',                      # Or path to database file if using sqlite3.
         'USER': '',                      # Not used with sqlite3.
         'PASSWORD': '',                  # Not used with sqlite3.
         'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
@@ -60,7 +59,7 @@ INPUT_DATE_FORMATS = (
     "%d-%m-%Y %H:%M", "%d/%m/%Y %H:%M",
     "%d-%m-%y %H:%M", "%d/%m/%y %H:%M",
 )
-
+SIMPLE_DATE_FORMAT = "%d-%m-%Y"
 DATETIME_HELP = "Format DD-MM-YY hh:mm (hh:mm is 24h time e.g. 14:30)"
 
 #  Absolute filesystem path to the directory that will hold user-uploaded files.
@@ -126,7 +125,8 @@ ROOT_URLCONF = 'qatrack.urls'
 LOGIN_EXEMPT_URLS = [
     r"^accounts/",
 ]
-LOGIN_REDIRECT_URL = '/qa/user_home'
+LOGIN_REDIRECT_URL = '/qa/'
+LOGIN_URL = "/accounts/login/"
 ACCOUNT_ACTIVATION_DAYS = 7
 
 # Python dotted path to the WSGI application used by Django's runserver.
@@ -137,6 +137,7 @@ TEMPLATE_DIRS = (
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
     os.path.join(PROJECT_ROOT,"templates"),
+    "genericdropdown/templates",
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = list(DEFAULT_SETTINGS.TEMPLATE_CONTEXT_PROCESSORS)
@@ -161,17 +162,25 @@ INSTALLED_APPS = (
     'django.contrib.humanize',
 
     'tastypie',
-    'registration',
+
+    'genericdropdown',
+    'django_coverage',
     #'debug_toolbar',
+
     #qatrack specific
-    #'qatrack.qatrack_tags',
-    'qatrack.accounts',
     'qatrack.units',
-    'qatrack.qagroups',
     'qatrack.qa',
     'qatrack.theme_bootstrap',
     'qatrack.data_tables',
+    'qatrack.notifications',
 )
+
+EMAIL_NOTIFICATION_USER = None
+EMAIL_NOTIFICATION_PWD = None
+EMAIL_NOTIFICATION_TEMPLATE = "notification_email.txt"
+EMAIL_NOTIFICATION_SENDER = "qatrack"
+EMAIL_NOTIFICATION_SUBJECT = "QATrack+ Test Status Notification"
+
 
 EMAIL_HOST = "" #e.g. 'smtp.gmail.com'
 EMAIL_HOST_USER = '' # e.g. "randle.taylor@gmail.com"
@@ -209,7 +218,8 @@ LOGGING = {
 }
 
 #Testing settings
-TEST_RUNNER = 'django_coverage.coverage_runner.CoverageRunner'
+#TEST_RUNNER = 'django_coverage.coverage_runner.CoverageRunner'
+COVERAGE_ADDITIONAL_MODULES = ["qatrack.tests"]
 
 #local_settings contains anything that should be overridden
 #based on site specific requirements (e.g. deployment, development etc)

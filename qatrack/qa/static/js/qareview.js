@@ -1,47 +1,28 @@
 var HISTORY_INSTANCE_LIMIT = 5;
 
-/**************************************************************************/
-//Initialize sortable/filterable test list table data types
-function init_test_list_table(){
-	var review_table = $('#qa-test-list-table').dataTable( {
-		"sDom": "<'row-fluid'<'span6'><'span6'>r>t<'row-fluid'<'span3'><'span3' l><'span6'p>>",
-
-		"bStateSave":false, //save filter/sort state between page loads
-		"bFilter":true,
-		"bPaginate": false,
-		aoColumns: [
-			null, //Unit
-			null, //Freq
-			null,  // Test list name
-			{"sType":"day-month-year-sort"}, //date completed
-			{"sType":"span-day-month-year-sort"}, //due date
-			null, //status of test list tests
-			null  //review status of list
-		]
-
-	} ).columnFilter({
-
-		aoColumns: [
-			{type: "select"}, //Unit
-			{type: "select"}, //Freq
-			{type: "text" }, // Test list name
-			{type: "text" }, //date completed
-			{type: "text" }, //due date
-			{ type: "text" }, //status of test list tests
-			null //review status of list
-		]
+/************************************************************************/
+//create a dropdown element for different review statuses
+function make_status_select(){
+	var status_options =[["",""]];
+	var i,status;
+	$.each(QAUtils.STATUSES, function(idx,status){
+		status_options.push([status.slug, status.name]);
 	});
-
+	return QAUtils.make_select("","input-medium pull-right status-update-value",status_options)
 }
 /**************************************************************************/
 //creates the html table to hold the tests from a test list
 function create_test_list_table(id){
-	var headers = '<tr><th class="name-col">Name</th><th>Type</th><th>Comment</th><th>Pass/Fail</th><th>Value</th><th class="ref-col">Ref/Tol</th><th class="history-col">History</th><th>Review URL</th></tr>';
+	var headers = '<tr><th class="name-col">Name</th><th>Type</th><th>Comment</th><th>Pass/Fail</th><th>Value</th><th class="ref-col">Ref/Tol</th><th class="history-col">History</th><th>Review URL</th><th>Review Status</th><th><input type="checkbox" class="toggle_children"/></tr>';
 	var elements = [
-		'<div class="review-button-container ">',
-		'<button data-toggle="button" data-loading-text="Updating..." class="pull-right btn toggle-review-status">Toggle Review Status</button>',
+		'<div class="review-status-container ">',
+		'<span class="label collection-review-status"></span>',
+
+		make_status_select(),
+		'<button data-loading-text="Updating..." class="pull-right btn update-review-status">Apply To Selected</button>',
+
 		'</div>',
-		'<table class="table table-bordered table-condensed sub-table" id="'+id+'">',
+		'<table class="table table-bordered table-condensed table-striped sub-table" id="'+id+'">',
 		'<thead>',headers,'</thead>',
 		'<tbody></tbody>',
 		'<tfoot>',headers,'</tfoot>',
@@ -159,6 +140,21 @@ function create_spark_line(container,test,test_list_instances){
 }
 
 /************************************************************************/
+//return review status span for input instance
+function create_review_status(instance){
+	var title = "";
+	if (!instance.status.review_required){
+		title = 'title="Reviewed by '+instance.reviewed_by+' on '+instance.review_date+'"';
+	}
+	var review_class = "reviewed";
+	if (instance.status.requires_review){
+		review_class = "unreviewed";
+	}
+
+	return '<span class="label label-info review-status '+review_class+'" '+title+'>'+instance.status.name+'</span>';
+}
+
+/************************************************************************/
 //add a row to a details table for the input test instance
 function add_test_row(parent,instance,test_list_instances){
 
@@ -172,7 +168,7 @@ function add_test_row(parent,instance,test_list_instances){
 	data.push(comment)
 
 	var pass_fail;
-	if (QAUtils.instance_has_ref_tol(instance)){
+	if (QAUtils.instance_has_ref_tol(instance) || test.type === QAUtils.BOOLEAN || test.type === QAUtils.MULTIPLE_CHOICE){
 		pass_fail = '<span class="pass-fail">'+QAUtils.qa_display(instance.pass_fail)+'</span>';
 	}else{
 		pass_fail = '<span class="pass-fail">No Reference</span>';
@@ -192,9 +188,15 @@ function add_test_row(parent,instance,test_list_instances){
 	var review_link = QAUtils.unit_test_chart_link(instance.unit,test,"Details");
 	data.push(review_link);
 
+
+	data.push(create_review_status(instance));
+
+	data.push('<input type="checkbox" class="test-selected"/>');
+
 	$(parent).dataTable().fnAddData(data);
 	var test_row = parent.find("#"+spark_id).parent().parent();
-
+	test_row.data("instance_id",instance.id);
+	test_row.data("instance_uri",instance.resource_uri);
 	create_spark_line($("#"+spark_id),instance.test,test_list_instances);
 
 	//set color Pass/Fail column based on test
@@ -206,16 +208,17 @@ function add_test_row(parent,instance,test_list_instances){
 
 /************************************************************************/
 //remove instance details row below input test_list_row for a given data_table
-function close_details(test_list_row,data_table){
-	data_table.fnClose(test_list_row[0]);
+function close_details(test_list_row){
+	test_list_row.closest("table").dataTable().fnClose(test_list_row[0]);
 }
+
 /************************************************************************/
 //open test list instance details row below input test_list_row for a given data_table
 function open_details(test_list_row,data_table){
 
-	var unit_number = test_list_row.attr("data-unit_number");
-	var test_list_id = test_list_row.attr("data-test_list_id");
-	var frequency = test_list_row.attr("data-frequency");
+	var unit_number = test_list_row.data("unit_number");
+	var test_list_id = test_list_row.find(".instance-id").find("option:selected").data("test_list_id");
+	var frequency = test_list_row.data("frequency");
 	var sub_table_id = 'test-list-'+test_list_id+'-unit-'+unit_number;
 
 	data_table.fnOpen(test_list_row.get(0),create_test_list_table(sub_table_id),"qa-details");
@@ -227,159 +230,208 @@ function open_details(test_list_row,data_table){
 		"bLengthChange":true,
 	} );
 
-	var details = test_list_row.next().children(".qa-details");
-	details.find("table").css("background-color","whiteSmoke");
-	return details;
-}
-
-/************************************************************************/
-//update row color based on its review status
-function update_row_color(row){
-	var review_td = row.find("td.review_status");
-	var reviewed = review_td.hasClass(QAUtils.APPROVED);
-	review_td.removeClass("alert-info").removeClass("alert-success");
-	if (reviewed){
-		review_td.find("span").addClass("alert-success");
-	}else{
-		review_td.find("span").addClass("alert-info");
-	}
-}
-/************************************************************************/
-//update review status displayed for a given row
-function set_test_list_review_status(row,user,date){
-
-	var status = '<span class="label label-info">Unreviewed</span>';
-	var review_button = row.next("tr").find(".btn").button();
-	var review_cell = 	row.find("td.review_status");
-	var cls = QAUtils.UNREVIEWED;
-
-	if (user && date){
-		date = QAUtils.parse_iso8601_date(date);
-		status = '<span class="label label-success">Reviewed by '+ user;
-		status+= " on " + QAUtils.format_date(date,true)+'</span>';
-		cls = QAUtils.APPROVED;
-	}
-
-	review_cell.html(status).removeClass(QAUtils.UNREVIEWED).removeClass(QAUtils.APPROVED);
-	review_cell.addClass(cls);
-	update_row_color(row);
+	return test_list_row.next().children(".qa-details");
 }
 
 /************************************************************************/
 //display all the tests from the the test list instance
-function display_test_list_details(container,test_list_instances){
-
-	var latest = test_list_instances[0];
-	var details_table = container.children().find("table");
-	var parent_row = container.parent().prev();
-	var review_button = container.find(".btn");
-	var test_instance_uris = [];
-	var unreview_text = "Unreview List";
-	var review_text = "Mark List as Reviewed";
-
-	//add row using latest test_list_instance
-	$.each(latest.test_instances,function(i,test_instance){
-		add_test_row(details_table,test_instance,test_list_instances);
-		test_instance_uris.push(test_instance.resource_uri);
-	});
-
-
-	if (latest.review_status.length > 0){
-		review_button.text(unreview_text);
-		review_button.button("toggle");
-	}else{
-		review_button.text(review_text);
+function display_test_list_details(container,instance_id,test_list_instances){
+	var idx,to_review;
+	for (idx = 0; idx < test_list_instances.length; idx+=1){
+		if (parseInt(test_list_instances[idx].id) === parseInt(instance_id)){
+			to_review = test_list_instances[idx];
+			break;
+		}
 	}
 
-	review_button.click(function(event){
-		review_button.button("loading");
-		var reviewed =$(event.currentTarget).hasClass("active");
-		var review_status;
-		var button_text;
-		var review_user;
-		var review_date;
+	container.addClass("sub-table-container");//css('background-color',QAUtils.REVIEW_COLOR);
 
-		if (reviewed){
-			//since we're already approved user wants to unnaprove
-			review_status = QAUtils.UNREVIEWED;
-			button_text = review_text;
-		}else{
-			review_status = QAUtils.APPROVED;
-			button_text = unreview_text;
-			review_user = "you";
-			review_date = (new Date()).toISOString();
-		}
-
-		QAUtils.set_test_instances_status(test_instance_uris,review_status,function(results,status){
-			//status successfully updated
-			review_button.button("complete");
-			review_button.attr("data-complete-text",button_text).text(button_text);
-			set_test_list_review_status(parent_row,	review_user,review_date);
-		});
+	//add row using to_review test_list_instance
+	$.each(to_review.test_instances,function(i,test_instance){
+		add_test_row(container.find("table"),test_instance,test_list_instances);
 	});
 
 }
+
+/**************************************************************************/
+//return all test rows selected within a test collection
+function get_selected_test_rows(container){
+	return container.find("input.test-selected:checked").closest("tr");
+}
+
+/**************************************************************************/
+//grab given data attribute from all selected test rows
+function get_selected_test_data_elements(container,data_element){
+	var data = [];
+	get_selected_test_rows(container).each(function(){
+		data.push($(this).data(data_element));
+	});
+	return data;
+}
+
+/**************************************************************************/
+//set the review status for all input test rows
+function set_review_status_for_rows(rows,status){
+	var labels = rows.find(".label.review-status");
+	labels.removeClass("unreviewed reviewed")
+	if (status.requires_review){
+		labels.addClass("unreviewed");
+	}else{
+		labels.addClass("reviewed");
+	}
+	labels.text(status.name);
+}
+
+/**************************************************************************/
+//update the label for the number of unreviewed tests and adjust the
+//drop down option to reflect its review status
+function update_collection_review_status(container){
+	var unreviewed = container.find(".label.review-status.unreviewed");
+	var status = container.find(".collection-review-status");
+
+	status.removeClass("label-info label-warning label-success label-important");
+	status.addClass(unreviewed.length === 0 ? "label-success" : "label-warning");
+	status.html('<span>'+unreviewed.length + "</span> Unreviewed Tests");
+
+	var collection_row = container.parent().prev();
+	var opt = collection_row.find("select.instance-id option:selected");
+	opt.removeClass("reviewed unreviewed");
+	opt.text(opt.text().replace("*",""));
+
+	if (unreviewed.length > 0){
+		opt.addClass("unreviewed");
+		opt.text("*"+opt.text()+"*");
+	}else{
+		opt.addClass("reviewed");
+	}
+
+	set_review_status(collection_row);
+}
+
+/**************************************************************************/
+//User clicked Apply To Selected button. Update the status of the selected
+//tests and then update appropriate review statuses
+function update_statuses_for_collection(container){
+
+	var new_status = QAUtils.STATUSES[container.find(".status-update-value").val()];
+
+	if (!new_status){
+		return;
+	}
+
+	var uris = get_selected_test_data_elements(container,"instance_uri");
+	var button = container.find(".update-review-status");
+	var button_text = button.text();
+
+	if ((uris.length > 0) && ( new_status !== "")){
+
+		button.button("loading");
+
+		QAUtils.set_test_instances_status(uris,new_status.resource_uri,function(results,status){
+
+			if (status === "success"){
+				set_review_status_for_rows(get_selected_test_rows(container),new_status);
+				update_collection_review_status(container.closest(".qa-details"));
+				update_total_unreviewed();
+			}
+
+			button.button("complete");
+			button.data("complete-text",button_text).text(button_text);
+		});
+	}
+}
+/**************************************************************************/
+//update the review status for a test collection row
+function set_review_status(container){
+	var unreviewed = container.find("select.instance-id").find("option.unreviewed");
+	var counter = container.find(".unreviewed-count");
+	var wrapper = counter.parent();
+	counter.text(unreviewed.length);
+	set_review_status_color(counter);
+}
+/**************************************************************************/
+//appropriately color input unreviewed status counter
+function set_review_status_color(counter){
+	var wrapper = counter.parent();
+	wrapper.removeClass("label-warning label-success");
+	wrapper.addClass(parseInt(counter.text()) === 0 ? "label-success" : "label-warning");
+}
+/**************************************************************************/
+//update all total unreviewed counters on page
+function update_total_unreviewed(){
+	var total = 0;
+	var counter = $(".total-unreviewed-count");
+
+	$(".unreviewed-count").each(function(){
+		total += parseInt($(this).text());
+	});
+	counter.text(total);
+	set_review_status_color(counter);
+
+}
+
 /**************************************************************************/
 //when user selects a row either close it if it's already open or
 //open it and load details from server
 function on_select_test_list(test_list_row){
 
-	var test_lists_data_table = $("#qa-test-list-table").dataTable();
-	var table_is_closing = test_list_row.next().children(".qa-details").length > 0;
+	var review_table = $(".review-table").dataTable();
 
-	if (table_is_closing){
-		close_details(test_list_row, test_lists_data_table);
-	}else{
+	test_list_row.children("td:last").append('<span class="pull-right"><em>Loading...</em></span>');
+	var instance_id = test_list_row.find(".instance-id").val();
+	var instance_options ={
+		test_list:test_list_row.find(".instance-id").find("option:selected").data("test_list_id"),
+		unit__number:test_list_row.data("unit_number"),
+		frequency:test_list_row.data("frequency"),
+		order_by:["-work_completed","-id"],
+		id__lte:instance_id,
+		limit:HISTORY_INSTANCE_LIMIT
+	};
 
-		test_list_row.children("td:last").append('<span class="pull-right"><em>Loading...</em></span>');
+	//fetch resources from server and then display them
+	QAUtils.get_resources(
+		"testlistinstance",
 
-		var instance_options ={
-			test_list:test_list_row.attr("data-test_list_id"),
-			unit__number:test_list_row.attr("data-unit_number"),
-			frequency:test_list_row.attr("data-frequency"),
-			order_by:"-work_completed",
-			limit:HISTORY_INSTANCE_LIMIT
-		};
+		function(resources){
+			test_list_row.children("td:last").children("span:last").remove();
+			var test_list_instances = resources.objects;
 
-		//fetch resources from server and then display them
-		QAUtils.get_resources(
-			"testlistinstance",
+			//make sure we got results from server & user hasn't closed table
+			if (test_list_instances.length > 0){
+				var details_container = open_details(test_list_row, review_table);
+				display_test_list_details(details_container,instance_id,test_list_instances);
+				update_collection_review_status(details_container);
+				set_review_status(details_container.find(".review-status-container"));
+			}
+		},
+		instance_options
+	);
 
-			function(resources){
-				test_list_row.children("td:last").children("span:last").remove();
-				var test_list_instances = resources.objects;
-
-				//make sure we got results from server & user hasn't closed table
-				if (test_list_instances.length > 0){
-				    var details_container = open_details(test_list_row, test_lists_data_table);
-					display_test_list_details(details_container,test_list_instances);
-				}
-			},
-			instance_options
-		);
-	}
 }
+
 /**************************************************************************/
 $(document).ready(function(){
 
-	init_test_list_table();
+	$.when(QAUtils.init()).done(function(){
 
-	$("#qa-test-list-table tbody tr").each(function(idx,row){
-		update_row_color($(row));
+		//user changed the selected instance for a TestCollection
+		$("select.instance-id").change(function(event){
+			var test_list_row = $(event.currentTarget).parents("tr");
+			if ($(event.currentTarget).val() === "hide"){
+				close_details(test_list_row);
+			}else{
+				on_select_test_list(test_list_row);
+			}
+		});
+
+		//(de)select checkboxes for child tests when user clicks on header checkbox
+		$("input.toggle_children").live("change",function(e){
+			$(this).closest(".qa-details").find("input.test-selected, input.toggle_children").attr("checked",$(this).is(":checked"))
+		});
+
+		//user updated review status of tests
+		$(".update-review-status").live("click",function(){
+			update_statuses_for_collection($(this).closest(".qa-details"))
+		});
 	});
-
-	$("#qa-test-list-table tbody tr").click(function(event){
-		on_select_test_list($(event.currentTarget));
-	});
-
-	$("tbody tr.has-due-date").each(function(idx,row){
-		var date_string = $(this).data("due");
-		var due_date = null;
-		if (date_string !== ""){
-			due_date = QAUtils.parse_iso8601_date(date_string);
-		}
-		var freq = $(this).data("frequency");
-		QAUtils.set_due_status_color($(this).find(".due-status"),due_date,freq);
-	});
-
 });

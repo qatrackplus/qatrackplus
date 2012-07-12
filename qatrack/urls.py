@@ -1,9 +1,10 @@
 from django.conf.urls.defaults import patterns, include, url
 from django.views.generic.simple import direct_to_template
 
-# Uncomment the next two lines to enable the admin:
 from django.contrib import admin
 admin.autodiscover()
+
+import settings
 
 urlpatterns = patterns('',
     # Examples:
@@ -13,7 +14,7 @@ urlpatterns = patterns('',
         }, name='home'
     ),
 
-    url(r'^accounts/logout/$', 'django.contrib.auth.views.logout',{'next_page': '/login/'}),
+    url(r'^accounts/logout/$', 'django.contrib.auth.views.logout',{'next_page': settings.LOGIN_URL}),
 
     url(r'^accounts/', include('registration.urls')),
 
@@ -24,5 +25,7 @@ urlpatterns = patterns('',
 
     # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),
+
+    url(r'^',include('genericdropdown.urls')),
 
 )

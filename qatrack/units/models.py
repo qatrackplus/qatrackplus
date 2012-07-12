@@ -1,6 +1,8 @@
 from django.db import models
 from django.utils.translation import ugettext as _
 
+PHOTON = "photon"
+ELECTRON = "electron"
 
 #==========================================================================
 class UnitType(models.Model):
@@ -33,7 +35,7 @@ class Modality(models.Model):
 
     """
 
-    type_choices = (("photon", "Photon"), ("electron", "Electron"),)
+    type_choices = ((PHOTON, "Photon"), (ELECTRON, "Electron"),)
     type = models.CharField(_("Treatement modality type"), choices=type_choices, max_length=20)
     energy = models.FloatField(help_text=_("Nominal energy (in MV for photons and MeV for electrons"))
 
@@ -47,7 +49,7 @@ class Modality(models.Model):
             unit, particle = "MV", "Photon"
         else:
             unit, particle = "MeV", "Electron"
-        return "<Modality(%.1f%s,%s)>" % (self.energy, unit, particle)
+        return "<Modality(%.2f%s,%s)>" % (self.energy, unit, particle)
 
 
 #============================================================================
@@ -60,6 +62,10 @@ class Unit(models.Model):
 
     number = models.PositiveIntegerField(null=False, unique=True, help_text=_("A unique number for this unit"))
     name = models.CharField(max_length=256, help_text=_("The display name for this unit"))
+    serial_number = models.CharField(max_length=256, null=True, blank=True,help_text=_("Optional serial number"))
+    location = models.CharField(max_length=256, null=True, blank=True, help_text=_("Optional location information"))
+    install_date = models.DateField(null=True, blank=True, help_text = _("Optional install date"))
+
     type = models.ForeignKey(UnitType)
 
     modalities = models.ManyToManyField(Modality)

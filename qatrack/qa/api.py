@@ -9,7 +9,10 @@ from tastypie.authorization import DjangoAuthorization
 from tastypie.utils import timezone
 import qatrack.qa.models as models
 from qatrack.units.models import Unit,Modality, UnitType
+from qatrack import settings
 from tastypie.serializers import Serializer
+
+
 
 def csv_date(dt):
     return dateformat.format(timezone.make_naive(dt),DATETIME_FORMAT)
@@ -118,15 +121,16 @@ class TestListResource(ModelResource):
         }
     #----------------------------------------------------------------------
     def dehydrate_frequencies(self,bundle):
-        return list(bundle.obj.unittestlists_set.values_list("frequency",flat=True).distinct())
+        return list(bundle.obj.assigned_to.values_list("frequency__slug",flat=True).distinct())
 
 #============================================================================
 class TestInstanceResource(ModelResource):
     test = tastypie.fields.ForeignKey("qatrack.qa.api.TestResource","test", full=True)
     reference = tastypie.fields.ForeignKey("qatrack.qa.api.ReferenceResource","reference", full=True,null=True)
     tolerance = tastypie.fields.ForeignKey("qatrack.qa.api.ToleranceResource","tolerance", full=True,null=True)
+    status = tastypie.fields.ForeignKey("qatrack.qa.api.StatusResource","status",full=True)
     unit = tastypie.fields.ForeignKey(UnitResource,"unit",full=True);
-
+    reviewed_by = tastypie.fields.CharField()
     class Meta:
         queryset = models.TestInstance.objects.all()
         resource_name = "values"
@@ -136,10 +140,16 @@ class TestInstanceResource(ModelResource):
             'test':ALL_WITH_RELATIONS,
             'work_completed':ALL,
             'id':ALL,
+            'unit':ALL_WITH_RELATIONS,
+            'status':ALL_WITH_RELATIONS,
         }
         ordering= ["work_completed"]
         authentication = BasicAuthentication()
         authorization = DjangoAuthorization()
+    #----------------------------------------------------------------------
+    def dehydrate_reviewed_by(self,bundle):
+        if bundle.obj.reviewed_by:
+            return bundle.obj.reviewed_by.username
 
     #----------------------------------------------------------------------
     def build_filters(self,filters=None):
@@ -147,29 +157,37 @@ class TestInstanceResource(ModelResource):
         if filters is None:
             filters = {}
 
-        orm_filters = super(TestInstanceResource,self).build_filters(filters)
+        orm_filters = super(TestInstanceResource,self).build_filters()
 
-        if "units" in filters:
-            orm_filters["unit__number__in"] = filters["units"].split(',')
 
-        if "from_date" in filters:
-            try:
-                orm_filters["work_completed__gte"] = timezone.datetime.datetime.strptime(filters["from_date"],"%d-%m-%Y")
-            except ValueError:
-                pass
-        if "to_date" in filters:
-            try:
-                orm_filters["work_completed__lte"] = timezone.datetime.datetime.strptime(filters["to_date"],"%d-%m-%Y")
-            except ValueError:
-                pass
+        today = timezone.timezone.now()
+        last_year = today-timezone.timezone.timedelta(days=365)
+        filters_requiring_processing = (
+            ("from_date","work_completed__gte","date",today.strftime(settings.SIMPLE_DATE_FORMAT)),
+            ("to_date","work_completed__lte","date",last_year.strftime(settings.SIMPLE_DATE_FORMAT)),
+            ("unit","unit__number__in",None,[]),
+            ("slug","test__slug__in",None,[]),
+        )
 
-        if "review_status" in filters:
-            orm_filters["status__in"] = filters["review_status"].split(',')
+        for field,filter_string,filter_type,default in filters_requiring_processing:
 
-        if "short_names" in filters:
-            orm_filters["test__short_name__in"] = [x.strip() for x in filters["short_names"].split(',')]
-        #elif "test_id" in filters:
-        #    orm_filters["test__pk"] = filters["pk"]
+            value = filters.pop(field,default)
+
+            if filter_type == "date":
+                try:
+                    value = timezone.datetime.datetime.strptime(value[0],settings.SIMPLE_DATE_FORMAT)
+                    value = timezone.make_aware(value)
+                    orm_filters[filter_string] = value
+                except (ValueError, IndexError, TypeError):
+                    pass
+            else:
+                orm_filters[filter_string] = value
+
+        #non specfic list filters
+        for key in filters:
+            if key in self.Meta.filtering:
+                orm_filters["%s__in"%key] = filters.getlist(key)
+
         return orm_filters
 
     #----------------------------------------------------------------------
@@ -193,6 +211,7 @@ def serialize_testinstance(test_instance):
         'user':None,
         'unit':None,
         'test':None,
+        'reviewed_by':None
     }
     if ti.reference:
         info["reference"] = ti.reference.value
@@ -207,7 +226,7 @@ def serialize_testinstance(test_instance):
         }
 
     if ti.test:
-        info["test"] = ti.test.short_name
+        info["test"] = ti.test.slug
 
     if ti.unit:
         info["unit"] = ti.unit.number
@@ -215,57 +234,32 @@ def serialize_testinstance(test_instance):
     if ti.created_by:
         info["user"] = ti.created_by.username
 
+    if ti.reviewed_by:
+        info["reviewed_by"] = ti.reviewed_by.username
+
     if ti.test:
-        info["test"] = ti.test.short_name
+        info["test"] = ti.test.slug
 
     return info
 
 #============================================================================
-class FrequencyResource(Resource):
-    """available test frequencies"""
-    value = tastypie.fields.CharField()
-    display = tastypie.fields.CharField()
+class FrequencyResource(ModelResource):
     class Meta:
-        allowed_methods = ["get"]
-    #----------------------------------------------------------------------
-    def dehydrate_value(self,bundle):
-        return bundle.obj["value"]
-    #----------------------------------------------------------------------
-    def dehydrate_display(self,bundle):
-        return bundle.obj["display"]
-    #----------------------------------------------------------------------
-    def get_object_list(self):
-        return [{"value":x[0],"display":x[1]} for x in models.FREQUENCY_CHOICES]
-    #----------------------------------------------------------------------
-    def obj_get_list(self,request=None,**kwargs):
-        return self.get_object_list()
+        queryset = models.Frequency.objects.all()
+
 
 #============================================================================
-class StatusResource(Resource):
+class StatusResource(ModelResource):
     """avaialable test statuses"""
-    value = tastypie.fields.CharField()
-    display = tastypie.fields.CharField()
     class Meta:
-        allowed_methods = ["get"]
-    #----------------------------------------------------------------------
-    def dehydrate_value(self,bundle):
-        return bundle.obj["value"]
-    #----------------------------------------------------------------------
-    def dehydrate_display(self,bundle):
-        return bundle.obj["display"]
-    #----------------------------------------------------------------------
-    def get_object_list(self):
-        return [{"value":x[0],"display":x[1]} for x in models.STATUS_CHOICES]
-    #----------------------------------------------------------------------
-    def obj_get_list(self,request=None,**kwargs):
-        return self.get_object_list()
+        queryset = models.TestInstanceStatus.objects.all()
 
 
 #============================================================================
 class ValueResource(Resource):
     unit = tastypie.fields.IntegerField()
     name = tastypie.fields.CharField()
-    short_name = tastypie.fields.CharField()
+    slug = tastypie.fields.CharField()
     data = tastypie.fields.DictField()
 
     #============================================================================
@@ -274,8 +268,8 @@ class ValueResource(Resource):
         resource_name = "grouped_values"
         allowed_methods = ["get"]
     #----------------------------------------------------------------------
-    def dehydrate_short_name(self,bundle):
-        return bundle.obj["short_name"]
+    def dehydrate_slug(self,bundle):
+        return bundle.obj["slug"]
     #----------------------------------------------------------------------
     def dehydrate_name(self,bundle):
         return bundle.obj["name"]
@@ -306,19 +300,19 @@ class ValueResource(Resource):
     def get_object_list(self,request):
         """return organized values"""
         objects = TestInstanceResource().obj_get_list(request)
-        names = objects.order_by("test__name").values_list("test__short_name","test__name").distinct()
+        names = objects.order_by("test__name").values_list("test__slug","test__name").distinct()
         units = objects.order_by("unit__number").values_list("unit__number",flat=True).distinct()
         self.dispatch
         organized = []
-        for short_name,name in names:
+        for slug,name in names:
             for unit in units:
                 data = objects.filter(
-                        test__short_name=short_name,
+                        test__slug=slug,
                         unit__number = unit,
-                ).order_by("work_completed")
+                ).order_by("work_completed","pk")
 
                 organized.append({
-                    'short_name':short_name,
+                    'slug':slug,
                     'name':name,
                     'unit':unit,
                     'data':data,
@@ -336,7 +330,7 @@ class TestResource(ModelResource):
     class Meta:
         queryset = models.Test.objects.all()
         filtering = {
-            "short_name": ALL,
+            "slug": ALL,
             "id":ALL
         }
     #    excludes = ["values"]
@@ -364,14 +358,15 @@ class TestListInstanceResource(ModelResource):
         queryset = models.TestListInstance.objects.all()
         filtering = {
             "unit":ALL_WITH_RELATIONS,
-            "test_list": ALL_WITH_RELATIONS
+            "test_list": ALL_WITH_RELATIONS,
+            "id":ALL,
         }
 
-        ordering= ["work_completed"]
+        ordering= ["work_completed","id"]
 
     #----------------------------------------------------------------------
     def dehydrate_review_status(self,bundle):
-        reviewed = bundle.obj.testinstance_set.exclude(status=models.UNREVIEWED).count()
+        reviewed = bundle.obj.testinstance_set.exclude(status__requires_review=True).count()
         total = bundle.obj.testinstance_set.count()
         if total == reviewed:
             #ugly

@@ -1,27 +1,8 @@
 {% extends "site_base.html" %}
 
 {% load staticfiles %}
+{% load qa_tags %}
 
-{% block extra_script %}
-    <script src="{% static "data_tables/js/jquery.dataTables.js" %}"></script>
-    <script src="{% static "data_tables/js/jquery.dataTables.columnFilter.js" %}"></script>
-	<script src="{% static "data_tables/js/DT_bootstrap.js" %}"></script>
-	<script src="{% static "data_tables/js/DT_sort.js" %}"></script>
-
-    <script src="{% static "js/jquery.flot.min.js" %}"></script>
-    <script src="{% static "js/jquery.flot.resize.js" %}"></script>
-    <script src="{% static "js/jquery.flot.fillbetween.js" %}"></script>
-    <script src="{% static "js/jquery.sparkline.min.js" %}"></script>
-
-	<script src="{% static "js/qautils.js" %}"></script>
-	<script src="{% static "js/qareview.js" %}"></script>
-
-{% endblock %}
-
-{% block extra_style %}
-    <link href="{% static "css/qa.css" %}" rel="stylesheet">
-    <link href="{% static "data_tables/css/DT_bootstrap.css" %}" rel="stylesheet">
-{% endblock extra_style %}
 
 {% block body %}
     <div class="row-fluid">
@@ -29,70 +10,14 @@
             <h2>Overall QA Program Status</h2>
         </div>
     </div>
+
     <div class="row-fluid" >
         <div class="span12 container form-inline">
-            <table class="table table-condensed table-bordered table-striped" id="qa-test-list-table">
-                <thead>
-                    <tr>
-                        {% for header in table_headers %}
-							<th>{{header}}</th>
-                        {% endfor %}
-					</tr>
-                </thead>
-
-                <tbody>
-
-                    {% for row in data %}
-                        <tr class="{% cycle 'odd' 'even' %} has-due-date" {% for k,v in row.info.items %} data-{{k}}="{{v}}" {% endfor %} >
-                            {% for prop,val in row.attrs %}
-
-                                    {% if prop == "pass_fail_status" %}
-										<td class="{{prop}}">
-                                        {% for status,display,tests in val %}
-                                            {% if tests.count > 0 %}
-                                            <span class="label {{status}}">{{tests.count}} {{display}}</span>
-                                            {% endif %}
-                                        {% endfor %}
-										</td>
-									{% elif prop == "review_status" %}
-										{% if val %}
-											<td class="{{prop}} approved">
-												<span class="label label-success">Reviewed by {{val.0}} on {{val.1}}
-											</td>
-										{% else %}
-											<td class="{{prop}} unreviewed">
-												<span class="label label-info">Unreviewed</label>
-											</td>
-										{% endif %}
-									{% elif prop  == "due"%}
-										<td class="{{prop}} unreviewed">
-											<span class="label due-status">{% if val %}{{val.date}}{%else%}New Test{%endif%}</span>
-										</td>
-									{% elif prop  == "last_done"%}
-										<td class="{{prop}} unreviewed">
-											{% if val %}{{val}}{%else%}New Test{%endif%}
-										</td>
-
-                                    {% else %}
-										<td class="{{prop}}">
-                                        {{val}}
-										</td>
-                                    {% endif %}
-                                </td>
-                            {% endfor %}
-                        </tr>
-                    {% endfor %}
-                </tbody>
-				<tfoot>
-                    <tr>
-                        {% for header in table_headers %}
-                            <th>{{header}}</th>
-                        {% endfor %}
-					</tr>
-				</tfoot>
-            </table>
-        </div>
-    </div>
-
-
+			{{unittestcollections|as_unittestcollections_table:"review"}}
+		</div>
+	</div>
 {% endblock body %}
+
+{% block end_body_extra_script %}
+	<script src="{% static "js/qareview.js" %}"></script>
+{% endblock end_body_extra_script %}

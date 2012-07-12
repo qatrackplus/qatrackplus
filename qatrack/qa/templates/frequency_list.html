@@ -1,67 +1,11 @@
 {% extends "site_base.html" %}
 {% load staticfiles %}
-
-{% block extra_style %}
-    <link href="{% static "css/qa.css" %}" rel="stylesheet">
-{% endblock %}
+{% load qa_tags %}
 
 {% block body %}
 
-    <h2>{{unit_test_list.unit.name}} {{frequency|title}} Test Lists</h2>
+    <h2>{{unittestcollections.0.unit.name}} {{frequency|title}} Test Lists</h2>
 
-    <table class="table table-bordered table-striped table-condensed span6">
+    {{unittestcollections|as_unittestcollections_table}}
 
-        <thead>
-            <tr>
-                <th>Test List</th>
-                <th>{{ frequency|title }} QA Last Performed</th>
-                <th>QA Status</th>
-                <th>Perform</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for test_list, last_completed in unit_test_list.test_lists_and_last_complete %}
-            <tr>
-                <td>{{test_list.name|title}}</td>
-
-                {% if last_completed %}
-                    <td>{{last_completed.work_completed}}</td>
-                    <td>
-                        {% for status,display,tests in last_completed.pass_fail_status %}
-                            {% if tests.count > 0 %}
-                            <span class="label {{status}}">{{tests.count}} {{display}}</span>
-                            {% endif %}
-                        {% endfor %}
-                    </td>
-                {% else %}
-                    <td><span class="btn-info disabled">New Test List</span></td>
-                    <td><span class="btn-info disabled">New Test List</span></td>
-                {% endif %}
-
-                 <td><a href="{%url perform_qa frequency=frequency type="test_list" pk=test_list.pk unit_number=unit_test_list.unit.number %}">Perform</a></td>
-            </tr>
-        {% endfor %}
-
-        {% for cycle_, last_completed in unit_test_list.cycles_and_last_complete %}
-            <tr>
-                <td>{{cycle_.name|title}}</td>
-                {% if last_completed %}
-                    <td>{{last_completed.work_completed}}</td>
-                    <td>
-                        {% for status,display,tests in last_completed.pass_fail_status %}
-                            {% if tests.count > 0 %}
-                            <span class="label {{status}}">{{tests.count}} {{display}}</span>
-                            {% endif %}
-                        {% endfor %}
-                    </td>
-                {% else %}
-                    <td><span class="btn-info disabled">New Test List</span></td>
-                    <td><span class="btn-info disabled">New Test List</span></td>
-                {% endif %}
-                 <td><a href="{%url perform_qa frequency=frequency type="cycle" pk=cycle_.pk unit_number=unit_test_list.unit.number%}?day=next">Perform</a></td>
-            </tr>
-        {% endfor %}
-
-        </tbody>
-    </table>
 {% endblock %}
