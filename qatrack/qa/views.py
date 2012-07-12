@@ -266,7 +266,7 @@ class PerformQAView(CreateView):
         unit = self.unit_test_list.unit
         freq = self.unit_test_list.frequency
 
-        for test in self.test_list.all_tests():
+        for test in self.test_list.ordered_tests():
             unit_test_info = models.UnitTestInfo.objects.get(test=test,unit=unit,frequency=freq)
 
             ti = models.TestInstance(
