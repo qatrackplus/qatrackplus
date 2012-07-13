@@ -60,7 +60,7 @@
 					</td>
 
 				{% else %}
-					<td>{{utc.assigned_to.group.name}}</td>
+					<td>{{utc.assigned_to.name}}</td>
 					<td><a href="{%url perform_qa utc.pk%}?day=next">Perform</a></td>
 				{% endif %}
 		   </tr>
