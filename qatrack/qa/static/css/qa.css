@@ -22,6 +22,11 @@ select.qa-input{
     max-width:85px;
     text-align:right;
 }
+
+.qa-table  tr:hover th {
+  background-color: inherit;
+}
+
 .qa-table td {
     font-size:0.9em;
     padding-bottom:2px;
@@ -169,10 +174,6 @@ span.tolerance {
     width:150px;
 }
 
-/*td.qa-details,
-td.qa-details:hover{
-    background-color:#D9EDF7;
-}*/
 option.unreviewed {
     background-color:#D9EDF7;
 }

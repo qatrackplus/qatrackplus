@@ -144,7 +144,7 @@ function get_value_for_row(input_row_element){
         }else{
             return null;
         }
-    
+
     }else {
         val = input_row_element.find(".qa-value input").val();
         if ($.trim(val) === ""){
@@ -283,23 +283,20 @@ $(document).ready(function(){
 
     //anytime an input changes run validation
     $(".qa-input").change(function(){
+        //only allow numerical characters on input
+
+        this.value = this.value.replace(QAUtils.NUMERIC_WHITELIST_REGEX,'');
         check_test_status($(this));
         calculate_composites();
     });
 
-    //only allow numerical characters on input
-    $(".qa-input").keyup(function(e){
+    /*$(".qa-input").keyup(function(e){
         //whitelist characters
-        this.value = this.value.replace(QAUtils.NUMERIC_WHITELIST_REGEX,'');
 
-        //color input if not valid
-        if (!QAUtils.NUMERIC_REGEX.test(this.value)){
-            $(this).css("background-color",QAUtils.ACT_COLOR);
-        }else{
-            $(this).css("background-color","");
-        }
+        check_test_status($(this));
+
     });
-
+*/
     //run filter routine anytime user alters the categories
     $("#category_filter").change(filter_by_category);
 
@@ -307,19 +304,19 @@ $(document).ready(function(){
     $("#cycle-day").change(set_cycle_link);
 
     //prevent form submission when user hits enter key
-    $(this).on("keypress","input", function(e) {
+    $(this).on("keypress","input, select", function(e) {
 
         //rather than submitting form on enter, move to next value
         if (e.keyCode == 13) {
-            var inputs = $(this).parents("form").find("input:text, input:radio");
+            var inputs = $(this).parents("form").find(".qa-input");
             var idx = inputs.index(this);
-
+            var next_row;
             if (idx == inputs.length - 1) {
-                inputs[0].select();
+                next_row = $(this).parents("form").find(".qa-valuerow").first();
             } else {
-                inputs[idx + 1].focus(); //  handles submit buttons
-                inputs[idx + 1].select();
+                next_row = $(this).parents("tr").nextAll(".qa-valuerow");
             }
+            next_row.find(".qa-input").first().focus();
             return false;
         }
     });
@@ -345,6 +342,13 @@ $(document).ready(function(){
     //run a full validation on page load
     full_validation();
 
-
+    var tabindex = 1;
+    $('.qa-input').each(function() {
+        if ($(this).type !== "hidden") {
+            $(this).attr("tabindex", tabindex);
+            tabindex++;
+        }
+    });
+    $(".qa-input").first().focus();
 });
 

@@ -6,13 +6,6 @@
     <link href="{% static "datepicker/css/datepicker.css" %}" rel="stylesheet">
 {% endblock %}
 
-{% block extra_script %}
-
-    <script src="{% static "js/qautils.js" %}"></script>
-    <script src="{% static "js/qa.js" %}"></script>
-    <script src="{% static "datepicker/js/bootstrap-datepicker.js" %}"></script>
-
-{% endblock %}
 
 {% load qa_tags %}
 
@@ -139,4 +132,11 @@
 		</form>
 	</div>
 </div>
+{% endblock %}
+
+{% block end_body_extra_script %}
+
+    <script src="{% static "js/qa.js" %}"></script>
+    <script src="{% static "datepicker/js/bootstrap-datepicker.js" %}"></script>
+
 {% endblock %}
