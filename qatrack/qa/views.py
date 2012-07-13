@@ -306,6 +306,8 @@ class PerformQAView(CreateView):
             self.object.unit = self.unit_test_list.unit
             self.object.created_by = self.request.user
             self.object.modified_by= self.request.user
+            if self.object.work_completed is None:
+                self.object.work_completed = timezone.now()
             self.object.save()
 
             status = models.TestInstanceStatus.objects.default()
