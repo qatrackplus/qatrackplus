@@ -40,7 +40,7 @@ function init_test_collection_tables(){
 				{"sType":"span-day-month-year-sort"}, //due date
 				null, //qa status
 				null,//assigned to
-				null, //perform link
+				null //perform link
 			];
 			filter_cols = [
 				{type: "select"}, //Unit
@@ -50,7 +50,7 @@ function init_test_collection_tables(){
 				{type: "text" }, //due date
 				null, //qa status
 				{type: "select"},//assigned to
-				null, //perform link
+				null //perform link
 			];
 		}
 
