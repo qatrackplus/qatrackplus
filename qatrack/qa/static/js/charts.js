@@ -196,8 +196,9 @@ function set_chart_url(){
 		});
 	});
 
-	document.location.hash = "#"+options.join(QAUtils.OPTION_SEP);
-	$("#chart-url").val(document.location);
+	var loc = window.location.protocol + "//"+window.location.hostname+":"+window.location.port+window.location.pathname;
+
+	$("#chart-url").val(loc+"#"+options.join(QAUtils.OPTION_SEP));
 }
 /*************************************************************************/
 //Do a full update of the chart
@@ -546,6 +547,7 @@ $(document).ready(function(){
 	$("#gen-control-chart").click(update);
 
     $(".date").datepicker().on('changeDate',update);
+	$("#from-date, #to-date").change(update);
 
     $(".collapse").collapse({selector:true,toggle:true});
 
