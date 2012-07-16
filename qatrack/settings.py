@@ -9,7 +9,7 @@ PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
 
 ADMINS = (
-    ('Randle Taylor', 'rataylor@toh.on.ca'),
+    ('Admin Name', 'admin.email@yourplace.com'),
 )
 
 MANAGERS = ADMINS
@@ -206,12 +206,22 @@ LOGGING = {
             'level': 'ERROR',
             'filters': ['require_debug_false'],
             'class': 'django.utils.log.AdminEmailHandler'
-         }
+         },
+         'console':{
+              'level':'DEBUG',
+              'class':'logging.StreamHandler',
+          },
     },
     'loggers': {
+
         'django.request': {
             'handlers': ['mail_admins'],
             'level': 'ERROR',
+            'propagate': True,
+        },
+        'qatrack.console': {
+            'handlers': ['console'],
+            'level': 'INFO',
             'propagate': True,
         },
     }
