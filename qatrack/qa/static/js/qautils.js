@@ -458,17 +458,16 @@ var QAUtils = new function() {
 	};
 
 	this.set_due_status_color = function(elem,last_done,frequency){
-		var color;
 		var status;
 
 		if (last_done === null){
-			color = this.NOT_DONE_COLOR;
+			status = this.OK;
 		}else{
 			status = this.due_status(last_done,frequency);
-			color = this.qa_color(status);
 		}
 
-		$(elem).css("background-color",color);
+		$(elem).removeClass([this.ACTION, this.TOLERANCE, this.OK].join(" "));
+		$(elem).addClass(status);
 	};
 
 	this.make_select = function(id,cls,options){

@@ -129,16 +129,16 @@ tr.col-group th{
 }
 /**************************************************/
 /*QA Status Spans                                 */
-span.no_tol, span.not_done {
+.no_tol, .not_done {
     background-color:#3a87ad;
 }
-span.ok {
+.ok {
     background-color:#468847;
 }
-span.action {
+.action {
     background-color:#b94a48;
 }
-span.tolerance {
+.tolerance {
     background-color: #f89406;
 }
 

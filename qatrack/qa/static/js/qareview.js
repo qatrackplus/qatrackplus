@@ -200,8 +200,7 @@ function add_test_row(parent,instance,test_list_instances){
 	create_spark_line($("#"+spark_id),instance.test,test_list_instances);
 
 	//set color Pass/Fail column based on test
-	var pass_fail_td = test_row.find("span.pass-fail");
-	pass_fail_td.css("background-color",QAUtils.qa_color(instance.pass_fail));
+	var pass_fail_td = test_row.find("span.pass-fail").addClass(instance.pass_fail);
 	pass_fail_td.addClass("label");
 	return test_row;
 }
@@ -244,7 +243,7 @@ function display_test_list_details(container,instance_id,test_list_instances){
 		}
 	}
 
-	container.addClass("sub-table-container");//css('background-color',QAUtils.REVIEW_COLOR);
+	container.addClass("sub-table-container");
 
 	//add row using to_review test_list_instance
 	$.each(to_review.test_instances,function(i,test_instance){
