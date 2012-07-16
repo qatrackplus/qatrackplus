@@ -20,9 +20,7 @@
 			{# display all individual test lists #}
 			<tr class="{% cycle 'odd' 'even' %} has-due-date" {{utc|as_data_attributes}}>
 				<td>
-					<a class="nav-list" href="{% url qa_by_frequency_unit utc.frequency.slug utc.unit.number %}" title="Perform {{utc.frequency.name}} QA for {{utc.unit.name}}">
-						{{utc.unit.name}}
-					</a>
+					{{utc.unit.name}}
 				</td>
 				<td>{{utc.frequency.name}}</td>
 				<td>{{utc.tests_object.name|title}}</td>

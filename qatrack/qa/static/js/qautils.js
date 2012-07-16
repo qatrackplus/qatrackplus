@@ -446,7 +446,9 @@ var QAUtils = new function() {
 
 		var today = new Date().setHours(0,0,0,0);
 		var delta_time = last_done - today; //in ms
-
+		if (delta_time > 0){
+			return this.NOT_DUE;
+		}
 		var delta_days = Math.floor(Math.abs(this.milliseconds_to_days(delta_time)));
 		var due,overdue;
 
@@ -455,14 +457,14 @@ var QAUtils = new function() {
 		return this.compare_due_date_delta(delta_days,frequency.due_interval,frequency.overdue_interval);
 	};
 
-	this.set_due_status_color = function(elem,due_date,frequency){
+	this.set_due_status_color = function(elem,last_done,frequency){
 		var color;
 		var status;
 
-		if (due_date === null){
+		if (last_done === null){
 			color = this.NOT_DONE_COLOR;
 		}else{
-			status = this.due_status(due_date,frequency);
+			status = this.due_status(last_done,frequency);
 			color = this.qa_color(status);
 		}
 
