@@ -434,12 +434,12 @@ var QAUtils = new function() {
 		return ms/(1000*60*60*24);
 	};
 	this.compare_due_date_delta = function(delta,due,overdue){
-		if (delta >= overdue ){
-			return this.OVERDUE;
-		}else if (delta >= due){
+		if (delta < due){
+			return this.NOT_DUE;
+		}else if ((delta == due) || (delta < overdue )){
 			return this.DUE;
 		}
-		return this.NOT_DUE;
+		return this.OVERDUE;
 	};
 	this.due_status = function(last_done,test_frequency){
 		last_done.setHours(0,0,0,0)
