@@ -407,7 +407,7 @@ class UnitGroupedFrequencyListView(ListView):
     #----------------------------------------------------------------------
     def get_queryset(self):
         """filter queryset by frequency"""
-
+        print self.kwargs
         return models.UnitTestCollection.objects.filter(
             frequency__slug=self.kwargs["frequency"],
             active=True,
