@@ -2,20 +2,40 @@
 import django.conf.global_settings as DEFAULT_SETTINGS
 import os
 
+
+#-----------------------------------------------------------------------------
+#Debug settings - remember to set both DEBUG & TEMPLATE_DEBUG to false when
+#deploying (either here or in local_settings.py)
 DEBUG = True
 TEMPLATE_DEBUG = True
 
-PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
-
+#Who to email when server errors occur
 ADMINS = (
     ('Admin Name', 'admin.email@yourplace.com'),
 )
-
 MANAGERS = ADMINS
+SEND_BROKEN_LINK_EMAILS = True
+
+#-----------------------------------------------------------------------------
+#misc settings
+PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
+
+# Python dotted path to the WSGI application used by Django's runserver.
+WSGI_APPLICATION = 'qatrack.wsgi.application'
+
+# Make this unique, and don't share it with anybody.
+SECRET_KEY = '78kj_s=rqh46bsv10eb-)uyy02kr35jy19pp*7u$4-te=x0^86'
+ROOT_URLCONF = 'qatrack.urls'
+
+SITE_ID = 1
+SITE_NAME = "QATrack+"
+
+#-----------------------------------------------------------------------------
+#Database settings
 
 #if you wish to override the database settings below (e.g. for deployment),
-#please do so in a local_settings.py file
+#please do so here or in a local_settings.py file
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
@@ -27,6 +47,9 @@ DATABASES = {
     }
 }
 
+#----------------------------------------------------------------------------
+#Default local settings
+
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
 # although not all choices may be available on all operating systems.
@@ -35,16 +58,6 @@ DATABASES = {
 # If running in a Windows environment this must be set to the same as your
 # system time zone.
 TIME_ZONE = 'America/Toronto'
-
-# Language code for this installation. All choices can be found here:
-# http://www.i18nguy.com/unicode/language-identifiers.html
-LANGUAGE_CODE = 'en-us'
-
-SITE_ID = 1
-SITE_NAME = "QATrack+"
-# If you set this to False, Django will make some optimizations so as not
-# to load the internationalization machinery.
-USE_I18N = True
 
 # If you set this to False, Django will not format dates, numbers and
 # calendars according to the current locale
@@ -61,6 +74,18 @@ INPUT_DATE_FORMATS = (
 )
 SIMPLE_DATE_FORMAT = "%d-%m-%Y"
 DATETIME_HELP = "Format DD-MM-YY hh:mm (hh:mm is 24h time e.g. 14:30)"
+
+# Language code for this installation. All choices can be found here:
+# http://www.i18nguy.com/unicode/language-identifiers.html
+LANGUAGE_CODE = 'en-us'
+
+# If you set this to False, Django will make some optimizations so as not
+# to load the internationalization machinery.
+USE_I18N = True
+
+
+#----------------------------------------------------------------------------
+#static media settings
 
 #  Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
@@ -97,16 +122,9 @@ STATICFILES_FINDERS = (
 #    'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
-# Make this unique, and don't share it with anybody.
-SECRET_KEY = '78kj_s=rqh46bsv10eb-)uyy02kr35jy19pp*7u$4-te=x0^86'
 
-# List of callables that know how to import templates from various sources.
-TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.app_directories.Loader',
-#     'django.template.loaders.eggs.Loader',
-)
-
+#------------------------------------------------------------------------------
+#Middleware
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -120,17 +138,23 @@ MIDDLEWARE_CLASSES = (
 #for django-debug-toolbar
 INTERNAL_IPS = ('127.0.0.1',)
 
-ROOT_URLCONF = 'qatrack.urls'
 
-LOGIN_EXEMPT_URLS = [
-    r"^accounts/",
-]
+
+#login required middleware settings
+LOGIN_EXEMPT_URLS = [r"^accounts/",]
 LOGIN_REDIRECT_URL = '/qa/'
 LOGIN_URL = "/accounts/login/"
 ACCOUNT_ACTIVATION_DAYS = 7
 
-# Python dotted path to the WSGI application used by Django's runserver.
-WSGI_APPLICATION = 'qatrack.wsgi.application'
+
+#------------------------------------------------------------------------------
+#Template settings
+# List of callables that know how to import templates from various sources.
+TEMPLATE_LOADERS = (
+    'django.template.loaders.filesystem.Loader',
+    'django.template.loaders.app_directories.Loader',
+#     'django.template.loaders.eggs.Loader',
+)
 
 TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
@@ -141,17 +165,18 @@ TEMPLATE_DIRS = (
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = list(DEFAULT_SETTINGS.TEMPLATE_CONTEXT_PROCESSORS)
-TEMPLATE_CONTEXT_PROCESSORS += [
-    "qatrack.context_processors.site",
-]
+TEMPLATE_CONTEXT_PROCESSORS += ["qatrack.context_processors.site",]
 
-#you can add more fixture
+#------------------------------------------------------------------------------
+#Fixtures
+#you can add more default fixture locations here
 FIXTURE_DIRS = (
     'fixtures/',
     'fixtures/test/'
 )
 
-INSTALLED_APPS = (
+#------------------------------------------------------------------------------
+INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -165,28 +190,59 @@ INSTALLED_APPS = (
 
     'genericdropdown',
     'django_coverage',
-    #'debug_toolbar',
-    #qatrack specific
+    'debug_toolbar',
+
     'qatrack.accounts',
     'qatrack.units',
     'qatrack.qa',
     'qatrack.theme_bootstrap',
     'qatrack.data_tables',
     'qatrack.notifications',
-)
+]
 
+
+#-----------------------------------------------------------------------------
+#Email and notification settings
 EMAIL_NOTIFICATION_USER = None
 EMAIL_NOTIFICATION_PWD = None
 EMAIL_NOTIFICATION_TEMPLATE = "notification_email.txt"
 EMAIL_NOTIFICATION_SENDER = "qatrack"
 EMAIL_NOTIFICATION_SUBJECT = "QATrack+ Test Status Notification"
 
-
 EMAIL_HOST = "" #e.g. 'smtp.gmail.com'
 EMAIL_HOST_USER = '' # e.g. "randle.taylor@gmail.com"
 EMAIL_HOST_PASSWORD = 'your_password_here'
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
+
+#-----------------------------------------------------------------------------
+#Authentication backend settings
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'qatrack.accounts.backends.ActiveDirectoryGroupMembershipSSLBackend',
+)
+
+#active directory settings
+AD_DNS_NAME='' # e.g. ad.civic1.ottawahospital.on.ca
+
+# If using non-SSL use these
+AD_LDAP_PORT=389
+AD_LDAP_URL='ldap://%s:%s' % (AD_DNS_NAME,AD_LDAP_PORT)
+
+# If using SSL use these:
+#AD_LDAP_PORT=636
+#AD_LDAP_URL='ldaps://%s:%s' % (AD_DNS_NAME,AD_LDAP_PORT)
+
+AD_SEARCH_DN = "" #eg "dc=ottawahospital,dc=on,dc=ca"
+AD_NT4_DOMAIN= "" #Network domain that AD server is part of
+
+AD_SEARCH_FIELDS= ['mail','givenName','sn','sAMAccountName','memberOf']
+AD_MEMBERSHIP_REQ= [] # eg ["*TOHCC - All Staff | Tout le personnel  - CCLHO"]
+#AD_CERT_FILE='/path/to/your/cert.txt'
+
+
+#------------------------------------------------------------------------------
+#Logging Settings
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
@@ -227,10 +283,12 @@ LOGGING = {
     }
 }
 
+#------------------------------------------------------------------------------
 #Testing settings
 #TEST_RUNNER = 'django_coverage.coverage_runner.CoverageRunner'
 COVERAGE_ADDITIONAL_MODULES = ["qatrack.tests"]
 
+#------------------------------------------------------------------------------
 #local_settings contains anything that should be overridden
 #based on site specific requirements (e.g. deployment, development etc)
 try:
