@@ -4,6 +4,11 @@
 {% load l10n %}
 {% load staticfiles %}
 
+{% block favicon %}
+	<link rel="shortcut icon" href="{% static "qatrack/favicon.ico" %}">
+	<link rel="apple-touch-icon" href="{% static "qatrack/apple-touch-icon.png" %}">
+{% endblock favicon %}
+
 {% block extra_style %}
     <link href="{% static "css/qa.css" %}" rel="stylesheet">
     <link href="{% static "data_tables/css/DT_bootstrap.css" %}" rel="stylesheet">
