@@ -217,6 +217,12 @@ EMAIL_HOST_PASSWORD = 'your_password_here'
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 
+
+#-----------------------------------------------------------------------------
+#Account settings
+#a list of group names to automatically add users to when they sign up
+DEFAULT_GROUP_NAMES = [] # eg ["Therapists"]
+
 #-----------------------------------------------------------------------------
 #Authentication backend settings
 AUTHENTICATION_BACKENDS = (
@@ -224,7 +230,7 @@ AUTHENTICATION_BACKENDS = (
     'qatrack.accounts.backends.ActiveDirectoryGroupMembershipSSLBackend',
 )
 
-#active directory settings
+#active directory settings (not required if only using ModelBackend
 AD_DNS_NAME='' # e.g. ad.civic1.ottawahospital.on.ca
 
 # If using non-SSL use these
@@ -241,6 +247,7 @@ AD_NT4_DOMAIN= "" #Network domain that AD server is part of
 AD_SEARCH_FIELDS= ['mail','givenName','sn','sAMAccountName','memberOf']
 AD_MEMBERSHIP_REQ= [] # eg ["*TOHCC - All Staff | Tout le personnel  - CCLHO"]
 #AD_CERT_FILE='/path/to/your/cert.txt'
+
 
 
 #------------------------------------------------------------------------------
