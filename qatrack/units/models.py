@@ -17,7 +17,7 @@ class UnitType(models.Model):
 
     name = models.CharField(max_length=50, help_text=_("Name for this unit type"))
     vendor = models.CharField(max_length=50, help_text=_("e.g. Elekta"))
-    model = models.CharField(max_length=50, help_text=_("Optional model name for this group (e.g. Beam Modulator)"), null=True, blank=True)
+    model = models.CharField(max_length=50, help_text=_("Optional model name for this group"), null=True, blank=True)
 
     class Meta:
         unique_together = [("name","model")]

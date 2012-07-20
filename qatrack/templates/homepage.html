@@ -8,5 +8,19 @@
 
 {% block body %}
     <h1>{% trans "Welcome to QATrack+" %}</h1>
-    <p>The Ottawa Hospital Cancer Center quality assurance system featuring:</p>
+    <p>Please choose one of the following available items</p>
+    <ul>
+        <li>
+            <a title="View available test lists to perform" href="{% url user_home %}">Choose a QA test list to perform</a>
+        </li>
+        {% if user.is_staff %}
+        <li>
+            <a title="View overall program status" href="{% url review %}">Review overall QA program status</a>
+        </li>
+        <li>
+            <a title="View trends and control charts" href="{% url charts %}">View Trends &amp; Control Charts</a>
+        </li>
+        {% endif %}
+    </ul>
+
  {% endblock %}

@@ -65,7 +65,6 @@ class ActiveDirectoryGroupMembershipSSLBackend:
             user.is_superuser = False
             user.set_password('ldap authenticated')
             user.save()
-
         return user
 
     #----------------------------------------------------------------------
@@ -74,3 +73,4 @@ class ActiveDirectoryGroupMembershipSSLBackend:
             return User.objects.get(pk=user_id)
         except User.DoesNotExist:
             return None
+
