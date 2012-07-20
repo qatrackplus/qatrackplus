@@ -221,7 +221,7 @@ LOGGING = {
         },
         'qatrack.console': {
             'handlers': ['console'],
-            'level': 'INFO',
+            'level': 'DEBUG',
             'propagate': True,
         },
     }
