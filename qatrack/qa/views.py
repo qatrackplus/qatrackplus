@@ -425,7 +425,7 @@ class UserBasedTestCollections(ListView):
         """filter based on user groups"""
         groups = self.request.user.groups.all()
         utlas = models.UnitTestCollection.objects.filter(active=True)
-        if groups.count() > 0:
+        if groups.count() > 0 and not self.request.user.is_staff:
             utlas = utlas.filter(assigned_to__in = [None]+list(groups))
         return utlas
 
