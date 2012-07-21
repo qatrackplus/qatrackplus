@@ -221,7 +221,7 @@ EMAIL_PORT = 587
 #Authentication backend settings
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
-    'qatrack.accounts.backends.ActiveDirectoryGroupMembershipSSLBackend',
+    #'qatrack.accounts.backends.ActiveDirectoryGroupMembershipSSLBackend',
 )
 
 #active directory settings

@@ -773,22 +773,21 @@ class UnitTestCollection(models.Model):
 #  Case 1) can be handled by the post_save signal of UnitTestCollection
 #  Case 2a & 2b) can be handled by the post_save signal of TestListMembership
 #  Case 3) can be handled by the m2m_changed signal of TestList.sublists.through
+
 #----------------------------------------------------------------------
-def create_unit_test_assignment(unit_test_list_assignment, test):
-    """create UnitTestCollection for the input UnitTestCollection and Test"""
-
-    utla = unit_test_list_assignment
-
-    uta, created = UnitTestInfo.objects.get_or_create(
-        unit = utla.unit,
+def get_or_create_unit_test_info(unit,test,frequency,assigned_to=None, active=True):
+    
+    uti, created = UnitTestInfo.objects.get_or_create(
+        unit = unit,
         test = test,
-        frequency = utla.frequency
+        frequency =frequency
     )
 
     if created:
-        uta.assigned_to = utla.assigned_to
-        uta.active = utla.active
-        uta.save()
+        uti.assigned_to = assigned_to
+        uti.active = active
+        uti.save()
+    return uti
 
 #----------------------------------------------------------------------
 def update_unit_test_assignments(test_list):
@@ -813,7 +812,13 @@ def update_unit_test_assignments(test_list):
     for utla in utlas:
         need_utas = all_tests.exclude(unittestinfo__unit = utla.unit)
         for test in need_utas:
-            create_unit_test_assignment(utla, test)
+            get_or_create_unit_test_info(
+                unit=utla.unit,
+                test=test,
+                frequency=utla.frequency,
+                assigned_to = utla.assigned_to,
+                active = utla.active
+            )
 
 #----------------------------------------------------------------------
 @receiver(post_save, sender=UnitTestCollection)
