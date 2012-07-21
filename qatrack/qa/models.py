@@ -214,9 +214,11 @@ class Reference(models.Model):
     #---------------------------------------------------------------------------
     def __unicode__(self):
         """more helpful display name"""
-        if self.type == "yes_no":
-            if self.value in (0, 1):
-                return self.name
+        if self.type == BOOLEAN:
+            if self.value == 0:
+                return "No"
+            elif self.value == 1:
+                return "Yes"
             else:
                 return "%s (Invalid Boolean)"%(self.name,)
 
