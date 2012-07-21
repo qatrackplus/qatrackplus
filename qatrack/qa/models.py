@@ -278,7 +278,7 @@ class Test(models.Model):
     RESULT_RE = re.compile("^result\s*=\s*[(_0-9.a-zA-Z]+.*$",re.MULTILINE)
 
     name = models.CharField(max_length=256, help_text=_("Name for this test"))
-    slug = models.SlugField(verbose_name="Macro name", max_length=25, help_text=_("A short variable name for this test (to be used in composite calculations)."))
+    slug = models.SlugField(verbose_name="Macro name", max_length=25, help_text=_("A short variable name for this test (to be used in composite calculations)."),blank=True,null=True)
     description = models.TextField(help_text=_("A concise description of what this test is for (optional)"), blank=True,null=True)
     procedure = models.CharField(max_length=512,help_text=_("Link to document describing how to perform this test"), blank=True, null=True)
 
