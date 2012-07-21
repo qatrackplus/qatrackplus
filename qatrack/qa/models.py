@@ -497,7 +497,7 @@ class TestCollectionInterface(models.Model):
 
     name = models.CharField(max_length=256)
     slug = models.SlugField(unique=True, help_text=_("A short unique name for use in the URL of this list"))
-    description = models.TextField(help_text=_("A concise description of this test checklist"))
+    description = models.TextField(help_text=_("A concise description of this test checklist"),null=True,blank=True)
 
     assigned_to = generic.GenericRelation(
         "UnitTestCollection",
