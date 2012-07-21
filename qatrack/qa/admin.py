@@ -228,6 +228,7 @@ class TestListCycleMembershipInline(admin.TabularInline):
 class TestListCycleAdmin(SaveUserMixin, admin.ModelAdmin):
     """Admin for daily test list cycles"""
     inlines = [TestListCycleMembershipInline]
+    prepopulated_fields =  {'slug': ('name',)}
 
     #============================================================================
     class Media:
