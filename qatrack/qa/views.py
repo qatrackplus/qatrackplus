@@ -345,8 +345,12 @@ class PerformQAView(CreateView):
                 self.request,"There must be at least one Test Status defined before performing a TestList"
             )
             return context
-
-        self.unit_test_list = get_object_or_404(models.UnitTestCollection,pk=self.kwargs["pk"])
+        
+        try:
+            self.unit_test_list = models.UnitTestCollection.objects.select_related().get(pk=self.kwargs["pk"])
+        except models.UnitTestCollection.DoesNotExist:
+            raise Http404
+        
         self.test_list = self.unit_test_list.get_list(self.request.GET.get("day",None))
         self.create_new_test_list_instance()
         self.add_test_instances()

@@ -475,7 +475,8 @@ class UnitTestInfo(models.Model):
         """return last 'number' of instances for this test performed on input unit
         list is ordered in ascending dates
         """
-        hist = self.test.testinstance_set.filter(unit=self.unit).order_by("-work_completed","-pk")
+        hist = TestInstance.objects.filter(unit=self.unit,test=self.test).order_by("-work_completed","-pk")
+        hist = hist.select_related("status")
         return [(x.work_completed,x.value, x.pass_fail, x.status) for x in reversed(hist[:number])]
 
 #============================================================================
@@ -531,7 +532,7 @@ class TestCollectionInterface(models.Model):
         """returns all tests from this list and sublists"""
         return Test.objects.filter(
             testlistmembership__test_list__in = self.all_lists()
-        ).distinct()
+        ).distinct().prefetch_related("category")
     #----------------------------------------------------------------------
     def content_type(self):
         """return content type of this object"""
@@ -553,11 +554,12 @@ class TestList(TestCollectionInterface):
     #----------------------------------------------------------------------
     def all_lists(self):
         """return query for self and all sublists"""
-        return TestList.objects.filter(pk=self.pk) | self.sublists.all()
+        qs = TestList.objects.filter(pk=self.pk) | self.sublists.all()
+        return qs
     #----------------------------------------------------------------------
     def ordered_tests(self):
         """return list of all tests/sublist tests in order"""
-        tests = [m.test for m in self.testlistmembership_set.all()]
+        tests = list(self.tests.all().select_related("category"))
         for sublist in self.sublists.all():
             tests.extend(sublist.all_tests())
         return tests
@@ -973,16 +975,16 @@ class TestInstance(models.Model):
 
 #============================================================================
 class TestListInstanceManager(models.Manager):
-
+        
     #----------------------------------------------------------------------
     def awaiting_review(self):
         return self.complete().filter(testinstance__status__requires_review=True).distinct().order_by("work_completed")
     #----------------------------------------------------------------------
     def in_progress(self):
-        return super(TestListInstanceManager,self).get_query_set().filter(in_progress=True)
+        return self.get_query_set().filter(in_progress=True)
     #----------------------------------------------------------------------
     def complete(self):
-        return super(TestListInstanceManager,self).get_query_set().filter(in_progress=False)
+        return self.get_query_set().filter(in_progress=False)
 
 #============================================================================
 class TestListInstance(models.Model):
