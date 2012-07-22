@@ -741,8 +741,12 @@ class UnitTestCollection(models.Model):
 
         return self.tests_object.next_list(last_instance.test_list)
     #----------------------------------------------------------------------
-    def get_list(self,day=None):
+    def get_list(self,day="next"):
         """return next list to be completed from tests_object"""
+
+        if day == "next":
+            return self.next_list()
+        
         try:
             return self.tests_object.get_list(int(day))
         except (ValueError,TypeError):
@@ -1066,7 +1070,7 @@ class TestListCycle(TestCollectionInterface):
     def first(self):
         """return first in order membership object for this cycle"""
         try:
-            return TestListCycleMembership.objects.get(cycle=self, order=0).test_list
+            return self.testlistcyclemembership_set.get(order=0).test_list
         except TestListCycleMembership.DoesNotExist:
             return None
 

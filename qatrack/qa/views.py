@@ -249,7 +249,6 @@ class PerformQAView(CreateView):
     #----------------------------------------------------------------------
     def create_new_test_list_instance(self):
         """generate a new test list instance for the user to fill in values for"""
-        day = self.request.GET.get("day","next")
         self.test_list_instance = models.TestListInstance(
             test_list   = self.test_list,
             unit        = self.unit_test_list.unit,
