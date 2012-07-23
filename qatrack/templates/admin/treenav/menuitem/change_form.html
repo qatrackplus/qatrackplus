@@ -1,0 +1,61 @@
+{% extends "admin/change_form.html" %}
+{% load i18n %}
+{#{% load compressed %}#}
+
+{% block extrahead %}
+
+{{ block.super }}
+
+
+{#<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}h/admin/css/tree.css"/>#}
+
+{#{% compressed_js "jquery" %}#}
+<script>
+	(function($){
+
+        $(document).ready(function($) {
+
+	   $('input#id_object_id').hide()
+	   $('input#id_object_id').after('<select id="generic_object_id"></select>')
+
+	   $('select#generic_object_id').change(function(){
+	   	   if ($(this).val()) {
+		   $('input#id_object_id').attr('value', $(this).val())
+			}
+		});
+	   $('select#id_content_type').change(function(){
+			$('select#generic_object_id option').remove()
+			$("#generic_object_id").css("width","5px");
+
+		   if ($(this).val()) {
+			   $.get("{% url updatecombo %}"+ $(this).val(), { },
+			  function(data){
+			  	$('select#generic_object_id').append(data);
+			$("#generic_object_id").css("width","205px");
+
+			  });
+
+		  }
+	   })
+
+	if ($('select#id_content_type').val()) {
+		$.get("{% url updatecombo %}"+ $('select#id_content_type').val(), { },
+		function(data){
+			$('select#generic_object_id option').remove()
+			$('select#generic_object_id').append(data)
+
+		      id = $('input#id_object_id').val()
+              $('#generic_object_id option[value='+ id +']').attr('selected', 'selected')
+		});
+	}
+
+
+})
+
+
+	})(django.jQuery);
+
+
+</script>
+
+{% endblock %}

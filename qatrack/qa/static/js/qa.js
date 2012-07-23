@@ -70,24 +70,6 @@ function calculate_composites(){
                 });
             }
         });
-        /*
-    $.ajax({
-        url:"/qa/composite/",
-        type:"POST",
-        data:{
-            qavalues:JSON.stringify(validation_data),
-            composite_ids:JSON.stringify(composite_ids)
-        },
-        success: function(data){
-            if (data.success){
-                $.each(data.results,function(name,result){
-                    set_value_by_name(name,result.value);
-                });
-            }
-        },
-        dataType:"json"
-    });
-*/
 }
 
 /***************************************************************/
@@ -205,10 +187,12 @@ function valid_input(input_element){
 /***************************************************************/
 //perform a full validation of all data (for example on page load after submit)
 function full_validation(){
+    calculate_composites();
+
     $(".qa-input").each(function(){
         check_test_status($(this));
-        calculate_composites();
     });
+
 }
 
 /***************************************************************/
