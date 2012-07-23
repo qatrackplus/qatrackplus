@@ -34,7 +34,7 @@ urlpatterns = patterns('',
     url(r"^(user_home/)?$", views.UserBasedTestCollections.as_view(),name="user_home"),
 
     #view for composite calculations via ajax
-    url(r"^composite/$", views.CompositeCalculation.as_view(), name="composite"),
+    url(r"^composite.json$", views.CompositeCalculation.as_view(), name="composite"),
 
 
     #api urls
