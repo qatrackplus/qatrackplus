@@ -249,7 +249,6 @@ class PerformQAView(CreateView):
     #----------------------------------------------------------------------
     def create_new_test_list_instance(self):
         """generate a new test list instance for the user to fill in values for"""
-        day = self.request.GET.get("day","next")
         self.test_list_instance = models.TestListInstance(
             test_list   = self.test_list,
             unit        = self.unit_test_list.unit,
@@ -267,7 +266,14 @@ class PerformQAView(CreateView):
         freq = self.unit_test_list.frequency
 
         for test in self.test_list.ordered_tests():
-            unit_test_info = models.UnitTestInfo.objects.get(test=test,unit=unit,frequency=freq)
+            #unit_test_info = models.UnitTestInfo.objects.get(test=test,unit=unit,frequency=freq)
+            unit_test_info = models.get_or_create_unit_test_info(
+                unit,
+                test,
+                freq,
+                assigned_to = self.unit_test_list.assigned_to,
+                active = self.unit_test_list.active,
+            )
 
             ti = models.TestInstance(
                 test = test,
@@ -339,8 +345,12 @@ class PerformQAView(CreateView):
                 self.request,"There must be at least one Test Status defined before performing a TestList"
             )
             return context
-
-        self.unit_test_list = get_object_or_404(models.UnitTestCollection,pk=self.kwargs["pk"])
+        
+        try:
+            self.unit_test_list = models.UnitTestCollection.objects.select_related().get(pk=self.kwargs["pk"])
+        except models.UnitTestCollection.DoesNotExist:
+            raise Http404
+        
         self.test_list = self.unit_test_list.get_list(self.request.GET.get("day",None))
         self.create_new_test_list_instance()
         self.add_test_instances()
@@ -425,7 +435,7 @@ class UserBasedTestCollections(ListView):
         """filter based on user groups"""
         groups = self.request.user.groups.all()
         utlas = models.UnitTestCollection.objects.filter(active=True)
-        if groups.count() > 0:
+        if groups.count() > 0 and not self.request.user.is_staff:
             utlas = utlas.filter(assigned_to__in = [None]+list(groups))
         return utlas
 
