@@ -658,7 +658,7 @@ class UnitTestCollection(models.Model):
             unit_test_assignments = UnitTestInfo.objects.filter(
                 unit=self.unit,
                 test__in = test_list.all_tests()
-            )
+            ).select_related()
 
             due_dates = [uta.due_date() for uta in unit_test_assignments]
             due_dates = [dd for dd in due_dates if dd is not None]
@@ -748,7 +748,7 @@ class UnitTestCollection(models.Model):
 
         if day == "next":
             return self.next_list()
-        
+
         try:
             return self.tests_object.get_list(int(day))
         except (ValueError,TypeError):
@@ -782,7 +782,7 @@ class UnitTestCollection(models.Model):
 
 #----------------------------------------------------------------------
 def get_or_create_unit_test_info(unit,test,frequency,assigned_to=None, active=True):
-    
+
     uti, created = UnitTestInfo.objects.get_or_create(
         unit = unit,
         test = test,
@@ -975,7 +975,7 @@ class TestInstance(models.Model):
 
 #============================================================================
 class TestListInstanceManager(models.Manager):
-        
+
     #----------------------------------------------------------------------
     def awaiting_review(self):
         return self.complete().filter(testinstance__status__requires_review=True).distinct().order_by("work_completed")
