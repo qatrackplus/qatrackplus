@@ -187,10 +187,12 @@ function valid_input(input_element){
 /***************************************************************/
 //perform a full validation of all data (for example on page load after submit)
 function full_validation(){
+    calculate_composites();
+
     $(".qa-input").each(function(){
         check_test_status($(this));
-        calculate_composites();
     });
+
 }
 
 /***************************************************************/
