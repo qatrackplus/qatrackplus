@@ -420,7 +420,10 @@ def on_test_save(*args, **kwargs):
             raise ValidationError("Can't change test type to %s while this test is still assigned to %s with a non-boolean reference"%(test.type, ua.unit.name))
 
 
-
+class UnitTestInfoManager(models.Manager):
+    #----------------------------------------------------------------------
+    def get_query_set(self):
+        return super(UnitTestInfoManager,self).get_query_set().select_related()
 #============================================================================
 class UnitTestInfo(models.Model):
     unit = models.ForeignKey(Unit)
@@ -434,7 +437,7 @@ class UnitTestInfo(models.Model):
     active = models.BooleanField(help_text=_("Uncheck to disable this test on this unit"), default=True)
 
     assigned_to = models.ForeignKey(Group,help_text = _("QA group that this test list should nominally be performed by"),null=True, blank=True)
-
+    objects = UnitTestInfoManager()
     #============================================================================
     class Meta:
         verbose_name_plural = "Set References & Tolerances"
@@ -461,14 +464,14 @@ class UnitTestInfo(models.Model):
     #----------------------------------------------------------------------
     def due_date(self):
         """return the due date for this unit test list assignment"""
-
-        last_instance = TestInstance.objects.valid().filter(
-            unit = self.unit,
-            test = self.test,
-        ).order_by("-work_completed","-pk")
-
-        if last_instance:
-            return (last_instance[0].work_completed + self.frequency.due_delta())
+        try:
+            last_instance = TestInstance.objects.valid().filter(
+                unit = self.unit,
+                test = self.test,
+            ).order_by("-work_completed","-pk")[0:1].get()
+            return (last_instance.work_completed + self.frequency.due_delta())
+        except TestInstance.DoesNotExist:
+            pass
 
     #----------------------------------------------------------------------
     def history(self,number=5):
@@ -658,7 +661,7 @@ class UnitTestCollection(models.Model):
             unit_test_assignments = UnitTestInfo.objects.filter(
                 unit=self.unit,
                 test__in = test_list.all_tests()
-            ).select_related()
+            )
 
             due_dates = [uta.due_date() for uta in unit_test_assignments]
             due_dates = [dd for dd in due_dates if dd is not None]
