@@ -167,6 +167,7 @@ class TestInstanceResource(ModelResource):
             ("to_date","work_completed__lte","date",last_year.strftime(settings.SIMPLE_DATE_FORMAT)),
             ("unit","unit__number__in",None,[]),
             ("slug","test__slug__in",None,[]),
+            ("status","status__slug__in",None,[]),
         )
 
         for field,filter_string,filter_type,default in filters_requiring_processing:
