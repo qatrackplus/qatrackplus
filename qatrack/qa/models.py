@@ -214,9 +214,11 @@ class Reference(models.Model):
     #---------------------------------------------------------------------------
     def __unicode__(self):
         """more helpful display name"""
-        if self.type == "yes_no":
-            if self.value in (0, 1):
-                return self.name
+        if self.type == BOOLEAN:
+            if self.value == 0:
+                return "No"
+            elif self.value == 1:
+                return "Yes"
             else:
                 return "%s (Invalid Boolean)"%(self.name,)
 
@@ -278,7 +280,7 @@ class Test(models.Model):
     RESULT_RE = re.compile("^result\s*=\s*[(_0-9.a-zA-Z]+.*$",re.MULTILINE)
 
     name = models.CharField(max_length=256, help_text=_("Name for this test"))
-    slug = models.SlugField(verbose_name="Macro name", max_length=25, help_text=_("A short variable name for this test (to be used in composite calculations)."))
+    slug = models.SlugField(verbose_name="Macro name", max_length=25, help_text=_("A short variable name for this test (to be used in composite calculations)."),blank=True,null=True)
     description = models.TextField(help_text=_("A concise description of what this test is for (optional)"), blank=True,null=True)
     procedure = models.CharField(max_length=512,help_text=_("Link to document describing how to perform this test"), blank=True, null=True)
 
@@ -473,7 +475,8 @@ class UnitTestInfo(models.Model):
         """return last 'number' of instances for this test performed on input unit
         list is ordered in ascending dates
         """
-        hist = self.test.testinstance_set.filter(unit=self.unit).order_by("-work_completed","-pk")
+        hist = TestInstance.objects.filter(unit=self.unit,test=self.test).order_by("-work_completed","-pk")
+        hist = hist.select_related("status")
         return [(x.work_completed,x.value, x.pass_fail, x.status) for x in reversed(hist[:number])]
 
 #============================================================================
@@ -497,7 +500,7 @@ class TestCollectionInterface(models.Model):
 
     name = models.CharField(max_length=256)
     slug = models.SlugField(unique=True, help_text=_("A short unique name for use in the URL of this list"))
-    description = models.TextField(help_text=_("A concise description of this test checklist"))
+    description = models.TextField(help_text=_("A concise description of this test checklist"),null=True,blank=True)
 
     assigned_to = generic.GenericRelation(
         "UnitTestCollection",
@@ -529,7 +532,7 @@ class TestCollectionInterface(models.Model):
         """returns all tests from this list and sublists"""
         return Test.objects.filter(
             testlistmembership__test_list__in = self.all_lists()
-        ).distinct()
+        ).distinct().prefetch_related("category")
     #----------------------------------------------------------------------
     def content_type(self):
         """return content type of this object"""
@@ -551,11 +554,12 @@ class TestList(TestCollectionInterface):
     #----------------------------------------------------------------------
     def all_lists(self):
         """return query for self and all sublists"""
-        return TestList.objects.filter(pk=self.pk) | self.sublists.all()
+        qs = TestList.objects.filter(pk=self.pk) | self.sublists.all()
+        return qs
     #----------------------------------------------------------------------
     def ordered_tests(self):
         """return list of all tests/sublist tests in order"""
-        tests = [m.test for m in self.testlistmembership_set.all()]
+        tests = list(self.tests.all().select_related("category"))
         for sublist in self.sublists.all():
             tests.extend(sublist.all_tests())
         return tests
@@ -739,8 +743,12 @@ class UnitTestCollection(models.Model):
 
         return self.tests_object.next_list(last_instance.test_list)
     #----------------------------------------------------------------------
-    def get_list(self,day=None):
+    def get_list(self,day="next"):
         """return next list to be completed from tests_object"""
+
+        if day == "next":
+            return self.next_list()
+        
         try:
             return self.tests_object.get_list(int(day))
         except (ValueError,TypeError):
@@ -771,22 +779,21 @@ class UnitTestCollection(models.Model):
 #  Case 1) can be handled by the post_save signal of UnitTestCollection
 #  Case 2a & 2b) can be handled by the post_save signal of TestListMembership
 #  Case 3) can be handled by the m2m_changed signal of TestList.sublists.through
+
 #----------------------------------------------------------------------
-def create_unit_test_assignment(unit_test_list_assignment, test):
-    """create UnitTestCollection for the input UnitTestCollection and Test"""
-
-    utla = unit_test_list_assignment
-
-    uta, created = UnitTestInfo.objects.get_or_create(
-        unit = utla.unit,
+def get_or_create_unit_test_info(unit,test,frequency,assigned_to=None, active=True):
+    
+    uti, created = UnitTestInfo.objects.get_or_create(
+        unit = unit,
         test = test,
-        frequency = utla.frequency
+        frequency =frequency
     )
 
     if created:
-        uta.assigned_to = utla.assigned_to
-        uta.active = utla.active
-        uta.save()
+        uti.assigned_to = assigned_to
+        uti.active = active
+        uti.save()
+    return uti
 
 #----------------------------------------------------------------------
 def update_unit_test_assignments(test_list):
@@ -811,7 +818,13 @@ def update_unit_test_assignments(test_list):
     for utla in utlas:
         need_utas = all_tests.exclude(unittestinfo__unit = utla.unit)
         for test in need_utas:
-            create_unit_test_assignment(utla, test)
+            get_or_create_unit_test_info(
+                unit=utla.unit,
+                test=test,
+                frequency=utla.frequency,
+                assigned_to = utla.assigned_to,
+                active = utla.active
+            )
 
 #----------------------------------------------------------------------
 @receiver(post_save, sender=UnitTestCollection)
@@ -962,16 +975,16 @@ class TestInstance(models.Model):
 
 #============================================================================
 class TestListInstanceManager(models.Manager):
-
+        
     #----------------------------------------------------------------------
     def awaiting_review(self):
         return self.complete().filter(testinstance__status__requires_review=True).distinct().order_by("work_completed")
     #----------------------------------------------------------------------
     def in_progress(self):
-        return super(TestListInstanceManager,self).get_query_set().filter(in_progress=True)
+        return self.get_query_set().filter(in_progress=True)
     #----------------------------------------------------------------------
     def complete(self):
-        return super(TestListInstanceManager,self).get_query_set().filter(in_progress=False)
+        return self.get_query_set().filter(in_progress=False)
 
 #============================================================================
 class TestListInstance(models.Model):
@@ -1059,7 +1072,7 @@ class TestListCycle(TestCollectionInterface):
     def first(self):
         """return first in order membership object for this cycle"""
         try:
-            return TestListCycleMembership.objects.get(cycle=self, order=0).test_list
+            return self.testlistcyclemembership_set.get(order=0).test_list
         except TestListCycleMembership.DoesNotExist:
             return None
 

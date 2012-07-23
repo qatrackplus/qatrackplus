@@ -212,7 +212,7 @@ function filter_by_category(){
 
     if (show_all){
         $(".qa-valuerow").show();
-        $(".qa-comment").hide();
+        $(".qa-comment, .qa-procedure").hide();
         $(".qa-skip input").attr("checked",false);
         return;
     }
@@ -271,14 +271,20 @@ $(document).ready(function(){
     initialize_qa();
 
     //hide all  comments initially
-    $(".qa-comment").hide();
+    $(".qa-comment, .qa-procedure").hide();
 
     //set tab index
     $(".qa-input").each(function(i,e){ $(e).attr("tabindex", i) });
 
     //show comment when clicked
     $(".qa-showcmt a").click(function(){
-      $(this).parent().parent().next().toggle(600);
+      $(this).parent().parent().nextAll(".qa-comment").toggle(600);
+      return false;
+    });
+
+    $(".qa-showproc a").click(function(){
+      $(this).parent().parent().nextAll(".qa-procedure").toggle(600);
+      return false;
     });
 
     //anytime an input changes run validation

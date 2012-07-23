@@ -47,7 +47,7 @@ class CategoryAdmin(admin.ModelAdmin):
 
 #============================================================================
 class TestInfoForm(forms.ModelForm):
-    reference_value = forms.FloatField(label=_("Update reference"),required=False,)
+    reference_value = forms.FloatField(label=_("New reference value"),required=False,)
     test_type = forms.CharField(required=False)
 
     class Meta:
@@ -65,7 +65,7 @@ class TestInfoForm(forms.ModelForm):
             self.fields["test_type"].initial = models.TEST_TYPE_CHOICES[i][1]
 
             if tt == models.BOOLEAN:
-                self.fields["reference_value"].widget = forms.Select(choices=[(0,"No"),(1,"Yes")])
+                self.fields["reference_value"].widget = forms.Select(choices=[(-1,"---"),(0,"No"),(1,"Yes")])
             elif tt == models.MULTIPLE_CHOICE:
                 self.fields["reference_value"].widget = forms.Select(choices=self.instance.test.get_choices())
 
@@ -79,7 +79,7 @@ class TestInfoForm(forms.ModelForm):
         ref_value = self.cleaned_data["reference_value"]
 
         if self.instance.test.type == models.BOOLEAN and int(ref_value) not in (0,1):
-                raise forms.ValidationError(_("Yes/No values must be 0 or 1"))
+                raise forms.ValidationError(_("You must select Yes or No as a new reference value"))
 
         if self.instance.test.type in (models.BOOLEAN, models.MULTIPLE_CHOICE):
             if self.cleaned_data["tolerance"] is not None:
@@ -228,6 +228,7 @@ class TestListCycleMembershipInline(admin.TabularInline):
 class TestListCycleAdmin(SaveUserMixin, admin.ModelAdmin):
     """Admin for daily test list cycles"""
     inlines = [TestListCycleMembershipInline]
+    prepopulated_fields =  {'slug': ('name',)}
 
     #============================================================================
     class Media:
