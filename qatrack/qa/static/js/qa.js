@@ -70,24 +70,6 @@ function calculate_composites(){
                 });
             }
         });
-        /*
-    $.ajax({
-        url:"/qa/composite/",
-        type:"POST",
-        data:{
-            qavalues:JSON.stringify(validation_data),
-            composite_ids:JSON.stringify(composite_ids)
-        },
-        success: function(data){
-            if (data.success){
-                $.each(data.results,function(name,result){
-                    set_value_by_name(name,result.value);
-                });
-            }
-        },
-        dataType:"json"
-    });
-*/
 }
 
 /***************************************************************/
