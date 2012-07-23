@@ -262,7 +262,7 @@ var QAUtils = new function() {
             },
 			traditional:true,
             error: function(error){
-                console.log(error);
+                if (typeof console != "undefined") {console.log(error)};
                 var msg = "Something went wrong with your request:\n    ";
                 var props = ["responseText","status","statusText"];
                 var err_vals = $.map(props,function(prop){return prop+": "+error[prop];});

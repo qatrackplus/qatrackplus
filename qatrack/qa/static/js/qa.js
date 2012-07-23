@@ -63,7 +63,7 @@ function calculate_composites(){
             composite_ids:JSON.stringify(composite_ids)
         };
 
-    QAUtils.call_api("/qa/composite.json","POST",data,function(data){
+    QAUtils.call_api("/qa/composite/","POST",data,function(data){
             if (data.success){
                 $.each(data.results,function(name,result){
                     set_value_by_name(name,result.value);
