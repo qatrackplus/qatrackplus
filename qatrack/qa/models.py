@@ -377,6 +377,10 @@ class Test(models.Model):
     #----------------------------------------------------------------------
     def clean_slug(self):
         """make sure slug is valid"""
+
+        if not self.slug:
+            return
+
         errors = []
         if not self.VARIABLE_RE.match(self.slug):
             errors.append(_("Macro names must contain only letters, numbers and underscores and start with a letter or underscore"))

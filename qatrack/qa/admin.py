@@ -67,7 +67,7 @@ class TestInfoForm(forms.ModelForm):
             if tt == models.BOOLEAN:
                 self.fields["reference_value"].widget = forms.Select(choices=[(-1,"---"),(0,"No"),(1,"Yes")])
             elif tt == models.MULTIPLE_CHOICE:
-                self.fields["reference_value"].widget = forms.Select(choices=self.instance.test.get_choices())
+                self.fields["reference_value"].widget = forms.Select(choices=[(-1,"---")]+self.instance.test.get_choices())
 
     #----------------------------------------------------------------------
     def clean(self):

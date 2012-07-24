@@ -1,3 +1,4 @@
+{% load qa_tags %}
 {% for field in form %}
     {% if field.errors %}
         <tr>
@@ -59,7 +60,7 @@
 			</td>
 			<td class="qa-history">
 				{% for d,v,pf,s in form.history %}
-					<span class="label {{pf}} history-value" title="{{d}} - {{s}}">{{v}}</span>
+					<span class="label {{pf}} history-value" title="{{d}} - {{s}}">{{v|floatformat:-3}}</span>
 				{% endfor %}
 			</td>
         {% endif %}
