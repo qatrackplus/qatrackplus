@@ -835,7 +835,10 @@ def list_assigned_to_unit(*args,**kwargs):
     """UnitTestCollection was saved.  Create UnitTestCollections
     for all Tests. (Case 1 from above)"""
 
-    update_unit_test_assignments(kwargs["instance"].tests_object)
+    if not kwargs.get("raw",False):
+        #don't process signal when loading fixture data
+
+        update_unit_test_assignments(kwargs["instance"].tests_object)
 
 #----------------------------------------------------------------------
 @receiver(post_save, sender=TestListMembership)
@@ -844,13 +847,17 @@ def test_added_to_list(*args,**kwargs):
     is performed on and create UnitTestCollection for the Unit, Test pair.
     Covers case 2a & 2b.
     """
-    update_unit_test_assignments(kwargs["instance"].test_list)
+    if not kwargs.get("raw",False):
+        #don't process signal when loading fixture data
+        update_unit_test_assignments(kwargs["instance"].test_list)
 
 #----------------------------------------------------------------------
 @receiver(m2m_changed, sender=TestList.sublists.through)
 def sublist_changed(*args,**kwargs):
     """when a sublist changes"""
-    update_unit_test_assignments(kwargs["instance"])
+    if not kwargs.get("raw",False):
+        #don't process signal when loading fixture data
+        update_unit_test_assignments(kwargs["instance"])
 
 #============================================================================
 class TestInstanceManager(models.Manager):
