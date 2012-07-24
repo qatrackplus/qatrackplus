@@ -336,6 +336,8 @@ $(document).ready(function(){
         $(window).unbind("beforeunload")
     });
 
+    $("#qa-form").preventDoubleSubmit();
+
     //automaticall unhide comment if test is being skipped
     $(".qa-skip input").click(function(){
         if ($(this).is(':checked')){
