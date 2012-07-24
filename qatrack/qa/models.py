@@ -420,6 +420,11 @@ def on_test_save(*args, **kwargs):
             raise ValidationError("Can't change test type to %s while this test is still assigned to %s with a non-boolean reference"%(test.type, ua.unit.name))
 
 
+class UnitTestInfoManager(models.Manager):
+
+    #----------------------------------------------------------------------
+    def get_query_set(self):
+        return super(UnitTestInfoManager,self).get_query_set().select_related()
 
 #============================================================================
 class UnitTestInfo(models.Model):
@@ -434,11 +439,13 @@ class UnitTestInfo(models.Model):
     active = models.BooleanField(help_text=_("Uncheck to disable this test on this unit"), default=True)
 
     assigned_to = models.ForeignKey(Group,help_text = _("QA group that this test list should nominally be performed by"),null=True, blank=True)
-
+    last_instance = models.ForeignKey("TestInstance",null=True)
+    objects = UnitTestInfoManager()
     #============================================================================
     class Meta:
         verbose_name_plural = "Set References & Tolerances"
         unique_together = ["test","unit", "frequency"]
+
     #----------------------------------------------------------------------
     def clean(self):
         """extra validation for Tests"""
@@ -458,17 +465,12 @@ class UnitTestInfo(models.Model):
             if self.tolerance is not None:
                 msg = _("Please leave tolerance blank for boolean tests")
                 raise ValidationError(msg)
+
     #----------------------------------------------------------------------
     def due_date(self):
         """return the due date for this unit test list assignment"""
-
-        last_instance = TestInstance.objects.valid().filter(
-            unit = self.unit,
-            test = self.test,
-        ).order_by("-work_completed","-pk")
-
-        if last_instance:
-            return (last_instance[0].work_completed + self.frequency.due_delta())
+        if hasattr(self,"last_instance") and self.last_instance is not None:
+            return self.last_instance.work_completed + self.frequency.due_delta()
 
     #----------------------------------------------------------------------
     def history(self,number=5):
@@ -597,6 +599,14 @@ class TestList(TestCollectionInterface):
 
 #============================================================================
 class UnitTestListManager(models.Manager):
+    #---------------------------------------------------------------------------
+    def get_query_set(self):
+        return super(UnitTestListManager,self).get_query_set().select_related(
+            "last_instance",
+            "unit",
+            "frequency",
+            "assigned_to",
+        )
     #----------------------------------------------------------------------
     def by_unit(self,unit):
         return self.get_query_set().filter(unit=unit)
@@ -630,6 +640,8 @@ class UnitTestCollection(models.Model):
     tests_object = generic.GenericForeignKey("content_type","object_id")
     objects = UnitTestListManager()
 
+    last_instance = models.ForeignKey("TestListInstance",null=True)
+
     class Meta:
         unique_together = ("unit", "frequency", "content_type","object_id",)
         verbose_name_plural = _("Assign Test Lists to Units")
@@ -655,13 +667,12 @@ class UnitTestCollection(models.Model):
         list_due_dates = []
 
         for test_list in all_lists:
-            unit_test_assignments = UnitTestInfo.objects.filter(
+            utis = UnitTestInfo.objects.filter(
                 unit=self.unit,
                 test__in = test_list.all_tests()
-            )
+            ).prefetch_related("last_instance")
 
-            due_dates = [uta.due_date() for uta in unit_test_assignments]
-            due_dates = [dd for dd in due_dates if dd is not None]
+            due_dates = [uti.last_instance.work_completed + uti.frequency.due_delta() for uti in utis if uti.last_instance]
 
             if due_dates:
                 list_due_dates.append(min(due_dates))
@@ -688,27 +699,8 @@ class UnitTestCollection(models.Model):
     #----------------------------------------------------------------------
     def last_done_date(self):
         """return date this test list was last performed"""
-        last = self.last_completed_instance()
-        if last:
-            return last.work_completed
-    #----------------------------------------------------------------------
-    def last_completed_instance(self):
-        """return the last instance of this test list that was performed"""
-
-        try:
-            all_lists = self.tests_object.test_lists.all()
-        except AttributeError:
-            all_lists = [self.tests_object]
-
-        try:
-            q = TestListInstance.objects.complete().filter(
-                test_list__in = all_lists,
-                unit = self.unit,
-            ).latest("work_completed")
-
-            return q
-        except TestListInstance.DoesNotExist:
-            return None
+        if hasattr(self,"last_instance") and self.last_instance is not None:
+            return self.last_instance.work_completed
 
     #----------------------------------------------------------------------
     def unreviewed_instances(self):
@@ -737,18 +729,17 @@ class UnitTestCollection(models.Model):
     def next_list(self):
         """return next list to be completed from tests_object"""
 
-        last_instance = self.last_completed_instance()
-        if not last_instance:
+        if not self.last_instance:
             return self.tests_object.first()
 
-        return self.tests_object.next_list(last_instance.test_list)
+        return self.tests_object.next_list(self.last_instance.test_list)
     #----------------------------------------------------------------------
     def get_list(self,day="next"):
         """return next list to be completed from tests_object"""
 
         if day == "next":
             return self.next_list()
-        
+
         try:
             return self.tests_object.get_list(int(day))
         except (ValueError,TypeError):
@@ -782,7 +773,7 @@ class UnitTestCollection(models.Model):
 
 #----------------------------------------------------------------------
 def get_or_create_unit_test_info(unit,test,frequency,assigned_to=None, active=True):
-    
+
     uti, created = UnitTestInfo.objects.get_or_create(
         unit = unit,
         test = test,
@@ -832,7 +823,10 @@ def list_assigned_to_unit(*args,**kwargs):
     """UnitTestCollection was saved.  Create UnitTestCollections
     for all Tests. (Case 1 from above)"""
 
-    update_unit_test_assignments(kwargs["instance"].tests_object)
+    if not kwargs.get("raw",False):
+        #don't process signal when loading fixture data
+
+        update_unit_test_assignments(kwargs["instance"].tests_object)
 
 #----------------------------------------------------------------------
 @receiver(post_save, sender=TestListMembership)
@@ -841,13 +835,17 @@ def test_added_to_list(*args,**kwargs):
     is performed on and create UnitTestCollection for the Unit, Test pair.
     Covers case 2a & 2b.
     """
-    update_unit_test_assignments(kwargs["instance"].test_list)
+    if not kwargs.get("raw",False):
+        #don't process signal when loading fixture data
+        update_unit_test_assignments(kwargs["instance"].test_list)
 
 #----------------------------------------------------------------------
 @receiver(m2m_changed, sender=TestList.sublists.through)
 def sublist_changed(*args,**kwargs):
     """when a sublist changes"""
-    update_unit_test_assignments(kwargs["instance"])
+    if not kwargs.get("raw",False):
+        #don't process signal when loading fixture data
+        update_unit_test_assignments(kwargs["instance"])
 
 #============================================================================
 class TestInstanceManager(models.Manager):
@@ -918,7 +916,6 @@ class TestInstance(models.Model):
 
         self.calculate_pass_fail()
         super(TestInstance,self).save(*args,**kwargs)
-
     #----------------------------------------------------------------------
     def difference(self):
         """return difference between instance and reference"""
@@ -972,10 +969,17 @@ class TestInstance(models.Model):
         except :
             return "TestInstance(Empty)"
 
+#----------------------------------------------------------------------
+@receiver(post_save,sender=TestInstance)
+def on_test_instance_saved(*args,**kwargs):
+    test_instance = kwargs["instance"]
+    UnitTestInfo.objects.filter(test=test_instance.test,unit=test_instance.unit).update(
+        last_instance = test_instance
+    )
 
 #============================================================================
 class TestListInstanceManager(models.Manager):
-        
+
     #----------------------------------------------------------------------
     def awaiting_review(self):
         return self.complete().filter(testinstance__status__requires_review=True).distinct().order_by("work_completed")
@@ -1010,6 +1014,7 @@ class TestListInstance(models.Model):
     modified = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(User, editable=False, related_name="test_list_instance_modifier")
 
+
     objects = TestListInstanceManager()
     class Meta:
         ordering = ("work_completed",)
@@ -1018,17 +1023,25 @@ class TestListInstance(models.Model):
     #----------------------------------------------------------------------
     def pass_fail_status(self,formatted=False):
         """return string with pass fail status of this qa instance"""
-        status = [(status,display,self.testinstance_set.filter(pass_fail=status)) for status,display in PASS_FAIL_CHOICES]
+        instances = list(self.testinstance_set.all())
+        statuses = [(status,display,[x for x in instances if x.pass_fail == status]) for status,display in PASS_FAIL_CHOICES]
+        statuses = [x for x in statuses if len(x[2])>0]
         if not formatted:
-            return status
-        return ", ".join(["%d %s" %(s.count(),d) for _,d,s in status])
+            return statuses
+        return ", ".join(["%d %s" %(len(s),d) for _,d,s in statuses])
     #----------------------------------------------------------------------
     def status(self,formatted=False):
         """return string with review status of this qa instance"""
-        status = [(status,self.testinstance_set.filter(status=status)) for status in TestInstanceStatus.objects.all()]
+        instances = list(self.testinstance_set.all())
+        statuses = [(status,[x for x in instances if x.status == status]) for status in TestInstanceStatus.objects.all()]
+        statuses = [x for x in statuses if len(x[1])>0]
         if not formatted:
-            return status
-        return ", ".join(["%d %s" %(s.count(),test_status.name) for test_status,s in status])
+            return statuses
+        return ", ".join(["%d %s" %(len(s),test_status.name) for test_status,s in statuses])
+        #status = [(status,self.testinstance_set.filter(status=status)) for status in TestInstanceStatus.objects.all()]
+        #if not formatted:
+        #    return status
+        #return ", ".join(["%d %s" %(s.count(),test_status.name) for test_status,s in status])
     #----------------------------------------------------------------------
     def unreviewed_instances(self):
         return self.testinstance_set.filter(status__requires_review=True)
@@ -1047,6 +1060,28 @@ class TestListInstance(models.Model):
             return "TestListInstance(Empty)"
 
 
+#----------------------------------------------------------------------
+@receiver(post_save,sender=TestListInstance)
+def on_test_list_instance_saved(*args,**kwargs):
+    """set last instance for UnitTestInfo"""
+
+    test_list_instance = kwargs["instance"]
+
+    cycle_ids = TestListCycle.objects.filter(
+        test_lists = test_list_instance.test_list
+    ).values_list("pk",flat=True)
+    cycle_ct = ContentType.objects.get_for_model(TestListCycle)
+
+    test_list_ids = [test_list_instance.test_list.pk]
+    list_ct = ContentType.objects.get_for_model(TestList)
+
+    to_update = [(cycle_ct,cycle_ids), (list_ct,test_list_ids)]
+    for ct,object_ids in to_update:
+        UnitTestCollection.objects.filter(
+            content_type = ct,
+            object_id__in = object_ids,
+            unit = test_list_instance.unit,
+        ).update(last_instance=test_list_instance)
 
 #============================================================================
 class TestListCycle(TestCollectionInterface):

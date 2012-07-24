@@ -50,6 +50,7 @@ def as_data_attributes(unit_test_collection):
     utc = unit_test_collection
     due_date = utc.due_date()
     last_done = utc.last_done_date()
+
     attrs = {
         "frequency": utc.frequency.slug,
         "due_date": due_date.isoformat() if due_date else "",
