@@ -556,18 +556,16 @@ class TestList(TestCollectionInterface):
         symmetrical=False,null=True, blank=True,
         help_text=_("Choose any sublists that should be performed as part of this list.")
     )
-
     #----------------------------------------------------------------------
     def all_lists(self):
         """return query for self and all sublists"""
-        qs = TestList.objects.filter(pk=self.pk) | self.sublists.all()
-        return qs
+        return TestList.objects.filter(pk=self.pk) | self.sublists.all()
     #----------------------------------------------------------------------
     def ordered_tests(self):
         """return list of all tests/sublist tests in order"""
-        tests = list(self.tests.all().select_related("category"))
+        tests = list(self.tests.all().order_by("testlistmembership__order").select_related("category"))
         for sublist in self.sublists.all():
-            tests.extend(sublist.all_tests())
+            tests.extend(sublist.ordered_tests())
         return tests
     #----------------------------------------------------------------------
     def set_references(self):
