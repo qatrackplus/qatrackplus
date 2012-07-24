@@ -292,6 +292,7 @@ class TestUnitTestInfo(TestCase):
         frequency = utils.create_frequency(nom=7,due=7,overdue=9)
         uti = utils.create_unit_test_info(frequency=frequency)
         ti = utils.create_test_instance(test=uti.test,unit=uti.unit,work_completed=now)
+        uti = models.UnitTestInfo.objects.get(pk=uti.pk )
         due = uti.due_date()
         self.assertEqual(due,now+timezone.timedelta(days=7))
     #---------------------------------------------------------------------------
@@ -543,6 +544,8 @@ class TestUnitTestCollection(TestCase):
         for delta,due_status in daily_statuses:
             wc = now+timezone.timedelta(days=delta)
             tli = utils.create_test_list_instance(unit=utc.unit,test_list=utc.tests_object,work_completed=wc)
+
+            utc = models.UnitTestCollection.objects.get(pk=utc.pk)
             self.assertEqual(utc.due_status(),due_status)
     #----------------------------------------------------------------------
     def test_weekly_due_status(self):
@@ -563,6 +566,7 @@ class TestUnitTestCollection(TestCase):
         for delta,due_status in weekly_statuses:
             wc = now+timezone.timedelta(days=delta)
             tli = utils.create_test_list_instance(unit=utc.unit,test_list=utc.tests_object,work_completed=wc)
+            utc = models.UnitTestCollection.objects.get(pk=utc.pk)
             self.assertEqual(utc.due_status(),due_status)
     #----------------------------------------------------------------------
     def test_last_done_date(self):
@@ -576,6 +580,7 @@ class TestUnitTestCollection(TestCase):
         ti = utils.create_test_instance(test=test,unit=utc.unit,work_completed=now)
         ti.test_list_instance = tli
         ti.save()
+        utc = models.UnitTestCollection.objects.get(pk=utc.pk)
         self.assertEqual(now,utc.last_done_date())
 
     #----------------------------------------------------------------------
@@ -598,13 +603,14 @@ class TestUnitTestCollection(TestCase):
         test = utils.create_test(name="tester")
         utils.create_test_list_membership(utc.tests_object,test)
 
-        self.assertIsNone(utc.last_completed_instance())
+        self.assertIsNone(utc.last_instance)
 
         tli = utils.create_test_list_instance(unit=utc.unit,test_list=utc.tests_object)
+        utc = models.UnitTestCollection.objects.get(pk=utc.pk)
         ti = utils.create_test_instance(test=test,unit=utc.unit)
         ti.test_list_instance = tli
         ti.save()
-        self.assertEqual(tli,utc.last_completed_instance())
+        self.assertEqual(tli,utc.last_instance)
     #----------------------------------------------------------------------
     def test_unreview_test_instances(self):
         utc = utils.create_unit_test_collection()
@@ -613,7 +619,7 @@ class TestUnitTestCollection(TestCase):
         test = utils.create_test(name="tester")
         utils.create_test_list_membership(utc.tests_object,test)
 
-        self.assertIsNone(utc.last_completed_instance())
+        self.assertIsNone(utc.last_instance)
 
         tli = utils.create_test_list_instance(unit=utc.unit,test_list=utc.tests_object)
         ti = utils.create_test_instance(test=test,unit=utc.unit)
@@ -667,11 +673,16 @@ class TestUnitTestCollection(TestCase):
         utc = utils.create_unit_test_collection(test_collection=cycle)
 
         self.assertEqual(utc.next_list(),test_lists[0])
-
         tli = utils.create_test_list_instance(unit=utc.unit,test_list=test_lists[0])
+
+        #need to regrab from db since since last_instance was updated in the db
+        #by signal handler
+        utc = models.UnitTestCollection.objects.get(pk=utc.pk)
         self.assertEqual(utc.next_list(),test_lists[1])
 
         tli = utils.create_test_list_instance(unit=utc.unit,test_list=test_lists[1])
+        utc = models.UnitTestCollection.objects.get(pk=utc.pk)
+
         self.assertEqual(utc.next_list(),test_lists[0])
 
     #----------------------------------------------------------------------
@@ -915,7 +926,7 @@ class TestTestListInstance(TestCase):
 
         status = self.test_list_instance.status()
         for stat,tests in self.test_list_instance.status():
-            self.assertEqual(tests.count(),1)
+            self.assertEqual(len(tests),1)
 
         self.assertEqual(
             self.test_list_instance.status(formatted=True),
