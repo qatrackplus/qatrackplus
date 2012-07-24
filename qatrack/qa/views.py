@@ -345,12 +345,12 @@ class PerformQAView(CreateView):
                 self.request,"There must be at least one Test Status defined before performing a TestList"
             )
             return context
-        
+
         try:
             self.unit_test_list = models.UnitTestCollection.objects.select_related().get(pk=self.kwargs["pk"])
         except models.UnitTestCollection.DoesNotExist:
             raise Http404
-        
+
         self.test_list = self.unit_test_list.get_list(self.request.GET.get("day",None))
         self.create_new_test_list_instance()
         self.add_test_instances()
@@ -417,7 +417,7 @@ class UnitGroupedFrequencyListView(ListView):
     #----------------------------------------------------------------------
     def get_queryset(self):
         """filter queryset by frequency"""
-        print self.kwargs
+
         return models.UnitTestCollection.objects.filter(
             frequency__slug=self.kwargs["frequency"],
             active=True,
