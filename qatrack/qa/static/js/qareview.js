@@ -178,8 +178,8 @@ function add_test_row(parent,instance,test_list_instances){
 	var val = QAUtils.format_instance_value(instance);
 	data.push(val)
 
-	var ref_tol = QAUtils.format_ref_tol(instance.reference, instance.tolerance);
-	data.push('<a href="#" title="'+ref_tol+'" class="ref-tol-format">'+QAUtils.format_ref(instance.reference)+'</a>');
+	var ref_tol = QAUtils.format_ref_tol(instance.reference, instance.tolerance,instance.test);
+	data.push('<a href="#" title="'+ref_tol+'" class="ref-tol-format">'+QAUtils.format_ref(instance.reference,instance.test)+'</a>');
 
 	var spark_id = 'id-'+instance.id;
 	var spark = '<span id="'+spark_id+'" class="sparklines"></span>';

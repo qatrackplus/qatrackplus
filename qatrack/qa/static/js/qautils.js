@@ -183,18 +183,15 @@ var QAUtils = new function() {
     };
 
     //return a string representation of a reference and tolerance
-    this.format_ref = function(reference){
+    this.format_ref = function(reference,test){
 		var t,v,s;
 
 		if (reference !== null){
 			v = reference.value;
-
 			if (reference.type === this.BOOLEAN){
-				if (Math.abs(reference.value - 1.) < this.EPSILON){
-					s = "Yes";
-				}else{
-					s = "No";
-				}
+				d = Math.abs(instance.value -1.) < this.EPSILON ? "Yes" : "No";
+			}else if (reference.type === this.MULTIPLE_CHOICE){
+				s = test.choices.split(',')[reference.value];
 			}else{
 				s = this.format_float(v);
 			}
@@ -207,7 +204,7 @@ var QAUtils = new function() {
     };
 
     //return a string representation of a reference and tolerance
-    this.format_ref_tol = function(reference, tolerance){
+    this.format_ref_tol = function(reference, tolerance,test){
 		var t,v,s;
 
 		if ((tolerance !== null) && (reference !== null)){
@@ -215,17 +212,15 @@ var QAUtils = new function() {
 			v = reference.value;
 
 			if (reference.type === this.BOOLEAN){
-				if (Math.abs(reference.value - 1.) < this.EPSILON){
-					s = "Yes";
-				}else{
-					s = "No";
-				}
+				s = Math.abs(instance.value -1.) < this.EPSILON ? "Yes" : "No";
+			}else if (reference.type === this.MULTIPLE_CHOICE){
+				s = test.choices.split(',')[instance.value];
 			}else{
 				var f = this.format_float;
 				s = [f(t.act_low),f(t.tol_low), f(v), f(t.tol_high), f(t.act_high)].join(" &le; ");
 			}
 		}else if (reference !== null){
-			s = this.format_ref(reference);
+			s = this.format_ref(reference,test);
 		}else{
 			s = "No Ref";
 		}
@@ -245,6 +240,8 @@ var QAUtils = new function() {
 			s = "<em>Skipped</em>";
 		}else if (instance.test.type === this.BOOLEAN){
 			s = Math.abs(instance.value -1.) < this.EPSILON ? "Yes" : "No";
+		}else if (instance.test.type === this.MULTIPLE_CHOICE){
+			s = instance.test.choices.split(',')[instance.value];
 		}else{
 			s = this.format_float(instance.value);
 		}

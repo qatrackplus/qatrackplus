@@ -112,6 +112,8 @@ class UnitTestInfoAdmin(admin.ModelAdmin):
         """create new reference when user updates value"""
         if form.instance.test.type == models.BOOLEAN:
             ref_type = models.BOOLEAN
+        elif form.instance.test.type == models.MULTIPLE_CHOICE:
+            ref_type = models.MULTIPLE_CHOICE
         else:
             ref_type = models.NUMERICAL
         val = form["reference_value"].value()
