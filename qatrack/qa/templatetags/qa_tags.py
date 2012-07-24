@@ -50,6 +50,7 @@ def as_data_attributes(unit_test_collection):
     utc = unit_test_collection
     due_date = utc.due_date()
     last_done = utc.last_done_date()
+
     attrs = {
         "frequency": utc.frequency.slug,
         "due_date": due_date.isoformat() if due_date else "",
@@ -61,3 +62,73 @@ def as_data_attributes(unit_test_collection):
     return " ".join(['data-%s=%s' % (k,v) for k,v in attrs.items() if v])
 
 
+pos_inf = 1e200 * 1e200
+neg_inf = -1e200 * 1e200
+nan = (1e200 * 1e200) / (1e200 * 1e200)
+special_floats = [str(pos_inf), str(neg_inf), str(nan)]
+from decimal import Decimal
+from django.utils.encoding import force_unicode
+
+@register.filter
+def scientificformat(text):
+    """
+    Displays a float in scientific notation.
+
+    If the input float is infinity or NaN, the (platform-dependent) string
+    representation of that value will be displayed.
+
+    This is based on the floatformat function in django/template/defaultfilters.py
+
+    http://classmplanet.wordpress.com/2011/06/26/displaying-floats-with-scientific-notation/
+    """
+
+    try:
+        input_val = force_unicode(text)
+        d = Decimal(input_val)
+    except UnicodeEncodeError:
+        return u''
+    except :
+        if input_val in special_floats:
+            return input_val
+        try:
+            d = Decimal(force_unicode(float(text)))
+        except (ValueError,  TypeError, UnicodeEncodeError):
+            return u''
+
+    try:
+        m = int(d) - d
+    except (ValueError, OverflowError):
+        return input_val
+
+    try:
+        # for 'normal' sized numbers
+        if d.is_zero():
+            number = u'0'
+        elif ( (d > Decimal('-10000') and d < Decimal('-0.01')) or ( d > Decimal('0.01') and d < Decimal('10000')) ) :
+            # this is what the original floatformat() function does
+            sign, digits, exponent = d.quantize(Decimal('.001'), ROUND_HALF_UP).as_tuple()
+            digits = [unicode(digit) for digit in reversed(digits)]
+            while len(digits) <= abs(exponent):
+                digits.append(u'0')
+            digits.insert(-exponent, u'.')
+            if sign:
+                digits.append(u'-')
+            number = u''.join(reversed(digits))
+        else:
+            # for very small and very large numbers
+            sign, digits, exponent = d.as_tuple()
+            exponent = d.adjusted()
+            digits = [unicode(digit) for digit in digits][:3] # limit to 2 decimal places
+            while len(digits) < 3:
+                digits.append(u'0')
+            digits.insert(1, u'.')
+            if sign:
+                digits.insert(0, u'-')
+            number = u''.join(digits)
+            number += u'e' + u'%i' % exponent
+
+        return mark_safe(formats.number_format(number))
+    except :
+        return input_val
+
+scientificformat.is_safe = True

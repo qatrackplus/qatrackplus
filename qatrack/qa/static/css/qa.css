@@ -162,20 +162,27 @@ tr.col-group th{
     background-color:#D9EDF7;
 }
 .sub-table {
+    font-size:0.9em;
     background-color: #F9F9F9;
 }
 .sub-table th{
     font-weight: normal;
     font-style:italic;
 }
+.sub-table th, .sub-table td {
+    text-align:center;
+}
 .sub-table th.name-col{
-    width:250px;
+    min-width:250px;
 }
-.sub-table th.ref-col {
-    width:150px;
+.cat-col{min-width:150px;}
+.comment-col {width:120px;}
+.history-col,  .review-col, .review-url-col{
+    width:100px;
 }
-.sub-table th.history-col{
-    width:150px;
+.ref-col, .value-col {
+    width:70px;
+    text-align:right;
 }
 
 option.unreviewed {

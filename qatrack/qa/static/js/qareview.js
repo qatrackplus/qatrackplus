@@ -13,7 +13,7 @@ function make_status_select(){
 /**************************************************************************/
 //creates the html table to hold the tests from a test list
 function create_test_list_table(id){
-	var headers = '<tr><th class="name-col">Name</th><th>Type</th><th>Comment</th><th>Pass/Fail</th><th>Value</th><th class="ref-col">Ref/Tol</th><th class="history-col">History</th><th>Review URL</th><th>Review Status</th><th><input type="checkbox" class="toggle_children"/></tr>';
+	var headers = '<tr><th class="name-col">Name</th><th class="cat-col">Category</th><th class="comment-col">Comment</th><th value="pass-fail-col">Pass/Fail</th><th class="value-col">Value</th><th class="ref-col">Ref/Tol</th><th class="history-col">History</th><th class="review-url-col">Review URL</th><th class="review-col">Review Status</th><th><input type="checkbox" class="toggle_children"/></tr>';
 	var elements = [
 		'<div class="review-status-container ">',
 		'<span class="label collection-review-status"></span>',
@@ -178,8 +178,8 @@ function add_test_row(parent,instance,test_list_instances){
 	var val = QAUtils.format_instance_value(instance);
 	data.push(val)
 
-	var ref_tol = QAUtils.format_ref_tol(instance.reference, instance.tolerance);
-	data.push(ref_tol)
+	var ref_tol = QAUtils.format_ref_tol(instance.reference, instance.tolerance,instance.test);
+	data.push('<a href="#" title="'+ref_tol+'" class="ref-tol-format">'+QAUtils.format_ref(instance.reference,instance.test)+'</a>');
 
 	var spark_id = 'id-'+instance.id;
 	var spark = '<span id="'+spark_id+'" class="sparklines"></span>';
