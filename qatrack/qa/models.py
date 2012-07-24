@@ -443,7 +443,7 @@ class UnitTestInfo(models.Model):
     active = models.BooleanField(help_text=_("Uncheck to disable this test on this unit"), default=True)
 
     assigned_to = models.ForeignKey(Group,help_text = _("QA group that this test list should nominally be performed by"),null=True, blank=True)
-    last_instance = models.ForeignKey("TestInstance",null=True)
+    last_instance = models.ForeignKey("TestInstance",null=True, editable=False)
     objects = UnitTestInfoManager()
     #============================================================================
     class Meta:
@@ -642,7 +642,7 @@ class UnitTestCollection(models.Model):
     tests_object = generic.GenericForeignKey("content_type","object_id")
     objects = UnitTestListManager()
 
-    last_instance = models.ForeignKey("TestListInstance",null=True)
+    last_instance = models.ForeignKey("TestListInstance",null=True,editable=False)
 
     class Meta:
         unique_together = ("unit", "frequency", "content_type","object_id",)
