@@ -67,7 +67,7 @@ class TestInfoForm(forms.ModelForm):
             if tt == models.BOOLEAN:
                 self.fields["reference_value"].widget = forms.Select(choices=[(-1,"---"),(0,"No"),(1,"Yes")])
             elif tt == models.MULTIPLE_CHOICE:
-                self.fields["reference_value"].widget = forms.Select(choices=self.instance.test.get_choices())
+                self.fields["reference_value"].widget = forms.Select(choices=[(-1,"---")]+self.instance.test.get_choices())
 
     #----------------------------------------------------------------------
     def clean(self):
@@ -112,6 +112,8 @@ class UnitTestInfoAdmin(admin.ModelAdmin):
         """create new reference when user updates value"""
         if form.instance.test.type == models.BOOLEAN:
             ref_type = models.BOOLEAN
+        elif form.instance.test.type == models.MULTIPLE_CHOICE:
+            ref_type = models.MULTIPLE_CHOICE
         else:
             ref_type = models.NUMERICAL
         val = form["reference_value"].value()

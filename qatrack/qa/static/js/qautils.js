@@ -183,7 +183,28 @@ var QAUtils = new function() {
     };
 
     //return a string representation of a reference and tolerance
-    this.format_ref_tol = function(reference, tolerance){
+    this.format_ref = function(reference,test){
+		var t,v,s;
+
+		if (reference !== null){
+			v = reference.value;
+			if (reference.type === this.BOOLEAN){
+				d = Math.abs(instance.value -1.) < this.EPSILON ? "Yes" : "No";
+			}else if (reference.type === this.MULTIPLE_CHOICE){
+				s = test.choices.split(',')[reference.value];
+			}else{
+				s = this.format_float(v);
+			}
+		}else{
+			s = "No Ref";
+		}
+
+		return s;
+
+    };
+
+    //return a string representation of a reference and tolerance
+    this.format_ref_tol = function(reference, tolerance,test){
 		var t,v,s;
 
 		if ((tolerance !== null) && (reference !== null)){
@@ -191,23 +212,26 @@ var QAUtils = new function() {
 			v = reference.value;
 
 			if (reference.type === this.BOOLEAN){
-				if (Math.abs(reference.value - 1.) < this.EPSILON){
-					s = "Yes Expected";
-				}else{
-					s = "No Expected";
-				}
+				s = Math.abs(instance.value -1.) < this.EPSILON ? "Yes" : "No";
+			}else if (reference.type === this.MULTIPLE_CHOICE){
+				s = test.choices.split(',')[instance.value];
 			}else{
-				s = [t.act_low,t.tol_low, v, t.tol_high, t.act_high].join(" &le; ");
+				var f = this.format_float;
+				s = [f(t.act_low),f(t.tol_low), f(v), f(t.tol_high), f(t.act_high)].join(" &le; ");
 			}
 		}else if (reference !== null){
-			s = reference.value.toString();
+			s = this.format_ref(reference,test);
 		}else{
-			s = "No Reference";
+			s = "No Ref";
 		}
 
 		return s;
 
     };
+
+	this.format_float = function(val){
+		return parseFloat(val).toPrecision(6);
+	}
 
 	//return a string representation of an instance value
 	this.format_instance_value= function(instance){
@@ -216,8 +240,10 @@ var QAUtils = new function() {
 			s = "<em>Skipped</em>";
 		}else if (instance.test.type === this.BOOLEAN){
 			s = Math.abs(instance.value -1.) < this.EPSILON ? "Yes" : "No";
+		}else if (instance.test.type === this.MULTIPLE_CHOICE){
+			s = instance.test.choices.split(',')[instance.value];
 		}else{
-			s = instance.value.toString();
+			s = this.format_float(instance.value);
 		}
 		return s;
 	};
