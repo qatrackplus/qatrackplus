@@ -117,3 +117,14 @@ if (!Array.prototype.filter)
     return res;
   };
 }
+
+$.fn.preventDoubleSubmit = function() {
+  jQuery(this).submit(function() {
+    if (this.beenSubmitted)
+      return false;
+    else{
+	  $(this).find("button[type=submit]").enable(false).addClass(".disabled").text("Submitting...");
+      this.beenSubmitted = true;
+	}
+  });
+};
