@@ -58,23 +58,18 @@ function calculate_composites(){
         return;
     }
 
-    $.ajax({
-        url:"/qa/composite/",
-        type:"POST",
-        data:{
+    var data = {
             qavalues:JSON.stringify(validation_data),
             composite_ids:JSON.stringify(composite_ids)
-        },
-        success: function(data){
+        };
+
+    QAUtils.call_api("/qa/composite/","POST",data,function(data){
             if (data.success){
                 $.each(data.results,function(name,result){
                     set_value_by_name(name,result.value);
                 });
             }
-        },
-        dataType:"json"
-    });
-
+        });
 }
 
 /***************************************************************/
@@ -144,7 +139,7 @@ function get_value_for_row(input_row_element){
         }else{
             return null;
         }
-    
+
     }else {
         val = input_row_element.find(".qa-value input").val();
         if ($.trim(val) === ""){
@@ -166,6 +161,9 @@ function get_value_for_row(input_row_element){
 function set_value_by_name(name, value){
     var row = $('.qa-contextname[value="'+name+'"]').parents(".qa-valuerow");
     var input = row.find(".qa-value input");
+    if (QAUtils.is_number(value)){
+        value =parseFloat(value).toPrecision(6);
+    }
     input.val(value);
     check_test_status(input);
 }
@@ -192,10 +190,12 @@ function valid_input(input_element){
 /***************************************************************/
 //perform a full validation of all data (for example on page load after submit)
 function full_validation(){
+    calculate_composites();
+
     $(".qa-input").each(function(){
         check_test_status($(this));
-        calculate_composites();
     });
+
 }
 
 /***************************************************************/
@@ -212,7 +212,7 @@ function filter_by_category(){
 
     if (show_all){
         $(".qa-valuerow").show();
-        $(".qa-comment").hide();
+        $(".qa-comment, .qa-procedure").hide();
         $(".qa-skip input").attr("checked",false);
         return;
     }
@@ -271,35 +271,38 @@ $(document).ready(function(){
     initialize_qa();
 
     //hide all  comments initially
-    $(".qa-comment").hide();
+    $(".qa-comment, .qa-procedure").hide();
 
     //set tab index
     $(".qa-input").each(function(i,e){ $(e).attr("tabindex", i) });
 
     //show comment when clicked
     $(".qa-showcmt a").click(function(){
-      $(this).parent().parent().next().toggle(600);
+      $(this).parent().parent().nextAll(".qa-comment").toggle(600);
+      return false;
+    });
+
+    $(".qa-showproc a").click(function(){
+      $(this).parent().parent().nextAll(".qa-procedure").toggle(600);
+      return false;
     });
 
     //anytime an input changes run validation
     $(".qa-input").change(function(){
+        //only allow numerical characters on input
+
+        this.value = this.value.replace(QAUtils.NUMERIC_WHITELIST_REGEX,'');
         check_test_status($(this));
         calculate_composites();
     });
 
-    //only allow numerical characters on input
-    $(".qa-input").keyup(function(e){
+    /*$(".qa-input").keyup(function(e){
         //whitelist characters
-        this.value = this.value.replace(QAUtils.NUMERIC_WHITELIST_REGEX,'');
 
-        //color input if not valid
-        if (!QAUtils.NUMERIC_REGEX.test(this.value)){
-            $(this).css("background-color",QAUtils.ACT_COLOR);
-        }else{
-            $(this).css("background-color","");
-        }
+        check_test_status($(this));
+
     });
-
+*/
     //run filter routine anytime user alters the categories
     $("#category_filter").change(filter_by_category);
 
@@ -307,19 +310,19 @@ $(document).ready(function(){
     $("#cycle-day").change(set_cycle_link);
 
     //prevent form submission when user hits enter key
-    $(this).on("keypress","input", function(e) {
+    $(this).on("keypress","input, select", function(e) {
 
         //rather than submitting form on enter, move to next value
         if (e.keyCode == 13) {
-            var inputs = $(this).parents("form").find("input:text, input:radio");
+            var inputs = $(this).parents("form").find(".qa-input");
             var idx = inputs.index(this);
-
+            var next_row;
             if (idx == inputs.length - 1) {
-                inputs[0].select();
+                next_row = $(this).parents("form").find(".qa-valuerow").first();
             } else {
-                inputs[idx + 1].focus(); //  handles submit buttons
-                inputs[idx + 1].select();
+                next_row = $(this).parents("tr").nextAll(".qa-valuerow");
             }
+            next_row.find(".qa-input").first().focus();
             return false;
         }
     });
@@ -333,6 +336,8 @@ $(document).ready(function(){
         $(window).unbind("beforeunload")
     });
 
+    $("#qa-form").preventDoubleSubmit();
+
     //automaticall unhide comment if test is being skipped
     $(".qa-skip input").click(function(){
         if ($(this).is(':checked')){
@@ -345,6 +350,13 @@ $(document).ready(function(){
     //run a full validation on page load
     full_validation();
 
-
+    var tabindex = 1;
+    $('.qa-input').each(function() {
+        if ($(this).type !== "hidden") {
+            $(this).attr("tabindex", tabindex);
+            tabindex++;
+        }
+    });
+    $(".qa-input").first().focus();
 });
 

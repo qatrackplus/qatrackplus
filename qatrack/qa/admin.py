@@ -1,5 +1,3 @@
-import datetime
-
 import django.forms as forms
 import django.db
 
@@ -7,6 +5,7 @@ from django.utils.translation import ugettext as _
 from django.contrib import admin
 from django.contrib.admin.templatetags.admin_static import static
 from django.utils.safestring import mark_safe
+from django.utils import timezone
 
 import qatrack.qa.models as models
 from qatrack.units.models import Unit
@@ -27,7 +26,7 @@ class SaveUserMixin(object):
         """set user and modified date time"""
         if not obj.pk:
             obj.created_by = request.user
-            obj.created = datetime.datetime.now()
+            obj.created = timezone.now()
         obj.modified_by = request.user
         super(SaveUserMixin, self).save_model(request, obj, form, change)
 
@@ -48,7 +47,7 @@ class CategoryAdmin(admin.ModelAdmin):
 
 #============================================================================
 class TestInfoForm(forms.ModelForm):
-    reference_value = forms.FloatField(label=_("Update reference"),required=False,)
+    reference_value = forms.FloatField(label=_("New reference value"),required=False,)
     test_type = forms.CharField(required=False)
 
     class Meta:
@@ -66,9 +65,9 @@ class TestInfoForm(forms.ModelForm):
             self.fields["test_type"].initial = models.TEST_TYPE_CHOICES[i][1]
 
             if tt == models.BOOLEAN:
-                self.fields["reference_value"].widget = forms.Select(choices=[(0,"No"),(1,"Yes")])
+                self.fields["reference_value"].widget = forms.Select(choices=[(-1,"---"),(0,"No"),(1,"Yes")])
             elif tt == models.MULTIPLE_CHOICE:
-                self.fields["reference_value"].widget = forms.Select(choices=self.instance.test.get_choices())
+                self.fields["reference_value"].widget = forms.Select(choices=[(-1,"---")]+self.instance.test.get_choices())
 
     #----------------------------------------------------------------------
     def clean(self):
@@ -80,7 +79,7 @@ class TestInfoForm(forms.ModelForm):
         ref_value = self.cleaned_data["reference_value"]
 
         if self.instance.test.type == models.BOOLEAN and int(ref_value) not in (0,1):
-                raise forms.ValidationError(_("Yes/No values must be 0 or 1"))
+                raise forms.ValidationError(_("You must select Yes or No as a new reference value"))
 
         if self.instance.test.type in (models.BOOLEAN, models.MULTIPLE_CHOICE):
             if self.cleaned_data["tolerance"] is not None:
@@ -113,6 +112,8 @@ class UnitTestInfoAdmin(admin.ModelAdmin):
         """create new reference when user updates value"""
         if form.instance.test.type == models.BOOLEAN:
             ref_type = models.BOOLEAN
+        elif form.instance.test.type == models.MULTIPLE_CHOICE:
+            ref_type = models.MULTIPLE_CHOICE
         else:
             ref_type = models.NUMERICAL
         val = form["reference_value"].value()
@@ -154,18 +155,18 @@ class TestInlineFormset(forms.models.BaseInlineFormSet):
 
     #----------------------------------------------------------------------
     def clean(self):
-        """Make sure there are no duplicated short_name's in a TestList"""
+        """Make sure there are no duplicated slugs in a TestList"""
         super(TestInlineFormset,self).clean()
 
         if not hasattr(self,"cleaned_data"):
             #something else went wrong already
             return {}
 
-        short_names = [f.instance.test.short_name for f in self.forms[:-self.extra]]
-        duplicates = list(set([sn for sn in short_names if short_names.count(sn)>1]))
+        slugs = [f.instance.test.slug for f in self.forms[:-self.extra]]
+        duplicates = list(set([sn for sn in slugs if slugs.count(sn)>1]))
         if duplicates:
             raise forms.ValidationError(
-                "The following short_names are duplicated " + ",".join(duplicates)
+                "The following macro names are duplicated " + ",".join(duplicates)
             )
 
         return self.cleaned_data
@@ -200,7 +201,7 @@ class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
 
 #============================================================================
 class TestAdmin(SaveUserMixin, admin.ModelAdmin):
-    list_display = ["name","short_name","category", "type", "set_references"]
+    list_display = ["name","slug","category", "type", "set_references"]
     list_filter = ["category","type"]
 
     #============================================================================
@@ -229,6 +230,7 @@ class TestListCycleMembershipInline(admin.TabularInline):
 class TestListCycleAdmin(SaveUserMixin, admin.ModelAdmin):
     """Admin for daily test list cycles"""
     inlines = [TestListCycleMembershipInline]
+    prepopulated_fields =  {'slug': ('name',)}
 
     #============================================================================
     class Media:
@@ -239,8 +241,15 @@ class TestListCycleAdmin(SaveUserMixin, admin.ModelAdmin):
             settings.STATIC_URL+"js/m2m_drag_admin.js",
         )
 
+#============================================================================
+class FrequencyAdmin(admin.ModelAdmin):
+    prepopulated_fields =  {'slug': ('name',)}
+    model = models.Frequency
 
-
+#============================================================================
+class StatusAdmin(admin.ModelAdmin):
+    prepopulated_fields =  {'slug': ('name',)}
+    model = models.TestInstanceStatus
 
 
 admin.site.register([models.Tolerance], BasicSaveUserAdmin)
@@ -251,5 +260,6 @@ admin.site.register([models.UnitTestInfo],UnitTestInfoAdmin)
 admin.site.register([models.UnitTestCollection],UnitTestCollectionAdmin)
 
 admin.site.register([models.TestListCycle],TestListCycleAdmin)
-
+admin.site.register([models.Frequency], FrequencyAdmin)
+admin.site.register([models.TestInstanceStatus], StatusAdmin)
 admin.site.register([models.TestListInstance,models.TestInstance], admin.ModelAdmin)

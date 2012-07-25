@@ -9,35 +9,38 @@ tr.qa-comment td, tr.qa-procedure td {
 }
 
 .qa-showcmt, .qa-status {
-    width: 60px;
+    max-width: 60px;
 }
 .qa-skip {
-    width:40px;
+    max-width:40px;
 }
 .qa-reference {
-    width:80px;
-
+    min-width:70px;
 }
-input[type="text"].qa-input {
-    width:85px;
-    height:12px;
+input.qa-input,
+select.qa-input{
+    max-width:85px;
     text-align:right;
 }
+
+.qa-table  tr:hover th {
+  background-color: inherit;
+}
+
 .qa-table td {
     font-size:0.9em;
     padding-bottom:2px;
 }
-.qa-table td.qa-value {
-    width:70px;
-}
 .qa-table td, .qa-table th{
     text-align:center;
-
 }
-.qa-table td.qa-category{
+.qa-table td.qa-value{
+    width:100px;
+}
+.qa-category{
     min-width: 140px;
 }
-.qa-table td.qa-name {
+.qa-name {
     min-width:300px;
     text-align:left;
 }
@@ -69,6 +72,7 @@ input[type="text"].qa-input {
 }
 #chart-legend {
     height:188px;
+    overflow-y:auto;
 }
 #chart-options {
     height:188px;
@@ -80,7 +84,10 @@ input[type="text"].qa-input {
   -moz-border-radius: 4px;
   border-radius: 4px;
 }
-
+#from-date-container label,
+#to-date-container label{
+    min-width:40px;
+}
 #filter-accordion{
     height:100%;
     overflow-y:auto;
@@ -122,16 +129,16 @@ tr.col-group th{
 }
 /**************************************************/
 /*QA Status Spans                                 */
-span.no_tol, span.not_done {
+.no_tol, .not_done {
     background-color:#3a87ad;
 }
-span.ok {
+.ok {
     background-color:#468847;
 }
-span.action {
+.action {
     background-color:#b94a48;
 }
-span.tolerance {
+.tolerance {
     background-color: #f89406;
 }
 
@@ -155,26 +162,29 @@ span.tolerance {
     background-color:#D9EDF7;
 }
 .sub-table {
+    font-size:0.9em;
     background-color: #F9F9F9;
 }
 .sub-table th{
     font-weight: normal;
     font-style:italic;
 }
+.sub-table th, .sub-table td {
+    text-align:center;
+}
 .sub-table th.name-col{
-    width:250px;
+    min-width:250px;
 }
-.sub-table th.ref-col {
-    width:150px;
+.cat-col{min-width:150px;}
+.comment-col {width:120px;}
+.history-col,  .review-col, .review-url-col{
+    width:100px;
 }
-.sub-table th.history-col{
-    width:150px;
+.ref-col, .value-col {
+    width:70px;
+    text-align:right;
 }
 
-/*td.qa-details,
-td.qa-details:hover{
-    background-color:#D9EDF7;
-}*/
 option.unreviewed {
     background-color:#D9EDF7;
 }

@@ -1,6 +1,8 @@
 from django.db import models
 from django.utils.translation import ugettext as _
 
+PHOTON = "photon"
+ELECTRON = "electron"
 
 #==========================================================================
 class UnitType(models.Model):
@@ -15,7 +17,7 @@ class UnitType(models.Model):
 
     name = models.CharField(max_length=50, help_text=_("Name for this unit type"))
     vendor = models.CharField(max_length=50, help_text=_("e.g. Elekta"))
-    model = models.CharField(max_length=50, help_text=_("Optional model name for this group (e.g. Beam Modulator)"), null=True, blank=True)
+    model = models.CharField(max_length=50, help_text=_("Optional model name for this group"), null=True, blank=True)
 
     class Meta:
         unique_together = [("name","model")]
@@ -33,7 +35,7 @@ class Modality(models.Model):
 
     """
 
-    type_choices = (("photon", "Photon"), ("electron", "Electron"),)
+    type_choices = ((PHOTON, "Photon"), (ELECTRON, "Electron"),)
     type = models.CharField(_("Treatement modality type"), choices=type_choices, max_length=20)
     energy = models.FloatField(help_text=_("Nominal energy (in MV for photons and MeV for electrons"))
 

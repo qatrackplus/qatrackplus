@@ -40,7 +40,7 @@ function init_test_collection_tables(){
 				{"sType":"span-day-month-year-sort"}, //due date
 				null, //qa status
 				null,//assigned to
-				null, //perform link
+				null //perform link
 			];
 			filter_cols = [
 				{type: "select"}, //Unit
@@ -50,7 +50,7 @@ function init_test_collection_tables(){
 				{type: "text" }, //due date
 				null, //qa status
 				{type: "select"},//assigned to
-				null, //perform link
+				null //perform link
 			];
 		}
 
@@ -77,16 +77,54 @@ function init_test_collection_tables(){
 /**************************************************************************/
 $(document).ready(function(){
 
-	init_test_collection_tables();
+	$.when(QAUtils.init()).done(function(){
+		init_test_collection_tables();
 
-	$(".test-collection-table tbody tr.has-due-date").each(function(idx,row){
-		var date_string = $(this).data("due_date");
-		var due_date = null;
-		if (date_string){
-			due_date = QAUtils.parse_iso8601_date(date_string);
-		}
-		var freq = $(this).data("frequency");
-		QAUtils.set_due_status_color($(this).find(".due-status"),due_date,freq);
+		$(".test-collection-table tbody tr.has-due-date").each(function(idx,row){
+			var date_string = $(this).data("last_done");
+			var last_done = null;
+			if (date_string){
+				last_done = QAUtils.parse_iso8601_date(date_string);
+			}
+			var freq = $(this).data("frequency");
+			QAUtils.set_due_status_color($(this).find(".due-status"),last_done,freq);
+		});
 	});
-
 });
+
+
+/* add filter to IE*/
+if (!Array.prototype.filter)
+{
+  Array.prototype.filter = function(fun /*, thisp*/)
+  {
+    var len = this.length;
+    if (typeof fun != "function")
+      throw new TypeError();
+
+    var res = new Array();
+    var thisp = arguments[1];
+    for (var i = 0; i < len; i++)
+    {
+      if (i in this)
+      {
+        var val = this[i]; // in case fun mutates this
+        if (fun.call(thisp, val, i, this))
+          res.push(val);
+      }
+    }
+
+    return res;
+  };
+}
+
+$.fn.preventDoubleSubmit = function() {
+  jQuery(this).submit(function() {
+    if (this.beenSubmitted)
+      return false;
+    else{
+	  $(this).find("button[type=submit]").enable(false).addClass(".disabled").text("Submitting...");
+      this.beenSubmitted = true;
+	}
+  });
+};

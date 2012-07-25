@@ -47,33 +47,15 @@ var QAUtils = new function() {
 	this.OPTION_SEP = "&";
 
 
-    this.UNREVIEWED = "unreviewed";
-    this.APPROVED = "approved";
-    this.SCRATCH = "scratch";
-    this.REJECTED = "rejected";
-	this.RETURN_TO_SERVICE = "returntoservice";
-	this.STATUSES = [this.UNREVIEWED, this.APPROVED, this.SCRATCH, this.REJECTED, this.RETURN_TO_SERVICE];
-
-	this.STATUS_DISPLAYS = {};
-	this.STATUS_DISPLAYS[this.UNREVIEWED] = "Unreviewed";
-	this.STATUS_DISPLAYS[this.APPROVED] = "Approved";
-	this.STATUS_DISPLAYS[this.SCRATCH] = "Scratch";
-	this.STATUS_DISPLAYS[this.REJECTED] = "Rejected";
-	this.STATUS_DISPLAYS[this.RETURN_TO_SERVICE] = "Return To Service";
-
-
 	this.DUE = this.TOLERANCE;
 	this.OVERDUE = this.ACTION;
 	this.NOT_DUE = this.WITHIN_TOL;
-	this.DAILY = "daily";
-	this.WEEKLY = "weekly";
-	this.MONTHLY = "monthly";
-	this.SEMIANNUAL = "semiannual";
-	this.ANNUAL = "annual";
-	this.OTHER = "other";
 
     this.MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
+	//initialized from api
+	this.FREQUENCIES = {};
+	this.STATUSES = {};
 
 
     /***************************************************************/
@@ -103,6 +85,7 @@ var QAUtils = new function() {
         var status, gen_status;
         var message;
 
+
         if ((test_type === this.BOOLEAN) || (test_type === this.MULTIPLE_CHOICE)){
             return this.test_multi(value, reference);
         }
@@ -115,7 +98,6 @@ var QAUtils = new function() {
                 message: this.NO_TOL_DISP
             };
 		}
-
 
         if (tolerances.type === this.PERCENT){
             diff = this.percent_difference(value,reference);
@@ -152,6 +134,15 @@ var QAUtils = new function() {
     };
 
     this.test_multi = function(value,reference){
+		if ( !this.is_number(reference)){
+            return {
+                status:this.NO_TOL,
+                gen_status:this.NO_TOL,
+                diff:"",
+                message: this.NO_TOL_DISP
+            };
+		}
+
         var status, gen_status;
         var diff = value-reference;
         var message;
@@ -192,7 +183,28 @@ var QAUtils = new function() {
     };
 
     //return a string representation of a reference and tolerance
-    this.format_ref_tol = function(reference, tolerance){
+    this.format_ref = function(reference,test){
+		var t,v,s;
+
+		if (reference !== null){
+			v = reference.value;
+			if (reference.type === this.BOOLEAN){
+				d = Math.abs(instance.value -1.) < this.EPSILON ? "Yes" : "No";
+			}else if (reference.type === this.MULTIPLE_CHOICE){
+				s = test.choices.split(',')[reference.value];
+			}else{
+				s = this.format_float(v);
+			}
+		}else{
+			s = "No Ref";
+		}
+
+		return s;
+
+    };
+
+    //return a string representation of a reference and tolerance
+    this.format_ref_tol = function(reference, tolerance,test){
 		var t,v,s;
 
 		if ((tolerance !== null) && (reference !== null)){
@@ -200,23 +212,26 @@ var QAUtils = new function() {
 			v = reference.value;
 
 			if (reference.type === this.BOOLEAN){
-				if (Math.abs(reference.value - 1.) < this.EPSILON){
-					s = "Yes Expected";
-				}else{
-					s = "No Expected";
-				}
+				s = Math.abs(instance.value -1.) < this.EPSILON ? "Yes" : "No";
+			}else if (reference.type === this.MULTIPLE_CHOICE){
+				s = test.choices.split(',')[instance.value];
 			}else{
-				s = [t.act_low,t.tol_low, v, t.tol_high, t.act_high].join(" &le; ");
+				var f = this.format_float;
+				s = [f(t.act_low),f(t.tol_low), f(v), f(t.tol_high), f(t.act_high)].join(" &le; ");
 			}
 		}else if (reference !== null){
-			s = reference.value.toString();
+			s = this.format_ref(reference,test);
 		}else{
-			s = "No Reference";
+			s = "No Ref";
 		}
 
 		return s;
 
     };
+
+	this.format_float = function(val){
+		return parseFloat(val).toPrecision(6);
+	}
 
 	//return a string representation of an instance value
 	this.format_instance_value= function(instance){
@@ -225,8 +240,10 @@ var QAUtils = new function() {
 			s = "<em>Skipped</em>";
 		}else if (instance.test.type === this.BOOLEAN){
 			s = Math.abs(instance.value -1.) < this.EPSILON ? "Yes" : "No";
+		}else if (instance.test.type === this.MULTIPLE_CHOICE){
+			s = instance.test.choices.split(',')[instance.value];
 		}else{
-			s = instance.value.toString();
+			s = this.format_float(instance.value);
 		}
 		return s;
 	};
@@ -259,10 +276,8 @@ var QAUtils = new function() {
 
     /********************************************************************/
     //API calls
-
-
     this.call_api = function(url,method,data,callback){
-        $.ajax({
+        return $.ajax({
             type:method,
             url:url,
             data:data,
@@ -273,7 +288,7 @@ var QAUtils = new function() {
             },
 			traditional:true,
             error: function(error){
-                console.log(error);
+                if (typeof console != "undefined") {console.log(error)};
                 var msg = "Something went wrong with your request:\n    ";
                 var props = ["responseText","status","statusText"];
                 var err_vals = $.map(props,function(prop){return prop+": "+error[prop];});
@@ -289,7 +304,7 @@ var QAUtils = new function() {
             return {resource_uri:uri,status:status};
         });
 
-        this.call_api(
+        return this.call_api(
             this.API_URL+"values/",
             "PATCH",
             JSON.stringify({objects:objects}),
@@ -312,7 +327,7 @@ var QAUtils = new function() {
             data["format"] = "json";
         }
 
-        this.call_api(this.API_URL+resource_name,"GET",data,callback );
+	    return this.call_api(this.API_URL+resource_name,"GET",data,callback );
     };
 
     //values for a group of tests
@@ -320,7 +335,7 @@ var QAUtils = new function() {
         if (!options.hasOwnProperty("limit")){
             options["limit"] = 0;
         }
-        this.call_api(this.API_URL+"grouped_values","GET",options,callback );
+        return this.call_api(this.API_URL+"grouped_values","GET",options,callback );
     };
 
     //*************************************************************
@@ -343,15 +358,14 @@ var QAUtils = new function() {
 	};
 
 	this.options_from_url_hash = function(hash){
-		var options = {};
+		var options = [];
 		if (hash[0] === "#"){
 			hash = hash.substring(1,hash.length);
 		}
 		var that = this;
-
 		$.each(hash.split(this.OPTION_SEP),function(i,elem){
 			var k_v = elem.split(that.OPTION_DELIM);
-			options[k_v[0]] = k_v[1];
+			options.push([k_v[0],k_v[1]]);
 		});
 		return options;
 	};
@@ -359,7 +373,7 @@ var QAUtils = new function() {
 
 	this.unit_test_chart_url = function(unit,test){
 		var unit_option = 'unit'+this.OPTION_DELIM+unit.number;
-		var test_option = 'test'+this.OPTION_DELIM+test.short_name;
+		var test_option = 'slug'+this.OPTION_DELIM+test.slug;
 		return this.CHARTS_URL+'#'+[unit_option,test_option].join(this.OPTION_SEP);
 	};
 	this.unit_test_chart_link = function(unit,test,text,title){
@@ -446,53 +460,40 @@ var QAUtils = new function() {
 		return ms/(1000*60*60*24);
 	};
 	this.compare_due_date_delta = function(delta,due,overdue){
-		if (delta >= overdue ){
-			return this.OVERDUE;
-		}else if (delta >= due){
+		if (delta < due){
+			return this.NOT_DUE;
+		}else if ((delta == due) || (delta < overdue )){
 			return this.DUE;
 		}
-		return this.NOT_DUE;
+		return this.OVERDUE;
 	};
-	this.due_status = function(due_date,frequency){
+	this.due_status = function(last_done,test_frequency){
+		last_done.setHours(0,0,0,0)
 
-		var today = new Date();
-		var delta_time = due_date - today; //in ms
-
-		var delta_days = Math.abs(this.milliseconds_to_days(delta_time));
+		var today = new Date().setHours(0,0,0,0);
+		var delta_time = last_done - today; //in ms
+		if (delta_time > 0){
+			return this.NOT_DUE;
+		}
+		var delta_days = Math.floor(Math.abs(this.milliseconds_to_days(delta_time)));
 		var due,overdue;
 
-		if (frequency === this.DAILY){
-			due = 1;
-			overdue = 1;
-		}else if (frequency === this.WEEKLY){
-			due = 7;
-			overdue = 9;
-		}else if (frequency === this.MONTHLY){
-			due = 28;
-			overdue = 35;
-		}else if (frequency === this.SEMIANNUAL){
-			due = 180;
-			overdue = 210;
-		}else if (frequency === this.ANNUAL){
-			due = 300;
-			overdue = 420;
-		}
+		var frequency = this.FREQUENCIES[test_frequency];
 
-		return this.compare_due_date_delta(delta_days,due,overdue);
+		return this.compare_due_date_delta(delta_days,frequency.due_interval,frequency.overdue_interval);
 	};
 
-	this.set_due_status_color = function(elem,due_date,frequency){
-		var color;
+	this.set_due_status_color = function(elem,last_done,frequency){
 		var status;
 
-		if (due_date === null){
-			color = this.NOT_DONE_COLOR;
+		if (last_done === null){
+			status = this.OK;
 		}else{
-			status = this.due_status(due_date,frequency);
-			color = this.qa_color(status);
+			status = this.due_status(last_done,frequency);
 		}
 
-		$(elem).css("background-color",color);
+		$(elem).removeClass([this.ACTION, this.TOLERANCE, this.OK].join(" "));
+		$(elem).addClass(status);
 	};
 
 	this.make_select = function(id,cls,options){
@@ -506,6 +507,40 @@ var QAUtils = new function() {
 		l.push("</select>");
 
 		return l.join("");
-	}
+	};
 
+
+	this.default_exported_statuses = function(){
+		var exported = [];
+		var status;
+		for (status in this.STATUSES){
+			if (this.STATUSES[status].export_by_default){
+				exported.push(status)
+			}
+		}
+		return exported;
+	};
+
+	//call using $.when() before using QAUTils in any scripts
+	//e.g. in a script where you want to use QAUTils you would do
+	// $.when(QAUTils.init()).done(function(){
+	//	   do_things_requiring_QAUtils();
+	//})
+	this.init = function(){
+		var that = this;
+
+		this.get_resources("status",function(results){
+			$.each(results.objects,function(idx,status){
+				that.STATUSES[status.slug] = status;
+			});
+		});
+
+		return this.get_resources("frequency",function(results){
+			$.each(results.objects,function(idx,freq){
+				that.FREQUENCIES[freq.slug] = freq;
+			});
+		});
+
+	};
 }();
+

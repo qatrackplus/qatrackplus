@@ -3,7 +3,7 @@
 {% load qa_tags %}
 
 {% block body %}
-    <h2>{{unittestcollections.0.frequency|title}} QA Test Lists</h2>
+    <h2>{{unittestcollections.0.frequency.name}} QA Test Lists</h2>
 	{% if not unittestcollections %}
 		<em>There are no test lists defined with this frequency</em>
 	{% else %}

@@ -1,0 +1,56 @@
+[
+    {
+        "pk": 1, 
+        "model": "units.unittype", 
+        "fields": {
+            "model": "Hi Art", 
+            "vendor": "Accuray", 
+            "name": "Tomotherapy"
+        }
+    }, 
+    {
+        "pk": 2, 
+        "model": "units.unittype", 
+        "fields": {
+            "model": "Synergy S", 
+            "vendor": "Elekta", 
+            "name": "Synergy S"
+        }
+    }, 
+    {
+        "pk": 3, 
+        "model": "units.unittype", 
+        "fields": {
+            "model": "Synergy", 
+            "vendor": "Elekta", 
+            "name": "Synergy"
+        }
+    }, 
+    {
+        "pk": 4, 
+        "model": "units.unittype", 
+        "fields": {
+            "model": "Primus", 
+            "vendor": "Siemens", 
+            "name": "Primus"
+        }
+    }, 
+    {
+        "pk": 5, 
+        "model": "units.unittype", 
+        "fields": {
+            "model": "Cyberknife", 
+            "vendor": "Accuray", 
+            "name": "Cyberknife"
+        }
+    }, 
+    {
+        "pk": 6, 
+        "model": "units.unittype", 
+        "fields": {
+            "model": "Therapax-300", 
+            "vendor": "Pantak", 
+            "name": "Orthovoltage"
+        }
+    }
+]

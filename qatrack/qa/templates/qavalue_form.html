@@ -1,3 +1,4 @@
+{% load qa_tags %}
 {% for field in form %}
     {% if field.errors %}
         <tr>
@@ -12,9 +13,8 @@
         </tr>
     {% endif %}
 {% endfor %}
-
 <tr class="control-group qa-valuerow">
-    {% with ref=form.fields.reference.initial  tol=form.fields.tolerance.initial%}
+    {% with ref=form.instance.reference  tol=form.instance.tolerance %}
         <input type="hidden" class="qa-reference-val" value="{{ref.value}}"/>
         <input type="hidden" class="qa-reference-pk" value="{{ref.pk}}"/>
         <input type="hidden" class="qa-tolerance act_low" value="{{tol.act_low}}"/>
@@ -24,14 +24,14 @@
         <input type="hidden" class="qa-tolerance-type" value="{{tol.type}}"/>
         <input type="hidden" class="qa-tolerance-pk" value="{{tol.pk}}"/>
 
-        <input type="hidden" class="qa-contextname" value="{{form.fields.test.initial.short_name}}"/>
-        {{form.reference.as_hidden}}
-        {{form.tolerance.as_hidden}}
-        {{form.test.as_hidden}}
+        <input type="hidden" class="qa-contextname" value="{{form.instance.test.slug}}"/>
         {{form.test_list_instance.as_hidden}}
-        {% with test=form.fields.test.initial %}
+		{{form.test.as_hidden}}
+		{{form.reference.as_hidden}}
+		{{form.tolerance.as_hidden}}
+        {% with test=form.instance.test %}
             <input type="hidden" class="qa-testtype" value="{{test.type}}"/>
-            <td class="qa-name qa-showproc"><a href="{{form.fields.test.initial.procedure}}" class="revealprocedure" title="Show procedure for this test" target="_blank">{{test.name}}</a></td>
+            <td class="qa-name qa-showproc"><a href="#" class="revealprocedure" title="Show/hide procedure for this test">{{test.name}}</a></td>
             <td class="qa-category">{{test.category.name|title}}</td>
             <td class="controls qa-value" title="{{form.value.help_text|safe}}">
 				{% if test.is_boolean %}
@@ -45,7 +45,7 @@
 
         <td class="qa-skip" title="{{form.skipped.help_text|safe}}">{{form.skipped}}</td>
         <td class="qa-status">Not Done</td>
-        <td class="qa-showcmt"><a href="#" class="revealcomment" title="Add comment for this test"><i class="icon-comment"/></a></td>
+        <td class="qa-showcmt"><a href="#" class="revealcomment" title="Add comment for this test"><i class="icon-comment"></i></a></td>
 		{% if include_admin %}
 			<td class="qa-reference">
 				{% if not ref %}
@@ -60,7 +60,7 @@
 			</td>
 			<td class="qa-history">
 				{% for d,v,pf,s in form.history %}
-					<span class="label {{pf}} history-value" title="{{d}} - {{s}}">{{v}}</span>
+					<span class="label {{pf}} history-value" title="{{d}} - {{s}}">{{v|floatformat:-3}}</span>
 				{% endfor %}
 			</td>
         {% endif %}
@@ -72,5 +72,31 @@
         <label class="label">Add Comment For Reviewer:</label>
         {{form.comment}}
     </td>
+</tr>
+<tr class="qa-procedure">
+    <td colspan="8"  class="" >
+		<table>
+			{% if form.instance.test.procedure %}
+			<tr>
+				<td>
+					<label class="label">Detailed procedure link:</label>
+				</td>
+				<td>
+					<a href="{{form.instance.test.procedure}}" class="revealprocedure" title="Show detailed procedure for this test" target="_blank">{{form.instance.test.name}}</a>
+				</td>
+			</tr>
+			{% endif %}
+			<tr>
+				<td>
+					<label class="label">Description of test:</label>
+				</td>
+				<td>
+					<textarea rows=10 cols=100 disabled="disabled">
+				        {{form.instance.test.description}}
+					</textarea>
+				</td>
+			</tr>
+		</table>
+	</td>
 </tr>
 

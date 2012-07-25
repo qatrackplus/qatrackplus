@@ -3,18 +3,17 @@ var HISTORY_INSTANCE_LIMIT = 5;
 /************************************************************************/
 //create a dropdown element for different review statuses
 function make_status_select(){
-	var status_options =[[null,""]];
+	var status_options =[["",""]];
 	var i,status;
-	for (i=0; i < QAUtils.STATUSES.length; i += 1){
-		status = QAUtils.STATUSES[i];
-		status_options.push([status, QAUtils.STATUS_DISPLAYS[status]]);
-	}
+	$.each(QAUtils.STATUSES, function(idx,status){
+		status_options.push([status.slug, status.name]);
+	});
 	return QAUtils.make_select("","input-medium pull-right status-update-value",status_options)
 }
 /**************************************************************************/
 //creates the html table to hold the tests from a test list
 function create_test_list_table(id){
-	var headers = '<tr><th class="name-col">Name</th><th>Type</th><th>Comment</th><th>Pass/Fail</th><th>Value</th><th class="ref-col">Ref/Tol</th><th class="history-col">History</th><th>Review URL</th><th>Review Status</th><th><input type="checkbox" class="toggle_children"/></tr>';
+	var headers = '<tr><th class="name-col">Name</th><th class="cat-col">Category</th><th class="comment-col">Comment</th><th value="pass-fail-col">Pass/Fail</th><th class="value-col">Value</th><th class="ref-col">Ref/Tol</th><th class="history-col">History</th><th class="review-url-col">Review URL</th><th class="review-col">Review Status</th><th><input type="checkbox" class="toggle_children"/></tr>';
 	var elements = [
 		'<div class="review-status-container ">',
 		'<span class="label collection-review-status"></span>',
@@ -144,10 +143,15 @@ function create_spark_line(container,test,test_list_instances){
 //return review status span for input instance
 function create_review_status(instance){
 	var title = "";
-	if (instance.reviewed){
+	if (!instance.status.review_required){
 		title = 'title="Reviewed by '+instance.reviewed_by+' on '+instance.review_date+'"';
 	}
-	return '<span class="label label-info review-status '+instance.status+'" '+title+'>'+QAUtils.STATUS_DISPLAYS[instance.status]+'</span>';
+	var review_class = "reviewed";
+	if (instance.status.requires_review){
+		review_class = "unreviewed";
+	}
+
+	return '<span class="label label-info review-status '+review_class+'" '+title+'>'+instance.status.name+'</span>';
 }
 
 /************************************************************************/
@@ -174,8 +178,8 @@ function add_test_row(parent,instance,test_list_instances){
 	var val = QAUtils.format_instance_value(instance);
 	data.push(val)
 
-	var ref_tol = QAUtils.format_ref_tol(instance.reference, instance.tolerance);
-	data.push(ref_tol)
+	var ref_tol = QAUtils.format_ref_tol(instance.reference, instance.tolerance,instance.test);
+	data.push('<a href="#" title="'+ref_tol+'" class="ref-tol-format">'+QAUtils.format_ref(instance.reference,instance.test)+'</a>');
 
 	var spark_id = 'id-'+instance.id;
 	var spark = '<span id="'+spark_id+'" class="sparklines"></span>';
@@ -196,8 +200,7 @@ function add_test_row(parent,instance,test_list_instances){
 	create_spark_line($("#"+spark_id),instance.test,test_list_instances);
 
 	//set color Pass/Fail column based on test
-	var pass_fail_td = test_row.find("span.pass-fail");
-	pass_fail_td.css("background-color",QAUtils.qa_color(instance.pass_fail));
+	var pass_fail_td = test_row.find("span.pass-fail").addClass(instance.pass_fail);
 	pass_fail_td.addClass("label");
 	return test_row;
 }
@@ -234,13 +237,13 @@ function open_details(test_list_row,data_table){
 function display_test_list_details(container,instance_id,test_list_instances){
 	var idx,to_review;
 	for (idx = 0; idx < test_list_instances.length; idx+=1){
-		if (test_list_instances[idx].id === instance_id){
+		if (parseInt(test_list_instances[idx].id) === parseInt(instance_id)){
 			to_review = test_list_instances[idx];
 			break;
 		}
 	}
 
-	container.addClass("sub-table-container");//css('background-color',QAUtils.REVIEW_COLOR);
+	container.addClass("sub-table-container");
 
 	//add row using to_review test_list_instance
 	$.each(to_review.test_instances,function(i,test_instance){
@@ -269,8 +272,13 @@ function get_selected_test_data_elements(container,data_element){
 //set the review status for all input test rows
 function set_review_status_for_rows(rows,status){
 	var labels = rows.find(".label.review-status");
-	labels.removeClass(QAUtils.STATUSES.join(" ")).addClass(status);
-	labels.text(QAUtils.STATUS_DISPLAYS[status]);
+	labels.removeClass("unreviewed reviewed")
+	if (status.requires_review){
+		labels.addClass("unreviewed");
+	}else{
+		labels.addClass("reviewed");
+	}
+	labels.text(status.name);
 }
 
 /**************************************************************************/
@@ -286,7 +294,7 @@ function update_collection_review_status(container){
 
 	var collection_row = container.parent().prev();
 	var opt = collection_row.find("select.instance-id option:selected");
-	opt.removeClass("reviewed").removeClass("unreviewed");
+	opt.removeClass("reviewed unreviewed");
 	opt.text(opt.text().replace("*",""));
 
 	if (unreviewed.length > 0){
@@ -304,7 +312,12 @@ function update_collection_review_status(container){
 //tests and then update appropriate review statuses
 function update_statuses_for_collection(container){
 
-	var new_status = container.find(".status-update-value").val();
+	var new_status = QAUtils.STATUSES[container.find(".status-update-value").val()];
+
+	if (!new_status){
+		return;
+	}
+
 	var uris = get_selected_test_data_elements(container,"instance_uri");
 	var button = container.find(".update-review-status");
 	var button_text = button.text();
@@ -313,7 +326,7 @@ function update_statuses_for_collection(container){
 
 		button.button("loading");
 
-		QAUtils.set_test_instances_status(uris,new_status,function(results,status){
+		QAUtils.set_test_instances_status(uris,new_status.resource_uri,function(results,status){
 
 			if (status === "success"){
 				set_review_status_for_rows(get_selected_test_rows(container),new_status);
@@ -364,7 +377,7 @@ function on_select_test_list(test_list_row){
 	var review_table = $(".review-table").dataTable();
 
 	test_list_row.children("td:last").append('<span class="pull-right"><em>Loading...</em></span>');
-	var instance_id = parseInt(test_list_row.find(".instance-id").val());
+	var instance_id = test_list_row.find(".instance-id").val();
 	var instance_options ={
 		test_list:test_list_row.find(".instance-id").find("option:selected").data("test_list_id"),
 		unit__number:test_list_row.data("unit_number"),
@@ -398,24 +411,26 @@ function on_select_test_list(test_list_row){
 /**************************************************************************/
 $(document).ready(function(){
 
-	//user changed the selected instance for a TestCollection
-	$("select.instance-id").change(function(event){
-		var test_list_row = $(event.currentTarget).parents("tr");
-		if ($(event.currentTarget).val() === "hide"){
-			close_details(test_list_row);
-		}else{
-			on_select_test_list(test_list_row);
-		}
-	});
+	$.when(QAUtils.init()).done(function(){
 
-	//(de)select checkboxes for child tests when user clicks on header checkbox
-	$("input.toggle_children").live("change",function(e){
-		$(this).closest(".qa-details").find("input.test-selected, input.toggle_children").attr("checked",$(this).is(":checked"))
-	});
+		//user changed the selected instance for a TestCollection
+		$("select.instance-id").change(function(event){
+			var test_list_row = $(event.currentTarget).parents("tr");
+			if ($(event.currentTarget).val() === "hide"){
+				close_details(test_list_row);
+			}else{
+				on_select_test_list(test_list_row);
+			}
+		});
 
-	//user updated review status of tests
-	$(".update-review-status").live("click",function(){
-		update_statuses_for_collection($(this).closest(".qa-details"))
-	});
+		//(de)select checkboxes for child tests when user clicks on header checkbox
+		$("input.toggle_children").live("change",function(e){
+			$(this).closest(".qa-details").find("input.test-selected, input.toggle_children").attr("checked",$(this).is(":checked"))
+		});
 
+		//user updated review status of tests
+		$(".update-review-status").live("click",function(){
+			update_statuses_for_collection($(this).closest(".qa-details"))
+		});
+	});
 });

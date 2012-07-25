@@ -48,8 +48,8 @@ urlpatterns = patterns('',
     url(r"^charts/control_chart.png$", views.ControlChartImage.as_view(), name="control_chart"),
 
     #performing qa
-    url(r"^(?P<frequency>\w+)/$", views.UnitGroupedFrequencyListView.as_view(), name="qa_by_frequency"),
+    url(r"^(?P<frequency>[\w-]+)/$", views.UnitGroupedFrequencyListView.as_view(), name="qa_by_frequency"),
     url(r"^(?P<pk>\d+)$", views.PerformQAView.as_view(), name="perform_qa"),
-    url(r"^(?P<frequency>\w+)/unit/(?P<unit_number>\d+)/$", views.UnitFrequencyListView.as_view(), name="qa_by_frequency_unit"),
+    url(r"^(?P<frequency>[\w-]+)/unit/(?P<unit_number>\d+)/$", views.UnitFrequencyListView.as_view(), name="qa_by_frequency_unit"),
 
 )

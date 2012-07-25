@@ -4,6 +4,11 @@
 {% load l10n %}
 {% load staticfiles %}
 
+{% block favicon %}
+	<link rel="shortcut icon" href="{% static "qatrack_theme/favicon.ico" %}">
+	<link rel="apple-touch-icon" href="{% static "qatrack_theme/apple-touch-icon.png" %}">
+{% endblock favicon %}
+
 {% block extra_style %}
     <link href="{% static "css/qa.css" %}" rel="stylesheet">
     <link href="{% static "data_tables/css/DT_bootstrap.css" %}" rel="stylesheet">
@@ -21,9 +26,13 @@
                 <ul class="dropdown-menu">
                     <li><a href="{% url user_home %}" title="Go to your groups QA home page"><i class="icon-user"></i> Users QA Home Page</a></li>
                     <li class="divider"></li>
+					<li class="nav-header">
+					    By Frequency
+				    </li>
                     {% for freq in QA_FREQUENCIES %}
-                        <li><a href="{% url qa_by_frequency freq.0 %}"><i class="icon-list"></i> {{freq.1}}</a></li>
+                        <li><a href="{% url qa_by_frequency frequency=freq.0 %}"><i class="icon-list"></i> {{freq.1}}</a></li>
                     {% endfor %}
+
                 </ul>
             </li>
             {% if user.is_staff %}

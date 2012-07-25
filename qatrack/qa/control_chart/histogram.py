@@ -3,8 +3,8 @@
 import numpy as np
 
 def binwidth(x, maxBins = None):
-    """ 
-    This method determines the optimal binwidth for a sample of data 
+    """
+    This method determines the optimal binwidth for a sample of data
     The algorithm is taken from Neural Computation 19, 6, 1503 - 1527.
     N.B. This algorithm assume all events in a sample are independent.
     """
@@ -14,6 +14,10 @@ def binwidth(x, maxBins = None):
         maxBins = 500   # must be larger than minBins
 
     span = np.max(x) - np.min(x)
+
+    if span == 0:
+        return 1.
+
     numOfBins = np.linspace(minBins, maxBins, maxBins - minBins + 1)
     C =  np.zeros( len(numOfBins) )
 
@@ -21,12 +25,13 @@ def binwidth(x, maxBins = None):
         k, edges = np.histogram(x, bins = numOfBins[i])
         C[i] = get_cost_func(k, span, numOfBins[i])
 
-    minCindex = np.where( C == np.min(C) )
+
+    minCindex = np.where( C == np.min(C) )[0][0]
     optBinWidth = span / numOfBins[minCindex]
 
     return optBinWidth
 
-    
+
 
 def get_cost_func(k, span, numOfBins):
     """ Calculates the cost function for a given bin width. """

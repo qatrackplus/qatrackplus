@@ -20,25 +20,23 @@
 			{# display all individual test lists #}
 			<tr class="{% cycle 'odd' 'even' %} has-due-date" {{utc|as_data_attributes}}>
 				<td>
-					<a class="nav-list" href="{% url qa_by_frequency_unit utc.frequency utc.unit.number %}" title="Perform {{frequency}} QA for {{utc.unit.name}}">
-						{{utc.unit.name}}
-					</a>
+					{{utc.unit.name}}
 				</td>
-				<td>{{utc.frequency|title}}</td>
+				<td>{{utc.frequency.name}}</td>
 				<td>{{utc.tests_object.name|title}}</td>
-				{% with utc.last_completed_instance as last_completed %}
-					{% if  last_completed %}
-						<td>{{last_completed.work_completed}}</td>
-						<td>{{utc|as_due_date}}</td>
-						<td class="pass_fail_status">
-							{{utc.last_completed_instance|as_pass_fail_status}}
-						</td>
-					{% else %}
-						<td>New List</td>
-						<td>New List</td>
-						<td>New List</td>
-					{% endif %}
-				{% endwith %}
+
+				{% if  utc.last_instance %}
+					<td>{{utc.last_instance.work_completed}}</td>
+					<td>{{utc|as_due_date}}</td>
+					<td class="pass_fail_status">
+						{{utc.last_instance|as_pass_fail_status}}
+					</td>
+				{% else %}
+					<td>New List</td>
+					<td>New List</td>
+					<td>New List</td>
+				{% endif %}
+
 				{% if table_type = "review" %}
 					<td class="review_status">
 						{{utc|as_unreviewed_count}}
@@ -60,7 +58,7 @@
 					</td>
 
 				{% else %}
-					<td>{{utc.assigned_to.group.name}}</td>
+					<td>{{utc.assigned_to.name}}</td>
 					<td><a href="{%url perform_qa utc.pk%}?day=next">Perform</a></td>
 				{% endif %}
 		   </tr>
