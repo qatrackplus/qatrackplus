@@ -741,16 +741,14 @@ class UnitTestCollection(models.Model):
 
         return self.tests_object.next_list(self.last_instance.test_list)
     #----------------------------------------------------------------------
-    def get_list(self,day="next"):
+    def get_list(self,day=None):
         """return next list to be completed from tests_object"""
 
-        if day == "next":
+        if day is None:
             return self.next_list()
 
-        try:
-            return self.tests_object.get_list(int(day))
-        except (ValueError,TypeError):
-            return self.next_list()
+        return self.tests_object.get_list(day)
+
     #----------------------------------------------------------------------
     def name(self):
         return self.__unicode__()
