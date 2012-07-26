@@ -280,7 +280,10 @@ class Test(models.Model):
     RESULT_RE = re.compile("^result\s*=\s*[(_0-9.a-zA-Z]+.*$",re.MULTILINE)
 
     name = models.CharField(max_length=256, help_text=_("Name for this test"))
-    slug = models.SlugField(verbose_name="Macro name", max_length=25, help_text=_("A short variable name for this test (to be used in composite calculations)."),blank=True,null=True)
+    slug = models.SlugField(
+        verbose_name="Macro name", max_length=25, blank=True,null=True,
+        help_text=_("A short variable name consisting of alphanumeric characters and underscores for this test (to be used in composite calculations). "),
+    )
     description = models.TextField(help_text=_("A concise description of what this test is for (optional)"), blank=True,null=True)
     procedure = models.CharField(max_length=512,help_text=_("Link to document describing how to perform this test"), blank=True, null=True)
 
@@ -378,11 +381,13 @@ class Test(models.Model):
     def clean_slug(self):
         """make sure slug is valid"""
 
-        if not self.slug:
-            return
-
         errors = []
-        if not self.VARIABLE_RE.match(self.slug):
+
+        if not self.slug:
+            if self.type != COMPOSITE:
+                return
+            errors.append(_("Composite tests require a macro name"))
+        elif not self.VARIABLE_RE.match(self.slug):
             errors.append(_("Macro names must contain only letters, numbers and underscores and start with a letter or underscore"))
 
         if errors:
