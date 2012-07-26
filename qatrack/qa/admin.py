@@ -162,11 +162,11 @@ class TestInlineFormset(forms.models.BaseInlineFormSet):
             #something else went wrong already
             return {}
 
-        slugs = [f.instance.test.slug for f in self.forms[:-self.extra]]
+        slugs = [f.instance.test.slug for f in self.forms if hasattr(f.instance,"test")]
         duplicates = list(set([sn for sn in slugs if slugs.count(sn)>1]))
         if duplicates:
             raise forms.ValidationError(
-                "The following macro names are duplicated " + ",".join(duplicates)
+                "The following macro names are duplicated :: " + ",".join(duplicates)
             )
 
         return self.cleaned_data
