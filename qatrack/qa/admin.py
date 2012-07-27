@@ -1,6 +1,8 @@
 import django.forms as forms
 import django.db
 
+from salmonella.admin import SalmonellaMixin
+
 from django.utils.translation import ugettext as _
 from django.contrib import admin
 from django.contrib.admin.templatetags.admin_static import static
@@ -148,7 +150,7 @@ class TestListAdminForm(forms.ModelForm):
 
 #============================================================================
 class TestInlineFormset(forms.models.BaseInlineFormSet):
-
+    
     #----------------------------------------------------------------------
     def clean(self):
         """Make sure there are no duplicated slugs in a TestList"""
@@ -168,14 +170,22 @@ class TestInlineFormset(forms.models.BaseInlineFormSet):
         return self.cleaned_data
 
 
+
+#----------------------------------------------------------------------
+def test_name(obj):
+    return obj.test.name
+#----------------------------------------------------------------------
+def macro_name(obj):
+    return obj.test.slug
 #============================================================================
-class TestListMembershipInline(admin.TabularInline):
+class TestListMembershipInline(SalmonellaMixin,admin.TabularInline):
     """"""
     model = models.TestListMembership
     formset = TestInlineFormset
-    extra = 1
+    extra = 5
     template = "admin/qa/testlistmembership/edit_inline/tabular.html"
-
+    readonly_fields = (test_name,macro_name,)
+    salmonella_fields = ("test",)
 #============================================================================
 class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
     prepopulated_fields =  {'slug': ('name',)}
