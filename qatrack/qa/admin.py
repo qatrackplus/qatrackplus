@@ -161,6 +161,7 @@ class TestInlineFormset(forms.models.BaseInlineFormSet):
             return {}
 
         slugs = [f.instance.test.slug for f in self.forms if (hasattr(f.instance,"test") and not f.cleaned_data["DELETE"])]
+        slugs = [x for x in slugs if x]
         duplicates = list(set([sn for sn in slugs if slugs.count(sn)>1]))
         if duplicates:
             raise forms.ValidationError(
