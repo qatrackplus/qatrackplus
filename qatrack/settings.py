@@ -193,6 +193,8 @@ INSTALLED_APPS = [
     'genericdropdown',
     'django_coverage',
     'debug_toolbar',
+    
+    'salmonella',
 
     'qatrack.accounts',
     'qatrack.units',
