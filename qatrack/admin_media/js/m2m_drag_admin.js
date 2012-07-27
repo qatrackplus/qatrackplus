@@ -7,7 +7,7 @@ function set_order(grouping){
     var order = 0;
     $(grouping).find('tr').each(function(i) {
 
-        if ($(this).find("option:selected").val()){
+        if ($(this).find("td.field-test input").val()){
             $(this).find('input[id$=order]').val(order);
             order +=1;
         }
