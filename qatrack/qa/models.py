@@ -310,7 +310,7 @@ class Test(models.Model):
     #----------------------------------------------------------------------
     def set_references(self):
         """allow user to go to references in admin interface"""
-
+        return "<i>Disabled</i>"
         url = "%s?"%urlresolvers.reverse("admin:qa_unittestinfo_changelist")
         test_filter = "test__id__exact=%d" % self.pk
 
