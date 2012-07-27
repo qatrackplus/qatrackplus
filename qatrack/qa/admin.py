@@ -180,7 +180,7 @@ class TestListMembershipInline(admin.TabularInline):
 class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
     prepopulated_fields =  {'slug': ('name',)}
     list_display = ("name", "set_references", "modified", "modified_by",)
-
+    search_fields = ("name", "description","slug",)
     filter_horizontal= ("tests", "sublists", )
     form = TestListAdminForm
     inlines = [TestListMembershipInline]
@@ -199,7 +199,7 @@ class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
 class TestAdmin(SaveUserMixin, admin.ModelAdmin):
     list_display = ["name","slug","category", "type", "set_references"]
     list_filter = ["category","type"]
-
+    search_fields = ["name","slug","category__name"]
     #============================================================================
     class Media:
         js = (
@@ -207,12 +207,27 @@ class TestAdmin(SaveUserMixin, admin.ModelAdmin):
             settings.STATIC_URL+"js/test_admin.js",
         )
 
+#----------------------------------------------------------------------
+def unit_name(obj):
+    return obj.unit.name
+unit_name.admin_order_field = "unit__name"
+unit_name.short_description = "Unit"
+def freq_name(obj):
+    return obj.frequency.name
+freq_name.admin_order_field = "frequency__name"
+freq_name.short_description = "Frequency"
+def assigned_to_name(obj):
+    return obj.assigned_to.name
+assigned_to_name.admin_order_field = "assigned_to__name"
+assigned_to_name.short_description = "Assigned To"
+
 #============================================================================
 class UnitTestCollectionAdmin(admin.ModelAdmin):
     #readonly_fields = ("unit","frequency",)
     #filter_horizontal = ("test_lists","cycles",)
-    list_display = ["tests_object", "unit", "frequency"]
-    list_filter = ["unit", "frequency"]
+    list_display = ["test_objects_name", unit_name, freq_name,assigned_to_name]
+    list_filter = ["unit__name", "frequency__name","assigned_to__name"]
+    search_fields = ["unit__name","frequency__name","testlist__name","testlistcycle__name"]
     change_form_template = "admin/treenav/menuitem/change_form.html"
 
 #============================================================================

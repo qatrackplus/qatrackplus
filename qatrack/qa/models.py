@@ -279,9 +279,9 @@ class Test(models.Model):
     VARIABLE_RE = re.compile("^[a-zA-Z_]+[0-9a-zA-Z_]*$")
     RESULT_RE = re.compile("^result\s*=\s*[(_0-9.a-zA-Z]+.*$",re.MULTILINE)
 
-    name = models.CharField(max_length=256, help_text=_("Name for this test"))
+    name = models.CharField(max_length=256, help_text=_("Name for this test"),unique=True)
     slug = models.SlugField(
-        verbose_name="Macro name", max_length=25, blank=True,null=True,
+        verbose_name="Macro name", max_length=128, blank=True,null=True,
         help_text=_("A short variable name consisting of alphanumeric characters and underscores for this test (to be used in composite calculations). "),
     )
     description = models.TextField(help_text=_("A concise description of what this test is for (optional)"), blank=True,null=True)
@@ -652,7 +652,7 @@ class UnitTestCollection(models.Model):
     class Meta:
         unique_together = ("unit", "frequency", "content_type","object_id",)
         verbose_name_plural = _("Assign Test Lists to Units")
-
+        ordering = ("testlist__name","testlistcycle__name",)
     #----------------------------------------------------------------------
     def due_date(self):
         """return the next due date of this Unit/TestList pair
@@ -752,7 +752,9 @@ class UnitTestCollection(models.Model):
     #----------------------------------------------------------------------
     def name(self):
         return self.__unicode__()
-
+    #----------------------------------------------------------------------
+    def test_objects_name(self):
+        return self.tests_object.name    
     #----------------------------------------------------------------------
     def __unicode__(self):
         return ("%s %s (%s)" %(self.unit.name, self.tests_object.name, self.frequency)).title()
