@@ -194,7 +194,7 @@ class TestInstanceStatus(models.Model):
 class Reference(models.Model):
     """Reference values for various QA :model:`Test`s"""
 
-    name = models.CharField(max_length=50, help_text=_("Enter a short name for this reference"))
+    name = models.CharField(max_length=256, help_text=_("Enter a short name for this reference"))
     type = models.CharField(max_length=15, choices=REF_TYPE_CHOICES,default="numerical")
     value = models.FloatField(help_text=_("Enter the reference value for this test."))
 
@@ -279,8 +279,11 @@ class Test(models.Model):
     VARIABLE_RE = re.compile("^[a-zA-Z_]+[0-9a-zA-Z_]*$")
     RESULT_RE = re.compile("^result\s*=\s*[(_0-9.a-zA-Z]+.*$",re.MULTILINE)
 
-    name = models.CharField(max_length=256, help_text=_("Name for this test"))
-    slug = models.SlugField(verbose_name="Macro name", max_length=25, help_text=_("A short variable name for this test (to be used in composite calculations)."),blank=True,null=True)
+    name = models.CharField(max_length=256, help_text=_("Name for this test"),unique=True)
+    slug = models.SlugField(
+        verbose_name="Macro name", max_length=128, blank=True,null=True,
+        help_text=_("A short variable name consisting of alphanumeric characters and underscores for this test (to be used in composite calculations). "),
+    )
     description = models.TextField(help_text=_("A concise description of what this test is for (optional)"), blank=True,null=True)
     procedure = models.CharField(max_length=512,help_text=_("Link to document describing how to perform this test"), blank=True, null=True)
 
@@ -307,7 +310,7 @@ class Test(models.Model):
     #----------------------------------------------------------------------
     def set_references(self):
         """allow user to go to references in admin interface"""
-        return ""
+        return "<i>Disabled</i>"
         url = "%s?"%urlresolvers.reverse("admin:qa_unittestinfo_changelist")
         test_filter = "test__id__exact=%d" % self.pk
 
@@ -378,11 +381,13 @@ class Test(models.Model):
     def clean_slug(self):
         """make sure slug is valid"""
 
-        if not self.slug:
-            return
-
         errors = []
-        if not self.VARIABLE_RE.match(self.slug):
+
+        if not self.slug:
+            if self.type != COMPOSITE:
+                return
+            errors.append(_("Composite tests require a macro name"))
+        elif not self.VARIABLE_RE.match(self.slug):
             errors.append(_("Macro names must contain only letters, numbers and underscores and start with a letter or underscore"))
 
         if errors:
@@ -484,6 +489,12 @@ class UnitTestInfo(models.Model):
         hist = TestInstance.objects.filter(unit=self.unit,test=self.test).order_by("-work_completed","-pk")
         hist = hist.select_related("status")
         return [(x.work_completed,x.value, x.pass_fail, x.status) for x in reversed(hist[:number])]
+    #----------------------------------------------------------------------
+    def __unicode__(self):
+        try:
+            return "UnitTestInfo(test=%s,unit=%s)"%(self.test.name,self.unit.name)
+        except:
+            return "UnitTestInfo(Empty)"
 
 #============================================================================
 class TestListMembership(models.Model):
@@ -497,7 +508,10 @@ class TestListMembership(models.Model):
 
     #----------------------------------------------------------------------
     def __unicode__(self):
-        return self.test.name
+        try:
+            return "TestListMembership(test=%s,test_list=%s)"%(self.test.name,self.test_list.name)
+        except:
+            return "TestListMembership(Empty)"
 
 
 #============================================================================
@@ -647,7 +661,7 @@ class UnitTestCollection(models.Model):
     class Meta:
         unique_together = ("unit", "frequency", "content_type","object_id",)
         verbose_name_plural = _("Assign Test Lists to Units")
-
+        ordering = ("testlist__name","testlistcycle__name",)
     #----------------------------------------------------------------------
     def due_date(self):
         """return the next due date of this Unit/TestList pair
@@ -736,23 +750,23 @@ class UnitTestCollection(models.Model):
 
         return self.tests_object.next_list(self.last_instance.test_list)
     #----------------------------------------------------------------------
-    def get_list(self,day="next"):
+    def get_list(self,day=None):
         """return next list to be completed from tests_object"""
 
-        if day == "next":
+        if day is None:
             return self.next_list()
 
-        try:
-            return self.tests_object.get_list(int(day))
-        except (ValueError,TypeError):
-            return self.next_list()
+        return self.tests_object.get_list(day)
+
     #----------------------------------------------------------------------
     def name(self):
         return self.__unicode__()
-
+    #----------------------------------------------------------------------
+    def test_objects_name(self):
+        return self.tests_object.name
     #----------------------------------------------------------------------
     def __unicode__(self):
-        return ("%s %s (%s)" %(self.unit.name, self.tests_object.name, self.frequency)).title()
+        return "UnitTestCollection(unit=%s, tests_object=%s, frequency=%s)" %(self.unit.name, self.tests_object.name, self.frequency.name)
 
 
 
@@ -967,7 +981,7 @@ class TestInstance(models.Model):
     def __unicode__(self):
         """return display representation of object"""
         try :
-            return "TestInstance(test=%s)" % self.test.name
+            return "TestInstance(test=%s,date=%s)" % (self.test.name,self.work_completed)
         except :
             return "TestInstance(Empty)"
 
@@ -1057,7 +1071,7 @@ class TestListInstance(models.Model):
     def __unicode__(self):
         """more helpful interactive display name"""
         try:
-            return "TestListInstance(test_list=%s)"%self.test_list.name
+            return "TestListInstance(test_list=%s,date=%s)"%(self.test_list.name,self.work_completed)
         except:
             return "TestListInstance(Empty)"
 
@@ -1170,3 +1184,9 @@ class TestListCycleMembership(models.Model):
         #memberships they can have the same order temporarily when orders are changed
         #unique_together = (("order", "cycle"),)
 
+    #----------------------------------------------------------------------
+    def __unicode__(self):
+        try:
+            return "TestListCycleMembership(test_list=%s,cycle=%s)"%(self.test_list.name,self.cycle.name)
+        except:
+            return "TestListCycleMembership(Empty)"

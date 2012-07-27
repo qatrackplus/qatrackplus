@@ -1,6 +1,8 @@
 import django.forms as forms
 import django.db
 
+from salmonella.admin import SalmonellaMixin
+
 from django.utils.translation import ugettext as _
 from django.contrib import admin
 from django.contrib.admin.templatetags.admin_static import static
@@ -35,10 +37,6 @@ class SaveUserMixin(object):
 class BasicSaveUserAdmin(SaveUserMixin, admin.ModelAdmin):
     """manage reference values for tests"""
 
-#----------------------------------------------------------------------
-def title_case_name(obj):
-    return ("%s"%obj.name).title()
-title_case_name.short_description = "Name"
 
 #============================================================================
 class CategoryAdmin(admin.ModelAdmin):
@@ -123,7 +121,7 @@ class UnitTestInfoAdmin(admin.ModelAdmin):
                 type = ref_type,
                 created_by = request.user,
                 modified_by = request.user,
-                name = "%s %s" % (test_info.unit.name,test_info.test.name)
+                name = "%s %s" % (test_info.unit.name,test_info.test.name)[:models.Reference.name.max_length]
             )
             ref.save()
             test_info.reference = ref
@@ -162,29 +160,37 @@ class TestInlineFormset(forms.models.BaseInlineFormSet):
             #something else went wrong already
             return {}
 
-        slugs = [f.instance.test.slug for f in self.forms[:-self.extra]]
+        slugs = [f.instance.test.slug for f in self.forms if (hasattr(f.instance,"test") and not f.cleaned_data["DELETE"])]
         duplicates = list(set([sn for sn in slugs if slugs.count(sn)>1]))
         if duplicates:
             raise forms.ValidationError(
-                "The following macro names are duplicated " + ",".join(duplicates)
+                "The following macro names are duplicated :: " + ",".join(duplicates)
             )
 
         return self.cleaned_data
 
 
+
+#----------------------------------------------------------------------
+def test_name(obj):
+    return obj.test.name
+#----------------------------------------------------------------------
+def macro_name(obj):
+    return obj.test.slug
 #============================================================================
-class TestListMembershipInline(admin.TabularInline):
+class TestListMembershipInline(SalmonellaMixin,admin.TabularInline):
     """"""
     model = models.TestListMembership
     formset = TestInlineFormset
-    extra = 1
+    extra = 5
     template = "admin/qa/testlistmembership/edit_inline/tabular.html"
-
+    readonly_fields = (macro_name,)
+    salmonella_fields = ("test",)
 #============================================================================
 class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
     prepopulated_fields =  {'slug': ('name',)}
-    list_display = (title_case_name, "set_references", "modified", "modified_by",)
-
+    list_display = ("name", "set_references", "modified", "modified_by",)
+    search_fields = ("name", "description","slug",)
     filter_horizontal= ("tests", "sublists", )
     form = TestListAdminForm
     inlines = [TestListMembershipInline]
@@ -203,7 +209,7 @@ class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
 class TestAdmin(SaveUserMixin, admin.ModelAdmin):
     list_display = ["name","slug","category", "type", "set_references"]
     list_filter = ["category","type"]
-
+    search_fields = ["name","slug","category__name"]
     #============================================================================
     class Media:
         js = (
@@ -211,12 +217,27 @@ class TestAdmin(SaveUserMixin, admin.ModelAdmin):
             settings.STATIC_URL+"js/test_admin.js",
         )
 
+#----------------------------------------------------------------------
+def unit_name(obj):
+    return obj.unit.name
+unit_name.admin_order_field = "unit__name"
+unit_name.short_description = "Unit"
+def freq_name(obj):
+    return obj.frequency.name
+freq_name.admin_order_field = "frequency__name"
+freq_name.short_description = "Frequency"
+def assigned_to_name(obj):
+    return obj.assigned_to.name
+assigned_to_name.admin_order_field = "assigned_to__name"
+assigned_to_name.short_description = "Assigned To"
+
 #============================================================================
 class UnitTestCollectionAdmin(admin.ModelAdmin):
     #readonly_fields = ("unit","frequency",)
     #filter_horizontal = ("test_lists","cycles",)
-    list_display = ["tests_object", "unit", "frequency"]
-    list_filter = ["unit", "frequency"]
+    list_display = ["test_objects_name", unit_name, freq_name,assigned_to_name]
+    list_filter = ["unit__name", "frequency__name","assigned_to__name"]
+    search_fields = ["unit__name","frequency__name","testlist__name","testlistcycle__name"]
     change_form_template = "admin/treenav/menuitem/change_form.html"
 
 #============================================================================

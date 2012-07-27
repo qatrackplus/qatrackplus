@@ -351,7 +351,9 @@ class PerformQAView(CreateView):
         except models.UnitTestCollection.DoesNotExist:
             raise Http404
 
-        self.test_list = self.unit_test_list.get_list(self.request.GET.get("day",None))
+        self.test_list = self.unit_test_list.get_list(self.get_day_to_perform())
+        if self.test_list is None:
+            raise Http404
         self.create_new_test_list_instance()
         self.add_test_instances()
 
@@ -387,6 +389,14 @@ class PerformQAView(CreateView):
         context["unit_test_list"] = self.unit_test_list
 
         return context
+    #----------------------------------------------------------------------
+    def get_day_to_perform(self):
+        """request comes in as 1 based day, convert to zero based"""
+        try:
+            day = int(self.request.GET.get("day"))-1
+        except (ValueError,TypeError,KeyError):
+            day = None
+        return day
     #----------------------------------------------------------------------
     def get_success_url(self):
         return reverse("user_home")
