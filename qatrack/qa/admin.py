@@ -35,10 +35,6 @@ class SaveUserMixin(object):
 class BasicSaveUserAdmin(SaveUserMixin, admin.ModelAdmin):
     """manage reference values for tests"""
 
-#----------------------------------------------------------------------
-def title_case_name(obj):
-    return ("%s"%obj.name).title()
-title_case_name.short_description = "Name"
 
 #============================================================================
 class CategoryAdmin(admin.ModelAdmin):
@@ -183,7 +179,7 @@ class TestListMembershipInline(admin.TabularInline):
 #============================================================================
 class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
     prepopulated_fields =  {'slug': ('name',)}
-    list_display = (title_case_name, "set_references", "modified", "modified_by",)
+    list_display = ("name", "set_references", "modified", "modified_by",)
 
     filter_horizontal= ("tests", "sublists", )
     form = TestListAdminForm
