@@ -121,7 +121,7 @@ class UnitTestInfoAdmin(admin.ModelAdmin):
                 type = ref_type,
                 created_by = request.user,
                 modified_by = request.user,
-                name = "%s %s" % (test_info.unit.name,test_info.test.name)[:models.Reference.name.max_length]
+                name = "%s %s" % (test_info.unit.name,test_info.test.name)[:255]
             )
             ref.save()
             test_info.reference = ref
