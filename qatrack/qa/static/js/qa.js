@@ -278,12 +278,12 @@ $(document).ready(function(){
 
     //show comment when clicked
     $(".qa-showcmt a").click(function(){
-      $(this).parent().parent().nextAll(".qa-comment").toggle(600);
+      $(this).parent().parent().nextAll(".qa-comment").first().toggle(600);
       return false;
     });
 
     $(".qa-showproc a").click(function(){
-      $(this).parent().parent().nextAll(".qa-procedure").toggle(600);
+      $(this).parent().parent().nextAll(".qa-procedure").first().toggle(600);
       return false;
     });
 
@@ -320,7 +320,7 @@ $(document).ready(function(){
             if (idx == inputs.length - 1) {
                 next_row = $(this).parents("form").find(".qa-valuerow").first();
             } else {
-                next_row = $(this).parents("tr").nextAll(".qa-valuerow");
+                next_row = $(this).parents("tr").nextAll(".qa-valuerow").first();
             }
             next_row.find(".qa-input").first().focus();
             return false;
