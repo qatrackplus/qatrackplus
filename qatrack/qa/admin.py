@@ -184,7 +184,7 @@ class TestListMembershipInline(SalmonellaMixin,admin.TabularInline):
     formset = TestInlineFormset
     extra = 5
     template = "admin/qa/testlistmembership/edit_inline/tabular.html"
-    readonly_fields = (test_name,macro_name,)
+    #readonly_fields = (test_name,macro_name,)
     salmonella_fields = ("test",)
 #============================================================================
 class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
