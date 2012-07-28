@@ -85,6 +85,12 @@ class TestInfoForm(forms.ModelForm):
         return self.cleaned_data
 
 
+#----------------------------------------------------------------------
+def test_type(obj):
+    for tt,display in models.TEST_TYPE_CHOICES:
+        if obj.test.type == tt:
+            return display
+test_type.admin_order_field = "test__type"
 #============================================================================
 class UnitTestInfoAdmin(admin.ModelAdmin):
     """"""
@@ -94,16 +100,13 @@ class UnitTestInfoAdmin(admin.ModelAdmin):
         "reference", "tolerance",
         "reference_value",
     )
-    list_display = ["test", "unit", "reference", "tolerance"]
-    list_filter = ["unit","test__category"]
+    list_display = ["test",test_type, "unit", "reference", "tolerance"]
+    list_filter = ["unit","test__category","frequency"]
     readonly_fields = ("reference","test", "unit",)
-
+    search_fields = ("test__name","test__slug","unit__name","frequency__name",)
     #---------------------------------------------------------------------------
     def has_add_permission(self,request):
         """unittestinfo's are created automatically"""
-        return False
-    def has_delete_permission_(self,request, obj=None):
-        """unittestinfo's are deleted automatically when test lists removed from unit"""
         return False
     #----------------------------------------------------------------------
     def save_model(self, request, test_info, form, change):
@@ -195,7 +198,7 @@ class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
     filter_horizontal= ("tests", "sublists", )
     form = TestListAdminForm
     inlines = [TestListMembershipInline]
-
+    save_as = True
     #============================================================================
     class Media:
         js = (
@@ -253,7 +256,7 @@ class TestListCycleAdmin(SaveUserMixin, admin.ModelAdmin):
     """Admin for daily test list cycles"""
     inlines = [TestListCycleMembershipInline]
     prepopulated_fields =  {'slug': ('name',)}
-
+    search_fields = ("name","slug",)
     #============================================================================
     class Media:
         js = (
@@ -263,6 +266,7 @@ class TestListCycleAdmin(SaveUserMixin, admin.ModelAdmin):
             settings.STATIC_URL+"js/m2m_drag_admin.js",
         )
 
+    
 #============================================================================
 class FrequencyAdmin(admin.ModelAdmin):
     prepopulated_fields =  {'slug': ('name',)}
