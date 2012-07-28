@@ -121,7 +121,7 @@ class UnitTestInfoAdmin(admin.ModelAdmin):
                 type = ref_type,
                 created_by = request.user,
                 modified_by = request.user,
-                name = "%s %s" % (test_info.unit.name,test_info.test.name)
+                name = "%s %s" % (test_info.unit.name,test_info.test.name)[:255]
             )
             ref.save()
             test_info.reference = ref
@@ -150,7 +150,7 @@ class TestListAdminForm(forms.ModelForm):
 
 #============================================================================
 class TestInlineFormset(forms.models.BaseInlineFormSet):
-    
+
     #----------------------------------------------------------------------
     def clean(self):
         """Make sure there are no duplicated slugs in a TestList"""
@@ -160,7 +160,8 @@ class TestInlineFormset(forms.models.BaseInlineFormSet):
             #something else went wrong already
             return {}
 
-        slugs = [f.instance.test.slug for f in self.forms if hasattr(f.instance,"test")]
+        slugs = [f.instance.test.slug for f in self.forms if (hasattr(f.instance,"test") and not f.cleaned_data["DELETE"])]
+        slugs = [x for x in slugs if x]
         duplicates = list(set([sn for sn in slugs if slugs.count(sn)>1]))
         if duplicates:
             raise forms.ValidationError(
@@ -184,7 +185,7 @@ class TestListMembershipInline(SalmonellaMixin,admin.TabularInline):
     formset = TestInlineFormset
     extra = 5
     template = "admin/qa/testlistmembership/edit_inline/tabular.html"
-    #readonly_fields = (test_name,macro_name,)
+    readonly_fields = (macro_name,)
     salmonella_fields = ("test",)
 #============================================================================
 class TestListAdmin(SaveUserMixin, admin.ModelAdmin):

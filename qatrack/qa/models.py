@@ -194,7 +194,7 @@ class TestInstanceStatus(models.Model):
 class Reference(models.Model):
     """Reference values for various QA :model:`Test`s"""
 
-    name = models.CharField(max_length=50, help_text=_("Enter a short name for this reference"))
+    name = models.CharField(max_length=256, help_text=_("Enter a short name for this reference"))
     type = models.CharField(max_length=15, choices=REF_TYPE_CHOICES,default="numerical")
     value = models.FloatField(help_text=_("Enter the reference value for this test."))
 
@@ -310,7 +310,7 @@ class Test(models.Model):
     #----------------------------------------------------------------------
     def set_references(self):
         """allow user to go to references in admin interface"""
-
+        return "<i>Disabled</i>"
         url = "%s?"%urlresolvers.reverse("admin:qa_unittestinfo_changelist")
         test_filter = "test__id__exact=%d" % self.pk
 
@@ -489,6 +489,12 @@ class UnitTestInfo(models.Model):
         hist = TestInstance.objects.filter(unit=self.unit,test=self.test).order_by("-work_completed","-pk")
         hist = hist.select_related("status")
         return [(x.work_completed,x.value, x.pass_fail, x.status) for x in reversed(hist[:number])]
+    #----------------------------------------------------------------------
+    def __unicode__(self):
+        try:
+            return "UnitTestInfo(test=%s,unit=%s)"%(self.test.name,self.unit.name)
+        except:
+            return "UnitTestInfo(Empty)"
 
 #============================================================================
 class TestListMembership(models.Model):
@@ -502,7 +508,10 @@ class TestListMembership(models.Model):
 
     #----------------------------------------------------------------------
     def __unicode__(self):
-        return self.test.name
+        try:
+            return "TestListMembership(test=%s,test_list=%s)"%(self.test.name,self.test_list.name)
+        except:
+            return "TestListMembership(Empty)"
 
 
 #============================================================================
@@ -754,10 +763,10 @@ class UnitTestCollection(models.Model):
         return self.__unicode__()
     #----------------------------------------------------------------------
     def test_objects_name(self):
-        return self.tests_object.name    
+        return self.tests_object.name
     #----------------------------------------------------------------------
     def __unicode__(self):
-        return ("%s %s (%s)" %(self.unit.name, self.tests_object.name, self.frequency)).title()
+        return "UnitTestCollection(unit=%s, tests_object=%s, frequency=%s)" %(self.unit.name, self.tests_object.name, self.frequency.name)
 
 
 
@@ -972,7 +981,7 @@ class TestInstance(models.Model):
     def __unicode__(self):
         """return display representation of object"""
         try :
-            return "TestInstance(test=%s)" % self.test.name
+            return "TestInstance(test=%s,date=%s)" % (self.test.name,self.work_completed)
         except :
             return "TestInstance(Empty)"
 
@@ -1062,7 +1071,7 @@ class TestListInstance(models.Model):
     def __unicode__(self):
         """more helpful interactive display name"""
         try:
-            return "TestListInstance(test_list=%s)"%self.test_list.name
+            return "TestListInstance(test_list=%s,date=%s)"%(self.test_list.name,self.work_completed)
         except:
             return "TestListInstance(Empty)"
 
@@ -1175,3 +1184,9 @@ class TestListCycleMembership(models.Model):
         #memberships they can have the same order temporarily when orders are changed
         #unique_together = (("order", "cycle"),)
 
+    #----------------------------------------------------------------------
+    def __unicode__(self):
+        try:
+            return "TestListCycleMembership(test_list=%s,cycle=%s)"%(self.test_list.name,self.cycle.name)
+        except:
+            return "TestListCycleMembership(Empty)"

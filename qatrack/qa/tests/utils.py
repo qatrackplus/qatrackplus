@@ -33,8 +33,10 @@ def create_status(name="status",slug="status",is_default=True):
     return status
 
 #----------------------------------------------------------------------
-def create_test(name="test",test_type=models.SIMPLE):
+def create_test(name=None,test_type=models.SIMPLE):
     user = create_user()
+    if name is None or models.Test.objects.filter(name=name).count()>0:
+        name = "test%d" % models.Test.objects.count()
     test = models.Test(
         name = name,
         slug=name,

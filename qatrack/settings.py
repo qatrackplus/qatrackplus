@@ -21,7 +21,7 @@ SEND_BROKEN_LINK_EMAILS = True
 #misc settings
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
-VERSION = "0.1.1"
+VERSION = "0.1.2"
 
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'qatrack.wsgi.application'
@@ -43,7 +43,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
         'NAME': 'db/default.db',                      # Or path to database file if using sqlite3.
         'USER': '',                      # Not used with sqlite3.
-        'PASSWORD': '',                  # Not used with sqlite3.
+        'PASSWORD': '',                  # Not used with sqlite3.S
         'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
         'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
     }
@@ -193,7 +193,7 @@ INSTALLED_APPS = [
     'genericdropdown',
     'django_coverage',
     'debug_toolbar',
-    
+
     'salmonella',
 
     'qatrack.accounts',
@@ -288,7 +288,7 @@ LOGGING = {
         },
         'qatrack.console': {
             'handlers': ['console'],
-            'level': 'INFO',
+            'level': 'DEBUG',
             'propagate': True,
         },
     }
