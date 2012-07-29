@@ -15,6 +15,7 @@ import qatrack.settings as settings
 import os
 import re
 
+    
 #============================================================================
 class SaveUserMixin(object):
     """A Mixin to save creating user and modifiying user
@@ -63,10 +64,14 @@ class TestInfoForm(forms.ModelForm):
             self.fields["test_type"].initial = models.TEST_TYPE_CHOICES[i][1]
 
             if tt == models.BOOLEAN:
-                self.fields["reference_value"].widget = forms.Select(choices=[(-1,"---"),(0,"No"),(1,"Yes")])
+                self.fields["reference_value"].widget = forms.Select(choices=[("","---"),(0,"No"),(1,"Yes")])
+                
             elif tt == models.MULTIPLE_CHOICE:
-                self.fields["reference_value"].widget = forms.Select(choices=[(-1,"---")]+self.instance.test.get_choices())
-
+                self.fields["reference_value"].widget = forms.Select(choices=[("","---")]+self.instance.test.get_choices(),)
+                
+            if self.instance.reference:
+                self.initial["reference_value"] = int(self.instance.reference.value)
+                
     #----------------------------------------------------------------------
     def clean(self):
         """make sure valid numbers are entered for boolean data"""
@@ -76,8 +81,8 @@ class TestInfoForm(forms.ModelForm):
 
         ref_value = self.cleaned_data["reference_value"]
 
-        if self.instance.test.type == models.BOOLEAN and int(ref_value) not in (0,1):
-                raise forms.ValidationError(_("You must select Yes or No as a new reference value"))
+        #if self.instance.test.type == models.BOOLEAN and int(ref_value) not in (0,1):
+        #        raise forms.ValidationError(_("You must select Yes or No as a new reference value"))
 
         if self.instance.test.type in (models.BOOLEAN, models.MULTIPLE_CHOICE):
             if self.cleaned_data["tolerance"] is not None:
@@ -119,15 +124,18 @@ class UnitTestInfoAdmin(admin.ModelAdmin):
             ref_type = models.NUMERICAL
         val = form["reference_value"].value()
         if val not in ("", None):
-            ref = models.Reference(
-                value=val,
-                type = ref_type,
-                created_by = request.user,
-                modified_by = request.user,
-                name = "%s %s" % (test_info.unit.name,test_info.test.name)[:255]
-            )
-            ref.save()
-            test_info.reference = ref
+            if not(test_info.reference and test_info.reference.value == float(val)):
+                ref = models.Reference(
+                    value=val,
+                    type = ref_type,
+                    created_by = request.user,
+                    modified_by = request.user,
+                    name = "%s %s" % (test_info.unit.name,test_info.test.name)[:255]
+                )
+                ref.save()
+                test_info.reference = ref
+        else:
+            test_info.reference = None
         super(UnitTestInfoAdmin,self).save_model(request,test_info,form,change)
 
 
@@ -210,10 +218,11 @@ class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
 
 
 #============================================================================
-class TestAdmin(SaveUserMixin, admin.ModelAdmin):
+class TestAdmin(SaveUserMixin,admin.ModelAdmin):
     list_display = ["name","slug","category", "type", "set_references"]
     list_filter = ["category","type"]
     search_fields = ["name","slug","category__name"]
+    save_as = True
     #============================================================================
     class Media:
         js = (
