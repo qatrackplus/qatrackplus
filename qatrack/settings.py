@@ -134,6 +134,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'qatrack.middleware.login_required.LoginRequiredMiddleware',
+    'qatrack.middleware.maintain_filters.FilterPersistMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
 )
 
