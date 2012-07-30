@@ -1,4 +1,5 @@
 from django import http
+import qatrack.settings as settings
 
 # based on http://code.djangoproject.com/ticket/3777#comment:4
 class FilterPersistMiddleware(object):
@@ -39,7 +40,7 @@ class FilterPersistMiddleware(object):
 
             if session.get(key, False):
                 query_string=request.session.get(key)
-                redirect_to = path+'?'+query_string
+                redirect_to = settings.FORCE_SCRIPT_NAME+path+'?'+query_string
                 request.session['redirected'] = True
 
                 return http.HttpResponseRedirect(redirect_to)
