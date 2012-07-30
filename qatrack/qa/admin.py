@@ -255,11 +255,11 @@ class UnitTestCollectionAdmin(admin.ModelAdmin):
     change_form_template = "admin/treenav/menuitem/change_form.html"
 
 #============================================================================
-class TestListCycleMembershipInline(admin.TabularInline):
+class TestListCycleMembershipInline(SalmonellaMixin,admin.TabularInline):
 
     model = models.TestListCycleMembership
     extra = 0
-
+    salmonella_fields = ("test_list",)
 
 #============================================================================
 class TestListCycleAdmin(SaveUserMixin, admin.ModelAdmin):
@@ -267,6 +267,7 @@ class TestListCycleAdmin(SaveUserMixin, admin.ModelAdmin):
     inlines = [TestListCycleMembershipInline]
     prepopulated_fields =  {'slug': ('name',)}
     search_fields = ("name","slug",)
+
     #============================================================================
     class Media:
         js = (
