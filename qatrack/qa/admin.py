@@ -70,7 +70,11 @@ class TestInfoForm(forms.ModelForm):
                 self.fields["reference_value"].widget = forms.Select(choices=[("","---")]+self.instance.test.get_choices(),)
 
             if self.instance.reference:
-                self.initial["reference_value"] = int(self.instance.reference.value)
+                if tt in (models.BOOLEAN,models.MULTIPLE_CHOICE):
+                    val = int(self.instance.reference.value)
+                else:
+                    val = self.instance.reference.value
+                self.initial["reference_value"] = val
 
     #----------------------------------------------------------------------
     def clean(self):
