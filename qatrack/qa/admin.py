@@ -298,8 +298,4 @@ admin.site.register([models.UnitTestCollection],UnitTestCollectionAdmin)
 admin.site.register([models.TestListCycle],TestListCycleAdmin)
 admin.site.register([models.Frequency], FrequencyAdmin)
 admin.site.register([models.TestInstanceStatus], StatusAdmin)
-<<<<<<< HEAD
-admin.site.register([models.TestListInstance,models.TestInstance], admin.ModelAdmin)
-=======
 #admin.site.register([models.TestListInstance,models.TestInstance], admin.ModelAdmin)
->>>>>>> 0bf7f1657e7f934194dbd4304cfdfca16b23c5d2
