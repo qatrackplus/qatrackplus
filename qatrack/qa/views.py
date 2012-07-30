@@ -229,7 +229,15 @@ class CompositeCalculation(JSONResponseMixin, View):
                 except ValueError:
                     pass
 
-
+#====================================================================================
+class ChooseUnit(ListView):
+    """choose a unit to perform qa on for this session"""
+    model = Unit
+    context_object_name = "units"
+    template_name = "choose_unit.html"
+    
+    
+    
 #============================================================================
 class PerformQAView(CreateView):
     """view for users to complete a qa test list"""
@@ -399,7 +407,11 @@ class PerformQAView(CreateView):
         return day
     #----------------------------------------------------------------------
     def get_success_url(self):
-        return reverse("user_home")
+        kwargs = {
+            "unit_number":self.unit_test_list.unit.number,
+            "frequency":self.unit_test_list.frequency.slug
+        }
+        return reverse("qa_by_frequency_unit",kwargs=kwargs)
 
 
 #============================================================================
@@ -416,7 +428,7 @@ class UnitFrequencyListView(ListView):
             frequency__slug=self.kwargs["frequency"],
             unit__number=self.kwargs["unit_number"],
             active=True,
-        )
+        ).order_by("frequency__nominal_interval")
 
 #============================================================================
 class UnitGroupedFrequencyListView(ListView):
@@ -434,20 +446,14 @@ class UnitGroupedFrequencyListView(ListView):
         )
 
 #============================================================================
-class UserBasedTestCollections(ListView):
+class AllTestCollections(ListView):
     """show all lists currently assigned to the groups this member is a part of"""
 
-    template_name = "user_based_test_lists.html"
+    template_name = "all_test_lists.html"
     context_object_name = "unittestcollections"
-
     #----------------------------------------------------------------------
     def get_queryset(self):
-        """filter based on user groups"""
-        groups = self.request.user.groups.all()
-        utlas = models.UnitTestCollection.objects.filter(active=True)
-        if groups.count() > 0 and not self.request.user.is_staff:
-            utlas = utlas.filter(assigned_to__in = [None]+list(groups))
-        return utlas
+        return models.UnitTestCollection.objects.filter(active=True)
 
 #============================================================================
 class ChartView(TemplateView):

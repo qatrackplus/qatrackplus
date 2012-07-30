@@ -317,7 +317,7 @@ function setup_filters(on_complete){
             $(resources.objects).each(function(index,resource){
                 var display = resource[filter.display_property];
                 var value = resource[filter.value_property];
-
+					
                 if (
                     (filter.to_check.length >= 0) &&
 					(($.inArray(value,filter.to_check)>=0) || (filter.to_check[0] === "all"))
@@ -483,9 +483,8 @@ function get_control_chart_url(){
 
 	return "/qa/charts/control_chart.png?"+props.join("&");
 }
-/**************************************************************************/
-$(document).ready(function(){
 
+function initialize_charts(){
 	$("#control-chart-container").hide();
 
     //set up main chart and options
@@ -552,4 +551,8 @@ $(document).ready(function(){
     $(".collapse").collapse({selector:true,toggle:true});
 
 
+}
+/**************************************************************************/
+$(document).ready(function(){
+	$.when(QAUtils.init()).done(initialize_charts);
 });

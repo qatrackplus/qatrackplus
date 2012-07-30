@@ -6,10 +6,10 @@
 {% block body %}
 	<div class="row-fluid">
 		<div class="span12">
-			<h2>QA Lists Assigned to Your Groups</h2>
+			<h2>All Active QA Lists </h2>
 
 			{% if not unittestcollections %}
-				<em>No lists assigned to your groups.</em>
+				<em>No lists available.</em>
 			{% else %}
 				{{ unittestcollections|as_unittestcollections_table}}
 			{% endif %}

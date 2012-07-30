@@ -15,6 +15,7 @@ import qatrack.settings as settings
 import os
 import re
 
+
 #============================================================================
 class SaveUserMixin(object):
     """A Mixin to save creating user and modifiying user
@@ -63,9 +64,13 @@ class TestInfoForm(forms.ModelForm):
             self.fields["test_type"].initial = models.TEST_TYPE_CHOICES[i][1]
 
             if tt == models.BOOLEAN:
-                self.fields["reference_value"].widget = forms.Select(choices=[(-1,"---"),(0,"No"),(1,"Yes")])
+                self.fields["reference_value"].widget = forms.Select(choices=[("","---"),(0,"No"),(1,"Yes")])
+
             elif tt == models.MULTIPLE_CHOICE:
-                self.fields["reference_value"].widget = forms.Select(choices=[(-1,"---")]+self.instance.test.get_choices())
+                self.fields["reference_value"].widget = forms.Select(choices=[("","---")]+self.instance.test.get_choices(),)
+
+            if self.instance.reference:
+                self.initial["reference_value"] = int(self.instance.reference.value)
 
     #----------------------------------------------------------------------
     def clean(self):
@@ -76,8 +81,8 @@ class TestInfoForm(forms.ModelForm):
 
         ref_value = self.cleaned_data["reference_value"]
 
-        if self.instance.test.type == models.BOOLEAN and int(ref_value) not in (0,1):
-                raise forms.ValidationError(_("You must select Yes or No as a new reference value"))
+        #if self.instance.test.type == models.BOOLEAN and int(ref_value) not in (0,1):
+        #        raise forms.ValidationError(_("You must select Yes or No as a new reference value"))
 
         if self.instance.test.type in (models.BOOLEAN, models.MULTIPLE_CHOICE):
             if self.cleaned_data["tolerance"] is not None:
@@ -85,6 +90,12 @@ class TestInfoForm(forms.ModelForm):
         return self.cleaned_data
 
 
+#----------------------------------------------------------------------
+def test_type(obj):
+    for tt,display in models.TEST_TYPE_CHOICES:
+        if obj.test.type == tt:
+            return display
+test_type.admin_order_field = "test__type"
 #============================================================================
 class UnitTestInfoAdmin(admin.ModelAdmin):
     """"""
@@ -94,16 +105,13 @@ class UnitTestInfoAdmin(admin.ModelAdmin):
         "reference", "tolerance",
         "reference_value",
     )
-    list_display = ["test", "unit", "reference", "tolerance"]
-    list_filter = ["unit","test__category"]
+    list_display = ["test",test_type, "unit", "reference", "tolerance"]
+    list_filter = ["unit","test__category","frequency"]
     readonly_fields = ("reference","test", "unit",)
-
+    search_fields = ("test__name","test__slug","unit__name","frequency__name",)
     #---------------------------------------------------------------------------
     def has_add_permission(self,request):
         """unittestinfo's are created automatically"""
-        return False
-    def has_delete_permission_(self,request, obj=None):
-        """unittestinfo's are deleted automatically when test lists removed from unit"""
         return False
     #----------------------------------------------------------------------
     def save_model(self, request, test_info, form, change):
@@ -116,16 +124,20 @@ class UnitTestInfoAdmin(admin.ModelAdmin):
             ref_type = models.NUMERICAL
         val = form["reference_value"].value()
         if val not in ("", None):
-            ref = models.Reference(
-                value=val,
-                type = ref_type,
-                created_by = request.user,
-                modified_by = request.user,
-                name = "%s %s" % (test_info.unit.name,test_info.test.name)[:255]
-            )
-            ref.save()
-            test_info.reference = ref
-        super(UnitTestInfoAdmin,self).save_model(request,test_info,form,change)
+            if not(test_info.reference and test_info.reference.value == float(val)):
+                ref = models.Reference(
+                    value=val,
+                    type = ref_type,
+                    created_by = request.user,
+                    modified_by = request.user,
+                    name = "%s %s" % (test_info.unit.name,test_info.test.name)[:255]
+                )
+                ref.save()
+                test_info.reference = ref
+        else:
+            test_info.reference = None
+        
+	super(UnitTestInfoAdmin,self).save_model(request,test_info,form,change)
 
 
 #============================================================================
@@ -195,7 +207,7 @@ class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
     filter_horizontal= ("tests", "sublists", )
     form = TestListAdminForm
     inlines = [TestListMembershipInline]
-
+    save_as = True
     #============================================================================
     class Media:
         js = (
@@ -207,10 +219,11 @@ class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
 
 
 #============================================================================
-class TestAdmin(SaveUserMixin, admin.ModelAdmin):
+class TestAdmin(SaveUserMixin,admin.ModelAdmin):
     list_display = ["name","slug","category", "type", "set_references"]
     list_filter = ["category","type"]
     search_fields = ["name","slug","category__name"]
+    save_as = True
     #============================================================================
     class Media:
         js = (
@@ -253,7 +266,7 @@ class TestListCycleAdmin(SaveUserMixin, admin.ModelAdmin):
     """Admin for daily test list cycles"""
     inlines = [TestListCycleMembershipInline]
     prepopulated_fields =  {'slug': ('name',)}
-
+    search_fields = ("name","slug",)
     #============================================================================
     class Media:
         js = (
@@ -262,6 +275,7 @@ class TestListCycleAdmin(SaveUserMixin, admin.ModelAdmin):
             settings.STATIC_URL+"js/collapsed_stacked_inlines.js",
             settings.STATIC_URL+"js/m2m_drag_admin.js",
         )
+
 
 #============================================================================
 class FrequencyAdmin(admin.ModelAdmin):
@@ -284,4 +298,8 @@ admin.site.register([models.UnitTestCollection],UnitTestCollectionAdmin)
 admin.site.register([models.TestListCycle],TestListCycleAdmin)
 admin.site.register([models.Frequency], FrequencyAdmin)
 admin.site.register([models.TestInstanceStatus], StatusAdmin)
+<<<<<<< HEAD
 admin.site.register([models.TestListInstance,models.TestInstance], admin.ModelAdmin)
+=======
+#admin.site.register([models.TestListInstance,models.TestInstance], admin.ModelAdmin)
+>>>>>>> 0bf7f1657e7f934194dbd4304cfdfca16b23c5d2

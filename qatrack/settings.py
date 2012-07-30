@@ -21,7 +21,7 @@ SEND_BROKEN_LINK_EMAILS = True
 #misc settings
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
-VERSION = "0.1.2"
+VERSION = "0.1.3"
 
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'qatrack.wsgi.application'
@@ -134,6 +134,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'qatrack.middleware.login_required.LoginRequiredMiddleware',
+    'qatrack.middleware.maintain_filters.FilterPersistMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
 )
 
@@ -144,7 +145,7 @@ INTERNAL_IPS = ('127.0.0.1',)
 
 #login required middleware settings
 LOGIN_EXEMPT_URLS = [r"^accounts/",]
-LOGIN_REDIRECT_URL = '/qa/'
+LOGIN_REDIRECT_URL = '/qa/units/'
 LOGIN_URL = "/accounts/login/"
 ACCOUNT_ACTIVATION_DAYS = 7
 
