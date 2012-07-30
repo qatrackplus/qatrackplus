@@ -31,7 +31,7 @@ for resource in resources:
 
 urlpatterns = patterns('',
 
-    url(r"^(user_home/)?$", views.UserBasedTestCollections.as_view(),name="user_home"),
+    url(r"^$", views.AllTestCollections.as_view(),name="all_lists"),
 
     #view for composite calculations via ajax
     url(r"^composite/$", views.CompositeCalculation.as_view(), name="composite"),
@@ -48,6 +48,7 @@ urlpatterns = patterns('',
     url(r"^charts/control_chart.png$", views.ControlChartImage.as_view(), name="control_chart"),
 
     #performing qa
+    url(r"^units/$", views.ChooseUnit.as_view(), name="choose_unit"),
     url(r"^(?P<frequency>[\w-]+)/$", views.UnitGroupedFrequencyListView.as_view(), name="qa_by_frequency"),
     url(r"^(?P<pk>\d+)$", views.PerformQAView.as_view(), name="perform_qa"),
     url(r"^(?P<frequency>[\w-]+)/unit/(?P<unit_number>\d+)/$", views.UnitFrequencyListView.as_view(), name="qa_by_frequency_unit"),

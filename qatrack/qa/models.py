@@ -100,7 +100,7 @@ class Frequency(models.Model):
 
     class Meta:
         verbose_name_plural = "frequencies"
-
+        ordering = ("nominal_interval",)
     #----------------------------------------------------------------------
     def nominal_delta(self):
         """return datetime delta for nominal interval"""
