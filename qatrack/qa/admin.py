@@ -15,7 +15,7 @@ import qatrack.settings as settings
 import os
 import re
 
-    
+
 #============================================================================
 class SaveUserMixin(object):
     """A Mixin to save creating user and modifiying user
@@ -65,13 +65,13 @@ class TestInfoForm(forms.ModelForm):
 
             if tt == models.BOOLEAN:
                 self.fields["reference_value"].widget = forms.Select(choices=[("","---"),(0,"No"),(1,"Yes")])
-                
+
             elif tt == models.MULTIPLE_CHOICE:
                 self.fields["reference_value"].widget = forms.Select(choices=[("","---")]+self.instance.test.get_choices(),)
-                
+
             if self.instance.reference:
                 self.initial["reference_value"] = int(self.instance.reference.value)
-                
+
     #----------------------------------------------------------------------
     def clean(self):
         """make sure valid numbers are entered for boolean data"""
@@ -275,7 +275,7 @@ class TestListCycleAdmin(SaveUserMixin, admin.ModelAdmin):
             settings.STATIC_URL+"js/m2m_drag_admin.js",
         )
 
-    
+
 #============================================================================
 class FrequencyAdmin(admin.ModelAdmin):
     prepopulated_fields =  {'slug': ('name',)}
@@ -297,4 +297,4 @@ admin.site.register([models.UnitTestCollection],UnitTestCollectionAdmin)
 admin.site.register([models.TestListCycle],TestListCycleAdmin)
 admin.site.register([models.Frequency], FrequencyAdmin)
 admin.site.register([models.TestInstanceStatus], StatusAdmin)
-admin.site.register([models.TestListInstance,models.TestInstance], admin.ModelAdmin)
+#admin.site.register([models.TestListInstance,models.TestInstance], admin.ModelAdmin)
