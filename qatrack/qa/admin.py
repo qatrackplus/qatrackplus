@@ -140,8 +140,8 @@ class UnitTestInfoAdmin(admin.ModelAdmin):
                 test_info.reference = ref
         else:
             test_info.reference = None
-        
-	super(UnitTestInfoAdmin,self).save_model(request,test_info,form,change)
+
+        super(UnitTestInfoAdmin,self).save_model(request,test_info,form,change)
 
 
 #============================================================================
