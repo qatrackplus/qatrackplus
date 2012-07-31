@@ -806,35 +806,46 @@ def get_or_create_unit_test_info(unit,test,frequency,assigned_to=None, active=Tr
     return uti
 
 #----------------------------------------------------------------------
-def update_unit_test_assignments(test_list):
+def update_unit_test_assignments(collection):
     """find out which units this test_list is assigned to and make
     sure there are UnitTestCollections for each Unit, Test pair"""
 
-    parent_pks =[test_list.pk]
-    if hasattr(test_list, "testlist_set"):
+    all_parents = {
+        ContentType.objects.get_for_model(collection):[collection],
+    }
+    
+    for parent_type in ("testlist_set", "testlistcycle_set"):
 
-        parents = test_list.testlist_set.all()
+        if hasattr(collection, parent_type):
+            parents = getattr(collection,parent_type).all()
+            if parents.count()>0:
+                ct = ContentType.objects.get_for_model(parents[0])
+                try:
+                    all_parents[ct].extend(list(parents))
+                except KeyError:
+                    all_parents[ct] = list(parents)
+            
+    all_tests = collection.all_tests()
+    
+    for ct,objects in all_parents.items():
+        utlas = UnitTestCollection.objects.filter(
+            object_id__in= [x.pk for x in objects],
+            content_type = ct,
+        )
 
-        if parents.count() > 0:
-            parent_pks = parents.values_list("pk",flat=True)
-
-    utlas = UnitTestCollection.objects.filter(
-        object_id__in= parent_pks,
-        content_type = ContentType.objects.get_for_model(test_list),
-    )
-
-    all_tests = test_list.all_tests()
-
-    for utla in utlas:
-        need_utas = all_tests.exclude(unittestinfo__unit = utla.unit)
-        for test in need_utas:
-            get_or_create_unit_test_info(
-                unit=utla.unit,
-                test=test,
-                frequency=utla.frequency,
-                assigned_to = utla.assigned_to,
-                active = utla.active
-            )
+    
+        for utla in utlas:
+            need_utas = all_tests.exclude(unittestinfo__unit = utla.unit)
+            
+            for test in need_utas:
+                
+                get_or_create_unit_test_info(
+                    unit=utla.unit,
+                    test=test,
+                    frequency=utla.frequency,
+                    assigned_to = utla.assigned_to,
+                    active = utla.active
+                )
 
 #----------------------------------------------------------------------
 @receiver(post_save, sender=UnitTestCollection)
@@ -1124,7 +1135,7 @@ class TestListCycle(TestCollectionInterface):
 
     #----------------------------------------------------------------------
     def first(self):
-        """return first in order membership object for this cycle"""
+        """return first in order membership obect for this cycle"""
         try:
             return self.testlistcyclemembership_set.get(order=0).test_list
         except TestListCycleMembership.DoesNotExist:

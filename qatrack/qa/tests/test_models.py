@@ -231,10 +231,14 @@ result = foo + bar
                 msg = ""
 
             self.assertTrue(len(msg)==0, msg=msg)
+        test.type = models.COMPOSITE
+        test.slug = ""
+    
+        self.assertRaises(ValidationError,test.clean_slug)
     #---------------------------------------------------------------------------
     def test_valid_clean_slug(self):
         test= utils.create_test()
-        valid = ("foo", "f6oo", "foo6","_foo","foo_","foo_bar",)
+        valid = ("foo", "f6oo", "foo6","_foo","foo_","foo_bar","")
         for v in valid:
             test.slug = v
             try:
@@ -321,7 +325,29 @@ class TestUnitTestInfo(TestCase):
         #test returns correct number of results
         self.assertListEqual(sorted_hist[-2:],uti.history(number=2))
 
+    #----------------------------------------------------------------------
+    def test_add_to_cycle(self):
+        tl1 = utils.create_test_list("tl1")
+        tl2 = utils.create_test_list("tl2")
+        t1 = utils.create_test("t1")
+        t2 = utils.create_test("t2")
+        utils.create_test_list_membership(tl1,t1)
+        utils.create_test_list_membership(tl2,t2)
 
+        cycle = utils.create_cycle(test_lists=[tl1,tl2])
+        
+        utc = utils.create_unit_test_collection(test_collection=cycle)
+        
+        utis = models.UnitTestInfo.objects.all()
+        
+        self.assertEqual(len(utis),2)
+        t3 = utils.create_test("t3")
+        utils.create_test_list_membership(tl2,t3)
+
+        utis = models.UnitTestInfo.objects.all()
+        self.assertEqual(len(utis),3)
+        
+    
 
 #====================================================================================
 class TestTestListMembership(TestCase):
@@ -686,10 +712,27 @@ class TestUnitTestCollection(TestCase):
         self.assertEqual(utc.next_list(),test_lists[0])
 
     #----------------------------------------------------------------------
-    def test_name(self):
-        utc = utils.create_unit_test_collection()
-        self.assertEqual(utc.name(),str(utc))
+    def test_cycle_get_list(self):
 
+        test_lists = [utils.create_test_list(name="test list %d"% i) for i in range(2)]
+        for i,test_list in enumerate(test_lists):
+            test = utils.create_test(name="test %d" %i)
+            utils.create_test_list_membership(test_list,test)
+
+        cycle = utils.create_cycle(test_lists=test_lists)
+        utc = utils.create_unit_test_collection(test_collection=cycle)
+
+        for i,test_list in enumerate(test_lists):
+            self.assertEqual(utc.get_list(i),test_list)
+        
+        self.assertEqual(utc.get_list(),test_lists[0])
+
+    #----------------------------------------------------------------------
+    def test_name(self):
+        tl = utils.create_test_list("tl1")
+        utc = utils.create_unit_test_collection(test_collection=tl)
+        self.assertEqual(utc.name(),str(utc))
+        self.assertEqual(tl.name,utc.test_objects_name())
 
 #============================================================================
 class TestSignals(TestCase):
