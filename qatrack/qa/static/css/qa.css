@@ -7,6 +7,12 @@ tr.qa-comment {
 tr.qa-comment td, tr.qa-procedure td {
     text-align:left;
 }
+tr.qa-procedure td table{
+    width:100%;
+}
+tr.qa-procedure td textarea {
+    width:100%;
+}
 
 .qa-showcmt, .qa-status {
     max-width: 60px;
