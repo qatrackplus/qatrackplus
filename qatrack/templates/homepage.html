@@ -11,6 +11,10 @@
     <p>Please choose one of the following available items</p>
     <ul>
         <li>
+            <a title="Choose a Unit to perform qa on" href="{% url choose_unit %}">Choose a Unit</a>
+        </li>
+
+        <li>
             <a title="View available test lists to perform" href="{% url all_lists %}">Choose a QA test list to perform</a>
         </li>
         {% if user.is_staff %}
