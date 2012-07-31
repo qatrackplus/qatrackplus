@@ -222,7 +222,7 @@ class Reference(models.Model):
             else:
                 return "%s (Invalid Boolean)"%(self.name,)
 
-        return "%g"%(self.value)
+        return "%s(%g)"%(self.name,self.value)
 
 #============================================================================
 class Tolerance(models.Model):
@@ -251,7 +251,7 @@ class Tolerance(models.Model):
         if self.type == ABSOLUTE:
             return "(%g, %g, %g, %g)" % (self.act_low,self.tol_low,self.tol_high,self.act_high)
         return "(%.1f%%, %.1f%%, %.1f%%, %.1f%%)" % (self.act_low,self.tol_low,self.tol_high,self.act_high)
-            
+
 
 #============================================================================
 class Category(models.Model):
@@ -813,7 +813,7 @@ def update_unit_test_assignments(collection):
     all_parents = {
         ContentType.objects.get_for_model(collection):[collection],
     }
-    
+
     for parent_type in ("testlist_set", "testlistcycle_set"):
 
         if hasattr(collection, parent_type):
@@ -824,21 +824,21 @@ def update_unit_test_assignments(collection):
                     all_parents[ct].extend(list(parents))
                 except KeyError:
                     all_parents[ct] = list(parents)
-            
+
     all_tests = collection.all_tests()
-    
+
     for ct,objects in all_parents.items():
         utlas = UnitTestCollection.objects.filter(
             object_id__in= [x.pk for x in objects],
             content_type = ct,
         )
 
-    
+
         for utla in utlas:
             need_utas = all_tests.exclude(unittestinfo__unit = utla.unit)
-            
+
             for test in need_utas:
-                
+
                 get_or_create_unit_test_info(
                     unit=utla.unit,
                     test=test,
