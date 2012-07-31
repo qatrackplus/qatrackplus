@@ -508,7 +508,7 @@ class TestListMembership(models.Model):
 
     class Meta:
         ordering = ("order",)
-
+        unique_together = ("test_list","test",)
     #----------------------------------------------------------------------
     def __unicode__(self):
         try:
