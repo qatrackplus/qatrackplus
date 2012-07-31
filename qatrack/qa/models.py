@@ -222,7 +222,7 @@ class Reference(models.Model):
             else:
                 return "%s (Invalid Boolean)"%(self.name,)
 
-        return "%s(%g)"%(self.name,self.value)
+        return "%g"%(self.value)
 
 #============================================================================
 class Tolerance(models.Model):
@@ -248,9 +248,10 @@ class Tolerance(models.Model):
     #---------------------------------------------------------------------------
     def __unicode__(self):
         """more helpful interactive display name"""
+        vals = (self.name,self.act_low,self.tol_low,self.tol_high,self.act_high)
         if self.type == ABSOLUTE:
-            return "(%g, %g, %g, %g)" % (self.act_low,self.tol_low,self.tol_high,self.act_high)
-        return "(%.1f%%, %.1f%%, %.1f%%, %.1f%%)" % (self.act_low,self.tol_low,self.tol_high,self.act_high)
+            return "%s(%g, %g, %g, %g)" % vals
+        return "%s(%.1f%%, %.1f%%, %.1f%%, %.1f%%)" % vals
 
 
 #============================================================================
