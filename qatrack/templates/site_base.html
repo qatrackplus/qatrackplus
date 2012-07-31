@@ -25,7 +25,8 @@
                 </a>
                 <ul class="dropdown-menu">
                     <li><a href="{% url all_lists %}" title="View all available QA Lists"><i class="icon-list"></i> All QA</a></li>
-                    <li><a href="{% url choose_unit %}" title="Choose a Unit To Perform QA On"><i class="icon-list"></i> Choose Unit</a></li>					
+                    <li><a href="{% url choose_unit %}" title="Choose a Unit To Perform QA On"><i class="icon-list"></i> Choose Unit</a></li>
+					{% comment %}
                     <li class="divider"></li>
 					<li class="nav-header">
 					    By Frequency
@@ -33,7 +34,7 @@
                     {% for freq in QA_FREQUENCIES %}
                         <li><a href="{% url qa_by_frequency frequency=freq.0 %}"><i class="icon-list"></i> {{freq.1}}</a></li>
                     {% endfor %}
-
+					{% endcomment %}
                 </ul>
             </li>
             {% if user.is_staff %}
