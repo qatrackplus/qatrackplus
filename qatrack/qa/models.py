@@ -438,7 +438,7 @@ class UnitTestInfoManager(models.Manager):
 
     #----------------------------------------------------------------------
     def get_query_set(self):
-        return super(UnitTestInfoManager,self).get_query_set().select_related()
+        return super(UnitTestInfoManager,self).get_query_set()
 
 #============================================================================
 class UnitTestInfo(models.Model):
@@ -620,14 +620,6 @@ class TestList(TestCollectionInterface):
 
 #============================================================================
 class UnitTestListManager(models.Manager):
-    #---------------------------------------------------------------------------
-    def get_query_set(self):
-        return super(UnitTestListManager,self).get_query_set().select_related(
-            "last_instance",
-            "unit",
-            "frequency",
-            "assigned_to",
-        )
     #----------------------------------------------------------------------
     def by_unit(self,unit):
         return self.get_query_set().filter(unit=unit)
@@ -678,25 +670,25 @@ class UnitTestCollection(models.Model):
         dates for its member TestLists
         """
 
-        if hasattr(self.tests_object, "test_lists",):
+        try:
             #collection of test lists (e.g. a cycle)
             all_lists = self.tests_object.test_lists.all()
-        else:
+        except AttributeError:
             #bare test_list
             all_lists = [self.tests_object]
 
         list_due_dates = []
 
+        due_delta = self.frequency.due_delta()
         for test_list in all_lists:
-            utis = UnitTestInfo.objects.filter(
+            min_work_completed = UnitTestInfo.objects.filter(
                 unit=self.unit,
                 test__in = test_list.all_tests()
-            ).prefetch_related("last_instance")
-
-            due_dates = [uti.last_instance.work_completed + uti.frequency.due_delta() for uti in utis if uti.last_instance]
-
-            if due_dates:
-                list_due_dates.append(min(due_dates))
+            ).aggregate(models.Min("last_instance__work_completed"))
+            try:
+                list_due_dates.append(min_work_completed["last_instance__work_completed__min"])
+            except KeyError:
+                pass
 
         if list_due_dates:
             return max(list_due_dates)
@@ -1018,10 +1010,7 @@ class TestInstance(models.Model):
     #----------------------------------------------------------------------
     def __unicode__(self):
         """return display representation of object"""
-        try :
-            return "TestInstance(test=%s,date=%s)" % (self.test.name,self.work_completed)
-        except :
-            return "TestInstance(Empty)"
+        return "TestInstance(pk=%s)" % self.pk
 
 #----------------------------------------------------------------------
 @receiver(post_save,sender=TestInstance)
@@ -1107,12 +1096,7 @@ class TestListInstance(models.Model):
         return self.testinstance_set.filter(pass_fail=ACTION)
     #---------------------------------------------------------------------------
     def __unicode__(self):
-        """more helpful interactive display name"""
-        try:
-            return "TestListInstance(test_list=%s,date=%s)"%(self.test_list.name,self.work_completed)
-        except:
-            return "TestListInstance(Empty)"
-
+        return "TestListInstance(pk=%s)"%self.pk
 
 #----------------------------------------------------------------------
 @receiver(post_save,sender=TestListInstance)

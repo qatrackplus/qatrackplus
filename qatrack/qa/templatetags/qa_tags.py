@@ -44,7 +44,6 @@ def as_due_date(unit_test_collection):
     template = get_template("due_date.html")
     c = Context({"unit_test_collection":unit_test_collection})
     return template.render(c)
-
 #----------------------------------------------------------------------
 @register.filter
 def as_data_attributes(unit_test_collection):
