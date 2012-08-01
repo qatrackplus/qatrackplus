@@ -280,7 +280,7 @@ class PerformQAView(CreateView):
             test__in = ordered_tests,
             frequency=freq,
             active=True,
-        )
+        ).prefetch_related("reference","tolerance")
 
         uti_d = {}
         for uti in utis:
