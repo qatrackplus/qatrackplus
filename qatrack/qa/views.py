@@ -273,21 +273,28 @@ class PerformQAView(CreateView):
         unit = self.unit_test_list.unit
         freq = self.unit_test_list.frequency
         tests_history = self.unit_test_list.tests_history()
-        for test in self.test_list.ordered_tests():
+        ordered_tests = self.test_list.ordered_tests() 
 
-            unit_test_info = models.get_or_create_unit_test_info(
-                unit,
-                test,
-                freq,
-                assigned_to = self.unit_test_list.assigned_to,
-                active = self.unit_test_list.active,
-            )
+        utis = models.UnitTestInfo.objects.filter(
+            unit = unit,
+            test__in = ordered_tests,
+            frequency=freq,
+            active=True,
+        )
 
+        uti_d = {}
+        for uti in utis:
+            uti_d[uti.test.name] = uti
+            
+        default_status = models.TestInstanceStatus.objects.default()
+
+        for test in ordered_tests:
+            unit_test_info = uti_d[test.name]
             ti = models.TestInstance(
                 test = test,
-                status = models.TestInstanceStatus.objects.default(),
                 reference = unit_test_info.reference,
                 tolerance = unit_test_info.tolerance,
+                status = default_status,
                 unit = unit,
                 created_by = self.request.user,
                 modified_by = self.request.user,
