@@ -15,8 +15,12 @@ tr.qa-comment td textarea{
     width:100%;
 }
 
-.qa-showcmt, .qa-status {
+.qa-showcmt{
     max-width: 60px;
+}
+.qa-status{
+    width:70px;
+    overflow-x:hidden;
 }
 .qa-skip {
     max-width:40px;
@@ -44,7 +48,7 @@ input.qa-input{
     font-size:0.9em;
     /*padding-bottom:2px;*/
     padding:2px 3px;
-    
+
 }
 .qa-table td, .qa-table th{
     text-align:center;
