@@ -293,7 +293,6 @@ var QAUtils = new function() {
                 var props = ["responseText","status","statusText"];
                 var err_vals = $.map(props,function(prop){return prop+": "+error[prop];});
                 msg += err_vals.join("\n    ");
-                alert(msg);
             }
         });
     };
