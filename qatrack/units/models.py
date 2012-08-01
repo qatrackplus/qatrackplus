@@ -51,7 +51,11 @@ class Modality(models.Model):
             unit, particle = "MeV", "Electron"
         return "<Modality(%.2f%s,%s)>" % (self.energy, unit, particle)
 
-
+class UnitManager(models.Manager):
+    #---------------------------------------------------------------------------
+    def get_query_set(self):
+        return super(UnitManager,self).get_query_set().select_related("type")
+        
 #============================================================================
 class Unit(models.Model):
     """Radiation devices
@@ -69,7 +73,7 @@ class Unit(models.Model):
     type = models.ForeignKey(UnitType)
 
     modalities = models.ManyToManyField(Modality)
-
+    objects = UnitManager()
     class Meta:
         ordering = ["number"]
 
