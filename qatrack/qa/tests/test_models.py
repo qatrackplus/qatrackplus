@@ -233,7 +233,7 @@ result = foo + bar
             self.assertTrue(len(msg)==0, msg=msg)
         test.type = models.COMPOSITE
         test.slug = ""
-    
+
         self.assertRaises(ValidationError,test.clean_slug)
     #---------------------------------------------------------------------------
     def test_valid_clean_slug(self):
@@ -335,19 +335,30 @@ class TestUnitTestInfo(TestCase):
         utils.create_test_list_membership(tl2,t2)
 
         cycle = utils.create_cycle(test_lists=[tl1,tl2])
-        
+
         utc = utils.create_unit_test_collection(test_collection=cycle)
-        
+
         utis = models.UnitTestInfo.objects.all()
-        
+
         self.assertEqual(len(utis),2)
         t3 = utils.create_test("t3")
         utils.create_test_list_membership(tl2,t3)
 
         utis = models.UnitTestInfo.objects.all()
         self.assertEqual(len(utis),3)
-        
-    
+    #----------------------------------------------------------------------
+    def test_readd_test(self):
+        tl1 = utils.create_test_list("tl1")
+        t1 = utils.create_test("t1")
+        utils.create_test_list_membership(tl1,t1)
+        utils.create_unit_test_collection(test_collection=tl1)
+        utis = models.UnitTestInfo.objects.all()
+        self.assertEqual(utis.count(),1)
+        utis.delete()
+        self.assertEqual(utis.count(),0)
+        tl1.save()
+        self.assertEqual(models.UnitTestInfo.objects.count(),1)
+
 
 #====================================================================================
 class TestTestListMembership(TestCase):
@@ -724,7 +735,7 @@ class TestUnitTestCollection(TestCase):
 
         for i,test_list in enumerate(test_lists):
             self.assertEqual(utc.get_list(i),test_list)
-        
+
         self.assertEqual(utc.get_list(),test_lists[0])
 
     #----------------------------------------------------------------------

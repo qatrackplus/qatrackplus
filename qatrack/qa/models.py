@@ -585,7 +585,7 @@ class TestList(TestCollectionInterface):
         tests = list(self.tests.all().order_by("testlistmembership__order").select_related("category"))
         for sublist in self.sublists.all():
             tests.extend(sublist.ordered_tests())
-        return tests       
+        return tests
     #----------------------------------------------------------------------
     def set_references(self):
         """allow user to go to references in admin interface"""
@@ -753,14 +753,14 @@ class UnitTestCollection(models.Model):
         hist = TestInstance.objects.filter(unit=self.unit,test__in=self.tests_object.all_tests()).order_by("-work_completed","-pk")
         hist = hist.select_related("status")
         history = {}
-              
+
         for hist in reversed(hist[:number]):
             h = (hist.work_completed,hist.value, hist.pass_fail, hist.status)
             try:
                 history[hist.test.name].append(h)
             except KeyError:
                 history[hist.test.name] = [h]
-        return history    
+        return history
     #----------------------------------------------------------------------
     def next_list(self):
         """return next list to be completed from tests_object"""
@@ -850,9 +850,8 @@ def update_unit_test_assignments(collection):
             content_type = ct,
         )
 
-
         for utla in utlas:
-            need_utas = all_tests.exclude(unittestinfo__unit = utla.unit)
+            need_utas = all_tests#.exclude(unittestinfo__unit = utla.unit)
 
             for test in need_utas:
 
@@ -872,7 +871,6 @@ def list_assigned_to_unit(*args,**kwargs):
 
     if not kwargs.get("raw",False):
         #don't process signal when loading fixture data
-
         update_unit_test_assignments(kwargs["instance"].tests_object)
 
 #----------------------------------------------------------------------
@@ -885,6 +883,15 @@ def test_added_to_list(*args,**kwargs):
     if not kwargs.get("raw",False):
         #don't process signal when loading fixture data
         update_unit_test_assignments(kwargs["instance"].test_list)
+
+#----------------------------------------------------------------------
+@receiver(post_save, sender=TestList)
+def test_list_saved(*args,**kwargs):
+    """TestList was saved. Recreate any UTI's that may have been deleted in past
+    """
+    if not kwargs.get("raw",False):
+        #don't process signal when loading fixture data
+        update_unit_test_assignments(kwargs["instance"])
 
 #----------------------------------------------------------------------
 @receiver(m2m_changed, sender=TestList.sublists.through)
