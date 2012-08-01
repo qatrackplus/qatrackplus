@@ -85,8 +85,10 @@ class TestInfoForm(forms.ModelForm):
 
         ref_value = self.cleaned_data["reference_value"]
 
-        #if self.instance.test.type == models.BOOLEAN and int(ref_value) not in (0,1):
-        #        raise forms.ValidationError(_("You must select Yes or No as a new reference value"))
+        tol =self.cleaned_data["tolerance"]
+        if tol is not None:
+            if ref_value == 0 and tol.type == models.PERCENT:
+                raise forms.ValidationError(_("Percentage based tolerances can not be used with reference value of zero (0)"))
 
         if self.instance.test.type in (models.BOOLEAN, models.MULTIPLE_CHOICE):
             if self.cleaned_data["tolerance"] is not None:
@@ -117,6 +119,7 @@ class UnitTestInfoAdmin(admin.ModelAdmin):
     def has_add_permission(self,request):
         """unittestinfo's are created automatically"""
         return False
+
     #----------------------------------------------------------------------
     def save_model(self, request, test_info, form, change):
         """create new reference when user updates value"""
