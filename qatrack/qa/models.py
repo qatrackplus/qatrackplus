@@ -283,10 +283,11 @@ class Test(models.Model):
     VARIABLE_RE = re.compile("^[a-zA-Z_]+[0-9a-zA-Z_]*$")
     RESULT_RE = re.compile("^result\s*=\s*[(_0-9.a-zA-Z]+.*$",re.MULTILINE)
 
-    name = models.CharField(max_length=256, help_text=_("Name for this test"),unique=True)
+    name = models.CharField(max_length=256, help_text=_("Name for this test"),unique=True,db_index=True)
     slug = models.SlugField(
         verbose_name="Macro name", max_length=128, blank=True,null=True,
         help_text=_("A short variable name consisting of alphanumeric characters and underscores for this test (to be used in composite calculations). "),
+        db_index=True,
     )
     description = models.TextField(help_text=_("A concise description of what this test is for (optional)"), blank=True,null=True)
     procedure = models.CharField(max_length=512,help_text=_("Link to document describing how to perform this test"), blank=True, null=True)
@@ -449,7 +450,7 @@ class UnitTestInfo(models.Model):
     reference = models.ForeignKey(Reference,verbose_name=_("Current Reference"),null=True, blank=True)
     tolerance = models.ForeignKey(Tolerance,null=True, blank=True)
 
-    active = models.BooleanField(help_text=_("Uncheck to disable this test on this unit"), default=True)
+    active = models.BooleanField(help_text=_("Uncheck to disable this test on this unit"), default=True,db_index=True)
 
     assigned_to = models.ForeignKey(Group,help_text = _("QA group that this test list should nominally be performed by"),null=True, blank=True)
     last_instance = models.ForeignKey("TestInstance",null=True, editable=False)
@@ -522,8 +523,8 @@ class TestListMembership(models.Model):
 class TestCollectionInterface(models.Model):
     """abstract base class for Tests collection (i.e. TestList's and TestListCycles"""
 
-    name = models.CharField(max_length=256)
-    slug = models.SlugField(unique=True, help_text=_("A short unique name for use in the URL of this list"))
+    name = models.CharField(max_length=256,db_index=True)
+    slug = models.SlugField(unique=True, help_text=_("A short unique name for use in the URL of this list"),db_index=True)
     description = models.TextField(help_text=_("A concise description of this test checklist"),null=True,blank=True)
 
     assigned_to = generic.GenericRelation(
@@ -584,7 +585,7 @@ class TestList(TestCollectionInterface):
         tests = list(self.tests.all().order_by("testlistmembership__order").select_related("category"))
         for sublist in self.sublists.all():
             tests.extend(sublist.ordered_tests())
-        return tests
+        return tests       
     #----------------------------------------------------------------------
     def set_references(self):
         """allow user to go to references in admin interface"""
@@ -652,7 +653,7 @@ class UnitTestCollection(models.Model):
     frequency = models.ForeignKey(Frequency, help_text=_("Frequency with which this test list is to be performed"))
 
     assigned_to = models.ForeignKey(Group,help_text = _("QA group that this test list should nominally be performed by"),null=True)
-    active = models.BooleanField(help_text=_("Uncheck to disable this test on this unit"), default=True)
+    active = models.BooleanField(help_text=_("Uncheck to disable this test on this unit"), default=True,db_index=True)
 
     limit = Q(app_label = 'qa', model = 'testlist') | Q(app_label = 'qa', model = 'testlistcycle')
     content_type = models.ForeignKey(ContentType, limit_choices_to = limit)
@@ -744,7 +745,22 @@ class UnitTestCollection(models.Model):
             unit=self.unit,
             test_list__in = self.tests_object.all_lists()
         ).order_by("-work_completed","-pk")[:number])
-
+    #---------------------------------------------------------------------------
+    def tests_history(self,number=5):
+        """return last 'number' of instances for this test performed on input unit
+        list is ordered in ascending dates
+        """
+        hist = TestInstance.objects.filter(unit=self.unit,test__in=self.tests_object.all_tests()).order_by("-work_completed","-pk")
+        hist = hist.select_related("status")
+        history = {}
+              
+        for hist in reversed(hist[:number]):
+            h = (hist.work_completed,hist.value, hist.pass_fail, hist.status)
+            try:
+                history[hist.test.name].append(h)
+            except KeyError:
+                history[hist.test.name] = [h]
+        return history    
     #----------------------------------------------------------------------
     def next_list(self):
         """return next list to be completed from tests_object"""
@@ -901,7 +917,7 @@ class TestInstance(models.Model):
     reviewed_by = models.ForeignKey(User,null=True, blank=True,editable=False)
 
     #did test pass or fail (or was skipped etc)
-    pass_fail = models.CharField(max_length=20, choices=PASS_FAIL_CHOICES,editable=False)
+    pass_fail = models.CharField(max_length=20, choices=PASS_FAIL_CHOICES,editable=False,db_index=True)
 
     #values set by user
     value = models.FloatField(help_text=_("For boolean Tests a value of 0 equals False and any non zero equals True"), null=True)
@@ -925,9 +941,9 @@ class TestInstance(models.Model):
 
     #when was the work actually performed
     work_completed = models.DateTimeField(default=timezone.now,
-        help_text=settings.DATETIME_HELP,
+        help_text=settings.DATETIME_HELP,db_index=True,
     )
-    in_progress = models.BooleanField(default=False,editable=False)
+    in_progress = models.BooleanField(default=False,editable=False,db_index=True)
 
     #for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)
@@ -1035,9 +1051,9 @@ class TestListInstance(models.Model):
     unit = models.ForeignKey(Unit,editable=False)
 
     work_started = models.DateTimeField(auto_now_add=True,editable=False)
-    work_completed = models.DateTimeField(default=timezone.now)
+    work_completed = models.DateTimeField(default=timezone.now,db_index=True)
 
-    in_progress = models.BooleanField(default=False, editable=False)
+    in_progress = models.BooleanField(default=False, editable=False,db_index=True)
 
     #for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)

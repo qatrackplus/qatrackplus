@@ -254,7 +254,6 @@ class PerformQAView(CreateView):
         "in_progress"
     )
 
-
     #----------------------------------------------------------------------
     def create_new_test_list_instance(self):
         """generate a new test list instance for the user to fill in values for"""
@@ -273,7 +272,7 @@ class PerformQAView(CreateView):
 
         unit = self.unit_test_list.unit
         freq = self.unit_test_list.frequency
-
+        tests_history = self.unit_test_list.tests_history()
         for test in self.test_list.ordered_tests():
 
             unit_test_info = models.get_or_create_unit_test_info(
@@ -295,7 +294,8 @@ class PerformQAView(CreateView):
                 in_progress = self.test_list_instance.in_progress,
                 test_list_instance=self.test_list_instance
             )
-            self.test_instances.append((ti,unit_test_info.history))
+            hist = tests_history.get(test.name,[])
+            self.test_instances.append((ti,hist))
 
     #----------------------------------------------------------------------
     def create_formset_class(self):
