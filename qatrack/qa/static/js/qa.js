@@ -336,7 +336,7 @@ $(document).ready(function(){
         //automatically unhide comment if test is being skipped
         $(".qa-skip input").click(function(){
             if ($(this).is(':checked')){
-                $(this).parent().parent().next().next().show(600);
+                $(this).parent().parent().next().show(600);
             }
         });
 

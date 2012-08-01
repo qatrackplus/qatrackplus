@@ -10,7 +10,8 @@ tr.qa-comment td, tr.qa-procedure td {
 tr.qa-procedure td table{
     width:100%;
 }
-tr.qa-procedure td textarea {
+tr.qa-procedure td textarea,
+tr.qa-comment td textarea{
     width:100%;
 }
 
@@ -28,14 +29,22 @@ select.qa-input{
     max-width:85px;
     text-align:right;
 }
-
+.qa-table [class*="span"] {
+    min-height:18px;
+}
+input.qa-input{
+    padding:1px 1px;
+    margin-bottom:0px;
+}
 .qa-table  tr:hover th {
   background-color: inherit;
 }
 
 .qa-table td {
     font-size:0.9em;
-    padding-bottom:2px;
+    /*padding-bottom:2px;*/
+    padding:2px 3px;
+    
 }
 .qa-table td, .qa-table th{
     text-align:center;
