@@ -1,5 +1,5 @@
 {% for status,display,tests in instance.pass_fail_status %}
-	{% if tests%}
+	{% if tests and status not in exclude%}
 	<span class="label {{status}}">{{tests|length}} {{display}}</span>
 	{% endif %}
 {% endfor %}

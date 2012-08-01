@@ -1,7 +1,7 @@
 from django.template import Context
 from django.template.loader import get_template
 from django import template
-
+import qatrack.qa.models as models
 register = template.Library()
 
 
@@ -29,7 +29,8 @@ def as_unittestcollections_table(unit_lists, table_type="datatable"):
 @register.filter
 def as_pass_fail_status(test_list_instance):
     template = get_template("pass_fail_status.html")
-    c = Context({"instance":test_list_instance})
+    statuses_to_exclude = [models.NO_TOL]
+    c = Context({"instance":test_list_instance,"exclude":statuses_to_exclude})
     return template.render(c)
 #----------------------------------------------------------------------
 @register.filter
