@@ -285,7 +285,7 @@ class Test(models.Model):
 
     name = models.CharField(max_length=256, help_text=_("Name for this test"),unique=True,db_index=True)
     slug = models.SlugField(
-        verbose_name="Macro name", max_length=128, blank=True,null=True,
+        verbose_name="Macro name", max_length=128,
         help_text=_("A short variable name consisting of alphanumeric characters and underscores for this test (to be used in composite calculations). "),
         db_index=True,
     )
@@ -389,9 +389,7 @@ class Test(models.Model):
         errors = []
 
         if not self.slug:
-            if self.type != COMPOSITE:
-                return
-            errors.append(_("Composite tests require a macro name"))
+            errors.append(_("All tests require a macro name"))
         elif not self.VARIABLE_RE.match(self.slug):
             errors.append(_("Macro names must contain only letters, numbers and underscores and start with a letter or underscore"))
 
