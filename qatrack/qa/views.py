@@ -201,6 +201,7 @@ class CompositeCalculation(JSONResponseMixin, View):
             #set up clean calculation context each time so there
             #is no potential conflicts between different composite tests
             self.set_calculation_context()
+            procedure = "\n".join(["from __future__ import division",procedure])
             try:
                 code = compile(procedure,"<string>","exec")
                 exec code in self.calculation_context
@@ -217,9 +218,9 @@ class CompositeCalculation(JSONResponseMixin, View):
     def set_calculation_context(self):
         """set up the environment that the composite test will be calculated in"""
 
-        self.calculation_context = {
-            'math':math,
-        }
+
+        self.calculation_context = {}
+        self.calculation_context["math"] = math
 
         for slug,info in self.values.iteritems():
             val = info["current_value"]
