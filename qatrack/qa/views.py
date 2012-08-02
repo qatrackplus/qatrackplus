@@ -273,37 +273,40 @@ class PerformQAView(CreateView):
 
         unit = self.unit_test_list.unit
         freq = self.unit_test_list.frequency
-        tests_history = self.unit_test_list.tests_history()
-        ordered_tests = self.test_list.ordered_tests()
-
-        utis = models.UnitTestInfo.objects.filter(
-            unit = unit,
-            test__in = ordered_tests,
-            frequency=freq,
-            active=True,
-        ).prefetch_related("reference","tolerance")
-
-        uti_d = {}
-        for uti in utis:
-            uti_d[uti.test.name] = uti
-
+        #ordered_tests = self.test_list.ordered_tests()
+        
+        #tests_history = self.unit_test_list.tests_history()
+        all_lists = [self.test_list]+list(self.test_list.sublists.all())
         default_status = models.TestInstanceStatus.objects.default()
-
-        for test in ordered_tests:
-            unit_test_info = uti_d[test.name]
-            ti = models.TestInstance(
-                test = test,
-                reference = unit_test_info.reference,
-                tolerance = unit_test_info.tolerance,
-                status = default_status,
+        
+        for test_list in all_lists:
+            utis = models.UnitTestInfo.objects.filter(
                 unit = unit,
-                created_by = self.request.user,
-                modified_by = self.request.user,
-                in_progress = self.test_list_instance.in_progress,
-                test_list_instance=self.test_list_instance
+                test__in = test_list.tests.all().order_by("testlistmbmership__order"),
+                frequency=freq,
+                active=True,
+            ).select_related(
+                "reference",
+                "tolerance",
+                "test",
+                "unit"
             )
-            hist = tests_history.get(test.name,[])
-            self.test_instances.append((ti,hist))
+        
+            for uti in utis:
+                ti = models.TestInstance(
+                    test = uti.test,
+                    reference = uti.reference,
+                    tolerance = uti.tolerance,
+                    status = default_status,
+                    unit = self.unit_test_list.unit,
+                    created_by = self.request.user,
+                    modified_by = self.request.user,
+                    in_progress = self.test_list_instance.in_progress,
+                    test_list_instance=self.test_list_instance
+                )
+                
+                hist = uti.history()
+                self.test_instances.append((ti,hist))
 
     #----------------------------------------------------------------------
     def create_formset_class(self):
@@ -356,23 +359,29 @@ class PerformQAView(CreateView):
     #----------------------------------------------------------------------
     def get_context_data(self,**kwargs):
         context = super(PerformQAView,self).get_context_data(**kwargs)
-
         if models.TestInstanceStatus.objects.default() is None:
             messages.error(
                 self.request,"There must be at least one Test Status defined before performing a TestList"
             )
             return context
-
         try:
-            self.unit_test_list = models.UnitTestCollection.objects.select_related().get(pk=self.kwargs["pk"])
+            self.unit_test_list = models.UnitTestCollection.objects.select_related(
+                "last_instance",
+                "unit",
+                "frequency"
+            ).prefetch_related(
+                "tests_object",
+                "last_instance__test_list",
+            ).get(pk=self.kwargs["pk"])
         except models.UnitTestCollection.DoesNotExist:
             raise Http404
-
         self.test_list = self.unit_test_list.get_list(self.get_day_to_perform())
         if self.test_list is None:
             raise Http404
         self.create_new_test_list_instance()
+
         self.add_test_instances()
+        return context
 
         TestInstanceFormset = self.create_formset_class()
 
