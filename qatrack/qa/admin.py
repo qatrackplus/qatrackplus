@@ -115,6 +115,17 @@ class UnitTestInfoAdmin(admin.ModelAdmin):
     list_filter = ["unit","test__category","frequency"]
     readonly_fields = ("reference","test", "unit",)
     search_fields = ("test__name","test__slug","unit__name","frequency__name",)
+    #----------------------------------------------------------------------
+    def queryset(self,*args,**kwargs):
+        """"""
+        qs = super(UnitTestInfoAdmin,self).queryset(*args,**kwargs)
+        return qs.select_related(
+            "reference",
+            "tolerance",
+            "unit",
+            "test",
+        )
+
     #---------------------------------------------------------------------------
     def has_add_permission(self,request):
         """unittestinfo's are created automatically"""
@@ -169,7 +180,14 @@ class TestListAdminForm(forms.ModelForm):
 
 #============================================================================
 class TestInlineFormset(forms.models.BaseInlineFormSet):
-
+    #----------------------------------------------------------------------
+    def get_queryset(self):
+        if not hasattr(self, '_queryset'):
+            qs = super(TestInlineFormset, self).get_queryset().select_related(
+                "test"
+            )
+            self._queryset = qs
+        return self._queryset
     #----------------------------------------------------------------------
     def clean(self):
         """Make sure there are no duplicated slugs in a TestList"""
@@ -209,9 +227,10 @@ class TestListMembershipInline(SalmonellaMixin,admin.TabularInline):
 #============================================================================
 class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
     prepopulated_fields =  {'slug': ('name',)}
-    list_display = ("name", "set_references", "modified", "modified_by",)
+    list_display = ("name", "modified", "modified_by",)
     search_fields = ("name", "description","slug",)
     filter_horizontal= ("tests", "sublists", )
+
     form = TestListAdminForm
     inlines = [TestListMembershipInline]
     save_as = True
@@ -223,11 +242,16 @@ class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
             #settings.STATIC_URL+"js/collapsed_stacked_inlines.js",
             settings.STATIC_URL+"js/m2m_drag_admin.js",
         )
-
+    #----------------------------------------------------------------------
+    def queryset(self,*args,**kwargs):
+        qs = super(TestListAdmin,self).queryset(*args,**kwargs)
+        return qs.prefetch_related(
+            "testlistmembership_set",
+        )
 
 #============================================================================
 class TestAdmin(SaveUserMixin,admin.ModelAdmin):
-    list_display = ["name","slug","category", "type", "set_references"]
+    list_display = ["name","slug","category", "type", ]
     list_filter = ["category","type"]
     search_fields = ["name","slug","category__name"]
     save_as = True
@@ -260,7 +284,17 @@ class UnitTestCollectionAdmin(admin.ModelAdmin):
     list_filter = ["unit__name", "frequency__name","assigned_to__name"]
     search_fields = ["unit__name","frequency__name","testlist__name","testlistcycle__name"]
     change_form_template = "admin/treenav/menuitem/change_form.html"
-
+    #----------------------------------------------------------------------
+    def queryset(self,*args,**kwargs):
+        """"""
+        qs = super(UnitTestCollectionAdmin,self).queryset(*args,**kwargs)
+        return qs.select_related(
+            "unit__name",
+            "frequency__name",
+            "assigned_to__name"
+        ).prefetch_related(
+            "tests_object",
+        )
 #============================================================================
 class TestListCycleMembershipInline(SalmonellaMixin,admin.TabularInline):
 

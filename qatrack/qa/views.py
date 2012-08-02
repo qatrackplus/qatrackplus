@@ -8,9 +8,10 @@ from django.core.urlresolvers import reverse
 from django.views.generic import ListView, FormView, View, TemplateView, RedirectView, CreateView
 from django.utils.translation import ugettext as _
 from django.utils import timezone
-from qatrack.qa import models
+from qatrack.qa import models,utils
 from qatrack.units.models import Unit, UnitType
 from qatrack import settings
+
 import forms
 import math
 import os
@@ -236,9 +237,9 @@ class ChooseUnit(ListView):
     model = Unit
     context_object_name = "units"
     template_name = "choose_unit.html"
-    
-    
-    
+
+
+
 #============================================================================
 class PerformQAView(CreateView):
     """view for users to complete a qa test list"""
@@ -259,50 +260,88 @@ class PerformQAView(CreateView):
         """generate a new test list instance for the user to fill in values for"""
         self.test_list_instance = models.TestListInstance(
             test_list   = self.test_list,
-            unit        = self.unit_test_list.unit,
+            unit        = self.unit_test_col.unit,
             created_by  = self.request.user,
             modified_by = self.request.user,
         )
 
+    #----------------------------------------------------------------------
+    def set_test_lists(self,current_day):
+
+        self.test_list = self.unit_test_col.get_list(current_day)
+        if self.test_list is None:
+            raise Http404
+
+        self.all_lists = [self.test_list]+list(self.test_list.sublists.all())
+    #----------------------------------------------------------------------
+    def set_all_tests(self):
+        self.all_tests = []
+        for test_list in self.all_lists:
+            tests = test_list.tests.all().order_by("testlistmembership__order")
+            self.all_tests.extend(tests)
+    #----------------------------------------------------------------------
+    def set_unit_test_collection(self):
+
+        q = models.UnitTestCollection.objects.select_related(
+            "unit",
+            "frequency",
+        ).filter(pk=self.kwargs["pk"])
+        if q.count() == 0:
+            raise Http404
+
+        self.unit_test_col = q[0]
+    #----------------------------------------------------------------------
+    def set_actual_day(self):
+        cycle_membership = models.TestListCycleMembership.objects.filter(
+            test_list = self.test_list,
+            cycle = self.unit_test_col.tests_object
+        )
+
+        self.actual_day = 0
+        if cycle_membership:
+            self.actual_day = cycle_membership[0].order
 
     #----------------------------------------------------------------------
     def add_test_instances(self):
         """create new test instances"""
-        self.test_instances = []
 
-        unit = self.unit_test_list.unit
-        freq = self.unit_test_list.frequency
-        tests_history = self.unit_test_list.tests_history()
-        ordered_tests = self.test_list.ordered_tests() 
-
-        utis = models.UnitTestInfo.objects.filter(
-            unit = unit,
-            test__in = ordered_tests,
-            frequency=freq,
-            active=True,
-        ).prefetch_related("reference","tolerance")
-
-        uti_d = {}
-        for uti in utis:
-            uti_d[uti.test.name] = uti
-            
         default_status = models.TestInstanceStatus.objects.default()
 
-        for test in ordered_tests:
-            unit_test_info = uti_d[test.name]
+        from_date = timezone.make_aware(timezone.datetime.now() - timezone.timedelta(days=10*self.unit_test_col.frequency.overdue_interval),timezone.get_current_timezone())
+        history = utils.tests_history(self.all_tests,self.unit_test_col.unit,from_date)
+
+        utis = models.UnitTestInfo.objects.filter(
+            unit = self.unit_test_col.unit,
+            test__in = self.all_tests,
+            frequency=self.unit_test_col.frequency,
+            active=True,
+        ).select_related(
+            "reference",
+            "test__category",
+            "test__pk",
+            "tolerance",
+            "unit",
+        )
+
+        uti_d = {}
+
+        for uti in utis:
             ti = models.TestInstance(
-                test = test,
-                reference = unit_test_info.reference,
-                tolerance = unit_test_info.tolerance,
+                test = uti.test,
+                reference = uti.reference,
+                tolerance = uti.tolerance,
                 status = default_status,
-                unit = unit,
+                unit = self.unit_test_col.unit,
                 created_by = self.request.user,
                 modified_by = self.request.user,
                 in_progress = self.test_list_instance.in_progress,
                 test_list_instance=self.test_list_instance
             )
-            hist = tests_history.get(test.name,[])
-            self.test_instances.append((ti,hist))
+
+            uti_d[uti.test.pk] = ti
+
+        #reorder in order of tests rather than order utis were returned from db
+        self.test_instances = [(uti_d[x.pk],history.get(x.pk,[])[:5]) for x in self.all_tests]
 
     #----------------------------------------------------------------------
     def create_formset_class(self):
@@ -311,7 +350,7 @@ class PerformQAView(CreateView):
             models.TestInstance,
             form=forms.TestInstanceForm,
             formset=forms.BaseTestInstanceFormset,
-            extra = self.test_list.all_tests().count()
+            extra = len(self.all_tests)
         )
 
     #----------------------------------------------------------------------
@@ -325,7 +364,7 @@ class PerformQAView(CreateView):
         if formset.is_valid():
             self.object = form.save(commit=False)
             self.object.test_list = self.test_list
-            self.object.unit = self.unit_test_list.unit
+            self.object.unit = self.unit_test_col.unit
             self.object.created_by = self.request.user
             self.object.modified_by= self.request.user
             if self.object.work_completed is None:
@@ -354,6 +393,7 @@ class PerformQAView(CreateView):
 
     #----------------------------------------------------------------------
     def get_context_data(self,**kwargs):
+
         context = super(PerformQAView,self).get_context_data(**kwargs)
 
         if models.TestInstanceStatus.objects.default() is None:
@@ -362,18 +402,16 @@ class PerformQAView(CreateView):
             )
             return context
 
-        try:
-            self.unit_test_list = models.UnitTestCollection.objects.select_related().get(pk=self.kwargs["pk"])
-        except models.UnitTestCollection.DoesNotExist:
-            raise Http404
-
-        self.test_list = self.unit_test_list.get_list(self.get_day_to_perform())
-        if self.test_list is None:
-            raise Http404
+        self.set_unit_test_collection()
+        self.set_test_lists(self.get_requested_day_to_perform())
+        self.set_actual_day()
+        self.set_all_tests()
         self.create_new_test_list_instance()
         self.add_test_instances()
 
+
         TestInstanceFormset = self.create_formset_class()
+
 
         if self.request.method == "POST":
             formset = TestInstanceFormset(self.request.POST,self.request.FILES,)
@@ -388,25 +426,18 @@ class PerformQAView(CreateView):
             subform.setup_form()
 
 
-        cycle_membership = models.TestListCycleMembership.objects.filter(
-            test_list = self.test_list,
-            cycle = self.unit_test_list.tests_object
-        )
-
-        current_day = 1
-        if cycle_membership:
-            current_day = cycle_membership[0].order + 1
 
         context["formset"] = formset
         context["include_admin"] = self.request.user.is_staff
-        context['categories'] = models.Category.objects.all()
-        context['current_day'] = current_day
-        context['days'] = range(1,len(self.unit_test_list.tests_object)+1)
-        context["unit_test_list"] = self.unit_test_list
+        context['categories'] = set([x[0].test.category for x in self.test_instances])
+        context['current_day'] = self.actual_day+1
+        context['days'] = range(1,len(self.unit_test_col.tests_object)+1)
+        context["unit_test_collection"] = self.unit_test_col
 
         return context
+
     #----------------------------------------------------------------------
-    def get_day_to_perform(self):
+    def get_requested_day_to_perform(self):
         """request comes in as 1 based day, convert to zero based"""
         try:
             day = int(self.request.GET.get("day"))-1
@@ -416,8 +447,8 @@ class PerformQAView(CreateView):
     #----------------------------------------------------------------------
     def get_success_url(self):
         kwargs = {
-            "unit_number":self.unit_test_list.unit.number,
-            "frequency":self.unit_test_list.frequency.slug
+            "unit_number":self.unit_test_col.unit.number,
+            "frequency":self.unit_test_col.frequency.slug
         }
         return reverse("qa_by_frequency_unit",kwargs=kwargs)
 
@@ -436,7 +467,8 @@ class UnitFrequencyListView(ListView):
             frequency__slug=self.kwargs["frequency"],
             unit__number=self.kwargs["unit_number"],
             active=True,
-        ).order_by("frequency__nominal_interval")
+        )
+
 
 #============================================================================
 class UnitGroupedFrequencyListView(ListView):
@@ -452,7 +484,6 @@ class UnitGroupedFrequencyListView(ListView):
             frequency__slug=self.kwargs["frequency"],
             active=True,
         )
-
 #============================================================================
 class AllTestCollections(ListView):
     """show all lists currently assigned to the groups this member is a part of"""
@@ -462,6 +493,7 @@ class AllTestCollections(ListView):
     #----------------------------------------------------------------------
     def get_queryset(self):
         return models.UnitTestCollection.objects.filter(active=True)
+
 
 #============================================================================
 class ChartView(TemplateView):

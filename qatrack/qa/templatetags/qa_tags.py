@@ -18,6 +18,16 @@ def as_unittestcollections_table(unit_lists, table_type="datatable"):
 
     filter_table = table_type in ("review","datatable")
 
+    unit_lists = unit_lists.select_related(
+        "last_instance",
+        "frequency",
+        "unit__name",
+    ).prefetch_related(
+        "last_instance__testinstance_set",
+        "assigned_to",        
+        "tests_object",        
+    )
+    
     c = Context({
         "unittestcollections":unit_lists,
         "filter_table":filter_table,
@@ -44,7 +54,6 @@ def as_due_date(unit_test_collection):
     template = get_template("due_date.html")
     c = Context({"unit_test_collection":unit_test_collection})
     return template.render(c)
-
 #----------------------------------------------------------------------
 @register.filter
 def as_data_attributes(unit_test_collection):

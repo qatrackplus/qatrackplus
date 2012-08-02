@@ -13,6 +13,7 @@ from django.utils import timezone
 
 from qatrack import settings
 from qatrack.units.models import Unit
+from qatrack.qa import utils
 
 import re
 
@@ -436,7 +437,7 @@ class UnitTestInfoManager(models.Manager):
 
     #----------------------------------------------------------------------
     def get_query_set(self):
-        return super(UnitTestInfoManager,self).get_query_set().select_related()
+        return super(UnitTestInfoManager,self).get_query_set()
 
 #============================================================================
 class UnitTestInfo(models.Model):
@@ -482,7 +483,7 @@ class UnitTestInfo(models.Model):
     def due_date(self):
         """return the due date for this unit test list assignment"""
         if hasattr(self,"last_instance") and self.last_instance is not None:
-            return self.last_instance.work_completed + self.frequency.due_delta()
+            return utils.due_date(self.last_instance.work_completed,self.frequency)
 
     #----------------------------------------------------------------------
     def history(self,number=5):
@@ -494,6 +495,7 @@ class UnitTestInfo(models.Model):
         return [(x.work_completed,x.value, x.pass_fail, x.status) for x in reversed(hist[:number])]
     #----------------------------------------------------------------------
     def __unicode__(self):
+        return "UnitTestInfo(%s)"%self.pk
         try:
             return "UnitTestInfo(test=%s,unit=%s)"%(self.test.name,self.unit.name)
         except:
@@ -511,10 +513,7 @@ class TestListMembership(models.Model):
         unique_together = ("test_list","test",)
     #----------------------------------------------------------------------
     def __unicode__(self):
-        try:
-            return "TestListMembership(test=%s,test_list=%s)"%(self.test.name,self.test_list.name)
-        except:
-            return "TestListMembership(Empty)"
+        return "TestListMembership(pk=%s)"%self.pk
 
 
 #============================================================================
@@ -588,12 +587,17 @@ class TestList(TestCollectionInterface):
     def set_references(self):
         """allow user to go to references in admin interface"""
 
-        url = "%s?"%urlresolvers.reverse("admin:qa_unittestinfo_changelist")
-        test_filter = "test__id__in=%s" % (','.join(["%d" % test.pk for test in self.all_tests()]))
+        url = "%s?prefilter=true&"%urlresolvers.reverse("admin:qa_unittestinfo_changelist")
+        all_tests = self.all_tests().values_list("pk",flat=True)
+        test_filter = "&".join(["test__id__exact=%d" % pk for pk in all_tests])
 
         unit_filter = "unit__id__exact=%d"
 
-        unit_assignments = UnitTestCollection.objects.test_lists().filter(object_id=self.pk)
+        unit_assignments = UnitTestCollection.objects.test_lists().filter(
+            object_id=self.pk
+        ).select_related(
+            "unit"
+        )
 
         urls = [(info.unit.name, url+test_filter+"&"+ unit_filter%info.unit.pk) for info in unit_assignments]
         link = '<a href="%s">%s</a>'
@@ -618,14 +622,6 @@ class TestList(TestCollectionInterface):
 
 #============================================================================
 class UnitTestListManager(models.Manager):
-    #---------------------------------------------------------------------------
-    def get_query_set(self):
-        return super(UnitTestListManager,self).get_query_set().select_related(
-            "last_instance",
-            "unit",
-            "frequency",
-            "assigned_to",
-        )
     #----------------------------------------------------------------------
     def by_unit(self,unit):
         return self.get_query_set().filter(unit=unit)
@@ -676,43 +672,13 @@ class UnitTestCollection(models.Model):
         dates for its member TestLists
         """
 
-        if hasattr(self.tests_object, "test_lists",):
-            #collection of test lists (e.g. a cycle)
-            all_lists = self.tests_object.test_lists.all()
-        else:
-            #bare test_list
-            all_lists = [self.tests_object]
-
-        list_due_dates = []
-
-        for test_list in all_lists:
-            utis = UnitTestInfo.objects.filter(
-                unit=self.unit,
-                test__in = test_list.all_tests()
-            ).prefetch_related("last_instance")
-
-            due_dates = [uti.last_instance.work_completed + uti.frequency.due_delta() for uti in utis if uti.last_instance]
-
-            if due_dates:
-                list_due_dates.append(min(due_dates))
-
-        if list_due_dates:
-            return max(list_due_dates)
+        if self.last_instance:
+            return utils.due_date(self.last_instance.work_completed,self.frequency)
 
     #----------------------------------------------------------------------
     def due_status(self):
-        last_done = self.last_done_date()
-
-        if last_done is None:
-            return NOT_DUE
-
-        day_delta = (timezone.now().date()-last_done.date()).days
-
-        if day_delta >= self.frequency.overdue_interval:
-            return OVERDUE
-        elif day_delta >= self.frequency.due_interval:
-            return DUE
-
+        if self.last_instance:
+            return utils.due_status(self.last_instance.work_completed,self.frequency)
         return NOT_DUE
 
     #----------------------------------------------------------------------
@@ -743,22 +709,7 @@ class UnitTestCollection(models.Model):
             unit=self.unit,
             test_list__in = self.tests_object.all_lists()
         ).order_by("-work_completed","-pk")[:number])
-    #---------------------------------------------------------------------------
-    def tests_history(self,number=5):
-        """return last 'number' of instances for this test performed on input unit
-        list is ordered in ascending dates
-        """
-        hist = TestInstance.objects.filter(unit=self.unit,test__in=self.tests_object.all_tests()).order_by("-work_completed","-pk")
-        hist = hist.select_related("status")
-        history = {}
 
-        for hist in reversed(hist[:number]):
-            h = (hist.work_completed,hist.value, hist.pass_fail, hist.status)
-            try:
-                history[hist.test.name].append(h)
-            except KeyError:
-                history[hist.test.name] = [h]
-        return history
     #----------------------------------------------------------------------
     def next_list(self):
         """return next list to be completed from tests_object"""
@@ -784,7 +735,8 @@ class UnitTestCollection(models.Model):
         return self.tests_object.name
     #----------------------------------------------------------------------
     def __unicode__(self):
-        return "UnitTestCollection(unit=%s, tests_object=%s, frequency=%s)" %(self.unit.name, self.tests_object.name, self.frequency.name)
+        return "UnitTestCollection(%s)"%self.pk
+    #return "UnitTestCollection(unit=%s, tests_object=%s, frequency=%s)" %(self.unit.name, self.tests_object.name, self.frequency.name)
 
 
 
@@ -1016,10 +968,7 @@ class TestInstance(models.Model):
     #----------------------------------------------------------------------
     def __unicode__(self):
         """return display representation of object"""
-        try :
-            return "TestInstance(test=%s,date=%s)" % (self.test.name,self.work_completed)
-        except :
-            return "TestInstance(Empty)"
+        return "TestInstance(pk=%s)" % self.pk
 
 #----------------------------------------------------------------------
 @receiver(post_save,sender=TestInstance)
@@ -1105,12 +1054,7 @@ class TestListInstance(models.Model):
         return self.testinstance_set.filter(pass_fail=ACTION)
     #---------------------------------------------------------------------------
     def __unicode__(self):
-        """more helpful interactive display name"""
-        try:
-            return "TestListInstance(test_list=%s,date=%s)"%(self.test_list.name,self.work_completed)
-        except:
-            return "TestListInstance(Empty)"
-
+        return "TestListInstance(pk=%s)"%self.pk
 
 #----------------------------------------------------------------------
 @receiver(post_save,sender=TestListInstance)
@@ -1222,7 +1166,4 @@ class TestListCycleMembership(models.Model):
 
     #----------------------------------------------------------------------
     def __unicode__(self):
-        try:
-            return "TestListCycleMembership(test_list=%s,cycle=%s)"%(self.test_list.name,self.cycle.name)
-        except:
-            return "TestListCycleMembership(Empty)"
+        return "TestListCycleMembership(pk=%s)"%self.pk

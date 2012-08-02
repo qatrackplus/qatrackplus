@@ -16,6 +16,8 @@ class FilterPersistMiddleware(object):
         path = request.path
         path = path[path.find('/admin'):len(path)]
         query_string = request.META['QUERY_STRING']
+        if "prefilter=true" in query_string:
+            return None
         session = request.session
 
         if session.get('redirected', False):#so that we dont loop once redirected

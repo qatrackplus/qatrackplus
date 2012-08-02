@@ -14,20 +14,26 @@
 			{% include "unittestcollections_table_headers.html"%}
 		{% endif %}
 	</thead>
-	<tbody>
+		<tbody>
+
 		{% for utc in unittestcollections %}
 
 			{# display all individual test lists #}
-			<tr class="{% cycle 'odd' 'even' %} has-due-date" {{utc|as_data_attributes}}>
+			<tr class="{% cycle 'odd' 'even' %} has-due-date">
 				<td>
 					{{utc.unit.name}}
 				</td>
 				<td>{{utc.frequency.name}}</td>
-				<td>{{utc.tests_object.name|title}}</td>
+				<td>
+				{{utc.testlist.name}}
+					<a href="{%url perform_qa utc.pk%}?day=next">{{utc.tests_object.name}}</a>
+				</td>
 
 				{% if  utc.last_instance %}
 					<td>{{utc.last_instance.work_completed}}</td>
-					<td>{{utc|as_due_date}}</td>
+					<td>
+						{{utc|as_due_date}}
+					</td>
 					<td class="pass_fail_status">
 						{{utc.last_instance|as_pass_fail_status}}
 					</td>
@@ -46,7 +52,6 @@
 						<select class="pull-right input-medium instance-id">
 							<option value="hide">Hidden</option>
 							{% for h in utc.history %}
-
 								{% if h.unreviewed_instances.count %}
 									<option data-test_list_id="{{h.test_list.pk}}" value="{{h.pk}}" class="unreviewed">* {{h.work_completed}} *</option>
 								{% else %}

@@ -87,7 +87,7 @@ $(document).ready(function(){
 				last_done = QAUtils.parse_iso8601_date(date_string);
 			}
 			var freq = $(this).data("frequency");
-			QAUtils.set_due_status_color($(this).find(".due-status"),last_done,freq);
+			//QAUtils.set_due_status_color($(this).find(".due-status"),last_done,freq);
 		});
 	});
 });

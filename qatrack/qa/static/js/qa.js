@@ -271,22 +271,23 @@ function confirm_leave_page(){
 /****************************************************************/
 $(document).ready(function(){
     var that = $(this);
+
+    $(".qa-comment, .qa-procedure").hide();
+
+    //show comment when clicked
+    $(".qa-showcmt a").click(function(){
+      $(this).parent().parent().nextAll(".qa-comment").first().toggle(600);
+      return false;
+    });
+
+    $(".qa-showproc a").click(function(){
+      $(this).parent().parent().nextAll(".qa-procedure").first().toggle(600);
+      return false;
+    });
+
     $.when(QAUtils.init()).done(function(){
         initialize_qa();
 
-        //hide all  comments initially
-        $(".qa-comment, .qa-procedure").hide();
-
-        //show comment when clicked
-        $(".qa-showcmt a").click(function(){
-          $(this).parent().parent().nextAll(".qa-comment").first().toggle(600);
-          return false;
-        });
-
-        $(".qa-showproc a").click(function(){
-          $(this).parent().parent().nextAll(".qa-procedure").first().toggle(600);
-          return false;
-        });
 
         var user_inputs=  $('.qa-input').not("[readonly=readonly]").not("[type=hidden]");
 
@@ -310,9 +311,9 @@ $(document).ready(function(){
 
             //rather than submitting form on enter, move to next value
             if (e.keyCode == 13) {
-                
+
                 var idx = user_inputs.index(this);
-                
+
                 if (idx == user_inputs.length - 1) {
                     user_inputs.first().focus();
                 } else {
