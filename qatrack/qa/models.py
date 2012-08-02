@@ -13,6 +13,7 @@ from django.utils import timezone
 
 from qatrack import settings
 from qatrack.units.models import Unit
+from qatrack.qa import utils
 
 import re
 
@@ -484,7 +485,7 @@ class UnitTestInfo(models.Model):
     def due_date(self):
         """return the due date for this unit test list assignment"""
         if hasattr(self,"last_instance") and self.last_instance is not None:
-            return self.last_instance.work_completed + self.frequency.due_delta()
+            return utils.due_date(self.last_instance.work_completed,self.frequency)
 
     #----------------------------------------------------------------------
     def history(self,number=5):
@@ -669,45 +670,14 @@ class UnitTestCollection(models.Model):
         due date for a TestCycle is calculated as the maximum of the due
         dates for its member TestLists
         """
-
-        try:
-            #collection of test lists (e.g. a cycle)
-            all_lists = self.tests_object.test_lists.all()
-        except AttributeError:
-            #bare test_list
-            all_lists = [self.tests_object]
-
-        list_due_dates = []
-
-        due_delta = self.frequency.due_delta()
-        for test_list in all_lists:
-            min_work_completed = UnitTestInfo.objects.filter(
-                unit=self.unit,
-                test__in = test_list.all_tests()
-            ).aggregate(models.Min("last_instance__work_completed"))
-            try:
-                list_due_dates.append(min_work_completed["last_instance__work_completed__min"])
-            except KeyError:
-                pass
-
-        if list_due_dates:
-            return max(list_due_dates)
+        
+        if self.last_instance:
+            return utils.due_date(self.last_instance.work_completed,self.frequency)
 
     #----------------------------------------------------------------------
     def due_status(self):
-        last_done = self.last_done_date()
-
-        if last_done is None:
-            return NOT_DUE
-
-        day_delta = (timezone.now().date()-last_done.date()).days
-
-        if day_delta >= self.frequency.overdue_interval:
-            return OVERDUE
-        elif day_delta >= self.frequency.due_interval:
-            return DUE
-
-        return NOT_DUE
+        if self.last_instance:
+            return utils.due_status(self.last_instance.work_completed,self.frequency)
 
     #----------------------------------------------------------------------
     def last_done_date(self):

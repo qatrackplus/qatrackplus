@@ -437,17 +437,7 @@ class UnitFrequencyListView(ListView):
             frequency__slug=self.kwargs["frequency"],
             unit__number=self.kwargs["unit_number"],
             active=True,
-        ).select_related("unit","assigned_to","frequency","last_instance")
-    #----------------------------------------------------------------------
-    def get_context_data(self,**kwargs):
-        """"""
-        context = super(UnitFrequencyListView,self).get_context_data(**kwargs)
-        utcs = list(context["unittestcollections"])
-        context["unittestcollections"] = utcs
-        if len(utcs)> 0:
-            context["frequency"] = utcs[0].frequency
-            context["unit"] = utcs[0].unit
-        return context
+        )
 
 
 #============================================================================
@@ -472,29 +462,7 @@ class AllTestCollections(ListView):
     context_object_name = "unittestcollections"
     #----------------------------------------------------------------------
     def get_queryset(self):
-        return models.UnitTestCollection.objects.get_empty_query_set()#filter(active=True).select_related("last_instance")
-
-    #----------------------------------------------------------------------
-    def get_context_data(self,**kwargs):
-
-        context = super(AllTestCollections,self).get_context_data(**kwargs)
-        utcs = models.UnitTestCollection.objects.filter(active=True).select_related("last_instance","tests_object","frequency",).prefetch_related("last_instance__testinstance_set")
-        last_instances = [utc.last_instance for utc in utcs]
-
-        vals = list(utcs.values("unit__name","last_instance__work_completed","frequency__name","assigned_to__name","testlist__name","testlistcycle__name"))
-
-        utcs = list(utcs)
-        for i,utc in enumerate(utcs):
-            if utc.last_instance:
-                vals[i]["due_date"] = (utc.last_instance.work_completed + utc.frequency.due_delta()).date()
-                vals[i]["due_status"] = utils.due_status(utc.last_instance.work_completed,utc.frequency)
-            else:
-                vals[i]["due_status"] = ""
-                vals[i]["due_date"] = "New List"
-
-        data = zip(utcs,vals)
-        context["unittestcollections"] = data
-        return context
+        return models.UnitTestCollection.objects.filter(active=True)
 
 
 #============================================================================

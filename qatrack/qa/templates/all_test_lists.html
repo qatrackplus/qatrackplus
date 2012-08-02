@@ -7,12 +7,7 @@
 	<div class="row-fluid">
 		<div class="span12">
 			<h2>All Active QA Lists </h2>
-
-			{% if not unittestcollections %}
-				<em>No lists available.</em>
-			{% else %}
-				{{ unittestcollections|as_unittestcollections_table}}
-			{% endif %}
+			{{ unittestcollections|as_unittestcollections_table}}
 		</div>
 	</div>
 

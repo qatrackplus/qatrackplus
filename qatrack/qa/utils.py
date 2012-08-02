@@ -14,3 +14,7 @@ def due_status(last_done,frequency):
         return models.DUE
 
     return models.NOT_DUE
+
+#----------------------------------------------------------------------
+def due_date(last_done_date,frequency):
+    return last_done_date+frequency.due_delta()
