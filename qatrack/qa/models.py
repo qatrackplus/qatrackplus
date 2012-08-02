@@ -515,11 +515,7 @@ class TestListMembership(models.Model):
         unique_together = ("test_list","test",)
     #----------------------------------------------------------------------
     def __unicode__(self):
-        return "TestListMembership(%s)"%self.pk
-        try:
-            return "TestListMembership(test=%s,test_list=%s)"%(self.test.name,self.test_list.name)
-        except:
-            return "TestListMembership(Empty)"
+        return "TestListMembership(pk=%s)"%self.pk
 
 
 #============================================================================
@@ -680,6 +676,7 @@ class UnitTestCollection(models.Model):
     def due_status(self):
         if self.last_instance:
             return utils.due_status(self.last_instance.work_completed,self.frequency)
+        return NOT_DUE
 
     #----------------------------------------------------------------------
     def last_done_date(self):
@@ -1166,8 +1163,4 @@ class TestListCycleMembership(models.Model):
 
     #----------------------------------------------------------------------
     def __unicode__(self):
-        return "TestListCycleMembership(%s)"%self.pk
-        try:
-            return "TestListCycleMembership(test_list=%s,cycle=%s)"%(self.test_list.name,self.cycle.name)
-        except:
-            return "TestListCycleMembership(Empty)"
+        return "TestListCycleMembership(pk=%s)"%self.pk
