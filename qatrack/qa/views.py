@@ -290,20 +290,26 @@ class PerformQAView(CreateView):
             raise Http404
 
         self.unit_test_col = q[0]
+    #----------------------------------------------------------------------
+    def set_actual_day(self):
+        cycle_membership = models.TestListCycleMembership.objects.filter(
+            test_list = self.test_list,
+            cycle = self.unit_test_col.tests_object
+        )
+
+        self.actual_day = 0
+        if cycle_membership:
+            self.actual_day = cycle_membership[0].order
 
     #----------------------------------------------------------------------
     def add_test_instances(self):
         """create new test instances"""
 
-        #1 query
         default_status = models.TestInstanceStatus.objects.default()
 
-        from_date = timezone.datetime.now() - timezone.timedelta(days=10*self.unit_test_col.frequency.overdue_interval)
-
-        # 1 query
+        from_date = timezone.make_aware(timezone.datetime.now() - timezone.timedelta(days=10*self.unit_test_col.frequency.overdue_interval),timezone.get_current_timezone())
         history = utils.tests_history(self.all_tests,self.unit_test_col.unit,from_date)
 
-        # 1 query
         utis = models.UnitTestInfo.objects.filter(
             unit = self.unit_test_col.unit,
             test__in = self.all_tests,
@@ -396,9 +402,9 @@ class PerformQAView(CreateView):
             )
             return context
 
-        current_day = self.get_day_to_perform()
         self.set_unit_test_collection()
-        self.set_test_lists(current_day)
+        self.set_test_lists(self.get_requested_day_to_perform())
+        self.set_actual_day()
         self.set_all_tests()
         self.create_new_test_list_instance()
         self.add_test_instances()
@@ -424,14 +430,14 @@ class PerformQAView(CreateView):
         context["formset"] = formset
         context["include_admin"] = self.request.user.is_staff
         context['categories'] = set([x[0].test.category for x in self.test_instances])
-        context['current_day'] = current_day
+        context['current_day'] = self.actual_day+1
         context['days'] = range(1,len(self.unit_test_col.tests_object)+1)
         context["unit_test_collection"] = self.unit_test_col
 
         return context
 
     #----------------------------------------------------------------------
-    def get_day_to_perform(self):
+    def get_requested_day_to_perform(self):
         """request comes in as 1 based day, convert to zero based"""
         try:
             day = int(self.request.GET.get("day"))-1
