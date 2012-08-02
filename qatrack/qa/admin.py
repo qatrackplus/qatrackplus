@@ -180,7 +180,14 @@ class TestListAdminForm(forms.ModelForm):
 
 #============================================================================
 class TestInlineFormset(forms.models.BaseInlineFormSet):
-
+    #----------------------------------------------------------------------
+    def get_queryset(self):
+        if not hasattr(self, '_queryset'):
+            qs = super(TestInlineFormset, self).get_queryset().select_related(
+                "test"
+            )
+            self._queryset = qs
+        return self._queryset
     #----------------------------------------------------------------------
     def clean(self):
         """Make sure there are no duplicated slugs in a TestList"""
@@ -234,6 +241,12 @@ class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
             settings.STATIC_URL+"js/jquery-ui.min.js",
             #settings.STATIC_URL+"js/collapsed_stacked_inlines.js",
             settings.STATIC_URL+"js/m2m_drag_admin.js",
+        )
+    #----------------------------------------------------------------------
+    def queryset(self,*args,**kwargs):
+        qs = super(TestListAdmin,self).queryset(*args,**kwargs)
+        return qs.prefetch_related(
+            "testlistmembership_set",
         )
 
 #============================================================================
