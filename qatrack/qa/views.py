@@ -260,54 +260,82 @@ class PerformQAView(CreateView):
         """generate a new test list instance for the user to fill in values for"""
         self.test_list_instance = models.TestListInstance(
             test_list   = self.test_list,
-            unit        = self.unit_test_list.unit,
+            unit        = self.unit_test_col.unit,
             created_by  = self.request.user,
             modified_by = self.request.user,
         )
 
+    #----------------------------------------------------------------------
+    def set_test_lists(self,current_day):
+
+        self.test_list = self.unit_test_col.get_list(current_day)
+        if self.test_list is None:
+            raise Http404
+
+        self.all_lists = [self.test_list]+list(self.test_list.sublists.all())
+    #----------------------------------------------------------------------
+    def set_all_tests(self):
+        self.all_tests = []
+        for test_list in self.all_lists:
+            tests = test_list.tests.all().order_by("testlistmembership__order")
+            self.all_tests.extend(tests)
+    #----------------------------------------------------------------------
+    def set_unit_test_collection(self):
+
+        q = models.UnitTestCollection.objects.select_related(
+            "unit",
+            "frequency",
+        ).filter(pk=self.kwargs["pk"])
+        if q.count() == 0:
+            raise Http404
+
+        self.unit_test_col = q[0]
 
     #----------------------------------------------------------------------
     def add_test_instances(self):
         """create new test instances"""
-        all_lists = [self.test_list]+list(self.test_list.sublists.all())
+
+        #1 query
         default_status = models.TestInstanceStatus.objects.default()
 
-        all_tests = []
-        for test_list in all_lists:
-            tests = test_list.tests.all().order_by("testlistmembership__order")
-            all_tests.extend(tests)
-        
+        from_date = timezone.datetime.now() - timezone.timedelta(days=10*self.unit_test_col.frequency.overdue_interval)
+
+        # 1 query
+        history = utils.tests_history(self.all_tests,self.unit_test_col.unit,from_date)
+
+        # 1 query
         utis = models.UnitTestInfo.objects.filter(
-            unit = self.unit_test_list.unit,
-            test__in = all_tests,
-            frequency=self.unit_test_list.frequency,
+            unit = self.unit_test_col.unit,
+            test__in = self.all_tests,
+            frequency=self.unit_test_col.frequency,
             active=True,
         ).select_related(
             "reference",
-            "tolerance",
-            "test",
-            "unit",
             "test__category",
+            "test__pk",
+            "tolerance",
+            "unit",
         )
-        
+
         uti_d = {}
-        
+
         for uti in utis:
             ti = models.TestInstance(
                 test = uti.test,
                 reference = uti.reference,
                 tolerance = uti.tolerance,
                 status = default_status,
-                unit = self.unit_test_list.unit,
+                unit = self.unit_test_col.unit,
                 created_by = self.request.user,
                 modified_by = self.request.user,
                 in_progress = self.test_list_instance.in_progress,
                 test_list_instance=self.test_list_instance
             )
-            uti_d[uti.test.pk] = (ti,uti.history())
-            
+
+            uti_d[uti.test.pk] = ti
+
         #reorder in order of tests rather than order utis were returned from db
-        self.test_instances = [uti_d[x.pk] for x in all_tests]
+        self.test_instances = [(uti_d[x.pk],history.get(x.pk,[])[:5]) for x in self.all_tests]
 
     #----------------------------------------------------------------------
     def create_formset_class(self):
@@ -316,7 +344,7 @@ class PerformQAView(CreateView):
             models.TestInstance,
             form=forms.TestInstanceForm,
             formset=forms.BaseTestInstanceFormset,
-            extra = self.test_list.all_tests().count()
+            extra = len(self.all_tests)
         )
 
     #----------------------------------------------------------------------
@@ -330,7 +358,7 @@ class PerformQAView(CreateView):
         if formset.is_valid():
             self.object = form.save(commit=False)
             self.object.test_list = self.test_list
-            self.object.unit = self.unit_test_list.unit
+            self.object.unit = self.unit_test_col.unit
             self.object.created_by = self.request.user
             self.object.modified_by= self.request.user
             if self.object.work_completed is None:
@@ -359,35 +387,25 @@ class PerformQAView(CreateView):
 
     #----------------------------------------------------------------------
     def get_context_data(self,**kwargs):
+
         context = super(PerformQAView,self).get_context_data(**kwargs)
+
         if models.TestInstanceStatus.objects.default() is None:
             messages.error(
                 self.request,"There must be at least one Test Status defined before performing a TestList"
             )
             return context
-        
-        q = models.UnitTestCollection.objects.select_related(
-            "unit",
-            "frequency",
-        ).filter(pk=self.kwargs["pk"])
-        
-        if q.count() == 0:
-            raise Http404        
-        self.unit_test_list = q[0]
-        
-        
-        current_day = self.get_day_to_perform()        
-        self.test_list = self.unit_test_list.get_list(current_day)        
-        if self.test_list is None:
-            raise Http404
-        
 
-        
+        current_day = self.get_day_to_perform()
+        self.set_unit_test_collection()
+        self.set_test_lists(current_day)
+        self.set_all_tests()
         self.create_new_test_list_instance()
         self.add_test_instances()
-            
-            
+
+
         TestInstanceFormset = self.create_formset_class()
+
 
         if self.request.method == "POST":
             formset = TestInstanceFormset(self.request.POST,self.request.FILES,)
@@ -402,16 +420,16 @@ class PerformQAView(CreateView):
             subform.setup_form()
 
 
+
         context["formset"] = formset
         context["include_admin"] = self.request.user.is_staff
         context['categories'] = set([x[0].test.category for x in self.test_instances])
         context['current_day'] = current_day
-        context['days'] = range(1,len(self.unit_test_list.tests_object)+1)
-        context["unit_test_list"] = self.unit_test_list
-
+        context['days'] = range(1,len(self.unit_test_col.tests_object)+1)
+        context["unit_test_collection"] = self.unit_test_col
 
         return context
-        
+
     #----------------------------------------------------------------------
     def get_day_to_perform(self):
         """request comes in as 1 based day, convert to zero based"""
@@ -423,8 +441,8 @@ class PerformQAView(CreateView):
     #----------------------------------------------------------------------
     def get_success_url(self):
         kwargs = {
-            "unit_number":self.unit_test_list.unit.number,
-            "frequency":self.unit_test_list.frequency.slug
+            "unit_number":self.unit_test_col.unit.number,
+            "frequency":self.unit_test_col.frequency.slug
         }
         return reverse("qa_by_frequency_unit",kwargs=kwargs)
 

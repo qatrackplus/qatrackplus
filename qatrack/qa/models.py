@@ -672,7 +672,7 @@ class UnitTestCollection(models.Model):
         due date for a TestCycle is calculated as the maximum of the due
         dates for its member TestLists
         """
-        
+
         if self.last_instance:
             return utils.due_date(self.last_instance.work_completed,self.frequency)
 
@@ -709,6 +709,7 @@ class UnitTestCollection(models.Model):
             unit=self.unit,
             test_list__in = self.tests_object.all_lists()
         ).order_by("-work_completed","-pk")[:number])
+
     #----------------------------------------------------------------------
     def next_list(self):
         """return next list to be completed from tests_object"""
