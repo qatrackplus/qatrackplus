@@ -497,6 +497,7 @@ class UnitTestInfo(models.Model):
         return [(x.work_completed,x.value, x.pass_fail, x.status) for x in reversed(hist[:number])]
     #----------------------------------------------------------------------
     def __unicode__(self):
+        return "UnitTestInfo(%s)"%self.pk
         try:
             return "UnitTestInfo(test=%s,unit=%s)"%(self.test.name,self.unit.name)
         except:
@@ -514,6 +515,7 @@ class TestListMembership(models.Model):
         unique_together = ("test_list","test",)
     #----------------------------------------------------------------------
     def __unicode__(self):
+        return "TestListMembership(%s)"%self.pk
         try:
             return "TestListMembership(test=%s,test_list=%s)"%(self.test.name,self.test_list.name)
         except:
@@ -707,22 +709,6 @@ class UnitTestCollection(models.Model):
             unit=self.unit,
             test_list__in = self.tests_object.all_lists()
         ).order_by("-work_completed","-pk")[:number])
-    #---------------------------------------------------------------------------
-    def tests_history(self,number=5):
-        """return last 'number' of instances for this test performed on input unit
-        list is ordered in ascending dates
-        """
-        hist = TestInstance.objects.filter(unit=self.unit,test__in=self.tests_object.all_tests()).order_by("-work_completed","-pk")
-        hist = hist.select_related("status")
-        history = {}
-
-        for hist in reversed(hist[:number]):
-            h = (hist.work_completed,hist.value, hist.pass_fail, hist.status)
-            try:
-                history[hist.test.name].append(h)
-            except KeyError:
-                history[hist.test.name] = [h]
-        return history
     #----------------------------------------------------------------------
     def next_list(self):
         """return next list to be completed from tests_object"""
@@ -748,7 +734,8 @@ class UnitTestCollection(models.Model):
         return self.tests_object.name
     #----------------------------------------------------------------------
     def __unicode__(self):
-        return "UnitTestCollection(unit=%s, tests_object=%s, frequency=%s)" %(self.unit.name, self.tests_object.name, self.frequency.name)
+        return "UnitTestCollection(%s)"%self.pk
+    #return "UnitTestCollection(unit=%s, tests_object=%s, frequency=%s)" %(self.unit.name, self.tests_object.name, self.frequency.name)
 
 
 
@@ -1178,6 +1165,7 @@ class TestListCycleMembership(models.Model):
 
     #----------------------------------------------------------------------
     def __unicode__(self):
+        return "TestListCycleMembership(%s)"%self.pk
         try:
             return "TestListCycleMembership(test_list=%s,cycle=%s)"%(self.test_list.name,self.cycle.name)
         except:
