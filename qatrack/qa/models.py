@@ -589,12 +589,17 @@ class TestList(TestCollectionInterface):
     def set_references(self):
         """allow user to go to references in admin interface"""
 
-        url = "%s?"%urlresolvers.reverse("admin:qa_unittestinfo_changelist")
-        test_filter = "test__id__in=%s" % (','.join(["%d" % test.pk for test in self.all_tests()]))
+        url = "%s?prefilter=true&"%urlresolvers.reverse("admin:qa_unittestinfo_changelist")
+        all_tests = self.all_tests().values_list("pk",flat=True)
+        test_filter = "&".join(["test__id__exact=%d" % pk for pk in all_tests])
 
         unit_filter = "unit__id__exact=%d"
 
-        unit_assignments = UnitTestCollection.objects.test_lists().filter(object_id=self.pk)
+        unit_assignments = UnitTestCollection.objects.test_lists().filter(
+            object_id=self.pk
+        ).select_related(
+            "unit"
+        )
 
         urls = [(info.unit.name, url+test_filter+"&"+ unit_filter%info.unit.pk) for info in unit_assignments]
         link = '<a href="%s">%s</a>'
