@@ -888,13 +888,11 @@ class TestInstance(models.Model):
     reference = models.ForeignKey(Reference,null=True, blank=True)
     tolerance = models.ForeignKey(Tolerance, null=True, blank=True)
 
-    unit = models.ForeignKey(Unit,editable=False)
+    unit_test_info = models.ForeignKey(UnitTestInfo)
 
     #keep track if this test was performed as part of a test list
     test_list_instance = models.ForeignKey("TestListInstance",editable=False, null=True, blank=True)
 
-    #which test is being performed
-    test = models.ForeignKey(Test)
 
     work_started = models.DateTimeField(auto_now_add=True,editable=False)
 
@@ -1003,8 +1001,7 @@ class TestListInstance(models.Model):
 
     """
 
-    test_list = models.ForeignKey(TestList, editable=False)
-    unit = models.ForeignKey(Unit,editable=False)
+    unit_test_collection = models.ForeignKey(UnitTestCollection,editable=False)
 
     work_started = models.DateTimeField(auto_now_add=True,editable=False)
     work_completed = models.DateTimeField(default=timezone.now,db_index=True)
