@@ -44,23 +44,24 @@
 				{% endif %}
 
 				{% if table_type = "review" %}
+					{% with utc.unreviewed_instances as unreviewed %}
 					<td class="review_status">
-						{{utc|as_unreviewed_count}}
+						<span class="label unreviewed-count-wrapper {% if unreviewed %}label-warning{% else %}label-success{% endif %}">
+							<span class="unreviewed-count">{{unreviewed|length}}</span>
+							Unreviewed
+						</span>
 					</td>
 
 					<td class="history">
 						<select class="pull-right input-medium instance-id">
 							<option value="hide">Hidden</option>
-							{% for h in utc.history %}
-								{% if h.unreviewed_instances.count %}
+							{% for h in unreviewed %}
 									<option data-test_list_id="{{h.test_list.pk}}" value="{{h.pk}}" class="unreviewed">* {{h.work_completed}} *</option>
-								{% else %}
-									<option data-test_list_id="{{h.test_list.pk}}" value="{{h.pk}}" class="reviewed">{{h.work_completed}}</option>
-								{% endif %}
-
 							{% endfor %}
+
 						</select>
 					</td>
+					{% endwith %}
 
 				{% else %}
 					<td>{{utc.assigned_to.name}}</td>
