@@ -692,10 +692,7 @@ class UnitTestCollection(models.Model):
     #----------------------------------------------------------------------
     def unreviewed_instances(self):
         """return a query set of all TestListInstances for this object that have not been fully reviewed"""
-        return TestListInstance.objects.awaiting_review().filter(
-            unit = self.unit,
-            test_list__in = self.tests_object.all_lists()
-        ).select_related("test_list")
+        return self.testlistinstance_set.filter(testinstance__status__requires_review=True).distinct().select_related("test_list")
     #----------------------------------------------------------------------
     def unreviewed_test_instances(self):
         """return query set of all TestInstances for this object"""
@@ -939,7 +936,7 @@ class TestInstance(models.Model):
 
             self.pass_fail = NOT_DONE
 
-        elif self.test.type in  (BOOLEAN, MULTIPLE_CHOICE) and self.reference:
+        elif self.unit_test_info.test.type in  (BOOLEAN, MULTIPLE_CHOICE) and self.reference:
 
             diff = abs(self.reference.value - self.value)
 
@@ -974,9 +971,8 @@ class TestInstance(models.Model):
 @receiver(post_save,sender=TestInstance)
 def on_test_instance_saved(*args,**kwargs):
     test_instance = kwargs["instance"]
-    UnitTestInfo.objects.filter(test=test_instance.test,unit=test_instance.unit).update(
-        last_instance = test_instance
-    )
+    test_instance.unit_test_info.last_instance = test_instance
+    test_instance.unit_test_info.save()
 
 #============================================================================
 class TestListInstanceManager(models.Manager):
@@ -1002,6 +998,7 @@ class TestListInstance(models.Model):
     """
 
     unit_test_collection = models.ForeignKey(UnitTestCollection,editable=False)
+    test_list = models.ForeignKey(TestList,editable=False)
 
     work_started = models.DateTimeField(auto_now_add=True,editable=False)
     work_completed = models.DateTimeField(default=timezone.now,db_index=True)
@@ -1075,7 +1072,7 @@ def on_test_list_instance_saved(*args,**kwargs):
         UnitTestCollection.objects.filter(
             content_type = ct,
             object_id__in = object_ids,
-            unit = test_list_instance.unit,
+            unit = test_list_instance.unit_test_collection.unit,
         ).update(last_instance=test_list_instance)
 
 #============================================================================

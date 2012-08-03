@@ -247,7 +247,7 @@ class PerformQAView(CreateView):
     form_class = forms.TestListInstanceForm
 
     TEST_LIST_TO_TEST_TRANSFER_FIELDS = (
-        "unit",
+        #"unit",
         "created_by",
         "modified_by",
         "work_started",
@@ -259,8 +259,7 @@ class PerformQAView(CreateView):
     def create_new_test_list_instance(self):
         """generate a new test list instance for the user to fill in values for"""
         self.test_list_instance = models.TestListInstance(
-            test_list   = self.test_list,
-            unit        = self.unit_test_col.unit,
+            unit_test_collection = self.unit_test_col,
             created_by  = self.request.user,
             modified_by = self.request.user,
         )
@@ -327,11 +326,10 @@ class PerformQAView(CreateView):
 
         for uti in utis:
             ti = models.TestInstance(
-                test = uti.test,
+                unit_test_info = uti,
                 reference = uti.reference,
                 tolerance = uti.tolerance,
                 status = default_status,
-                unit = self.unit_test_col.unit,
                 created_by = self.request.user,
                 modified_by = self.request.user,
                 in_progress = self.test_list_instance.in_progress,
@@ -364,11 +362,13 @@ class PerformQAView(CreateView):
         if formset.is_valid():
             self.object = form.save(commit=False)
             self.object.test_list = self.test_list
-            self.object.unit = self.unit_test_col.unit
+            #self.object.unit = self.unit_test_col.unit
+            self.object.unit_test_collection = self.unit_test_col
             self.object.created_by = self.request.user
             self.object.modified_by= self.request.user
             if self.object.work_completed is None:
                 self.object.work_completed = timezone.now()
+
             self.object.save()
 
             status = models.TestInstanceStatus.objects.default()
@@ -429,7 +429,7 @@ class PerformQAView(CreateView):
 
         context["formset"] = formset
         context["include_admin"] = self.request.user.is_staff
-        context['categories'] = set([x[0].test.category for x in self.test_instances])
+        context['categories'] = set([x[0].unit_test_info.test.category for x in self.test_instances])
         context['current_day'] = self.actual_day+1
         context['days'] = range(1,len(self.unit_test_col.tests_object)+1)
         context["unit_test_collection"] = self.unit_test_col
@@ -523,7 +523,20 @@ class ReviewView(ListView):
     model = models.UnitTestCollection
     context_object_name = "unittestcollections"
 
+    #----------------------------------------------------------------------
+    def get_context_data(self,**kwargs):
+        context = super(ReviewView,self).get_context_data(**kwargs)
 
+        requires_review = models.TestListInstance.objects.filter(testinstance__status__requires_review=True).distinct().select_related("test_list")
+        utcs = list(context["unittestcollections"])
+
+        requires_reviews =[]
+        for utc in utcs:
+            requires_reviews.append(requires_review.filter(unit_test_collection=utc))
+
+        context["requires_reviews"] = requires_review
+
+        return context
 #============================================================================
 class ExportToCSV(View):
     """A simple api wrapper to give exported api data a filename for downloads"""

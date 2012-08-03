@@ -23,12 +23,12 @@ def due_date(last_done_date,frequency):
 #----------------------------------------------------------------------
 def tests_history(tests,unit,from_date,selected_related=None):
     all_instances = models.TestInstance.objects.filter(
-        test__in = tests,
-        unit = unit,
+        unit_test_info__test__in = tests,
+        unit_test_info__unit = unit,
         work_completed__gte = from_date,
     ).select_related(
         "status",
-        "test__pk"
+        "unit_test_info__test__pk"
     ).order_by("work_completed")
 
 
@@ -36,8 +36,8 @@ def tests_history(tests,unit,from_date,selected_related=None):
     for instance in all_instances:
         hist = (instance.work_completed,instance.value,instance.pass_fail,instance.status)
         try:
-            hist_dict[instance.test.pk].append(hist)
+            hist_dict[instance.unit_test_info.test.pk].append(hist)
         except KeyError:
-            hist_dict[instance.test.pk] = [hist]
+            hist_dict[instance.unit_test_info.test.pk] = [hist]
 
     return hist_dict

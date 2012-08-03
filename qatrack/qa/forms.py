@@ -42,7 +42,7 @@ class TestInstanceForm(forms.ModelForm):
     #---------------------------------------------------------------------------
     def setup_form(self):
         """do initialization once instance is set"""
-        if hasattr(self.instance,"test"):
+        if hasattr(self.instance,"unit_test_info"):
             self.set_value_widget()
             self.disable_read_only_fields()
             self.set_constant_values()
@@ -53,21 +53,21 @@ class TestInstanceForm(forms.ModelForm):
         #temp store attributes so they can be restored to reset widget
         attrs = self.fields["value"].widget.attrs
 
-        if self.instance.test.is_boolean():
+        if self.instance.unit_test_info.test.is_boolean():
             self.fields["value"].widget = RadioSelect(choices=BOOL_CHOICES)
-        elif self.instance.test.type == models.MULTIPLE_CHOICE:
-            self.fields["value"].widget = Select(choices=[("","")]+self.instance.test.get_choices())
+        elif self.instance.unit_test_info.test.type == models.MULTIPLE_CHOICE:
+            self.fields["value"].widget = Select(choices=[("","")]+self.instance.unit_test_info.test.get_choices())
         self.fields["value"].widget.attrs.update(attrs)
     #----------------------------------------------------------------------
     def disable_read_only_fields(self):
         """disable some fields for constant and composite tests"""
-        if self.instance.test.type in (models.CONSTANT,models.COMPOSITE,):
+        if self.instance.unit_test_info.test.type in (models.CONSTANT,models.COMPOSITE,):
             self.fields["value"].widget.attrs["readonly"] = "readonly"
     #----------------------------------------------------------------------
     def set_constant_values(self):
         """set values for constant tests"""
-        if self.instance.test.type == models.CONSTANT:
-            self.initial["value"] = self.instance.test.constant_value
+        if self.instance.unit_test_info.test.type == models.CONSTANT:
+            self.initial["value"] = self.instance.unit_test_info.test.constant_value
 
 #=======================================================================================
 BaseTestInstanceFormset = forms.formsets.formset_factory(TestInstanceForm,extra=0,can_delete=False)

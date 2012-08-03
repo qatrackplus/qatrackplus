@@ -23,13 +23,13 @@
         <input type="hidden" class="qa-tolerance act_high" value="{{tol.act_high}}"/>
         <input type="hidden" class="qa-tolerance-type" value="{{tol.type}}"/>
         <input type="hidden" class="qa-tolerance-pk" value="{{tol.pk}}"/>
-
-        <input type="hidden" class="qa-contextname" value="{{form.instance.test.slug}}"/>
+        <input type="hidden" class="qa-test-pk" value="{{form.instance.unit_test_info.test.pk}}"/>
+        <input type="hidden" class="qa-contextname" value="{{form.instance.unit_test_info.test.slug}}"/>
         {{form.test_list_instance.as_hidden}}
-		{{form.test.as_hidden}}
+		{{form.unit_test_info.as_hidden}}
 		{{form.reference.as_hidden}}
 		{{form.tolerance.as_hidden}}
-        {% with test=form.instance.test %}
+        {% with test=form.instance.unit_test_info.test %}
             <input type="hidden" class="qa-testtype" value="{{test.type}}"/>
             <td class="qa-name qa-showproc"><a href="#" class="revealprocedure" title="Show/hide procedure for this test">{{test.name}}</a></td>
             <td class="qa-category">{{test.category.name|title}}</td>
@@ -76,20 +76,20 @@
 <tr class="qa-procedure">
     <td colspan="8"  class="" >
 		<table>
-			{% if form.instance.test.procedure %}
+			{% if form.instance.unit_test_info.test.procedure %}
 			<tr>
 				<td>
 					<label class="label">Detailed procedure link:</label>
 				</td>
 				<td>
-					<a href="{{form.instance.test.procedure}}" class="revealprocedure" title="Show detailed procedure for this test" target="_blank">{{form.instance.test.name}}</a>
+					<a href="{{form.instance.unit_tset_info.test.procedure}}" class="revealprocedure" title="Show detailed procedure for this test" target="_blank">{{form.instance.unit_test_info.test.name}}</a>
 				</td>
 			</tr>
 			{% endif %}
 			<tr>
 				<td>
 					<textarea rows="5" disabled="disabled">
-				        {{form.instance.test.description}}
+				        {{form.instance.unit_test_info.test.description}}
 					</textarea>
 				</td>
 			</tr>
