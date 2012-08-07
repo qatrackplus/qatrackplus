@@ -49,12 +49,19 @@
                 </a>
                 <ul class="dropdown-menu">
                     <li>
-                        <a href="{% url  review %}">
+                        <a href="{% url  awaiting_review %}">
                             <i class="icon-check"></i>
-                            Review QA
+                            Awaiting Review
                             <span title="There are currently {{AWAITING_REVIEW}} QA Sessions waiting to be reviewed" class="label {% if AWAITING_REVIEW == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
                                 <span class="total-unreviewed-count">{{AWAITING_REVIEW}}</span>
                             </span>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="{% url  review %}">
+                            <i class="icon-check"></i>
+                            Review QA
                         </a>
                     </li>
                     <li><a href="{% url charts %}"><i class="icon-picture"></i>Trending</a></li>
@@ -73,7 +80,6 @@
 {% block extra_body %}
 	{% block end_body_script_base %}
 		<script src="{% static "data_tables/js/jquery.dataTables.min.js" %}"></script>
-		{# http://jquery-datatables-column-filter.googlecode.com/svn/trunk/index.html #}
 		<script src="{% static "data_tables/js/jquery.dataTables.columnFilter.js" %}"></script>
 		<script src="{% static "data_tables/js/DT_bootstrap.js" %}"></script>
 		<script src="{% static "data_tables/js/DT_sort.js" %}"></script>

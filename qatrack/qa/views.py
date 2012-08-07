@@ -517,6 +517,24 @@ class ChartView(TemplateView):
 
 
 #============================================================================
+class AwaitingReview(ListView):
+    """view for grouping all test lists with a certain frequency for all units"""
+    template_name = "awaiting_review.html"
+    model = models.TestListInstance
+    context_object_name = "test_list_instances"
+    #----------------------------------------------------------------------
+    def get_queryset(self):
+        qs = models.TestListInstance.objects.awaiting_review()
+        qs = qs.select_related(
+            "test_list__name",
+            "unit_test_collection__unit__name",
+            "unit_test_collection__frequency__name",
+        ).prefetch_related("testinstance_set")
+
+        return qs
+
+
+#============================================================================
 class ReviewView(ListView):
     """view for grouping all test lists with a certain frequency for all units"""
     template_name = "review_all.html"
@@ -524,17 +542,28 @@ class ReviewView(ListView):
     context_object_name = "unittestcollections"
 
     #----------------------------------------------------------------------
+    def get_queryset(self):
+        qs = super(ReviewView,self).get_queryset()
+        qs = qs.select_related(
+                "last_instance",
+                "frequency",
+                "unit__name",
+            ).prefetch_related(
+                "last_instance__testinstance_set",
+                "assigned_to",
+                "tests_object",
+            )
+        return qs
+    #----------------------------------------------------------------------
     def get_context_data(self,**kwargs):
         context = super(ReviewView,self).get_context_data(**kwargs)
 
-        requires_review = models.TestListInstance.objects.filter(testinstance__status__requires_review=True).distinct().select_related("test_list")
-        utcs = list(context["unittestcollections"])
+        requires_review = list(models.TestListInstance.objects.filter(
+            testinstance__status__requires_review=True
+        ).distinct().select_related("test_list"))
 
-        requires_reviews =[]
-        for utc in utcs:
-            requires_reviews.append(requires_review.filter(unit_test_collection=utc))
-
-        context["requires_reviews"] = requires_review
+        for utc in context["unittestcollections"]:
+            utc.requires_review = [x for x in requires_review if x.unit_test_collection==utc]
 
         return context
 #============================================================================

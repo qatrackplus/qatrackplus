@@ -1,0 +1,78 @@
+{% extends "site_base.html" %}
+
+{% load staticfiles %}
+{% load qa_tags %}
+
+
+{% block body %}
+    <div class="row-fluid">
+        <div class="span12">
+            <h2>QA Items Currently Awaiting Review</h2>
+        </div>
+    </div>
+
+    <div class="row-fluid" >
+        <div class="span12 container form-inline">
+			<table class="table table-bordered table-striped table-condensed ">
+
+				<thead>
+					{% include "awaiting_review_headers.html"%}
+					{% include "awaiting_review_headers.html"%}
+				</thead>
+				<tbody>
+
+				{% for instance in test_list_instances %}
+
+					<tr class="{% cycle 'odd' 'even' %} has-due-date">
+						{% with utc=instance.unit_test_collection %}
+							<td>{{utc.unit.name}}</td>
+							<td>{{utc.frequency.name}}</td>
+						{% endwith %}
+						<td><a href="#">{{instance.test_list.name}}</a></td>
+						<td>{{instance.work_completed}}</td>
+						<td class="pass_fail_status">{{instance|as_pass_fail_status}}</td>
+						<td class="pass_fail_status"><a href="#">Review</a></td>
+				   </tr>
+				{% endfor %}
+				</tbody>
+				<tfoot>
+					{% include "awaiting_review_headers.html"%}
+				</tfoot>
+			</table>
+		</div>
+	</div>
+
+{% endblock body %}
+
+{% block end_body_extra_script %}
+	<script>
+		$(document).ready(function(){
+			$(".table").dataTable( {
+				"sDom": "t<'row-fluid'<'span3'><'span3' l><'span6'p>>",
+				"bStateSave":false, //save filter/sort state between page loads
+				"bFilter":true,
+				"bPaginate": false,
+
+				aoColumns: [
+					null, //Unit
+					null, //Freq
+					null,  // Test list name
+					{"sType":"day-month-year-sort"}, //date completed
+					null, //status of test list tests,
+					null //review link
+				]
+
+			}).columnFilter({
+				sPlaceHolder: "head:after",
+				aoColumns: [
+					{type: "select"}, //Unit
+					{type: "select"}, //Freq
+					{type: "text" }, // Test list name
+					{type: "text" }, //date completed
+					null, //status of test list tests
+					null //review link
+				]
+			});
+		});
+	</script>
+{% endblock end_body_extra_script %}

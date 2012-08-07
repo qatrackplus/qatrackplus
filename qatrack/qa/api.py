@@ -125,11 +125,11 @@ class TestListResource(ModelResource):
 
 #============================================================================
 class TestInstanceResource(ModelResource):
-    test = tastypie.fields.ForeignKey("qatrack.qa.api.TestResource","test", full=True)
+    #test = tastypie.fields.ForeignKey("qatrack.qa.api.TestResource","test", full=True)
     reference = tastypie.fields.ForeignKey("qatrack.qa.api.ReferenceResource","reference", full=True,null=True)
     tolerance = tastypie.fields.ForeignKey("qatrack.qa.api.ToleranceResource","tolerance", full=True,null=True)
     status = tastypie.fields.ForeignKey("qatrack.qa.api.StatusResource","status",full=True)
-    unit = tastypie.fields.ForeignKey(UnitResource,"unit",full=True);
+    #unit = tastypie.fields.ForeignKey(UnitResource,"unit",full=True);
     reviewed_by = tastypie.fields.CharField()
     class Meta:
         queryset = models.TestInstance.objects.complete().all()
@@ -137,10 +137,10 @@ class TestInstanceResource(ModelResource):
         allowed_methods = ["get","patch","put"]
         always_return_data = True
         filtering = {
-            'test':ALL_WITH_RELATIONS,
+     #       'test':ALL_WITH_RELATIONS,
             'work_completed':ALL,
             'id':ALL,
-            'unit':ALL_WITH_RELATIONS,
+     #       'unit':ALL_WITH_RELATIONS,
             'status':ALL_WITH_RELATIONS,
         }
         ordering= ["work_completed"]
@@ -211,7 +211,7 @@ def serialize_testinstance(test_instance):
         'tolerance': {'type':None,'act_low':None,'tol_low':None,'tol_high':None,'act_high':None,},
         'user':None,
         'unit':None,
-        'test':None,
+        #'test':None,
         'reviewed_by':None
     }
     if ti.reference:
@@ -226,8 +226,8 @@ def serialize_testinstance(test_instance):
             'act_high':ti.tolerance.act_high,
         }
 
-    if ti.test:
-        info["test"] = ti.test.slug
+    #if ti.test:
+    #    info["test"] = ti.test.slug
 
     if ti.unit:
         info["unit"] = ti.unit.number
@@ -238,8 +238,8 @@ def serialize_testinstance(test_instance):
     if ti.reviewed_by:
         info["reviewed_by"] = ti.reviewed_by.username
 
-    if ti.test:
-        info["test"] = ti.test.slug
+    #if ti.test:
+    #    info["test"] = ti.test.slug
 
     return info
 
@@ -350,7 +350,8 @@ class TestResource(ModelResource):
 
 #============================================================================
 class TestListInstanceResource(ModelResource):
-    unit = tastypie.fields.ForeignKey(UnitResource,"unit",full=True)
+    #unit = tastypie.fields.ForeignKey(UnitResource,"unit",full=True)
+    #unit_test_collection = tastypie.fields.ForeignKey(UnitTestCollectionResource,"unit_test_collection",full=True)
     test_list = tastypie.fields.ForeignKey(TestListResource,"test_list",full=True)
     test_instances = tastypie.fields.ToManyField(TestInstanceResource,"testinstance_set",full=True)
     review_status = tastypie.fields.ListField()
@@ -358,7 +359,7 @@ class TestListInstanceResource(ModelResource):
     class Meta:
         queryset = models.TestListInstance.objects.complete().all()
         filtering = {
-            "unit":ALL_WITH_RELATIONS,
+#            "unit":ALL_WITH_RELATIONS,
             "test_list": ALL_WITH_RELATIONS,
             "id":ALL,
         }
@@ -370,12 +371,13 @@ class TestListInstanceResource(ModelResource):
         reviewed = bundle.obj.testinstance_set.exclude(status__requires_review=True).count()
         total = bundle.obj.testinstance_set.count()
         if total == reviewed:
+            review = ()
             #ugly
-            try:
-                test = bundle.obj.testinstance_set.latest()
-                review = (test.modified_by,test.modified)
-            except models.TestInstance.DoesNotExist:
-                review = ()
+            #try:
+            #    test = bundle.obj.testinstance_set.latest()
+            #    review = (test.modified_by,test.modified)
+            #except models.TestInstance.DoesNotExist:
+            #    review = ()
         else:
             review = ()
         return review

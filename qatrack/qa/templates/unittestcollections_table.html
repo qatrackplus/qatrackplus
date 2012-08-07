@@ -16,8 +16,7 @@
 	</thead>
 		<tbody>
 
-		{% for utc,requires_review in unittestcollections %}
-			<tr>{{utc}}</tr>
+		{% for utc in unittestcollections %}
 			{# display all individual test lists #}
 			<tr class="{% cycle 'odd' 'even' %} has-due-date">
 				<td>
@@ -46,7 +45,6 @@
 				{% if table_type = "review" %}
 					{% with utc.requires_review as unreviewed %}
 					<td class="review_status">
-						foo {{utc.requires_review}}
 						<span class="label unreviewed-count-wrapper {% if unreviewed %}label-warning{% else %}label-success{% endif %}">
 							<span class="unreviewed-count">{{unreviewed|length}}</span>
 							Unreviewed
