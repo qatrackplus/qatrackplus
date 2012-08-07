@@ -28,7 +28,7 @@
 							<td>{{utc.unit.name}}</td>
 							<td>{{utc.frequency.name}}</td>
 						{% endwith %}
-						<td><a href="#">{{instance.test_list.name}}</a></td>
+						<td><a href="{% url review_test_list_instance instance.pk %}">{{instance.test_list.name}}</a></td>
 						<td>{{instance.work_completed}}</td>
 						<td class="pass_fail_status">{{instance|as_pass_fail_status}}</td>
 						<td class="pass_fail_status"><a href="#">Review</a></td>
