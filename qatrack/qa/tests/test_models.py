@@ -240,7 +240,7 @@ result = foo + bar
     #---------------------------------------------------------------------------
     def test_valid_clean_slug(self):
         test= utils.create_test()
-        valid = ("foo", "f6oo", "foo6","_foo","foo_","foo_bar","")
+        valid = ("foo", "f6oo", "foo6","_foo","foo_","foo_bar")
         for v in valid:
             test.slug = v
             try:
