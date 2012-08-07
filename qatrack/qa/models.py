@@ -693,7 +693,7 @@ class UnitTestCollection(models.Model):
         return TestListInstance.objects.awaiting_review().filter(
             unit = self.unit,
             test_list__in = self.tests_object.all_lists()
-        )
+        ).select_related("test_list")
     #----------------------------------------------------------------------
     def unreviewed_test_instances(self):
         """return query set of all TestInstances for this object"""

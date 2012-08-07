@@ -16,29 +16,41 @@ tr.qa-comment td textarea{
 }
 
 .qa-showcmt{
-    max-width: 60px;
+    width: 80px;
+    overflow:hidden;
 }
 .qa-status{
     width:70px;
     overflow-x:hidden;
 }
 .qa-skip {
-    max-width:40px;
+    width:40px;
 }
 .qa-reference {
-    min-width:70px;
+    width:70px;
 }
 input.qa-input,
 select.qa-input{
-    max-width:85px;
+    width:85px;
     text-align:right;
+    height:15px;
+    padding:1px 1px;
+    margin-bottom:0px;
 }
+
+input[type=radio].qa-input{
+    width:15px;
+    text-align:right;
+    height:12px;
+    font-size:0.9em;
+    margin-bottom:3px;
+}
+
 .qa-table [class*="span"] {
     min-height:18px;
 }
-input.qa-input{
-    padding:1px 1px;
-    margin-bottom:0px;
+.qa-table label{
+    margin:0px;
 }
 .qa-table  tr:hover th {
   background-color: inherit;
@@ -47,30 +59,50 @@ input.qa-input{
 .qa-table td {
     font-size:0.9em;
     /*padding-bottom:2px;*/
-    padding:2px 3px;
+    padding:1px;
 
 }
 .qa-table td, .qa-table th{
     text-align:center;
 }
-.qa-table td.qa-value{
+.qa-table td.qa-value,
+.qa-table th.qa-value{
     width:100px;
+    text-align:center;
 }
 .qa-category{
-    min-width: 140px;
+    min-width: 180px;
 }
+th.qa-category div{
+/* hack to fix IE7 min-width*/
+    width:180px;
+    height:1px;
+}
+
 .qa-name {
     min-width:300px;
     text-align:left;
 }
+th.qa-name div{
+/* hack to fix IE7 min-width*/
+    width:300px;
+    height:1px;
+}
+
 #qa-form div.well{
     padding:4px;
     padding-bottom:0px;
     margin-bottom:0px;
 }
 .qa-history{
-    min-width:300px;
+    min-width:250px;
 }
+th.qa-history div{
+/* hack to fix IE7 min-width*/
+    width:220px;
+    height:1px;
+}
+
 .history-value {
     display:inline-block;
 

@@ -104,18 +104,18 @@
 
 			{{formset.management_form}}
 
-			<table class="qa-table table table-bordered table-striped table-condensed">
+			<table class="qa-table table table-bordered table-striped table-condensed" >
 				<thead>
 					<tr>
-						<th class="qa-showproc qa-name">Name</th>
+						<th class="qa-showproc qa-name">Name<div></div></th>
 						<th class="qa-category">Category</th>
-						<th class="qa-value">Value</th>
+						<th class="qa-value" width=100>Value</th>
 						<th class="qa-skip">Skip</th>
 						<th class="qa-status">Status</th>
 						<th class="qa-showcmt">Comment</th>
 						{% if include_admin %}
 							<th class="qa-reference">Reference</th>
-							<th class="qa-history">History</th>
+							<th class="qa-history">History<div></div></th>
 						{% endif %}
 					</tr>
 				</thead>
