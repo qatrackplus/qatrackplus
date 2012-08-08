@@ -5,7 +5,7 @@ from django.forms.models import inlineformset_factory
 from django.http import HttpResponse,HttpResponseRedirect, Http404
 from django.shortcuts import get_object_or_404
 from django.core.urlresolvers import reverse
-from django.views.generic import ListView, FormView, View, TemplateView, CreateView, DetailView
+from django.views.generic import ListView, UpdateView, View, TemplateView, CreateView, DetailView
 from django.utils.translation import ugettext as _
 from django.utils import timezone
 from qatrack.qa import models,utils
@@ -534,8 +534,9 @@ class AwaitingReview(ListView):
         return qs
 
 #============================================================================
-class ReviewTestListInstance(DetailView):
+class ReviewTestListInstance(UpdateView):
     model = models.TestListInstance
+    form_class = forms.TestListInstanceForm
     template_name = "review_test_list_instance.html"
 
 
