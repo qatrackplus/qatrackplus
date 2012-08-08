@@ -452,6 +452,49 @@ class PerformQAView(CreateView):
         }
         return reverse("qa_by_frequency_unit",kwargs=kwargs)
 
+#============================================================================
+class ReviewTestListInstance(UpdateView):
+    model = models.TestListInstance
+    form_class = forms.TestListInstanceForm
+    template_name = "review_test_list_instance.html"
+    
+    #---------------------------------------------------------------------------
+    def create_formset_class(self):
+        return inlineformset_factory(
+            models.TestListInstance,
+            models.TestInstance,
+            form=forms.TestInstanceForm,
+            formset=forms.BaseTestInstanceFormset,
+            extra = len(self.object.testinstance_set.all()),
+            can_delete=False
+        )
+
+    #----------------------------------------------------------------------
+    def get_context_data(self,**kwargs):
+
+        context = super(ReviewTestListInstance,self).get_context_data(**kwargs)
+        self.test_instances = list(self.object.testinstance_set.all())
+        TestInstanceFormset = self.create_formset_class()
+
+
+        if self.request.method == "POST":
+            formset = TestInstanceFormset(self.request.POST,self.request.FILES,)
+        else:
+            formset = TestInstanceFormset()
+            for subform, ti in zip(formset.forms,self.test_instances):
+                subform.initial = forms.model_to_dict(ti)
+
+        for subform, ti in zip(formset.forms,self.test_instances):
+            subform.instance = ti
+            subform.setup_form()
+            subform.set_values_from_instance()
+            for field in ("reference","tolerance","unit_test_info","comment","skipped"):
+                subform.fields[field].widget = forms.forms.HiddenInput()
+            
+            
+        context["formset"] = formset
+
+        return context
 
 #============================================================================
 class UnitFrequencyListView(ListView):
@@ -533,11 +576,6 @@ class AwaitingReview(ListView):
 
         return qs
 
-#============================================================================
-class ReviewTestListInstance(UpdateView):
-    model = models.TestListInstance
-    form_class = forms.TestListInstanceForm
-    template_name = "review_test_list_instance.html"
 
 
 #============================================================================

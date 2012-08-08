@@ -68,6 +68,10 @@ class TestInstanceForm(forms.ModelForm):
         """set values for constant tests"""
         if self.instance.unit_test_info.test.type == models.CONSTANT:
             self.initial["value"] = self.instance.unit_test_info.test.constant_value
+    #---------------------------------------------------------------------------
+    def set_values_from_instance(self):
+        if self.instance.unit_test_info.test.type in (models.BOOLEAN,models.MULTIPLE_CHOICE):
+            self.initial["value"] = int(self.instance.value)
 
 #=======================================================================================
 BaseTestInstanceFormset = forms.formsets.formset_factory(TestInstanceForm,extra=0,can_delete=False)
