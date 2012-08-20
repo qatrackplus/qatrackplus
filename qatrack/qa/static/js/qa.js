@@ -306,18 +306,25 @@ $(document).ready(function(){
         //update the link for user to change cycles
         $("#cycle-day").change(set_cycle_link);
 
-        //prevent form submission when user hits enter key
-        $(that).on("keypress","input, select", function(e) {
+        //allow arrow key and enter navigation
+        $(that).on("keydown","input, select", function(e) {
+
+            var idx = user_inputs.index(this);
 
             //rather than submitting form on enter, move to next value
-            if (e.keyCode == 13) {
-
-                var idx = user_inputs.index(this);
+            if (e.which == QAUtils.KC_ENTER  || e.which == QAUtils.KC_DOWN || e.which == QAUtils.KC_RIGHT ) {
 
                 if (idx == user_inputs.length - 1) {
                     user_inputs.first().focus();
                 } else {
                     user_inputs[idx+1].focus();
+                }
+                return false;
+            }else if (e.which == QAUtils.KC_UP || e.which == QAUtils.KC_LEFT ){
+                if (idx == 0) {
+                    user_inputs.last().focus();
+                } else {
+                    user_inputs[idx-1].focus();
                 }
                 return false;
             }

@@ -34,6 +34,11 @@ select.qa-input{
     margin-bottom:0px;
 }
 
+input[disabled].qa-input, input[readonly].qa-input {
+    background-color: #EEB;
+    font-weight:600;
+}
+
 input[type=radio].qa-input{
     width:15px;
     text-align:right;

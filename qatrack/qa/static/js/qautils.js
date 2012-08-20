@@ -58,6 +58,12 @@ var QAUtils = new function() {
 	this.STATUSES = {};
 
 
+	this.KC_ENTER = 13;
+	this.KC_LEFT = 37;
+	this.KC_UP = 38;
+	this.KC_RIGHT = 39;
+	this.KC_DOWN = 40;
+
     /***************************************************************/
     /* Tolerance functions
     value is floating point number to be tested
