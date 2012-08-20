@@ -60,7 +60,7 @@
 			</td>
 			<td class="qa-history">
 				{% for d,v,pf,s in form.history %}
-					<span class="label {{pf}} history-value" title="{{d}} - {{s}}">{{v|floatformat:-3}}</span>
+					<span class="label {{pf}} history-value" title="{{d}} - {{s}}">{{v|scientificformat}}</span>
 				{% endfor %}
 			</td>
         {% endif %}

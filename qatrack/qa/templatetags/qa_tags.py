@@ -1,6 +1,9 @@
 from django.template import Context
 from django.template.loader import get_template
 from django import template
+from django.utils.safestring import mark_safe
+from django.utils import formats
+
 import qatrack.qa.models as models
 register = template.Library()
 
@@ -24,10 +27,10 @@ def as_unittestcollections_table(unit_lists, table_type="datatable"):
         "unit__name",
     ).prefetch_related(
         "last_instance__testinstance_set",
-        "assigned_to",        
-        "tests_object",        
+        "assigned_to",
+        "tests_object",
     )
-    
+
     c = Context({
         "unittestcollections":unit_lists,
         "filter_table":filter_table,
@@ -114,7 +117,7 @@ def scientificformat(text):
         # for 'normal' sized numbers
         if d.is_zero():
             number = u'0'
-        elif ( (d > Decimal('-10000') and d < Decimal('-0.01')) or ( d > Decimal('0.01') and d < Decimal('10000')) ) :
+        elif  (Decimal('-10000') < d < Decimal('-0.01')) or (Decimal('0.01') < d < Decimal('10000')):
             # this is what the original floatformat() function does
             sign, digits, exponent = d.quantize(Decimal('.001'), ROUND_HALF_UP).as_tuple()
             digits = [unicode(digit) for digit in reversed(digits)]
@@ -123,7 +126,7 @@ def scientificformat(text):
             digits.insert(-exponent, u'.')
             if sign:
                 digits.append(u'-')
-            number = u''.join(reversed(digits))
+            number = u''.join(reversed(digits)).rstrip("0")
         else:
             # for very small and very large numbers
             sign, digits, exponent = d.as_tuple()
