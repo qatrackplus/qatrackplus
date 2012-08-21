@@ -33,6 +33,10 @@ select.qa-input{
     padding:1px 1px;
     margin-bottom:0px;
 }
+select.qa-input{
+    height:20px;
+}
+
 
 input[disabled].qa-input, input[readonly].qa-input {
     background-color: #EEB;
