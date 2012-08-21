@@ -1,10 +1,6 @@
 {% load staticfiles %}
 {% load qa_tags %}
-{% if not unittestcollections %}
-<table class="table table-bordered table-striped table-condensed">
-	<tbody><tr><td><em>No test lists to display</em></td></tr></tbody>
-</table>
-{% else %}
+
 
 <table class="table table-bordered table-striped table-condensed {% if filter_table %}test-collection-table{% endif %} {{table_type}}-table">
 
@@ -68,6 +64,8 @@
 					<td><a href="{%url perform_qa utc.pk%}?day=next">Perform</a></td>
 				{% endif %}
 		   </tr>
+		{% empty %}
+			<tr><td><em>No test lists to display</em></td></tr>
 		{% endfor %}
 	</tbody>
 	<tfoot>
@@ -80,4 +78,3 @@
 		<script src="{% static "js/jquery.sparkline.min.js" %}"></script>
 	{% endif %}
 </table>
-{% endif %}
