@@ -29,7 +29,7 @@ def tests_history(tests,unit,from_date,selected_related=None):
     ).select_related(
         "status",
         "test__pk"
-    ).order_by("work_completed")
+    ).order_by("-work_completed")
 
 
     hist_dict = {}

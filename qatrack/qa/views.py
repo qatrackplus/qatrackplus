@@ -248,25 +248,6 @@ class PerformQAView(CreateView):
     template_name = "perform_test_list.html"
     form_class = forms.TestListInstanceForm
 
-    TEST_LIST_TO_TEST_TRANSFER_FIELDS = (
-        "unit",
-        "created_by",
-        "modified_by",
-        "work_started",
-        "work_completed",
-        "in_progress"
-    )
-
-    #----------------------------------------------------------------------
-    def create_new_test_list_instance(self):
-        """generate a new test list instance for the user to fill in values for"""
-        self.test_list_instance = models.TestListInstance(
-            test_list   = self.test_list,
-            unit        = self.unit_test_col.unit,
-            created_by  = self.request.user,
-            modified_by = self.request.user,
-        )
-
     #----------------------------------------------------------------------
     def set_test_lists(self,current_day):
 
@@ -283,15 +264,10 @@ class PerformQAView(CreateView):
             self.all_tests.extend(tests)
     #----------------------------------------------------------------------
     def set_unit_test_collection(self):
-
-        q = models.UnitTestCollection.objects.select_related(
-            "unit",
-            "frequency",
-        ).filter(pk=self.kwargs["pk"])
-        if q.count() == 0:
-            raise Http404
-
-        self.unit_test_col = q[0]
+        self.unit_test_col = get_object_or_404(
+            models.UnitTestCollection.objects.select_related("unit","frequency"),
+            pk=self.kwargs["pk"]
+        )
     #----------------------------------------------------------------------
     def set_actual_day(self):
         cycle_membership = models.TestListCycleMembership.objects.filter(
@@ -302,17 +278,9 @@ class PerformQAView(CreateView):
         self.actual_day = 0
         if cycle_membership:
             self.actual_day = cycle_membership[0].order
-
     #----------------------------------------------------------------------
-    def add_test_instances(self):
-        """create new test instances"""
-
-        default_status = models.TestInstanceStatus.objects.default()
-
-        from_date = timezone.make_aware(timezone.datetime.now() - timezone.timedelta(days=10*self.unit_test_col.frequency.overdue_interval),timezone.get_current_timezone())
-        history = utils.tests_history(self.all_tests,self.unit_test_col.unit,from_date)
-
-        utis = models.UnitTestInfo.objects.filter(
+    def set_unit_test_infos(self):
+        self.unit_test_infos = models.UnitTestInfo.objects.filter(
             unit = self.unit_test_col.unit,
             test__in = self.all_tests,
             frequency=self.unit_test_col.frequency,
@@ -325,45 +293,21 @@ class PerformQAView(CreateView):
             "unit",
         )
 
-        uti_d = {}
-
-        for uti in utis:
-            ti = models.TestInstance(
-                test = uti.test,
-                reference = uti.reference,
-                tolerance = uti.tolerance,
-                status = default_status,
-                unit = self.unit_test_col.unit,
-                created_by = self.request.user,
-                modified_by = self.request.user,
-                in_progress = self.test_list_instance.in_progress,
-                test_list_instance=self.test_list_instance
-            )
-
-            uti_d[uti.test.pk] = ti
-
-        #reorder in order of tests rather than order utis were returned from db
-        self.test_instances = [(uti_d[x.pk],history.get(x.pk,[])[:5]) for x in self.all_tests]
-
+        self.add_histories()
     #----------------------------------------------------------------------
-    def create_formset_class(self):
-        return inlineformset_factory(
-            models.TestListInstance,
-            models.TestInstance,
-            form=forms.TestInstanceForm,
-            formset=forms.BaseTestInstanceFormset,
-            extra = len(self.all_tests)
-        )
+    def add_histories(self):
+        """paste historical values onto unit test infos"""
 
-    #----------------------------------------------------------------------
-    def copy_values(self,test_list_instance,test_instance):
-        for field in self.TEST_LIST_TO_TEST_TRANSFER_FIELDS:
-            setattr(test_instance,field,getattr(test_list_instance,field))
+        from_date = timezone.make_aware(timezone.datetime.now() - timezone.timedelta(days=10*self.unit_test_col.frequency.overdue_interval),timezone.get_current_timezone())
+        histories = utils.tests_history(self.all_tests,self.unit_test_col.unit,from_date)
+        for uti in self.unit_test_infos:
+            uti.history = histories.get(uti.test.pk,[])[:5]
     #----------------------------------------------------------------------
     def form_valid(self,form):
         context = self.get_context_data()
         formset = context["formset"]
         if formset.is_valid():
+
             self.object = form.save(commit=False)
             self.object.test_list = self.test_list
             self.object.unit = self.unit_test_col.unit
@@ -371,27 +315,41 @@ class PerformQAView(CreateView):
             self.object.modified_by= self.request.user
             if self.object.work_completed is None:
                 self.object.work_completed = timezone.now()
+
             self.object.save()
 
-            status = models.TestInstanceStatus.objects.default()
+            status=models.TestInstanceStatus.objects.default()
             if form.fields.has_key("status"):
-                status_pk = form["status"].value()
-                if status_pk:
-                    status = models.TestInstanceStatus.objects.get(pk=status_pk)
+                val = form["status"].value()
+                if val is not None:
+                    status = models.TestInstanceStatus.objects.get(pk=val)
 
             for ti_form in formset:
-                ti_form.instance.status = status
-                ti_form.instance.test_list_instance = self.object
-                self.copy_values(self.object,ti_form.instance)
-                ti_form.save()
-
+                ti = models.TestInstance(
+                    value=ti_form.cleaned_data["value"],
+                    skipped=ti_form.cleaned_data["skipped"],
+                    comment=ti_form.cleaned_data["comment"],
+                    test = ti_form.unit_test_info.test,
+                    reference = ti_form.unit_test_info.reference,
+                    tolerance = ti_form.unit_test_info.tolerance,
+                    status = status,
+                    unit = self.unit_test_col.unit,
+                    created_by = self.request.user,
+                    modified_by = self.request.user,
+                    in_progress = self.object.in_progress,
+                    test_list_instance=self.object,
+                    work_started=self.object.work_started,
+                    work_completed=self.object.work_completed,
+                )
+                ti.save()
 
             #let user know request succeeded and return to unit list
             messages.success(self.request,_("Successfully submitted %s "% self.object.test_list.name))
 
             return HttpResponseRedirect(self.get_success_url())
         else:
-            return self.render_to_response(self.get_context_data(form=form))
+            context["form"] = form
+            return self.render_to_response(context)
 
     #----------------------------------------------------------------------
     def get_context_data(self,**kwargs):
@@ -408,30 +366,17 @@ class PerformQAView(CreateView):
         self.set_test_lists(self.get_requested_day_to_perform())
         self.set_actual_day()
         self.set_all_tests()
-        self.create_new_test_list_instance()
-        self.add_test_instances()
-
-
-        TestInstanceFormset = self.create_formset_class()
-
+        self.set_unit_test_infos()
 
         if self.request.method == "POST":
-            formset = TestInstanceFormset(self.request.POST,self.request.FILES,)
+            formset = forms.TestInstanceFormSet(self.request.POST,self.request.FILES,unit_test_infos=self.unit_test_infos)
         else:
-            formset = TestInstanceFormset()
-            for subform, (ti,hist) in zip(formset.forms,self.test_instances):
-                subform.initial = forms.model_to_dict(ti)
-
-        for subform, (ti,hist) in zip(formset.forms,self.test_instances):
-            subform.instance = ti
-            subform.history = hist
-            subform.setup_form()
-
+            formset = forms.TestInstanceFormSet(unit_test_infos=self.unit_test_infos)
 
 
         context["formset"] = formset
         context["include_admin"] = self.request.user.is_staff
-        context['categories'] = set([x[0].test.category for x in self.test_instances])
+        context['categories'] = set([x.test.category for x in self.unit_test_infos])
         context['current_day'] = self.actual_day+1
         context['days'] = range(1,len(self.unit_test_col.tests_object)+1)
         context["unit_test_collection"] = self.unit_test_col
