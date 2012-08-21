@@ -25,6 +25,7 @@ def as_unittestcollections_table(unit_lists, table_type="datatable"):
         "last_instance",
         "frequency",
         "unit__name",
+        "assigned_to__name",
     ).prefetch_related(
         "last_instance__testinstance_set",
         "assigned_to",
