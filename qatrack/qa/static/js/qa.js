@@ -345,6 +345,8 @@ $(document).ready(function(){
         $(".qa-skip input").click(function(){
             if ($(this).is(':checked')){
                 $(this).parent().parent().next().show(600);
+            }else{
+               $(this).parent().parent().next().hide(600);
             }
         });
 
