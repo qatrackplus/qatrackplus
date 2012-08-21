@@ -186,8 +186,7 @@ class TestInstanceStatus(models.Model):
 
     #---------------------------------------------------------------------------
     def __unicode__(self):
-        """more helpful interactive display name"""
-        return "<Status(%s)>"%self.name
+        return self.name
 
 
 

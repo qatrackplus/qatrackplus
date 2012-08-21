@@ -382,7 +382,7 @@ class TestPerformQA(TestCase):
             "work_completed":"11-07-2012 00:10",
             "status":self.status.pk,
             "form-TOTAL_FORMS":len(self.tests),
-            "form-INITIAL_FORMS":"0",
+            "form-INITIAL_FORMS":len(self.tests),
             "form-MAX_NUM_FORMS":"",
         }
 
@@ -403,7 +403,7 @@ class TestPerformQA(TestCase):
             "work_completed":"11-07-2012 00:10",
             "status":self.status.pk,
             "form-TOTAL_FORMS":len(self.tests),
-            "form-INITIAL_FORMS":"0",
+            "form-INITIAL_FORMS":len(self.tests),
             "form-MAX_NUM_FORMS":"",
         }
 

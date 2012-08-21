@@ -4,48 +4,45 @@ from django.forms.models import inlineformset_factory, modelformset_factory, mod
 from django.forms.widgets import RadioSelect, Select
 from django.contrib import messages
 from django.utils import timezone
+from django.utils.translation import ugettext as _
 import qatrack.settings as settings
 
 import models
 
 BOOL_CHOICES = [(0,"No"),(1,"Yes")]
 
-#=======================================================================================
-class TestInstanceForm(forms.ModelForm):
-    """Model form for use in a formset of tests within a testlistinstance"""
-
-    value = forms.FloatField(required=False, widget=forms.widgets.TextInput(attrs={"class":"qa-input"}))
-    class Meta:
-        model = models.TestInstance
-        exclude = ("work_completed","status")
+#============================================================================
+class TestInstanceForm(forms.Form):
+    value = forms.FloatField(required=False,widget=forms.widgets.TextInput(attrs={"class":"qa-input"}))
+    skipped = forms.BooleanField(required=False,help_text=_("Was this test skipped for some reason (add comment)"))
+    comment = forms.CharField(widget=forms.Textarea,required=False,help_text=_("Show or hide comment field"))
 
     #----------------------------------------------------------------------
     def clean(self):
         """do some custom form validation"""
 
         cleaned_data = super(TestInstanceForm,self).clean()
-        skipped = cleaned_data["skipped"]
-        comment = cleaned_data["comment"]
+        skipped = cleaned_data.get("skipped")
+        comment = cleaned_data.get("comment")
+        value = cleaned_data.get("value")
 
         if skipped and not comment:
             self._errors["skipped"] = self.error_class(["Please add comment when skipping"])
             del cleaned_data["skipped"]
 
         #force user to enter value unless skipping test
-        if "value" in cleaned_data:
-            value = cleaned_data["value"]
-            if value is None and not skipped:
-                self._errors["value"] = self.error_class(["Value required"])
-                del cleaned_data["value"]
+        if value is None and not skipped:
+            self._errors["value"] = self.error_class(["Value required"])
+            del cleaned_data["value"]
 
         return cleaned_data
-    #---------------------------------------------------------------------------
-    def setup_form(self):
-        """do initialization once instance is set"""
-        if hasattr(self.instance,"unit_test_info"):
-            self.set_value_widget()
-            self.disable_read_only_fields()
-            self.set_constant_values()
+
+    #----------------------------------------------------------------------
+    def set_unit_test_info(self,unit_test_info):
+        self.unit_test_info = unit_test_info
+        self.set_value_widget()
+        self.disable_read_only_fields()
+
     #---------------------------------------------------------------------------
     def set_value_widget(self):
         """add custom widget for boolean values (after form has been """
@@ -53,28 +50,35 @@ class TestInstanceForm(forms.ModelForm):
         #temp store attributes so they can be restored to reset widget
         attrs = self.fields["value"].widget.attrs
 
-        if self.instance.unit_test_info.test.is_boolean():
+        if self.unit_test_info.test.is_boolean():
             self.fields["value"].widget = RadioSelect(choices=BOOL_CHOICES)
-        elif self.instance.unit_test_info.test.type == models.MULTIPLE_CHOICE:
-            self.fields["value"].widget = Select(choices=[("","")]+self.instance.unit_test_info.test.get_choices())
+        elif self.unit_test_info.test.type == models.MULTIPLE_CHOICE:
+            self.fields["value"].widget = Select(choices=[("","")]+self.unit_test_info.test.get_choices())
         self.fields["value"].widget.attrs.update(attrs)
     #----------------------------------------------------------------------
     def disable_read_only_fields(self):
         """disable some fields for constant and composite tests"""
-        if self.instance.unit_test_info.test.type in (models.CONSTANT,models.COMPOSITE,):
+        if self.unit_test_info.test.type in (models.CONSTANT,models.COMPOSITE,):
             self.fields["value"].widget.attrs["readonly"] = "readonly"
-    #----------------------------------------------------------------------
-    def set_constant_values(self):
-        """set values for constant tests"""
-        if self.instance.unit_test_info.test.type == models.CONSTANT:
-            self.initial["value"] = self.instance.unit_test_info.test.constant_value
-    #---------------------------------------------------------------------------
-    def set_values_from_instance(self):
-        if self.instance.unit_test_info.test.type in (models.BOOLEAN,models.MULTIPLE_CHOICE):
-            self.initial["value"] = int(self.instance.value)
 
-#=======================================================================================
-BaseTestInstanceFormset = forms.formsets.formset_factory(TestInstanceForm,extra=0,can_delete=False)
+BaseTestInstanceFormSet = forms.formsets.formset_factory(TestInstanceForm,extra=0)
+class TestInstanceFormSet(BaseTestInstanceFormSet):
+    #----------------------------------------------------------------------
+    def __init__(self,*args,**kwargs):
+        unit_test_infos = kwargs.pop("unit_test_infos")
+        initial = []
+        for uti in unit_test_infos:
+            init = {"value":None}
+            if uti.test.type == models.CONSTANT:
+                init["value"] = uti.test.constant_value
+            initial.append(init)
+        kwargs.update(initial=initial)
+        super(BaseTestInstanceFormSet,self).__init__(*args,**kwargs)
+
+        for form,uti in zip(self.forms,unit_test_infos):
+            form.set_unit_test_info(uti)
+
+
 
 #============================================================================
 class TestListInstanceForm(forms.ModelForm):
@@ -101,5 +105,4 @@ class TestListInstanceForm(forms.ModelForm):
         self.fields["work_completed"].initial = timezone.now()
         self.fields["work_completed"].help_text = settings.DATETIME_HELP
         self.fields["work_completed"].localize = True
-
 
