@@ -238,7 +238,9 @@ class ChooseUnit(ListView):
     context_object_name = "units"
     template_name = "choose_unit.html"
 
-
+    #---------------------------------------------------------------------------
+    def get_queryset(self):
+        return Unit.objects.all().select_related("type")
 
 #============================================================================
 class PerformQAView(CreateView):
