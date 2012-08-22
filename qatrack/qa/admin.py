@@ -65,10 +65,12 @@ class TestInfoForm(forms.ModelForm):
 
             if tt == models.BOOLEAN:
                 self.fields["reference_value"].widget = forms.Select(choices=[("","---"),(0,"No"),(1,"Yes")])
-
+                self.fields["tolerance"].widget = forms.HiddenInput()
+                #self.fields["tolerance"].widget.attrs["readonly"] = "readonly"# = forms.HiddenInput()
+                
             elif tt == models.MULTIPLE_CHOICE:
                 self.fields["reference_value"].widget = forms.Select(choices=[("","---")]+self.instance.test.get_choices(),)
-
+                self.fields["tolerance"].widget.attrs["readonly"] = "readonly"# = forms.HiddenInput()
             if self.instance.reference:
                 if tt in (models.BOOLEAN,models.MULTIPLE_CHOICE):
                     val = int(self.instance.reference.value)
