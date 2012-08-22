@@ -1026,6 +1026,10 @@ class TestListInstance(models.Model):
             return statuses
         return ", ".join(["%d %s" %(len(s),d) for _,d,s in statuses])
     #----------------------------------------------------------------------
+    def duration(self):
+        """return timedelta of time from start to completion"""
+        return self.work_completed-self.work_started
+    #----------------------------------------------------------------------
     def status(self,formatted=False):
         """return string with review status of this qa instance"""
         instances = list(self.testinstance_set.all())
