@@ -4,6 +4,9 @@ from django import template
 from django.utils.safestring import mark_safe
 from django.utils import formats
 
+from decimal import Decimal, ROUND_HALF_UP
+from django.utils.encoding import force_unicode
+
 import qatrack.qa.models as models
 register = template.Library()
 
@@ -80,8 +83,6 @@ pos_inf = 1e200 * 1e200
 neg_inf = -1e200 * 1e200
 nan = (1e200 * 1e200) / (1e200 * 1e200)
 special_floats = [str(pos_inf), str(neg_inf), str(nan)]
-from decimal import Decimal
-from django.utils.encoding import force_unicode
 
 @register.filter
 def scientificformat(text):
@@ -128,6 +129,7 @@ def scientificformat(text):
             if sign:
                 digits.append(u'-')
             number = u''.join(reversed(digits)).rstrip("0")
+
         else:
             # for very small and very large numbers
             sign, digits, exponent = d.as_tuple()
