@@ -29,8 +29,8 @@ input.qa-input,
 select.qa-input{
     width:85px;
     text-align:right;
-    height:15px;
-    padding:1px 1px;
+    height:16px;
+    padding:1px 4px;
     margin-bottom:0px;
 }
 select.qa-input{
@@ -40,7 +40,7 @@ select.qa-input{
 
 input[disabled].qa-input, input[readonly].qa-input {
     background-color: #EEB;
-    font-weight:600;
+    font-weight:550;
 }
 
 input[type=radio].qa-input{
@@ -108,12 +108,16 @@ th.qa-history div{
     height:1px;
 }
 
-.history-value {
+.history-value,.history-label {
     display:inline-block;
-
-    width: 40px;
+    width: 42px;
     margin-right: 1px; /*fix ie inline block bug*/
 }
+
+.history-label {
+    font-size:0.8em;
+}
+
 
 /**************************************************/
 /* Trending                                       */

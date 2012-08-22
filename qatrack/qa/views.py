@@ -300,8 +300,23 @@ class PerformQAView(CreateView):
 
         from_date = timezone.make_aware(timezone.datetime.now() - timezone.timedelta(days=10*self.unit_test_col.frequency.overdue_interval),timezone.get_current_timezone())
         histories = utils.tests_history(self.all_tests,self.unit_test_col.unit,from_date)
+        dates = set()
         for uti in self.unit_test_infos:
             uti.history = histories.get(uti.test.pk,[])[:5]
+            dates |=  set([x[0] for x in uti.history])
+            
+        self.history_dates = list(sorted(dates,reverse=True))[:5]
+        for uti in self.unit_test_infos:
+            new_history = []
+            for d in self.history_dates:
+                hist = [None]*4
+                for h in uti.history:
+                    if h[0] == d:
+                        hist = h
+                        break
+                new_history.append(hist)
+            uti.history = new_history
+                        
     #----------------------------------------------------------------------
     def form_valid(self,form):
         context = self.get_context_data()
@@ -375,6 +390,7 @@ class PerformQAView(CreateView):
 
 
         context["formset"] = formset
+        context["history_dates"] = self.history_dates
         context["include_admin"] = self.request.user.is_staff
         context['categories'] = set([x.test.category for x in self.unit_test_infos])
         context['current_day'] = self.actual_day+1

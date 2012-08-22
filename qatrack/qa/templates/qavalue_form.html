@@ -61,7 +61,11 @@
 			</td>
 			<td class="qa-history">
 				{% for d,v,pf,s in uti.history %}
+					{% if d and pf != "not_done"%}
 					<span class="label {{pf}} history-value" title="{{d}} - {{s}}">{{v|scientificformat}}</span>
+					{% else %}
+						<span class="label history-value" title="N/A">N/A</span>					
+					{% endif %}
 				{% endfor %}
 			</td>
         {% endif %}

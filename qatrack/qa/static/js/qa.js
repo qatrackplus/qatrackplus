@@ -296,6 +296,9 @@ $(document).ready(function(){
             //only allow numerical characters on input
 
             this.value = this.value.replace(QAUtils.NUMERIC_WHITELIST_REGEX,'');
+            if (this.value[0] === ".") {
+                this.value = "0" + this.value;
+            }
             check_test_status($(this));
             calculate_composites();
         });
