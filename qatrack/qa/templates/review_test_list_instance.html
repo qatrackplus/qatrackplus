@@ -5,9 +5,12 @@
 {% block body %}
 
     <h2>{{object.test_list.name}} Details</h2>
-    
+
     {{form}}
-    {{formset}}
-        
-    
+
+
+    {% for ti_form in formset %}
+    {{ti_form}}
+        {{ti_form.instance.reference}}
+    {% endfor %}
 {% endblock %}

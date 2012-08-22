@@ -111,6 +111,19 @@ class CreateTestListInstanceForm(forms.ModelForm):
         self.fields["work_started"].initial = timezone.now()
 
         self.fields["status"].widget.attrs["class"] = "input-medium"
+
 #============================================================================
 class UpdateTestListInstanceForm(CreateTestListInstanceForm):
     """"""
+
+
+
+#============================================================================
+class UpdateTestInstanceForm(forms.ModelForm):
+
+    #============================================================================
+    class Meta:
+        model = models.TestInstance
+
+
+UpdateTestInstanceFormset = inlineformset_factory(models.TestListInstance,models.TestInstance,form=UpdateTestInstanceForm,extra=0,can_delete=False)

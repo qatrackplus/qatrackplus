@@ -429,23 +429,19 @@ class ReviewTestListInstance(UpdateView):
     def get_context_data(self,**kwargs):
 
         context = super(ReviewTestListInstance,self).get_context_data(**kwargs)
-        self.test_instances = list(self.object.testinstance_set.all())
-        TestInstanceFormset = self.create_formset_class()
 
+        #we need to override the default queryset for the formset so that we can pull
+        #in all the reference/tolerance data without the ORM generating 100's of queries
+        qs = models.TestInstance.objects.filter(
+            test_list_instance=self.object
+        ).select_related(
+            "reference","tolerance","status"
+        )
 
         if self.request.method == "POST":
-            formset = TestInstanceFormset(self.request.POST,self.request.FILES,)
+            formset = forms.UpdateTestInstanceFormset(self.request.POST,self.request.FILES,instance=self.get_object(),queryset=qs)
         else:
-            formset = TestInstanceFormset()
-            for subform, ti in zip(formset.forms,self.test_instances):
-                subform.initial = forms.model_to_dict(ti)
-
-        for subform, ti in zip(formset.forms,self.test_instances):
-            subform.instance = ti
-            subform.setup_form()
-            subform.set_values_from_instance()
-            for field in ("reference","tolerance","unit_test_info","comment","skipped"):
-                subform.fields[field].widget = forms.forms.HiddenInput()
+            formset = forms.UpdateTestInstanceFormset(instance=self.get_object(),queryset=qs)
 
 
         context["formset"] = formset

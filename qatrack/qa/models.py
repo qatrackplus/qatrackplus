@@ -881,10 +881,10 @@ class TestInstance(models.Model):
 
 
     #reference used
-    reference = models.ForeignKey(Reference,null=True, blank=True)
-    tolerance = models.ForeignKey(Tolerance, null=True, blank=True)
+    reference = models.ForeignKey(Reference,null=True, blank=True,editable=False)
+    tolerance = models.ForeignKey(Tolerance, null=True, blank=True,editable=False)
 
-    unit_test_info = models.ForeignKey(UnitTestInfo)
+    unit_test_info = models.ForeignKey(UnitTestInfo,editable=False)
 
     #keep track if this test was performed as part of a test list
     test_list_instance = models.ForeignKey("TestListInstance",editable=False, null=True, blank=True)
