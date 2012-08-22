@@ -59,17 +59,17 @@ function calculate_composites(){
     }
 
     var data = {
-            qavalues:JSON.stringify(validation_data),
-            composite_ids:JSON.stringify(composite_ids)
-        };
+        qavalues:JSON.stringify(validation_data),
+        composite_ids:JSON.stringify(composite_ids)
+    };
 
     QAUtils.call_api("/qa/composite/","POST",data,function(data){
-            if (data.success){
-                $.each(data.results,function(name,result){
-                    set_value_by_name(name,result.value);
-                });
-            }
-        });
+        if (data.success){
+            $.each(data.results,function(name,result){
+                set_value_by_name(name,result.value);
+            });
+        }
+    });
 }
 
 /***************************************************************/
