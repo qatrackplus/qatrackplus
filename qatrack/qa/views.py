@@ -198,38 +198,39 @@ class CompositeCalculation(JSONResponseMixin, View):
 
 
         results = {}
-        for name, procedure in self.composite_tests:
-            #set up clean calculation context each time so there
-            #is no potential conflicts between different composite tests
-            self.set_calculation_context()
-            procedure = "\n".join(["from __future__ import division",procedure])
+        for slug, raw_procedure in self.composite_tests:
+            calculation_context = self.get_calculation_context()
+            procedure = self.process_procedure(raw_procedure)
             try:
                 code = compile(procedure,"<string>","exec")
-                exec code in self.calculation_context
-                results[name] = {
-                    'value':self.calculation_context.pop("result"),
+                exec code in calculation_context
+                results[slug] = {
+                    'value':calculation_context["result"],
                     'error':None
                 }
-            except:
-                results[name] = {'value':None, 'error':"Invalid Test"}
+            except Exception as e:
+                results[slug] = {'value':None, 'error':"Invalid Test"}
 
         return self.render_to_response({"success":True,"errors":[],"results":results})
-
+    #---------------------------------------------------------------------------
+    def process_procedure(self,procedure):
+        """prepare raw procedure for evaluation"""
+        return "\n".join(["from __future__ import division",procedure,"\n"]).replace('\r','\n')
     #----------------------------------------------------------------------
-    def set_calculation_context(self):
+    def get_calculation_context(self):
         """set up the environment that the composite test will be calculated in"""
-
-
-        self.calculation_context = {}
-        self.calculation_context["math"] = math
+        context = {
+            "math":math
+        }
 
         for slug,info in self.values.iteritems():
             val = info["current_value"]
             if val is not None:
                 try:
-                    self.calculation_context[slug] = float(val)
+                    context[slug] = float(val)
                 except ValueError:
                     pass
+        return context
 
 #====================================================================================
 class ChooseUnit(ListView):
@@ -300,8 +301,26 @@ class PerformQAView(CreateView):
 
         from_date = timezone.make_aware(timezone.datetime.now() - timezone.timedelta(days=10*self.unit_test_col.frequency.overdue_interval),timezone.get_current_timezone())
         histories = utils.tests_history(self.all_tests,self.unit_test_col.unit,from_date)
+
+        #figure out 5 most recent dates that a test from this list was performed
+        dates = set()
         for uti in self.unit_test_infos:
             uti.history = histories.get(uti.test.pk,[])[:5]
+            dates |=  set([x[0] for x in uti.history])
+        self.history_dates = list(sorted(dates,reverse=True))[:5]
+
+        #change history to only show values from 5 most recent dates
+        for uti in self.unit_test_infos:
+            new_history = []
+            for d in self.history_dates:
+                hist = [None]*4
+                for h in uti.history:
+                    if h[0] == d:
+                        hist = h
+                        break
+                new_history.append(hist)
+            uti.history = new_history
+
     #----------------------------------------------------------------------
     def form_valid(self,form):
         context = self.get_context_data()
@@ -376,6 +395,7 @@ class PerformQAView(CreateView):
 
 
         context["formset"] = formset
+        context["history_dates"] = self.history_dates
         context["include_admin"] = self.request.user.is_staff
         context['categories'] = set([x.test.category for x in self.unit_test_infos])
         context['current_day'] = self.actual_day+1

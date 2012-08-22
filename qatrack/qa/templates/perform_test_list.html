@@ -110,7 +110,11 @@
 						<th class="qa-showcmt">Comment</th>
 						{% if include_admin %}
 							<th class="qa-reference">Reference</th>
-							<th class="qa-history">History<div></div></th>
+							<th class="qa-history">History<br/>
+								{% for d in history_dates %}
+									<span class="label history-label" title="{{d}}">{{d|date:"dMy"}}</span>								
+								{% endfor %}													
+							<div></div></th>
 						{% endif %}
 					</tr>
 				</thead>

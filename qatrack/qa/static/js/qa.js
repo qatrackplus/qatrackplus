@@ -59,17 +59,17 @@ function calculate_composites(){
     }
 
     var data = {
-            qavalues:JSON.stringify(validation_data),
-            composite_ids:JSON.stringify(composite_ids)
-        };
+        qavalues:JSON.stringify(validation_data),
+        composite_ids:JSON.stringify(composite_ids)
+    };
 
     QAUtils.call_api("/qa/composite/","POST",data,function(data){
-            if (data.success){
-                $.each(data.results,function(name,result){
-                    set_value_by_name(name,result.value);
-                });
-            }
-        });
+        if (data.success){
+            $.each(data.results,function(name,result){
+                set_value_by_name(name,result.value);
+            });
+        }
+    });
 }
 
 /***************************************************************/
@@ -296,6 +296,9 @@ $(document).ready(function(){
             //only allow numerical characters on input
 
             this.value = this.value.replace(QAUtils.NUMERIC_WHITELIST_REGEX,'');
+            if (this.value[0] === ".") {
+                this.value = "0" + this.value;
+            }
             check_test_status($(this));
             calculate_composites();
         });
@@ -345,6 +348,8 @@ $(document).ready(function(){
         $(".qa-skip input").click(function(){
             if ($(this).is(':checked')){
                 $(this).parent().parent().next().show(600);
+            }else{
+               $(this).parent().parent().next().hide(600);
             }
         });
 
