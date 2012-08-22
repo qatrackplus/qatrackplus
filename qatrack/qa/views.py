@@ -198,38 +198,39 @@ class CompositeCalculation(JSONResponseMixin, View):
 
 
         results = {}
-        for name, procedure in self.composite_tests:
-            #set up clean calculation context each time so there
-            #is no potential conflicts between different composite tests
-            self.set_calculation_context()
-            procedure = "\n".join(["from __future__ import division",procedure])
+        for slug, raw_procedure in self.composite_tests:
+            calculation_context = self.get_calculation_context()
+            procedure = self.process_procedure(raw_procedure)
             try:
                 code = compile(procedure,"<string>","exec")
-                exec code in self.calculation_context
-                results[name] = {
-                    'value':self.calculation_context.pop("result"),
+                exec code in calculation_context
+                results[slug] = {
+                    'value':calculation_context["result"],
                     'error':None
                 }
-            except:
-                results[name] = {'value':None, 'error':"Invalid Test"}
+            except Exception as e:
+                results[slug] = {'value':None, 'error':"Invalid Test"}
 
         return self.render_to_response({"success":True,"errors":[],"results":results})
-
+    #---------------------------------------------------------------------------
+    def process_procedure(self,procedure):
+        """prepare raw procedure for evaluation"""
+        return "\n".join(["from __future__ import division",procedure,"\n"]).replace('\r','\n')        
     #----------------------------------------------------------------------
-    def set_calculation_context(self):
+    def get_calculation_context(self):
         """set up the environment that the composite test will be calculated in"""
-
-
-        self.calculation_context = {}
-        self.calculation_context["math"] = math
+        context = {
+            "math":math
+        }
 
         for slug,info in self.values.iteritems():
             val = info["current_value"]
             if val is not None:
                 try:
-                    self.calculation_context[slug] = float(val)
+                    context[slug] = float(val)
                 except ValueError:
                     pass
+        return context
 
 #====================================================================================
 class ChooseUnit(ListView):
