@@ -25,7 +25,7 @@ class TestTags(TestCase):
         self.unit_test_list = utils.create_unit_test_collection()
     #----------------------------------------------------------------------
     def test_as_qavalue(self):
-        form = forms.TestInstanceForm()
+        form = forms.CreateTestInstanceForm()
         rendered = qa_tags.as_qavalue(form,True)
         self.assertIsInstance(rendered,basestring)
 

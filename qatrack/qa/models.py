@@ -999,7 +999,7 @@ class TestListInstance(models.Model):
     unit_test_collection = models.ForeignKey(UnitTestCollection,editable=False)
     test_list = models.ForeignKey(TestList,editable=False)
 
-    work_started = models.DateTimeField(auto_now_add=True,editable=False)
+    work_started = models.DateTimeField()
     work_completed = models.DateTimeField(default=timezone.now,db_index=True)
 
     in_progress = models.BooleanField(default=False, editable=False,db_index=True)

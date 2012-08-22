@@ -118,6 +118,23 @@ th.qa-history div{
     font-size:0.8em;
 }
 
+#admin_controls div {
+    margin-right:4px;
+}
+
+#admin_controls div label{
+    float: left;
+    text-align: right;
+}
+
+#admin_controls div.date label{
+    width:100px;
+}
+
+#admin_controls div.date input{
+    width:100px;
+}
+
 
 /**************************************************/
 /* Trending                                       */
@@ -187,6 +204,7 @@ tr.col-group th{
     padding-top: 5px;
     text-align: right;
 }
+
 /**************************************************/
 /*QA Status Spans                                 */
 .no_tol, .not_done {

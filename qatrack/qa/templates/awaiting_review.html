@@ -31,7 +31,7 @@
 						<td><a href="{% url review_test_list_instance instance.pk %}">{{instance.test_list.name}}</a></td>
 						<td>{{instance.work_completed}}</td>
 						<td class="pass_fail_status">{{instance|as_pass_fail_status}}</td>
-						<td class="pass_fail_status"><a href="#">Review</a></td>
+						<td class="pass_fail_status"><a href="{% url review_test_list_instance instance.pk %}">Review</a></td>
 				   </tr>
 				{% endfor %}
 				</tbody>

@@ -354,6 +354,7 @@ $(document).ready(function(){
         });
 
         $("#work-completed").datepicker();
+        $("#work-started").datepicker();
 
         //run a full validation on page load
         full_validation();

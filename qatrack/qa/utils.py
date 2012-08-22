@@ -23,8 +23,6 @@ def due_date(last_done_date,frequency):
 #----------------------------------------------------------------------
 def tests_history(tests,unit,from_date,selected_related=None):
     all_instances = models.TestInstance.objects.filter(
-        test__in = tests,
-        unit = unit,
         unit_test_info__test__in = tests,
         unit_test_info__unit = unit,
         work_completed__gte = from_date,

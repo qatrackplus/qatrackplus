@@ -75,7 +75,7 @@ INPUT_DATE_FORMATS = (
     "%d-%m-%y %H:%M", "%d/%m/%y %H:%M",
 )
 SIMPLE_DATE_FORMAT = "%d-%m-%Y"
-DATETIME_HELP = "Format DD-MM-YY hh:mm (hh:mm is 24h time e.g. 14:30)"
+DATETIME_HELP = "Format DD-MM-YY hh:mm (hh:mm is 24h time e.g. 31-05-12 14:30)"
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html

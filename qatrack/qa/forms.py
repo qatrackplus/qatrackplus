@@ -12,7 +12,7 @@ import models
 BOOL_CHOICES = [(0,"No"),(1,"Yes")]
 
 #============================================================================
-class TestInstanceForm(forms.Form):
+class CreateTestInstanceForm(forms.Form):
     value = forms.FloatField(required=False,widget=forms.widgets.TextInput(attrs={"class":"qa-input"}))
     skipped = forms.BooleanField(required=False,help_text=_("Was this test skipped for some reason (add comment)"))
     comment = forms.CharField(widget=forms.Textarea,required=False,help_text=_("Show or hide comment field"))
@@ -21,7 +21,7 @@ class TestInstanceForm(forms.Form):
     def clean(self):
         """do some custom form validation"""
 
-        cleaned_data = super(TestInstanceForm,self).clean()
+        cleaned_data = super(CreateTestInstanceForm,self).clean()
         skipped = cleaned_data.get("skipped")
         comment = cleaned_data.get("comment")
         value = cleaned_data.get("value")
@@ -61,8 +61,8 @@ class TestInstanceForm(forms.Form):
         if self.unit_test_info.test.type in (models.CONSTANT,models.COMPOSITE,):
             self.fields["value"].widget.attrs["readonly"] = "readonly"
 
-BaseTestInstanceFormSet = forms.formsets.formset_factory(TestInstanceForm,extra=0)
-class TestInstanceFormSet(BaseTestInstanceFormSet):
+BaseCreateTestInstanceFormSet = forms.formsets.formset_factory(CreateTestInstanceForm,extra=0)
+class CreateTestInstanceFormSet(BaseCreateTestInstanceFormSet):
     #----------------------------------------------------------------------
     def __init__(self,*args,**kwargs):
         unit_test_infos = kwargs.pop("unit_test_infos")
@@ -73,7 +73,7 @@ class TestInstanceFormSet(BaseTestInstanceFormSet):
                 init["value"] = uti.test.constant_value
             initial.append(init)
         kwargs.update(initial=initial)
-        super(BaseTestInstanceFormSet,self).__init__(*args,**kwargs)
+        super(BaseCreateTestInstanceFormSet,self).__init__(*args,**kwargs)
 
         for form,uti in zip(self.forms,unit_test_infos):
             form.set_unit_test_info(uti)
@@ -81,7 +81,7 @@ class TestInstanceFormSet(BaseTestInstanceFormSet):
 
 
 #============================================================================
-class TestListInstanceForm(forms.ModelForm):
+class CreateTestListInstanceForm(forms.ModelForm):
     """parent form for doing qa test list"""
     status = forms.ModelChoiceField(
         queryset=models.TestInstanceStatus.objects,
@@ -91,18 +91,26 @@ class TestListInstanceForm(forms.ModelForm):
 
     work_completed = forms.DateTimeField(required=False)
 
+
     #----------------------------------------------------------------------
     class Meta:
         model = models.TestListInstance
 
     #----------------------------------------------------------------------
     def __init__(self,*args,**kwargs):
-        super(TestListInstanceForm,self).__init__(*args,**kwargs)
-        self.fields["work_completed"].widget = forms.widgets.DateTimeInput()
-        self.fields["work_completed"].widget.format = settings.INPUT_DATE_FORMATS[0]
-        self.fields["work_completed"].input_formats = settings.INPUT_DATE_FORMATS
-        self.fields["work_completed"].widget.attrs["title"] = settings.DATETIME_HELP
-        self.fields["work_completed"].initial = timezone.now()
-        self.fields["work_completed"].help_text = settings.DATETIME_HELP
-        self.fields["work_completed"].localize = True
+        super(CreateTestListInstanceForm,self).__init__(*args,**kwargs)
+        for field in ("work_completed","work_started"):
+            self.fields[field].widget = forms.widgets.DateTimeInput()
+            self.fields[field].widget.format = settings.INPUT_DATE_FORMATS[0]
+            self.fields[field].input_formats = settings.INPUT_DATE_FORMATS
+            self.fields[field].widget.attrs["title"] = settings.DATETIME_HELP
+            self.fields[field].widget.attrs["class"] = "input-medium"
+            self.fields[field].help_text = settings.DATETIME_HELP
+            self.fields[field].localize = True
 
+        self.fields["work_started"].initial = timezone.now()
+
+        self.fields["status"].widget.attrs["class"] = "input-medium"
+#============================================================================
+class UpdateTestListInstanceForm(CreateTestListInstanceForm):
+    """"""

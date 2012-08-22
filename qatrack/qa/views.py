@@ -247,7 +247,7 @@ class ChooseUnit(ListView):
 class PerformQAView(CreateView):
     """view for users to complete a qa test list"""
     template_name = "perform_test_list.html"
-    form_class = forms.TestListInstanceForm
+    form_class = forms.CreateTestListInstanceForm
 
     #----------------------------------------------------------------------
     def set_test_lists(self,current_day):
@@ -349,11 +349,10 @@ class PerformQAView(CreateView):
                     value=ti_form.cleaned_data["value"],
                     skipped=ti_form.cleaned_data["skipped"],
                     comment=ti_form.cleaned_data["comment"],
-                    test = ti_form.unit_test_info.test,
+                    unit_test_info = ti_form.unit_test_info,
                     reference = ti_form.unit_test_info.reference,
                     tolerance = ti_form.unit_test_info.tolerance,
                     status = status,
-                    unit = self.unit_test_col.unit,
                     created_by = self.request.user,
                     modified_by = self.request.user,
                     in_progress = self.object.in_progress,
@@ -389,9 +388,9 @@ class PerformQAView(CreateView):
         self.set_unit_test_infos()
 
         if self.request.method == "POST":
-            formset = forms.TestInstanceFormSet(self.request.POST,self.request.FILES,unit_test_infos=self.unit_test_infos)
+            formset = forms.CreateTestInstanceFormSet(self.request.POST,self.request.FILES,unit_test_infos=self.unit_test_infos)
         else:
-            formset = forms.TestInstanceFormSet(unit_test_infos=self.unit_test_infos)
+            formset = forms.CreateTestInstanceFormSet(unit_test_infos=self.unit_test_infos)
 
 
         context["formset"] = formset
@@ -423,19 +422,8 @@ class PerformQAView(CreateView):
 #============================================================================
 class ReviewTestListInstance(UpdateView):
     model = models.TestListInstance
-    form_class = forms.TestListInstanceForm
+    form_class = forms.UpdateTestListInstanceForm
     template_name = "review_test_list_instance.html"
-    
-    #---------------------------------------------------------------------------
-    def create_formset_class(self):
-        return inlineformset_factory(
-            models.TestListInstance,
-            models.TestInstance,
-            form=forms.TestInstanceForm,
-            formset=forms.BaseTestInstanceFormset,
-            extra = len(self.object.testinstance_set.all()),
-            can_delete=False
-        )
 
     #----------------------------------------------------------------------
     def get_context_data(self,**kwargs):
@@ -458,8 +446,8 @@ class ReviewTestListInstance(UpdateView):
             subform.set_values_from_instance()
             for field in ("reference","tolerance","unit_test_info","comment","skipped"):
                 subform.fields[field].widget = forms.forms.HiddenInput()
-            
-            
+
+
         context["formset"] = formset
 
         return context
