@@ -215,7 +215,7 @@ class CompositeCalculation(JSONResponseMixin, View):
     #---------------------------------------------------------------------------
     def process_procedure(self,procedure):
         """prepare raw procedure for evaluation"""
-        return "\n".join(["from __future__ import division",procedure,"\n"]).replace('\r','\n')        
+        return "\n".join(["from __future__ import division",procedure,"\n"]).replace('\r','\n')
     #----------------------------------------------------------------------
     def get_calculation_context(self):
         """set up the environment that the composite test will be calculated in"""
@@ -301,12 +301,15 @@ class PerformQAView(CreateView):
 
         from_date = timezone.make_aware(timezone.datetime.now() - timezone.timedelta(days=10*self.unit_test_col.frequency.overdue_interval),timezone.get_current_timezone())
         histories = utils.tests_history(self.all_tests,self.unit_test_col.unit,from_date)
+
+        #figure out 5 most recent dates that a test from this list was performed
         dates = set()
         for uti in self.unit_test_infos:
             uti.history = histories.get(uti.test.pk,[])[:5]
             dates |=  set([x[0] for x in uti.history])
-            
         self.history_dates = list(sorted(dates,reverse=True))[:5]
+
+        #change history to only show values from 5 most recent dates
         for uti in self.unit_test_infos:
             new_history = []
             for d in self.history_dates:
@@ -317,7 +320,7 @@ class PerformQAView(CreateView):
                         break
                 new_history.append(hist)
             uti.history = new_history
-                        
+
     #----------------------------------------------------------------------
     def form_valid(self,form):
         context = self.get_context_data()
