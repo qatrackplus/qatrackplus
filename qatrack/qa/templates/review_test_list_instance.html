@@ -3,14 +3,126 @@
 {% load qa_tags %}
 
 {% block body %}
+    <div class="row-fluid">
+        <div class="span12">
+            <h3>{{test_list_instance.work_completed|date}} {{test_list_instance.test_list.name}} Details</h3>
+        </div>
+    </div>
+    <div class="row-fluid">
+        <div class="span3">
+        {% with tli=test_list_instance %}
+            <dl class="dl-horizontal">    
+                <dt>Unit</dt>
+                <dd>{{tli.unit_test_collection.unit.name}}</dd>
+				
+                <dt>Collection</dt>
+                <dd>{{tli.unit_test_collection.tests_object.name}}</dd>
 
-    <h2>{{object.test_list.name}} Details</h2>
+                <dt>Test List</dt>
+                <dd>{{tli.test_list.name}}</dd>
 
-    {{form}}
+                <dt>Work Started</dt>
+                <dd>{{tli.work_started}}</dd>
 
+                <dt>Work Completed</dt>
+                <dd>{{tli.work_completed}}</dd>
+    
+                <dt>Duration</dt>
+                <dd>{{tli.duration|as_time_delta}}</dd>
 
-    {% for ti_form in formset %}
-    {{ti_form}}
-        {{ti_form.instance.reference}}
-    {% endfor %}
+                <dt>Performed By</dt>
+                <dd>{{tli.created_by}}</dd>
+
+                <dt>Last Modification</dt>
+                <dd>{{tli.modified_by}} @ {{tli.modified}}</dd>            
+
+           </dl>
+        {% endwith %}
+        </div>
+
+        <div class="span9">
+			<form class="nosubmit form-inline review-test-list" id="qa-review" method="POST" action="">
+				{% csrf_token %}
+    
+				<table class="table table-bordered table-striped table-condensed" >
+					<thead>
+						<tr>
+							<th>Test<div></div></th>
+							<th class="review-value">Value</th>
+							<th class="review-ref">Reference</th>							
+							<th>Comment</th>
+							<th class="qa-history">History<br/>
+								{% for d in history_dates %}
+									<span class="label history-label" title="{{d}}">{{d|date:"dMy"}}</span>
+								{% endfor %}
+								<div></div>
+							</th>							
+							<th class="review-status">
+								Status<br/>
+								<div class="input-append">
+								<select name="bulk-status" id="bulk-status" class="input-medium">
+									<option value="" selected="selected">---</option>
+								
+									{% for status in statuses %}											
+										<option value="{{status.pk}}">{{status.name}}</option>
+									{% endfor %}
+								</select><span class="add-on" title="Click to apply this status to all selected tests"><i class="icon-ok"></i></span>
+								</div>
+							</th>		
+							<th class="review-selected">Selected<br/><input class="test-selected-toggle" type="checkbox" checked="checked"/></th>
+						</tr>
+					</thead>
+					<tbody>
+						{{ formset.management_form }}
+						{% for ti_form in formset %}
+							{% with ti=ti_form.instance %}
+							<tr>
+								<td>{{ti.unit_test_info.test.name}}</td>
+								<td class="review-value"><div class="label pass-fail {{ti.pass_fail}}">{{ti.value}}</div></td>
+								<td class="review-ref">
+									{% if not ti.reference %}
+										<em>No Ref</em>
+									{% else %}
+										{% if ti.tolerance.type == "percent" %}
+											<a href="#" title="{{ti.tolerance.act_low}}% &le; {{ti.tolerance.tol_low}}% &le; {{ti.reference.value}} &le; {{ti.tolerance.tol_high}}% &le; {{ti.tolerance.act_high}}%">{{ti.reference.value}}</a>
+										{% else %}
+											<a href="#" title="{{ti.tolerance.act_low}} &le; {{ti.tolerance.tol_low}} &le; {{ti.reference.value}} &le; {{ti.tolerance.tol_high}} &le; {{ti.tolerance.act_high}}">{{ti.reference.value}}</a>
+										{% endif %}
+									{% endif %}
+								</td>
+								<td>
+									{% if ti.comment %}
+										<a title="{{ti.comment}}">Hover for Comment</a>
+									{% else %}
+										<em>No comment</em>
+									{% endif %}
+								</td>
+								<td class="qa-history">
+									{% for d,v,pf,s in ti_form.history %}
+										{% if d and pf != "not_done"%}
+										<span class="label {{pf}} history-value" title="{{d}} - {{s}}">{{v|scientificformat}}</span>
+										{% else %}
+											<span class="label history-value" title="N/A">N/A</span>					
+										{% endif %}
+									{% endfor %}
+								</td>
+								{# note we render this manually to prevent the Django ORM from running a query for every form #}
+								<td class="review-status">
+									<select name="testinstance_set-{{forloop.counter0}}-status" id="id_testinstance_set-{{forloop.counter0}}-status" class="input-medium">
+										{% for status in statuses %}											
+											<option value="{{status.pk}}" {% if ti.status = status %}selected="selected"{% endif %}>{{status.name}}</option>
+										{% endfor %}
+									</select>
+								</td>
+								<td class="review-selected"><input class="test-selected" type="checkbox" checked="checked"/></td>
+							</tr>
+							{%endwith%}
+						{% endfor %}					
+					</tbody>
+				</table>
+    
+    
+            </form>        
+        </div>
+    </div>
 {% endblock %}

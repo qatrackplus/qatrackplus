@@ -61,6 +61,16 @@ def as_due_date(unit_test_collection):
     template = get_template("due_date.html")
     c = Context({"unit_test_collection":unit_test_collection})
     return template.render(c)
+
+#----------------------------------------------------------------------
+@register.filter
+def as_time_delta(time_delta):
+
+    days, remainder = divmod(time_delta.seconds, 24*60*60)
+    hours, remainder = divmod(remainder, 60*60)
+    minutes, seconds = divmod(remainder, 60)
+    return '%dd %dh %dm %ds' % (days, hours, minutes, seconds)    
+
 #----------------------------------------------------------------------
 @register.filter
 def as_data_attributes(unit_test_collection):

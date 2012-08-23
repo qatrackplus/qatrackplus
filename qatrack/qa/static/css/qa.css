@@ -222,6 +222,31 @@ tr.col-group th{
 
 /*********************************************/
 /* QA review & approval                      */
+
+
+td.review-value,
+th.review-value {
+    width:60px;
+    text-align:center;
+}
+
+td.review-ref,
+th.review-ref {
+    width:60px;
+    text-align:center;
+}
+
+td.review-selected,
+th.review-selected{
+    width:40px;
+    text-align:center;
+}
+
+td.review-status,
+th.review-status{
+    width:185px;
+}
+
 #qa-test-list-table,
 #qa-test-review-table{
     margin: 1em 0;

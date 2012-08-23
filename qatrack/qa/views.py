@@ -424,7 +424,46 @@ class ReviewTestListInstance(UpdateView):
     model = models.TestListInstance
     form_class = forms.UpdateTestListInstanceForm
     template_name = "review_test_list_instance.html"
+    context_object_name = "test_list_instance"
+    #---------------------------------------------------------------------------
+    def get_queryset(self):
+        qs = super(ReviewTestListInstance,self).get_queryset()
+        qs = qs.select_related(
+            "unit_test_collection",
+            "unit_test_collection__unit",
+            "test_list",
+            "created_by",
+            "modified_by",
+        )
+        return qs
+    
+    #----------------------------------------------------------------------
+    def add_histories(self,forms):
+        """paste historical values onto unit test infos"""
 
+        from_date = timezone.make_aware(timezone.datetime.now() - timezone.timedelta(days=10*self.object.unit_test_collection.frequency.overdue_interval),timezone.get_current_timezone())
+        tests = [x.unit_test_info.test for x in self.test_instances]
+        histories = utils.tests_history(tests,self.object.unit_test_collection.unit,from_date)
+
+        #figure out 5 most recent dates that a test from this list was performed
+        dates = set()
+        for f in forms:
+            f.history = histories.get(f.instance.unit_test_info.test.pk,[])[:5]
+            dates |=  set([x[0] for x in f.history])
+        self.history_dates = list(sorted(dates,reverse=True))[:5]
+
+        #change history to only show values from 5 most recent dates
+        for f in forms:
+            new_history = []
+            for d in self.history_dates:
+                hist = [None]*4
+                for h in f.history:
+                    if h[0] == d:
+                        hist = h
+                        break
+                new_history.append(hist)
+            f.history = new_history
+    
     #----------------------------------------------------------------------
     def get_context_data(self,**kwargs):
 
@@ -432,20 +471,21 @@ class ReviewTestListInstance(UpdateView):
 
         #we need to override the default queryset for the formset so that we can pull
         #in all the reference/tolerance data without the ORM generating 100's of queries
-        qs = models.TestInstance.objects.filter(
+        self.test_instances = models.TestInstance.objects.filter(
             test_list_instance=self.object
         ).select_related(
-            "reference","tolerance","status"
+            "reference","tolerance","status","unit_test_info","unit_test_info__test","status"
         )
 
         if self.request.method == "POST":
-            formset = forms.UpdateTestInstanceFormset(self.request.POST,self.request.FILES,instance=self.get_object(),queryset=qs)
+            formset = forms.UpdateTestInstanceFormset(self.request.POST,self.request.FILES,instance=self.get_object(),queryset=self.test_instances)
         else:
-            formset = forms.UpdateTestInstanceFormset(instance=self.get_object(),queryset=qs)
+            formset = forms.UpdateTestInstanceFormset(instance=self.get_object(),queryset=self.test_instances)
 
-
+        self.add_histories(formset.forms)
         context["formset"] = formset
-
+        context["history_dates"] = self.history_dates
+        context["statuses"] = models.TestInstanceStatus.objects.all()
         return context
 
 #============================================================================
@@ -527,8 +567,6 @@ class AwaitingReview(ListView):
         ).prefetch_related("testinstance_set")
 
         return qs
-
-
 
 #============================================================================
 class ReviewView(ListView):
