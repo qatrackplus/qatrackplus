@@ -312,23 +312,6 @@ class Test(models.Model):
     modified = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(User, editable=False, related_name="test_modifier")
 
-    #----------------------------------------------------------------------
-    def set_references(self):
-        """allow user to go to references in admin interface"""
-        return "<i>Disabled</i>"
-        url = "%s?"%urlresolvers.reverse("admin:qa_unittestinfo_changelist")
-        test_filter = "test__id__exact=%d" % self.pk
-
-        unit_filter = "unit__id__exact=%d"
-        info_set = self.unittestinfo_set.all()
-        urls = [(info.unit.name, url+test_filter+"&"+ unit_filter%info.unit.pk) for info in info_set]
-        link = '<a href="%s">%s</a>'
-        all_link = link%(url+test_filter,"All Units")
-        links = [link % (url,name) for name,url in urls]
-
-        return "%s (%s)" %(all_link, ", ".join(links))
-    set_references.allow_tags = True
-    set_references.short_description = "Set references and tolerances for this test"
 
     #----------------------------------------------------------------------
     def is_boolean(self):
@@ -389,9 +372,7 @@ class Test(models.Model):
         errors = []
 
         if not self.slug:
-            if self.type != COMPOSITE:
-                return
-            errors.append(_("Composite tests require a macro name"))
+            errors.append(_("All tests require a macro name"))
         elif not self.VARIABLE_RE.match(self.slug):
             errors.append(_("Macro names must contain only letters, numbers and underscores and start with a letter or underscore"))
 
@@ -491,17 +472,13 @@ class UnitTestInfo(models.Model):
         """return last 'number' of instances for this test performed on input unit
         list is ordered in ascending dates
         """
-        hist = TestInstance.objects.filter(unit=self.unit,test=self.test).order_by("-work_completed","-pk")
-        hist = hist.select_related("status")
+        #hist = TestInstance.objects.filter(unit_test_info=self)
+        hist = self.testinstance_set.select_related("status").all().order_by("-work_completed","-pk")
+        #hist = hist.select_related("status")
         return [(x.work_completed,x.value, x.pass_fail, x.status) for x in reversed(hist[:number])]
     #----------------------------------------------------------------------
     def __unicode__(self):
         return "UnitTestInfo(%s)"%self.pk
-        try:
-            return "UnitTestInfo(test=%s,unit=%s)"%(self.test.name,self.unit.name)
-        except:
-            return "UnitTestInfo(Empty)"
-
 #============================================================================
 class TestListMembership(models.Model):
     """Keep track of ordering for tests within a test list"""
@@ -584,32 +561,6 @@ class TestList(TestCollectionInterface):
         for sublist in self.sublists.all():
             tests.extend(sublist.ordered_tests())
         return tests
-    #----------------------------------------------------------------------
-    def set_references(self):
-        """allow user to go to references in admin interface"""
-
-        url = "%s?prefilter=true&"%urlresolvers.reverse("admin:qa_unittestinfo_changelist")
-        all_tests = self.all_tests().values_list("pk",flat=True)
-        test_filter = "&".join(["test__id__exact=%d" % pk for pk in all_tests])
-
-        unit_filter = "unit__id__exact=%d"
-
-        unit_assignments = UnitTestCollection.objects.test_lists().filter(
-            object_id=self.pk
-        ).select_related(
-            "unit"
-        )
-
-        urls = [(info.unit.name, url+test_filter+"&"+ unit_filter%info.unit.pk) for info in unit_assignments]
-        link = '<a href="%s">%s</a>'
-        links = [link % (url,name) for name,url in urls]
-
-        if links:
-            return ", ".join(links)
-        else:
-            return "<em>Currently not assigned to any units</em>"
-    set_references.allow_tags = True
-    set_references.short_description = "Set references and tolerances for this list"
 
     #----------------------------------------------------------------------
     def __len__(self):
@@ -696,17 +647,14 @@ class UnitTestCollection(models.Model):
     def unreviewed_test_instances(self):
         """return query set of all TestInstances for this object"""
         return TestInstance.objects.complete().filter(
-            unit = self.unit,
-            test__in = self.tests_object.all_tests()
+            unit_test_info__unit = self.unit,
+            unit_test_info__test__in = self.tests_object.all_tests()
         )
 
     #----------------------------------------------------------------------
     def history(self,number=10):
         """returns the last num_instances performed for this object"""
-        return reversed(TestListInstance.objects.complete().filter(
-            unit=self.unit,
-            test_list__in = self.tests_object.all_lists()
-        ).order_by("-work_completed","-pk")[:number])
+        return reversed(self.testlistinstance_set.all().order_by("-work_completed","-pk")[:number])
 
     #----------------------------------------------------------------------
     def next_list(self):
@@ -858,16 +806,13 @@ class TestInstanceManager(models.Manager):
     #----------------------------------------------------------------------
     def complete(self):
         return models.Manager.get_query_set(self).filter(in_progress=False)
-    #----------------------------------------------------------------------
-    def valid(self):
-        return self.complete().filter(status__valid=True)
 
 #============================================================================
 class TestInstance(models.Model):
     """Measured instance of a :model:`Test`"""
 
     #review status
-    status = models.ForeignKey(TestInstanceStatus,editable=False)
+    status = models.ForeignKey(TestInstanceStatus)
     review_date = models.DateTimeField(null=True, blank=True,editable=False)
     reviewed_by = models.ForeignKey(User,null=True, blank=True,editable=False)
 

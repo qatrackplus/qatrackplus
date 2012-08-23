@@ -42,8 +42,8 @@ urlpatterns = patterns('',
 
     #review
     url(r"review/$", views.ReviewView.as_view(), name="review"),
-    url(r"review/new$", views.AwaitingReview.as_view(), name="awaiting_review"),
-    url(r"review/new/(?P<pk>\d+)/$", views.ReviewTestListInstance.as_view(), name="review_test_list_instance"),
+    url(r"review/new/$", views.AwaitingReview.as_view(), name="awaiting_review"),
+    url(r"review/details/(?P<pk>\d+)/$", views.ReviewTestListInstance.as_view(), name="review_test_list_instance"),
     url(r"charts/$", views.ChartView.as_view(), name="charts"),
     url(r"^charts/export/$",views.ExportToCSV.as_view()),
     #generating control chart images

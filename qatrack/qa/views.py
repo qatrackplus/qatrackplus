@@ -1,3 +1,4 @@
+import collections
 import json
 from api import ValueResource
 from django.contrib import messages
@@ -91,10 +92,10 @@ class ControlChartImage(View):
             return [], []
 
         data = models.TestInstance.objects.complete().filter(
-            test__slug = test,
+            unit_test_info__test__slug = test,
             work_completed__gte = from_date,
             work_completed__lte = to_date,
-            unit__number = unit,
+            unit_test_info__unit__number = unit,
         ).order_by("work_completed","pk").values_list("work_completed","value")
 
         if data.count()>0:
@@ -323,6 +324,7 @@ class PerformQAView(CreateView):
 
     #----------------------------------------------------------------------
     def form_valid(self,form):
+
         context = self.get_context_data()
         formset = context["formset"]
         if formset.is_valid():
@@ -436,7 +438,51 @@ class ReviewTestListInstance(UpdateView):
             "modified_by",
         )
         return qs
-    
+    #----------------------------------------------------------------------
+    def form_valid(self,form):
+        context = self.get_context_data()
+        formset = context["formset"]
+
+        update_time = timezone.make_aware(timezone.datetime.now(),timezone.get_current_timezone())
+        update_user = self.request.user
+
+        test_list_instance = form.save(commit=False)
+        test_list_instance.modified = update_time
+        test_list_instance.modified_by = update_user
+        test_list_instance.save()
+
+        # note we are not calling if formset.is_valid() here since we assume
+        # validity given we are only changing the status of the test_instances.
+        # Also, we are not cleaning the data since a 500 will be raised if
+        # something other than a valid int is passed for the status.
+        #
+        # If you add something here be very careful to check that the data
+        # is clean before updating the db
+
+        #for efficiency update statuses in bulk rather than test by test basis
+        status_groups = collections.defaultdict(list)
+        for ti_form in formset:
+            status_pk = int(ti_form["status"].value())
+            status_groups[status_pk].append(ti_form.instance.pk)
+
+        for status_pk,test_instance_pks in status_groups.items():
+            status = models.TestInstanceStatus.objects.get(pk=status_pk)
+            models.TestInstance.objects.filter(pk__in=test_instance_pks).update(
+                status=status,
+                modified_by=update_user,
+                modified = update_time
+            )
+
+        #let user know request succeeded and return to unit list
+        messages.success(self.request,_("Successfully updated %s "% self.object.test_list.name))
+        return HttpResponseRedirect(self.get_success_url())
+    #----------------------------------------------------------------------
+    def get_success_url(self):
+        referer = self.request.META.get("HTTP_REFERER")
+        if referer:
+            return referer
+        return reverse("awaiting_review")
+
     #----------------------------------------------------------------------
     def add_histories(self,forms):
         """paste historical values onto unit test infos"""
@@ -463,7 +509,7 @@ class ReviewTestListInstance(UpdateView):
                         break
                 new_history.append(hist)
             f.history = new_history
-    
+
     #----------------------------------------------------------------------
     def get_context_data(self,**kwargs):
 

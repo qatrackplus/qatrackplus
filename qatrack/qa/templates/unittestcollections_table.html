@@ -25,7 +25,7 @@
 				</td>
 
 				{% if  utc.last_instance %}
-					<td>{{utc.last_instance.work_completed}}</td>
+					<td><a href="{% url review_test_list_instance utc.last_instance.pk %}" title="view details of last instance">{{utc.last_instance.work_completed}}</a></td>
 					<td>
 						{{utc|as_due_date}}
 					</td>

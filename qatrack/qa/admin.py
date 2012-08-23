@@ -67,7 +67,7 @@ class TestInfoForm(forms.ModelForm):
                 self.fields["reference_value"].widget = forms.Select(choices=[("","---"),(0,"No"),(1,"Yes")])
                 self.fields["tolerance"].widget = forms.HiddenInput()
                 #self.fields["tolerance"].widget.attrs["readonly"] = "readonly"# = forms.HiddenInput()
-                
+
             elif tt == models.MULTIPLE_CHOICE:
                 self.fields["reference_value"].widget = forms.Select(choices=[("","---")]+self.instance.test.get_choices(),)
                 self.fields["tolerance"].widget.attrs["readonly"] = "readonly"# = forms.HiddenInput()
@@ -253,7 +253,7 @@ class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
 
 #============================================================================
 class TestAdmin(SaveUserMixin,admin.ModelAdmin):
-    list_display = ["name","slug","category", "type", ]
+    list_display = ["name","slug","category", "type"]
     list_filter = ["category","type"]
     search_fields = ["name","slug","category__name"]
     save_as = True

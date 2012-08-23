@@ -61,19 +61,23 @@ def create_test_list(name="test_list"):
     test_list.save()
     return test_list
 #----------------------------------------------------------------------
-def create_test_list_instance(unit=None,test_list=None,work_completed=None,created_by=None):
-    if unit is None: unit = create_unit()
-    if test_list is None: test_list = create_test_list()
+def create_test_list_instance(unit_test_collection=None,work_completed=None,created_by=None,test_list=None):
+    if unit_test_collection is None:
+        unit_test_collection = create_unit_test_collection()
+    if test_list is None:
+        test_list = unit_test_collection.next_list()
     if work_completed is None: work_completed = timezone.now()
+    work_started = work_completed - timezone.timedelta(seconds=60)
     if created_by is None: created_by = create_user()
 
 
     tli = models.TestListInstance(
-        test_list=test_list,
-        unit=unit,
+        unit_test_collection=unit_test_collection,
         created_by=created_by,
         modified_by=created_by,
-        work_completed=work_completed
+        work_completed=work_completed,
+        work_started = work_started,
+        test_list = test_list
     )
     tli.save()
     return tli
@@ -106,16 +110,17 @@ def create_test_list_membership(test_list,test,order=0):
     return tlm
 
 #----------------------------------------------------------------------
-def create_test_instance(test=None,unit=None,value=1., created_by=None,work_completed=None,status=None):
-    if unit is None: unit = create_unit()
-    if test is None: test = create_test()
+def create_test_instance(unit_test_info=None,value=1., created_by=None,work_completed=None,status=None):
+    if unit_test_info is None:
+        unit_test_info = create_unit_test_info()
+
+
     if work_completed is None: work_completed = timezone.now()
     if created_by is None: created_by = create_user()
     if status is None: status = create_status()
 
     ti = models.TestInstance(
-        test=test,
-        unit=unit,
+        unit_test_info=unit_test_info,
         value=value,
         created_by=created_by,
         modified_by=created_by,

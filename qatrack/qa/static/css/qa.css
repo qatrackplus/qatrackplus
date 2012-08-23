@@ -111,6 +111,7 @@ th.qa-history div{
 .history-value,.history-label {
     display:inline-block;
     width: 42px;
+    text-align:right;
     margin-right: 1px; /*fix ie inline block bug*/
 }
 
@@ -223,8 +224,13 @@ tr.col-group th{
 /*********************************************/
 /* QA review & approval                      */
 
-
-
+.review-buttons {
+    padding-bottom: 8px;
+    padding-top:8px;
+}
+.review-buttons hr{
+    margin-top:1px;
+}
 .review-test-list td select{
     text-align:right;
     height:22px;

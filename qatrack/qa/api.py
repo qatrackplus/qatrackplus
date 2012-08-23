@@ -165,8 +165,8 @@ class TestInstanceResource(ModelResource):
         filters_requiring_processing = (
             ("from_date","work_completed__gte","date",today.strftime(settings.SIMPLE_DATE_FORMAT)),
             ("to_date","work_completed__lte","date",last_year.strftime(settings.SIMPLE_DATE_FORMAT)),
-            ("unit","unit__number__in",None,[]),
-            ("slug","test__slug__in",None,[]),
+            ("unit","unit_test_info__unit__number__in",None,[]),
+            ("slug","unit_test_info__test__slug__in",None,[]),
             ("status","status__slug__in",None,[]),
         )
 
@@ -230,7 +230,7 @@ def serialize_testinstance(test_instance):
     #    info["test"] = ti.test.slug
 
     if ti.unit:
-        info["unit"] = ti.unit.number
+        info["unit"] = ti.unit_test_info.unit.number
 
     if ti.created_by:
         info["user"] = ti.created_by.username
@@ -301,15 +301,15 @@ class ValueResource(Resource):
     def get_object_list(self,request):
         """return organized values"""
         objects = TestInstanceResource().obj_get_list(request)
-        names = objects.order_by("test__name").values_list("test__slug","test__name").distinct()
-        units = objects.order_by("unit__number").values_list("unit__number",flat=True).distinct()
+        names = objects.order_by("unit_test_info__test__name").values_list("unit_test_info__test__slug","unit_test_info__test__name").distinct()
+        units = objects.order_by("unit_test_info__unit__number").values_list("unit_test_info__unit__number",flat=True).distinct()
         self.dispatch
         organized = []
         for slug,name in names:
             for unit in units:
                 data = objects.filter(
-                        test__slug=slug,
-                        unit__number = unit,
+                        unit_test_info__test__slug=slug,
+                        unit_test_info__unit__number = unit,
                 ).order_by("work_completed","pk")
 
                 organized.append({

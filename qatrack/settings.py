@@ -297,7 +297,7 @@ LOGGING = {
 
 #------------------------------------------------------------------------------
 #Testing settings
-#TEST_RUNNER = 'django_coverage.coverage_runner.CoverageRunner'
+TEST_RUNNER = 'django_coverage.coverage_runner.CoverageRunner'
 COVERAGE_ADDITIONAL_MODULES = ["qatrack.tests"]
 
 #------------------------------------------------------------------------------

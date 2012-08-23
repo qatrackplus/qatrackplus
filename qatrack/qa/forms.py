@@ -113,22 +113,21 @@ class CreateTestListInstanceForm(forms.ModelForm):
         self.fields["status"].widget.attrs["class"] = "input-medium"
 
 #============================================================================
-class UpdateTestListInstanceForm(CreateTestListInstanceForm):
-    """"""
+class UpdateTestListInstanceForm(forms.ModelForm):
+    #============================================================================
+    class Meta:
+        model = models.TestInstance
+        fields = ()
 
 
 
 #============================================================================
 class UpdateTestInstanceForm(forms.ModelForm):
-    status = forms.ModelChoiceField(
-        queryset=models.TestInstanceStatus.objects,
-        initial=models.TestInstanceStatus.objects.default,
-        required=False
-    )
 
     #============================================================================
     class Meta:
         model = models.TestInstance
+        fields = ("status" , )
 
 
 UpdateTestInstanceFormset = inlineformset_factory(models.TestListInstance,models.TestInstance,form=UpdateTestInstanceForm,extra=0,can_delete=False)

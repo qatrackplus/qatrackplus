@@ -44,9 +44,9 @@ class TestTags(TestCase):
         self.assertIsInstance(rendered,basestring)
     #----------------------------------------------------------------------
     def test_as_pass_fail_status(self):
+
         tli = utils.create_test_list_instance(
-            test_list=self.unit_test_list.tests_object,
-            unit=self.unit_test_list.unit,
+            unit_test_collection = self.unit_test_list
         )
         rendered = qa_tags.as_pass_fail_status(tli)
         self.assertIsInstance(rendered,basestring)

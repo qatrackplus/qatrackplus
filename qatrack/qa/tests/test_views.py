@@ -55,6 +55,9 @@ class TestURLS(TestCase):
     def test_unit_group_frequency(self):
         self.assertTrue(self.returns_200("/qa/daily/"))
     #---------------------------------------------------------------------------
+    def test_all_lists(self):
+        self.assertTrue(self.returns_200("/qa/"))
+    #---------------------------------------------------------------------------
     def test_perform(self):
         utils.create_status()
         utils.create_unit_test_collection()
@@ -63,6 +66,14 @@ class TestURLS(TestCase):
     #---------------------------------------------------------------------------
     def test_unit_frequency(self):
         self.assertTrue(self.returns_200("/qa/daily/unit/1/"))
+
+    #----------------------------------------------------------------------
+    def test_awaiting_review(self):
+        self.assertTrue(self.returns_200("/qa/review/new/"))
+    #----------------------------------------------------------------------
+    def test_tli_details(self):
+        tli = utils.create_test_list_instance()
+        self.assertTrue(self.returns_200("/qa/review/details/1/"))
 
 
 
@@ -127,6 +138,8 @@ class TestControlChartImage(TestCase):
     def test_valid(self):
         test = utils.create_test()
         unit = utils.create_unit()
+        uti = utils.create_unit_test_info(test=test,unit=unit)
+
         status = utils.create_status()
         yesterday = timezone.datetime.today()-timezone.timedelta(days=1)
         yesterday = timezone.make_aware(yesterday,timezone.get_current_timezone())
@@ -143,9 +156,8 @@ class TestControlChartImage(TestCase):
         for n in (1,1,8,90):
             for x in range(n):
                 utils.create_test_instance(
+                    unit_test_info=uti,
                     value=random.gauss(1,0.5),
-                    test=test,
-                    unit=unit,
                     status=status
                 )
 
@@ -158,6 +170,8 @@ class TestControlChartImage(TestCase):
     def test_invalid(self):
         test = utils.create_test()
         unit = utils.create_unit()
+        uti = utils.create_unit_test_info(test=test,unit=unit)
+
         status = utils.create_status()
         yesterday = timezone.datetime.today()-timezone.timedelta(days=1)
         yesterday = timezone.make_aware(yesterday,timezone.get_current_timezone())
@@ -170,13 +184,13 @@ class TestControlChartImage(TestCase):
 
         url = self.make_url(test.slug,unit.number,yesterday,tomorrow,fit="true")
 
+
         #generate some data that the control chart fit function won't be able to fit
         for x in range(10):
             utils.create_test_instance(
                 value=x,
-                test=test,
-                unit=unit,
-                status=status
+                status=status,
+                unit_test_info=uti
             )
 
         request = self.factory.get(url)
@@ -333,6 +347,9 @@ class TestPerformQA(TestCase):
             test_collection=self.test_list
         )
 
+        self.unit_test_infos = []
+        for test in self.tests:
+            self.unit_test_infos.append(models.UnitTestInfo.objects.get(test=test,unit=self.unit_test_list.unit))
         self.url = reverse("perform_qa",kwargs={"pk":self.unit_test_list.pk})
         self.client.login(username="user",password="password")
         self.user = User.objects.get(username="user")
@@ -378,16 +395,15 @@ class TestPerformQA(TestCase):
     #---------------------------------------------------------------------------
     def test_perform_valid(self):
         data = {
-
-            "work_completed":"11-07-2012 00:10",
+            "work_started":"11-07-2012 00:09",
             "status":self.status.pk,
             "form-TOTAL_FORMS":len(self.tests),
             "form-INITIAL_FORMS":len(self.tests),
             "form-MAX_NUM_FORMS":"",
         }
 
-        for test_idx, test in enumerate(self.tests):
-            data["form-%d-test" % test_idx] = test.pk
+        for test_idx, uti in enumerate(self.unit_test_infos):
+
             data["form-%d-value"%test_idx] =  1
             data["form-%d-comment"%test_idx]= ""
 
@@ -401,6 +417,7 @@ class TestPerformQA(TestCase):
         data = {
 
             "work_completed":"11-07-2012 00:10",
+            "work_started":"11-07-2012 00:09",
             "status":self.status.pk,
             "form-TOTAL_FORMS":len(self.tests),
             "form-INITIAL_FORMS":len(self.tests),
