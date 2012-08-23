@@ -331,12 +331,12 @@ class PerformQAView(CreateView):
 
             self.object = form.save(commit=False)
             self.object.test_list = self.test_list
-            #self.object.unit = self.unit_test_col.unit
             self.object.unit_test_collection = self.unit_test_col
             self.object.created_by = self.request.user
             self.object.modified_by= self.request.user
+
             if self.object.work_completed is None:
-                self.object.work_completed = timezone.now()
+                self.object.work_completed = timezone.make_aware(timezone.datetime.now(),timezone=timezone.get_current_timezone())
 
             self.object.save()
 
