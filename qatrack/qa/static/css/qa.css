@@ -224,6 +224,14 @@ tr.col-group th{
 /* QA review & approval                      */
 
 
+
+.review-test-list td select{
+    text-align:right;
+    height:22px;
+    padding:1px 4px;
+    margin-bottom:0px;
+}
+
 td.review-value,
 th.review-value {
     width:60px;
