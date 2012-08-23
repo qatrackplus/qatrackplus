@@ -478,9 +478,6 @@ class ReviewTestListInstance(UpdateView):
         return HttpResponseRedirect(self.get_success_url())
     #----------------------------------------------------------------------
     def get_success_url(self):
-        referer = self.request.META.get("HTTP_REFERER")
-        if referer:
-            return referer
         return reverse("awaiting_review")
 
     #----------------------------------------------------------------------
