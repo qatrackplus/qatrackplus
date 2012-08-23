@@ -229,7 +229,7 @@ def serialize_testinstance(test_instance):
     #if ti.test:
     #    info["test"] = ti.test.slug
 
-    if ti.unit:
+    if ti.unit_test_info.unit:
         info["unit"] = ti.unit_test_info.unit.number
 
     if ti.created_by:
