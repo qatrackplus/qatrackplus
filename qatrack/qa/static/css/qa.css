@@ -2,8 +2,11 @@
 /* performing qa                                */
 tr.qa-comment {
     height:50px;
+    display:none;
 }
-
+tr.qa-procedure {
+    display:none;
+}
 tr.qa-comment td, tr.qa-procedure td {
     text-align:left;
 }
