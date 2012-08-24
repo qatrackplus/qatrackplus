@@ -279,7 +279,6 @@ function check_skip_status(input){
 $(document).ready(function(){
     var that = $(this);
 
-    $(".qa-comment, .qa-procedure, .qa-tli-comment textarea").hide();
 
     //show comment when clicked
     $(".qa-showcmt a").click(function(){

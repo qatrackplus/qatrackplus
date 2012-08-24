@@ -24,6 +24,7 @@ tr.qa-comment td textarea{
 .qa-tli-comment textarea {
     width:400px;
     margin-bottom:10px;
+    display:none;
 }
 
 .qa-showcmt, .qa-status {
