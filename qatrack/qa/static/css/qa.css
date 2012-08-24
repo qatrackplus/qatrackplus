@@ -1,6 +1,26 @@
 .hand-cursor{
    cursor: hand; cursor: pointer;
 }
+.navbar .nav > li > a{
+    color:white;
+}
+.navbar .nav > li > a:hover{
+    color:#08c;
+}
+.navbar .nav li.dropdown .caret{
+    border-top-color:white;
+    border-bottom-color:white;
+}
+
+.navbar b.caret{
+    border-top: 7px solid black;
+    border-right:5px solid transparent;
+    border-left:5px solid transparent;
+    opacity:1;
+    filter: alpha(opacity=100)
+}
+
+
 
 /************************************************/
 /* performing qa                                */

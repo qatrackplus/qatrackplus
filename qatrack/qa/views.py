@@ -397,11 +397,13 @@ class PerformQAView(CreateView):
 
 
         context["formset"] = formset
+
         context["history_dates"] = self.history_dates
         context["include_admin"] = self.request.user.is_staff
         context['categories'] = set([x.test.category for x in self.unit_test_infos])
         context['current_day'] = self.actual_day+1
         context['days'] = range(1,len(self.unit_test_col.tests_object)+1)
+        context["test_list"] = self.test_list
         context["unit_test_collection"] = self.unit_test_col
         context["contacts"] = list(Contact.objects.all().order_by("name"))
         return context
@@ -547,7 +549,6 @@ class UnitFrequencyListView(ListView):
             unit__number=self.kwargs["unit_number"],
             active=True,
         )
-
 
 #============================================================================
 class UnitGroupedFrequencyListView(ListView):
