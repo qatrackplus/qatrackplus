@@ -203,6 +203,7 @@ INSTALLED_APPS = [
     'qatrack.theme_bootstrap',
     'qatrack.data_tables',
     'qatrack.notifications',
+    'qatrack.contacts',
 ]
 
 

@@ -1,4 +1,7 @@
 <tr>
+	{% if table_type != "review" %}
+		<th>Perform</th>
+	{% endif %}
 	<th>Unit</th>
 	<th>Frequency</th>
 	<th>Test List/Cycle</th>
@@ -10,6 +13,5 @@
 		<th>History</th>
 	{% else %}
 		<th>Assigned To</th>
-		<th>Perform</th>
 	{% endif %}
 </tr>

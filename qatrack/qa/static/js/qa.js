@@ -271,8 +271,8 @@ function check_skip_status(input){
     var row = input.parents(".qa-valuerow");
     var val = get_value_for_row(row);
     if (val !== "") {
-        row.find(".qa-skip input").attr("checked",false);        
-    }    
+        row.find(".qa-skip input").attr("checked",false);
+    }
 }
 
 /****************************************************************/
@@ -291,7 +291,20 @@ $(document).ready(function(){
       $(".qa-tli-comment textarea").toggle(600);
       return false;
     });
-    
+
+    //toggle contacts
+    $("#toggle-contacts").click(function(){
+        $("#contacts").toggle();
+
+        var visible = $("#contacts").is(":visible");
+        var icon = "icon-plus-sign";
+        if (visible) {
+            icon = "icon-minus-sign";
+        }
+
+        $("#toggle-contacts i").removeClass("icon-plus-sign icon-minus-sign").addClass(icon);
+
+    });
 
     $(".qa-showproc a").click(function(){
       $(this).parent().parent().nextAll(".qa-procedure").first().toggle(600);
@@ -305,9 +318,9 @@ $(document).ready(function(){
 
         //anytime an input changes run validation
         user_inputs.change(function(){
-            
-            check_skip_status($(this));        
-        
+
+            check_skip_status($(this));
+
             //only allow numerical characters on input
             this.value = this.value.replace(QAUtils.NUMERIC_WHITELIST_REGEX,'');
             if (this.value[0] === ".") {

@@ -1,5 +1,22 @@
+.hand-cursor{
+   cursor: hand; cursor: pointer;
+}
+
 /************************************************/
 /* performing qa                                */
+#contacts{
+    display:none;
+}
+#contact-container {
+    padding: 2px 14px 2px 14px;
+    margin-bottom:3px;
+    min-height:14px;
+}
+
+#contact-container hr{
+    margin: 1px;
+}
+
 tr.qa-comment {
     height:50px;
     display:none;

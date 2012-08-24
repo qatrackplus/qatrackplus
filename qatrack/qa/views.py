@@ -11,6 +11,7 @@ from django.utils.translation import ugettext as _
 from django.utils import timezone
 from qatrack.qa import models,utils
 from qatrack.units.models import Unit, UnitType
+from qatrack.contacts.models import Contact
 from qatrack import settings
 
 import forms
@@ -402,7 +403,7 @@ class PerformQAView(CreateView):
         context['current_day'] = self.actual_day+1
         context['days'] = range(1,len(self.unit_test_col.tests_object)+1)
         context["unit_test_collection"] = self.unit_test_col
-
+        context["contacts"] = list(Contact.objects.all().order_by("name"))
         return context
 
     #----------------------------------------------------------------------

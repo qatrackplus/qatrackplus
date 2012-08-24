@@ -15,17 +15,24 @@
 		{% for utc in unittestcollections %}
 			{# display all individual test lists #}
 			<tr class="{% cycle 'odd' 'even' %} has-due-date">
+				{% if table_type != "review" %}
+				<td><a class="btn btn-primary btn-mini" href="{%url perform_qa utc.pk%}?day=next">Perform {{utc.frequency.name}} QA</a></td>
+				{% endif %}
 				<td>
 					{{utc.unit.name}}
 				</td>
 				<td>{{utc.frequency.name}}</td>
-				<td>
-				{{utc.testlist.name}}
-					<a href="{%url perform_qa utc.pk%}?day=next">{{utc.tests_object.name}}</a>
-				</td>
+				<td><strong>{{utc.tests_object.name}}</strong></td>
 
 				{% if  utc.last_instance %}
-					<td><a href="{% url review_test_list_instance utc.last_instance.pk %}" title="view details of last instance">{{utc.last_instance.work_completed}}</a></td>
+					<td>
+						{% if request.user.is_staff %}
+							<a href="{% url review_test_list_instance utc.last_instance.pk %}" title="view details of last instance">{{utc.last_instance.work_completed}}</a>
+						{% else %}
+							<abbr title="QA performed by {{utc.last_instance.created_by}}">{{utc.last_instance.work_completed}}</abbr>
+						{% endif %}
+						<i class="icon-user" title="QA performed by {{utc.last_instance.created_by}}"></i>
+					</td>
 					<td>
 						{{utc|as_due_date}}
 					</td>
@@ -60,7 +67,6 @@
 
 				{% else %}
 					<td>{{utc.assigned_to.name}}</td>
-					<td><a href="{%url perform_qa utc.pk%}?day=next">Perform</a></td>
 				{% endif %}
 		   </tr>
 		{% empty %}
