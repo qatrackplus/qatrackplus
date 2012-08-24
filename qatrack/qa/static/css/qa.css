@@ -15,6 +15,14 @@ tr.qa-comment td textarea{
     width:100%;
 }
 
+#toggle-gen-comment {
+    margin-bottom:10px;
+}
+.qa-tli-comment textarea {
+    width:400px;
+    margin-bottom:10px;
+}
+
 .qa-showcmt, .qa-status {
     width: 80px;
     overflow:hidden;

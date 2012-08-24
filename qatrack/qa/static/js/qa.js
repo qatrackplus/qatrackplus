@@ -272,13 +272,20 @@ function confirm_leave_page(){
 $(document).ready(function(){
     var that = $(this);
 
-    $(".qa-comment, .qa-procedure").hide();
+    $(".qa-comment, .qa-procedure, .qa-tli-comment textarea").hide();
 
     //show comment when clicked
     $(".qa-showcmt a").click(function(){
       $(this).parent().parent().nextAll(".qa-comment").first().toggle(600);
       return false;
     });
+
+    //show comment when clicked
+    $("#toggle-gen-comment").click(function(){
+      $(".qa-tli-comment textarea").toggle(600);
+      return false;
+    });
+    
 
     $(".qa-showproc a").click(function(){
       $(this).parent().parent().nextAll(".qa-procedure").first().toggle(600);

@@ -142,8 +142,20 @@
 				</tbody>
 			</table>
 
-			<div class="actions">
-				<button type="submit" class="btn btn-primary pull-right">Submit QA Results</button>
+			<div class="row-fluid">
+				<div class="span12">
+					<a id="toggle-gen-comment" class="btn pull-right" href="#" title="Click here to add a general comment about this set of tests"><i class="icon-comment"></i> Add Comment</a>
+				</div>
+			</div>
+			<div class="row-fluid">
+				<div class="span12 qa-tli-comment">
+					{{form.comment}}
+				</div>
+			</div>
+			<div class="row-fluid">
+				<div class="span12">
+					<button type="submit" class="btn btn-primary pull-right">Submit QA Results</button>
+				</div>
 			</div>
 		</form>
 

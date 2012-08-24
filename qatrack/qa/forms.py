@@ -91,7 +91,6 @@ class CreateTestListInstanceForm(forms.ModelForm):
 
     work_completed = forms.DateTimeField(required=False)
 
-
     #----------------------------------------------------------------------
     class Meta:
         model = models.TestListInstance
@@ -111,6 +110,12 @@ class CreateTestListInstanceForm(forms.ModelForm):
         self.fields["work_started"].initial = timezone.now()
 
         self.fields["status"].widget.attrs["class"] = "input-medium"
+
+        self.fields["comment"].widget.attrs["rows"] = "4"
+        self.fields["comment"].widget.attrs["class"] = "pull-right"
+        self.fields["comment"].widget.attrs["placeholder"] = "Add comment about this set of tests"
+        
+        self.fields["comment"].widget.attrs.pop("cols")
 
 #============================================================================
 class UpdateTestListInstanceForm(forms.ModelForm):

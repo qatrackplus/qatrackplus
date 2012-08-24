@@ -835,7 +835,7 @@ class TestInstance(models.Model):
     test_list_instance = models.ForeignKey("TestListInstance",editable=False, null=True, blank=True)
 
 
-    work_started = models.DateTimeField(auto_now_add=True,editable=False)
+    work_started = models.DateTimeField(editable=False)
 
     #when was the work actually performed
     work_completed = models.DateTimeField(default=timezone.now,
@@ -947,12 +947,14 @@ class TestListInstance(models.Model):
     work_started = models.DateTimeField()
     work_completed = models.DateTimeField(default=timezone.now,db_index=True,null=True)
 
+    comment = models.TextField(help_text=_("Add a comment to this set of tests"), null=True, blank=True)
+    
     in_progress = models.BooleanField(default=False, editable=False,db_index=True)
 
     #for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, editable=False, related_name="test_list_instance_creator")
-    modified = models.DateTimeField(auto_now=True)
+    modified = models.DateTimeField(auto_now=True)	
     modified_by = models.ForeignKey(User, editable=False, related_name="test_list_instance_modifier")
 
 
