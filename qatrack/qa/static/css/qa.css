@@ -13,9 +13,8 @@ tr.qa-comment td, tr.qa-procedure td {
 tr.qa-procedure td table{
     width:100%;
 }
-tr.qa-procedure td textarea,
 tr.qa-comment td textarea{
-    width:100%;
+    width:90%;
 }
 
 #toggle-gen-comment {

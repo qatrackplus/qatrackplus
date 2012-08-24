@@ -93,9 +93,7 @@
 			{% endif %}
 			<tr>
 				<td>
-					<textarea rows="5" disabled="disabled">
-				        {{form.unit_test_info.test.description}}
-					</textarea>
+					<div class="qa-procedure-text"><pre>{{form.unit_test_info.test.description.strip|safe}}</pre></div>
 				</td>
 			</tr>
 		</table>
