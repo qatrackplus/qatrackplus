@@ -544,8 +544,14 @@ class UnitFrequencyListView(ListView):
     #----------------------------------------------------------------------
     def get_queryset(self):
         """filter queryset by frequency"""
+        freq = self.kwargs["frequency"]
+        if freq == "short-interval":
+            freqs = models.Frequency.objects.filter(due_interval__lte=14).values_list("slug",flat=True)
+        else:
+            freqs = self.kwargs["frequency"].split("/")
+
         return models.UnitTestCollection.objects.filter(
-            frequency__slug=self.kwargs["frequency"],
+            frequency__slug__in=freqs,
             unit__number=self.kwargs["unit_number"],
             active=True,
         )
