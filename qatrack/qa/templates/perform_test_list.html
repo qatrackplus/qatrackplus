@@ -21,13 +21,12 @@
 				<div class="clearfix"></div>
 				<div id="contacts" class="clearfix">
 					<hr/>
-					<ul class="unstyled">
+					<dl class="dl-horizontal">
 						{% for contact in contacts %}
-							<li title="{{contact.description}}">
-								{{contact.name}} :: {{contact.number}}
-							</li>
+							<dt><abbr title="{{contact.description}}">{{contact.name}}</abbr></dt>
+							<dd>{{contact.number}}</dd>
 						{% endfor %}
-					</ul>
+					</dl>
 				</div>
 
 		</div>
