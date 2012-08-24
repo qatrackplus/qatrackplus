@@ -63,7 +63,7 @@ function calculate_composites(){
         composite_ids:JSON.stringify(composite_ids)
     };
 
-    QAUtils.call_api("/qa/composite/","POST",data,function(data){
+    QAUtils.call_api(QAUtils.COMPOSITE_URL,"POST",data,function(data){
         if (data.success){
             $.each(data.results,function(name,result){
                 set_value_by_name(name,result.value);
@@ -266,7 +266,14 @@ function confirm_leave_page(){
     }
 }
 
-
+/****************************************************************/
+function check_skip_status(input){
+    var row = input.parents(".qa-valuerow");
+    var val = get_value_for_row(row);
+    if (val !== "") {
+        row.find(".qa-skip input").attr("checked",false);        
+    }    
+}
 
 /****************************************************************/
 $(document).ready(function(){
@@ -295,13 +302,14 @@ $(document).ready(function(){
     $.when(QAUtils.init()).done(function(){
         initialize_qa();
 
-
         var user_inputs=  $('.qa-input').not("[readonly=readonly]").not("[type=hidden]");
 
         //anytime an input changes run validation
         user_inputs.change(function(){
+            
+            check_skip_status($(this));        
+        
             //only allow numerical characters on input
-
             this.value = this.value.replace(QAUtils.NUMERIC_WHITELIST_REGEX,'');
             if (this.value[0] === ".") {
                 this.value = "0" + this.value;
