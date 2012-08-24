@@ -38,6 +38,19 @@
 			{% csrf_token %}
 
 			<div id="admin_controls" class="well">
+
+				{# display any form errors up top #}
+				{% if form.errors %}
+					<div class="alert-message error">
+						{% for field in form%}
+								{% for error in field.errors %}
+									<span class="alert-error help-block-inline ">{{field.label}} ::{{ error }}</span>
+								{% endfor %}
+						{% endfor %}
+					</div>
+					<hr/>
+				{% endif %}
+
 				{% if include_admin %}
 
 					<div class="input-prepend input-append" id="category">
@@ -60,13 +73,10 @@
 					<label for="id_work_started" class="add-on">
 						{{form.work_started.label}}:
 					</label>
-					<input name="work_started" {% if not include_admin %}disabled="disabled"{% endif %} title="Format DD-MM-YY hh:mm (hh:mm is 24h time e.g. 31-05-12 14:30)" value="{% now "d-m-Y H:i" %}" class="input-medium" type="text" id="id_work_started">
+					<input name="work_started" {% if not include_admin %}readonly="readonly"{% endif %} title="Format DD-MM-YY hh:mm (hh:mm is 24h time e.g. 31-05-12 14:30)" value="{% now "d-m-Y H:i" %}" class="input-medium" type="text" id="id_work_started">
 					{% if include_admin%}
 						<span class="add-on"><i class="icon-th"></i></span>
 					{% endif %}
-					{% for error in form.errors.work_started %}
-						<span class="alert-error help-block-inline">{{ error }} {{form.work_started.help_text}}</span>
-					{% endfor %}
 					{% endspaceless %}
 				</div>
 
@@ -75,18 +85,12 @@
 						<label for="id_work_completed" class="add-on">
 							{{form.work_completed.label}}:
 						</label>{{form.work_completed}}<span class="add-on"><i class="icon-th"></i></span>
-						{% for error in form.errors.work_completed %}
-							<span class="alert-error help-block-inline">{{ error }} {{form.work_completed.help_text}}</span>
-						{% endfor %}
 					</div>
 
 					<div class="input-prepend input-append" id="status">
 						<label for="id_status" class="add-on">
 							Set Status:
 						</label>{{form.status}}
-						{% for error in form.errors.status %}
-							<span class="alert-error help-block-inline">{{ error }} {{form.work_completed.help_text}}</span>
-						{% endfor %}
 					</div>
 
 				{% endif %}
@@ -97,7 +101,7 @@
 						<label for="cycle-day" class="add-on">
 							Choose Day:
 						</label>
-						<select id="cycle-day" class="input-small" {% if not days %}disabled="disabled"{%endif%}>
+						<select id="cycle-day" class="input-small" {% if not days %}readonly="readonly"{%endif%}>
 							<option value="next">Next scheduled</option>
 							{% for day in days %}
 								<option value="{{day}}" {% if day == current_day %}selected="selected"{% endif %}>
@@ -110,19 +114,6 @@
 
 			</div>
 
-
-			{# display any form errors up top #}
-			{% if form.errors %}
-				<div class="alert-message error">
-					{% for field,errors in form.errors.items %}
-						{% if field != "work_completed" %}
-							{% for error in errors %}
-								<span class="alert-error help-block-inline ">{{ error }}</span>
-							{% endfor %}
-						{% endif %}
-					{% endfor %}
-				</div>
-			{% endif %}
 
 			{% if formset.non_form_errors %}
 				<div class="alert-message error">

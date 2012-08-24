@@ -55,8 +55,6 @@ class TestInfoForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(TestInfoForm, self).__init__(*args, **kwargs)
         self.fields['test_type'].widget.attrs['readonly'] = "readonly"
-        #self.fields['test_type'].widget.attrs['disabled'] = "disabled"
-
 
         if self.instance:
             tt = self.instance.test.type
