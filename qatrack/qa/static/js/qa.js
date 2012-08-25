@@ -25,6 +25,8 @@ function initialize_qa(){
             tol_low:parseFloat($(this).find(".tol_low").val()),
             tol_high:parseFloat($(this).find(".tol_high").val()),
             act_high:parseFloat($(this).find(".act_high").val()),
+            mc_pass_choices:QAUtils.non_empty($(this).find(".mc_pass_choices").val().split(',')),
+            mc_tol_choices:QAUtils.non_empty($(this).find(".mc_tol_choices").val().split(',')),
             type:$(this).find(".qa-tolerance-type").val(),
             pk:$(this).find(".qa-tolerance-pk").val()
 
@@ -133,9 +135,9 @@ function get_value_for_row(input_row_element){
             return null;
         }
     }else if (test_type === QAUtils.MULTIPLE_CHOICE){
-        val = $(input_row_element).find(":selected").val();
+        val = $(input_row_element).find(":selected").text();
         if (val !== ""){
-            return parseFloat(val);
+            return val;
         }else{
             return null;
         }

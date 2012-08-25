@@ -64,13 +64,12 @@ class TestInfoForm(forms.ModelForm):
             if tt == models.BOOLEAN:
                 self.fields["reference_value"].widget = forms.Select(choices=[("","---"),(0,"No"),(1,"Yes")])
                 self.fields["tolerance"].widget = forms.HiddenInput()
-                #self.fields["tolerance"].widget.attrs["readonly"] = "readonly"# = forms.HiddenInput()
 
             elif tt == models.MULTIPLE_CHOICE:
-                self.fields["reference_value"].widget = forms.Select(choices=[("","---")]+self.instance.test.get_choices(),)
-                self.fields["tolerance"].widget.attrs["readonly"] = "readonly"# = forms.HiddenInput()
-            if self.instance.reference:
-                if tt in (models.BOOLEAN,models.MULTIPLE_CHOICE):
+                self.fields["reference_value"].widget = forms.HiddenInput()
+
+            if tt != models.MULTIPLE_CHOICE and self.instance.reference:
+                if tt == models.BOOLEAN:
                     val = int(self.instance.reference.value)
                 else:
                     val = self.instance.reference.value
@@ -79,20 +78,24 @@ class TestInfoForm(forms.ModelForm):
     #----------------------------------------------------------------------
     def clean(self):
         """make sure valid numbers are entered for boolean data"""
-
-        if "reference_value" not in self.cleaned_data:
-            return self.cleaned_data
-
-        ref_value = self.cleaned_data["reference_value"]
-
-        tol =self.cleaned_data["tolerance"]
-        if tol is not None:
-            if ref_value == 0 and tol.type == models.PERCENT:
-                raise forms.ValidationError(_("Percentage based tolerances can not be used with reference value of zero (0)"))
-
-        if self.instance.test.type in (models.BOOLEAN, models.MULTIPLE_CHOICE):
-            if self.cleaned_data["tolerance"] is not None:
-                raise forms.ValidationError(_("Please leave tolerance field blank for boolean and multiple choice test types"))
+        
+        if self.instance.test.type == models.MULTIPLE_CHOICE and self.cleaned_data["tolerance"]:
+            if self.cleaned_data["tolerance"].type != models.MULTIPLE_CHOICE:
+                raise forms.ValidationError(_("You can't use a non-multiple choice tolerance with a multiple choice test"))
+        else:
+            if "reference_value" not in self.cleaned_data:
+                return self.cleaned_data
+    
+            ref_value = self.cleaned_data["reference_value"]
+    
+            tol =self.cleaned_data["tolerance"]
+            if tol is not None:
+                if ref_value == 0 and tol.type == models.PERCENT:
+                    raise forms.ValidationError(_("Percentage based tolerances can not be used with reference value of zero (0)"))
+    
+            if self.instance.test.type == models.BOOLEAN:
+                if self.cleaned_data["tolerance"] is not None:
+                    raise forms.ValidationError(_("Please leave tolerance field blank for boolean and multiple choice test types"))
         return self.cleaned_data
 
 
@@ -134,26 +137,27 @@ class UnitTestInfoAdmin(admin.ModelAdmin):
     #----------------------------------------------------------------------
     def save_model(self, request, test_info, form, change):
         """create new reference when user updates value"""
-        if form.instance.test.type == models.BOOLEAN:
-            ref_type = models.BOOLEAN
-        elif form.instance.test.type == models.MULTIPLE_CHOICE:
-            ref_type = models.MULTIPLE_CHOICE
-        else:
-            ref_type = models.NUMERICAL
-        val = form["reference_value"].value()
-        if val not in ("", None):
-            if not(test_info.reference and test_info.reference.value == float(val)):
-                ref = models.Reference(
-                    value=val,
-                    type = ref_type,
-                    created_by = request.user,
-                    modified_by = request.user,
-                    name = "%s %s" % (test_info.unit.name,test_info.test.name)[:255]
-                )
-                ref.save()
-                test_info.reference = ref
-        else:
-            test_info.reference = None
+        
+        if form.instance.test.type != models.MULTIPLE_CHOICE:        
+        
+            if form.instance.test.type == models.BOOLEAN:
+                ref_type = models.BOOLEAN
+            else:
+                ref_type = models.NUMERICAL
+            val = form["reference_value"].value()
+            if val not in ("", None):
+                if not(test_info.reference and test_info.reference.value == float(val)):
+                    ref = models.Reference(
+                        value=val,
+                        type = ref_type,
+                        created_by = request.user,
+                        modified_by = request.user,
+                        name = "%s %s" % (test_info.unit.name,test_info.test.name)[:255]
+                    )
+                    ref.save()
+                    test_info.reference = ref
+            else:
+                test_info.reference = None
 
         super(UnitTestInfoAdmin,self).save_model(request,test_info,form,change)
 

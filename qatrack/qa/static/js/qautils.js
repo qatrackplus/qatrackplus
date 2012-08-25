@@ -93,9 +93,11 @@ var QAUtils = new function() {
         var message;
 
 
-        if ((test_type === this.BOOLEAN) || (test_type === this.MULTIPLE_CHOICE)){
-            return this.test_multi(value, reference);
-        }
+        if (test_type === this.BOOLEAN){
+            return this.test_bool(value, reference);
+        }else if  (test_type === this.MULTIPLE_CHOICE){
+			return this.test_multi(value,tolerances)
+		}
 
 		if ( !this.is_number(reference) || !tolerances.type){
             return {
@@ -140,7 +142,7 @@ var QAUtils = new function() {
         return {status:status, gen_status:gen_status, diff:diff, message:message};
     };
 
-    this.test_multi = function(value,reference){
+    this.test_bool = function(value,reference){
 		if ( !this.is_number(reference)){
             return {
                 status:this.NO_TOL,
@@ -169,6 +171,36 @@ var QAUtils = new function() {
 
         return {status:status, gen_status:gen_status, diff:diff, message:message};
     };
+
+
+    this.test_multi = function(value,tolerance){
+		if ( tolerance.mc_pass_choices.length == 0){
+            return {
+                status:this.NO_TOL,
+                gen_status:this.NO_TOL,
+                diff:"",
+                message: this.NO_TOL_DISP
+            };
+		}
+
+        var status, gen_status,diff;
+	
+        var message;
+		
+		if (tolerance.mc_pass_choices.indexOf(value)>=0){
+			gen_status = this.WITHIN_TOL;
+			message = "PASS";
+		}else if (tolerance.mc_tol_choices.indexOf(value)>=0){
+			gen_status = this.TOLERANCE;
+			message = "TOL";
+		}else{
+			gen_status = this.ACTION;
+			message = "FAIL";
+		}
+
+        return {status:status, gen_status:gen_status, diff:diff, message:message};
+    };
+
 
     //convert a tolerance from relative to absolute values based on reference
     this.convert_tol_to_abs = function(ref_val,tol){
@@ -355,7 +387,10 @@ var QAUtils = new function() {
         }
         return zipped;
     };
-
+	
+	this.non_empty = function(arr){
+		return	arr.filter(function(elem,idx){return elem !== "";});
+	};
     this.intersection = function(a1,a2){
         return $(a1).filter(function(idx,elem){return $.inArray(elem,a2)>=0;});
     };

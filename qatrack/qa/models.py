@@ -41,6 +41,7 @@ PERCENT = "percent"
 TOL_TYPE_CHOICES = (
     (ABSOLUTE, "Absolute"),
     (PERCENT, "Percentage"),
+    (MULTIPLE_CHOICE,"Multiple Choice"),
 )
 
 #reference types
@@ -232,10 +233,13 @@ class Tolerance(models.Model):
     """
     name = models.CharField(max_length=50, unique=True, help_text=_("Enter a short name for this tolerance type"))
     type = models.CharField(max_length=20, help_text=_("Select whether this will be an absolute or relative tolerance criteria"),choices=TOL_TYPE_CHOICES)
-    act_low = models.FloatField(verbose_name="Action Low", help_text=_("Absolute value of lower action level"), null=True)
-    tol_low = models.FloatField(verbose_name="Tolerance Low", help_text=_("Absolute value of lower tolerance level"), null=True)
-    tol_high = models.FloatField(verbose_name="Tolerance High", help_text=_("Absolute value of upper tolerance level"), null=True)
-    act_high = models.FloatField(verbose_name="Action High", help_text=_("Absolute value of upper action level"), null=True)
+    act_low = models.FloatField(verbose_name=_("Action Low"), help_text=_("Absolute value of lower action level"), null=True,blank=True)
+    tol_low = models.FloatField(verbose_name=_("Tolerance Low"), help_text=_("Absolute value of lower tolerance level"), null=True,blank=True)
+    tol_high = models.FloatField(verbose_name=_("Tolerance High"), help_text=_("Absolute value of upper tolerance level"), null=True,blank=True)
+    act_high = models.FloatField(verbose_name=_("Action High"), help_text=_("Absolute value of upper action level"), null=True, blank=True)
+
+    mc_pass_choices = models.CharField(verbose_name=_("Multiple Choice Pass Values"),max_length=2048,help_text=_("Comma seperated list of choices that are considered passing"),null=True,blank=True)
+    mc_tol_choices = models.CharField(verbose_name=_("Multiple Choice Tolerance Values"), max_length=2048,help_text=_("Comma seperated list of choices that are considered at tolerance"),null=True,blank=True)
 
     #who created this tolerance
     created_date = models.DateTimeField(auto_now_add=True)
@@ -246,12 +250,47 @@ class Tolerance(models.Model):
     modified_by = models.ForeignKey(User,editable=False,related_name="tolerance_modifiers")
 
     #---------------------------------------------------------------------------
+    def pass_choices(self):
+        return self.mc_pass_choices.split(",")
+    #---------------------------------------------------------------------------
+    def tol_choices(self):
+        return self.mc_tol_choices.split(",")
+
+    #---------------------------------------------------------------------------
+    def clean_choices(self):
+        """make sure choices provided if Tolerance Type is MultipleChoice"""
+        errors = []
+        if self.type == MULTIPLE_CHOICE:
+            if (None, None, None, None) != (self.act_low,self.tol_low,self.tol_high,self.act_high):
+                errors.append("Value set for tolerance or action but type is Multiple Choice")
+                
+        elif self.type is not MULTIPLE_CHOICE:
+            if (None, None) != (self.mc_pass_choices,self.mc_tol_choices):
+                errors.append("Value set for pass choices or tolerance choices but type is not Multiple Choice")
+
+        pass_choices = [x.strip() for x in self.mc_pass_choices.split(",") if x.strip()]
+        tol_choices = [x.strip() for x in self.mc_tol_choices.split(",") if x.strip()]
+        
+        if not pass_choices:
+            errors.append("You must give more at l passing choice for a multiple choice tolerance")
+        else:
+            self.mc_pass_choices = ",".join(pass_choices)
+            if tol_choices:
+                self.tol_choices = ",".join(tol_choices)
+            
+        if errors:
+            raise ValidationError({"pass_choices":errors})
+        
+    #---------------------------------------------------------------------------
     def __unicode__(self):
         """more helpful interactive display name"""
         vals = (self.name,self.act_low,self.tol_low,self.tol_high,self.act_high)
         if self.type == ABSOLUTE:
             return "%s(%g, %g, %g, %g)" % vals
-        return "%s(%.1f%%, %.1f%%, %.1f%%, %.1f%%)" % vals
+        elif self.type == PERCENT:
+            return "%s(%.1f%%, %.1f%%, %.1f%%, %.1f%%)" % vals
+        elif self.type == MULTIPLE_CHOICE:
+            return "%s(Multiple Choices)" % self.name
 
 
 #============================================================================
@@ -299,7 +338,7 @@ class Test(models.Model):
         help_text=_("Indicate if this test is a %s" % (','.join(x[1].title() for x in TEST_TYPE_CHOICES)))
     )
 
-    choices = models.CharField(max_length=2048,help_text=_("Comma seperated list of choices for multipel choice test types"),null=True,blank=True)
+    choices = models.CharField(max_length=2048,help_text=_("Comma seperated list of choices for multiple choice test types"),null=True,blank=True)
     constant_value = models.FloatField(help_text=_("Only required for constant value types"), null=True, blank=True)
 
     calculation_procedure = models.TextField(null=True, blank=True,help_text=_(
@@ -393,6 +432,11 @@ class Test(models.Model):
         if self.type == MULTIPLE_CHOICE:
             cs = self.choices.split(",")
             return zip(range(len(cs)),cs)
+    #---------------------------------------------------------------------------
+    def get_choice_value(self,choice):
+        """return string representing integer choice value"""
+        if self.type == MULTIPLE_CHOICE:
+            return self.choices.split(",")[choice]
 
     #----------------------------------------------------------------------
     def __unicode__(self):
@@ -660,7 +704,7 @@ class UnitTestCollection(models.Model):
     def next_list(self):
         """return next list to be completed from tests_object"""
 
-        if not self.last_instance:
+        if not hasattr(self,"last_instance"):
             return self.tests_object.first()
 
         return self.tests_object.next_list(self.last_instance.test_list)
@@ -858,7 +902,6 @@ class TestInstance(models.Model):
     #----------------------------------------------------------------------
     def save(self, *args, **kwargs):
         """set pass fail status on save"""
-
         self.calculate_pass_fail()
         super(TestInstance,self).save(*args,**kwargs)
     #----------------------------------------------------------------------
@@ -872,37 +915,49 @@ class TestInstance(models.Model):
             raise ValueError("Tried to calculate percent diff with a zero reference value")
         return 100.*(self.value-self.reference.value)/float(self.reference.value)
 
+    #---------------------------------------------------------------------------
+    def bool_pass_fail(self):
+        diff = abs(self.reference.value - self.value)
+        if diff > EPSILON:
+            self.pass_fail = ACTION
+        else:
+            self.pass_fail = OK
+    #---------------------------------------------------------------------------
+    def mult_choice_pass_fail(self):
+        choice = self.unit_test_info.test.get_choice_value(int(self.value)).lower()
+        if choice in map(str.lower,self.tolerance.pass_choices()):
+            self.pass_fail = OK
+        elif choice in map(str.lower,self.tolerance.tol_choices()):
+            self.pass_fail = TOLERANCE
+        else:
+            self.pass_fail = ACTION
+        
+    #---------------------------------------------------------------------------
+    def float_pass_fail(self):
+        if self.tolerance.type == ABSOLUTE:
+            diff = self.difference()
+        else:
+            diff = self.percent_difference()
+
+        if self.tolerance.tol_low <= diff <= self.tolerance.tol_high:
+            self.pass_fail = OK
+        elif self.tolerance.act_low <= diff <= self.tolerance.tol_low or self.tolerance.tol_high <= diff <= self.tolerance.act_high:
+            self.pass_fail = TOLERANCE
+        else:
+            self.pass_fail = ACTION
+        
     #----------------------------------------------------------------------
     def calculate_pass_fail(self):
         """set pass/fail status of the current value"""
 
         if self.skipped:
-
             self.pass_fail = NOT_DONE
-
-        elif self.unit_test_info.test.type in  (BOOLEAN, MULTIPLE_CHOICE) and self.reference:
-
-            diff = abs(self.reference.value - self.value)
-
-            if diff > EPSILON:
-                self.pass_fail = ACTION
-            else:
-                self.pass_fail = OK
-
+        elif (self.unit_test_info.test.type ==  BOOLEAN) and self.reference:
+            self.bool_pass_fail()
+        elif self.unit_test_info.test.type ==  MULTIPLE_CHOICE and self.tolerance:
+            self.mult_choice_pass_fail()
         elif self.reference and self.tolerance:
-
-            if self.tolerance.type == ABSOLUTE:
-                diff = self.difference()
-            else:
-                diff = self.percent_difference()
-
-            if self.tolerance.tol_low <= diff <= self.tolerance.tol_high:
-                self.pass_fail = OK
-            elif self.tolerance.act_low <= diff <= self.tolerance.tol_low or self.tolerance.tol_high <= diff <= self.tolerance.act_high:
-                self.pass_fail = TOLERANCE
-            else:
-                self.pass_fail = ACTION
-
+            self.float_pass_fail()
         else:
             #no tolerance and/or reference set
             self.pass_fail = NO_TOL
