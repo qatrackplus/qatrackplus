@@ -704,7 +704,7 @@ class UnitTestCollection(models.Model):
     def next_list(self):
         """return next list to be completed from tests_object"""
 
-        if not hasattr(self,"last_instance"):
+        if not hasattr(self,"last_instance") or not self.last_instance:
             return self.tests_object.first()
 
         return self.tests_object.next_list(self.last_instance.test_list)
@@ -925,9 +925,9 @@ class TestInstance(models.Model):
     #---------------------------------------------------------------------------
     def mult_choice_pass_fail(self):
         choice = self.unit_test_info.test.get_choice_value(int(self.value)).lower()
-        if choice in map(str.lower,self.tolerance.pass_choices()):
+        if choice in [x.lower() for x in self.tolerance.pass_choices()]:
             self.pass_fail = OK
-        elif choice in map(str.lower,self.tolerance.tol_choices()):
+        elif choice in [x.lower() for x in self.tolerance.tol_choices()]:
             self.pass_fail = TOLERANCE
         else:
             self.pass_fail = ACTION
