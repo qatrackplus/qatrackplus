@@ -116,6 +116,8 @@ def create_test_instance(unit_test_info=None,value=1., created_by=None,work_comp
 
 
     if work_completed is None: work_completed = timezone.now()
+    work_started = work_completed - timezone.timedelta(seconds=60)
+    
     if created_by is None: created_by = create_user()
     if status is None: status = create_status()
 
@@ -126,6 +128,7 @@ def create_test_instance(unit_test_info=None,value=1., created_by=None,work_comp
         modified_by=created_by,
         status=status,
         work_completed=work_completed,
+        work_started=work_started,
     )
 
     ti.save()
