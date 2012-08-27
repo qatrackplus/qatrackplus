@@ -24,8 +24,13 @@
 
 /************************************************/
 /* performing qa                                */
+#overall-qa-status{
+    min-height:0px;
+}
+#do-not-treat,
 #contacts{
     display:none;
+    min-height:0px;
 }
 #contacts dt{
     width:inherit;

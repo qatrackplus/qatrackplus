@@ -28,7 +28,7 @@
         <input type="hidden" class="qa-tolerance act_high" value="{{tol.act_high}}"/>
         <input type="hidden" class="qa-tolerance mc_pass_choices" value="{{tol.mc_pass_choices}}"/>
         <input type="hidden" class="qa-tolerance mc_tol_choices" value="{{tol.mc_tol_choices}}"/>
-		
+
         <input type="hidden" class="qa-tolerance-type" value="{{tol.type}}"/>
 		<input type="hidden" class="qa-contextname" value="{{test.slug}}"/>
 		<input type="hidden" class="qa-test-id" value="{{test.pk}}"/>
@@ -58,7 +58,7 @@
 					{% if tol.type == "percent" %}
 						<span title="{{tol.act_low}}% &le; {{tol.tol_low}}% &le; {{ref.value}} &le; {{tol.tol_high}}% &le; {{tol.act_high}}%">{{ref.value}}</span>
 					{% elif tol.type == "multchoice" %}
-						<span title="Passing Values: {{tol.mc_pass_choices}};  Tolerance Values: {{tol.mc_tol_choices}}; All other choices will are failing"><em>Mult. Choice</em></span>					
+						<span title="Passing Values: {{tol.mc_pass_choices}};  Tolerance Values: {{tol.mc_tol_choices}}; All other choices will are failing"><em>Mult. Choice</em></span>
 					{% else %}
 						<span title="{{tol.act_low}} &le; {{tol.tol_low}} &le; {{ref.value}} &le; {{tol.tol_high}} &le; {{tol.act_high}}">{{ref.value}}</span>
 					{% endif %}
@@ -69,7 +69,7 @@
 					{% if d and pf != "not_done"%}
 					<span class="label {{pf}} history-value" title="{{d}} - {{s}}">{{v|scientificformat}}</span>
 					{% else %}
-						<span class="label history-value" title="N/A">N/A</span>					
+						<span class="label history-value" title="N/A">N/A</span>
 					{% endif %}
 				{% endfor %}
 			</td>
@@ -98,7 +98,17 @@
 			{% endif %}
 			<tr>
 				<td>
-					<div class="qa-procedure-text"><pre>{{form.unit_test_info.test.description.strip|safe}}</pre></div>
+					<div class="qa-procedure-text">
+						{% spaceless %}
+						{% if not form.unit_test_info.test.description %}
+							<pre>
+								<em>No procedure available</em>
+							</pre>
+						{%else %}
+							<pre>{{form.unit_test_info.test.description.strip|safe}}</pre>
+						{% endif %}
+						{% endspaceless%}
+					</div>
 				</td>
 			</tr>
 		</table>
