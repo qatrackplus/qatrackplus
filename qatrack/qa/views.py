@@ -585,12 +585,27 @@ class AllTestCollections(ListView):
 class ChartView(TemplateView):
     """view for creating charts/graphs from data"""
     template_name = "charts.html"
+            
     #----------------------------------------------------------------------
     def get_context_data(self,**kwargs):
         """add default dates to context"""
         context = super(ChartView,self).get_context_data(**kwargs)
+        
+        test_lists = models.TestList.objects.prefetch_related(
+            "tests"
+        )
+        #tests = models.Test.objects.prefetch_related(
+        #    "tests",
+            #"testlistmembership_set"
+        #)
+        
+        for x in test_lists:
+            print x,x.tests.all()
+        
         context["from_date"] = timezone.now().date()-timezone.timedelta(days=365)
         context["to_date"] = timezone.now().date()+timezone.timedelta(days=1)
+        
+        
         context["check_list_filters"] = [
             ("Frequency","frequency"),
             ("Review Status","review-status"),
