@@ -32,6 +32,7 @@ def as_unittestcollections_table(unit_lists, table_type="datatable"):
     ).prefetch_related(
         "last_instance__testinstance_set",
         "assigned_to",
+        "visible_to",
         "tests_object",
     )
 

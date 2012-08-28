@@ -8,6 +8,11 @@ function init_test_collection_tables(){
 		selector = arguments[0];
 	}
 	$(selector).each(function(idx,table){
+
+		if ($(this).find("tr.empty-table")){
+			continue;
+		}
+		
 		var cols ;
 
 		if ($(table).hasClass("review-table")){

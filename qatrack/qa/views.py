@@ -268,7 +268,12 @@ class PerformQAView(CreateView):
     #----------------------------------------------------------------------
     def set_unit_test_collection(self):
         self.unit_test_col = get_object_or_404(
-            models.UnitTestCollection.objects.select_related("unit","frequency"),
+            models.UnitTestCollection.objects.select_related(
+                "unit","frequency"
+            ).filter(
+                active=True,
+                visible_to__in = self.request.user.groups.all(),            
+            ).distinct(),
             pk=self.kwargs["pk"]
         )
     #----------------------------------------------------------------------
@@ -554,7 +559,8 @@ class UnitFrequencyListView(ListView):
             frequency__slug__in=freqs,
             unit__number=self.kwargs["unit_number"],
             active=True,
-        )
+            visible_to__in = self.request.user.groups.all(),            
+        ).distinct()
 
 #============================================================================
 class UnitGroupedFrequencyListView(ListView):
@@ -569,7 +575,9 @@ class UnitGroupedFrequencyListView(ListView):
         return models.UnitTestCollection.objects.filter(
             frequency__slug=self.kwargs["frequency"],
             active=True,
-        )
+            visible_to__in = self.request.user.groups.all(),            
+        ).distinct()
+    
 #============================================================================
 class AllTestCollections(ListView):
     """show all lists currently assigned to the groups this member is a part of"""
@@ -578,7 +586,10 @@ class AllTestCollections(ListView):
     context_object_name = "unittestcollections"
     #----------------------------------------------------------------------
     def get_queryset(self):
-        return models.UnitTestCollection.objects.filter(active=True)
+        return models.UnitTestCollection.objects.filter(
+            active=True,
+            visible_to__in = self.request.user.groups.all(),            
+        ).distinct()
 
 
 #============================================================================

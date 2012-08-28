@@ -283,7 +283,7 @@ assigned_to_name.short_description = "Assigned To"
 #============================================================================
 class UnitTestCollectionAdmin(admin.ModelAdmin):
     #readonly_fields = ("unit","frequency",)
-    #filter_horizontal = ("test_lists","cycles",)
+    filter_horizontal = ("visible_to",)
     list_display = ["test_objects_name", unit_name, freq_name,assigned_to_name]
     list_filter = ["unit__name", "frequency__name","assigned_to__name"]
     search_fields = ["unit__name","frequency__name","testlist__name","testlistcycle__name"]
