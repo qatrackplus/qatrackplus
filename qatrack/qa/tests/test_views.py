@@ -343,6 +343,9 @@ class TestPerformQA(TestCase):
         for test in self.tests:
             utils.create_test_list_membership(self.test_list,test)
 
+        group = Group(name="foo")
+        group.save()
+
         self.unit_test_list = utils.create_unit_test_collection(
             test_collection=self.test_list
         )
@@ -352,8 +355,6 @@ class TestPerformQA(TestCase):
             self.unit_test_infos.append(models.UnitTestInfo.objects.get(test=test,unit=self.unit_test_list.unit))
         self.url = reverse("perform_qa",kwargs={"pk":self.unit_test_list.pk})
         self.client.login(username="user",password="password")
-        group = Group(name="foo")
-        group.save()
         self.user = User.objects.get(username="user")
         self.user.save()
         self.user.groups.add(group)
@@ -488,6 +489,8 @@ class TestPerformQA(TestCase):
         self.assertTrue(response.context["include_admin"])
 
         u2 = utils.create_user(is_staff=False,is_superuser=False,uname="u2")
+        u2.groups.add(Group.objects.get(pk=1))
+        u2.save()
         self.client.logout()
         self.client.login(username="u2",password="password")
 
