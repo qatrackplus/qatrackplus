@@ -543,29 +543,6 @@ class ReviewTestListInstance(UpdateView):
         context["statuses"] = models.TestInstanceStatus.objects.all()
         return context
 
-#============================================================================
-class UnitFrequencyListView(ListView):
-    """list daily/monthly/annual test lists for a unit"""
-
-    template_name_suffix = "_unit_frequency"
-    context_object_name = "unittestcollections"
-
-    #----------------------------------------------------------------------
-    def get_queryset(self):
-        """filter queryset by frequency"""
-        freq = self.kwargs["frequency"]
-        if freq == "short-interval":
-            freqs = models.Frequency.objects.filter(due_interval__lte=14).values_list("slug",flat=True)
-        else:
-            freqs = self.kwargs["frequency"].split("/")
-
-        return models.UnitTestCollection.objects.filter(
-            frequency__slug__in=freqs,
-            unit__number=self.kwargs["unit_number"],
-            active=True,
-            visible_to__in = self.request.user.groups.all(),
-        ).distinct()
-
 
 #============================================================================
 class UTCListView(ListView):
@@ -694,38 +671,6 @@ class AwaitingReview(ListView):
         context["page_title"] = "Awaiting Review"
         return context
 
-#============================================================================
-class ReviewView(ListView):
-    """view for grouping all test lists with a certain frequency for all units"""
-    template_name = "review_all.html"
-    model = models.UnitTestCollection
-    context_object_name = "unittestcollections"
-
-    #----------------------------------------------------------------------
-    def get_queryset(self):
-        qs = super(ReviewView,self).get_queryset()
-        qs = qs.select_related(
-                "last_instance",
-                "frequency",
-                "unit__name",
-            ).prefetch_related(
-                "last_instance__testinstance_set",
-                "assigned_to",
-                "tests_object",
-            )
-        return qs
-    #----------------------------------------------------------------------
-    def get_context_data(self,**kwargs):
-        context = super(ReviewView,self).get_context_data(**kwargs)
-
-        requires_review = list(models.TestListInstance.objects.filter(
-            testinstance__status__requires_review=True
-        ).distinct().select_related("test_list"))
-
-        for utc in context["unittestcollections"]:
-            utc.requires_review = [x for x in requires_review if x.unit_test_collection==utc]
-
-        return context
 #============================================================================
 class ExportToCSV(View):
     """A simple api wrapper to give exported api data a filename for downloads"""
