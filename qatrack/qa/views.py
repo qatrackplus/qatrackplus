@@ -333,6 +333,10 @@ class PerformQAView(CreateView):
 
         context = self.get_context_data()
         formset = context["formset"]
+        
+        for ti_form in formset:
+            ti_form.in_progress = form.instance.in_progress
+        
         if formset.is_valid():
 
             self.object = form.save(commit=False)
@@ -612,6 +616,22 @@ class ChartView(TemplateView):
         ]
         return context
 
+
+#============================================================================
+class InProgress(ListView):
+    """view for grouping all test lists with a certain frequency for all units"""
+    template_name = "awaiting_review.html"
+    model = models.TestListInstance
+    context_object_name = "test_list_instances"
+    #----------------------------------------------------------------------
+    def get_queryset(self):
+        qs = models.TestListInstance.objects.in_progress().select_related(
+            "test_list__name",
+            "unit_test_collection__unit__name",
+            "unit_test_collection__frequency__name",
+        ).prefetch_related("testinstance_set")
+
+        return qs
 
 #============================================================================
 class AwaitingReview(ListView):

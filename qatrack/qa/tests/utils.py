@@ -220,8 +220,11 @@ def create_unit_test_collection(unit=None,frequency=None,test_collection=None):
         unit = unit,
         object_id = test_collection.pk,
         content_type = ContentType.objects.get_for_model(test_collection),
-        frequency = frequency
+        frequency = frequency,
+
     )
 
+    utc.save()
+    utc.visible_to = Group.objects.all()
     utc.save()
     return utc

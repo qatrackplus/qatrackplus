@@ -16,12 +16,20 @@ class CreateTestInstanceForm(forms.Form):
     value = forms.FloatField(required=False,widget=forms.widgets.TextInput(attrs={"class":"qa-input"}))
     skipped = forms.BooleanField(required=False,help_text=_("Was this test skipped for some reason (add comment)"))
     comment = forms.CharField(widget=forms.Textarea,required=False,help_text=_("Show or hide comment field"))
-
+    
+    #---------------------------------------------------------------------------
+    def __init__(self,*args,**kwargs):
+        super(CreateTestInstanceForm,self).__init__(*args,**kwargs)
+        self.in_progress = False
+        
     #----------------------------------------------------------------------
     def clean(self):
         """do some custom form validation"""
-
         cleaned_data = super(CreateTestInstanceForm,self).clean()
+        
+        if self.in_progress:
+            return cleaned_data
+        
         skipped = cleaned_data.get("skipped")
         comment = cleaned_data.get("comment")
         value = cleaned_data.get("value")
@@ -66,6 +74,7 @@ class CreateTestInstanceFormSet(BaseCreateTestInstanceFormSet):
     #----------------------------------------------------------------------
     def __init__(self,*args,**kwargs):
         unit_test_infos = kwargs.pop("unit_test_infos")
+        #in_progress = kwargs.pop("in_progress")
         initial = []
         for uti in unit_test_infos:
             init = {"value":None}
@@ -77,6 +86,7 @@ class CreateTestInstanceFormSet(BaseCreateTestInstanceFormSet):
 
         for form,uti in zip(self.forms,unit_test_infos):
             form.set_unit_test_info(uti)
+            #form.in_progress = in_progress
 
 
 

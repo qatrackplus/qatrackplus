@@ -51,8 +51,11 @@ urlpatterns = patterns('',
 
     #performing qa
     url(r"^units/$", views.ChooseUnit.as_view(), name="choose_unit"),
+    url(r"^sessions/in-progress/$", views.InProgress.as_view(), name="in_progress"),
+    
     url(r"^(?P<frequency>[\w-]+)/$", views.UnitGroupedFrequencyListView.as_view(), name="qa_by_frequency"),
     url(r"^(?P<pk>\d+)$", views.PerformQAView.as_view(), name="perform_qa"),
+    
     url(r"^(?P<frequency>[/\w-]+)/unit/(?P<unit_number>\d+)/$", views.UnitFrequencyListView.as_view(), name="qa_by_frequency_unit"),
 
 

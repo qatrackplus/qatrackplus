@@ -906,6 +906,7 @@ class TestInstance(models.Model):
     #----------------------------------------------------------------------
     def save(self, *args, **kwargs):
         """set pass fail status on save"""
+
         self.calculate_pass_fail()
         super(TestInstance,self).save(*args,**kwargs)
     #----------------------------------------------------------------------
@@ -954,7 +955,7 @@ class TestInstance(models.Model):
     def calculate_pass_fail(self):
         """set pass/fail status of the current value"""
 
-        if self.skipped:
+        if self.skipped or (self.value is None and self.in_progress):
             self.pass_fail = NOT_DONE
         elif (self.unit_test_info.test.type ==  BOOLEAN) and self.reference:
             self.bool_pass_fail()
@@ -974,8 +975,9 @@ class TestInstance(models.Model):
 @receiver(post_save,sender=TestInstance)
 def on_test_instance_saved(*args,**kwargs):
     test_instance = kwargs["instance"]
-    test_instance.unit_test_info.last_instance = test_instance
-    test_instance.unit_test_info.save()
+    if not test_instance.in_progress:
+        test_instance.unit_test_info.last_instance = test_instance
+        test_instance.unit_test_info.save()
 
 #============================================================================
 class TestListInstanceManager(models.Manager):
@@ -1008,7 +1010,7 @@ class TestListInstance(models.Model):
 
     comment = models.TextField(help_text=_("Add a comment to this set of tests"), null=True, blank=True)
     
-    in_progress = models.BooleanField(default=False, editable=False,db_index=True)
+    in_progress = models.BooleanField(help_text=_("Mark this session as still in progress so you can complete later (will not be submitted for review)"),default=False,db_index=True)
 
     #for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)
@@ -1067,6 +1069,9 @@ def on_test_list_instance_saved(*args,**kwargs):
     """set last instance for UnitTestInfo"""
 
     test_list_instance = kwargs["instance"]
+
+    if test_list_instance.in_progress:
+        return
 
     cycle_ids = TestListCycle.objects.filter(
         test_lists = test_list_instance.test_list

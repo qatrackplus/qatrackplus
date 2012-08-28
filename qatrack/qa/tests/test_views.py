@@ -352,7 +352,12 @@ class TestPerformQA(TestCase):
             self.unit_test_infos.append(models.UnitTestInfo.objects.get(test=test,unit=self.unit_test_list.unit))
         self.url = reverse("perform_qa",kwargs={"pk":self.unit_test_list.pk})
         self.client.login(username="user",password="password")
+        group = Group(name="foo")
+        group.save()
         self.user = User.objects.get(username="user")
+        self.user.save()
+        self.user.groups.add(group)
+        self.user.save()
     #----------------------------------------------------------------------
     def test_test_forms_present(self):
         response = self.client.get(self.url)

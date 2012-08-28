@@ -168,8 +168,16 @@
 				</div>
 			</div>
 			<div class="row-fluid">
-				<div class="span12">
-					<button type="submit" class="btn btn-primary pull-right">Submit QA Results</button>
+				<div class="span12">				
+					<div class="pull-right">
+						<label title="{{form.in_progress.help_text}}" for="id_in_progress" class="add-on">
+							Mark this list as still in progress:
+						</label>
+					
+						{{form.in_progress}}
+	
+						<button type="submit" class="btn btn-primary">Submit QA Results</button>
+					</div>
 				</div>
 			</div>
 		</form>
