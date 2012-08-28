@@ -13,14 +13,14 @@ register = template.Library()
 
 @register.filter
 def as_qavalue(form, include_admin):
-    template = get_template("qavalue_form.html")
+    template = get_template("qa/qavalue_form.html")
     c = Context({"form": form,"include_admin":include_admin})
     return template.render(c)
 
 @register.filter
 def as_unittestcollections_table(unit_lists, table_type="datatable"):
 
-    template = get_template("unittestcollections_table.html")
+    template = get_template("qa/unittestcollections_table.html")
 
     filter_table = table_type in ("review","datatable")
 
@@ -46,20 +46,20 @@ def as_unittestcollections_table(unit_lists, table_type="datatable"):
 #----------------------------------------------------------------------
 @register.filter
 def as_pass_fail_status(test_list_instance):
-    template = get_template("pass_fail_status.html")
+    template = get_template("qa/pass_fail_status.html")
     statuses_to_exclude = [models.NO_TOL]
     c = Context({"instance":test_list_instance,"exclude":statuses_to_exclude})
     return template.render(c)
 #----------------------------------------------------------------------
 @register.filter
 def as_unreviewed_count(unit_test_collection):
-    template = get_template("unreviewed_count.html")
+    template = get_template("qa/unreviewed_count.html")
     c = Context({"unit_test_collection":unit_test_collection})
     return template.render(c)
 #----------------------------------------------------------------------
 @register.filter
 def as_due_date(unit_test_collection):
-    template = get_template("due_date.html")
+    template = get_template("qa/due_date.html")
     c = Context({"unit_test_collection":unit_test_collection})
     return template.render(c)
 
@@ -70,7 +70,7 @@ def as_time_delta(time_delta):
     days, remainder = divmod(time_delta.seconds, 24*60*60)
     hours, remainder = divmod(remainder, 60*60)
     minutes, seconds = divmod(remainder, 60)
-    return '%dd %dh %dm %ds' % (days, hours, minutes, seconds)    
+    return '%dd %dh %dm %ds' % (days, hours, minutes, seconds)
 
 #----------------------------------------------------------------------
 @register.filter

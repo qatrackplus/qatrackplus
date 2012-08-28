@@ -5,9 +5,9 @@
 <table class="table table-bordered table-striped table-condensed {% if filter_table %}test-collection-table{% endif %} {{table_type}}-table">
 
 	<thead>
-		{% include "unittestcollections_table_headers.html"%}
+		{% include "qa/unittestcollections_table_headers.html"%}
 		{% if filter_table %}
-			{% include "unittestcollections_table_headers.html"%}
+			{% include "qa/unittestcollections_table_headers.html"%}
 		{% endif %}
 	</thead>
 		<tbody>
@@ -74,7 +74,7 @@
 		{% endfor %}
 	</tbody>
 	<tfoot>
-		{% include "unittestcollections_table_headers.html"%}
+		{% include "qa/unittestcollections_table_headers.html"%}
 	</tfoot>
 	{% if table_type = "review" %}
 		<script src="{% static "js/jquery.flot.min.js" %}"></script>

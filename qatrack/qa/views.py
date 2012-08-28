@@ -239,7 +239,6 @@ class ChooseUnit(ListView):
     """choose a unit to perform qa on for this session"""
     model = Unit
     context_object_name = "units"
-    template_name = "choose_unit.html"
 
     #---------------------------------------------------------------------------
     def get_queryset(self):
@@ -248,9 +247,9 @@ class ChooseUnit(ListView):
 #============================================================================
 class PerformQAView(CreateView):
     """view for users to complete a qa test list"""
-    template_name = "perform_test_list.html"
-    form_class = forms.CreateTestListInstanceForm
 
+    form_class = forms.CreateTestListInstanceForm
+    model = models.TestListInstance
     #----------------------------------------------------------------------
     def set_test_lists(self,current_day):
 
@@ -272,7 +271,7 @@ class PerformQAView(CreateView):
                 "unit","frequency"
             ).filter(
                 active=True,
-                visible_to__in = self.request.user.groups.all(),            
+                visible_to__in = self.request.user.groups.all(),
             ).distinct(),
             pk=self.kwargs["pk"]
         )
@@ -333,10 +332,10 @@ class PerformQAView(CreateView):
 
         context = self.get_context_data()
         formset = context["formset"]
-        
+
         for ti_form in formset:
             ti_form.in_progress = form.instance.in_progress
-        
+
         if formset.is_valid():
 
             self.object = form.save(commit=False)
@@ -399,6 +398,7 @@ class PerformQAView(CreateView):
         self.set_all_tests()
         self.set_unit_test_infos()
 
+
         if self.request.method == "POST":
             formset = forms.CreateTestInstanceFormSet(self.request.POST,self.request.FILES,unit_test_infos=self.unit_test_infos)
         else:
@@ -437,7 +437,7 @@ class PerformQAView(CreateView):
 class ReviewTestListInstance(UpdateView):
     model = models.TestListInstance
     form_class = forms.UpdateTestListInstanceForm
-    template_name = "review_test_list_instance.html"
+    template_name_suffix = "_review"
     context_object_name = "test_list_instance"
     #---------------------------------------------------------------------------
     def get_queryset(self):
@@ -547,7 +547,7 @@ class ReviewTestListInstance(UpdateView):
 class UnitFrequencyListView(ListView):
     """list daily/monthly/annual test lists for a unit"""
 
-    template_name = "frequency_list.html"
+    template_name_suffix = "_unit_frequency"
     context_object_name = "unittestcollections"
 
     #----------------------------------------------------------------------
@@ -563,37 +563,71 @@ class UnitFrequencyListView(ListView):
             frequency__slug__in=freqs,
             unit__number=self.kwargs["unit_number"],
             active=True,
-            visible_to__in = self.request.user.groups.all(),            
+            visible_to__in = self.request.user.groups.all(),
         ).distinct()
 
+
 #============================================================================
-class UnitGroupedFrequencyListView(ListView):
-    """view for grouping all test lists with a certain frequency for all units"""
-    template_name = "unit_grouped_frequency_list.html"
+class UTCListView(ListView):
+    model = models.UnitTestCollection
     context_object_name = "unittestcollections"
+
+    #----------------------------------------------------------------------
+    def get_queryset(self):
+        qs = super(UTCListView,self).get_queryset()
+        return qs.filter(
+            active=True,
+            visible_to__in = self.request.user.groups.all(),
+        ).distinct()
+
+    #----------------------------------------------------------------------
+    def get_page_title(self):
+        return "All Test Collections"
+    #----------------------------------------------------------------------
+    def get_context_data(self,*args,**kwargs):
+        context = super(UTCListView,self).get_context_data(*args,**kwargs)
+        context["page_title"] = self.get_page_title()
+        return context
+
+
+#============================================================================
+class FrequencyListView(UTCListView):
+    """list daily/monthly/annual test lists for a unit"""
 
     #----------------------------------------------------------------------
     def get_queryset(self):
         """filter queryset by frequency"""
 
-        return models.UnitTestCollection.objects.filter(
-            frequency__slug=self.kwargs["frequency"],
-            active=True,
-            visible_to__in = self.request.user.groups.all(),            
-        ).distinct()
-    
-#============================================================================
-class AllTestCollections(ListView):
-    """show all lists currently assigned to the groups this member is a part of"""
+        qs = super(FrequencyListView,self).get_queryset()
 
-    template_name = "all_test_lists.html"
-    context_object_name = "unittestcollections"
+        freq = self.kwargs["frequency"]
+        if freq == "short-interval":
+            self.frequencies = models.Frequency.objects.filter(due_interval__lte=14)
+        else:
+            self.frequencies = models.Frequency.objects.filter(slug__in=self.kwargs["frequency"].split("/"))
+
+        return qs.filter(
+            frequency__slug__in=self.frequencies.values_list("slug",flat=True),
+        ).distinct()
+    #----------------------------------------------------------------------
+    def get_page_title(self):
+        return ",".join([x.name for x in self.frequencies]) + " Test Lists"
+#============================================================================
+class UnitFrequencyListView(FrequencyListView):
+    """list daily/monthly/annual test lists for a unit"""
+
     #----------------------------------------------------------------------
     def get_queryset(self):
-        return models.UnitTestCollection.objects.filter(
-            active=True,
-            visible_to__in = self.request.user.groups.all(),            
-        ).distinct()
+        """filter queryset by frequency"""
+        qs = super(UnitFrequencyListView,self).get_queryset()
+        self.unit = get_object_or_404(Unit,number=self.kwargs["unit_number"])
+        return qs.filter(unit=self.unit)
+    #----------------------------------------------------------------------
+    def get_page_title(self):
+        return "%s "%self.unit + ",".join([x.name for x in self.frequencies]) + " Test Lists"
+
+
+
 
 
 #============================================================================
@@ -620,23 +654,28 @@ class ChartView(TemplateView):
 #============================================================================
 class InProgress(ListView):
     """view for grouping all test lists with a certain frequency for all units"""
-    template_name = "awaiting_review.html"
     model = models.TestListInstance
     context_object_name = "test_list_instances"
+
     #----------------------------------------------------------------------
     def get_queryset(self):
         qs = models.TestListInstance.objects.in_progress().select_related(
             "test_list__name",
             "unit_test_collection__unit__name",
             "unit_test_collection__frequency__name",
+            "created_by"
         ).prefetch_related("testinstance_set")
 
         return qs
+    #----------------------------------------------------------------------
+    def get_context_data(self,*args,**kwargs):
+        context = super(InProgress,self).get_context_data(*args,**kwargs)
+        context["page_title"] = "Incomplete Sessions"
+        return context
 
 #============================================================================
 class AwaitingReview(ListView):
     """view for grouping all test lists with a certain frequency for all units"""
-    template_name = "awaiting_review.html"
     model = models.TestListInstance
     context_object_name = "test_list_instances"
     #----------------------------------------------------------------------
@@ -649,6 +688,11 @@ class AwaitingReview(ListView):
         ).prefetch_related("testinstance_set")
 
         return qs
+    #----------------------------------------------------------------------
+    def get_context_data(self,*args,**kwargs):
+        context = super(AwaitingReview,self).get_context_data(*args,**kwargs)
+        context["page_title"] = "Awaiting Review"
+        return context
 
 #============================================================================
 class ReviewView(ListView):

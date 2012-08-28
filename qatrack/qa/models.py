@@ -263,24 +263,24 @@ class Tolerance(models.Model):
         if self.type == MULTIPLE_CHOICE:
             if (None, None, None, None) != (self.act_low,self.tol_low,self.tol_high,self.act_high):
                 errors.append("Value set for tolerance or action but type is Multiple Choice")
-                
+
         elif self.type is not MULTIPLE_CHOICE:
             if (None, None) != (self.mc_pass_choices,self.mc_tol_choices):
                 errors.append("Value set for pass choices or tolerance choices but type is not Multiple Choice")
 
         pass_choices = [x.strip() for x in self.mc_pass_choices.split(",") if x.strip()]
         tol_choices = [x.strip() for x in self.mc_tol_choices.split(",") if x.strip()]
-        
+
         if not pass_choices:
             errors.append("You must give more at l passing choice for a multiple choice tolerance")
         else:
             self.mc_pass_choices = ",".join(pass_choices)
             if tol_choices:
                 self.tol_choices = ",".join(tol_choices)
-            
+
         if errors:
             raise ValidationError({"pass_choices":errors})
-        
+
     #---------------------------------------------------------------------------
     def __unicode__(self):
         """more helpful interactive display name"""
@@ -643,7 +643,7 @@ class UnitTestCollection(models.Model):
     frequency = models.ForeignKey(Frequency, help_text=_("Frequency with which this test list is to be performed"))
 
     assigned_to = models.ForeignKey(Group,help_text = _("QA group that this test list should nominally be performed by"),null=True)
-    visible_to = models.ManyToManyField(Group,help_text=_("Select groups who will be able to see this test collection on this unit"),related_name="test_collection_visibility",default=Group.objects.all)    
+    visible_to = models.ManyToManyField(Group,help_text=_("Select groups who will be able to see this test collection on this unit"),related_name="test_collection_visibility",default=Group.objects.all)
 
     active = models.BooleanField(help_text=_("Uncheck to disable this test on this unit"), default=True,db_index=True)
 
@@ -906,7 +906,6 @@ class TestInstance(models.Model):
     #----------------------------------------------------------------------
     def save(self, *args, **kwargs):
         """set pass fail status on save"""
-
         self.calculate_pass_fail()
         super(TestInstance,self).save(*args,**kwargs)
     #----------------------------------------------------------------------
@@ -936,7 +935,7 @@ class TestInstance(models.Model):
             self.pass_fail = TOLERANCE
         else:
             self.pass_fail = ACTION
-        
+
     #---------------------------------------------------------------------------
     def float_pass_fail(self):
         if self.tolerance.type == ABSOLUTE:
@@ -950,7 +949,7 @@ class TestInstance(models.Model):
             self.pass_fail = TOLERANCE
         else:
             self.pass_fail = ACTION
-        
+
     #----------------------------------------------------------------------
     def calculate_pass_fail(self):
         """set pass/fail status of the current value"""
@@ -1009,13 +1008,13 @@ class TestListInstance(models.Model):
     work_completed = models.DateTimeField(default=timezone.now,db_index=True,null=True)
 
     comment = models.TextField(help_text=_("Add a comment to this set of tests"), null=True, blank=True)
-    
+
     in_progress = models.BooleanField(help_text=_("Mark this session as still in progress so you can complete later (will not be submitted for review)"),default=False,db_index=True)
 
     #for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, editable=False, related_name="test_list_instance_creator")
-    modified = models.DateTimeField(auto_now=True)	
+    modified = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(User, editable=False, related_name="test_list_instance_modifier")
 
 
