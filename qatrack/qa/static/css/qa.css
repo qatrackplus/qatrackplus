@@ -20,7 +20,10 @@
     filter: alpha(opacity=100)
 }
 
-
+.pagination {
+    margin:0;
+    margin-bottom:2px;
+}
 
 /************************************************/
 /* performing qa                                */

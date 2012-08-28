@@ -13,6 +13,89 @@
         </div>
     </div>
 
-    {{unittestcollections|as_unittestcollections_table}}
+    {% include "qa/paginator.html"%}
+
+	<table class="table table-bordered table-striped table-condensed test-collection-table">
+
+		<thead>
+			<tr>
+				<th>Perform</th>
+				<th>Unit</th>
+				<th>Frequency</th>
+				<th>Test List/Cycle</th>
+				<th>Last Performed</th>
+				<th>Due Date</th>
+				<th>Last QA Status</th>
+				<th>Assigned To</th>
+			</tr>
+			<tr>
+				<th>Perform</th>
+				<th>Unit</th>
+				<th>Frequency</th>
+				<th>Test List/Cycle</th>
+				<th>Last Performed</th>
+				<th>Due Date</th>
+				<th>Last QA Status</th>
+				<th>Assigned To</th>
+			</tr>
+		</thead>
+			<tbody>
+
+			{% for utc in unittestcollections %}
+				{# display all individual test lists #}
+				<tr class="{% cycle 'odd' 'even' %} has-due-date">
+
+					<td><a class="btn btn-primary btn-mini" href="{%url perform_qa utc.pk%}?day=next">Perform {{utc.frequency.name}} QA</a></td>
+					<td>{{utc.unit.name}}</td>
+					<td>{{utc.frequency.name}}</td>
+					<td><strong>{{utc.tests_object.name}}</strong></td>
+
+					{% if  utc.last_instance %}
+						<td>
+							<span data-timestamp="{{utc.last_instance.work_completed|date:"U"}}" >
+								<abbr title="QA performed by {{utc.last_instance.created_by}}">
+									{{utc.last_instance.work_completed}}
+								</abbr>
+								<i class="icon-user" title="QA performed by {{utc.last_instance.created_by}}"></i>
+							</span>
+						</td>
+						<td>
+							{{utc|as_due_date}}
+						</td>
+						<td class="pass_fail_status">
+							{{utc.last_instance|as_pass_fail_status}}
+						</td>
+					{% else %}
+						<td>
+							<span data-timestamp="0" ><em>New List</em></span>
+						</td>
+						<td>
+							<span data-timestamp="0" ><em>New List</em></span>
+						</td>
+						<td>New List</td>
+					{% endif %}
+
+					<td>{{utc.assigned_to.name}}</td>
+			   </tr>
+			{% empty %}
+				<tr class="empty-table"><td colspan="8"><em>No test lists to display</em></td></tr>
+			{% endfor %}
+		</tbody>
+		<tfoot>
+			<tr>
+				<th>Perform</th>
+				<th>Unit</th>
+				<th>Frequency</th>
+				<th>Test List/Cycle</th>
+				<th>Last Performed</th>
+				<th>Due Date</th>
+				<th>Last QA Status</th>
+				<th>Assigned To</th>
+			</tr>
+		</tfoot>
+		<script src="{% static "js/unittestcollection.js" %}"></script>
+	</table>
+
+    {% include "qa/paginator.html"%}
 
 {% endblock %}

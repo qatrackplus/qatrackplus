@@ -1,4 +1,4 @@
-<span class="label due-status {{unit_test_collection.due_status}}">
+<span class="label due-status {{unit_test_collection.due_status}}" data-timestamp="{{unit_test_collection.due_date|date:"U"}}">
     {% with unit_test_collection.due_date as due_date %}
         {% if due_date %}
             {{due_date.date}}

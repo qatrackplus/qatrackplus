@@ -548,14 +548,26 @@ class ReviewTestListInstance(UpdateView):
 class UTCListView(ListView):
     model = models.UnitTestCollection
     context_object_name = "unittestcollections"
-
+    paginate_by = settings.PAGINATE_DEFAULT
     #----------------------------------------------------------------------
     def get_queryset(self):
-        qs = super(UTCListView,self).get_queryset()
-        return qs.filter(
+
+        qs = super(UTCListView,self).get_queryset().filter(
             active=True,
             visible_to__in = self.request.user.groups.all(),
-        ).distinct()
+        ).select_related(
+            "last_instance",
+            "frequency",
+            "unit__name",
+            "assigned_to__name",
+        ).prefetch_related(
+            "last_instance__testinstance_set",
+            "assigned_to",
+            "visible_to",
+            "tests_object",
+        ).order_by("testlist__name","testlistcycle__name","unit__number")
+
+        return qs.distinct()
 
     #----------------------------------------------------------------------
     def get_page_title(self):
@@ -633,7 +645,7 @@ class InProgress(ListView):
     """view for grouping all test lists with a certain frequency for all units"""
     model = models.TestListInstance
     context_object_name = "test_list_instances"
-
+    paginate_by = settings.PAGINATE_DEFAULT
     #----------------------------------------------------------------------
     def get_queryset(self):
         qs = models.TestListInstance.objects.in_progress().select_related(
@@ -655,6 +667,7 @@ class AwaitingReview(ListView):
     """view for grouping all test lists with a certain frequency for all units"""
     model = models.TestListInstance
     context_object_name = "test_list_instances"
+    paginate_by = settings.PAGINATE_DEFAULT
     #----------------------------------------------------------------------
     def get_queryset(self):
         qs = models.TestListInstance.objects.awaiting_review()

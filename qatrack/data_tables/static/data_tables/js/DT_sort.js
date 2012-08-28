@@ -121,3 +121,20 @@ jQuery.fn.dataTableExt.oSort['span-day-month-year-sort-asc']  = function(a,b) {
 jQuery.fn.dataTableExt.oSort['span-day-month-year-sort-desc'] = function(a,b) {
     return jQuery.fn.dataTableExt.oSort['day-month-year-sort-desc']($(a).text(),$(b).text());
 };
+
+
+jQuery.fn.dataTableExt.oSort['span-timestamp-asc'] = function(a,b) {
+
+    var a = parseInt($(a).data("timestamp"));
+    var b = parseInt($(b).data("timestamp"));
+
+    return ((a < b) ? -1 : ((a > b) ?  1 : 0));
+};
+
+jQuery.fn.dataTableExt.oSort['span-timestamp-desc'] = function(a,b) {
+
+    var a = parseInt($(a).data("timestamp"));
+    var b = parseInt($(b).data("timestamp"));
+
+    return ((a < b) ? 1 : ((a > b) ?  -1 : 0));
+};

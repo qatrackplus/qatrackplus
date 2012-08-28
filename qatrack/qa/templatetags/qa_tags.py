@@ -17,32 +17,6 @@ def as_qavalue(form, include_admin):
     c = Context({"form": form,"include_admin":include_admin})
     return template.render(c)
 
-@register.filter
-def as_unittestcollections_table(unit_lists, table_type="datatable"):
-
-    template = get_template("qa/unittestcollections_table.html")
-
-    filter_table = table_type in ("review","datatable")
-
-    unit_lists = unit_lists.select_related(
-        "last_instance",
-        "frequency",
-        "unit__name",
-        "assigned_to__name",
-    ).prefetch_related(
-        "last_instance__testinstance_set",
-        "assigned_to",
-        "visible_to",
-        "tests_object",
-    )
-
-    c = Context({
-        "unittestcollections":unit_lists,
-        "filter_table":filter_table,
-        "table_type":table_type,
-    })
-    return template.render(c)
-
 #----------------------------------------------------------------------
 @register.filter
 def as_pass_fail_status(test_list_instance):
