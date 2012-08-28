@@ -1,7 +1,7 @@
 /**************************************************************************/
 //Initialize sortable/filterable test list table data types
-function init_test_collection_tables(){
-	$(".test-collection-table").each(function(idx,table){
+function init_test_list_instance_tables(){
+	$(".test-list-instance-table").each(function(idx,table){
 
 		if ($(this).find("tr.empty-table").length>0){
 			return;
@@ -13,9 +13,8 @@ function init_test_collection_tables(){
 			null, //Freq
 			null,  // Test list name
 			{"sType":"span-timestamp"}, //date completed
-			{"sType":"span-timestamp"}, //due date
+			null,//completed by
 			null, //qa status
-			null//assigned to
 		];
 
 		var	filter_cols = [
@@ -24,9 +23,8 @@ function init_test_collection_tables(){
 				{type: "select"}, //Freq
 				{type: "text" }, // Test list name
 				{type: "text" }, //date completed
-				{type: "text" }, //due date
+				{type: "select" }, //completed by
 				null, //qa status
-				{type: "select"}//assigned to
 			];
 
 
@@ -52,6 +50,6 @@ function init_test_collection_tables(){
 
 /**************************************************************************/
 $(document).ready(function(){
-	init_test_collection_tables();
+	init_test_list_instance_tables();
 });
 

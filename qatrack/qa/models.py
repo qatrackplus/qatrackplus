@@ -982,7 +982,7 @@ def on_test_instance_saved(*args,**kwargs):
 class TestListInstanceManager(models.Manager):
 
     #----------------------------------------------------------------------
-    def awaiting_review(self):
+    def unreviewed(self):
         return self.complete().filter(testinstance__status__requires_review=True).distinct().order_by("work_completed")
     #----------------------------------------------------------------------
     def in_progress(self):

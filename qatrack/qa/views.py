@@ -433,6 +433,8 @@ class PerformQAView(CreateView):
         }
         return reverse("qa_by_frequency_unit",kwargs=kwargs)
 
+
+
 #============================================================================
 class ReviewTestListInstance(UpdateView):
     model = models.TestListInstance
@@ -490,7 +492,7 @@ class ReviewTestListInstance(UpdateView):
         return HttpResponseRedirect(self.get_success_url())
     #----------------------------------------------------------------------
     def get_success_url(self):
-        return reverse("awaiting_review")
+        return reverse("unreviewed")
 
     #----------------------------------------------------------------------
     def add_histories(self,forms):
@@ -609,11 +611,13 @@ class UnitFrequencyListView(FrequencyListView):
     def get_queryset(self):
         """filter queryset by frequency"""
         qs = super(UnitFrequencyListView,self).get_queryset()
-        self.unit = get_object_or_404(Unit,number=self.kwargs["unit_number"])
-        return qs.filter(unit=self.unit)
+        self.units = Unit.objects.filter(number__in=self.kwargs["unit_number"].split("/"))
+        return qs.filter(unit__in=self.units)
     #----------------------------------------------------------------------
     def get_page_title(self):
-        return "%s "%self.unit + ",".join([x.name for x in self.frequencies]) + " Test Lists"
+        title = ", ".join([x.name for x in self.units])
+        title+= " " + ", ".join([x.name for x in self.frequencies]) + " Test Lists"
+        return  title
 
 
 
@@ -639,50 +643,48 @@ class ChartView(TemplateView):
         ]
         return context
 
-
 #============================================================================
-class InProgress(ListView):
-    """view for grouping all test lists with a certain frequency for all units"""
+class TestListInstances(ListView):
     model = models.TestListInstance
     context_object_name = "test_list_instances"
     paginate_by = settings.PAGINATE_DEFAULT
+    queryset = models.TestListInstance.objects.complete
     #----------------------------------------------------------------------
     def get_queryset(self):
-        qs = models.TestListInstance.objects.in_progress().select_related(
+        return self.fetch_related(self.queryset())
+    #----------------------------------------------------------------------
+    def fetch_related(self,qs):
+        return qs.select_related(
             "test_list__name",
             "unit_test_collection__unit__name",
             "unit_test_collection__frequency__name",
             "created_by"
         ).prefetch_related("testinstance_set")
-
-        return qs
+    #----------------------------------------------------------------------
+    def get_page_title(self):
+        return "Completed Test Lists"
     #----------------------------------------------------------------------
     def get_context_data(self,*args,**kwargs):
-        context = super(InProgress,self).get_context_data(*args,**kwargs)
-        context["page_title"] = "Incomplete Sessions"
+        context = super(TestListInstances,self).get_context_data(*args,**kwargs)
+        context["page_title"] = self.get_page_title()
         return context
 
 #============================================================================
-class AwaitingReview(ListView):
+class InProgress(TestListInstances):
     """view for grouping all test lists with a certain frequency for all units"""
-    model = models.TestListInstance
-    context_object_name = "test_list_instances"
-    paginate_by = settings.PAGINATE_DEFAULT
+    queryset = models.TestListInstance.objects.in_progress
     #----------------------------------------------------------------------
-    def get_queryset(self):
-        qs = models.TestListInstance.objects.awaiting_review()
-        qs = qs.select_related(
-            "test_list__name",
-            "unit_test_collection__unit__name",
-            "unit_test_collection__frequency__name",
-        ).prefetch_related("testinstance_set")
+    def get_page_title(self):
+        return "In Progress Test Lists"
 
-        return qs
+#============================================================================
+class Unreviewed(TestListInstances):
+    """view for grouping all test lists with a certain frequency for all units"""
+    queryset = models.TestListInstance.objects.unreviewed
+
     #----------------------------------------------------------------------
-    def get_context_data(self,*args,**kwargs):
-        context = super(AwaitingReview,self).get_context_data(*args,**kwargs)
-        context["page_title"] = "Awaiting Review"
-        return context
+    def get_page_title(self):
+        return "Unreviewed Test Lists"
 
 #============================================================================
 class ExportToCSV(View):

@@ -20,7 +20,7 @@
         <ul class="nav nav-pills">
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                    QA Lists
+                    QA Test Lists
                     <b class="caret"></b>
                 </a>
                 <ul class="dropdown-menu">
@@ -40,22 +40,22 @@
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                     Review
-                    <span title="There are currently {{AWAITING_REVIEW}} QA Sessions waiting to be reviewed" class="label {% if AWAITING_REVIEW == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
-                        <span class="total-unreviewed-count">{{AWAITING_REVIEW}}</span>
+                    <span title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                        <span class="total-unreviewed-count">{{UNREVIEWED}}</span>
                     </span>
                     <b class="caret"></b>
                 </a>
                 <ul class="dropdown-menu">
                     <li>
-                        <a href="{% url  awaiting_review %}">
-                            <i class="icon-check"></i>
-                            Awaiting Review
-                            <span title="There are currently {{AWAITING_REVIEW}} QA Sessions waiting to be reviewed" class="label {% if AWAITING_REVIEW == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
-                                <span class="total-unreviewed-count">{{AWAITING_REVIEW}}</span>
+                        <a href="{% url  unreviewed %}">
+                            <i class="icon-question-sign"></i>
+                            Unreviewed
+                            <span title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                                <span class="total-unreviewed-count">{{UNREVIEWED}}</span>
                             </span>
                         </a>
                     </li>
-
+					<li><a href="{% url complete_instances %}"><i class="icon-check"></i>Approved Data</a></li>
                     <li><a href="{% url charts %}"><i class="icon-picture"></i>Trending</a></li>
                 </ul>
             </li>

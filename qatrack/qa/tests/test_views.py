@@ -68,7 +68,7 @@ class TestURLS(TestCase):
         self.assertTrue(self.returns_200("/qa/daily/unit/1/"))
 
     #----------------------------------------------------------------------
-    def test_awaiting_review(self):
+    def test_unreviewed(self):
         self.assertTrue(self.returns_200("/qa/review/new/"))
     #----------------------------------------------------------------------
     def test_tli_details(self):

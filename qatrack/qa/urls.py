@@ -41,19 +41,21 @@ urlpatterns = patterns('',
     url(r"^api/",include(v1_api.urls)),
 
     #review
-    url(r"review/new/$", views.AwaitingReview.as_view(), name="awaiting_review"),
+    url(r"review/details/$", views.TestListInstances.as_view(), name="complete_instances"),
     url(r"review/details/(?P<pk>\d+)/$", views.ReviewTestListInstance.as_view(), name="review_test_list_instance"),
+    url(r"review/unreviewed/$", views.Unreviewed.as_view(), name="unreviewed"),
+
     url(r"charts/$", views.ChartView.as_view(), name="charts"),
     url(r"^charts/export/$",views.ExportToCSV.as_view()),
     #generating control chart images
     url(r"^charts/control_chart.png$", views.ControlChartImage.as_view(), name="control_chart"),
 
-    #performing qa
+
     url(r"^units/$", views.ChooseUnit.as_view(), name="choose_unit"),
     url(r"^test-list-instances/in-progress/$", views.InProgress.as_view(), name="in_progress"),
 
-    url(r"^(?P<frequency>[\w-]+)/$", views.FrequencyListView.as_view(), name="qa_by_frequency"),
-    url(r"^(?P<frequency>[/\w-]+)/unit/(?P<unit_number>\d+)/$", views.UnitFrequencyListView.as_view(), name="qa_by_frequency_unit"),
+    url(r"^(?P<frequency>[/\w-]+)/unit/(?P<unit_number>[/\d]+)/$", views.UnitFrequencyListView.as_view(), name="qa_by_frequency_unit"),
+    url(r"^(?P<frequency>[/\w-]+)/$", views.FrequencyListView.as_view(), name="qa_by_frequency"),
     url(r"^(?P<pk>\d+)$", views.PerformQAView.as_view(), name="perform_qa"),
 
 
