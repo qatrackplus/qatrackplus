@@ -316,7 +316,7 @@ class TestPerformQA(TestCase):
     #----------------------------------------------------------------------
     def setUp(self):
         self.factory = RequestFactory()
-        self.view = views.PerformQAView.as_view()
+        self.view = views.PerformQA.as_view()
         self.status = utils.create_status()
 
         self.test_list = utils.create_test_list()

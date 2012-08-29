@@ -42,12 +42,12 @@ urlpatterns = patterns('',
 
     #review utc's
     url(r"^review/$", views.UTCReview.as_view(), name="review_all"),
-    url(r"^review/utc/(?P<pk>\d+)/$", views.UTCInstances.as_view(), name="review_utc"),    
-    url(r"^review/frequency/$", views.ChooseFrequencyForReview.as_view(), name="choose_review_frequency"),    
+    url(r"^review/utc/(?P<pk>\d+)/$", views.UTCInstances.as_view(), name="review_utc"),
+    url(r"^review/frequency/$", views.ChooseFrequencyForReview.as_view(), name="choose_review_frequency"),
     url(r"^review/frequency/(?P<frequency>[/\w-]+)/$", views.UTCFrequencyReview.as_view(), name="review_by_frequency"),
-    url(r"^review/unit/$", views.ChooseUnitForReview.as_view(), name="choose_review_unit"),    
+    url(r"^review/unit/$", views.ChooseUnitForReview.as_view(), name="choose_review_unit"),
     url(r"^review/unit/(?P<unit_number>[/\d]+)/$", views.UTCUnitReview.as_view(), name="review_by_unit"),
-    
+
     #test list instances
     url(r"review/tli/details/$", views.TestListInstances.as_view(), name="complete_instances"),
     url(r"review/tli/details/(?P<pk>\d+)/$", views.ReviewTestListInstance.as_view(), name="review_test_list_instance"),
@@ -64,7 +64,7 @@ urlpatterns = patterns('',
 
     url(r"^(?P<frequency>[/\w-]+)/unit/(?P<unit_number>[/\d]+)/$", views.UnitFrequencyListView.as_view(), name="qa_by_frequency_unit"),
     url(r"^(?P<frequency>[/\w-]+)/$", views.FrequencyList.as_view(), name="qa_by_frequency"),
-    url(r"^perform/(?P<pk>\d+)$", views.PerformQAView.as_view(), name="perform_qa"),
+    url(r"^perform/(?P<pk>\d+)$", views.PerformQA.as_view(), name="perform_qa"),
 
 
 
