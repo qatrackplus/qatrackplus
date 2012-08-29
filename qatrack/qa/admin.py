@@ -78,21 +78,21 @@ class TestInfoForm(forms.ModelForm):
     #----------------------------------------------------------------------
     def clean(self):
         """make sure valid numbers are entered for boolean data"""
-        
+
         if self.instance.test.type == models.MULTIPLE_CHOICE and self.cleaned_data["tolerance"]:
             if self.cleaned_data["tolerance"].type != models.MULTIPLE_CHOICE:
                 raise forms.ValidationError(_("You can't use a non-multiple choice tolerance with a multiple choice test"))
         else:
             if "reference_value" not in self.cleaned_data:
                 return self.cleaned_data
-    
+
             ref_value = self.cleaned_data["reference_value"]
-    
+
             tol =self.cleaned_data["tolerance"]
             if tol is not None:
                 if ref_value == 0 and tol.type == models.PERCENT:
                     raise forms.ValidationError(_("Percentage based tolerances can not be used with reference value of zero (0)"))
-    
+
             if self.instance.test.type == models.BOOLEAN:
                 if self.cleaned_data["tolerance"] is not None:
                     raise forms.ValidationError(_("Please leave tolerance field blank for boolean and multiple choice test types"))
@@ -137,9 +137,9 @@ class UnitTestInfoAdmin(admin.ModelAdmin):
     #----------------------------------------------------------------------
     def save_model(self, request, test_info, form, change):
         """create new reference when user updates value"""
-        
-        if form.instance.test.type != models.MULTIPLE_CHOICE:        
-        
+
+        if form.instance.test.type != models.MULTIPLE_CHOICE:
+
             if form.instance.test.type == models.BOOLEAN:
                 ref_type = models.BOOLEAN
             else:
@@ -183,11 +183,11 @@ class TestListAdminForm(forms.ModelForm):
         return sublists
 
 #============================================================================
-class TestInlineFormset(forms.models.BaseInlineFormSet):
+class TestInlineFormSet(forms.models.BaseInlineFormSet):
     #----------------------------------------------------------------------
     def get_queryset(self):
         if not hasattr(self, '_queryset'):
-            qs = super(TestInlineFormset, self).get_queryset().select_related(
+            qs = super(TestInlineFormSet, self).get_queryset().select_related(
                 "test"
             )
             self._queryset = qs
@@ -195,7 +195,7 @@ class TestInlineFormset(forms.models.BaseInlineFormSet):
     #----------------------------------------------------------------------
     def clean(self):
         """Make sure there are no duplicated slugs in a TestList"""
-        super(TestInlineFormset,self).clean()
+        super(TestInlineFormSet,self).clean()
 
         if not hasattr(self,"cleaned_data"):
             #something else went wrong already
@@ -223,7 +223,7 @@ def macro_name(obj):
 class TestListMembershipInline(SalmonellaMixin,admin.TabularInline):
     """"""
     model = models.TestListMembership
-    formset = TestInlineFormset
+    formset = TestInlineFormSet
     extra = 5
     template = "admin/qa/testlistmembership/edit_inline/tabular.html"
     readonly_fields = (macro_name,)

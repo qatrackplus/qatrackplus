@@ -30,6 +30,16 @@
 						<dt>Performed By :</dt>
 						<dd>{{tli.created_by}}</dd>
 
+						<dt>Actions:</dt>
+						<dd>
+
+							<a class="btn btn-danger btn-mini" title="Permanently Delete This List" href="#" disabled="disabled" >Delete</a>
+							{% if instance.in_progress %}
+								<a class="btn btn-primary btn-mini" title="Continue this list" href="{%url edit_tli pk=test_list_instance.pk%}" >Continue</a>
+							{% else %}
+								<a class="btn btn-primary btn-mini" title="Edit this list" href="{%url edit_tli pk=test_list_instance.pk%}" >Edit</a>
+							{% endif %}
+						</dd>
 				   </dl>
 				</div>
 				<div class="span4">
@@ -48,13 +58,17 @@
 								<span class="label label-success">
 									{{tli.work_completed}}
 								</span>
-
-							
 							{% endif %}
 						</dd>
 
 						<dt>Duration :</dt>
-						<dd>{{tli.duration|as_time_delta}}</dd>
+						<dd>
+							{% if tli.duration %}
+								{{tli.duration|as_time_delta}}
+							{% else %}
+								<em>In Progress</em>
+							{% endif %}
+						</dd>
 
 						<dt>Last Modification :</dt>
 						<dd>{{tli.modified_by}} @ {{tli.modified}}</dd>
@@ -67,7 +81,7 @@
 						<dt>Comment :</dt>
 						<dd>{% if tli.comment %}{{tli.comment}}{% else %}<em>No comment</em>{% endif %}</dd>
 					</dl>
-			
+
 				</div>
 
 

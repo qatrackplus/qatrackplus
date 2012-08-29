@@ -41,3 +41,25 @@ def tests_history(tests,unit,from_date,selected_related=None):
             hist_dict[instance.unit_test_info.test.pk] = [hist]
 
     return hist_dict
+
+#----------------------------------------------------------------------
+def add_history_to_utis(unit_test_infos,histories):
+    #figure out 5 most recent dates that a test from this list was performed
+    dates = set()
+    for uti in unit_test_infos:
+        uti.history = histories.get(uti.test.pk,[])[:5]
+        dates |=  set([x[0] for x in uti.history])
+    history_dates = list(sorted(dates,reverse=True))[:5]
+
+    #change history to only show values from 5 most recent dates
+    for uti in unit_test_infos:
+        new_history = []
+        for d in history_dates:
+            hist = [None]*4
+            for h in uti.history:
+                if h[0] == d:
+                    hist = h
+                    break
+            new_history.append(hist)
+        uti.history = new_history
+    return unit_test_infos, history_dates

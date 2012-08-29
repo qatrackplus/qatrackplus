@@ -11,10 +11,15 @@ import qatrack.qa.models as models
 register = template.Library()
 
 
-@register.filter
-def as_qavalue(form, include_admin):
+@register.simple_tag
+def qa_value_form(form, include_admin=False,test_info=None):
     template = get_template("qa/qavalue_form.html")
-    c = Context({"form": form,"include_admin":include_admin})
+    c = Context({
+        "form": form,
+        "test_info":test_info,
+        "include_admin":include_admin
+
+    })
     return template.render(c)
 
 #----------------------------------------------------------------------
@@ -31,21 +36,20 @@ def as_unreviewed_count(unit_test_collection):
     c = Context({"unit_test_collection":unit_test_collection})
     return template.render(c)
 #----------------------------------------------------------------------
-@register.filter
+@register.filter(expects_local_time=True)
 def as_due_date(unit_test_collection):
     template = get_template("qa/due_date.html")
     c = Context({"unit_test_collection":unit_test_collection})
     return template.render(c)
 
 #----------------------------------------------------------------------
-@register.filter
+@register.filter(is_safe=True,expects_local_time=True)
 def as_time_delta(time_delta):
-
     days, remainder = divmod(time_delta.seconds, 24*60*60)
     hours, remainder = divmod(remainder, 60*60)
     minutes, seconds = divmod(remainder, 60)
     return '%dd %dh %dm %ds' % (days, hours, minutes, seconds)
-
+as_time_delta.safe = True
 #----------------------------------------------------------------------
 @register.filter
 def as_data_attributes(unit_test_collection):

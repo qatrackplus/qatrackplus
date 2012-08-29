@@ -512,7 +512,7 @@ class UnitTestInfo(models.Model):
             return utils.due_date(self.last_instance.work_completed,self.frequency)
 
     #----------------------------------------------------------------------
-    def history(self,number=5):
+    def get_history(self,number=5):
         """return last 'number' of instances for this test performed on input unit
         list is ordered in ascending dates
         """
@@ -916,7 +916,7 @@ class TestInstance(models.Model):
     def percent_difference(self):
         """return percent difference between instance and reference"""
         if (self.reference.value < EPSILON):
-            raise ValueError("Tried to calculate percent diff with a zero reference value")
+            raise ZeroDivisionError("Tried to calculate percent diff with a zero reference value")
         return 100.*(self.value-self.reference.value)/float(self.reference.value)
 
     #---------------------------------------------------------------------------

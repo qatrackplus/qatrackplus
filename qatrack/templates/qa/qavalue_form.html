@@ -6,7 +6,7 @@
             <td colspan="2">&nbsp;</td>
             <td>
             {% for error in field.errors %}
-                <span class="alert-error">{{ error }}</span>
+                <span class="alert-error">{{field.label}}:{{ error }}</span>
             {% endfor %}
             </td>
 			{% if include_admin %}
@@ -18,7 +18,11 @@
     {% endif %}
 {% endfor %}
 <tr class="control-group qa-valuerow">
-    {% with ref=form.unit_test_info.reference  tol=form.unit_test_info.tolerance  test=form.unit_test_info.test uti=form.unit_test_info%}
+	{% for hidden in form.hidden_fields %}
+	    {{ hidden }}
+    {% endfor %}
+
+    {% with ref=test_info.reference  tol=test_info.tolerance  test=test_info.test uti=test_info.unit_test_info %}
 
 		{# Hidden inputs required for checking pass/fail status #}
         <input type="hidden" class="qa-reference-val" value="{{ref.value}}"/>
@@ -28,7 +32,7 @@
         <input type="hidden" class="qa-tolerance act_high" value="{{tol.act_high}}"/>
         <input type="hidden" class="qa-tolerance mc_pass_choices" value="{{tol.mc_pass_choices}}"/>
         <input type="hidden" class="qa-tolerance mc_tol_choices" value="{{tol.mc_tol_choices}}"/>
-		
+
         <input type="hidden" class="qa-tolerance-type" value="{{tol.type}}"/>
 		<input type="hidden" class="qa-contextname" value="{{test.slug}}"/>
 		<input type="hidden" class="qa-test-id" value="{{test.pk}}"/>
@@ -58,7 +62,7 @@
 					{% if tol.type == "percent" %}
 						<span title="{{tol.act_low}}% &le; {{tol.tol_low}}% &le; {{ref.value}} &le; {{tol.tol_high}}% &le; {{tol.act_high}}%">{{ref.value}}</span>
 					{% elif tol.type == "multchoice" %}
-						<span title="Passing Values: {{tol.mc_pass_choices}};  Tolerance Values: {{tol.mc_tol_choices}}; All other choices will are failing"><em>Mult. Choice</em></span>					
+						<span title="Passing Values: {{tol.mc_pass_choices}};  Tolerance Values: {{tol.mc_tol_choices}}; All other choices will are failing"><em>Mult. Choice</em></span>
 					{% else %}
 						<span title="{{tol.act_low}} &le; {{tol.tol_low}} &le; {{ref.value}} &le; {{tol.tol_high}} &le; {{tol.act_high}}">{{ref.value}}</span>
 					{% endif %}
@@ -69,7 +73,7 @@
 					{% if work_completed and pass_fail != "not_done" %}
 					<span class="label {{pass_fail}} history-value" title="{{work_completed}} - {{status}}">{{value|scientificformat}}</span>
 					{% else %}
-						<span class="label history-value" title="N/A">N/A</span>					
+						<span class="label history-value" title="N/A">N/A</span>
 					{% endif %}
 				{% endfor %}
 			</td>
@@ -86,19 +90,19 @@
 <tr class="qa-procedure">
     <td colspan="8"  class="" >
 		<table>
-			{% if form.unit_test_info.test.procedure %}
+			{% if form.instance.unit_test_info.test.procedure %}
 			<tr>
 				<td>
 					<label class="label">Detailed procedure link:</label>
 				</td>
 				<td>
-					<a href="{{form.unit_test_info.test.procedure}}" class="revealprocedure" title="Show detailed procedure for this test" target="_blank">{{form.instance.test.name}}</a>
+					<a href="{{form.instance.unit_test_info.test.procedure}}" class="revealprocedure" title="Show detailed procedure for this test" target="_blank">{{form.instance.test.name}}</a>
 				</td>
 			</tr>
 			{% endif %}
 			<tr>
 				<td>
-					<div class="qa-procedure-text"><pre>{{form.unit_test_info.test.description.strip|safe}}</pre></div>
+					<div class="qa-procedure-text"><pre>{{form.instance.unit_test_info.test.description.strip|safe}}</pre></div>
 				</td>
 			</tr>
 		</table>

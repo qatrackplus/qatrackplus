@@ -96,11 +96,8 @@ function check_test_status(input_element){
     }
 
     //ensure numerical value and highlight input element appropriately
-    set_valid_input(input_element);
-    if (val === ""){
-        return;
-    }else if (val === null){
-        set_invalid_input(input_element);
+
+    if ((val === "") || (val === null)){
         return;
     }
 
@@ -168,19 +165,6 @@ function set_value_by_name(name, value){
     }
     input.val(value);
     check_test_status(input);
-}
-
-/***************************************************************/
-//mark an input box as having invalid input
-function set_invalid_input(input_element){
-    input_element.parents(".control-group").removeClass("success");
-    input_element.parents(".control-group").addClass("error");
-}
-/***************************************************************/
-//mark an input box as having valid input
-function set_valid_input(input_element){
-    input_element.parents(".control-group").removeClass("error");
-    input_element.parents(".control-group").addClass("success");
 }
 
 /***************************************************************/
