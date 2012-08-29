@@ -49,9 +49,9 @@ urlpatterns = patterns('',
     url(r"^review/unit/(?P<unit_number>[/\d]+)/$", views.UTCUnitReview.as_view(), name="review_by_unit"),
 
     #test list instances
-    url(r"review/tli/details/$", views.TestListInstances.as_view(), name="complete_instances"),
-    url(r"review/tli/details/(?P<pk>\d+)/$", views.ReviewTestListInstance.as_view(), name="review_test_list_instance"),
-    url(r"review/unreviewed/$", views.Unreviewed.as_view(), name="unreviewed"),
+    url(r"^review/tli/details/$", views.TestListInstances.as_view(), name="complete_instances"),
+    url(r"^review/tli/details/(?P<pk>\d+)/$", views.ReviewTestListInstance.as_view(), name="review_test_list_instance"),
+    url(r"^review/unreviewed/$", views.Unreviewed.as_view(), name="unreviewed"),
 
 
     url(r"^units/$", views.ChooseUnit.as_view(), name="choose_unit"),
@@ -62,10 +62,8 @@ urlpatterns = patterns('',
     url(r"^(?P<frequency>[/\w-]+)/$", views.FrequencyList.as_view(), name="qa_by_frequency"),
 
 
-
     url(r"charts/$", views.ChartView.as_view(), name="charts"),
     url(r"^charts/export/$",views.ExportToCSV.as_view()),
-    #generating control chart images
     url(r"^charts/control_chart.png$", views.ControlChartImage.as_view(), name="control_chart"),
 
 
