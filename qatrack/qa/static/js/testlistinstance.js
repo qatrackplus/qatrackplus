@@ -13,7 +13,8 @@ function init_test_list_instance_tables(){
 			null, //Freq
 			null,  // Test list name
 			{"sType":"span-timestamp"}, //date completed
-			null,//completed by
+			null,//completed by,
+			null,//progres
 			null, //qa status
 		];
 
@@ -24,6 +25,7 @@ function init_test_list_instance_tables(){
 				{type: "text" }, // Test list name
 				{type: "text" }, //date completed
 				{type: "select" }, //completed by
+				{type: "text"},//progress
 				null, //qa status
 			];
 
@@ -33,7 +35,7 @@ function init_test_list_instance_tables(){
 			bStateSave:false, //save filter/sort state between page loads
 			bFilter:true,
 			bPaginate: false,
-			aaSorting:[],
+			aaSorting:[[4,"desc"]],
 			aoColumns: cols,
 			fnAdjustColumnSizing:false
 

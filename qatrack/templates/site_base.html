@@ -55,8 +55,11 @@
                             </span>
                         </a>
                     </li>
-					<li><a href="{% url complete_instances %}"><i class="icon-check"></i>Approved Data</a></li>
-                    <li><a href="{% url charts %}"><i class="icon-picture"></i>Trending</a></li>
+					<li><a href="{% url review_all %}"><i class="icon-check"></i> Reviewed</a></li>
+                    <li><a href="{% url choose_review_unit %}"><i class="icon-list"></i> Choose Unit</a></li>					
+                    <li><a href="{% url choose_review_frequency %}"><i class="icon-list"></i> Choose Frequency</a></li>					
+					<li class="divider"></li>					
+                    <li><a href="{% url charts %}"><i class="icon-picture"></i> Trending</a></li>
                 </ul>
             </li>
             {% endif %}

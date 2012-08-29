@@ -19,7 +19,7 @@
 
 		<thead>
 			<tr>
-				<th>Perform</th>
+				<th>{{action_display}}</th>
 				<th>Unit</th>
 				<th>Frequency</th>
 				<th>Test List/Cycle</th>
@@ -29,7 +29,7 @@
 				<th>Assigned To</th>
 			</tr>
 			<tr>
-				<th>Perform</th>
+				<th>{{action_display}}</th>
 				<th>Unit</th>
 				<th>Frequency</th>
 				<th>Test List/Cycle</th>
@@ -45,7 +45,14 @@
 				{# display all individual test lists #}
 				<tr class="{% cycle 'odd' 'even' %} has-due-date">
 
-					<td><a class="btn btn-primary btn-mini" href="{%url perform_qa utc.pk%}?day=next">Perform {{utc.frequency.name}} QA</a></td>
+					<td>
+						{% if action =  "perform" %}
+							<a class="btn btn-primary btn-mini" href="{%url perform_qa utc.pk%}?day=next">Perform {{utc.frequency.name}} QA</a>
+						{% elif action = "review" %}
+							<a class="btn btn-primary btn-mini" href="{%url review_utc utc.pk%}">Review Data</a>
+						{% endif %}						
+						
+					</td>
 					<td>{{utc.unit.name}}</td>
 					<td>{{utc.frequency.name}}</td>
 					<td><strong>{{utc.tests_object.name}}</strong></td>
@@ -83,7 +90,7 @@
 		</tbody>
 		<tfoot>
 			<tr>
-				<th>Perform</th>
+				<th>{{action_display}}</th>
 				<th>Unit</th>
 				<th>Frequency</th>
 				<th>Test List/Cycle</th>

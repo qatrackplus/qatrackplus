@@ -547,14 +547,16 @@ class ReviewTestListInstance(UpdateView):
 
 
 #============================================================================
-class UTCListView(ListView):
+class UTCList(ListView):
     model = models.UnitTestCollection
     context_object_name = "unittestcollections"
     paginate_by = settings.PAGINATE_DEFAULT
+    action = "perform"
+    action_display = "Perform"
     #----------------------------------------------------------------------
     def get_queryset(self):
 
-        qs = super(UTCListView,self).get_queryset().filter(
+        qs = super(UTCList,self).get_queryset().filter(
             active=True,
             visible_to__in = self.request.user.groups.all(),
         ).select_related(
@@ -576,20 +578,84 @@ class UTCListView(ListView):
         return "All Test Collections"
     #----------------------------------------------------------------------
     def get_context_data(self,*args,**kwargs):
-        context = super(UTCListView,self).get_context_data(*args,**kwargs)
+        context = super(UTCList,self).get_context_data(*args,**kwargs)
         context["page_title"] = self.get_page_title()
+        context["action"] = self.action
+        context["action_display"] = self.action_display
         return context
+        
+#====================================================================================
+class UTCReview(UTCList):
+    action = "review"
+    action_display = "Review"
+    #---------------------------------------------------------------------------
+    def get_page_title(self):
+        return "Review Test List Data"
+#====================================================================================
+class UTCFrequencyReview(UTCReview):
 
+    #----------------------------------------------------------------------
+    def get_queryset(self):
+        """filter queryset by frequency"""
 
+        qs = super(UTCFrequencyReview,self).get_queryset()
+
+        freq = self.kwargs["frequency"]
+        if freq == "short-interval":
+            self.frequencies = models.Frequency.objects.filter(due_interval__lte=14)
+        else:
+            self.frequencies = models.Frequency.objects.filter(slug__in=self.kwargs["frequency"].split("/"))
+
+        return qs.filter(
+            frequency__slug__in=self.frequencies.values_list("slug",flat=True),
+        ).distinct()
+         
+    #---------------------------------------------------------------------------
+    def get_page_title(self):
+        return " Review " + ", ".join([x.name for x in self.frequencies]) + " Test Lists"
+        
+    
+#====================================================================================
+class UTCUnitReview(UTCReview):
+
+    #----------------------------------------------------------------------
+    def get_queryset(self):
+        """filter queryset by frequency"""
+        qs = super(UTCUnitReview,self).get_queryset()
+        self.units = Unit.objects.filter(number__in=self.kwargs["unit_number"].split("/"))
+        return qs.filter(unit__in=self.units)
+         
+    #---------------------------------------------------------------------------
+    def get_page_title(self):
+        return "Review " + ", ".join([x.name for x in self.units]) + " Test Lists"        
+#====================================================================================
+class ChooseUnitForReview(ListView):
+ 
+    model = Unit
+    context_object_name = "units"
+    template_name_suffix = "_choose_for_review"
+    #---------------------------------------------------------------------------
+    def get_queryset(self):
+        return Unit.objects.all().select_related("type")
+            
+#====================================================================================
+class ChooseFrequencyForReview(ListView):
+ 
+    model = models.Frequency
+    context_object_name = "frequencies"
+    template_name_suffix = "_choose_for_review"
+        
+        
+    
 #============================================================================
-class FrequencyListView(UTCListView):
+class FrequencyList(UTCList):
     """list daily/monthly/annual test lists for a unit"""
 
     #----------------------------------------------------------------------
     def get_queryset(self):
         """filter queryset by frequency"""
 
-        qs = super(FrequencyListView,self).get_queryset()
+        qs = super(FrequencyList,self).get_queryset()
 
         freq = self.kwargs["frequency"]
         if freq == "short-interval":
@@ -604,7 +670,7 @@ class FrequencyListView(UTCListView):
     def get_page_title(self):
         return ",".join([x.name for x in self.frequencies]) + " Test Lists"
 #============================================================================
-class UnitFrequencyListView(FrequencyListView):
+class UnitFrequencyListView(FrequencyList):
     """list daily/monthly/annual test lists for a unit"""
 
     #----------------------------------------------------------------------
@@ -668,7 +734,15 @@ class TestListInstances(ListView):
         context = super(TestListInstances,self).get_context_data(*args,**kwargs)
         context["page_title"] = self.get_page_title()
         return context
-
+#====================================================================================
+class UTCInstances(TestListInstances):
+        
+    #---------------------------------------------------------------------------
+    def get_queryset(self):
+        utc = get_object_or_404(models.UnitTestCollection,pk=self.kwargs["pk"])
+        return self.fetch_related(utc.testlistinstance_set)
+        
+    
 #============================================================================
 class InProgress(TestListInstances):
     """view for grouping all test lists with a certain frequency for all units"""
