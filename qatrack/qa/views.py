@@ -245,7 +245,7 @@ class ChooseUnit(ListView):
         return Unit.objects.all().select_related("type")
 
 #============================================================================
-class PerformQAView(CreateView):
+class PerformQA(CreateView):
     """view for users to complete a qa test list"""
 
     form_class = forms.CreateTestListInstanceForm
@@ -384,7 +384,7 @@ class PerformQAView(CreateView):
     #----------------------------------------------------------------------
     def get_context_data(self,**kwargs):
 
-        context = super(PerformQAView,self).get_context_data(**kwargs)
+        context = super(PerformQA,self).get_context_data(**kwargs)
 
         if models.TestInstanceStatus.objects.default() is None:
             messages.error(
@@ -576,6 +576,7 @@ class UTCList(ListView):
     #----------------------------------------------------------------------
     def get_page_title(self):
         return "All Test Collections"
+
     #----------------------------------------------------------------------
     def get_context_data(self,*args,**kwargs):
         context = super(UTCList,self).get_context_data(*args,**kwargs)
@@ -583,7 +584,7 @@ class UTCList(ListView):
         context["action"] = self.action
         context["action_display"] = self.action_display
         return context
-        
+
 #====================================================================================
 class UTCReview(UTCList):
     action = "review"
@@ -591,6 +592,7 @@ class UTCReview(UTCList):
     #---------------------------------------------------------------------------
     def get_page_title(self):
         return "Review Test List Data"
+
 #====================================================================================
 class UTCFrequencyReview(UTCReview):
 
@@ -609,12 +611,12 @@ class UTCFrequencyReview(UTCReview):
         return qs.filter(
             frequency__slug__in=self.frequencies.values_list("slug",flat=True),
         ).distinct()
-         
+
     #---------------------------------------------------------------------------
     def get_page_title(self):
         return " Review " + ", ".join([x.name for x in self.frequencies]) + " Test Lists"
-        
-    
+
+
 #====================================================================================
 class UTCUnitReview(UTCReview):
 
@@ -624,29 +626,28 @@ class UTCUnitReview(UTCReview):
         qs = super(UTCUnitReview,self).get_queryset()
         self.units = Unit.objects.filter(number__in=self.kwargs["unit_number"].split("/"))
         return qs.filter(unit__in=self.units)
-         
+
     #---------------------------------------------------------------------------
     def get_page_title(self):
-        return "Review " + ", ".join([x.name for x in self.units]) + " Test Lists"        
+        return "Review " + ", ".join([x.name for x in self.units]) + " Test Lists"
+
 #====================================================================================
 class ChooseUnitForReview(ListView):
- 
+
     model = Unit
     context_object_name = "units"
     template_name_suffix = "_choose_for_review"
     #---------------------------------------------------------------------------
     def get_queryset(self):
         return Unit.objects.all().select_related("type")
-            
+
 #====================================================================================
 class ChooseFrequencyForReview(ListView):
- 
+
     model = models.Frequency
     context_object_name = "frequencies"
     template_name_suffix = "_choose_for_review"
-        
-        
-    
+
 #============================================================================
 class FrequencyList(UTCList):
     """list daily/monthly/annual test lists for a unit"""
@@ -736,13 +737,13 @@ class TestListInstances(ListView):
         return context
 #====================================================================================
 class UTCInstances(TestListInstances):
-        
+
     #---------------------------------------------------------------------------
     def get_queryset(self):
         utc = get_object_or_404(models.UnitTestCollection,pk=self.kwargs["pk"])
         return self.fetch_related(utc.testlistinstance_set)
-        
-    
+
+
 #============================================================================
 class InProgress(TestListInstances):
     """view for grouping all test lists with a certain frequency for all units"""
