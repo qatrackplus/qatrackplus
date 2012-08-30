@@ -145,7 +145,7 @@ INTERNAL_IPS = ('127.0.0.1',)
 
 #login required middleware settings
 LOGIN_EXEMPT_URLS = [r"^accounts/",]
-LOGIN_REDIRECT_URL = '/qa/units/'
+LOGIN_REDIRECT_URL = '/qa/unit/'
 LOGIN_URL = "/accounts/login/"
 ACCOUNT_ACTIVATION_DAYS = 7
 

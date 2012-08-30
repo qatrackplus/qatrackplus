@@ -317,7 +317,7 @@ function setup_filters(on_complete){
             $(resources.objects).each(function(index,resource){
                 var display = resource[filter.display_property];
                 var value = resource[filter.value_property];
-					
+
                 if (
                     (filter.to_check.length >= 0) &&
 					(($.inArray(value,filter.to_check)>=0) || (filter.to_check[0] === "all"))
@@ -485,7 +485,7 @@ function get_control_chart_url(){
 }
 
 function initialize_charts(){
-	$.plot(		
+	$.plot(
         $("#chart"),
         [{}],
         {
@@ -502,10 +502,11 @@ function initialize_charts(){
             }
         }
     );
-	return;
-	
 	$("#control-chart-container").hide();
-	
+
+	return;
+
+
     //set up main chart and options
     main_graph = $.plot(
         $("#trend-chart"),
@@ -571,7 +572,181 @@ function initialize_charts(){
 
 
 }
+
 /**************************************************************************/
 $(document).ready(function(){
-	$.when(QAUtils.init()).done(initialize_charts);
+	$.when(QAUtils.init()).done(function(){
+		initialize_charts();
+		hide_all_tests();
+		$("#test-list-filters select").change(update_tests);
+
+		$("#gen-chart").click(update_chart);
+	});
 });
+
+function hide_all_tests(){
+	$("#test input").parent().hide();
+}
+
+function update_tests(){
+	var test_lists = get_selected_option_vals("#test-list");
+	var tests = get_tests_for_lists(test_lists);
+	var categories = get_selected_option_vals("#category");
+	var frequencies = get_selected_option_vals("#frequency");
+
+	var to_show = filter_tests(tests,categories,frequencies);
+	show_tests(to_show);
+}
+
+function get_selected_option_vals(select_id){
+	var selected = [];
+
+	$(select_id).find(":selected").each(function(){
+		selected.push(parseInt($(this).val()));
+	});
+	return selected;
+}
+
+function get_tests_for_lists(test_lists){
+	var all_tests = [];
+	var tests,test_list;
+	var i;
+	$.each(test_lists,function(i,pk){
+		test_list =  test_data.test_lists[pk];
+		if (test_list){
+			all_tests.push.apply(all_tests,test_list.tests);
+		}
+	});
+
+	return all_tests;
+}
+
+function filter_tests(tests,categories,frequencies){
+	var filtered = [];
+	$.each(test_data.tests,function(idx,test){
+		if (
+				(categories.indexOf(test.category)>=0) &&
+				(test.frequency === null || frequencies.indexOf(test.frequency) >= 0) &&
+				(tests.indexOf(test.pk) >= 0)
+			){
+			filtered.push(test.pk);
+		}
+	});
+	return filtered;
+}
+
+function show_tests(visible_tests){
+	$("#test input").each(function(i,option){
+		var pk = parseInt($(this).val());
+		if (visible_tests.indexOf(pk) >= 0){
+			$(this).parent().show();
+		}else{
+			$(this).attr(":checked",false);
+			$(this).parent().hide();
+		}
+	});
+}
+
+function update_chart(){
+	start_chart_update();
+	if (basic_chart_selected()){
+		create_basic_chart();
+	}else{
+		create_control_chart();
+	}
+}
+function basic_chart_selected(){
+	return $("#chart-type").val() === "basic";
+}
+function create_basic_chart(){
+	var data = get_chart_data();
+	if (data.tests.length === 0){
+		initialize_charts();
+		finished_chart_update();
+		return;
+	}
+
+	$.ajax({
+            type:"get",
+            url:"/qa/charts/data/",
+            data:data,
+            contentType:"application/json",
+            dataType:"json",
+            success: function(result,status,jqXHR){
+                finished_chart_update();
+				plot_data(result);
+            },
+            error: function(error){
+                finished_chart_update();
+                if (typeof console != "undefined") {console.log(error)};
+            }
+	});
+
+}
+
+function plot_data(data){
+	var data_to_plot = [];
+
+	$.each(data,function(idx,series){
+		var series_data = []
+		$.each(series.data,function(idx,values){
+			var date = QAUtils.parse_iso8601_date(values[0]);
+			series_data.push([date,values[1]]);
+		});
+		data_to_plot.push(series_data);
+
+
+	});
+	$.plot(
+        $("#chart"),
+        data_to_plot,
+        {
+            xaxis:{
+                mode: "time",
+                timeformat: "%d %b %y",
+                autoscaleMargin:0.001
+            },
+            legend:{
+                container:"#chart-legend"
+            },
+            grid:{
+                hoverable:true
+            }
+        }
+    );
+	console.log(data_to_plot);
+
+}
+function create_control_chart(){
+
+}
+function start_chart_update(){
+	$("#gen-chart").button("loading");
+}
+function finished_chart_update(){
+	$("#gen-chart").button("reset");
+}
+function get_chart_data(){
+	var data = {
+		units:get_selected_option_vals("#unit"),
+		statuses:get_selected_option_vals("#status"),
+		from_date:get_date("#from-date"),
+		to_date:get_date("#to-date"),
+		tests:get_selected_tests()
+	};
+
+	return data;
+}
+
+function get_date(date_id){
+	return $(date_id).val();
+
+
+}
+function get_selected_tests(){
+	var tests = [];
+	$("input.test:checked").each(function(){
+		tests.push($(this).val());
+	});
+	return tests;
+}

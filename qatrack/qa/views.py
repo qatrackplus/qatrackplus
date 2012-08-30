@@ -54,6 +54,133 @@ class JSONResponseMixin(object):
 
 
 #============================================================================
+class ChartView(TemplateView):
+    """view for creating charts/graphs from data"""
+    template_name = "qa/charts.html"
+
+    #----------------------------------------------------------------------
+    def create_test_data(self):
+
+        self.test_data = {
+            "test_lists":{},
+            "tests":{},
+            "categories":{}
+        }
+        for test_list in self.test_lists:
+            tests = [x.pk for x in test_list.tests.all()]
+            if tests:
+                self.test_data["test_lists"][test_list.pk] = {
+                    "tests" : tests,
+                }
+        for test in self.tests:
+            test["frequency"] = test["unittestinfo__frequency"]
+            self.test_data["tests"][test["pk"]] = test
+
+
+        return json.dumps(self.test_data)
+
+    #----------------------------------------------------------------------
+    def get_context_data(self,**kwargs):
+        """add default dates to context"""
+        context = super(ChartView,self).get_context_data(**kwargs)
+
+
+
+        self.test_lists = models.TestList.objects.order_by("name").prefetch_related(
+            "tests"
+        ).all()
+
+        self.tests = models.Test.objects.order_by("name").values(
+            "pk",
+            "category",
+            "name",
+            "type",
+            "description",
+            "unittestinfo__frequency"
+        ).distinct()
+
+
+        self.utis = models.UnitTestInfo.objects.all().select_related(
+            "test__category__name",
+            "unit__name",
+            "frequency__pk"
+        ).order_by("unit","test__name")
+
+        c = {
+            "cc_available":CONTROL_CHART_AVAILABLE,
+            "from_date": timezone.now().date()-timezone.timedelta(days=180),
+            "to_date":timezone.now().date()+timezone.timedelta(days=1),
+            "unit_test_infos":self.utis,
+            "frequencies":models.Frequency.objects.all(),
+            "tests":self.tests,
+            "test_lists":self.test_lists,
+            "categories":models.Category.objects.all(),
+            "statuses":models.TestInstanceStatus.objects.all(),
+            "units":Unit.objects.all().select_related("type"),
+            "test_data": self.create_test_data(),
+
+        }
+        context.update(c)
+        return context
+
+#============================================================================
+class BasicChartData(JSONResponseMixin,View):
+
+    #----------------------------------------------------------------------
+    def get(self,request):
+
+        return self.render_to_response(self.get_plot_data())
+    #----------------------------------------------------------------------
+    def get_date(self,key,default):
+        try:
+            d = timezone.datetime.strptime(self.request.GET.get(key),settings.SIMPLE_DATE_FORMAT)
+
+        except:
+            d = default
+
+        if timezone.is_naive(d):
+            d = timezone.make_aware(d,timezone.get_current_timezone())
+
+        return d
+
+
+    #----------------------------------------------------------------------
+    def get_plot_data(self):
+        print self.request.GET
+        tests = self.request.GET.getlist("tests[]",[])
+        units = self.request.GET.getlist("units[]",[])
+        statuses = self.request.GET.getlist("statuses[]",[])
+
+        now = timezone.datetime.now()
+        from_date = self.get_date("from_date",now-timezone.timedelta(days=180))
+        to_date = self.get_date("to_date",now)
+        print from_date
+        print to_date
+        print tests
+        print units
+        print statuses
+        tis = models.TestInstance.objects.filter(
+            unit_test_info__test__pk__in=tests,
+            unit_test_info__unit__pk__in=units,
+            status__pk__in = statuses,
+            work_completed__gte = from_date,
+            work_completed__lte = to_date,
+        ).order_by(
+            "work_completed"
+        )
+
+        data = collections.defaultdict(lambda : {"data":[]})
+        for ti in tis:
+            uti = ti.unit_test_info
+            data[uti.pk]["data"].append([ti.work_completed.isoformat(),ti.value])
+            data[uti.pk]["unit"] = {"name":uti.unit.name,"pk":uti.unit.pk}
+            data[uti.pk]["test"] = {"name":uti.test.name,"pk":uti.test.pk}
+
+
+        return data
+
+
+#============================================================================
 class ControlChartImage(View):
     """Return a control chart image from given qa data"""
     #----------------------------------------------------------------------
@@ -109,6 +236,9 @@ class ControlChartImage(View):
 
     #----------------------------------------------------------------------
     def get(self,request):
+        if not CONTROL_CHART_AVAILABLE:
+            raise Http404
+
         return self.render_to_response({})
     #----------------------------------------------------------------------
     def get_number_from_request(self,param,default,dtype=float):
@@ -119,12 +249,6 @@ class ControlChartImage(View):
         return v
     #----------------------------------------------------------------------
     def render_to_response(self,context):
-
-
-        if not CONTROL_CHART_AVAILABLE:
-            im = open(os.path.join(settings.PROJECT_ROOT,"qa","static","img","control_charts_not_available.png"),"rb").read()
-            return HttpResponse(im,mimetype="image/png")
-
 
         fig=Figure(dpi=72,facecolor="white")
         dpi = fig.get_dpi()
@@ -651,7 +775,7 @@ class UTCList(ListView):
             "unit__name",
             "assigned_to__name",
         ).prefetch_related(
-            "last_instance__testinstance_set",                    
+            "last_instance__testinstance_set",
             "tests_object",
         ).order_by("unit__number","testlist__name","testlistcycle__name",)
 
@@ -747,7 +871,7 @@ class FrequencyList(UTCList):
 
         if "short-interval" in freqs:
             self.frequencies.extend(list(models.Frequency.objects.filter(due_interval__lte=14)))
-            
+
 
         return qs.filter(
             frequency__in=self.frequencies,
@@ -784,60 +908,13 @@ class UnitList(UTCList):
             number__in=self.kwargs["unit_number"].split("/")
         )
         return qs.filter(unit__in=self.units)
-        
+
     #----------------------------------------------------------------------
     def get_page_title(self):
         title = ", ".join([x.name for x in self.units]) + " Test Lists"
         return  title
-        
-    
-    
 
 
-#============================================================================
-class ChartView(TemplateView):
-    """view for creating charts/graphs from data"""
-    template_name = "qa/charts.html"
-            
-    #----------------------------------------------------------------------
-    def get_context_data(self,**kwargs):
-        """add default dates to context"""
-        context = super(ChartView,self).get_context_data(**kwargs)
-        
-        test_data = {}
-        test_lists = models.TestList.objects.order_by("name").all()
-        
-        
-        tests = models.Test.objects.order_by("name").values(
-            "pk",
-            "category__pk",
-            "name",
-            "type",
-            "description"
-        )
-        
-        categories = models.Category.objects.all()
-        statuses = models.TestInstanceStatus.objects.all()
-        units = Unit.objects.all().select_related("type")
-        frequencies = models.Frequency.objects.all()
-        
-        utis = models.UnitTestInfo.objects.all().select_related(
-            "test__category__name",
-            "unit__name",
-            "frequency__pk"
-        ).order_by("unit","test__name")
-        
-        context["from_date"] = timezone.now().date()-timezone.timedelta(days=365)
-        context["to_date"] = timezone.now().date()+timezone.timedelta(days=1)
-        
-        context["unit_test_infos"] = utis
-        context["frequencies"] = frequencies
-        context["tests"] = tests
-        context["test_lists"] = test_lists
-        context["units"] = units
-        context["statuses"] = statuses
-        context["categories"] = categories
-        return context
 
 #============================================================================
 class TestListInstances(ListView):
