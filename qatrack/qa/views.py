@@ -645,16 +645,15 @@ class UTCList(ListView):
             active=True,
             visible_to__in = self.request.user.groups.all(),
         ).select_related(
-            "last_instance",
+            "last_instance__work_completed",
+            "last_instance__created_by",
             "frequency",
             "unit__name",
             "assigned_to__name",
         ).prefetch_related(
-            "last_instance__testinstance_set",
-            "assigned_to",
-            "visible_to",
+            "last_instance__testinstance_set",                    
             "tests_object",
-        ).order_by("testlist__name","testlistcycle__name","unit__number")
+        ).order_by("unit__number","testlist__name","testlistcycle__name",)
 
         return qs.distinct()
 
@@ -743,26 +742,27 @@ class FrequencyList(UTCList):
 
         qs = super(FrequencyList,self).get_queryset()
 
-        freq = self.kwargs["frequency"]
-        if freq == "short-interval":
-            self.frequencies = models.Frequency.objects.filter(due_interval__lte=14)
-        else:
-            self.frequencies = models.Frequency.objects.filter(slug__in=self.kwargs["frequency"].split("/"))
+        freqs = self.kwargs["frequency"].split("/")
+        self.frequencies = list(models.Frequency.objects.filter(slug__in=freqs))
+
+        if "short-interval" in freqs:
+            self.frequencies.extend(list(models.Frequency.objects.filter(due_interval__lte=14)))
+            
 
         return qs.filter(
-            frequency__slug__in=self.frequencies.values_list("slug",flat=True),
+            frequency__in=self.frequencies,
         ).distinct()
     #----------------------------------------------------------------------
     def get_page_title(self):
         return ",".join([x.name for x in self.frequencies]) + " Test Lists"
 #============================================================================
-class UnitFrequencyListView(FrequencyList):
+class UnitFrequencyList(FrequencyList):
     """list daily/monthly/annual test lists for a unit"""
 
     #----------------------------------------------------------------------
     def get_queryset(self):
         """filter queryset by frequency"""
-        qs = super(UnitFrequencyListView,self).get_queryset()
+        qs = super(UnitFrequencyList,self).get_queryset()
         self.units = Unit.objects.filter(number__in=self.kwargs["unit_number"].split("/"))
         return qs.filter(unit__in=self.units)
     #----------------------------------------------------------------------
@@ -772,7 +772,26 @@ class UnitFrequencyListView(FrequencyList):
         return  title
 
 
+#====================================================================================
+class UnitList(UTCList):
+    """list qa filtered by unit"""
 
+    #----------------------------------------------------------------------
+    def get_queryset(self):
+        """filter queryset by frequency"""
+        qs = super(UnitList,self).get_queryset()
+        self.units = Unit.objects.filter(
+            number__in=self.kwargs["unit_number"].split("/")
+        )
+        return qs.filter(unit__in=self.units)
+        
+    #----------------------------------------------------------------------
+    def get_page_title(self):
+        title = ", ".join([x.name for x in self.units]) + " Test Lists"
+        return  title
+        
+    
+    
 
 
 #============================================================================
