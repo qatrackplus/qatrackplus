@@ -797,36 +797,46 @@ class UnitList(UTCList):
 #============================================================================
 class ChartView(TemplateView):
     """view for creating charts/graphs from data"""
-    template_name = "charts.html"
+    template_name = "qa/charts.html"
             
     #----------------------------------------------------------------------
     def get_context_data(self,**kwargs):
         """add default dates to context"""
         context = super(ChartView,self).get_context_data(**kwargs)
         
-        test_lists = models.TestList.objects.prefetch_related(
-            "tests"
-        )
-        #tests = models.Test.objects.prefetch_related(
-        #    "tests",
-            #"testlistmembership_set"
-        #)
+        test_data = {}
+        test_lists = models.TestList.objects.order_by("name").all()
         
-        for x in test_lists:
-            print x,x.tests.all()
+        
+        tests = models.Test.objects.order_by("name").values(
+            "pk",
+            "category__pk",
+            "name",
+            "type",
+            "description"
+        )
+        
+        categories = models.Category.objects.all()
+        statuses = models.TestInstanceStatus.objects.all()
+        units = Unit.objects.all().select_related("type")
+        frequencies = models.Frequency.objects.all()
+        
+        utis = models.UnitTestInfo.objects.all().select_related(
+            "test__category__name",
+            "unit__name",
+            "frequency__pk"
+        ).order_by("unit","test__name")
         
         context["from_date"] = timezone.now().date()-timezone.timedelta(days=365)
         context["to_date"] = timezone.now().date()+timezone.timedelta(days=1)
         
-        
-        context["check_list_filters"] = [
-            ("Frequency","frequency"),
-            ("Review Status","review-status"),
-            ("Unit","unit"),
-            ("Category","category"),
-            ("Test List","test-list"),
-            ("Test","test"),
-        ]
+        context["unit_test_infos"] = utis
+        context["frequencies"] = frequencies
+        context["tests"] = tests
+        context["test_lists"] = test_lists
+        context["units"] = units
+        context["statuses"] = statuses
+        context["categories"] = categories
         return context
 
 #============================================================================
