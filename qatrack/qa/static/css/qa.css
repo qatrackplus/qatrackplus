@@ -20,7 +20,10 @@
     filter: alpha(opacity=100)
 }
 
-
+.pagination {
+    margin:0;
+    margin-bottom:2px;
+}
 
 /************************************************/
 /* performing qa                                */
@@ -286,6 +289,7 @@ tr.col-group th{
 
 /*********************************************/
 /* QA review & approval                      */
+
 
 .review-buttons {
     padding-bottom: 8px;

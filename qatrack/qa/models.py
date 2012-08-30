@@ -263,24 +263,24 @@ class Tolerance(models.Model):
         if self.type == MULTIPLE_CHOICE:
             if (None, None, None, None) != (self.act_low,self.tol_low,self.tol_high,self.act_high):
                 errors.append("Value set for tolerance or action but type is Multiple Choice")
-                
+
         elif self.type is not MULTIPLE_CHOICE:
             if (None, None) != (self.mc_pass_choices,self.mc_tol_choices):
                 errors.append("Value set for pass choices or tolerance choices but type is not Multiple Choice")
 
         pass_choices = [x.strip() for x in self.mc_pass_choices.split(",") if x.strip()]
         tol_choices = [x.strip() for x in self.mc_tol_choices.split(",") if x.strip()]
-        
+
         if not pass_choices:
             errors.append("You must give more at l passing choice for a multiple choice tolerance")
         else:
             self.mc_pass_choices = ",".join(pass_choices)
             if tol_choices:
                 self.tol_choices = ",".join(tol_choices)
-            
+
         if errors:
             raise ValidationError({"pass_choices":errors})
-        
+
     #---------------------------------------------------------------------------
     def __unicode__(self):
         """more helpful interactive display name"""
@@ -512,7 +512,7 @@ class UnitTestInfo(models.Model):
             return utils.due_date(self.last_instance.work_completed,self.frequency)
 
     #----------------------------------------------------------------------
-    def history(self,number=5):
+    def get_history(self,number=5):
         """return last 'number' of instances for this test performed on input unit
         list is ordered in ascending dates
         """
@@ -643,6 +643,8 @@ class UnitTestCollection(models.Model):
     frequency = models.ForeignKey(Frequency, help_text=_("Frequency with which this test list is to be performed"))
 
     assigned_to = models.ForeignKey(Group,help_text = _("QA group that this test list should nominally be performed by"),null=True)
+    visible_to = models.ManyToManyField(Group,help_text=_("Select groups who will be able to see this test collection on this unit"),related_name="test_collection_visibility",default=Group.objects.all)
+
     active = models.BooleanField(help_text=_("Uncheck to disable this test on this unit"), default=True,db_index=True)
 
     limit = Q(app_label = 'qa', model = 'testlist') | Q(app_label = 'qa', model = 'testlistcycle')
@@ -652,6 +654,8 @@ class UnitTestCollection(models.Model):
     objects = UnitTestListManager()
 
     last_instance = models.ForeignKey("TestListInstance",null=True,editable=False)
+
+
 
     class Meta:
         unique_together = ("unit", "frequency", "content_type","object_id",)
@@ -912,7 +916,7 @@ class TestInstance(models.Model):
     def percent_difference(self):
         """return percent difference between instance and reference"""
         if (self.reference.value < EPSILON):
-            raise ValueError("Tried to calculate percent diff with a zero reference value")
+            raise ZeroDivisionError("Tried to calculate percent diff with a zero reference value")
         return 100.*(self.value-self.reference.value)/float(self.reference.value)
 
     #---------------------------------------------------------------------------
@@ -931,7 +935,7 @@ class TestInstance(models.Model):
             self.pass_fail = TOLERANCE
         else:
             self.pass_fail = ACTION
-        
+
     #---------------------------------------------------------------------------
     def float_pass_fail(self):
         if self.tolerance.type == ABSOLUTE:
@@ -945,12 +949,12 @@ class TestInstance(models.Model):
             self.pass_fail = TOLERANCE
         else:
             self.pass_fail = ACTION
-        
+
     #----------------------------------------------------------------------
     def calculate_pass_fail(self):
         """set pass/fail status of the current value"""
 
-        if self.skipped:
+        if self.skipped or (self.value is None and self.in_progress):
             self.pass_fail = NOT_DONE
         elif (self.unit_test_info.test.type ==  BOOLEAN) and self.reference:
             self.bool_pass_fail()
@@ -970,14 +974,15 @@ class TestInstance(models.Model):
 @receiver(post_save,sender=TestInstance)
 def on_test_instance_saved(*args,**kwargs):
     test_instance = kwargs["instance"]
-    test_instance.unit_test_info.last_instance = test_instance
-    test_instance.unit_test_info.save()
+    if not test_instance.in_progress:
+        test_instance.unit_test_info.last_instance = test_instance
+        test_instance.unit_test_info.save()
 
 #============================================================================
 class TestListInstanceManager(models.Manager):
 
     #----------------------------------------------------------------------
-    def awaiting_review(self):
+    def unreviewed(self):
         return self.complete().filter(testinstance__status__requires_review=True).distinct().order_by("work_completed")
     #----------------------------------------------------------------------
     def in_progress(self):
@@ -1003,13 +1008,13 @@ class TestListInstance(models.Model):
     work_completed = models.DateTimeField(default=timezone.now,db_index=True,null=True)
 
     comment = models.TextField(help_text=_("Add a comment to this set of tests"), null=True, blank=True)
-    
-    in_progress = models.BooleanField(default=False, editable=False,db_index=True)
+
+    in_progress = models.BooleanField(help_text=_("Mark this session as still in progress so you can complete later (will not be submitted for review)"),default=False,db_index=True)
 
     #for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, editable=False, related_name="test_list_instance_creator")
-    modified = models.DateTimeField(auto_now=True)	
+    modified = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(User, editable=False, related_name="test_list_instance_modifier")
 
 
@@ -1063,6 +1068,9 @@ def on_test_list_instance_saved(*args,**kwargs):
     """set last instance for UnitTestInfo"""
 
     test_list_instance = kwargs["instance"]
+
+    if test_list_instance.in_progress:
+        return
 
     cycle_ids = TestListCycle.objects.filter(
         test_lists = test_list_instance.test_list

@@ -117,7 +117,7 @@ def create_test_instance(unit_test_info=None,value=1., created_by=None,work_comp
 
     if work_completed is None: work_completed = timezone.now()
     work_started = work_completed - timezone.timedelta(seconds=60)
-    
+
     if created_by is None: created_by = create_user()
     if status is None: status = create_status()
 
@@ -135,12 +135,12 @@ def create_test_instance(unit_test_info=None,value=1., created_by=None,work_comp
     return ti
 #----------------------------------------------------------------------
 def create_modality(energy=6,particle=PHOTON):
-    m = Modality(type=particle,energy=energy)
+    m, _ = Modality.objects.get_or_create(type=particle,energy=energy)
     m.save()
     return m
 #----------------------------------------------------------------------
 def create_unit_type(name="utype",vendor="vendor",model="model"):
-    ut = UnitType(name=name,vendor=vendor, model=model)
+    ut,_ = UnitType.objects.get_or_create(name=name,vendor=vendor, model=model)
     ut.save()
     return ut
 
@@ -220,8 +220,11 @@ def create_unit_test_collection(unit=None,frequency=None,test_collection=None):
         unit = unit,
         object_id = test_collection.pk,
         content_type = ContentType.objects.get_for_model(test_collection),
-        frequency = frequency
+        frequency = frequency,
+
     )
 
+    utc.save()
+    utc.visible_to = Group.objects.all()
     utc.save()
     return utc

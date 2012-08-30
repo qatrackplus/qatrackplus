@@ -296,6 +296,8 @@ LOGGING = {
     }
 }
 
+PAGINATE_DEFAULT=50
+
 #------------------------------------------------------------------------------
 #Testing settings
 TEST_RUNNER = 'django_coverage.coverage_runner.CoverageRunner'

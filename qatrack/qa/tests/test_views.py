@@ -27,6 +27,45 @@ class TestURLS(TestCase):
     #---------------------------------------------------------------------------
     def returns_200(self,url,method="get"):
         return getattr(self.client,method)(url).status_code == 200
+
+    def test_qa_urls(self):
+
+        utils.create_status()
+        u1 = utils.create_unit(number=1,name="u1")
+        utils.create_unit(number=2,name="u2",)
+        utc = utils.create_unit_test_collection(unit=u1)
+        tli = utils.create_test_list_instance(unit_test_collection=utc)
+
+        urls = (
+            "",
+            "review/",
+            "review/utc/1/",
+            "review/frequency/",
+            "review/frequency/daily/",
+            "review/frequency/daily/monthly/",
+            "review/unit/",
+            "review/unit/1/",
+            "review/unit/1/2/",
+            "review/tli/details/",
+            "review/tli/details/1/",
+            "review/unreviewed/",
+
+
+            "units/",
+            "perform/utc/1/",
+            "tli/in-progress/",
+            "tli/edit/1/",
+            "daily/unit/1/",
+            "daily/",
+
+            "charts/",
+            "charts/export/",
+            "charts/control_chart.png",
+
+        )
+
+        for url in urls:
+            self.assertTrue(self.returns_200("/qa/"+url))
     #---------------------------------------------------------------------------
     def test_home(self):
         self.assertTrue(self.returns_200("/"))
@@ -36,44 +75,16 @@ class TestURLS(TestCase):
     #---------------------------------------------------------------------------
     def test_login_redirect(self):
         self.assertTrue(self.returns_200(settings.LOGIN_REDIRECT_URL))
-    #---------------------------------------------------------------------------
+    #----------------------------------------------------------------------
     def test_composite(self):
+
         self.assertTrue(self.returns_200("/qa/composite/",method="post"))
-    #---------------------------------------------------------------------------
-    def test_review(self):
-        self.assertTrue(self.returns_200("/qa/review/"))
-    #---------------------------------------------------------------------------
-    def test_charts(self):
-        self.assertTrue(self.returns_200("/qa/charts/"))
-    #-----------------------------------------------------------
-    def test_charts_export(self):
-        self.assertTrue(self.returns_200("/qa/charts/export/"))
-    #---------------------------------------------------------------------------
-    def test_charts_control_chart(self):
-        self.assertTrue(self.returns_200("/qa/charts/control_chart.png"))
-    #---------------------------------------------------------------------------
-    def test_unit_group_frequency(self):
-        self.assertTrue(self.returns_200("/qa/daily/"))
-    #---------------------------------------------------------------------------
-    def test_all_lists(self):
-        self.assertTrue(self.returns_200("/qa/"))
-    #---------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def test_perform(self):
         utils.create_status()
         utils.create_unit_test_collection()
-        self.assertTrue(self.returns_200("/qa/1"))
-        self.assertTrue(404==self.client.get("/qa/2").status_code)
-    #---------------------------------------------------------------------------
-    def test_unit_frequency(self):
-        self.assertTrue(self.returns_200("/qa/daily/unit/1/"))
-
-    #----------------------------------------------------------------------
-    def test_awaiting_review(self):
-        self.assertTrue(self.returns_200("/qa/review/new/"))
-    #----------------------------------------------------------------------
-    def test_tli_details(self):
-        tli = utils.create_test_list_instance()
-        self.assertTrue(self.returns_200("/qa/review/details/1/"))
+        self.assertTrue(self.returns_200("/qa/perform/utc/1/"))
+        self.assertTrue(404==self.client.get("/qa/perform/utc/2/").status_code)
 
 
 
@@ -316,7 +327,7 @@ class TestPerformQA(TestCase):
     #----------------------------------------------------------------------
     def setUp(self):
         self.factory = RequestFactory()
-        self.view = views.PerformQAView.as_view()
+        self.view = views.PerformQA.as_view()
         self.status = utils.create_status()
 
         self.test_list = utils.create_test_list()
@@ -343,6 +354,9 @@ class TestPerformQA(TestCase):
         for test in self.tests:
             utils.create_test_list_membership(self.test_list,test)
 
+        group = Group(name="foo")
+        group.save()
+
         self.unit_test_list = utils.create_unit_test_collection(
             test_collection=self.test_list
         )
@@ -353,6 +367,9 @@ class TestPerformQA(TestCase):
         self.url = reverse("perform_qa",kwargs={"pk":self.unit_test_list.pk})
         self.client.login(username="user",password="password")
         self.user = User.objects.get(username="user")
+        self.user.save()
+        self.user.groups.add(group)
+        self.user.save()
     #----------------------------------------------------------------------
     def test_test_forms_present(self):
         response = self.client.get(self.url)
@@ -483,6 +500,8 @@ class TestPerformQA(TestCase):
         self.assertTrue(response.context["include_admin"])
 
         u2 = utils.create_user(is_staff=False,is_superuser=False,uname="u2")
+        u2.groups.add(Group.objects.get(pk=1))
+        u2.save()
         self.client.logout()
         self.client.login(username="u2",password="password")
 

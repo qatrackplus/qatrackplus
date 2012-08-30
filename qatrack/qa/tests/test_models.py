@@ -308,10 +308,10 @@ class TestUnitTestInfo(TestCase):
             utils.create_test_instance(unit_test_info=uti,status=status,work_completed=wc,value=val)
 
         sorted_hist = list(sorted(history))
-        self.assertListEqual(sorted_hist,uti.history())
+        self.assertListEqual(sorted_hist,uti.get_history())
 
         #test returns correct number of results
-        self.assertListEqual(sorted_hist[-2:],uti.history(number=2))
+        self.assertListEqual(sorted_hist[-2:],uti.get_history(number=2))
 
     #----------------------------------------------------------------------
     def test_add_to_cycle(self):
@@ -814,7 +814,7 @@ class TestTestInstance(TestCase):
         ti.reference = ref
         self.assertAlmostEqual(10,ti.percent_difference())
         ref.value=0
-        self.assertRaises(ValueError,ti.percent_difference)
+        self.assertRaises(ZeroDivisionError,ti.percent_difference)
     #----------------------------------------------------------------------
     def test_bool_pass_fail(self):
         test = utils.create_test(test_type=models.BOOLEAN)

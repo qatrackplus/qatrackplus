@@ -55,7 +55,7 @@ class Modality(models.Model):
     #---------------------------------------------------------------------------
 #    def get_query_set(self):
 #        return super(UnitManager,self).get_query_set().select_related("type")
-        
+
 #============================================================================
 class Unit(models.Model):
     """Radiation devices
@@ -79,4 +79,4 @@ class Unit(models.Model):
 
     #----------------------------------------------------------------------
     def __unicode__(self):
-        return u"<Unit(%d, %s)>" % (self.number, self.name)
+        return self.name

@@ -14,10 +14,8 @@ def site(request):
         'SITE_NAME': site.name,
         'SITE_URL': site.domain,
         'VERSION' : qatrack.settings.VERSION,
-        #QA Specific
-        
+
         #forcing list cuts down number of queries on some pages
         'QA_FREQUENCIES' : list(Frequency.objects.frequency_choices()),
-        
-        'AWAITING_REVIEW': TestListInstance.objects.awaiting_review().count(),
+        'UNREVIEWED': TestListInstance.objects.unreviewed().count(),
     }

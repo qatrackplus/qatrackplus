@@ -14,6 +14,10 @@ from qatrack.units.models import Unit, UnitType
 from qatrack.contacts.models import Contact
 from qatrack import settings
 
+
+import logging
+logger = logging.getLogger(__name__)
+
 import forms
 import math
 import os
@@ -239,18 +243,18 @@ class ChooseUnit(ListView):
     """choose a unit to perform qa on for this session"""
     model = Unit
     context_object_name = "units"
-    template_name = "choose_unit.html"
 
     #---------------------------------------------------------------------------
     def get_queryset(self):
         return Unit.objects.all().select_related("type")
 
-#============================================================================
-class PerformQAView(CreateView):
-    """view for users to complete a qa test list"""
-    template_name = "perform_test_list.html"
-    form_class = forms.CreateTestListInstanceForm
 
+#============================================================================
+class PerformQA(CreateView):
+    """view for users to complete a qa test list"""
+
+    form_class = forms.CreateTestListInstanceForm
+    model = models.TestListInstance
     #----------------------------------------------------------------------
     def set_test_lists(self,current_day):
 
@@ -268,7 +272,12 @@ class PerformQAView(CreateView):
     #----------------------------------------------------------------------
     def set_unit_test_collection(self):
         self.unit_test_col = get_object_or_404(
-            models.UnitTestCollection.objects.select_related("unit","frequency"),
+            models.UnitTestCollection.objects.select_related(
+                "unit","frequency"
+            ).filter(
+                active=True,
+                visible_to__in = self.request.user.groups.all(),
+            ).distinct(),
             pk=self.kwargs["pk"]
         )
     #----------------------------------------------------------------------
@@ -303,31 +312,17 @@ class PerformQAView(CreateView):
 
         from_date = timezone.make_aware(timezone.datetime.now() - timezone.timedelta(days=10*self.unit_test_col.frequency.overdue_interval),timezone.get_current_timezone())
         histories = utils.tests_history(self.all_tests,self.unit_test_col.unit,from_date)
-
-        #figure out 5 most recent dates that a test from this list was performed
-        dates = set()
-        for uti in self.unit_test_infos:
-            uti.history = histories.get(uti.test.pk,[])[:5]
-            dates |=  set([x[0] for x in uti.history])
-        self.history_dates = list(sorted(dates,reverse=True))[:5]
-
-        #change history to only show values from 5 most recent dates
-        for uti in self.unit_test_infos:
-            new_history = []
-            for d in self.history_dates:
-                hist = [None]*4
-                for h in uti.history:
-                    if h[0] == d:
-                        hist = h
-                        break
-                new_history.append(hist)
-            uti.history = new_history
+        self.unit_test_infos, self.history_dates = utils.add_history_to_utis(self.unit_test_infos,histories)
 
     #----------------------------------------------------------------------
     def form_valid(self,form):
 
         context = self.get_context_data()
         formset = context["formset"]
+
+        for ti_form in formset:
+            ti_form.in_progress = form.instance.in_progress
+
         if formset.is_valid():
 
             self.object = form.save(commit=False)
@@ -363,7 +358,21 @@ class PerformQAView(CreateView):
                     work_started=self.object.work_started,
                     work_completed=self.object.work_completed,
                 )
-                ti.save()
+                try:
+                    ti.save()
+                except ZeroDivisionError:
+
+                    msga = "Tried to calculate percent diff with a zero reference value. "
+
+                    ti.skipped = True
+                    ti.comment = msga + " Original value was %s" % ti.value
+                    ti.value = None
+                    ti.save()
+
+                    logger.error(msga+ " UTI=%d"%ti.unit_test_info.pk)
+                    msg =  "Please call physics.  Test %s is configured incorrectly on this unit. "% ti.unit_test_info.test.name
+                    msg += msga
+                    messages.error(self.request,_(msg))
 
             #let user know request succeeded and return to unit list
             messages.success(self.request,_("Successfully submitted %s "% self.object.test_list.name))
@@ -376,7 +385,7 @@ class PerformQAView(CreateView):
     #----------------------------------------------------------------------
     def get_context_data(self,**kwargs):
 
-        context = super(PerformQAView,self).get_context_data(**kwargs)
+        context = super(PerformQA,self).get_context_data(**kwargs)
 
         if models.TestInstanceStatus.objects.default() is None:
             messages.error(
@@ -390,6 +399,7 @@ class PerformQAView(CreateView):
         self.set_all_tests()
         self.set_unit_test_infos()
 
+
         if self.request.method == "POST":
             formset = forms.CreateTestInstanceFormSet(self.request.POST,self.request.FILES,unit_test_infos=self.unit_test_infos)
         else:
@@ -402,7 +412,11 @@ class PerformQAView(CreateView):
         context["include_admin"] = self.request.user.is_staff
         context['categories'] = set([x.test.category for x in self.unit_test_infos])
         context['current_day'] = self.actual_day+1
-        context['days'] = range(1,len(self.unit_test_col.tests_object)+1)
+
+        ndays = len(self.unit_test_col.tests_object)
+        if ndays > 1:
+            context['days'] = range(1,ndays+1)
+
         context["test_list"] = self.test_list
         context["unit_test_collection"] = self.unit_test_col
         context["contacts"] = list(Contact.objects.all().order_by("name"))
@@ -424,15 +438,16 @@ class PerformQAView(CreateView):
         }
         return reverse("qa_by_frequency_unit",kwargs=kwargs)
 
+
+
+
 #============================================================================
-class ReviewTestListInstance(UpdateView):
+class BaseEditTestListInstance(UpdateView):
     model = models.TestListInstance
-    form_class = forms.UpdateTestListInstanceForm
-    template_name = "review_test_list_instance.html"
     context_object_name = "test_list_instance"
     #---------------------------------------------------------------------------
     def get_queryset(self):
-        qs = super(ReviewTestListInstance,self).get_queryset()
+        qs = super(BaseEditTestListInstance,self).get_queryset()
         qs = qs.select_related(
             "unit_test_collection",
             "unit_test_collection__unit",
@@ -441,6 +456,55 @@ class ReviewTestListInstance(UpdateView):
             "modified_by",
         )
         return qs
+
+    #----------------------------------------------------------------------
+    def add_histories(self,forms):
+        """paste historical values onto unit test infos"""
+
+        from_date = timezone.make_aware(timezone.datetime.now() - timezone.timedelta(days=10*self.object.unit_test_collection.frequency.overdue_interval),timezone.get_current_timezone())
+        tests = [x.unit_test_info.test for x in self.test_instances]
+        histories = utils.tests_history(tests,self.object.unit_test_collection.unit,from_date)
+        unit_test_infos = [f.instance.unit_test_info for f in forms]
+        _, self.history_dates = utils.add_history_to_utis(unit_test_infos,histories)
+
+
+    #----------------------------------------------------------------------
+    def get_context_data(self,**kwargs):
+
+        context = super(BaseEditTestListInstance,self).get_context_data(**kwargs)
+
+        #we need to override the default queryset for the formset so that we can pull
+        #in all the reference/tolerance data without the ORM generating 100's of queries
+        self.test_instances = models.TestInstance.objects.filter(
+            test_list_instance=self.object
+        ).select_related(
+            "reference","tolerance","status","unit_test_info","unit_test_info__test","status"
+        )
+
+        if self.request.method == "POST":
+            formset = self.formset_class(self.request.POST,self.request.FILES,instance=self.get_object(),queryset=self.test_instances)
+        else:
+            formset = self.formset_class(instance=self.get_object(),queryset=self.test_instances)
+
+        self.add_histories(formset.forms)
+        context["formset"] = formset
+        context["history_dates"] = self.history_dates
+        context["statuses"] = models.TestInstanceStatus.objects.all()
+        return context
+
+    #----------------------------------------------------------------------
+    def form_valid(self,form):
+        raise NotImplementedError
+    #----------------------------------------------------------------------
+    def get_success_url(self):
+        raise NotImplementedError
+
+#============================================================================
+class ReviewTestListInstance(BaseEditTestListInstance):
+    form_class = forms.ReviewTestListInstanceForm
+    formset_class = forms.ReviewTestInstanceFormSet
+    template_name_suffix = "_review"
+
     #----------------------------------------------------------------------
     def form_valid(self,form):
         context = self.get_context_data()
@@ -481,104 +545,234 @@ class ReviewTestListInstance(UpdateView):
         return HttpResponseRedirect(self.get_success_url())
     #----------------------------------------------------------------------
     def get_success_url(self):
-        return reverse("awaiting_review")
+        kwargs = {
+            "unit_number":self.object.unit_test_collection.unit.number,
+            "frequency":self.object.unit_test_collection.frequency.slug
+        }
+        return reverse("qa_by_frequency_unit",kwargs=kwargs)
+
+#============================================================================
+class EditTestListInstance(BaseEditTestListInstance):
+    """view for users to complete a qa test list"""
+
+    form_class = forms.UpdateTestListInstanceForm
+    formset_class = forms.UpdateTestInstanceFormSet
 
     #----------------------------------------------------------------------
-    def add_histories(self,forms):
-        """paste historical values onto unit test infos"""
+    def form_valid(self,form):
+        context = self.get_context_data()
+        formset = context["formset"]
 
-        from_date = timezone.make_aware(timezone.datetime.now() - timezone.timedelta(days=10*self.object.unit_test_collection.frequency.overdue_interval),timezone.get_current_timezone())
-        tests = [x.unit_test_info.test for x in self.test_instances]
-        histories = utils.tests_history(tests,self.object.unit_test_collection.unit,from_date)
+        update_time = timezone.make_aware(timezone.datetime.now(),timezone.get_current_timezone())
+        update_user = self.request.user
 
-        #figure out 5 most recent dates that a test from this list was performed
-        dates = set()
-        for f in forms:
-            f.history = histories.get(f.instance.unit_test_info.test.pk,[])[:5]
-            dates |=  set([x[0] for x in f.history])
-        self.history_dates = list(sorted(dates,reverse=True))[:5]
+        for ti_form in formset:
+            ti_form.in_progress = form.instance.in_progress
 
-        #change history to only show values from 5 most recent dates
-        for f in forms:
-            new_history = []
-            for d in self.history_dates:
-                hist = [None]*4
-                for h in f.history:
-                    if h[0] == d:
-                        hist = h
-                        break
-                new_history.append(hist)
-            f.history = new_history
+        if formset.is_valid():
 
-    #----------------------------------------------------------------------
-    def get_context_data(self,**kwargs):
+            self.object = form.save(commit=False)
+            self.object.created_by = self.request.user
+            self.object.modified_by= self.request.user
 
-        context = super(ReviewTestListInstance,self).get_context_data(**kwargs)
+            if self.object.work_completed is None:
+                self.object.work_completed = timezone.make_aware(timezone.datetime.now(),timezone=timezone.get_current_timezone())
 
-        #we need to override the default queryset for the formset so that we can pull
-        #in all the reference/tolerance data without the ORM generating 100's of queries
-        self.test_instances = models.TestInstance.objects.filter(
-            test_list_instance=self.object
-        ).select_related(
-            "reference","tolerance","status","unit_test_info","unit_test_info__test","status"
-        )
+            self.object.save()
 
-        if self.request.method == "POST":
-            formset = forms.UpdateTestInstanceFormset(self.request.POST,self.request.FILES,instance=self.get_object(),queryset=self.test_instances)
+            status=models.TestInstanceStatus.objects.default()
+            if form.fields.has_key("status"):
+                val = form["status"].value()
+                if val is not None:
+                    status = models.TestInstanceStatus.objects.get(pk=val)
+
+            for ti_form in formset:
+                ti = ti_form.save(commit=False)
+                ti.status = status
+                ti.created_by = self.request.user
+                ti.modified_by = self.request.user
+                ti.in_progress = self.object.in_progress
+                ti.work_started=self.object.work_started
+                ti.work_completed=self.object.work_completed
+
+                try:
+                    ti.save()
+                except ZeroDivisionError:
+
+                    msga = "Tried to calculate percent diff with a zero reference value. "
+
+                    ti.skipped = True
+                    ti.comment = msga + " Original value was %s" % ti.value
+                    ti.value = None
+                    ti.save()
+
+                    logger.error(msga+ " UTI=%d"%ti.unit_test_info.pk)
+                    msg =  "Please call physics.  Test %s is configured incorrectly on this unit. "% ti.unit_test_info.test.name
+                    msg += msga
+                    messages.error(self.request,_(msg))
+
+            #let user know request succeeded and return to unit list
+            messages.success(self.request,_("Successfully submitted %s "% self.object.test_list.name))
+
+            return HttpResponseRedirect(self.get_success_url())
         else:
-            formset = forms.UpdateTestInstanceFormset(instance=self.get_object(),queryset=self.test_instances)
+            context["form"] = form
+            return self.render_to_response(context)
 
-        self.add_histories(formset.forms)
-        context["formset"] = formset
-        context["history_dates"] = self.history_dates
-        context["statuses"] = models.TestInstanceStatus.objects.all()
+
+    #----------------------------------------------------------------------
+    def get_context_data(self,*args,**kwargs):
+        context = super(EditTestListInstance,self).get_context_data(*args,**kwargs)
+        context["include_admin"] = self.request.user.is_staff
+
         return context
 
-#============================================================================
-class UnitFrequencyListView(ListView):
-    """list daily/monthly/annual test lists for a unit"""
+    #----------------------------------------------------------------------
+    def get_success_url(self):
+        return reverse("unreviewed")
 
-    template_name = "frequency_list.html"
+#============================================================================
+class UTCList(ListView):
+    model = models.UnitTestCollection
     context_object_name = "unittestcollections"
+    paginate_by = settings.PAGINATE_DEFAULT
+    action = "perform"
+    action_display = "Perform"
+    #----------------------------------------------------------------------
+    def get_queryset(self):
+
+        qs = super(UTCList,self).get_queryset().filter(
+            active=True,
+            visible_to__in = self.request.user.groups.all(),
+        ).select_related(
+            "last_instance",
+            "frequency",
+            "unit__name",
+            "assigned_to__name",
+        ).prefetch_related(
+            "last_instance__testinstance_set",
+            "assigned_to",
+            "visible_to",
+            "tests_object",
+        ).order_by("testlist__name","testlistcycle__name","unit__number")
+
+        return qs.distinct()
+
+    #----------------------------------------------------------------------
+    def get_page_title(self):
+        return "All Test Collections"
+
+    #----------------------------------------------------------------------
+    def get_context_data(self,*args,**kwargs):
+        context = super(UTCList,self).get_context_data(*args,**kwargs)
+        context["page_title"] = self.get_page_title()
+        context["action"] = self.action
+        context["action_display"] = self.action_display
+        return context
+
+#====================================================================================
+class UTCReview(UTCList):
+    action = "review"
+    action_display = "Review"
+    #---------------------------------------------------------------------------
+    def get_page_title(self):
+        return "Review Test List Data"
+
+#====================================================================================
+class UTCFrequencyReview(UTCReview):
 
     #----------------------------------------------------------------------
     def get_queryset(self):
         """filter queryset by frequency"""
+
+        qs = super(UTCFrequencyReview,self).get_queryset()
+
         freq = self.kwargs["frequency"]
         if freq == "short-interval":
-            freqs = models.Frequency.objects.filter(due_interval__lte=14).values_list("slug",flat=True)
+            self.frequencies = models.Frequency.objects.filter(due_interval__lte=14)
         else:
-            freqs = self.kwargs["frequency"].split("/")
+            self.frequencies = models.Frequency.objects.filter(slug__in=self.kwargs["frequency"].split("/"))
 
-        return models.UnitTestCollection.objects.filter(
-            frequency__slug__in=freqs,
-            unit__number=self.kwargs["unit_number"],
-            active=True,
-        )
+        return qs.filter(
+            frequency__slug__in=self.frequencies.values_list("slug",flat=True),
+        ).distinct()
+
+    #---------------------------------------------------------------------------
+    def get_page_title(self):
+        return " Review " + ", ".join([x.name for x in self.frequencies]) + " Test Lists"
+
+
+#====================================================================================
+class UTCUnitReview(UTCReview):
+
+    #----------------------------------------------------------------------
+    def get_queryset(self):
+        """filter queryset by frequency"""
+        qs = super(UTCUnitReview,self).get_queryset()
+        self.units = Unit.objects.filter(number__in=self.kwargs["unit_number"].split("/"))
+        return qs.filter(unit__in=self.units)
+
+    #---------------------------------------------------------------------------
+    def get_page_title(self):
+        return "Review " + ", ".join([x.name for x in self.units]) + " Test Lists"
+
+#====================================================================================
+class ChooseUnitForReview(ListView):
+
+    model = Unit
+    context_object_name = "units"
+    template_name_suffix = "_choose_for_review"
+    #---------------------------------------------------------------------------
+    def get_queryset(self):
+        return Unit.objects.all().select_related("type")
+
+#====================================================================================
+class ChooseFrequencyForReview(ListView):
+
+    model = models.Frequency
+    context_object_name = "frequencies"
+    template_name_suffix = "_choose_for_review"
 
 #============================================================================
-class UnitGroupedFrequencyListView(ListView):
-    """view for grouping all test lists with a certain frequency for all units"""
-    template_name = "unit_grouped_frequency_list.html"
-    context_object_name = "unittestcollections"
+class FrequencyList(UTCList):
+    """list daily/monthly/annual test lists for a unit"""
 
     #----------------------------------------------------------------------
     def get_queryset(self):
         """filter queryset by frequency"""
 
-        return models.UnitTestCollection.objects.filter(
-            frequency__slug=self.kwargs["frequency"],
-            active=True,
-        )
-#============================================================================
-class AllTestCollections(ListView):
-    """show all lists currently assigned to the groups this member is a part of"""
+        qs = super(FrequencyList,self).get_queryset()
 
-    template_name = "all_test_lists.html"
-    context_object_name = "unittestcollections"
+        freq = self.kwargs["frequency"]
+        if freq == "short-interval":
+            self.frequencies = models.Frequency.objects.filter(due_interval__lte=14)
+        else:
+            self.frequencies = models.Frequency.objects.filter(slug__in=self.kwargs["frequency"].split("/"))
+
+        return qs.filter(
+            frequency__slug__in=self.frequencies.values_list("slug",flat=True),
+        ).distinct()
+    #----------------------------------------------------------------------
+    def get_page_title(self):
+        return ",".join([x.name for x in self.frequencies]) + " Test Lists"
+#============================================================================
+class UnitFrequencyListView(FrequencyList):
+    """list daily/monthly/annual test lists for a unit"""
+
     #----------------------------------------------------------------------
     def get_queryset(self):
-        return models.UnitTestCollection.objects.filter(active=True)
+        """filter queryset by frequency"""
+        qs = super(UnitFrequencyListView,self).get_queryset()
+        self.units = Unit.objects.filter(number__in=self.kwargs["unit_number"].split("/"))
+        return qs.filter(unit__in=self.units)
+    #----------------------------------------------------------------------
+    def get_page_title(self):
+        title = ", ".join([x.name for x in self.units])
+        title+= " " + ", ".join([x.name for x in self.frequencies]) + " Test Lists"
+        return  title
+
+
+
 
 
 #============================================================================
@@ -616,56 +810,57 @@ class ChartView(TemplateView):
         ]
         return context
 
-
 #============================================================================
-class AwaitingReview(ListView):
-    """view for grouping all test lists with a certain frequency for all units"""
-    template_name = "awaiting_review.html"
+class TestListInstances(ListView):
     model = models.TestListInstance
     context_object_name = "test_list_instances"
+    paginate_by = settings.PAGINATE_DEFAULT
+    queryset = models.TestListInstance.objects.all
     #----------------------------------------------------------------------
     def get_queryset(self):
-        qs = models.TestListInstance.objects.awaiting_review()
-        qs = qs.select_related(
+        return self.fetch_related(self.queryset())
+    #----------------------------------------------------------------------
+    def fetch_related(self,qs):
+        return qs.select_related(
             "test_list__name",
             "unit_test_collection__unit__name",
             "unit_test_collection__frequency__name",
+            "created_by"
         ).prefetch_related("testinstance_set")
+    #----------------------------------------------------------------------
+    def get_page_title(self):
+        return "Completed Test Lists"
+    #----------------------------------------------------------------------
+    def get_context_data(self,*args,**kwargs):
+        context = super(TestListInstances,self).get_context_data(*args,**kwargs)
+        context["page_title"] = self.get_page_title()
+        return context
+#====================================================================================
+class UTCInstances(TestListInstances):
 
-        return qs
+    #---------------------------------------------------------------------------
+    def get_queryset(self):
+        utc = get_object_or_404(models.UnitTestCollection,pk=self.kwargs["pk"])
+        return self.fetch_related(utc.testlistinstance_set)
+
 
 #============================================================================
-class ReviewView(ListView):
+class InProgress(TestListInstances):
     """view for grouping all test lists with a certain frequency for all units"""
-    template_name = "review_all.html"
-    model = models.UnitTestCollection
-    context_object_name = "unittestcollections"
+    queryset = models.TestListInstance.objects.in_progress
+    #----------------------------------------------------------------------
+    def get_page_title(self):
+        return "In Progress Test Lists"
+
+#============================================================================
+class Unreviewed(TestListInstances):
+    """view for grouping all test lists with a certain frequency for all units"""
+    queryset = models.TestListInstance.objects.unreviewed
 
     #----------------------------------------------------------------------
-    def get_queryset(self):
-        qs = super(ReviewView,self).get_queryset()
-        qs = qs.select_related(
-                "last_instance",
-                "frequency",
-                "unit__name",
-            ).prefetch_related(
-                "last_instance__testinstance_set",
-                "assigned_to",
-                "tests_object",
-            )
-        return qs
-    #----------------------------------------------------------------------
-    def get_context_data(self,**kwargs):
-        context = super(ReviewView,self).get_context_data(**kwargs)
+    def get_page_title(self):
+        return "Unreviewed Test Lists"
 
-        requires_review = list(models.TestListInstance.objects.filter(
-            testinstance__status__requires_review=True
-        ).distinct().select_related("test_list"))
-
-        for utc in context["unittestcollections"]:
-            utc.requires_review = [x for x in requires_review if x.unit_test_collection==utc]
-
-        return context
 #============================================================================
 class ExportToCSV(View):
     """A simple api wrapper to give exported api data a filename for downloads"""

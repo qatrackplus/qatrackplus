@@ -24,16 +24,11 @@ class TestTags(TestCase):
     def setUp(self):
         self.unit_test_list = utils.create_unit_test_collection()
     #----------------------------------------------------------------------
-    def test_as_qavalue(self):
+    def test_qa_value_form(self):
         form = forms.CreateTestInstanceForm()
-        rendered = qa_tags.as_qavalue(form,True)
+        rendered = qa_tags.qa_value_form(form)
         self.assertIsInstance(rendered,basestring)
 
-    #----------------------------------------------------------------------
-    def test_as_unittestcollections_table(self):
-        utcs = models.UnitTestCollection.objects.all()
-        rendered = qa_tags.as_unittestcollections_table(utcs)
-        self.assertIsInstance(rendered,basestring)
     #----------------------------------------------------------------------
     def test_unreviewed_count(self):
         rendered = qa_tags.as_unreviewed_count(self.unit_test_list)
