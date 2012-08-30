@@ -118,6 +118,7 @@ function check_test_status(input_element){
     }else{
         qastatus.addClass("btn-info");
     }
+
 }
 
 /***************************************************************/
@@ -181,6 +182,8 @@ function full_validation(){
     $(".qa-input").each(function(){
         check_test_status($(this));
     });
+
+    update_qa_status();
 
 }
 
@@ -260,7 +263,14 @@ function check_skip_status(input){
         row.find(".qa-skip input").attr("checked",false);
     }
 }
-
+/****************************************************************/
+function update_qa_status(){
+    if ($(".btn-danger").length >0){
+        $("#do-not-treat").show();
+    }else{
+        $("#do-not-treat").hide();
+    }
+}
 /****************************************************************/
 $(document).ready(function(){
     var that = $(this);
@@ -314,6 +324,8 @@ $(document).ready(function(){
             }
             check_test_status($(this));
             calculate_composites();
+            update_qa_status();
+
         });
 
         //run filter routine anytime user alters the categories

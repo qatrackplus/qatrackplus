@@ -1045,10 +1045,6 @@ class TestListInstance(models.Model):
         if not formatted:
             return statuses
         return ", ".join(["%d %s" %(len(s),test_status.name) for test_status,s in statuses])
-        #status = [(status,self.testinstance_set.filter(status=status)) for status in TestInstanceStatus.objects.all()]
-        #if not formatted:
-        #    return status
-        #return ", ".join(["%d %s" %(s.count(),test_status.name) for test_status,s in status])
     #----------------------------------------------------------------------
     def unreviewed_instances(self):
         return self.testinstance_set.filter(status__requires_review=True)

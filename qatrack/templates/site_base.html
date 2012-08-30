@@ -24,8 +24,8 @@
                     <b class="caret"></b>
                 </a>
                 <ul class="dropdown-menu">
-                    <li><a href="{% url all_lists %}" title="View all available QA Lists"><i class="icon-list"></i> All QA</a></li>
                     <li><a href="{% url choose_unit %}" title="Choose a Unit To Perform QA On"><i class="icon-list"></i> Choose Unit</a></li>
+                    <li><a href="{% url all_lists %}" title="View all available QA Lists"><i class="icon-list"></i> All QA</a></li>
                     <li class="divider"></li>
                     <li>
                         <a title="Resume a QA session currently in progress" href="{% url in_progress %}">
@@ -46,8 +46,12 @@
                     <b class="caret"></b>
                 </a>
                 <ul class="dropdown-menu">
+					<li class="nav-header">QA Program Status</li>									
+					<li><a href="#" title="View a summary of the status of the QA program">View Overall QA Program Status</a></li>									
+					<li class="divider"></li>										
+					<li class="nav-header">Sessions</li>									
                     <li>
-                        <a href="{% url  unreviewed %}">
+                        <a href="{% url  unreviewed %}" title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed">
                             <i class="icon-question-sign"></i>
                             Unreviewed
                             <span title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
@@ -55,11 +59,14 @@
                             </span>
                         </a>
                     </li>
-					<li><a href="{% url review_all %}"><i class="icon-check"></i> Reviewed</a></li>
-                    <li><a href="{% url choose_review_unit %}"><i class="icon-list"></i> Choose Unit</a></li>					
-                    <li><a href="{% url choose_review_frequency %}"><i class="icon-list"></i> Choose Frequency</a></li>					
 					<li class="divider"></li>					
-                    <li><a href="{% url charts %}"><i class="icon-picture"></i> Trending</a></li>
+					<li class="nav-header">Test Lists</li>					
+					<li><a href="{% url review_all %}" title="View all test lists"><i class="icon-check"></i> View All Test Lists</a></li>
+                    <li><a href="{% url choose_review_unit %}" title="Choose a unit to review qa lists for."><i class="icon-list"></i> Choose Unit To Review</a></li>					
+                    <li><a href="{% url choose_review_frequency %}" title="Choose a frequency to review qa lists for."><i class="icon-list"></i> Choose Frequency To Review</a></li>					
+					<li class="divider"></li>					
+					<li class="nav-header">Charts</li>										
+                    <li><a href="{% url charts %}"><i class="icon-picture"></i> Charts</a></li>
                 </ul>
             </li>
             {% endif %}

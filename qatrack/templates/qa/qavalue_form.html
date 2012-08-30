@@ -102,7 +102,17 @@
 			{% endif %}
 			<tr>
 				<td>
-					<div class="qa-procedure-text"><pre>{{form.instance.unit_test_info.test.description.strip|safe}}</pre></div>
+					<div class="qa-procedure-text">
+						{% spaceless %}
+						{% if not form.unit_test_info.test.description %}
+							<pre>
+								<em>No procedure available</em>
+							</pre>
+						{%else %}
+							<pre>{{form.unit_test_info.test.description.strip|safe}}</pre>
+						{% endif %}
+						{% endspaceless%}
+					</div>
 				</td>
 			</tr>
 		</table>

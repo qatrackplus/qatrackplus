@@ -27,8 +27,13 @@
 
 /************************************************/
 /* performing qa                                */
+#overall-qa-status{
+    min-height:0px;
+}
+#do-not-treat,
 #contacts{
     display:none;
+    min-height:0px;
 }
 #contacts dt{
     width:inherit;
@@ -200,6 +205,12 @@ th.qa-history div{
 
 /**************************************************/
 /* Trending                                       */
+
+#chart {
+    height:600px;
+    min-width:300px;
+}
+
 .tab-pane{width:100%;height:100%;}
 .filtered-chart {
     height:500px;

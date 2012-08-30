@@ -485,8 +485,27 @@ function get_control_chart_url(){
 }
 
 function initialize_charts(){
+	$.plot(		
+        $("#chart"),
+        [{}],
+        {
+            xaxis:{
+                mode: "time",
+                timeformat: "%d %b %y",
+                autoscaleMargin:0.001
+            },
+            legend:{
+                container:"#chart-legend"
+            },
+            grid:{
+                hoverable:true
+            }
+        }
+    );
+	return;
+	
 	$("#control-chart-container").hide();
-
+	
     //set up main chart and options
     main_graph = $.plot(
         $("#trend-chart"),
