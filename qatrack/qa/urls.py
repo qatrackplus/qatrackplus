@@ -42,6 +42,7 @@ urlpatterns = patterns('',
 
     url(r"^charts/$", views.ChartView.as_view(), name="charts"),
     url(r"^charts/export/$",views.ExportToCSV.as_view()),
+    url(r"^charts/data/$",views.BasicChartData.as_view()),
     #generating control chart images
     url(r"^charts/control_chart.png$", views.ControlChartImage.as_view(), name="control_chart"),
 
@@ -67,7 +68,7 @@ urlpatterns = patterns('',
     url(r"^unit/(?P<unit_number>[/\d]+)/frequency/(?P<frequency>[/\w-]+)/$", views.UnitFrequencyList.as_view(), name="qa_by_frequency_unit"),
     url(r"^unit/(?P<unit_number>[/\d]+)/$", views.UnitList.as_view(), name="qa_by_unit"),
 
-    url(r"^frequency/(?P<frequency>[/\w-]+)/unit/(?P<unit_number>[/\d]+)/$", views.UnitFrequencyList.as_view(), name="qa_by_unit_frequency"),        
+    url(r"^frequency/(?P<frequency>[/\w-]+)/unit/(?P<unit_number>[/\d]+)/$", views.UnitFrequencyList.as_view(), name="qa_by_unit_frequency"),
     url(r"^frequency/(?P<frequency>[/\w-]+)/$", views.FrequencyList.as_view(), name="qa_by_frequency"),
 
 
