@@ -130,13 +130,15 @@
 								<td><strong>{{ti.unit_test_info.test.name}}</strong></td>
 								<td class="review-value"><div class="label pass-fail {{ti.pass_fail}}">{{ti.value_display}}</div></td>
 								<td class="review-ref">
-									{% if not ti.reference %}
+									{% if not ti.reference and not ti.unit_test_info.test.is_mult_choice %}
 										<em>No Ref</em>
 									{% else %}
 										{% if ti.tolerance.type == "percent" %}
-											<a href="#" title="{{ti.tolerance.act_low}}% &le; {{ti.tolerance.tol_low}}% &le; {{ti.reference.value}} &le; {{ti.tolerance.tol_high}}% &le; {{ti.tolerance.act_high}}%">{{ti.reference.value}}</a>
+											<span title="{{ti.tolerance.act_low}}% &le; {{ti.tolerance.tol_low}}% &le; {{ti.reference.value}} &le; {{ti.tolerance.tol_high}}% &le; {{ti.tolerance.act_high}}%">{{ti.reference.value}}</span>
+										{% elif ti.tolerance.type == "multchoice" %}
+											<span><abbr title="Passing Values: {{ti.tolerance.pass_choices}};  Tolerance Values: {{tol.tol_choices}}; All other choices are failing"><em>Mult. Choice</em></abbr></span>
 										{% else %}
-											<a href="#" title="{{ti.tolerance.act_low}} &le; {{ti.tolerance.tol_low}} &le; {{ti.reference.value}} &le; {{ti.tolerance.tol_high}} &le; {{ti.tolerance.act_high}}">{{ti.reference.value}}</a>
+											<span title="{{ti.tolerance.act_low}} &le; {{ti.tolerance.tol_low}} &le; {{ti.reference.value}} &le; {{ti.tolerance.tol_high}} &le; {{ti.tolerance.act_high}}">{{ti.reference.value}}</span>
 										{% endif %}
 									{% endif %}
 								</td>

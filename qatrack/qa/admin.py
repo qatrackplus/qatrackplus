@@ -115,7 +115,7 @@ class UnitTestInfoAdmin(admin.ModelAdmin):
         "reference_value",
     )
     list_display = ["test",test_type, "unit", "reference", "tolerance"]
-    list_filter = ["unit","test__category","frequency"]
+    list_filter = ["unit","test__category"]
     readonly_fields = ("reference","test", "unit",)
     search_fields = ("test__name","test__slug","unit__name","frequency__name",)
     #----------------------------------------------------------------------

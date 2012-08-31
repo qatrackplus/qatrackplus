@@ -36,39 +36,44 @@ class TestURLS(TestCase):
         utc = utils.create_unit_test_collection(unit=u1)
         tli = utils.create_test_list_instance(unit_test_collection=utc)
 
-        urls = (
-            "",
-            "review/",
-            "review/utc/1/",
-            "review/frequency/",
-            "review/frequency/daily/",
-            "review/frequency/daily/monthly/",
-            "review/unit/",
-            "review/unit/1/",
-            "review/unit/1/2/",
-            "review/tli/details/",
-            "review/tli/details/1/",
-            "review/unreviewed/",
+        url_names = (
+            ("home",{}),
 
+            ("all_lists",{}),
 
-            "units/",
-            "perform/utc/1/",
-            "tli/in-progress/",
-            "tli/edit/1/",
-            "daily/unit/1/",
-            "daily/",
+            ("charts",{}),
+            ("export_data",{}),
+            ("chart_data",{}),
+            ("control_chart",{}),
+            ("review_all",{}),
+            ("review_utc",{"pk":"1"}),
+            ("choose_review_frequency",{}),
+            ("review_by_frequency",{"frequency":"daily"}),
+            ("review_by_frequency",{"frequency":"daily/monthly"}),
+            ("choose_review_unit",{}),
+            ("review_by_unit",{"unit_number":"1"}),
+            ("review_by_unit",{"unit_number":"1/2"}),
 
-            "charts/",
-            "charts/export/",
-            "charts/control_chart.png",
+            ("complete_instances",{}),
 
+            ("review_test_list_instance",{"pk":"1"}),
+
+            ("unreviewed",{}),
+
+            ("in_progress",{}),
+
+            ("edit_tli",{"pk":"1"}),
+            ("choose_unit",{}),
+            ("perform_qa",{"pk":"1"}),
+            ("qa_by_frequency_unit",{"unit_number":"1","frequency":"daily"}),
+            ("qa_by_unit",{"unit_number":"1"}),
+            ("qa_by_frequency_unit",{"unit_number":"1","frequency":"daily"}),
+            ("qa_by_unit_frequency",{"unit_number":"1","frequency":"daily"}),
+            ("qa_by_frequency",{"frequency":"daily"}),
         )
 
-        for url in urls:
-            self.assertTrue(self.returns_200("/qa/"+url))
-    #---------------------------------------------------------------------------
-    def test_home(self):
-        self.assertTrue(self.returns_200("/"))
+        for url,kwargs in url_names:
+            self.assertTrue(self.returns_200(reverse(url,kwargs=kwargs)))
     #---------------------------------------------------------------------------
     def test_login(self):
         self.assertTrue(self.returns_200(settings.LOGIN_URL))
@@ -77,14 +82,18 @@ class TestURLS(TestCase):
         self.assertTrue(self.returns_200(settings.LOGIN_REDIRECT_URL))
     #----------------------------------------------------------------------
     def test_composite(self):
+        url = reverse("composite")
 
-        self.assertTrue(self.returns_200("/qa/composite/",method="post"))
+        self.assertTrue(self.returns_200(url,method="post"))
     #--------------------------------------------------------------------------
     def test_perform(self):
         utils.create_status()
         utils.create_unit_test_collection()
-        self.assertTrue(self.returns_200("/qa/perform/utc/1/"))
-        self.assertTrue(404==self.client.get("/qa/perform/utc/2/").status_code)
+        url = reverse("perform_qa",kwargs={"pk":"1"})
+        self.assertTrue(self.returns_200(url))
+        url = reverse("perform_qa",kwargs={"pk":"2"})
+
+        self.assertTrue(404==self.client.get(url).status_code)
 
 
 
@@ -105,13 +114,9 @@ class TestControlChartImage(TestCase):
     #----------------------------------------------------------------------
     def test_cc_not_available(self):
         views.CONTROL_CHART_AVAILABLE = False
-
-        cc_not_available_image = open(os.path.join(settings.PROJECT_ROOT,"qa","static","img","control_charts_not_available.png"),"rb").read()
-
+        from django.http import Http404
         request = self.factory.get(self.url)
-        response =  self.view(request)
-
-        self.assertEqual(response.content,cc_not_available_image)
+        self.assertRaises(Http404,self.view,request)
 
     #----------------------------------------------------------------------
     def test_not_enough_data(self):

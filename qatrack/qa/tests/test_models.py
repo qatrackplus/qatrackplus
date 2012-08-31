@@ -75,10 +75,66 @@ class TestReference(TestCase):
             created_by=u, modified_by=u
         )
         self.assertRaises(ValidationError,r.clean_fields)
+    #----------------------------------------------------------------------
+    def test_display_value(self):
+        t = models.Reference(name="bool",type=models.BOOLEAN,value=1        )
+        f = models.Reference(name="bool",type=models.BOOLEAN,value=0        )
+        v = models.Reference(name="bool",type=models.ABSOLUTE,value=0        )
+        self.assertTrue(t.value_display() == "Yes")
+        self.assertTrue(f.value_display() == "No")
+        self.assertTrue(v.value_display() == 0)
 
 #====================================================================================
 class TestTolerance(TestCase):
-    pass
+    #----------------------------------------------------------------------
+    def test_pass_choices(self):
+        t = models.Tolerance(mc_pass_choices="a,b,c")
+        self.assertListEqual(["a","b","c"],t.pass_choices())
+    #----------------------------------------------------------------------
+    def test_tol_choices(self):
+        t = models.Tolerance(mc_tol_choices="a,b,c")
+        self.assertListEqual(["a","b","c"],t.tol_choices())
+
+    #----------------------------------------------------------------------
+    def test_no_pass_vals(self):
+        t = models.Tolerance(mc_pass_choices=" ",type=models.MULTIPLE_CHOICE)
+        self.assertRaises(ValidationError,t.clean_choices)
+    #----------------------------------------------------------------------
+    def test_act_set(self):
+        t = models.Tolerance(mc_pass_choices="",act_high=1,type=models.MULTIPLE_CHOICE)
+        self.assertRaises(ValidationError,t.clean_choices)
+    #----------------------------------------------------------------------
+    def test_pass_is_none(self):
+        t = models.Tolerance(type=models.MULTIPLE_CHOICE)
+        self.assertRaises(ValidationError,t.clean_choices)
+    #----------------------------------------------------------------------
+    def test_with_tol_choices(self):
+        t = models.Tolerance(mc_pass_choices="a",mc_tol_choices=" ",type=models.MULTIPLE_CHOICE)
+        t.clean_choices()
+
+    #----------------------------------------------------------------------
+    def test_ok_mc(self):
+        t = models.Tolerance(name="foo",mc_pass_choices="a",mc_tol_choices="b",type=models.MULTIPLE_CHOICE)
+        t.clean_fields()
+        self.assertListEqual(t.tol_choices(),["b"])
+        self.assertListEqual(t.pass_choices(),["a"])
+    #----------------------------------------------------------------------
+    def test_mc_repr(self):
+
+        t = models.Tolerance(name="foo",type=models.MULTIPLE_CHOICE)
+        self.assertIsInstance(t.__unicode__(),basestring)
+
+    #----------------------------------------------------------------------
+    def test_without_act(self):
+        t = models.Tolerance(name="foo",type=models.ABSOLUTE)
+        self.assertRaises(ValidationError,t.clean_tols)
+    #----------------------------------------------------------------------
+    def test_invalid_mc_choices(self):
+        t = models.Tolerance(name="foo",mc_pass_choices="a",type=models.ABSOLUTE)
+        self.assertRaises(ValidationError,t.clean_choices)
+        t = models.Tolerance(name="foo",mc_tol_choices="a",type=models.ABSOLUTE)
+        self.assertRaises(ValidationError,t.clean_choices)
+
 
 #====================================================================================
 class TestCategory(TestCase):
@@ -239,6 +295,11 @@ result = foo + bar
     def test_clean_fields(self):
         test = utils.create_test()
         test.clean_fields()
+    #----------------------------------------------------------------------
+    def test_get_choice(self):
+        test = utils.create_test(test_type=models.MULTIPLE_CHOICE)
+        test.choices = "a,b,c"
+        self.assertEqual(test.get_choice_value(1),"b")
 
 #============================================================================
 class TestOnTestSaveSignal(TestCase):
@@ -274,19 +335,27 @@ class TestUnitTestInfo(TestCase):
         ref.value = 0
         uti.test.type = models.BOOLEAN
         self.assertRaises(ValidationError,uti.clean)
+    #----------------------------------------------------------------------
+    def test_mult_choice_with_tol(self):
+        tol = models.Tolerance(type=models.MULTIPLE_CHOICE,mc_pass_choices="a")
+        uti = utils.create_unit_test_info(tol=tol)
+        uti.test.type = models.BOOLEAN
+        self.assertRaises(ValidationError,uti.clean)
+
     #---------------------------------------------------------------------------
-    def test_new_list_due_date(self):
-        uti = utils.create_unit_test_info()
-        self.assertIsNone(uti.due_date())
+    #def test_new_list_due_date(self):
+        #uti = utils.create_unit_test_info()
+    #    self.assertIsNone(uti.due_date())
     #---------------------------------------------------------------------------
-    def test_due_date(self):
-        now = timezone.now()
-        frequency = utils.create_frequency(nom=7,due=7,overdue=9)
-        uti = utils.create_unit_test_info(frequency=frequency)
-        ti = utils.create_test_instance(unit_test_info=uti,work_completed=now)
-        uti = models.UnitTestInfo.objects.get(pk=uti.pk )
-        due = uti.due_date()
-        self.assertEqual(due,now+timezone.timedelta(days=7))
+    #def test_due_date(self):
+
+    #    now = timezone.now()
+    #    frequency = utils.create_frequency(nom=7,due=7,overdue=9)
+    #    uti = utils.create_unit_test_info(frequency=frequency)
+    #    ti = utils.create_test_instance(unit_test_info=uti,work_completed=now)
+    #    uti = models.UnitTestInfo.objects.get(pk=uti.pk )
+    #    due = uti.due_date()
+    #    self.assertEqual(due,now+timezone.timedelta(days=7))
     #---------------------------------------------------------------------------
     def test_history(self):
         td = timezone.timedelta
@@ -604,7 +673,7 @@ class TestUnitTestCollection(TestCase):
         test = utils.create_test(name="tester")
         utils.create_test_list_membership(tli.test_list,test)
 
-        uti = models.UnitTestInfo.objects.get(test=test,unit=utc.unit,frequency=utc.frequency)
+        uti = models.UnitTestInfo.objects.get(test=test,unit=utc.unit)
 
         ti = utils.create_test_instance(unit_test_info=uti,work_completed=now)
         ti.test_list_instance = tli
@@ -653,7 +722,7 @@ class TestUnitTestCollection(TestCase):
         self.assertIsNone(utc.last_instance)
 
         tli = utils.create_test_list_instance(unit_test_collection=utc)
-        uti = models.UnitTestInfo.objects.get(test=test,unit=utc.unit,frequency=utc.frequency)
+        uti = models.UnitTestInfo.objects.get(test=test,unit=utc.unit)
         ti = utils.create_test_instance(unit_test_info=uti)
         ti.test_list_instance = tli
         ti.save()
@@ -844,6 +913,30 @@ class TestTestInstance(TestCase):
             i.calculate_pass_fail()
             self.assertEqual(models.ACTION,i.pass_fail)
     #----------------------------------------------------------------------
+    def test_mult_pass_fail(self):
+        test = models.Test(type=models.MULTIPLE_CHOICE,choices="a,b,c,d,e")
+
+        t = models.Tolerance(type=models.MULTIPLE_CHOICE,mc_pass_choices="a,b",mc_tol_choices="c,d")
+        uti = models.UnitTestInfo(test=test,tolerance=t)
+
+        instance = models.TestInstance(unit_test_info=uti,tolerance=t)
+
+        for c in (0,1):
+            instance.value = c
+            instance.calculate_pass_fail()
+            self.assertEqual(instance.pass_fail,models.OK)
+
+        for c in (2,3):
+            instance.value = c
+            instance.calculate_pass_fail()
+            self.assertEqual(instance.pass_fail,models.TOLERANCE)
+
+        for c in (4,):
+            instance.value = c
+            instance.calculate_pass_fail()
+            self.assertEqual(instance.pass_fail,models.ACTION)
+
+    #----------------------------------------------------------------------
     def test_absolute_pass_fail(self):
         test = models.Test(type=models.SIMPLE)
         uti = models.UnitTestInfo(test=test)
@@ -924,6 +1017,38 @@ class TestTestInstance(TestCase):
         ti.save()
 
         self.assertEqual(models.TestInstance.objects.in_progress()[0],ti)
+
+    #----------------------------------------------------------------------
+    def test_bool_display_value(self):
+        t = models.Test(type=models.BOOLEAN)
+        uti = models.UnitTestInfo(test=t)
+
+        ti = models.TestInstance(unit_test_info=uti,value=1)
+        self.assertEqual("Yes",ti.value_display())
+
+        ti = models.TestInstance(unit_test_info=uti,value=0)
+        self.assertEqual("No",ti.value_display())
+
+
+    #----------------------------------------------------------------------
+    def test_mc_display_value(self):
+        t = models.Test(type=models.MULTIPLE_CHOICE,choices="a,b,c")
+        uti = models.UnitTestInfo(test=t)
+
+        ti = models.TestInstance(unit_test_info=uti,value=0)
+        self.assertEqual("a",ti.value_display())
+        ti = models.TestInstance(unit_test_info=uti,value=1)
+        self.assertEqual("b",ti.value_display())
+        ti = models.TestInstance(unit_test_info=uti,value=2)
+        self.assertEqual("c",ti.value_display())
+
+    #----------------------------------------------------------------------
+    def test_reg_display_value(self):
+        t = models.Test(type=models.NUMERICAL)
+        uti = models.UnitTestInfo(test=t)
+
+        ti = models.TestInstance(unit_test_info=uti,value=0)
+        self.assertEqual(0,ti.value_display())
 
 
 #============================================================================

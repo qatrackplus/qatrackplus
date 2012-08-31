@@ -74,7 +74,6 @@ class ChartView(TemplateView):
                     "tests" : tests,
                 }
         for test in self.tests:
-            test["frequency"] = test["unittestinfo__frequency"]
             self.test_data["tests"][test["pk"]] = test
 
 
@@ -97,7 +96,6 @@ class ChartView(TemplateView):
             "name",
             "type",
             "description",
-            "unittestinfo__frequency"
         ).distinct()
 
         test_data = self.create_test_data()
@@ -251,8 +249,8 @@ class ControlChartImage(BaseChartView):
 
         dates,data = [],[]
 
-        if context:
-            d = context.values()[0]
+        if context["data"]:
+            d = context["data"].values()[0]
             dates,data = d["dates"],d["values"]
 
         n_baseline_subgroups = self.get_number_from_request("n_baseline_subgroups",2,dtype=int)
@@ -414,7 +412,6 @@ class PerformQA(CreateView):
         self.unit_test_infos = models.UnitTestInfo.objects.filter(
             unit = self.unit_test_col.unit,
             test__in = self.all_tests,
-            frequency=self.unit_test_col.frequency,
             active=True,
         ).select_related(
             "reference",

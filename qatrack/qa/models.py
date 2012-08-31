@@ -211,8 +211,7 @@ class Reference(models.Model):
         if self.type is BOOLEAN and self.value not in (0,1):
             raise ValidationError({"value":["Boolean values must be 0 or 1"]})
     #----------------------------------------------------------------------
-    def display_value(self):
-        """"""
+    def value_display(self):
         if self.type == BOOLEAN:
             return "Yes" if int(self.value)==1 else "No"
         return self.value
@@ -267,30 +266,53 @@ class Tolerance(models.Model):
         if self.type == MULTIPLE_CHOICE:
             if (None, None, None, None) != (self.act_low,self.tol_low,self.tol_high,self.act_high):
                 errors.append("Value set for tolerance or action but type is Multiple Choice")
+            if self.mc_pass_choices == None:
+                errors.append("You must give more at l passing choice for a multiple choice tolerance")
+            else:
+
+                pass_choices = [x.strip() for x in self.mc_pass_choices.split(",") if x.strip()]
+
+                if self.mc_tol_choices:
+                    tol_choices = [x.strip() for x in self.mc_tol_choices.split(",") if x.strip()]
+                else:
+                    tol_choices = []
+
+                if not pass_choices:
+                    errors.append("You must give more at l passing choice for a multiple choice tolerance")
+                else:
+                    self.mc_pass_choices = ",".join(pass_choices)
+                    if tol_choices:
+                        self.mc_tol_choices = ",".join(tol_choices)
 
         elif self.type is not MULTIPLE_CHOICE:
-            if (None, None) != (self.mc_pass_choices,self.mc_tol_choices):
+            if (self.mc_pass_choices or self.mc_tol_choices):
                 errors.append("Value set for pass choices or tolerance choices but type is not Multiple Choice")
 
-        pass_choices = [x.strip() for x in self.mc_pass_choices.split(",") if x.strip()]
-        tol_choices = [x.strip() for x in self.mc_tol_choices.split(",") if x.strip()]
-
-        if not pass_choices:
-            errors.append("You must give more at l passing choice for a multiple choice tolerance")
-        else:
-            self.mc_pass_choices = ",".join(pass_choices)
-            if tol_choices:
-                self.tol_choices = ",".join(tol_choices)
-
         if errors:
-            raise ValidationError({"pass_choices":errors})
+            raise ValidationError({"mc_pass_choices":errors})
+    #----------------------------------------------------------------------
+    def clean_tols(self):
+        if self.type in (ABSOLUTE, PERCENT):
+            errors = {}
+            check = ("act_high","act_low","tol_high","tol_low",)
+            for c in check:
+                if getattr(self,c) is None:
+                    errors[c] = ["You can not leave this field blank for this test type"]
 
+            if errors:
+                raise ValidationError(errors)
+    #----------------------------------------------------------------------
+    def clean_fields(self,exclude=None):
+        """extra validation for Tests"""
+        super(Tolerance,self).clean_fields(exclude)
+        self.clean_choices()
+        self.clean_tols()
     #---------------------------------------------------------------------------
     def __unicode__(self):
         """more helpful interactive display name"""
         vals = (self.name,self.act_low,self.tol_low,self.tol_high,self.act_high)
         if self.type == ABSOLUTE:
-            return "%s(%g, %g, %g, %g)" % vals
+            return "%s(%s, %s, %s, %s)" % vals
         elif self.type == PERCENT:
             return "%s(%.1f%%, %.1f%%, %.1f%%, %.1f%%)" % vals
         elif self.type == MULTIPLE_CHOICE:
@@ -477,8 +499,6 @@ class UnitTestInfo(models.Model):
     unit = models.ForeignKey(Unit)
     test = models.ForeignKey(Test)
 
-    frequency = models.ForeignKey(Frequency, help_text=_("Frequency with which this test is to be performed"))
-
     reference = models.ForeignKey(Reference,verbose_name=_("Current Reference"),null=True, blank=True)
     tolerance = models.ForeignKey(Tolerance,null=True, blank=True)
 
@@ -490,7 +510,7 @@ class UnitTestInfo(models.Model):
     #============================================================================
     class Meta:
         verbose_name_plural = "Set References & Tolerances"
-        unique_together = ["test","unit", "frequency"]
+        unique_together = ["test","unit"]
 
     #----------------------------------------------------------------------
     def clean(self):
@@ -512,11 +532,6 @@ class UnitTestInfo(models.Model):
                 msg = _("Please leave tolerance blank for boolean tests")
                 raise ValidationError(msg)
 
-    #----------------------------------------------------------------------
-    def due_date(self):
-        """return the due date for this unit test list assignment"""
-        if hasattr(self,"last_instance") and self.last_instance is not None:
-            return utils.due_date(self.last_instance.work_completed,self.frequency)
 
     #----------------------------------------------------------------------
     def get_history(self,number=5):
@@ -759,12 +774,11 @@ class UnitTestCollection(models.Model):
 #  Case 3) can be handled by the m2m_changed signal of TestList.sublists.through
 
 #----------------------------------------------------------------------
-def get_or_create_unit_test_info(unit,test,frequency,assigned_to=None, active=True):
+def get_or_create_unit_test_info(unit,test,assigned_to=None, active=True):
 
     uti, created = UnitTestInfo.objects.get_or_create(
         unit = unit,
         test = test,
-        frequency =frequency
     )
 
     if created:
@@ -809,7 +823,6 @@ def update_unit_test_assignments(collection):
                 get_or_create_unit_test_info(
                     unit=utla.unit,
                     test=test,
-                    frequency=utla.frequency,
                     assigned_to = utla.assigned_to,
                     active = utla.active
                 )
@@ -978,7 +991,7 @@ class TestInstance(models.Model):
         if test.type == BOOLEAN:
             return "Yes" if int(self.value) == 1 else "No"
         elif test.type == MULTIPLE_CHOICE:
-            return test.get_choice_value(v)
+            return test.get_choice_value(self.value)
         return self.value
 
     #----------------------------------------------------------------------

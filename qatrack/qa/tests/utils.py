@@ -190,17 +190,15 @@ def create_frequency(name="freq",slug="freq",nom=1,due=1,overdue=1):
     f.save()
     return f
 #----------------------------------------------------------------------
-def create_unit_test_info(unit=None,test=None,frequency=None,assigned_to=None,ref=None,tol=None,active=True):
+def create_unit_test_info(unit=None,test=None,assigned_to=None,ref=None,tol=None,active=True):
     if unit is None: unit = create_unit()
     if test is None: test = create_test()
-    if frequency is None: frequency = create_frequency()
     if assigned_to is None: assigned_to = create_group()
 
 
     uti = models.UnitTestInfo(
         unit=unit,
         test=test,
-        frequency=frequency,
         reference=ref,
         tolerance=tol,
         assigned_to=assigned_to,
