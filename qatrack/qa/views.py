@@ -100,17 +100,11 @@ class ChartView(TemplateView):
         ).distinct()
 
 
-        self.utis = models.UnitTestInfo.objects.all().select_related(
-            "test__category__name",
-            "unit__name",
-            "frequency__pk"
-        ).order_by("unit","test__name")
 
         c = {
             "cc_available":CONTROL_CHART_AVAILABLE,
             "from_date": timezone.now().date()-timezone.timedelta(days=180),
             "to_date":timezone.now().date()+timezone.timedelta(days=1),
-            "unit_test_infos":self.utis,
             "frequencies":models.Frequency.objects.all(),
             "tests":self.tests,
             "test_lists":self.test_lists,
@@ -118,18 +112,20 @@ class ChartView(TemplateView):
             "statuses":models.TestInstanceStatus.objects.all(),
             "units":Unit.objects.all().select_related("type"),
             "test_data": self.create_test_data(),
+            "chart_data_url":reverse("chart_data"),
+            "control_chart_url":reverse("control_chart"),
 
         }
         context.update(c)
         return context
 
-#============================================================================
-class BasicChartData(JSONResponseMixin,View):
-
+class BaseChartView(View):
+    ISO_FORMAT = False
     #----------------------------------------------------------------------
     def get(self,request):
 
         return self.render_to_response(self.get_plot_data())
+    
     #----------------------------------------------------------------------
     def get_date(self,key,default):
         try:
@@ -143,10 +139,12 @@ class BasicChartData(JSONResponseMixin,View):
 
         return d
 
-
+    #---------------------------------------------------------------------------
+    def convert_date(self,dt):
+        return dt.isoformat()
     #----------------------------------------------------------------------
     def get_plot_data(self):
-        print self.request.GET
+
         tests = self.request.GET.getlist("tests[]",[])
         units = self.request.GET.getlist("units[]",[])
         statuses = self.request.GET.getlist("statuses[]",[])
@@ -154,11 +152,7 @@ class BasicChartData(JSONResponseMixin,View):
         now = timezone.datetime.now()
         from_date = self.get_date("from_date",now-timezone.timedelta(days=180))
         to_date = self.get_date("to_date",now)
-        print from_date
-        print to_date
-        print tests
-        print units
-        print statuses
+
         tis = models.TestInstance.objects.filter(
             unit_test_info__test__pk__in=tests,
             unit_test_info__unit__pk__in=units,
@@ -169,77 +163,32 @@ class BasicChartData(JSONResponseMixin,View):
             "work_completed"
         )
 
-        data = collections.defaultdict(lambda : {"data":[]})
+        data = collections.defaultdict(lambda : {"data":[],"values":[],"dates":[]})
         for ti in tis:
             uti = ti.unit_test_info
-            data[uti.pk]["data"].append([ti.work_completed.isoformat(),ti.value])
+            d = timezone.make_naive(ti.work_completed,timezone.get_current_timezone())
+            d = self.convert_date(d)
+            data[uti.pk]["data"].append([d,ti.value])
+            data[uti.pk]["values"].append(ti.value)
+            data[uti.pk]["dates"].append(d)
             data[uti.pk]["unit"] = {"name":uti.unit.name,"pk":uti.unit.pk}
             data[uti.pk]["test"] = {"name":uti.test.name,"pk":uti.test.pk}
 
 
         return data
+    
+#============================================================================
+class BasicChartData(JSONResponseMixin,BaseChartView):
+    pass
 
 
 #============================================================================
-class ControlChartImage(View):
+class ControlChartImage(BaseChartView):
     """Return a control chart image from given qa data"""
-    #----------------------------------------------------------------------
-    def get_dates(self):
-        """try to parse from_date & to_date from GET parameters"""
-
-        from_date = self.request.GET.get("from_date",None)
-        to_date = self.request.GET.get("to_date",None)
-
-        try:
-            to_date = timezone.datetime.strptime(to_date,settings.SIMPLE_DATE_FORMAT)
-            to_date = timezone.make_aware(to_date,timezone.get_current_timezone())
-        except:
-            to_date = timezone.now()
-
-        try:
-            from_date = timezone.datetime.strptime(from_date,settings.SIMPLE_DATE_FORMAT)
-            from_date = timezone.make_aware(from_date,timezone.get_current_timezone())
-        except:
-            from_date = to_date - timezone.timedelta(days=30)
-
-        return from_date,to_date
-    #----------------------------------------------------------------------
-    def get_test(self):
-        """return first requested test for control chart others are ignored"""
-        return self.request.GET.get("slug","").split(",")[0]
-    #----------------------------------------------------------------------
-    def get_units(self):
-        """return first unit requested, others are ignored"""
-        return self.request.GET.get("unit","").split(",")[0]
-    #----------------------------------------------------------------------
-    def get_data(self):
-        """grab data to create control chart from"""
-        from_date, to_date = self.get_dates()
-
-        test = self.get_test()
-
-        unit = self.get_units()
-
-        if not all([from_date,to_date,test,unit]):
-            return [], []
-
-        data = models.TestInstance.objects.complete().filter(
-            unit_test_info__test__slug = test,
-            work_completed__gte = from_date,
-            work_completed__lte = to_date,
-            unit_test_info__unit__number = unit,
-        ).order_by("work_completed","pk").values_list("work_completed","value")
-
-        if data.count()>0:
-            return zip(*data)
-        return [],[]
-
-    #----------------------------------------------------------------------
-    def get(self,request):
-        if not CONTROL_CHART_AVAILABLE:
-            raise Http404
-
-        return self.render_to_response({})
+    #---------------------------------------------------------------------------
+    def convert_date(self,dt):
+        return dt
+    
     #----------------------------------------------------------------------
     def get_number_from_request(self,param,default,dtype=float):
         try:
@@ -249,6 +198,9 @@ class ControlChartImage(View):
         return v
     #----------------------------------------------------------------------
     def render_to_response(self,context):
+        if not CONTROL_CHART_AVAILABLE:
+            raise Http404
+
 
         fig=Figure(dpi=72,facecolor="white")
         dpi = fig.get_dpi()
@@ -258,7 +210,11 @@ class ControlChartImage(View):
         )
         canvas=FigureCanvas(fig)
 
-        dates,data = self.get_data()
+        dates,data = [],[]
+
+        if context:
+            d = context.values()[0]
+            dates,data = d["dates"],d["values"]
 
         n_baseline_subgroups = self.get_number_from_request("n_baseline_subgroups",2,dtype=int)
 

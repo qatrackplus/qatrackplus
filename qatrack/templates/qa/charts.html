@@ -9,13 +9,22 @@
 {% endblock %}
 
 {% block extra_script %}
+	{% comment %}
     <script src="{% static "js/jquery.flot.min.js" %}"></script>
 	<script src="{% static "js/jquery.flot.image.js" %}"></script>
     <script src="{% static "js/jquery.flot.resize.js" %}"></script>
     <script src="{% static "js/jquery.flot.fillbetween.js" %}"></script>
+	{% endcomment %}
+	<script src="{% static "js/highstock/highstock.js" %}"></script>
     <script src="{% static "datepicker/js/bootstrap-datepicker.js" %}"></script>
 	<script>
-		var test_data = {{test_data|safe}};
+
+		var QACharts = {
+			data_url:"{{chart_data_url}}",
+			control_chart_url:"{{control_chart_url}}",
+			test_info:{{test_data|safe}}
+		};
+
 	</script>
 
     <script src="{% static "js/charts.js" %}"></script>
@@ -110,7 +119,7 @@
 								<h5>Unit:</h5>
 								<select id="unit" multiple="multiple" class="input-medium">
 								{% for unit in units %}
-									<option id="unit-{{unit.pk}}" value="{{unit.pk}}" title="{{unit.name}}" class="unit unit-type-{{unit.type.pk}}" >{{unit.name}}</option>
+									<option id="unit-{{unit.pk}}" value="{{unit.pk}}" title="{{unit.name}}" class="unit unit-type-{{unit.type.pk}}" selected="selected"> {{unit.name}}</option>
 								{% endfor %}
 								</select>
 							</label>
@@ -134,10 +143,10 @@
 										</select>
 									</label>
 								</div>
-								<div class="span4">
+								<div id="display-options" class="span4">
 									<label class="control-label  basic-option" for="show-lines">
 										Show Lines:
-										<input type="checkbox" id="show-lines"  />
+										<input type="checkbox" id="show-lines" checked="checked" />
 									</label>
 									<label class="control-label  basic-option" for="show-references">
 										Show References:
@@ -185,7 +194,6 @@
 	<div class="span3">
 		<div id="test" class="control-container">
 
-
 			{% for test in tests %}
 				<label class="checkbox" title="{{test.description}}" >
 					<input value="{{test.pk}}" type="checkbox" id="test-{{test.pk}}"  class="test category-{{test.category}} type-{{test.type}}"></input>
@@ -201,7 +209,7 @@
 			<div id="chart"  class="span12"></div>
 		</div>
 		<div id="control-chart-container" class="row-fluid">
-			<img src="" class="span12" alt="Control chart for data"/>
+			<div class="please-wait">Control Not Generated Yet</div>
 		</div>
 		<div class="row-fluid">
 			<div class="input-prepend">

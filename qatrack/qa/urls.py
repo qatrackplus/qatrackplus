@@ -42,7 +42,7 @@ urlpatterns = patterns('',
 
     url(r"^charts/$", views.ChartView.as_view(), name="charts"),
     url(r"^charts/export/$",views.ExportToCSV.as_view()),
-    url(r"^charts/data/$",views.BasicChartData.as_view()),
+    url(r"^charts/data/$",views.BasicChartData.as_view(),name="chart_data"),
     #generating control chart images
     url(r"^charts/control_chart.png$", views.ControlChartImage.as_view(), name="control_chart"),
 
