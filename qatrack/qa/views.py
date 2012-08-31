@@ -130,7 +130,6 @@ class BaseChartView(View):
     def get_date(self,key,default):
         try:
             d = timezone.datetime.strptime(self.request.GET.get(key),settings.SIMPLE_DATE_FORMAT)
-
         except:
             d = default
 
@@ -144,11 +143,10 @@ class BaseChartView(View):
         return dt.isoformat()
     #----------------------------------------------------------------------
     def get_plot_data(self):
-
+        
         tests = self.request.GET.getlist("tests[]",[])
         units = self.request.GET.getlist("units[]",[])
         statuses = self.request.GET.getlist("statuses[]",[])
-
         now = timezone.datetime.now()
         from_date = self.get_date("from_date",now-timezone.timedelta(days=180))
         to_date = self.get_date("to_date",now)

@@ -27,6 +27,7 @@ function check_cc_loaded(){
 	}
 }
 /*************************************************************************/
+//generate a url to allow linking directly to chart
 function set_chart_url(){
 	$("#chart-url").val("not implemented yet");
 	var filters = get_data_filters();
@@ -79,18 +80,9 @@ function set_options_from_url(){
     });
     update();
 }
-
-function get_control_chart_options(){
-	return {
-		n_baseline_subgroups:$("#n-baseline-subgroups").val(),
-		subgroup_size:$("#subgroup-size").val(),
-		fit_data:$("#include-fit").is(":checked")
-	};
-}
-
+/**************************************************************************/
 function get_control_chart_url(){
 	var filters = get_data_filters();
-	var cc_options = get_control_chart_options();
 
 	var	props = [
 		"width="+$("#chart-container").width(),
@@ -99,13 +91,15 @@ function get_control_chart_url(){
 	];
 
 	$.each(filters,function(k,v){
-		props.push(k+"="+v);
+		if(	$.isArray(v)){
+			$.each(v,function(i,vv){
+				props.push(encodeURI(k+"[]="+vv));	
+			});
+		}else{
+			props.push(encodeURI(k+"="+v));	
+		}
 	});
-
-	$.each(get_control_chart_options(),function(k,v){
-		props.push(k+"="+v);
-	});
-
+	console.log(props.join("&"));
 
 	return QACharts.control_chart_url+"?"+props.join("&");
 }
@@ -326,12 +320,15 @@ function finished_chart_update(){
 	$("#gen-chart").button("reset");
 }
 function get_data_filters(){
-	var filters = {
+	var filters = {	
 		units:get_selected_option_vals("#unit"),
 		statuses:get_selected_option_vals("#status"),
 		from_date:get_date("#from-date"),
 		to_date:get_date("#to-date"),
-		tests:get_selected_tests()
+		tests:get_selected_tests(),
+		n_baseline_subgroups:$("#n-baseline-subgroups").val(),
+		subgroup_size:$("#subgroup-size").val(),
+		fit_data:$("#include-fit").is(":checked")		
 	};
 
 	return filters;
