@@ -56,13 +56,13 @@
         <td class="qa-showcmt"><a href="#" class="revealcomment" title="Add comment for this test"><i class="icon-comment"></i></a></td>
 		{% if include_admin %}
 			<td class="qa-reference">
-				{% if not ref %}
+				{% if not ref and not test.is_mult_choice %}
 					<span>No Ref</span>
 				{% else %}
 					{% if tol.type == "percent" %}
 						<span title="{{tol.act_low}}% &le; {{tol.tol_low}}% &le; {{ref.value}} &le; {{tol.tol_high}}% &le; {{tol.act_high}}%">{{ref.display_value}}</span>
 					{% elif tol.type == "multchoice" %}
-						<span title="Passing Values: {{tol.mc_pass_choices}};  Tolerance Values: {{tol.mc_tol_choices}}; All other choices will are failing"><em>Mult. Choice</em></span>
+						<span><abbr title="Passing Values: {{tol.mc_pass_choices}};  Tolerance Values: {{tol.mc_tol_choices}}; All other choices are failing"><em>Mult. Choice</em></abbr></span>
 					{% else %}
 						<span title="{{tol.act_low}} &le; {{tol.tol_low}} &le; {{ref.value}} &le; {{tol.tol_high}} &le; {{tol.act_high}}">{{ref.display_value}}</span>
 					{% endif %}
