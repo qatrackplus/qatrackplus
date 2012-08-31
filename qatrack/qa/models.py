@@ -48,7 +48,6 @@ TOL_TYPE_CHOICES = (
 REF_TYPE_CHOICES = (
     (NUMERICAL, "Numerical"),
     (BOOLEAN, "Yes / No"),
-    (MULTIPLE_CHOICE,"Multiple Choice"),
 )
 
 
@@ -211,7 +210,12 @@ class Reference(models.Model):
     def clean_fields(self):
         if self.type is BOOLEAN and self.value not in (0,1):
             raise ValidationError({"value":["Boolean values must be 0 or 1"]})
-
+    #----------------------------------------------------------------------
+    def display_value(self):
+        """"""
+        if self.type == BOOLEAN:
+            return "Yes" if int(self.value)==1 else "No"
+        return self.value
     #---------------------------------------------------------------------------
     def __unicode__(self):
         """more helpful display name"""
@@ -356,7 +360,10 @@ class Test(models.Model):
     def is_boolean(self):
         """Return whether or not this is a boolean test"""
         return self.type == BOOLEAN
-
+    #----------------------------------------------------------------------
+    def is_mult_choice(self):
+        """return True if this is a multiple choice test else, false"""
+        return self.type == MULTIPLE_CHOICE
     #---------------------------------------------------------------------------
     def check_test_type(self,field, test_type,display):
         #"""check that correct test type is set"""
@@ -436,7 +443,7 @@ class Test(models.Model):
     def get_choice_value(self,choice):
         """return string representing integer choice value"""
         if self.type == MULTIPLE_CHOICE:
-            return self.choices.split(",")[choice]
+            return self.choices.split(",")[int(choice)]
 
     #----------------------------------------------------------------------
     def __unicode__(self):
@@ -965,6 +972,15 @@ class TestInstance(models.Model):
         else:
             #no tolerance and/or reference set
             self.pass_fail = NO_TOL
+    #----------------------------------------------------------------------
+    def value_display(self):
+        test = self.unit_test_info.test
+        if test.type == BOOLEAN:
+            return "Yes" if int(self.value) == 1 else "No"
+        elif test.type == MULTIPLE_CHOICE:
+            return test.get_choice_value(v)
+        return self.value
+
     #----------------------------------------------------------------------
     def __unicode__(self):
         """return display representation of object"""

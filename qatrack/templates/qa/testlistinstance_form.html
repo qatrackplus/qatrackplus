@@ -12,16 +12,14 @@
 {% block body %}
 
 <div class="row-fluid">
-	<div class="span6">
-		<h3>
+	<div class="span12">
+		<h3 class="pull-left">
 			{% if test_list_instance %}
 				Edit {{test_list_instance.unit_test_collection.unit.name}} : {{test_list_instance.test_list.name}}
 			{% else %}
 				{{unit_test_collection.unit.name}} : {{test_list.name}}
 			{% endif %}
 		</h3>
-	</div>
-	<div class="span6">
 		<div id="contact-container" class="pull-right alert alert-info">
 
 			<span id="toggle-contacts" class="pull-right hand-cursor">

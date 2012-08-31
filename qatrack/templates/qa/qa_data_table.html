@@ -1,0 +1,31 @@
+<table class="data-table table table-striped table-bordered table-condensed">
+    <thead>
+        <tr>
+
+            {% for header in headers %}
+                <th>Date</th>
+                <th>{{header}}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in rows %}
+            <tr>
+                {% for da,val in row %}
+                    <td>{{da}}</td>
+                    <td>{{val}}</td>
+                {% endfor  %}
+            </tr>
+        {% endfor %}
+    </tbody>
+    <tfoot>
+        <tr>
+
+            {% for header in headers %}
+            <th>Date</th>
+            <th>{{header}}</th>
+            {% endfor %}
+        </tr>
+    </tfoot>
+
+</table>

@@ -205,11 +205,20 @@ th.qa-history div{
 
 /**************************************************/
 /* Trending                                       */
-
 #chart {
     height:540px;
     min-width:300px;
 }
+#instructions-container {
+    padding: 2px 14px 2px 14px;
+    margin-bottom:3px;
+    min-height:14px;
+}
+
+#instructions-container hr{
+    margin: 1px;
+}
+
 .control-container {
     position:relative;
     margin:5px 0;

@@ -34,7 +34,7 @@ def tests_history(tests,unit,from_date,selected_related=None):
 
     hist_dict = {}
     for instance in all_instances:
-        hist = (instance.work_completed,instance.value,instance.pass_fail,instance.status)
+        hist = (instance.work_completed,instance.value_display(),instance.pass_fail,instance.status)
         try:
             hist_dict[instance.unit_test_info.test.pk].append(hist)
         except KeyError:

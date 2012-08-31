@@ -1,9 +1,6 @@
 "use strict";
-var test_list_data = {};
-var main_graph;
-var previous_point = null;
-var test_list_members = {}; //short names of test list tests belonging to test lists
 
+var last_requested_data;
 
 /*************************************************************************/
 //return all checked checkboxes within container
@@ -33,7 +30,7 @@ function set_chart_url(){
 	var filters = get_data_filters();
 	filters.from_date = [filters.from_date];
 	filters.to_date = [filters.to_date];
-	
+
 	var options = [];
 
 	$.each(filters,function(key,values){
@@ -93,13 +90,12 @@ function get_control_chart_url(){
 	$.each(filters,function(k,v){
 		if(	$.isArray(v)){
 			$.each(v,function(i,vv){
-				props.push(encodeURI(k+"[]="+vv));	
+				props.push(encodeURI(k+"[]="+vv));
 			});
 		}else{
-			props.push(encodeURI(k+"="+v));	
+			props.push(encodeURI(k+"="+v));
 		}
 	});
-	console.log(props.join("&"));
 
 	return QACharts.control_chart_url+"?"+props.join("&");
 }
@@ -111,17 +107,36 @@ $(document).ready(function(){
 		initialize_charts();
 
 		hide_all_tests();
-				
-		$("#control-chart-container").hide();
-		
+
+		$("#control-chart-container, #instructions").hide();
+
 		$("#chart-type").change(switch_chart_type);
-		
+
 		$("#test-list-filters select").change(update_tests);
 
 		$("#gen-chart").click(update_chart);
 		$("#display-options input").change(update_chart);
+
+	    $("#toggle-instructions").click(toggle_instructions);
+
+		update_tests();
+
 	});
 });
+
+function toggle_instructions(){
+	$("#instructions").toggle();
+
+	var visible = $("#instructions").is(":visible");
+	var icon = "icon-plus-sign";
+	if (visible) {
+		icon = "icon-minus-sign";
+	}
+
+	$("#toggle-instructions i").removeClass("icon-plus-sign icon-minus-sign").addClass(icon);
+
+}
+
 
 function initialize_charts(){
 	create_stockchart([{name:"",data:[[new Date().getTime(),0]]}]);
@@ -131,7 +146,7 @@ function switch_chart_type(){
 }
 
 function hide_all_tests(){
-	$("#test input").parent().hide();	
+	$("#test input").parent().hide();
 }
 
 function update_tests(){
@@ -202,13 +217,14 @@ function update_chart(){
 		create_control_chart();
 	}
 }
+
 function basic_chart_selected(){
 	return $("#chart-type").val() === "basic";
 }
-function create_basic_chart(){
 
-	var data = get_data_filters();
-	if (data.tests.length === 0){
+function retrieve_data(callback,error){
+	var data_filters = get_data_filters();
+	if (data_filters.tests.length === 0){
 		initialize_charts();
 		finished_chart_update();
 		return;
@@ -217,26 +233,32 @@ function create_basic_chart(){
 	$.ajax({
             type:"get",
             url:QACharts.data_url,
-            data:data,
+            data:data_filters,
             contentType:"application/json",
             dataType:"json",
             success: function(result,status,jqXHR){
+				last_requested_data = result;
                 finished_chart_update();
-				plot_data(result);
+				callback(result);
             },
             error: function(error){
+				last_requested_data = {};
                 finished_chart_update();
                 if (typeof console != "undefined") {console.log(error)};
             }
 	});
 
 }
+function create_basic_chart(){
+	retrieve_data(plot_data);
+}
 
 function plot_data(data){
-
-	var data_to_plot = convert_data_to_highchart_series(data);
+	var data_to_plot = convert_data_to_highchart_series(data.data);
 	create_stockchart(data_to_plot);
+	update_data_table(data);
 }
+
 function create_stockchart(data){
 	window.chart = new Highcharts.StockChart({
             chart : {
@@ -244,13 +266,9 @@ function create_stockchart(data){
 				animation:false
             },
 
-            rangeSelector : {
-                selected : 1
-            },
+            rangeSelector : get_range_options(),
 
-            title : {
-                text : 'QA Values'
-            },
+			legend: get_legend_options(),
 
             plotOptions: {
                 series: {
@@ -258,22 +276,63 @@ function create_stockchart(data){
 					marker : {
 						enabled : true,
 						radius : 4
-					}					
+					}
                 },
 				line:{
 					animation:false
 				}
             },
-            
+
             tooltip: {
                 pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b> ({point.change})<br/>',
                 valueDecimals: 2
             },
-			            
+
             series : data
 	});
-    
+
 }
+
+function get_range_options(){
+	return {
+		buttons: [{
+				type: 'week',
+				count: 1,
+				text: '1w'
+			},{
+				type: 'month',
+				count: 1,
+				text: '1m'
+			},{
+				type: 'month',
+				count: 6,
+				text: '6m'
+			},{
+				type: 'year',
+				count: 1,
+				text: '1y'
+			},{
+				type: 'all',
+				text: 'All'
+			}
+		],
+		selected: 1
+	}
+}
+
+function get_legend_options(){
+	var legend = {};
+	if ($("#show-legend").is(":checked")){
+		legend = {
+			align: "right",
+			layout: "vertical",
+			enabled: true,
+			verticalAlign: "middle"
+		}
+	}
+	return legend;
+}
+
 function get_line_width(){
 	if ($("#show-lines").is(":checked")){
 		return 2;
@@ -281,23 +340,22 @@ function get_line_width(){
 		return 0;
 	}
 }
+
 function convert_data_to_highchart_series(data){
 	var hc_series = [];
-	
+
 	$.each(data,function(idx,series){
 		var series_data = []
 		$.each(series.data,function(idx,values){
 			var date = QAUtils.parse_iso8601_date(values[0]).getTime();
 			series_data.push([date,values[1]]);
 		});
-		
 
 		hc_series.push({
 			name:series.unit.name+" " +series.test.name,
-			data:series_data
+			data:series_data,
+			showInLegend:true
 		});
-
-
 	});
 	return hc_series;
 }
@@ -312,15 +370,20 @@ function create_control_chart(){
 	var chart_src_url = get_control_chart_url();
 	$("#control-chart-container img").attr("src",chart_src_url);
 
+	retrieve_data(update_data_table);
+
 }
+
 function start_chart_update(){
 	$("#gen-chart").button("loading");
 }
+
 function finished_chart_update(){
 	$("#gen-chart").button("reset");
 }
+
 function get_data_filters(){
-	var filters = {	
+	var filters = {
 		units:get_selected_option_vals("#unit"),
 		statuses:get_selected_option_vals("#status"),
 		from_date:get_date("#from-date"),
@@ -328,7 +391,7 @@ function get_data_filters(){
 		tests:get_selected_tests(),
 		n_baseline_subgroups:$("#n-baseline-subgroups").val(),
 		subgroup_size:$("#subgroup-size").val(),
-		fit_data:$("#include-fit").is(":checked")		
+		fit_data:$("#include-fit").is(":checked")
 	};
 
 	return filters;
@@ -346,4 +409,9 @@ function get_selected_tests(){
 		tests.push($(this).val());
 	});
 	return tests;
+}
+
+function update_data_table(data){
+
+	$("#data-table-wrapper").html(data.table);
 }

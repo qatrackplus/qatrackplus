@@ -34,6 +34,27 @@
 
 <div class="row-fluid">
 	<div class="span12">
+		<h3 class="pull-left">Trending</h3>
+		<div id="instructions-container" class="alert alert-info pull-right">
+
+			<span id="toggle-instructions" class="pull-right hand-cursor">
+				<i class="icon-plus-sign"></i> Instructions
+			</span>
+			<div class="clearfix"></div>
+			<div id="instructions" class="clearfix">
+				<hr/>
+				<ol>
+					<li>Choose Test Lists From <strong>Test List Filters</strong> Box</li>
+					<li>Select Tests To Generate Plots for</li>
+					<li>Select Chart Type (Basic or Control Chart)</li>
+					<li>Click Generate Chart</li>
+				</ol>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="row-fluid">
+	<div class="span12">
 
 		<div class="row-fluid">
 			<div class="span4">
@@ -42,7 +63,7 @@
 					<div class="row-fluid">
 
 						<div id="test-list-container" class="span7">
-							<h5>Test List:</h5>
+							<h5>Test Lists To Display Tests For:</h5>
 							<select id="test-list" size="12" multiple="multiple" class="input-large">
 							{% for test_list in test_lists %}
 								<option id="test-list-{{test_list.pk}}" value="{{test_list.pk}}" title="{{test_list.description}}"  class="test-list">{{test_list.name}}</option>
@@ -156,6 +177,11 @@
 										Show Tolerances:
 										<input type="checkbox" id="show-tolerances" checked="checked" />
 									</label>
+									<label class="control-label  basic-option" for="show-legend">
+										Show Legend:
+										<input type="checkbox" id="show-legend" />
+									</label>
+
 								</div>
 								<div class="span4">
 									{% if cc_available %}
@@ -221,6 +247,11 @@
 
 </div>
 
+<div class="row-fluid">
+	<div class="span12">
+		<div id="data-table-wrapper"></div>
+	</div>
+</div>
 
 
 {% endblock %}

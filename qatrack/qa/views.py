@@ -6,6 +6,8 @@ from django.forms.models import inlineformset_factory
 from django.http import HttpResponse,HttpResponseRedirect, Http404
 from django.shortcuts import get_object_or_404
 from django.core.urlresolvers import reverse
+from django.template import Context
+from django.template.loader import get_template
 from django.views.generic import ListView, UpdateView, View, TemplateView, CreateView, DetailView
 from django.utils.translation import ugettext as _
 from django.utils import timezone
@@ -46,8 +48,7 @@ class JSONResponseMixin(object):
 
     def convert_context_to_json(self, context):
         """Convert the context dictionary into a JSON object"""
-        # Note: This is *EXTREMELY* naive; in reality, you'll need
-        # to do much more complex handling to ensure that arbitrary
+        # Note: This is *EXTREMELY* naive; no checking is done to ensure that arbitrary
         # objects -- such as Django model instances or querysets
         # -- can be serialized as JSON.
         return json.dumps(context)
@@ -99,7 +100,7 @@ class ChartView(TemplateView):
             "unittestinfo__frequency"
         ).distinct()
 
-
+        test_data = self.create_test_data()
 
         c = {
             "cc_available":CONTROL_CHART_AVAILABLE,
@@ -111,7 +112,7 @@ class ChartView(TemplateView):
             "categories":models.Category.objects.all(),
             "statuses":models.TestInstanceStatus.objects.all(),
             "units":Unit.objects.all().select_related("type"),
-            "test_data": self.create_test_data(),
+            "test_data": test_data,
             "chart_data_url":reverse("chart_data"),
             "control_chart_url":reverse("control_chart"),
 
@@ -123,9 +124,49 @@ class BaseChartView(View):
     ISO_FORMAT = False
     #----------------------------------------------------------------------
     def get(self,request):
+        data = self.get_plot_data()
+        table = self.create_data_table()
+        return self.render_to_response({"data":data,"table":table})
+    #----------------------------------------------------------------------
+    def create_data_table(self):
 
-        return self.render_to_response(self.get_plot_data())
-    
+        utis = list(set([x.unit_test_info for x in self.tis]))
+
+
+        rows = []
+        headers = []
+        max_len = 0
+        cols = []
+        for uti in utis:
+            tis = self.tis.filter(unit_test_info=uti)
+            headers.append("%s %s" %(uti.unit.name,uti.test.name))
+            dates = tis.values_list("work_completed",flat=True)
+            values = [ti.value_display() for ti in tis]
+
+
+
+
+            cols.append(zip(dates,values))
+            max_len = max(len(dates),max_len)
+
+        for idx in range(max_len):
+            row = []
+            for col in cols:
+                try:
+                    row.append(col[idx])
+                except IndexError:
+                    row.append(["",""])
+                    pass
+            rows.append(row)
+
+
+        context = Context({
+            "rows":rows,
+            "headers":headers
+        })
+        template = get_template("qa/qa_data_table.html")
+
+        return template.render(context)
     #----------------------------------------------------------------------
     def get_date(self,key,default):
         try:
@@ -143,7 +184,7 @@ class BaseChartView(View):
         return dt.isoformat()
     #----------------------------------------------------------------------
     def get_plot_data(self):
-        
+
         tests = self.request.GET.getlist("tests[]",[])
         units = self.request.GET.getlist("units[]",[])
         statuses = self.request.GET.getlist("statuses[]",[])
@@ -151,7 +192,7 @@ class BaseChartView(View):
         from_date = self.get_date("from_date",now-timezone.timedelta(days=180))
         to_date = self.get_date("to_date",now)
 
-        tis = models.TestInstance.objects.filter(
+        self.tis = models.TestInstance.objects.filter(
             unit_test_info__test__pk__in=tests,
             unit_test_info__unit__pk__in=units,
             status__pk__in = statuses,
@@ -162,7 +203,7 @@ class BaseChartView(View):
         )
 
         data = collections.defaultdict(lambda : {"data":[],"values":[],"dates":[]})
-        for ti in tis:
+        for ti in self.tis:
             uti = ti.unit_test_info
             d = timezone.make_naive(ti.work_completed,timezone.get_current_timezone())
             d = self.convert_date(d)
@@ -174,7 +215,7 @@ class BaseChartView(View):
 
 
         return data
-    
+
 #============================================================================
 class BasicChartData(JSONResponseMixin,BaseChartView):
     pass
@@ -186,7 +227,7 @@ class ControlChartImage(BaseChartView):
     #---------------------------------------------------------------------------
     def convert_date(self,dt):
         return dt
-    
+
     #----------------------------------------------------------------------
     def get_number_from_request(self,param,default,dtype=float):
         try:
