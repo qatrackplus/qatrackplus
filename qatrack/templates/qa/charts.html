@@ -61,18 +61,22 @@
 
 				<div id="test-list-filters" class="control-container">
 					<div class="row-fluid">
-
-						<div id="test-list-container" class="span7">
+					
+						<div class="span7">
 							<h5>Test Lists To Display Tests For:</h5>
-							<select id="test-list" size="12" multiple="multiple" class="input-large">
-							{% for test_list in test_lists %}
-								<option id="test-list-{{test_list.pk}}" value="{{test_list.pk}}" title="{{test_list.description}}"  class="test-list">{{test_list.name}}</option>
-							{% endfor %}
-							</select>
-						</div>
 
+							<div id="test-list-container">
+								{% for test_list in test_lists %}
+									<label class="checkbox" title="{{test_list.name}}" >
+										<input type="checkbox" id="test-list-{{test_list.pk}}" value="{{test_list.pk}}" title="{{test_list.description}}"  class="test-list"></input>
+										{{test_list.name}}
+									</label>
+								{% endfor %}
+							
+							</div>
+						</div>
 						<div class="span5">
-							<div id="category-container">
+							<div id="frequency-container">
 								<h5>Frequency:</h5>
 								<select id="frequency" multiple="multiple" size="5" class="input-medium">
 								{% for frequency in frequencies %}
@@ -218,15 +222,17 @@
 
 <div class="row-fluid">
 	<div class="span3">
-		<div id="test" class="control-container">
-
-			{% for test in tests %}
-				<label class="checkbox" title="{{test.description}}" >
-					<input value="{{test.pk}}" type="checkbox" id="test-{{test.pk}}"  class="test category-{{test.category}} type-{{test.type}}"></input>
-					{{test.name}}
-				</label>
-			{% endfor %}
-
+		<div id="test-container" class="control-container">
+			<div id="test">
+	
+				{% for test in tests %}
+					<label class="checkbox" title="{{test.description}}" >
+						<input value="{{test.pk}}" type="checkbox" id="test-{{test.pk}}"  class="test category-{{test.category}} type-{{test.type}}"></input>
+						{{test.name}}
+					</label>
+				{% endfor %}
+	
+			</div>
 		</div>
 	</div>
 

@@ -101,28 +101,6 @@ function get_control_chart_url(){
 }
 
 
-/**************************************************************************/
-$(document).ready(function(){
-	$.when(QAUtils.init()).done(function(){
-		initialize_charts();
-
-		hide_all_tests();
-
-		$("#control-chart-container, #instructions").hide();
-
-		$("#chart-type").change(switch_chart_type);
-
-		$("#test-list-filters select").change(update_tests);
-
-		$("#gen-chart").click(update_chart);
-		$("#display-options input").change(update_chart);
-
-	    $("#toggle-instructions").click(toggle_instructions);
-
-		update_tests();
-
-	});
-});
 
 function toggle_instructions(){
 	$("#instructions").toggle();
@@ -150,14 +128,48 @@ function hide_all_tests(){
 }
 
 function update_tests(){
-	var test_lists = get_selected_option_vals("#test-list");
+	var frequencies = get_selected_option_vals("#frequency");
+	filter_test_lists(frequencies);
+	
+	var test_lists = get_checked("#test-list-container");
 	var tests = get_tests_for_lists(test_lists);
 	var categories = get_selected_option_vals("#category");
-	var frequencies = get_selected_option_vals("#frequency");
+
 
 	var to_show = filter_tests(tests,categories,frequencies);
 	show_tests(to_show);
 }
+function filter_test_lists(frequencies){
+	var test_lists = get_test_lists_for_frequencies(frequencies);
+
+	$("#test-list-container input").each(function(i,option){
+		var pk = $(this).val();
+		if (test_lists.indexOf(pk)>=0){
+			$(this).parent().show();
+		}else{
+			$(this).attr("checked",false)
+			$(this).parent().hide();
+		}
+	});
+}
+
+function get_test_lists_for_frequencies(frequencies){
+	
+	var test_lists = [];
+
+	var i;
+	$.each(frequencies,function(i,frequency){
+		$.each(QACharts.test_info.test_lists,function(pk,test_list){				
+			if (test_list.frequencies.indexOf(frequency)>=0){
+				test_lists.push(pk)
+			}
+		});
+	});
+
+	return test_lists;
+
+}
+
 
 function get_selected_option_vals(select_id){
 	var selected = [];
@@ -187,7 +199,6 @@ function filter_tests(tests,categories,frequencies){
 	$.each(QACharts.test_info.tests,function(idx,test){
 		if (
 				(categories.indexOf(test.category)>=0) &&
-				(test.frequency === null || frequencies.indexOf(test.frequency) >= 0) &&
 				(tests.indexOf(test.pk) >= 0)
 			){
 			filtered.push(test.pk);
@@ -202,7 +213,7 @@ function show_tests(visible_tests){
 		if (visible_tests.indexOf(pk) >= 0){
 			$(this).parent().show();
 		}else{
-			$(this).attr(":checked",false);
+			$(this).attr("checked",false);
 			$(this).parent().hide();
 		}
 	});
@@ -262,8 +273,7 @@ function plot_data(data){
 function create_stockchart(data){
 	window.chart = new Highcharts.StockChart({
             chart : {
-                renderTo : 'chart',
-				animation:false
+                renderTo : 'chart'
             },
 
             rangeSelector : get_range_options(),
@@ -415,3 +425,28 @@ function update_data_table(data){
 
 	$("#data-table-wrapper").html(data.table);
 }
+
+
+
+/**************************************************************************/
+$(document).ready(function(){
+	$.when(QAUtils.init()).done(function(){
+		initialize_charts();
+
+		hide_all_tests();
+
+		$("#control-chart-container, #instructions").hide();
+
+		$("#chart-type").change(switch_chart_type);
+
+		$("#test-list-filters select, #frequency input, #test-list-container input").change(update_tests);
+
+		$("#gen-chart").click(update_chart);
+		$("#display-options input").change(update_chart);
+
+	    $("#toggle-instructions").click(toggle_instructions);
+
+		update_tests();
+
+	});
+});

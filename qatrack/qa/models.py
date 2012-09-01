@@ -212,6 +212,8 @@ class Reference(models.Model):
             raise ValidationError({"value":["Boolean values must be 0 or 1"]})
     #----------------------------------------------------------------------
     def value_display(self):
+        if self.value is None:
+            return ""
         if self.type == BOOLEAN:
             return "Yes" if int(self.value)==1 else "No"
         return self.value
@@ -987,6 +989,8 @@ class TestInstance(models.Model):
             self.pass_fail = NO_TOL
     #----------------------------------------------------------------------
     def value_display(self):
+        if self.value is None:
+            return ""
         test = self.unit_test_info.test
         if test.type == BOOLEAN:
             return "Yes" if int(self.value) == 1 else "No"

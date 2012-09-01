@@ -209,6 +209,7 @@ th.qa-history div{
     height:540px;
     min-width:300px;
 }
+
 #instructions-container {
     padding: 2px 14px 2px 14px;
     margin-bottom:3px;
@@ -246,6 +247,20 @@ th.qa-history div{
 #data-filters:after{
     content:"Data Filters";
 }
+#test,
+#test-list-container{    
+    overflow:auto;
+    padding:5px;
+    background:white;
+    border:1px solid #DDD;
+    -webkit-border-radius: 4px 0 4px 0;
+    -moz-border-radius: 4px 0 4px 0;
+    border-radius: 4px 0 4px 0;
+    
+}
+#test-list-container{
+    height:210px;   
+}
 #test-list-filters:after {
     content:"Test List Filters";
 }
@@ -253,15 +268,15 @@ th.qa-history div{
     content:"Options";
 }
 
-#test:after {
-    content:"Tests To Plot";
-}
 #chart-actions:after {
     content:"Actions";
 }
 #test{
     height:540px;
     overflow:scroll;
+}
+#test-container:after {
+    content:"Tests To Plot";
 }
 
 select#test-list,

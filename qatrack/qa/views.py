@@ -67,11 +67,16 @@ class ChartView(TemplateView):
             "tests":{},
             "categories":{}
         }
+        utc_freqs = models.UnitTestCollection.objects.prefetch_related("frequency").values("testlist","frequency","testlistcycle__test_lists")
+        
         for test_list in self.test_lists:
             tests = [x.pk for x in test_list.tests.all()]
+            freqs = [x["frequency"] for x in utc_freqs if x["testlist"] == test_list.pk or x["testlistcycle__test_lists"]==test_list.pk]
+            freqs = list(sorted(set(freqs)))
             if tests:
                 self.test_data["test_lists"][test_list.pk] = {
                     "tests" : tests,
+                    "frequencies":freqs,
                 }
         for test in self.tests:
             self.test_data["tests"][test["pk"]] = test
@@ -87,7 +92,10 @@ class ChartView(TemplateView):
 
 
         self.test_lists = models.TestList.objects.order_by("name").prefetch_related(
-            "tests"
+            "tests",
+            "testlistcycle_set",
+            "assigned_to",
+            "testlistcycle_set__assigned_to"
         ).all()
 
         self.tests = models.Test.objects.order_by("name").values(
@@ -124,29 +132,23 @@ class BaseChartView(View):
     def get(self,request):
         data = self.get_plot_data()
         table = self.create_data_table()
-        return self.render_to_response({"data":data,"table":table})
+        resp = self.render_to_response({"data":data,"table":table})
+        return resp
     #----------------------------------------------------------------------
     def create_data_table(self):
 
         utis = list(set([x.unit_test_info for x in self.tis]))
 
-
-        rows = []
         headers = []
         max_len = 0
         cols = []
-        for uti in utis:
-            tis = self.tis.filter(unit_test_info=uti)
-            headers.append("%s %s" %(uti.unit.name,uti.test.name))
-            dates = tis.values_list("work_completed",flat=True)
-            values = [ti.value_display() for ti in tis]
+        for uti in utis:                        
+            headers.append("%s %s" %(uti.unit.name,uti.test.name))            
+            col = [(ti.work_completed,ti.value_display()) for ti in self.tis if ti.unit_test_info == uti]
+            cols.append(col)
+            max_len = max(len(col),max_len)
 
-
-
-
-            cols.append(zip(dates,values))
-            max_len = max(len(dates),max_len)
-
+        rows = []
         for idx in range(max_len):
             row = []
             for col in cols:
@@ -196,6 +198,8 @@ class BaseChartView(View):
             status__pk__in = statuses,
             work_completed__gte = from_date,
             work_completed__lte = to_date,
+        ).select_related(
+            "reference","tolerance","status","unit_test_info","unit_test_info__test","unit_test_info__unit","status"            
         ).order_by(
             "work_completed"
         )
