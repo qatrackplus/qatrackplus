@@ -379,6 +379,26 @@ var QAUtils = new function() {
 
     //*************************************************************
     //General
+	
+
+	/*************************************************************************/
+	this.get_checked = function(container){
+		var vals =  [];
+		$(container+" input[type=checkbox]:checked").each(function(i,cb){
+			vals.push(cb.value);
+		});
+		return vals;
+	}
+	
+	this.get_selected_option_vals = function(select_id){
+		var selected = [];
+	
+		$(select_id).find(":selected").each(function(){
+			selected.push(parseInt($(this).val()));
+		});
+		return selected;
+	}
+	
     this.zip = function(a1,a2){
         var ii;
         var zipped = [];

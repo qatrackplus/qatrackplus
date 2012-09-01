@@ -126,14 +126,18 @@ class ChartView(TemplateView):
         context.update(c)
         return context
 
+    
 class BaseChartView(View):
     ISO_FORMAT = False
-    #----------------------------------------------------------------------
+    #----------------------------------------------------------------------    
     def get(self,request):
+
         data = self.get_plot_data()
         table = self.create_data_table()
         resp = self.render_to_response({"data":data,"table":table})
+
         return resp
+    
     #----------------------------------------------------------------------
     def create_data_table(self):
 
@@ -203,14 +207,31 @@ class BaseChartView(View):
         ).order_by(
             "work_completed"
         )
-
-        data = collections.defaultdict(lambda : {"data":[],"values":[],"dates":[]})
+        
+        
+        vals_dict = lambda : {"data":[],"values":[],"dates":[],"references":[],"act_low":[],"tol_low":[],"tol_high":[],"act_high":[]}
+        data = collections.defaultdict(vals_dict)
+        
         for ti in self.tis:
             uti = ti.unit_test_info
             d = timezone.make_naive(ti.work_completed,timezone.get_current_timezone())
             d = self.convert_date(d)
             data[uti.pk]["data"].append([d,ti.value])
             data[uti.pk]["values"].append(ti.value)
+
+ 
+            if ti.reference is not None:
+                data[uti.pk]["references"].append(ti.reference.value)
+            else:
+                data[uti.pk]["references"].append(None)
+        
+            if ti.tolerance is not None and ti.reference is not None:
+                tols = ti.tolerance.tolerances_for_value(ti.reference.value)
+            else:
+                tols = {"act_high":None,"act_low":None,"tol_low":None,"tol_high":None}
+            for k,v in tols.items():
+                data[uti.pk][k].append(v)
+
             data[uti.pk]["dates"].append(d)
             data[uti.pk]["unit"] = {"name":uti.unit.name,"pk":uti.unit.pk}
             data[uti.pk]["test"] = {"name":uti.test.name,"pk":uti.test.pk}
@@ -253,9 +274,12 @@ class ControlChartImage(BaseChartView):
 
         dates,data = [],[]
 
-        if context["data"]:
-            d = context["data"].values()[0]
-            dates,data = d["dates"],d["values"]
+        if context["data"] and context["data"].values():
+
+            for d,v in context["data"].values()[0]["data"]:
+                if None not in (d,v):
+                    dates.append(d)
+                    data.append(v)                
 
         n_baseline_subgroups = self.get_number_from_request("n_baseline_subgroups",2,dtype=int)
 

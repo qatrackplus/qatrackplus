@@ -310,6 +310,23 @@ class Tolerance(models.Model):
         self.clean_choices()
         self.clean_tols()
     #---------------------------------------------------------------------------
+    def tolerances_for_value(self,value):
+        """return dict containing tolerances for input value"""
+
+        tols = {"act_high":None,"act_low":None,"tol_low":None,"tol_high":None}
+        attrs = tols.keys()
+        
+        if value is None:
+            return tols
+        if self.type == ABSOLUTE:
+            for attr in attrs:
+                tols[attr] = value + getattr(self,attr)
+        elif self.type == PERCENT:
+            for attr in attrs:
+                tols[attr] = value*(1.+getattr(self,attr)/100.)
+        return tols
+            
+    #---------------------------------------------------------------------------
     def __unicode__(self):
         """more helpful interactive display name"""
         vals = (self.name,self.act_low,self.tol_low,self.tol_high,self.act_high)

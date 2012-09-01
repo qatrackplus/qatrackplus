@@ -307,89 +307,89 @@ $(document).ready(function(){
       return false;
     });
 
-    $.when(QAUtils.init()).done(function(){
-        initialize_qa();
 
-        var user_inputs=  $('.qa-input').not("[readonly=readonly]").not("[type=hidden]");
+    initialize_qa();
 
-        //anytime an input changes run validation
-        user_inputs.change(function(){
+    var user_inputs=  $('.qa-input').not("[readonly=readonly]").not("[type=hidden]");
 
-            check_skip_status($(this));
+    //anytime an input changes run validation
+    user_inputs.change(function(){
 
-            //only allow numerical characters on input
-            this.value = this.value.replace(QAUtils.NUMERIC_WHITELIST_REGEX,'');
-            if (this.value[0] === ".") {
-                this.value = "0" + this.value;
-            }
-            check_test_status($(this));
-            calculate_composites();
-            update_qa_status();
+        check_skip_status($(this));
 
-        });
+        //only allow numerical characters on input
+        this.value = this.value.replace(QAUtils.NUMERIC_WHITELIST_REGEX,'');
+        if (this.value[0] === ".") {
+            this.value = "0" + this.value;
+        }
+        check_test_status($(this));
+        calculate_composites();
+        update_qa_status();
 
-        //run filter routine anytime user alters the categories
-        $("#category_filter").change(filter_by_category);
-
-        //update the link for user to change cycles
-        $("#cycle-day").change(set_cycle_link);
-
-        //allow arrow key and enter navigation
-        $(that).on("keydown","input, select", function(e) {
-
-            var idx = user_inputs.index(this);
-
-            //rather than submitting form on enter, move to next value
-            if (e.which == QAUtils.KC_ENTER  || e.which == QAUtils.KC_DOWN || e.which == QAUtils.KC_RIGHT ) {
-
-                if (idx == user_inputs.length - 1) {
-                    user_inputs.first().focus();
-                } else {
-                    user_inputs[idx+1].focus();
-                }
-                return false;
-            }else if (e.which == QAUtils.KC_UP || e.which == QAUtils.KC_LEFT ){
-                if (idx == 0) {
-                    user_inputs.last().focus();
-                } else {
-                    user_inputs[idx-1].focus();
-                }
-                return false;
-            }
-        });
-
-        //make sure user actually want's to go back
-        //this is here to help mitigate the risk that a user hits back or backspace key
-        //by accident and completely hoses all the information they've entered during
-        //a qa session
-        $(window).bind("beforeunload",confirm_leave_page);
-        $("#qa-form").submit(function(){
-            $(window).unbind("beforeunload")
-        });
-
-        $("#qa-form").preventDoubleSubmit();
-
-        //automatically unhide comment if test is being skipped
-        $(".qa-skip input").click(function(){
-            if ($(this).is(':checked')){
-                $(this).parent().parent().next().show(600);
-            }else{
-               $(this).parent().parent().next().hide(600);
-            }
-        });
-
-        $("#work-completed").datepicker();
-        $("#work-started").datepicker();
-
-        //run a full validation on page load
-        full_validation();
-
-        var tabindex = 1;
-        user_inputs.each(function() {
-            $(this).attr("tabindex", tabindex);
-            tabindex++;
-        });
-        user_inputs.first().focus();
     });
+
+    //run filter routine anytime user alters the categories
+    $("#category_filter").change(filter_by_category);
+
+    //update the link for user to change cycles
+    $("#cycle-day").change(set_cycle_link);
+
+    //allow arrow key and enter navigation
+    $(that).on("keydown","input, select", function(e) {
+
+        var idx = user_inputs.index(this);
+
+        //rather than submitting form on enter, move to next value
+        if (e.which == QAUtils.KC_ENTER  || e.which == QAUtils.KC_DOWN || e.which == QAUtils.KC_RIGHT ) {
+
+            if (idx == user_inputs.length - 1) {
+                user_inputs.first().focus();
+            } else {
+                user_inputs[idx+1].focus();
+            }
+            return false;
+        }else if (e.which == QAUtils.KC_UP || e.which == QAUtils.KC_LEFT ){
+            if (idx == 0) {
+                user_inputs.last().focus();
+            } else {
+                user_inputs[idx-1].focus();
+            }
+            return false;
+        }
+    });
+
+    //make sure user actually want's to go back
+    //this is here to help mitigate the risk that a user hits back or backspace key
+    //by accident and completely hoses all the information they've entered during
+    //a qa session
+    $(window).bind("beforeunload",confirm_leave_page);
+    $("#qa-form").submit(function(){
+        $(window).unbind("beforeunload")
+    });
+
+    $("#qa-form").preventDoubleSubmit();
+
+    //automatically unhide comment if test is being skipped
+    $(".qa-skip input").click(function(){
+        if ($(this).is(':checked')){
+            $(this).parent().parent().next().show(600);
+        }else{
+           $(this).parent().parent().next().hide(600);
+        }
+    });
+
+    $("#work-completed").datepicker();
+    $("#work-started").datepicker();
+
+    //run a full validation on page load
+    full_validation();
+
+    var tabindex = 1;
+    user_inputs.each(function() {
+        $(this).attr("tabindex", tabindex);
+        tabindex++;
+    });
+    user_inputs.first().focus();
+
 });
 
