@@ -14,6 +14,8 @@ import models
 @receiver(signals.post_save, sender=TestListInstance)
 def email_on_testlist_save(*args,**kwargs):
     """TestListInstance was completed.  Send email notification if applicable"""
+    if not kwargs["created"]:
+        return
     test_list_instance = kwargs["instance"]
 
     failing = failing_tests_to_report(test_list_instance)

@@ -1,59 +1,80 @@
 from django.template import Context
 from django.template.loader import get_template
 from django import template
+from django.utils.safestring import mark_safe
+from django.utils import formats
+
+from decimal import Decimal, ROUND_HALF_UP
+from django.utils.encoding import force_unicode
+
 import qatrack.qa.models as models
 register = template.Library()
 
 
-@register.filter
-def as_qavalue(form, include_admin):
-    template = get_template("qavalue_form.html")
-    c = Context({"form": form,"include_admin":include_admin})
-    return template.render(c)
-
-@register.filter
-def as_unittestcollections_table(unit_lists, table_type="datatable"):
-
-    template = get_template("unittestcollections_table.html")
-
-    filter_table = table_type in ("review","datatable")
-
-    unit_lists = unit_lists.select_related(
-        "last_instance",
-        "frequency",
-        "unit__name",
-    ).prefetch_related(
-        "last_instance__testinstance_set",
-        "assigned_to",        
-        "tests_object",        
-    )
-    
+@register.simple_tag
+def qa_value_form(form, include_admin=False,test_info=None):
+    template = get_template("qa/qavalue_form.html")
     c = Context({
-        "unittestcollections":unit_lists,
-        "filter_table":filter_table,
-        "table_type":table_type,
+        "form": form,
+        "test_info":test_info,
+        "include_admin":include_admin
+
     })
     return template.render(c)
 
 #----------------------------------------------------------------------
 @register.filter
+def reference_tolerance_span(unit_test_info):
+    ref = unit_test_info.reference
+    tol = unit_test_info.tolerance
+    test = unit_test_info.test 
+
+    if ref is None and not test.is_mult_choice():
+        return mark_safe("<span>No Ref</span>")
+
+    if test.is_boolean(): 
+        return mark_safe('<span title="Passing value = %s">%s</span>' %(ref.value_display(),ref.value_display()))
+
+    if not tol:
+        return	mark_safe('<span title="No Tolerance Set">No Tol</span>')
+
+    if tol.type == models.MULTIPLE_CHOICE:
+        return mark_safe('<span><abbr title="Passing Values: %s;  Tolerance Values: %s; All other choices are failing"><em>Mult. Choice</em></abbr></span>' %(tol.pass_choices,tol.tolerance_choices))
+
+
+    if tol.type == models.ABSOLUTE:
+        return mark_safe('<span> <abbr title="(AL, TL, TH, AH) = (%s, %s, %s, %s)">%s</abbr></span>'% (tol.act_low,tol.tol_low,tol.tol_high,tol.act_high, ref.value_display()))
+    elif tol.type == models.PERCENT:
+        return mark_safe('<span> <abbr title="(AL, TL, TH, AH) = (%.1f%%, %.1f%%, %.1f%%, %.1f%%)">%s</abbr></span>'% (tol.act_low,tol.tol_low,tol.tol_high,tol.act_high, ref.value_display()))
+
+#----------------------------------------------------------------------
+@register.filter
 def as_pass_fail_status(test_list_instance):
-    template = get_template("pass_fail_status.html")
+    template = get_template("qa/pass_fail_status.html")
     statuses_to_exclude = [models.NO_TOL]
     c = Context({"instance":test_list_instance,"exclude":statuses_to_exclude})
     return template.render(c)
 #----------------------------------------------------------------------
 @register.filter
 def as_unreviewed_count(unit_test_collection):
-    template = get_template("unreviewed_count.html")
+    template = get_template("qa/unreviewed_count.html")
     c = Context({"unit_test_collection":unit_test_collection})
     return template.render(c)
 #----------------------------------------------------------------------
-@register.filter
+@register.filter(expects_local_time=True)
 def as_due_date(unit_test_collection):
-    template = get_template("due_date.html")
+    template = get_template("qa/due_date.html")
     c = Context({"unit_test_collection":unit_test_collection})
     return template.render(c)
+
+#----------------------------------------------------------------------
+@register.filter(is_safe=True,expects_local_time=True)
+def as_time_delta(time_delta):
+    days, remainder = divmod(time_delta.seconds, 24*60*60)
+    hours, remainder = divmod(remainder, 60*60)
+    minutes, seconds = divmod(remainder, 60)
+    return '%dd %dh %dm %ds' % (days, hours, minutes, seconds)
+as_time_delta.safe = True
 #----------------------------------------------------------------------
 @register.filter
 def as_data_attributes(unit_test_collection):
@@ -76,8 +97,6 @@ pos_inf = 1e200 * 1e200
 neg_inf = -1e200 * 1e200
 nan = (1e200 * 1e200) / (1e200 * 1e200)
 special_floats = [str(pos_inf), str(neg_inf), str(nan)]
-from decimal import Decimal
-from django.utils.encoding import force_unicode
 
 @register.filter
 def scientificformat(text):
@@ -114,7 +133,7 @@ def scientificformat(text):
         # for 'normal' sized numbers
         if d.is_zero():
             number = u'0'
-        elif ( (d > Decimal('-10000') and d < Decimal('-0.01')) or ( d > Decimal('0.01') and d < Decimal('10000')) ) :
+        elif  (Decimal('-10000') < d < Decimal('-0.01')) or (Decimal('0.01') < d < Decimal('10000')):
             # this is what the original floatformat() function does
             sign, digits, exponent = d.quantize(Decimal('.001'), ROUND_HALF_UP).as_tuple()
             digits = [unicode(digit) for digit in reversed(digits)]
@@ -123,7 +142,8 @@ def scientificformat(text):
             digits.insert(-exponent, u'.')
             if sign:
                 digits.append(u'-')
-            number = u''.join(reversed(digits))
+            number = u''.join(reversed(digits)).rstrip("0")
+
         else:
             # for very small and very large numbers
             sign, digits, exponent = d.as_tuple()

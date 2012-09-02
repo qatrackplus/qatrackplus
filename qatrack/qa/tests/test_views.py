@@ -27,42 +27,73 @@ class TestURLS(TestCase):
     #---------------------------------------------------------------------------
     def returns_200(self,url,method="get"):
         return getattr(self.client,method)(url).status_code == 200
-    #---------------------------------------------------------------------------
-    def test_home(self):
-        self.assertTrue(self.returns_200("/"))
+
+    def test_qa_urls(self):
+
+        utils.create_status()
+        u1 = utils.create_unit(number=1,name="u1")
+        utils.create_unit(number=2,name="u2",)
+        utc = utils.create_unit_test_collection(unit=u1)
+        tli = utils.create_test_list_instance(unit_test_collection=utc)
+
+        url_names = (
+            ("home",{}),
+
+            ("all_lists",{}),
+
+            ("charts",{}),
+            ("export_data",{}),
+            ("chart_data",{}),
+            ("control_chart",{}),
+            ("review_all",{}),
+            ("review_utc",{"pk":"1"}),
+            ("choose_review_frequency",{}),
+            ("review_by_frequency",{"frequency":"daily"}),
+            ("review_by_frequency",{"frequency":"daily/monthly"}),
+            ("choose_review_unit",{}),
+            ("review_by_unit",{"unit_number":"1"}),
+            ("review_by_unit",{"unit_number":"1/2"}),
+
+            ("complete_instances",{}),
+
+            ("review_test_list_instance",{"pk":"1"}),
+
+            ("unreviewed",{}),
+
+            ("in_progress",{}),
+
+            ("edit_tli",{"pk":"1"}),
+            ("choose_unit",{}),
+            ("perform_qa",{"pk":"1"}),
+            ("qa_by_frequency_unit",{"unit_number":"1","frequency":"daily"}),
+            ("qa_by_unit",{"unit_number":"1"}),
+            ("qa_by_frequency_unit",{"unit_number":"1","frequency":"daily"}),
+            ("qa_by_unit_frequency",{"unit_number":"1","frequency":"daily"}),
+            ("qa_by_frequency",{"frequency":"daily"}),
+        )
+
+        for url,kwargs in url_names:
+            self.assertTrue(self.returns_200(reverse(url,kwargs=kwargs)))
     #---------------------------------------------------------------------------
     def test_login(self):
         self.assertTrue(self.returns_200(settings.LOGIN_URL))
     #---------------------------------------------------------------------------
     def test_login_redirect(self):
         self.assertTrue(self.returns_200(settings.LOGIN_REDIRECT_URL))
-    #---------------------------------------------------------------------------
+    #----------------------------------------------------------------------
     def test_composite(self):
-        self.assertTrue(self.returns_200("/qa/composite/",method="post"))
-    #---------------------------------------------------------------------------
-    def test_review(self):
-        self.assertTrue(self.returns_200("/qa/review/"))
-    #---------------------------------------------------------------------------
-    def test_charts(self):
-        self.assertTrue(self.returns_200("/qa/charts/"))
-    #-----------------------------------------------------------
-    def test_charts_export(self):
-        self.assertTrue(self.returns_200("/qa/charts/export/"))
-    #---------------------------------------------------------------------------
-    def test_charts_control_chart(self):
-        self.assertTrue(self.returns_200("/qa/charts/control_chart.png"))
-    #---------------------------------------------------------------------------
-    def test_unit_group_frequency(self):
-        self.assertTrue(self.returns_200("/qa/daily/"))
-    #---------------------------------------------------------------------------
+        url = reverse("composite")
+
+        self.assertTrue(self.returns_200(url,method="post"))
+    #--------------------------------------------------------------------------
     def test_perform(self):
         utils.create_status()
         utils.create_unit_test_collection()
-        self.assertTrue(self.returns_200("/qa/1"))
-        self.assertTrue(404==self.client.get("/qa/2").status_code)
-    #---------------------------------------------------------------------------
-    def test_unit_frequency(self):
-        self.assertTrue(self.returns_200("/qa/daily/unit/1/"))
+        url = reverse("perform_qa",kwargs={"pk":"1"})
+        self.assertTrue(self.returns_200(url))
+        url = reverse("perform_qa",kwargs={"pk":"2"})
+
+        self.assertTrue(404==self.client.get(url).status_code)
 
 
 
@@ -83,13 +114,9 @@ class TestControlChartImage(TestCase):
     #----------------------------------------------------------------------
     def test_cc_not_available(self):
         views.CONTROL_CHART_AVAILABLE = False
-
-        cc_not_available_image = open(os.path.join(settings.PROJECT_ROOT,"qa","static","img","control_charts_not_available.png"),"rb").read()
-
+        from django.http import Http404
         request = self.factory.get(self.url)
-        response =  self.view(request)
-
-        self.assertEqual(response.content,cc_not_available_image)
+        self.assertRaises(Http404,self.view,request)
 
     #----------------------------------------------------------------------
     def test_not_enough_data(self):
@@ -127,6 +154,8 @@ class TestControlChartImage(TestCase):
     def test_valid(self):
         test = utils.create_test()
         unit = utils.create_unit()
+        uti = utils.create_unit_test_info(test=test,unit=unit)
+
         status = utils.create_status()
         yesterday = timezone.datetime.today()-timezone.timedelta(days=1)
         yesterday = timezone.make_aware(yesterday,timezone.get_current_timezone())
@@ -143,9 +172,8 @@ class TestControlChartImage(TestCase):
         for n in (1,1,8,90):
             for x in range(n):
                 utils.create_test_instance(
+                    unit_test_info=uti,
                     value=random.gauss(1,0.5),
-                    test=test,
-                    unit=unit,
                     status=status
                 )
 
@@ -158,6 +186,8 @@ class TestControlChartImage(TestCase):
     def test_invalid(self):
         test = utils.create_test()
         unit = utils.create_unit()
+        uti = utils.create_unit_test_info(test=test,unit=unit)
+
         status = utils.create_status()
         yesterday = timezone.datetime.today()-timezone.timedelta(days=1)
         yesterday = timezone.make_aware(yesterday,timezone.get_current_timezone())
@@ -170,13 +200,13 @@ class TestControlChartImage(TestCase):
 
         url = self.make_url(test.slug,unit.number,yesterday,tomorrow,fit="true")
 
+
         #generate some data that the control chart fit function won't be able to fit
         for x in range(10):
             utils.create_test_instance(
                 value=x,
-                test=test,
-                unit=unit,
-                status=status
+                status=status,
+                unit_test_info=uti
             )
 
         request = self.factory.get(url)
@@ -302,7 +332,7 @@ class TestPerformQA(TestCase):
     #----------------------------------------------------------------------
     def setUp(self):
         self.factory = RequestFactory()
-        self.view = views.PerformQAView.as_view()
+        self.view = views.PerformQA.as_view()
         self.status = utils.create_status()
 
         self.test_list = utils.create_test_list()
@@ -329,13 +359,22 @@ class TestPerformQA(TestCase):
         for test in self.tests:
             utils.create_test_list_membership(self.test_list,test)
 
+        group = Group(name="foo")
+        group.save()
+
         self.unit_test_list = utils.create_unit_test_collection(
             test_collection=self.test_list
         )
 
+        self.unit_test_infos = []
+        for test in self.tests:
+            self.unit_test_infos.append(models.UnitTestInfo.objects.get(test=test,unit=self.unit_test_list.unit))
         self.url = reverse("perform_qa",kwargs={"pk":self.unit_test_list.pk})
         self.client.login(username="user",password="password")
         self.user = User.objects.get(username="user")
+        self.user.save()
+        self.user.groups.add(group)
+        self.user.save()
     #----------------------------------------------------------------------
     def test_test_forms_present(self):
         response = self.client.get(self.url)
@@ -378,16 +417,15 @@ class TestPerformQA(TestCase):
     #---------------------------------------------------------------------------
     def test_perform_valid(self):
         data = {
-
-            "work_completed":"11-07-2012 00:10",
+            "work_started":"11-07-2012 00:09",
             "status":self.status.pk,
             "form-TOTAL_FORMS":len(self.tests),
-            "form-INITIAL_FORMS":"0",
+            "form-INITIAL_FORMS":len(self.tests),
             "form-MAX_NUM_FORMS":"",
         }
 
-        for test_idx, test in enumerate(self.tests):
-            data["form-%d-test" % test_idx] = test.pk
+        for test_idx, uti in enumerate(self.unit_test_infos):
+
             data["form-%d-value"%test_idx] =  1
             data["form-%d-comment"%test_idx]= ""
 
@@ -401,9 +439,10 @@ class TestPerformQA(TestCase):
         data = {
 
             "work_completed":"11-07-2012 00:10",
+            "work_started":"11-07-2012 00:09",
             "status":self.status.pk,
             "form-TOTAL_FORMS":len(self.tests),
-            "form-INITIAL_FORMS":"0",
+            "form-INITIAL_FORMS":len(self.tests),
             "form-MAX_NUM_FORMS":"",
         }
 
@@ -466,6 +505,8 @@ class TestPerformQA(TestCase):
         self.assertTrue(response.context["include_admin"])
 
         u2 = utils.create_user(is_staff=False,is_superuser=False,uname="u2")
+        u2.groups.add(Group.objects.get(pk=1))
+        u2.save()
         self.client.logout()
         self.client.login(username="u2",password="password")
 

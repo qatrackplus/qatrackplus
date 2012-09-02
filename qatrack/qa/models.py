@@ -41,13 +41,13 @@ PERCENT = "percent"
 TOL_TYPE_CHOICES = (
     (ABSOLUTE, "Absolute"),
     (PERCENT, "Percentage"),
+    (MULTIPLE_CHOICE,"Multiple Choice"),
 )
 
 #reference types
 REF_TYPE_CHOICES = (
     (NUMERICAL, "Numerical"),
     (BOOLEAN, "Yes / No"),
-    (MULTIPLE_CHOICE,"Multiple Choice"),
 )
 
 
@@ -186,8 +186,7 @@ class TestInstanceStatus(models.Model):
 
     #---------------------------------------------------------------------------
     def __unicode__(self):
-        """more helpful interactive display name"""
-        return "<Status(%s)>"%self.name
+        return self.name
 
 
 
@@ -211,7 +210,13 @@ class Reference(models.Model):
     def clean_fields(self):
         if self.type is BOOLEAN and self.value not in (0,1):
             raise ValidationError({"value":["Boolean values must be 0 or 1"]})
-
+    #----------------------------------------------------------------------
+    def value_display(self):
+        if self.value is None:
+            return ""
+        if self.type == BOOLEAN:
+            return "Yes" if int(self.value)==1 else "No"
+        return self.value
     #---------------------------------------------------------------------------
     def __unicode__(self):
         """more helpful display name"""
@@ -233,10 +238,13 @@ class Tolerance(models.Model):
     """
     name = models.CharField(max_length=50, unique=True, help_text=_("Enter a short name for this tolerance type"))
     type = models.CharField(max_length=20, help_text=_("Select whether this will be an absolute or relative tolerance criteria"),choices=TOL_TYPE_CHOICES)
-    act_low = models.FloatField(verbose_name="Action Low", help_text=_("Absolute value of lower action level"), null=True)
-    tol_low = models.FloatField(verbose_name="Tolerance Low", help_text=_("Absolute value of lower tolerance level"), null=True)
-    tol_high = models.FloatField(verbose_name="Tolerance High", help_text=_("Absolute value of upper tolerance level"), null=True)
-    act_high = models.FloatField(verbose_name="Action High", help_text=_("Absolute value of upper action level"), null=True)
+    act_low = models.FloatField(verbose_name=_("Action Low"), help_text=_("Absolute value of lower action level"), null=True,blank=True)
+    tol_low = models.FloatField(verbose_name=_("Tolerance Low"), help_text=_("Absolute value of lower tolerance level"), null=True,blank=True)
+    tol_high = models.FloatField(verbose_name=_("Tolerance High"), help_text=_("Absolute value of upper tolerance level"), null=True,blank=True)
+    act_high = models.FloatField(verbose_name=_("Action High"), help_text=_("Absolute value of upper action level"), null=True, blank=True)
+
+    mc_pass_choices = models.CharField(verbose_name=_("Multiple Choice Pass Values"),max_length=2048,help_text=_("Comma seperated list of choices that are considered passing"),null=True,blank=True)
+    mc_tol_choices = models.CharField(verbose_name=_("Multiple Choice Tolerance Values"), max_length=2048,help_text=_("Comma seperated list of choices that are considered at tolerance"),null=True,blank=True)
 
     #who created this tolerance
     created_date = models.DateTimeField(auto_now_add=True)
@@ -247,12 +255,87 @@ class Tolerance(models.Model):
     modified_by = models.ForeignKey(User,editable=False,related_name="tolerance_modifiers")
 
     #---------------------------------------------------------------------------
+    def pass_choices(self):
+        return self.mc_pass_choices.split(",")
+    #---------------------------------------------------------------------------
+    def tol_choices(self):
+        return self.mc_tol_choices.split(",")
+
+    #---------------------------------------------------------------------------
+    def clean_choices(self):
+        """make sure choices provided if Tolerance Type is MultipleChoice"""
+        errors = []
+        if self.type == MULTIPLE_CHOICE:
+            if (None, None, None, None) != (self.act_low,self.tol_low,self.tol_high,self.act_high):
+                errors.append("Value set for tolerance or action but type is Multiple Choice")
+            if self.mc_pass_choices == None:
+                errors.append("You must give more at l passing choice for a multiple choice tolerance")
+            else:
+
+                pass_choices = [x.strip() for x in self.mc_pass_choices.split(",") if x.strip()]
+
+                if self.mc_tol_choices:
+                    tol_choices = [x.strip() for x in self.mc_tol_choices.split(",") if x.strip()]
+                else:
+                    tol_choices = []
+
+                if not pass_choices:
+                    errors.append("You must give more at l passing choice for a multiple choice tolerance")
+                else:
+                    self.mc_pass_choices = ",".join(pass_choices)
+                    if tol_choices:
+                        self.mc_tol_choices = ",".join(tol_choices)
+
+        elif self.type is not MULTIPLE_CHOICE:
+            if (self.mc_pass_choices or self.mc_tol_choices):
+                errors.append("Value set for pass choices or tolerance choices but type is not Multiple Choice")
+
+        if errors:
+            raise ValidationError({"mc_pass_choices":errors})
+    #----------------------------------------------------------------------
+    def clean_tols(self):
+        if self.type in (ABSOLUTE, PERCENT):
+            errors = {}
+            check = ("act_high","act_low","tol_high","tol_low",)
+            for c in check:
+                if getattr(self,c) is None:
+                    errors[c] = ["You can not leave this field blank for this test type"]
+
+            if errors:
+                raise ValidationError(errors)
+    #----------------------------------------------------------------------
+    def clean_fields(self,exclude=None):
+        """extra validation for Tests"""
+        super(Tolerance,self).clean_fields(exclude)
+        self.clean_choices()
+        self.clean_tols()
+    #---------------------------------------------------------------------------
+    def tolerances_for_value(self,value):
+        """return dict containing tolerances for input value"""
+
+        tols = {"act_high":None,"act_low":None,"tol_low":None,"tol_high":None}
+        attrs = tols.keys()
+
+        if value is None:
+            return tols
+        if self.type == ABSOLUTE:
+            for attr in attrs:
+                tols[attr] = value + getattr(self,attr)
+        elif self.type == PERCENT:
+            for attr in attrs:
+                tols[attr] = value*(1.+getattr(self,attr)/100.)
+        return tols
+
+    #---------------------------------------------------------------------------
     def __unicode__(self):
         """more helpful interactive display name"""
         vals = (self.name,self.act_low,self.tol_low,self.tol_high,self.act_high)
         if self.type == ABSOLUTE:
-            return "%s(%g, %g, %g, %g)" % vals
-        return "%s(%.1f%%, %.1f%%, %.1f%%, %.1f%%)" % vals
+            return "%s(%s, %s, %s, %s)" % vals
+        elif self.type == PERCENT:
+            return "%s(%.1f%%, %.1f%%, %.1f%%, %.1f%%)" % vals
+        elif self.type == MULTIPLE_CHOICE:
+            return "%s(Multiple Choices)" % self.name
 
 
 #============================================================================
@@ -300,7 +383,7 @@ class Test(models.Model):
         help_text=_("Indicate if this test is a %s" % (','.join(x[1].title() for x in TEST_TYPE_CHOICES)))
     )
 
-    choices = models.CharField(max_length=2048,help_text=_("Comma seperated list of choices for multipel choice test types"),null=True,blank=True)
+    choices = models.CharField(max_length=2048,help_text=_("Comma seperated list of choices for multiple choice test types"),null=True,blank=True)
     constant_value = models.FloatField(help_text=_("Only required for constant value types"), null=True, blank=True)
 
     calculation_procedure = models.TextField(null=True, blank=True,help_text=_(
@@ -313,29 +396,15 @@ class Test(models.Model):
     modified = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(User, editable=False, related_name="test_modifier")
 
-    #----------------------------------------------------------------------
-    def set_references(self):
-        """allow user to go to references in admin interface"""
-        return "<i>Disabled</i>"
-        url = "%s?"%urlresolvers.reverse("admin:qa_unittestinfo_changelist")
-        test_filter = "test__id__exact=%d" % self.pk
-
-        unit_filter = "unit__id__exact=%d"
-        info_set = self.unittestinfo_set.all()
-        urls = [(info.unit.name, url+test_filter+"&"+ unit_filter%info.unit.pk) for info in info_set]
-        link = '<a href="%s">%s</a>'
-        all_link = link%(url+test_filter,"All Units")
-        links = [link % (url,name) for name,url in urls]
-
-        return "%s (%s)" %(all_link, ", ".join(links))
-    set_references.allow_tags = True
-    set_references.short_description = "Set references and tolerances for this test"
 
     #----------------------------------------------------------------------
     def is_boolean(self):
         """Return whether or not this is a boolean test"""
         return self.type == BOOLEAN
-
+    #----------------------------------------------------------------------
+    def is_mult_choice(self):
+        """return True if this is a multiple choice test else, false"""
+        return self.type == MULTIPLE_CHOICE
     #---------------------------------------------------------------------------
     def check_test_type(self,field, test_type,display):
         #"""check that correct test type is set"""
@@ -411,6 +480,11 @@ class Test(models.Model):
         if self.type == MULTIPLE_CHOICE:
             cs = self.choices.split(",")
             return zip(range(len(cs)),cs)
+    #---------------------------------------------------------------------------
+    def get_choice_value(self,choice):
+        """return string representing integer choice value"""
+        if self.type == MULTIPLE_CHOICE:
+            return self.choices.split(",")[int(choice)]
 
     #----------------------------------------------------------------------
     def __unicode__(self):
@@ -444,8 +518,6 @@ class UnitTestInfo(models.Model):
     unit = models.ForeignKey(Unit)
     test = models.ForeignKey(Test)
 
-    frequency = models.ForeignKey(Frequency, help_text=_("Frequency with which this test is to be performed"))
-
     reference = models.ForeignKey(Reference,verbose_name=_("Current Reference"),null=True, blank=True)
     tolerance = models.ForeignKey(Tolerance,null=True, blank=True)
 
@@ -457,7 +529,7 @@ class UnitTestInfo(models.Model):
     #============================================================================
     class Meta:
         verbose_name_plural = "Set References & Tolerances"
-        unique_together = ["test","unit", "frequency"]
+        unique_together = ["test","unit"]
 
     #----------------------------------------------------------------------
     def clean(self):
@@ -479,34 +551,25 @@ class UnitTestInfo(models.Model):
                 msg = _("Please leave tolerance blank for boolean tests")
                 raise ValidationError(msg)
 
-    #----------------------------------------------------------------------
-    def due_date(self):
-        """return the due date for this unit test list assignment"""
-        if hasattr(self,"last_instance") and self.last_instance is not None:
-            return utils.due_date(self.last_instance.work_completed,self.frequency)
 
     #----------------------------------------------------------------------
-    def history(self,number=5):
+    def get_history(self,number=5):
         """return last 'number' of instances for this test performed on input unit
         list is ordered in ascending dates
         """
-        hist = TestInstance.objects.filter(unit=self.unit,test=self.test).order_by("-work_completed","-pk")
-        hist = hist.select_related("status")
+        #hist = TestInstance.objects.filter(unit_test_info=self)
+        hist = self.testinstance_set.select_related("status").all().order_by("-work_completed","-pk")
+        #hist = hist.select_related("status")
         return [(x.work_completed,x.value, x.pass_fail, x.status) for x in reversed(hist[:number])]
     #----------------------------------------------------------------------
     def __unicode__(self):
         return "UnitTestInfo(%s)"%self.pk
-        try:
-            return "UnitTestInfo(test=%s,unit=%s)"%(self.test.name,self.unit.name)
-        except:
-            return "UnitTestInfo(Empty)"
-
 #============================================================================
 class TestListMembership(models.Model):
     """Keep track of ordering for tests within a test list"""
     test_list = models.ForeignKey("TestList")
     test = models.ForeignKey(Test)
-    order = models.IntegerField()
+    order = models.IntegerField(db_index=True)
 
     class Meta:
         ordering = ("order",)
@@ -583,32 +646,6 @@ class TestList(TestCollectionInterface):
         for sublist in self.sublists.all():
             tests.extend(sublist.ordered_tests())
         return tests
-    #----------------------------------------------------------------------
-    def set_references(self):
-        """allow user to go to references in admin interface"""
-
-        url = "%s?prefilter=true&"%urlresolvers.reverse("admin:qa_unittestinfo_changelist")
-        all_tests = self.all_tests().values_list("pk",flat=True)
-        test_filter = "&".join(["test__id__exact=%d" % pk for pk in all_tests])
-
-        unit_filter = "unit__id__exact=%d"
-
-        unit_assignments = UnitTestCollection.objects.test_lists().filter(
-            object_id=self.pk
-        ).select_related(
-            "unit"
-        )
-
-        urls = [(info.unit.name, url+test_filter+"&"+ unit_filter%info.unit.pk) for info in unit_assignments]
-        link = '<a href="%s">%s</a>'
-        links = [link % (url,name) for name,url in urls]
-
-        if links:
-            return ", ".join(links)
-        else:
-            return "<em>Currently not assigned to any units</em>"
-    set_references.allow_tags = True
-    set_references.short_description = "Set references and tolerances for this list"
 
     #----------------------------------------------------------------------
     def __len__(self):
@@ -647,6 +684,8 @@ class UnitTestCollection(models.Model):
     frequency = models.ForeignKey(Frequency, help_text=_("Frequency with which this test list is to be performed"))
 
     assigned_to = models.ForeignKey(Group,help_text = _("QA group that this test list should nominally be performed by"),null=True)
+    visible_to = models.ManyToManyField(Group,help_text=_("Select groups who will be able to see this test collection on this unit"),related_name="test_collection_visibility",default=Group.objects.all)
+
     active = models.BooleanField(help_text=_("Uncheck to disable this test on this unit"), default=True,db_index=True)
 
     limit = Q(app_label = 'qa', model = 'testlist') | Q(app_label = 'qa', model = 'testlistcycle')
@@ -656,6 +695,8 @@ class UnitTestCollection(models.Model):
     objects = UnitTestListManager()
 
     last_instance = models.ForeignKey("TestListInstance",null=True,editable=False)
+
+
 
     class Meta:
         unique_together = ("unit", "frequency", "content_type","object_id",)
@@ -690,31 +731,25 @@ class UnitTestCollection(models.Model):
     #----------------------------------------------------------------------
     def unreviewed_instances(self):
         """return a query set of all TestListInstances for this object that have not been fully reviewed"""
-        return TestListInstance.objects.awaiting_review().filter(
-            unit = self.unit,
-            test_list__in = self.tests_object.all_lists()
-        ).select_related("test_list")
+        return self.testlistinstance_set.filter(testinstance__status__requires_review=True).distinct().select_related("test_list")
     #----------------------------------------------------------------------
     def unreviewed_test_instances(self):
         """return query set of all TestInstances for this object"""
         return TestInstance.objects.complete().filter(
-            unit = self.unit,
-            test__in = self.tests_object.all_tests()
+            unit_test_info__unit = self.unit,
+            unit_test_info__test__in = self.tests_object.all_tests()
         )
 
     #----------------------------------------------------------------------
     def history(self,number=10):
         """returns the last num_instances performed for this object"""
-        return reversed(TestListInstance.objects.complete().filter(
-            unit=self.unit,
-            test_list__in = self.tests_object.all_lists()
-        ).order_by("-work_completed","-pk")[:number])
+        return reversed(self.testlistinstance_set.all().order_by("-work_completed","-pk")[:number])
 
     #----------------------------------------------------------------------
     def next_list(self):
         """return next list to be completed from tests_object"""
 
-        if not self.last_instance:
+        if not hasattr(self,"last_instance") or not self.last_instance:
             return self.tests_object.first()
 
         return self.tests_object.next_list(self.last_instance.test_list)
@@ -758,12 +793,11 @@ class UnitTestCollection(models.Model):
 #  Case 3) can be handled by the m2m_changed signal of TestList.sublists.through
 
 #----------------------------------------------------------------------
-def get_or_create_unit_test_info(unit,test,frequency,assigned_to=None, active=True):
+def get_or_create_unit_test_info(unit,test,assigned_to=None, active=True):
 
     uti, created = UnitTestInfo.objects.get_or_create(
         unit = unit,
         test = test,
-        frequency =frequency
     )
 
     if created:
@@ -808,7 +842,6 @@ def update_unit_test_assignments(collection):
                 get_or_create_unit_test_info(
                     unit=utla.unit,
                     test=test,
-                    frequency=utla.frequency,
                     assigned_to = utla.assigned_to,
                     active = utla.active
                 )
@@ -860,16 +893,13 @@ class TestInstanceManager(models.Manager):
     #----------------------------------------------------------------------
     def complete(self):
         return models.Manager.get_query_set(self).filter(in_progress=False)
-    #----------------------------------------------------------------------
-    def valid(self):
-        return self.complete().filter(status__valid=True)
 
 #============================================================================
 class TestInstance(models.Model):
     """Measured instance of a :model:`Test`"""
 
     #review status
-    status = models.ForeignKey(TestInstanceStatus,editable=False)
+    status = models.ForeignKey(TestInstanceStatus)
     review_date = models.DateTimeField(null=True, blank=True,editable=False)
     reviewed_by = models.ForeignKey(User,null=True, blank=True,editable=False)
 
@@ -883,18 +913,16 @@ class TestInstance(models.Model):
 
 
     #reference used
-    reference = models.ForeignKey(Reference,null=True, blank=True)
-    tolerance = models.ForeignKey(Tolerance, null=True, blank=True)
+    reference = models.ForeignKey(Reference,null=True, blank=True,editable=False)
+    tolerance = models.ForeignKey(Tolerance, null=True, blank=True,editable=False)
 
-    unit = models.ForeignKey(Unit,editable=False)
+    unit_test_info = models.ForeignKey(UnitTestInfo,editable=False)
 
     #keep track if this test was performed as part of a test list
     test_list_instance = models.ForeignKey("TestListInstance",editable=False, null=True, blank=True)
 
-    #which test is being performed
-    test = models.ForeignKey(Test)
 
-    work_started = models.DateTimeField(auto_now_add=True,editable=False)
+    work_started = models.DateTimeField(editable=False,db_index=True)
 
     #when was the work actually performed
     work_completed = models.DateTimeField(default=timezone.now,
@@ -917,7 +945,6 @@ class TestInstance(models.Model):
     #----------------------------------------------------------------------
     def save(self, *args, **kwargs):
         """set pass fail status on save"""
-
         self.calculate_pass_fail()
         super(TestInstance,self).save(*args,**kwargs)
     #----------------------------------------------------------------------
@@ -928,43 +955,66 @@ class TestInstance(models.Model):
     def percent_difference(self):
         """return percent difference between instance and reference"""
         if (self.reference.value < EPSILON):
-            raise ValueError("Tried to calculate percent diff with a zero reference value")
+            raise ZeroDivisionError("Tried to calculate percent diff with a zero reference value")
         return 100.*(self.value-self.reference.value)/float(self.reference.value)
+
+    #---------------------------------------------------------------------------
+    def bool_pass_fail(self):
+        diff = abs(self.reference.value - self.value)
+        if diff > EPSILON:
+            self.pass_fail = ACTION
+        else:
+            self.pass_fail = OK
+    #---------------------------------------------------------------------------
+    def mult_choice_pass_fail(self):
+        choice = self.unit_test_info.test.get_choice_value(int(self.value)).lower()
+        if choice in [x.lower() for x in self.tolerance.pass_choices()]:
+            self.pass_fail = OK
+        elif choice in [x.lower() for x in self.tolerance.tol_choices()]:
+            self.pass_fail = TOLERANCE
+        else:
+            self.pass_fail = ACTION
+
+    #---------------------------------------------------------------------------
+    def float_pass_fail(self):
+        if self.tolerance.type == ABSOLUTE:
+            diff = self.difference()
+        else:
+            diff = self.percent_difference()
+
+        if self.tolerance.tol_low <= diff <= self.tolerance.tol_high:
+            self.pass_fail = OK
+        elif self.tolerance.act_low <= diff <= self.tolerance.tol_low or self.tolerance.tol_high <= diff <= self.tolerance.act_high:
+            self.pass_fail = TOLERANCE
+        else:
+            self.pass_fail = ACTION
 
     #----------------------------------------------------------------------
     def calculate_pass_fail(self):
         """set pass/fail status of the current value"""
 
-        if self.skipped:
-
+        if self.skipped or (self.value is None and self.in_progress):
             self.pass_fail = NOT_DONE
-
-        elif self.test.type in  (BOOLEAN, MULTIPLE_CHOICE) and self.reference:
-
-            diff = abs(self.reference.value - self.value)
-
-            if diff > EPSILON:
-                self.pass_fail = ACTION
-            else:
-                self.pass_fail = OK
-
+        elif (self.unit_test_info.test.type ==  BOOLEAN) and self.reference:
+            self.bool_pass_fail()
+        elif self.unit_test_info.test.type ==  MULTIPLE_CHOICE and self.tolerance:
+            self.mult_choice_pass_fail()
         elif self.reference and self.tolerance:
-
-            if self.tolerance.type == ABSOLUTE:
-                diff = self.difference()
-            else:
-                diff = self.percent_difference()
-
-            if self.tolerance.tol_low <= diff <= self.tolerance.tol_high:
-                self.pass_fail = OK
-            elif self.tolerance.act_low <= diff <= self.tolerance.tol_low or self.tolerance.tol_high <= diff <= self.tolerance.act_high:
-                self.pass_fail = TOLERANCE
-            else:
-                self.pass_fail = ACTION
-
+            self.float_pass_fail()
         else:
             #no tolerance and/or reference set
             self.pass_fail = NO_TOL
+    #----------------------------------------------------------------------
+    def value_display(self):
+        if self.value is None:
+            return ""
+        test = self.unit_test_info.test
+        if test.type == BOOLEAN:
+            return "Yes" if int(self.value) == 1 else "No"
+        elif test.type == MULTIPLE_CHOICE:
+            return test.get_choice_value(self.value)
+        return self.value
+
     #----------------------------------------------------------------------
     def __unicode__(self):
         """return display representation of object"""
@@ -974,15 +1024,15 @@ class TestInstance(models.Model):
 @receiver(post_save,sender=TestInstance)
 def on_test_instance_saved(*args,**kwargs):
     test_instance = kwargs["instance"]
-    UnitTestInfo.objects.filter(test=test_instance.test,unit=test_instance.unit).update(
-        last_instance = test_instance
-    )
+    if not test_instance.in_progress:
+        test_instance.unit_test_info.last_instance = test_instance
+        test_instance.unit_test_info.save()
 
 #============================================================================
 class TestListInstanceManager(models.Manager):
 
     #----------------------------------------------------------------------
-    def awaiting_review(self):
+    def unreviewed(self):
         return self.complete().filter(testinstance__status__requires_review=True).distinct().order_by("work_completed")
     #----------------------------------------------------------------------
     def in_progress(self):
@@ -1001,13 +1051,15 @@ class TestListInstance(models.Model):
 
     """
 
-    test_list = models.ForeignKey(TestList, editable=False)
-    unit = models.ForeignKey(Unit,editable=False)
+    unit_test_collection = models.ForeignKey(UnitTestCollection,editable=False)
+    test_list = models.ForeignKey(TestList,editable=False)
 
-    work_started = models.DateTimeField(auto_now_add=True,editable=False)
-    work_completed = models.DateTimeField(default=timezone.now,db_index=True)
+    work_started = models.DateTimeField(db_index=True)
+    work_completed = models.DateTimeField(default=timezone.now,db_index=True,null=True)
 
-    in_progress = models.BooleanField(default=False, editable=False,db_index=True)
+    comment = models.TextField(help_text=_("Add a comment to this set of tests"), null=True, blank=True)
+
+    in_progress = models.BooleanField(help_text=_("Mark this session as still in progress so you can complete later (will not be submitted for review)"),default=False,db_index=True)
 
     #for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)
@@ -1031,6 +1083,10 @@ class TestListInstance(models.Model):
             return statuses
         return ", ".join(["%d %s" %(len(s),d) for _,d,s in statuses])
     #----------------------------------------------------------------------
+    def duration(self):
+        """return timedelta of time from start to completion"""
+        return self.work_completed-self.work_started
+    #----------------------------------------------------------------------
     def status(self,formatted=False):
         """return string with review status of this qa instance"""
         instances = list(self.testinstance_set.all())
@@ -1039,10 +1095,6 @@ class TestListInstance(models.Model):
         if not formatted:
             return statuses
         return ", ".join(["%d %s" %(len(s),test_status.name) for test_status,s in statuses])
-        #status = [(status,self.testinstance_set.filter(status=status)) for status in TestInstanceStatus.objects.all()]
-        #if not formatted:
-        #    return status
-        #return ", ".join(["%d %s" %(s.count(),test_status.name) for test_status,s in status])
     #----------------------------------------------------------------------
     def unreviewed_instances(self):
         return self.testinstance_set.filter(status__requires_review=True)
@@ -1063,6 +1115,9 @@ def on_test_list_instance_saved(*args,**kwargs):
 
     test_list_instance = kwargs["instance"]
 
+    if test_list_instance.in_progress:
+        return
+
     cycle_ids = TestListCycle.objects.filter(
         test_lists = test_list_instance.test_list
     ).values_list("pk",flat=True)
@@ -1076,7 +1131,7 @@ def on_test_list_instance_saved(*args,**kwargs):
         UnitTestCollection.objects.filter(
             content_type = ct,
             object_id__in = object_ids,
-            unit = test_list_instance.unit,
+            unit = test_list_instance.unit_test_collection.unit,
         ).update(last_instance=test_list_instance)
 
 #============================================================================

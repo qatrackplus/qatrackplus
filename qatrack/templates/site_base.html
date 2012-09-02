@@ -17,47 +17,56 @@
 
 {% block nav %}
     {% if user.is_authenticated %}
-        <ul class="nav">
+        <ul class="nav nav-pills">
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                    QA
+                    QA Test Lists
                     <b class="caret"></b>
                 </a>
                 <ul class="dropdown-menu">
-                    <li><a href="{% url all_lists %}" title="View all available QA Lists"><i class="icon-list"></i> All QA</a></li>
                     <li><a href="{% url choose_unit %}" title="Choose a Unit To Perform QA On"><i class="icon-list"></i> Choose Unit</a></li>
-					{% comment %}
+                    <li><a href="{% url all_lists %}" title="View all available QA Lists"><i class="icon-list"></i> All QA</a></li>
                     <li class="divider"></li>
-					<li class="nav-header">
-					    By Frequency
-				    </li>
-                    {% for freq in QA_FREQUENCIES %}
-                        <li><a href="{% url qa_by_frequency frequency=freq.0 %}"><i class="icon-list"></i> {{freq.1}}</a></li>
-                    {% endfor %}
-					{% endcomment %}
-                </ul>
+                    <li>
+                        <a title="Resume a QA session currently in progress" href="{% url in_progress %}">
+                            <i class="icon-play"></i>
+                            In Progress
+                        </a>
+                    </li>
+				</ul>
             </li>
             {% if user.is_staff %}
 
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                     Review
-                    <span title="There are currently {{AWAITING_REVIEW}} QA Sessions waiting to be reviewed" class="label {% if AWAITING_REVIEW == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
-                        <span class="total-unreviewed-count">{{AWAITING_REVIEW}}</span>
+                    <span title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                        <span class="total-unreviewed-count">{{UNREVIEWED}}</span>
                     </span>
                     <b class="caret"></b>
                 </a>
                 <ul class="dropdown-menu">
+					<li class="nav-header">QA Program Status</li>									
+					<li><a href="#" title="View a summary of the status of the QA program">View Overall QA Program Status</a></li>									
+					<li class="divider"></li>										
+					<li class="nav-header">Sessions</li>									
                     <li>
-                        <a href="{% url  review %}">
-                            <i class="icon-check"></i>
-                            Review QA
-                            <span title="There are currently {{AWAITING_REVIEW}} QA Sessions waiting to be reviewed" class="label {% if AWAITING_REVIEW == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
-                                <span class="total-unreviewed-count">{{AWAITING_REVIEW}}</span>
+                        <a href="{% url  unreviewed %}" title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed">
+                            <i class="icon-question-sign"></i>
+                            Unreviewed
+                            <span title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                                <span class="total-unreviewed-count">{{UNREVIEWED}}</span>
                             </span>
                         </a>
                     </li>
-                    <li><a href="{% url charts %}"><i class="icon-picture"></i>Trending</a></li>
+					<li class="divider"></li>					
+					<li class="nav-header">Test Lists</li>					
+					<li><a href="{% url review_all %}" title="View all test lists"><i class="icon-check"></i> View All Test Lists</a></li>
+                    <li><a href="{% url choose_review_unit %}" title="Choose a unit to review qa lists for."><i class="icon-list"></i> Choose Unit To Review</a></li>					
+                    <li><a href="{% url choose_review_frequency %}" title="Choose a frequency to review qa lists for."><i class="icon-list"></i> Choose Frequency To Review</a></li>					
+					<li class="divider"></li>					
+					<li class="nav-header">Charts</li>										
+                    <li><a href="{% url charts %}"><i class="icon-picture"></i> Charts</a></li>
                 </ul>
             </li>
             {% endif %}
@@ -73,7 +82,6 @@
 {% block extra_body %}
 	{% block end_body_script_base %}
 		<script src="{% static "data_tables/js/jquery.dataTables.min.js" %}"></script>
-		{# http://jquery-datatables-column-filter.googlecode.com/svn/trunk/index.html #}
 		<script src="{% static "data_tables/js/jquery.dataTables.columnFilter.js" %}"></script>
 		<script src="{% static "data_tables/js/DT_bootstrap.js" %}"></script>
 		<script src="{% static "data_tables/js/DT_sort.js" %}"></script>

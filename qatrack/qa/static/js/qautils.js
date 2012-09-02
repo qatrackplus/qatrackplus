@@ -42,6 +42,7 @@ var QAUtils = new function() {
 
     this.API_VERSION = "v1";
     this.API_URL = "/qa/api/"+this.API_VERSION+"/";
+	this.COMPOSITE_URL = "/qa/composite/";
 	this.CHARTS_URL = "/qa/charts/";
 	this.OPTION_DELIM = "=";
 	this.OPTION_SEP = "&";
@@ -57,6 +58,12 @@ var QAUtils = new function() {
 	this.FREQUENCIES = {};
 	this.STATUSES = {};
 
+
+	this.KC_ENTER = 13;
+	this.KC_LEFT = 37;
+	this.KC_UP = 38;
+	this.KC_RIGHT = 39;
+	this.KC_DOWN = 40;
 
     /***************************************************************/
     /* Tolerance functions
@@ -86,9 +93,11 @@ var QAUtils = new function() {
         var message;
 
 
-        if ((test_type === this.BOOLEAN) || (test_type === this.MULTIPLE_CHOICE)){
-            return this.test_multi(value, reference);
-        }
+        if (test_type === this.BOOLEAN){
+            return this.test_bool(value, reference);
+        }else if  (test_type === this.MULTIPLE_CHOICE){
+			return this.test_multi(value,tolerances)
+		}
 
 		if ( !this.is_number(reference) || !tolerances.type){
             return {
@@ -133,7 +142,7 @@ var QAUtils = new function() {
         return {status:status, gen_status:gen_status, diff:diff, message:message};
     };
 
-    this.test_multi = function(value,reference){
+    this.test_bool = function(value,reference){
 		if ( !this.is_number(reference)){
             return {
                 status:this.NO_TOL,
@@ -162,6 +171,36 @@ var QAUtils = new function() {
 
         return {status:status, gen_status:gen_status, diff:diff, message:message};
     };
+
+
+    this.test_multi = function(value,tolerance){
+		if ( tolerance.mc_pass_choices.length == 0){
+            return {
+                status:this.NO_TOL,
+                gen_status:this.NO_TOL,
+                diff:"",
+                message: this.NO_TOL_DISP
+            };
+		}
+
+        var status, gen_status,diff;
+	
+        var message;
+		
+		if (tolerance.mc_pass_choices.indexOf(value)>=0){
+			gen_status = this.WITHIN_TOL;
+			message = "PASS";
+		}else if (tolerance.mc_tol_choices.indexOf(value)>=0){
+			gen_status = this.TOLERANCE;
+			message = "TOL";
+		}else{
+			gen_status = this.ACTION;
+			message = "FAIL";
+		}
+
+        return {status:status, gen_status:gen_status, diff:diff, message:message};
+    };
+
 
     //convert a tolerance from relative to absolute values based on reference
     this.convert_tol_to_abs = function(ref_val,tol){
@@ -339,6 +378,26 @@ var QAUtils = new function() {
 
     //*************************************************************
     //General
+	
+
+	/*************************************************************************/
+	this.get_checked = function(container){
+		var vals =  [];
+		$(container+" input[type=checkbox]:checked").each(function(i,cb){
+			vals.push(cb.value);
+		});
+		return vals;
+	}
+	
+	this.get_selected_option_vals = function(select_id){
+		var selected = [];
+	
+		$(select_id).find(":selected").each(function(){
+			selected.push(parseInt($(this).val()));
+		});
+		return selected;
+	}
+	
     this.zip = function(a1,a2){
         var ii;
         var zipped = [];
@@ -347,7 +406,10 @@ var QAUtils = new function() {
         }
         return zipped;
     };
-
+	
+	this.non_empty = function(arr){
+		return	arr.filter(function(elem,idx){return elem !== "";});
+	};
     this.intersection = function(a1,a2){
         return $(a1).filter(function(idx,elem){return $.inArray(elem,a2)>=0;});
     };

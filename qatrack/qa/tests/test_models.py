@@ -75,10 +75,66 @@ class TestReference(TestCase):
             created_by=u, modified_by=u
         )
         self.assertRaises(ValidationError,r.clean_fields)
+    #----------------------------------------------------------------------
+    def test_display_value(self):
+        t = models.Reference(name="bool",type=models.BOOLEAN,value=1        )
+        f = models.Reference(name="bool",type=models.BOOLEAN,value=0        )
+        v = models.Reference(name="bool",type=models.ABSOLUTE,value=0        )
+        self.assertTrue(t.value_display() == "Yes")
+        self.assertTrue(f.value_display() == "No")
+        self.assertTrue(v.value_display() == 0)
 
 #====================================================================================
 class TestTolerance(TestCase):
-    pass
+    #----------------------------------------------------------------------
+    def test_pass_choices(self):
+        t = models.Tolerance(mc_pass_choices="a,b,c")
+        self.assertListEqual(["a","b","c"],t.pass_choices())
+    #----------------------------------------------------------------------
+    def test_tol_choices(self):
+        t = models.Tolerance(mc_tol_choices="a,b,c")
+        self.assertListEqual(["a","b","c"],t.tol_choices())
+
+    #----------------------------------------------------------------------
+    def test_no_pass_vals(self):
+        t = models.Tolerance(mc_pass_choices=" ",type=models.MULTIPLE_CHOICE)
+        self.assertRaises(ValidationError,t.clean_choices)
+    #----------------------------------------------------------------------
+    def test_act_set(self):
+        t = models.Tolerance(mc_pass_choices="",act_high=1,type=models.MULTIPLE_CHOICE)
+        self.assertRaises(ValidationError,t.clean_choices)
+    #----------------------------------------------------------------------
+    def test_pass_is_none(self):
+        t = models.Tolerance(type=models.MULTIPLE_CHOICE)
+        self.assertRaises(ValidationError,t.clean_choices)
+    #----------------------------------------------------------------------
+    def test_with_tol_choices(self):
+        t = models.Tolerance(mc_pass_choices="a",mc_tol_choices=" ",type=models.MULTIPLE_CHOICE)
+        t.clean_choices()
+
+    #----------------------------------------------------------------------
+    def test_ok_mc(self):
+        t = models.Tolerance(name="foo",mc_pass_choices="a",mc_tol_choices="b",type=models.MULTIPLE_CHOICE)
+        t.clean_fields()
+        self.assertListEqual(t.tol_choices(),["b"])
+        self.assertListEqual(t.pass_choices(),["a"])
+    #----------------------------------------------------------------------
+    def test_mc_repr(self):
+
+        t = models.Tolerance(name="foo",type=models.MULTIPLE_CHOICE)
+        self.assertIsInstance(t.__unicode__(),basestring)
+
+    #----------------------------------------------------------------------
+    def test_without_act(self):
+        t = models.Tolerance(name="foo",type=models.ABSOLUTE)
+        self.assertRaises(ValidationError,t.clean_tols)
+    #----------------------------------------------------------------------
+    def test_invalid_mc_choices(self):
+        t = models.Tolerance(name="foo",mc_pass_choices="a",type=models.ABSOLUTE)
+        self.assertRaises(ValidationError,t.clean_choices)
+        t = models.Tolerance(name="foo",mc_tol_choices="a",type=models.ABSOLUTE)
+        self.assertRaises(ValidationError,t.clean_choices)
+
 
 #====================================================================================
 class TestCategory(TestCase):
@@ -86,20 +142,6 @@ class TestCategory(TestCase):
 
 #====================================================================================
 class TestTest(TestCase):
-    #---------------------------------------------------------------------------
-    def test_set_references(self):
-        """make sure set references links in admin work"""
-        #disable for now
-        return
-        user = utils.create_user()
-        test = utils.create_test()
-
-        set_ref_link = test.set_references()
-        self.client.login(username="user",password="password")
-
-        for url in re.findall('href="(.*?)"',set_ref_link):
-            response = self.client.get(url)
-            self.assertEqual(response.status_code,200)
 
     #---------------------------------------------------------------------------
     def test_is_boolean(self):
@@ -253,6 +295,11 @@ result = foo + bar
     def test_clean_fields(self):
         test = utils.create_test()
         test.clean_fields()
+    #----------------------------------------------------------------------
+    def test_get_choice(self):
+        test = utils.create_test(test_type=models.MULTIPLE_CHOICE)
+        test.choices = "a,b,c"
+        self.assertEqual(test.get_choice_value(1),"b")
 
 #============================================================================
 class TestOnTestSaveSignal(TestCase):
@@ -288,19 +335,27 @@ class TestUnitTestInfo(TestCase):
         ref.value = 0
         uti.test.type = models.BOOLEAN
         self.assertRaises(ValidationError,uti.clean)
+    #----------------------------------------------------------------------
+    def test_mult_choice_with_tol(self):
+        tol = models.Tolerance(type=models.MULTIPLE_CHOICE,mc_pass_choices="a")
+        uti = utils.create_unit_test_info(tol=tol)
+        uti.test.type = models.BOOLEAN
+        self.assertRaises(ValidationError,uti.clean)
+
     #---------------------------------------------------------------------------
-    def test_new_list_due_date(self):
-        uti = utils.create_unit_test_info()
-        self.assertIsNone(uti.due_date())
+    #def test_new_list_due_date(self):
+        #uti = utils.create_unit_test_info()
+    #    self.assertIsNone(uti.due_date())
     #---------------------------------------------------------------------------
-    def test_due_date(self):
-        now = timezone.now()
-        frequency = utils.create_frequency(nom=7,due=7,overdue=9)
-        uti = utils.create_unit_test_info(frequency=frequency)
-        ti = utils.create_test_instance(test=uti.test,unit=uti.unit,work_completed=now)
-        uti = models.UnitTestInfo.objects.get(pk=uti.pk )
-        due = uti.due_date()
-        self.assertEqual(due,now+timezone.timedelta(days=7))
+    #def test_due_date(self):
+
+    #    now = timezone.now()
+    #    frequency = utils.create_frequency(nom=7,due=7,overdue=9)
+    #    uti = utils.create_unit_test_info(frequency=frequency)
+    #    ti = utils.create_test_instance(unit_test_info=uti,work_completed=now)
+    #    uti = models.UnitTestInfo.objects.get(pk=uti.pk )
+    #    due = uti.due_date()
+    #    self.assertEqual(due,now+timezone.timedelta(days=7))
     #---------------------------------------------------------------------------
     def test_history(self):
         td = timezone.timedelta
@@ -319,13 +374,13 @@ class TestUnitTestInfo(TestCase):
         ]
 
         for wc, val, _, _ in history:
-            utils.create_test_instance(test=uti.test,unit=uti.unit,status=status,work_completed=wc,value=val)
+            utils.create_test_instance(unit_test_info=uti,status=status,work_completed=wc,value=val)
 
         sorted_hist = list(sorted(history))
-        self.assertListEqual(sorted_hist,uti.history())
+        self.assertListEqual(sorted_hist,uti.get_history())
 
         #test returns correct number of results
-        self.assertListEqual(sorted_hist[-2:],uti.history(number=2))
+        self.assertListEqual(sorted_hist[-2:],uti.get_history(number=2))
 
     #----------------------------------------------------------------------
     def test_add_to_cycle(self):
@@ -415,29 +470,6 @@ class TestTestList(TestCase):
         tl1.sublists.add(tl2)
 
         self.assertListEqual(list(tl1.ordered_tests()),[t1,t2])
-    #---------------------------------------------------------------------------
-    def test_set_references_link(self):
-        #user = utils.create_user(is_staff=True,is_superuser=True,uname="user",pwd="password")
-        #disabled for now
-        return
-        user = utils.create_user()
-        test_list = utils.create_test_list()
-        test = utils.create_test()
-        utils.create_test_list_membership(test_list=test_list,test=test)
-
-        unassigned = "<em>Currently not assigned to any units</em>"
-        self.assertEqual(unassigned,test_list.set_references())
-
-        utl = utils.create_unit_test_collection(test_collection=test_list)
-        set_ref_link = utl.tests_object.set_references()
-
-        import re
-        urls = re.findall('href="(.*?)"',set_ref_link)
-        self.assertEqual(len(urls),1)
-        self.client.login(username="user",password="password")
-        for url in urls:
-            response = self.client.get(url)
-            self.assertEqual(response.status_code,200)
     #---------------------------------------------------------------------------
     def test_len(self):
         self.assertEqual(1,len(utils.create_test_list()))
@@ -540,8 +572,10 @@ class TestUnitTestCollection(TestCase):
 
         utc = utils.create_unit_test_collection(test_collection=test_list,frequency=daily)
 
-        tli = utils.create_test_list_instance(unit=utc.unit,test_list=test_list,work_completed=now)
-        ti = utils.create_test_instance(test=test,work_completed=now,unit=utc.unit)
+        tli = utils.create_test_list_instance(unit_test_collection=utc,work_completed=now)
+
+        uti = models.UnitTestInfo.objects.get(test=test,unit=utc.unit)
+        ti = utils.create_test_instance(unit_test_info=uti,work_completed=now)
 
         tli.testinstance_set.add(ti)
         tli.save()
@@ -550,9 +584,9 @@ class TestUnitTestCollection(TestCase):
 
         self.assertEqual(utc.due_date(),ti.work_completed+daily.due_delta())
 
-        tli2 = utils.create_test_list_instance(unit=utc.unit,test_list=test_list,work_completed=now+timezone.timedelta(days=3))
+        tli2 = utils.create_test_list_instance(unit_test_collection=utc,work_completed=now+timezone.timedelta(days=3))
 
-        ti2 = utils.create_test_instance(test=test,work_completed=now+timezone.timedelta(days=3), unit=utc.unit,status=ti.status)
+        ti2 = utils.create_test_instance(unit_test_info=uti,work_completed=now+timezone.timedelta(days=3),status=ti.status)
         tli2.testinstance_set.add(ti2)
         ti2.save()
         utc = models.UnitTestCollection.objects.get(pk=utc.pk)
@@ -571,16 +605,19 @@ class TestUnitTestCollection(TestCase):
 
         now = timezone.now()
         tl = utc.next_list()
-        ti = utils.create_test_instance(test=tl.all_tests()[0],unit=utc.unit,work_completed=now,status=status)
+        uti = models.UnitTestInfo.objects.get(test=tl.all_tests()[0],unit=utc.unit)
+        ti = utils.create_test_instance(unit_test_info=uti,work_completed=now,status=status)
 
-        tli = utils.create_test_list_instance(unit=utc.unit,test_list=tl,work_completed=now)
+        tli = utils.create_test_list_instance(unit_test_collection=utc,work_completed=now)
         tli.testinstance_set.add(ti)
         tli.save()
 
         utc = models.UnitTestCollection.objects.get(pk=utc.pk)
         self.assertEqual(utc.due_date(),now+daily.due_delta())
 
-        utils.create_test_instance(test=test_lists[1].tests.all()[0],unit=utc.unit,work_completed=now,status=status)
+        uti = models.UnitTestInfo.objects.get(test=test_lists[1].tests.all()[0],unit=utc.unit)
+
+        utils.create_test_instance(unit_test_info=uti,work_completed=now,status=status)
         self.assertEqual(utc.due_date(),now+daily.due_delta())
 
 
@@ -602,7 +639,7 @@ class TestUnitTestCollection(TestCase):
         )
         for delta,due_status in daily_statuses:
             wc = now+timezone.timedelta(days=delta)
-            tli = utils.create_test_list_instance(unit=utc.unit,test_list=utc.tests_object,work_completed=wc)
+            tli = utils.create_test_list_instance(unit_test_collection=utc,work_completed=wc)
 
             utc = models.UnitTestCollection.objects.get(pk=utc.pk)
             self.assertEqual(utc.due_status(),due_status)
@@ -624,7 +661,7 @@ class TestUnitTestCollection(TestCase):
         )
         for delta,due_status in weekly_statuses:
             wc = now+timezone.timedelta(days=delta)
-            tli = utils.create_test_list_instance(unit=utc.unit,test_list=utc.tests_object,work_completed=wc)
+            tli = utils.create_test_list_instance(unit_test_collection=utc,work_completed=wc)
             utc = models.UnitTestCollection.objects.get(pk=utc.pk)
             self.assertEqual(utc.due_status(),due_status)
     #----------------------------------------------------------------------
@@ -632,11 +669,13 @@ class TestUnitTestCollection(TestCase):
         now = timezone.now()
         utc = utils.create_unit_test_collection()
         self.assertFalse(utc.unreviewed_instances())
-        tli = utils.create_test_list_instance(unit=utc.unit,test_list=utc.tests_object,work_completed=now)
+        tli = utils.create_test_list_instance(unit_test_collection=utc,work_completed=now)
         test = utils.create_test(name="tester")
         utils.create_test_list_membership(tli.test_list,test)
 
-        ti = utils.create_test_instance(test=test,unit=utc.unit,work_completed=now)
+        uti = models.UnitTestInfo.objects.get(test=test,unit=utc.unit)
+
+        ti = utils.create_test_instance(unit_test_info=uti,work_completed=now)
         ti.test_list_instance = tli
         ti.save()
         utc = models.UnitTestCollection.objects.get(pk=utc.pk)
@@ -646,11 +685,12 @@ class TestUnitTestCollection(TestCase):
     def test_unreviewed_instances(self):
         utc = utils.create_unit_test_collection()
         self.assertFalse(utc.unreviewed_instances())
-        tli = utils.create_test_list_instance(unit=utc.unit,test_list=utc.tests_object)
+        tli = utils.create_test_list_instance(unit_test_collection=utc)
         test = utils.create_test(name="tester")
         utils.create_test_list_membership(tli.test_list,test)
-
-        ti = utils.create_test_instance(test=test,unit=utc.unit)
+        #uti = utils.create_unit_test_info(test=test,unit=utc.unit,frequency=utc.frequency)
+        uti = models.UnitTestInfo.objects.get(test=test,unit=utc.unit)
+        ti = utils.create_test_instance(unit_test_info=uti)
         ti.test_list_instance = tli
         ti.save()
         self.assertEqual([tli],list(utc.unreviewed_instances()))
@@ -664,9 +704,10 @@ class TestUnitTestCollection(TestCase):
 
         self.assertIsNone(utc.last_instance)
 
-        tli = utils.create_test_list_instance(unit=utc.unit,test_list=utc.tests_object)
+        uti = models.UnitTestInfo.objects.get(test=test,unit=utc.unit)
+        tli = utils.create_test_list_instance(unit_test_collection=utc)
         utc = models.UnitTestCollection.objects.get(pk=utc.pk)
-        ti = utils.create_test_instance(test=test,unit=utc.unit)
+        ti = utils.create_test_instance(unit_test_info=uti)
         ti.test_list_instance = tli
         ti.save()
         self.assertEqual(tli,utc.last_instance)
@@ -680,8 +721,9 @@ class TestUnitTestCollection(TestCase):
 
         self.assertIsNone(utc.last_instance)
 
-        tli = utils.create_test_list_instance(unit=utc.unit,test_list=utc.tests_object)
-        ti = utils.create_test_instance(test=test,unit=utc.unit)
+        tli = utils.create_test_list_instance(unit_test_collection=utc)
+        uti = models.UnitTestInfo.objects.get(test=test,unit=utc.unit)
+        ti = utils.create_test_instance(unit_test_info=uti)
         ti.test_list_instance = tli
         ti.save()
         self.assertEqual([ti],list(utc.unreviewed_test_instances()))
@@ -700,7 +742,7 @@ class TestUnitTestCollection(TestCase):
         ]
 
         for wc in history:
-            tli = utils.create_test_list_instance(unit=utc.unit,test_list=utc.tests_object,work_completed=wc)
+            tli = utils.create_test_list_instance(unit_test_collection=utc,work_completed=wc)
 
         sorted_hist = list(sorted(history))
         dates = [x.work_completed for x in utc.history()]
@@ -716,7 +758,7 @@ class TestUnitTestCollection(TestCase):
 
         self.assertEqual(utc.next_list(),utc.tests_object)
 
-        tli = utils.create_test_list_instance(unit=utc.unit,test_list=utc.tests_object)
+        tli = utils.create_test_list_instance(unit_test_collection=utc)
         self.assertEqual(utc.next_list(),utc.tests_object)
 
 
@@ -732,14 +774,14 @@ class TestUnitTestCollection(TestCase):
         utc = utils.create_unit_test_collection(test_collection=cycle)
 
         self.assertEqual(utc.next_list(),test_lists[0])
-        tli = utils.create_test_list_instance(unit=utc.unit,test_list=test_lists[0])
+        tli = utils.create_test_list_instance(unit_test_collection=utc,test_list=test_lists[0])
 
         #need to regrab from db since since last_instance was updated in the db
         #by signal handler
         utc = models.UnitTestCollection.objects.get(pk=utc.pk)
         self.assertEqual(utc.next_list(),test_lists[1])
 
-        tli = utils.create_test_list_instance(unit=utc.unit,test_list=test_lists[1])
+        tli = utils.create_test_list_instance(unit_test_collection=utc,test_list=test_lists[1])
         utc = models.UnitTestCollection.objects.get(pk=utc.pk)
 
         self.assertEqual(utc.next_list(),test_lists[0])
@@ -841,15 +883,17 @@ class TestTestInstance(TestCase):
         ti.reference = ref
         self.assertAlmostEqual(10,ti.percent_difference())
         ref.value=0
-        self.assertRaises(ValueError,ti.percent_difference)
+        self.assertRaises(ZeroDivisionError,ti.percent_difference)
     #----------------------------------------------------------------------
     def test_bool_pass_fail(self):
         test = utils.create_test(test_type=models.BOOLEAN)
+        uti = models.UnitTestInfo(test=test)
+
         yes_ref = models.Reference(type = models.BOOLEAN,value = True,)
         no_ref = models.Reference(type = models.BOOLEAN,value = False,)
 
-        yes_instance = models.TestInstance(value=1,test=test)
-        no_instance = models.TestInstance(value=0,test=test)
+        yes_instance = models.TestInstance(value=1,unit_test_info=uti)
+        no_instance = models.TestInstance(value=0,unit_test_info=uti)
 
         ok_tests = (
             (yes_instance,yes_ref),
@@ -869,9 +913,34 @@ class TestTestInstance(TestCase):
             i.calculate_pass_fail()
             self.assertEqual(models.ACTION,i.pass_fail)
     #----------------------------------------------------------------------
+    def test_mult_pass_fail(self):
+        test = models.Test(type=models.MULTIPLE_CHOICE,choices="a,b,c,d,e")
+
+        t = models.Tolerance(type=models.MULTIPLE_CHOICE,mc_pass_choices="a,b",mc_tol_choices="c,d")
+        uti = models.UnitTestInfo(test=test,tolerance=t)
+
+        instance = models.TestInstance(unit_test_info=uti,tolerance=t)
+
+        for c in (0,1):
+            instance.value = c
+            instance.calculate_pass_fail()
+            self.assertEqual(instance.pass_fail,models.OK)
+
+        for c in (2,3):
+            instance.value = c
+            instance.calculate_pass_fail()
+            self.assertEqual(instance.pass_fail,models.TOLERANCE)
+
+        for c in (4,):
+            instance.value = c
+            instance.calculate_pass_fail()
+            self.assertEqual(instance.pass_fail,models.ACTION)
+
+    #----------------------------------------------------------------------
     def test_absolute_pass_fail(self):
         test = models.Test(type=models.SIMPLE)
-        ti = models.TestInstance(test=test)
+        uti = models.UnitTestInfo(test=test)
+        ti = models.TestInstance(unit_test_info=uti)
         ref = models.Reference(type=models.NUMERICAL,value=100.)
         ti.reference = ref
         tol = models.Tolerance(
@@ -904,7 +973,9 @@ class TestTestInstance(TestCase):
     #----------------------------------------------------------------------
     def test_percent_pass_fail(self):
         test = models.Test(type=models.SIMPLE)
-        ti = models.TestInstance(test=test)
+        uti = models.UnitTestInfo(test=test)
+        ti = models.TestInstance(unit_test_info=uti)
+
         ti.reference = models.Reference(type=models.NUMERICAL,value=100.)
         ti.tolerance = models.Tolerance(
             type=models.PERCENT,
@@ -947,6 +1018,38 @@ class TestTestInstance(TestCase):
 
         self.assertEqual(models.TestInstance.objects.in_progress()[0],ti)
 
+    #----------------------------------------------------------------------
+    def test_bool_display_value(self):
+        t = models.Test(type=models.BOOLEAN)
+        uti = models.UnitTestInfo(test=t)
+
+        ti = models.TestInstance(unit_test_info=uti,value=1)
+        self.assertEqual("Yes",ti.value_display())
+
+        ti = models.TestInstance(unit_test_info=uti,value=0)
+        self.assertEqual("No",ti.value_display())
+
+
+    #----------------------------------------------------------------------
+    def test_mc_display_value(self):
+        t = models.Test(type=models.MULTIPLE_CHOICE,choices="a,b,c")
+        uti = models.UnitTestInfo(test=t)
+
+        ti = models.TestInstance(unit_test_info=uti,value=0)
+        self.assertEqual("a",ti.value_display())
+        ti = models.TestInstance(unit_test_info=uti,value=1)
+        self.assertEqual("b",ti.value_display())
+        ti = models.TestInstance(unit_test_info=uti,value=2)
+        self.assertEqual("c",ti.value_display())
+
+    #----------------------------------------------------------------------
+    def test_reg_display_value(self):
+        t = models.Test(type=models.NUMERICAL)
+        uti = models.UnitTestInfo(test=t)
+
+        ti = models.TestInstance(unit_test_info=uti,value=0)
+        self.assertEqual(0,ti.value_display())
+
 
 #============================================================================
 class TestTestListInstance(TestCase):
@@ -967,12 +1070,16 @@ class TestTestListInstance(TestCase):
 
         utc = utils.create_unit_test_collection(test_collection=self.test_list)
 
-        self.test_list_instance = utils.create_test_list_instance(unit=utc.unit,test_list=self.test_list)
+        self.test_list_instance = utils.create_test_list_instance(unit_test_collection=utc)
 
         values = [None, None,96,97,100,100]
         self.statuses = [utils.create_status(name="status%d"%x,slug="status%d"%x) for x in range(len(values))]
+
+        uti = models.UnitTestInfo.objects.get(test=test,unit=utc.unit)
+
         for i,(v,test,status) in enumerate(zip(values,tests,self.statuses)):
-            ti = utils.create_test_instance(test=test,unit=utc.unit,value=v,status=status)
+
+            ti = utils.create_test_instance(unit_test_info=uti,value=v,status=status)
             ti.reference = ref
             ti.tolerance = tol
             ti.test_list_instance = self.test_list_instance

@@ -19,9 +19,6 @@
         </li>
         {% if user.is_staff %}
         <li>
-            <a title="View overall program status" href="{% url review %}">Review overall QA program status</a>
-        </li>
-        <li>
             <a title="View trends and control charts" href="{% url charts %}">View Trends &amp; Control Charts</a>
         </li>
         {% endif %}

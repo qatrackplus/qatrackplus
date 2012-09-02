@@ -75,7 +75,7 @@ INPUT_DATE_FORMATS = (
     "%d-%m-%y %H:%M", "%d/%m/%y %H:%M",
 )
 SIMPLE_DATE_FORMAT = "%d-%m-%Y"
-DATETIME_HELP = "Format DD-MM-YY hh:mm (hh:mm is 24h time e.g. 14:30)"
+DATETIME_HELP = "Format DD-MM-YY hh:mm (hh:mm is 24h time e.g. 31-05-12 14:30)"
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
@@ -145,7 +145,7 @@ INTERNAL_IPS = ('127.0.0.1',)
 
 #login required middleware settings
 LOGIN_EXEMPT_URLS = [r"^accounts/",]
-LOGIN_REDIRECT_URL = '/qa/units/'
+LOGIN_REDIRECT_URL = '/qa/unit/'
 LOGIN_URL = "/accounts/login/"
 ACCOUNT_ACTIVATION_DAYS = 7
 
@@ -203,6 +203,7 @@ INSTALLED_APPS = [
     'qatrack.theme_bootstrap',
     'qatrack.data_tables',
     'qatrack.notifications',
+    'qatrack.contacts',
 ]
 
 
@@ -295,9 +296,11 @@ LOGGING = {
     }
 }
 
+PAGINATE_DEFAULT=50
+
 #------------------------------------------------------------------------------
 #Testing settings
-#TEST_RUNNER = 'django_coverage.coverage_runner.CoverageRunner'
+TEST_RUNNER = 'django_coverage.coverage_runner.CoverageRunner'
 COVERAGE_ADDITIONAL_MODULES = ["qatrack.tests"]
 
 #------------------------------------------------------------------------------

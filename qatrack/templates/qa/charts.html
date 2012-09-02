@@ -1,0 +1,267 @@
+{% extends "site_base.html" %}
+
+{% load staticfiles %}
+
+{% block extra_style %}
+    <link href="{% static "css/qa.css" %}" rel="stylesheet">
+    <link href="{% static "datepicker/css/datepicker.css" %}" rel="stylesheet">
+    <link href="{% static "data_tables/css/DT_bootstrap.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block extra_script %}
+	{% comment %}
+    <script src="{% static "js/jquery.flot.min.js" %}"></script>
+	<script src="{% static "js/jquery.flot.image.js" %}"></script>
+    <script src="{% static "js/jquery.flot.resize.js" %}"></script>
+    <script src="{% static "js/jquery.flot.fillbetween.js" %}"></script>
+	{% endcomment %}
+	<script src="{% static "js/highstock/highstock.js" %}"></script>
+	<script src="{% static "js/highstock/highcharts-more.js" %}"></script>	
+    <script src="{% static "datepicker/js/bootstrap-datepicker.js" %}"></script>
+	<script>
+
+		var QACharts = {
+			data_url:"{{chart_data_url}}",
+			control_chart_url:"{{control_chart_url}}",
+			test_info:{{test_data|safe}}
+		};
+
+	</script>
+
+    <script src="{% static "js/charts.js" %}"></script>
+{% endblock %}
+
+{% block body %}
+
+<div class="row-fluid">
+	<div class="span12">
+		<h3 class="pull-left">Trending</h3>
+		<div id="instructions-container" class="alert alert-info pull-right">
+
+			<span id="toggle-instructions" class="pull-right hand-cursor">
+				<i class="icon-plus-sign"></i> Instructions
+			</span>
+			<div class="clearfix"></div>
+			<div id="instructions" class="clearfix">
+				<hr/>
+				<ol>
+					<li>Choose Test Lists From <strong>Test List Filters</strong> Box</li>
+					<li>Select Tests To Generate Plots for</li>
+					<li>Select Chart Type (Basic or Control Chart)</li>
+					<li>Click Generate Chart</li>
+				</ol>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="row-fluid">
+	<div class="span12">
+
+		<div class="row-fluid">
+			<div class="span4">
+
+				<div id="test-list-filters" class="control-container">
+					<div class="row-fluid">
+					
+						<div class="span7">
+							<h5>Test Lists To Display Tests For:</h5>
+
+							<div id="test-list-container">
+								{% for test_list in test_lists %}
+									<label class="checkbox" title="{{test_list.name}}" >
+										<input type="checkbox" id="test-list-{{test_list.pk}}" value="{{test_list.pk}}" title="{{test_list.description}}"  class="test-list"></input>
+										{{test_list.name}}
+									</label>
+								{% endfor %}
+							
+							</div>
+						</div>
+						<div class="span5">
+							<div id="frequency-container">
+								<h5>Frequency:</h5>
+								<select id="frequency" multiple="multiple" size="5" class="input-medium">
+								{% for frequency in frequencies %}
+									<option id="frequency-{{frequency.pk}}" value="{{frequency.pk}}" selected="selected" class="frequency frequency-{{frequency.pk}}">{{frequency.name}}</option>
+								{% endfor %}
+								</select>
+							</div>
+
+							<div id="category-container" class="">
+								<h5>Category:</h5>
+								<select id="category" multiple="multiple" size="5" class="input-medium">
+								{% for category in categories %}
+									<option id="category-{{category.pk}}" value="{{category.pk}}"  selected="selected" title="{{category.description}}" class="category category-{{category.pk}}" >{{category.name}}</option>
+								{% endfor %}
+								</select>
+							</div>
+						</div>
+
+						{% comment %}
+						<div id="unit-test-info-container" class="span3">
+						<div id="status-container" class="span4">
+							<select id="unit-test-info" multiple="multiple" class="input-small">
+							{% for uti in unit_test_infos %}
+								<option id="unit-test-info-{{uti.pk}}" title="{{uti.unit.name}} {{uti.test.name}}" class="unit-test-info test-{{uti.test.pk}} frequency-{{uti.frequency.pk}} category-{{uti.test.category.pk}}">{{uti.unit.name}}{{uti.test.name}}</option>
+							{% endfor %}
+							</select>
+						</div>
+						{% endcomment %}
+
+					</div>
+				</div>
+			</div>
+			<div class="span8">
+				<div id="data-filters" class="control-container">
+					<div class="row-fluid">
+
+						<div id="date-container" class="span6 form-inline">
+							<h5>Dates:</h5>
+							<div class="date input-prepend input-append" id="from-date-wrapper" data-date="{{ from_date|date:'d-m-Y'}}" data-date-format="dd-mm-yyyy">
+								{% spaceless %}
+								<span for="from-date" class="add-on date-label">From:</span>
+								<input type="text" id="from-date" class="date-only-input" value="{{ from_date|date:'d-m-Y'}}"></input><span class="add-on"><i class="icon-th"></i></span>
+								{% endspaceless %}
+							</div>
+
+							<div class="date input-prepend input-append" id="to-date-wrapper" data-date="{{ to_date|date:'d-m-Y'}}" data-date-format="dd-mm-yyyy">
+								{% spaceless %}
+								<span for="to-date" class="add-on date-label">To:</span>
+								<input type="text" id="to-date" class="date-only-input" value="{{ to_date|date:'d-m-Y'}}"></input><span class="add-on"><i class="icon-th"></i></span>
+								{% endspaceless %}
+							</div>
+						</div>
+						<div id="status-container" class="span3">
+							<label for="status">
+								<h5>Status:</h5>
+								<select id="status" multiple="multiple" class="input-medium">
+								{% for status in statuses %}
+									<option id="status-{{status.pk}}" value="{{status.pk}}" title="{{status.name}}" class="status status-{{status.pk}}" {% if status.export_by_default %}selected="selected"{% endif %}>{{status.name}}</option>
+								{% endfor %}
+								</select>
+							</label>
+						</div>
+						<div id="unit-container" class="span3">
+							<label for="unit">
+								<h5>Unit:</h5>
+								<select id="unit" multiple="multiple" class="input-medium">
+								{% for unit in units %}
+									<option id="unit-{{unit.pk}}" value="{{unit.pk}}" title="{{unit.name}}" class="unit unit-type-{{unit.type.pk}}" selected="selected"> {{unit.name}}</option>
+								{% endfor %}
+								</select>
+							</label>
+						</div>
+
+					</div>
+				</div>
+				<div class="row-fluid">
+					<div class="span8">
+
+						<div id="chart-options" class="control-container form-inline">
+							<div class="row-fluid">
+								<div class="span4">
+									<label class="control-label" for="chart-type">
+										Type:
+										<select id="chart-type" class="inline input-small">
+											<option value="basic">Basic</option>
+											{% if cc_available %}
+												<option value="control">Control Chart</option>
+											{% endif %}
+										</select>
+									</label>
+								</div>
+								<div id="display-options" class="span4">
+									<label class="control-label  basic-option" for="show-lines">
+										Show Lines:
+										<input type="checkbox" id="show-lines" checked="checked" />
+									</label>
+									<label class="control-label  basic-option" for="show-references">
+										Show References:
+										<input type="checkbox" id="show-references" checked="checked" />
+									</label>
+									<label class="control-label  basic-option" for="show-tolerances">
+										Show Tolerances:
+										<input type="checkbox" id="show-tolerances" checked="checked" />
+									</label>
+									<label class="control-label  basic-option" for="show-legend">
+										Show Legend:
+										<input type="checkbox" id="show-legend" />
+									</label>
+
+								</div>
+								<div class="span4">
+									{% if cc_available %}
+										<label title="Set the subgroup size (Control Chart Only)" class="control-label  control-chart-option" for="subgroup-size">
+											SG Size:
+											<input type="number" min="1" step="1" value ="1" id="subgroup-size"  class="input-mini"/>
+										</label>
+										<label title="Set the number of subgroups for the baseline (Control Chart Only)" class="control-label control-chart-option" for="n-baseline-subgroups">
+											# SG's:
+											<input type="number" min="2" step="1" value ="2" id="n-baseline-subgroups" class="input-mini" />
+										</label>
+										<label title="Include a gaussian fit to histogrammed data (slow) (Control Chart Only)" class="control-label  control-chart-option" for="include-fit">
+											Include Fit:
+											<input type="checkbox" id="include-fit"/>
+										</label>
+									{% else %}
+										<em>Control charts not available</em>
+									{% endif %}
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="span4">
+						<div class="control-container" id="chart-actions">
+							<button type="button" class="btn btn-primary" data-loading-text="Generating Chart..." id="gen-chart">Generate Chart</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+</div>
+
+<div class="row-fluid">
+	<div class="span3">
+		<div id="test-container" class="control-container">
+			<div id="test">
+	
+				{% for test in tests %}
+					<label class="checkbox" title="{{test.description}}" >
+						<input value="{{test.pk}}" type="checkbox" id="test-{{test.pk}}"  class="test category-{{test.category}} type-{{test.type}}"></input>
+						{{test.name}}
+					</label>
+				{% endfor %}
+	
+			</div>
+		</div>
+	</div>
+
+	<div class="span9">
+		<div id="chart-container" class="row-fluid">
+			<div id="chart"  class="span12"></div>
+		</div>
+		<div id="control-chart-container" class="row-fluid">
+			<div class="please-wait">Control Not Generated Yet</div>
+		</div>
+		<div class="row-fluid">
+			<div class="input-prepend">
+				<label class="control-label-small add-on">Link to this chart</label>
+				<input type="text" class="input-xxlarge" id="chart-url"/>
+			</div>
+		</div>
+	</div>
+
+</div>
+
+<div class="row-fluid">
+	<div class="span12">
+		<div id="data-table-wrapper"></div>
+	</div>
+</div>
+
+
+{% endblock %}
+
+
+

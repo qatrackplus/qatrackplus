@@ -55,8 +55,6 @@ class TestInfoForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(TestInfoForm, self).__init__(*args, **kwargs)
         self.fields['test_type'].widget.attrs['readonly'] = "readonly"
-        #self.fields['test_type'].widget.attrs['disabled'] = "disabled"
-
 
         if self.instance:
             tt = self.instance.test.type
@@ -65,12 +63,13 @@ class TestInfoForm(forms.ModelForm):
 
             if tt == models.BOOLEAN:
                 self.fields["reference_value"].widget = forms.Select(choices=[("","---"),(0,"No"),(1,"Yes")])
+                self.fields["tolerance"].widget = forms.HiddenInput()
 
             elif tt == models.MULTIPLE_CHOICE:
-                self.fields["reference_value"].widget = forms.Select(choices=[("","---")]+self.instance.test.get_choices(),)
+                self.fields["reference_value"].widget = forms.HiddenInput()
 
-            if self.instance.reference:
-                if tt in (models.BOOLEAN,models.MULTIPLE_CHOICE):
+            if tt != models.MULTIPLE_CHOICE and self.instance.reference:
+                if tt == models.BOOLEAN:
                     val = int(self.instance.reference.value)
                 else:
                     val = self.instance.reference.value
@@ -80,19 +79,23 @@ class TestInfoForm(forms.ModelForm):
     def clean(self):
         """make sure valid numbers are entered for boolean data"""
 
-        if "reference_value" not in self.cleaned_data:
-            return self.cleaned_data
+        if self.instance.test.type == models.MULTIPLE_CHOICE and self.cleaned_data["tolerance"]:
+            if self.cleaned_data["tolerance"].type != models.MULTIPLE_CHOICE:
+                raise forms.ValidationError(_("You can't use a non-multiple choice tolerance with a multiple choice test"))
+        else:
+            if "reference_value" not in self.cleaned_data:
+                return self.cleaned_data
 
-        ref_value = self.cleaned_data["reference_value"]
+            ref_value = self.cleaned_data["reference_value"]
 
-        tol =self.cleaned_data["tolerance"]
-        if tol is not None:
-            if ref_value == 0 and tol.type == models.PERCENT:
-                raise forms.ValidationError(_("Percentage based tolerances can not be used with reference value of zero (0)"))
+            tol =self.cleaned_data["tolerance"]
+            if tol is not None:
+                if ref_value == 0 and tol.type == models.PERCENT:
+                    raise forms.ValidationError(_("Percentage based tolerances can not be used with reference value of zero (0)"))
 
-        if self.instance.test.type in (models.BOOLEAN, models.MULTIPLE_CHOICE):
-            if self.cleaned_data["tolerance"] is not None:
-                raise forms.ValidationError(_("Please leave tolerance field blank for boolean and multiple choice test types"))
+            if self.instance.test.type == models.BOOLEAN:
+                if self.cleaned_data["tolerance"] is not None:
+                    raise forms.ValidationError(_("Please leave tolerance field blank for boolean and multiple choice test types"))
         return self.cleaned_data
 
 
@@ -112,7 +115,7 @@ class UnitTestInfoAdmin(admin.ModelAdmin):
         "reference_value",
     )
     list_display = ["test",test_type, "unit", "reference", "tolerance"]
-    list_filter = ["unit","test__category","frequency"]
+    list_filter = ["unit","test__category"]
     readonly_fields = ("reference","test", "unit",)
     search_fields = ("test__name","test__slug","unit__name","frequency__name",)
     #----------------------------------------------------------------------
@@ -134,26 +137,27 @@ class UnitTestInfoAdmin(admin.ModelAdmin):
     #----------------------------------------------------------------------
     def save_model(self, request, test_info, form, change):
         """create new reference when user updates value"""
-        if form.instance.test.type == models.BOOLEAN:
-            ref_type = models.BOOLEAN
-        elif form.instance.test.type == models.MULTIPLE_CHOICE:
-            ref_type = models.MULTIPLE_CHOICE
-        else:
-            ref_type = models.NUMERICAL
-        val = form["reference_value"].value()
-        if val not in ("", None):
-            if not(test_info.reference and test_info.reference.value == float(val)):
-                ref = models.Reference(
-                    value=val,
-                    type = ref_type,
-                    created_by = request.user,
-                    modified_by = request.user,
-                    name = "%s %s" % (test_info.unit.name,test_info.test.name)[:255]
-                )
-                ref.save()
-                test_info.reference = ref
-        else:
-            test_info.reference = None
+
+        if form.instance.test.type != models.MULTIPLE_CHOICE:
+
+            if form.instance.test.type == models.BOOLEAN:
+                ref_type = models.BOOLEAN
+            else:
+                ref_type = models.NUMERICAL
+            val = form["reference_value"].value()
+            if val not in ("", None):
+                if not(test_info.reference and test_info.reference.value == float(val)):
+                    ref = models.Reference(
+                        value=val,
+                        type = ref_type,
+                        created_by = request.user,
+                        modified_by = request.user,
+                        name = "%s %s" % (test_info.unit.name,test_info.test.name)[:255]
+                    )
+                    ref.save()
+                    test_info.reference = ref
+            else:
+                test_info.reference = None
 
         super(UnitTestInfoAdmin,self).save_model(request,test_info,form,change)
 
@@ -179,11 +183,11 @@ class TestListAdminForm(forms.ModelForm):
         return sublists
 
 #============================================================================
-class TestInlineFormset(forms.models.BaseInlineFormSet):
+class TestInlineFormSet(forms.models.BaseInlineFormSet):
     #----------------------------------------------------------------------
     def get_queryset(self):
         if not hasattr(self, '_queryset'):
-            qs = super(TestInlineFormset, self).get_queryset().select_related(
+            qs = super(TestInlineFormSet, self).get_queryset().select_related(
                 "test"
             )
             self._queryset = qs
@@ -191,7 +195,7 @@ class TestInlineFormset(forms.models.BaseInlineFormSet):
     #----------------------------------------------------------------------
     def clean(self):
         """Make sure there are no duplicated slugs in a TestList"""
-        super(TestInlineFormset,self).clean()
+        super(TestInlineFormSet,self).clean()
 
         if not hasattr(self,"cleaned_data"):
             #something else went wrong already
@@ -219,7 +223,7 @@ def macro_name(obj):
 class TestListMembershipInline(SalmonellaMixin,admin.TabularInline):
     """"""
     model = models.TestListMembership
-    formset = TestInlineFormset
+    formset = TestInlineFormSet
     extra = 5
     template = "admin/qa/testlistmembership/edit_inline/tabular.html"
     readonly_fields = (macro_name,)
@@ -251,7 +255,7 @@ class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
 
 #============================================================================
 class TestAdmin(SaveUserMixin,admin.ModelAdmin):
-    list_display = ["name","slug","category", "type", ]
+    list_display = ["name","slug","category", "type"]
     list_filter = ["category","type"]
     search_fields = ["name","slug","category__name"]
     save_as = True
@@ -279,7 +283,7 @@ assigned_to_name.short_description = "Assigned To"
 #============================================================================
 class UnitTestCollectionAdmin(admin.ModelAdmin):
     #readonly_fields = ("unit","frequency",)
-    #filter_horizontal = ("test_lists","cycles",)
+    filter_horizontal = ("visible_to",)
     list_display = ["test_objects_name", unit_name, freq_name,assigned_to_name]
     list_filter = ["unit__name", "frequency__name","assigned_to__name"]
     search_fields = ["unit__name","frequency__name","testlist__name","testlistcycle__name"]

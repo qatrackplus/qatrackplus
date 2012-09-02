@@ -1812,7 +1812,7 @@ legend + .control-group {
 }
 .btn-info:active,
 .btn-info.active {
-  background-color: #24748c \9;
+  background-color: #24748c;
 }
 .btn-inverse {
   background-color: #414141;

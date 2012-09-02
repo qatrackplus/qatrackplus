@@ -25,6 +25,8 @@ function initialize_qa(){
             tol_low:parseFloat($(this).find(".tol_low").val()),
             tol_high:parseFloat($(this).find(".tol_high").val()),
             act_high:parseFloat($(this).find(".act_high").val()),
+            mc_pass_choices:QAUtils.non_empty($(this).find(".mc_pass_choices").val().split(',')),
+            mc_tol_choices:QAUtils.non_empty($(this).find(".mc_tol_choices").val().split(',')),
             type:$(this).find(".qa-tolerance-type").val(),
             pk:$(this).find(".qa-tolerance-pk").val()
 
@@ -44,7 +46,7 @@ function initialize_qa(){
     //store ids and names for all composite tests
     $('.qa-testtype[value="composite"]').each(function(){
         var row = $(this).parents(".qa-valuerow");
-        var test_id = row.find('input[name$="-test"]').val();
+        var test_id = row.find('.qa-test-id').val();
         var name = row.find('.qa-contextname').val();
         composite_ids[name] = test_id;
     });
@@ -59,17 +61,17 @@ function calculate_composites(){
     }
 
     var data = {
-            qavalues:JSON.stringify(validation_data),
-            composite_ids:JSON.stringify(composite_ids)
-        };
+        qavalues:JSON.stringify(validation_data),
+        composite_ids:JSON.stringify(composite_ids)
+    };
 
-    QAUtils.call_api("/qa/composite/","POST",data,function(data){
-            if (data.success){
-                $.each(data.results,function(name,result){
-                    set_value_by_name(name,result.value);
-                });
-            }
-        });
+    QAUtils.call_api(QAUtils.COMPOSITE_URL,"POST",data,function(data){
+        if (data.success){
+            $.each(data.results,function(name,result){
+                set_value_by_name(name,result.value);
+            });
+        }
+    });
 }
 
 /***************************************************************/
@@ -94,11 +96,8 @@ function check_test_status(input_element){
     }
 
     //ensure numerical value and highlight input element appropriately
-    set_valid_input(input_element);
-    if (val === ""){
-        return;
-    }else if (val === null){
-        set_invalid_input(input_element);
+
+    if ((val === "") || (val === null)){
         return;
     }
 
@@ -119,6 +118,7 @@ function check_test_status(input_element){
     }else{
         qastatus.addClass("btn-info");
     }
+
 }
 
 /***************************************************************/
@@ -133,9 +133,9 @@ function get_value_for_row(input_row_element){
             return null;
         }
     }else if (test_type === QAUtils.MULTIPLE_CHOICE){
-        val = $(input_row_element).find(":selected").val();
+        val = $(input_row_element).find(":selected").text();
         if (val !== ""){
-            return parseFloat(val);
+            return val;
         }else{
             return null;
         }
@@ -166,19 +166,7 @@ function set_value_by_name(name, value){
     }
     input.val(value);
     check_test_status(input);
-}
-
-/***************************************************************/
-//mark an input box as having invalid input
-function set_invalid_input(input_element){
-    input_element.parents(".control-group").removeClass("success");
-    input_element.parents(".control-group").addClass("error");
-}
-/***************************************************************/
-//mark an input box as having valid input
-function set_valid_input(input_element){
-    input_element.parents(".control-group").removeClass("error");
-    input_element.parents(".control-group").addClass("success");
+    update_qa_status();
 }
 
 /***************************************************************/
@@ -195,6 +183,8 @@ function full_validation(){
     $(".qa-input").each(function(){
         check_test_status($(this));
     });
+
+    update_qa_status();
 
 }
 
@@ -266,13 +256,26 @@ function confirm_leave_page(){
     }
 }
 
-
-
+/****************************************************************/
+function check_skip_status(input){
+    var row = input.parents(".qa-valuerow");
+    var val = get_value_for_row(row);
+    if (val !== "") {
+        row.find(".qa-skip input").attr("checked",false);
+    }
+}
+/****************************************************************/
+function update_qa_status(){
+    if ($(".btn-danger").length >0){
+        $("#do-not-treat").show();
+    }else{
+        $("#do-not-treat").hide();
+    }
+}
 /****************************************************************/
 $(document).ready(function(){
     var that = $(this);
 
-    $(".qa-comment, .qa-procedure").hide();
 
     //show comment when clicked
     $(".qa-showcmt a").click(function(){
@@ -280,78 +283,113 @@ $(document).ready(function(){
       return false;
     });
 
+    //show comment when clicked
+    $("#toggle-gen-comment").click(function(){
+      $(".qa-tli-comment textarea").toggle(600);
+      return false;
+    });
+
+    //toggle contacts
+    $("#toggle-contacts").click(function(){
+        $("#contacts").toggle();
+
+        var visible = $("#contacts").is(":visible");
+        var icon = "icon-plus-sign";
+        if (visible) {
+            icon = "icon-minus-sign";
+        }
+
+        $("#toggle-contacts i").removeClass("icon-plus-sign icon-minus-sign").addClass(icon);
+
+    });
+
     $(".qa-showproc a").click(function(){
       $(this).parent().parent().nextAll(".qa-procedure").first().toggle(600);
       return false;
     });
 
-    $.when(QAUtils.init()).done(function(){
-        initialize_qa();
 
+    initialize_qa();
 
-        var user_inputs=  $('.qa-input').not("[readonly=readonly]").not("[type=hidden]");
+    var user_inputs=  $('.qa-input').not("[readonly=readonly]").not("[type=hidden]");
 
-        //anytime an input changes run validation
-        user_inputs.change(function(){
-            //only allow numerical characters on input
+    //anytime an input changes run validation
+    user_inputs.change(function(){
 
-            this.value = this.value.replace(QAUtils.NUMERIC_WHITELIST_REGEX,'');
-            check_test_status($(this));
-            calculate_composites();
-        });
+        check_skip_status($(this));
 
-        //run filter routine anytime user alters the categories
-        $("#category_filter").change(filter_by_category);
+        //only allow numerical characters on input
+        this.value = this.value.replace(QAUtils.NUMERIC_WHITELIST_REGEX,'');
+        if (this.value[0] === ".") {
+            this.value = "0" + this.value;
+        }
+        check_test_status($(this));
+        calculate_composites();
 
-        //update the link for user to change cycles
-        $("#cycle-day").change(set_cycle_link);
-
-        //prevent form submission when user hits enter key
-        $(that).on("keypress","input, select", function(e) {
-
-            //rather than submitting form on enter, move to next value
-            if (e.keyCode == 13) {
-
-                var idx = user_inputs.index(this);
-
-                if (idx == user_inputs.length - 1) {
-                    user_inputs.first().focus();
-                } else {
-                    user_inputs[idx+1].focus();
-                }
-                return false;
-            }
-        });
-
-        //make sure user actually want's to go back
-        //this is here to help mitigate the risk that a user hits back or backspace key
-        //by accident and completely hoses all the information they've entered during
-        //a qa session
-        $(window).bind("beforeunload",confirm_leave_page);
-        $("#qa-form").submit(function(){
-            $(window).unbind("beforeunload")
-        });
-
-        $("#qa-form").preventDoubleSubmit();
-
-        //automatically unhide comment if test is being skipped
-        $(".qa-skip input").click(function(){
-            if ($(this).is(':checked')){
-                $(this).parent().parent().next().show(600);
-            }
-        });
-
-        $("#work-completed").datepicker();
-
-        //run a full validation on page load
-        full_validation();
-
-        var tabindex = 1;
-        user_inputs.each(function() {
-            $(this).attr("tabindex", tabindex);
-            tabindex++;
-        });
-        user_inputs.first().focus();
     });
+
+    //run filter routine anytime user alters the categories
+    $("#category_filter").change(filter_by_category);
+
+    //update the link for user to change cycles
+    $("#cycle-day").change(set_cycle_link);
+
+    //allow arrow key and enter navigation
+    $(that).on("keydown","input, select", function(e) {
+
+        var idx = user_inputs.index(this);
+
+        //rather than submitting form on enter, move to next value
+        if (e.which == QAUtils.KC_ENTER  || e.which == QAUtils.KC_DOWN || e.which == QAUtils.KC_RIGHT ) {
+
+            if (idx == user_inputs.length - 1) {
+                user_inputs.first().focus();
+            } else {
+                user_inputs[idx+1].focus();
+            }
+            return false;
+        }else if (e.which == QAUtils.KC_UP || e.which == QAUtils.KC_LEFT ){
+            if (idx == 0) {
+                user_inputs.last().focus();
+            } else {
+                user_inputs[idx-1].focus();
+            }
+            return false;
+        }
+    });
+
+    //make sure user actually want's to go back
+    //this is here to help mitigate the risk that a user hits back or backspace key
+    //by accident and completely hoses all the information they've entered during
+    //a qa session
+    $(window).bind("beforeunload",confirm_leave_page);
+    $("#qa-form").submit(function(){
+        $(window).unbind("beforeunload")
+    });
+
+    $("#qa-form").preventDoubleSubmit();
+
+    //automatically unhide comment if test is being skipped
+    $(".qa-skip input").click(function(){
+        if ($(this).is(':checked')){
+            $(this).parent().parent().next().show(600);
+        }else{
+           $(this).parent().parent().next().hide(600);
+        }
+    });
+
+    $("#work-completed").datepicker();
+    $("#work-started").datepicker();
+
+    //run a full validation on page load
+    full_validation();
+
+    var tabindex = 1;
+    user_inputs.each(function() {
+        $(this).attr("tabindex", tabindex);
+        tabindex++;
+    });
+    user_inputs.first().focus();
+
 });
 

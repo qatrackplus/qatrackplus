@@ -61,19 +61,23 @@ def create_test_list(name="test_list"):
     test_list.save()
     return test_list
 #----------------------------------------------------------------------
-def create_test_list_instance(unit=None,test_list=None,work_completed=None,created_by=None):
-    if unit is None: unit = create_unit()
-    if test_list is None: test_list = create_test_list()
+def create_test_list_instance(unit_test_collection=None,work_completed=None,created_by=None,test_list=None):
+    if unit_test_collection is None:
+        unit_test_collection = create_unit_test_collection()
+    if test_list is None:
+        test_list = unit_test_collection.next_list()
     if work_completed is None: work_completed = timezone.now()
+    work_started = work_completed - timezone.timedelta(seconds=60)
     if created_by is None: created_by = create_user()
 
 
     tli = models.TestListInstance(
-        test_list=test_list,
-        unit=unit,
+        unit_test_collection=unit_test_collection,
         created_by=created_by,
         modified_by=created_by,
-        work_completed=work_completed
+        work_completed=work_completed,
+        work_started = work_started,
+        test_list = test_list
     )
     tli.save()
     return tli
@@ -106,33 +110,37 @@ def create_test_list_membership(test_list,test,order=0):
     return tlm
 
 #----------------------------------------------------------------------
-def create_test_instance(test=None,unit=None,value=1., created_by=None,work_completed=None,status=None):
-    if unit is None: unit = create_unit()
-    if test is None: test = create_test()
+def create_test_instance(unit_test_info=None,value=1., created_by=None,work_completed=None,status=None):
+    if unit_test_info is None:
+        unit_test_info = create_unit_test_info()
+
+
     if work_completed is None: work_completed = timezone.now()
+    work_started = work_completed - timezone.timedelta(seconds=60)
+
     if created_by is None: created_by = create_user()
     if status is None: status = create_status()
 
     ti = models.TestInstance(
-        test=test,
-        unit=unit,
+        unit_test_info=unit_test_info,
         value=value,
         created_by=created_by,
         modified_by=created_by,
         status=status,
         work_completed=work_completed,
+        work_started=work_started,
     )
 
     ti.save()
     return ti
 #----------------------------------------------------------------------
 def create_modality(energy=6,particle=PHOTON):
-    m = Modality(type=particle,energy=energy)
+    m, _ = Modality.objects.get_or_create(type=particle,energy=energy)
     m.save()
     return m
 #----------------------------------------------------------------------
 def create_unit_type(name="utype",vendor="vendor",model="model"):
-    ut = UnitType(name=name,vendor=vendor, model=model)
+    ut,_ = UnitType.objects.get_or_create(name=name,vendor=vendor, model=model)
     ut.save()
     return ut
 
@@ -182,17 +190,15 @@ def create_frequency(name="freq",slug="freq",nom=1,due=1,overdue=1):
     f.save()
     return f
 #----------------------------------------------------------------------
-def create_unit_test_info(unit=None,test=None,frequency=None,assigned_to=None,ref=None,tol=None,active=True):
+def create_unit_test_info(unit=None,test=None,assigned_to=None,ref=None,tol=None,active=True):
     if unit is None: unit = create_unit()
     if test is None: test = create_test()
-    if frequency is None: frequency = create_frequency()
     if assigned_to is None: assigned_to = create_group()
 
 
     uti = models.UnitTestInfo(
         unit=unit,
         test=test,
-        frequency=frequency,
         reference=ref,
         tolerance=tol,
         assigned_to=assigned_to,
@@ -212,8 +218,11 @@ def create_unit_test_collection(unit=None,frequency=None,test_collection=None):
         unit = unit,
         object_id = test_collection.pk,
         content_type = ContentType.objects.get_for_model(test_collection),
-        frequency = frequency
+        frequency = frequency,
+
     )
 
+    utc.save()
+    utc.visible_to = Group.objects.all()
     utc.save()
     return utc
