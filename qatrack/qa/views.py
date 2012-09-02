@@ -68,7 +68,7 @@ class ChartView(TemplateView):
             "categories":{}
         }
         utc_freqs = models.UnitTestCollection.objects.prefetch_related("frequency").values("testlist","frequency","testlistcycle__test_lists")
-        
+
         for test_list in self.test_lists:
             tests = [x.pk for x in test_list.tests.all()]
             freqs = [x["frequency"] for x in utc_freqs if x["testlist"] == test_list.pk or x["testlistcycle__test_lists"]==test_list.pk]
@@ -126,10 +126,10 @@ class ChartView(TemplateView):
         context.update(c)
         return context
 
-    
+
 class BaseChartView(View):
     ISO_FORMAT = False
-    #----------------------------------------------------------------------    
+    #----------------------------------------------------------------------
     def get(self,request):
 
         data = self.get_plot_data()
@@ -137,7 +137,7 @@ class BaseChartView(View):
         resp = self.render_to_response({"data":data,"table":table})
 
         return resp
-    
+
     #----------------------------------------------------------------------
     def create_data_table(self):
 
@@ -146,8 +146,8 @@ class BaseChartView(View):
         headers = []
         max_len = 0
         cols = []
-        for uti in utis:                        
-            headers.append("%s %s" %(uti.unit.name,uti.test.name))            
+        for uti in utis:
+            headers.append("%s %s" %(uti.unit.name,uti.test.name))
             col = [(ti.work_completed,ti.value_display()) for ti in self.tis if ti.unit_test_info == uti]
             cols.append(col)
             max_len = max(len(col),max_len)
@@ -203,15 +203,15 @@ class BaseChartView(View):
             work_completed__gte = from_date,
             work_completed__lte = to_date,
         ).select_related(
-            "reference","tolerance","status","unit_test_info","unit_test_info__test","unit_test_info__unit","status"            
+            "reference","tolerance","status","unit_test_info","unit_test_info__test","unit_test_info__unit","status"
         ).order_by(
             "work_completed"
         )
-        
-        
+
+
         vals_dict = lambda : {"data":[],"values":[],"dates":[],"references":[],"act_low":[],"tol_low":[],"tol_high":[],"act_high":[]}
         data = collections.defaultdict(vals_dict)
-        
+
         for ti in self.tis:
             uti = ti.unit_test_info
             d = timezone.make_naive(ti.work_completed,timezone.get_current_timezone())
@@ -219,12 +219,12 @@ class BaseChartView(View):
             data[uti.pk]["data"].append([d,ti.value])
             data[uti.pk]["values"].append(ti.value)
 
- 
+
             if ti.reference is not None:
                 data[uti.pk]["references"].append(ti.reference.value)
             else:
                 data[uti.pk]["references"].append(None)
-        
+
             if ti.tolerance is not None and ti.reference is not None:
                 tols = ti.tolerance.tolerances_for_value(ti.reference.value)
             else:
@@ -279,7 +279,7 @@ class ControlChartImage(BaseChartView):
             for d,v in context["data"].values()[0]["data"]:
                 if None not in (d,v):
                     dates.append(d)
-                    data.append(v)                
+                    data.append(v)
 
         n_baseline_subgroups = self.get_number_from_request("n_baseline_subgroups",2,dtype=int)
 
@@ -447,6 +447,9 @@ class PerformQA(CreateView):
             "test__pk",
             "tolerance",
             "unit",
+        ).prefetch_related(
+            "reference",
+            "tolerance"
         )
 
         self.add_histories()

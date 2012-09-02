@@ -1006,8 +1006,11 @@ class TestInstance(models.Model):
             self.pass_fail = NO_TOL
     #----------------------------------------------------------------------
     def value_display(self):
-        if self.value is None:
-            return ""
+        if self.skipped:
+            return "Skipped"
+        elif self.value is None:
+            return "Not Done"
+
         test = self.unit_test_info.test
         if test.type == BOOLEAN:
             return "Yes" if int(self.value) == 1 else "No"

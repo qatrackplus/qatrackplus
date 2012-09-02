@@ -128,9 +128,9 @@
 							<tr>
 								<input type="hidden" name="testinstance_set-{{forloop.counter0}}-id" value="{{ti.pk}}" id="id_testinstance_set-{{forloop.counter0}}-id">
 								<td><strong>{{ti.unit_test_info.test.name}}</strong></td>
-								<td class="review-value"><div class="label pass-fail {{ti.pass_fail}}">{{ti.value_display}}</div></td>
+								<td class="review-value"><span class="label pass-fail {{ti.pass_fail}}">{{ti.value_display}}</span></td>
 								<td class="review-ref">
-								    {{ti.unit_test_info|reference_tolerance_span}}
+								    {% reference_tolerance_span ti.unit_test_info.test ti.reference ti.tolerance%}
 								</td>
 								<td>
 									{% if ti.comment %}
