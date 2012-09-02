@@ -166,6 +166,7 @@ function set_value_by_name(name, value){
     }
     input.val(value);
     check_test_status(input);
+    update_qa_status();
 }
 
 /***************************************************************/
@@ -324,7 +325,6 @@ $(document).ready(function(){
         }
         check_test_status($(this));
         calculate_composites();
-        update_qa_status();
 
     });
 
