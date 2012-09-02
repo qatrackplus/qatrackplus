@@ -24,6 +24,31 @@ def qa_value_form(form, include_admin=False,test_info=None):
 
 #----------------------------------------------------------------------
 @register.filter
+def reference_tolerance_span(unit_test_info):
+    ref = unit_test_info.reference
+    tol = unit_test_info.tolerance
+    test = unit_test_info.test 
+
+    if ref is None and not test.is_mult_choice():
+        return mark_safe("<span>No Ref</span>")
+
+    if test.is_boolean(): 
+        return mark_safe('<span title="Passing value = %s">%s</span>' %(ref.value_display(),ref.value_display()))
+
+    if not tol:
+        return	mark_safe('<span title="No Tolerance Set">No Tol</span>')
+
+    if tol.type == models.MULTIPLE_CHOICE:
+        return mark_safe('<span><abbr title="Passing Values: %s;  Tolerance Values: %s; All other choices are failing"><em>Mult. Choice</em></abbr></span>' %(tol.pass_choices,tol.tolerance_choices))
+
+
+    if tol.type == models.ABSOLUTE:
+        return mark_safe('<span> <abbr title="(AL, TL, TH, AH) = (%s, %s, %s, %s)">%s</abbr></span>'% (tol.act_low,tol.tol_low,tol.tol_high,tol.act_high, ref.value_display()))
+    elif tol.type == models.PERCENT:
+        return mark_safe('<span> <abbr title="(AL, TL, TH, AH) = (%.1f%%, %.1f%%, %.1f%%, %.1f%%)">%s</abbr></span>'% (tol.act_low,tol.tol_low,tol.tol_high,tol.act_high, ref.value_display()))
+
+#----------------------------------------------------------------------
+@register.filter
 def as_pass_fail_status(test_list_instance):
     template = get_template("qa/pass_fail_status.html")
     statuses_to_exclude = [models.NO_TOL]

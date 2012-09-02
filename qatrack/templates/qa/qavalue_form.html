@@ -56,24 +56,13 @@
         <td class="qa-showcmt"><a href="#" class="revealcomment" title="Add comment for this test"><i class="icon-comment"></i></a></td>
 		{% if include_admin %}
 			<td class="qa-reference">
-				{% if not ref and not test.is_mult_choice %}
-					<span>No Ref</span>
-				{% else %}
-					{% if tol.type == "percent" %}
-						<span title="{{tol.act_low}}% &le; {{tol.tol_low}}% &le; {{ref.value}} &le; {{tol.tol_high}}% &le; {{tol.act_high}}%">{{ref.display_value}}</span>
-					{% elif tol.type == "multchoice" %}
-						<span><abbr title="Passing Values: {{tol.mc_pass_choices}};  Tolerance Values: {{tol.mc_tol_choices}}; All other choices are failing"><em>Mult. Choice</em></abbr></span>
-					{% else %}
-						<span title="{{tol.act_low}} &le; {{tol.tol_low}} &le; {{ref.value}} &le; {{tol.tol_high}} &le; {{tol.act_high}}">{{ref.display_value}}</span>
-					{% endif %}
-				{% endif %}
+				{{uti.as_reference_tolerance_span}}
 			</td>
 			<td class="qa-history">
 				{% for work_completed,value,pass_fail,status in uti.history %}
 					{% if work_completed and pass_fail != "not_done" %}
 
 						<span class="label {{pass_fail}} history-value" title="{{work_completed}} - {{status}}">
-
 							{% if test.is_boolean or test.is_mult_choice %}
 								{{value}}
 							{% else %}
