@@ -46,9 +46,12 @@
                     <b class="caret"></b>
                 </a>
                 <ul class="dropdown-menu">
+					{% comment %}
 					<li class="nav-header">QA Program Status</li>
-					{#<li><a href="#" title="View a summary of the status of the QA program">View Overall QA Program Status</a></li>#}
+					<li><a href="#" title="View a summary of the status of the QA program">View Overall QA Program Status</a></li>#}
+
 					<li class="divider"></li>
+					{% endcomment %}
 					<li class="nav-header">Sessions</li>
                     <li>
                         <a href="{% url  unreviewed %}" title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed">
