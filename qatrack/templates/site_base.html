@@ -46,10 +46,10 @@
                     <b class="caret"></b>
                 </a>
                 <ul class="dropdown-menu">
-					<li class="nav-header">QA Program Status</li>									
-					<li><a href="#" title="View a summary of the status of the QA program">View Overall QA Program Status</a></li>									
-					<li class="divider"></li>										
-					<li class="nav-header">Sessions</li>									
+					<li class="nav-header">QA Program Status</li>
+					{#<li><a href="#" title="View a summary of the status of the QA program">View Overall QA Program Status</a></li>#}
+					<li class="divider"></li>
+					<li class="nav-header">Sessions</li>
                     <li>
                         <a href="{% url  unreviewed %}" title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed">
                             <i class="icon-question-sign"></i>
@@ -59,13 +59,13 @@
                             </span>
                         </a>
                     </li>
-					<li class="divider"></li>					
-					<li class="nav-header">Test Lists</li>					
+					<li class="divider"></li>
+					<li class="nav-header">Test Lists</li>
 					<li><a href="{% url review_all %}" title="View all test lists"><i class="icon-check"></i> View All Test Lists</a></li>
-                    <li><a href="{% url choose_review_unit %}" title="Choose a unit to review qa lists for."><i class="icon-list"></i> Choose Unit To Review</a></li>					
-                    <li><a href="{% url choose_review_frequency %}" title="Choose a frequency to review qa lists for."><i class="icon-list"></i> Choose Frequency To Review</a></li>					
-					<li class="divider"></li>					
-					<li class="nav-header">Charts</li>										
+                    <li><a href="{% url choose_review_unit %}" title="Choose a unit to review qa lists for."><i class="icon-list"></i> Choose Unit To Review</a></li>
+                    <li><a href="{% url choose_review_frequency %}" title="Choose a frequency to review qa lists for."><i class="icon-list"></i> Choose Frequency To Review</a></li>
+					<li class="divider"></li>
+					<li class="nav-header">Charts</li>
                     <li><a href="{% url charts %}"><i class="icon-picture"></i> Charts</a></li>
                 </ul>
             </li>
