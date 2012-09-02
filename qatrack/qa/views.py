@@ -447,9 +447,6 @@ class PerformQA(CreateView):
             "test__pk",
             "tolerance",
             "unit",
-        ).prefetch_related(
-            "reference",
-            "tolerance"
         )
 
         self.add_histories()
@@ -612,7 +609,9 @@ class BaseEditTestListInstance(UpdateView):
         tests = [x.unit_test_info.test for x in self.test_instances]
         histories = utils.tests_history(tests,self.object.unit_test_collection.unit,from_date)
         unit_test_infos = [f.instance.unit_test_info for f in forms]
-        _, self.history_dates = utils.add_history_to_utis(unit_test_infos,histories)
+        unit_test_infos, self.history_dates = utils.add_history_to_utis(unit_test_infos,histories)
+        for uti,f in zip(unit_test_infos,forms):
+            f.history = uti.history
 
 
     #----------------------------------------------------------------------
