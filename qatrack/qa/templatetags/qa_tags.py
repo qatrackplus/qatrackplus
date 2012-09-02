@@ -23,16 +23,13 @@ def qa_value_form(form, include_admin=False,test_info=None):
     return template.render(c)
 
 #----------------------------------------------------------------------
-@register.filter
-def reference_tolerance_span(unit_test_info):
-    ref = unit_test_info.reference
-    tol = unit_test_info.tolerance
-    test = unit_test_info.test 
+@register.simple_tag
+def reference_tolerance_span(test,ref,tol):
 
     if ref is None and not test.is_mult_choice():
         return mark_safe("<span>No Ref</span>")
 
-    if test.is_boolean(): 
+    if test.is_boolean():
         return mark_safe('<span title="Passing value = %s">%s</span>' %(ref.value_display(),ref.value_display()))
 
     if not tol:

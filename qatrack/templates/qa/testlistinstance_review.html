@@ -124,13 +124,13 @@
 
 						{% for ti_form in formset %}
 
-							{% with ti=ti_form.instance %}
+							{% with ti=ti_form.instance test=ti_form.instance.unit_test_info.test %}
 							<tr>
 								<input type="hidden" name="testinstance_set-{{forloop.counter0}}-id" value="{{ti.pk}}" id="id_testinstance_set-{{forloop.counter0}}-id">
 								<td><strong>{{ti.unit_test_info.test.name}}</strong></td>
-								<td class="review-value"><div class="label pass-fail {{ti.pass_fail}}">{{ti.value_display}}</div></td>
+								<td class="review-value"><span class="label pass-fail {{ti.pass_fail}}">{{ti.value_display}}</span></td>
 								<td class="review-ref">
-								    {{ti.unit_test_info|reference_tolerance_span}}
+								    {% reference_tolerance_span ti.unit_test_info.test ti.reference ti.tolerance%}
 								</td>
 								<td>
 									{% if ti.comment %}
@@ -140,9 +140,16 @@
 									{% endif %}
 								</td>
 								<td class="qa-history">
-									{% for d,v,pf,s in ti_form.history %}
-										{% if d and pf != "not_done"%}
-										<span class="label {{pf}} history-value" title="{{d}} - {{s}}">{{v|scientificformat}}</span>
+									{% for work_completed,value,pass_fail,status in ti_form.history %}
+										{% if work_completed and pass_fail != "not_done" %}
+
+											<span class="label {{pass_fail}} history-value" title="{{work_completed}} - {{status}}">
+												{% if test.is_boolean or test.is_mult_choice %}
+													{{value}}
+												{% else %}
+													{{value|scientificformat}}
+												{% endif %}
+											</span>
 										{% else %}
 											<span class="label history-value" title="N/A">N/A</span>
 										{% endif %}

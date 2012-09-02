@@ -56,7 +56,7 @@
         <td class="qa-showcmt"><a href="#" class="revealcomment" title="Add comment for this test"><i class="icon-comment"></i></a></td>
 		{% if include_admin %}
 			<td class="qa-reference">
-				{{uti.as_reference_tolerance_span}}
+				{% reference_tolerance_span test ref tol %}
 			</td>
 			<td class="qa-history">
 				{% for work_completed,value,pass_fail,status in uti.history %}
