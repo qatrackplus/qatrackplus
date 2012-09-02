@@ -315,7 +315,7 @@ class Tolerance(models.Model):
 
         tols = {"act_high":None,"act_low":None,"tol_low":None,"tol_high":None}
         attrs = tols.keys()
-        
+
         if value is None:
             return tols
         if self.type == ABSOLUTE:
@@ -325,7 +325,7 @@ class Tolerance(models.Model):
             for attr in attrs:
                 tols[attr] = value*(1.+getattr(self,attr)/100.)
         return tols
-            
+
     #---------------------------------------------------------------------------
     def __unicode__(self):
         """more helpful interactive display name"""
@@ -569,7 +569,7 @@ class TestListMembership(models.Model):
     """Keep track of ordering for tests within a test list"""
     test_list = models.ForeignKey("TestList")
     test = models.ForeignKey(Test)
-    order = models.IntegerField()
+    order = models.IntegerField(db_index=True)
 
     class Meta:
         ordering = ("order",)
@@ -922,7 +922,7 @@ class TestInstance(models.Model):
     test_list_instance = models.ForeignKey("TestListInstance",editable=False, null=True, blank=True)
 
 
-    work_started = models.DateTimeField(editable=False)
+    work_started = models.DateTimeField(editable=False,db_index=True)
 
     #when was the work actually performed
     work_completed = models.DateTimeField(default=timezone.now,
@@ -1054,7 +1054,7 @@ class TestListInstance(models.Model):
     unit_test_collection = models.ForeignKey(UnitTestCollection,editable=False)
     test_list = models.ForeignKey(TestList,editable=False)
 
-    work_started = models.DateTimeField()
+    work_started = models.DateTimeField(db_index=True)
     work_completed = models.DateTimeField(default=timezone.now,db_index=True,null=True)
 
     comment = models.TextField(help_text=_("Add a comment to this set of tests"), null=True, blank=True)
