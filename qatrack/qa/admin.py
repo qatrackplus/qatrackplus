@@ -117,7 +117,7 @@ class UnitTestInfoAdmin(admin.ModelAdmin):
     list_display = ["test",test_type, "unit", "reference", "tolerance"]
     list_filter = ["unit","test__category"]
     readonly_fields = ("reference","test", "unit",)
-    search_fields = ("test__name","test__slug","unit__name","frequency__name",)
+    search_fields = ("test__name","test__slug","unit__name",)
     #----------------------------------------------------------------------
     def queryset(self,*args,**kwargs):
         """"""
