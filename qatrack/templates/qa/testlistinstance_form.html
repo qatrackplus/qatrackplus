@@ -2,8 +2,8 @@
 {% load staticfiles %}
 
 {% block extra_style %}
-    <link href="{% static "css/qa.css" %}" rel="stylesheet">
-    <link href="{% static "datepicker/css/datepicker.css" %}" rel="stylesheet">
+    <link href="{% static "css/qa.css" %}?v={{VERSION}}" rel="stylesheet">
+    <link href="{% static "datepicker/css/datepicker.css" %}?v={{VERSION}}" rel="stylesheet">
 {% endblock %}
 
 
@@ -195,9 +195,9 @@
 {% endblock %}
 
 {% block end_body_extra_script %}
-    <script type="text/javascript" src="{% static "js/json2.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/json2.js" %}?v={{VERSION}}"></script>
 
-    <script src="{% static "js/qa.js" %}"></script>
-    <script src="{% static "datepicker/js/bootstrap-datepicker.js" %}"></script>
+    <script src="{% static "js/qa.js" %}?v={{VERSION}}"></script>
+    <script src="{% static "datepicker/js/bootstrap-datepicker.js" %}?v={{VERSION}}"></script>
 
 {% endblock %}

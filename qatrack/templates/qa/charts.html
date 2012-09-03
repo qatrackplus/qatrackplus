@@ -3,21 +3,21 @@
 {% load staticfiles %}
 
 {% block extra_style %}
-    <link href="{% static "css/qa.css" %}" rel="stylesheet">
-    <link href="{% static "datepicker/css/datepicker.css" %}" rel="stylesheet">
-    <link href="{% static "data_tables/css/DT_bootstrap.css" %}" rel="stylesheet">
+    <link href="{% static "css/qa.css" %}?v={{VERSION}}" rel="stylesheet">
+    <link href="{% static "datepicker/css/datepicker.css" %}?v={{VERSION}}" rel="stylesheet">
+    <link href="{% static "data_tables/css/DT_bootstrap.css" %}?v={{VERSION}}" rel="stylesheet">
 {% endblock %}
 
 {% block extra_script %}
 	{% comment %}
-    <script src="{% static "js/jquery.flot.min.js" %}"></script>
-	<script src="{% static "js/jquery.flot.image.js" %}"></script>
-    <script src="{% static "js/jquery.flot.resize.js" %}"></script>
-    <script src="{% static "js/jquery.flot.fillbetween.js" %}"></script>
+    <script src="{% static "js/jquery.flot.min.js" %}?v={{VERSION}}"></script>
+	<script src="{% static "js/jquery.flot.image.js" %}?v={{VERSION}}"></script>
+    <script src="{% static "js/jquery.flot.resize.js" %}?v={{VERSION}}"></script>
+    <script src="{% static "js/jquery.flot.fillbetween.js"%}?v={{VERSION}}"></script>
 	{% endcomment %}
-	<script src="{% static "js/highstock/highstock.js" %}"></script>
-	<script src="{% static "js/highstock/highcharts-more.js" %}"></script>	
-    <script src="{% static "datepicker/js/bootstrap-datepicker.js" %}"></script>
+	<script src="{% static "js/highstock/highstock.js" %}?v={{VERSION}}"></script>
+	<script src="{% static "js/highstock/highcharts-more.js" %}?v={{VERSION}}"></script>	
+    <script src="{% static "datepicker/js/bootstrap-datepicker.js" %}?v={{VERSION}}"></script>
 	<script>
 
 		var QACharts = {
@@ -28,7 +28,7 @@
 
 	</script>
 
-    <script src="{% static "js/charts.js" %}"></script>
+    <script src="{% static "js/charts.js" %}?v={{VERSION}}"></script>
 {% endblock %}
 
 {% block body %}

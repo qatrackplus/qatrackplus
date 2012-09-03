@@ -5,13 +5,13 @@
 {% load staticfiles %}
 
 {% block favicon %}
-	<link rel="shortcut icon" href="{% static "qatrack_theme/favicon.ico" %}">
-	<link rel="apple-touch-icon" href="{% static "qatrack_theme/apple-touch-icon.png" %}">
+	<link rel="shortcut icon" href="{% static "qatrack_theme/favicon.ico" %}?v={{VERSION}}">
+	<link rel="apple-touch-icon" href="{% static "qatrack_theme/apple-touch-icon.png" %}?v={{VERSION}}">
 {% endblock favicon %}
 
 {% block extra_style %}
-    <link href="{% static "css/qa.css" %}" rel="stylesheet">
-    <link href="{% static "data_tables/css/DT_bootstrap.css" %}" rel="stylesheet">
+    <link href="{% static "css/qa.css" %}?v={{VERSION}}" rel="stylesheet">
+    <link href="{% static "data_tables/css/DT_bootstrap.css" %}?v={{VERSION}}" rel="stylesheet">
 	{% block page_style %}{% endblock %}
 {% endblock %}
 
@@ -84,12 +84,12 @@
 
 {% block extra_body %}
 	{% block end_body_script_base %}
-		<script src="{% static "data_tables/js/jquery.dataTables.min.js" %}"></script>
-		<script src="{% static "data_tables/js/jquery.dataTables.columnFilter.js" %}"></script>
-		<script src="{% static "data_tables/js/DT_bootstrap.js" %}"></script>
-		<script src="{% static "data_tables/js/DT_sort.js" %}"></script>
-		<script src="{% static "js/qautils.js" %}"></script>
-		<script src="{% static "js/base.js" %}"></script>
+		<script src="{% static "data_tables/js/jquery.dataTables.min.js" %}?v={{VERSION}}"></script>
+		<script src="{% static "data_tables/js/jquery.dataTables.columnFilter.js" %}?v={{VERSION}}"></script>
+		<script src="{% static "data_tables/js/DT_bootstrap.js" %}?v={{VERSION}}"></script>
+		<script src="{% static "data_tables/js/DT_sort.js" %}?v={{VERSION}}"></script>
+		<script src="{% static "js/qautils.js" %}?v={{VERSION}}"></script>
+		<script src="{% static "js/base.js" %}?v={{VERSION}}"></script>
 		{% block end_body_extra_script %}{%endblock%}
 	{% endblock end_body_script_base%}
 {% endblock %}
