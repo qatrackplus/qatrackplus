@@ -208,7 +208,7 @@ class Reference(models.Model):
 
     #----------------------------------------------------------------------
     def clean_fields(self):
-        if self.type is BOOLEAN and self.value not in (0,1):
+        if self.type == BOOLEAN and self.value not in (0,1):
             raise ValidationError({"value":["Boolean values must be 0 or 1"]})
     #----------------------------------------------------------------------
     def value_display(self):
@@ -268,7 +268,7 @@ class Tolerance(models.Model):
         if self.type == MULTIPLE_CHOICE:
             if (None, None, None, None) != (self.act_low,self.tol_low,self.tol_high,self.act_high):
                 errors.append("Value set for tolerance or action but type is Multiple Choice")
-            if self.mc_pass_choices == None:
+            if self.mc_pass_choices  is None or self.mc_pass_choices.strip()=="":
                 errors.append("You must give more at l passing choice for a multiple choice tolerance")
             else:
 
@@ -286,7 +286,7 @@ class Tolerance(models.Model):
                     if tol_choices:
                         self.mc_tol_choices = ",".join(tol_choices)
 
-        elif self.type is not MULTIPLE_CHOICE:
+        elif self.type != MULTIPLE_CHOICE:
             if (self.mc_pass_choices or self.mc_tol_choices):
                 errors.append("Value set for pass choices or tolerance choices but type is not Multiple Choice")
 
@@ -294,7 +294,7 @@ class Tolerance(models.Model):
             raise ValidationError({"mc_pass_choices":errors})
     #----------------------------------------------------------------------
     def clean_tols(self):
-        if self.type in (ABSOLUTE, PERCENT):
+        if self.type  in (ABSOLUTE, PERCENT):
             errors = {}
             check = ("act_high","act_low","tol_high","tol_low",)
             for c in check:
@@ -442,13 +442,16 @@ class Test(models.Model):
     def clean_choices(self):
         """make sure choices provided if TestType is MultipleChoice"""
         errors = self.check_test_type(self.choices,MULTIPLE_CHOICE,"Multiple Choice")
-        if self.type is not MULTIPLE_CHOICE:
+        if self.type != MULTIPLE_CHOICE:
             return
-        choices = [x.strip() for x in self.choices.split(",") if x.strip()]
-        if len(choices) <= 1:
-            errors.append("You must give more than 1 choice for a multiple choice test")
+        elif self.choices is None:
+            errors.append("You must give at least 1 choice for a multiple choice test")
         else:
-            self.choices = ",".join(choices)
+            choices = [x.strip() for x in self.choices.strip().split(",") if x.strip()]
+            if len(choices) < 1:
+                errors.append("You must give at least 1 choice for a multiple choice test")
+            else:
+                self.choices = ",".join(choices)
         if errors:
             raise ValidationError({"choices":errors})
 

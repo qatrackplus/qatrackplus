@@ -256,7 +256,7 @@ result = foo + bar
     #---------------------------------------------------------------------------
     def test_invalid_mult_choice(self):
         test = utils.create_test(test_type=models.MULTIPLE_CHOICE)
-        invalid = ("foo", "foo bar",)
+        invalid = (None,""," ",)
         for i in invalid:
             test.choices = i
             self.assertRaises(ValidationError,test.clean_choices)
