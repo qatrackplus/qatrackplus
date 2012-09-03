@@ -36,7 +36,7 @@ def reference_tolerance_span(test,ref,tol):
         return	mark_safe('<span title="No Tolerance Set">No Tol</span>')
 
     if tol.type == models.MULTIPLE_CHOICE:
-        return mark_safe('<span><abbr title="Passing Values: %s;  Tolerance Values: %s; All other choices are failing"><em>Mult. Choice</em></abbr></span>' %(tol.pass_choices,tol.tolerance_choices))
+        return mark_safe('<span><abbr title="Passing Values: %s;  Tolerance Values: %s; All other choices are failing"><em>Mult. Choice</em></abbr></span>' %(", ".join(tol.pass_choices()),', '.join(tol.tol_choices())))
 
 
     if tol.type == models.ABSOLUTE:
