@@ -133,7 +133,7 @@ function get_value_for_row(input_row_element){
             return null;
         }
     }else if (test_type === QAUtils.MULTIPLE_CHOICE){
-        val = $(input_row_element).find(":selected").text();
+        val = $.trim($(input_row_element).find(":selected").text());
         if (val !== ""){
             return val;
         }else{
