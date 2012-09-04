@@ -6,7 +6,7 @@ def due_status(last_done,frequency):
     if last_done is None:
         return models.NOT_DUE
 
-    day_delta = timezone.localtime(timezone.now().date()-last_done.date()).days
+    day_delta = (timezone.localtime(timezone.now()).date()-timezone.localtime(last_done).date()).days
 
     if day_delta >= frequency.overdue_interval:
         return models.OVERDUE
