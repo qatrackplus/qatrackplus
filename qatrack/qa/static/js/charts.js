@@ -333,7 +333,7 @@ function create_stockchart(data){
 				animation:false
 			},
 			arearange:{
-				animation:false,
+				animation:false
 			}
 		},
 		tooltip: {
