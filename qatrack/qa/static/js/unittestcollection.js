@@ -35,7 +35,7 @@ function init_test_collection_tables(){
 			bStateSave:false, //save filter/sort state between page loads
 			bFilter:true,
 			bPaginate: false,
-			aaSorting:[],
+			aaSorting:[[3,"asc"]],//sort by name
 			aoColumns: cols,
 			fnAdjustColumnSizing:false
 
