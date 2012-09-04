@@ -20,20 +20,22 @@
 				{{unit_test_collection.unit.name}} : {{test_list.name}}
 			{% endif %}
 		</h3>
-		<div id="contact-container" class="pull-right alert alert-info">
+		<div id="float-right-container">
+			<div id="contact-container" class="alert alert-info">
 
-			<span id="toggle-contacts" class="pull-right hand-cursor">
-				Contact Numbers <i class="icon-plus-sign"></i>
-			</span>
-			<div class="clearfix"></div>
-			<div id="contacts" class="clearfix">
-				<hr/>
-				<dl class="dl-horizontal">
-					{% for contact in contacts %}
-						<dt><abbr title="{{contact.description}}">{{contact.name}}</abbr></dt>
-						<dd>{{contact.number}}</dd>
-					{% endfor %}
-				</dl>
+				<span id="toggle-contacts" class="pull-right hand-cursor">
+					Contact Numbers <i class="icon-plus-sign"></i>
+				</span>
+				<div class="clearfix"></div>
+				<div id="contacts" class="clearfix">
+					<hr/>
+					<dl class="dl-horizontal">
+						{% for contact in contacts %}
+							<dt><abbr title="{{contact.description}}">{{contact.name}}</abbr></dt>
+							<dd>{{contact.number}}</dd>
+						{% endfor %}
+					</dl>
+				</div>
 			</div>
 		</div>
 	</div>
