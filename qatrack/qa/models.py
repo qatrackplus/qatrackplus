@@ -1031,8 +1031,10 @@ class TestInstance(models.Model):
 def on_test_instance_saved(*args,**kwargs):
     test_instance = kwargs["instance"]
     if not test_instance.in_progress:
-        test_instance.unit_test_info.last_instance = test_instance
-        test_instance.unit_test_info.save()
+        last = test_instance.unit_test_info.last_instance
+        if not last or (last and last.work_completed <= test_instance.work_completed):
+            test_instance.unit_test_info.last_instance = test_instance
+            test_instance.unit_test_info.save()
 
 #============================================================================
 class TestListInstanceManager(models.Manager):
@@ -1133,11 +1135,15 @@ def on_test_list_instance_saved(*args,**kwargs):
     list_ct = ContentType.objects.get_for_model(TestList)
 
     to_update = [(cycle_ct,cycle_ids), (list_ct,test_list_ids)]
+    last_instance_filter = Q(last_instance__work_completed__lte=test_list_instance.work_completed) | Q(last_instance=None)
+
     for ct,object_ids in to_update:
         UnitTestCollection.objects.filter(
             content_type = ct,
             object_id__in = object_ids,
             unit = test_list_instance.unit_test_collection.unit,
+        ).filter(
+            last_instance_filter
         ).update(last_instance=test_list_instance)
 
 #============================================================================
