@@ -16,10 +16,10 @@ $(document).ready(function(){
 	$("#chart-type").change(switch_chart_type);
 
 	$("#toggle-instructions").click(toggle_instructions);
-	
+
 	$("#test-list-filters select, #frequency input, #test-list-container input, #display-options input").change(update_tests);
 	$("#gen-chart").click(update_chart);
-	
+
 	update_tests();
 
 });
@@ -53,7 +53,7 @@ function switch_chart_type(){
 function update_tests(){
 	var frequencies = QAUtils.get_selected_option_vals("#frequency");
 	filter_test_lists(frequencies);
-	
+
 	var test_lists = QAUtils.get_checked("#test-list-container");
 	var tests = get_tests_for_lists(test_lists);
 	var categories = QAUtils.get_selected_option_vals("#category");
@@ -80,12 +80,12 @@ function filter_test_lists(frequencies){
 
 /***************************************************/
 function get_test_lists_for_frequencies(frequencies){
-	
+
 	var test_lists = [];
 
 	var i;
 	$.each(frequencies,function(i,frequency){
-		$.each(QACharts.test_info.test_lists,function(pk,test_list){				
+		$.each(QACharts.test_info.test_lists,function(pk,test_list){
 			if (test_list.frequencies.indexOf(frequency)>=0){
 				test_lists.push(pk)
 			}
@@ -244,15 +244,15 @@ function convert_data_to_highchart_series(data){
 		var series_data = [];
 		var ref_data = [];
 		var tolerance_high = [],tolerance_low=[],ok=[];
-		
+
 		$.each(series.dates,function(idx,date){
 			date = QAUtils.parse_iso8601_date(date).getTime();
 			series_data.push([date,series.values[idx]]);
-			ref_data.push([date,series.references[idx]]); 
+			ref_data.push([date,series.references[idx]]);
 			ok.push([date,series.tol_low[idx],series.tol_high[idx]]);
 			tolerance_low.push([date,series.tol_low[idx],series.act_low[idx]]);
 			tolerance_high.push([date,series.tol_high[idx],series.act_high[idx]]);
-			
+
 		});
 
 		hc_series.push({
@@ -260,14 +260,13 @@ function convert_data_to_highchart_series(data){
 			data:series_data,
 			showInLegend:true,
 			lineWidth : get_line_width(),
-			fillOpacity:1,			
+			fillOpacity:1,
 			marker : {
 				enabled : true,
 				radius : 4
-			},
-
-			
+			}
 		});
+
 		if ($("#show-references").is(":checked")){
 			hc_series.push({
 				name:series.unit.name+" " +series.test.name + " References",
@@ -283,7 +282,7 @@ function convert_data_to_highchart_series(data){
 		}
 		var tol_color = 'rgba(255, 255, 17, 0.2)';
 		var act_color = 'rgba(46, 217, 49, 0.2)';
-		
+
 		if ($("#show-tolerances").is(":checked")){
 			hc_series.push({
 				data:tolerance_high,
@@ -292,16 +291,16 @@ function convert_data_to_highchart_series(data){
 				fillColor: tol_color,
 				name:series.unit.name+" " +series.test.name + " Tol High",
 				showInLegend:false
-				
+
 			});
-		
+
 			hc_series.push({
 				data:ok,
 				type:'arearange',
 				lineWidth:0,
 				fillColor: act_color,
 				name:series.unit.name+" " +series.test.name + " OK",
-				showInLegend:false				
+				showInLegend:false
 			});
 			hc_series.push({
 				data:tolerance_low,
@@ -311,7 +310,7 @@ function convert_data_to_highchart_series(data){
 				name:series.unit.name+" " +series.test.name + " Tol Low",
 				showInLegend:false
 			});
-			
+
 		}
 
 	});
@@ -334,7 +333,7 @@ function create_stockchart(data){
 				animation:false
 			},
 			arearange:{
-				animation:false,				
+				animation:false,
 			}
 		},
 		tooltip: {
@@ -397,14 +396,14 @@ function create_control_chart(){
 function check_cc_loaded(){
 
 	if ($("#control-chart-container img").height()>100){
-		control_chart_finished();		
+		control_chart_finished();
 	}
 }
 function control_chart_error(){
 	control_chart_finished();
 	$("#control-chart-container img").remove();
-	$("#control-chart-container").append('<div class="cc-error">Something went wrong while generating your control chart</div>');	
-}	
+	$("#control-chart-container").append('<div class="cc-error">Something went wrong while generating your control chart</div>');
+}
 function control_chart_finished(){
 	$("#control-chart-container div.please-wait").remove();
 	clearInterval(waiting_timeout);
