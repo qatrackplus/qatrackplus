@@ -46,6 +46,13 @@ def reference_tolerance_span(test,ref,tol):
 
 #----------------------------------------------------------------------
 @register.filter
+def history_display(history,test):
+    template = get_template("qa/history.html")
+    c = Context({"history":history,"test":test})
+    return template.render(c)
+
+#----------------------------------------------------------------------
+@register.filter
 def as_pass_fail_status(test_list_instance):
     template = get_template("qa/pass_fail_status.html")
     statuses_to_exclude = [models.NO_TOL]

@@ -32,13 +32,20 @@ def tests_history(tests,unit,from_date,selected_related=None):
         work_completed__gte = from_date,
     ).select_related(
         "status",
-        "unit_test_info__test__pk"
+        "unit_test_info__test__pk",
+        "created_by"
     ).order_by("-work_completed")
 
 
     hist_dict = {}
     for instance in all_instances:
-        hist = (instance.work_completed,instance.value_display(),instance.pass_fail,instance.status)
+        hist = {
+            "work_completed":instance.work_completed,
+            "value":instance.value_display(),
+            "pass_fail":instance.pass_fail,
+            "status":instance.status,
+            "created_by":instance.created_by,
+        }
         try:
             hist_dict[instance.unit_test_info.test.pk].append(hist)
         except KeyError:
@@ -52,7 +59,7 @@ def add_history_to_utis(unit_test_infos,histories):
     dates = set()
     for uti in unit_test_infos:
         uti.history = histories.get(uti.test.pk,[])[:5]
-        dates |=  set([x[0] for x in uti.history])
+        dates |=  set([x["work_completed"] for x in uti.history])
     history_dates = list(sorted(dates,reverse=True))[:5]
 
     #change history to only show values from 5 most recent dates
@@ -61,7 +68,7 @@ def add_history_to_utis(unit_test_infos,histories):
         for d in history_dates:
             hist = [None]*4
             for h in uti.history:
-                if h[0] == d:
+                if h["work_completed"] == d:
                     hist = h
                     break
             new_history.append(hist)

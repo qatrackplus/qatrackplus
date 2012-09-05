@@ -140,20 +140,7 @@
 									{% endif %}
 								</td>
 								<td class="qa-history">
-									{% for work_completed,value,pass_fail,status in ti_form.history %}
-										{% if work_completed and pass_fail != "not_done" %}
-
-											<span class="label {{pass_fail}} history-value" title="{{work_completed}} - {{status}}">
-												{% if test.is_boolean or test.is_mult_choice %}
-													{{value}}
-												{% else %}
-													{{value|scientificformat}}
-												{% endif %}
-											</span>
-										{% else %}
-											<span class="label history-value" title="N/A">N/A</span>
-										{% endif %}
-									{% endfor %}
+									{{ti_form.history|history_display:test}}
 								</td>
 								{# note we render this manually to prevent the Django ORM from running a query for every form #}
 								<td class="review-status">
