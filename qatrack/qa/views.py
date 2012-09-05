@@ -17,6 +17,7 @@ from qatrack.contacts.models import Contact
 from qatrack import settings
 
 
+
 import logging
 logger = logging.getLogger(__name__)
 
@@ -61,16 +62,29 @@ class ChartView(TemplateView):
 
     #----------------------------------------------------------------------
     def create_test_data(self):
-
+        frequencies = models.Frequency.objects.values_list("pk",flat=True)
         self.test_data = {
             "test_lists":{},
             "tests":{},
-            "categories":{}
+            "categories": {},
+            "frequencies": collections.defaultdict(list),
         }
-        utc_freqs = models.UnitTestCollection.objects.prefetch_related("frequency").values("testlist","frequency","testlistcycle__test_lists")
+        utc_freqs = models.UnitTestCollection.objects.prefetch_related(
+            "frequency",
+            "testlist__testlistmembership__test"
+        ).values("testlist","frequency","testlistcycle__test_lists")
+        #len(utc_freqs)
+        #for freq in frequencies:
+            #for utc in utc_freqs:
+                #if utc["frequency"] == freq:
+                    #if utc["testlist"]:
+                        #self.test_data["frequencies"][freq].append(utc["testlist"])
+                    #elif utc["testlistcycle"]:
+                        #self.test_data["frequencies"][freq].append(utc["testlistcycle"])#.test_lists.values_list("pk",flat=True))
+
 
         for test_list in self.test_lists:
-            tests = [x.pk for x in test_list.tests.all()]
+            tests = [x.pk for x in test_list.all_tests().select_related("category")]
             freqs = [x["frequency"] for x in utc_freqs if x["testlist"] == test_list.pk or x["testlistcycle__test_lists"]==test_list.pk]
             freqs = list(sorted(set(freqs)))
             if tests:
@@ -91,11 +105,14 @@ class ChartView(TemplateView):
 
 
 
-        self.test_lists = models.TestList.objects.order_by("name").prefetch_related(
+        self.test_lists = models.TestList.objects.order_by("name").select_related(
+            "testlistmembership",
+            "testlistmembership__test",
+        ).prefetch_related(
             "tests",
             "testlistcycle_set",
             "assigned_to",
-            "testlistcycle_set__assigned_to"
+            "testlistcycle_set__assigned_to",
         ).all()
 
         self.tests = models.Test.objects.order_by("name").values(
@@ -329,11 +346,42 @@ class CompositeCalculation(JSONResponseMixin, View):
             return
 
     #----------------------------------------------------------------------
+    def resolve_dependency_order(self):
+        """resolve calculation order dependencies using topological sort"""
+        #see http://code.activestate.com/recipes/577413-topological-sort/
+        data = dict(self.dependencies)
+        for k, v in data.items():
+            v.discard(k) # Ignore self dependencies
+        extra_items_in_deps = reduce(set.union, data.values()) - set(data.keys())
+        data.update({item:set() for item in extra_items_in_deps})
+        deps = []
+        while True:
+            ordered = set(item for item,dep in data.items() if not dep)
+            if not ordered:
+                break
+            deps.extend(list(sorted(ordered)))
+            data = {item: (dep - ordered) for item,dep in data.items()
+                    if item not in ordered}
+
+        self.calculation_order = deps
+        self.cyclic_tests = data.keys()
+
+    #----------------------------------------------------------------------
+    def set_dependencies(self):
+        """figure out composite dependencies of composite tests"""
+
+        self.dependencies = {}
+        slugs = self.composite_tests.keys()
+        for slug  in slugs:
+            tokens = utils.tokenize_composite_calc(self.composite_tests[slug])
+            dependencies = [s for s in slugs if s in tokens and s != slug]
+            self.dependencies[slug] = set(dependencies)
+
+
+    #----------------------------------------------------------------------
     def post(self,*args, **kwargs):
-        """calculate and return all composite values
-        Note we use post here because the query strings can get very long and
-        we may run into browser limits with GET.
-        """
+        """calculate and return all composite values"""
+
         self.values = self.get_json_data("qavalues")
         if not self.values:
             return self.render_to_response({"success":False,"errors":["Invalid QA Values"]})
@@ -345,22 +393,33 @@ class CompositeCalculation(JSONResponseMixin, View):
         #grab calculation procedures for all the composite tests
         self.composite_tests = models.Test.objects.filter(
             pk__in=self.composite_ids.values()
-        ).values_list("slug", "calculation_procedure")
+        ).values_list("slug","calculation_procedure")
+        self.composite_tests = dict(list(self.composite_tests))
 
+        self.set_dependencies()
+        self.resolve_dependency_order()
 
         results = {}
-        for slug, raw_procedure in self.composite_tests:
-            calculation_context = self.get_calculation_context()
-            procedure = self.process_procedure(raw_procedure)
-            try:
-                code = compile(procedure,"<string>","exec")
-                exec code in calculation_context
-                results[slug] = {
-                    'value':calculation_context["result"],
-                    'error':None
-                }
-            except Exception as e:
-                results[slug] = {'value':None, 'error':"Invalid Test"}
+        calculation_context = self.get_calculation_context()
+
+        for slug in self.calculation_order:
+
+            if slug in self.cyclic_tests:
+                results[slug] = {'value':None, 'error':"Cyclic test dependency"}
+            else:
+                raw_procedure = self.composite_tests[slug]
+                procedure = self.process_procedure(raw_procedure)
+                try:
+                    code = compile(procedure,"<string>","exec")
+                    exec code in calculation_context
+                    result = calculation_context["result"]
+                    results[slug] = { 'value': result,'error':None }
+                    calculation_context[slug]=result
+                except Exception as e:
+                    results[slug] = {'value':None, 'error':"Invalid Test"}
+                finally:
+                    if "result" in calculation_context:
+                        del calculation_context["result"]
 
         return self.render_to_response({"success":True,"errors":[],"results":results})
     #---------------------------------------------------------------------------
@@ -376,7 +435,7 @@ class CompositeCalculation(JSONResponseMixin, View):
 
         for slug,info in self.values.iteritems():
             val = info["current_value"]
-            if val is not None:
+            if val is not None and slug not in self.composite_tests:
                 try:
                     context[slug] = float(val)
                 except ValueError:

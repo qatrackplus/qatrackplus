@@ -1,5 +1,9 @@
 from django.utils import timezone
 import models
+import StringIO
+import tokenize
+import token
+
 #----------------------------------------------------------------------
 def due_status(last_done,frequency):
 
@@ -63,3 +67,11 @@ def add_history_to_utis(unit_test_infos,histories):
             new_history.append(hist)
         uti.history = new_history
     return unit_test_infos, history_dates
+
+
+
+#----------------------------------------------------------------------
+def tokenize_composite_calc(calc_procedure):
+    """tokenize a calculation procedure"""
+    tokens = tokenize.generate_tokens(StringIO.StringIO(calc_procedure).readline)
+    return [t[token.NAME] for t in tokens if t[token.NAME]]
