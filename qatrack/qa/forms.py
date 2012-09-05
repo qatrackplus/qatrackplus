@@ -18,21 +18,23 @@ class TestInstanceWidgetsMixin(object):
         """do some custom form validation"""
         cleaned_data = super(TestInstanceWidgetsMixin,self).clean()
 
-        if self.in_progress:
+        if self.in_progress :
             return cleaned_data
 
         skipped = cleaned_data.get("skipped")
         comment = cleaned_data.get("comment")
         value = cleaned_data.get("value")
 
-        if skipped and not comment:
-            self._errors["skipped"] = self.error_class(["Please add comment when skipping"])
-            del cleaned_data["skipped"]
-
         #force user to enter value unless skipping test
         if value is None and not skipped:
             self._errors["value"] = self.error_class(["Value required"])
-            del cleaned_data["value"]
+
+        if skipped and not comment :
+            self._errors["skipped"] = self.error_class(["Please add comment when skipping"])
+            del cleaned_data["skipped"]
+
+        if value is None and skipped and "value" in self.errors:
+            del self.errors["value"]
 
         return cleaned_data
 
@@ -118,6 +120,7 @@ class UpdateTestInstanceForm(TestInstanceWidgetsMixin,forms.ModelForm):
     def __init__(self,*args,**kwargs):
 
         super(UpdateTestInstanceForm,self).__init__(*args,**kwargs)
+        self.fields["value"].required = False
         self.unit_test_info = self.instance.unit_test_info
         self.set_value_widget()
         self.disable_read_only_fields()
