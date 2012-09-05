@@ -58,12 +58,7 @@ def as_pass_fail_status(test_list_instance):
     statuses_to_exclude = [models.NO_TOL]
     c = Context({"instance":test_list_instance,"exclude":statuses_to_exclude})
     return template.render(c)
-#----------------------------------------------------------------------
-@register.filter
-def as_unreviewed_count(unit_test_collection):
-    template = get_template("qa/unreviewed_count.html")
-    c = Context({"unit_test_collection":unit_test_collection})
-    return template.render(c)
+
 #----------------------------------------------------------------------
 @register.filter(expects_local_time=True)
 def as_due_date(unit_test_collection):
