@@ -51,7 +51,7 @@
     display: inline-block;
     zoom: 1;
     min-width: 1px;
-    width:400px;
+    *width:400px;/* ie only */
 
 }
 
