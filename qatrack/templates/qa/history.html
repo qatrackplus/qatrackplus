@@ -1,0 +1,15 @@
+{% load qa_tags %}
+{% for hist in history %}
+	{% if hist.work_completed and hist.pass_fail != "not_done" %}
+
+		<span class="label {{hist.pass_fail}} history-value" title="{{hist.created_by}} on {{hist.work_completed}} - {{hist.status}}">
+			{% if test.is_boolean or test.is_mult_choice %}
+				{{hist.value}}
+			{% else %}
+				{{hist.value|scientificformat}}
+			{% endif %}
+		</span>
+	{% else %}
+		<span class="label history-value" title="N/A">N/A</span>
+	{% endif %}
+{% endfor %}
