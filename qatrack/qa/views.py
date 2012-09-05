@@ -346,6 +346,84 @@ class CompositeCalculation(JSONResponseMixin, View):
             return
 
     #----------------------------------------------------------------------
+    def post(self,*args, **kwargs):
+        """calculate and return all composite values"""
+
+        self.set_composite_test_data()
+        if not self.composite_tests:
+            return self.render_to_response({"success":False,"errors":["No Valid Composite ID's"]})
+
+        self.set_calculation_context()
+        if not self.calculation_context:
+            return self.render_to_response({"success":False,"errors":["Invalid QA Values"]})
+
+        self.set_dependencies()
+        self.resolve_dependency_order()
+
+        results = {}
+
+        for slug in self.calculation_order:
+
+            if slug in self.cyclic_tests:
+                results[slug] = {'value':None, 'error':"Cyclic test dependency"}
+            else:
+                raw_procedure = self.composite_tests[slug]
+                procedure = self.process_procedure(raw_procedure)
+                try:
+                    code = compile(procedure,"<string>","exec")
+                    exec code in self.calculation_context
+                    result = self.calculation_context["result"]
+                    results[slug] = { 'value': result,'error':None }
+                    self.calculation_context[slug]=result
+                except Exception as e:
+                    results[slug] = {'value':None, 'error':"Invalid Test"}
+                finally:
+                    if "result" in self.calculation_context:
+                        del self.calculation_context["result"]
+
+        return self.render_to_response({"success":True,"errors":[],"results":results})
+    #----------------------------------------------------------------------
+    def set_composite_test_data(self):
+        composite_ids = self.get_json_data("composite_ids")
+
+        composite_tests = models.Test.objects.filter(
+            pk__in=composite_ids.values()
+        ).values_list("slug","calculation_procedure")
+
+        self.composite_tests = dict(composite_tests)
+
+    #---------------------------------------------------------------------------
+    def process_procedure(self,procedure):
+        """prepare raw procedure for evaluation"""
+        return "\n".join(["from __future__ import division",procedure,"\n"]).replace('\r','\n')
+    #----------------------------------------------------------------------
+    def set_calculation_context(self):
+        """set up the environment that the composite test will be calculated in"""
+        self.values = self.get_json_data("qavalues")
+        self.calculation_context = {
+            "math":math
+        }
+
+        for slug,info in self.values.iteritems():
+            val = info["current_value"]
+            if val is not None and slug not in self.composite_tests:
+                try:
+                    self.calculation_context[slug] = float(val)
+                except ValueError:
+                    pass
+
+    #----------------------------------------------------------------------
+    def set_dependencies(self):
+        """figure out composite dependencies of composite tests"""
+
+        self.dependencies = {}
+        slugs = self.composite_tests.keys()
+        for slug  in slugs:
+            tokens = utils.tokenize_composite_calc(self.composite_tests[slug])
+            dependencies = [s for s in slugs if s in tokens and s != slug]
+            self.dependencies[slug] = set(dependencies)
+
+    #----------------------------------------------------------------------
     def resolve_dependency_order(self):
         """resolve calculation order dependencies using topological sort"""
         #see http://code.activestate.com/recipes/577413-topological-sort/
@@ -366,81 +444,7 @@ class CompositeCalculation(JSONResponseMixin, View):
         self.calculation_order = deps
         self.cyclic_tests = data.keys()
 
-    #----------------------------------------------------------------------
-    def set_dependencies(self):
-        """figure out composite dependencies of composite tests"""
 
-        self.dependencies = {}
-        slugs = self.composite_tests.keys()
-        for slug  in slugs:
-            tokens = utils.tokenize_composite_calc(self.composite_tests[slug])
-            dependencies = [s for s in slugs if s in tokens and s != slug]
-            self.dependencies[slug] = set(dependencies)
-
-
-    #----------------------------------------------------------------------
-    def post(self,*args, **kwargs):
-        """calculate and return all composite values"""
-
-        self.values = self.get_json_data("qavalues")
-        if not self.values:
-            return self.render_to_response({"success":False,"errors":["Invalid QA Values"]})
-
-        self.composite_ids = self.get_json_data("composite_ids")
-        if not self.composite_ids:
-            return self.render_to_response({"success":False,"errors":["No Valid Composite ID's"]})
-
-        #grab calculation procedures for all the composite tests
-        self.composite_tests = models.Test.objects.filter(
-            pk__in=self.composite_ids.values()
-        ).values_list("slug","calculation_procedure")
-        self.composite_tests = dict(list(self.composite_tests))
-
-        self.set_dependencies()
-        self.resolve_dependency_order()
-
-        results = {}
-        calculation_context = self.get_calculation_context()
-
-        for slug in self.calculation_order:
-
-            if slug in self.cyclic_tests:
-                results[slug] = {'value':None, 'error':"Cyclic test dependency"}
-            else:
-                raw_procedure = self.composite_tests[slug]
-                procedure = self.process_procedure(raw_procedure)
-                try:
-                    code = compile(procedure,"<string>","exec")
-                    exec code in calculation_context
-                    result = calculation_context["result"]
-                    results[slug] = { 'value': result,'error':None }
-                    calculation_context[slug]=result
-                except Exception as e:
-                    results[slug] = {'value':None, 'error':"Invalid Test"}
-                finally:
-                    if "result" in calculation_context:
-                        del calculation_context["result"]
-
-        return self.render_to_response({"success":True,"errors":[],"results":results})
-    #---------------------------------------------------------------------------
-    def process_procedure(self,procedure):
-        """prepare raw procedure for evaluation"""
-        return "\n".join(["from __future__ import division",procedure,"\n"]).replace('\r','\n')
-    #----------------------------------------------------------------------
-    def get_calculation_context(self):
-        """set up the environment that the composite test will be calculated in"""
-        context = {
-            "math":math
-        }
-
-        for slug,info in self.values.iteritems():
-            val = info["current_value"]
-            if val is not None and slug not in self.composite_tests:
-                try:
-                    context[slug] = float(val)
-                except ValueError:
-                    pass
-        return context
 
 #====================================================================================
 class ChooseUnit(ListView):
