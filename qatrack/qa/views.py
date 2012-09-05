@@ -386,6 +386,11 @@ class CompositeCalculation(JSONResponseMixin, View):
     def set_composite_test_data(self):
         composite_ids = self.get_json_data("composite_ids")
 
+        if composite_ids is None:
+            self.composite_tests = {}
+            return
+
+
         composite_tests = models.Test.objects.filter(
             pk__in=composite_ids.values()
         ).values_list("slug","calculation_procedure")
@@ -399,12 +404,16 @@ class CompositeCalculation(JSONResponseMixin, View):
     #----------------------------------------------------------------------
     def set_calculation_context(self):
         """set up the environment that the composite test will be calculated in"""
-        self.values = self.get_json_data("qavalues")
+        values = self.get_json_data("qavalues")
+        if values is None:
+            self.calculation_context = {}
+            return
+
         self.calculation_context = {
             "math":math
         }
 
-        for slug,info in self.values.iteritems():
+        for slug,info in values.iteritems():
             val = info["current_value"]
             if val is not None and slug not in self.composite_tests:
                 try:
