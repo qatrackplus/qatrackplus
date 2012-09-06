@@ -246,7 +246,6 @@ class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
     search_fields = ("name", "description","slug",)
     filter_horizontal= ("tests", "sublists", )
 
-
     form = TestListAdminForm
     inlines = [TestListMembershipInline]
     save_as = True
@@ -261,11 +260,7 @@ class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
     #----------------------------------------------------------------------
     def queryset(self,*args,**kwargs):
         qs = super(TestListAdmin,self).queryset(*args,**kwargs)
-        return qs.select_related(
-            "testlistmembership_set",
-            "tests",
-
-        )
+        return qs.select_related("modified_by")
 
 #============================================================================
 class TestAdmin(SaveUserMixin,admin.ModelAdmin):
