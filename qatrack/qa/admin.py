@@ -220,20 +220,32 @@ def test_name(obj):
 def macro_name(obj):
     return obj.test.slug
 #============================================================================
-class TestListMembershipInline(SalmonellaMixin,admin.TabularInline):
+class TestListMembershipInline(admin.TabularInline):
     """"""
     model = models.TestListMembership
     formset = TestInlineFormSet
     extra = 5
     template = "admin/qa/testlistmembership/edit_inline/tabular.html"
     readonly_fields = (macro_name,)
-    salmonella_fields = ("test",)
+    raw_id_fields = ("test",)
+
+    #salmonella_fields = ("test",)
+    def queryset(self,*args,**kwargs):
+        qs = super(TestListMembershipInline,self).queryset(*args,**kwargs)
+        return qs.select_related("test","test_list")
+
+    def formfield_for_dbfield(self,db_field,**kwargs):
+        formfield = super(TestListMembershipInline,self).formfield_for_dbfield(db_field,**kwargs)
+        if db_field.name == "test":
+            formfield.choices = list(formfield.choices)
+        return formfield
 #============================================================================
 class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
     prepopulated_fields =  {'slug': ('name',)}
     list_display = ("name", "modified", "modified_by",)
     search_fields = ("name", "description","slug",)
     filter_horizontal= ("tests", "sublists", )
+
 
     form = TestListAdminForm
     inlines = [TestListMembershipInline]
@@ -249,8 +261,10 @@ class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
     #----------------------------------------------------------------------
     def queryset(self,*args,**kwargs):
         qs = super(TestListAdmin,self).queryset(*args,**kwargs)
-        return qs.prefetch_related(
+        return qs.select_related(
             "testlistmembership_set",
+            "tests",
+
         )
 
 #============================================================================
