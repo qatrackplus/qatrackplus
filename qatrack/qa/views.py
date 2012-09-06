@@ -62,39 +62,37 @@ class ChartView(TemplateView):
 
     #----------------------------------------------------------------------
     def create_test_data(self):
-        frequencies = models.Frequency.objects.values_list("pk",flat=True)
+
         self.test_data = {
             "test_lists":{},
             "tests":{},
             "categories": {},
             "frequencies": collections.defaultdict(list),
         }
-        utc_freqs = models.UnitTestCollection.objects.prefetch_related(
+        
+        utc_freqs = models.UnitTestCollection.objects.values(            
             "frequency",
-            "testlist__testlistmembership__test"
-        ).values("testlist","frequency","testlistcycle__test_lists")
-        #len(utc_freqs)
-        #for freq in frequencies:
-            #for utc in utc_freqs:
-                #if utc["frequency"] == freq:
-                    #if utc["testlist"]:
-                        #self.test_data["frequencies"][freq].append(utc["testlist"])
-                    #elif utc["testlistcycle"]:
-                        #self.test_data["frequencies"][freq].append(utc["testlistcycle"])#.test_lists.values_list("pk",flat=True))
-
+            "testlist",            
+            "testlistcycle__test_lists"
+        )
+        
 
         for test_list in self.test_lists:
-            tests = [x.pk for x in test_list.all_tests().select_related("category")]
-            freqs = [x["frequency"] for x in utc_freqs if x["testlist"] == test_list.pk or x["testlistcycle__test_lists"]==test_list.pk]
-            freqs = list(sorted(set(freqs)))
-            if tests:
-                self.test_data["test_lists"][test_list.pk] = {
-                    "tests" : tests,
-                    "frequencies":freqs,
-                }
+
+            tests = [x.pk for x in test_list.tests.all()]
+            if test_list.sublists:
+                for sublist in test_list.sublists.all():
+                    tests.extend(list(sublist.tests.values_list("pk",flat=True)))
+                    
+            freqs = list(set([x["frequency"] for x in utc_freqs if x["testlist"] == test_list.pk or x["testlistcycle__test_lists"]==test_list.pk]))
+
+            self.test_data["test_lists"][test_list.pk] = {"tests" : tests,}
+
+            for freq in freqs:
+                self.test_data["frequencies"][freq].append(test_list.pk)
+                    
         for test in self.tests:
             self.test_data["tests"][test["pk"]] = test
-
 
         return json.dumps(self.test_data)
 
@@ -103,25 +101,17 @@ class ChartView(TemplateView):
         """add default dates to context"""
         context = super(ChartView,self).get_context_data(**kwargs)
 
-
-
-        self.test_lists = models.TestList.objects.order_by("name").select_related(
-            "testlistmembership",
-            "testlistmembership__test",
-        ).prefetch_related(
+        self.test_lists = models.TestList.objects.order_by("name").prefetch_related(
+            "sublists",
             "tests",
-            "testlistcycle_set",
-            "assigned_to",
-            "testlistcycle_set__assigned_to",
-        ).all()
+        )
 
         self.tests = models.Test.objects.order_by("name").values(
             "pk",
             "category",
             "name",
-            "type",
             "description",
-        ).distinct()
+        )
 
         test_data = self.create_test_data()
 
@@ -440,15 +430,14 @@ class CompositeCalculation(JSONResponseMixin, View):
         for k, v in data.items():
             v.discard(k) # Ignore self dependencies
         extra_items_in_deps = reduce(set.union, data.values()) - set(data.keys())
-        data.update({item:set() for item in extra_items_in_deps})
+        data.update(dict((item,set()) for item in extra_items_in_deps))
         deps = []
         while True:
             ordered = set(item for item,dep in data.items() if not dep)
             if not ordered:
                 break
             deps.extend(list(sorted(ordered)))
-            data = {item: (dep - ordered) for item,dep in data.items()
-                    if item not in ordered}
+            data = dict((item, (dep - ordered)) for item,dep in data.items() if item not in ordered)
 
         self.calculation_order = deps
         self.cyclic_tests = data.keys()
@@ -1021,12 +1010,15 @@ class TestListInstances(ListView):
         return self.fetch_related(self.queryset())
     #----------------------------------------------------------------------
     def fetch_related(self,qs):
-        return qs.select_related(
-            "test_list__name",
-            "unit_test_collection__unit__name",
-            "unit_test_collection__frequency__name",
-            "created_by"
-        ).prefetch_related("testinstance_set")
+        qs = qs.select_related(
+                    "test_list__name",
+                    "testinstance__status",
+                    "unit_test_collection__unit__name",
+                    "unit_test_collection__frequency__name",
+                    "created_by"
+        ).prefetch_related("testinstance_set","testinstance_set__status")        
+
+        return qs
     #----------------------------------------------------------------------
     def get_page_title(self):
         return "Completed Test Lists"
