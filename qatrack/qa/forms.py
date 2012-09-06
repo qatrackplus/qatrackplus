@@ -195,7 +195,26 @@ class BaseTestListInstanceForm(forms.ModelForm):
         self.fields["comment"].widget.attrs["class"] = "pull-right"
         self.fields["comment"].widget.attrs["placeholder"] = "Add comment about this set of tests"
         self.fields["comment"].widget.attrs.pop("cols")
-
+        
+    #---------------------------------------------------------------------------
+    def clean(self):
+        """"""
+        cleaned_data = super(BaseTestListInstanceForm,self).clean()
+        
+        work_started = cleaned_data.get("work_started")
+        work_completed = cleaned_data.get("work_completed")
+        
+        if work_started and work_completed:
+            
+            if work_completed <= work_started:
+                self._errors["work_started"] = self.error_class(["Work started date/time can not be after work completed date/time"])
+                del cleaned_data["work_started"]
+            
+        elif work_started:
+            if work_started >= timezone.make_aware(timezone.datetime.now(),timezone.get_current_timezone()):
+                self._errors["work_started"] = self.error_class(["Work started date/time can not be in the future"])
+                del cleaned_data["work_started"]
+        return cleaned_data
 
 #============================================================================
 class CreateTestListInstanceForm(BaseTestListInstanceForm):
