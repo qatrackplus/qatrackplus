@@ -515,8 +515,7 @@ class PerformQA(CreateView):
     def add_histories(self):
         """paste historical values onto unit test infos"""
 
-        from_date = timezone.make_aware(timezone.datetime.now() - timezone.timedelta(days=10*self.unit_test_col.frequency.overdue_interval),timezone.get_current_timezone())
-        histories = utils.tests_history(self.all_tests,self.unit_test_col.unit,from_date)
+        histories = utils.tests_history(self.all_tests,self.unit_test_col.unit)
         self.unit_test_infos, self.history_dates = utils.add_history_to_utis(self.unit_test_infos,histories)
 
     #----------------------------------------------------------------------
@@ -666,9 +665,8 @@ class BaseEditTestListInstance(UpdateView):
     def add_histories(self,forms):
         """paste historical values onto unit test infos"""
 
-        from_date = timezone.make_aware(timezone.datetime.now() - timezone.timedelta(days=10*self.object.unit_test_collection.frequency.overdue_interval),timezone.get_current_timezone())
         tests = [x.unit_test_info.test for x in self.test_instances]
-        histories = utils.tests_history(tests,self.object.unit_test_collection.unit,from_date)
+        histories = utils.tests_history(tests,self.object.unit_test_collection.unit)
         unit_test_infos = [f.instance.unit_test_info for f in forms]
         unit_test_infos, self.history_dates = utils.add_history_to_utis(unit_test_infos,histories)
         for uti,f in zip(unit_test_infos,forms):

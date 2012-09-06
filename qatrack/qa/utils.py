@@ -25,16 +25,15 @@ def due_date(last_done_date,frequency):
 
 
 #----------------------------------------------------------------------
-def tests_history(tests,unit,from_date,selected_related=None):
+def tests_history(tests,unit,number=5):
     all_instances = models.TestInstance.objects.filter(
         unit_test_info__test__in = tests,
         unit_test_info__unit = unit,
-        work_completed__gte = from_date,
     ).select_related(
         "status",
         "unit_test_info__test__pk",
         "created_by"
-    ).order_by("-work_completed")
+    ).order_by("-work_completed")[:number]
 
 
     hist_dict = {}
