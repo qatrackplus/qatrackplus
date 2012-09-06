@@ -1,3 +1,5 @@
+import collections
+
 from django.template import Context
 from django.template.loader import get_template
 from django import template
@@ -57,6 +59,19 @@ def as_pass_fail_status(test_list_instance):
     template = get_template("qa/pass_fail_status.html")
     statuses_to_exclude = [models.NO_TOL]
     c = Context({"instance":test_list_instance,"exclude":statuses_to_exclude})
+    return template.render(c)
+
+#----------------------------------------------------------------------
+@register.filter
+def as_review_status(test_list_instance):
+    statuses = collections.defaultdict(lambda:{"count":0})
+    for ti in test_list_instance.testinstance_set.all():
+        statuses[ti.status.name]["count"] += 1
+        statuses[ti.status.name]["valid"] = ti.status.valid
+        statuses[ti.status.name]["requires_review"] = ti.status.requires_review
+        
+    template = get_template("qa/review_status.html")
+    c = Context({"statuses":dict(statuses)})
     return template.render(c)
 
 #----------------------------------------------------------------------
