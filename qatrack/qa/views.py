@@ -69,13 +69,13 @@ class ChartView(TemplateView):
             "categories": {},
             "frequencies": collections.defaultdict(list),
         }
-        
-        utc_freqs = models.UnitTestCollection.objects.values(            
+
+        utc_freqs = models.UnitTestCollection.objects.values(
             "frequency",
-            "testlist",            
+            "testlist",
             "testlistcycle__test_lists"
         )
-        
+
 
         for test_list in self.test_lists:
 
@@ -83,14 +83,14 @@ class ChartView(TemplateView):
             if test_list.sublists:
                 for sublist in test_list.sublists.all():
                     tests.extend(list(sublist.tests.values_list("pk",flat=True)))
-                    
+
             freqs = list(set([x["frequency"] for x in utc_freqs if x["testlist"] == test_list.pk or x["testlistcycle__test_lists"]==test_list.pk]))
 
             self.test_data["test_lists"][test_list.pk] = {"tests" : tests,}
 
             for freq in freqs:
                 self.test_data["frequencies"][freq].append(test_list.pk)
-                    
+
         for test in self.tests:
             self.test_data["tests"][test["pk"]] = test
 
@@ -640,9 +640,11 @@ class PerformQA(CreateView):
             "unit_number":self.unit_test_col.unit.number,
             "frequency":self.unit_test_col.frequency.slug
         }
+
+        if not self.request.user.is_staff:
+            kwargs["frequency"] = "short-interval"
+
         return reverse("qa_by_frequency_unit",kwargs=kwargs)
-
-
 
 
 #============================================================================
@@ -749,7 +751,7 @@ class ReviewTestListInstance(BaseEditTestListInstance):
         messages.success(self.request,_("Successfully updated %s "% self.object.test_list.name))
         return HttpResponseRedirect(self.get_success_url())
     #----------------------------------------------------------------------
-    def get_success_url(self):        
+    def get_success_url(self):
         return reverse("unreviewed")
 
 #============================================================================
@@ -1010,7 +1012,7 @@ class TestListInstances(ListView):
                     "unit_test_collection__unit__name",
                     "unit_test_collection__frequency__name",
                     "created_by"
-        ).prefetch_related("testinstance_set","testinstance_set__status")        
+        ).prefetch_related("testinstance_set","testinstance_set__status")
 
         return qs
     #----------------------------------------------------------------------
