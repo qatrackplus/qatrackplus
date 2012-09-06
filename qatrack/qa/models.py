@@ -1082,27 +1082,24 @@ class TestListInstance(models.Model):
         get_latest_by = "work_completed"
 
     #----------------------------------------------------------------------
-    def pass_fail_status(self,formatted=False):
+    def pass_fail_status(self):
         """return string with pass fail status of this qa instance"""
         instances = list(self.testinstance_set.all())
         statuses = [(status,display,[x for x in instances if x.pass_fail == status]) for status,display in PASS_FAIL_CHOICES]
-        statuses = [x for x in statuses if len(x[2])>0]
-        if not formatted:
-            return statuses
-        return ", ".join(["%d %s" %(len(s),d) for _,d,s in statuses])
+        return [x for x in statuses if len(x[2])>0]
+    
     #----------------------------------------------------------------------
     def duration(self):
         """return timedelta of time from start to completion"""
         return self.work_completed-self.work_started
     #----------------------------------------------------------------------
-    def status(self,formatted=False):
+    def status(self,queryset=None):
         """return string with review status of this qa instance"""
-        instances = list(self.testinstance_set.all())
-        statuses = [(status,[x for x in instances if x.status == status]) for status in TestInstanceStatus.objects.all()]
-        statuses = [x for x in statuses if len(x[1])>0]
-        if not formatted:
-            return statuses
-        return ", ".join(["%d %s" %(len(s),test_status.name) for test_status,s in statuses])
+        if queryset is None:
+            queryset = self.testinstance_set.prefetch_related("status").all()
+        status_types = set([x.status for x in queryset])
+        statuses = [(status,[x for x in queryset if x.status == status]) for status in status_types]
+        return [x for x in statuses if len(x[1])>0]
     #----------------------------------------------------------------------
     def unreviewed_instances(self):
         return self.testinstance_set.filter(status__requires_review=True)

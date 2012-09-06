@@ -17,6 +17,7 @@ from qatrack.contacts.models import Contact
 from qatrack import settings
 
 
+
 import logging
 logger = logging.getLogger(__name__)
 
@@ -65,22 +66,33 @@ class ChartView(TemplateView):
         self.test_data = {
             "test_lists":{},
             "tests":{},
-            "categories":{}
+            "categories": {},
+            "frequencies": collections.defaultdict(list),
         }
-        utc_freqs = models.UnitTestCollection.objects.prefetch_related("frequency").values("testlist","frequency","testlistcycle__test_lists")
+
+        utc_freqs = models.UnitTestCollection.objects.values(
+            "frequency",
+            "testlist",
+            "testlistcycle__test_lists"
+        )
+
 
         for test_list in self.test_lists:
+
             tests = [x.pk for x in test_list.tests.all()]
-            freqs = [x["frequency"] for x in utc_freqs if x["testlist"] == test_list.pk or x["testlistcycle__test_lists"]==test_list.pk]
-            freqs = list(sorted(set(freqs)))
-            if tests:
-                self.test_data["test_lists"][test_list.pk] = {
-                    "tests" : tests,
-                    "frequencies":freqs,
-                }
+            if test_list.sublists:
+                for sublist in test_list.sublists.all():
+                    tests.extend(list(sublist.tests.values_list("pk",flat=True)))
+
+            freqs = list(set([x["frequency"] for x in utc_freqs if x["testlist"] == test_list.pk or x["testlistcycle__test_lists"]==test_list.pk]))
+
+            self.test_data["test_lists"][test_list.pk] = {"tests" : tests,}
+
+            for freq in freqs:
+                self.test_data["frequencies"][freq].append(test_list.pk)
+
         for test in self.tests:
             self.test_data["tests"][test["pk"]] = test
-
 
         return json.dumps(self.test_data)
 
@@ -89,22 +101,17 @@ class ChartView(TemplateView):
         """add default dates to context"""
         context = super(ChartView,self).get_context_data(**kwargs)
 
-
-
         self.test_lists = models.TestList.objects.order_by("name").prefetch_related(
+            "sublists",
             "tests",
-            "testlistcycle_set",
-            "assigned_to",
-            "testlistcycle_set__assigned_to"
-        ).all()
+        )
 
         self.tests = models.Test.objects.order_by("name").values(
             "pk",
             "category",
             "name",
-            "type",
             "description",
-        ).distinct()
+        )
 
         test_data = self.create_test_data()
 
@@ -330,58 +337,112 @@ class CompositeCalculation(JSONResponseMixin, View):
 
     #----------------------------------------------------------------------
     def post(self,*args, **kwargs):
-        """calculate and return all composite values
-        Note we use post here because the query strings can get very long and
-        we may run into browser limits with GET.
-        """
-        self.values = self.get_json_data("qavalues")
-        if not self.values:
-            return self.render_to_response({"success":False,"errors":["Invalid QA Values"]})
+        """calculate and return all composite values"""
 
-        self.composite_ids = self.get_json_data("composite_ids")
-        if not self.composite_ids:
+        self.set_composite_test_data()
+        if not self.composite_tests:
             return self.render_to_response({"success":False,"errors":["No Valid Composite ID's"]})
 
-        #grab calculation procedures for all the composite tests
-        self.composite_tests = models.Test.objects.filter(
-            pk__in=self.composite_ids.values()
-        ).values_list("slug", "calculation_procedure")
+        self.set_calculation_context()
+        if not self.calculation_context:
+            return self.render_to_response({"success":False,"errors":["Invalid QA Values"]})
 
+        self.set_dependencies()
+        self.resolve_dependency_order()
 
         results = {}
-        for slug, raw_procedure in self.composite_tests:
-            calculation_context = self.get_calculation_context()
-            procedure = self.process_procedure(raw_procedure)
-            try:
-                code = compile(procedure,"<string>","exec")
-                exec code in calculation_context
-                results[slug] = {
-                    'value':calculation_context["result"],
-                    'error':None
-                }
-            except Exception as e:
-                results[slug] = {'value':None, 'error':"Invalid Test"}
+
+        for slug in self.calculation_order:
+
+            if slug in self.cyclic_tests:
+                results[slug] = {'value':None, 'error':"Cyclic test dependency"}
+            else:
+                raw_procedure = self.composite_tests[slug]
+                procedure = self.process_procedure(raw_procedure)
+                try:
+                    code = compile(procedure,"<string>","exec")
+                    exec code in self.calculation_context
+                    result = self.calculation_context["result"]
+                    results[slug] = { 'value': result,'error':None }
+                    self.calculation_context[slug]=result
+                except Exception as e:
+                    results[slug] = {'value':None, 'error':"Invalid Test"}
+                finally:
+                    if "result" in self.calculation_context:
+                        del self.calculation_context["result"]
 
         return self.render_to_response({"success":True,"errors":[],"results":results})
+    #----------------------------------------------------------------------
+    def set_composite_test_data(self):
+        composite_ids = self.get_json_data("composite_ids")
+
+        if composite_ids is None:
+            self.composite_tests = {}
+            return
+
+
+        composite_tests = models.Test.objects.filter(
+            pk__in=composite_ids.values()
+        ).values_list("slug","calculation_procedure")
+
+        self.composite_tests = dict(composite_tests)
+
     #---------------------------------------------------------------------------
     def process_procedure(self,procedure):
         """prepare raw procedure for evaluation"""
         return "\n".join(["from __future__ import division",procedure,"\n"]).replace('\r','\n')
     #----------------------------------------------------------------------
-    def get_calculation_context(self):
+    def set_calculation_context(self):
         """set up the environment that the composite test will be calculated in"""
-        context = {
+        values = self.get_json_data("qavalues")
+        if values is None:
+            self.calculation_context = {}
+            return
+
+        self.calculation_context = {
             "math":math
         }
 
-        for slug,info in self.values.iteritems():
+        for slug,info in values.iteritems():
             val = info["current_value"]
-            if val is not None:
+            if val is not None and slug not in self.composite_tests:
                 try:
-                    context[slug] = float(val)
+                    self.calculation_context[slug] = float(val)
                 except ValueError:
                     pass
-        return context
+
+    #----------------------------------------------------------------------
+    def set_dependencies(self):
+        """figure out composite dependencies of composite tests"""
+
+        self.dependencies = {}
+        slugs = self.composite_tests.keys()
+        for slug  in slugs:
+            tokens = utils.tokenize_composite_calc(self.composite_tests[slug])
+            dependencies = [s for s in slugs if s in tokens and s != slug]
+            self.dependencies[slug] = set(dependencies)
+
+    #----------------------------------------------------------------------
+    def resolve_dependency_order(self):
+        """resolve calculation order dependencies using topological sort"""
+        #see http://code.activestate.com/recipes/577413-topological-sort/
+        data = dict(self.dependencies)
+        for k, v in data.items():
+            v.discard(k) # Ignore self dependencies
+        extra_items_in_deps = reduce(set.union, data.values()) - set(data.keys())
+        data.update(dict((item,set()) for item in extra_items_in_deps))
+        deps = []
+        while True:
+            ordered = set(item for item,dep in data.items() if not dep)
+            if not ordered:
+                break
+            deps.extend(list(sorted(ordered)))
+            data = dict((item, (dep - ordered)) for item,dep in data.items() if item not in ordered)
+
+        self.calculation_order = deps
+        self.cyclic_tests = data.keys()
+
+
 
 #====================================================================================
 class ChooseUnit(ListView):
@@ -437,7 +498,7 @@ class PerformQA(CreateView):
             self.actual_day = cycle_membership[0].order
     #----------------------------------------------------------------------
     def set_unit_test_infos(self):
-        self.unit_test_infos = models.UnitTestInfo.objects.filter(
+        utis = models.UnitTestInfo.objects.filter(
             unit = self.unit_test_col.unit,
             test__in = self.all_tests,
             active=True,
@@ -449,13 +510,15 @@ class PerformQA(CreateView):
             "unit",
         )
 
-        self.add_histories()
+        #make sure utis are correctly ordered
+        uti_tests = [x.test for x in utis]
+        self.unit_test_infos = [utis[uti_tests.index(test)] for test in self.all_tests]
+
     #----------------------------------------------------------------------
     def add_histories(self):
         """paste historical values onto unit test infos"""
 
-        from_date = timezone.make_aware(timezone.datetime.now() - timezone.timedelta(days=10*self.unit_test_col.frequency.overdue_interval),timezone.get_current_timezone())
-        histories = utils.tests_history(self.all_tests,self.unit_test_col.unit,from_date)
+        histories = utils.tests_history(self.all_tests,self.unit_test_col.unit)
         self.unit_test_infos, self.history_dates = utils.add_history_to_utis(self.unit_test_infos,histories)
 
     #----------------------------------------------------------------------
@@ -542,7 +605,7 @@ class PerformQA(CreateView):
         self.set_actual_day()
         self.set_all_tests()
         self.set_unit_test_infos()
-
+        self.add_histories()
 
         if self.request.method == "POST":
             formset = forms.CreateTestInstanceFormSet(self.request.POST,self.request.FILES,unit_test_infos=self.unit_test_infos)
@@ -580,9 +643,11 @@ class PerformQA(CreateView):
             "unit_number":self.unit_test_col.unit.number,
             "frequency":self.unit_test_col.frequency.slug
         }
+
+        if not self.request.user.is_staff:
+            kwargs["frequency"] = "short-interval"
+
         return reverse("qa_by_frequency_unit",kwargs=kwargs)
-
-
 
 
 #============================================================================
@@ -605,9 +670,8 @@ class BaseEditTestListInstance(UpdateView):
     def add_histories(self,forms):
         """paste historical values onto unit test infos"""
 
-        from_date = timezone.make_aware(timezone.datetime.now() - timezone.timedelta(days=10*self.object.unit_test_collection.frequency.overdue_interval),timezone.get_current_timezone())
         tests = [x.unit_test_info.test for x in self.test_instances]
-        histories = utils.tests_history(tests,self.object.unit_test_collection.unit,from_date)
+        histories = utils.tests_history(tests,self.object.unit_test_collection.unit)
         unit_test_infos = [f.instance.unit_test_info for f in forms]
         unit_test_infos, self.history_dates = utils.add_history_to_utis(unit_test_infos,histories)
         for uti,f in zip(unit_test_infos,forms):
@@ -691,11 +755,7 @@ class ReviewTestListInstance(BaseEditTestListInstance):
         return HttpResponseRedirect(self.get_success_url())
     #----------------------------------------------------------------------
     def get_success_url(self):
-        kwargs = {
-            "unit_number":self.object.unit_test_collection.unit.number,
-            "frequency":self.object.unit_test_collection.frequency.slug
-        }
-        return reverse("qa_by_frequency_unit",kwargs=kwargs)
+        return reverse("unreviewed")
 
 #============================================================================
 class EditTestListInstance(BaseEditTestListInstance):
@@ -949,12 +1009,15 @@ class TestListInstances(ListView):
         return self.fetch_related(self.queryset())
     #----------------------------------------------------------------------
     def fetch_related(self,qs):
-        return qs.select_related(
-            "test_list__name",
-            "unit_test_collection__unit__name",
-            "unit_test_collection__frequency__name",
-            "created_by"
-        ).prefetch_related("testinstance_set")
+        qs = qs.select_related(
+                    "test_list__name",
+                    "testinstance__status",
+                    "unit_test_collection__unit__name",
+                    "unit_test_collection__frequency__name",
+                    "created_by"
+        ).prefetch_related("testinstance_set","testinstance_set__status")
+
+        return qs
     #----------------------------------------------------------------------
     def get_page_title(self):
         return "Completed Test Lists"
@@ -984,7 +1047,9 @@ class InProgress(TestListInstances):
 class Unreviewed(TestListInstances):
     """view for grouping all test lists with a certain frequency for all units"""
     queryset = models.TestListInstance.objects.unreviewed
-
+    #---------------------------------------------------------------------------
+    def get_queryset(self):
+        return self.fetch_related(self.queryset().order_by("-work_completed"))
     #----------------------------------------------------------------------
     def get_page_title(self):
         return "Unreviewed Test Lists"

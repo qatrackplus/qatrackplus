@@ -1,8 +1,0 @@
-{% with unit_test_collection.unreviewed_instances.count as c %}
-
-<span class="label unreviewed-count-wrapper {% if c = 0 %}label-success{% else %}label-warning{% endif %}">
-	<span class="unreviewed-count">{{c}}</span>
-	Unreviewed
-</span>
-
-{% endwith %}

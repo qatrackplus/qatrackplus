@@ -59,20 +59,7 @@
 				{% reference_tolerance_span test ref tol %}
 			</td>
 			<td class="qa-history">
-				{% for work_completed,value,pass_fail,status in uti.history %}
-					{% if work_completed and pass_fail != "not_done" %}
-
-						<span class="label {{pass_fail}} history-value" title="{{work_completed}} - {{status}}">
-							{% if test.is_boolean or test.is_mult_choice %}
-								{{value}}
-							{% else %}
-								{{value|scientificformat}}
-							{% endif %}
-						</span>
-					{% else %}
-						<span class="label history-value" title="N/A">N/A</span>
-					{% endif %}
-				{% endfor %}
+				{{uti.history|history_display:test}}
 			</td>
         {% endif %}
 

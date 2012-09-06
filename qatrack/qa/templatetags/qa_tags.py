@@ -1,3 +1,5 @@
+import collections
+
 from django.template import Context
 from django.template.loader import get_template
 from django import template
@@ -46,17 +48,32 @@ def reference_tolerance_span(test,ref,tol):
 
 #----------------------------------------------------------------------
 @register.filter
+def history_display(history,test):
+    template = get_template("qa/history.html")
+    c = Context({"history":history,"test":test})
+    return template.render(c)
+
+#----------------------------------------------------------------------
+@register.filter
 def as_pass_fail_status(test_list_instance):
     template = get_template("qa/pass_fail_status.html")
     statuses_to_exclude = [models.NO_TOL]
     c = Context({"instance":test_list_instance,"exclude":statuses_to_exclude})
     return template.render(c)
+
 #----------------------------------------------------------------------
 @register.filter
-def as_unreviewed_count(unit_test_collection):
-    template = get_template("qa/unreviewed_count.html")
-    c = Context({"unit_test_collection":unit_test_collection})
+def as_review_status(test_list_instance):
+    statuses = collections.defaultdict(lambda:{"count":0})
+    for ti in test_list_instance.testinstance_set.all():
+        statuses[ti.status.name]["count"] += 1
+        statuses[ti.status.name]["valid"] = ti.status.valid
+        statuses[ti.status.name]["requires_review"] = ti.status.requires_review
+        
+    template = get_template("qa/review_status.html")
+    c = Context({"statuses":dict(statuses)})
     return template.render(c)
+
 #----------------------------------------------------------------------
 @register.filter(expects_local_time=True)
 def as_due_date(unit_test_collection):
@@ -67,10 +84,9 @@ def as_due_date(unit_test_collection):
 #----------------------------------------------------------------------
 @register.filter(is_safe=True,expects_local_time=True)
 def as_time_delta(time_delta):
-    days, remainder = divmod(time_delta.seconds, 24*60*60)
-    hours, remainder = divmod(remainder, 60*60)
+    hours, remainder = divmod(time_delta.seconds, 60*60)
     minutes, seconds = divmod(remainder, 60)
-    return '%dd %dh %dm %ds' % (days, hours, minutes, seconds)
+    return '%dd %dh %dm %ds' % (time_delta.days, hours, minutes, seconds)
 as_time_delta.safe = True
 #----------------------------------------------------------------------
 @register.filter

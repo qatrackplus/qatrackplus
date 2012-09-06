@@ -68,7 +68,7 @@ function filter_test_lists(frequencies){
 	var test_lists = get_test_lists_for_frequencies(frequencies);
 
 	$("#test-list-container input").each(function(i,option){
-		var pk = $(this).val();
+		var pk = parseInt($(this).val());
 		if (test_lists.indexOf(pk)>=0){
 			$(this).parent().show();
 		}else{
@@ -82,20 +82,12 @@ function filter_test_lists(frequencies){
 function get_test_lists_for_frequencies(frequencies){
 
 	var test_lists = [];
-
-	var i;
-	$.each(frequencies,function(i,frequency){
-		$.each(QACharts.test_info.test_lists,function(pk,test_list){
-			if (test_list.frequencies.indexOf(frequency)>=0){
-				test_lists.push(pk)
-			}
-		});
-	});
-
+	var i;	
+	for (i=0; i < frequencies.length; i++){
+		test_lists.push.apply(test_lists,QACharts.test_info.frequencies[frequencies[i]]);
+	}
 	return test_lists;
-
 }
-
 
 /****************************************************/
 function get_tests_for_lists(test_lists){

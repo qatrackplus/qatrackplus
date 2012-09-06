@@ -166,6 +166,7 @@ function set_value_by_name(name, value){
     }
     input.val(value);
     check_test_status(input);
+    check_skip_status(input);
     update_qa_status();
 }
 

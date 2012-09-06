@@ -51,7 +51,7 @@
     display: inline-block;
     zoom: 1;
     min-width: 1px;
-    width:400px;
+    *width:400px;/* ie only */
 
 }
 
@@ -75,7 +75,9 @@ tr.qa-procedure td table{
 tr.qa-comment td textarea{
     width:90%;
 }
-
+.qa-procedure-text pre {
+    *width:900px;
+}
 #toggle-gen-comment {
     margin-bottom:10px;
 }

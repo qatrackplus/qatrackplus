@@ -30,10 +30,6 @@ class TestTags(TestCase):
         self.assertIsInstance(rendered,basestring)
 
     #----------------------------------------------------------------------
-    def test_unreviewed_count(self):
-        rendered = qa_tags.as_unreviewed_count(self.unit_test_list)
-        self.assertIsInstance(rendered,basestring)
-    #----------------------------------------------------------------------
     def test_due_date(self):
         rendered = qa_tags.as_due_date(self.unit_test_list)
         self.assertIsInstance(rendered,basestring)

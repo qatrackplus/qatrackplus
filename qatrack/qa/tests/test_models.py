@@ -1101,9 +1101,6 @@ class TestTestListInstance(TestCase):
             else:
                 self.assertTrue(len(tests)==1)
 
-        formatted = "1 Not Done, 2 OK, 1 Tolerance, 1 Action, 1 No Tol Set"
-        self.assertEqual(self.test_list_instance.pass_fail_status(True),formatted)
-
     #----------------------------------------------------------------------
     def test_review_status(self):
 
@@ -1111,10 +1108,6 @@ class TestTestListInstance(TestCase):
         for stat,tests in self.test_list_instance.status():
             self.assertEqual(len(tests),1)
 
-        self.assertEqual(
-            self.test_list_instance.status(formatted=True),
-            ", ".join(["1 status%d" % x for x in range(len(self.statuses))])
-        )
     #----------------------------------------------------------------------
     def test_unreviewed_instances(self):
 
