@@ -498,7 +498,7 @@ class PerformQA(CreateView):
             self.actual_day = cycle_membership[0].order
     #----------------------------------------------------------------------
     def set_unit_test_infos(self):
-        self.unit_test_infos = models.UnitTestInfo.objects.filter(
+        utis = models.UnitTestInfo.objects.filter(
             unit = self.unit_test_col.unit,
             test__in = self.all_tests,
             active=True,
@@ -510,7 +510,10 @@ class PerformQA(CreateView):
             "unit",
         )
 
-        self.add_histories()
+        #make sure utis are correctly ordered
+        uti_tests = [x.test for x in utis]
+        self.unit_test_infos = [utis[uti_tests.index(test)] for test in self.all_tests]
+
     #----------------------------------------------------------------------
     def add_histories(self):
         """paste historical values onto unit test infos"""
@@ -602,7 +605,7 @@ class PerformQA(CreateView):
         self.set_actual_day()
         self.set_all_tests()
         self.set_unit_test_infos()
-
+        self.add_histories()
 
         if self.request.method == "POST":
             formset = forms.CreateTestInstanceFormSet(self.request.POST,self.request.FILES,unit_test_infos=self.unit_test_infos)
