@@ -63,7 +63,7 @@
 
 						<dt>Duration :</dt>
 						<dd>
-							{% if tli.duration %}
+							{% if not tli.in_progress%}
 								{{tli.duration|as_time_delta}}
 							{% else %}
 								<em>In Progress</em>
