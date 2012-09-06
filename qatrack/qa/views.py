@@ -751,12 +751,8 @@ class ReviewTestListInstance(BaseEditTestListInstance):
         messages.success(self.request,_("Successfully updated %s "% self.object.test_list.name))
         return HttpResponseRedirect(self.get_success_url())
     #----------------------------------------------------------------------
-    def get_success_url(self):
-        kwargs = {
-            "unit_number":self.object.unit_test_collection.unit.number,
-            "frequency":self.object.unit_test_collection.frequency.slug
-        }
-        return reverse("qa_by_frequency_unit",kwargs=kwargs)
+    def get_success_url(self):        
+        return reverse("unreviewed")
 
 #============================================================================
 class EditTestListInstance(BaseEditTestListInstance):
@@ -1048,7 +1044,9 @@ class InProgress(TestListInstances):
 class Unreviewed(TestListInstances):
     """view for grouping all test lists with a certain frequency for all units"""
     queryset = models.TestListInstance.objects.unreviewed
-
+    #---------------------------------------------------------------------------
+    def get_queryset(self):
+        return self.fetch_related(self.queryset().order_by("-work_completed"))
     #----------------------------------------------------------------------
     def get_page_title(self):
         return "Unreviewed Test Lists"
