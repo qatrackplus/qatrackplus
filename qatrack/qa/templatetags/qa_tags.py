@@ -84,10 +84,9 @@ def as_due_date(unit_test_collection):
 #----------------------------------------------------------------------
 @register.filter(is_safe=True,expects_local_time=True)
 def as_time_delta(time_delta):
-    days, remainder = divmod(time_delta.seconds, 24*60*60)
-    hours, remainder = divmod(remainder, 60*60)
+    hours, remainder = divmod(time_delta.seconds, 60*60)
     minutes, seconds = divmod(remainder, 60)
-    return '%dd %dh %dm %ds' % (days, hours, minutes, seconds)
+    return '%dd %dh %dm %ds' % (time_delta.days, hours, minutes, seconds)
 as_time_delta.safe = True
 #----------------------------------------------------------------------
 @register.filter
