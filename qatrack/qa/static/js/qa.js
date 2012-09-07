@@ -326,7 +326,7 @@ $(document).ready(function(){
         }
         check_test_status($(this));
         calculate_composites();
-
+        update_qa_status();
     });
 
     //run filter routine anytime user alters the categories
