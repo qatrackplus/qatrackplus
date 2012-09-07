@@ -125,7 +125,6 @@ class UpdateTestInstanceForm(TestInstanceWidgetsMixin,forms.ModelForm):
         self.set_value_widget()
         self.disable_read_only_fields()
 
-
     #----------------------------------------------------------------------
     def get_test_info(self):
         return {

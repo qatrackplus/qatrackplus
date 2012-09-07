@@ -5,9 +5,12 @@ from salmonella.admin import SalmonellaMixin
 
 from django.utils.translation import ugettext as _
 from django.contrib import admin
+from django.contrib.admin import widgets
 from django.contrib.admin.templatetags.admin_static import static
 from django.utils.safestring import mark_safe
 from django.utils import timezone
+from django.utils.text import Truncator
+from django.utils.html import escape
 
 import qatrack.qa.models as models
 from qatrack.units.models import Unit
@@ -184,14 +187,14 @@ class TestListAdminForm(forms.ModelForm):
 
 #============================================================================
 class TestInlineFormSet(forms.models.BaseInlineFormSet):
-    #----------------------------------------------------------------------
-    def get_queryset(self):
-        if not hasattr(self, '_queryset'):
-            qs = super(TestInlineFormSet, self).get_queryset().select_related(
-                "test"
-            )
-            self._queryset = qs
-        return self._queryset
+    #---------------------------------------------------------------------------
+    def __init__(self,*args,**kwargs):
+        """"""
+
+        qs = kwargs["queryset"].filter(test_list=kwargs["instance"]).select_related("test")
+        kwargs["queryset"] = qs
+        super(TestInlineFormSet,self).__init__(*args,**kwargs)
+    
     #----------------------------------------------------------------------
     def clean(self):
         """Make sure there are no duplicated slugs in a TestList"""
@@ -229,16 +232,46 @@ class TestListMembershipInline(admin.TabularInline):
     readonly_fields = (macro_name,)
     raw_id_fields = ("test",)
 
-    #salmonella_fields = ("test",)
-    def queryset(self,*args,**kwargs):
-        qs = super(TestListMembershipInline,self).queryset(*args,**kwargs)
-        return qs.select_related("test","test_list")
+    #---------------------------------------------------------------------------
+    def __init__(self,*args,**kwargs):
+        """"""
+        #randy extra query is being generated in label_for_value in contrib/admin/widgets.py
+        
+        super(TestListMembershipInline,self).__init__(*args,**kwargs)
+        
+    #---------------------------------------------------------------------------
+    def label_for_value(self,value):
+        try:
+            name = self.test_names[value]
+            return '&nbsp;<strong>%s</strong>' % escape(Truncator(name).words(14, truncate='...'))
+        except (ValueError, KeyError):
+            return ''
 
-    def formfield_for_dbfield(self,db_field,**kwargs):
-        formfield = super(TestListMembershipInline,self).formfield_for_dbfield(db_field,**kwargs)
+        
+    def formfield_for_foreignkey(self,db_field, request=None,**kwargs):
+        db = kwargs.get('using')
         if db_field.name == "test":
-            formfield.choices = list(formfield.choices)
-        return formfield
+            widget = widgets.ForeignKeyRawIdWidget(db_field.rel,
+                                    self.admin_site, using=db)
+            widget.label_for_value = self.label_for_value
+            kwargs['widget'] = widget
+        
+        elif db_field.name in self.raw_id_fields:
+            kwargs['widget'] = widgets.ForeignKeyRawIdWidget(db_field.rel,
+                                    self.admin_site, using=db)
+        elif db_field.name in self.radio_fields:
+            kwargs['widget'] = widgets.AdminRadioSelect(attrs={
+                'class': get_ul_class(self.radio_fields[db_field.name]),
+            })
+            kwargs['empty_label'] = db_field.blank and _('None') or None
+        return db_field.formfield(**kwargs)
+    
+    #salmonella_fields = ("test",)
+    def get_formset(self,request,obj=None,**kwargs):
+        self.test_names = dict(obj.tests.values_list("pk","name"))
+        formset = super(TestListMembershipInline,self).get_formset(request,obj,**kwargs)
+    #    print qs
+        return formset    
 #============================================================================
 class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
     prepopulated_fields =  {'slug': ('name',)}
@@ -305,9 +338,9 @@ class UnitTestCollectionAdmin(admin.ModelAdmin):
             "unit__name",
             "frequency__name",
             "assigned_to__name"
-        ).prefetch_related(
-            "tests_object",
-        )
+            ).prefetch_related(
+                "tests_object",
+            )
 #============================================================================
 class TestListCycleMembershipInline(SalmonellaMixin,admin.TabularInline):
 
