@@ -498,6 +498,8 @@ class Test(models.Model):
 @receiver(pre_save,sender=Test)
 def on_test_save(*args, **kwargs):
     """Ensure that model validates on save"""
+    if kwargs.get("raw",False):
+        return
 
     test = kwargs["instance"]
     if test.type is not BOOLEAN:
@@ -1029,6 +1031,10 @@ class TestInstance(models.Model):
 #----------------------------------------------------------------------
 @receiver(post_save,sender=TestInstance)
 def on_test_instance_saved(*args,**kwargs):
+
+    if kwargs.get("raw",False):
+        return
+
     test_instance = kwargs["instance"]
     if not test_instance.in_progress:
         last = test_instance.unit_test_info.last_instance
@@ -1087,7 +1093,7 @@ class TestListInstance(models.Model):
         instances = list(self.testinstance_set.all())
         statuses = [(status,display,[x for x in instances if x.pass_fail == status]) for status,display in PASS_FAIL_CHOICES]
         return [x for x in statuses if len(x[2])>0]
-    
+
     #----------------------------------------------------------------------
     def duration(self):
         """return timedelta of time from start to completion"""
@@ -1117,6 +1123,8 @@ class TestListInstance(models.Model):
 @receiver(post_save,sender=TestListInstance)
 def on_test_list_instance_saved(*args,**kwargs):
     """set last instance for UnitTestInfo"""
+    if kwargs.get("raw",False):
+        return
 
     test_list_instance = kwargs["instance"]
 
