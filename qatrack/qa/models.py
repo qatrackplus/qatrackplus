@@ -365,7 +365,7 @@ class Test(models.Model):
     """Test to be completed as part of a QA :model:`TestList`"""
 
     VARIABLE_RE = re.compile("^[a-zA-Z_]+[0-9a-zA-Z_]*$")
-    RESULT_RE = re.compile("^result\s*=\s*[(_0-9.a-zA-Z]+.*$",re.MULTILINE)
+    RESULT_RE = re.compile("^result\s*=\s*[(\-+_0-9.a-zA-Z]+.*$",re.MULTILINE)
 
     name = models.CharField(max_length=256, help_text=_("Name for this test"),unique=True,db_index=True)
     slug = models.SlugField(
