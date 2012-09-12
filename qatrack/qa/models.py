@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 from django.dispatch import receiver
-from django.db.models.signals import pre_save,post_save, m2m_changed
+from django.db.models.signals import pre_save,post_save, post_delete, m2m_changed
 from django.db.models import signals
 from django.utils import timezone
 
@@ -1041,7 +1041,7 @@ def on_test_instance_saved(*args,**kwargs):
         if not last or (last and last.work_completed <= test_instance.work_completed):
             test_instance.unit_test_info.last_instance = test_instance
             test_instance.unit_test_info.save()
-
+        
 #============================================================================
 class TestListInstanceManager(models.Manager):
 
@@ -1150,6 +1150,23 @@ def on_test_list_instance_saved(*args,**kwargs):
         ).filter(
             last_instance_filter
         ).update(last_instance=test_list_instance)
+
+@receiver(post_delete,sender=TestListInstance)
+#----------------------------------------------------------------------
+def on_test_list_instance_deleted(*args,**kwargs):
+    """update last_instance if available"""
+    test_list_instance = kwargs["instance"]
+    utc = test_list_instance.unit_test_collection
+
+    try:
+        last =  TestListInstance.objects.filter(unit_test_collection=utc).latest("work_completed")
+        utc.last_instance = last
+        utc.save()
+        for ti in last.testinstance_set.all():
+            ti.unit_test_info.last_instance = ti
+            ti.unit_test_info.save()
+    except TestListInstance.DoesNotExist:
+        pass
 
 #============================================================================
 class TestListCycle(TestCollectionInterface):
