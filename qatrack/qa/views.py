@@ -546,7 +546,7 @@ class PerformQA(CreateView):
             status=models.TestInstanceStatus.objects.default()
             if form.fields.has_key("status"):
                 val = form["status"].value()
-                if val is not None:
+                if val not in ("", None):
                     status = models.TestInstanceStatus.objects.get(pk=val)
 
             for ti_form in formset:
@@ -789,7 +789,7 @@ class EditTestListInstance(BaseEditTestListInstance):
             status=models.TestInstanceStatus.objects.default()
             if form.fields.has_key("status"):
                 val = form["status"].value()
-                if val is not None:
+                if val not in ("",  None):
                     status = models.TestInstanceStatus.objects.get(pk=val)
 
             for ti_form in formset:
