@@ -25,7 +25,7 @@ def due_date(last_done_date,frequency):
 
 
 #----------------------------------------------------------------------
-def tests_history(tests,unit,from_date):
+def tests_history(tests,unit,from_date,test_list=None):
     all_instances = models.TestInstance.objects.filter(
         unit_test_info__test__in = tests,
         unit_test_info__unit = unit,
@@ -36,6 +36,8 @@ def tests_history(tests,unit,from_date):
         "created_by"
     ).order_by("-work_completed")
 
+    if test_list is not None:
+        all_instances = all_instances.filter(test_list_instance__test_list=test_list)
 
     hist_dict = {}
     for instance in all_instances:
