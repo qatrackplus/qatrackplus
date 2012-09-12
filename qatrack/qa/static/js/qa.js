@@ -268,9 +268,9 @@ function check_skip_status(input){
 /****************************************************************/
 function update_qa_status(){
     if ($(".btn-danger").length >0){
-        $("#do-not-treat").show();
+        $(".do-not-treat").show();
     }else{
-        $("#do-not-treat").hide();
+        $(".do-not-treat").hide();
     }
 }
 /****************************************************************/
