@@ -341,7 +341,16 @@ class FrequencyAdmin(admin.ModelAdmin):
 class StatusAdmin(admin.ModelAdmin):
     prepopulated_fields =  {'slug': ('name',)}
     model = models.TestInstanceStatus
+#----------------------------------------------------------------------
+def utc_unit_name(obj):
+    return obj.unit_test_collection.unit.name
+utc_unit_name.admin_order_field = "unit_test_collection__unit__name"
+utc_unit_name.short_description = "Unit"
 
+#====================================================================================
+class TestListInstanceAdmin(admin.ModelAdmin):
+    list_display = ["__unicode__",utc_unit_name,"test_list","work_completed","created_by"]
+    
 
 admin.site.register([models.Tolerance], BasicSaveUserAdmin)
 admin.site.register([models.Category], CategoryAdmin)
@@ -353,4 +362,4 @@ admin.site.register([models.UnitTestCollection],UnitTestCollectionAdmin)
 admin.site.register([models.TestListCycle],TestListCycleAdmin)
 admin.site.register([models.Frequency], FrequencyAdmin)
 admin.site.register([models.TestInstanceStatus], StatusAdmin)
-#admin.site.register([models.TestListInstance,models.TestInstance], admin.ModelAdmin)
+admin.site.register([models.TestListInstance], TestListInstanceAdmin)
