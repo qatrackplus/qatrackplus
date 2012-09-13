@@ -2,6 +2,8 @@
 {% load staticfiles %}
 {% load qa_tags %}
 
+{% block head_title %}{{test_list_instance.work_completed|date}} {{test_list_instance.test_list.name}} Details{% endblock %}
+
 {% block body %}
     <div class="row-fluid">
         <div class="span12">
