@@ -35,9 +35,9 @@
 
 							<a class="btn btn-danger btn-mini" title="Permanently Delete This List" href="#" disabled="disabled" >Delete</a>
 							{% if instance.in_progress %}
-								<a class="btn btn-primary btn-mini" title="Continue this list" href="{%url edit_tli pk=test_list_instance.pk%}" >Continue</a>
+								<a class="btn btn-primary btn-mini" title="Continue this list" href="{%url edit_tli pk=test_list_instance.pk%}?next={{request.get_full_path}}" >Continue</a>
 							{% else %}
-								<a class="btn btn-primary btn-mini" title="Edit this list" href="{%url edit_tli pk=test_list_instance.pk%}" >Edit</a>
+								<a class="btn btn-primary btn-mini" title="Edit this list" href="{%url edit_tli pk=test_list_instance.pk%}?next={{request.get_full_path}}" >Edit</a>
 							{% endif %}
 						</dd>
 				   </dl>
