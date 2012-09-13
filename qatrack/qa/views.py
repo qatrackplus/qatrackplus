@@ -835,7 +835,12 @@ class EditTestListInstance(BaseEditTestListInstance):
 
     #----------------------------------------------------------------------
     def get_success_url(self):
+        next_ = self.request.GET.get("next",None)
+        if next_ is not None:
+            return next_
+
         return reverse("unreviewed")
+
 
 #============================================================================
 class UTCList(ListView):

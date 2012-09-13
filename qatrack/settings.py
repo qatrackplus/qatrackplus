@@ -168,7 +168,10 @@ TEMPLATE_DIRS = (
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = list(DEFAULT_SETTINGS.TEMPLATE_CONTEXT_PROCESSORS)
-TEMPLATE_CONTEXT_PROCESSORS += ["qatrack.context_processors.site",]
+TEMPLATE_CONTEXT_PROCESSORS += [
+    'django.core.context_processors.request',
+    "qatrack.context_processors.site",
+]
 
 #------------------------------------------------------------------------------
 #Fixtures
