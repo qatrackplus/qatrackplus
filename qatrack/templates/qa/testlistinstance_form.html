@@ -50,6 +50,7 @@
 <div class="row-fluid">
     <div class="span12">
 		<form class="nosubmit form-inline" id="qa-form" method="POST" action="">
+		
 			{% csrf_token %}
 
 			<div id="admin_controls" class="well">
@@ -175,6 +176,15 @@
 					{{form.comment}}
 				</div>
 			</div>
+
+			<div class="row-fluid">
+				<div class="span12" id="overall-qa-status">
+					<div class="alert alert-error do-not-treat">
+						<strong>Do Not Treat! Call Physics.</strong>
+					</div>
+				</div>
+			</div>
+			
 			<div class="row-fluid">
 				<div class="span12">
 					<div class="pull-right">
@@ -194,13 +204,6 @@
     </div>
 </div>
 
-<div class="row-fluid">
-	<div class="span12" id="overall-qa-status">
-		<div class="alert alert-error do-not-treat">
-			<strong>Do Not Treat! Call Physics.</strong>
-		</div>
-	</div>
-</div>
 
 {% endblock %}
 
