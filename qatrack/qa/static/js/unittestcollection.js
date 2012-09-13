@@ -12,8 +12,8 @@ function init_test_collection_tables(){
 			null, //Unit
 			null, //Freq
 			null,  // Test list name
-			{"sType":"span-timestamp"}, //date completed
 			{"sType":"span-timestamp"}, //due date
+			{"sType":"span-timestamp"}, //date completed
 			null, //qa status
 			null//assigned to
 		];
@@ -23,8 +23,8 @@ function init_test_collection_tables(){
 				{type: "select"}, //Unit
 				{type: "select"}, //Freq
 				{type: "text" }, // Test list name
-				{type: "text" }, //date completed
 				{type: "text" }, //due date
+				{type: "text" }, //date completed
 				null, //qa status
 				{type: "select"}//assigned to
 			];

@@ -25,6 +25,10 @@
     margin-bottom:2px;
 }
 
+.test-collection-table th{
+    text-align:center;
+}
+
 /************************************************/
 /* performing qa                                */
 #overall-qa-status{

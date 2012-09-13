@@ -25,8 +25,8 @@
 				<th>Unit</th>
 				<th>Frequency</th>
 				<th>Test List/Cycle</th>
-				<th>Last Performed</th>
 				<th>Due Date</th>
+				<th>Last Performed</th>
 				<th>Last QA Pass/Fail Status</th>
 				<th>Assigned To</th>
 			</tr>
@@ -35,8 +35,8 @@
 				<th>Unit</th>
 				<th>Frequency</th>
 				<th>Test List/Cycle</th>
-				<th>Last Performed</th>
 				<th>Due Date</th>
+				<th>Last Performed</th>
 				<th>Last QA Pass/Fail Status</th>
 				<th>Assigned To</th>
 			</tr>
@@ -61,15 +61,16 @@
 
 					{% if  utc.last_instance %}
 						<td>
+							{{utc|as_due_date}}
+						</td>
+
+						<td>
 							<span data-timestamp="{{utc.last_instance.work_completed|date:"U"}}" >
 								<abbr title="QA performed by {{utc.last_instance.created_by}}">
 									{{utc.last_instance.work_completed}}
 								</abbr>
 								<i class="icon-user" title="QA performed by {{utc.last_instance.created_by}}"></i>
 							</span>
-						</td>
-						<td>
-							{{utc|as_due_date}}
 						</td>
 						<td class="pass_fail_status">
 							{{utc.last_instance|as_pass_fail_status}}
@@ -96,8 +97,8 @@
 				<th>Unit</th>
 				<th>Frequency</th>
 				<th>Test List/Cycle</th>
-				<th>Last Performed</th>
 				<th>Due Date</th>
+				<th>Last Performed</th>
 				<th>Last QA Pass/Fail Status</th>
 				<th>Assigned To</th>
 			</tr>
