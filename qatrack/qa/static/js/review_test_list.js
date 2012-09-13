@@ -10,7 +10,7 @@ $(document).ready(function(){
 	$("#apply-status").live("click",function(){
 		var val = $("#bulk-status").val();
 		if (val !== ""){
-			$("td.review-status select").val(val);
+			$("input.test-selected:checked").parents("tr").find("select").val(val);
 		}
 		return false;
 	});
