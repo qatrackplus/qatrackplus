@@ -707,7 +707,12 @@ class BaseEditTestListInstance(UpdateView):
         raise NotImplementedError
     #----------------------------------------------------------------------
     def get_success_url(self):
-        raise NotImplementedError
+        next_ = self.request.GET.get("next",None)
+        if next_ is not None:
+            return next_
+
+        return reverse("unreviewed")
+
 
 #============================================================================
 class ReviewTestListInstance(BaseEditTestListInstance):
@@ -753,9 +758,6 @@ class ReviewTestListInstance(BaseEditTestListInstance):
         #let user know request succeeded and return to unit list
         messages.success(self.request,_("Successfully updated %s "% self.object.test_list.name))
         return HttpResponseRedirect(self.get_success_url())
-    #----------------------------------------------------------------------
-    def get_success_url(self):
-        return reverse("unreviewed")
 
 #============================================================================
 class EditTestListInstance(BaseEditTestListInstance):
@@ -832,14 +834,6 @@ class EditTestListInstance(BaseEditTestListInstance):
         context["include_admin"] = self.request.user.is_staff
 
         return context
-
-    #----------------------------------------------------------------------
-    def get_success_url(self):
-        next_ = self.request.GET.get("next",None)
-        if next_ is not None:
-            return next_
-
-        return reverse("unreviewed")
 
 
 #============================================================================
