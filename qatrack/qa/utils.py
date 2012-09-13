@@ -32,6 +32,7 @@ def tests_history(tests,unit,from_date,test_list=None):
         work_completed__gte = from_date,
     ).select_related(
         "status",
+        "tolerance","reference",
         "unit_test_info__test__pk",
         "created_by"
     ).order_by("-work_completed")
