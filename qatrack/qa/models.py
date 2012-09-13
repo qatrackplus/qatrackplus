@@ -396,7 +396,10 @@ class Test(models.Model):
     modified = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(User, editable=False, related_name="test_modifier")
 
-
+    #----------------------------------------------------------------------
+    def is_numerical(self):
+        """return whether or not this is a numerical test"""
+        return self.type in (COMPOSITE,CONSTANT,SIMPLE)
     #----------------------------------------------------------------------
     def is_boolean(self):
         """Return whether or not this is a boolean test"""
@@ -982,18 +985,23 @@ class TestInstance(models.Model):
 
     #---------------------------------------------------------------------------
     def float_pass_fail(self):
-        if self.tolerance.type == ABSOLUTE:
-            diff = self.difference()
-        else:
-            diff = self.percent_difference()
-
+        diff = self.calculate_diff()
         if self.tolerance.tol_low <= diff <= self.tolerance.tol_high:
             self.pass_fail = OK
         elif self.tolerance.act_low <= diff <= self.tolerance.tol_low or self.tolerance.tol_high <= diff <= self.tolerance.act_high:
             self.pass_fail = TOLERANCE
         else:
             self.pass_fail = ACTION
+    #----------------------------------------------------------------------
+    def calculate_diff(self):
+        if not (self.tolerance and self.reference and self.unit_test_info.test):
+            return
 
+        if self.tolerance.type == ABSOLUTE:
+            diff = self.difference()
+        else:
+            diff = self.percent_difference()
+        return diff
     #----------------------------------------------------------------------
     def calculate_pass_fail(self):
         """set pass/fail status of the current value"""
@@ -1017,12 +1025,21 @@ class TestInstance(models.Model):
             return "Not Done"
 
         test = self.unit_test_info.test
-        if test.type == BOOLEAN:
+        if test.is_boolean():
             return "Yes" if int(self.value) == 1 else "No"
-        elif test.type == MULTIPLE_CHOICE:
+        elif test.is_mult_choice():
             return test.get_choice_value(self.value)
-        return self.value
-
+        return "%.4g" % self.value
+    #----------------------------------------------------------------------
+    def diff_display(self):
+        display = ""
+        if self.unit_test_info.test.is_numerical():
+            diff = self.calculate_diff()
+            if diff:
+                display = "diff = %.4g" % diff
+                if self.tolerance and self.tolerance.type == PERCENT:
+                    display += "%"
+        return display
     #----------------------------------------------------------------------
     def __unicode__(self):
         """return display representation of object"""
@@ -1041,7 +1058,7 @@ def on_test_instance_saved(*args,**kwargs):
         if not last or (last and last.work_completed <= test_instance.work_completed):
             test_instance.unit_test_info.last_instance = test_instance
             test_instance.unit_test_info.save()
-        
+
 #============================================================================
 class TestListInstanceManager(models.Manager):
 

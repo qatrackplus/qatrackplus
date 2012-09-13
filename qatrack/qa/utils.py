@@ -47,6 +47,7 @@ def tests_history(tests,unit,from_date,test_list=None):
             "pass_fail":instance.pass_fail,
             "status":instance.status,
             "created_by":instance.created_by,
+            "diff":instance.diff_display(),
         }
         try:
             hist_dict[instance.unit_test_info.test.pk].append(hist)
