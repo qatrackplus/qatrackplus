@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 from django.dispatch import receiver
-from django.db.models.signals import pre_save,post_save, m2m_changed
+from django.db.models.signals import pre_save,post_save, post_delete, m2m_changed
 from django.db.models import signals
 from django.utils import timezone
 
@@ -365,7 +365,7 @@ class Test(models.Model):
     """Test to be completed as part of a QA :model:`TestList`"""
 
     VARIABLE_RE = re.compile("^[a-zA-Z_]+[0-9a-zA-Z_]*$")
-    RESULT_RE = re.compile("^result\s*=\s*[(_0-9.a-zA-Z]+.*$",re.MULTILINE)
+    RESULT_RE = re.compile("^result\s*=\s*[(\-+_0-9.a-zA-Z]+.*$",re.MULTILINE)
 
     name = models.CharField(max_length=256, help_text=_("Name for this test"),unique=True,db_index=True)
     slug = models.SlugField(
@@ -523,12 +523,12 @@ class UnitTestInfo(models.Model):
     unit = models.ForeignKey(Unit)
     test = models.ForeignKey(Test)
 
-    reference = models.ForeignKey(Reference,verbose_name=_("Current Reference"),null=True, blank=True)
-    tolerance = models.ForeignKey(Tolerance,null=True, blank=True)
+    reference = models.ForeignKey(Reference,verbose_name=_("Current Reference"),null=True, blank=True,on_delete=models.SET_NULL)
+    tolerance = models.ForeignKey(Tolerance,null=True, blank=True,on_delete=models.SET_NULL)
 
     active = models.BooleanField(help_text=_("Uncheck to disable this test on this unit"), default=True,db_index=True)
 
-    assigned_to = models.ForeignKey(Group,help_text = _("QA group that this test list should nominally be performed by"),null=True, blank=True)
+    assigned_to = models.ForeignKey(Group,help_text = _("QA group that this test list should nominally be performed by"),null=True, blank=True,on_delete=models.SET_NULL)
     last_instance = models.ForeignKey("TestInstance",null=True, editable=False,on_delete=models.SET_NULL)
     objects = UnitTestInfoManager()
     #============================================================================
@@ -1041,7 +1041,7 @@ def on_test_instance_saved(*args,**kwargs):
         if not last or (last and last.work_completed <= test_instance.work_completed):
             test_instance.unit_test_info.last_instance = test_instance
             test_instance.unit_test_info.save()
-
+        
 #============================================================================
 class TestListInstanceManager(models.Manager):
 
@@ -1150,6 +1150,23 @@ def on_test_list_instance_saved(*args,**kwargs):
         ).filter(
             last_instance_filter
         ).update(last_instance=test_list_instance)
+
+@receiver(post_delete,sender=TestListInstance)
+#----------------------------------------------------------------------
+def on_test_list_instance_deleted(*args,**kwargs):
+    """update last_instance if available"""
+    test_list_instance = kwargs["instance"]
+    utc = test_list_instance.unit_test_collection
+
+    try:
+        last =  TestListInstance.objects.filter(unit_test_collection=utc).latest("work_completed")
+        utc.last_instance = last
+        utc.save()
+        for ti in last.testinstance_set.all():
+            ti.unit_test_info.last_instance = ti
+            ti.unit_test_info.save()
+    except TestListInstance.DoesNotExist:
+        pass
 
 #============================================================================
 class TestListCycle(TestCollectionInterface):

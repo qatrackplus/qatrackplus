@@ -30,7 +30,7 @@
 #overall-qa-status{
     min-height:0px;
 }
-#do-not-treat,
+.do-not-treat,
 #contacts{
     display:none;
     min-height:0px;

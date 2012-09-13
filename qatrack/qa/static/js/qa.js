@@ -268,9 +268,9 @@ function check_skip_status(input){
 /****************************************************************/
 function update_qa_status(){
     if ($(".btn-danger").length >0){
-        $("#do-not-treat").show();
+        $(".do-not-treat").show();
     }else{
-        $("#do-not-treat").hide();
+        $(".do-not-treat").hide();
     }
 }
 /****************************************************************/
@@ -341,7 +341,7 @@ $(document).ready(function(){
         var idx = user_inputs.index(this);
 
         //rather than submitting form on enter, move to next value
-        if (e.which == QAUtils.KC_ENTER  || e.which == QAUtils.KC_DOWN || e.which == QAUtils.KC_RIGHT ) {
+        if (e.which == QAUtils.KC_ENTER  || e.which == QAUtils.KC_DOWN ) {
 
             if (idx == user_inputs.length - 1) {
                 user_inputs.first().focus();
@@ -349,7 +349,7 @@ $(document).ready(function(){
                 user_inputs[idx+1].focus();
             }
             return false;
-        }else if (e.which == QAUtils.KC_UP || e.which == QAUtils.KC_LEFT ){
+        }else if (e.which == QAUtils.KC_UP ){
             if (idx == 0) {
                 user_inputs.last().focus();
             } else {

@@ -47,6 +47,8 @@ class CategoryAdmin(admin.ModelAdmin):
 #============================================================================
 class TestInfoForm(forms.ModelForm):
     reference_value = forms.FloatField(label=_("New reference value"),required=False,)
+    reference_set_by = forms.CharField(label=_("Set by"),required=False)
+    reference_set = forms.CharField(label=_("Date"),required=False)
     test_type = forms.CharField(required=False)
 
     class Meta:
@@ -54,8 +56,10 @@ class TestInfoForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(TestInfoForm, self).__init__(*args, **kwargs)
-        self.fields['test_type'].widget.attrs['readonly'] = "readonly"
-
+        readonly = ("test_type", "reference_set_by", "reference_set",)
+        for f in readonly:
+            self.fields[f].widget.attrs['readonly'] = "readonly"
+        
         if self.instance:
             tt = self.instance.test.type
             i = [x[0] for x in models.TEST_TYPE_CHOICES].index(tt)
@@ -74,7 +78,12 @@ class TestInfoForm(forms.ModelForm):
                 else:
                     val = self.instance.reference.value
                 self.initial["reference_value"] = val
-
+                
+            if self.instance.reference:
+                r = self.instance.reference
+                self.initial["reference_set_by"] = "%s" % (r.modified_by)
+                self.initial["reference_set"] = "%s" % (r.modified)
+                
     #----------------------------------------------------------------------
     def clean(self):
         """make sure valid numbers are entered for boolean data"""
@@ -111,7 +120,7 @@ class UnitTestInfoAdmin(admin.ModelAdmin):
     form = TestInfoForm
     fields = (
         "unit", "test","test_type",
-        "reference", "tolerance",
+        "reference", "reference_set_by", "reference_set", "tolerance",
         "reference_value",
     )
     list_display = ["test",test_type, "unit", "reference", "tolerance"]
@@ -332,7 +341,16 @@ class FrequencyAdmin(admin.ModelAdmin):
 class StatusAdmin(admin.ModelAdmin):
     prepopulated_fields =  {'slug': ('name',)}
     model = models.TestInstanceStatus
+#----------------------------------------------------------------------
+def utc_unit_name(obj):
+    return obj.unit_test_collection.unit.name
+utc_unit_name.admin_order_field = "unit_test_collection__unit__name"
+utc_unit_name.short_description = "Unit"
 
+#====================================================================================
+class TestListInstanceAdmin(admin.ModelAdmin):
+    list_display = ["__unicode__",utc_unit_name,"test_list","work_completed","created_by"]
+    
 
 admin.site.register([models.Tolerance], BasicSaveUserAdmin)
 admin.site.register([models.Category], CategoryAdmin)
@@ -344,4 +362,4 @@ admin.site.register([models.UnitTestCollection],UnitTestCollectionAdmin)
 admin.site.register([models.TestListCycle],TestListCycleAdmin)
 admin.site.register([models.Frequency], FrequencyAdmin)
 admin.site.register([models.TestInstanceStatus], StatusAdmin)
-admin.site.register([models.TestListInstance,models.TestInstance], admin.ModelAdmin)
+admin.site.register([models.TestListInstance], TestListInstanceAdmin)

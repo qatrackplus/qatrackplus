@@ -518,7 +518,7 @@ class PerformQA(CreateView):
     def add_histories(self):
         """paste historical values onto unit test infos"""
         from_date = timezone.make_aware(timezone.datetime.now() - timezone.timedelta(days=10*self.unit_test_col.frequency.overdue_interval),timezone.get_current_timezone())
-        histories = utils.tests_history(self.all_tests,self.unit_test_col.unit,from_date)
+        histories = utils.tests_history(self.all_tests,self.unit_test_col.unit,from_date,test_list=self.test_list)
         self.unit_test_infos, self.history_dates = utils.add_history_to_utis(self.unit_test_infos,histories)
 
     #----------------------------------------------------------------------
@@ -546,14 +546,14 @@ class PerformQA(CreateView):
             status=models.TestInstanceStatus.objects.default()
             if form.fields.has_key("status"):
                 val = form["status"].value()
-                if val is not None:
+                if val not in ("", None):
                     status = models.TestInstanceStatus.objects.get(pk=val)
 
             for ti_form in formset:
                 ti = models.TestInstance(
-                    value=ti_form.cleaned_data["value"],
-                    skipped=ti_form.cleaned_data["skipped"],
-                    comment=ti_form.cleaned_data["comment"],
+                    value=ti_form.cleaned_data.get("value",None),
+                    skipped=ti_form.cleaned_data.get("skipped",False),
+                    comment=ti_form.cleaned_data.get("comment",""),
                     unit_test_info = ti_form.unit_test_info,
                     reference = ti_form.unit_test_info.reference,
                     tolerance = ti_form.unit_test_info.tolerance,
@@ -671,7 +671,7 @@ class BaseEditTestListInstance(UpdateView):
         """paste historical values onto unit test infos"""
         from_date = timezone.make_aware(timezone.datetime.now() - timezone.timedelta(days=10*self.object.unit_test_collection.frequency.overdue_interval),timezone.get_current_timezone())
         tests = [x.unit_test_info.test for x in self.test_instances]
-        histories = utils.tests_history(tests,self.object.unit_test_collection.unit,from_date)
+        histories = utils.tests_history(tests,self.object.unit_test_collection.unit,from_date,test_list=self.object.test_list)
         unit_test_infos = [f.instance.unit_test_info for f in forms]
         unit_test_infos, self.history_dates = utils.add_history_to_utis(unit_test_infos,histories)
         for uti,f in zip(unit_test_infos,forms):
@@ -789,7 +789,7 @@ class EditTestListInstance(BaseEditTestListInstance):
             status=models.TestInstanceStatus.objects.default()
             if form.fields.has_key("status"):
                 val = form["status"].value()
-                if val is not None:
+                if val not in ("",  None):
                     status = models.TestInstanceStatus.objects.get(pk=val)
 
             for ti_form in formset:

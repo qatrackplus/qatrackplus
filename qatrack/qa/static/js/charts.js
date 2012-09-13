@@ -82,9 +82,13 @@ function filter_test_lists(frequencies){
 function get_test_lists_for_frequencies(frequencies){
 
 	var test_lists = [];
-	var i;	
+	var freq_lists;
+	var i,j;	
 	for (i=0; i < frequencies.length; i++){
-		test_lists.push.apply(test_lists,QACharts.test_info.frequencies[frequencies[i]]);
+		freq_lists = QACharts.test_info.frequencies[frequencies[i]];
+		if (freq_lists){	
+			test_lists.push.apply(test_lists,freq_lists);
+		}
 	}
 	return test_lists;
 }

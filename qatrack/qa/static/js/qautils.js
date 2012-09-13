@@ -110,7 +110,7 @@ var QAUtils = new function() {
 
         if (tolerances.type === this.PERCENT){
             diff = this.percent_difference(value,reference);
-            message = "(" + diff.toFixed(1)+")";
+            message = "(" + diff.toFixed(1)+"%)";
 
         }else{
             diff = this.absolute_difference(value,reference);
