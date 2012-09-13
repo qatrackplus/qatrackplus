@@ -551,9 +551,9 @@ class PerformQA(CreateView):
 
             for ti_form in formset:
                 ti = models.TestInstance(
-                    value=ti_form.cleaned_data["value"],
-                    skipped=ti_form.cleaned_data["skipped"],
-                    comment=ti_form.cleaned_data["comment"],
+                    value=ti_form.cleaned_data.get("value",None),
+                    skipped=ti_form.cleaned_data.get("skipped",False),
+                    comment=ti_form.cleaned_data.get("comment",""),
                     unit_test_info = ti_form.unit_test_info,
                     reference = ti_form.unit_test_info.reference,
                     tolerance = ti_form.unit_test_info.tolerance,
