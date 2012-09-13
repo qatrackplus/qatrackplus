@@ -529,7 +529,7 @@ class UnitTestInfo(models.Model):
     active = models.BooleanField(help_text=_("Uncheck to disable this test on this unit"), default=True,db_index=True)
 
     assigned_to = models.ForeignKey(Group,help_text = _("QA group that this test list should nominally be performed by"),null=True, blank=True)
-    last_instance = models.ForeignKey("TestInstance",null=True, editable=False)
+    last_instance = models.ForeignKey("TestInstance",null=True, editable=False,on_delete=models.SET_NULL)
     objects = UnitTestInfoManager()
     #============================================================================
     class Meta:
@@ -699,7 +699,7 @@ class UnitTestCollection(models.Model):
     tests_object = generic.GenericForeignKey("content_type","object_id")
     objects = UnitTestListManager()
 
-    last_instance = models.ForeignKey("TestListInstance",null=True,editable=False)
+    last_instance = models.ForeignKey("TestListInstance",null=True,editable=False,on_delete=models.SET_NULL)
 
 
 
@@ -918,8 +918,8 @@ class TestInstance(models.Model):
 
 
     #reference used
-    reference = models.ForeignKey(Reference,null=True, blank=True,editable=False)
-    tolerance = models.ForeignKey(Tolerance, null=True, blank=True,editable=False)
+    reference = models.ForeignKey(Reference,null=True, blank=True,editable=False,on_delete=models.SET_NULL)
+    tolerance = models.ForeignKey(Tolerance, null=True, blank=True,editable=False,on_delete=models.SET_NULL)
 
     unit_test_info = models.ForeignKey(UnitTestInfo,editable=False)
 
