@@ -722,12 +722,12 @@ class UnitTestCollection(models.Model):
         """
 
         if self.last_instance:
-            return utils.due_date(self.last_instance.work_completed,self.frequency)
+            return utils.due_date(self.last_instance,self.frequency)
 
     #----------------------------------------------------------------------
     def due_status(self):
         if self.last_instance:
-            return utils.due_status(self.last_instance.work_completed,self.frequency)
+            return utils.due_status(self.last_instance,self.frequency)
         return NOT_DUE
 
     #----------------------------------------------------------------------

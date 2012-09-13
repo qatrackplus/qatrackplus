@@ -5,10 +5,15 @@ import tokenize
 import token
 
 #----------------------------------------------------------------------
-def due_status(last_done,frequency):
-
-    if last_done is None:
+def due_status(last_instance,frequency):
+    if last_instance is None:
         return models.NOT_DUE
+
+    last_done = last_instance.work_completed
+
+    invalids = [1 for x in last_instance.testinstance_set.all() if not x.status.valid]
+    if invalids:
+        return models.OVERDUE
 
     day_delta = (timezone.localtime(timezone.now()).date()-timezone.localtime(last_done).date()).days
 
@@ -20,8 +25,12 @@ def due_status(last_done,frequency):
     return models.NOT_DUE
 
 #----------------------------------------------------------------------
-def due_date(last_done_date,frequency):
-    return timezone.localtime(last_done_date+frequency.due_delta())
+def due_date(last_instance,frequency):
+    invalids = [1 for x in last_instance.testinstance_set.all() if not x.status.valid]
+    if invalids:
+        return timezone.localtime(timezone.datetime.now())
+    last_done = last_instance.work_completed
+    return timezone.localtime(last_done+frequency.due_delta())
 
 
 #----------------------------------------------------------------------

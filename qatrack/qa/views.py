@@ -857,6 +857,7 @@ class UTCList(ListView):
             "assigned_to__name",
         ).prefetch_related(
             "last_instance__testinstance_set",
+            "last_instance__testinstance_set__status",
             "tests_object",
         ).order_by("unit__number","testlist__name","testlistcycle__name",)
 
