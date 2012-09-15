@@ -25,7 +25,8 @@
     margin-bottom:2px;
 }
 
-.test-collection-table th{
+.test-collection-table th,
+.test-collection-table td{
     text-align:center;
 }
 
