@@ -216,7 +216,7 @@ class Reference(models.Model):
             return ""
         if self.type == BOOLEAN:
             return "Yes" if int(self.value)==1 else "No"
-        return self.value
+        return "%.3g" %(self.value)
     #---------------------------------------------------------------------------
     def __unicode__(self):
         """more helpful display name"""
@@ -821,9 +821,9 @@ def get_or_create_unit_test_info(unit,test,assigned_to=None, active=True):
 def update_unit_test_assignments(collection):
     """find out which units this test_list is assigned to and make
     sure there are UnitTestCollections for each Unit, Test pair"""
-    
+
     #note this function should be re-written.  It generates a of DB queries right now.
-    
+
     all_parents = {
         ContentType.objects.get_for_model(collection):[collection],
     }
