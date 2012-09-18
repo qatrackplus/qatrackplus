@@ -1055,14 +1055,18 @@ class TestInstance(models.Model):
 @receiver(post_save,sender=TestInstance)
 def on_test_instance_saved(*args,**kwargs):
 
-    if not loaded_from_fixture(kwargs):
+    if (not loaded_from_fixture(kwargs)) and kwargs["created"]:
 
         test_instance = kwargs["instance"]
-        if not test_instance.in_progress:
-            last = test_instance.unit_test_info.last_instance
-            if not last or (last and last.work_completed <= test_instance.work_completed):
-                test_instance.unit_test_info.last_instance = test_instance
-                test_instance.unit_test_info.save()
+        try:
+            latest = TestInstance.objects.complete().filter(
+                unit_test_info = test_instance.unit_test_info
+            ).latest("work_completed")
+        except TestInstance.DoesNotExist:
+            latest = None
+
+        test_instance.unit_test_info.last_instance = latest
+        test_instance.unit_test_info.save()
 
 #============================================================================
 class TestListInstanceManager(models.Manager):
