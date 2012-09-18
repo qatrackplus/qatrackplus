@@ -510,18 +510,17 @@ def loaded_from_fixture(kwargs):
 @receiver(pre_save,sender=Test)
 def on_test_save(*args, **kwargs):
     """Ensure that model validates on save"""
-    if loaded_from_fixture(kwargs):
-        return
+    if not loaded_from_fixture(kwargs):
 
-    test = kwargs["instance"]
-    if test.type is not BOOLEAN:
-        return
+        test = kwargs["instance"]
+        if test.type is not BOOLEAN:
+            return
 
-    unit_assignments = UnitTestInfo.objects.filter(test = test)
+        unit_assignments = UnitTestInfo.objects.filter(test = test)
 
-    for ua in unit_assignments:
-        if ua.reference and ua.reference.value not in (0.,1.,):
-            raise ValidationError("Can't change test type to %s while this test is still assigned to %s with a non-boolean reference"%(test.type, ua.unit.name))
+        for ua in unit_assignments:
+            if ua.reference and ua.reference.value not in (0.,1.,):
+                raise ValidationError("Can't change test type to %s while this test is still assigned to %s with a non-boolean reference"%(test.type, ua.unit.name))
 
 
 class UnitTestInfoManager(models.Manager):
@@ -1056,15 +1055,14 @@ class TestInstance(models.Model):
 @receiver(post_save,sender=TestInstance)
 def on_test_instance_saved(*args,**kwargs):
 
-    if loaded_from_fixture(kwargs):
-        return
+    if not loaded_from_fixture(kwargs):
 
-    test_instance = kwargs["instance"]
-    if not test_instance.in_progress:
-        last = test_instance.unit_test_info.last_instance
-        if not last or (last and last.work_completed <= test_instance.work_completed):
-            test_instance.unit_test_info.last_instance = test_instance
-            test_instance.unit_test_info.save()
+        test_instance = kwargs["instance"]
+        if not test_instance.in_progress:
+            last = test_instance.unit_test_info.last_instance
+            if not last or (last and last.work_completed <= test_instance.work_completed):
+                test_instance.unit_test_info.last_instance = test_instance
+                test_instance.unit_test_info.save()
 
 #============================================================================
 class TestListInstanceManager(models.Manager):
@@ -1147,33 +1145,33 @@ class TestListInstance(models.Model):
 @receiver(post_save,sender=TestListInstance)
 def on_test_list_instance_saved(*args,**kwargs):
     """set last instance for UnitTestInfo"""
-    if loaded_from_fixture(kwargs):
-        return
 
-    test_list_instance = kwargs["instance"]
+    if not loaded_from_fixture(kwargs):
 
-    if test_list_instance.in_progress:
-        return
+        test_list_instance = kwargs["instance"]
 
-    cycle_ids = TestListCycle.objects.filter(
-        test_lists = test_list_instance.test_list
-    ).values_list("pk",flat=True)
-    cycle_ct = ContentType.objects.get_for_model(TestListCycle)
+        if test_list_instance.in_progress:
+            return
 
-    test_list_ids = [test_list_instance.test_list.pk]
-    list_ct = ContentType.objects.get_for_model(TestList)
+        cycle_ids = TestListCycle.objects.filter(
+            test_lists = test_list_instance.test_list
+        ).values_list("pk",flat=True)
+        cycle_ct = ContentType.objects.get_for_model(TestListCycle)
 
-    to_update = [(cycle_ct,cycle_ids), (list_ct,test_list_ids)]
-    last_instance_filter = Q(last_instance__work_completed__lte=test_list_instance.work_completed) | Q(last_instance=None)
+        test_list_ids = [test_list_instance.test_list.pk]
+        list_ct = ContentType.objects.get_for_model(TestList)
 
-    for ct,object_ids in to_update:
-        UnitTestCollection.objects.filter(
-            content_type = ct,
-            object_id__in = object_ids,
-            unit = test_list_instance.unit_test_collection.unit,
-        ).filter(
-            last_instance_filter
-        ).update(last_instance=test_list_instance)
+        to_update = [(cycle_ct,cycle_ids), (list_ct,test_list_ids)]
+        last_instance_filter = Q(last_instance__work_completed__lte=test_list_instance.work_completed) | Q(last_instance=None)
+
+        for ct,object_ids in to_update:
+            UnitTestCollection.objects.filter(
+                content_type = ct,
+                object_id__in = object_ids,
+                unit = test_list_instance.unit_test_collection.unit,
+            ).filter(
+                last_instance_filter
+            ).update(last_instance=test_list_instance)
 
 @receiver(post_delete,sender=TestListInstance)
 #----------------------------------------------------------------------
