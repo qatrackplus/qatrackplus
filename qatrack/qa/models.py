@@ -1141,54 +1141,57 @@ class TestListInstance(models.Model):
     def __unicode__(self):
         return "TestListInstance(pk=%s)"%self.pk
 
+
+#----------------------------------------------------------------------
+def update_last_instances(test_list_instance):
+    try:
+        last_instance = TestListInstance.objects.complete().filter(
+            unit_test_collection=test_list_instance.unit_test_collection
+        ).latest("work_completed")
+    except TestListInstance.DoesNotExist:
+        last_instance = None
+
+    cycle_ids = TestListCycle.objects.filter(
+        test_lists = test_list_instance.test_list
+    ).values_list("pk",flat=True)
+    cycle_ct = ContentType.objects.get_for_model(TestListCycle)
+
+    test_list_ids = [test_list_instance.test_list.pk]
+    list_ct = ContentType.objects.get_for_model(TestList)
+
+    to_update = [(cycle_ct,cycle_ids), (list_ct,test_list_ids)]
+
+    for ct,object_ids in to_update:
+        UnitTestCollection.objects.filter(
+            content_type = ct,
+            object_id__in = object_ids,
+            unit = test_list_instance.unit_test_collection.unit,
+        ).update(last_instance=last_instance)
+
+    if last_instance:
+        for ti in last_instance.testinstance_set.all():
+            ti.unit_test_info.last_instance = ti
+            ti.unit_test_info.save()
+    else:
+        for ti in test_list_instance.testinstance_set.all():
+            ti.unit_test_info.last_instance = None
+            ti.unit_test_info.save()
+
+
 #----------------------------------------------------------------------
 @receiver(post_save,sender=TestListInstance)
 def on_test_list_instance_saved(*args,**kwargs):
     """set last instance for UnitTestInfo"""
 
     if not loaded_from_fixture(kwargs):
-
-        test_list_instance = kwargs["instance"]
-
-        if test_list_instance.in_progress:
-            return
-
-        cycle_ids = TestListCycle.objects.filter(
-            test_lists = test_list_instance.test_list
-        ).values_list("pk",flat=True)
-        cycle_ct = ContentType.objects.get_for_model(TestListCycle)
-
-        test_list_ids = [test_list_instance.test_list.pk]
-        list_ct = ContentType.objects.get_for_model(TestList)
-
-        to_update = [(cycle_ct,cycle_ids), (list_ct,test_list_ids)]
-        last_instance_filter = Q(last_instance__work_completed__lte=test_list_instance.work_completed) | Q(last_instance=None)
-
-        for ct,object_ids in to_update:
-            UnitTestCollection.objects.filter(
-                content_type = ct,
-                object_id__in = object_ids,
-                unit = test_list_instance.unit_test_collection.unit,
-            ).filter(
-                last_instance_filter
-            ).update(last_instance=test_list_instance)
+        update_last_instances(kwargs["instance"])
 
 @receiver(post_delete,sender=TestListInstance)
 #----------------------------------------------------------------------
 def on_test_list_instance_deleted(*args,**kwargs):
     """update last_instance if available"""
     test_list_instance = kwargs["instance"]
-    utc = test_list_instance.unit_test_collection
-
-    try:
-        last =  TestListInstance.objects.filter(unit_test_collection=utc).latest("work_completed")
-        utc.last_instance = last
-        utc.save()
-        for ti in last.testinstance_set.all():
-            ti.unit_test_info.last_instance = ti
-            ti.unit_test_info.save()
-    except TestListInstance.DoesNotExist:
-        pass
+    update_last_instances(kwargs["instance"])
 
 #============================================================================
 class TestListCycle(TestCollectionInterface):
