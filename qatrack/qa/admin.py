@@ -62,7 +62,7 @@ class TestInfoForm(forms.ModelForm):
         readonly = ("test_type", "reference_set_by", "reference_set",)
         for f in readonly:
             self.fields[f].widget.attrs['readonly'] = "readonly"
-        
+
         if self.instance:
             tt = self.instance.test.type
             i = [x[0] for x in models.TEST_TYPE_CHOICES].index(tt)
@@ -81,12 +81,12 @@ class TestInfoForm(forms.ModelForm):
                 else:
                     val = self.instance.reference.value
                 self.initial["reference_value"] = val
-                
+
             if self.instance.reference:
                 r = self.instance.reference
                 self.initial["reference_set_by"] = "%s" % (r.modified_by)
                 self.initial["reference_set"] = "%s" % (r.modified)
-                
+
     #----------------------------------------------------------------------
     def clean(self):
         """make sure valid numbers are entered for boolean data"""
@@ -198,12 +198,10 @@ class TestListAdminForm(forms.ModelForm):
 class TestInlineFormSet(forms.models.BaseInlineFormSet):
     #---------------------------------------------------------------------------
     def __init__(self,*args,**kwargs):
-        """"""
-
         qs = kwargs["queryset"].filter(test_list=kwargs["instance"]).select_related("test")
         kwargs["queryset"] = qs
         super(TestInlineFormSet,self).__init__(*args,**kwargs)
-    
+
     #----------------------------------------------------------------------
     def clean(self):
         """Make sure there are no duplicated slugs in a TestList"""
@@ -220,9 +218,7 @@ class TestInlineFormSet(forms.models.BaseInlineFormSet):
             raise forms.ValidationError(
                 "The following macro names are duplicated :: " + ",".join(duplicates)
             )
-
         return self.cleaned_data
-
 
 
 #----------------------------------------------------------------------
@@ -249,7 +245,7 @@ class TestListMembershipInline(admin.TabularInline):
         except (ValueError, KeyError):
             return ''
 
-        
+
     def formfield_for_foreignkey(self,db_field, request=None,**kwargs):
         #copied from django.contrib.admin.wigets so we can override the label_for_value function
         #for the test raw id widget
@@ -259,7 +255,7 @@ class TestListMembershipInline(admin.TabularInline):
                                     self.admin_site, using=db)
             widget.label_for_value = self.label_for_value
             kwargs['widget'] = widget
-        
+
         elif db_field.name in self.raw_id_fields:
             kwargs['widget'] = widgets.ForeignKeyRawIdWidget(db_field.rel,
                                     self.admin_site, using=db)
@@ -269,13 +265,15 @@ class TestListMembershipInline(admin.TabularInline):
             })
             kwargs['empty_label'] = db_field.blank and _('None') or None
         return db_field.formfield(**kwargs)
-    
+
 
     def get_formset(self,request,obj=None,**kwargs):
         #hacky method for getting test names so they don't need to be looked up again
         # in the label_for_value in contrib/admin/widgets.py
         self.test_names = dict(obj.tests.values_list("pk","name"))
         return super(TestListMembershipInline,self).get_formset(request,obj,**kwargs)
+
+
 #============================================================================
 class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
     prepopulated_fields =  {'slug': ('name',)}
@@ -387,7 +385,7 @@ utc_unit_name.short_description = "Unit"
 #====================================================================================
 class TestListInstanceAdmin(admin.ModelAdmin):
     list_display = ["__unicode__",utc_unit_name,"test_list","work_completed","created_by"]
-    
+
 
 admin.site.register([models.Tolerance], BasicSaveUserAdmin)
 admin.site.register([models.Category], CategoryAdmin)
