@@ -498,10 +498,13 @@ class Test(models.Model):
         return "%s" % (self.name)
 
 #============================================================================
+def loaded_from_fixture(kwargs):
+    return kwargs.get("raw",False)
+
 @receiver(pre_save,sender=Test)
 def on_test_save(*args, **kwargs):
     """Ensure that model validates on save"""
-    if kwargs.get("raw",False):
+    if loaded_from_fixture(kwargs):
         return
 
     test = kwargs["instance"]
@@ -818,6 +821,9 @@ def get_or_create_unit_test_info(unit,test,assigned_to=None, active=True):
 def update_unit_test_assignments(collection):
     """find out which units this test_list is assigned to and make
     sure there are UnitTestCollections for each Unit, Test pair"""
+    
+    #note this function should be re-written.  It generates a of DB queries right now.
+    
     all_parents = {
         ContentType.objects.get_for_model(collection):[collection],
     }
@@ -859,8 +865,7 @@ def list_assigned_to_unit(*args,**kwargs):
     """UnitTestCollection was saved.  Create UnitTestCollections
     for all Tests. (Case 1 from above)"""
 
-    if not kwargs.get("raw",False):
-        #don't process signal when loading fixture data
+    if not loaded_from_fixture(kwargs):
         update_unit_test_assignments(kwargs["instance"].tests_object)
 
 #----------------------------------------------------------------------
@@ -870,8 +875,7 @@ def test_added_to_list(*args,**kwargs):
     is performed on and create UnitTestCollection for the Unit, Test pair.
     Covers case 2a & 2b.
     """
-    if not kwargs.get("raw",False):
-        #don't process signal when loading fixture data
+    if not loaded_from_fixture(kwargs):
         update_unit_test_assignments(kwargs["instance"].test_list)
 
 #----------------------------------------------------------------------
@@ -879,16 +883,14 @@ def test_added_to_list(*args,**kwargs):
 def test_list_saved(*args,**kwargs):
     """TestList was saved. Recreate any UTI's that may have been deleted in past
     """
-    if not kwargs.get("raw",False):
-        #don't process signal when loading fixture data
+    if not loaded_from_fixture(kwargs):
         update_unit_test_assignments(kwargs["instance"])
 
 #----------------------------------------------------------------------
 @receiver(m2m_changed, sender=TestList.sublists.through)
 def sublist_changed(*args,**kwargs):
     """when a sublist changes"""
-    if not kwargs.get("raw",False):
-        #don't process signal when loading fixture data
+    if not loaded_from_fixture(kwargs):
         update_unit_test_assignments(kwargs["instance"])
 
 #============================================================================
@@ -1048,7 +1050,7 @@ class TestInstance(models.Model):
 @receiver(post_save,sender=TestInstance)
 def on_test_instance_saved(*args,**kwargs):
 
-    if kwargs.get("raw",False):
+    if loaded_from_fixture(kwargs):
         return
 
     test_instance = kwargs["instance"]
@@ -1139,7 +1141,7 @@ class TestListInstance(models.Model):
 @receiver(post_save,sender=TestListInstance)
 def on_test_list_instance_saved(*args,**kwargs):
     """set last instance for UnitTestInfo"""
-    if kwargs.get("raw",False):
+    if loaded_from_fixture(kwargs):
         return
 
     test_list_instance = kwargs["instance"]
