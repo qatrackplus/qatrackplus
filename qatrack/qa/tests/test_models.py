@@ -77,12 +77,15 @@ class TestReference(TestCase):
         self.assertRaises(ValidationError,r.clean_fields)
     #----------------------------------------------------------------------
     def test_display_value(self):
-        t = models.Reference(name="bool",type=models.BOOLEAN,value=1        )
-        f = models.Reference(name="bool",type=models.BOOLEAN,value=0        )
-        v = models.Reference(name="bool",type=models.ABSOLUTE,value=0        )
+        t = models.Reference(type=models.BOOLEAN,value=1        )
+        f = models.Reference(type=models.BOOLEAN,value=0        )
+        v = models.Reference(type=models.NUMERICAL,value=0        )
+        n = models.Reference(type=models.NUMERICAL)
+
         self.assertTrue(t.value_display() == "Yes")
         self.assertTrue(f.value_display() == "No")
-        self.assertTrue(v.value_display() == 0)
+        self.assertTrue(v.value_display() == "0")
+        self.assertTrue(n.value_display() == "")
 
 #====================================================================================
 class TestTolerance(TestCase):
@@ -132,8 +135,36 @@ class TestTolerance(TestCase):
     def test_invalid_mc_choices(self):
         t = models.Tolerance(name="foo",mc_pass_choices="a",type=models.ABSOLUTE)
         self.assertRaises(ValidationError,t.clean_choices)
+
         t = models.Tolerance(name="foo",mc_tol_choices="a",type=models.ABSOLUTE)
         self.assertRaises(ValidationError,t.clean_choices)
+    #----------------------------------------------------------------------
+    def test_no_pass_choices(self):
+        t = models.Tolerance(name="foo",mc_pass_choices="",type=models.MULTIPLE_CHOICE)
+        self.assertRaises(ValidationError,t.clean_choices)
+
+    #----------------------------------------------------------------------
+    def test_no_tol_choices(self):
+        t = models.Tolerance(name="foo",mc_pass_choices="a",mc_tol_choices="",type=models.MULTIPLE_CHOICE)
+        t.clean_choices()
+        t = models.Tolerance(name="foo",mc_pass_choices="a",type=models.MULTIPLE_CHOICE)
+        t.clean_choices()
+    #----------------------------------------------------------------------
+    def test_tolerances_for_value_none(self):
+        expected = {models.ACT_HIGH:None,models.ACT_LOW:None,models.TOL_LOW:None,models.TOL_HIGH:None}
+        t = models.Tolerance()
+        self.assertDictEqual(t.tolerances_for_value(None),expected)
+    #----------------------------------------------------------------------
+    def test_tolerances_for_value_absolute(self):
+        expected = {models.ACT_HIGH:55,models.ACT_LOW:51,models.TOL_LOW:52,models.TOL_HIGH:54}
+        t = models.Tolerance(act_high=2,act_low=-2,tol_high=1,tol_low=-1,type=models.ABSOLUTE)
+        self.assertDictEqual(expected,t.tolerances_for_value(53))
+    #----------------------------------------------------------------------
+    def test_tolerances_for_value_percent(self):
+        expected = {models.ACT_HIGH:1.02,models.ACT_LOW:0.98,models.TOL_LOW:0.99,models.TOL_HIGH:1.01}
+        t = models.Tolerance(act_high=2,act_low=-2,tol_high=1,tol_low=-1,type=models.PERCENT)
+        self.assertDictEqual(expected,t.tolerances_for_value(1))
+
 
 
 #====================================================================================
@@ -147,6 +178,10 @@ class TestTest(TestCase):
     def test_is_boolean(self):
         test = utils.create_test(name="bool",test_type=models.BOOLEAN)
         self.assertTrue(test.is_boolean())
+    #----------------------------------------------------------------------
+    def test_is_numerical(self):
+        test = utils.create_test(name="num",test_type=models.NUMERICAL)
+        self.assertTrue(test.is_numerical())
 
     #---------------------------------------------------------------------------
     def test_valid_check_test_type(self):

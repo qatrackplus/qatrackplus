@@ -324,7 +324,7 @@ class Tolerance(models.Model):
 
         if value is None:
             return tols
-        if self.type == ABSOLUTE:
+        elif self.type == ABSOLUTE:
             for attr in attrs:
                 tols[attr] = value + getattr(self,attr)
         elif self.type == PERCENT:
