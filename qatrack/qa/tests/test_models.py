@@ -1048,7 +1048,7 @@ class TestTestInstance(TestCase):
         uti = models.UnitTestInfo(test=t)
 
         ti = models.TestInstance(unit_test_info=uti,value=0)
-        self.assertEqual(0,ti.value_display())
+        self.assertEqual("0",ti.value_display())
 
 
 #============================================================================

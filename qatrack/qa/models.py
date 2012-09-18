@@ -818,7 +818,6 @@ def get_or_create_unit_test_info(unit,test,assigned_to=None, active=True):
 def update_unit_test_assignments(collection):
     """find out which units this test_list is assigned to and make
     sure there are UnitTestCollections for each Unit, Test pair"""
-
     all_parents = {
         ContentType.objects.get_for_model(collection):[collection],
     }
@@ -1035,8 +1034,8 @@ class TestInstance(models.Model):
         display = ""
         if self.unit_test_info.test.is_numerical() and self.value is not None:
             diff = self.calculate_diff()
-            if diff:
-                display = "diff = %.4g" % diff
+            if diff is not None:
+                display = "%.4g" % diff
                 if self.tolerance and self.tolerance.type == PERCENT:
                     display += "%"
         return display
