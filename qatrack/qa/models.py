@@ -280,7 +280,7 @@ class Tolerance(models.Model):
                     tol_choices = []
 
                 if not pass_choices:
-                    errors.append("You must give more at l passing choice for a multiple choice tolerance")
+                    errors.append("You must give at least l passing choice for a multiple choice tolerance")
                 else:
                     self.mc_pass_choices = ",".join(pass_choices)
                     if tol_choices:
