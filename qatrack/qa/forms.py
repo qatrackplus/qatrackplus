@@ -75,6 +75,7 @@ class CreateTestInstanceForm(TestInstanceWidgetsMixin,forms.Form):
     def __init__(self,*args,**kwargs):
         super(CreateTestInstanceForm,self).__init__(*args,**kwargs)
         self.in_progress = False
+        self.fields["comment"].widget.attrs["rows"] = 2
 
     #----------------------------------------------------------------------
     def set_unit_test_info(self,unit_test_info):
