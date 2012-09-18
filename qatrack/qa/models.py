@@ -264,27 +264,28 @@ class Tolerance(models.Model):
     #---------------------------------------------------------------------------
     def clean_choices(self):
         """make sure choices provided if Tolerance Type is MultipleChoice"""
+
         errors = []
+
         if self.type == MULTIPLE_CHOICE:
+
             if (None, None, None, None) != (self.act_low,self.tol_low,self.tol_high,self.act_high):
                 errors.append("Value set for tolerance or action but type is Multiple Choice")
+
             if self.mc_pass_choices  is None or self.mc_pass_choices.strip()=="":
-                errors.append("You must give more at l passing choice for a multiple choice tolerance")
+                errors.append("You must give at least l passing choice for a multiple choice tolerance")
             else:
 
                 pass_choices = [x.strip() for x in self.mc_pass_choices.split(",") if x.strip()]
+                self.mc_pass_choices = ",".join(pass_choices)
 
                 if self.mc_tol_choices:
                     tol_choices = [x.strip() for x in self.mc_tol_choices.split(",") if x.strip()]
                 else:
                     tol_choices = []
 
-                if not pass_choices:
-                    errors.append("You must give at least l passing choice for a multiple choice tolerance")
-                else:
-                    self.mc_pass_choices = ",".join(pass_choices)
-                    if tol_choices:
-                        self.mc_tol_choices = ",".join(tol_choices)
+                if tol_choices:
+                    self.mc_tol_choices = ",".join(tol_choices)
 
         elif self.type != MULTIPLE_CHOICE:
             if (self.mc_pass_choices or self.mc_tol_choices):
