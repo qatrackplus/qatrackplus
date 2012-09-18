@@ -195,7 +195,7 @@ class Reference(models.Model):
     """Reference values for various QA :model:`Test`s"""
 
     name = models.CharField(max_length=256, help_text=_("Enter a short name for this reference"))
-    type = models.CharField(max_length=15, choices=REF_TYPE_CHOICES,default="numerical")
+    type = models.CharField(max_length=15, choices=REF_TYPE_CHOICES,default=NUMERICAL)
     value = models.FloatField(help_text=_("Enter the reference value for this test."))
 
     #who created this reference
