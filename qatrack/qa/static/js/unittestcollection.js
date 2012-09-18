@@ -9,24 +9,26 @@ function init_test_collection_tables(){
 
 		var cols = [
 			null, //Action
+			null,  // Test list name			
+			{"sType":"span-timestamp"}, //due date			
 			null, //Unit
 			null, //Freq
-			null,  // Test list name
+			null,//assigned to
 			{"sType":"span-timestamp"}, //date completed
-			{"sType":"span-timestamp"}, //due date
-			null, //qa status
-			null//assigned to
+			null, //pass/fail status
+			null // review -status
 		];
 
 		var	filter_cols = [
 				null, //action
-				{type: "select"}, //Unit
+				{type: "text" }, // Test list name				
+				{type: "text" }, //due date				
+				{type: "select"}, //Unit				
 				{type: "select"}, //Freq
-				{type: "text" }, // Test list name
+				{type: "select"},//assigned to
 				{type: "text" }, //date completed
-				{type: "text" }, //due date
-				null, //qa status
-				{type: "select"}//assigned to
+				null, //pass/fail status
+				null //review-status
 			];
 
 
@@ -35,7 +37,7 @@ function init_test_collection_tables(){
 			bStateSave:false, //save filter/sort state between page loads
 			bFilter:true,
 			bPaginate: false,
-			aaSorting:[[3,"asc"]],//sort by name
+			aaSorting:[[1,"asc"]],//sort by name
 			aoColumns: cols,
 			fnAdjustColumnSizing:false
 

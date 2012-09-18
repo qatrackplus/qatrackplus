@@ -27,7 +27,9 @@ class TestInstanceWidgetsMixin(object):
 
         #force user to enter value unless skipping test
         if value is None and not skipped:
-            self._errors["value"] = self.error_class(["Value required"])
+            self._errors["value"] = self.error_class(["Value required if not skipping"])
+        elif value is not None and skipped:
+            self._errors["value"] = self.error_class(["Clear value if skipping"])
 
         if skipped and not comment :
             self._errors["skipped"] = self.error_class(["Please add comment when skipping"])
@@ -194,21 +196,21 @@ class BaseTestListInstanceForm(forms.ModelForm):
         self.fields["comment"].widget.attrs["class"] = "pull-right"
         self.fields["comment"].widget.attrs["placeholder"] = "Add comment about this set of tests"
         self.fields["comment"].widget.attrs.pop("cols")
-        
+
     #---------------------------------------------------------------------------
     def clean(self):
         """"""
         cleaned_data = super(BaseTestListInstanceForm,self).clean()
-        
+
         work_started = cleaned_data.get("work_started")
         work_completed = cleaned_data.get("work_completed")
-        
+
         if work_started and work_completed:
-            
+
             if work_completed <= work_started:
                 self._errors["work_started"] = self.error_class(["Work started date/time can not be after work completed date/time"])
                 del cleaned_data["work_started"]
-            
+
         elif work_started:
             if work_started >= timezone.make_aware(timezone.datetime.now(),timezone.get_current_timezone()):
                 self._errors["work_started"] = self.error_class(["Work started date/time can not be in the future"])
@@ -232,7 +234,15 @@ class UpdateTestListInstanceForm(BaseTestListInstanceForm):
     def __init__(self,*args,**kwargs):
 
         instance = kwargs["instance"]
-        instance.work_completed = None
+
+        #only blank out work_completed if we are continuing an in progress list
+        #otherwise maintain work completed date (e.g. we are just updating a
+        #test list instance that was completed earlier.
+        if instance.in_progress:
+            instance.work_completed = None
+
+        #force user to re-check in_progress flag if they want to submit
+        # as in_progress again.
         instance.in_progress = False
 
         super(UpdateTestListInstanceForm,self).__init__(*args,**kwargs)

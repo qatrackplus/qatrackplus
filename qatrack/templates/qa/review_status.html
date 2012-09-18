@@ -1,3 +1,3 @@
 {% for display,status in statuses.items %}
-	<span class="label {% if not status.valid %} label-important {% elif status.requires_review %} label-warning {% else %} label-success{% endif %}">{{status.count}} {{display}}</span>
+	<span class="label {% if not status.valid %} label-important {% elif status.requires_review %} label-warning {% else %} label-success{% endif %}">{{status.count}} {{display}}</span>	
 {% endfor %}

@@ -551,9 +551,9 @@ class PerformQA(CreateView):
 
             for ti_form in formset:
                 ti = models.TestInstance(
-                    value=ti_form.cleaned_data["value"],
-                    skipped=ti_form.cleaned_data["skipped"],
-                    comment=ti_form.cleaned_data["comment"],
+                    value=ti_form.cleaned_data.get("value",None),
+                    skipped=ti_form.cleaned_data.get("skipped",False),
+                    comment=ti_form.cleaned_data.get("comment",""),
                     unit_test_info = ti_form.unit_test_info,
                     reference = ti_form.unit_test_info.reference,
                     tolerance = ti_form.unit_test_info.tolerance,
@@ -707,7 +707,12 @@ class BaseEditTestListInstance(UpdateView):
         raise NotImplementedError
     #----------------------------------------------------------------------
     def get_success_url(self):
-        raise NotImplementedError
+        next_ = self.request.GET.get("next",None)
+        if next_ is not None:
+            return next_
+
+        return reverse("unreviewed")
+
 
 #============================================================================
 class ReviewTestListInstance(BaseEditTestListInstance):
@@ -753,9 +758,6 @@ class ReviewTestListInstance(BaseEditTestListInstance):
         #let user know request succeeded and return to unit list
         messages.success(self.request,_("Successfully updated %s "% self.object.test_list.name))
         return HttpResponseRedirect(self.get_success_url())
-    #----------------------------------------------------------------------
-    def get_success_url(self):
-        return reverse("unreviewed")
 
 #============================================================================
 class EditTestListInstance(BaseEditTestListInstance):
@@ -833,9 +835,6 @@ class EditTestListInstance(BaseEditTestListInstance):
 
         return context
 
-    #----------------------------------------------------------------------
-    def get_success_url(self):
-        return reverse("unreviewed")
 
 #============================================================================
 class UTCList(ListView):
@@ -858,6 +857,7 @@ class UTCList(ListView):
             "assigned_to__name",
         ).prefetch_related(
             "last_instance__testinstance_set",
+            "last_instance__testinstance_set__status",
             "tests_object",
         ).order_by("unit__number","testlist__name","testlistcycle__name",)
 
