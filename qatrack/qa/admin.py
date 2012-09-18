@@ -242,13 +242,6 @@ class TestListMembershipInline(admin.TabularInline):
     raw_id_fields = ("test",)
 
     #---------------------------------------------------------------------------
-    def __init__(self,*args,**kwargs):
-        """"""
-        #randy extra query is being generated in label_for_value in contrib/admin/widgets.py
-        
-        super(TestListMembershipInline,self).__init__(*args,**kwargs)
-        
-    #---------------------------------------------------------------------------
     def label_for_value(self,value):
         try:
             name = self.test_names[value]
@@ -258,6 +251,8 @@ class TestListMembershipInline(admin.TabularInline):
 
         
     def formfield_for_foreignkey(self,db_field, request=None,**kwargs):
+        #copied from django.contrib.admin.wigets so we can override the label_for_value function
+        #for the test raw id widget
         db = kwargs.get('using')
         if db_field.name == "test":
             widget = widgets.ForeignKeyRawIdWidget(db_field.rel,
@@ -275,12 +270,12 @@ class TestListMembershipInline(admin.TabularInline):
             kwargs['empty_label'] = db_field.blank and _('None') or None
         return db_field.formfield(**kwargs)
     
-    #salmonella_fields = ("test",)
+
     def get_formset(self,request,obj=None,**kwargs):
+        #hacky method for getting test names so they don't need to be looked up again
+        # in the label_for_value in contrib/admin/widgets.py
         self.test_names = dict(obj.tests.values_list("pk","name"))
-        formset = super(TestListMembershipInline,self).get_formset(request,obj,**kwargs)
-    #    print qs
-        return formset    
+        return super(TestListMembershipInline,self).get_formset(request,obj,**kwargs)
 #============================================================================
 class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
     prepopulated_fields =  {'slug': ('name',)}
