@@ -58,6 +58,11 @@ TOLERANCE = "tolerance"
 ACTION = "action"
 NO_TOL = "no_tol"
 
+ACT_HIGH = "act_high"
+ACT_LOW = "act_low"
+TOL_HIGH = "tol_high"
+TOL_LOW = "tol_low"
+
 PASS_FAIL_CHOICES = (
     (NOT_DONE,"Not Done"),
     (OK,"OK"),
@@ -297,7 +302,7 @@ class Tolerance(models.Model):
     def clean_tols(self):
         if self.type  in (ABSOLUTE, PERCENT):
             errors = {}
-            check = ("act_high","act_low","tol_high","tol_low",)
+            check = (ACT_HIGH,ACT_LOW,TOL_HIGH,TOL_LOW,)
             for c in check:
                 if getattr(self,c) is None:
                     errors[c] = ["You can not leave this field blank for this test type"]
@@ -314,7 +319,7 @@ class Tolerance(models.Model):
     def tolerances_for_value(self,value):
         """return dict containing tolerances for input value"""
 
-        tols = {"act_high":None,"act_low":None,"tol_low":None,"tol_high":None}
+        tols = {ACT_HIGH:None,ACT_LOW:None,TOL_LOW:None,TOL_HIGH:None}
         attrs = tols.keys()
 
         if value is None:
