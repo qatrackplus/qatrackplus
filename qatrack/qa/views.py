@@ -512,7 +512,14 @@ class PerformQA(CreateView):
 
         #make sure utis are correctly ordered
         uti_tests = [x.test for x in utis]
-        self.unit_test_infos = [utis[uti_tests.index(test)] for test in self.all_tests]
+        self.unit_test_infos = []
+        for test in self.all_tests:
+            try:
+                self.unit_test_infos.append(utis[uti_tests.index(test)])
+            except ValueError:
+                msg =  "Do not treat! Please call physics.  Test '%s' is missing information for this unit "% test.name
+                logger.error(msg+ " Test=%d"%test.pk)
+                messages.error(self.request,_(msg))
 
     #----------------------------------------------------------------------
     def add_histories(self):
