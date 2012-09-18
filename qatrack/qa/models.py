@@ -787,26 +787,7 @@ class UnitTestCollection(models.Model):
     #----------------------------------------------------------------------
     def __unicode__(self):
         return "UnitTestCollection(%s)"%self.pk
-    #return "UnitTestCollection(unit=%s, tests_object=%s, frequency=%s)" %(self.unit.name, self.tests_object.name, self.frequency.name)
 
-
-
-#There are three cases when we might reguire a new UnitTestCollection
-#to be created:
-#  1)  When a TestList is assigned to a Unit through a UnitTestCollection
-#      all Tests from the TestList and all its sub-TestLists must have a
-#      UnitTestAssignmnent created
-#  2a) When a Test is added to a TestList we must find all Units
-#      that TestList is performed on and create a UnitTestCollection
-#  2b) When a Test is added to a TestList.sublist we e must find all Units
-#      that TestList is performed on and create a UnitTestCollection
-#  3)  When a TestList added to a TestList.sublist we must find all Units
-#      that TestList is performed on and create UnitTestCollections for
-#      all Tests in the sub-TestList
-#
-#  Case 1) can be handled by the post_save signal of UnitTestCollection
-#  Case 2a & 2b) can be handled by the post_save signal of TestListMembership
-#  Case 3) can be handled by the m2m_changed signal of TestList.sublists.through
 
 #----------------------------------------------------------------------
 def get_or_create_unit_test_info(unit,test,assigned_to=None, active=True):
@@ -823,17 +804,19 @@ def get_or_create_unit_test_info(unit,test,assigned_to=None, active=True):
     return uti
 
 #----------------------------------------------------------------------
-def update_unit_test_assignments(collection):
-    """find out which units this test_list is assigned to and make
-    sure there are UnitTestCollections for each Unit, Test pair"""
+def find_assigned_unit_test_collections(collection):
+    """take a test collection (eg test list, sub list or test list cycle) and return
+    the units that it is a part of
+    """
 
-    #note this function should be re-written.  It generates a of DB queries right now.
 
     all_parents = {
         ContentType.objects.get_for_model(collection):[collection],
     }
 
-    for parent_type in ("testlist_set", "testlistcycle_set"):
+    parent_types = [x._meta.module_name+"_set" for x in TestCollectionInterface.__subclasses__()]
+
+    for parent_type in parent_types:
 
         if hasattr(collection, parent_type):
             parents = getattr(collection,parent_type).all()
@@ -844,59 +827,66 @@ def update_unit_test_assignments(collection):
                 except KeyError:
                     all_parents[ct] = list(parents)
 
-    all_tests = collection.all_tests()
-
+    assigned_utcs = []
     for ct,objects in all_parents.items():
-        utlas = UnitTestCollection.objects.filter(
+        utcs = UnitTestCollection.objects.filter(
             object_id__in= [x.pk for x in objects],
             content_type = ct,
-        )
+        ).select_related("unit","assinged_to")
+        assigned_utcs.extend(utcs)
+    return assigned_utcs
 
-        for utla in utlas:
-            need_utas = all_tests#.exclude(unittestinfo__unit = utla.unit)
+#----------------------------------------------------------------------
+def update_unit_test_infos(collection):
+    """find out which units this test_list is assigned to and make
+    sure there are UnitTestInfo's for each Unit, Test pair"""
 
-            for test in need_utas:
 
-                get_or_create_unit_test_info(
-                    unit=utla.unit,
-                    test=test,
-                    assigned_to = utla.assigned_to,
-                    active = utla.active
-                )
+    all_tests = collection.all_tests()
+
+    assigned_utcs = find_assigned_unit_test_collections(collection)
+    for utc in assigned_utcs:
+        existing_uti_units = UnitTestInfo.objects.filter(
+            unit= utc.unit,
+            test__in = all_tests,
+        ).select_related("test")
+
+        existing_tests = [x.test for x in existing_uti_units]
+        missing_utis = [x for x in all_tests if x not in existing_tests]
+        for test in missing_utis:
+            get_or_create_unit_test_info(
+                unit=utc.unit,
+                test=test,
+                assigned_to = utc.assigned_to,
+                active = utc.active
+            )
+
 
 #----------------------------------------------------------------------
 @receiver(post_save, sender=UnitTestCollection)
 def list_assigned_to_unit(*args,**kwargs):
-    """UnitTestCollection was saved.  Create UnitTestCollections
-    for all Tests. (Case 1 from above)"""
+    """UnitTestCollection was saved.  Create UnitTestInfo's for all Tests."""
 
     if not loaded_from_fixture(kwargs):
-        update_unit_test_assignments(kwargs["instance"].tests_object)
+        update_unit_test_infos(kwargs["instance"].tests_object)
 
 #----------------------------------------------------------------------
 @receiver(post_save, sender=TestListMembership)
 def test_added_to_list(*args,**kwargs):
-    """Test was added to a list (or sublist). Find all units this list
-    is performed on and create UnitTestCollection for the Unit, Test pair.
-    Covers case 2a & 2b.
     """
-    if not loaded_from_fixture(kwargs):
-        update_unit_test_assignments(kwargs["instance"].test_list)
+    Test was added to a list (or sublist). Find all units this list
+    is performed on and create UnitTestInfo for the Unit, Test pair.
+    """
+    if (not loaded_from_fixture(kwargs)) :
+        update_unit_test_infos(kwargs["instance"].test_list)
 
 #----------------------------------------------------------------------
 @receiver(post_save, sender=TestList)
 def test_list_saved(*args,**kwargs):
-    """TestList was saved. Recreate any UTI's that may have been deleted in past
-    """
+    """TestList was saved. Recreate any UTI's that may have been deleted in past"""
     if not loaded_from_fixture(kwargs):
-        update_unit_test_assignments(kwargs["instance"])
+        update_unit_test_infos(kwargs["instance"])
 
-#----------------------------------------------------------------------
-@receiver(m2m_changed, sender=TestList.sublists.through)
-def sublist_changed(*args,**kwargs):
-    """when a sublist changes"""
-    if not loaded_from_fixture(kwargs):
-        update_unit_test_assignments(kwargs["instance"])
 
 #============================================================================
 class TestInstanceManager(models.Manager):
