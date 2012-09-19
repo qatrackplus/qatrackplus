@@ -212,6 +212,50 @@ class TestControlChartImage(TestCase):
         request = self.factory.get(url)
         response =  self.view(request)
         self.assertTrue(response.get("content-type"),"image/png")
+        
+#====================================================================================
+class TestChartView(TestCase):
+
+    #----------------------------------------------------------------------
+    def setUp(self):        
+        self.view = views.ChartView()
+        tl = utils.create_test_list()
+        test1 = utils.create_test(name="test1")
+        utils.create_test_list_membership(tl,test1)
+        
+        sl = utils.create_test_list("sublist")
+        test2 = utils.create_test(name="test2")
+        utils.create_test_list_membership(sl,test2)
+        
+        tl.sublists.add(sl)
+        tl.save()
+        
+        utils.create_unit_test_collection(test_collection=tl)
+        
+        self.view.set_test_lists()
+        self.view.set_tests()
+    #---------------------------------------------------------------------------
+    def test_create_test_data(self):
+
+        data = json.loads(self.view.get_context_data()["test_data"])
+        expected = {
+            'frequencies': {
+                '1': [1]
+            }, 
+            'tests': {
+                '1': {'category': 1, 'pk': 1, 'name': 'test1', 'description': 'desc'}, 
+                '2': {'category': 1, 'pk': 2, 'name':'test2', 'description': 'desc'}
+            }, 
+            'test_lists': {
+                '1': {'tests': [1, 2]}, 
+                '2': {u'tests': [2]}
+            }, 
+            'categories': {}
+        }        
+        self.assertDictEqual(data,expected)
+
+
+    
 
 #============================================================================
 class TestComposite(TestCase):

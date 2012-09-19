@@ -101,17 +101,8 @@ class ChartView(TemplateView):
         """add default dates to context"""
         context = super(ChartView,self).get_context_data(**kwargs)
 
-        self.test_lists = models.TestList.objects.order_by("name").prefetch_related(
-            "sublists",
-            "tests",
-        )
-
-        self.tests = models.Test.objects.order_by("name").values(
-            "pk",
-            "category",
-            "name",
-            "description",
-        )
+        self.set_test_lists()
+        self.set_tests()
 
         test_data = self.create_test_data()
 
@@ -132,7 +123,22 @@ class ChartView(TemplateView):
         }
         context.update(c)
         return context
-
+    #----------------------------------------------------------------------
+    def set_tests(self):
+        self.tests = models.Test.objects.order_by("name").values(
+            "pk",
+            "category",
+            "name",
+            "description",
+        )
+    #---------------------------------------------------------------------------
+    def set_test_lists(self):        
+        self.test_lists = models.TestList.objects.order_by("name").prefetch_related(
+            "sublists",
+            "tests",
+        )
+        
+    
 
 class BaseChartView(View):
     ISO_FORMAT = False
