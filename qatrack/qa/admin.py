@@ -1,8 +1,6 @@
 import django.forms as forms
 import django.db
 
-from salmonella.admin import SalmonellaMixin
-
 from django.utils.translation import ugettext as _
 from django.contrib import admin
 from django.contrib.admin import widgets
@@ -344,11 +342,11 @@ class UnitTestCollectionAdmin(admin.ModelAdmin):
                 "tests_object",
             )
 #============================================================================
-class TestListCycleMembershipInline(SalmonellaMixin,admin.TabularInline):
+class TestListCycleMembershipInline(admin.TabularInline):
 
     model = models.TestListCycleMembership
     extra = 0
-    salmonella_fields = ("test_list",)
+    raw_id_fields = ("test_list",)
 
 #============================================================================
 class TestListCycleAdmin(SaveUserMixin, admin.ModelAdmin):
