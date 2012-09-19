@@ -1030,11 +1030,14 @@ class TestInstance(models.Model):
     def diff_display(self):
         display = ""
         if self.unit_test_info.test.is_numerical() and self.value is not None:
-            diff = self.calculate_diff()
-            if diff is not None:
-                display = "%.4g" % diff
-                if self.tolerance and self.tolerance.type == PERCENT:
-                    display += "%"
+            try:
+                diff = self.calculate_diff()
+                if diff is not None:
+                    display = "%.4g" % diff
+                    if self.tolerance and self.tolerance.type == PERCENT:
+                        display += "%"
+            except ZeroDivisionError:
+                display = "Zero ref with % diff tol"
         return display
     #----------------------------------------------------------------------
     def __unicode__(self):
