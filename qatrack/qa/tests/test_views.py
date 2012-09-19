@@ -48,7 +48,7 @@ class TestURLS(TestCase):
             ("review_all",{}),
             ("review_utc",{"pk":"1"}),
             ("choose_review_frequency",{}),
-            ("review_by_frequency",{"frequency":"daily"}),
+            ("review_by_frequency",{"frequency":"short-interval"}),
             ("review_by_frequency",{"frequency":"daily/monthly"}),
             ("choose_review_unit",{}),
             ("review_by_unit",{"unit_number":"1"}),
@@ -65,11 +65,11 @@ class TestURLS(TestCase):
             ("edit_tli",{"pk":"1"}),
             ("choose_unit",{}),
             ("perform_qa",{"pk":"1"}),
-            ("qa_by_frequency_unit",{"unit_number":"1","frequency":"daily"}),
+            ("qa_by_frequency_unit",{"unit_number":"1","frequency":"short-interval"}),
             ("qa_by_unit",{"unit_number":"1"}),
-            ("qa_by_frequency_unit",{"unit_number":"1","frequency":"daily"}),
-            ("qa_by_unit_frequency",{"unit_number":"1","frequency":"daily"}),
-            ("qa_by_frequency",{"frequency":"daily"}),
+            ("qa_by_frequency_unit",{"unit_number":"1","frequency":"short-interval"}),
+            ("qa_by_unit_frequency",{"unit_number":"1","frequency":"short-interval"}),
+            ("qa_by_frequency",{"frequency":"short-interval"}),
         )
 
         for url,kwargs in url_names:
@@ -435,6 +435,41 @@ class TestPerformQA(TestCase):
         #user is redirected if form submitted successfully
         self.assertEqual(response.status_code,302)
     #---------------------------------------------------------------------------
+    def test_perform_valid_redirect(self):
+        data = {
+            "work_started":"11-07-2012 00:09",
+            "status":self.status.pk,
+            "form-TOTAL_FORMS":len(self.tests),
+            "form-INITIAL_FORMS":len(self.tests),
+            "form-MAX_NUM_FORMS":"",
+        }
+
+        for test_idx, uti in enumerate(self.unit_test_infos):
+
+            data["form-%d-value"%test_idx] =  1
+            data["form-%d-comment"%test_idx]= ""
+
+
+        response = self.client.post(self.url+"?next=%s"%reverse("home"),data=data)
+
+        #user is redirected if form submitted successfully
+        self.assertEqual(response.status_code,302)
+        self.assertEqual("http://testserver/",response._headers['location'][1])
+
+        u2 = utils.create_user(is_staff=False,is_superuser=False,uname="u2")
+        u2.groups.add(Group.objects.get(pk=1))
+        u2.save()
+        self.client.logout()
+        self.client.login(username="u2",password="password")
+
+        response = self.client.post(self.url,data=data)
+
+        #user is redirected if form submitted successfully
+        self.assertEqual(response.status_code,302)
+        self.assertIn("short-interval",response._headers['location'][1])
+
+
+    #---------------------------------------------------------------------------
     def test_perform_invalid(self):
         data = {
 
@@ -519,6 +554,253 @@ class TestPerformQA(TestCase):
         models.TestInstanceStatus.objects.all().delete()
         response = self.client.get(self.url)
         self.assertTrue(len(list(response.context['messages']))==1)
+
+    #---------------------------------------------------------------------------
+    def test_perform_invalid_ref(self):
+        data = {
+
+            "work_completed":"11-07-2012 00:10",
+            "work_started":"11-07-2012 00:09",
+            "status":self.status.pk,
+            "form-TOTAL_FORMS":len(self.tests),
+            "form-INITIAL_FORMS":len(self.tests),
+            "form-MAX_NUM_FORMS":"",
+        }
+
+        ref = utils.create_reference()
+        ref.value = 0
+        ref.save()
+
+        tol = utils.create_tolerance()
+        tol.type = models.PERCENT
+        tol.save()
+
+        self.unit_test_infos[0].reference = ref
+        self.unit_test_infos[0].tolerance = tol
+        self.unit_test_infos[0].save()
+
+        for test_idx, uti in enumerate(self.unit_test_infos):
+            data["form-%d-value"%test_idx] =  1
+            data["form-%d-comment"%test_idx]= ""
+
+
+        response = self.client.post(self.url,data=data)
+
+        #no values sent so there should be form errors and a 200 status
+        self.assertEqual(response.status_code,302)
+        ti = models.TestInstance.objects.get(unit_test_info=self.unit_test_infos[0])
+        self.assertIsNone(ti.value)
+    #----------------------------------------------------------------------
+    def test_missing_unit_test_info(self):
+        self.unit_test_infos[0].delete()
+        response = self.client.get(self.url)
+        self.assertIn("do not treat",str(list(response.context['messages'])[0]).lower())
+
+    #----------------------------------------------------------------------
+    def test_invalid_day(self):
+
+        tl1 = utils.create_test_list(name="tl1")
+        tl2 = utils.create_test_list(name="tl2")
+        cycle = utils.create_cycle(test_lists=[tl1,tl2])
+        utc = utils.create_unit_test_collection(
+            test_collection=cycle,
+            unit=self.unit_test_list.unit,
+            frequency=self.unit_test_list.frequency,
+        )
+        url = reverse("perform_qa",kwargs={"pk":utc.pk})+"?day=22"
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code,404)
+
+#============================================================================
+class TestBaseEditTestListInstance(TestCase):
+    #----------------------------------------------------------------------
+    def setUp(self):
+        self.view = views.BaseEditTestListInstance()
+    #----------------------------------------------------------------------
+    def test_form_valid_not_implemented(self):
+        self.assertRaises(NotImplementedError,self.view.form_valid,None)
+
+#============================================================================
+class TestEditTestListInstance(TestCase):
+
+    #----------------------------------------------------------------------
+    def setUp(self):
+
+        self.view = views.EditTestListInstance.as_view()
+        self.factory = RequestFactory()
+
+        self.status = utils.create_status()
+
+        self.test_list = utils.create_test_list()
+        self.test = utils.create_test(name="test_simple")
+        utils.create_test_list_membership(self.test_list,self.test)
+
+        self.utc = utils.create_unit_test_collection(test_collection=self.test_list)
+        self.tli = utils.create_test_list_instance(unit_test_collection=self.utc)
+
+        uti = models.UnitTestInfo.objects.get(pk=1)
+
+        self.ti = utils.create_test_instance(unit_test_info=uti,value=1,status=self.status)
+        self.ti.test_list_instance = self.tli
+        self.ti.save()
+
+        self.url = reverse("edit_tli",kwargs={"pk":self.tli.pk})
+        self.client.login(username="user",password="password")
+        self.user = User.objects.get(username="user")
+        self.user.save()
+
+        self.base_data = {
+            "work_completed":"11-07-2012 00:10",
+            "work_started":"11-07-2012 00:09",
+            "status":self.status.pk,
+            "testinstance_set-TOTAL_FORMS":"1",
+            "testinstance_set-INITIAL_FORMS":"1",
+            "testinstance_set-MAX_NUM_FORMS":"",
+            "testinstance_set-0-id":self.ti.pk,
+            "testinstance_set-0-value":1,
+        }
+
+    #----------------------------------------------------------------------
+    def test_get(self):
+
+        response = self.client.get(self.url)
+        self.assertEqual(200,response.status_code)
+
+    #----------------------------------------------------------------------
+    def test_edit(self):
+
+        self.base_data.update({
+            "testinstance_set-0-value":88,
+        })
+
+        response = self.client.post(self.url,data=self.base_data)
+
+        self.assertEqual(302,response.status_code)
+        self.assertEqual(88,models.TestInstance.objects.get(pk=1).value)
+    #----------------------------------------------------------------------
+    def test_no_work_completed(self):
+
+        self.base_data.update({
+            "testinstance_set-0-value":88,
+            "work_completed":""
+        })
+
+        response = self.client.post(self.url,data=self.base_data)
+
+        self.assertEqual(302,response.status_code)
+    #----------------------------------------------------------------------
+    def test_no_value(self):
+
+        self.base_data.update({
+            "testinstance_set-0-value":None,
+        })
+
+        response = self.client.post(self.url,data=self.base_data)
+
+        self.assertEqual(200,response.status_code)
+
+    #----------------------------------------------------------------------
+    def test_no_work_started(self):
+
+        del self.base_data["work_started"]
+
+        response = self.client.post(self.url,data=self.base_data)
+        self.assertEqual(200,response.status_code)
+    #----------------------------------------------------------------------
+    def test_next_redirect(self):
+        """"""
+        response = self.client.post(self.url+"?next=%s"%reverse("home"),data=self.base_data)
+        self.assertEqual(302,response.status_code)
+
+    #----------------------------------------------------------------------
+    def test_invalid_ref_on_edit(self):
+
+        ref = utils.create_reference()
+        tol = utils.create_tolerance()
+        tol.type = models.PERCENT
+        tol.save()
+
+
+        self.ti.reference = ref
+        self.ti.tolerance = tol
+        self.ti.save()
+
+        ref.value = 0
+        ref.save()
+
+        self.base_data.update({
+            "testinstance_set-0-reference":ref.pk,
+            "testinstance_set-0-tolerance":tol.pk,
+        })
+
+        response = self.client.post(self.url,data=self.base_data)
+        ti = models.TestInstance.objects.get(pk=self.ti.pk)
+
+        #if saved with inavlid ref, test list instance should be saved
+        #and test instance should be saved with value of None and comment
+        self.assertEqual(response.status_code,302)
+        self.assertIsNone(ti.value)
+        self.assertNotIn(ti.comment,("",None))
+
+#============================================================================
+class TestReviewTestListInstance(TestCase):
+
+    #----------------------------------------------------------------------
+    def setUp(self):
+
+        self.view = views.ReviewTestListInstance.as_view()
+        self.factory = RequestFactory()
+
+        self.status = utils.create_status()
+        self.review_status = utils.create_status(name="reviewed",slug="reviewed",is_default=False)
+        self.review_status.requires_review = False
+        self.review_status.save()
+
+        self.test_list = utils.create_test_list()
+        self.test = utils.create_test(name="test_simple")
+        utils.create_test_list_membership(self.test_list,self.test)
+
+        self.utc = utils.create_unit_test_collection(test_collection=self.test_list)
+        self.tli = utils.create_test_list_instance(unit_test_collection=self.utc)
+
+        uti = models.UnitTestInfo.objects.get(pk=1)
+
+        self.ti = utils.create_test_instance(unit_test_info=uti,value=1,status=self.status)
+        self.ti.test_list_instance = self.tli
+        self.ti.save()
+
+        self.url = reverse("review_test_list_instance",kwargs={"pk":self.tli.pk})
+        self.client.login(username="user",password="password")
+        self.user = User.objects.get(username="user")
+        self.user.save()
+
+        self.base_data = {
+            "testinstance_set-TOTAL_FORMS":"1",
+            "testinstance_set-INITIAL_FORMS":"1",
+            "testinstance_set-MAX_NUM_FORMS":"",
+            "testinstance_set-0-id":self.ti.pk,
+            "testinstance_set-0-value":1,
+        }
+
+    #----------------------------------------------------------------------
+    def test_update(self):
+
+        response = self.client.get(self.url)
+
+        self.base_data.update({
+            "testinstance_set-0-status":self.review_status.pk,
+        })
+
+        self.assertEqual(1,models.TestListInstance.objects.unreviewed().count())
+        response = self.client.post(self.url,data=self.base_data)
+
+        self.assertEqual(302,response.status_code)
+        ti = models.TestInstance.objects.get(pk=self.ti.pk)
+        self.assertEqual(ti.status,self.review_status)
+        self.assertEqual(0,models.TestListInstance.objects.unreviewed().count())
+
 
 
 if __name__ == "__main__":

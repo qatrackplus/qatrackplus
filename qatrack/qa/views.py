@@ -646,6 +646,10 @@ class PerformQA(CreateView):
         return day
     #----------------------------------------------------------------------
     def get_success_url(self):
+        next_ = self.request.GET.get("next",None)
+        if next_ is not None:
+            return next_
+
         kwargs = {
             "unit_number":self.unit_test_col.unit.number,
             "frequency":self.unit_test_col.frequency.slug
@@ -778,53 +782,22 @@ class EditTestListInstance(BaseEditTestListInstance):
         context = self.get_context_data()
         formset = context["formset"]
 
-        update_time = timezone.make_aware(timezone.datetime.now(),timezone.get_current_timezone())
-        update_user = self.request.user
-
         for ti_form in formset:
             ti_form.in_progress = form.instance.in_progress
 
         if formset.is_valid():
 
             self.object = form.save(commit=False)
-            self.object.created_by = self.request.user
-            self.object.modified_by= self.request.user
+            self.update_test_list_instance()
 
-            if self.object.work_completed is None:
-                self.object.work_completed = timezone.make_aware(timezone.datetime.now(),timezone=timezone.get_current_timezone())
-
-            self.object.save()
-
-            status=models.TestInstanceStatus.objects.default()
+            status_pk = None
             if form.fields.has_key("status"):
-                val = form["status"].value()
-                if val not in ("",  None):
-                    status = models.TestInstanceStatus.objects.get(pk=val)
+                status_pk = form["status"].value()
+            status= self.get_status_object(status_pk)
 
             for ti_form in formset:
                 ti = ti_form.save(commit=False)
-                ti.status = status
-                ti.created_by = self.request.user
-                ti.modified_by = self.request.user
-                ti.in_progress = self.object.in_progress
-                ti.work_started=self.object.work_started
-                ti.work_completed=self.object.work_completed
-
-                try:
-                    ti.save()
-                except ZeroDivisionError:
-
-                    msga = "Tried to calculate percent diff with a zero reference value. "
-
-                    ti.skipped = True
-                    ti.comment = msga + " Original value was %s" % ti.value
-                    ti.value = None
-                    ti.save()
-
-                    logger.error(msga+ " UTI=%d"%ti.unit_test_info.pk)
-                    msg =  "Please call physics.  Test %s is configured incorrectly on this unit. "% ti.unit_test_info.test.name
-                    msg += msga
-                    messages.error(self.request,_(msg))
+                self.update_test_instance(ti,status)
 
             #let user know request succeeded and return to unit list
             messages.success(self.request,_("Successfully submitted %s "% self.object.test_list.name))
@@ -841,6 +814,49 @@ class EditTestListInstance(BaseEditTestListInstance):
         context["include_admin"] = self.request.user.is_staff
 
         return context
+    #----------------------------------------------------------------------
+    def update_test_list_instance(self):
+        self.object.created_by = self.request.user
+        self.object.modified_by= self.request.user
+
+        if self.object.work_completed is None:
+            self.object.work_completed = timezone.make_aware(timezone.datetime.now(),timezone=timezone.get_current_timezone())
+
+        self.object.save()
+    #----------------------------------------------------------------------
+    def get_status_object(self,status_pk):
+        try:
+            status = models.TestInstanceStatus.objects.get(pk=val)
+        except:
+            status = models.TestInstanceStatus.objects.default()
+        return status
+    #----------------------------------------------------------------------
+    def update_test_instance(self,test_instance,status):
+        ti = test_instance
+        ti.status = status
+        ti.created_by = self.request.user
+        ti.modified_by = self.request.user
+        ti.in_progress = self.object.in_progress
+        ti.work_started=self.object.work_started
+        ti.work_completed=self.object.work_completed
+
+        try:
+            ti.save()
+        except ZeroDivisionError:
+
+            msga = "Tried to calculate percent diff with a zero reference value. "
+
+            ti.skipped = True
+            ti.comment = msga + " Original value was %s" % ti.value
+            ti.value = None
+            ti.save()
+
+            logger.error(msga+ " UTI=%d"%ti.unit_test_info.pk)
+            msg =  "Please call physics.  Test %s is configured incorrectly on this unit. "% ti.unit_test_info.test.name
+            msg += msga
+            messages.error(self.request,_(msg))
+
+
 
 
 #============================================================================
@@ -960,7 +976,6 @@ class FrequencyList(UTCList):
 
         if "short-interval" in freqs:
             self.frequencies.extend(list(models.Frequency.objects.filter(due_interval__lte=14)))
-
 
         return qs.filter(
             frequency__in=self.frequencies,
