@@ -1045,7 +1045,7 @@ class TestInstance(models.Model):
 @receiver(post_save,sender=TestInstance)
 def on_test_instance_saved(*args,**kwargs):
 
-    if (not loaded_from_fixture(kwargs)) and kwargs["created"]:
+    if (not loaded_from_fixture(kwargs)):
 
         test_instance = kwargs["instance"]
         try:
