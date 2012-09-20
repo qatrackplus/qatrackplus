@@ -126,10 +126,37 @@ class TestControlChartImage(TestCase):
         self.assertTrue(response.get("content-type"),"image/png")
     #----------------------------------------------------------------------
     def test_baseline_subgroups(self):
+        test = utils.create_test()
+        unit = utils.create_unit()
+        uti = utils.create_unit_test_info(test=test,unit=unit)
+
+        status = utils.create_status()
+        yesterday = timezone.datetime.today()-timezone.timedelta(days=1)
+        yesterday = timezone.make_aware(yesterday,timezone.get_current_timezone())
+        tomorrow = yesterday+timezone.timedelta(days=2)
+
         for n in [-1,0,1,2,"nonnumber"]:
-            request = self.factory.get(self.url+"?n_base_subgroups=%s"%n)
+            url = self.make_url(test.pk,unit.number,yesterday,tomorrow,n_base=n)
+            request = self.factory.get(url)
             response =  self.view(request)
             self.assertTrue(response.get("content-type"),"image/png")
+    #----------------------------------------------------------------------
+    def test_invalid_subgroup_size(self):
+        test = utils.create_test()
+        unit = utils.create_unit()
+        uti = utils.create_unit_test_info(test=test,unit=unit)
+
+        status = utils.create_status()
+        yesterday = timezone.datetime.today()-timezone.timedelta(days=1)
+        yesterday = timezone.make_aware(yesterday,timezone.get_current_timezone())
+        tomorrow = yesterday+timezone.timedelta(days=2)
+
+        for n in [-1,0,101,"nonnumber"]:
+            url = self.make_url(test.pk,unit.number,yesterday,tomorrow,sg_size=n)
+            request = self.factory.get(url)
+            response =  self.view(request)
+            self.assertTrue(response.get("content-type"),"image/png")
+
     #----------------------------------------------------------------------
     def test_include_fit(self):
         for f in ["true","false"]:
@@ -137,10 +164,10 @@ class TestControlChartImage(TestCase):
             response =  self.view(request)
             self.assertTrue(response.get("content-type"),"image/png")
     #----------------------------------------------------------------------
-    def make_url(self,slug,unumber,from_date,to_date,sg_size=2,n_base=2,fit="true"):
+    def make_url(self,pk,unumber,from_date,to_date,sg_size=2,n_base=2,fit="true"):
         url = self.url+"?subgroup_size=%s&n_baseline_subgroups=%s&fit_data=%s" %(sg_size,n_base,fit)
-        url+= "&slug=%s"%slug
-        url+= "&unit=%s"%unumber
+        url+= "&tests[]=%s"%pk
+        url+= "&units[]=%s"%unumber
         url+= "&from_date=%s"%from_date.strftime(settings.SIMPLE_DATE_FORMAT)
         url+= "&to_date=%s"%to_date.strftime(settings.SIMPLE_DATE_FORMAT)
         return url
@@ -155,13 +182,7 @@ class TestControlChartImage(TestCase):
         yesterday = timezone.make_aware(yesterday,timezone.get_current_timezone())
         tomorrow = yesterday+timezone.timedelta(days=2)
 
-        url = self.make_url(test.slug,unit.number,yesterday,yesterday)
-
-        request = self.factory.get(url)
-        response =  self.view(request)
-        self.assertTrue(response.get("content-type"),"image/png")
-
-        url = self.make_url(test.slug,unit.number,yesterday,tomorrow)
+        url = self.make_url(test.pk,unit.number,yesterday,tomorrow)
 
         for n in (1,1,8,90):
             for x in range(n):
@@ -187,12 +208,12 @@ class TestControlChartImage(TestCase):
         yesterday = timezone.make_aware(yesterday,timezone.get_current_timezone())
         tomorrow = yesterday+timezone.timedelta(days=2)
 
-        url = self.make_url(test.slug,unit.number,yesterday,yesterday)
+        url = self.make_url(test.pk,unit.number,yesterday,yesterday)
         request = self.factory.get(url)
         response =  self.view(request)
         self.assertTrue(response.get("content-type"),"image/png")
 
-        url = self.make_url(test.slug,unit.number,yesterday,tomorrow,fit="true")
+        url = self.make_url(test.pk,unit.number,yesterday,tomorrow,fit="true")
 
 
         #generate some data that the control chart fit function won't be able to fit
@@ -206,26 +227,26 @@ class TestControlChartImage(TestCase):
         request = self.factory.get(url)
         response =  self.view(request)
         self.assertTrue(response.get("content-type"),"image/png")
-        
+
 #====================================================================================
 class TestChartView(TestCase):
 
     #----------------------------------------------------------------------
-    def setUp(self):        
+    def setUp(self):
         self.view = views.ChartView()
         tl = utils.create_test_list()
         test1 = utils.create_test(name="test1")
         utils.create_test_list_membership(tl,test1)
-        
+
         sl = utils.create_test_list("sublist")
         test2 = utils.create_test(name="test2")
         utils.create_test_list_membership(sl,test2)
-        
+
         tl.sublists.add(sl)
         tl.save()
-        
+
         utils.create_unit_test_collection(test_collection=tl)
-        
+
         self.view.set_test_lists()
         self.view.set_tests()
     #---------------------------------------------------------------------------
@@ -235,21 +256,74 @@ class TestChartView(TestCase):
         expected = {
             'frequencies': {
                 '1': [1]
-            }, 
+            },
             'tests': {
-                '1': {'category': 1, 'pk': 1, 'name': 'test1', 'description': 'desc'}, 
+                '1': {'category': 1, 'pk': 1, 'name': 'test1', 'description': 'desc'},
                 '2': {'category': 1, 'pk': 2, 'name':'test2', 'description': 'desc'}
-            }, 
+            },
             'test_lists': {
-                '1': {'tests': [1, 2]}, 
+                '1': {'tests': [1, 2]},
                 '2': {u'tests': [2]}
-            }, 
+            },
             'categories': {}
-        }        
+        }
         self.assertDictEqual(data,expected)
 
 
-    
+#============================================================================
+class TestChartData(TestCase):
+
+    #----------------------------------------------------------------------
+    def setUp(self):
+        self.url = reverse("chart_data")
+        self.view = views.BasicChartData.as_view()
+
+
+        self.status = utils.create_status()
+        ref = utils.create_reference()
+        tol = utils.create_tolerance()
+        self.test1 = utils.create_test(name="test1")
+        self.test2 = utils.create_test(name="test2")
+        self.tl1 = utils.create_test_list(name="tl1")
+        self.tl2 = utils.create_test_list(name="tl2")
+
+        utils.create_test_list_membership(self.tl1,self.test1)
+        utils.create_test_list_membership(self.tl2,self.test2)
+
+        self.utc1 = utils.create_unit_test_collection(test_collection=self.tl1)
+        self.utc2 = utils.create_unit_test_collection(unit=self.utc1.unit,test_collection=self.tl2,frequency=self.utc1.frequency)
+
+        self.uti1 = models.UnitTestInfo.objects.get(test=self.test1)
+        self.uti1.reference = ref
+        self.uti1.tolerance = tol
+        self.uti1.save()
+
+        self.uti2 = models.UnitTestInfo.objects.get(test=self.test2)
+
+        for x in range(100):
+            ti = utils.create_test_instance(value=1., status=self.status, unit_test_info=self.uti1)
+            ti.reference = ref
+            ti.tolerance = tol
+            ti.save()
+
+            if x >0:
+                utils.create_test_instance(value=2., status=self.status, unit_test_info=self.uti2)
+
+        self.client.login(username="user",password="password")
+
+
+    #----------------------------------------------------------------------
+    def test_basic_data(self):
+        """"""
+        data = {
+            "tests[]":[self.test1.pk,self.test2.pk],
+            "units[]":[self.utc1.unit.pk],
+            "statuses[]":[self.status.pk],
+        }
+        response =  self.client.get(self.url,data=data)
+
+
+
 
 #============================================================================
 class TestComposite(TestCase):
@@ -264,7 +338,7 @@ class TestComposite(TestCase):
         self.tc = utils.create_test(name="testc",test_type=models.COMPOSITE)
         self.tc.calculation_procedure = "result = test1 + test2"
         self.tc.save()
-        
+
     #----------------------------------------------------------------------
     def test_composite(self):
 
@@ -326,7 +400,7 @@ class TestComposite(TestCase):
                 'testc': {
                     'error': u'Invalid Test', u'value': None
                 }
-            },                        
+            },
         }
         self.assertDictEqual(values,expected)
     #----------------------------------------------------------------------
@@ -336,7 +410,7 @@ class TestComposite(TestCase):
             u'qavalues': [
                 u'{"testc":{"name":"testc","current_value":""},"test1":{"name":"test1","current_value":1},"test2":{"name":"test2","current_value":"abc"}}'
             ],
-            
+
             u'composite_ids': [u' ']
         }
 
@@ -349,7 +423,7 @@ class TestComposite(TestCase):
             "success": False
         }
         self.assertDictEqual(values,expected)
-    
+
     #----------------------------------------------------------------------
     def test_no_composite(self):
 
@@ -414,7 +488,7 @@ class TestComposite(TestCase):
         self.cyclic1 = utils.create_test(name="cyclic1",test_type=models.COMPOSITE)
         self.cyclic1.calculation_procedure = "result = cyclic2 + test2"
         self.cyclic1.save()
-        
+
         self.cyclic2 = utils.create_test(name="cyclic2",test_type=models.COMPOSITE)
         self.cyclic2.calculation_procedure = "result = cyclic1 + test1"
         self.cyclic2.save()
@@ -443,14 +517,14 @@ class TestComposite(TestCase):
                         u'value': None
                     },
                 'testc': {
-                    'error': None, 
+                    'error': None,
                     'value': 3.0
                 }
             },
-        
-        
+
+
             'success': True,
-        }        
+        }
         self.assertDictEqual(values,expected)
 
 

@@ -132,13 +132,13 @@ class ChartView(TemplateView):
             "description",
         )
     #---------------------------------------------------------------------------
-    def set_test_lists(self):        
+    def set_test_lists(self):
         self.test_lists = models.TestList.objects.order_by("name").prefetch_related(
             "sublists",
             "tests",
         )
-        
-    
+
+
 
 class BaseChartView(View):
     ISO_FORMAT = False
@@ -204,7 +204,8 @@ class BaseChartView(View):
 
         tests = self.request.GET.getlist("tests[]",[])
         units = self.request.GET.getlist("units[]",[])
-        statuses = self.request.GET.getlist("statuses[]",[])
+        statuses = self.request.GET.getlist("statuses[]",models.TestInstanceStatus.objects.values_list("pk",flat=True))
+
         now = timezone.datetime.now()
         from_date = self.get_date("from_date",now-timezone.timedelta(days=180))
         to_date = self.get_date("to_date",now)
@@ -260,6 +261,10 @@ class BasicChartData(JSONResponseMixin,BaseChartView):
 #============================================================================
 class ControlChartImage(BaseChartView):
     """Return a control chart image from given qa data"""
+
+    #---------------------------------------------------------------------------
+    def convert_date(self,dt):
+        return dt
 
     #----------------------------------------------------------------------
     def get_number_from_request(self,param,default,dtype=float):
@@ -356,7 +361,7 @@ class CompositeCalculation(JSONResponseMixin, View):
         results = {}
 
         for slug in self.cyclic_tests:
-            results[slug] = {'value':None, 'error':"Cyclic test dependency"}            
+            results[slug] = {'value':None, 'error':"Cyclic test dependency"}
 
         for slug in self.calculation_order:
             raw_procedure = self.composite_tests[slug]
