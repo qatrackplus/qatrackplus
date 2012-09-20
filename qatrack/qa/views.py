@@ -260,9 +260,6 @@ class BasicChartData(JSONResponseMixin,BaseChartView):
 #============================================================================
 class ControlChartImage(BaseChartView):
     """Return a control chart image from given qa data"""
-    #---------------------------------------------------------------------------
-    def convert_date(self,dt):
-        return dt
 
     #----------------------------------------------------------------------
     def get_number_from_request(self,param,default,dtype=float):
@@ -358,24 +355,23 @@ class CompositeCalculation(JSONResponseMixin, View):
 
         results = {}
 
-        for slug in self.calculation_order:
+        for slug in self.cyclic_tests:
+            results[slug] = {'value':None, 'error':"Cyclic test dependency"}            
 
-            if slug in self.cyclic_tests:
-                results[slug] = {'value':None, 'error':"Cyclic test dependency"}
-            else:
-                raw_procedure = self.composite_tests[slug]
-                procedure = self.process_procedure(raw_procedure)
-                try:
-                    code = compile(procedure,"<string>","exec")
-                    exec code in self.calculation_context
-                    result = self.calculation_context["result"]
-                    results[slug] = { 'value': result,'error':None }
-                    self.calculation_context[slug]=result
-                except Exception as e:
-                    results[slug] = {'value':None, 'error':"Invalid Test"}
-                finally:
-                    if "result" in self.calculation_context:
-                        del self.calculation_context["result"]
+        for slug in self.calculation_order:
+            raw_procedure = self.composite_tests[slug]
+            procedure = self.process_procedure(raw_procedure)
+            try:
+                code = compile(procedure,"<string>","exec")
+                exec code in self.calculation_context
+                result = self.calculation_context["result"]
+                results[slug] = { 'value': result,'error':None }
+                self.calculation_context[slug]=result
+            except Exception as e:
+                results[slug] = {'value':None, 'error':"Invalid Test"}
+            finally:
+                if "result" in self.calculation_context:
+                    del self.calculation_context["result"]
 
         return self.render_to_response({"success":True,"errors":[],"results":results})
     #----------------------------------------------------------------------
