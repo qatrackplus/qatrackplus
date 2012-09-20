@@ -131,12 +131,6 @@ class TestControlChartImage(TestCase):
             response =  self.view(request)
             self.assertTrue(response.get("content-type"),"image/png")
     #----------------------------------------------------------------------
-    def test_baseline_subgroups(self):
-        for n in [-1,0,1,2,200,"nonnumber"]:
-            request = self.factory.get(self.url+"?subgroup_size=%s"%n)
-            response =  self.view(request)
-            self.assertTrue(response.get("content-type"),"image/png")
-    #----------------------------------------------------------------------
     def test_include_fit(self):
         for f in ["true","false"]:
             request = self.factory.get(self.url+"?fit_data=%s"%f)
@@ -270,7 +264,7 @@ class TestComposite(TestCase):
         self.tc = utils.create_test(name="testc",test_type=models.COMPOSITE)
         self.tc.calculation_procedure = "result = test1 + test2"
         self.tc.save()
-
+        
     #----------------------------------------------------------------------
     def test_composite(self):
 
@@ -310,6 +304,52 @@ class TestComposite(TestCase):
             "success": False
         }
         self.assertDictEqual(values,expected)
+    #----------------------------------------------------------------------
+    def test_invalid_number(self):
+
+        data =  {
+            u'qavalues': [
+                u'{"testc":{"name":"testc","current_value":""},"test1":{"name":"test1","current_value":1},"test2":{"name":"test2","current_value":"abc"}}'
+            ],
+            u'composite_ids': [u'{"testc":"3"}']
+        }
+
+        request = self.factory.post(self.url,data=data)
+        response = self.view(request)
+
+        values = json.loads(response.content)
+
+        expected = {
+            "errors": [],
+            "success": True,
+            'results': {
+                'testc': {
+                    'error': u'Invalid Test', u'value': None
+                }
+            },                        
+        }
+        self.assertDictEqual(values,expected)
+    #----------------------------------------------------------------------
+    def test_invalid_composite(self):
+
+        data =  {
+            u'qavalues': [
+                u'{"testc":{"name":"testc","current_value":""},"test1":{"name":"test1","current_value":1},"test2":{"name":"test2","current_value":"abc"}}'
+            ],
+            
+            u'composite_ids': [u' ']
+        }
+
+        request = self.factory.post(self.url,data=data)
+        response = self.view(request)
+        values = json.loads(response.content)
+
+        expected = {
+            "errors": ["No Valid Composite ID's"],
+            "success": False
+        }
+        self.assertDictEqual(values,expected)
+    
     #----------------------------------------------------------------------
     def test_no_composite(self):
 
@@ -367,6 +407,50 @@ class TestComposite(TestCase):
             },
             "success": True
         }
+        self.assertDictEqual(values,expected)
+    #----------------------------------------------------------------------
+    def test_cyclic(self):
+
+        self.cyclic1 = utils.create_test(name="cyclic1",test_type=models.COMPOSITE)
+        self.cyclic1.calculation_procedure = "result = cyclic2 + test2"
+        self.cyclic1.save()
+        
+        self.cyclic2 = utils.create_test(name="cyclic2",test_type=models.COMPOSITE)
+        self.cyclic2.calculation_procedure = "result = cyclic1 + test1"
+        self.cyclic2.save()
+
+        data =  {
+            u'qavalues': [
+                u'{"testc":{"name":"testc","current_value":""},"cyclic1":{"name":"cyclic1","current_value":""},"cyclic2":{"name":"cyclic2","current_value":""},"test1":{"name":"test1","current_value":1},"test2":{"name":"test2","current_value":2}}'
+            ],
+            u'composite_ids': [u'{"testc":"3","cyclic1":"4","cyclic2":"5"}']
+        }
+
+
+        request = self.factory.post(self.url,data=data)
+        response = self.view(request)
+        values = json.loads(response.content)
+
+        expected = {
+            'errors': [],
+            u'results': {
+                'cyclic1': {
+                    'error': u'Cyclic test dependency',
+                    'value': None
+                },
+                'cyclic2': {
+                    'error': u'Cyclic test dependency',
+                        u'value': None
+                    },
+                'testc': {
+                    'error': None, 
+                    'value': 3.0
+                }
+            },
+        
+        
+            'success': True,
+        }        
         self.assertDictEqual(values,expected)
 
 
