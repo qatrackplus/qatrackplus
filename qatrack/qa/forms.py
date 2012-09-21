@@ -203,6 +203,10 @@ class BaseTestListInstanceForm(forms.ModelForm):
         """"""
         cleaned_data = super(BaseTestListInstanceForm,self).clean()
 
+        for field in ("work_completed","work_started",):
+            if field in self.errors:
+                self.errors[field][0] += " %s" % settings.DATETIME_HELP
+
         work_started = cleaned_data.get("work_started")
         work_completed = cleaned_data.get("work_completed")
 
