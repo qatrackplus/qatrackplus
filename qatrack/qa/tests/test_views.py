@@ -617,6 +617,29 @@ class TestPerformQA(TestCase):
         self.assertTrue( isinstance(widget,django.forms.Select))
         self.assertEqual(widget.choices,[('',''),(0,'c1'),(1,'c2'),(2,'c3')])
     #---------------------------------------------------------------------------
+    def test_perform_in_progress(self):
+        data = {
+            "work_started":"11-07-2012 00:09",
+            "status":self.status.pk,
+            "form-TOTAL_FORMS":len(self.tests),
+            "form-INITIAL_FORMS":len(self.tests),
+            "form-MAX_NUM_FORMS":"",
+            "in_progress":True,
+        }
+
+        for test_idx, uti in enumerate(self.unit_test_infos):
+            data["form-%d-value"%test_idx] =  1
+            data["form-%d-comment"%test_idx]= ""
+
+
+        response = self.client.post(self.url,data=data)
+
+        self.assertTrue(1,models.TestListInstance.objects.in_progress().count())
+        self.assertTrue(len(self.tests),models.TestInstance.objects.in_progress().count())
+        #user is redirected if form submitted successfully
+        self.assertEqual(response.status_code,302)
+
+    #---------------------------------------------------------------------------
     def test_perform_valid(self):
         data = {
             "work_started":"11-07-2012 00:09",
@@ -633,6 +656,8 @@ class TestPerformQA(TestCase):
 
 
         response = self.client.post(self.url,data=data)
+        self.assertTrue(1,models.TestListInstance.objects.count())
+        self.assertTrue(len(self.tests),models.TestInstance.objects.count())
 
         #user is redirected if form submitted successfully
         self.assertEqual(response.status_code,302)
@@ -717,6 +742,54 @@ class TestPerformQA(TestCase):
 
         for f in response.context["formset"].forms:
             self.assertTrue(len(f.errors)>0)
+    #---------------------------------------------------------------------------
+    def test_skipped_with_val(self):
+        data = {
+            "work_completed":"11-07-2012 00:10",
+            "status":self.status.pk,
+            "form-TOTAL_FORMS":len(self.tests),
+            "form-INITIAL_FORMS":"0",
+            "form-MAX_NUM_FORMS":"",
+        }
+
+        for test_idx, test in enumerate(self.tests):
+            data["form-%d-value" % test_idx] = 1
+            data["form-%d-test" % test_idx] = test.pk
+            data["form-%d-skipped" % test_idx] = "true"
+            data["form-%d-comment"%test_idx]= ""
+
+        response = self.client.post(self.url,data=data)
+
+        #skipped but value entered so there should be form errors and a 200 status
+        self.assertEqual(response.status_code,200)
+
+        for f in response.context["formset"].forms:
+            self.assertTrue(len(f.errors)>0)
+
+    #---------------------------------------------------------------------------
+    def test_skipped_with_invalid_val(self):
+        data = {
+            "work_completed":"11-07-2012 00:10",
+            "status":self.status.pk,
+            "form-TOTAL_FORMS":len(self.tests),
+            "form-INITIAL_FORMS":"0",
+            "form-MAX_NUM_FORMS":"",
+        }
+
+        for test_idx, test in enumerate(self.tests):
+            data["form-%d-value" % test_idx] = None
+            data["form-%d-test" % test_idx] = test.pk
+            data["form-%d-skipped" % test_idx] = "true"
+            data["form-%d-comment"%test_idx]= ""
+
+        response = self.client.post(self.url,data=data)
+
+        #skipped but value entered so there should be form errors and a 200 status
+        self.assertEqual(response.status_code,200)
+
+        for f in response.context["formset"].forms:
+            self.assertTrue(len(f.errors)>0)
+
 
     #----------------------------------------------------------------------
     def test_cycle(self):
@@ -837,16 +910,23 @@ class TestEditTestListInstance(TestCase):
 
         self.test_list = utils.create_test_list()
         self.test = utils.create_test(name="test_simple")
+        self.test_bool = utils.create_test(name="test_bool",test_type=models.BOOLEAN)
         utils.create_test_list_membership(self.test_list,self.test)
+        utils.create_test_list_membership(self.test_list,self.test_bool)
 
         self.utc = utils.create_unit_test_collection(test_collection=self.test_list)
         self.tli = utils.create_test_list_instance(unit_test_collection=self.utc)
 
-        uti = models.UnitTestInfo.objects.get(pk=1)
+        uti = models.UnitTestInfo.objects.get(test=self.test)
 
         self.ti = utils.create_test_instance(unit_test_info=uti,value=1,status=self.status)
         self.ti.test_list_instance = self.tli
         self.ti.save()
+
+        utib = models.UnitTestInfo.objects.get(test=self.test_bool)
+        self.tib = utils.create_test_instance(unit_test_info=utib,value=1,status=self.status)
+        self.tib.test_list_instance = self.tli
+        self.tib.save()
 
         self.url = reverse("edit_tli",kwargs={"pk":self.tli.pk})
         self.client.login(username="user",password="password")
@@ -857,11 +937,13 @@ class TestEditTestListInstance(TestCase):
             "work_completed":"11-07-2012 00:10",
             "work_started":"11-07-2012 00:09",
             "status":self.status.pk,
-            "testinstance_set-TOTAL_FORMS":"1",
-            "testinstance_set-INITIAL_FORMS":"1",
+            "testinstance_set-TOTAL_FORMS":"2",
+            "testinstance_set-INITIAL_FORMS":"2",
             "testinstance_set-MAX_NUM_FORMS":"",
             "testinstance_set-0-id":self.ti.pk,
             "testinstance_set-0-value":1,
+            "testinstance_set-1-id":self.tib.pk,
+            "testinstance_set-1-value":1,
         }
 
     #----------------------------------------------------------------------
@@ -881,6 +963,21 @@ class TestEditTestListInstance(TestCase):
 
         self.assertEqual(302,response.status_code)
         self.assertEqual(88,models.TestInstance.objects.get(pk=1).value)
+    #----------------------------------------------------------------------
+    def test_in_progress(self):
+
+        self.base_data.update({
+            "in_progress":True
+        })
+
+        response = self.client.post(self.url,data=self.base_data)
+        ntests = models.Test.objects.count()
+        self.assertEqual(models.TestInstance.objects.in_progress().count(),ntests)
+        del self.base_data["in_progress"]
+        response = self.client.post(self.url,data=self.base_data)
+        self.assertEqual(models.TestInstance.objects.in_progress().count(),0)
+
+
     #----------------------------------------------------------------------
     def test_no_work_completed(self):
 
@@ -910,6 +1007,21 @@ class TestEditTestListInstance(TestCase):
 
         response = self.client.post(self.url,data=self.base_data)
         self.assertEqual(200,response.status_code)
+    #----------------------------------------------------------------------
+    def test_start_after_complete(self):
+
+        self.base_data["work_completed"] = "10-07-2012 00:10",
+
+        response = self.client.post(self.url,data=self.base_data)
+        self.assertEqual(200,response.status_code)
+    #----------------------------------------------------------------------
+    def test_start_future(self):
+        del self.base_data["work_completed"]
+        self.base_data["work_started"] = "10-07-2013 00:10",
+
+        response = self.client.post(self.url,data=self.base_data)
+        self.assertEqual(200,response.status_code)
+
     #----------------------------------------------------------------------
     def test_next_redirect(self):
         """"""

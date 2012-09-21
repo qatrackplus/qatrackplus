@@ -53,7 +53,7 @@ class TestInstanceWidgetsMixin(object):
         elif test_type == models.MULTIPLE_CHOICE:
             self.fields["value"].widget = Select(choices=[("","")]+self.unit_test_info.test.get_choices())
 
-        if  test_type in (models.BOOLEAN,models.MULTIPLE_CHOICE):
+        if test_type in (models.BOOLEAN,models.MULTIPLE_CHOICE):
             if hasattr(self,"instance") and self.instance.value is not None:
                 self.initial["value"] = int(self.instance.value)
 
