@@ -60,18 +60,27 @@ function calculate_composites(){
         return;
     }
 
+    $('button[type=submit]').attr("disabled", true);
     var data = {
         qavalues:JSON.stringify(validation_data),
         composite_ids:JSON.stringify(composite_ids)
     };
 
-    QAUtils.call_api(QAUtils.COMPOSITE_URL,"POST",data,function(data){
+    var on_success = function(data){
+        $('button[type=submit]').attr("disabled", false);
+
         if (data.success){
             $.each(data.results,function(name,result){
                 set_value_by_name(name,result.value);
             });
         }
-    });
+    }
+
+    var on_error = function(){
+        $('button[type=submit]').attr("disabled", false);
+    }
+
+    QAUtils.call_api(QAUtils.COMPOSITE_URL,"POST",data,on_success,on_error);
 }
 
 /***************************************************************/
@@ -273,6 +282,7 @@ function update_qa_status(){
         $(".do-not-treat").hide();
     }
 }
+
 /****************************************************************/
 $(document).ready(function(){
     var that = $(this);
@@ -319,10 +329,8 @@ $(document).ready(function(){
 
         check_skip_status($(this));
 
-        //only allow numerical characters on input
-        this.value = this.value.replace(QAUtils.NUMERIC_WHITELIST_REGEX,'');
-        if (this.value[0] === ".") {
-            this.value = "0" + this.value;
+        if (this.type === "text"){
+            this.value = QAUtils.clean_numerical_value(this.value);
         }
         check_test_status($(this));
         calculate_composites();
