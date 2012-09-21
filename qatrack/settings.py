@@ -180,7 +180,6 @@ TEMPLATE_CONTEXT_PROCESSORS += [
 #you can add more default fixture locations here
 FIXTURE_DIRS = (
     'fixtures/',
-    'fixtures/test/'
 )
 
 #------------------------------------------------------------------------------
