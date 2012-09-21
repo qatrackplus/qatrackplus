@@ -283,6 +283,9 @@ function update_qa_status(){
     }
 }
 
+function update_time(input){
+    input.val(input.val()+" 19:30");
+}
 /****************************************************************/
 $(document).ready(function(){
     var that = $(this);
@@ -387,8 +390,12 @@ $(document).ready(function(){
         }
     });
 
-    $("#work-completed").datepicker();
-    $("#work-started").datepicker();
+    $("#work-completed, #work-started").datepicker({
+        autoclose:true
+    }).on('change',function (ev){
+        update_time($(this).find("input"));
+    });
+
 
     //run a full validation on page load
     full_validation();
