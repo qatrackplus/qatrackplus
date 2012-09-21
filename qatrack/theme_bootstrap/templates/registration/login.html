@@ -3,7 +3,6 @@
 {% load i18n %}
 {% load bootstrap_tags %}
 
-
 {% block head_title %}{% trans "Log In" %}{% endblock %}
 
 {% block body %}
@@ -13,10 +12,9 @@
     <div class="row">
         <div class="span8">
             {% if user.is_authenticated %}
-                {#% user_display user as user_display %#}
                 <div class="alert alert-info">
                     <strong>{% trans "Note" %}</strong>:
-                    {% blocktrans %}you are already logged in as {{ user_display }}.{% endblocktrans %}
+                    {% blocktrans %}you are already logged in as {{ user }}.{% endblocktrans %}
                 </div>
             {% else %}
                 <p>
