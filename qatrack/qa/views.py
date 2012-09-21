@@ -945,7 +945,7 @@ class UTCUnitReview(UTCReview):
         """filter queryset by frequency"""
         qs = super(UTCUnitReview,self).get_queryset()
         self.units = Unit.objects.filter(number__in=self.kwargs["unit_number"].split("/"))
-        return qs.filter(unit__in=self.units)
+        return qs.filter(unit__in=self.units).order_by("unit__number")
 
     #---------------------------------------------------------------------------
     def get_page_title(self):
@@ -1061,7 +1061,7 @@ class UTCInstances(TestListInstances):
     #---------------------------------------------------------------------------
     def get_queryset(self):
         utc = get_object_or_404(models.UnitTestCollection,pk=self.kwargs["pk"])
-        return self.fetch_related(utc.testlistinstance_set)
+        return self.fetch_related(utc.testlistinstance_set).order_by("-work_completed")
 
 
 #============================================================================
@@ -1078,7 +1078,7 @@ class Unreviewed(TestListInstances):
     queryset = models.TestListInstance.objects.unreviewed
     #---------------------------------------------------------------------------
     def get_queryset(self):
-        return self.fetch_related(self.queryset().order_by("-work_completed"))
+        return self.fetch_related(self.queryset().order_by("unit_test_collection__unit__number","-work_completed"))
     #----------------------------------------------------------------------
     def get_page_title(self):
         return "Unreviewed Test Lists"

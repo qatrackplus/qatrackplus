@@ -9,8 +9,8 @@ function init_test_collection_tables(){
 
 		var cols = [
 			null, //Action
-			null,  // Test list name			
-			{"sType":"span-timestamp"}, //due date			
+			null,  // Test list name
+			{"sType":"span-timestamp"}, //due date
 			null, //Unit
 			null, //Freq
 			null,//assigned to
@@ -21,9 +21,9 @@ function init_test_collection_tables(){
 
 		var	filter_cols = [
 				null, //action
-				{type: "text" }, // Test list name				
-				{type: "text" }, //due date				
-				{type: "select"}, //Unit				
+				{type: "text" }, // Test list name
+				{type: "text" }, //due date
+				{type: "select"}, //Unit
 				{type: "select"}, //Freq
 				{type: "select"},//assigned to
 				{type: "text" }, //date completed
@@ -37,7 +37,7 @@ function init_test_collection_tables(){
 			bStateSave:false, //save filter/sort state between page loads
 			bFilter:true,
 			bPaginate: false,
-			aaSorting:[[1,"asc"]],//sort by name
+			aaSorting:[[3,"asc"],[1,"asc"]],//sort by unit then name
 			aoColumns: cols,
 			fnAdjustColumnSizing:false
 
