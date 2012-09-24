@@ -866,8 +866,6 @@ def update_unit_test_infos(collection):
 @receiver(post_save, sender=UnitTestCollection)
 def list_assigned_to_unit(*args,**kwargs):
     """UnitTestCollection was saved.  Create UnitTestInfo's for all Tests."""
-    if kwargs.get("raw",False):
-        return
     if not loaded_from_fixture(kwargs):
         update_unit_test_infos(kwargs["instance"].tests_object)
 
