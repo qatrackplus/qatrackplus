@@ -69,7 +69,9 @@ def as_review_status(test_list_instance):
         statuses[ti.status.name]["count"] += 1
         statuses[ti.status.name]["valid"] = ti.status.valid
         statuses[ti.status.name]["requires_review"] = ti.status.requires_review
-        
+        statuses[ti.status.name]["reviewed_by"] = test_list_instance.modified_by
+        statuses[ti.status.name]["reviewed"] = test_list_instance.modified
+
     template = get_template("qa/review_status.html")
     c = Context({"statuses":dict(statuses)})
     return template.render(c)

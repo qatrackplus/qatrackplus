@@ -888,6 +888,7 @@ class UTCList(ListView):
         ).prefetch_related(
             "last_instance__testinstance_set",
             "last_instance__testinstance_set__status",
+            "last_instance__modified_by",
             "tests_object",
         ).order_by("unit__number","testlist__name","testlistcycle__name",)
 
@@ -1043,7 +1044,7 @@ class TestListInstances(ListView):
                     "testinstance__status",
                     "unit_test_collection__unit__name",
                     "unit_test_collection__frequency__name",
-                    "created_by"
+                    "created_by","modified_by",
         ).prefetch_related("testinstance_set","testinstance_set__status")
 
         return qs
