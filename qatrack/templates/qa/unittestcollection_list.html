@@ -2,6 +2,8 @@
 {% load staticfiles %}
 {% load qa_tags %}
 
+{% block head_title %}{{page_title}}{% endblock %}
+
 {% block body %}
 
     <div class="row-fluid">
@@ -9,7 +11,11 @@
             <h2>{{page_title}}</h2>
         </div>
         <div class="span6">
-            <a class="pull-right" href="{% url choose_unit %}" title="return to unit selection">&larr; Back to Unit Selection Page</a>
+			{% if action =  "perform" %}
+	            <a class="pull-right" href="{% url choose_unit %}" title="return to unit selection">&larr; Back to Unit Selection Page</a>
+			{% else %}
+			    <a class="pull-right" href="{% url choose_review_unit %}" title="return to unit selection">&larr; Back to Unit Review Selection Page</a>
+			{% endif %}
         </div>
     </div>
 
@@ -20,23 +26,29 @@
 		<thead>
 			<tr>
 				<th>{{action_display}}</th>
+				<th>Test List/Cycle</th>
+				<th>Due Date</th>
 				<th>Unit</th>
 				<th>Frequency</th>
-				<th>Test List/Cycle</th>
-				<th>Last Performed</th>
-				<th>Due Date</th>
-				<th>Last QA Status</th>
 				<th>Assigned To</th>
+				<th>Completed</th>
+				<th>Pass/Fail Status</th>
+				<th>Review Status</th>
+			</tr>
+			<tr>
+				<th colspan="6">&nbsp;</th>
+				<th colspan="3">Last Session Details</th>
 			</tr>
 			<tr>
 				<th>{{action_display}}</th>
+				<th>Test List/Cycle</th>
+				<th>Due Date</th>
 				<th>Unit</th>
 				<th>Frequency</th>
-				<th>Test List/Cycle</th>
-				<th>Last Performed</th>
-				<th>Due Date</th>
-				<th>Last QA Status</th>
 				<th>Assigned To</th>
+				<th>Completed</th>
+				<th>Pass/Fail Status</th>
+				<th>Review Status</th>
 			</tr>
 		</thead>
 			<tbody>
@@ -47,42 +59,53 @@
 
 					<td>
 						{% if action =  "perform" %}
-							<a class="btn btn-primary btn-mini" href="{%url perform_qa utc.pk%}?day=next">Perform {{utc.frequency.name}} QA</a>
+							<a class="btn btn-primary btn-mini" href="{%url perform_qa utc.pk%}?day=next&next={{request.get_full_path}}">Perform {{utc.frequency.name}} QA</a>
 						{% elif action = "review" %}
-							<a class="btn btn-primary btn-mini" href="{%url review_utc utc.pk%}">Review Data</a>
-						{% endif %}						
-						
+							<a class="btn btn-primary btn-mini" href="{%url review_utc utc.pk%}?next={{request.get_full_path}}">Review Data</a>
+						{% endif %}
 					</td>
-					<td>{{utc.unit.name}}</td>
-					<td>{{utc.frequency.name}}</td>
 					<td><strong>{{utc.tests_object.name}}</strong></td>
 
-					{% if  utc.last_instance %}
-						<td>
-							<span data-timestamp="{{utc.last_instance.work_completed|date:"U"}}" >
-								<abbr title="QA performed by {{utc.last_instance.created_by}}">
-									{{utc.last_instance.work_completed}}
-								</abbr>
-								<i class="icon-user" title="QA performed by {{utc.last_instance.created_by}}"></i>
-							</span>
-						</td>
-						<td>
+					<td>
+						{% if  utc.last_instance %}
 							{{utc|as_due_date}}
-						</td>
-						<td class="pass_fail_status">
-							{{utc.last_instance|as_pass_fail_status}}
-						</td>
-					{% else %}
-						<td>
+						{% else %}
 							<span data-timestamp="0" ><em>New List</em></span>
-						</td>
-						<td>
-							<span data-timestamp="0" ><em>New List</em></span>
-						</td>
-						<td>New List</td>
-					{% endif %}
+						{% endif %}
+					</td>
 
+					<td>{{utc.unit.name}}</td>
+					<td>{{utc.frequency.name}}</td>
 					<td>{{utc.assigned_to.name}}</td>
+					<td>
+						{% if  utc.last_instance %}
+							<span data-timestamp="{{utc.last_instance.work_completed|date:"U"}}" >
+								<abbr title="QA performed by {{utc.last_instance.created_by}} {{utc.last_instance.work_completed}} ">
+									{{utc.last_instance.work_completed.date}}
+								</abbr>
+							</span>
+						{% else %}
+							<span data-timestamp="0" ><em>New List</em></span>
+						{% endif %}
+					</td>
+					<td class="pass_fail_status">
+						{% if  utc.last_instance %}
+							{{utc.last_instance|as_pass_fail_status}}
+						{% else %}
+							<em>New List</em>
+						{% endif %}
+					</td>
+					<td class="review_status">
+						{% if utc.last_instance %}
+							{{utc.last_instance|as_review_status}}
+							{% if request.user.is_staff %}
+								<a class="pull-right" title="Review this session" href="{% url review_test_list_instance utc.last_instance.pk %}?next={{request.get_full_path}}"><i class="icon-zoom-in"></i></a>
+							{% endif %}
+						{% else %}
+							<em>New List</em>
+						{% endif %}
+					</td>
+
 			   </tr>
 			{% empty %}
 				<tr class="empty-table"><td colspan="8"><em>No test lists to display</em></td></tr>
@@ -91,13 +114,14 @@
 		<tfoot>
 			<tr>
 				<th>{{action_display}}</th>
+				<th>Test List/Cycle</th>
+				<th>Due Date</th>
 				<th>Unit</th>
 				<th>Frequency</th>
-				<th>Test List/Cycle</th>
-				<th>Last Performed</th>
-				<th>Due Date</th>
-				<th>Last QA Status</th>
 				<th>Assigned To</th>
+				<th>Completed</th>
+				<th>Pass/Fail Status</th>
+				<th>Review Status</th>
 			</tr>
 		</tfoot>
 		<script src="{% static "js/unittestcollection.js" %}?v={{VERSION}}"></script>

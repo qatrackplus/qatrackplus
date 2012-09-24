@@ -1,6 +1,7 @@
 {% extends "site_base.html" %}
 {% load staticfiles %}
 
+{% block head_title %}Choose Unit for Review{% endblock %}
 
 {% block body %}
 <div class="row-fluid">
@@ -19,8 +20,8 @@
 	<div class="row-fluid row-spacer">
 		<div class="span12">
 
-			<h4 class="header-spacer">{{unit_type.grouper.name}}</h4>			
-			
+			<h4 class="header-spacer">{{unit_type.grouper.name}}</h4>
+
 			<ul>
 				<li><a href="{% url choose_review_unit %}{% for unit in unit_type.list %}{{unit.number}}/{%endfor%}">All {{unit_type.grouper.name}} Units</a></li>
 

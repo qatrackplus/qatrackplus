@@ -77,12 +77,15 @@ class TestReference(TestCase):
         self.assertRaises(ValidationError,r.clean_fields)
     #----------------------------------------------------------------------
     def test_display_value(self):
-        t = models.Reference(name="bool",type=models.BOOLEAN,value=1        )
-        f = models.Reference(name="bool",type=models.BOOLEAN,value=0        )
-        v = models.Reference(name="bool",type=models.ABSOLUTE,value=0        )
+        t = models.Reference(type=models.BOOLEAN,value=1        )
+        f = models.Reference(type=models.BOOLEAN,value=0        )
+        v = models.Reference(type=models.NUMERICAL,value=0        )
+        n = models.Reference(type=models.NUMERICAL)
+
         self.assertTrue(t.value_display() == "Yes")
         self.assertTrue(f.value_display() == "No")
-        self.assertTrue(v.value_display() == 0)
+        self.assertTrue(v.value_display() == "0")
+        self.assertTrue(n.value_display() == "")
 
 #====================================================================================
 class TestTolerance(TestCase):
@@ -132,8 +135,36 @@ class TestTolerance(TestCase):
     def test_invalid_mc_choices(self):
         t = models.Tolerance(name="foo",mc_pass_choices="a",type=models.ABSOLUTE)
         self.assertRaises(ValidationError,t.clean_choices)
+
         t = models.Tolerance(name="foo",mc_tol_choices="a",type=models.ABSOLUTE)
         self.assertRaises(ValidationError,t.clean_choices)
+    #----------------------------------------------------------------------
+    def test_no_pass_choices(self):
+        t = models.Tolerance(name="foo",mc_pass_choices="",type=models.MULTIPLE_CHOICE)
+        self.assertRaises(ValidationError,t.clean_choices)
+
+    #----------------------------------------------------------------------
+    def test_no_tol_choices(self):
+        t = models.Tolerance(name="foo",mc_pass_choices="a",mc_tol_choices="",type=models.MULTIPLE_CHOICE)
+        t.clean_choices()
+        t = models.Tolerance(name="foo",mc_pass_choices="a",type=models.MULTIPLE_CHOICE)
+        t.clean_choices()
+    #----------------------------------------------------------------------
+    def test_tolerances_for_value_none(self):
+        expected = {models.ACT_HIGH:None,models.ACT_LOW:None,models.TOL_LOW:None,models.TOL_HIGH:None}
+        t = models.Tolerance()
+        self.assertDictEqual(t.tolerances_for_value(None),expected)
+    #----------------------------------------------------------------------
+    def test_tolerances_for_value_absolute(self):
+        expected = {models.ACT_HIGH:55,models.ACT_LOW:51,models.TOL_LOW:52,models.TOL_HIGH:54}
+        t = models.Tolerance(act_high=2,act_low=-2,tol_high=1,tol_low=-1,type=models.ABSOLUTE)
+        self.assertDictEqual(expected,t.tolerances_for_value(53))
+    #----------------------------------------------------------------------
+    def test_tolerances_for_value_percent(self):
+        expected = {models.ACT_HIGH:1.02,models.ACT_LOW:0.98,models.TOL_LOW:0.99,models.TOL_HIGH:1.01}
+        t = models.Tolerance(act_high=2,act_low=-2,tol_high=1,tol_low=-1,type=models.PERCENT)
+        self.assertDictEqual(expected,t.tolerances_for_value(1))
+
 
 
 #====================================================================================
@@ -147,6 +178,11 @@ class TestTest(TestCase):
     def test_is_boolean(self):
         test = utils.create_test(name="bool",test_type=models.BOOLEAN)
         self.assertTrue(test.is_boolean())
+    #----------------------------------------------------------------------
+    def test_is_numerical(self):
+        for t in (models.COMPOSITE, models.CONSTANT, models.SIMPLE):
+            test = utils.create_test(name="num",test_type=t)
+            self.assertTrue(test.is_numerical())
 
     #---------------------------------------------------------------------------
     def test_valid_check_test_type(self):
@@ -877,6 +913,11 @@ class TestTestInstance(TestCase):
         ti.reference = ref
         self.assertEqual(0,ti.difference())
     #----------------------------------------------------------------------
+    def test_diff_unavailable(self):
+        ti = utils.create_test_instance(value=1)
+        self.assertIsNone(ti.calculate_diff())
+
+    #----------------------------------------------------------------------
     def test_percent_diff(self):
         ref = utils.create_reference(value=1)
         ti = utils.create_test_instance(value=1.1)
@@ -1044,11 +1085,48 @@ class TestTestInstance(TestCase):
 
     #----------------------------------------------------------------------
     def test_reg_display_value(self):
-        t = models.Test(type=models.NUMERICAL)
+        t = models.Test(type=models.SIMPLE)
         uti = models.UnitTestInfo(test=t)
 
         ti = models.TestInstance(unit_test_info=uti,value=0)
-        self.assertEqual(0,ti.value_display())
+        self.assertEqual("0",ti.value_display())
+
+        ti.skipped = True
+        self.assertEqual("Skipped",ti.value_display())
+
+        ti.skipped = False
+        ti.value = None
+        self.assertEqual("Not Done",ti.value_display())
+
+    #----------------------------------------------------------------------
+    def test_diff_display_no_value(self):
+        t = models.Test(type=models.SIMPLE)
+        uti = models.UnitTestInfo(test=t)
+
+        ti = models.TestInstance(unit_test_info=uti,value=0)
+        self.assertEqual("",ti.diff_display())
+    #----------------------------------------------------------------------
+    def test_diff_display_absolute(self):
+        t = models.Test(type=models.SIMPLE)
+        uti = models.UnitTestInfo(test=t)
+
+        tol = models.Tolerance(act_high=2,act_low=-2,tol_high=1,tol_low=-1,type=models.ABSOLUTE)
+        ref = models.Reference(type=models.NUMERICAL,value=100.)
+
+        ti = models.TestInstance(unit_test_info=uti,value=0,reference=ref,tolerance=tol)
+        self.assertEqual("-100",ti.diff_display())
+
+    #----------------------------------------------------------------------
+    def test_diff_display_percent(self):
+        t = models.Test(type=models.SIMPLE)
+        uti = models.UnitTestInfo(test=t)
+
+        tol = models.Tolerance(act_high=2,act_low=-2,tol_high=1,tol_low=-1,type=models.PERCENT)
+        ref = models.Reference(type=models.NUMERICAL,value=1.)
+
+        ti = models.TestInstance(unit_test_info=uti,value=0.995,reference=ref,tolerance=tol)
+        self.assertEqual("-0.5%",ti.diff_display())
+
 
 
 #============================================================================
@@ -1056,33 +1134,36 @@ class TestTestListInstance(TestCase):
 
     #----------------------------------------------------------------------
     def setUp(self):
-        tests = []
+        self.tests = []
 
-        ref = models.Reference(type=models.NUMERICAL,value=100.)
-        tol = models.Tolerance( type=models.PERCENT, act_low = -3, tol_low =-2, tol_high= 2, act_high= 3)
+        self.ref = models.Reference(type=models.NUMERICAL,value=100.)
+        self.tol = models.Tolerance( type=models.PERCENT, act_low = -3, tol_low =-2, tol_high= 2, act_high= 3)
+        self.values = [None, None,96,97,100,100]
+
+        self.statuses = [utils.create_status(name="status%d"%x,slug="status%d"%x) for x in range(len(self.values))]
 
 
         self.test_list = utils.create_test_list()
         for i in range(6):
             test = utils.create_test(name="name%d"%i)
-            tests.append(test)
+            self.tests.append(test)
             utils.create_test_list_membership(self.test_list,test)
 
-        utc = utils.create_unit_test_collection(test_collection=self.test_list)
+        self.unit_test_collection = utils.create_unit_test_collection(test_collection=self.test_list)
 
-        self.test_list_instance = utils.create_test_list_instance(unit_test_collection=utc)
+        self.test_list_instance = self.create_test_list_instance()
+    #----------------------------------------------------------------------
+    def create_test_list_instance(self):
+        utc = self.unit_test_collection
 
-        values = [None, None,96,97,100,100]
-        self.statuses = [utils.create_status(name="status%d"%x,slug="status%d"%x) for x in range(len(values))]
+        tli = utils.create_test_list_instance(unit_test_collection=utc)
 
-        uti = models.UnitTestInfo.objects.get(test=test,unit=utc.unit)
-
-        for i,(v,test,status) in enumerate(zip(values,tests,self.statuses)):
-
+        for i,(v,test,status) in enumerate(zip(self.values,self.tests,self.statuses)):
+            uti = models.UnitTestInfo.objects.get(test=test,unit=utc.unit)
             ti = utils.create_test_instance(unit_test_info=uti,value=v,status=status)
-            ti.reference = ref
-            ti.tolerance = tol
-            ti.test_list_instance = self.test_list_instance
+            ti.reference = self.ref
+            ti.tolerance = self.tol
+            ti.test_list_instance = tli
             if i == 0:
                 ti.skipped = True
             elif i == 1:
@@ -1090,6 +1171,8 @@ class TestTestListInstance(TestCase):
                 ti.reference = None
 
             ti.save()
+        tli.save()
+        return tli
 
     #----------------------------------------------------------------------
     def test_pass_fail(self):
@@ -1129,6 +1212,59 @@ class TestTestListInstance(TestCase):
             models.TestListInstance.objects.in_progress()[0],
             self.test_list_instance
         )
+
+    #----------------------------------------------------------------------
+    def test_deleted_signal_tis_deleted(self):
+        self.test_list_instance.delete()
+        self.assertEqual(models.TestInstance.objects.count(),0)
+
+    #----------------------------------------------------------------------
+    def test_deleted_signal_last_instance_updated(self):
+
+        tli = self.create_test_list_instance()
+        self.unit_test_collection = models.UnitTestCollection.objects.get(pk=self.unit_test_collection.pk)
+        self.assertEqual(self.unit_test_collection.last_instance,tli)
+
+        tli.delete()
+        self.unit_test_collection = models.UnitTestCollection.objects.get(pk=self.unit_test_collection.pk)
+        self.assertEqual(self.unit_test_collection.last_instance,self.test_list_instance)
+
+        self.test_list_instance.delete()
+        self.unit_test_collection = models.UnitTestCollection.objects.get(pk=self.unit_test_collection.pk)
+        self.assertEqual(self.unit_test_collection.last_instance,None)
+
+    #----------------------------------------------------------------------
+    def test_deleted_signal_uti_last_instance_updated(self):
+        tli = self.create_test_list_instance()
+        utc = self.unit_test_collection
+
+        for test in self.tests:
+            uti = models.UnitTestInfo.objects.get(test=test,unit=utc.unit)
+            self.assertIn(uti.last_instance,tli.testinstance_set.all())
+
+        tli.delete()
+
+        for test in self.tests:
+            uti = models.UnitTestInfo.objects.get(test=test,unit=utc.unit)
+            self.assertIn(uti.last_instance,self.test_list_instance.testinstance_set.all())
+
+        self.test_list_instance.delete()
+        for test in self.tests:
+            uti = models.UnitTestInfo.objects.get(test=test,unit=utc.unit)
+            self.assertIsNone(uti.last_instance)
+
+    #----------------------------------------------------------------------
+    def test_input_later(self):
+        tli = self.create_test_list_instance()
+        utc = models.UnitTestCollection.objects.get(pk=self.unit_test_collection.pk)
+        self.assertEqual(utc.last_instance, tli)
+
+        tli.work_completed = timezone.now()-timezone.timedelta(days=1)
+        tli.save()
+
+        utc = models.UnitTestCollection.objects.get(pk=self.unit_test_collection.pk)
+        self.assertEqual(utc.last_instance, self.test_list_instance)
+
 
 
 if __name__ == "__main__":

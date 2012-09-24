@@ -110,7 +110,7 @@ var QAUtils = new function() {
 
         if (tolerances.type === this.PERCENT){
             diff = this.percent_difference(value,reference);
-            message = "(" + diff.toFixed(1)+")";
+            message = "(" + diff.toFixed(1)+"%)";
 
         }else{
             diff = this.absolute_difference(value,reference);
@@ -184,9 +184,9 @@ var QAUtils = new function() {
 		}
 
         var status, gen_status,diff;
-	
+
         var message;
-		
+
 		if (tolerance.mc_pass_choices.indexOf(value)>=0){
 			gen_status = this.WITHIN_TOL;
 			message = "PASS";
@@ -287,6 +287,32 @@ var QAUtils = new function() {
 		return s;
 	};
 
+
+	this.clean_numerical_value = function(value){
+
+		if (value.length === 0){
+			return "";
+		}
+
+		//only allow numerical characters on input
+		value = value.replace(this.NUMERIC_WHITELIST_REGEX,'');
+
+		if ((value === ".") || (value === "-") || (value==="e") || (value==="E")){
+			return "";
+		}
+
+		if (value[0] === ".") {
+			value = "0" + value;
+		}
+
+		if ( (value[0] === "-") && (value[1]===".")){
+			return "-0."+value.substr(2,value.length-1);
+		}
+
+		return value;
+
+	};
+
     //return an appropriate display for a given pass_fail status
     this.qa_displays = {};
     this.qa_displays[this.ACTION] = this.ACTION_DISP;
@@ -315,7 +341,7 @@ var QAUtils = new function() {
 
     /********************************************************************/
     //API calls
-    this.call_api = function(url,method,data,callback){
+    this.call_api = function(url,method,data,success_callback,error_callback){
         return $.ajax({
             type:method,
             url:url,
@@ -323,15 +349,11 @@ var QAUtils = new function() {
             contentType:"application/json",
             dataType:"json",
             success: function(result,status,jqXHR){
-                callback(result,status, jqXHR,this.url);
+                success_callback(result,status, jqXHR,this.url);
             },
 			traditional:true,
-            error: function(error){
-                if (typeof console != "undefined") {console.log(error)};
-                var msg = "Something went wrong with your request:\n    ";
-                var props = ["responseText","status","statusText"];
-                var err_vals = $.map(props,function(prop){return prop+": "+error[prop];});
-                msg += err_vals.join("\n    ");
+            error: function(result,status,jqXHR){
+                error_callback(result,status, jqXHR,this.url);
             }
         });
     };
@@ -378,7 +400,7 @@ var QAUtils = new function() {
 
     //*************************************************************
     //General
-	
+
 
 	/*************************************************************************/
 	this.get_checked = function(container){
@@ -388,16 +410,16 @@ var QAUtils = new function() {
 		});
 		return vals;
 	}
-	
+
 	this.get_selected_option_vals = function(select_id){
 		var selected = [];
-	
+
 		$(select_id).find(":selected").each(function(){
 			selected.push(parseInt($(this).val()));
 		});
 		return selected;
 	}
-	
+
     this.zip = function(a1,a2){
         var ii;
         var zipped = [];
@@ -406,7 +428,7 @@ var QAUtils = new function() {
         }
         return zipped;
     };
-	
+
 	this.non_empty = function(arr){
 		return	arr.filter(function(elem,idx){return elem !== "";});
 	};

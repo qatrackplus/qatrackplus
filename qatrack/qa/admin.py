@@ -1,13 +1,14 @@
 import django.forms as forms
 import django.db
 
-from salmonella.admin import SalmonellaMixin
-
 from django.utils.translation import ugettext as _
 from django.contrib import admin
+from django.contrib.admin import widgets
 from django.contrib.admin.templatetags.admin_static import static
 from django.utils.safestring import mark_safe
 from django.utils import timezone
+from django.utils.text import Truncator
+from django.utils.html import escape
 
 import qatrack.qa.models as models
 from qatrack.units.models import Unit
@@ -47,6 +48,8 @@ class CategoryAdmin(admin.ModelAdmin):
 #============================================================================
 class TestInfoForm(forms.ModelForm):
     reference_value = forms.FloatField(label=_("New reference value"),required=False,)
+    reference_set_by = forms.CharField(label=_("Set by"),required=False)
+    reference_set = forms.CharField(label=_("Date"),required=False)
     test_type = forms.CharField(required=False)
 
     class Meta:
@@ -54,7 +57,9 @@ class TestInfoForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(TestInfoForm, self).__init__(*args, **kwargs)
-        self.fields['test_type'].widget.attrs['readonly'] = "readonly"
+        readonly = ("test_type", "reference_set_by", "reference_set",)
+        for f in readonly:
+            self.fields[f].widget.attrs['readonly'] = "readonly"
 
         if self.instance:
             tt = self.instance.test.type
@@ -74,6 +79,11 @@ class TestInfoForm(forms.ModelForm):
                 else:
                     val = self.instance.reference.value
                 self.initial["reference_value"] = val
+
+            if self.instance.reference:
+                r = self.instance.reference
+                self.initial["reference_set_by"] = "%s" % (r.modified_by)
+                self.initial["reference_set"] = "%s" % (r.modified)
 
     #----------------------------------------------------------------------
     def clean(self):
@@ -111,7 +121,7 @@ class UnitTestInfoAdmin(admin.ModelAdmin):
     form = TestInfoForm
     fields = (
         "unit", "test","test_type",
-        "reference", "tolerance",
+        "reference", "reference_set_by", "reference_set", "tolerance",
         "reference_value",
     )
     list_display = ["test",test_type, "unit", "reference", "tolerance"]
@@ -184,14 +194,12 @@ class TestListAdminForm(forms.ModelForm):
 
 #============================================================================
 class TestInlineFormSet(forms.models.BaseInlineFormSet):
-    #----------------------------------------------------------------------
-    def get_queryset(self):
-        if not hasattr(self, '_queryset'):
-            qs = super(TestInlineFormSet, self).get_queryset().select_related(
-                "test"
-            )
-            self._queryset = qs
-        return self._queryset
+    #---------------------------------------------------------------------------
+    def __init__(self,*args,**kwargs):
+        qs = kwargs["queryset"].filter(test_list=kwargs["instance"]).select_related("test")
+        kwargs["queryset"] = qs
+        super(TestInlineFormSet,self).__init__(*args,**kwargs)
+
     #----------------------------------------------------------------------
     def clean(self):
         """Make sure there are no duplicated slugs in a TestList"""
@@ -208,9 +216,7 @@ class TestInlineFormSet(forms.models.BaseInlineFormSet):
             raise forms.ValidationError(
                 "The following macro names are duplicated :: " + ",".join(duplicates)
             )
-
         return self.cleaned_data
-
 
 
 #----------------------------------------------------------------------
@@ -220,14 +226,52 @@ def test_name(obj):
 def macro_name(obj):
     return obj.test.slug
 #============================================================================
-class TestListMembershipInline(SalmonellaMixin,admin.TabularInline):
+class TestListMembershipInline(admin.TabularInline):
     """"""
     model = models.TestListMembership
     formset = TestInlineFormSet
     extra = 5
     template = "admin/qa/testlistmembership/edit_inline/tabular.html"
     readonly_fields = (macro_name,)
-    salmonella_fields = ("test",)
+    raw_id_fields = ("test",)
+
+    #---------------------------------------------------------------------------
+    def label_for_value(self,value):
+        try:
+            name = self.test_names[value]
+            return '&nbsp;<strong>%s</strong>' % escape(Truncator(name).words(14, truncate='...'))
+        except (ValueError, KeyError):
+            return ''
+
+
+    def formfield_for_foreignkey(self,db_field, request=None,**kwargs):
+        #copied from django.contrib.admin.wigets so we can override the label_for_value function
+        #for the test raw id widget
+        db = kwargs.get('using')
+        if db_field.name == "test":
+            widget = widgets.ForeignKeyRawIdWidget(db_field.rel,
+                                    self.admin_site, using=db)
+            widget.label_for_value = self.label_for_value
+            kwargs['widget'] = widget
+
+        elif db_field.name in self.raw_id_fields:
+            kwargs['widget'] = widgets.ForeignKeyRawIdWidget(db_field.rel,
+                                    self.admin_site, using=db)
+        elif db_field.name in self.radio_fields:
+            kwargs['widget'] = widgets.AdminRadioSelect(attrs={
+                'class': get_ul_class(self.radio_fields[db_field.name]),
+            })
+            kwargs['empty_label'] = db_field.blank and _('None') or None
+        return db_field.formfield(**kwargs)
+
+
+    def get_formset(self,request,obj=None,**kwargs):
+        #hacky method for getting test names so they don't need to be looked up again
+        # in the label_for_value in contrib/admin/widgets.py
+        self.test_names = dict(obj.tests.values_list("pk","name"))
+        return super(TestListMembershipInline,self).get_formset(request,obj,**kwargs)
+
+
 #============================================================================
 class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
     prepopulated_fields =  {'slug': ('name',)}
@@ -249,9 +293,7 @@ class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
     #----------------------------------------------------------------------
     def queryset(self,*args,**kwargs):
         qs = super(TestListAdmin,self).queryset(*args,**kwargs)
-        return qs.prefetch_related(
-            "testlistmembership_set",
-        )
+        return qs.select_related("modified_by")
 
 #============================================================================
 class TestAdmin(SaveUserMixin,admin.ModelAdmin):
@@ -296,15 +338,15 @@ class UnitTestCollectionAdmin(admin.ModelAdmin):
             "unit__name",
             "frequency__name",
             "assigned_to__name"
-        ).prefetch_related(
-            "tests_object",
-        )
+            ).prefetch_related(
+                "tests_object",
+            )
 #============================================================================
-class TestListCycleMembershipInline(SalmonellaMixin,admin.TabularInline):
+class TestListCycleMembershipInline(admin.TabularInline):
 
     model = models.TestListCycleMembership
     extra = 0
-    salmonella_fields = ("test_list",)
+    raw_id_fields = ("test_list",)
 
 #============================================================================
 class TestListCycleAdmin(SaveUserMixin, admin.ModelAdmin):
@@ -332,6 +374,15 @@ class FrequencyAdmin(admin.ModelAdmin):
 class StatusAdmin(admin.ModelAdmin):
     prepopulated_fields =  {'slug': ('name',)}
     model = models.TestInstanceStatus
+#----------------------------------------------------------------------
+def utc_unit_name(obj):
+    return obj.unit_test_collection.unit.name
+utc_unit_name.admin_order_field = "unit_test_collection__unit__name"
+utc_unit_name.short_description = "Unit"
+
+#====================================================================================
+class TestListInstanceAdmin(admin.ModelAdmin):
+    list_display = ["__unicode__",utc_unit_name,"test_list","work_completed","created_by"]
 
 
 admin.site.register([models.Tolerance], BasicSaveUserAdmin)
@@ -344,4 +395,4 @@ admin.site.register([models.UnitTestCollection],UnitTestCollectionAdmin)
 admin.site.register([models.TestListCycle],TestListCycleAdmin)
 admin.site.register([models.Frequency], FrequencyAdmin)
 admin.site.register([models.TestInstanceStatus], StatusAdmin)
-#admin.site.register([models.TestListInstance,models.TestInstance], admin.ModelAdmin)
+admin.site.register([models.TestListInstance], TestListInstanceAdmin)

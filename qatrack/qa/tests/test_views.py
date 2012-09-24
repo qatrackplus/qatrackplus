@@ -48,7 +48,7 @@ class TestURLS(TestCase):
             ("review_all",{}),
             ("review_utc",{"pk":"1"}),
             ("choose_review_frequency",{}),
-            ("review_by_frequency",{"frequency":"daily"}),
+            ("review_by_frequency",{"frequency":"short-interval"}),
             ("review_by_frequency",{"frequency":"daily/monthly"}),
             ("choose_review_unit",{}),
             ("review_by_unit",{"unit_number":"1"}),
@@ -65,11 +65,11 @@ class TestURLS(TestCase):
             ("edit_tli",{"pk":"1"}),
             ("choose_unit",{}),
             ("perform_qa",{"pk":"1"}),
-            ("qa_by_frequency_unit",{"unit_number":"1","frequency":"daily"}),
+            ("qa_by_frequency_unit",{"unit_number":"1","frequency":"short-interval"}),
             ("qa_by_unit",{"unit_number":"1"}),
-            ("qa_by_frequency_unit",{"unit_number":"1","frequency":"daily"}),
-            ("qa_by_unit_frequency",{"unit_number":"1","frequency":"daily"}),
-            ("qa_by_frequency",{"frequency":"daily"}),
+            ("qa_by_frequency_unit",{"unit_number":"1","frequency":"short-interval"}),
+            ("qa_by_unit_frequency",{"unit_number":"1","frequency":"short-interval"}),
+            ("qa_by_frequency",{"frequency":"short-interval"}),
         )
 
         for url,kwargs in url_names:
@@ -126,16 +126,37 @@ class TestControlChartImage(TestCase):
         self.assertTrue(response.get("content-type"),"image/png")
     #----------------------------------------------------------------------
     def test_baseline_subgroups(self):
+        test = utils.create_test()
+        unit = utils.create_unit()
+        uti = utils.create_unit_test_info(test=test,unit=unit)
+
+        status = utils.create_status()
+        yesterday = timezone.datetime.today()-timezone.timedelta(days=1)
+        yesterday = timezone.make_aware(yesterday,timezone.get_current_timezone())
+        tomorrow = yesterday+timezone.timedelta(days=2)
+
         for n in [-1,0,1,2,"nonnumber"]:
-            request = self.factory.get(self.url+"?n_base_subgroups=%s"%n)
+            url = self.make_url(test.pk,unit.number,yesterday,tomorrow,n_base=n)
+            request = self.factory.get(url)
             response =  self.view(request)
             self.assertTrue(response.get("content-type"),"image/png")
     #----------------------------------------------------------------------
-    def test_baseline_subgroups(self):
-        for n in [-1,0,1,2,200,"nonnumber"]:
-            request = self.factory.get(self.url+"?subgroup_size=%s"%n)
+    def test_invalid_subgroup_size(self):
+        test = utils.create_test()
+        unit = utils.create_unit()
+        uti = utils.create_unit_test_info(test=test,unit=unit)
+
+        status = utils.create_status()
+        yesterday = timezone.datetime.today()-timezone.timedelta(days=1)
+        yesterday = timezone.make_aware(yesterday,timezone.get_current_timezone())
+        tomorrow = yesterday+timezone.timedelta(days=2)
+
+        for n in [-1,0,101,"nonnumber"]:
+            url = self.make_url(test.pk,unit.number,yesterday,tomorrow,sg_size=n)
+            request = self.factory.get(url)
             response =  self.view(request)
             self.assertTrue(response.get("content-type"),"image/png")
+
     #----------------------------------------------------------------------
     def test_include_fit(self):
         for f in ["true","false"]:
@@ -143,10 +164,10 @@ class TestControlChartImage(TestCase):
             response =  self.view(request)
             self.assertTrue(response.get("content-type"),"image/png")
     #----------------------------------------------------------------------
-    def make_url(self,slug,unumber,from_date,to_date,sg_size=2,n_base=2,fit="true"):
+    def make_url(self,pk,unumber,from_date,to_date,sg_size=2,n_base=2,fit="true"):
         url = self.url+"?subgroup_size=%s&n_baseline_subgroups=%s&fit_data=%s" %(sg_size,n_base,fit)
-        url+= "&slug=%s"%slug
-        url+= "&unit=%s"%unumber
+        url+= "&tests[]=%s"%pk
+        url+= "&units[]=%s"%unumber
         url+= "&from_date=%s"%from_date.strftime(settings.SIMPLE_DATE_FORMAT)
         url+= "&to_date=%s"%to_date.strftime(settings.SIMPLE_DATE_FORMAT)
         return url
@@ -161,13 +182,7 @@ class TestControlChartImage(TestCase):
         yesterday = timezone.make_aware(yesterday,timezone.get_current_timezone())
         tomorrow = yesterday+timezone.timedelta(days=2)
 
-        url = self.make_url(test.slug,unit.number,yesterday,yesterday)
-
-        request = self.factory.get(url)
-        response =  self.view(request)
-        self.assertTrue(response.get("content-type"),"image/png")
-
-        url = self.make_url(test.slug,unit.number,yesterday,tomorrow)
+        url = self.make_url(test.pk,unit.number,yesterday,tomorrow)
 
         for n in (1,1,8,90):
             for x in range(n):
@@ -193,12 +208,12 @@ class TestControlChartImage(TestCase):
         yesterday = timezone.make_aware(yesterday,timezone.get_current_timezone())
         tomorrow = yesterday+timezone.timedelta(days=2)
 
-        url = self.make_url(test.slug,unit.number,yesterday,yesterday)
+        url = self.make_url(test.pk,unit.number,yesterday,yesterday)
         request = self.factory.get(url)
         response =  self.view(request)
         self.assertTrue(response.get("content-type"),"image/png")
 
-        url = self.make_url(test.slug,unit.number,yesterday,tomorrow,fit="true")
+        url = self.make_url(test.pk,unit.number,yesterday,tomorrow,fit="true")
 
 
         #generate some data that the control chart fit function won't be able to fit
@@ -212,6 +227,103 @@ class TestControlChartImage(TestCase):
         request = self.factory.get(url)
         response =  self.view(request)
         self.assertTrue(response.get("content-type"),"image/png")
+
+#====================================================================================
+class TestChartView(TestCase):
+
+    #----------------------------------------------------------------------
+    def setUp(self):
+        self.view = views.ChartView()
+        tl = utils.create_test_list()
+        test1 = utils.create_test(name="test1")
+        utils.create_test_list_membership(tl,test1)
+
+        sl = utils.create_test_list("sublist")
+        test2 = utils.create_test(name="test2")
+        utils.create_test_list_membership(sl,test2)
+
+        tl.sublists.add(sl)
+        tl.save()
+
+        utils.create_unit_test_collection(test_collection=tl)
+
+        self.view.set_test_lists()
+        self.view.set_tests()
+    #---------------------------------------------------------------------------
+    def test_create_test_data(self):
+
+        data = json.loads(self.view.get_context_data()["test_data"])
+        expected = {
+            'frequencies': {
+                '1': [1]
+            },
+            'tests': {
+                '1': {'category': 1, 'pk': 1, 'name': 'test1', 'description': 'desc'},
+                '2': {'category': 1, 'pk': 2, 'name':'test2', 'description': 'desc'}
+            },
+            'test_lists': {
+                '1': {'tests': [1, 2]},
+                '2': {u'tests': [2]}
+            },
+            'categories': {}
+        }
+        self.assertDictEqual(data,expected)
+
+
+#============================================================================
+class TestChartData(TestCase):
+
+    #----------------------------------------------------------------------
+    def setUp(self):
+        self.url = reverse("chart_data")
+        self.view = views.BasicChartData.as_view()
+
+
+        self.status = utils.create_status()
+        ref = utils.create_reference()
+        tol = utils.create_tolerance()
+        self.test1 = utils.create_test(name="test1")
+        self.test2 = utils.create_test(name="test2")
+        self.tl1 = utils.create_test_list(name="tl1")
+        self.tl2 = utils.create_test_list(name="tl2")
+
+        utils.create_test_list_membership(self.tl1,self.test1)
+        utils.create_test_list_membership(self.tl2,self.test2)
+
+        self.utc1 = utils.create_unit_test_collection(test_collection=self.tl1)
+        self.utc2 = utils.create_unit_test_collection(unit=self.utc1.unit,test_collection=self.tl2,frequency=self.utc1.frequency)
+
+        self.uti1 = models.UnitTestInfo.objects.get(test=self.test1)
+        self.uti1.reference = ref
+        self.uti1.tolerance = tol
+        self.uti1.save()
+
+        self.uti2 = models.UnitTestInfo.objects.get(test=self.test2)
+
+        for x in range(100):
+            ti = utils.create_test_instance(value=1., status=self.status, unit_test_info=self.uti1)
+            ti.reference = ref
+            ti.tolerance = tol
+            ti.save()
+
+            if x >0:
+                utils.create_test_instance(value=2., status=self.status, unit_test_info=self.uti2)
+
+        self.client.login(username="user",password="password")
+
+
+    #----------------------------------------------------------------------
+    def test_basic_data(self):
+        """"""
+        data = {
+            "tests[]":[self.test1.pk,self.test2.pk],
+            "units[]":[self.utc1.unit.pk],
+            "statuses[]":[self.status.pk],
+        }
+        response =  self.client.get(self.url,data=data)
+
+
+
 
 #============================================================================
 class TestComposite(TestCase):
@@ -266,6 +378,52 @@ class TestComposite(TestCase):
             "success": False
         }
         self.assertDictEqual(values,expected)
+    #----------------------------------------------------------------------
+    def test_invalid_number(self):
+
+        data =  {
+            u'qavalues': [
+                u'{"testc":{"name":"testc","current_value":""},"test1":{"name":"test1","current_value":1},"test2":{"name":"test2","current_value":"abc"}}'
+            ],
+            u'composite_ids': [u'{"testc":"3"}']
+        }
+
+        request = self.factory.post(self.url,data=data)
+        response = self.view(request)
+
+        values = json.loads(response.content)
+
+        expected = {
+            "errors": [],
+            "success": True,
+            'results': {
+                'testc': {
+                    'error': u'Invalid Test', u'value': None
+                }
+            },
+        }
+        self.assertDictEqual(values,expected)
+    #----------------------------------------------------------------------
+    def test_invalid_composite(self):
+
+        data =  {
+            u'qavalues': [
+                u'{"testc":{"name":"testc","current_value":""},"test1":{"name":"test1","current_value":1},"test2":{"name":"test2","current_value":"abc"}}'
+            ],
+
+            u'composite_ids': [u' ']
+        }
+
+        request = self.factory.post(self.url,data=data)
+        response = self.view(request)
+        values = json.loads(response.content)
+
+        expected = {
+            "errors": ["No Valid Composite ID's"],
+            "success": False
+        }
+        self.assertDictEqual(values,expected)
+
     #----------------------------------------------------------------------
     def test_no_composite(self):
 
@@ -322,6 +480,50 @@ class TestComposite(TestCase):
                 }
             },
             "success": True
+        }
+        self.assertDictEqual(values,expected)
+    #----------------------------------------------------------------------
+    def test_cyclic(self):
+
+        self.cyclic1 = utils.create_test(name="cyclic1",test_type=models.COMPOSITE)
+        self.cyclic1.calculation_procedure = "result = cyclic2 + test2"
+        self.cyclic1.save()
+
+        self.cyclic2 = utils.create_test(name="cyclic2",test_type=models.COMPOSITE)
+        self.cyclic2.calculation_procedure = "result = cyclic1 + test1"
+        self.cyclic2.save()
+
+        data =  {
+            u'qavalues': [
+                u'{"testc":{"name":"testc","current_value":""},"cyclic1":{"name":"cyclic1","current_value":""},"cyclic2":{"name":"cyclic2","current_value":""},"test1":{"name":"test1","current_value":1},"test2":{"name":"test2","current_value":2}}'
+            ],
+            u'composite_ids': [u'{"testc":"3","cyclic1":"4","cyclic2":"5"}']
+        }
+
+
+        request = self.factory.post(self.url,data=data)
+        response = self.view(request)
+        values = json.loads(response.content)
+
+        expected = {
+            'errors': [],
+            u'results': {
+                'cyclic1': {
+                    'error': u'Cyclic test dependency',
+                    'value': None
+                },
+                'cyclic2': {
+                    'error': u'Cyclic test dependency',
+                        u'value': None
+                    },
+                'testc': {
+                    'error': None,
+                    'value': 3.0
+                }
+            },
+
+
+            'success': True,
         }
         self.assertDictEqual(values,expected)
 
@@ -415,6 +617,29 @@ class TestPerformQA(TestCase):
         self.assertTrue( isinstance(widget,django.forms.Select))
         self.assertEqual(widget.choices,[('',''),(0,'c1'),(1,'c2'),(2,'c3')])
     #---------------------------------------------------------------------------
+    def test_perform_in_progress(self):
+        data = {
+            "work_started":"11-07-2012 00:09",
+            "status":self.status.pk,
+            "form-TOTAL_FORMS":len(self.tests),
+            "form-INITIAL_FORMS":len(self.tests),
+            "form-MAX_NUM_FORMS":"",
+            "in_progress":True,
+        }
+
+        for test_idx, uti in enumerate(self.unit_test_infos):
+            data["form-%d-value"%test_idx] =  1
+            data["form-%d-comment"%test_idx]= ""
+
+
+        response = self.client.post(self.url,data=data)
+
+        self.assertTrue(1,models.TestListInstance.objects.in_progress().count())
+        self.assertTrue(len(self.tests),models.TestInstance.objects.in_progress().count())
+        #user is redirected if form submitted successfully
+        self.assertEqual(response.status_code,302)
+
+    #---------------------------------------------------------------------------
     def test_perform_valid(self):
         data = {
             "work_started":"11-07-2012 00:09",
@@ -431,9 +656,46 @@ class TestPerformQA(TestCase):
 
 
         response = self.client.post(self.url,data=data)
+        self.assertTrue(1,models.TestListInstance.objects.count())
+        self.assertTrue(len(self.tests),models.TestInstance.objects.count())
 
         #user is redirected if form submitted successfully
         self.assertEqual(response.status_code,302)
+    #---------------------------------------------------------------------------
+    def test_perform_valid_redirect(self):
+        data = {
+            "work_started":"11-07-2012 00:09",
+            "status":self.status.pk,
+            "form-TOTAL_FORMS":len(self.tests),
+            "form-INITIAL_FORMS":len(self.tests),
+            "form-MAX_NUM_FORMS":"",
+        }
+
+        for test_idx, uti in enumerate(self.unit_test_infos):
+
+            data["form-%d-value"%test_idx] =  1
+            data["form-%d-comment"%test_idx]= ""
+
+
+        response = self.client.post(self.url+"?next=%s"%reverse("home"),data=data)
+
+        #user is redirected if form submitted successfully
+        self.assertEqual(response.status_code,302)
+        self.assertEqual("http://testserver/",response._headers['location'][1])
+
+        u2 = utils.create_user(is_staff=False,is_superuser=False,uname="u2")
+        u2.groups.add(Group.objects.get(pk=1))
+        u2.save()
+        self.client.logout()
+        self.client.login(username="u2",password="password")
+
+        response = self.client.post(self.url,data=data)
+
+        #user is redirected if form submitted successfully
+        self.assertEqual(response.status_code,302)
+        self.assertIn("short-interval",response._headers['location'][1])
+
+
     #---------------------------------------------------------------------------
     def test_perform_invalid(self):
         data = {
@@ -480,6 +742,54 @@ class TestPerformQA(TestCase):
 
         for f in response.context["formset"].forms:
             self.assertTrue(len(f.errors)>0)
+    #---------------------------------------------------------------------------
+    def test_skipped_with_val(self):
+        data = {
+            "work_completed":"11-07-2012 00:10",
+            "status":self.status.pk,
+            "form-TOTAL_FORMS":len(self.tests),
+            "form-INITIAL_FORMS":"0",
+            "form-MAX_NUM_FORMS":"",
+        }
+
+        for test_idx, test in enumerate(self.tests):
+            data["form-%d-value" % test_idx] = 1
+            data["form-%d-test" % test_idx] = test.pk
+            data["form-%d-skipped" % test_idx] = "true"
+            data["form-%d-comment"%test_idx]= ""
+
+        response = self.client.post(self.url,data=data)
+
+        #skipped but value entered so there should be form errors and a 200 status
+        self.assertEqual(response.status_code,200)
+
+        for f in response.context["formset"].forms:
+            self.assertTrue(len(f.errors)>0)
+
+    #---------------------------------------------------------------------------
+    def test_skipped_with_invalid_val(self):
+        data = {
+            "work_completed":"11-07-2012 00:10",
+            "status":self.status.pk,
+            "form-TOTAL_FORMS":len(self.tests),
+            "form-INITIAL_FORMS":"0",
+            "form-MAX_NUM_FORMS":"",
+        }
+
+        for test_idx, test in enumerate(self.tests):
+            data["form-%d-value" % test_idx] = None
+            data["form-%d-test" % test_idx] = test.pk
+            data["form-%d-skipped" % test_idx] = "true"
+            data["form-%d-comment"%test_idx]= ""
+
+        response = self.client.post(self.url,data=data)
+
+        #skipped but value entered so there should be form errors and a 200 status
+        self.assertEqual(response.status_code,200)
+
+        for f in response.context["formset"].forms:
+            self.assertTrue(len(f.errors)>0)
+
 
     #----------------------------------------------------------------------
     def test_cycle(self):
@@ -519,6 +829,292 @@ class TestPerformQA(TestCase):
         models.TestInstanceStatus.objects.all().delete()
         response = self.client.get(self.url)
         self.assertTrue(len(list(response.context['messages']))==1)
+
+    #---------------------------------------------------------------------------
+    def test_perform_invalid_ref(self):
+        data = {
+
+            "work_completed":"11-07-2012 00:10",
+            "work_started":"11-07-2012 00:09",
+            "status":self.status.pk,
+            "form-TOTAL_FORMS":len(self.tests),
+            "form-INITIAL_FORMS":len(self.tests),
+            "form-MAX_NUM_FORMS":"",
+        }
+
+        ref = utils.create_reference()
+        ref.value = 0
+        ref.save()
+
+        tol = utils.create_tolerance()
+        tol.type = models.PERCENT
+        tol.save()
+
+        self.unit_test_infos[0].reference = ref
+        self.unit_test_infos[0].tolerance = tol
+        self.unit_test_infos[0].save()
+
+        for test_idx, uti in enumerate(self.unit_test_infos):
+            data["form-%d-value"%test_idx] =  1
+            data["form-%d-comment"%test_idx]= ""
+
+
+        response = self.client.post(self.url,data=data)
+
+        #no values sent so there should be form errors and a 200 status
+        self.assertEqual(response.status_code,302)
+        ti = models.TestInstance.objects.get(unit_test_info=self.unit_test_infos[0])
+        self.assertIsNone(ti.value)
+    #----------------------------------------------------------------------
+    def test_missing_unit_test_info(self):
+        self.unit_test_infos[0].delete()
+        response = self.client.get(self.url)
+        self.assertIn("do not treat",str(list(response.context['messages'])[0]).lower())
+
+    #----------------------------------------------------------------------
+    def test_invalid_day(self):
+
+        tl1 = utils.create_test_list(name="tl1")
+        tl2 = utils.create_test_list(name="tl2")
+        cycle = utils.create_cycle(test_lists=[tl1,tl2])
+        utc = utils.create_unit_test_collection(
+            test_collection=cycle,
+            unit=self.unit_test_list.unit,
+            frequency=self.unit_test_list.frequency,
+        )
+        url = reverse("perform_qa",kwargs={"pk":utc.pk})+"?day=22"
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code,404)
+
+#============================================================================
+class TestBaseEditTestListInstance(TestCase):
+    #----------------------------------------------------------------------
+    def setUp(self):
+        self.view = views.BaseEditTestListInstance()
+    #----------------------------------------------------------------------
+    def test_form_valid_not_implemented(self):
+        self.assertRaises(NotImplementedError,self.view.form_valid,None)
+
+#============================================================================
+class TestEditTestListInstance(TestCase):
+
+    #----------------------------------------------------------------------
+    def setUp(self):
+
+        self.view = views.EditTestListInstance.as_view()
+        self.factory = RequestFactory()
+
+        self.status = utils.create_status()
+
+        self.test_list = utils.create_test_list()
+        self.test = utils.create_test(name="test_simple")
+        self.test_bool = utils.create_test(name="test_bool",test_type=models.BOOLEAN)
+        utils.create_test_list_membership(self.test_list,self.test)
+        utils.create_test_list_membership(self.test_list,self.test_bool)
+
+        self.utc = utils.create_unit_test_collection(test_collection=self.test_list)
+        self.tli = utils.create_test_list_instance(unit_test_collection=self.utc)
+
+        uti = models.UnitTestInfo.objects.get(test=self.test)
+
+        self.ti = utils.create_test_instance(unit_test_info=uti,value=1,status=self.status)
+        self.ti.test_list_instance = self.tli
+        self.ti.save()
+
+        utib = models.UnitTestInfo.objects.get(test=self.test_bool)
+        self.tib = utils.create_test_instance(unit_test_info=utib,value=1,status=self.status)
+        self.tib.test_list_instance = self.tli
+        self.tib.save()
+
+        self.url = reverse("edit_tli",kwargs={"pk":self.tli.pk})
+        self.client.login(username="user",password="password")
+        self.user = User.objects.get(username="user")
+        self.user.save()
+
+        self.base_data = {
+            "work_completed":"11-07-2012 00:10",
+            "work_started":"11-07-2012 00:09",
+            "status":self.status.pk,
+            "testinstance_set-TOTAL_FORMS":"2",
+            "testinstance_set-INITIAL_FORMS":"2",
+            "testinstance_set-MAX_NUM_FORMS":"",
+            "testinstance_set-0-id":self.ti.pk,
+            "testinstance_set-0-value":1,
+            "testinstance_set-1-id":self.tib.pk,
+            "testinstance_set-1-value":1,
+        }
+
+    #----------------------------------------------------------------------
+    def test_get(self):
+
+        response = self.client.get(self.url)
+        self.assertEqual(200,response.status_code)
+
+    #----------------------------------------------------------------------
+    def test_edit(self):
+
+        self.base_data.update({
+            "testinstance_set-0-value":88,
+        })
+
+        response = self.client.post(self.url,data=self.base_data)
+
+        self.assertEqual(302,response.status_code)
+        self.assertEqual(88,models.TestInstance.objects.get(pk=1).value)
+    #----------------------------------------------------------------------
+    def test_in_progress(self):
+
+        self.base_data.update({
+            "in_progress":True
+        })
+
+        response = self.client.post(self.url,data=self.base_data)
+        ntests = models.Test.objects.count()
+        self.assertEqual(models.TestInstance.objects.in_progress().count(),ntests)
+        del self.base_data["in_progress"]
+        response = self.client.post(self.url,data=self.base_data)
+        self.assertEqual(models.TestInstance.objects.in_progress().count(),0)
+
+
+    #----------------------------------------------------------------------
+    def test_no_work_completed(self):
+
+        self.base_data.update({
+            "testinstance_set-0-value":88,
+            "work_completed":""
+        })
+
+        response = self.client.post(self.url,data=self.base_data)
+
+        self.assertEqual(302,response.status_code)
+    #----------------------------------------------------------------------
+    def test_no_value(self):
+
+        self.base_data.update({
+            "testinstance_set-0-value":None,
+        })
+
+        response = self.client.post(self.url,data=self.base_data)
+
+        self.assertEqual(200,response.status_code)
+
+    #----------------------------------------------------------------------
+    def test_no_work_started(self):
+
+        del self.base_data["work_started"]
+
+        response = self.client.post(self.url,data=self.base_data)
+        self.assertEqual(200,response.status_code)
+    #----------------------------------------------------------------------
+    def test_start_after_complete(self):
+
+        self.base_data["work_completed"] = "10-07-2012 00:10",
+
+        response = self.client.post(self.url,data=self.base_data)
+        self.assertEqual(200,response.status_code)
+    #----------------------------------------------------------------------
+    def test_start_future(self):
+        del self.base_data["work_completed"]
+        self.base_data["work_started"] = "10-07-2013 00:10",
+
+        response = self.client.post(self.url,data=self.base_data)
+        self.assertEqual(200,response.status_code)
+
+    #----------------------------------------------------------------------
+    def test_next_redirect(self):
+        """"""
+        response = self.client.post(self.url+"?next=%s"%reverse("home"),data=self.base_data)
+        self.assertEqual(302,response.status_code)
+
+    #----------------------------------------------------------------------
+    def test_invalid_ref_on_edit(self):
+
+        ref = utils.create_reference()
+        tol = utils.create_tolerance()
+        tol.type = models.PERCENT
+        tol.save()
+
+
+        self.ti.reference = ref
+        self.ti.tolerance = tol
+        self.ti.save()
+
+        ref.value = 0
+        ref.save()
+
+        self.base_data.update({
+            "testinstance_set-0-reference":ref.pk,
+            "testinstance_set-0-tolerance":tol.pk,
+        })
+
+        response = self.client.post(self.url,data=self.base_data)
+        ti = models.TestInstance.objects.get(pk=self.ti.pk)
+
+        #if saved with inavlid ref, test list instance should be saved
+        #and test instance should be saved with value of None and comment
+        self.assertEqual(response.status_code,302)
+        self.assertIsNone(ti.value)
+        self.assertNotIn(ti.comment,("",None))
+
+#============================================================================
+class TestReviewTestListInstance(TestCase):
+
+    #----------------------------------------------------------------------
+    def setUp(self):
+
+        self.view = views.ReviewTestListInstance.as_view()
+        self.factory = RequestFactory()
+
+        self.status = utils.create_status()
+        self.review_status = utils.create_status(name="reviewed",slug="reviewed",is_default=False)
+        self.review_status.requires_review = False
+        self.review_status.save()
+
+        self.test_list = utils.create_test_list()
+        self.test = utils.create_test(name="test_simple")
+        utils.create_test_list_membership(self.test_list,self.test)
+
+        self.utc = utils.create_unit_test_collection(test_collection=self.test_list)
+        self.tli = utils.create_test_list_instance(unit_test_collection=self.utc)
+
+        uti = models.UnitTestInfo.objects.get(pk=1)
+
+        self.ti = utils.create_test_instance(unit_test_info=uti,value=1,status=self.status)
+        self.ti.test_list_instance = self.tli
+        self.ti.save()
+
+        self.url = reverse("review_test_list_instance",kwargs={"pk":self.tli.pk})
+        self.client.login(username="user",password="password")
+        self.user = User.objects.get(username="user")
+        self.user.save()
+
+        self.base_data = {
+            "testinstance_set-TOTAL_FORMS":"1",
+            "testinstance_set-INITIAL_FORMS":"1",
+            "testinstance_set-MAX_NUM_FORMS":"",
+            "testinstance_set-0-id":self.ti.pk,
+            "testinstance_set-0-value":1,
+        }
+
+    #----------------------------------------------------------------------
+    def test_update(self):
+
+        response = self.client.get(self.url)
+
+        self.base_data.update({
+            "testinstance_set-0-status":self.review_status.pk,
+        })
+
+        self.assertEqual(1,models.TestListInstance.objects.unreviewed().count())
+        response = self.client.post(self.url,data=self.base_data)
+
+        self.assertEqual(302,response.status_code)
+        ti = models.TestInstance.objects.get(pk=self.ti.pk)
+        self.assertEqual(ti.status,self.review_status)
+        self.assertEqual(0,models.TestListInstance.objects.unreviewed().count())
+
 
 
 if __name__ == "__main__":

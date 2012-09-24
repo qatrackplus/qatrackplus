@@ -20,9 +20,22 @@
     filter: alpha(opacity=100)
 }
 
+/*dropdown on hover rather than click */
+ul.nav li.dropdown:hover ul.dropdown-menu{
+    display: block;    
+}
+.navbar .dropdown-menu {
+ margin-top: 0px;
+}
+
 .pagination {
     margin:0;
     margin-bottom:2px;
+}
+
+.test-collection-table th,
+.test-collection-table td{
+    text-align:center;
 }
 
 /************************************************/
@@ -30,7 +43,7 @@
 #overall-qa-status{
     min-height:0px;
 }
-#do-not-treat,
+.do-not-treat,
 #contacts{
     display:none;
     min-height:0px;

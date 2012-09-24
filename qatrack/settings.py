@@ -21,7 +21,7 @@ SEND_BROKEN_LINK_EMAILS = True
 #misc settings
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
-VERSION = "0.1.11"
+VERSION = "0.2.0"
 
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'qatrack.wsgi.application'
@@ -154,8 +154,10 @@ ACCOUNT_ACTIVATION_DAYS = 7
 #Template settings
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
+    #('django.template.loaders.cached.Loader', (
     'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
+    #)),
 #     'django.template.loaders.eggs.Loader',
 )
 
@@ -168,14 +170,16 @@ TEMPLATE_DIRS = (
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = list(DEFAULT_SETTINGS.TEMPLATE_CONTEXT_PROCESSORS)
-TEMPLATE_CONTEXT_PROCESSORS += ["qatrack.context_processors.site",]
+TEMPLATE_CONTEXT_PROCESSORS += [
+    'django.core.context_processors.request',
+    "qatrack.context_processors.site",
+]
 
 #------------------------------------------------------------------------------
 #Fixtures
 #you can add more default fixture locations here
 FIXTURE_DIRS = (
     'fixtures/',
-    'fixtures/test/'
 )
 
 #------------------------------------------------------------------------------

@@ -15,7 +15,7 @@ function init_test_list_instance_tables(){
 			{"sType":"span-timestamp"}, //date completed
 			null,//completed by,
 			null,//progres
-			null, //qa status
+			null //qa status
 		];
 
 		var	filter_cols = [
@@ -26,7 +26,7 @@ function init_test_list_instance_tables(){
 				{type: "text" }, //date completed
 				{type: "select" }, //completed by
 				{type: "text"},//progress
-				null, //qa status
+				null //qa status
 			];
 
 
@@ -35,7 +35,7 @@ function init_test_list_instance_tables(){
 			bStateSave:false, //save filter/sort state between page loads
 			bFilter:true,
 			bPaginate: false,
-			aaSorting:[[4,"desc"]],
+			aaSorting:[[1,"desc"],[3,"desc"],[4,"desc"]],
 			aoColumns: cols,
 			fnAdjustColumnSizing:false
 

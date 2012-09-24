@@ -2,6 +2,8 @@
 {% load staticfiles %}
 {% load qa_tags %}
 
+{% block head_title %}{{test_list_instance.work_completed|date}} {{test_list_instance.test_list.name}} Details{% endblock %}
+
 {% block body %}
     <div class="row-fluid">
         <div class="span12">
@@ -35,9 +37,9 @@
 
 							<a class="btn btn-danger btn-mini" title="Permanently Delete This List" href="#" disabled="disabled" >Delete</a>
 							{% if instance.in_progress %}
-								<a class="btn btn-primary btn-mini" title="Continue this list" href="{%url edit_tli pk=test_list_instance.pk%}" >Continue</a>
+								<a class="btn btn-primary btn-mini" title="Continue this list" href="{%url edit_tli pk=test_list_instance.pk%}?next={{request.get_full_path}}" >Continue</a>
 							{% else %}
-								<a class="btn btn-primary btn-mini" title="Edit this list" href="{%url edit_tli pk=test_list_instance.pk%}" >Edit</a>
+								<a class="btn btn-primary btn-mini" title="Edit this list" href="{%url edit_tli pk=test_list_instance.pk%}?next={{request.get_full_path}}" >Edit</a>
 							{% endif %}
 						</dd>
 				   </dl>
@@ -128,7 +130,7 @@
 							<tr>
 								<input type="hidden" name="testinstance_set-{{forloop.counter0}}-id" value="{{ti.pk}}" id="id_testinstance_set-{{forloop.counter0}}-id">
 								<td><strong>{{ti.unit_test_info.test.name}}</strong></td>
-								<td class="review-value"><span class="label pass-fail {{ti.pass_fail}}">{{ti.value_display}}</span></td>
+								<td class="review-value"><span class="label pass-fail {{ti.pass_fail}}" title="{{ti.diff_display}}">{{ti.value_display}}</span></td>
 								<td class="review-ref">
 								    {% reference_tolerance_span ti.unit_test_info.test ti.reference ti.tolerance%}
 								</td>

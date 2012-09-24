@@ -1,6 +1,7 @@
 {% extends "site_base.html" %}
 {% load staticfiles %}
 
+{% block head_title %}Choose Unit{% endblock %}
 
 {% block body %}
 <div class="row-fluid">
@@ -31,6 +32,9 @@
 								<span class="caret"></span>
 							</button>
 							<ul class="dropdown-menu">
+								<li>
+									<a href="{% url qa_by_frequency_unit frequency="short-interval" unit_number=unit.number %}">{{unit.name}} &mdash; Daily &amp; Weekly</a>
+								</li>
 								{% for freq in QA_FREQUENCIES %}
 								<li>
 									<a href="{% url qa_by_frequency_unit frequency=freq.0 unit_number=unit.number %}">{{unit.name}} &mdash; {{freq.1}}</a>

@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 from django.dispatch import receiver
-from django.db.models.signals import pre_save,post_save, m2m_changed
+from django.db.models.signals import pre_save,post_save, post_delete, m2m_changed
 from django.db.models import signals
 from django.utils import timezone
 
@@ -57,6 +57,11 @@ OK = "ok"
 TOLERANCE = "tolerance"
 ACTION = "action"
 NO_TOL = "no_tol"
+
+ACT_HIGH = "act_high"
+ACT_LOW = "act_low"
+TOL_HIGH = "tol_high"
+TOL_LOW = "tol_low"
 
 PASS_FAIL_CHOICES = (
     (NOT_DONE,"Not Done"),
@@ -195,7 +200,7 @@ class Reference(models.Model):
     """Reference values for various QA :model:`Test`s"""
 
     name = models.CharField(max_length=256, help_text=_("Enter a short name for this reference"))
-    type = models.CharField(max_length=15, choices=REF_TYPE_CHOICES,default="numerical")
+    type = models.CharField(max_length=15, choices=REF_TYPE_CHOICES,default=NUMERICAL)
     value = models.FloatField(help_text=_("Enter the reference value for this test."))
 
     #who created this reference
@@ -216,7 +221,7 @@ class Reference(models.Model):
             return ""
         if self.type == BOOLEAN:
             return "Yes" if int(self.value)==1 else "No"
-        return self.value
+        return "%.3g" %(self.value)
     #---------------------------------------------------------------------------
     def __unicode__(self):
         """more helpful display name"""
@@ -264,27 +269,28 @@ class Tolerance(models.Model):
     #---------------------------------------------------------------------------
     def clean_choices(self):
         """make sure choices provided if Tolerance Type is MultipleChoice"""
+
         errors = []
+
         if self.type == MULTIPLE_CHOICE:
+
             if (None, None, None, None) != (self.act_low,self.tol_low,self.tol_high,self.act_high):
                 errors.append("Value set for tolerance or action but type is Multiple Choice")
+
             if self.mc_pass_choices  is None or self.mc_pass_choices.strip()=="":
-                errors.append("You must give more at l passing choice for a multiple choice tolerance")
+                errors.append("You must give at least l passing choice for a multiple choice tolerance")
             else:
 
                 pass_choices = [x.strip() for x in self.mc_pass_choices.split(",") if x.strip()]
+                self.mc_pass_choices = ",".join(pass_choices)
 
                 if self.mc_tol_choices:
                     tol_choices = [x.strip() for x in self.mc_tol_choices.split(",") if x.strip()]
                 else:
                     tol_choices = []
 
-                if not pass_choices:
-                    errors.append("You must give more at l passing choice for a multiple choice tolerance")
-                else:
-                    self.mc_pass_choices = ",".join(pass_choices)
-                    if tol_choices:
-                        self.mc_tol_choices = ",".join(tol_choices)
+                if tol_choices:
+                    self.mc_tol_choices = ",".join(tol_choices)
 
         elif self.type != MULTIPLE_CHOICE:
             if (self.mc_pass_choices or self.mc_tol_choices):
@@ -296,7 +302,7 @@ class Tolerance(models.Model):
     def clean_tols(self):
         if self.type  in (ABSOLUTE, PERCENT):
             errors = {}
-            check = ("act_high","act_low","tol_high","tol_low",)
+            check = (ACT_HIGH,ACT_LOW,TOL_HIGH,TOL_LOW,)
             for c in check:
                 if getattr(self,c) is None:
                     errors[c] = ["You can not leave this field blank for this test type"]
@@ -313,12 +319,12 @@ class Tolerance(models.Model):
     def tolerances_for_value(self,value):
         """return dict containing tolerances for input value"""
 
-        tols = {"act_high":None,"act_low":None,"tol_low":None,"tol_high":None}
+        tols = {ACT_HIGH:None,ACT_LOW:None,TOL_LOW:None,TOL_HIGH:None}
         attrs = tols.keys()
 
         if value is None:
             return tols
-        if self.type == ABSOLUTE:
+        elif self.type == ABSOLUTE:
             for attr in attrs:
                 tols[attr] = value + getattr(self,attr)
         elif self.type == PERCENT:
@@ -365,7 +371,7 @@ class Test(models.Model):
     """Test to be completed as part of a QA :model:`TestList`"""
 
     VARIABLE_RE = re.compile("^[a-zA-Z_]+[0-9a-zA-Z_]*$")
-    RESULT_RE = re.compile("^result\s*=\s*[(_0-9.a-zA-Z]+.*$",re.MULTILINE)
+    RESULT_RE = re.compile("^result\s*=\s*[(\-+_0-9.a-zA-Z]+.*$",re.MULTILINE)
 
     name = models.CharField(max_length=256, help_text=_("Name for this test"),unique=True,db_index=True)
     slug = models.SlugField(
@@ -396,7 +402,10 @@ class Test(models.Model):
     modified = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(User, editable=False, related_name="test_modifier")
 
-
+    #----------------------------------------------------------------------
+    def is_numerical(self):
+        """return whether or not this is a numerical test"""
+        return self.type in (COMPOSITE,CONSTANT,SIMPLE)
     #----------------------------------------------------------------------
     def is_boolean(self):
         """Return whether or not this is a boolean test"""
@@ -495,21 +504,23 @@ class Test(models.Model):
         return "%s" % (self.name)
 
 #============================================================================
+def loaded_from_fixture(kwargs):
+    return kwargs.get("raw",False)
+
 @receiver(pre_save,sender=Test)
 def on_test_save(*args, **kwargs):
     """Ensure that model validates on save"""
-    if kwargs.get("raw",False):
-        return
+    if not loaded_from_fixture(kwargs):
 
-    test = kwargs["instance"]
-    if test.type is not BOOLEAN:
-        return
+        test = kwargs["instance"]
+        if test.type is not BOOLEAN:
+            return
 
-    unit_assignments = UnitTestInfo.objects.filter(test = test)
+        unit_assignments = UnitTestInfo.objects.filter(test = test)
 
-    for ua in unit_assignments:
-        if ua.reference and ua.reference.value not in (0.,1.,):
-            raise ValidationError("Can't change test type to %s while this test is still assigned to %s with a non-boolean reference"%(test.type, ua.unit.name))
+        for ua in unit_assignments:
+            if ua.reference and ua.reference.value not in (0.,1.,):
+                raise ValidationError("Can't change test type to %s while this test is still assigned to %s with a non-boolean reference"%(test.type, ua.unit.name))
 
 
 class UnitTestInfoManager(models.Manager):
@@ -523,13 +534,13 @@ class UnitTestInfo(models.Model):
     unit = models.ForeignKey(Unit)
     test = models.ForeignKey(Test)
 
-    reference = models.ForeignKey(Reference,verbose_name=_("Current Reference"),null=True, blank=True)
-    tolerance = models.ForeignKey(Tolerance,null=True, blank=True)
+    reference = models.ForeignKey(Reference,verbose_name=_("Current Reference"),null=True, blank=True,on_delete=models.SET_NULL)
+    tolerance = models.ForeignKey(Tolerance,null=True, blank=True,on_delete=models.SET_NULL)
 
     active = models.BooleanField(help_text=_("Uncheck to disable this test on this unit"), default=True,db_index=True)
 
-    assigned_to = models.ForeignKey(Group,help_text = _("QA group that this test list should nominally be performed by"),null=True, blank=True)
-    last_instance = models.ForeignKey("TestInstance",null=True, editable=False)
+    assigned_to = models.ForeignKey(Group,help_text = _("QA group that this test list should nominally be performed by"),null=True, blank=True,on_delete=models.SET_NULL)
+    last_instance = models.ForeignKey("TestInstance",null=True, editable=False,on_delete=models.SET_NULL)
     objects = UnitTestInfoManager()
     #============================================================================
     class Meta:
@@ -699,7 +710,7 @@ class UnitTestCollection(models.Model):
     tests_object = generic.GenericForeignKey("content_type","object_id")
     objects = UnitTestListManager()
 
-    last_instance = models.ForeignKey("TestListInstance",null=True,editable=False)
+    last_instance = models.ForeignKey("TestListInstance",null=True,editable=False,on_delete=models.SET_NULL)
 
 
 
@@ -719,12 +730,12 @@ class UnitTestCollection(models.Model):
         """
 
         if self.last_instance:
-            return utils.due_date(self.last_instance.work_completed,self.frequency)
+            return utils.due_date(self.last_instance,self.frequency)
 
     #----------------------------------------------------------------------
     def due_status(self):
         if self.last_instance:
-            return utils.due_status(self.last_instance.work_completed,self.frequency)
+            return utils.due_status(self.last_instance,self.frequency)
         return NOT_DUE
 
     #----------------------------------------------------------------------
@@ -776,26 +787,7 @@ class UnitTestCollection(models.Model):
     #----------------------------------------------------------------------
     def __unicode__(self):
         return "UnitTestCollection(%s)"%self.pk
-    #return "UnitTestCollection(unit=%s, tests_object=%s, frequency=%s)" %(self.unit.name, self.tests_object.name, self.frequency.name)
 
-
-
-#There are three cases when we might reguire a new UnitTestCollection
-#to be created:
-#  1)  When a TestList is assigned to a Unit through a UnitTestCollection
-#      all Tests from the TestList and all its sub-TestLists must have a
-#      UnitTestAssignmnent created
-#  2a) When a Test is added to a TestList we must find all Units
-#      that TestList is performed on and create a UnitTestCollection
-#  2b) When a Test is added to a TestList.sublist we e must find all Units
-#      that TestList is performed on and create a UnitTestCollection
-#  3)  When a TestList added to a TestList.sublist we must find all Units
-#      that TestList is performed on and create UnitTestCollections for
-#      all Tests in the sub-TestList
-#
-#  Case 1) can be handled by the post_save signal of UnitTestCollection
-#  Case 2a & 2b) can be handled by the post_save signal of TestListMembership
-#  Case 3) can be handled by the m2m_changed signal of TestList.sublists.through
 
 #----------------------------------------------------------------------
 def get_or_create_unit_test_info(unit,test,assigned_to=None, active=True):
@@ -812,15 +804,19 @@ def get_or_create_unit_test_info(unit,test,assigned_to=None, active=True):
     return uti
 
 #----------------------------------------------------------------------
-def update_unit_test_assignments(collection):
-    """find out which units this test_list is assigned to and make
-    sure there are UnitTestCollections for each Unit, Test pair"""
+def find_assigned_unit_test_collections(collection):
+    """take a test collection (eg test list, sub list or test list cycle) and return
+    the units that it is a part of
+    """
+
 
     all_parents = {
         ContentType.objects.get_for_model(collection):[collection],
     }
 
-    for parent_type in ("testlist_set", "testlistcycle_set"):
+    parent_types = [x._meta.module_name+"_set" for x in TestCollectionInterface.__subclasses__()]
+
+    for parent_type in parent_types:
 
         if hasattr(collection, parent_type):
             parents = getattr(collection,parent_type).all()
@@ -831,64 +827,67 @@ def update_unit_test_assignments(collection):
                 except KeyError:
                     all_parents[ct] = list(parents)
 
-    all_tests = collection.all_tests()
-
+    assigned_utcs = []
     for ct,objects in all_parents.items():
-        utlas = UnitTestCollection.objects.filter(
+        utcs = UnitTestCollection.objects.filter(
             object_id__in= [x.pk for x in objects],
             content_type = ct,
-        )
+        ).select_related("unit","assinged_to")
+        assigned_utcs.extend(utcs)
+    return assigned_utcs
 
-        for utla in utlas:
-            need_utas = all_tests#.exclude(unittestinfo__unit = utla.unit)
+#----------------------------------------------------------------------
+def update_unit_test_infos(collection):
+    """find out which units this test_list is assigned to and make
+    sure there are UnitTestInfo's for each Unit, Test pair"""
 
-            for test in need_utas:
 
-                get_or_create_unit_test_info(
-                    unit=utla.unit,
-                    test=test,
-                    assigned_to = utla.assigned_to,
-                    active = utla.active
-                )
+    all_tests = collection.all_tests()
+
+    assigned_utcs = find_assigned_unit_test_collections(collection)
+    for utc in assigned_utcs:
+        existing_uti_units = UnitTestInfo.objects.filter(
+            unit= utc.unit,
+            test__in = all_tests,
+        ).select_related("test")
+
+        existing_tests = [x.test for x in existing_uti_units]
+        missing_utis = [x for x in all_tests if x not in existing_tests]
+        for test in missing_utis:
+            get_or_create_unit_test_info(
+                unit=utc.unit,
+                test=test,
+                assigned_to = utc.assigned_to,
+                active = utc.active
+            )
+
 
 #----------------------------------------------------------------------
 @receiver(post_save, sender=UnitTestCollection)
 def list_assigned_to_unit(*args,**kwargs):
-    """UnitTestCollection was saved.  Create UnitTestCollections
-    for all Tests. (Case 1 from above)"""
+    """UnitTestCollection was saved.  Create UnitTestInfo's for all Tests."""
     if kwargs.get("raw",False):
         return
-    if not kwargs.get("raw",False):
-        #don't process signal when loading fixture data
-        update_unit_test_assignments(kwargs["instance"].tests_object)
+    if not loaded_from_fixture(kwargs):
+        update_unit_test_infos(kwargs["instance"].tests_object)
 
 #----------------------------------------------------------------------
 @receiver(post_save, sender=TestListMembership)
 def test_added_to_list(*args,**kwargs):
-    """Test was added to a list (or sublist). Find all units this list
-    is performed on and create UnitTestCollection for the Unit, Test pair.
-    Covers case 2a & 2b.
     """
-    if not kwargs.get("raw",False):
-        #don't process signal when loading fixture data
-        update_unit_test_assignments(kwargs["instance"].test_list)
+    Test was added to a list (or sublist). Find all units this list
+    is performed on and create UnitTestInfo for the Unit, Test pair.
+    """
+    if (not loaded_from_fixture(kwargs)) :
+        update_unit_test_infos(kwargs["instance"].test_list)
 
 #----------------------------------------------------------------------
 @receiver(post_save, sender=TestList)
 def test_list_saved(*args,**kwargs):
-    """TestList was saved. Recreate any UTI's that may have been deleted in past
-    """
-    if not kwargs.get("raw",False):
-        #don't process signal when loading fixture data
-        update_unit_test_assignments(kwargs["instance"])
+    """TestList was saved. Recreate any UTI's that may have been deleted in past"""
+    if not loaded_from_fixture(kwargs):
+        update_unit_test_infos(kwargs["instance"])
 
-#----------------------------------------------------------------------
-@receiver(m2m_changed, sender=TestList.sublists.through)
-def sublist_changed(*args,**kwargs):
-    """when a sublist changes"""
-    if not kwargs.get("raw",False):
-        #don't process signal when loading fixture data
-        update_unit_test_assignments(kwargs["instance"])
 
 #============================================================================
 class TestInstanceManager(models.Manager):
@@ -919,8 +918,8 @@ class TestInstance(models.Model):
 
 
     #reference used
-    reference = models.ForeignKey(Reference,null=True, blank=True,editable=False)
-    tolerance = models.ForeignKey(Tolerance, null=True, blank=True,editable=False)
+    reference = models.ForeignKey(Reference,null=True, blank=True,editable=False,on_delete=models.SET_NULL)
+    tolerance = models.ForeignKey(Tolerance, null=True, blank=True,editable=False,on_delete=models.SET_NULL)
 
     unit_test_info = models.ForeignKey(UnitTestInfo,editable=False)
 
@@ -983,18 +982,23 @@ class TestInstance(models.Model):
 
     #---------------------------------------------------------------------------
     def float_pass_fail(self):
-        if self.tolerance.type == ABSOLUTE:
-            diff = self.difference()
-        else:
-            diff = self.percent_difference()
-
+        diff = self.calculate_diff()
         if self.tolerance.tol_low <= diff <= self.tolerance.tol_high:
             self.pass_fail = OK
         elif self.tolerance.act_low <= diff <= self.tolerance.tol_low or self.tolerance.tol_high <= diff <= self.tolerance.act_high:
             self.pass_fail = TOLERANCE
         else:
             self.pass_fail = ACTION
+    #----------------------------------------------------------------------
+    def calculate_diff(self):
+        if not (self.tolerance and self.reference and self.unit_test_info.test):
+            return
 
+        if self.tolerance.type == ABSOLUTE:
+            diff = self.difference()
+        else:
+            diff = self.percent_difference()
+        return diff
     #----------------------------------------------------------------------
     def calculate_pass_fail(self):
         """set pass/fail status of the current value"""
@@ -1018,12 +1022,24 @@ class TestInstance(models.Model):
             return "Not Done"
 
         test = self.unit_test_info.test
-        if test.type == BOOLEAN:
+        if test.is_boolean():
             return "Yes" if int(self.value) == 1 else "No"
-        elif test.type == MULTIPLE_CHOICE:
+        elif test.is_mult_choice():
             return test.get_choice_value(self.value)
-        return self.value
-
+        return "%.4g" % self.value
+    #----------------------------------------------------------------------
+    def diff_display(self):
+        display = ""
+        if self.unit_test_info.test.is_numerical() and self.value is not None:
+            try:
+                diff = self.calculate_diff()
+                if diff is not None:
+                    display = "%.4g" % diff
+                    if self.tolerance and self.tolerance.type == PERCENT:
+                        display += "%"
+            except ZeroDivisionError:
+                display = "Zero ref with % diff tol"
+        return display
     #----------------------------------------------------------------------
     def __unicode__(self):
         """return display representation of object"""
@@ -1032,15 +1048,19 @@ class TestInstance(models.Model):
 #----------------------------------------------------------------------
 @receiver(post_save,sender=TestInstance)
 def on_test_instance_saved(*args,**kwargs):
-    if kwargs.get("raw",False):
-        return
 
-    test_instance = kwargs["instance"]
-    if not test_instance.in_progress:
-        last = test_instance.unit_test_info.last_instance
-        if not last or (last and last.work_completed <= test_instance.work_completed):
-            test_instance.unit_test_info.last_instance = test_instance
-            test_instance.unit_test_info.save()
+    if (not loaded_from_fixture(kwargs)):
+
+        test_instance = kwargs["instance"]
+        try:
+            latest = TestInstance.objects.complete().filter(
+                unit_test_info = test_instance.unit_test_info
+            ).latest("work_completed")
+        except TestInstance.DoesNotExist:
+            latest = None
+
+        test_instance.unit_test_info.last_instance = latest
+        test_instance.unit_test_info.save()
 
 #============================================================================
 class TestListInstanceManager(models.Manager):
@@ -1119,17 +1139,15 @@ class TestListInstance(models.Model):
     def __unicode__(self):
         return "TestListInstance(pk=%s)"%self.pk
 
+
 #----------------------------------------------------------------------
-@receiver(post_save,sender=TestListInstance)
-def on_test_list_instance_saved(*args,**kwargs):
-    """set last instance for UnitTestInfo"""
-    if kwargs.get("raw",False):
-        return
-
-    test_list_instance = kwargs["instance"]
-
-    if test_list_instance.in_progress:
-        return
+def update_last_instances(test_list_instance):
+    try:
+        last_instance = TestListInstance.objects.complete().filter(
+            unit_test_collection=test_list_instance.unit_test_collection
+        ).latest("work_completed")
+    except TestListInstance.DoesNotExist:
+        last_instance = None
 
     cycle_ids = TestListCycle.objects.filter(
         test_lists = test_list_instance.test_list
@@ -1140,16 +1158,38 @@ def on_test_list_instance_saved(*args,**kwargs):
     list_ct = ContentType.objects.get_for_model(TestList)
 
     to_update = [(cycle_ct,cycle_ids), (list_ct,test_list_ids)]
-    last_instance_filter = Q(last_instance__work_completed__lte=test_list_instance.work_completed) | Q(last_instance=None)
 
     for ct,object_ids in to_update:
         UnitTestCollection.objects.filter(
             content_type = ct,
             object_id__in = object_ids,
             unit = test_list_instance.unit_test_collection.unit,
-        ).filter(
-            last_instance_filter
-        ).update(last_instance=test_list_instance)
+        ).update(last_instance=last_instance)
+
+    if last_instance:
+        for ti in last_instance.testinstance_set.all():
+            ti.unit_test_info.last_instance = ti
+            ti.unit_test_info.save()
+    else:
+        for ti in test_list_instance.testinstance_set.all():
+            ti.unit_test_info.last_instance = None
+            ti.unit_test_info.save()
+
+
+#----------------------------------------------------------------------
+@receiver(post_save,sender=TestListInstance)
+def on_test_list_instance_saved(*args,**kwargs):
+    """set last instance for UnitTestInfo"""
+
+    if not loaded_from_fixture(kwargs):
+        update_last_instances(kwargs["instance"])
+
+@receiver(post_delete,sender=TestListInstance)
+#----------------------------------------------------------------------
+def on_test_list_instance_deleted(*args,**kwargs):
+    """update last_instance if available"""
+    test_list_instance = kwargs["instance"]
+    update_last_instances(kwargs["instance"])
 
 #============================================================================
 class TestListCycle(TestCollectionInterface):

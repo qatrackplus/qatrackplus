@@ -101,17 +101,8 @@ class ChartView(TemplateView):
         """add default dates to context"""
         context = super(ChartView,self).get_context_data(**kwargs)
 
-        self.test_lists = models.TestList.objects.order_by("name").prefetch_related(
-            "sublists",
-            "tests",
-        )
-
-        self.tests = models.Test.objects.order_by("name").values(
-            "pk",
-            "category",
-            "name",
-            "description",
-        )
+        self.set_test_lists()
+        self.set_tests()
 
         test_data = self.create_test_data()
 
@@ -132,6 +123,21 @@ class ChartView(TemplateView):
         }
         context.update(c)
         return context
+    #----------------------------------------------------------------------
+    def set_tests(self):
+        self.tests = models.Test.objects.order_by("name").values(
+            "pk",
+            "category",
+            "name",
+            "description",
+        )
+    #---------------------------------------------------------------------------
+    def set_test_lists(self):
+        self.test_lists = models.TestList.objects.order_by("name").prefetch_related(
+            "sublists",
+            "tests",
+        )
+
 
 
 class BaseChartView(View):
@@ -198,7 +204,8 @@ class BaseChartView(View):
 
         tests = self.request.GET.getlist("tests[]",[])
         units = self.request.GET.getlist("units[]",[])
-        statuses = self.request.GET.getlist("statuses[]",[])
+        statuses = self.request.GET.getlist("statuses[]",models.TestInstanceStatus.objects.values_list("pk",flat=True))
+
         now = timezone.datetime.now()
         from_date = self.get_date("from_date",now-timezone.timedelta(days=180))
         to_date = self.get_date("to_date",now)
@@ -254,6 +261,7 @@ class BasicChartData(JSONResponseMixin,BaseChartView):
 #============================================================================
 class ControlChartImage(BaseChartView):
     """Return a control chart image from given qa data"""
+
     #---------------------------------------------------------------------------
     def convert_date(self,dt):
         return dt
@@ -352,24 +360,23 @@ class CompositeCalculation(JSONResponseMixin, View):
 
         results = {}
 
-        for slug in self.calculation_order:
+        for slug in self.cyclic_tests:
+            results[slug] = {'value':None, 'error':"Cyclic test dependency"}
 
-            if slug in self.cyclic_tests:
-                results[slug] = {'value':None, 'error':"Cyclic test dependency"}
-            else:
-                raw_procedure = self.composite_tests[slug]
-                procedure = self.process_procedure(raw_procedure)
-                try:
-                    code = compile(procedure,"<string>","exec")
-                    exec code in self.calculation_context
-                    result = self.calculation_context["result"]
-                    results[slug] = { 'value': result,'error':None }
-                    self.calculation_context[slug]=result
-                except Exception as e:
-                    results[slug] = {'value':None, 'error':"Invalid Test"}
-                finally:
-                    if "result" in self.calculation_context:
-                        del self.calculation_context["result"]
+        for slug in self.calculation_order:
+            raw_procedure = self.composite_tests[slug]
+            procedure = self.process_procedure(raw_procedure)
+            try:
+                code = compile(procedure,"<string>","exec")
+                exec code in self.calculation_context
+                result = self.calculation_context["result"]
+                results[slug] = { 'value': result,'error':None }
+                self.calculation_context[slug]=result
+            except Exception as e:
+                results[slug] = {'value':None, 'error':"Invalid Test"}
+            finally:
+                if "result" in self.calculation_context:
+                    del self.calculation_context["result"]
 
         return self.render_to_response({"success":True,"errors":[],"results":results})
     #----------------------------------------------------------------------
@@ -512,13 +519,20 @@ class PerformQA(CreateView):
 
         #make sure utis are correctly ordered
         uti_tests = [x.test for x in utis]
-        self.unit_test_infos = [utis[uti_tests.index(test)] for test in self.all_tests]
+        self.unit_test_infos = []
+        for test in self.all_tests:
+            try:
+                self.unit_test_infos.append(utis[uti_tests.index(test)])
+            except ValueError:
+                msg =  "Do not treat! Please call physics.  Test '%s' is missing information for this unit "% test.name
+                logger.error(msg+ " Test=%d"%test.pk)
+                messages.error(self.request,_(msg))
 
     #----------------------------------------------------------------------
     def add_histories(self):
         """paste historical values onto unit test infos"""
         from_date = timezone.make_aware(timezone.datetime.now() - timezone.timedelta(days=10*self.unit_test_col.frequency.overdue_interval),timezone.get_current_timezone())
-        histories = utils.tests_history(self.all_tests,self.unit_test_col.unit,from_date)
+        histories = utils.tests_history(self.all_tests,self.unit_test_col.unit,from_date,test_list=self.test_list)
         self.unit_test_infos, self.history_dates = utils.add_history_to_utis(self.unit_test_infos,histories)
 
     #----------------------------------------------------------------------
@@ -546,14 +560,14 @@ class PerformQA(CreateView):
             status=models.TestInstanceStatus.objects.default()
             if form.fields.has_key("status"):
                 val = form["status"].value()
-                if val is not None:
+                if val not in ("", None):
                     status = models.TestInstanceStatus.objects.get(pk=val)
 
             for ti_form in formset:
                 ti = models.TestInstance(
-                    value=ti_form.cleaned_data["value"],
-                    skipped=ti_form.cleaned_data["skipped"],
-                    comment=ti_form.cleaned_data["comment"],
+                    value=ti_form.cleaned_data.get("value",None),
+                    skipped=ti_form.cleaned_data.get("skipped",False),
+                    comment=ti_form.cleaned_data.get("comment",""),
                     unit_test_info = ti_form.unit_test_info,
                     reference = ti_form.unit_test_info.reference,
                     tolerance = ti_form.unit_test_info.tolerance,
@@ -639,6 +653,10 @@ class PerformQA(CreateView):
         return day
     #----------------------------------------------------------------------
     def get_success_url(self):
+        next_ = self.request.GET.get("next",None)
+        if next_ is not None:
+            return next_
+
         kwargs = {
             "unit_number":self.unit_test_col.unit.number,
             "frequency":self.unit_test_col.frequency.slug
@@ -671,7 +689,7 @@ class BaseEditTestListInstance(UpdateView):
         """paste historical values onto unit test infos"""
         from_date = timezone.make_aware(timezone.datetime.now() - timezone.timedelta(days=10*self.object.unit_test_collection.frequency.overdue_interval),timezone.get_current_timezone())
         tests = [x.unit_test_info.test for x in self.test_instances]
-        histories = utils.tests_history(tests,self.object.unit_test_collection.unit,from_date)
+        histories = utils.tests_history(tests,self.object.unit_test_collection.unit,from_date,test_list=self.object.test_list)
         unit_test_infos = [f.instance.unit_test_info for f in forms]
         unit_test_infos, self.history_dates = utils.add_history_to_utis(unit_test_infos,histories)
         for uti,f in zip(unit_test_infos,forms):
@@ -707,7 +725,12 @@ class BaseEditTestListInstance(UpdateView):
         raise NotImplementedError
     #----------------------------------------------------------------------
     def get_success_url(self):
-        raise NotImplementedError
+        next_ = self.request.GET.get("next",None)
+        if next_ is not None:
+            return next_
+
+        return reverse("unreviewed")
+
 
 #============================================================================
 class ReviewTestListInstance(BaseEditTestListInstance):
@@ -753,9 +776,6 @@ class ReviewTestListInstance(BaseEditTestListInstance):
         #let user know request succeeded and return to unit list
         messages.success(self.request,_("Successfully updated %s "% self.object.test_list.name))
         return HttpResponseRedirect(self.get_success_url())
-    #----------------------------------------------------------------------
-    def get_success_url(self):
-        return reverse("unreviewed")
 
 #============================================================================
 class EditTestListInstance(BaseEditTestListInstance):
@@ -769,53 +789,22 @@ class EditTestListInstance(BaseEditTestListInstance):
         context = self.get_context_data()
         formset = context["formset"]
 
-        update_time = timezone.make_aware(timezone.datetime.now(),timezone.get_current_timezone())
-        update_user = self.request.user
-
         for ti_form in formset:
             ti_form.in_progress = form.instance.in_progress
 
         if formset.is_valid():
 
             self.object = form.save(commit=False)
-            self.object.created_by = self.request.user
-            self.object.modified_by= self.request.user
+            self.update_test_list_instance()
 
-            if self.object.work_completed is None:
-                self.object.work_completed = timezone.make_aware(timezone.datetime.now(),timezone=timezone.get_current_timezone())
-
-            self.object.save()
-
-            status=models.TestInstanceStatus.objects.default()
+            status_pk = None
             if form.fields.has_key("status"):
-                val = form["status"].value()
-                if val is not None:
-                    status = models.TestInstanceStatus.objects.get(pk=val)
+                status_pk = form["status"].value()
+            status= self.get_status_object(status_pk)
 
             for ti_form in formset:
                 ti = ti_form.save(commit=False)
-                ti.status = status
-                ti.created_by = self.request.user
-                ti.modified_by = self.request.user
-                ti.in_progress = self.object.in_progress
-                ti.work_started=self.object.work_started
-                ti.work_completed=self.object.work_completed
-
-                try:
-                    ti.save()
-                except ZeroDivisionError:
-
-                    msga = "Tried to calculate percent diff with a zero reference value. "
-
-                    ti.skipped = True
-                    ti.comment = msga + " Original value was %s" % ti.value
-                    ti.value = None
-                    ti.save()
-
-                    logger.error(msga+ " UTI=%d"%ti.unit_test_info.pk)
-                    msg =  "Please call physics.  Test %s is configured incorrectly on this unit. "% ti.unit_test_info.test.name
-                    msg += msga
-                    messages.error(self.request,_(msg))
+                self.update_test_instance(ti,status)
 
             #let user know request succeeded and return to unit list
             messages.success(self.request,_("Successfully submitted %s "% self.object.test_list.name))
@@ -832,10 +821,50 @@ class EditTestListInstance(BaseEditTestListInstance):
         context["include_admin"] = self.request.user.is_staff
 
         return context
-
     #----------------------------------------------------------------------
-    def get_success_url(self):
-        return reverse("unreviewed")
+    def update_test_list_instance(self):
+        self.object.created_by = self.request.user
+        self.object.modified_by= self.request.user
+
+        if self.object.work_completed is None:
+            self.object.work_completed = timezone.make_aware(timezone.datetime.now(),timezone=timezone.get_current_timezone())
+
+        self.object.save()
+    #----------------------------------------------------------------------
+    def get_status_object(self,status_pk):
+        try:
+            status = models.TestInstanceStatus.objects.get(pk=val)
+        except:
+            status = models.TestInstanceStatus.objects.default()
+        return status
+    #----------------------------------------------------------------------
+    def update_test_instance(self,test_instance,status):
+        ti = test_instance
+        ti.status = status
+        ti.created_by = self.request.user
+        ti.modified_by = self.request.user
+        ti.in_progress = self.object.in_progress
+        ti.work_started=self.object.work_started
+        ti.work_completed=self.object.work_completed
+
+        try:
+            ti.save()
+        except ZeroDivisionError:
+
+            msga = "Tried to calculate percent diff with a zero reference value. "
+
+            ti.skipped = True
+            ti.comment = msga + " Original value was %s" % ti.value
+            ti.value = None
+            ti.save()
+
+            logger.error(msga+ " UTI=%d"%ti.unit_test_info.pk)
+            msg =  "Please call physics.  Test %s is configured incorrectly on this unit. "% ti.unit_test_info.test.name
+            msg += msga
+            messages.error(self.request,_(msg))
+
+
+
 
 #============================================================================
 class UTCList(ListView):
@@ -858,6 +887,7 @@ class UTCList(ListView):
             "assigned_to__name",
         ).prefetch_related(
             "last_instance__testinstance_set",
+            "last_instance__testinstance_set__status",
             "tests_object",
         ).order_by("unit__number","testlist__name","testlistcycle__name",)
 
@@ -915,7 +945,7 @@ class UTCUnitReview(UTCReview):
         """filter queryset by frequency"""
         qs = super(UTCUnitReview,self).get_queryset()
         self.units = Unit.objects.filter(number__in=self.kwargs["unit_number"].split("/"))
-        return qs.filter(unit__in=self.units)
+        return qs.filter(unit__in=self.units).order_by("unit__number")
 
     #---------------------------------------------------------------------------
     def get_page_title(self):
@@ -953,7 +983,6 @@ class FrequencyList(UTCList):
 
         if "short-interval" in freqs:
             self.frequencies.extend(list(models.Frequency.objects.filter(due_interval__lte=14)))
-
 
         return qs.filter(
             frequency__in=self.frequencies,
@@ -1032,7 +1061,7 @@ class UTCInstances(TestListInstances):
     #---------------------------------------------------------------------------
     def get_queryset(self):
         utc = get_object_or_404(models.UnitTestCollection,pk=self.kwargs["pk"])
-        return self.fetch_related(utc.testlistinstance_set)
+        return self.fetch_related(utc.testlistinstance_set).order_by("-work_completed")
 
 
 #============================================================================
@@ -1049,7 +1078,7 @@ class Unreviewed(TestListInstances):
     queryset = models.TestListInstance.objects.unreviewed
     #---------------------------------------------------------------------------
     def get_queryset(self):
-        return self.fetch_related(self.queryset().order_by("-work_completed"))
+        return self.fetch_related(self.queryset().order_by("unit_test_collection__unit__number","-work_completed"))
     #----------------------------------------------------------------------
     def get_page_title(self):
         return "Unreviewed Test Lists"

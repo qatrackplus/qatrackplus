@@ -60,18 +60,27 @@ function calculate_composites(){
         return;
     }
 
+    $('button[type=submit]').attr("disabled", true);
     var data = {
         qavalues:JSON.stringify(validation_data),
         composite_ids:JSON.stringify(composite_ids)
     };
 
-    QAUtils.call_api(QAUtils.COMPOSITE_URL,"POST",data,function(data){
+    var on_success = function(data){
+        $('button[type=submit]').attr("disabled", false);
+
         if (data.success){
             $.each(data.results,function(name,result){
                 set_value_by_name(name,result.value);
             });
         }
-    });
+    }
+
+    var on_error = function(){
+        $('button[type=submit]').attr("disabled", false);
+    }
+
+    QAUtils.call_api(QAUtils.COMPOSITE_URL,"POST",data,on_success,on_error);
 }
 
 /***************************************************************/
@@ -268,10 +277,14 @@ function check_skip_status(input){
 /****************************************************************/
 function update_qa_status(){
     if ($(".btn-danger").length >0){
-        $("#do-not-treat").show();
+        $(".do-not-treat").show();
     }else{
-        $("#do-not-treat").hide();
+        $(".do-not-treat").hide();
     }
+}
+
+function update_time(input){
+    input.val(input.val()+" 19:30");
 }
 /****************************************************************/
 $(document).ready(function(){
@@ -319,10 +332,8 @@ $(document).ready(function(){
 
         check_skip_status($(this));
 
-        //only allow numerical characters on input
-        this.value = this.value.replace(QAUtils.NUMERIC_WHITELIST_REGEX,'');
-        if (this.value[0] === ".") {
-            this.value = "0" + this.value;
+        if (this.type === "text"){
+            this.value = QAUtils.clean_numerical_value(this.value);
         }
         check_test_status($(this));
         calculate_composites();
@@ -341,7 +352,7 @@ $(document).ready(function(){
         var idx = user_inputs.index(this);
 
         //rather than submitting form on enter, move to next value
-        if (e.which == QAUtils.KC_ENTER  || e.which == QAUtils.KC_DOWN || e.which == QAUtils.KC_RIGHT ) {
+        if (e.which == QAUtils.KC_ENTER  || e.which == QAUtils.KC_DOWN ) {
 
             if (idx == user_inputs.length - 1) {
                 user_inputs.first().focus();
@@ -349,7 +360,7 @@ $(document).ready(function(){
                 user_inputs[idx+1].focus();
             }
             return false;
-        }else if (e.which == QAUtils.KC_UP || e.which == QAUtils.KC_LEFT ){
+        }else if (e.which == QAUtils.KC_UP ){
             if (idx == 0) {
                 user_inputs.last().focus();
             } else {
@@ -379,8 +390,12 @@ $(document).ready(function(){
         }
     });
 
-    $("#work-completed").datepicker();
-    $("#work-started").datepicker();
+    $("#work-completed, #work-started").datepicker({
+        autoclose:true
+    }).on('change',function (ev){
+        update_time($(this).find("input"));
+    });
+
 
     //run a full validation on page load
     full_validation();

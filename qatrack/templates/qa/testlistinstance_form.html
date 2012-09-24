@@ -1,6 +1,14 @@
 {% extends "site_base.html" %}
 {% load staticfiles %}
 
+{% block head_title %}{% spaceless %}
+	{% if test_list_instance %}
+		Edit {{test_list_instance.unit_test_collection.unit.name}} : {{test_list_instance.test_list.name}}
+	{% else %}
+		Perform {{unit_test_collection.unit.name}} : {{test_list.name}}
+	{% endif %}
+{%endspaceless%}{% endblock %}
+
 {% block extra_style %}
     <link href="{% static "css/qa.css" %}?v={{VERSION}}" rel="stylesheet">
     <link href="{% static "datepicker/css/datepicker.css" %}?v={{VERSION}}" rel="stylesheet">
@@ -17,7 +25,7 @@
 			{% if test_list_instance %}
 				Edit {{test_list_instance.unit_test_collection.unit.name}} : {{test_list_instance.test_list.name}}
 			{% else %}
-				{{unit_test_collection.unit.name}} : {{test_list.name}}
+				Perform {{unit_test_collection.unit.name}} : {{test_list.name}}
 			{% endif %}
 		</h3>
 		<div id="float-right-container">
@@ -42,14 +50,15 @@
 </div>
 <div class="row-fluid">
 	<div class="span12" id="overall-qa-status">
-		<div id="do-not-treat" class="alert alert-error">
+		<div class="alert alert-error do-not-treat">
 			<strong>Do Not Treat! Call Physics.</strong>
 		</div>
 	</div>
 </div>
 <div class="row-fluid">
     <div class="span12">
-		<form class="nosubmit form-inline" id="qa-form" method="POST" action="">
+		<form class="nosubmit form-inline" id="qa-form" method="POST" action="" autocomplete="off">
+
 			{% csrf_token %}
 
 			<div id="admin_controls" class="well">
@@ -175,6 +184,15 @@
 					{{form.comment}}
 				</div>
 			</div>
+
+			<div class="row-fluid">
+				<div class="span12" id="overall-qa-status">
+					<div class="alert alert-error do-not-treat">
+						<strong>Do Not Treat! Call Physics.</strong>
+					</div>
+				</div>
+			</div>
+
 			<div class="row-fluid">
 				<div class="span12">
 					<div class="pull-right">
@@ -193,6 +211,7 @@
 
     </div>
 </div>
+
 
 {% endblock %}
 

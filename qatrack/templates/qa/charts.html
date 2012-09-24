@@ -2,6 +2,8 @@
 
 {% load staticfiles %}
 
+{% block head_title %}QA Data Charts{% endblock %}
+
 {% block extra_style %}
     <link href="{% static "css/qa.css" %}?v={{VERSION}}" rel="stylesheet">
     <link href="{% static "datepicker/css/datepicker.css" %}?v={{VERSION}}" rel="stylesheet">
@@ -16,7 +18,7 @@
     <script src="{% static "js/jquery.flot.fillbetween.js"%}?v={{VERSION}}"></script>
 	{% endcomment %}
 	<script src="{% static "js/highstock/highstock.js" %}?v={{VERSION}}"></script>
-	<script src="{% static "js/highstock/highcharts-more.js" %}?v={{VERSION}}"></script>	
+	<script src="{% static "js/highstock/highcharts-more.js" %}?v={{VERSION}}"></script>
     <script src="{% static "datepicker/js/bootstrap-datepicker.js" %}?v={{VERSION}}"></script>
 	<script>
 
@@ -62,7 +64,7 @@
 
 				<div id="test-list-filters" class="control-container">
 					<div class="row-fluid">
-					
+
 						<div class="span7">
 							<h5>Test Lists To Display Tests For:</h5>
 
@@ -73,7 +75,7 @@
 										{{test_list.name}}
 									</label>
 								{% endfor %}
-							
+
 							</div>
 						</div>
 						<div class="span5">
@@ -225,14 +227,14 @@
 	<div class="span3">
 		<div id="test-container" class="control-container">
 			<div id="test">
-	
+
 				{% for test in tests %}
 					<label class="checkbox" title="{{test.description}}" >
 						<input value="{{test.pk}}" type="checkbox" id="test-{{test.pk}}"  class="test category-{{test.category}} type-{{test.type}}"></input>
 						{{test.name}}
 					</label>
 				{% endfor %}
-	
+
 			</div>
 		</div>
 	</div>
