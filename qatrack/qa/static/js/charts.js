@@ -9,7 +9,9 @@ $(document).ready(function(){
 
 	hide_all_tests();
 
-    $(".date").datepicker();
+    $(".date").datepicker({
+        autoclose:true
+    });
 
 	$("#control-chart-container, #instructions").hide();
 
@@ -20,7 +22,8 @@ $(document).ready(function(){
 	$("#test-list-filters select, #frequency input, #test-list-container input, #display-options input").change(update_tests);
 	$("#gen-chart").click(update_chart);
 
-	update_tests();
+	set_chart_options();
+//	update_tests();
 
 });
 
@@ -46,9 +49,19 @@ function toggle_instructions(){
 }
 /***************************************************/
 function switch_chart_type(){
+	set_chart_options();
 	$("#chart-container, #control-chart-container").toggle();
 }
-
+/***************************************************/
+function set_chart_options(){
+	if (basic_chart_selected()){
+		$("#basic-chart-options").show();
+		$("#cc-chart-options").hide();
+	}else{
+		$("#basic-chart-options").hide();
+		$("#cc-chart-options").show();
+	}
+}
 /***************************************************/
 function update_tests(){
 	var frequencies = QAUtils.get_selected_option_vals("#frequency");
@@ -83,10 +96,10 @@ function get_test_lists_for_frequencies(frequencies){
 
 	var test_lists = [];
 	var freq_lists;
-	var i,j;	
+	var i,j;
 	for (i=0; i < frequencies.length; i++){
 		freq_lists = QACharts.test_info.frequencies[frequencies[i]];
-		if (freq_lists){	
+		if (freq_lists){
 			test_lists.push.apply(test_lists,freq_lists);
 		}
 	}
