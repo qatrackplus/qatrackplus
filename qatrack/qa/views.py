@@ -62,12 +62,20 @@ class ChartView(TemplateView):
 
     #----------------------------------------------------------------------
     def create_test_data(self):
+        utcs = models.UnitTestCollection.objects.all()
+        self.unit_frequencies = collections.defaultdict(set)
+        for utc in utcs:
+            self.unit_frequencies[utc.unit.pk].add(utc.frequency.pk)
+
+        for k,v in self.unit_frequencies.items():
+            self.unit_frequencies[k] = list(v)
 
         self.test_data = {
             "test_lists":{},
             "tests":{},
             "categories": {},
             "frequencies": collections.defaultdict(list),
+            "unit_frequencies":self.unit_frequencies,
         }
 
         utc_freqs = models.UnitTestCollection.objects.values(

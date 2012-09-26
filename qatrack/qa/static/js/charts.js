@@ -7,11 +7,12 @@ var waiting_timeout = null;
 $(document).ready(function(){
 	initialize_charts();
 
-	hide_all_tests();
+	var test_filters = ["#test-list-container","#test-container","#frequency-container"];
+	_.each(test_filters,function(container){
+		hide_all_inputs(container);
+	});
 
-    $(".date").datepicker({
-        autoclose:true
-    });
+    $(".date").datepicker({autoclose:true});
 
 	$("#control-chart-container, #instructions").hide();
 
@@ -19,11 +20,10 @@ $(document).ready(function(){
 
 	$("#toggle-instructions").click(toggle_instructions);
 
-	$("#test-list-filters select, #frequency input, #test-list-container input, #display-options input").change(update_tests);
+	$(".test-filter input").change(update_tests);
 	$("#gen-chart").click(update_chart);
 
 	set_chart_options();
-//	update_tests();
 
 });
 
@@ -32,8 +32,8 @@ function initialize_charts(){
 	create_stockchart([{name:"",data:[[new Date().getTime(),0,0]]}]);
 }
 /****************************************************/
-function hide_all_tests(){
-	$("#test input").parent().hide();
+function hide_all_inputs(container){
+	$(container + " input").parent().hide();
 }
 
 /***************************************************/
@@ -64,6 +64,12 @@ function set_chart_options(){
 }
 /***************************************************/
 function update_tests(){
+	set_frequencies();
+	return;
+	set_test_lists();
+	set_tests();
+	return;
+
 	var frequencies = QAUtils.get_selected_option_vals("#frequency");
 	filter_test_lists(frequencies);
 
@@ -75,7 +81,20 @@ function update_tests(){
 	var to_show = filter_tests(tests,categories,frequencies);
 	show_tests(to_show);
 }
+/***************************************************/
+function set_frequencies(){
+	var units = QAUtils.get_checked("#unit-container");
+	var frequencies = [];
+	_.each(units,function(unit){
+		frequencies = _.union(frequencies,QACharts.test_info.unit_frequencies[unit])
+	});
 
+	$("#frequency-container input").removeAttr("checked").parent().hide();
+
+	_.each(frequencies,function(frequency){
+		$("#frequency-"+frequency).attr("checked","checked").parent().show();
+	});
+}
 /***************************************************/
 function filter_test_lists(frequencies){
 	var test_lists = get_test_lists_for_frequencies(frequencies);

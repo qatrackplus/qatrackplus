@@ -35,12 +35,12 @@
 		<h3>Trending</h3>
 	</div>
 </div>
-<div class="row-fluid">
+<div id="test-filters" class="row-fluid">
 
 	<div class="span2">
 		<div id="unit-container" class="control-container">
 			<h5>1. Choose Units</h5>
-			<div class="checkbox-container checkbox-filter">
+			<div class="checkbox-container test-filter">
 				{% for unit in units %}
 					<label class="checkbox" title="{{test_list.name}}" >
 						<input type="checkbox" id="unit-{{unit.pk}}" name="unit[]" value="{{unit.pk}}" title="{{unit.name}}" class="unit unit-type-{{unit.type.pk}}"></input>
@@ -53,7 +53,7 @@
 	<div class="span2">
 		<div id="frequency-container" class="control-container">
 			<h5>2. Choose Frequencies</h5>
-			<div class="checkbox-container checkbox-filter">
+			<div class="checkbox-container test-filter">
 				{% for frequency in frequencies %}
 					<label class="checkbox" title="{{frequency.name}}" >
 						<input type="checkbox" id="frequency-{{frequency.pk}}" name="frequency[]" value="{{frequency.pk}}" checked="checked" class="frequency"></input>
@@ -67,7 +67,7 @@
 		<div id="test-list-container" class="control-container">
 			<h5>3. Choose Test Lists</h5>
 
-			<div class="checkbox-container checkbox-filter">
+			<div id="test" class="checkbox-container test-filter">
 				{% for test_list in test_lists %}
 					<label class="checkbox" title="{{test_list.name}}" >
 						<input type="checkbox" id="test-list-{{test_list.pk}}" name="test-list[]" value="{{test_list.pk}}" title="{{test_list.description}}"  class="test-list"></input>
@@ -81,7 +81,7 @@
 		<div id="test-container" class="control-container">
 			<h5>4. Choose Tests to Plot</h5>
 
-			<div class="checkbox-container checkbox-filter">
+			<div class="checkbox-container test-filter">
 				{% for test in tests %}
 					<label class="checkbox" title="{{test.description}}" >
 						<input value="{{test.pk}}" type="checkbox" name="test[]" id="test-{{test.pk}}"  class="test category-{{test.category}} type-{{test.type}}"></input>
@@ -185,15 +185,15 @@
 			</div>
 		</div>
 		<div class="row-fluid">
-			<div class="span8 input-prepend">
+			<div class="span7 input-prepend">
 				{% spaceless %}
-				<span class="add-on">Chart Link</span>
+				<span class="add-on">Link</span>
 				<input type="text" class="input-medium" id="chart-url"/>
 				{% endspaceless %}
 			</div>
 
-			<div class="span4" id="chart-actions">
-				<button type="button" class="btn btn-primary pull-right" data-loading-text="Generating Chart..." id="gen-chart">Generate Chart</button>
+			<div class="span5" id="chart-actions">
+				<button type="button" class="btn btn-primary pull-right" data-loading-text="Generating Chart..." id="gen-chart">5. Generate Chart</button>
 			</div>
 		</div>
 
@@ -210,16 +210,8 @@
 			<div class="please-wait">Control Not Generated Yet</div>
 		</div>
 	</div>
+</div>
 
-</div>
-<div class="row-fluid">
-	<div class="span12 input-prepend">
-		{% spaceless %}
-		<span class="add-on">Link to this chart</span>
-		<input type="text" class="input-xxlarge" id="chart-url"/>
-		{% endspaceless %}
-	</div>
-</div>
 <div class="row-fluid">
 	<div class="span12">
 		<div id="data-table-wrapper"></div>
