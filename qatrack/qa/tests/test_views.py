@@ -254,19 +254,13 @@ class TestChartView(TestCase):
 
         data = json.loads(self.view.get_context_data()["test_data"])
         expected = {
-            'frequencies': {
-                '1': [1]
-            },
-            'tests': {
-                '1': {'category': 1, 'pk': 1, 'name': 'test1', 'description': 'desc'},
-                '2': {'category': 1, 'pk': 2, 'name':'test2', 'description': 'desc'}
-            },
             'test_lists': {
-                '1': {'tests': [1, 2]},
-                '2': {u'tests': [2]}
+                '1': [1, 2],
+                '2': [2]
             },
-            'categories': {}
+            'unit_frequency_lists': {u'1': {u'1': [1]}},
         }
+
         self.assertDictEqual(data,expected)
 
 
