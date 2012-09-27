@@ -7,9 +7,12 @@ var waiting_timeout = null;
 $(document).ready(function(){
 	initialize_charts();
 
-	hide_all_tests();
+	var test_filters = ["#test-list-container","#test-container","#frequency-container"];
+	_.each(test_filters,function(container){
+		hide_all_inputs(container);
+	});
 
-    $(".date").datepicker();
+    $(".date").datepicker({autoclose:true});
 
 	$("#control-chart-container, #instructions").hide();
 
@@ -17,10 +20,12 @@ $(document).ready(function(){
 
 	$("#toggle-instructions").click(toggle_instructions);
 
-	$("#test-list-filters select, #frequency input, #test-list-container input, #display-options input").change(update_tests);
+	$(".test-filter input").change(update_tests);
+
 	$("#gen-chart").click(update_chart);
 
-	update_tests();
+	set_chart_options();
+	set_options_from_url();
 
 });
 
@@ -29,8 +34,11 @@ function initialize_charts(){
 	create_stockchart([{name:"",data:[[new Date().getTime(),0,0]]}]);
 }
 /****************************************************/
-function hide_all_tests(){
-	$("#test input").parent().hide();
+function hide_all_inputs(container){
+	$(container + " input").parent().hide();
+}
+function show_all_inputs(container){
+	$(container + " input").parent().show();
 }
 
 /***************************************************/
@@ -46,88 +54,71 @@ function toggle_instructions(){
 }
 /***************************************************/
 function switch_chart_type(){
+	set_chart_options();
 	$("#chart-container, #control-chart-container").toggle();
 }
-
+/***************************************************/
+function set_chart_options(){
+	if (basic_chart_selected()){
+		$("#basic-chart-options").show();
+		$("#cc-chart-options").hide();
+	}else{
+		$("#basic-chart-options").hide();
+		$("#cc-chart-options").show();
+	}
+}
 /***************************************************/
 function update_tests(){
-	var frequencies = QAUtils.get_selected_option_vals("#frequency");
-	filter_test_lists(frequencies);
+	set_frequencies();
+	set_test_lists();
+	set_tests();
+}
+/***************************************************/
+function set_frequencies(){
+	var units = QAUtils.get_checked("#unit-container");
+	var frequencies = [];
+	_.each(units,function(unit){
+		frequencies = _.union(frequencies,_.keys(QACharts.test_info.unit_frequency_lists[unit]))
+	});
 
-	var test_lists = QAUtils.get_checked("#test-list-container");
-	var tests = get_tests_for_lists(test_lists);
-	var categories = QAUtils.get_selected_option_vals("#category");
-
-
-	var to_show = filter_tests(tests,categories,frequencies);
-	show_tests(to_show);
+	filter_container("#frequency-container",frequencies);
 }
 
 /***************************************************/
-function filter_test_lists(frequencies){
-	var test_lists = get_test_lists_for_frequencies(frequencies);
+function set_test_lists(){
+	var units = QAUtils.get_checked("#unit-container");
+	var frequencies = QAUtils.get_checked("#frequency-container");
 
-	$("#test-list-container input").each(function(i,option){
+	var test_lists = [];
+
+	_.each(units,function(unit){
+		_.each(frequencies,function(freq){
+			test_lists = _.union(test_lists,QACharts.test_info.unit_frequency_lists[unit][freq]);
+		});
+	});
+
+	filter_container("#test-list-container",test_lists);
+}
+/***************************************************/
+function set_tests(){
+
+	var test_lists = QAUtils.get_checked("#test-list-container");
+	var tests = []
+	_.each(test_lists,function(test_list){
+		tests = _.union(tests,QACharts.test_info.test_lists[test_list]);
+	});
+
+	filter_container("#test-container",tests);
+}
+/***************************************************/
+function filter_container(container,visible){
+	visible = _.map(visible,function(x){return parseInt(x);});
+	$(container+" input").each(function(i,option){
 		var pk = parseInt($(this).val());
-		if (test_lists.indexOf(pk)>=0){
+		if (visible.indexOf(pk)>=0){
 			$(this).parent().show();
 		}else{
 			$(this).attr("checked",false)
-			$(this).parent().hide();
-		}
-	});
-}
-
-/***************************************************/
-function get_test_lists_for_frequencies(frequencies){
-
-	var test_lists = [];
-	var freq_lists;
-	var i,j;	
-	for (i=0; i < frequencies.length; i++){
-		freq_lists = QACharts.test_info.frequencies[frequencies[i]];
-		if (freq_lists){	
-			test_lists.push.apply(test_lists,freq_lists);
-		}
-	}
-	return test_lists;
-}
-
-/****************************************************/
-function get_tests_for_lists(test_lists){
-	var all_tests = [];
-	var tests,test_list;
-	var i;
-	$.each(test_lists,function(i,pk){
-		test_list =  QACharts.test_info.test_lists[pk];
-		if (test_list){
-			all_tests.push.apply(all_tests,test_list.tests);
-		}
-	});
-
-	return all_tests;
-}
-/****************************************************/
-function filter_tests(tests,categories,frequencies){
-	var filtered = [];
-	$.each(QACharts.test_info.tests,function(idx,test){
-		if (
-				(categories.indexOf(test.category)>=0) &&
-				(tests.indexOf(test.pk) >= 0)
-			){
-			filtered.push(test.pk);
-		}
-	});
-	return filtered;
-}
-/****************************************************/
-function show_tests(visible_tests){
-	$("#test input").each(function(i,option){
-		var pk = parseInt($(this).val());
-		if (visible_tests.indexOf(pk) >= 0){
-			$(this).parent().show();
-		}else{
-			$(this).attr("checked",false);
 			$(this).parent().hide();
 		}
 	});
@@ -174,11 +165,11 @@ function set_chart_url(){
 /***************************************************/
 function get_data_filters(){
 	var filters = {
-		units:QAUtils.get_selected_option_vals("#unit"),
-		statuses:QAUtils.get_selected_option_vals("#status"),
+		units:QAUtils.get_checked("#unit-container"),
+		statuses:QAUtils.get_checked("#status-container"),
 		from_date:get_date("#from-date"),
 		to_date:get_date("#to-date"),
-		tests:QAUtils.get_checked("#test")	,
+		tests:QAUtils.get_checked("#test-container")	,
 		n_baseline_subgroups:$("#n-baseline-subgroups").val(),
 		subgroup_size:$("#subgroup-size").val(),
 		fit_data:$("#include-fit").is(":checked")
@@ -411,7 +402,7 @@ function get_control_chart_url(){
 
 	var	props = [
 		"width="+$("#chart-container").width(),
-		"height="+$("#test").height(),
+		"height="+$("#chart").height(),
 		"timestamp="+ new Date().getTime()
 	];
 
@@ -436,34 +427,35 @@ function update_data_table(data){
 /**************************************************************************/
 //set initial options based on url hash
 function set_options_from_url(){
+	var unit_ids,test_ids,freq_ids,test_list_ids;
+
     var options = QAUtils.options_from_url_hash(document.location.hash);
-	var f,o;
-	var clear_if_option_exists = ["unit", "test"];
-	for (f in clear_if_option_exists){
-		for (o in options){
-			if (clear_if_option_exists[f] == options[o][0]){
-				$("#"+clear_if_option_exists[f]+"-filter input").attr("checked",false);
-				break;
-			}
-		}
+
+	var units = get_filtered_option_values("units",options);
+	var tests = get_filtered_option_values("tests",options);
+
+	if ((units.length === 0) || (tests.length === 0)){
+		return;
 	}
 
-	var key,value;
-    $.each(options,function(idx,option){
-		key = option[0];
-		value = option[1];
-        switch(key){
-            case  "slug" :
-                $("#test-filter input[value="+value+"]").attr("checked","checked");
-            break;
-            case "unit":
-                $("#unit-filter input[value="+value+"]").attr("checked","checked");
-                break;
-            default:
-                break;
-        }
+	unit_ids = _.map(units,function(pk){return "#unit-"+pk;});
+	test_ids = _.map(tests,function(pk){return "#test-"+pk;});
 
-    });
-    update();
+	var filters = ["#unit-container","#frequency-container","#test-list-container"];
+
+	_.map(filters,show_all_inputs);
+	$(".test-list").attr("checked",true);
+	QAUtils.set_checked_state(unit_ids,true);
+	update_tests();
+	QAUtils.set_checked_state(test_ids,true);
+
+	update_chart();
+
 }
 
+
+function get_filtered_option_values(opt_type,options){
+	var opt_value = function(opt){return opt[1];};
+	var f = function(opt){return opt[0] == opt_type;};
+	return _.map(_.filter(options,f),opt_value);
+}

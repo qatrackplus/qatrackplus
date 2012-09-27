@@ -1,0 +1,107 @@
+#chart {
+    height:540px;
+    min-width:300px;
+}
+
+#instructions-container {
+    padding: 2px 14px 2px 14px;
+    margin-bottom:3px;
+    min-height:14px;
+}
+
+#instructions-container hr{
+    margin: 1px;
+}
+
+.control-container {
+    position:relative;
+    margin:5px 0;
+    padding: 10px 5px 5px 5px;
+    border:1px solid #DDD;
+    background-color:#F9F9F9;
+    -webkit-border-radius:4px;
+    -moz-border-radius:4px;
+    border-radius:4px;
+}
+.control-container:after{
+    position:absolute;
+    top:-1px;
+    left:-1px;
+    padding:3px;
+
+    font-size:12px;
+    font-weight:bold;
+    background-color:whiteSmoke;
+    border:1px solid #DDD;
+    -webkit-border-radius: 4px 0 4px 0;
+    -moz-border-radius: 4px 0 4px 0;
+    border-radius: 4px 0 4px 0;
+}
+
+
+#unit-container:after{content: "1. Choose Units";}
+#frequency-container:after{content: "2. Choose Frequencies";}
+#test-list-container:after{content: "3. Choose Test Lists";}
+#test-container:after{content: "4. Choose Tests to plot";}
+#date-container:after{content: "Dates Filter";}
+#status-container:after{content: "Review Status Filter";}
+
+#to-date-label,
+#from-date-label {
+    width:30px;
+}
+
+#chart-options:after {
+    content:"Chart Options";
+}
+/*#chart-options{
+    height:100px;
+}*/
+input.date-only-input{
+    width:70px;
+}
+
+.please-wait {
+  margin-bottom: 2px;
+  border: 1px solid #e5e5e5;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+}
+#from-date-container label,
+#to-date-container label{
+    min-width:40px;
+}
+#chart-actions {
+    padding-top: 5px;
+}
+.checkbox-container {
+    overflow-x: hidden;
+    overflow-y:auto;
+}
+
+.test-filter{
+    height:235px;;
+}
+
+#status-checkboxes,
+#chart-date-wrapper{
+    height:60px;
+}
+
+/**********************************************/
+/* Trending data table                        */
+tr.col-group th{
+    border-bottom:1px solid #ddd;
+    text-align:center;
+}
+#data-container {
+    padding-top:20px;
+}
+#data-container .well{
+    overflow-x:auto;
+}
+#data-table th{
+    text-align:center;
+    min-width:65px;
+}
