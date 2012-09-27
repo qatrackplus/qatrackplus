@@ -449,8 +449,8 @@ var QAUtils = new function() {
 
 	this.options_from_url_hash = function(hash){
 		var options = [];
-		if (hash[0] === "#"){
-			hash = hash.substring(1,hash.length);
+		if (hash.slice(0,1) === "#"){
+			hash = hash.slice(1);
 		}
 		var that = this;
 		$.each(hash.split(this.OPTION_SEP),function(i,elem){
