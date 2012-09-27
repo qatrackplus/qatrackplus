@@ -268,7 +268,10 @@ class TestListMembershipInline(admin.TabularInline):
     def get_formset(self,request,obj=None,**kwargs):
         #hacky method for getting test names so they don't need to be looked up again
         # in the label_for_value in contrib/admin/widgets.py
-        self.test_names = dict(obj.tests.values_list("pk","name"))
+        if obj:
+            self.test_names = dict(obj.tests.values_list("pk","name"))
+        else:
+            self.test_names = {}
         return super(TestListMembershipInline,self).get_formset(request,obj,**kwargs)
 
 
