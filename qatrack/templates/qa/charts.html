@@ -5,6 +5,7 @@
 {% block head_title %}QA Data Charts{% endblock %}
 
 {% block extra_style %}
+    <link href="{% static "css/qa.css" %}?v={{VERSION}}" rel="stylesheet">
     <link href="{% static "css/charts.css" %}?v={{VERSION}}" rel="stylesheet">
     <link href="{% static "datepicker/css/datepicker.css" %}?v={{VERSION}}" rel="stylesheet">
     <link href="{% static "data_tables/css/DT_bootstrap.css" %}?v={{VERSION}}" rel="stylesheet">

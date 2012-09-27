@@ -2,6 +2,7 @@ import collections
 import json
 from api import ValueResource
 from django.contrib import messages
+from django.contrib.contenttypes.models import ContentType
 from django.forms.models import inlineformset_factory
 from django.http import HttpResponse,HttpResponseRedirect, Http404
 from django.shortcuts import get_object_or_404
@@ -62,27 +63,33 @@ class ChartView(TemplateView):
 
     #----------------------------------------------------------------------
     def create_test_data(self):
-        utcs = models.UnitTestCollection.objects.all()
-        self.unit_frequencies = collections.defaultdict(set)
-        for utc in utcs:
-            self.unit_frequencies[utc.unit.pk].add(utc.frequency.pk)
-
-        for k,v in self.unit_frequencies.items():
-            self.unit_frequencies[k] = list(v)
-
-        self.test_data = {
-            "test_lists":{},
-            "tests":{},
-            "categories": {},
-            "frequencies": collections.defaultdict(list),
-            "unit_frequencies":self.unit_frequencies,
-        }
-
-        utc_freqs = models.UnitTestCollection.objects.values(
+        tlc_content_type = ContentType.objects.get_for_model(models.TestListCycle).pk
+        
+        utcs = models.UnitTestCollection.objects.all().values(
             "frequency",
+            "content_type",
             "testlist",
+            "testlistcycle",
+            "unit",
             "testlistcycle__test_lists"
         )
+        
+        self.unit_frequencies = collections.defaultdict(lambda:collections.defaultdict(list))
+        
+        for utc in utcs:
+            unit = utc["unit"]#.unit.pk
+            freq = utc["frequency"]#.pk
+            if utc["content_type"] == tlc_content_type:
+                test_list = utc["testlistcycle__test_lists"] 
+            else:
+                test_list = utc["testlist"]
+
+            self.unit_frequencies[unit][freq].append(test_list)
+            
+        self.test_data = {
+            "test_lists":{},
+            "unit_frequency_lists":self.unit_frequencies,
+        }
 
 
         for test_list in self.test_lists:
@@ -92,15 +99,8 @@ class ChartView(TemplateView):
                 for sublist in test_list.sublists.all():
                     tests.extend(list(sublist.tests.values_list("pk",flat=True)))
 
-            freqs = list(set([x["frequency"] for x in utc_freqs if x["testlist"] == test_list.pk or x["testlistcycle__test_lists"]==test_list.pk]))
+            self.test_data["test_lists"][test_list.pk] = tests
 
-            self.test_data["test_lists"][test_list.pk] = {"tests" : tests,}
-
-            for freq in freqs:
-                self.test_data["frequencies"][freq].append(test_list.pk)
-
-        for test in self.tests:
-            self.test_data["tests"][test["pk"]] = test
 
         return json.dumps(self.test_data)
 
