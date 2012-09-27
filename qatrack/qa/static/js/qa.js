@@ -391,10 +391,13 @@ $(document).ready(function(){
     });
 
     $("#work-completed, #work-started").datepicker({
-        autoclose:true
-    }).on('change',function (ev){
+        autoclose:true,
+        keyboardNavigation:false
+    }).on('changeDate',function (ev){
         update_time($(this).find("input"));
-    });
+    })
+
+    $("#work-completed, #id_work_started").on('focus',function(ev){ev.stopPropagation();window.event.cancelBubble=true;return false;});
 
 
     //run a full validation on page load
