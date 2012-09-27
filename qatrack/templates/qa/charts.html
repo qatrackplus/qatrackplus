@@ -94,6 +94,14 @@
 	</div>
 
 	<div class="span4">
+
+		<div class="row-fluid">
+			<div class="span5" id="chart-actions">
+				<button type="button" class="btn btn-primary" data-loading-text="Generating Chart..." id="gen-chart">5. Generate Chart</button>
+			</div>
+
+		</div>
+
 		<div class="row-fluid">
 			<div class="span6">
 				<div id="date-container" class="control-container form-inline data-filter">
@@ -186,15 +194,11 @@
 			</div>
 		</div>
 		<div class="row-fluid">
-			<div class="span7 input-prepend">
+			<div class="span12 input-prepend">
 				{% spaceless %}
 				<span class="add-on">Link</span>
-				<input type="text" class="input-medium" id="chart-url"/>
+				<input type="text" class="input-large" id="chart-url"/>
 				{% endspaceless %}
-			</div>
-
-			<div class="span5" id="chart-actions">
-				<button type="button" class="btn btn-primary pull-right" data-loading-text="Generating Chart..." id="gen-chart">5. Generate Chart</button>
 			</div>
 		</div>
 

@@ -72,14 +72,16 @@ input.date-only-input{
 #to-date-container label{
     min-width:40px;
 }
-
+#chart-actions {
+    padding-top: 5px;
+}
 .checkbox-container {
     overflow-x: hidden;
     overflow-y:auto;
 }
 
 .test-filter{
-    height:200px;;
+    height:235px;;
 }
 
 #status-checkboxes,
