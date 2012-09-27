@@ -409,7 +409,14 @@ var QAUtils = new function() {
 			vals.push(cb.value);
 		});
 		return vals;
-	}
+	};
+
+	this.set_checked_state = function(checkbox_selectors,state){
+		var i;
+		for (i=0; i < checkbox_selectors.length; i++){
+			$(checkbox_selectors[i]).attr("checked",state);
+		}
+	};
 
 	this.get_selected_option_vals = function(select_id){
 		var selected = [];
@@ -418,7 +425,7 @@ var QAUtils = new function() {
 			selected.push(parseInt($(this).val()));
 		});
 		return selected;
-	}
+	};
 
     this.zip = function(a1,a2){
         var ii;

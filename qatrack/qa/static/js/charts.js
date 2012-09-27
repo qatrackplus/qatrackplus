@@ -21,10 +21,11 @@ $(document).ready(function(){
 	$("#toggle-instructions").click(toggle_instructions);
 
 	$(".test-filter input").change(update_tests);
-	
+
 	$("#gen-chart").click(update_chart);
 
 	set_chart_options();
+	set_options_from_url();
 
 });
 
@@ -35,6 +36,9 @@ function initialize_charts(){
 /****************************************************/
 function hide_all_inputs(container){
 	$(container + " input").parent().hide();
+}
+function show_all_inputs(container){
+	$(container + " input").parent().show();
 }
 
 /***************************************************/
@@ -77,7 +81,7 @@ function set_frequencies(){
 		frequencies = _.union(frequencies,_.keys(QACharts.test_info.unit_frequency_lists[unit]))
 	});
 
-	filter_container("#frequency-container",frequencies);	
+	filter_container("#frequency-container",frequencies);
 }
 
 /***************************************************/
@@ -90,10 +94,10 @@ function set_test_lists(){
 	_.each(units,function(unit){
 		_.each(frequencies,function(freq){
 			test_lists = _.union(test_lists,QACharts.test_info.unit_frequency_lists[unit][freq]);
-		});	
+		});
 	});
 
-	filter_container("#test-list-container",test_lists);	
+	filter_container("#test-list-container",test_lists);
 }
 /***************************************************/
 function set_tests(){
@@ -104,7 +108,7 @@ function set_tests(){
 		tests = _.union(tests,QACharts.test_info.test_lists[test_list]);
 	});
 
-	filter_container("#test-container",tests);	
+	filter_container("#test-container",tests);
 }
 /***************************************************/
 function filter_container(container,visible){
@@ -423,34 +427,35 @@ function update_data_table(data){
 /**************************************************************************/
 //set initial options based on url hash
 function set_options_from_url(){
+	var unit_ids,test_ids,freq_ids,test_list_ids;
+
     var options = QAUtils.options_from_url_hash(document.location.hash);
-	var f,o;
-	var clear_if_option_exists = ["unit", "test"];
-	for (f in clear_if_option_exists){
-		for (o in options){
-			if (clear_if_option_exists[f] == options[o][0]){
-				$("#"+clear_if_option_exists[f]+"-filter input").attr("checked",false);
-				break;
-			}
-		}
+
+	var units = get_filtered_option_values("units",options);
+	var tests = get_filtered_option_values("tests",options);
+
+	if ((units.length === 0) || (tests.length === 0)){
+		return;
 	}
 
-	var key,value;
-    $.each(options,function(idx,option){
-		key = option[0];
-		value = option[1];
-        switch(key){
-            case  "slug" :
-                $("#test-filter input[value="+value+"]").attr("checked","checked");
-            break;
-            case "unit":
-                $("#unit-filter input[value="+value+"]").attr("checked","checked");
-                break;
-            default:
-                break;
-        }
+	unit_ids = _.map(units,function(pk){return "#unit-"+pk;});
+	test_ids = _.map(tests,function(pk){return "#test-"+pk;});
 
-    });
-    update();
+	var filters = ["#unit-container","#frequency-container","#test-list-container"];
+
+	_.map(filters,show_all_inputs);
+	$(".test-list").attr("checked",true);
+	QAUtils.set_checked_state(unit_ids,true);
+	update_tests();
+	QAUtils.set_checked_state(test_ids,true);
+
+	update_chart();
+
 }
 
+
+function get_filtered_option_values(opt_type,options){
+	var opt_value = function(opt){return opt[1];};
+	var f = function(opt){return opt[0] == opt_type;};
+	return _.map(_.filter(options,f),opt_value);
+}
