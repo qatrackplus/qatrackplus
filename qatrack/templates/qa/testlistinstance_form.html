@@ -151,7 +151,7 @@
 			<table class="qa-table table table-bordered table-striped table-condensed" >
 				<thead>
 					<tr>
-						<th class="qa-showproc qa-name">Name<div></div></th>
+						<th class="qa-showproc qa-name">Name</th>
 						<th class="qa-category">Category</th>
 						<th class="qa-value" width=100>Value</th>
 						<th class="qa-skip">Skip</th>
@@ -164,6 +164,8 @@
 									<span class="label history-label" title="{{d}}">{{d|date:"dMy"}}</span>
 								{% endfor %}
 							<div></div></th>
+						{% else %}
+						<th>&nbsp;<div></div></th>
 						{% endif %}
 					</tr>
 				</thead>

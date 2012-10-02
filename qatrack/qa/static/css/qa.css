@@ -165,6 +165,7 @@ input[type=radio].qa-input{
     text-align:center;
 }
 .qa-category{
+    width:180px;
     min-width: 180px;
 }
 th.qa-category div{
@@ -174,7 +175,7 @@ th.qa-category div{
 }
 
 .qa-name {
-    min-width:300px;
+    width:300px;
     text-align:left;
 }
 th.qa-name div{
