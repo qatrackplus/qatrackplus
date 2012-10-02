@@ -64,7 +64,7 @@ class ChartView(TemplateView):
     #----------------------------------------------------------------------
     def create_test_data(self):
         tlc_content_type = ContentType.objects.get_for_model(models.TestListCycle).pk
-        
+
         utcs = models.UnitTestCollection.objects.all().values(
             "frequency",
             "content_type",
@@ -73,19 +73,19 @@ class ChartView(TemplateView):
             "unit",
             "testlistcycle__test_lists"
         )
-        
+
         self.unit_frequencies = collections.defaultdict(lambda:collections.defaultdict(list))
-        
+
         for utc in utcs:
             unit = utc["unit"]#.unit.pk
             freq = utc["frequency"]#.pk
             if utc["content_type"] == tlc_content_type:
-                test_list = utc["testlistcycle__test_lists"] 
+                test_list = utc["testlistcycle__test_lists"]
             else:
                 test_list = utc["testlist"]
 
             self.unit_frequencies[unit][freq].append(test_list)
-            
+
         self.test_data = {
             "test_lists":{},
             "unit_frequency_lists":self.unit_frequencies,
@@ -841,8 +841,8 @@ class EditTestListInstance(BaseEditTestListInstance):
     #----------------------------------------------------------------------
     def get_status_object(self,status_pk):
         try:
-            status = models.TestInstanceStatus.objects.get(pk=val)
-        except:
+            status = models.TestInstanceStatus.objects.get(pk=status_pk)
+        except models.TestInstanceStatus.DoesNotExist:
             status = models.TestInstanceStatus.objects.default()
         return status
     #----------------------------------------------------------------------
