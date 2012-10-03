@@ -848,7 +848,7 @@ class EditTestListInstance(BaseEditTestListInstance):
     def get_status_object(self,status_pk):
         try:
             status = models.TestInstanceStatus.objects.get(pk=status_pk)
-        except ValueError:
+        except (models.TestInstanceStatus.DoesNotExist,ValueError):
             status = models.TestInstanceStatus.objects.default()
         return status
     #----------------------------------------------------------------------
