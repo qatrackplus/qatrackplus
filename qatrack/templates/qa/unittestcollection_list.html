@@ -97,10 +97,10 @@
 					</td>
 					<td class="review_status">
 						{% if utc.last_instance %}
-							{{utc.last_instance|as_review_status}}
 							{% if request.user.is_staff %}
 								<a class="pull-right" title="Review this session" href="{% url review_test_list_instance utc.last_instance.pk %}?next={{request.get_full_path}}"><i class="icon-zoom-in"></i></a>
 							{% endif %}
+							{{utc.last_instance|as_review_status}}
 						{% else %}
 							<em>New List</em>
 						{% endif %}
