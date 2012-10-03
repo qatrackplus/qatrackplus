@@ -245,7 +245,13 @@ class TestChartView(TestCase):
         tl.sublists.add(sl)
         tl.save()
 
-        utils.create_unit_test_collection(test_collection=tl)
+        utc = utils.create_unit_test_collection(test_collection=tl)
+
+        tlc1 = utils.create_test_list("cycle1")
+        tlc2 = utils.create_test_list("cycle2")
+        tlc = utils.create_cycle(test_lists=[tlc1,tlc2])
+
+        utils.create_unit_test_collection(test_collection=tlc,unit=utc.unit,frequency=utc.frequency)
 
         self.view.set_test_lists()
         self.view.set_tests()
@@ -256,9 +262,15 @@ class TestChartView(TestCase):
         expected = {
             'test_lists': {
                 '1': [1, 2],
-                '2': [2]
+                '2': [2],
+                '3':[],
+                '4':[],
             },
-            'unit_frequency_lists': {u'1': {u'1': [1]}},
+            'unit_frequency_lists': {
+                '1': {
+                    '1': [1,3,4]
+                }
+            },
         }
 
         self.assertDictEqual(data,expected)
@@ -957,6 +969,19 @@ class TestEditTestListInstance(TestCase):
 
         self.assertEqual(302,response.status_code)
         self.assertEqual(88,models.TestInstance.objects.get(pk=1).value)
+    #----------------------------------------------------------------------
+    def test_blank_status_edit(self):
+
+        self.base_data.update({
+            "testinstance_set-0-value":88,
+            "status":"",
+        })
+
+        response = self.client.post(self.url,data=self.base_data)
+
+        self.assertEqual(302,response.status_code)
+        self.assertEqual(88,models.TestInstance.objects.get(pk=1).value)
+
     #----------------------------------------------------------------------
     def test_in_progress(self):
 

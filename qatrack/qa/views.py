@@ -86,6 +86,12 @@ class ChartView(TemplateView):
 
             self.unit_frequencies[unit][freq].append(test_list)
 
+        #uniquify unit/freq lists
+        for utc in utcs:
+            unit = utc["unit"]
+            freq = utc["frequency"]
+            self.unit_frequencies[unit][freq] = list(sorted(set(self.unit_frequencies[unit][freq])))
+
         self.test_data = {
             "test_lists":{},
             "unit_frequency_lists":self.unit_frequencies,
@@ -842,7 +848,7 @@ class EditTestListInstance(BaseEditTestListInstance):
     def get_status_object(self,status_pk):
         try:
             status = models.TestInstanceStatus.objects.get(pk=status_pk)
-        except models.TestInstanceStatus.DoesNotExist:
+        except ValueError:
             status = models.TestInstanceStatus.objects.default()
         return status
     #----------------------------------------------------------------------
