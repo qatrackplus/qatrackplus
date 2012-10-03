@@ -946,6 +946,7 @@ class TestInstance(models.Model):
         get_latest_by = "work_completed"
         permissions = (
             ("can_view_charts","Can view charts"),
+            ("can_review","Can review tests"),
         )
 
     #----------------------------------------------------------------------

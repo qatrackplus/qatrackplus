@@ -35,16 +35,20 @@
                     </li>
 				</ul>
             </li>
-            {% if user.is_staff %}
+
+			{% if perms.qa.can_review or perms.qa.can_view_charts %}
 
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle" >
                     Review
-                    <span title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
-                        <span class="total-unreviewed-count">{{UNREVIEWED}}</span>
-                    </span>
+					{% if perms.qa.can_review %}
+						<span title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+							<span class="total-unreviewed-count">{{UNREVIEWED}}</span>
+						</span>
+					{% endif %}
                     <b class="caret"></b>
                 </a>
+
                 <ul class="dropdown-menu">
 					{% comment %}
 					<li class="nav-header">QA Program Status</li>
@@ -52,27 +56,32 @@
 
 					<li class="divider"></li>
 					{% endcomment %}
-					<li class="nav-header">Sessions</li>
-                    <li>
-                        <a href="{% url  unreviewed %}" title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed">
-                            <i class="icon-question-sign"></i>
-                            Unreviewed
-                            <span title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
-                                <span class="total-unreviewed-count">{{UNREVIEWED}}</span>
-                            </span>
-                        </a>
-                    </li>
-					<li class="divider"></li>
-					<li class="nav-header">Test Lists</li>
-					<li><a href="{% url review_all %}" title="View all test lists"><i class="icon-check"></i> View All Test Lists</a></li>
-                    <li><a href="{% url choose_review_unit %}" title="Choose a unit to review qa lists for."><i class="icon-list"></i> Choose Unit To Review</a></li>
-                    <li><a href="{% url choose_review_frequency %}" title="Choose a frequency to review qa lists for."><i class="icon-list"></i> Choose Frequency To Review</a></li>
-					<li class="divider"></li>
-					<li class="nav-header">Charts</li>
-                    <li><a href="{% url charts %}"><i class="icon-picture"></i> Charts</a></li>
+					{% if perms.qa.can_review %}
+						<li class="nav-header">Sessions</li>
+						<li>
+							<a href="{% url  unreviewed %}" title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed">
+								<i class="icon-question-sign"></i>
+								Unreviewed
+								<span title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+									<span class="total-unreviewed-count">{{UNREVIEWED}}</span>
+								</span>
+							</a>
+						</li>
+						<li class="divider"></li>
+						<li class="nav-header">Test Lists</li>
+						<li><a href="{% url review_all %}" title="View all test lists"><i class="icon-check"></i> View All Test Lists</a></li>
+						<li><a href="{% url choose_review_unit %}" title="Choose a unit to review qa lists for."><i class="icon-list"></i> Choose Unit To Review</a></li>
+						<li><a href="{% url choose_review_frequency %}" title="Choose a frequency to review qa lists for."><i class="icon-list"></i> Choose Frequency To Review</a></li>
+					{% endif %}
+					{% if perms.qa.can_view_charts %}
+						<li class="divider"></li>
+						<li class="nav-header">Charts</li>
+						<li><a href="{% url charts %}"><i class="icon-picture"></i> Charts</a></li>
+					{% endif %}
                 </ul>
+
             </li>
-            {% endif %}
+			{% endif %}
         </ul>
     {% endif %}
 
