@@ -1027,7 +1027,7 @@ class TestInstance(models.Model):
         return "%.4g" % self.value
     #----------------------------------------------------------------------
     def diff_display(self):
-        display = "N/A"
+        display = ""
         if self.unit_test_info.test.is_numerical() and self.value is not None:
             try:
                 diff = self.calculate_diff()
