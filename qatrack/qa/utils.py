@@ -39,6 +39,7 @@ def tests_history(tests,unit,from_date,test_list=None):
         unit_test_info__test__in = tests,
         unit_test_info__unit = unit,
         work_completed__gte = from_date,
+        status__export_by_default=True,
     ).select_related(
         "status",
         "tolerance",

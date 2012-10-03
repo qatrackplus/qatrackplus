@@ -57,6 +57,7 @@ class JSONResponseMixin(object):
 
 
 #============================================================================
+
 class ChartView(TemplateView):
     """view for creating charts/graphs from data"""
     template_name = "qa/charts.html"

@@ -944,6 +944,9 @@ class TestInstance(models.Model):
     class Meta:
         ordering = ("work_completed",)
         get_latest_by = "work_completed"
+        permissions = (
+            ("can_view_charts","Can view charts"),
+        )
 
     #----------------------------------------------------------------------
     def save(self, *args, **kwargs):

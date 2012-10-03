@@ -1,10 +1,11 @@
+from django.contrib.auth.decorators import permission_required
 from django.conf.urls.defaults import patterns, include, url
 from django.views.generic.simple import direct_to_template
 from django.views.generic import ListView
 
 import models
 import views
-
+from qatrack.decorators import custom_permission_required as cpr
 from qatrack.qa import api
 from tastypie.api import Api
 
@@ -28,6 +29,7 @@ resources = [
 for resource in resources:
     v1_api.register(resource)
 
+can_view_charts = cpr("testinstance.can_view_charts")
 
 urlpatterns = patterns('',
 
@@ -40,11 +42,11 @@ urlpatterns = patterns('',
     #api urls
     url(r"^api/",include(v1_api.urls)),
 
-    url(r"^charts/$", views.ChartView.as_view(), name="charts"),
-    url(r"^charts/export/$",views.ExportToCSV.as_view(),name="export_data"),
-    url(r"^charts/data/$",views.BasicChartData.as_view(),name="chart_data"),
+    url(r"^charts/$", can_view_charts(views.ChartView.as_view()), name="charts"),
+    url(r"^charts/export/$",can_view_charts(views.ExportToCSV.as_view()),name="export_data"),
+    url(r"^charts/data/$",can_view_charts(views.BasicChartData.as_view()),name="chart_data"),
     #generating control chart images
-    url(r"^charts/control_chart.png$", views.ControlChartImage.as_view(), name="control_chart"),
+    url(r"^charts/control_chart.png$", can_view_charts(views.ControlChartImage.as_view()), name="control_chart"),
 
     #review utc's
     url(r"^review/$", views.UTCReview.as_view(), name="review_all"),
