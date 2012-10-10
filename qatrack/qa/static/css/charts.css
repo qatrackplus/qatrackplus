@@ -39,21 +39,21 @@
 }
 
 
-#unit-container:after{content: "1. Choose Units";}
+/*#unit-container:after{content: "1. Choose Units";}
 #frequency-container:after{content: "2. Choose Frequencies";}
 #test-list-container:after{content: "3. Choose Test Lists";}
 #test-container:after{content: "4. Choose Tests to plot";}
 #date-container:after{content: "Dates Filter";}
 #status-container:after{content: "Review Status Filter";}
-
+*/
 #to-date-label,
 #from-date-label {
     width:30px;
 }
 
-#chart-options:after {
+/*#chart-options:after {
     content:"Chart Options";
-}
+}*
 /*#chart-options{
     height:100px;
 }*/
