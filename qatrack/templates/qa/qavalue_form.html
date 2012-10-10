@@ -79,13 +79,10 @@
 <tr class="qa-procedure">
     <td colspan="8"  class="" >
 		<table>
-			{% if form.instance.unit_test_info.test.procedure %}
+			{% if form.unit_test_info.test.procedure %}
 			<tr>
 				<td>
-					<label class="label">Detailed procedure link:</label>
-				</td>
-				<td>
-					<a href="{{form.instance.unit_test_info.test.procedure}}" class="revealprocedure" title="Show detailed procedure for this test" target="_blank">{{form.instance.test.name}}</a>
+					<label class="label">Detailed procedure link:</label>					<a href="{{form.unit_test_info.test.procedure}}" class="revealprocedure" title="Show detailed procedure for this test" target="_blank">{{form.unit_test_info.test.name}}</a>
 				</td>
 			</tr>
 			{% endif %}
