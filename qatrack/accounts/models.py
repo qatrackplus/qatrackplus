@@ -15,9 +15,10 @@ def add_to_default_groups(sender,instance,created,**kwargs):
 
     if created:
         group_names = getattr(settings,"DEFAULT_GROUP_NAMES",[])
+
         for group_name in group_names:
 
             group,_ = Group.objects.get_or_create(name=group_name)
-            group.user_set.add(instance)
-            group.save()
+            instance.groups.add(group)
+            instance.save()
 
