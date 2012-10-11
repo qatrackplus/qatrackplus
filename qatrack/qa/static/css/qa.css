@@ -50,6 +50,7 @@ ul.nav li.dropdown:hover ul.dropdown-menu{
 }
 #contacts dt{
     width:inherit;
+    *width:250px;
 }
 #contacts dd{
     margin-left:300px;
