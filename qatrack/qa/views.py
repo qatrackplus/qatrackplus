@@ -475,13 +475,13 @@ class ChooseUnit(ListView):
     def get_queryset(self):
         return Unit.objects.all().select_related("type")
 
-
 #============================================================================
 class PerformQA(CreateView):
     """view for users to complete a qa test list"""
 
     form_class = forms.CreateTestListInstanceForm
     model = models.TestListInstance
+
     #----------------------------------------------------------------------
     def set_test_lists(self,current_day):
 
@@ -621,6 +621,11 @@ class PerformQA(CreateView):
     def get_context_data(self,**kwargs):
 
         context = super(PerformQA,self).get_context_data(**kwargs)
+
+        #explicity refresh session expiry to prevent situation where a session
+        #expires in between the time a user requests a page and then submits the page
+        #causing them to lose all the data they entered
+        self.request.session.set_expiry(settings.SESSION_COOKIE_AGE)
 
         if models.TestInstanceStatus.objects.default() is None:
             messages.error(

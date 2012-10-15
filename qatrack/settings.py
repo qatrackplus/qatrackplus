@@ -209,7 +209,9 @@ INSTALLED_APPS = [
     'qatrack.notifications',
     'qatrack.contacts',
 ]
-
+#-----------------------------------------------------------------------------
+#Session Settings
+SESSION_COOKIE_AGE = 14*24*60*60
 
 #-----------------------------------------------------------------------------
 #Email and notification settings
