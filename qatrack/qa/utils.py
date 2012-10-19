@@ -96,3 +96,19 @@ def tokenize_composite_calc(calc_procedure):
     """tokenize a calculation procedure"""
     tokens = tokenize.generate_tokens(StringIO.StringIO(calc_procedure).readline)
     return [t[token.NAME] for t in tokens if t[token.NAME]]
+
+#----------------------------------------------------------------------
+def unique(seq,idfun=None):
+    """f5 from http://www.peterbe.com/plog/uniqifiers-benchmark"""
+    # order preserving
+    if idfun is None:
+        def idfun(x): return x
+    seen = {}
+    result = []
+    for item in seq:
+        marker = idfun(item)
+        if marker in seen:
+            continue
+        seen[marker] = 1
+        result.append(item)
+    return result
