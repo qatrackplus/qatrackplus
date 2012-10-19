@@ -15,14 +15,12 @@
 	</div>
 </div>
 
-
-	{% regroup units by type as unit_type_list %}
-	{% for unit_type in unit_type_list %}
+	{% for unit_type in unit_types %}
 		<div class="row-fluid row-spacer">
 			<div class="span12">
 
-				<h4 class="header-spacer">{{unit_type.grouper.name}}</h4>
-				{% for unit in unit_type.list %}
+				<h4 class="header-spacer">{{unit_type.name}}</h4>
+				{% for unit in unit_type.unit_set.all %}
 					{% if not user.is_staff %}
 							<a class="btn" href="{% url qa_by_frequency_unit frequency="short-interval" unit_number=unit.number %}">{{unit.name}}</a>
 					{% else %}
