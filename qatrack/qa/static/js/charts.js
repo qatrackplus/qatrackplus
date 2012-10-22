@@ -144,7 +144,7 @@ function finished_chart_update(){
 /*************************************************************************/
 //generate a url to allow linking directly to chart
 function set_chart_url(){
-	$("#chart-url").val("not implemented yet");
+
 	var filters = get_data_filters();
 	filters.from_date = [filters.from_date];
 	filters.to_date = [filters.to_date];
@@ -157,7 +157,12 @@ function set_chart_url(){
 		});
 	});
 
-	var loc = window.location.protocol + "//"+window.location.hostname+":"+window.location.port+window.location.pathname;
+	var loc = window.location.protocol + "//"+window.location.hostname;
+	if (window.location.port !== ""){
+		loc += ":"+window.location.port;
+	}
+
+	loc += window.location.pathname;
 
 	$("#chart-url").val(loc+"#"+options.join(QAUtils.OPTION_SEP));
 }
