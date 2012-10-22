@@ -46,9 +46,12 @@ def tests_history(tests,unit,from_date,test_list=None):
         "unit_test_info__test__pk",
         "created_by"
     ).order_by("-work_completed")
-
+    from django.db.models import Q
     if test_list is not None:
-        all_instances = all_instances.filter(test_list_instance__test_list=test_list)
+        all_instances = all_instances.filter(
+            Q(test_list_instance__test_list=test_list) |
+            Q(test_list_instance__test_list__testlistcycle__test_lists=test_list)
+        )
 
     hist_dict = {}
     for instance in all_instances:
