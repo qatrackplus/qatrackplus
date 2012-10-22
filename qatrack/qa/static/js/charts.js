@@ -146,15 +146,17 @@ function finished_chart_update(){
 function set_chart_url(){
 
 	var filters = get_data_filters();
-	filters.from_date = [filters.from_date];
-	filters.to_date = [filters.to_date];
 
 	var options = [];
 
 	$.each(filters,function(key,values){
-		$.each(values,function(idx,value){
-			options.push(key+QAUtils.OPTION_DELIM+value)
-		});
+		if (_.isArray(values)){
+			$.each(values,function(idx,value){
+				options.push(key+QAUtils.OPTION_DELIM+value)
+			});
+		}else if (!_.isEmpty(values)){
+			options.push(key+QAUtils.OPTION_DELIM+values)
+		}
 	});
 
 	var loc = window.location.protocol + "//"+window.location.hostname;
