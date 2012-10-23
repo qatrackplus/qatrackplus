@@ -690,7 +690,7 @@ class PerformQA(CreateView):
             "frequency":self.unit_test_col.frequency.slug
         }
 
-        if not self.request.user.is_staff:
+        if not self.request.user.has_perm("qa.can_choose_frequency"):
             kwargs["frequency"] = "short-interval"
 
         return reverse("qa_by_frequency_unit",kwargs=kwargs)
