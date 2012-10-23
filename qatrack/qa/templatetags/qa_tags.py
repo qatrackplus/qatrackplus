@@ -42,9 +42,9 @@ def reference_tolerance_span(test,ref,tol):
 
 
     if tol.type == models.ABSOLUTE:
-        return mark_safe('<span> <abbr title="(AL, TL, TH, AH) = (%s, %s, %s, %s)">%s</abbr></span>'% (tol.act_low,tol.tol_low,tol.tol_high,tol.act_high, ref.value_display()))
+        return mark_safe('<span> <abbr title="(ACT L, TOL L, TOL H, ACT H) = (%s, %s, %s, %s)">%s</abbr></span>'% (tol.act_low,tol.tol_low,tol.tol_high,tol.act_high, ref.value_display()))
     elif tol.type == models.PERCENT:
-        return mark_safe('<span> <abbr title="(AL, TL, TH, AH) = (%.1f%%, %.1f%%, %.1f%%, %.1f%%)">%s</abbr></span>'% (tol.act_low,tol.tol_low,tol.tol_high,tol.act_high, ref.value_display()))
+        return mark_safe('<span> <abbr title="(ACT L, TOL L, TOL H, ACT H) = (%.1f%%, %.1f%%, %.1f%%, %.1f%%)">%s</abbr></span>'% (tol.act_low,tol.tol_low,tol.tol_high,tol.act_high, ref.value_display()))
 
 #----------------------------------------------------------------------
 @register.filter
