@@ -21,7 +21,7 @@ SEND_BROKEN_LINK_EMAILS = True
 #misc settings
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
-VERSION = "0.2.2.3"
+VERSION = "0.2.2.4"
 
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'qatrack.wsgi.application'
