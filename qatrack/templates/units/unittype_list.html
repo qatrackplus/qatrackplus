@@ -21,7 +21,7 @@
 
 				<h4 class="header-spacer">{{unit_type.name}}</h4>
 				{% for unit in unit_type.unit_set.all %}
-					{% if not user.is_staff %}
+					{% if not perms.qa.can_choose_frequency %}
 							<a class="btn" href="{% url qa_by_frequency_unit frequency="short-interval" unit_number=unit.number %}">{{unit.name}}</a>
 					{% else %}
 						<div class="btn-group" style="float:left">
