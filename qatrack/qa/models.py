@@ -957,7 +957,7 @@ class TestInstance(models.Model):
     #----------------------------------------------------------------------
     def percent_difference(self):
         """return percent difference between instance and reference"""
-        if (self.reference.value < EPSILON):
+        if self.reference.value == 0:
             raise ZeroDivisionError("Tried to calculate percent diff with a zero reference value")
         return 100.*(self.value-self.reference.value)/float(self.reference.value)
 
