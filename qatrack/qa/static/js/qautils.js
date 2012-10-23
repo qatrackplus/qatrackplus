@@ -74,7 +74,7 @@ var QAUtils = new function() {
     */
     this.percent_difference = function(measured, reference){
         //reference = 0. is a special case
-        if (Math.abs(reference) < this.EPSILON){
+        if (reference === 0.){
             return this.absolute_difference(measured,reference);
         }
         return 100.*(measured-reference)/reference;

@@ -553,7 +553,7 @@ class UnitTestInfo(models.Model):
 
         super(UnitTestInfo,self).clean()
         if None not in (self.reference, self.tolerance):
-            if self.tolerance.type == PERCENT and abs(self.reference.value) < EPSILON:
+            if self.tolerance.type == PERCENT and self.reference.value == 0:
                 msg = _("Percentage based tolerances can not be used with reference value of zero (0)")
                 raise ValidationError(msg)
 
