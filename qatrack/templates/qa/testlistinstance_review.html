@@ -35,7 +35,7 @@
 						<dt>Actions:</dt>
 						<dd>
 
-							<a class="btn btn-danger btn-mini" title="Permanently Delete This List" href="#" disabled="disabled" >Delete</a>
+							<a class="btn btn-danger btn-mini" title="This will redirect you to the admin site where you can permanently delete this qa session" href="{% url admin:qa_testlistinstance_delete test_list_instance.pk%}">Delete</a>
 							{% if instance.in_progress %}
 								<a class="btn btn-primary btn-mini" title="Continue this list" href="{%url edit_tli pk=test_list_instance.pk%}?next={{request.get_full_path}}" >Continue</a>
 							{% else %}
@@ -165,7 +165,6 @@
 		</div>
 		<div class="row-fluid">
 			<div class="span12 actions review-buttons">
-					{#	<button type="submit" class="btn btn-danger btn-mini pull-left">Delete</button>#}
 					<button type="submit" class="btn btn-primary pull-right">Update Test Statuses</button>
 			</div>
 
