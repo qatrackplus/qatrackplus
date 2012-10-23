@@ -385,7 +385,7 @@ $(document).ready(function(){
     $(".qa-skip input").click(function(){
         if ($(this).is(':checked')){
             $(this).parent().parent().next().show(600);
-            $(".qa-skip").parents(".qa-valuerow").find("input[type=radio]").attr("checked",false);
+            $(this).parents(".qa-valuerow").find("input[type=radio]").attr("checked",false);
         }else{
            $(this).parent().parent().next().hide(600);
         }

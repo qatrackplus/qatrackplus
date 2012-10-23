@@ -1,0 +1,60 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+{% load url from future %}
+{% load admin_urls %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ app_label|capfirst }}</a>
+&rsaquo; <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst|escape }}</a>
+&rsaquo; <a href="{% url opts|admin_urlname:'changelist' %}{{ object.pk }}">{{ object|truncatewords:"18" }}</a>
+&rsaquo; {% trans 'Delete' %}
+</div>
+{% endblock %}
+
+{% block content %}
+
+{% if perms_lacking or protected %}
+    {% if perms_lacking %}
+        <p>{% blocktrans with escaped_object=object %}Deleting the {{ object_name }} '{{ escaped_object }}' would result in deleting related objects, but your account doesn't have permission to delete the following types of objects:{% endblocktrans %}</p>
+        <ul>
+        {% for obj in perms_lacking %}
+            <li>{{ obj }}</li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+    {% if protected %}
+        <p>{% blocktrans with escaped_object=object %}Deleting the {{ object_name }} '{{ escaped_object }}' would require deleting the following protected related objects:{% endblocktrans %}</p>
+        <ul>
+        {% for obj in protected %}
+            <li>{{ obj }}</li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+{% else %}
+    <p>
+        Are you sure you want to delete the following QA Session?
+    </p>
+    <ul>
+        <li><strong>Test List</strong> : {{object.test_list.name}}</li>
+        <li><strong>Work Completed</strong> : {{object.work_completed}}</li>
+        <li><strong>Created by</strong> : {{object.created_by}}</li>
+        <li><strong>Last modified by</strong> : {{object.modified_by}}</li>
+    </ul>
+    <p>
+        The following test instances will also be deleted as a result:
+    </p>
+    <ul>
+        {% for del_obj in object.testinstance_set.all  %}
+            <li>{{del_obj.unit_test_info.test.name}} : {{del_obj.work_completed}} : {{del_obj.modified_by}} : {{del_obj.status}}</li>
+        {% endfor %}
+    </ul>
+    <form action="" method="post">{% csrf_token %}
+    <div>
+    <input type="hidden" name="post" value="yes" />
+    <input type="submit" value="{% trans "Yes, I'm sure" %}" />
+    </div>
+    </form>
+{% endif %}
+{% endblock %}

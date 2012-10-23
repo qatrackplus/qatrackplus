@@ -221,7 +221,7 @@ class Reference(models.Model):
             return ""
         if self.type == BOOLEAN:
             return "Yes" if int(self.value)==1 else "No"
-        return "%.3g" %(self.value)
+        return "%.6G" %(self.value)
     #---------------------------------------------------------------------------
     def __unicode__(self):
         """more helpful display name"""
@@ -553,7 +553,7 @@ class UnitTestInfo(models.Model):
 
         super(UnitTestInfo,self).clean()
         if None not in (self.reference, self.tolerance):
-            if self.tolerance.type == PERCENT and abs(self.reference.value) < EPSILON:
+            if self.tolerance.type == PERCENT and self.reference.value == 0:
                 msg = _("Percentage based tolerances can not be used with reference value of zero (0)")
                 raise ValidationError(msg)
 
@@ -961,7 +961,7 @@ class TestInstance(models.Model):
     #----------------------------------------------------------------------
     def percent_difference(self):
         """return percent difference between instance and reference"""
-        if (self.reference.value < EPSILON):
+        if self.reference.value == 0:
             raise ZeroDivisionError("Tried to calculate percent diff with a zero reference value")
         return 100.*(self.value-self.reference.value)/float(self.reference.value)
 

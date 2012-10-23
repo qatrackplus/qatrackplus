@@ -21,7 +21,7 @@ SEND_BROKEN_LINK_EMAILS = True
 #misc settings
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
-VERSION = "0.2.1"
+VERSION = "0.2.2.3"
 
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'qatrack.wsgi.application'
@@ -209,7 +209,9 @@ INSTALLED_APPS = [
     'qatrack.notifications',
     'qatrack.contacts',
 ]
-
+#-----------------------------------------------------------------------------
+#Session Settings
+SESSION_COOKIE_AGE = 14*24*60*60
 
 #-----------------------------------------------------------------------------
 #Email and notification settings

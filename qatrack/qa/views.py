@@ -469,12 +469,20 @@ class CompositeCalculation(JSONResponseMixin, View):
 #====================================================================================
 class ChooseUnit(ListView):
     """choose a unit to perform qa on for this session"""
-    model = Unit
-    context_object_name = "units"
+    model = UnitType
+    context_object_name = "unit_types"
 
     #---------------------------------------------------------------------------
     def get_queryset(self):
-        return Unit.objects.all().select_related("type")
+        return UnitType.objects.all().order_by("unit__number").prefetch_related("unit_set")
+    #----------------------------------------------------------------------
+    def get_context_data(self,*args,**kwargs):
+        """reorder unit types"""
+        context = super(ChooseUnit,self).get_context_data(*args,**kwargs)
+        uts = [ut for ut in context["unit_types"] if len(ut.unit_set.all()) >0]
+        context["unit_types"] = utils.unique(uts)
+        return context
+
 
 
 #============================================================================
@@ -483,6 +491,7 @@ class PerformQA(CreateView):
 
     form_class = forms.CreateTestListInstanceForm
     model = models.TestListInstance
+
     #----------------------------------------------------------------------
     def set_test_lists(self,current_day):
 
@@ -622,6 +631,11 @@ class PerformQA(CreateView):
     def get_context_data(self,**kwargs):
 
         context = super(PerformQA,self).get_context_data(**kwargs)
+
+        #explicity refresh session expiry to prevent situation where a session
+        #expires in between the time a user requests a page and then submits the page
+        #causing them to lose all the data they entered
+        self.request.session.set_expiry(settings.SESSION_COOKIE_AGE)
 
         if models.TestInstanceStatus.objects.default() is None:
             messages.error(
