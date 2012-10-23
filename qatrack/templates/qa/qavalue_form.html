@@ -9,8 +9,10 @@
                 <span class="alert-error">{{field.label}}:{{ error }}</span>
             {% endfor %}
             </td>
-			{% if include_admin %}
+			{% if include_history and include_ref_tols %}
 	            <td colspan="5">&nbsp;</td>
+			{% elif include_history or include_ref_tols %}
+	            <td colspan="4">&nbsp;</td>
 			{% else %}
 	            <td colspan="3">&nbsp;</td>
 			{% endif %}
@@ -53,14 +55,19 @@
         <td class="qa-skip" title="{{form.skipped.help_text|safe}}">{{form.skipped}}</td>
         <td class="qa-status">Not Done</td>
         <td class="qa-showcmt"><a href="#" class="revealcomment" title="Add comment for this test"><i class="icon-comment"></i></a></td>
-		{% if include_admin %}
-			<td class="qa-reference">
-				{% reference_tolerance_span test ref tol %}
-			</td>
-			<td class="qa-history">
-				{{uti.history|history_display:test}}
-				<a title="View chart of this data" target="_blank" href="{% url charts %}#units={{uti.unit.pk}}&tests={{uti.test.pk}}"><i class="icon-picture"></i></a>
-			</td>
+
+		{% if include_ref_tols or include_history%}
+			{% if include_ref_tols %}
+				<td class="qa-reference">
+					{% reference_tolerance_span test ref tol %}
+				</td>
+			{% endif %}
+			{% if include_history %}
+				<td class="qa-history">
+					{{uti.history|history_display:test}}
+					<a title="View chart of this data" target="_blank" href="{% url charts %}#units={{uti.unit.pk}}&tests={{uti.test.pk}}"><i class="icon-picture"></i></a>
+				</td>
+			{% endif %}
 		{% else %}
 			<td></td>
         {% endif %}

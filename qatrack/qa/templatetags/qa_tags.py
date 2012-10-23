@@ -14,13 +14,13 @@ register = template.Library()
 
 
 @register.simple_tag
-def qa_value_form(form, include_admin=False,test_info=None):
+def qa_value_form(form, include_history=False,include_ref_tols=False,test_info=None):
     template = get_template("qa/qavalue_form.html")
     c = Context({
         "form": form,
         "test_info":test_info,
-        "include_admin":include_admin
-
+        "include_history":include_history,
+        "include_ref_tols":include_ref_tols,
     })
     return template.render(c)
 

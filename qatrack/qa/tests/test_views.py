@@ -814,22 +814,6 @@ class TestPerformQA(TestCase):
         self.assertEqual(response.context["current_day"],1)
 
     #----------------------------------------------------------------------
-    def test_include_admin(self):
-
-        #orig user is staff so admin should be included
-        response = self.client.get(self.url)
-        self.assertTrue(response.context["include_admin"])
-
-        u2 = utils.create_user(is_staff=False,is_superuser=False,uname="u2")
-        u2.groups.add(Group.objects.get(pk=1))
-        u2.save()
-        self.client.logout()
-        self.client.login(username="u2",password="password")
-
-        #new user is not staff so admin should not be included
-        response = self.client.get(self.url)
-        self.assertFalse(response.context["include_admin"])
-    #----------------------------------------------------------------------
     def test_no_status(self):
         from django.contrib import messages
         models.TestInstanceStatus.objects.all().delete()

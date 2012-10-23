@@ -551,6 +551,10 @@ class UnitTestInfo(models.Model):
         verbose_name_plural = "Set References & Tolerances"
         unique_together = ["test","unit"]
 
+        permissions = (
+            ("can_view_ref_tol","Can view Refs and Tols"),
+        )
+
     #----------------------------------------------------------------------
     def clean(self):
         """extra validation for Tests"""
@@ -949,7 +953,7 @@ class TestInstance(models.Model):
         ordering = ("work_completed",)
         get_latest_by = "work_completed"
         permissions = (
-            ("can_view_charts","Can view charts"),
+            ("can_view_history","Can view test history"),
             ("can_review","Can review tests"),
         )
 
@@ -1112,6 +1116,10 @@ class TestListInstance(models.Model):
     class Meta:
         ordering = ("work_completed",)
         get_latest_by = "work_completed"
+        permissions = (
+            ("can_override_date","Can override date"),
+            ("can_perform_subset","Can perform subset of tests"),
+        )
 
     #----------------------------------------------------------------------
     def pass_fail_status(self):

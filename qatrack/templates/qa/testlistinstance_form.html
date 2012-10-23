@@ -75,7 +75,7 @@
 					<hr/>
 				{% endif %}
 
-				{% if include_admin %}
+				{% if perms.qa.can_perform_subset %}
 
 					<div class="input-prepend input-append" id="category">
 						<label for="category_filter" class="add-on">
@@ -98,13 +98,13 @@
 							{{form.work_started.label}}:
 						</label>
 						{{form.work_started}}
-						{% if include_admin%}
+						{% if perms.qa.can_override_date %}
 							<span class="add-on"><i class="icon-th"></i></span>
 						{% endif %}
 					{% endspaceless %}
 				</div>
 
-				{% if include_admin %}
+				{% if perms.qa.can_override_date %}
 					<div class="date input-prepend input-append" id="work-completed" data-date="{% now 'd-m-Y'%}" data-date-format="dd-mm-yyyy">
 						<label for="id_work_completed" class="add-on">
 							{{form.work_completed.label}}:
@@ -157,21 +157,25 @@
 						<th class="qa-skip">Skip</th>
 						<th class="qa-status">Status</th>
 						<th class="qa-showcmt">Comment</th>
-						{% if include_admin %}
-							<th class="qa-reference">Reference</th>
-							<th class="qa-history">History<br/>
-								{% for d in history_dates %}
-									<span class="label history-label" title="{{d}}">{{d|date:"dMy"}}</span>
-								{% endfor %}
-							<div></div></th>
+						{% if perms.qa.can_view_ref_tol or perms.qa.can_view_history %}
+							{% if perms.qa.can_view_ref_tol %}
+								<th class="qa-reference">Reference</th>
+							{% endif %}
+							{% if perms.qa.can_view_history %}
+								<th class="qa-history">History<br/>
+									{% for d in history_dates %}
+										<span class="label history-label" title="{{d}}">{{d|date:"dMy"}}</span>
+									{% endfor %}
+								<div></div></th>
+							{% endif %}
 						{% else %}
-						<th>&nbsp;<div></div></th>
+							<th>&nbsp;<div></div></th>
 						{% endif %}
 					</tr>
 				</thead>
 				<tbody>
 					{% for test_form in formset %}
-						{% qa_value_form test_form include_admin=include_admin test_info=test_form.get_test_info  %}
+						{% qa_value_form test_form include_history=perms.qa.can_view_history include_ref_tols=perms.qa.can_view_ref_tol test_info=test_form.get_test_info  %}
 					{% endfor %}
 				</tbody>
 			</table>

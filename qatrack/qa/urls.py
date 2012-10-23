@@ -29,7 +29,8 @@ resources = [
 for resource in resources:
     v1_api.register(resource)
 
-can_view_charts = cpr("testinstance.can_view_charts")
+can_view_history = cpr("qa.can_view_history")
+can_edit = cpr("qa.change_testinstance")
 
 urlpatterns = patterns('',
 
@@ -42,26 +43,26 @@ urlpatterns = patterns('',
     #api urls
     url(r"^api/",include(v1_api.urls)),
 
-    url(r"^charts/$", can_view_charts(views.ChartView.as_view()), name="charts"),
-    url(r"^charts/export/$",can_view_charts(views.ExportToCSV.as_view()),name="export_data"),
-    url(r"^charts/data/$",can_view_charts(views.BasicChartData.as_view()),name="chart_data"),
+    url(r"^charts/$", can_view_history(views.ChartView.as_view()), name="charts"),
+    url(r"^charts/export/$",can_view_history(views.ExportToCSV.as_view()),name="export_data"),
+    url(r"^charts/data/$",can_view_history(views.BasicChartData.as_view()),name="chart_data"),
     #generating control chart images
-    url(r"^charts/control_chart.png$", can_view_charts(views.ControlChartImage.as_view()), name="control_chart"),
+    url(r"^charts/control_chart.png$", can_view_history(views.ControlChartImage.as_view()), name="control_chart"),
 
     #review utc's
-    url(r"^review/$", views.UTCReview.as_view(), name="review_all"),
-    url(r"^review/utc/(?P<pk>\d+)/$", views.UTCInstances.as_view(), name="review_utc"),
-    url(r"^review/frequency/$", views.ChooseFrequencyForReview.as_view(), name="choose_review_frequency"),
-    url(r"^review/frequency/(?P<frequency>[/\w-]+)/$", views.UTCFrequencyReview.as_view(), name="review_by_frequency"),
-    url(r"^review/unit/$", views.ChooseUnitForReview.as_view(), name="choose_review_unit"),
-    url(r"^review/unit/(?P<unit_number>[/\d]+)/$", views.UTCUnitReview.as_view(), name="review_by_unit"),
+    url(r"^review/$", can_view_history(views.UTCReview.as_view()), name="review_all"),
+    url(r"^review/utc/(?P<pk>\d+)/$", can_view_history(views.UTCInstances.as_view()), name="review_utc"),
+    url(r"^review/frequency/$", can_view_history(views.ChooseFrequencyForReview.as_view()), name="choose_review_frequency"),
+    url(r"^review/frequency/(?P<frequency>[/\w-]+)/$", can_view_history(views.UTCFrequencyReview.as_view()), name="review_by_frequency"),
+    url(r"^review/unit/$", can_view_history(views.ChooseUnitForReview.as_view()), name="choose_review_unit"),
+    url(r"^review/unit/(?P<unit_number>[/\d]+)/$", can_view_history(views.UTCUnitReview.as_view()), name="review_by_unit"),
 
     #test list instances
-    url(r"^session/details/$", views.TestListInstances.as_view(), name="complete_instances"),
-    url(r"^session/details/(?P<pk>\d+)/$", views.ReviewTestListInstance.as_view(), name="review_test_list_instance"),
-    url(r"^session/unreviewed/$", views.Unreviewed.as_view(), name="unreviewed"),
-    url(r"^session/in-progress/$", views.InProgress.as_view(), name="in_progress"),
-    url(r"^session/edit/(?P<pk>\d+)/$", views.EditTestListInstance.as_view(), name="edit_tli"),
+    url(r"^session/details/$", can_view_history(views.TestListInstances.as_view()), name="complete_instances"),
+    url(r"^session/details/(?P<pk>\d+)/$", can_view_history(views.ReviewTestListInstance.as_view()), name="review_test_list_instance"),
+    url(r"^session/unreviewed/$", can_view_history(views.Unreviewed.as_view()), name="unreviewed"),
+    url(r"^session/in-progress/$", can_view_history(views.InProgress.as_view()), name="in_progress"),
+    url(r"^session/edit/(?P<pk>\d+)/$", can_edit(views.EditTestListInstance.as_view()), name="edit_tli"),
 
 
     url(r"^unit/$", views.ChooseUnit.as_view(), name="choose_unit"),
@@ -72,14 +73,5 @@ urlpatterns = patterns('',
 
     url(r"^frequency/(?P<frequency>[/\w-]+)/unit/(?P<unit_number>[/\d]+)/$", views.UnitFrequencyList.as_view(), name="qa_by_unit_frequency"),
     url(r"^frequency/(?P<frequency>[/\w-]+)/$", views.FrequencyList.as_view(), name="qa_by_frequency"),
-
-
-
-
-
-
-
-
-
 
 )

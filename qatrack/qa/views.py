@@ -659,7 +659,6 @@ class PerformQA(CreateView):
         context["formset"] = formset
 
         context["history_dates"] = self.history_dates
-        context["include_admin"] = self.request.user.is_staff
         context['categories'] = set([x.test.category for x in self.unit_test_infos])
         context['current_day'] = self.actual_day+1
 
@@ -843,13 +842,6 @@ class EditTestListInstance(BaseEditTestListInstance):
             context["form"] = form
             return self.render_to_response(context)
 
-
-    #----------------------------------------------------------------------
-    def get_context_data(self,*args,**kwargs):
-        context = super(EditTestListInstance,self).get_context_data(*args,**kwargs)
-        context["include_admin"] = self.request.user.is_staff
-
-        return context
     #----------------------------------------------------------------------
     def update_test_list_instance(self):
         self.object.created_by = self.request.user

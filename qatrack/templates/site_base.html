@@ -20,7 +20,7 @@
         <ul class="nav nav-pills">
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle" >
-                    QA Test Lists
+                    Perform QA
                     <b class="caret"></b>
                 </a>
                 <ul class="dropdown-menu">
@@ -36,11 +36,11 @@
 				</ul>
             </li>
 
-			{% if perms.qa.can_review or perms.qa.can_view_charts %}
+			{% if perms.qa.can_review or perms.qa.can_view_history or perms.qa.change_testinstance %}
 
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle" >
-                    Review
+                    Review Data
 					{% if perms.qa.can_review %}
 						<span title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
 							<span class="total-unreviewed-count">{{UNREVIEWED}}</span>
@@ -56,8 +56,10 @@
 
 					<li class="divider"></li>
 					{% endcomment %}
+
 					{% if perms.qa.can_review %}
-						<li class="nav-header">Sessions</li>
+					<li class="nav-header">QA Sessions</li>
+
 						<li>
 							<a href="{% url  unreviewed %}" title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed">
 								<i class="icon-question-sign"></i>
@@ -68,14 +70,15 @@
 							</a>
 						</li>
 						<li class="divider"></li>
-						<li class="nav-header">Test Lists</li>
-						<li><a href="{% url review_all %}" title="View all test lists"><i class="icon-check"></i> View All Test Lists</a></li>
-						<li><a href="{% url choose_review_unit %}" title="Choose a unit to review qa lists for."><i class="icon-list"></i> Choose Unit To Review</a></li>
-						<li><a href="{% url choose_review_frequency %}" title="Choose a frequency to review qa lists for."><i class="icon-list"></i> Choose Frequency To Review</a></li>
 					{% endif %}
-					{% if perms.qa.can_view_charts %}
+					<li class="nav-header">Test Lists</li>
+					<li><a href="{% url review_all %}" title="View all test lists"><i class="icon-list"></i> All Test Lists</a></li>
+					<li><a href="{% url choose_review_unit %}" title="Choose a unit to review qa lists for."><i class="icon-list"></i> Test Lists By Unit</a></li>
+					<li><a href="{% url choose_review_frequency %}" title="Choose a frequency to review qa lists for."><i class="icon-list"></i> Test Lists By Frequency</a></li>
+
+					{% if perms.qa.can_view_history %}
 						<li class="divider"></li>
-						<li class="nav-header">Charts</li>
+						<li class="nav-header">Trends and Analysis</li>
 						<li><a href="{% url charts %}"><i class="icon-picture"></i> Charts</a></li>
 					{% endif %}
                 </ul>

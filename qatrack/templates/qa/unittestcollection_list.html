@@ -61,7 +61,7 @@
 						{% if action =  "perform" %}
 							<a class="btn btn-primary btn-mini" href="{%url perform_qa utc.pk%}?day=next&next={{request.get_full_path}}">Perform {{utc.frequency.name}} QA</a>
 						{% elif action = "review" %}
-							<a class="btn btn-primary btn-mini" href="{%url review_utc utc.pk%}?next={{request.get_full_path}}">Review Data</a>
+							<a class="btn btn-primary btn-mini" href="{%url review_utc utc.pk%}?next={{request.get_full_path}}">History</a>
 						{% endif %}
 					</td>
 					<td><strong>{{utc.tests_object.name}}</strong></td>
@@ -97,7 +97,7 @@
 					</td>
 					<td class="review-status">
 						{% if utc.last_instance %}
-							{% if request.user.is_staff %}
+							{% if perms.qa.can_review %}
 								<a class="pull-right" title="Review this session" href="{% url review_test_list_instance utc.last_instance.pk %}?next={{request.get_full_path}}"><i class="icon-zoom-in"></i></a>
 							{% endif %}
 							{{utc.last_instance|as_review_status}}
