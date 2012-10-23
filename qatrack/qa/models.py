@@ -221,7 +221,7 @@ class Reference(models.Model):
             return ""
         if self.type == BOOLEAN:
             return "Yes" if int(self.value)==1 else "No"
-        return "%.3g" %(self.value)
+        return "%.6G" %(self.value)
     #---------------------------------------------------------------------------
     def __unicode__(self):
         """more helpful display name"""
