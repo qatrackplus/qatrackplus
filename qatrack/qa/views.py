@@ -1066,7 +1066,7 @@ class TestListInstances(ListView):
     ]
     #----------------------------------------------------------------------
     def get_queryset(self):
-        return self.set_ordering(self.fetch_related(self.queryset()))
+        return self.fetch_related(self.queryset())
     #----------------------------------------------------------------------
     def fetch_related(self,qs):
         qs = qs.select_related(

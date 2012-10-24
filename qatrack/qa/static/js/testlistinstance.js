@@ -3,9 +3,9 @@ var column_sort_keys = [
 	null,
 	"unit_test_collection__unit__name",
 	"unit_test_collection__frequency__nominal_interval",
-	"work_completed",
-	"completed_by__username",
 	"test_list__name",
+	"work_completed",
+	"created_by__username",
 	null,
 	null
 ];
