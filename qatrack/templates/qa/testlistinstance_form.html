@@ -48,6 +48,16 @@
 		</div>
 	</div>
 </div>
+
+{% if days and last_instance %}
+	<div class="row-fluid">
+		<div class="span12">
+			<h5 class="pull-left">
+				<em>Last done: Day {{last_day}} ({{last_instance.test_list.name}})</em>
+			</h5>
+		</div>
+	</div>
+{% endif %}
 <div class="row-fluid">
 	<div class="span12" id="overall-qa-status">
 		<div class="alert alert-error do-not-treat">

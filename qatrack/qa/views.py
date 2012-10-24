@@ -510,7 +510,7 @@ class PerformQA(CreateView):
     def set_unit_test_collection(self):
         self.unit_test_col = get_object_or_404(
             models.UnitTestCollection.objects.select_related(
-                "unit","frequency"
+                "unit","frequency","last_instance"
             ).filter(
                 active=True,
                 visible_to__in = self.request.user.groups.all(),
@@ -525,8 +525,24 @@ class PerformQA(CreateView):
         )
 
         self.actual_day = 0
+        self.is_cycle = False
         if cycle_membership:
+            self.is_cycle = True
             self.actual_day = cycle_membership[0].order
+    #----------------------------------------------------------------------
+    def set_last_day(self):
+
+
+        self.last_day = 0
+
+        if self.unit_test_col.last_instance:
+            last_membership = models.TestListCycleMembership.objects.filter(
+                test_list = self.unit_test_col.last_instance.test_list,
+                cycle = self.unit_test_col.tests_object
+            )
+            if last_membership:
+                self.last_day = last_membership[0].order
+
     #----------------------------------------------------------------------
     def set_unit_test_infos(self):
         utis = models.UnitTestInfo.objects.filter(
@@ -646,6 +662,7 @@ class PerformQA(CreateView):
         self.set_unit_test_collection()
         self.set_test_lists(self.get_requested_day_to_perform())
         self.set_actual_day()
+        self.set_last_day()
         self.set_all_tests()
         self.set_unit_test_infos()
         self.add_histories()
@@ -661,7 +678,8 @@ class PerformQA(CreateView):
         context["history_dates"] = self.history_dates
         context['categories'] = set([x.test.category for x in self.unit_test_infos])
         context['current_day'] = self.actual_day+1
-
+        context["last_instance"] = self.unit_test_col.last_instance
+        context['last_day'] = self.last_day + 1
         ndays = len(self.unit_test_col.tests_object)
         if ndays > 1:
             context['days'] = range(1,ndays+1)
