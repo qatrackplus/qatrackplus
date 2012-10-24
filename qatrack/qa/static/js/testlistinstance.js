@@ -1,3 +1,15 @@
+var supress_initial_reload = true;
+var column_sort_keys = [
+	null,
+	"unit_test_collection__unit__name",
+	"unit_test_collection__frequency__nominal_interval",
+	"work_completed",
+	"completed_by__username",
+	"test_list__name",
+	null,
+	null
+];
+
 /**************************************************************************/
 //Initialize sortable/filterable test list table data types
 function init_test_list_instance_tables(){
@@ -7,41 +19,29 @@ function init_test_list_instance_tables(){
 			return;
 		}
 
+		//we are using datatables to keep track of the direction of the sort
+		//and also provide the sort images but the actual sorting
+		//is handled through page refreshes and django on the backend
 		var cols = [
-			null, //Action
-			null, //Unit
-			null, //Freq
-			null,  // Test list name
-			{"sType":"span-timestamp"}, //date completed
-			null,//completed by,
-			null,//progres
-			null //qa status
+			{"sType":"null-sort"},
+			{"sType":"null-sort"},
+			{"sType":"null-sort"},
+			{"sType":"null-sort"},
+			{"sType":"null-sort"},
+			{"sType":"null-sort"},
+			{"sType":"null-sort"},
+			{"sType":"null-sort"}
 		];
-
-		var	filter_cols = [
-				null, //action
-				{type: "select"}, //Unit
-				{type: "select"}, //Freq
-				{type: "text" }, // Test list name
-				{type: "text" }, //date completed
-				{type: "select" }, //completed by
-				{type: "text"},//progress
-				null //qa status
-			];
-
 
 		$(table).dataTable( {
 			sDom: "t",
-			bStateSave:false, //save filter/sort state between page loads
-			bFilter:true,
+			bStateSave:true, //save filter/sort state between page loads
 			bPaginate: false,
-			aaSorting:[[1,"desc"],[3,"desc"],[4,"desc"]],
+			aaSorting:[],//false,//[[1,"desc"],[3,"desc"],[4,"desc"]],
 			aoColumns: cols,
-			fnAdjustColumnSizing:false
+			fnAdjustColumnSizing:false,
+			fnDrawCallback: on_table_sort
 
-		}).columnFilter({
-			sPlaceHolder: "head:after",
-			aoColumns: filter_cols
 		});
 
 		$(table).find("select, input").addClass("input-small");
@@ -50,6 +50,44 @@ function init_test_list_instance_tables(){
 
 }
 
+function on_table_sort(){
+
+	if (supress_initial_reload){
+		supress_initial_reload = false;
+		return;
+	}
+
+	var sorts = this.fnSettings().aaSorting;
+	var qs = "?";
+	var refresh_required = false;
+
+	_.each(sorts,function(sort_info){
+
+		var col = sort_info[0];
+		var dir = sort_info[1];
+		var key = column_sort_keys[col];
+
+		var ordering;
+
+		if (!_.isNull(key)){
+
+			refresh_required = true;
+
+			if (dir === "desc"){
+				key = "-"+key;
+			}
+
+			qs += "order="+key+"&";
+		}
+	});
+
+	if (refresh_required){
+		var url = document.location.href.replace(document.location.search,"")+qs;
+		document.location.replace(url);
+	}
+
+
+}
 /**************************************************************************/
 $(document).ready(function(){
 	init_test_list_instance_tables();

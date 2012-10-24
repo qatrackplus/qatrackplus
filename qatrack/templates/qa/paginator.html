@@ -4,19 +4,19 @@
             <div class="pagination pull-right">
                 <ul>
                     {% if page_obj.has_previous %}
-                        <li><a href="?page={{ page_obj.previous_page_number }}">&lt;</a></li>
+                        <li><a href="?page={{ page_obj.previous_page_number }}&{{sorting_keys}}">&lt;</a></li>
                     {% else %}
                         <li class="disabled"><a>&lt;</a></li>
                     {% endif %}
 
                     {% for page_num in paginator.page_range %}
                         <li class="{%if page_num = page_obj.number%}active{%endif%}">
-                            <a href="?page={{ page_num }}">{{page_num}}</a></li>
+                            <a href="?page={{ page_num }}&{{sorting_keys}}">{{page_num}}</a></li>
                         </li>
                     {% endfor %}
 
                     {% if page_obj.has_next %}
-                        <li><a href="?page={{ page_obj.next_page_number }}">&gt;</a></li>
+                        <li><a href="?page={{ page_obj.next_page_number }}&{{sorting_keys}}">&gt;</a></li>
                     {% else %}
                         <li class="disabled"><a>&gt;</a></li>
                     {% endif %}

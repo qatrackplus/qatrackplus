@@ -1055,9 +1055,18 @@ class TestListInstances(ListView):
     context_object_name = "test_list_instances"
     paginate_by = settings.PAGINATE_DEFAULT
     queryset = models.TestListInstance.objects.all
+
+    allowed_orderings = [
+        "test_list__name",
+        "testinstance__status",
+        "unit_test_collection__unit__name",
+        "unit_test_collection__frequency__nominal_interval",
+        "created_by__username","modified_by__username",
+        "work_completed","work_started"
+    ]
     #----------------------------------------------------------------------
     def get_queryset(self):
-        return self.fetch_related(self.queryset())
+        return self.set_ordering(self.fetch_related(self.queryset()))
     #----------------------------------------------------------------------
     def fetch_related(self,qs):
         qs = qs.select_related(
@@ -1076,7 +1085,21 @@ class TestListInstances(ListView):
     def get_context_data(self,*args,**kwargs):
         context = super(TestListInstances,self).get_context_data(*args,**kwargs)
         context["page_title"] = self.get_page_title()
+        context["sorting_keys"] = "&".join(["order=%s"%s for s in self.request.GET.getlist("order")])
         return context
+    #----------------------------------------------------------------------
+    def get_paginator(self,*args,**kwargs):
+        """set pagination ordering based on url parameters"""
+        paginator = super(TestListInstances,self).get_paginator(*args,**kwargs)
+        paginator.object_list = paginator.object_list.order_by(*self.get_orderings())
+        return paginator
+    #----------------------------------------------------------------------
+    def get_orderings(self):
+        """return list of ordering strings based on url parameters"""
+        request_orders = self.request.GET.getlist("order")
+        allowed_ordering = [x for x in request_orders if x.strip("-") in self.allowed_orderings]
+        return allowed_ordering
+
 #====================================================================================
 class UTCInstances(TestListInstances):
 

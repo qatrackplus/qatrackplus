@@ -138,3 +138,10 @@ jQuery.fn.dataTableExt.oSort['span-timestamp-desc'] = function(a,b) {
 
     return ((a < b) ? 1 : ((a > b) ?  -1 : 0));
 };
+
+jQuery.fn.dataTableExt.oSort['null-sort-asc'] = function(a,b) {
+    return 0;
+};
+jQuery.fn.dataTableExt.oSort['null-sort-desc'] = function(a,b) {
+    return 0;
+};
