@@ -840,7 +840,7 @@ def find_assigned_unit_test_collections(collection):
         utcs = UnitTestCollection.objects.filter(
             object_id__in= [x.pk for x in objects],
             content_type = ct,
-        ).select_related("unit","assinged_to")
+        ).select_related("unit","assigned_to")
         assigned_utcs.extend(utcs)
     return assigned_utcs
 
