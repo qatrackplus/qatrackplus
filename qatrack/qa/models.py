@@ -1163,6 +1163,12 @@ def update_last_instances(test_list_instance):
         ).latest("work_completed")
     except TestListInstance.DoesNotExist:
         last_instance = None
+    except UnitTestCollection.DoesNotExist:
+        #this will occur when a UnitTestCollection deletion cascades and
+        #deletes all test_list_instances associated with it.
+        #in that case it doesn't make sense to try to update anything
+        return
+
 
     cycle_ids = TestListCycle.objects.filter(
         test_lists = test_list_instance.test_list
