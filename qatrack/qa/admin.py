@@ -193,17 +193,17 @@ class TestListAdminForm(forms.ModelForm):
         return sublists
 
 #============================================================================
-class TestInlineFormSet(forms.models.BaseInlineFormSet):
+class TestListMembershipInlineFormSet(forms.models.BaseInlineFormSet):
     #---------------------------------------------------------------------------
     def __init__(self,*args,**kwargs):
         qs = kwargs["queryset"].filter(test_list=kwargs["instance"]).select_related("test")
         kwargs["queryset"] = qs
-        super(TestInlineFormSet,self).__init__(*args,**kwargs)
+        super(TestListMembershipInlineFormSet,self).__init__(*args,**kwargs)
 
     #----------------------------------------------------------------------
     def clean(self):
         """Make sure there are no duplicated slugs in a TestList"""
-        super(TestInlineFormSet,self).clean()
+        super(TestListMembershipInlineFormSet,self).clean()
 
         if not hasattr(self,"cleaned_data"):
             #something else went wrong already
@@ -225,11 +225,29 @@ def test_name(obj):
 #----------------------------------------------------------------------
 def macro_name(obj):
     return obj.test.slug
+
+#============================================================================
+class TestListMembershipForm(forms.ModelForm):
+
+    model = models.TestListMembership
+
+    #----------------------------------------------------------------------
+    def validate_unique(self):
+        """skip unique validation.
+
+        The uniqueness of ('test_list','test',) is already independently checked
+        by the formset (looks for duplicate macro names).
+
+        By making validate_unique here a null function, we eliminate a DB call
+        per test list membership when saving test lists in the admin.
+        """
+
 #============================================================================
 class TestListMembershipInline(admin.TabularInline):
     """"""
     model = models.TestListMembership
-    formset = TestInlineFormSet
+    formset = TestListMembershipInlineFormSet
+    form = TestListMembershipForm
     extra = 5
     template = "admin/qa/testlistmembership/edit_inline/tabular.html"
     readonly_fields = (macro_name,)
