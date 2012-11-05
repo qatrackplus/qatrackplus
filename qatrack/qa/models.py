@@ -149,7 +149,8 @@ class TestInstanceStatus(models.Model):
     )
 
     description = models.TextField(
-        help_text=_("Give a brief description of what type of test results should be given this status")
+        help_text=_("Give a brief description of what type of test results should be given this status"),
+        null=True,blank=True
     )
 
 
