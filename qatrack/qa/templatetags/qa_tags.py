@@ -55,10 +55,10 @@ def history_display(history,test):
 
 #----------------------------------------------------------------------
 @register.filter
-def as_pass_fail_status(test_list_instance):
+def as_pass_fail_status(test_list_instance,show_label=True):
     template = get_template("qa/pass_fail_status.html")
     statuses_to_exclude = [models.NO_TOL]
-    c = Context({"instance":test_list_instance,"exclude":statuses_to_exclude})
+    c = Context({"instance":test_list_instance,"exclude":statuses_to_exclude,"show_label":show_label})
     return template.render(c)
 
 #----------------------------------------------------------------------
