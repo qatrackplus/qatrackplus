@@ -113,7 +113,7 @@
                                     <option value="" selected="selected">---</option>
 
                                     {% for status in statuses %}
-                                        <option value="{{status.pk}}">{{status.name}}</option>
+                                        <option title="{% if status.description %}{{status.description}}{% else %}No description available{%endif%}" value="{{status.pk}}">{{status.name}}</option>
                                     {% endfor %}
                                 </select><span id="apply-status" class="btn add-on" title="Click to apply this status to all selected tests"><i class="icon-ok"></i></span>
                                 </div>
@@ -149,7 +149,7 @@
                                 <td class="review-status">
                                     <select name="testinstance_set-{{forloop.counter0}}-status" id="id_testinstance_set-{{forloop.counter0}}-status" class="input-medium">
                                         {% for status in statuses %}
-                                            <option value="{{status.pk}}" {% if ti.status = status %}selected="selected"{% endif %}>{{status.name}}</option>
+                                            <option title="{% if status.description %}{{status.description}}{% else %}No description available{%endif%}" value="{{status.pk}}" {% if ti.status = status %}selected="selected"{% endif %}>{{status.name}}</option>
                                         {% endfor %}
                                     </select>
                                 </td>
