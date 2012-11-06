@@ -50,12 +50,20 @@
                 </a>
 
                 <ul class="dropdown-menu">
-					{% comment %}
 					<li class="nav-header">QA Program Status</li>
-					<li><a href="#" title="View a summary of the status of the QA program">View Overall QA Program Status</a></li>#}
-
+					<li>
+						<a href="{% url overview %}" title="View a summary of the status of the QA program">
+							<i class="icon-globe"></i>
+							Overview
+						</a>
+					</li>
+					<li>
+						<a href="{% url overview_due_dates %}" title="View a summary of the status of the QA program">
+							<i class="icon-globe"></i>
+							By Due Status
+						</a>
+					</li>
 					<li class="divider"></li>
-					{% endcomment %}
 
 					{% if perms.qa.can_review %}
 					<li class="nav-header">QA Sessions</li>

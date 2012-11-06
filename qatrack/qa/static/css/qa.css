@@ -359,3 +359,66 @@ option.unreviewed {
 .header-spacer {
     margin-bottom:5px;
 }
+
+/* overall qa status */
+
+.due-status-container {
+    margin-right:20px;
+}
+.due-status-lists {
+    overflow-y:auto;
+    max-height:180px;
+}
+.due-status-container hr{
+    margin:2px 0;
+}
+
+
+
+/* overviewtrack view */
+.overview-freq-container{
+    float: left;
+    padding-bottom:3px;
+    margin-bottom:3px;
+}
+.overview-utc-container {
+    float: left;
+    padding-bottom:3px;
+    width:100%;
+}
+.overview-unit-container .alert{
+    margin-top: 15px;
+    margin-bottom:5px;
+    padding:0;
+    padding-left:5px;
+
+
+}
+h3.overview-unit-title{
+    background-color: #3A87AD;
+}
+.overview-unit-container hr {
+    margin: 3px 0;
+}
+.overview-unit-container h3 {
+    line-height:24px;
+}
+.overview-freq-container {
+    padding:5px;
+}
+.overview-test-list-name{
+    float:left;
+    min-height:1px;
+}
+
+.overview-test-list-date{
+    text-align:right;
+    width:85px;
+    min-height:1px;
+}
+.overview-test-list-pass-fail{
+    text-align:right;
+    width:125px;
+    min-height:1px;
+}
+

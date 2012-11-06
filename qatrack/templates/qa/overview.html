@@ -1,0 +1,93 @@
+{% extends "site_base.html" %}
+{% load staticfiles %}
+{% load qa_tags %}
+
+{% block head_title %}QA Program Overview{% endblock %}
+
+{% block body %}
+    <div class="row-fluid">
+        <div class="span12">
+            <h1>QA Program Overview</h1>
+			<p>
+				<em>Overview of current QA status on all units</em>
+			</p>
+			<p>
+				Jump to: {%for unit,_ in unit_lists%}<a href="#U{{unit.number}}">{{unit.name}}</a>{%if not forloop.last%} {%endif%}{%endfor%}
+			</p>
+        </div>
+    </div>
+	{% for unit, freq_utcs in unit_lists %}
+		<div class="row-fluid">
+
+			<div class="span12 overview-unit-container">
+				<a style="visibility:hidden" id="U{{unit.number}}">&nbsp;</a>
+				<div class="alert alert-info">
+					<h3>{{unit.name}}</h3>
+				</div>
+
+				{% for freq, utcs in freq_utcs %}
+					{% if forloop.counter0|divisibleby:"3" or forloop.counter0 = 0 %}
+					<div class="row-fluid">
+					{% endif %}
+
+						<div class="span4">
+							<div class="well overview-freq-container">
+
+								<h4>{{freq.name}}</h4>
+								<div class="overview-utc-container">
+									<div class="overview-test-list-name pull-left">
+										<h5>Test List</h5>
+									</div>
+									<div class="overview-test-list-pass-fail pull-right">
+										<h5>Last QA Status</h5>
+									</div>
+
+									<div class="overview-test-list-date pull-right" >
+										<h5>Due Date</h5>
+									</div>
+								</div>
+								{% for utc in utcs %}
+									<div class="overview-utc-container">
+										<div class="overview-test-list-name pull-left">
+											<a href="{%url review_utc utc.pk %}" title="View history of {{utc.tests_object.name}} for {{unit.name}}">{{utc.tests_object.name|truncatechars:25}}</a>
+										</div>
+										<div class="overview-test-list-pass-fail pull-right">
+											{% if utc.last_instance%}
+												{{utc.last_instance|as_pass_fail_status:0}}
+											{% else %}
+												&nbsp;
+											{% endif %}
+										</div>
+										<div class="overview-test-list-date pull-right" {% if utc.last_instance %}title="Last completed on {{utc.last_instance.work_completed}} by {{utc.last_instance.created_by}}"{%endif%}>
+											{{utc|as_due_date}}
+										</div>
+									</div>
+								{% empty %}
+									<div class="overview-test-list-name pull-left">
+										<em>No Test Lists</em>
+									</div>
+									<div class="overview-test-list-pass-fail pull-right">
+
+									</div>
+
+									<div class="overview-test-list-date pull-right" >
+
+									</div>
+								{% endfor %}
+							</div>
+						</div>
+					{% if forloop.counter|divisibleby:"3" or forloop.last %}
+					</div>
+					{% endif %}
+				{% endfor %}
+
+			</div>
+		</div>
+
+	{% endfor %}
+
+{% endblock %}
+
+{% block end_body_extra_script %}
+
+{% endblock %}
