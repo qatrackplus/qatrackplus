@@ -1,11 +1,11 @@
 {% load qa_tags %}
 {% for hist in history %}
-	{% if hist.work_completed and hist.pass_fail != "not_done" %}
+    {% if hist.work_completed and hist.pass_fail != "not_done" %}
 
-		<span class="label {{hist.pass_fail}} history-value" title="Diff from ref={% if hist.diff %}{{hist.diff}}{%else%}N/A{%endif%};  {{hist.created_by}} on {{hist.work_completed}}; {{hist.status}}">
-				{{hist.value}}
-		</span>
-	{% else %}
-		<span class="label history-value" title="N/A">N/A</span>
-	{% endif %}
+        <span class="label {{hist.pass_fail}} history-value" title="Diff from ref={% if hist.diff %}{{hist.diff}}{%else%}N/A{%endif%};  {{hist.created_by}} on {{hist.work_completed}}; {{hist.status}}">
+                {{hist.value}}
+        </span>
+    {% else %}
+        <span class="label history-value" title="N/A">N/A</span>
+    {% endif %}
 {% endfor %}

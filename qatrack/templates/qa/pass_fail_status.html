@@ -1,5 +1,5 @@
 {% for status,display,tests in instance.pass_fail_status %}
-	{% if tests and status not in exclude%}
-	<span class="{%if show_label%}label{%else%}badge{%endif%} {{status}}" title="{{tests|length}} {{display}}">{{tests|length}}{%if show_label%} {{display}}{%endif%}</span>
-	{% endif %}
+    {% if tests and status not in exclude%}
+    <span class="{%if show_label%}label{%else%}badge{%endif%} {{status}}" title="{{tests|length}} {{display}}">{{tests|length}}{%if show_label%} {{display}}{%endif%}</span>
+    {% endif %}
 {% endfor %}

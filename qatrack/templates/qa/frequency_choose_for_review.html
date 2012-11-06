@@ -10,21 +10,21 @@
     </div>
 </div>
 <div class="row-fluid">
-	<div class="span12">
-		<em>Choose a frequency below to review test lists</em>
-	</div>
+    <div class="span12">
+        <em>Choose a frequency below to review test lists</em>
+    </div>
 </div>
 <div class="row-fluid row-spacer">
-	<div class="span12">
-		<ul>
-			{% for freq in frequencies %}
-				<li>
-					<a href="{% url review_by_frequency frequency=freq.slug %}">{{freq.name}}</a>
-				</li>
-			{% endfor %}
-		</ul>
+    <div class="span12">
+        <ul>
+            {% for freq in frequencies %}
+                <li>
+                    <a href="{% url review_by_frequency frequency=freq.slug %}">{{freq.name}}</a>
+                </li>
+            {% endfor %}
+        </ul>
 
-	</div>
+    </div>
 </div>
 
 {% endblock %}
