@@ -45,6 +45,8 @@ class TestURLS(TestCase):
             ("export_data",{}),
             ("chart_data",{}),
             ("control_chart",{}),
+            ("overview",{}),
+            ("overview_due_dates",{}),
             ("review_all",{}),
             ("review_utc",{"pk":"1"}),
             ("choose_review_frequency",{}),
