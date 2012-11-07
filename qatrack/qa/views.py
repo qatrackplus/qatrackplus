@@ -1216,7 +1216,8 @@ class DueDateOverview(TemplateView):
                 elif due_date == today:
                     due["today"].append(utc)
                 elif due_date <= friday:
-                    due["this_week"].append(utc)
+                    if utc.last_instance.work_completed.date() != today:
+                        due["this_week"].append(utc)
                 elif due_date <= next_friday:
                     due["next_week"].append(utc)
                 elif due_date <= month_end:
