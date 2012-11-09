@@ -6,7 +6,9 @@ $(document).ready(function(){
 		$(this).closest("table").find("input.test-selected").attr("checked",$(this).is(":checked"))
 	});
 
-
+	$("#bulk-status").live('change',function(){
+		$("#bulk-status").attr("title",$("#bulk-status :selected").attr("title") || "Choose a status");
+	});
 	$("#apply-status").live("click",function(){
 		var val = $("#bulk-status").val();
 		if (val !== ""){

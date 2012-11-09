@@ -1,5 +1,6 @@
 import collections
 import json
+import calendar
 from api import ValueResource
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
@@ -1156,3 +1157,132 @@ class ExportToCSV(View):
         response = ValueResource().get_list(request)
         response["Content-Disposition"] = 'attachment; filename=exported_data.csv'
         return response
+
+
+#============================================================================
+class DueDateOverview(TemplateView):
+    """Overall status of the QA Program"""
+    template_name = "qa/overview_by_due_date.html"
+    #----------------------------------------------------------------------
+    def get_queryset(self):
+
+        qs = models.UnitTestCollection.objects.filter(
+            active=True,
+            visible_to__in = self.request.user.groups.all(),
+        ).select_related(
+            "last_instance__work_completed",
+            "last_instance__created_by",
+            "frequency",
+            "unit__name",
+            "assigned_to__name",
+        ).prefetch_related(
+            "last_instance__testinstance_set",
+            "last_instance__testinstance_set__status",
+            "last_instance__modified_by",
+            "tests_object",
+        ).order_by("frequency__nominal_interval","unit__number","testlist__name","testlistcycle__name",)
+
+        return qs.distinct()
+
+    #----------------------------------------------------------------------
+    def get_context_data(self):
+        context = super(DueDateOverview,self).get_context_data()
+        qs = self.get_queryset()
+        now = timezone.localtime(timezone.datetime.now())
+
+        today = now.date()
+        friday = today + timezone.timedelta(days=(4-today.weekday()) % 7 )
+        next_friday = friday + timezone.timedelta(days=7)
+        month_end = timezone.datetime(now.year, now.month, calendar.mdays[now.month]).date()
+        next_month_start = month_end + timezone.timedelta(days=1)
+        next_month_end = timezone.datetime(next_month_start.year, next_month_start.month, calendar.mdays[next_month_start.month]).date()
+
+        due = collections.defaultdict(list)
+        due_display_order = (
+            ("overdue","Overdue"),
+            ("today","Due Today"),
+            ("this_week","Due This Week"),
+            ("next_week","Due Next Week"),
+            ("this_month","Due This Month"),
+            ("next_month","Due Next Month"),
+            #("later","Later"),
+        )
+
+        for utc in qs:
+            if utc.last_instance:
+                due_date = utc.due_date().date()
+                if  due_date <= today:
+                    due["overdue"].append(utc)
+                elif due_date == today:
+                    due["today"].append(utc)
+                elif due_date <= friday:
+                    if utc.last_instance.work_completed.date() != today:
+                        due["this_week"].append(utc)
+                elif due_date <= next_friday:
+                    due["next_week"].append(utc)
+                elif due_date <= month_end:
+                    due["this_month"].append(utc)
+                elif due_date <= next_month_end:
+                    due["next_month"].append(utc)
+                else:
+                    due["later"].append(utc)
+            else:
+                due["new"].append(utc)
+
+        ordered_due_lists = []
+        for key,display in due_display_order:
+            ordered_due_lists.append((display,due[key]))
+        context["due"] = ordered_due_lists
+        return context
+
+#============================================================================
+class Overview(TemplateView):
+    """Overall status of the QA Program"""
+    template_name = "qa/overview.html"
+    #----------------------------------------------------------------------
+    def get_queryset(self):
+
+        qs = models.UnitTestCollection.objects.filter(
+            active=True,
+            visible_to__in = self.request.user.groups.all(),
+        ).select_related(
+            "last_instance__work_completed",
+            "last_instance__created_by",
+            "frequency",
+            "unit__name",
+            "assigned_to__name",
+        ).prefetch_related(
+            "last_instance__testinstance_set",
+            "last_instance__testinstance_set__status",
+            "last_instance__modified_by",
+            "tests_object",
+        ).order_by("frequency__nominal_interval","unit__number","testlist__name","testlistcycle__name",)
+
+        return qs.distinct()
+
+    #----------------------------------------------------------------------
+    def get_context_data(self):
+        context = super(Overview,self).get_context_data()
+        qs = self.get_queryset()
+        now = timezone.localtime(timezone.datetime.now())
+
+        today = now.date()
+        friday = today + timezone.timedelta(days=(4-today.weekday()) % 7 )
+        next_friday = friday + timezone.timedelta(days=7)
+        month_end = timezone.datetime(now.year, now.month, calendar.mdays[now.month]).date()
+        next_month_start = month_end + timezone.timedelta(days=1)
+        next_month_end = timezone.datetime(next_month_start.year, next_month_start.month, calendar.mdays[next_month_start.month]).date()
+
+        units = Unit.objects.order_by("number")
+        frequencies = models.Frequency.objects.order_by("nominal_interval")
+
+        due = collections.defaultdict(list)
+        unit_lists = []
+
+        for unit in units:
+            unit_lists.append((unit,[]))
+            for freq in frequencies:
+                unit_lists[-1][-1].append((freq,[utc for utc in qs if utc.frequency == freq and utc.unit == unit]))
+
+        context["unit_lists"] = unit_lists
+        return context

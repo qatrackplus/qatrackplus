@@ -199,8 +199,6 @@ INSTALLED_APPS = [
     'django_coverage',
     'debug_toolbar',
 
-    'salmonella',
-
     'qatrack.accounts',
     'qatrack.units',
     'qatrack.qa',
@@ -208,6 +206,9 @@ INSTALLED_APPS = [
     'qatrack.data_tables',
     'qatrack.notifications',
     'qatrack.contacts',
+
+    'south',
+
 ]
 #-----------------------------------------------------------------------------
 #Session Settings

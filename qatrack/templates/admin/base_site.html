@@ -18,14 +18,14 @@ django.jQuery(function(){
 
   django.jQuery("form").submit(function() {
 
-		if (this.beenSubmitted){
-		  return false;
-		}else{
-		  django.jQuery(this).find("input[type=submit]").val("Submitting...");
-		  this.beenSubmitted = true;		  
-		}
-	  });
-	  
+        if (this.beenSubmitted){
+          return false;
+        }else{
+          django.jQuery(this).find("input[type=submit]").val("Submitting...");
+          this.beenSubmitted = true;
+        }
+      });
+
 });
 
 </script>

@@ -9,24 +9,24 @@
                 <span class="alert-error">{{field.label}}:{{ error }}</span>
             {% endfor %}
             </td>
-			{% if include_history and include_ref_tols %}
-	            <td colspan="5">&nbsp;</td>
-			{% elif include_history or include_ref_tols %}
-	            <td colspan="4">&nbsp;</td>
-			{% else %}
-	            <td colspan="3">&nbsp;</td>
-			{% endif %}
+            {% if include_history and include_ref_tols %}
+                <td colspan="5">&nbsp;</td>
+            {% elif include_history or include_ref_tols %}
+                <td colspan="4">&nbsp;</td>
+            {% else %}
+                <td colspan="3">&nbsp;</td>
+            {% endif %}
         </tr>
     {% endif %}
 {% endfor %}
 <tr class="control-group qa-valuerow">
-	{% for hidden in form.hidden_fields %}
-	    {{ hidden }}
+    {% for hidden in form.hidden_fields %}
+        {{ hidden }}
     {% endfor %}
 
     {% with ref=test_info.reference  tol=test_info.tolerance  test=test_info.test uti=test_info.unit_test_info %}
 
-		{# Hidden inputs required for checking pass/fail status #}
+        {# Hidden inputs required for checking pass/fail status #}
         <input type="hidden" class="qa-reference-val" value="{{ref.value}}"/>
         <input type="hidden" class="qa-tolerance act_low" value="{{tol.act_low}}"/>
         <input type="hidden" class="qa-tolerance tol_low" value="{{tol.tol_low}}"/>
@@ -36,40 +36,40 @@
         <input type="hidden" class="qa-tolerance mc_tol_choices" value="{{tol.mc_tol_choices}}"/>
 
         <input type="hidden" class="qa-tolerance-type" value="{{tol.type}}"/>
-		<input type="hidden" class="qa-contextname" value="{{test.slug}}"/>
-		<input type="hidden" class="qa-test-id" value="{{test.pk}}"/>
-		<input type="hidden" class="qa-testtype" value="{{test.type}}"/>
+        <input type="hidden" class="qa-contextname" value="{{test.slug}}"/>
+        <input type="hidden" class="qa-test-id" value="{{test.pk}}"/>
+        <input type="hidden" class="qa-testtype" value="{{test.type}}"/>
 
-		<td class="qa-category">{{test.category.name|title}}</td>
-		<td class="qa-name qa-showproc"><a href="#" class="revealprocedure" title="Show/hide procedure for this test">{{test.name}}</a></td>
-		<td class="qa-value" width=100 title="{{form.value.help_text|safe}}">
-			{% if test.is_boolean %}
-				<span class="pull-left">{{form.value.0}}</span>
-				<span class="pull-right">{{form.value.1}}</span>
-			{% else %}
-				 <span class="">{{form.value}}</span>
-			{% endif %}
-		</td>
+        <td class="qa-category">{{test.category.name|title}}</td>
+        <td class="qa-name qa-showproc"><a href="#" class="revealprocedure" title="Show/hide procedure for this test">{{test.name}}</a></td>
+        <td class="qa-value" width=100 title="{{form.value.help_text|safe}}">
+            {% if test.is_boolean %}
+                <span class="pull-left">{{form.value.0}}</span>
+                <span class="pull-right">{{form.value.1}}</span>
+            {% else %}
+                 <span class="">{{form.value}}</span>
+            {% endif %}
+        </td>
 
 
         <td class="qa-skip" title="{{form.skipped.help_text|safe}}">{{form.skipped}}</td>
         <td class="qa-status">Not Done</td>
         <td class="qa-showcmt"><a href="#" class="revealcomment" title="Add comment for this test"><i class="icon-comment"></i></a></td>
 
-		{% if include_ref_tols or include_history%}
-			{% if include_ref_tols %}
-				<td class="qa-reference">
-					{% reference_tolerance_span test ref tol %}
-				</td>
-			{% endif %}
-			{% if include_history %}
-				<td class="qa-history">
-					{{uti.history|history_display:test}}
-					<a title="View chart of this data" target="_blank" href="{% url charts %}#units={{uti.unit.pk}}&tests={{uti.test.pk}}"><i class="icon-picture"></i></a>
-				</td>
-			{% endif %}
-		{% else %}
-			<td></td>
+        {% if include_ref_tols or include_history%}
+            {% if include_ref_tols %}
+                <td class="qa-reference">
+                    {% reference_tolerance_span test ref tol %}
+                </td>
+            {% endif %}
+            {% if include_history %}
+                <td class="qa-history">
+                    {{uti.history|history_display:test}}
+                    <a title="View chart of this data" target="_blank" href="{% url charts %}#units={{uti.unit.pk}}&tests={{uti.test.pk}}"><i class="icon-picture"></i></a>
+                </td>
+            {% endif %}
+        {% else %}
+            <td></td>
         {% endif %}
 
 
@@ -84,30 +84,30 @@
 </tr>
 <tr class="qa-procedure">
     <td colspan="8"  class="" >
-		<table>
-			{% if form.unit_test_info.test.procedure %}
-			<tr>
-				<td>
-					<label class="label">Detailed procedure link:</label>					<a href="{{form.unit_test_info.test.procedure}}" class="revealprocedure" title="Show detailed procedure for this test" target="_blank">{{form.unit_test_info.test.name}}</a>
-				</td>
-			</tr>
-			{% endif %}
-			<tr>
-				<td>
-					<div class="qa-procedure-text">
-						{% spaceless %}
-						{% if not form.unit_test_info.test.description %}
-							<pre>
-								<em>No procedure available</em>
-							</pre>
-						{%else %}
-							<pre>{{form.unit_test_info.test.description.strip|safe}}</pre>
-						{% endif %}
-						{% endspaceless%}
-					</div>
-				</td>
-			</tr>
-		</table>
-	</td>
+        <table>
+            {% if form.unit_test_info.test.procedure %}
+            <tr>
+                <td>
+                    <label class="label">Detailed procedure link:</label>                    <a href="{{form.unit_test_info.test.procedure}}" class="revealprocedure" title="Show detailed procedure for this test" target="_blank">{{form.unit_test_info.test.name}}</a>
+                </td>
+            </tr>
+            {% endif %}
+            <tr>
+                <td>
+                    <div class="qa-procedure-text">
+                        {% spaceless %}
+                        {% if not form.unit_test_info.test.description %}
+                            <pre>
+                                <em>No procedure available</em>
+                            </pre>
+                        {%else %}
+                            <pre>{{form.unit_test_info.test.description.strip|safe}}</pre>
+                        {% endif %}
+                        {% endspaceless%}
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </td>
 </tr>
 

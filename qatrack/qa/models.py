@@ -148,6 +148,12 @@ class TestInstanceStatus(models.Model):
         help_text=_("Unique identifier made of lowercase characters and underscores for this status")
     )
 
+    description = models.TextField(
+        help_text=_("Give a brief description of what type of test results should be given this status"),
+        null=True,blank=True
+    )
+
+
     is_default = models.BooleanField(
         default=False,
         help_text=_("Check to make this status the default for new Test Instances")
