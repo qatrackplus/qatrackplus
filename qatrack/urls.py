@@ -7,8 +7,7 @@ admin.autodiscover()
 import settings
 
 urlpatterns = patterns('',
-    url(r'^admin/salmonella/', include('salmonella.urls')),
-    
+
     url(r'^$', direct_to_template, {
         'template': "homepage.html",
         'extra_context': {},
