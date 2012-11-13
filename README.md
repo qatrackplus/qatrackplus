@@ -33,7 +33,7 @@ local institution policies.
 
 ## Documentation & Release Notes
 
-The latest version is 0.2.4 Please review the *need review notes link* before
+The latest version is 0.2.4 Please review the [release_notes](https://bitbucket.org/randlet/qatrack/src/master/release_notes.md) before
 installing or upgrading.
 
 The [documentation can be found
