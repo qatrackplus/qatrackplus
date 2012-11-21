@@ -31,6 +31,8 @@ performed as part of investigative work, or as part of routine QC testing.
 departments. Can optionally be managed within a physics department if permitted by
 local institution policies.
 
+---
+
 ## Documentation & Release Notes
 
 The latest version is 0.2.4 Please review the [release_notes](https://bitbucket.org/randlet/qatrack/src/master/release_notes.md) before
@@ -40,6 +42,8 @@ The [documentation can be found
 online](https://bitbucket.org/randlet/qatrack/wiki/Home) and is where you
 should start if you
 are interested in installing or helping develop QATrack+.
+
+---
 
 ## Important notes regarding 3rd party code in QATrack+
 
