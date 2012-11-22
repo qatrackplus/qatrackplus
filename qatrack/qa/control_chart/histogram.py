@@ -11,7 +11,7 @@ def binwidth(x, maxBins = None):
 
     minBins = 1         # must be not be zero!
     if maxBins is None:
-        maxBins = 200   # must be larger than minBins
+        maxBins = 50   # must be larger than minBins
 
     span = np.max(x) - np.min(x)
 
