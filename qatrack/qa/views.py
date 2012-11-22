@@ -313,6 +313,7 @@ class ControlChartImage(BaseChartView):
                     data.append(v)
 
         n_baseline_subgroups = self.get_number_from_request("n_baseline_subgroups",2,dtype=int)
+        n_baseline_subgroups = max(2,n_baseline_subgroups)
 
         subgroup_size = self.get_number_from_request("subgroup_size",2,dtype=int)
         if subgroup_size <1 or subgroup_size >100:
