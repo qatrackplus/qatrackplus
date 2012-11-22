@@ -1,8 +1,10 @@
+import warnings
+warnings.filterwarnings("error")
 import numpy
 #from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 #from matplotlib.figure import Figure
 import matplotlib
-#matplotlib.use("agg")
+matplotlib.use("agg")
 from qatrack.qa.control_chart import control_chart
 from matplotlib import pyplot
 
@@ -11,14 +13,15 @@ ok_data = [1.999, 1.994, 1.99, 1.987, 1.988, 1.988, 1.99, 1.987, 1.985, 2.001, 2
 sim_data =  numpy.random.normal(6, 3, 1000)
 #sim_data = [x for x in sim_data if x >=0]
 
-data = sim_data
-n_subgroups = 1
+data = ok_data#sim_data
+n_subgroups = 2
 subgroup_size = 1
-include_fit = True
+include_fit = False#True
 
 fig=pyplot.figure()
 
 control_chart.display(fig, numpy.array(data), subgroup_size, n_subgroups, fit = include_fit)
+pyplot.savefig("test.png")
 pyplot.interactive(True)
 pyplot.show()
 print fig

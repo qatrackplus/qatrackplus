@@ -92,7 +92,7 @@ def generate_fit(x,axes,freq, bins, binwidth):
     norm, fitmean, fitsigma = optParam
     paramUnc = np.zeros(len(optParam))
     for i in np.arange(0, len(optParam)):
-        paramUnc[i] = np.sqrt(cov[i,1])
+        paramUnc[i] = np.sqrt(abs(cov[i,1]))
     xdata = np.linspace(fitmean-fitsigma*10, fitmean+fitsigma*10, 500)
     ydata = lsqfit.gauss_pdf(xdata, norm, fitmean, fitsigma)
     axes.plot(ydata, xdata, GAUSSFORMAT, label=LBL_GAUSS, lw=LINEWIDTH)
@@ -195,13 +195,14 @@ def display(fig, x, sgSize, baseline, dates = None, fit = None):
 def get_bins(x):
     binwidth = htg.binwidth(x)
     xAbsMax = np.max( np.fabs(x) )
-
+    xMin = np.min(x)
     lim = ( int(xAbsMax / binwidth) + 1) * binwidth
 
-    bins = np.arange( - lim, lim + binwidth, binwidth)
+    #bins = np.arange( - lim, lim + binwidth, binwidth)
+    bins = np.arange(xMin,lim+binwidth,binwidth)
     if len(bins)<NBIN_THRESH:
         binwidth = 2.*lim/NBIN_THRESH
-        bins = np.arange( - lim, lim + binwidth, binwidth)
+        bins = np.arange( xMin, lim + binwidth, binwidth)
 
     return bins, binwidth
 
