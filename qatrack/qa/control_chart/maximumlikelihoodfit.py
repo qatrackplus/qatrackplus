@@ -4,10 +4,11 @@
 import numpy as np
 import scipy.special as sps
 
+MAX_NEWTON_ITERATIONS = 1000
 
 def gauss_fit(data, binwidth=None):
-    """ 
-    Fits a Gaussian pdf to a set of independent values (data) using 
+    """
+    Fits a Gaussian pdf to a set of independent values (data) using
     maximum likelihood estimators. If fitting to a histogram, the
     resulting fit can be normalized if the binwidth is also supplied.
     """
@@ -19,7 +20,7 @@ def gauss_fit(data, binwidth=None):
     std  = np.std(data)
 
     optParam = norm, mean, std
-    
+
     return optParam
 
 
@@ -38,6 +39,7 @@ def gamma_fit(data, binwidth):
 
     # In general, k can be approxmated to within 1.5% as
     s = np.log(np.mean(data)) - np.mean(np.log(data))
+
     kguess = (3. - s + np.sqrt((s-3)**2 + 24*s)) / (12*s)
     # k = kguess  # "accurate to within 1.5%" according to wikipedia.org
 
@@ -45,11 +47,11 @@ def gamma_fit(data, binwidth):
     # Scipy.special has the digamma (psi) and its derivative (polygamma)
     # required for this.
     k = k_param(kguess, s)
-    
+
     theta = np.mean(data)/k
 
     optParam = norm, k, theta
-    
+
     return optParam
 
 
@@ -64,13 +66,18 @@ def k_param(kguess, s):
     """
     k = kguess
     val = np.log(k) - sps.psi(k) - s
+    counter = 0
     while np.abs(val) >= 0.0001:
         k = k - (np.log(k)-sps.psi(k)-s)/(1/k-sps.polygamma(1,k))
         val = np.log(k) - sps.psi(k) - s
+        counter += 1
+
+        if counter > MAX_NEWTON_ITERATIONS:
+            raise Exception("Max Newton's method iterations exceeded")
         # sps.polygamma(1,k) is first derivative of sps.psi(k)
     return k
 
-    
+
 def gamma_pdf(x, norm, k, theta):
     """
     This method calculates the Gamma probability density function
