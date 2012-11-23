@@ -15,9 +15,9 @@ from matplotlib.font_manager import FontProperties
 
 # Spacing:
 WSPACE  = 0.05   # horizontal space between plots
-HSPACE  = 0.15   # vertical space between plots
+HSPACE  = 0.20   # vertical space between plots
 DATA_HSPACE = 0.05 # space following data; frac of # of subgroups (aesthetics)
-DATA_TSPACE = 0.10 # space above data to leave room for string.
+DATA_TSPACE = 0.2 # space above data to leave room for string.
 
 LMARGIN = 0.1    #
 RMARGIN = 0.95   #   definition of outer
@@ -26,8 +26,8 @@ TMARGIN = 0.9    #
 
 HEADERX = 0.1    # x position of header
 HEADERY = 0.93   # y position of header
-STRING_XPOS = 0.05 # relative position of control chart string in x direction
-STRING_YPOS = 0.95 # relative position of control chart string in y direction
+STRING_XPOS = 0.02 # relative position of control chart string in x direction
+STRING_YPOS = 0.87 # relative position of control chart string in y direction
 
 XPOS_MULT = 0.7 # adjust the relative x-position of histogram strings
 YPOS_MULT = 0.1 # adjust the relative y-position of histogram string (cntrl chrt only)
@@ -47,7 +47,7 @@ LINESTYLE = '-'
 LINEWIDTH = 3  # width of fit lines and control/range chart limits
 COLORS   = ['#006400','#CD2626', '#CD2626','#FFC125','#FFC125']
 STDSTYLE = ['-', '-', '-', '--', '--']
-DATALABEL   = ['mean', 'range limit', '', 'st. dev. limit', '']
+DATALABEL   = ['mean', 'range lim.', '', 'st. dev. lim.', '']
 GAUSSFORMAT = 'k'       # Format of Gaussian distribution fit line
 GAMMAFORMAT = '#0000CD' # Format of Gamma distributio fit line
 GAMMALINE   = '--'      # Style of fit line for Gamma distribution
@@ -65,8 +65,8 @@ LBL2 = 'all data'              # label to indicate that it reprensents all the d
 LBL_GAUSS = "Gaussian dist. fit line"  # in legend
 LBL_GAMMA = "Gamma dist. fit line"     # in legend
 
-header_string = '# of data points = %r  |  subgroup size = %r  |  # of baseline points = %r'
-control_chart_string = 'Ac = %1.2f    Au = %1.2f    Al = %1.2f    Au,s = %1.2f    Al,s = %1.2f'
+header_string = '# of data points = %r |  subgroup size = %r |  # of baseline points = %r'
+control_chart_string = 'Ac   = %1.2f    Au = %1.2f    Al = %1.2f\nAu,s = %1.2f  Al,s = %1.2f'
 range_chart_string   = 'Rc = %1.2f    Ru = %1.2f    Rl = %1.2f'
 hist_string       = 'mean = %1.2f,  stdev = %1.2f \nfit mean = %1.2f, fit stdev = %1.2f \nfit k = %1.2f,  fit theta = %1.2f'
 short_hist_string = 'mean = %1.2f,  stdev = %1.2f \nfit mean = %1.2f, fit stdev = %1.2f'
@@ -161,7 +161,11 @@ def display(fig, x, sgSize, baseline, dates = None, fit = None):
     axHistD = fig.add_subplot(grid[0,1])
     freq, bins, binwidth = generate_hist(axHistD, xbar, baseline)
     if fit:
-        cc_fits = generate_fit(xbar,axHistD,freq,bins,binwidth)
+        try:
+            cc_fits = generate_fit(xbar,axHistD,freq,bins,binwidth)
+        except:
+            #unable to find valid fit
+            cc_fits = []
     else:
         cc_fits = []
 
@@ -176,7 +180,10 @@ def display(fig, x, sgSize, baseline, dates = None, fit = None):
     axHistR = fig.add_subplot(grid[1,1])
     freq, bins, binwidth = generate_hist(axHistR, r, baseline)
     if fit:
-        rc_fits = generate_fit(r,axHistR,freq,bins,binwidth)
+        try:
+            rc_fits = generate_fit(r,axHistR,freq,bins,binwidth)
+        except:
+            rc_fits = []
     else:
         rc_fits = []
 
@@ -280,20 +287,21 @@ def format_plots(plots, xbar_thresh, range_thresh,
     plots[3].set_xlabel(HISTAXIS, fontsize = ALFS)
 
     # new y-axis limits to make room for string
+    plots[0].autoscale(axis="y",tight=True)
     cc_ylim = plots[0].get_ylim()
-    cc_ylim = (cc_ylim[0], cc_ylim[1] + cc_ylim[1]*DATA_TSPACE)
+    cc_ylim = (cc_ylim[0], cc_ylim[1] + (cc_ylim[1]-cc_ylim[0])*DATA_TSPACE)
     plots[0].set_ylim( cc_ylim )
 
     range_lim = plots[2].get_ylim()
-    if np.abs(range_lim[1] - Ru[0])/range_lim[1] < 0.05: # then make space
-        range_lim = (range_lim[0], range_lim[1] + range_lim[1]*DATA_TSPACE)
-        plots[2].set_ylim( range_lim )
+    #if np.abs(range_lim[1] - Ru[0])/range_lim[1] < 0.05: # then make space
+    #    range_lim = (range_lim[0], range_ylim[1]*(1. + (range_ylim[1]-range_ylim[0])*DATA_TSPACE))
+    #    plots[2].set_ylim( range_lim )
 
 
     # redefine x-axis limits for aesthetics
     cc_xlim = plots[0].get_xlim()
-    if not use_dates:
-        cc_xlim = (cc_xlim[0], xaxis_limit + xaxis_limit * DATA_HSPACE)
+    #if not use_dates:
+    cc_xlim = (cc_xlim[0], cc_xlim[1] + (cc_xlim[1]-cc_xlim[0]) * DATA_HSPACE)
 
     plots[0].set_xlim( cc_xlim )     # white space after data ends
     plots[2].set_xlim( plots[0].get_xlim() )  # Range chart shares x-axis with control chart
@@ -301,16 +309,21 @@ def format_plots(plots, xbar_thresh, range_thresh,
     plots[1].set_ylim( plots[0].get_ylim() )  # Control chart shares y-axis with histogram
     plots[3].set_ylim( plots[2].get_ylim() )  # Range chart shares y-axis with histogram
 
-    if use_dates:
-        cc_string_xpos = cc_xlim[0]+50
-    else:
-        cc_string_xpos = xaxis_limit*STRING_XPOS
 
-    cc_string_ypos = np.max(xbar_thresh) + np.abs(cc_ylim[1] - np.max(xbar_thresh))/2.
+    cc_string_xpos = cc_xlim[0] + (cc_xlim[1]-cc_xlim[0])*STRING_XPOS
+
+    cc_string_ypos = cc_ylim[1] - (cc_ylim[1]- cc_ylim[0]) * (1.-STRING_YPOS)
+
     cchist_string_xpos = np.mean( plots[1].get_xlim() ) * XPOS_MULT
     cchist_string_ypos = cc_ylim[0] + (cc_ylim[1]- cc_ylim[0]) * YPOS_MULT
 
-    r_string_ypos = Ru + np.abs(np.max(range_lim) - Ru) / 2.
+    #r_string_ypos = Ru + np.abs(np.max(range_lim) - Ru) / 2.
+    rc_ylim = plots[2].get_ylim()
+    #rc_ylim = (rc_ylim[0], rc_ylim[1]*(1. + (rc_ylim[1]-rc_ylim[0])*DATA_TSPACE))
+    #plots[2].set_ylim( rc_ylim )
+
+    r_string_ypos = _string_ypos = rc_ylim[1] - (rc_ylim[1]- rc_ylim[0]) * (1.-STRING_YPOS)
+
     rhist_string_xpos = np.mean( plots[3].get_xlim() ) * XPOS_MULT
     rhist_string_ypos = np.mean( plots[3].get_ylim() )
 
@@ -323,7 +336,7 @@ def format_plots(plots, xbar_thresh, range_thresh,
         if plot == plots[0]:
             plot.xaxis.set_major_formatter(nullfmt)
 
-            plot.legend(loc='upper center', bbox_to_anchor=(0.5, -0.01),
+            plot.legend(loc='upper center', bbox_to_anchor=(0.45, -0.03),
                         ncol=4, fancybox=True, shadow=True, prop=font)
 
             plot.text(cc_string_xpos, cc_string_ypos,
@@ -333,7 +346,7 @@ def format_plots(plots, xbar_thresh, range_thresh,
             plot.grid(True)
 
         if plot == plots[2]:
-            plot.text(cc_string_xpos, r_string_ypos[0],
+            plot.text(cc_string_xpos, r_string_ypos,
                 range_chart_string % (Rc[0],Ru[0],Rl[0]),
                 fontsize = CFS)
 
@@ -344,7 +357,7 @@ def format_plots(plots, xbar_thresh, range_thresh,
             plot.legend(bbox_to_anchor=(1.05,1.05),
                         fancybox=True, shadow=True, prop=font)
 
-            if plot == plots[1] and fit:
+            if plot == plots[1] and cc_fits:
                 if len(cc_fits) == 6:
                     cm, cs, fcm, fcs, fck, fct = cc_fits
                     plot.text(cchist_string_xpos, cchist_string_ypos,
@@ -357,7 +370,7 @@ def format_plots(plots, xbar_thresh, range_thresh,
                               fontsize = HISTFS)
 
 
-            if plot == plots[3] and fit:
+            if plot == plots[3] and rc_fits:
                 if len(rc_fits) == 6:
                     rm, rs, frm, frs, frk, frt = rc_fits
                     plot.text(rhist_string_xpos, rhist_string_ypos,
