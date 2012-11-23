@@ -29,6 +29,9 @@ def binwidth(x, maxBins = None):
     minCindex = np.where( C == np.min(C) )[0][0]
     optBinWidth = span / numOfBins[minCindex]
 
+    if optBinWidth == 0:
+        optBinWidth = 1.
+
     return optBinWidth
 
 
