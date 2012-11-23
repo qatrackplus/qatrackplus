@@ -194,15 +194,20 @@ def display(fig, x, sgSize, baseline, dates = None, fit = None):
 
 def get_bins(x):
     binwidth = htg.binwidth(x)
-    xAbsMax = np.max( np.fabs(x) )
-    xMin = np.min(x)
-    lim = ( int(xAbsMax / binwidth) + 1) * binwidth
 
-    #bins = np.arange( - lim, lim + binwidth, binwidth)
-    bins = np.arange(xMin,lim+binwidth,binwidth)
+    xMax = np.max(x)
+    xMin = np.min(x)
+
+    bins_min = xMin - binwidth/2.
+    bins_max = xMax + binwidth
+    bins = np.arange(bins_min,bins_max,binwidth)
+
     if len(bins)<NBIN_THRESH:
-        binwidth = 2.*lim/NBIN_THRESH
-        bins = np.arange( xMin, lim + binwidth, binwidth)
+        binwidth = 2.*(xMax-xMin)/NBIN_THRESH
+        centre = (xMin+xMax)/2.
+        bins_min = centre-binwidth*(NBIN_THRESH/2+1)
+        bins_max = centre+binwidth*(NBIN_THRESH/2+1)
+        bins = np.arange( bins_min, bins_max, binwidth)
 
     return bins, binwidth
 
