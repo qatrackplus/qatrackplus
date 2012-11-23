@@ -211,9 +211,13 @@ def get_bins(x):
 
     if len(bins)<NBIN_THRESH:
         binwidth = 2.*(xMax-xMin)/NBIN_THRESH
+        if binwidth == 0:
+            binwidth = 1
+
         centre = (xMin+xMax)/2.
         bins_min = centre-binwidth*(NBIN_THRESH/2+1)
         bins_max = centre+binwidth*(NBIN_THRESH/2+1)
+
         bins = np.arange( bins_min, bins_max, binwidth)
 
     return bins, binwidth
