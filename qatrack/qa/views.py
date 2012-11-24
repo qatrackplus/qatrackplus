@@ -1085,6 +1085,7 @@ class TestListInstances(ListView):
         "created_by__username","modified_by__username",
         "work_completed","work_started"
     ]
+    DEFAULT_ORDERINGS = ["-work_completed"]
     #----------------------------------------------------------------------
     def get_queryset(self):
         return self.fetch_related(self.queryset())
@@ -1119,6 +1120,8 @@ class TestListInstances(ListView):
         """return list of ordering strings based on url parameters"""
         request_orders = self.request.GET.getlist("order")
         allowed_ordering = [x for x in request_orders if x.strip("-") in self.allowed_orderings]
+        if not allowed_ordering:
+            allowed_ordering = self.DEFAULT_ORDERINGS
         return allowed_ordering
 
 #====================================================================================
@@ -1142,9 +1145,10 @@ class InProgress(TestListInstances):
 class Unreviewed(TestListInstances):
     """view for grouping all test lists with a certain frequency for all units"""
     queryset = models.TestListInstance.objects.unreviewed
+    DEFAULT_ORDERINGS = ["unit_test_collection__unit__number","-work_completed"]
     #---------------------------------------------------------------------------
     def get_queryset(self):
-        return self.fetch_related(self.queryset().order_by("unit_test_collection__unit__number","-work_completed"))
+        return self.fetch_related(self.queryset())
     #----------------------------------------------------------------------
     def get_page_title(self):
         return "Unreviewed Test Lists"
