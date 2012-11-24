@@ -28,6 +28,7 @@ HEADERX = 0.1    # x position of header
 HEADERY = 0.93   # y position of header
 STRING_XPOS = 0.02 # relative position of control chart string in x direction
 STRING_YPOS = 0.87 # relative position of control chart string in y direction
+RSTRING_YPOS = 0.93
 
 XPOS_MULT = 0.7 # adjust the relative x-position of histogram strings
 YPOS_MULT = 0.1 # adjust the relative y-position of histogram string (cntrl chrt only)
@@ -116,7 +117,7 @@ def generate_fit(x,axes,freq, bins, binwidth):
 
 #################################################################################
 
-def display(fig, x, sgSize, baseline, dates = None, fit = None):
+def display(fig, x, sgSize, baseline, dates = None, fit = False):
 
     """
     Display a statistical control chart for a dataset. See Pawlicki et al
@@ -138,9 +139,6 @@ def display(fig, x, sgSize, baseline, dates = None, fit = None):
         use_dates = False
     else:
         use_dates = True
-
-    if fit is None:
-        fit = False
 
     # process data for plotting
     sg, xbar, sgNum = get_subgroups(x, sgSize, dates) # sg = subgroup of size sgSize
@@ -326,7 +324,7 @@ def format_plots(plots, xbar_thresh, range_thresh,
     #rc_ylim = (rc_ylim[0], rc_ylim[1]*(1. + (rc_ylim[1]-rc_ylim[0])*DATA_TSPACE))
     #plots[2].set_ylim( rc_ylim )
 
-    r_string_ypos = _string_ypos = rc_ylim[1] - (rc_ylim[1]- rc_ylim[0]) * (1.-STRING_YPOS)
+    r_string_ypos = _string_ypos = rc_ylim[1] - (rc_ylim[1]- rc_ylim[0]) * (1.-RSTRING_YPOS)
 
     rhist_string_xpos = np.mean( plots[3].get_xlim() ) * XPOS_MULT
     rhist_string_ypos = np.mean( plots[3].get_ylim() )
