@@ -319,9 +319,10 @@ class ControlChartImage(BaseChartView):
         if subgroup_size <1 or subgroup_size >100:
             subgroup_size = 1
 
-        include_fit = self.request.GET.get("fit_data",False)
-        if include_fit == "true":
+        if self.request.GET.get("fit_data","") == "true":
             include_fit = True
+        else:
+            include_fit = False
 
 
         response = HttpResponse(mimetype="image/png")
