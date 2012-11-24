@@ -430,11 +430,11 @@ class CompositeCalculation(JSONResponseMixin, View):
 
         for slug,info in values.iteritems():
             val = info["current_value"]
-            if val is not None and slug not in self.composite_tests:
+            if slug not in self.composite_tests:
                 try:
                     self.calculation_context[slug] = float(val)
                 except ValueError:
-                    pass
+                    self.calculation_context[slug] = val
 
     #----------------------------------------------------------------------
     def set_dependencies(self):
