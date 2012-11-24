@@ -284,7 +284,11 @@ function update_qa_status(){
 }
 
 function update_time(input){
-    input.val(input.val()+" 19:30");
+    if (input.attr("name") === "work_completed"){   
+        input.val(input.val()+" 20:30");
+    }else{
+        input.val(input.val()+" 19:30");
+    }
 }
 /****************************************************************/
 $(document).ready(function(){
@@ -396,7 +400,7 @@ $(document).ready(function(){
         keyboardNavigation:false
     }).on('changeDate',function (ev){
         update_time($(this).find("input"));
-    })
+    });
 
     //run a full validation on page load
     full_validation();
