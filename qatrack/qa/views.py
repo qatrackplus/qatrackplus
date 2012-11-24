@@ -1201,8 +1201,7 @@ class DueDateOverview(TemplateView):
 
         due = collections.defaultdict(list)
         due_display_order = (
-            ("overdue","Overdue"),
-            ("today","Due Today"),
+            ("overdue","Due & Overdue"),
             ("this_week","Due This Week"),
             ("next_week","Due Next Week"),
             ("this_month","Due This Month"),
@@ -1215,8 +1214,6 @@ class DueDateOverview(TemplateView):
                 due_date = utc.due_date().date()
                 if  due_date <= today:
                     due["overdue"].append(utc)
-                elif due_date == today:
-                    due["today"].append(utc)
                 elif due_date <= friday:
                     if utc.last_instance.work_completed.date() != today:
                         due["this_week"].append(utc)
