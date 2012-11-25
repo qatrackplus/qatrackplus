@@ -38,6 +38,13 @@ try:
 except ImportError:
     CONTROL_CHART_AVAILABLE = False
 
+try:
+    import numpy
+    import scipy
+    SCIPY_AVAILABLE = True
+except:
+    SCIPY_AVAILABLE = False
+
 
 class JSONResponseMixin(object):
     """bare bones JSON response mixin taken from Django docs"""
@@ -425,8 +432,12 @@ class CompositeCalculation(JSONResponseMixin, View):
             return
 
         self.calculation_context = {
-            "math":math
+            "math":math,
         }
+        
+        if SCIPY_AVAILABLE:
+            self.calculation_context["scipy"] = scipy
+            self.calculation_context["numpy"] = numpy
 
         for slug,info in values.iteritems():
             val = info["current_value"]
