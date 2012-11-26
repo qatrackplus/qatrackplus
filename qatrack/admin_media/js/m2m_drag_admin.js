@@ -10,6 +10,8 @@ function set_order(grouping){
         if ($(this).find("td[class^=field-] input").val()){
             $(this).find('input[id$=order]').val(order);
             order +=1;
+        }else{
+            $(this).find('input[id$=order]').val("");
         }
     });
 }
