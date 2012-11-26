@@ -70,11 +70,12 @@ def k_param(kguess, s):
     while np.abs(val) >= 0.0001:
         k = k - (np.log(k)-sps.psi(k)-s)/(1/k-sps.polygamma(1,k))
         val = np.log(k) - sps.psi(k) - s
-        counter += 1
+        # sps.polygamma(1,k) is first derivative of sps.psi(k)
 
+        counter += 1
         if counter > MAX_NEWTON_ITERATIONS:
             raise Exception("Max Newton's method iterations exceeded")
-        # sps.polygamma(1,k) is first derivative of sps.psi(k)
+
     return k
 
 
