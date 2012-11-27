@@ -1,0 +1,42 @@
+{% extends "site_base.html" %}
+{% load staticfiles %}
+
+{% block head_title %}Choose Unit for Review{% endblock %}
+
+{% block body %}
+<div class="row-fluid">
+    <div class="span12">
+        <h2>Review QA By Unit</h3>
+    </div>
+</div>
+<div class="row-fluid">
+    <div class="span12">
+        <em>Choose a unit below to review its QA Data</em>
+    </div>
+</div>
+
+
+
+{% for unit_type in unit_types %}
+    <div class="row-fluid row-spacer">
+        <div class="span12">
+
+            <h4 class="header-spacer">{{unit_type.name}}</h4>
+            <div class="btn-group" style="float:left">
+                <button class="btn top-level"><a href="{% url choose_review_unit %}{% for unit in unit_type.list %}{{unit.number}}/{%endfor%}">All</a></button>
+
+                {% for unit in unit_type.unit_set.all %}
+                    <button class="btn top-level"><a href="{% url review_by_unit unit_number=unit.number %}">{{unit.name}}</a></button>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endfor %}
+<script type="text/javascript">
+    $(".btn.top-level").click(function(){
+        window.location = $(this).find("a").attr("href");
+    });
+</script>
+
+{% endblock %}
+

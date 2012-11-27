@@ -434,7 +434,7 @@ class CompositeCalculation(JSONResponseMixin, View):
         self.calculation_context = {
             "math":math,
         }
-        
+
         if SCIPY_AVAILABLE:
             self.calculation_context["scipy"] = scipy
             self.calculation_context["numpy"] = numpy
@@ -1006,14 +1006,8 @@ class UTCUnitReview(UTCReview):
         return "Review " + ", ".join([x.name for x in self.units]) + " Test Lists"
 
 #====================================================================================
-class ChooseUnitForReview(ListView):
-
-    model = Unit
-    context_object_name = "units"
+class ChooseUnitForReview(ChooseUnit):
     template_name_suffix = "_choose_for_review"
-    #---------------------------------------------------------------------------
-    def get_queryset(self):
-        return Unit.objects.all().select_related("type")
 
 #====================================================================================
 class ChooseFrequencyForReview(ListView):
