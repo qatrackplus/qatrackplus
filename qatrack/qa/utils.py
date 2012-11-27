@@ -144,6 +144,6 @@ def almost_equal(a,b,significant=7):
         sc_a = a/scale
     except ZeroDivisionError:
         sc_a = 0.0
-    print "here", a,b,scale,sc_a,sc_b
+
     return abs(sc_b - sc_a) <= math.pow(10.,-(significant-1))
 
