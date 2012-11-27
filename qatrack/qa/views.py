@@ -444,7 +444,7 @@ class CompositeCalculation(JSONResponseMixin, View):
             if slug not in self.composite_tests:
                 try:
                     self.calculation_context[slug] = float(val)
-                except ValueError:
+                except (ValueError, TypeError):
                     self.calculation_context[slug] = val
 
     #----------------------------------------------------------------------
