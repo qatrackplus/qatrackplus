@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.mlab as mlab
 from scipy.optimize import curve_fit
 
+np.seterr("log")
 
 def gauss_fit(data, freq, bins, binwidth):
     """
@@ -43,8 +44,9 @@ def gauss_pdf(x, norm, mu, sigma):
     is normalized (multiplied by) 'norm', and so 'norm' should equal
     1.000 unless you have a reason for it to be otherwise.
     """
+
     if any(np.isnan([norm,mu,sigma])) or any(np.isnan(x)):
-        raise Exception("Invalid value in gauss_pdf")
+        return np.NaN
 
     GaussPdf = norm * mlab.normpdf(x, mu, sigma)
     return GaussPdf
