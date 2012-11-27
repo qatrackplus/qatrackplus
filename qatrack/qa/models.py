@@ -1000,9 +1000,12 @@ class TestInstance(models.Model):
     #---------------------------------------------------------------------------
     def float_pass_fail(self):
         diff = self.calculate_diff()
-        if self.tolerance.tol_low <= diff <= self.tolerance.tol_high:
+        right_at_tolerance = utils.almost_equal(self.tolerance.tol_low,diff) or utils.almost_equal(self.tolerance.tol_high,diff)
+        right_at_action = utils.almost_equal(self.tolerance.act_low,diff) or utils.almost_equal(self.tolerance.act_high,diff)
+
+        if right_at_tolerance or (self.tolerance.tol_low <= diff <= self.tolerance.tol_high):
             self.pass_fail = OK
-        elif self.tolerance.act_low <= diff <= self.tolerance.tol_low or self.tolerance.tol_high <= diff <= self.tolerance.act_high:
+        elif right_at_action or (self.tolerance.act_low <= diff <= self.tolerance.tol_low or self.tolerance.tol_high <= diff <= self.tolerance.act_high):
             self.pass_fail = TOLERANCE
         else:
             self.pass_fail = ACTION

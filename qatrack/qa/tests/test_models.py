@@ -1034,6 +1034,46 @@ class TestTestInstance(TestCase):
             self.assertEqual(result,ti.pass_fail)
 
     #----------------------------------------------------------------------
+    def test_edge_pass_fail(self):
+        test = models.Test(type=models.SIMPLE)
+        uti = models.UnitTestInfo(test=test)
+        ti = models.TestInstance(unit_test_info=uti)
+        ref = models.Reference(type=models.NUMERICAL,value=5.)
+        ti.reference = ref
+        tol = models.Tolerance(
+            type=models.ABSOLUTE,
+            act_low = -0.2,
+            tol_low = -0.1,
+            tol_high=  0.1,
+            act_high=  0.2,
+        )
+        ti.tolerance = tol
+        tests = (
+            (models.ACTION,4.79999),
+            (models.TOLERANCE,4.799999999999999999),
+            (models.TOLERANCE,4.8),
+
+            (models.TOLERANCE,4.89999),
+            (models.OK,4.899999999999999999),
+            (models.OK,4.9),
+
+
+            (models.OK,5.1),
+            (models.OK,5.10000000000000000000001),
+            (models.TOLERANCE,5.10001),
+
+            (models.TOLERANCE,5.2),
+            (models.TOLERANCE,5.20000000000000000000001),
+            (models.ACTION,5.20001),
+        )
+
+        for result,val in tests:
+            ti.value = val
+            ti.calculate_pass_fail()
+            self.assertEqual(result,ti.pass_fail)
+
+
+    #----------------------------------------------------------------------
     def test_percent_pass_fail(self):
         test = models.Test(type=models.SIMPLE)
         uti = models.UnitTestInfo(test=test)

@@ -1,5 +1,6 @@
 from django.db.models import Q
 from django.utils import timezone
+import math
 import models
 import StringIO
 import tokenize
@@ -117,3 +118,32 @@ def unique(seq,idfun=None):
         seen[marker] = 1
         result.append(item)
     return result
+
+
+#----------------------------------------------------------------------
+def almost_equal(a,b,significant=7):
+    """determine if two numbers are nearly equal to significant figures
+    copied from numpy.testing.assert_approx_equal
+    """
+    a, b = map(float, (a, b))
+    if b==a:
+        return
+    # Normalized the numbers to be in range (-10.0,10.0)
+    # scale = float(pow(10,math.floor(math.log10(0.5*(abs(b)+abs(a))))))
+    try:
+        scale = 0.5*(abs(b) + abs(a))
+        scale = math.pow(10,math.floor(math.log10(scale)))
+    finally:
+        pass
+
+    try:
+        sc_b = b/scale
+    except ZeroDivisionError:
+        sc_b = 0.0
+    try:
+        sc_a = a/scale
+    except ZeroDivisionError:
+        sc_a = 0.0
+    print "here", a,b,scale,sc_a,sc_b
+    return abs(sc_b - sc_a) <= math.pow(10.,-(significant-1))
+

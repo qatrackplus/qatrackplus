@@ -39,6 +39,7 @@ var QAUtils = new function() {
 
     //value equality tolerance
     this.EPSILON = 1E-10;
+    this.COMPARISON_SIGNIFICANT = 7;
 
     this.API_VERSION = "v1";
     this.API_URL = "/qa/api/"+this.API_VERSION+"/";
@@ -72,6 +73,43 @@ var QAUtils = new function() {
     while tolerances must be an object with act_low, tol_low, tol_high,
     act_high and tol_type attributes.
     */
+
+    this.log10 = function(x){
+        return Math.log(x)/Math.LN10;
+    };
+
+    this.almost_equal = function(a, b){
+        if (a == b){
+            return true;
+        }
+
+        var scale;
+        var sc_a,sc_b;
+
+        try {
+            scale = Math.pow(10,Math.floor(this.log10(scale)));
+            scale = 0.5*(Math.abs(b) + Math.abs(a));
+        }catch(err){
+
+        }
+
+
+        try {
+            sc_b = b/scale;
+        } catch(err) {
+            sc_b = 0.0;
+        }
+
+        try {
+            sc_a = a/scale;
+        } catch(err) {
+            sc_a = 0.0;
+        }
+
+        return Math.abs(sc_b - sc_a) <= Math.pow(10.,-(this.COMPARISON_SIGNIFICANT-1));
+
+    };
+
     this.percent_difference = function(measured, reference){
         //reference = 0. is a special case
         if (reference === 0.){
@@ -117,15 +155,19 @@ var QAUtils = new function() {
         message = "(" + diff.toFixed(2)+")";
     }
 
-    if ((tolerances.tol_low <= diff) && (diff <= tolerances.tol_high)){
+    var right_at_tolerance = this.almost_equal(tolerances.tol_low,diff) || this.almost_equal(tolerances.tol_high,diff);
+    var right_at_low_action = this.almost_equal(tolerances.act_low,diff);
+    var right_at_high_action = this.almost_equal(tolerances.act_high,diff);
+
+    if ( right_at_tolerance || ((tolerances.tol_low <= diff) && (diff <= tolerances.tol_high))){
         status = this.WITHIN_TOL;
         gen_status = this.WITHIN_TOL;
         message = this.WITHIN_TOL_DISP + message;
-    }else if ((tolerances.act_low <= diff) && (diff <= tolerances.tol_low)){
+    }else if (right_at_low_action || ((tolerances.act_low <= diff) && (diff <= tolerances.tol_low))){
         status = this.TOL_LOW;
         gen_status = this.TOLERANCE;
         message = this.TOLERANCE_DISP + message;
-    }else if ((tolerances.tol_high <= diff) && (diff <= tolerances.act_high)){
+    }else if (right_at_high_action || ((tolerances.tol_high <= diff) && (diff <= tolerances.act_high))){
         status = this.TOL_HIGH;
         message = this.TOLERANCE_DISP + message;
         gen_status = this.TOLERANCE;
