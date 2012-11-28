@@ -13,7 +13,7 @@ var column_sort_keys = [
 /**************************************************************************/
 //Initialize sortable/filterable test list table data types
 function init_test_list_instance_tables(){
-	$(".test-list-instance-table").each(function(idx,table){
+/*	$(".test-list-instance-table").each(function(idx,table){
 
 		if ($(this).find("tr.empty-table").length>0){
 			return;
@@ -46,7 +46,17 @@ function init_test_list_instance_tables(){
 
 		$(table).find("select, input").addClass("input-small");
 
+
+
+
 	});
+*/
+    $("#testlistinstance-table").dataTable({
+        "bProcessing":true,
+		"bServerSide":true,
+        "sAjaxSource":'../data-tables/'
+    });
+
 
 }
 

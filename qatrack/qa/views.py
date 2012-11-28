@@ -1129,6 +1129,56 @@ class TestListInstances(ListView):
             allowed_ordering = self.DEFAULT_ORDERINGS
         return allowed_ordering
 
+
+#============================================================================
+class TestListInstancesDataSource(JSONResponseMixin,ListView):
+    """"""
+    model = models.TestListInstance
+    queryset = models.TestListInstance.objects.all
+
+    #----------------------------------------------------------------------
+    def get_queryset(self):
+        return self.fetch_related(self.queryset())
+    #----------------------------------------------------------------------
+    def fetch_related(self,qs):
+        qs = qs.select_related(
+                    "test_list__name",
+                    "testinstance__status",
+                    "unit_test_collection__unit__name",
+                    "unit_test_collection__frequency__name",
+                    "created_by","modified_by",
+        ).prefetch_related("testinstance_set","testinstance_set__status")
+
+        return qs
+    #----------------------------------------------------------------------
+    def get_context_data(self,*args,**kwargs):
+        """"""
+        context = super(TestListInstancesDataSource,self).get_context_data(*args,**kwargs)
+        return context
+    #----------------------------------------------------------------------
+    def convert_context_to_json(self, context):
+        """Convert the context dictionary into a JSON object"""
+        data = []
+        for tli in context["testlistinstance_list"][:50]:
+            data.append([
+                self.get_actions(),
+                tli.unit_test_collection.unit.name,
+                tli.unit_test_collection.frequency.name,
+                tli.test_list.name,
+                "%s"%tli.work_completed,
+                tli.created_by.username,
+                "progress",
+                "pass fail",
+                ]
+            )
+        return json.dumps({"aaData":data})
+    #----------------------------------------------------------------------
+    def get_actions(self):
+        #{% url review_test_list_instance instance.pk %}
+        return '<a class="btn btn-primary btn-mini" href="%s?next=%s">Review</a>' %("foo","bar")
+
+
+
 #====================================================================================
 class UTCInstances(TestListInstances):
 
@@ -1157,6 +1207,10 @@ class Unreviewed(TestListInstances):
     #----------------------------------------------------------------------
     def get_page_title(self):
         return "Unreviewed Test Lists"
+    #----------------------------------------------------------------------
+    def render_to_response_(self):
+        """"""
+        self.render_to_response
 
 #============================================================================
 class ExportToCSV(View):

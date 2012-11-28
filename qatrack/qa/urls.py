@@ -65,6 +65,7 @@ urlpatterns = patterns('',
     url(r"^session/details/$", can_view_history(views.TestListInstances.as_view()), name="complete_instances"),
     url(r"^session/details/(?P<pk>\d+)/$", can_view_history(views.ReviewTestListInstance.as_view()), name="review_test_list_instance"),
     url(r"^session/unreviewed/$", can_view_history(views.Unreviewed.as_view()), name="unreviewed"),
+    url(r"^session/data-tables/$", can_view_history(views.TestListInstancesDataSource.as_view()), name="data-tables"),
     url(r"^session/in-progress/$", views.InProgress.as_view(), name="in_progress"),
     url(r"^session/edit/(?P<pk>\d+)/$", can_edit(views.EditTestListInstance.as_view()), name="edit_tli"),
 
