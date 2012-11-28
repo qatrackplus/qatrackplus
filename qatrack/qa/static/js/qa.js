@@ -203,6 +203,8 @@ function full_validation(){
 function filter_by_category(){
 
     var selected_categories = new Array();
+    var not_performed = "Category not performed";
+
     $("#category_filter option:selected").each(function(){
         selected_categories.push($(this).val());
     });
@@ -210,10 +212,15 @@ function filter_by_category(){
     var show_all = (selected_categories.length === 0) ||
         ($.inArray("all",selected_categories) >= 0);
 
+    var cmt;
+
     if (show_all){
         $(".qa-valuerow").show();
         $(".qa-comment, .qa-procedure").hide();
         $(".qa-skip input").attr("checked",false);
+        $(".qa-comment textarea").each(function(){
+            $(this).val($(this).val().replace(not_performed,""));
+        })
         return;
     }
 
@@ -228,11 +235,11 @@ function filter_by_category(){
 
         if ($.inArray(category,selected_categories) < 0){
             $(this).find(".qa-skip input").attr("checked",true);
-            $(this).next().find("textarea").val("Category not performed");
+            $(this).next().find("textarea").val(not_performed);
             to_toggle.hide();
         }else{
             $(this).find(".qa-skip input").attr("checked",false);
-            $(this).next().find("textarea").val("");
+            $(this).next().find("textarea").val($(this).next().find("textarea").val().replace(not_performed,""));
             to_toggle.show();
         }
     });
@@ -284,7 +291,7 @@ function update_qa_status(){
 }
 
 function update_time(input){
-    if (input.attr("name") === "work_completed"){   
+    if (input.attr("name") === "work_completed"){
         input.val(input.val()+" 20:30");
     }else{
         input.val(input.val()+" 19:30");
