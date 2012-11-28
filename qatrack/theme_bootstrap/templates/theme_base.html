@@ -39,7 +39,8 @@
             <script src="{% static "pinax/js/jquery.form.js" %}"></script>
             <script src="{% static "bootstrap/js/bootstrap.min.js" %}"></script>
             <script src="{% static "pinax/js/theme.js" %}"></script>
-            <script src="{% static "pinax/js/pinax.modal.js" %}"></script>
+            {#<script src="{% static "pinax/js/pinax.modal.js" %}"></script>#}
+            <script type="text/javascript" src="{% static "js/json2.js" %}?v={{VERSION}}"></script>
             {% block extra_script %}{% endblock %}
         {% endblock %}
         {% block extra_head_base %}
