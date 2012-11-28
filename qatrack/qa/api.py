@@ -81,8 +81,8 @@ class UnitTypeResource(ModelResource):
 
 #============================================================================
 class UnitResource(ModelResource):
-    modalities = tastypie.fields.ToManyField("qatrack.qa.api.ModalityResource","modalities",full=True)
-    type = tastypie.fields.ToOneField("qatrack.qa.api.UnitTypeResource","type",full=True)
+    #modalities = tastypie.fields.ToManyField("qatrack.qa.api.ModalityResource","modalities",full=True)
+    #type = tastypie.fields.ToOneField("qatrack.qa.api.UnitTypeResource","type",full=True)
 
     class Meta:
         queryset = Unit.objects.order_by("number").all()

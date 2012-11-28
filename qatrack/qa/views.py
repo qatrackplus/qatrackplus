@@ -8,11 +8,13 @@ from django.forms.models import inlineformset_factory
 from django.http import HttpResponse,HttpResponseRedirect, Http404
 from django.shortcuts import get_object_or_404
 from django.core.urlresolvers import reverse
+from django.core.paginator import Paginator
 from django.template import Context
 from django.template.loader import get_template
 from django.views.generic import ListView, UpdateView, View, TemplateView, CreateView, DetailView
 from django.utils.translation import ugettext as _
 from django.utils import timezone
+
 from qatrack.qa import models,utils
 from qatrack.units.models import Unit, UnitType
 from qatrack.contacts.models import Contact
@@ -1151,15 +1153,21 @@ class TestListInstancesDataSource(JSONResponseMixin,ListView):
 
         return qs
     #----------------------------------------------------------------------
-    def get_context_data(self,*args,**kwargs):
-        """"""
-        context = super(TestListInstancesDataSource,self).get_context_data(*args,**kwargs)
-        return context
-    #----------------------------------------------------------------------
     def convert_context_to_json(self, context):
         """Convert the context dictionary into a JSON object"""
+
+        qs = context["testlistinstance_list"]
+        total = qs.count()
+        total_after_filter = total
+
+        per_page = int(self.request.GET.get("iDisplayLength"))
+        offset = int(self.request.GET.get("iDisplayStart"))
+
+        objects = qs[offset:offset+per_page]
+        filtered_objects =  qs
+
         data = []
-        for tli in context["testlistinstance_list"][:50]:
+        for tli in objects:
             data.append([
                 self.get_actions(),
                 tli.unit_test_collection.unit.name,
@@ -1171,7 +1179,15 @@ class TestListInstancesDataSource(JSONResponseMixin,ListView):
                 "pass fail",
                 ]
             )
-        return json.dumps({"aaData":data})
+
+        data_tables = {
+            "data":data,
+            "iTotalRecords":total,
+            "iTotalDisplayRecords":filtered_objects.count(),
+            "sEcho":self.request.GET.get("sEcho"),
+        }
+
+        return json.dumps(data_tables)
     #----------------------------------------------------------------------
     def get_actions(self):
         #{% url review_test_list_instance instance.pk %}
