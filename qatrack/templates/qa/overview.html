@@ -11,9 +11,14 @@
             <p>
                 <em>Overview of current QA status on all units</em>
             </p>
-            <p>
+            <p class="pull-left">
                 Jump to: {%for unit,_ in unit_lists%}<a href="#U{{unit.number}}">{{unit.name}}</a>{%if not forloop.last%} {%endif%}{%endfor%}
             </p>
+
+            <span id="collapse-container" class="pull-right hand-cursor">
+                <i id="collapse-img" class="icon-minus-sign"></i> <span id="collapse-string">Collapse All</span>
+            </p>
+
         </div>
     </div>
     {% for unit, freq_utcs in unit_lists %}
@@ -21,14 +26,14 @@
 
             <div class="span12 overview-unit-container">
                 <a style="visibility:hidden" id="U{{unit.number}}">&nbsp;</a>
-                <div class="">
+                <div class="" style="width:100%">
                     <hr/>
-                    <h3>{{unit.name}}</h3>
+                    <h3 class="">{{unit.name}}<span class="pull-right hand-cursor toggle-unit"><i class="unit-toggle-img icon-minus-sign"></i></span></h3>
                 </div>
-
+                <div class="unit-container">
                 {% for freq, utcs in freq_utcs %}
                     {% if forloop.counter0|divisibleby:"3" or forloop.counter0 = 0 %}
-                    <div class="row-fluid">
+                    <div class="row-fluid unit-overview">
                     {% endif %}
 
                         <div class="span4">
@@ -81,6 +86,7 @@
                     </div>
                     {% endif %}
                 {% endfor %}
+                </div>
 
             </div>
         </div>
@@ -90,5 +96,5 @@
 {% endblock %}
 
 {% block end_body_extra_script %}
-
+    <script src="{% static "js/overview.js" %}?v={{VERSION}}"></script>
 {% endblock %}
