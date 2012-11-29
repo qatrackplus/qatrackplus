@@ -1,0 +1,9 @@
+{% load qa_tags %}
+{% if perms.qa.can_review %}
+<a class="btn btn-primary btn-mini" href="{% url review_test_list_instance instance.pk %}?next={{request.META.HTTP_REFERER|get_full_path}}">Review</a>
+{% endif %}
+{% if instance.in_progress %}
+    <a class="btn btn-primary btn-mini" title="Continue this list" href="{%url edit_tli pk=instance.pk%}?next={{request.META.HTTP_REFERER|get_full_path}}" >Continue</a>
+{% else %}
+    <a class="btn btn-primary btn-mini" title="Edit this list" href="{%url edit_tli pk=instance.pk%}?next={{request.META.HTTP_REFERER|get_full_path}}" >Edit</a>
+{% endif %}
