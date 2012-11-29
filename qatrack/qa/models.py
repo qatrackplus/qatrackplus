@@ -1087,7 +1087,7 @@ class TestListInstanceManager(models.Manager):
 
     #----------------------------------------------------------------------
     def unreviewed(self):
-        return self.complete().filter(testinstance__status__requires_review=True).distinct().order_by("work_completed")
+        return self.complete().filter(testinstance__status__requires_review=True).distinct()
     #----------------------------------------------------------------------
     def in_progress(self):
         return self.get_query_set().filter(in_progress=True)
