@@ -1,4 +1,5 @@
 import collections
+import urlparse
 
 from django.template import Context
 from django.template.loader import get_template
@@ -107,6 +108,21 @@ def as_data_attributes(unit_test_collection):
 
     return " ".join(['data-%s=%s' % (k,v) for k,v in attrs.items() if v])
 
+
+@register.filter
+def get_full_path(value):
+    """Remove scheme://host:port from url, return the left request part.
+
+    In some situations, we have to remove scheme://host:port part from
+    url, e.g. when we do the redirect operation, we often get the referer
+    from request.META.HTTP_REFERER, this is a full url like:
+    http://www.site.com:8000/some/page
+    while we just need `/some/page` but not full url, this little snippet
+    will do this work. it remove `http://www.site.com:8000` in above
+    example.
+    """
+    url = urlparse.urlsplit(value)
+    return urlparse.urlunsplit((0, 0, url[2], url[3], url[4]))
 
 pos_inf = 1e200 * 1e200
 neg_inf = -1e200 * 1e200
