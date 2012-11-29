@@ -1031,12 +1031,44 @@ class BaseDataTablesDataSource(ListView):
 
 
 #============================================================================
-class UTCList(ListView):
+class UTCList(BaseDataTablesDataSource):
     model = models.UnitTestCollection
-    context_object_name = "unittestcollections"
-    paginate_by = settings.PAGINATE_DEFAULT
+#    context_object_name = "unittestcollections"
+#    paginate_by = settings.PAGINATE_DEFAULT
     action = "perform"
     action_display = "Perform"
+
+
+    #---------------------------------------------------------------------------
+    def set_columns(self):
+        self.columns = (
+            (self.get_actions,None,None),
+            (lambda x:x.tests_object.name, "tests_object__name__exact", "tests_object__name"),
+            (self.get_due_date, None,None),
+            (lambda x:x.unit.name, "unit__name__exact", "unit__number"),
+            (lambda x:x.frequency.name, "frequency__name__exact", "frequency__name"),
+
+            (lambda x:x.assigned_to.name,"assigned_to__name__contains","assigned_to__name"),
+            (self.get_last_instance_work_completed,None,"last_instance__work_completed"),
+            (self.get_last_instance_pass_fail,None,None),
+            (self.get_last_instance_review_status,None,None),
+        )
+
+    #----------------------------------------------------------------------
+    def get_actions(self,utc):
+        return ""
+    #----------------------------------------------------------------------
+    def get_due_date(self,utc):
+        return "foo"
+    #----------------------------------------------------------------------
+    def get_last_instance_work_completed(self,utc):
+        return "bar"
+    #----------------------------------------------------------------------
+    def get_last_instance_pass_fail(self,utc):
+        return "qux"
+    #----------------------------------------------------------------------
+    def get_last_instance_review_status(self,utc):
+        return "42"
     #----------------------------------------------------------------------
     def get_queryset(self):
 
@@ -1054,7 +1086,7 @@ class UTCList(ListView):
             "last_instance__testinstance_set__status",
             "last_instance__modified_by",
             "tests_object",
-        ).order_by("unit__number","testlist__name","testlistcycle__name",)
+        )#.order_by("unit__number","testlist__name","testlistcycle__name",)
 
         return qs.distinct()
 
@@ -1063,8 +1095,8 @@ class UTCList(ListView):
         return "All Test Collections"
 
     #----------------------------------------------------------------------
-    def get_context_data(self,*args,**kwargs):
-        context = super(UTCList,self).get_context_data(*args,**kwargs)
+    def get_template_context_data(self,context):
+        #context = super(UTCList,self).get_context_data(*args,**kwargs)
         context["page_title"] = self.get_page_title()
         context["action"] = self.action
         context["action_display"] = self.action_display

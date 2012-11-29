@@ -34,7 +34,7 @@ can_edit = cpr("qa.change_testinstance")
 
 urlpatterns = patterns('',
 
-    url(r"^$", views.UTCList.as_view(),name="all_lists"),
+    url(r"^(?P<data>data/)?$", views.UTCList.as_view(),name="all_lists"),
 
     #view for composite calculations via ajax
     url(r"^composite/$", views.CompositeCalculation.as_view(), name="composite"),
