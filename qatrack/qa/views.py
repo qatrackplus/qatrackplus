@@ -1133,67 +1133,114 @@ class TestListInstances(ListView):
 
 
 #============================================================================
-class TestListInstancesDataSource(JSONResponseMixin,ListView):
-    """"""
-    model = models.TestListInstance
-    queryset = models.TestListInstance.objects.all
+class BaseDataTablesDataSource(JSONResponseMixin,ListView):
 
-    #----------------------------------------------------------------------
-    def get_queryset(self):
-        return self.fetch_related(self.queryset())
-    #----------------------------------------------------------------------
-    def fetch_related(self,qs):
-        qs = qs.select_related(
-                    "test_list__name",
-                    "testinstance__status",
-                    "unit_test_collection__unit__name",
-                    "unit_test_collection__frequency__name",
-                    "created_by","modified_by",
-        ).prefetch_related("testinstance_set","testinstance_set__status")
-
-        return qs
-    #----------------------------------------------------------------------
-    def convert_context_to_json(self, context):
-        """Convert the context dictionary into a JSON object"""
-
-        qs = context["testlistinstance_list"]
+    model = None
+    queryset = None
+    #---------------------------------------------------------------------------
+    def get_columns(self):
+        """must be overridden in child class
+        get_columns must return a list of iterables of the form
+        (display, search_string, ordering)
+        """
+        return ()
+    #---------------------------------------------------------------------------
+    def get_context_data(self,*args,**kwargs):
+        base_context = super(BaseDataTablesDataSource,self).get_context_data(*args,**kwargs)
+        
+        qs = base_context["object_list"]
         total = qs.count()
-        total_after_filter = total
+
+        n_orderings = int(self.request.GET.get("iSortingCols",0))        
+        order_cols = {}
+        
+        for x in range(n_orderings):
+            col = int(self.request.GET.get("iSortCol_%d"%x))
+            dir_= "" if self.request.GET.get("sSortDir_%d"%x) == "desc" else "-"
+            order_cols[col] = dir_
+                    
+        filters = {}
+        orderings = []
+        columns = self.get_columns()
+        for col, (display, search, ordering) in enumerate(columns):
+
+            f = self.request.GET.get("sSearch_%d"%col)
+            if search and f:                
+                filters[search] = f
+                
+            if (col in order_cols) and ordering:
+                orderings.append("%s%s" % (order_cols[col],ordering))
+
+                            
+        filtered_objects =  qs.filter(**filters).order_by(*orderings)
 
         per_page = int(self.request.GET.get("iDisplayLength"))
         offset = int(self.request.GET.get("iDisplayStart"))
-
-        objects = qs[offset:offset+per_page]
-        filtered_objects =  qs
-
+        page_objects = filtered_objects[offset:offset+per_page]
+        
         data = []
-        for tli in objects:
-            data.append([
-                self.get_actions(),
-                tli.unit_test_collection.unit.name,
-                tli.unit_test_collection.frequency.name,
-                tli.test_list.name,
-                "%s"%tli.work_completed,
-                tli.created_by.username,
-                "progress",
-                "pass fail",
-                ]
-            )
-
-        data_tables = {
+        for obj in page_objects:
+            row = []
+            for col, (display, search, ordering) in enumerate(columns):
+                if callable(display):
+                    display = display(obj)
+                row.append(display)
+            data.append(row)
+            
+        context = {
             "data":data,
             "iTotalRecords":total,
             "iTotalDisplayRecords":filtered_objects.count(),
             "sEcho":self.request.GET.get("sEcho"),
         }
 
-        return json.dumps(data_tables)
+        return context
+
+
+
+#============================================================================
+class TestListInstancesDataSource(BaseDataTablesDataSource):
+    """"""
+    model = models.TestListInstance
+    queryset = models.TestListInstance.objects.all
+
+    #---------------------------------------------------------------------------
+    def get_columns(self):        
+        columns = (
+            (self.get_actions,None,None),
+            (lambda x:x.unit_test_collection.unit.name, "unit_test_collection__unit__name__exact", "unit_test_collection__unit__number"),
+            (lambda x:x.unit_test_collection.frequency.name, "unit_test_collection__frequency__name__exact", "unit_test_collection__frequency__name"),            
+            (lambda x:x.test_list.name,"test_list__name__contains","test_list__name"),
+            (self.get_work_completed,None,"work_completed"),
+            (lambda x:x.created_by.username,"created_by__username__contains","created_by__username"),
+            (self.get_review_status,None,None),
+            (self.get_pass_fail,None,None),
+        )
+        return columns
+
     #----------------------------------------------------------------------
-    def get_actions(self):
+    def get_queryset(self):
+        return self.queryset().select_related(
+            "test_list__name",
+            "testinstance__status",
+            "unit_test_collection__unit__name",
+            "unit_test_collection__frequency__due_interval",
+            "created_by","modified_by",
+        ).prefetch_related("testinstance_set","testinstance_set__status")
+
+    #----------------------------------------------------------------------
+    def get_actions(self,tli):
         #{% url review_test_list_instance instance.pk %}
         return '<a class="btn btn-primary btn-mini" href="%s?next=%s">Review</a>' %("foo","bar")
-
-
+    #---------------------------------------------------------------------------
+    def get_work_completed(self,tli):
+        return "%s"%tli.work_completed
+    #---------------------------------------------------------------------------
+    def get_review_status(self,tli):
+        return "foo"
+    #---------------------------------------------------------------------------
+    def get_pass_fail(self,tli):
+        return "bar"
 
 #====================================================================================
 class UTCInstances(TestListInstances):

@@ -18,14 +18,14 @@ function init_test_list_instance_tables(units, frequencies){
     var freq_names = _.pluck(frequencies[0].objects,"name");
 
     var cols = [
+        {bSortable:false},
         null,
         null,
         null,
         null,
         null,
-        null,
-        null,
-        null
+        {bSortable:false},
+        {bSortable:false}
     ];
 
     var filter_cols = [
@@ -33,7 +33,7 @@ function init_test_list_instance_tables(units, frequencies){
         {type: "select",values:unit_names }, // unit
         {type: "select",values:freq_names }, //Freq
         {type: "text"}, //Test List
-        {type: "text"}, //work completed
+        null, //work completed
         {type: "text"},//user
         null,
         null //pass/fail status
@@ -54,8 +54,30 @@ function init_test_list_instance_tables(units, frequencies){
     }).columnFilter({
         sPlaceHolder: "head:after",
         aoColumns: filter_cols
-    }).find("select, input").addClass("input-small");
+    }).fnSetFilteringDelay();
 
+    $("#testlistinstance-table").find("select, input").addClass("input-small");
+/*
+    var searchWait = 0;
+    var searchWaitInterval;
+    $('.dataTables_filter input')
+    .unbind('keypress keyup')
+    .bind('keypress keyup', function(e){
+        var item = $(this);
+        searchWait = 0;
+        if(!searchWaitInterval) searchWaitInterval = setInterval(function(){
+            if(searchWait>=3){
+                clearInterval(searchWaitInterval);
+                searchWaitInterval = '';
+                searchTerm = $(item).val();
+                oTable.fnFilter(searchTerm);
+                searchWait = 0;
+            }
+            searchWait++;
+        },200);
+
+    });
+    */
 }
 
 function on_table_sort(){
