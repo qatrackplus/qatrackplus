@@ -10,6 +10,7 @@ from django.shortcuts import get_object_or_404
 from django.core.urlresolvers import reverse
 from django.core.paginator import Paginator
 from django.template import Context
+from django.contrib.auth.context_processors import PermWrapper
 from django.template.loader import get_template
 
 from django.views.generic import ListView, UpdateView, View, TemplateView, CreateView, DetailView
@@ -1098,7 +1099,6 @@ class BaseDataTablesDataSource(ListView):
 
     model = None
     queryset = None
-    data_source_url = ""
 
     #----------------------------------------------------------------------
     def dispatch_(self,*args,**kwargs):
@@ -1119,10 +1119,7 @@ class BaseDataTablesDataSource(ListView):
             return super(BaseDataTablesDataSource,self).render_to_response(context)
     #---------------------------------------------------------------------------
     def set_columns(self):
-        """must be overridden in child class
-        get_columns must return a list of iterables of the form
-        (display, search_string, ordering)
-        """
+        """must be overridden in child class"""
         self.columns = ()
     #----------------------------------------------------------------------
     def set_orderings(self):
@@ -1130,7 +1127,7 @@ class BaseDataTablesDataSource(ListView):
         order_cols = {}
         for x in range(n_orderings):
             col = int(self.request.GET.get("iSortCol_%d"%x))
-            order_cols[col] = "" if self.request.GET.get("sSortDir_%d"%x) == "desc" else "-"
+            order_cols[col] = "" if self.request.GET.get("sSortDir_%d"%x) == "asc" else "-"
 
         self.orderings = []
         for col, (display, search, ordering) in enumerate(self.columns):
@@ -1172,8 +1169,6 @@ class BaseDataTablesDataSource(ListView):
     #----------------------------------------------------------------------
     def get_table_context_data(self,base_context):
 
-        #base_context =
-
         all_objects = base_context["object_list"]
 
         self.set_columns()
@@ -1201,9 +1196,7 @@ class BaseDataTablesDataSource(ListView):
         return "Generic Data Tables Template View"
     #----------------------------------------------------------------------
     def get_template_context_data(self,context):
-        #context = super(DataTablesTemplateView,self).get_context_data(*args,**kwargs)
         context["page_title"] = self.get_page_title()
-        #context["data_url"] = self.get_data_source()
         return context
 
 
@@ -1224,7 +1217,7 @@ class TestListInstances(BaseDataTablesDataSource):
             (lambda x:x.test_list.name,"test_list__name__contains","test_list__name"),
             (self.get_work_completed,None,"work_completed"),
             (lambda x:x.created_by.username,"created_by__username__contains","created_by__username"),
-            (qa_tags.as_review_status,None,None),
+            (self.get_review_status,None,None),
             (qa_tags.as_pass_fail_status,None,None),
         )
 
@@ -1241,17 +1234,31 @@ class TestListInstances(BaseDataTablesDataSource):
     #----------------------------------------------------------------------
     def get_actions(self,tli):
         template = get_template("qa/testlistinstance_actions.html")
-        from django.contrib.auth.context_processors import PermWrapper
         c = Context({"instance":tli,"perms":PermWrapper(self.request.user),"request":self.request})
         return template.render(c)
 
     #---------------------------------------------------------------------------
     def get_work_completed(self,tli):
-        return formats.date_format(tli.work_completed,"DATETIME_FORMAT")
+        template = get_template("qa/testlistinstance_work_completed.html")
+        c = Context({"instance":tli})
+        return template.render(c)
+    #----------------------------------------------------------------------
+    def get_review_status(self,tli):
+        template = get_template("qa/testlistinstance_review_status.html")
+        c = Context({"instance":tli})
+        return template.render(c)
+
 
 
 #====================================================================================
 class UTCInstances(TestListInstances):
+    #----------------------------------------------------------------------
+    def get_page_title(self):
+        try:
+            utc = models.UnitTestCollection.objects.get(pk=self.kwargs["pk"])
+            return "History for %s" % utc.tests_object.name
+        except:
+            raise Http404
 
     #---------------------------------------------------------------------------
     def get_queryset(self):
