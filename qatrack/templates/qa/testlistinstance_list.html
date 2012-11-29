@@ -5,12 +5,6 @@
 
 {% block head_title %}{{page_title}}{% endblock %}
 
-{% block extra_script %}
-	<script type="text/javascript">
-		var data_tables_data_source = "{{data_url}}";
-	</script>
-{% endblock %}
-
 {% block body %}
     <div class="row-fluid">
         <div class="span12">
@@ -65,85 +59,6 @@
         </div>
     </div>
 
-    {% comment %}
-    {% include "qa/paginator.html" %}
-    <div class="row-fluid" >
-        <div class="span12 container form-inline">
-            <table class="table table-bordered table-striped table-condensed test-list-instance-table">
-
-                <thead>
-                    <tr>
-                        <th>Actions</th>
-                        <th class="unit">Unit</th>
-                        <th class="frequency">Frequency</th>
-                        <th>Test List/Cycle<div></div></th>
-                        <th>Date</th>
-                        <th>User</th>
-                        <th>Progress</th>
-                        <th>Pass/Fail Status</th>
-
-                    </tr>
-                </thead>
-                <tbody>
-
-                {% for instance in test_list_instances %}
-
-                    <tr class="{% cycle 'odd' 'even' %} has-due-date">
-                        <td>
-                            {% if perms.qa.can_review %}
-                            <a class="btn btn-primary btn-mini" href="{% url review_test_list_instance instance.pk %}?next={{request.get_full_path}}">Review</a>
-                            {% endif %}
-                            {% if instance.in_progress %}
-                                <a class="btn btn-primary btn-mini" title="Continue this list" href="{%url edit_tli pk=instance.pk%}?next={{request.get_full_path}}" >Continue</a>
-                            {% else %}
-                                <a class="btn btn-primary btn-mini" title="Edit this list" href="{%url edit_tli pk=instance.pk%}?next={{request.get_full_path}}" >Edit</a>
-                            {% endif %}
-                        </td>
-                        <td>{{instance.unit_test_collection.unit.name}}</td>
-                        <td>{{instance.unit_test_collection.frequency.name}}</td>
-                        <td><strong>{{instance.test_list.name}}</strong></td>
-                        <td>
-                            {% if instance.in_progress %}
-                                <span data-timestamp="{{instance.work_started|date:"U"}}">
-                                    {{instance.work_started}}
-                                </span>
-                            {% else %}
-                                <span data-timestamp="{{instance.work_completed|date:"U"}}">
-                                    {{instance.work_completed}}
-                                </span>
-                            {% endif %}
-                        </td>
-                        <td>{{instance.created_by}}</td>
-
-                        <td class="review-status">
-                            {% if instance.in_progress %}
-                                <abbr title="Started {{instance.work_started}} by {{instance.created_by}}"><em>In Progress</em></abbr>
-                            {% else %}
-                                {{instance|as_review_status}}
-                            {% endif %}
-                        </td>
-                        <td class="pass_fail_status">{{instance|as_pass_fail_status}}</td>
-
-                   </tr>
-                {% endfor %}
-                </tbody>
-                <tfoot>
-                    <tr>
-                        <th>Actions</th>
-                        <th class="unit">Unit</th>
-                        <th class="frequency">Frequency</th>
-                        <th>Test List/Cycle<div></div></th>
-                        <th>Date</th>
-                        <th>User</th>
-                        <th>Review Status</th>
-                        <th>Status</th>
-                    </tr>
-                </tfoot>
-            </table>
-        </div>
-    </div>
-    {% include "qa/paginator.html" %}
-    {% endcomment %}
 {% endblock body %}
 
 {% block end_body_extra_script %}
