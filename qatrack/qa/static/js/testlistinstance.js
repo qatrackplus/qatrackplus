@@ -36,7 +36,8 @@ function init_test_list_instance_tables(units, frequencies){
         fnAdjustColumnSizing:false,
         bFilter:true,
         bPaginate:true,
-        iDisplayLength:10,
+        iDisplayLength:50,
+        aaSorting:[[1,"asc"],[4,"desc"]],
         aoColumns:cols,
         sDom: '<"row-fluid"<"span6"ir><"span6"p>>t<"row-fluid"<"span12"lp>>',
         sPaginationType: "bootstrap"
