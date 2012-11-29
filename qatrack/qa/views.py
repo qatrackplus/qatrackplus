@@ -923,6 +923,112 @@ class EditTestListInstance(BaseEditTestListInstance):
 
 
 
+#============================================================================
+class BaseDataTablesDataSource(ListView):
+
+    model = None
+    queryset = None
+
+    #----------------------------------------------------------------------
+    def dispatch_(self,*args,**kwargs):
+        if settings.DEBUG:
+            import django.db
+            start = len(django.db.connection.queries)
+        resp = super(BaseDataTablesDataSource,self).dispatch(*args,**kwargs)
+
+        if settings.DEBUG:
+            end = len(django.db.connection.queries)
+            print "\n\nNumber of queries: %d\n\n" %(end-start)
+        return resp
+
+    def render_to_response(self, context):
+        if self.kwargs["data"]:
+            return HttpResponse(context, content_type='application/json')
+        else:
+            return super(BaseDataTablesDataSource,self).render_to_response(context)
+    #---------------------------------------------------------------------------
+    def set_columns(self):
+        """must be overridden in child class"""
+        self.columns = ()
+    #----------------------------------------------------------------------
+    def set_orderings(self):
+        n_orderings = int(self.request.GET.get("iSortingCols",0))
+        order_cols = {}
+        for x in range(n_orderings):
+            col = int(self.request.GET.get("iSortCol_%d"%x))
+            order_cols[col] = "" if self.request.GET.get("sSortDir_%d"%x) == "asc" else "-"
+
+        self.orderings = []
+        for col, (display, search, ordering) in enumerate(self.columns):
+            if (col in order_cols) and ordering:
+                self.orderings.append("%s%s" % (order_cols[col],ordering))
+
+
+    #----------------------------------------------------------------------
+    def set_filters(self):
+        self.filters = {}
+        for col, (display, search, ordering) in enumerate(self.columns):
+
+            f = self.request.GET.get("sSearch_%d"%col)
+            if search and f:
+                self.filters[search] = f
+    #----------------------------------------------------------------------
+    def set_current_page_objects(self):
+        per_page = int(self.request.GET.get("iDisplayLength"))
+        offset = int(self.request.GET.get("iDisplayStart"))
+        self.cur_page_objects = self.filtered_objects[offset:offset+per_page]
+    #----------------------------------------------------------------------
+    def tabulate_data(self):
+        self.table_data = []
+        for obj in self.cur_page_objects:
+            row = []
+            for col, (display, search, ordering) in enumerate(self.columns):
+                if callable(display):
+                    display = display(obj)
+                row.append(display)
+            self.table_data.append(row)
+
+    #---------------------------------------------------------------------------
+    def get_context_data(self,*args,**kwargs):
+        context = super(BaseDataTablesDataSource,self).get_context_data(*args,**kwargs)
+        if self.kwargs["data"]:
+            return self.get_table_context_data(context)
+        else:
+            return self.get_template_context_data(context)
+    #----------------------------------------------------------------------
+    def get_table_context_data(self,base_context):
+
+        all_objects = base_context["object_list"]
+
+        self.set_columns()
+        self.set_filters()
+        self.set_orderings()
+
+        self.filtered_objects =  all_objects.filter(**self.filters).order_by(*self.orderings)
+        self.set_current_page_objects()
+        self.tabulate_data()
+
+        context = {
+            "data":self.table_data,
+            "iTotalRecords":all_objects.count(),
+            "iTotalDisplayRecords":self.filtered_objects.count(),
+            "sEcho":self.request.GET.get("sEcho"),
+        }
+
+        return json.dumps(context)
+
+    #----------------------------------------------------------------------
+    def get_data_source(self):
+        raise NotImplementedError
+    #----------------------------------------------------------------------
+    def get_page_title(self):
+        return "Generic Data Tables Template View"
+    #----------------------------------------------------------------------
+    def get_template_context_data(self,context):
+        context["page_title"] = self.get_page_title()
+        return context
+
+
 
 #============================================================================
 class UTCList(ListView):
@@ -1077,127 +1183,6 @@ class UnitList(UTCList):
     def get_page_title(self):
         title = ", ".join([x.name for x in self.units]) + " Test Lists"
         return  title
-
-
-class DataTablesTemplateView(TemplateView):
-
-    #----------------------------------------------------------------------
-    def get_data_source(self):
-        raise NotImplementedError
-    #----------------------------------------------------------------------
-    def get_page_title(self):
-        return "Generic Data Tables Template View"
-    #----------------------------------------------------------------------
-    def get_context_data(self,*args,**kwargs):
-        context = super(DataTablesTemplateView,self).get_context_data(*args,**kwargs)
-        context["page_title"] = self.get_page_title()
-        context["data_url"] = self.get_data_source()
-        return context
-
-#============================================================================
-class BaseDataTablesDataSource(ListView):
-
-    model = None
-    queryset = None
-
-    #----------------------------------------------------------------------
-    def dispatch_(self,*args,**kwargs):
-        if settings.DEBUG:
-            import django.db
-            start = len(django.db.connection.queries)
-        resp = super(BaseDataTablesDataSource,self).dispatch(*args,**kwargs)
-
-        if settings.DEBUG:
-            end = len(django.db.connection.queries)
-            print "\n\nNumber of queries: %d\n\n" %(end-start)
-        return resp
-
-    def render_to_response(self, context):
-        if self.kwargs["data"]:
-            return HttpResponse(context, content_type='application/json')
-        else:
-            return super(BaseDataTablesDataSource,self).render_to_response(context)
-    #---------------------------------------------------------------------------
-    def set_columns(self):
-        """must be overridden in child class"""
-        self.columns = ()
-    #----------------------------------------------------------------------
-    def set_orderings(self):
-        n_orderings = int(self.request.GET.get("iSortingCols",0))
-        order_cols = {}
-        for x in range(n_orderings):
-            col = int(self.request.GET.get("iSortCol_%d"%x))
-            order_cols[col] = "" if self.request.GET.get("sSortDir_%d"%x) == "asc" else "-"
-
-        self.orderings = []
-        for col, (display, search, ordering) in enumerate(self.columns):
-            if (col in order_cols) and ordering:
-                self.orderings.append("%s%s" % (order_cols[col],ordering))
-
-
-    #----------------------------------------------------------------------
-    def set_filters(self):
-        self.filters = {}
-        for col, (display, search, ordering) in enumerate(self.columns):
-
-            f = self.request.GET.get("sSearch_%d"%col)
-            if search and f:
-                self.filters[search] = f
-    #----------------------------------------------------------------------
-    def set_current_page_objects(self):
-        per_page = int(self.request.GET.get("iDisplayLength"))
-        offset = int(self.request.GET.get("iDisplayStart"))
-        self.cur_page_objects = self.filtered_objects[offset:offset+per_page]
-    #----------------------------------------------------------------------
-    def tabulate_data(self):
-        self.table_data = []
-        for obj in self.cur_page_objects:
-            row = []
-            for col, (display, search, ordering) in enumerate(self.columns):
-                if callable(display):
-                    display = display(obj)
-                row.append(display)
-            self.table_data.append(row)
-
-    #---------------------------------------------------------------------------
-    def get_context_data(self,*args,**kwargs):
-        context = super(BaseDataTablesDataSource,self).get_context_data(*args,**kwargs)
-        if self.kwargs["data"]:
-            return self.get_table_context_data(context)
-        else:
-            return self.get_template_context_data(context)
-    #----------------------------------------------------------------------
-    def get_table_context_data(self,base_context):
-
-        all_objects = base_context["object_list"]
-
-        self.set_columns()
-        self.set_filters()
-        self.set_orderings()
-
-        self.filtered_objects =  all_objects.filter(**self.filters).order_by(*self.orderings)
-        self.set_current_page_objects()
-        self.tabulate_data()
-
-        context = {
-            "data":self.table_data,
-            "iTotalRecords":all_objects.count(),
-            "iTotalDisplayRecords":self.filtered_objects.count(),
-            "sEcho":self.request.GET.get("sEcho"),
-        }
-
-        return json.dumps(context)
-
-    #----------------------------------------------------------------------
-    def get_data_source(self):
-        raise NotImplementedError
-    #----------------------------------------------------------------------
-    def get_page_title(self):
-        return "Generic Data Tables Template View"
-    #----------------------------------------------------------------------
-    def get_template_context_data(self,context):
-        context["page_title"] = self.get_page_title()
-        return context
 
 
 
