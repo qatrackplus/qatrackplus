@@ -5,6 +5,12 @@
 
 {% block head_title %}{{page_title}}{% endblock %}
 
+{% block extra_script %}
+	<script type="text/javascript">
+		var data_tables_data_source = "{{data_url}}";
+	</script>
+{% endblock %}
+
 {% block body %}
     <div class="row-fluid">
         <div class="span12">

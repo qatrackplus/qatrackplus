@@ -11,11 +11,13 @@ from django.core.urlresolvers import reverse
 from django.core.paginator import Paginator
 from django.template import Context
 from django.template.loader import get_template
+
 from django.views.generic import ListView, UpdateView, View, TemplateView, CreateView, DetailView
 from django.utils.translation import ugettext as _
-from django.utils import timezone
+from django.utils import timezone,formats
 
 from qatrack.qa import models,utils
+from qatrack.qa.templatetags import qa_tags
 from qatrack.units.models import Unit, UnitType
 from qatrack.contacts.models import Contact
 from qatrack import settings
@@ -1076,147 +1078,155 @@ class UnitList(UTCList):
         return  title
 
 
+class DataTablesTemplateView(TemplateView):
 
-#============================================================================
-class TestListInstances(ListView):
-    model = models.TestListInstance
-    context_object_name = "test_list_instances"
-    paginate_by = settings.PAGINATE_DEFAULT
-    queryset = models.TestListInstance.objects.all
-
-    allowed_orderings = [
-        "test_list__name",
-        "testinstance__status",
-        "unit_test_collection__unit__name",
-        "unit_test_collection__frequency__nominal_interval",
-        "created_by__username","modified_by__username",
-        "work_completed","work_started"
-    ]
-    DEFAULT_ORDERINGS = ["-work_completed"]
     #----------------------------------------------------------------------
-    def get_queryset(self):
-        return self.fetch_related(self.queryset())
-    #----------------------------------------------------------------------
-    def fetch_related(self,qs):
-        qs = qs.select_related(
-                    "test_list__name",
-                    "testinstance__status",
-                    "unit_test_collection__unit__name",
-                    "unit_test_collection__frequency__name",
-                    "created_by","modified_by",
-        ).prefetch_related("testinstance_set","testinstance_set__status")
-
-        return qs
+    def get_data_source(self):
+        raise NotImplementedError
     #----------------------------------------------------------------------
     def get_page_title(self):
-        return "Completed Test Lists"
+        return "Generic Data Tables Template View"
     #----------------------------------------------------------------------
     def get_context_data(self,*args,**kwargs):
-        context = super(TestListInstances,self).get_context_data(*args,**kwargs)
+        context = super(DataTablesTemplateView,self).get_context_data(*args,**kwargs)
         context["page_title"] = self.get_page_title()
-        context["sorting_keys"] = "&".join(["order=%s"%s for s in self.request.GET.getlist("order")])
+        context["data_url"] = self.get_data_source()
         return context
-    #----------------------------------------------------------------------
-    def get_paginator(self,*args,**kwargs):
-        """set pagination ordering based on url parameters"""
-        paginator = super(TestListInstances,self).get_paginator(*args,**kwargs)
-        paginator.object_list = paginator.object_list.order_by(*self.get_orderings())
-        return paginator
-    #----------------------------------------------------------------------
-    def get_orderings(self):
-        """return list of ordering strings based on url parameters"""
-        request_orders = self.request.GET.getlist("order")
-        allowed_ordering = [x for x in request_orders if x.strip("-") in self.allowed_orderings]
-        if not allowed_ordering:
-            allowed_ordering = self.DEFAULT_ORDERINGS
-        return allowed_ordering
-
 
 #============================================================================
-class BaseDataTablesDataSource(JSONResponseMixin,ListView):
+class BaseDataTablesDataSource(ListView):
 
     model = None
     queryset = None
+    data_source_url = ""
+
+    #----------------------------------------------------------------------
+    def dispatch_(self,*args,**kwargs):
+        if settings.DEBUG:
+            import django.db
+            start = len(django.db.connection.queries)
+        resp = super(BaseDataTablesDataSource,self).dispatch(*args,**kwargs)
+
+        if settings.DEBUG:
+            end = len(django.db.connection.queries)
+            print "\n\nNumber of queries: %d\n\n" %(end-start)
+        return resp
+
+    def render_to_response(self, context):
+        if self.kwargs["data"]:
+            return HttpResponse(context, content_type='application/json')
+        else:
+            return super(BaseDataTablesDataSource,self).render_to_response(context)
     #---------------------------------------------------------------------------
-    def get_columns(self):
+    def set_columns(self):
         """must be overridden in child class
         get_columns must return a list of iterables of the form
         (display, search_string, ordering)
         """
-        return ()
-    #---------------------------------------------------------------------------
-    def get_context_data(self,*args,**kwargs):
-        base_context = super(BaseDataTablesDataSource,self).get_context_data(*args,**kwargs)
-        
-        qs = base_context["object_list"]
-        total = qs.count()
-
-        n_orderings = int(self.request.GET.get("iSortingCols",0))        
+        self.columns = ()
+    #----------------------------------------------------------------------
+    def set_orderings(self):
+        n_orderings = int(self.request.GET.get("iSortingCols",0))
         order_cols = {}
-        
         for x in range(n_orderings):
             col = int(self.request.GET.get("iSortCol_%d"%x))
-            dir_= "" if self.request.GET.get("sSortDir_%d"%x) == "desc" else "-"
-            order_cols[col] = dir_
-                    
-        filters = {}
-        orderings = []
-        columns = self.get_columns()
-        for col, (display, search, ordering) in enumerate(columns):
+            order_cols[col] = "" if self.request.GET.get("sSortDir_%d"%x) == "desc" else "-"
+
+        self.orderings = []
+        for col, (display, search, ordering) in enumerate(self.columns):
+            if (col in order_cols) and ordering:
+                self.orderings.append("%s%s" % (order_cols[col],ordering))
+
+
+    #----------------------------------------------------------------------
+    def set_filters(self):
+        self.filters = {}
+        for col, (display, search, ordering) in enumerate(self.columns):
 
             f = self.request.GET.get("sSearch_%d"%col)
-            if search and f:                
-                filters[search] = f
-                
-            if (col in order_cols) and ordering:
-                orderings.append("%s%s" % (order_cols[col],ordering))
-
-                            
-        filtered_objects =  qs.filter(**filters).order_by(*orderings)
-
+            if search and f:
+                self.filters[search] = f
+    #----------------------------------------------------------------------
+    def set_current_page_objects(self):
         per_page = int(self.request.GET.get("iDisplayLength"))
         offset = int(self.request.GET.get("iDisplayStart"))
-        page_objects = filtered_objects[offset:offset+per_page]
-        
-        data = []
-        for obj in page_objects:
+        self.cur_page_objects = self.filtered_objects[offset:offset+per_page]
+    #----------------------------------------------------------------------
+    def tabulate_data(self):
+        self.table_data = []
+        for obj in self.cur_page_objects:
             row = []
-            for col, (display, search, ordering) in enumerate(columns):
+            for col, (display, search, ordering) in enumerate(self.columns):
                 if callable(display):
                     display = display(obj)
                 row.append(display)
-            data.append(row)
-            
+            self.table_data.append(row)
+
+    #---------------------------------------------------------------------------
+    def get_context_data(self,*args,**kwargs):
+        context = super(BaseDataTablesDataSource,self).get_context_data(*args,**kwargs)
+        if self.kwargs["data"]:
+            return self.get_table_context_data(context)
+        else:
+            return self.get_template_context_data(context)
+    #----------------------------------------------------------------------
+    def get_table_context_data(self,base_context):
+
+        #base_context =
+
+        all_objects = base_context["object_list"]
+
+        self.set_columns()
+        self.set_filters()
+        self.set_orderings()
+
+        self.filtered_objects =  all_objects.filter(**self.filters).order_by(*self.orderings)
+        self.set_current_page_objects()
+        self.tabulate_data()
+
         context = {
-            "data":data,
-            "iTotalRecords":total,
-            "iTotalDisplayRecords":filtered_objects.count(),
+            "data":self.table_data,
+            "iTotalRecords":all_objects.count(),
+            "iTotalDisplayRecords":self.filtered_objects.count(),
             "sEcho":self.request.GET.get("sEcho"),
         }
 
+        return json.dumps(context)
+
+    #----------------------------------------------------------------------
+    def get_data_source(self):
+        raise NotImplementedError
+    #----------------------------------------------------------------------
+    def get_page_title(self):
+        return "Generic Data Tables Template View"
+    #----------------------------------------------------------------------
+    def get_template_context_data(self,context):
+        #context = super(DataTablesTemplateView,self).get_context_data(*args,**kwargs)
+        context["page_title"] = self.get_page_title()
+        #context["data_url"] = self.get_data_source()
         return context
 
 
 
+
 #============================================================================
-class TestListInstancesDataSource(BaseDataTablesDataSource):
-    """"""
+class TestListInstances(BaseDataTablesDataSource):
+
     model = models.TestListInstance
     queryset = models.TestListInstance.objects.all
 
     #---------------------------------------------------------------------------
-    def get_columns(self):        
-        columns = (
+    def set_columns(self):
+        self.columns = (
             (self.get_actions,None,None),
             (lambda x:x.unit_test_collection.unit.name, "unit_test_collection__unit__name__exact", "unit_test_collection__unit__number"),
-            (lambda x:x.unit_test_collection.frequency.name, "unit_test_collection__frequency__name__exact", "unit_test_collection__frequency__name"),            
+            (lambda x:x.unit_test_collection.frequency.name, "unit_test_collection__frequency__name__exact", "unit_test_collection__frequency__name"),
             (lambda x:x.test_list.name,"test_list__name__contains","test_list__name"),
             (self.get_work_completed,None,"work_completed"),
             (lambda x:x.created_by.username,"created_by__username__contains","created_by__username"),
-            (self.get_review_status,None,None),
-            (self.get_pass_fail,None,None),
+            (qa_tags.as_review_status,None,None),
+            (qa_tags.as_pass_fail_status,None,None),
         )
-        return columns
 
     #----------------------------------------------------------------------
     def get_queryset(self):
@@ -1230,25 +1240,23 @@ class TestListInstancesDataSource(BaseDataTablesDataSource):
 
     #----------------------------------------------------------------------
     def get_actions(self,tli):
-        #{% url review_test_list_instance instance.pk %}
-        return '<a class="btn btn-primary btn-mini" href="%s?next=%s">Review</a>' %("foo","bar")
+        template = get_template("qa/testlistinstance_actions.html")
+        from django.contrib.auth.context_processors import PermWrapper
+        c = Context({"instance":tli,"perms":PermWrapper(self.request.user),"request":self.request})
+        return template.render(c)
+
     #---------------------------------------------------------------------------
     def get_work_completed(self,tli):
-        return "%s"%tli.work_completed
-    #---------------------------------------------------------------------------
-    def get_review_status(self,tli):
-        return "foo"
-    #---------------------------------------------------------------------------
-    def get_pass_fail(self,tli):
-        return "bar"
+        return formats.date_format(tli.work_completed,"DATETIME_FORMAT")
+
 
 #====================================================================================
 class UTCInstances(TestListInstances):
 
     #---------------------------------------------------------------------------
     def get_queryset(self):
-        utc = get_object_or_404(models.UnitTestCollection,pk=self.kwargs["pk"])
-        return self.fetch_related(utc.testlistinstance_set).order_by("-work_completed")
+        qs = super(UTCInstances,self).get_queryset()
+        return qs.filter(unit_test_collection__pk=self.kwargs["pk"])
 
 
 #============================================================================
@@ -1263,17 +1271,9 @@ class InProgress(TestListInstances):
 class Unreviewed(TestListInstances):
     """view for grouping all test lists with a certain frequency for all units"""
     queryset = models.TestListInstance.objects.unreviewed
-    DEFAULT_ORDERINGS = ["unit_test_collection__unit__number","-work_completed"]
-    #---------------------------------------------------------------------------
-    def get_queryset(self):
-        return self.fetch_related(self.queryset())
     #----------------------------------------------------------------------
     def get_page_title(self):
         return "Unreviewed Test Lists"
-    #----------------------------------------------------------------------
-    def render_to_response_(self):
-        """"""
-        self.render_to_response
 
 #============================================================================
 class ExportToCSV(View):

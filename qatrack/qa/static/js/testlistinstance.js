@@ -30,13 +30,15 @@ function init_test_list_instance_tables(units, frequencies){
     $("#testlistinstance-table").dataTable({
         bProcessing:true,
         bServerSide:true,
-        sAjaxSource:'../data-tables/',
+        sAjaxSource:"./data/",
         sAjaxDataProp:"data",
         bAutoWidth:false,
         fnAdjustColumnSizing:false,
         bFilter:true,
         bPaginate:true,
+        iDisplayLength:10,
         aoColumns:cols,
+        sDom: '<"row-fluid"<"span6"ir><"span6"p>>t<"row-fluid"<"span12"lp>>',
         sPaginationType: "bootstrap"
 
     }).columnFilter({
