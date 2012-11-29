@@ -1,17 +1,17 @@
 ﻿/*
 * File:        jquery.dataTables.columnFilter.js
 * Version:     1.4.7.
-* Author:      Jovan Popovic 
-* 
+* Author:      Jovan Popovic
+*
 * Copyright 2011-2012 Jovan Popovic, all rights reserved.
 *
 * This source file is free software, under either the GPL v2 license or a
 * BSD style license, as supplied with this software.
-* 
-* This source file is distributed in the hope that it will be useful, but 
-* WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY 
-* or FITNESS FOR A PARTICULAR PURPOSE. 
-* 
+*
+* This source file is distributed in the hope that it will be useful, but
+* WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+* or FITNESS FOR A PARTICULAR PURPOSE.
+*
 * Parameters:"
 * @sPlaceHolder                 String      Place where inline filtering function should be placed ("tfoot", "thead:before", "thead:after"). Default is "tfoot"
 * @sRangeSeparator              String      Separator that will be used when range values are sent to the server-side. Default value is "~".
@@ -65,7 +65,7 @@
             // use all rows
             else aiRows = oSettings.aiDisplayMaster; // all row numbers
 
-            // set up data array	
+            // set up data array
             var asResultData = new Array();
 
             for (var i = 0, c = aiRows.length; i < c; i++) {
@@ -357,8 +357,8 @@
         function fnCreateSelect(oTable, aData, bRegex) {
             var oSettings = oTable.fnSettings();
             if (aData == null && oSettings.sAjaxSource != "" && !oSettings.oFeatures.bServerSide) {
-                // Add a function to the draw callback, which will check for the Ajax data having 
-                // been loaded. Use a closure for the individual column elements that are used to 
+                // Add a function to the draw callback, which will check for the Ajax data having
+                // been loaded. Use a closure for the individual column elements that are used to
                 // built the column filter, since 'i' and 'th' (etc) are locally "global".
                 oSettings.aoDrawCallback.push({
                     "fn": (function (iColumn, nTh, sLabel) {
@@ -537,7 +537,7 @@
             });
             oTable.fnFilter('', index, true, false);
             return false;
-            }); 
+            });
             */
         }
 
@@ -616,7 +616,7 @@
 
                 oHost = oTable.fnSettings().nTHead;
 
-                
+
             }
 
             //$(sFilterRow + " th", oHost).each(function (index) {//bug with ColVis
@@ -706,6 +706,7 @@
                     }
                     aoData.push({ "name": "sRangeSeparator", "value": properties.sRangeSeparator });
 
+					/*
                     if (fnServerDataOriginal != null) {
                         try {
                             fnServerDataOriginal(sSource, aoData, fnCallback, oTable.fnSettings()); //TODO: See Issue 18
@@ -717,6 +718,30 @@
                         $.getJSON(sSource, aoData, function (json) {
                             fnCallback(json)
                         });
+                    }*/
+                    if (fnServerDataOriginal != null) {
+                        if (properties.iFilteringDelay != 0) {
+                            if (oFunctionTimeout != null)
+                                window.clearTimeout(oFunctionTimeout);
+                                oFunctionTimeout = window.setTimeout(function () {
+                                    try {
+                                        fnServerDataOriginal(sSource, aoData, fnCallback, oTable.fnSettings()); //TODO: See  Issue 18
+                                    } catch (ex) {
+                                        fnServerDataOriginal(sSource, aoData, fnCallback);
+                                    }
+                                }, properties.iFilteringDelay);
+                        }
+                    }
+                    else {
+                        if (properties.iFilteringDelay != 0) {
+                            if (oFunctionTimeout != null)
+                                window.clearTimeout(oFunctionTimeout);
+                                oFunctionTimeout = window.setTimeout(function () {
+                                    $.getJSON(sSource, aoData, function (json) {
+                                        fnCallback(json)
+                                    });
+                                }, properties.iFilteringDelay);
+                        }
                     }
                 };
 
