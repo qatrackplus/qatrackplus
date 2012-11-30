@@ -4,6 +4,7 @@ import calendar
 from api import ValueResource
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import Q
 from django.forms.models import inlineformset_factory
 from django.http import HttpResponse,HttpResponseRedirect, Http404
 from django.shortcuts import get_object_or_404
@@ -961,17 +962,33 @@ class BaseDataTablesDataSource(ListView):
         self.orderings = []
         for col, (display, search, ordering) in enumerate(self.columns):
             if (col in order_cols) and ordering:
-                self.orderings.append("%s%s" % (order_cols[col],ordering))
+                if isinstance(ordering,basestring):
+                    self.orderings.append("%s%s" % (order_cols[col],ordering))
+                else:
+                    for o in ordering:
+                        self.orderings.append("%s%s" % (order_cols[col],o))
 
 
     #----------------------------------------------------------------------
     def set_filters(self):
-        self.filters = {}
+        self.filters = []
         for col, (display, search, ordering) in enumerate(self.columns):
 
-            f = self.request.GET.get("sSearch_%d"%col)
-            if search and f:
-                self.filters[search] = f
+            search_term = self.request.GET.get("sSearch_%d"%col)
+            if search and search_term:
+                if not isinstance(search,basestring):
+                    f = None
+                    for s,ct in search:
+                        q = Q(**{s:search_term,"content_type":ct})
+                        if f is None:
+                            f = q
+                        else:
+                            f |= q
+                    
+                else:
+                    f = Q(**{search:search_term})
+                self.filters.append(f)                    
+
     #----------------------------------------------------------------------
     def set_current_page_objects(self):
         per_page = int(self.request.GET.get("iDisplayLength"))
@@ -1003,8 +1020,9 @@ class BaseDataTablesDataSource(ListView):
         self.set_columns()
         self.set_filters()
         self.set_orderings()
-
-        self.filtered_objects =  all_objects.filter(**self.filters).order_by(*self.orderings)
+        
+        self.filtered_objects =  all_objects.filter(*self.filters).order_by(*self.orderings)
+        
         self.set_current_page_objects()
         self.tabulate_data()
 
@@ -1033,8 +1051,6 @@ class BaseDataTablesDataSource(ListView):
 #============================================================================
 class UTCList(BaseDataTablesDataSource):
     model = models.UnitTestCollection
-#    context_object_name = "unittestcollections"
-#    paginate_by = settings.PAGINATE_DEFAULT
     action = "perform"
     action_display = "Perform"
 
@@ -1043,8 +1059,14 @@ class UTCList(BaseDataTablesDataSource):
     def set_columns(self):
         self.columns = (
             (self.get_actions,None,None),
-            (lambda x:x.tests_object.name, "tests_object__name__exact", "tests_object__name"),
-            (self.get_due_date, None,None),
+            (
+                lambda x:x.tests_object.name, (
+                    ("testlist__name__icontains",ContentType.objects.get_for_model(models.TestList)),
+                    ("testlistcycle__name__icontains",ContentType.objects.get_for_model(models.TestListCycle))                    
+                ), 
+                None
+            ),
+            (qa_tags.as_due_date, None,None),
             (lambda x:x.unit.name, "unit__name__exact", "unit__number"),
             (lambda x:x.frequency.name, "frequency__name__exact", "frequency__name"),
 
@@ -1056,19 +1078,24 @@ class UTCList(BaseDataTablesDataSource):
 
     #----------------------------------------------------------------------
     def get_actions(self,utc):
-        return ""
-    #----------------------------------------------------------------------
-    def get_due_date(self,utc):
-        return "foo"
-    #----------------------------------------------------------------------
+        template = get_template("qa/unittestcollection_actions.html")
+        c = Context({"utc":utc,"request":self.request,"action":self.action})
+        return template.render(c)
+    
+    #---------------------------------------------------------------------------
     def get_last_instance_work_completed(self,utc):
-        return "bar"
-    #----------------------------------------------------------------------
-    def get_last_instance_pass_fail(self,utc):
-        return "qux"
+        template = get_template("qa/testlistinstance_work_completed.html")
+        c = Context({"instance":utc.last_instance})
+        return template.render(c)
     #----------------------------------------------------------------------
     def get_last_instance_review_status(self,utc):
-        return "42"
+        template = get_template("qa/testlistinstance_review_status.html")
+        c = Context({"instance":utc.last_instance,"perms":PermWrapper(self.request.user),"request":self.request})
+        return template.render(c)
+    
+    #----------------------------------------------------------------------
+    def get_last_instance_pass_fail(self,utc):
+        return qa_tags.as_pass_fail_status(utc.last_instance)
     #----------------------------------------------------------------------
     def get_queryset(self):
 
@@ -1262,7 +1289,7 @@ class TestListInstances(BaseDataTablesDataSource):
     #----------------------------------------------------------------------
     def get_review_status(self,tli):
         template = get_template("qa/testlistinstance_review_status.html")
-        c = Context({"instance":tli})
+        c = Context({"instance":tli,"perms":PermWrapper(self.request.user)})
         return template.render(c)
 
 
