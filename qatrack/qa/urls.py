@@ -54,12 +54,12 @@ urlpatterns = patterns('',
     url(r"^review/due-dates/$", can_view_history(views.DueDateOverview.as_view()), name="overview_due_dates"),
 
     #review utc's
-    url(r"^review/all/$", can_view_history(views.UTCReview.as_view()), name="review_all"),
+    url(r"^review/all/(?P<data>data/)?$", can_view_history(views.UTCReview.as_view()), name="review_all"),
     url(r"^review/utc/(?P<pk>\d+)/(?P<data>data/)?$", can_view_history(views.UTCInstances.as_view()), name="review_utc"),
     url(r"^review/frequency/$", can_view_history(views.ChooseFrequencyForReview.as_view()), name="choose_review_frequency"),
-    url(r"^review/frequency/(?P<frequency>[/\w-]+)/$", can_view_history(views.UTCFrequencyReview.as_view()), name="review_by_frequency"),
+    url(r"^review/frequency/(?P<frequency>[/\w-]+?)/(?P<data>data/)?$", can_view_history(views.UTCFrequencyReview.as_view()), name="review_by_frequency"),
     url(r"^review/unit/$", can_view_history(views.ChooseUnitForReview.as_view()), name="choose_review_unit"),
-    url(r"^review/unit/(?P<unit_number>[/\d]+)/$", can_view_history(views.UTCUnitReview.as_view()), name="review_by_unit"),
+    url(r"^review/unit/(?P<unit_number>[/\d]+)/(?P<data>data/)?$", can_view_history(views.UTCUnitReview.as_view()), name="review_by_unit"),
 
     #test list instances
     url(r"^session/details/(?P<data>data/)?$", can_view_history(views.TestListInstances.as_view()), name="complete_instances"),
@@ -72,10 +72,10 @@ urlpatterns = patterns('',
     url(r"^unit/$", views.ChooseUnit.as_view(), name="choose_unit"),
     url(r"^utc/perform/(?P<pk>\d+)/$", views.PerformQA.as_view(), name="perform_qa"),
 
-    url(r"^unit/(?P<unit_number>[/\d]+)/frequency/(?P<frequency>[/\w-]+)/$", views.UnitFrequencyList.as_view(), name="qa_by_frequency_unit"),
+    url(r"^unit/(?P<unit_number>[/\d]+)/frequency/(?P<frequency>[/\w-]+?)/(?P<data>data/)?$", views.UnitFrequencyList.as_view(), name="qa_by_frequency_unit"),
     url(r"^unit/(?P<unit_number>[/\d]+)/$", views.UnitList.as_view(), name="qa_by_unit"),
 
-    url(r"^frequency/(?P<frequency>[/\w-]+)/unit/(?P<unit_number>[/\d]+)/$", views.UnitFrequencyList.as_view(), name="qa_by_unit_frequency"),
-    url(r"^frequency/(?P<frequency>[/\w-]+)/$", views.FrequencyList.as_view(), name="qa_by_frequency"),
+    url(r"^frequency/(?P<frequency>[/\w-]+)/unit/(?P<unit_number>[/\d]+)/(?P<data>data/)?$", views.UnitFrequencyList.as_view(), name="qa_by_unit_frequency"),
+    url(r"^frequency/(?P<frequency>[/\w-]+?)/(?P<data>data/)?$", views.FrequencyList.as_view(), name="qa_by_frequency"),
 
 )
