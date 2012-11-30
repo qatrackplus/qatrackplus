@@ -361,21 +361,29 @@ $(document).ready(function(){
     $(that).on("keydown","input, select", function(e) {
 
         var idx = user_inputs.index(this);
-
+        var to_focus;
         //rather than submitting form on enter, move to next value
         if (e.which == QAUtils.KC_ENTER  || e.which == QAUtils.KC_DOWN ) {
 
             if (idx == user_inputs.length - 1) {
-                user_inputs.first().focus();
+                to_focus=user_inputs.first();
             } else {
-                user_inputs[idx+1].focus();
+                to_focus = user_inputs[idx+1];
+            }
+            to_focus.focus()
+            if (to_focus.type === "text"){
+                to_focus.select();
             }
             return false;
         }else if (e.which == QAUtils.KC_UP ){
             if (idx == 0) {
-                user_inputs.last().focus();
+                to_focus = user_inputs.last();
             } else {
-                user_inputs[idx-1].focus();
+                to_focus = user_inputs[idx-1];
+            }
+            to_focus.focus()
+            if (to_focus.type === "text"){
+                to_focus.select();
             }
             return false;
         }
