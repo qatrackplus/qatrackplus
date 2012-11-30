@@ -23,7 +23,7 @@
 
             <h4 class="header-spacer">{{unit_type.name}}</h4>
             <div class="btn-group" style="float:left">
-                <button class="btn top-level"><a href="{% url choose_review_unit %}{% for unit in unit_type.list %}{{unit.number}}/{%endfor%}">All</a></button>
+                <button class="btn top-level"><a href="{% url choose_review_unit %}{% for unit in unit_type.unit_set.all %}{{unit.number}}/{%endfor%}">All</a></button>
 
                 {% for unit in unit_type.unit_set.all %}
                     <button class="btn top-level"><a href="{% url review_by_unit unit_number=unit.number %}">{{unit.name}}</a></button>
