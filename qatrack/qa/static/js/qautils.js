@@ -130,59 +130,58 @@ var QAUtils = new function() {
         var status, gen_status;
         var message;
 
+        if (test_type === this.BOOLEAN){
+            return this.test_bool(value, reference);
+        }else if  (test_type === this.MULTIPLE_CHOICE){
+            return this.test_multi(value,tolerances)
+        }
 
-    if (test_type === this.BOOLEAN){
-        return this.test_bool(value, reference);
-    }else if  (test_type === this.MULTIPLE_CHOICE){
-        return this.test_multi(value,tolerances)
-    }
+        if ( !this.is_number(reference) || !tolerances.type){
+            return {
+                status:this.NO_TOL,
+                gen_status:this.NO_TOL,
+                diff:"",
+                message: this.NO_TOL_DISP
+            };
+        }
 
-    if ( !this.is_number(reference) || !tolerances.type){
-        return {
-            status:this.NO_TOL,
-            gen_status:this.NO_TOL,
-            diff:"",
-            message: this.NO_TOL_DISP
-        };
-    }
+        if (tolerances.type === this.PERCENT){
+            diff = this.percent_difference(value,reference);
+            message = "(" + diff.toFixed(1)+"%)";
 
-    if (tolerances.type === this.PERCENT){
-        diff = this.percent_difference(value,reference);
-        message = "(" + diff.toFixed(1)+"%)";
+        }else{
+            diff = this.absolute_difference(value,reference);
+            message = "(" + diff.toFixed(2)+")";
+        }
 
-    }else{
-        diff = this.absolute_difference(value,reference);
-        message = "(" + diff.toFixed(2)+")";
-    }
+        var right_at_tolerance = this.almost_equal(tolerances.tol_low,diff) || this.almost_equal(tolerances.tol_high,diff);
+        var right_at_low_action = this.almost_equal(tolerances.act_low,diff);
+        var right_at_high_action = this.almost_equal(tolerances.act_high,diff);
 
-    var right_at_tolerance = this.almost_equal(tolerances.tol_low,diff) || this.almost_equal(tolerances.tol_high,diff);
-    var right_at_low_action = this.almost_equal(tolerances.act_low,diff);
-    var right_at_high_action = this.almost_equal(tolerances.act_high,diff);
+        if ( right_at_tolerance || ((tolerances.tol_low <= diff) && (diff <= tolerances.tol_high))){
+            status = this.WITHIN_TOL;
+            gen_status = this.WITHIN_TOL;
+            message = this.WITHIN_TOL_DISP + message;
+        }else if (right_at_low_action || ((tolerances.act_low <= diff) && (diff <= tolerances.tol_low))){
+            status = this.TOL_LOW;
+            gen_status = this.TOLERANCE;
+            message = this.TOLERANCE_DISP + message;
+        }else if (right_at_high_action || ((tolerances.tol_high <= diff) && (diff <= tolerances.act_high))){
+            status = this.TOL_HIGH;
+            message = this.TOLERANCE_DISP + message;
+            gen_status = this.TOLERANCE;
+        }else if (diff <= tolerances.act_low){
+            status = this.ACT_LOW;
+            message = this.ACTION_DISP + message;
+            gen_status = this.ACTION;
+        }else{
+            status = this.ACT_HIGH;
+            message = this.ACTION_DISP + message;
+            gen_status = this.ACTION;
+        }
 
-    if ( right_at_tolerance || ((tolerances.tol_low <= diff) && (diff <= tolerances.tol_high))){
-        status = this.WITHIN_TOL;
-        gen_status = this.WITHIN_TOL;
-        message = this.WITHIN_TOL_DISP + message;
-    }else if (right_at_low_action || ((tolerances.act_low <= diff) && (diff <= tolerances.tol_low))){
-        status = this.TOL_LOW;
-        gen_status = this.TOLERANCE;
-        message = this.TOLERANCE_DISP + message;
-    }else if (right_at_high_action || ((tolerances.tol_high <= diff) && (diff <= tolerances.act_high))){
-        status = this.TOL_HIGH;
-        message = this.TOLERANCE_DISP + message;
-        gen_status = this.TOLERANCE;
-    }else if (diff <= tolerances.act_low){
-        status = this.ACT_LOW;
-        message = this.ACTION_DISP + message;
-        gen_status = this.ACTION;
-    }else{
-        status = this.ACT_HIGH;
-        message = this.ACTION_DISP + message;
-        gen_status = this.ACTION;
-    }
-
-    return {status:status, gen_status:gen_status, diff:diff, message:message};
-};
+        return {status:status, gen_status:gen_status, diff:diff, message:message};
+    };
 
     this.test_bool = function(value,reference){
         if ( !this.is_number(reference)){
@@ -194,25 +193,25 @@ var QAUtils = new function() {
             };
         }
 
-    var status, gen_status;
-    var diff = value-reference;
-    var message;
+        var status, gen_status;
+        var diff = value-reference;
+        var message;
 
-    if (Math.abs(diff)> this.EPSILON){
-        if (reference > 0){
-            status = this.ACT_LOW;
+        if (Math.abs(diff)> this.EPSILON){
+            if (reference > 0){
+                status = this.ACT_LOW;
+            }else{
+                status = this.ACT_HIGH;
+            }
+            message = "FAIL";
+            gen_status = this.ACTION;
         }else{
-            status = this.ACT_HIGH;
+            message = "PASS";
+            gen_status = this.WITHIN_TOL;
         }
-        message = "FAIL";
-        gen_status = this.ACTION;
-    }else{
-        message = "PASS";
-        gen_status = this.WITHIN_TOL;
-    }
 
-    return {status:status, gen_status:gen_status, diff:diff, message:message};
-};
+        return {status:status, gen_status:gen_status, diff:diff, message:message};
+    };
 
 
     this.test_multi = function(value,tolerance){
@@ -225,23 +224,23 @@ var QAUtils = new function() {
             };
         }
 
-    var status, gen_status,diff;
+        var status, gen_status,diff;
 
-    var message;
+        var message;
 
-    if (tolerance.mc_pass_choices.indexOf(value)>=0){
-        gen_status = this.WITHIN_TOL;
-        message = "PASS";
-    }else if (tolerance.mc_tol_choices.indexOf(value)>=0){
-        gen_status = this.TOLERANCE;
-        message = "TOL";
-    }else{
-        gen_status = this.ACTION;
-        message = "FAIL";
-    }
+        if (tolerance.mc_pass_choices.indexOf(value)>=0){
+            gen_status = this.WITHIN_TOL;
+            message = "PASS";
+        }else if (tolerance.mc_tol_choices.indexOf(value)>=0){
+            gen_status = this.TOLERANCE;
+            message = "TOL";
+        }else{
+            gen_status = this.ACTION;
+            message = "FAIL";
+        }
 
-    return {status:status, gen_status:gen_status, diff:diff, message:message};
-};
+        return {status:status, gen_status:gen_status, diff:diff, message:message};
+    };
 
 
     //convert a tolerance from relative to absolute values based on reference
@@ -255,32 +254,32 @@ var QAUtils = new function() {
             };
         }
 
-    return {
-        act_low : ref_val*(100.+tol.act_low)/100.,
-        tol_low : ref_val*(100.+tol.tol_low)/100.,
-        tol_high : ref_val*(100.+tol.tol_high)/100.,
-        act_high : ref_val*(100.+tol.act_high)/100.
+        return {
+            act_low : ref_val*(100.+tol.act_low)/100.,
+            tol_low : ref_val*(100.+tol.tol_low)/100.,
+            tol_high : ref_val*(100.+tol.tol_high)/100.,
+            act_high : ref_val*(100.+tol.act_high)/100.
+        };
     };
-};
 
     //return a string representation of a reference and tolerance
     this.format_ref = function(reference,test){
         var t,v,s;
 
-    if (reference !== null){
-        v = reference.value;
-        if (reference.type === this.BOOLEAN){
-            d = Math.abs(instance.value -1.) < this.EPSILON ? "Yes" : "No";
-        }else if (reference.type === this.MULTIPLE_CHOICE){
-            s = test.choices.split(',')[reference.value];
+        if (reference !== null){
+            v = reference.value;
+            if (reference.type === this.BOOLEAN){
+                d = Math.abs(instance.value -1.) < this.EPSILON ? "Yes" : "No";
+            }else if (reference.type === this.MULTIPLE_CHOICE){
+                s = test.choices.split(',')[reference.value];
+            }else{
+                s = this.format_float(v);
+            }
         }else{
-            s = this.format_float(v);
+            s = "No Ref";
         }
-    }else{
-        s = "No Ref";
-    }
 
-    return s;
+        return s;
 
     };
 
@@ -288,25 +287,25 @@ var QAUtils = new function() {
     this.format_ref_tol = function(reference, tolerance,test){
         var t,v,s;
 
-    if ((tolerance !== null) && (reference !== null)){
-        t = this.convert_tol_to_abs(reference.value,tolerance);
-        v = reference.value;
+        if ((tolerance !== null) && (reference !== null)){
+            t = this.convert_tol_to_abs(reference.value,tolerance);
+            v = reference.value;
 
-    if (reference.type === this.BOOLEAN){
-        s = Math.abs(instance.value -1.) < this.EPSILON ? "Yes" : "No";
-    }else if (reference.type === this.MULTIPLE_CHOICE){
-        s = test.choices.split(',')[instance.value];
-    }else{
-        var f = this.format_float;
-        s = [f(t.act_low),f(t.tol_low), f(v), f(t.tol_high), f(t.act_high)].join(" &le; ");
-    }
-}else if (reference !== null){
-    s = this.format_ref(reference,test);
-}else{
-    s = "No Ref";
-}
+            if (reference.type === this.BOOLEAN){
+                s = Math.abs(instance.value -1.) < this.EPSILON ? "Yes" : "No";
+            }else if (reference.type === this.MULTIPLE_CHOICE){
+                s = test.choices.split(',')[instance.value];
+            }else{
+                var f = this.format_float;
+                s = [f(t.act_low),f(t.tol_low), f(v), f(t.tol_high), f(t.act_high)].join(" &le; ");
+            }
+        }else if (reference !== null){
+            s = this.format_ref(reference,test);
+        }else{
+            s = "No Ref";
+        }
 
-    return s;
+        return s;
 
     };
 
@@ -332,26 +331,26 @@ var QAUtils = new function() {
 
     this.clean_numerical_value = function(value){
 
-    if (value.length === 0){
-        return "";
-    }
+        if (value.length === 0){
+            return "";
+        }
 
-    //only allow numerical characters on input
-    value = value.replace(this.NUMERIC_WHITELIST_REGEX,'');
+        //only allow numerical characters on input
+        value = value.replace(this.NUMERIC_WHITELIST_REGEX,'');
 
-    if ((value === ".") || (value === "-") || (value==="e") || (value==="E")){
-        return "";
-    }
+        if ((value === ".") || (value === "-") || (value==="e") || (value==="E")){
+            return "";
+        }
 
-    if (value[0] === ".") {
-        value = "0" + value;
-    }
+        if (value[0] === ".") {
+            value = "0" + value;
+        }
 
-    if ( (value[0] === "-") && (value[1]===".")){
-        return "-0."+value.substr(2,value.length-1);
-    }
+        if ( (value[0] === "-") && (value[1]===".")){
+            return "-0."+value.substr(2,value.length-1);
+        }
 
-    return value;
+        return value;
 
     };
 
@@ -406,31 +405,31 @@ var QAUtils = new function() {
             return {resource_uri:uri,status:status};
         });
 
-    return this.call_api(
-        this.API_URL+"values/",
-        "PATCH",
-        JSON.stringify({objects:objects}),
-        callback
-    );
-};
+        return this.call_api(
+            this.API_URL+"values/",
+            "PATCH",
+            JSON.stringify({objects:objects}),
+            callback
+        );
+    };
 
     //get resources for a given resource name
     this.get_resources = function(resource_name,callback, data){
 
-    //make sure limit option is set
-    if (data === null || data === undefined){
-        data = {limit:0};
-    }else if (!data.hasOwnProperty("limit")){
-        data["limit"] = 0;
-    }
+        //make sure limit option is set
+        if (data === null || data === undefined){
+            data = {limit:0};
+        }else if (!data.hasOwnProperty("limit")){
+            data["limit"] = 0;
+        }
 
-    //default to json format
-    if (!data.hasOwnProperty("format")){
-        data["format"] = "json";
-    }
+        //default to json format
+        if (!data.hasOwnProperty("format")){
+            data["format"] = "json";
+        }
 
-    return this.call_api(this.API_URL+resource_name,"GET",data,callback );
-};
+        return this.call_api(this.API_URL+resource_name,"GET",data,callback );
+    };
 
     //values for a group of tests
     this.test_values = function(options,callback){
@@ -463,11 +462,11 @@ var QAUtils = new function() {
     this.get_selected_option_vals = function(select_id){
         var selected = [];
 
-    $(select_id).find(":selected").each(function(){
-        selected.push(parseInt($(this).val()));
-    });
-    return selected;
-};
+        $(select_id).find(":selected").each(function(){
+            selected.push(parseInt($(this).val()));
+        });
+        return selected;
+    };
 
     this.zip = function(a1,a2){
         var ii;
@@ -526,60 +525,60 @@ var QAUtils = new function() {
     //taken from http://n8v.enteuxis.org/2010/12/parsing-iso-8601-dates-in-javascript/
     this.parse_iso8601_date = function(s){
 
-    // parenthese matches:
-    // year month day    hours minutes seconds
-    // dotmilliseconds
-    // tzstring plusminus hours minutes
-    var re = /(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)(\.\d+)?(Z|([+-])(\d\d):(\d\d))?/;
+        // parenthese matches:
+        // year month day    hours minutes seconds
+        // dotmilliseconds
+        // tzstring plusminus hours minutes
+        var re = /(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)(\.\d+)?(Z|([+-])(\d\d):(\d\d))?/;
 
-    var d = [];
-    d = s.match(re);
+        var d = [];
+        d = s.match(re);
 
-    // "2010-12-07T11:00:00.000-09:00" parses to:
-    //  ["2010-12-07T11:00:00.000-09:00", "2010", "12", "07", "11",
-    //     "00", "00", ".000", "-09:00", "-", "09", "00"]
-    // "2010-12-07T11:00:00.000Z" parses to:
-    //  ["2010-12-07T11:00:00.000Z",      "2010", "12", "07", "11",
-    //     "00", "00", ".000", "Z", undefined, undefined, undefined]
+        // "2010-12-07T11:00:00.000-09:00" parses to:
+        //  ["2010-12-07T11:00:00.000-09:00", "2010", "12", "07", "11",
+        //     "00", "00", ".000", "-09:00", "-", "09", "00"]
+        // "2010-12-07T11:00:00.000Z" parses to:
+        //  ["2010-12-07T11:00:00.000Z",      "2010", "12", "07", "11",
+        //     "00", "00", ".000", "Z", undefined, undefined, undefined]
 
-    if (! d) {
-        throw "Couldn't parse ISO 8601 date string '" + s + "'";
-    }
-
-    // parse strings, leading zeros into proper ints
-    var a = [1,2,3,4,5,6,10,11];
-    var i;
-    for (i in a) {
-        d[a[i]] = parseInt(d[a[i]], 10);
-    }
-    d[7] = parseFloat(d[7]);
-
-    // Date.UTC(year, month[, date[, hrs[, min[, sec[, ms]]]]])
-    // note that month is 0-11, not 1-12
-    // see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Date/UTC
-    var ms = Date.UTC(d[1], d[2] - 1, d[3], d[4], d[5], d[6]);
-
-    // if there are milliseconds, add them
-    if (d[7] > 0) {
-        ms += Math.round(d[7] * 1000);
-    }
-
-    // if there's a timezone, calculate it
-    if (d[8] !== "Z" && d[10]) {
-        var offset = d[10] * 60 * 60 * 1000;
-        if (d[11]) {
-            offset += d[11] * 60 * 1000;
+        if (! d) {
+            throw "Couldn't parse ISO 8601 date string '" + s + "'";
         }
-        if (d[9] === "-") {
-            ms -= offset;
-        }
-        else {
-            ms += offset;
-        }
-    }
 
-    return new Date(ms);
-};
+        // parse strings, leading zeros into proper ints
+        var a = [1,2,3,4,5,6,10,11];
+        var i;
+        for (i in a) {
+            d[a[i]] = parseInt(d[a[i]], 10);
+        }
+        d[7] = parseFloat(d[7]);
+
+        // Date.UTC(year, month[, date[, hrs[, min[, sec[, ms]]]]])
+        // note that month is 0-11, not 1-12
+        // see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Date/UTC
+        var ms = Date.UTC(d[1], d[2] - 1, d[3], d[4], d[5], d[6]);
+
+        // if there are milliseconds, add them
+        if (d[7] > 0) {
+            ms += Math.round(d[7] * 1000);
+        }
+
+        // if there's a timezone, calculate it
+        if (d[8] !== "Z" && d[10]) {
+            var offset = d[10] * 60 * 60 * 1000;
+            if (d[11]) {
+                offset += d[11] * 60 * 1000;
+            }
+            if (d[9] === "-") {
+                ms -= offset;
+            }
+            else {
+                ms += offset;
+            }
+        }
+
+        return new Date(ms);
+    };
 
     this.format_date = function(d,with_time){
         var date = [d.getDate(), this.MONTHS[d.getMonth()], d.getFullYear()];
@@ -602,45 +601,44 @@ var QAUtils = new function() {
     this.due_status = function(last_done,test_frequency){
         last_done.setHours(0,0,0,0)
 
-    var today = new Date().setHours(0,0,0,0);
-    var delta_time = last_done - today; //in ms
-    if (delta_time > 0){
-        return this.NOT_DUE;
-    }
-    var delta_days = Math.floor(Math.abs(this.milliseconds_to_days(delta_time)));
-    var due,overdue;
+        var today = new Date().setHours(0,0,0,0);
+        var delta_time = last_done - today; //in ms
+        if (delta_time > 0){
+            return this.NOT_DUE;
+        }
+        var delta_days = Math.floor(Math.abs(this.milliseconds_to_days(delta_time)));
+        var due,overdue;
 
-    var frequency = this.FREQUENCIES[test_frequency];
+        var frequency = this.FREQUENCIES[test_frequency];
 
-    return this.compare_due_date_delta(delta_days,frequency.due_interval,frequency.overdue_interval);
-};
+        return this.compare_due_date_delta(delta_days,frequency.due_interval,frequency.overdue_interval);
+    };
 
     this.set_due_status_color = function(elem,last_done,frequency){
         var status;
 
-    if (last_done === null){
-        status = this.OK;
-    }else{
-        status = this.due_status(last_done,frequency);
-    }
+        if (last_done === null){
+            status = this.OK;
+        }else{
+            status = this.due_status(last_done,frequency);
+        }
 
-    $(elem).removeClass([this.ACTION, this.TOLERANCE, this.OK].join(" "));
-    $(elem).addClass(status);
-};
+        $(elem).removeClass([this.ACTION, this.TOLERANCE, this.OK].join(" "));
+        $(elem).addClass(status);
+    };
 
     this.make_select = function(id,cls,options){
         var l = [];
         var idx;
 
-    l.push('<select id="'+id+'" class="'+cls+'">');
-    for (idx = 0; idx < options.length; idx +=1){
-        l.push('<option value="'+options[idx][0]+'">'+options[idx][1]+'</option>');
-    }
-    l.push("</select>");
+        l.push('<select id="'+id+'" class="'+cls+'">');
+        for (idx = 0; idx < options.length; idx +=1){
+            l.push('<option value="'+options[idx][0]+'">'+options[idx][1]+'</option>');
+        }
+        l.push("</select>");
 
-    return l.join("");
-};
-
+        return l.join("");
+    };
 
     this.default_exported_statuses = function(){
         var exported = [];
@@ -661,17 +659,17 @@ var QAUtils = new function() {
     this.init = function(){
         var that = this;
 
-    this.get_resources("status",function(results){
-        $.each(results.objects,function(idx,status){
-            that.STATUSES[status.slug] = status;
+        this.get_resources("status",function(results){
+            $.each(results.objects,function(idx,status){
+                that.STATUSES[status.slug] = status;
+            });
         });
-    });
 
-    return this.get_resources("frequency",function(results){
-        $.each(results.objects,function(idx,freq){
-            that.FREQUENCIES[freq.slug] = freq;
+        return this.get_resources("frequency",function(results){
+            $.each(results.objects,function(idx,freq){
+                that.FREQUENCIES[freq.slug] = freq;
+            });
         });
-    });
 
     };
 }();
