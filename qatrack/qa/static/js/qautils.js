@@ -310,6 +310,9 @@ var QAUtils = new function() {
     };
 
     this.format_float = function(val){
+        if ((Math.abs(val) < 0.01) || (Math.abs(val) > 9999.)){
+            return val.toExponential(4);
+        }
         return parseFloat(val).toPrecision(6);
     }
 
