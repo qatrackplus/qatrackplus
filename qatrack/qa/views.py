@@ -930,18 +930,6 @@ class BaseDataTablesDataSource(ListView):
     model = None
     queryset = None
 
-    #----------------------------------------------------------------------
-    def dispatch_(self,*args,**kwargs):
-        if settings.DEBUG:
-            import django.db
-            start = len(django.db.connection.queries)
-        resp = super(BaseDataTablesDataSource,self).dispatch(*args,**kwargs)
-
-        if settings.DEBUG:
-            end = len(django.db.connection.queries)
-            print "\n\nNumber of queries: %d\n\n" %(end-start)
-        return resp
-
     def render_to_response(self, context):
         if self.kwargs["data"]:
             return HttpResponse(context, content_type='application/json')
@@ -984,10 +972,10 @@ class BaseDataTablesDataSource(ListView):
                             f = q
                         else:
                             f |= q
-                    
+
                 else:
                     f = Q(**{search:search_term})
-                self.filters.append(f)                    
+                self.filters.append(f)
 
     #----------------------------------------------------------------------
     def set_current_page_objects(self):
@@ -1020,9 +1008,9 @@ class BaseDataTablesDataSource(ListView):
         self.set_columns()
         self.set_filters()
         self.set_orderings()
-        
+
         self.filtered_objects =  all_objects.filter(*self.filters).order_by(*self.orderings)
-        
+
         self.set_current_page_objects()
         self.tabulate_data()
 
@@ -1062,13 +1050,13 @@ class UTCList(BaseDataTablesDataSource):
             (
                 lambda x:x.tests_object.name, (
                     ("testlist__name__icontains",ContentType.objects.get_for_model(models.TestList)),
-                    ("testlistcycle__name__icontains",ContentType.objects.get_for_model(models.TestListCycle))                    
-                ), 
-                None
+                    ("testlistcycle__name__icontains",ContentType.objects.get_for_model(models.TestListCycle))
+                ),
+                ("testlist__name","testlistcycle__name",)
             ),
             (qa_tags.as_due_date, None,None),
             (lambda x:x.unit.name, "unit__name__exact", "unit__number"),
-            (lambda x:x.frequency.name, "frequency__name__exact", "frequency__name"),
+            (lambda x:x.frequency.name, "frequency__name__exact", "frequency__due_interval"),
 
             (lambda x:x.assigned_to.name,"assigned_to__name__contains","assigned_to__name"),
             (self.get_last_instance_work_completed,None,"last_instance__work_completed"),
@@ -1081,7 +1069,7 @@ class UTCList(BaseDataTablesDataSource):
         template = get_template("qa/unittestcollection_actions.html")
         c = Context({"utc":utc,"request":self.request,"action":self.action})
         return template.render(c)
-    
+
     #---------------------------------------------------------------------------
     def get_last_instance_work_completed(self,utc):
         template = get_template("qa/testlistinstance_work_completed.html")
@@ -1092,7 +1080,7 @@ class UTCList(BaseDataTablesDataSource):
         template = get_template("qa/testlistinstance_review_status.html")
         c = Context({"instance":utc.last_instance,"perms":PermWrapper(self.request.user),"request":self.request})
         return template.render(c)
-    
+
     #----------------------------------------------------------------------
     def get_last_instance_pass_fail(self,utc):
         return qa_tags.as_pass_fail_status(utc.last_instance)

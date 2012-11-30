@@ -8,7 +8,7 @@ function init_test_collection_tables(units, frequencies){
 
     var cols = [
         {bSortable:false},
-        {bSortable:false},
+        null,//{bSortable:false},
         {bSortable:false},
         null, //Unit
         null, //Freq
@@ -40,6 +40,7 @@ function init_test_collection_tables(units, frequencies){
         bFilter:true,
         bPaginate:true,
         iDisplayLength:50,
+        aaSorting:[[4,"desc"],[1,"asc"]],
 //        aaSorting:[[1,"asc"],[4,"desc"]],
         aoColumns:cols,
         sDom: '<"row-fluid"<"span6"ir><"span6"p>>t<"row-fluid"<"span12"lp>>',
