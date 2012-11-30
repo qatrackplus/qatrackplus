@@ -1,10 +1,14 @@
 {% load qa_tags %}
-{% if instance.in_progress %}
-    <span data-timestamp="{{instance.work_started|date:"U"}}">
-        {{instance.work_started}}
-    </span>
+{% if instance %}
+    {% if instance.in_progress %}
+        <span data-timestamp="{{instance.work_started|date:"U"}}">
+            {{instance.work_started}}
+        </span>
+    {% else %}
+        <span data-timestamp="{{instance.work_completed|date:"U"}}">
+            {{instance.work_completed}}
+        </span>
+    {% endif %}
 {% else %}
-    <span data-timestamp="{{instance.work_completed|date:"U"}}">
-        {{instance.work_completed}}
-    </span>
+    <em>New List</em>
 {% endif %}
