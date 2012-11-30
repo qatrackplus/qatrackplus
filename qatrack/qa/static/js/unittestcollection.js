@@ -9,7 +9,7 @@ function init_test_collection_tables(units, frequencies){
     var cols = [
         {bSortable:false},
         {bSortable:false},
-        null, //due date
+        {bSortable:false},
         null, //Unit
         null, //Freq
         null,//assigned to
