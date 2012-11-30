@@ -171,7 +171,7 @@ function set_value_by_name(name, value){
     var row = $('.qa-contextname[value="'+name+'"]').parents(".qa-valuerow");
     var input = row.find(".qa-value input");
     if (QAUtils.is_number(value)){
-        value =parseFloat(value).toPrecision(6);
+        value =QAUtils.format_float(value);
     }
     input.val(value);
     check_test_status(input);
