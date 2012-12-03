@@ -1025,9 +1025,6 @@ class BaseDataTablesDataSource(ListView):
         return json.dumps(context)
 
     #----------------------------------------------------------------------
-    def get_data_source(self):
-        raise NotImplementedError
-    #----------------------------------------------------------------------
     def get_page_title(self):
         return "Generic Data Tables Template View"
     #----------------------------------------------------------------------
