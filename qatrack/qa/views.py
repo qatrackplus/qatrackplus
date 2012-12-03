@@ -1056,7 +1056,7 @@ class UTCList(BaseDataTablesDataSource):
             (lambda x:x.unit.name, "unit__name__exact", "unit__number"),
             (lambda x:x.frequency.name, "frequency__name__exact", "frequency__due_interval"),
 
-            (lambda x:x.assigned_to.name,"assigned_to__name__contains","assigned_to__name"),
+            (lambda x:x.assigned_to.name,"assigned_to__name__icontains","assigned_to__name"),
             (self.get_last_instance_work_completed,None,"last_instance__work_completed"),
             (self.get_last_instance_pass_fail,None,None),
             (self.get_last_instance_review_status,None,None),
@@ -1244,9 +1244,9 @@ class TestListInstances(BaseDataTablesDataSource):
             (self.get_actions,None,None),
             (lambda x:x.unit_test_collection.unit.name, "unit_test_collection__unit__name__exact", "unit_test_collection__unit__number"),
             (lambda x:x.unit_test_collection.frequency.name, "unit_test_collection__frequency__name__exact", "unit_test_collection__frequency__name"),
-            (lambda x:x.test_list.name,"test_list__name__contains","test_list__name"),
+            (lambda x:x.test_list.name,"test_list__name__icontains","test_list__name"),
             (self.get_work_completed,None,"work_completed"),
-            (lambda x:x.created_by.username,"created_by__username__contains","created_by__username"),
+            (lambda x:x.created_by.username,"created_by__username__icontains","created_by__username"),
             (self.get_review_status,None,None),
             (qa_tags.as_pass_fail_status,None,None),
         )
