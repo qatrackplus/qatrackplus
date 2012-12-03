@@ -53,7 +53,7 @@
     <div class="row-fluid">
         <div class="span12">
             <h5 class="pull-left">
-                <em>Last done: Day {{last_day}} ({{last_instance.test_list.name}})</em>
+                <em>Last done: {% if last_day %}Day {{last_day}} ({{last_instance.test_list.name}}){% else %}New list{%endif%}</em>
             </h5>
         </div>
     </div>

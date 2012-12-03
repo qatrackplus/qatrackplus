@@ -553,7 +553,7 @@ class PerformQA(CreateView):
     def set_last_day(self):
 
 
-        self.last_day = 0
+        self.last_day = None
 
         if self.unit_test_col.last_instance:
             last_membership = models.TestListCycleMembership.objects.filter(
@@ -561,7 +561,7 @@ class PerformQA(CreateView):
                 cycle = self.unit_test_col.tests_object
             )
             if last_membership:
-                self.last_day = last_membership[0].order
+                self.last_day = last_membership[0].order + 1
 
     #----------------------------------------------------------------------
     def set_unit_test_infos(self):
@@ -699,7 +699,7 @@ class PerformQA(CreateView):
         context['categories'] = set([x.test.category for x in self.unit_test_infos])
         context['current_day'] = self.actual_day+1
         context["last_instance"] = self.unit_test_col.last_instance
-        context['last_day'] = self.last_day + 1
+        context['last_day'] = self.last_day
         ndays = len(self.unit_test_col.tests_object)
         if ndays > 1:
             context['days'] = range(1,ndays+1)
