@@ -814,6 +814,18 @@ class TestPerformQA(TestCase):
         response = self.client.get(url)
         self.assertListEqual(response.context["days"],[1,2])
         self.assertEqual(response.context["current_day"],1)
+        self.assertEqual(response.context["last_day"],None)
+
+        utils.create_test_list_instance(unit_test_collection=utc,test_list=tl1)
+        response = self.client.get(url)
+        self.assertEqual(response.context["current_day"],2)
+        self.assertEqual(response.context["last_day"],1)
+
+        utils.create_test_list_instance(unit_test_collection=utc,test_list=tl2)
+        response = self.client.get(url)
+        self.assertEqual(response.context["current_day"],1)
+        self.assertEqual(response.context["last_day"],2)
+
 
     #----------------------------------------------------------------------
     def test_no_status(self):
