@@ -21,7 +21,7 @@ function init_test_collection_tables(units, frequencies){
     var filter_cols = [
         null, //action
         {type: "text" }, // Test list name
-        {type: "text" }, //due date
+        null, //due date
         {type: "select",values:unit_names }, // unit
         {type: "select",values:freq_names }, //Freq
         {type: "select"},//assigned to
