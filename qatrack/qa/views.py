@@ -945,7 +945,7 @@ class BaseDataTablesDataSource(ListView):
         order_cols = {}
         for x in range(n_orderings):
             col = int(self.request.GET.get("iSortCol_%d"%x))
-            order_cols[col] = "" if self.request.GET.get("sSortDir_%d"%x) == "asc" else "-"
+            order_cols[col] = "" if self.request.GET.get("sSortDir_%d"%x,"asc") == "asc" else "-"
 
         self.orderings = []
         for col, (display, search, ordering) in enumerate(self.columns):

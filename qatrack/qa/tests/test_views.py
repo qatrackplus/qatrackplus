@@ -48,6 +48,7 @@ class TestURLS(TestCase):
             ("overview",{}),
             ("overview_due_dates",{}),
             ("review_all",{}),
+            ("review_all",{}),
             ("review_utc",{"pk":"1"}),
             ("choose_review_frequency",{}),
             ("review_by_frequency",{"frequency":"short-interval"}),
@@ -98,6 +99,46 @@ class TestURLS(TestCase):
         self.assertTrue(404==self.client.get(url).status_code)
 
 
+#============================================================================
+class TestDataTables(TestCase):
+
+    #---------------------------------------------------------------------------
+    def setUp(self):
+        self.user = utils.create_user()
+        self.client.login(username="user",password="password")
+        g = utils.create_group()
+        self.user.groups.add(g)
+        self.user.save()
+
+        self.factory = RequestFactory()
+        self.view = views.UTCList.as_view()
+
+        self.url = reverse("all_lists",kwargs={"data":"data/"})
+
+    #----------------------------------------------------------------------
+    def test_utc_display(self):
+
+        utils.create_status()
+        u1 = utils.create_unit(number=1,name="u1")
+        utils.create_unit(number=2,name="u2",)
+        utc = utils.create_unit_test_collection(unit=u1)
+        utc.assigned_to = self.user.groups.all()[0]
+        utc.save()
+        tli = utils.create_test_list_instance(unit_test_collection=utc)
+
+        data = {
+            "iDisplayLength":100,
+            "iDisplayStart":1,
+
+            "iSortingCols":2,
+            "iSortCol_0":4,
+            "iSortCol_1":1,
+
+            "sSearch_1":"foo",
+            "sSearch_3":"bar"
+        }
+
+        resp = self.client.get(self.url,data=data)
 
 #============================================================================
 class TestControlChartImage(TestCase):
