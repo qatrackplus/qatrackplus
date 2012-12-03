@@ -115,30 +115,51 @@ class TestDataTables(TestCase):
 
         self.url = reverse("all_lists",kwargs={"data":"data/"})
 
-    #----------------------------------------------------------------------
-    def test_utc_display(self):
 
         utils.create_status()
         u1 = utils.create_unit(number=1,name="u1")
         utils.create_unit(number=2,name="u2",)
-        utc = utils.create_unit_test_collection(unit=u1)
-        utc.assigned_to = self.user.groups.all()[0]
-        utc.save()
-        tli = utils.create_test_list_instance(unit_test_collection=utc)
+        self.utc = utils.create_unit_test_collection(unit=u1)
+        self.utc.assigned_to = self.user.groups.all()[0]
+        self.utc.save()
+        tli = utils.create_test_list_instance(unit_test_collection=self.utc)
+
+    #----------------------------------------------------------------------
+    def test_utc_display(self):
+
 
         data = {
             "iDisplayLength":100,
-            "iDisplayStart":1,
+            "iDisplayStart":0,
 
             "iSortingCols":2,
             "iSortCol_0":4,
             "iSortCol_1":1,
 
-            "sSearch_1":"foo",
-            "sSearch_3":"bar"
+            "sSearch_1":"test"
         }
 
         resp = self.client.get(self.url,data=data)
+
+    #----------------------------------------------------------------------
+    def test_gen_tli_display(self):
+        url = reverse("complete_instances",kwargs={"data":"data/"})
+
+        data = {
+            "iDisplayLength":100,
+            "iDisplayStart":0,
+
+            "iSortingCols":2,
+            "iSortCol_0":4,
+            "iSortCol_1":1,
+
+            "sSearch_1":"u1",
+#            "sSearch_3":"test",
+
+        }
+
+        resp = self.client.get(url,data=data)
+
 
 #============================================================================
 class TestControlChartImage(TestCase):
