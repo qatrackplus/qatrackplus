@@ -979,8 +979,8 @@ class BaseDataTablesDataSource(ListView):
 
     #----------------------------------------------------------------------
     def set_current_page_objects(self):
-        per_page = int(self.request.GET.get("iDisplayLength"))
-        offset = int(self.request.GET.get("iDisplayStart"))
+        per_page = int(self.request.GET.get("iDisplayLength",100))
+        offset = int(self.request.GET.get("iDisplayStart",0))
         self.cur_page_objects = self.filtered_objects[offset:offset+per_page]
     #----------------------------------------------------------------------
     def tabulate_data(self):
@@ -996,6 +996,7 @@ class BaseDataTablesDataSource(ListView):
     #---------------------------------------------------------------------------
     def get_context_data(self,*args,**kwargs):
         context = super(BaseDataTablesDataSource,self).get_context_data(*args,**kwargs)
+
         if self.kwargs["data"]:
             return self.get_table_context_data(context)
         else:
