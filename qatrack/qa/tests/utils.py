@@ -226,3 +226,8 @@ def create_unit_test_collection(unit=None,frequency=None,test_collection=None):
     utc.visible_to = Group.objects.all()
     utc.save()
     return utc
+
+#----------------------------------------------------------------------
+def datetimes_same(date1,date2,nminutes=1):
+    """return whether date1 and date2 are the same within nminutes minutes"""
+    return abs(date1-date2) <= timezone.timedelta(minutes=nminutes)
