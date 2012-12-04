@@ -24,8 +24,8 @@ function init_test_collection_tables(units, frequencies){
         null, //due date
         {type: "select",values:unit_names }, // unit
         {type: "select",values:freq_names }, //Freq
-        {type: "select"},//assigned to
-        {type: "text" }, //date completed
+        null,//assigned to
+        null, //date completed
         null, //pass/fail status
         null //review-status
     ];
