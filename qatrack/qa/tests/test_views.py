@@ -49,7 +49,7 @@ class TestURLS(TestCase):
             ("overview_due_dates",{}),
             ("review_all",{}),
             ("review_all",{}),
-            ("review_utc",{"pk":"1"}),
+            ("review_utc",{"pk":"%d"%utc.pk}),
             ("choose_review_frequency",{}),
             ("review_by_frequency",{"frequency":"short-interval"}),
             ("review_by_frequency",{"frequency":"daily/monthly"}),
@@ -59,15 +59,15 @@ class TestURLS(TestCase):
 
             ("complete_instances",{}),
 
-            ("review_test_list_instance",{"pk":"1"}),
+            ("review_test_list_instance",{"pk":"%d"%tli.pk}),
 
             ("unreviewed",{}),
 
             ("in_progress",{}),
 
-            ("edit_tli",{"pk":"1"}),
+            ("edit_tli",{"pk":"%d"%(tli.pk)}),
             ("choose_unit",{}),
-            ("perform_qa",{"pk":"1"}),
+            ("perform_qa",{"pk":"%d"%utc.pk}),
             ("qa_by_frequency_unit",{"unit_number":"1","frequency":"short-interval"}),
             ("qa_by_unit",{"unit_number":"1"}),
             ("qa_by_frequency_unit",{"unit_number":"1","frequency":"short-interval"}),
@@ -91,8 +91,8 @@ class TestURLS(TestCase):
     #--------------------------------------------------------------------------
     def test_perform(self):
         utils.create_status()
-        utils.create_unit_test_collection()
-        url = reverse("perform_qa",kwargs={"pk":"1"})
+        utc = utils.create_unit_test_collection()
+        url = reverse("perform_qa",kwargs={"pk":"%d"%utc.pk})
         self.assertTrue(self.returns_200(url))
         url = reverse("perform_qa",kwargs={"pk":"2"})
 
@@ -298,24 +298,24 @@ class TestChartView(TestCase):
     #----------------------------------------------------------------------
     def setUp(self):
         self.view = views.ChartView()
-        tl = utils.create_test_list()
-        test1 = utils.create_test(name="test1")
-        utils.create_test_list_membership(tl,test1)
+        self.tl = utils.create_test_list()
+        self.test1 = utils.create_test(name="test1")
+        utils.create_test_list_membership(self.tl,self.test1)
 
-        sl = utils.create_test_list("sublist")
-        test2 = utils.create_test(name="test2")
-        utils.create_test_list_membership(sl,test2)
+        self.sl = utils.create_test_list("sublist")
+        self.test2 = utils.create_test(name="test2")
+        utils.create_test_list_membership(self.sl,self.test2)
 
-        tl.sublists.add(sl)
-        tl.save()
+        self.tl.sublists.add(self.sl)
+        self.tl.save()
 
-        utc = utils.create_unit_test_collection(test_collection=tl)
+        self.utc = utils.create_unit_test_collection(test_collection=self.tl)
 
-        tlc1 = utils.create_test_list("cycle1")
-        tlc2 = utils.create_test_list("cycle2")
-        tlc = utils.create_cycle(test_lists=[tlc1,tlc2])
+        self.tlc1 = utils.create_test_list("cycle1")
+        self.tlc2 = utils.create_test_list("cycle2")
+        self.tlc = utils.create_cycle(test_lists=[self.tlc1,self.tlc2])
 
-        utils.create_unit_test_collection(test_collection=tlc,unit=utc.unit,frequency=utc.frequency)
+        self.utc2 = utils.create_unit_test_collection(test_collection=self.tlc,unit=self.utc.unit,frequency=self.utc.frequency)
 
         self.view.set_test_lists()
         self.view.set_tests()
@@ -324,17 +324,17 @@ class TestChartView(TestCase):
 
         data = json.loads(self.view.get_context_data()["test_data"])
         expected = {
-            'test_lists': {
-                '1': [1, 2],
-                '2': [2],
-                '3':[],
-                '4':[],
+            "test_lists": {
+                "%d"%self.tl.pk: [self.test1.pk, self.test2.pk],
+                "%d"%self.sl.pk: [self.test2.pk],
+                "%d"%self.tlc1.pk:[],
+                "%d"%self.tlc2.pk:[]
             },
             'unit_frequency_lists': {
-                '1': {
-                    '1': [1,3,4]
+                "%d"%self.utc.unit.pk: {
+                    "%d"%self.utc.frequency.pk: [self.tl.pk,self.tlc1.pk,self.tlc2.pk]
                 }
-            },
+            }
         }
 
         self.assertDictEqual(data,expected)
@@ -416,7 +416,7 @@ class TestComposite(TestCase):
             u'qavalues': [
                 u'{"testc":{"name":"testc","current_value":""},"test1":{"name":"test1","current_value":1},"test2":{"name":"test2","current_value":2}}'
             ],
-            u'composite_ids': [u'{"testc":"3"}']
+            u'composite_ids': [u'{"testc":"%d"}'%self.tc.pk]
         }
 
 
@@ -437,7 +437,7 @@ class TestComposite(TestCase):
     #----------------------------------------------------------------------
     def test_invalid_values(self):
 
-        data =  {u'composite_ids': [u'{"testc":"3"}']}
+        data =  {u'composite_ids': [u'{"testc":"%d"}'%self.tc.pk]}
 
         request = self.factory.post(self.url,data=data)
         response = self.view(request)
@@ -455,7 +455,7 @@ class TestComposite(TestCase):
             u'qavalues': [
                 u'{"testc":{"name":"testc","current_value":""},"test1":{"name":"test1","current_value":1},"test2":{"name":"test2","current_value":"abc"}}'
             ],
-            u'composite_ids': [u'{"testc":"3"}']
+            u'composite_ids': [u'{"testc":"%d"}'%self.tc.pk]
         }
 
         request = self.factory.post(self.url,data=data)
@@ -535,7 +535,7 @@ class TestComposite(TestCase):
             u'qavalues': [
                 u'{"testc":{"name":"testc","current_value":""},"test1":{"name":"test1","current_value":1},"test2":{"name":"test2","current_value":2}}'
             ],
-            u'composite_ids': [u'{"testc":"3"}']
+            u'composite_ids': [u'{"testc":"%d"}'%self.tc.pk]
         }
 
         request = self.factory.post(self.url,data=data)
@@ -567,7 +567,7 @@ class TestComposite(TestCase):
             u'qavalues': [
                 u'{"testc":{"name":"testc","current_value":""},"cyclic1":{"name":"cyclic1","current_value":""},"cyclic2":{"name":"cyclic2","current_value":""},"test1":{"name":"test1","current_value":1},"test2":{"name":"test2","current_value":2}}'
             ],
-            u'composite_ids': [u'{"testc":"3","cyclic1":"4","cyclic2":"5"}']
+            u'composite_ids': [u'{"testc":"%d","cyclic1":"%d","cyclic2":"%d"}'%(self.tc.pk,self.cyclic1.pk,self.cyclic2.pk)]
         }
 
 
@@ -754,7 +754,7 @@ class TestPerformQA(TestCase):
         self.assertEqual("http://testserver/",response._headers['location'][1])
 
         u2 = utils.create_user(is_staff=False,is_superuser=False,uname="u2")
-        u2.groups.add(Group.objects.get(pk=1))
+        u2.groups.add(Group.objects.latest("pk"))
         u2.save()
         self.client.logout()
         self.client.login(username="u2",password="password")
@@ -1028,7 +1028,7 @@ class TestEditTestListInstance(TestCase):
         response = self.client.post(self.url,data=self.base_data)
 
         self.assertEqual(302,response.status_code)
-        self.assertEqual(88,models.TestInstance.objects.get(pk=1).value)
+        self.assertEqual(88,models.TestInstance.objects.get(pk=self.ti.pk).value)
     #----------------------------------------------------------------------
     def test_blank_status_edit(self):
 
@@ -1040,7 +1040,7 @@ class TestEditTestListInstance(TestCase):
         response = self.client.post(self.url,data=self.base_data)
 
         self.assertEqual(302,response.status_code)
-        self.assertEqual(88,models.TestInstance.objects.get(pk=1).value)
+        self.assertEqual(88,models.TestInstance.objects.get(pk=self.ti.pk).value)
 
     #----------------------------------------------------------------------
     def test_in_progress(self):
@@ -1158,7 +1158,7 @@ class TestReviewTestListInstance(TestCase):
         self.utc = utils.create_unit_test_collection(test_collection=self.test_list)
         self.tli = utils.create_test_list_instance(unit_test_collection=self.utc)
 
-        uti = models.UnitTestInfo.objects.get(pk=1)
+        uti = models.UnitTestInfo.objects.get(unit=self.utc.unit,test=self.test)
 
         self.ti = utils.create_test_instance(unit_test_info=uti,value=1,status=self.status)
         self.ti.test_list_instance = self.tli

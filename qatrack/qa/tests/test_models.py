@@ -412,11 +412,13 @@ class TestUnitTestInfo(TestCase):
         for wc, val, _, _ in history:
             utils.create_test_instance(unit_test_info=uti,status=status,work_completed=wc,value=val)
 
-        sorted_hist = list(sorted(history))
-        self.assertListEqual(sorted_hist,uti.get_history())
+        sorted_hist = list(sorted([(x[0].replace(second=0,microsecond=0),x[1],x[2],x[3]) for x in history]))
+        uti_hist = [(x[0].replace(second=0,microsecond=0),x[1],x[2],x[3]) for x in uti.get_history()]
+        self.assertListEqual(sorted_hist,uti_hist)
 
         #test returns correct number of results
-        self.assertListEqual(sorted_hist[-2:],uti.get_history(number=2))
+        limited = [(x[0].replace(second=0,microsecond=0),x[1],x[2],x[3]) for x in uti.get_history(number=2)]
+        self.assertListEqual(sorted_hist[-2:],limited)
 
     #----------------------------------------------------------------------
     def test_add_to_cycle(self):
@@ -618,7 +620,7 @@ class TestUnitTestCollection(TestCase):
 
         utc = models.UnitTestCollection.objects.get(pk=utc.pk)
 
-        self.assertEqual(utc.due_date(),ti.work_completed+daily.due_delta())
+        self.assertTrue(utils.datetimes_same(utc.due_date(),ti.work_completed+daily.due_delta()))
 
         tli2 = utils.create_test_list_instance(unit_test_collection=utc,work_completed=now+timezone.timedelta(days=3))
 
@@ -627,7 +629,7 @@ class TestUnitTestCollection(TestCase):
         ti2.save()
         utc = models.UnitTestCollection.objects.get(pk=utc.pk)
 
-        self.assertEqual(utc.due_date(),now+timezone.timedelta(days=4))
+        self.assertTrue(utils.datetimes_same(utc.due_date(),now+timezone.timedelta(days=4)))
     #---------------------------------------------------------------------------
     def test_cycle_due_date(self):
         test_lists = [utils.create_test_list(name="test list %d"% i) for i in range(2)]
@@ -649,12 +651,12 @@ class TestUnitTestCollection(TestCase):
         tli.save()
 
         utc = models.UnitTestCollection.objects.get(pk=utc.pk)
-        self.assertEqual(utc.due_date(),now+daily.due_delta())
+        self.assertTrue(utils.datetimes_same(utc.due_date(),now+daily.due_delta()))
 
         uti = models.UnitTestInfo.objects.get(test=test_lists[1].tests.all()[0],unit=utc.unit)
 
         utils.create_test_instance(unit_test_info=uti,work_completed=now,status=status)
-        self.assertEqual(utc.due_date(),now+daily.due_delta())
+        self.assertTrue(utils.datetimes_same(utc.due_date(),now+daily.due_delta()))
 
 
     #----------------------------------------------------------------------
@@ -715,7 +717,7 @@ class TestUnitTestCollection(TestCase):
         ti.test_list_instance = tli
         ti.save()
         utc = models.UnitTestCollection.objects.get(pk=utc.pk)
-        self.assertEqual(now,utc.last_done_date())
+        self.assertTrue(utils.datetimes_same(now,utc.last_done_date()))
 
     #----------------------------------------------------------------------
     def test_unreviewed_instances(self):
@@ -780,11 +782,11 @@ class TestUnitTestCollection(TestCase):
         for wc in history:
             tli = utils.create_test_list_instance(unit_test_collection=utc,work_completed=wc)
 
-        sorted_hist = list(sorted(history))
-        dates = [x.work_completed for x in utc.history()]
+        sorted_hist = list(sorted([h.replace(second=0,microsecond=0) for h in history]))
+        dates = [x.work_completed.replace(second=0,microsecond=0) for x in utc.history()]
         self.assertEqual(sorted_hist,dates)
 
-        limited_dates = [x.work_completed for x in utc.history(number=2)]
+        limited_dates = [x.work_completed.replace(second=0,microsecond=0) for x in utc.history(number=2)]
         #test returns correct number of results
         self.assertListEqual(sorted_hist[-2:],limited_dates)
     #----------------------------------------------------------------------
