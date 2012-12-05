@@ -22,6 +22,8 @@ SEND_BROKEN_LINK_EMAILS = True
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
 VERSION = "0.2.5"
+BUG_REPORT_URL = "https://bitbucket.org/tohccmedphys/qatrackplus/issues/new"
+FEAURE_REQUEST_URL = BUG_REPORT_URL
 
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'qatrack.wsgi.application'
