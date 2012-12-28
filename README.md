@@ -39,7 +39,7 @@ The latest version is 0.2.5 Please review the [release_notes](https://bitbucket.
 installing or upgrading.
 
 The [documentation can be found
-online](https://bitbucket.org/randlet/qatrack/wiki/Home) and is where you
+online](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/Home) and is where you
 should start if you
 are interested in installing or helping develop QATrack+.
 
