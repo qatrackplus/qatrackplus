@@ -378,8 +378,11 @@ option.unreviewed {
 /* overviewtrack view */
 .overview-freq-container{
     float: left;
+    padding:5px;
     padding-bottom:3px;
     margin-bottom:3px;
+    max-height: 175px;
+    overflow-y:auto;
 }
 .overview-utc-container {
     float: left;
@@ -403,9 +406,7 @@ h3.overview-unit-title{
 .overview-unit-container h3 {
     line-height:24px;
 }
-.overview-freq-container {
-    padding:5px;
-}
+
 .overview-test-list-name{
     float:left;
     min-height:1px;
