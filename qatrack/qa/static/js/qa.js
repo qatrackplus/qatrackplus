@@ -360,6 +360,9 @@ $(document).ready(function(){
     //allow arrow key and enter navigation
     $(that).on("keydown","input, select", function(e) {
 
+        //reset user_inputs to account for any change in visibility
+        user_inputs=  $('.qa-input').filter(':visible').not("[readonly=readonly]").not("[type=hidden]");
+
         var idx = user_inputs.index(this);
         var to_focus;
         //rather than submitting form on enter, move to next value
