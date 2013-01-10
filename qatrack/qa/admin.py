@@ -367,7 +367,6 @@ class UnitTestCollectionAdmin(admin.ModelAdmin):
 class TestListCycleMembershipInline(admin.TabularInline):
 
     model = models.TestListCycleMembership
-    extra = 0
     raw_id_fields = ("test_list",)
 
 #============================================================================
