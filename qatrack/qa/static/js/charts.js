@@ -320,22 +320,25 @@ function create_stockchart(data){
             renderTo : 'chart'
         },
 
-    rangeSelector : get_range_options(),
-    legend: get_legend_options(),
-    plotOptions: {
-        line:{
-            animation:false
+        rangeSelector : get_range_options(),
+        legend: get_legend_options(),
+        plotOptions: {
+            line:{
+                animation:false
+            },
+            arearange:{
+                animation:false
+            }
         },
-        arearange:{
-            animation:false
-        }
-    },
-    tooltip: {
-        pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b> ({point.change})<br/>',
-        valueDecimals: 2
-    },
-    series : data
-});
+        xAxis:{
+            ordinal: false
+        },
+        tooltip: {
+            pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b> ({point.change})<br/>',
+            valueDecimals: 2
+        },
+        series : data
+    });
 
 }
 /*********************************************************************/
