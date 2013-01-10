@@ -1,5 +1,5 @@
 from django import http
-import qatrack.settings as settings
+from django.conf import settings
 
 # based on http://code.djangoproject.com/ticket/3777#comment:4
 class FilterPersistMiddleware(object):

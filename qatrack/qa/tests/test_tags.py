@@ -1,10 +1,10 @@
+from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 from django.test.client import RequestFactory
 from django.test.utils import setup_test_environment
 from django.utils import unittest,timezone
-from qatrack import settings
 from qatrack.qa import models,views,forms
 
 from qatrack.qa.templatetags import qa_tags

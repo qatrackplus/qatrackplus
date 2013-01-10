@@ -5,7 +5,8 @@ from django.forms.widgets import RadioSelect, Select
 from django.contrib import messages
 from django.utils import timezone
 from django.utils.translation import ugettext as _
-import qatrack.settings as settings
+
+from django.conf import settings
 
 import models
 

@@ -1,5 +1,6 @@
 import csv
 import StringIO
+from django.conf import settings
 from qatrack.formats.en.formats import DATETIME_FORMAT
 import django.utils.dateformat as dateformat
 import tastypie
@@ -9,7 +10,7 @@ from tastypie.authorization import DjangoAuthorization
 from tastypie.utils import timezone
 import qatrack.qa.models as models
 from qatrack.units.models import Unit,Modality, UnitType
-from qatrack import settings
+
 from tastypie.serializers import Serializer
 
 

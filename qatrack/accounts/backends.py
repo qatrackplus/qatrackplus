@@ -1,5 +1,5 @@
 import ldap
-from qatrack import settings
+from django.conf import settings
 from django.contrib.auth.models import User, Group
 
 #stripped down version of http://djangosnippets.org/snippets/901/

@@ -2,6 +2,8 @@ import collections
 import json
 import calendar
 from api import ValueResource
+
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
@@ -22,7 +24,6 @@ from qatrack.qa import models,utils
 from qatrack.qa.templatetags import qa_tags
 from qatrack.units.models import Unit, UnitType
 from qatrack.contacts.models import Contact
-from qatrack import settings
 
 
 

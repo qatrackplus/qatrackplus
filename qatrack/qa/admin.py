@@ -2,6 +2,7 @@ import django.forms as forms
 import django.db
 
 from django.utils.translation import ugettext as _
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin import widgets
 from django.contrib.admin.templatetags.admin_static import static
@@ -12,7 +13,7 @@ from django.utils.html import escape
 
 import qatrack.qa.models as models
 from qatrack.units.models import Unit
-import qatrack.settings as settings
+
 import os
 import re
 
