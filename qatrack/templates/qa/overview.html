@@ -11,24 +11,28 @@
             <p>
                 <em>Overview of current QA status on all units</em>
             </p>
-            <p class="pull-left">
-                Jump to: {%for unit,_ in unit_lists%}<a href="#U{{unit.number}}">{{unit.name}}</a>{%if not forloop.last%} {%endif%}{%endfor%}
-            </p>
-
-            <span id="collapse-container" class="pull-right hand-cursor">
-                <i id="collapse-img" class="icon-minus-sign"></i> <span id="collapse-string">Collapse All</span>
-            </span>
-
         </div>
     </div>
+    <div class="row-fluid">
+        <div class="span12">
+            <label class="pull-left" for="unit-filter"><strong>Visible Units:&nbsp;</strong></label>
+            <select class="pull-left" id="unit-filter" multiple="multiple">
+                <option id="all-option" value="all" selected="selected">All</option>
+                {% for unit, _ in unit_lists %}
+                <option class="unit-option" value="{{unit.number}}" selected="selected">{{unit.name}}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
     {% for unit, freq_utcs in unit_lists %}
-        <div class="row-fluid">
+        <div class="row-fluid" id="unit-container-{{unit.number}}" class="unit-container">
 
             <div class="span12 overview-unit-container">
                 <a style="visibility:hidden" id="U{{unit.number}}">&nbsp;</a>
                 <div class="" style="width:100%">
                     <hr/>
-                    <h3 class="">{{unit.name}}<span class="pull-right hand-cursor toggle-unit"><i class="unit-toggle-img icon-minus-sign"></i></span></h3>
+                    <h4 class="">{{unit.name}}</h4>
                 </div>
                 <div class="unit-container">
                 {% for freq, utcs in freq_utcs %}
