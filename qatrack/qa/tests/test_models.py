@@ -232,6 +232,7 @@ class TestTest(TestCase):
             "",
             "foo = a +b",
             "foo = __import__('bar')",
+            "result = (a+b",
         )
 
         for icp in invalid_calc_procedures:

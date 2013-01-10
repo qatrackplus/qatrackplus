@@ -449,6 +449,11 @@ class Test(models.Model):
         if self.calculation_procedure.find("__") >= 0:
             errors.append(_('No double underscore methods allowed in calculations'))
 
+        try:
+            utils.tokenize_composite_calc(self.calculation_procedure)
+        except utils.tokenize.TokenError:
+            errors.append(_('Calculation procedure invalid: Possible cause is an unbalanced parenthesis'))
+
         if errors:
             raise ValidationError({"calculation_procedure":errors})
     #----------------------------------------------------------------------
