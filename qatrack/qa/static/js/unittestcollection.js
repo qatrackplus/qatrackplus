@@ -1,10 +1,11 @@
 
 /**************************************************************************/
 //Initialize sortable/filterable test list table data types
-function init_test_collection_tables(units, frequencies){
+function init_test_collection_tables(units, frequencies, groups){
 
     var unit_names = _.pluck(units[0].objects,"name");
     var freq_names = _.pluck(frequencies[0].objects,"name");
+    var group_names = _.pluck(groups[0].objects,"name");
 
     var cols = [
         {bSortable:false},
@@ -24,7 +25,7 @@ function init_test_collection_tables(units, frequencies){
         null, //due date
         {type: "select",values:unit_names }, // unit
         {type: "select",values:freq_names }, //Freq
-        null,//assigned to
+        {type: "select",values:group_names }, //assigned to
         null, //date completed
         null, //pass/fail status
         null //review-status
@@ -60,7 +61,8 @@ $(document).ready(function(){
 
     $.when(
         $.getJSON("/qa/api/v1/unit/?format=json"),
-        $.getJSON("/qa/api/v1/frequency/?format=json")
+        $.getJSON("/qa/api/v1/frequency/?format=json"),
+        $.getJSON("/qa/api/v1/group/?format=json")
     ).then(init_test_collection_tables);
 
 });
