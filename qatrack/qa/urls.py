@@ -24,7 +24,7 @@ resources = [
     api.UnitResource(),
     api.ModalityResource(),
     api.UnitTypeResource(),
-
+    api.GroupResource(),
 ]
 for resource in resources:
     v1_api.register(resource)

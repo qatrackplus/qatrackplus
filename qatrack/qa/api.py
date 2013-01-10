@@ -1,6 +1,7 @@
 import csv
 import StringIO
 from django.conf import settings
+from django.contrib.auth.models import User, Group
 from qatrack.formats.en.formats import DATETIME_FORMAT
 import django.utils.dateformat as dateformat
 import tastypie
@@ -249,6 +250,10 @@ class FrequencyResource(ModelResource):
     class Meta:
         queryset = models.Frequency.objects.all()
 
+#============================================================================
+class GroupResource(ModelResource):
+    class Meta:
+        queryset = Group.objects.all()
 
 #============================================================================
 class StatusResource(ModelResource):
