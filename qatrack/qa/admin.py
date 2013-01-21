@@ -353,6 +353,7 @@ class UnitTestCollectionAdmin(admin.ModelAdmin):
     search_fields = ["unit__name","frequency__name","testlist__name","testlistcycle__name"]
     change_form_template = "admin/treenav/menuitem/change_form.html"
     list_editable = ["active"]
+    save_as = True
     #----------------------------------------------------------------------
     def queryset(self,*args,**kwargs):
         """"""
