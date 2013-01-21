@@ -9,8 +9,28 @@
     min-height:14px;
 }
 
-#instructions-container hr{
-    margin: 1px;
+#chart-options hr{
+    margin: 4px;
+}
+
+#test-filters .span1,
+#test-filters .span2,
+#test-filters .span3,
+#test-filters .span4 {
+    margin-left:0.56%
+}
+
+#test-filters .span1{
+    width:12%;
+}
+#test-filters .span2{
+    width:18%;
+}
+#test-filters .span3{
+    width:24%;
+}
+#test-filters .span4{
+    width:30%;
 }
 
 .control-container {
@@ -38,25 +58,10 @@
     border-radius: 4px 0 4px 0;
 }
 
-
-/*#unit-container:after{content: "1. Choose Units";}
-#frequency-container:after{content: "2. Choose Frequencies";}
-#test-list-container:after{content: "3. Choose Test Lists";}
-#test-container:after{content: "4. Choose Tests to plot";}
-#date-container:after{content: "Dates Filter";}
-#status-container:after{content: "Review Status Filter";}
-*/
-#to-date-label,
-#from-date-label {
-    width:30px;
+#cc-chart-options input{
+    max-width:35px;
 }
 
-/*#chart-options:after {
-    content:"Chart Options";
-}*
-/*#chart-options{
-    height:100px;
-}*/
 input.date-only-input{
     width:70px;
 }
@@ -68,15 +73,11 @@ input.date-only-input{
   -moz-border-radius: 4px;
   border-radius: 4px;
 }
-#from-date-container label,
-#to-date-container label{
-    min-width:40px;
-}
 #chart-actions {
     padding-top: 5px;
 }
 .checkbox-container {
-    overflow-x: hidden;
+    overflow-x: auto;
     overflow-y:auto;
 }
 
@@ -84,10 +85,6 @@ input.date-only-input{
     height:235px;;
 }
 
-#status-checkboxes,
-#chart-date-wrapper{
-    height:60px;
-}
 
 /**********************************************/
 /* Trending data table                        */
