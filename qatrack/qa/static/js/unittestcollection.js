@@ -40,6 +40,7 @@ function init_test_collection_tables(units, frequencies, groups){
         fnAdjustColumnSizing:false,
         bFilter:true,
         bPaginate:true,
+        bStateSave:true, /*remember filter/sort state on page load*/
         iDisplayLength:50,
         aaSorting:[[4,"desc"],[1,"asc"]],
 //        aaSorting:[[1,"asc"],[4,"desc"]],

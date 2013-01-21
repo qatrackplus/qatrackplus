@@ -36,6 +36,7 @@ function init_test_list_instance_tables(units, frequencies){
         fnAdjustColumnSizing:false,
         bFilter:true,
         bPaginate:true,
+        bSaveState:true,/*save sort/filter state*/
         iDisplayLength:50,
         aaSorting:[[1,"asc"],[4,"desc"]],
         aoColumns:cols,
