@@ -351,7 +351,7 @@ function get_range_options(){
             { type: 'year',    count: 1, text: '1y' },
             { type: 'all', text: 'All' }
         ],
-        selected: 1
+        selected: 4
     }
 }
 /*********************************************************************/
