@@ -2,6 +2,30 @@
 
 var waiting_timeout = null;
 
+var next_color = (function(){
+
+    var pointer = 0;
+
+    var colors = [
+		'#4572A7',
+		'#AA4643',
+		'#89A54E',
+		'#80699B',
+		'#3D96AE',
+		'#DB843D',
+		'#92A8CD',
+		'#A47D7C',
+		'#B5CA92'
+	];
+
+	return function(){
+		var color = colors[pointer];
+		pointer = (colors.length + pointer +1) % colors.length;
+		return color;
+
+	}
+})();
+
 
 /**************************************************************************/
 $(document).ready(function(){
@@ -238,74 +262,77 @@ function convert_data_to_highchart_series(data){
         var series_data = [];
         var ref_data = [];
         var tolerance_high = [],tolerance_low=[],ok=[];
+		var series_color = next_color();
 
-    $.each(series.dates,function(idx,date){
-        date = QAUtils.parse_iso8601_date(date).getTime();
-        series_data.push([date,series.values[idx]]);
-        ref_data.push([date,series.references[idx]]);
-        ok.push([date,series.tol_low[idx],series.tol_high[idx]]);
-        tolerance_low.push([date,series.tol_low[idx],series.act_low[idx]]);
-        tolerance_high.push([date,series.tol_high[idx],series.act_high[idx]]);
+		$.each(series.dates,function(idx,date){
+				date = QAUtils.parse_iso8601_date(date).getTime();
+				series_data.push([date,series.values[idx]]);
+				ref_data.push([date,series.references[idx]]);
+				ok.push([date,series.tol_low[idx],series.tol_high[idx]]);
+				tolerance_low.push([date,series.tol_low[idx],series.act_low[idx]]);
+				tolerance_high.push([date,series.tol_high[idx],series.act_high[idx]]);
 
-    });
+			});
 
-    hc_series.push({
-        name:series.unit.name+" " +series.test.name,
-        data:series_data,
-        showInLegend:true,
-        lineWidth : get_line_width(),
-        fillOpacity:1,
-        marker : {
-            enabled : true,
-            radius : 4
-        }
-    });
+			hc_series.push({
+				name:series.unit.name+" " +series.test.name,
+				data:series_data,
+				showInLegend:true,
+				lineWidth : get_line_width(),
+				fillOpacity:1,
+				color:series_color,
+				marker : {
+					enabled : true,
+					radius : 4
+				}
+			});
 
-    if ($("#show-references").is(":checked")){
-        hc_series.push({
-            name:series.unit.name+" " +series.test.name + " References",
-            data:ref_data,
-            lineWidth : 2,
-            color:"#468847",
-            fillOpacity:1,
-            marker : {
-                enabled : false
-            },
-            showInLegend:true
-        });
-    }
-    var tol_color = 'rgba(255, 255, 17, 0.2)';
-    var act_color = 'rgba(46, 217, 49, 0.2)';
+			if ($("#show-references").is(":checked")){
+				hc_series.push({
+					name:series.unit.name+" " +series.test.name + " References",
+					data:ref_data,
+					lineWidth : 2,
+					dashStyle:"ShortDash",
+					color:series_color,
+					fillOpacity:1,
+					marker : {
+						enabled : false
+					},
+					showInLegend:true
+				});
+			}
+			var tol_color = 'rgba(255, 255, 17, 0.2)';
+			var act_color = 'rgba(46, 217, 49, 0.2)';
 
-    if ($("#show-tolerances").is(":checked")){
-        hc_series.push({
-            data:tolerance_high,
-            type:'arearange',
-            lineWidth:0,
-            fillColor: tol_color,
-            name:series.unit.name+" " +series.test.name + " Tol High",
-            showInLegend:false
+			if ($("#show-tolerances").is(":checked")){
+				hc_series.push({
+					data:tolerance_high,
+					type:'arearange',
+					lineWidth:0,
+					fillColor: tol_color,
+					name:series.unit.name+" " +series.test.name + " Tol High",
+					showInLegend:false
 
-    });
+			});
 
-    hc_series.push({
-        data:ok,
-        type:'arearange',
-        lineWidth:0,
-        fillColor: act_color,
-        name:series.unit.name+" " +series.test.name + " OK",
-        showInLegend:false
-    });
-    hc_series.push({
-        data:tolerance_low,
-        type:'arearange',
-        fillColor: tol_color,
-        lineWidth:0,
-        name:series.unit.name+" " +series.test.name + " Tol Low",
-        showInLegend:false
-    });
+			hc_series.push({
+				data:ok,
+				type:'arearange',
+				lineWidth:0,
+				fillColor: act_color,
+				name:series.unit.name+" " +series.test.name + " OK",
+				showInLegend:false
+			});
+			hc_series.push({
+				data:tolerance_low,
+				type:'arearange',
+				fillColor: tol_color,
+				lineWidth:0,
+				name:series.unit.name+" " +series.test.name + " Tol Low",
+				showInLegend:false
+			});
 
-    }
+		}
 
     });
     return hc_series;
@@ -315,12 +342,14 @@ function convert_data_to_highchart_series(data){
 /**********************************************************/
 function create_stockchart(data){
 
+	var prev_range = window.chart.rangeSelector ? window.chart.rangeSelector.selected:"";
+
     window.chart = new Highcharts.StockChart({
         chart : {
             renderTo : 'chart'
         },
 
-        rangeSelector : get_range_options(),
+        rangeSelector : get_range_options(prev_range),
         legend: get_legend_options(),
         plotOptions: {
             line:{
@@ -342,7 +371,8 @@ function create_stockchart(data){
 
 }
 /*********************************************************************/
-function get_range_options(){
+function get_range_options(prev_selection){
+
     return {
         buttons: [
             { type: 'week', count: 1, text: '1w' },
@@ -351,7 +381,7 @@ function get_range_options(){
             { type: 'year',    count: 1, text: '1y' },
             { type: 'all', text: 'All' }
         ],
-        selected: 4
+        selected: prev_selection || 4
     }
 }
 /*********************************************************************/
