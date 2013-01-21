@@ -298,6 +298,17 @@ function update_time(input){
     }
 }
 /****************************************************************/
+function set_comment_icon(input){
+    var icon = $(input).parents("tr").prev("tr").find(".qa-showcmt i");
+    icon.removeClass();
+    if ($(input).val().trim().length>0){
+        icon.addClass("icon-check");
+    }else{
+        icon.addClass("icon-comment");
+    }
+
+}
+/****************************************************************/
 $(document).ready(function(){
     var that = $(this);
 
@@ -313,6 +324,11 @@ $(document).ready(function(){
       $(".qa-tli-comment textarea").toggle(600);
       return false;
     });
+
+    $(".qa-comment textarea").blur(function(){
+        set_comment_icon($(this));
+    });
+    _.map($(".qa-comment textarea"),set_comment_icon);
 
     //toggle contacts
     $("#toggle-contacts").click(function(){
