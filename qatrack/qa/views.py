@@ -495,7 +495,9 @@ class ChooseUnit(ListView):
 
     #---------------------------------------------------------------------------
     def get_queryset(self):
-        return UnitType.objects.all().order_by("unit__number").prefetch_related("unit_set")
+        groups = self.request.user.groups.all()
+        units = list(set(models.UnitTestCollection.objects.by_visibility(groups).values_list("unit",flat=True)))
+        return UnitType.objects.all().filter(unit__pk__in=units).order_by("unit__number").prefetch_related("unit_set")
     #----------------------------------------------------------------------
     def get_context_data(self,*args,**kwargs):
         """reorder unit types"""
