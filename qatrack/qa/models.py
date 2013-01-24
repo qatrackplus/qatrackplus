@@ -710,7 +710,9 @@ class UnitTestListManager(models.Manager):
         return self.get_query_set().filter(
             content_type=ContentType.objects.get(app_label="qa",model="testlist")
         )
-
+    #----------------------------------------------------------------------
+    def by_visibility(self,groups):
+        return self.get_query_set().filter(visible_to__in=groups)
 
 #============================================================================
 class UnitTestCollection(models.Model):
