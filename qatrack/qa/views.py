@@ -792,9 +792,9 @@ class BaseEditTestListInstance(UpdateView):
         )
 
         if self.request.method == "POST":
-            formset = self.formset_class(self.request.POST,self.request.FILES,instance=self.get_object(),queryset=self.test_instances)
+            formset = self.formset_class(self.request.POST,self.request.FILES,instance=self.get_object(),queryset=self.test_instances,user=self.request.user)
         else:
-            formset = self.formset_class(instance=self.get_object(),queryset=self.test_instances)
+            formset = self.formset_class(instance=self.get_object(),queryset=self.test_instances,user=self.request.user)
 
         self.add_histories(formset.forms)
         context["formset"] = formset

@@ -152,8 +152,13 @@ class UpdateTestInstanceFormSet(BaseUpdateTestInstanceFormSet):
             "unit_test_info__test__category"
         )
 
+        user = kwargs.pop("user")
+
         super(UpdateTestInstanceFormSet,self).__init__(*args,**kwargs)
 
+        skip_comment_required = not user.has_perm("can_skip_without_comment")
+        for form in self.forms:
+            form.skip_comment_required = skip_comment_required
 
 #============================================================================
 class ReviewTestInstanceForm(forms.ModelForm):
