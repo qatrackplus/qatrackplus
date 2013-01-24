@@ -1,6 +1,20 @@
 # QATrack+ Release Notes
 
-## v0.2.5 
+## v0.2.6
+This release does
+
+
+### To upgrade from v0.2.5
+
+**Note: this release introduces some database shema changes.  BACK UP YOUR DATABASE
+BEFORE ATTEMPTING THIS UPGRADE**
+
+1. Check out latest version from git (e.g. git pull origin master)
+2. python manage syncdb
+3. python manage.py migrate qa
+
+
+## v0.2.5
 
 This release fixes some issues with control charts and makes test list pages
 orderable and filterable.
@@ -11,11 +25,11 @@ be a matter of pulling the latest release from git.
 Changes in this release include:
 
 * A number of improvments to the control chart functionality have been made
-* Test lists and completed sessions are now sortable & filterable without a page refresh. 
+* Test lists and completed sessions are now sortable & filterable without a page refresh.
 * On the overview page, you cannow collapse/expand the units so that you can review one unit at a time.
 * Scientific notation is now used to display composite test results for large & small values.
 * The behaviour when determining whether a value exactly on a pass/tolerance or tolerance/fail border has been improved (see [https://bitbucket.org/randlet/qatrack/issue/207/](issue 207))
-* numpy & scipy are now available in the composite calculation context 
+* numpy & scipy are now available in the composite calculation context
 * All test variable names (whether they have values entered for them or not) are now included in the composite calculation context.
 * Crash in admin when "saving as new" with missing tests has been fixed.
 * default work completed date is now an hour later than default work started.
