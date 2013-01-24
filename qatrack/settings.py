@@ -305,8 +305,11 @@ LOGGING = {
     }
 }
 
-PAGINATE_DEFAULT=50
 
+#------------------------------------------------------------------------------
+#QA Settings
+PAGINATE_DEFAULT=50
+NHIST=5 #number of historical test results to show when reviewing/performing qa
 #------------------------------------------------------------------------------
 #Testing settings
 TEST_RUNNER = 'django_coverage.coverage_runner.CoverageRunner'

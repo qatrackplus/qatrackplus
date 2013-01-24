@@ -1,4 +1,5 @@
 from django.db.models import Q
+from django.conf import settings
 from django.utils import timezone
 import math
 import models
@@ -78,15 +79,15 @@ def add_history_to_utis(unit_test_infos,histories):
     #figure out 5 most recent dates that a test from this list was performed
     dates = set()
     for uti in unit_test_infos:
-        uti.history = histories.get(uti.test.pk,[])[:5]
+        uti.history = histories.get(uti.test.pk,[])
         dates |=  set([x["work_completed"] for x in uti.history])
-    history_dates = list(sorted(dates,reverse=True))[:5]
+    history_dates = list(sorted(dates,reverse=True))[:settings.NHIST]
 
-    #change history to only show values from 5 most recent dates
+    #change history to only show values from NHIST most recent dates
     for uti in unit_test_infos:
         new_history = []
         for d in history_dates:
-            hist = [None]*4
+            hist = [None]*settings.NHIST
             for h in uti.history:
                 if h["work_completed"] == d:
                     hist = h
