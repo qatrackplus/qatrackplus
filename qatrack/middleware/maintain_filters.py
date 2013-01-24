@@ -42,7 +42,8 @@ class FilterPersistMiddleware(object):
 
             if session.get(key, False):
                 query_string=request.session.get(key)
-                redirect_to = getattr(settings,"FORCE_SCRIPT_NAME","")+path+'?'+query_string
+                root = getattr(settings,"FORCE_SCRIPT_NAME","") or ""
+                redirect_to = root+path+'?'+query_string
                 request.session['redirected'] = True
 
                 return http.HttpResponseRedirect(redirect_to)
