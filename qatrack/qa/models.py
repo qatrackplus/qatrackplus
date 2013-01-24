@@ -970,6 +970,7 @@ class TestInstance(models.Model):
         permissions = (
             ("can_view_history","Can view test history"),
             ("can_review","Can review tests"),
+            ("can_skip_without_comment","Can skip without comment"),
         )
 
     #----------------------------------------------------------------------

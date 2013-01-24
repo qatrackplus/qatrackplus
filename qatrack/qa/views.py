@@ -697,9 +697,9 @@ class PerformQA(CreateView):
         self.add_histories()
 
         if self.request.method == "POST":
-            formset = forms.CreateTestInstanceFormSet(self.request.POST,self.request.FILES,unit_test_infos=self.unit_test_infos)
+            formset = forms.CreateTestInstanceFormSet(self.request.POST,self.request.FILES,unit_test_infos=self.unit_test_infos,user=self.request.user)
         else:
-            formset = forms.CreateTestInstanceFormSet(unit_test_infos=self.unit_test_infos)
+            formset = forms.CreateTestInstanceFormSet(unit_test_infos=self.unit_test_infos,user=self.request.user)
 
 
         context["formset"] = formset

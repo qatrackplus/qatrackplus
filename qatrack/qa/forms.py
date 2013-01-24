@@ -32,7 +32,7 @@ class TestInstanceWidgetsMixin(object):
         elif value is not None and skipped:
             self._errors["value"] = self.error_class(["Clear value if skipping"])
 
-        if skipped and not comment :
+        if self.skip_comment_required and skipped and not comment :
             self._errors["skipped"] = self.error_class(["Please add comment when skipping"])
             del cleaned_data["skipped"]
 
@@ -99,7 +99,7 @@ class CreateTestInstanceFormSet(BaseTestInstanceFormSet):
     #----------------------------------------------------------------------
     def __init__(self,*args,**kwargs):
         unit_test_infos = kwargs.pop("unit_test_infos")
-
+        user = kwargs.pop("user")
         initial = []
         for uti in unit_test_infos:
             init = {"value":None}
@@ -109,9 +109,11 @@ class CreateTestInstanceFormSet(BaseTestInstanceFormSet):
         kwargs.update(initial=initial)
         super(CreateTestInstanceFormSet,self).__init__(*args,**kwargs)
 
+        skip_comment_required = not user.has_perm("can_skip_without_comment")
+
         for form,uti in zip(self.forms,unit_test_infos):
             form.set_unit_test_info(uti)
-
+            form.skip_comment_required = skip_comment_required
 
 #============================================================================
 class UpdateTestInstanceForm(TestInstanceWidgetsMixin,forms.ModelForm):
