@@ -14,6 +14,9 @@
 
     <div class="row-fluid" >
         <div class="span12 container form-inline">
+			<input type="hidden" id="total_records" value="{{iTotalRecords}}"/>
+			<input type="hidden" id="filtered_records" value="{{iTotalDisplayRecords}}"/>
+
             <table id="testlistinstance-table" class="table table-bordered table-striped table-condensed test-list-instance-table">
 
                 <thead>
@@ -39,9 +42,16 @@
                     </tr>
                 </thead>
                 <tbody>
-					<tr>
-						<td colspan="8" class="dataTables_empty"><em>Loading data from server...</em></td>
-					</tr>
+					{% for row in data %}
+						<tr>
+							{% for col in row %}
+								<td>{{col}}</td>
+							{% endfor %}
+					{% empty %}
+						<tr>
+							<td colspan="8" class="dataTables_empty"><em>Loading data from server...</em></td>
+						</tr>
+					{% endfor %}
                 </tbody>
                 <tfoot>
                     <tr>

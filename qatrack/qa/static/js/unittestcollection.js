@@ -2,10 +2,12 @@
 /**************************************************************************/
 //Initialize sortable/filterable test list table data types
 function init_test_collection_tables(units, frequencies, groups){
-
+    /*pagination_info is array like [total_records, num_filtered_records]*/
     var unit_names = _.pluck(units[0].objects,"name");
     var freq_names = _.pluck(frequencies[0].objects,"name");
     var group_names = _.pluck(groups[0].objects,"name");
+
+    var pagination = [$("#total_records").val(),$("#filtered_records").val()];
 
     var cols = [
         {bSortable:false},
@@ -31,6 +33,7 @@ function init_test_collection_tables(units, frequencies, groups){
         null //review-status
     ];
 
+
     $(".test-collection-table").dataTable({
         bProcessing:true,
         bServerSide:true,
@@ -42,7 +45,8 @@ function init_test_collection_tables(units, frequencies, groups){
         bPaginate:true,
         bStateSave:true, /*remember filter/sort state on page load*/
         iDisplayLength:50,
-        aaSorting:[[4,"desc"],[1,"asc"]],
+        iDeferLoading:pagination,
+        aaSorting:[[3,"asc"],[4,"desc"],[1,"asc"]],
 //        aaSorting:[[1,"asc"],[4,"desc"]],
         aoColumns:cols,
         sDom: '<"row-fluid"<"span6"ir><"span6"p>>t<"row-fluid"<"span12"lp>>',

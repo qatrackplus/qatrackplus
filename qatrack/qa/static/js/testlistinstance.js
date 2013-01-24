@@ -5,6 +5,8 @@ function init_test_list_instance_tables(units, frequencies){
     var unit_names = _.pluck(units[0].objects,"name");
     var freq_names = _.pluck(frequencies[0].objects,"name");
 
+    var pagination = [$("#total_records").val(),$("#filtered_records").val()];
+
     var cols = [
         {bSortable:false},
         null,
@@ -37,6 +39,7 @@ function init_test_list_instance_tables(units, frequencies){
         bFilter:true,
         bPaginate:true,
         bSaveState:true,/*save sort/filter state*/
+        iDeferLoading:pagination,
         iDisplayLength:50,
         aaSorting:[[1,"asc"],[4,"desc"]],
         aoColumns:cols,

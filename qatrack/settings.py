@@ -308,7 +308,8 @@ LOGGING = {
 
 #------------------------------------------------------------------------------
 #QA Settings
-PAGINATE_DEFAULT=50
+PAGINATE_DEFAULT=50 #remember to change iDisplayLength in unittestcollection.js and testlistinstance.js if you change this
+
 NHIST=5 #number of historical test results to show when reviewing/performing qa
 #------------------------------------------------------------------------------
 #Testing settings

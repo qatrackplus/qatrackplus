@@ -208,17 +208,19 @@ def create_unit_test_info(unit=None,test=None,assigned_to=None,ref=None,tol=None
     return uti
 
 #----------------------------------------------------------------------
-def create_unit_test_collection(unit=None,frequency=None,test_collection=None):
+def create_unit_test_collection(unit=None,frequency=None,test_collection=None,assigned_to=None):
 
     if unit is None: unit = create_unit()
     if test_collection is None: test_collection = create_test_list()
     if frequency is None: frequency = create_frequency()
+    if assigned_to is None: assigned_to,_ = Group.objects.get_or_create(name="group")
 
     utc =  models.UnitTestCollection(
         unit = unit,
         object_id = test_collection.pk,
         content_type = ContentType.objects.get_for_model(test_collection),
         frequency = frequency,
+        assigned_to = assigned_to
 
     )
 

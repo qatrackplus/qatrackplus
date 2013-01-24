@@ -592,13 +592,13 @@ class PerformQA(CreateView):
     #----------------------------------------------------------------------
     def add_histories(self):
         """paste historical values onto unit test infos"""
-        
+
         utc_hist = models.TestListInstance.objects.filter(unit_test_collection=self.unit_test_col,test_list=self.test_list).order_by("-work_completed").values_list("work_completed",flat=True)[:settings.NHIST]
         if utc_hist.count() > 0:
             from_date = list(utc_hist)[-1]
         else:
             from_date = timezone.make_aware(timezone.datetime.now() - timezone.timedelta(days=10*self.unit_test_col.frequency.overdue_interval),timezone.get_current_timezone())
-        
+
         histories = utils.tests_history(self.all_tests,self.unit_test_col.unit,from_date,test_list=self.test_list)
         self.unit_test_infos, self.history_dates = utils.add_history_to_utis(self.unit_test_infos,histories)
 
@@ -766,8 +766,8 @@ class BaseEditTestListInstance(UpdateView):
             from_date = list(utc_hist)[-1]
         else:
             from_date = timezone.make_aware(timezone.datetime.now() - timezone.timedelta(days=10*self.object.unit_test_collection.frequency.overdue_interval),timezone.get_current_timezone())
-        
-        
+
+
         tests = [x.unit_test_info.test for x in self.test_instances]
         histories = utils.tests_history(tests,self.object.unit_test_collection.unit,from_date,test_list=self.object.test_list)
         unit_test_infos = [f.instance.unit_test_info for f in forms]
@@ -943,6 +943,7 @@ class BaseDataTablesDataSource(ListView):
 
     model = None
     queryset = None
+    initial_orderings = []
 
     def render_to_response(self, context):
         if self.kwargs["data"]:
@@ -956,19 +957,26 @@ class BaseDataTablesDataSource(ListView):
     #----------------------------------------------------------------------
     def set_orderings(self):
         n_orderings = int(self.request.GET.get("iSortingCols",0))
-        order_cols = {}
+
+        if n_orderings == 0:
+            self.orderings = self.initial_orderings
+            return
+
+        order_cols = []
         for x in range(n_orderings):
             col = int(self.request.GET.get("iSortCol_%d"%x))
-            order_cols[col] = "" if self.request.GET.get("sSortDir_%d"%x,"asc") == "asc" else "-"
+            direction =  "" if self.request.GET.get("sSortDir_%d"%x,"asc") == "asc" else "-"
+            order_cols.append((col,direction))
 
         self.orderings = []
-        for col, (display, search, ordering) in enumerate(self.columns):
-            if (col in order_cols) and ordering:
+        for col,direction in order_cols:
+            display,search,ordering = self.columns[col]
+            if ordering:
                 if isinstance(ordering,basestring):
-                    self.orderings.append("%s%s" % (order_cols[col],ordering))
+                    self.orderings.append("%s%s" % (direction,ordering))
                 else:
                     for o in ordering:
-                        self.orderings.append("%s%s" % (order_cols[col],o))
+                        self.orderings.append("%s%s" % (direction,o))
 
 
     #----------------------------------------------------------------------
@@ -1011,9 +1019,11 @@ class BaseDataTablesDataSource(ListView):
     def get_context_data(self,*args,**kwargs):
         context = super(BaseDataTablesDataSource,self).get_context_data(*args,**kwargs)
 
+        table_data = self.get_table_context_data(context)
         if self.kwargs["data"]:
-            return self.get_table_context_data(context)
+            return json.dumps(table_data)
         else:
+            context.update(table_data)
             return self.get_template_context_data(context)
     #----------------------------------------------------------------------
     def get_table_context_data(self,base_context):
@@ -1036,7 +1046,7 @@ class BaseDataTablesDataSource(ListView):
             "sEcho":self.request.GET.get("sEcho"),
         }
 
-        return json.dumps(context)
+        return context
 
     #----------------------------------------------------------------------
     def get_page_title(self):
@@ -1054,7 +1064,7 @@ class UTCList(BaseDataTablesDataSource):
     action = "perform"
     action_display = "Perform"
 
-
+    initial_orderings = ["unit__number","frequency__due_interval","testlist__name","testlistcycle__name"]
     #---------------------------------------------------------------------------
     def set_columns(self):
         self.columns = (
@@ -1113,7 +1123,7 @@ class UTCList(BaseDataTablesDataSource):
             "last_instance__testinstance_set__status",
             "last_instance__modified_by",
             "tests_object",
-        )#.order_by("unit__number","testlist__name","testlistcycle__name",)
+        )
 
         return qs.distinct()
 
@@ -1251,7 +1261,7 @@ class TestListInstances(BaseDataTablesDataSource):
 
     model = models.TestListInstance
     queryset = models.TestListInstance.objects.all
-
+    initial_orderings = ["unit_test_collection__unit__number","-work_completed"]
     #---------------------------------------------------------------------------
     def set_columns(self):
         self.columns = (
