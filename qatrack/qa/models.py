@@ -210,7 +210,7 @@ class TestInstanceStatus(models.Model):
 class Reference(models.Model):
     """Reference values for various QA :model:`Test`s"""
 
-    name = models.CharField(max_length=256, help_text=_("Enter a short name for this reference"))
+    name = models.CharField(max_length=255, help_text=_("Enter a short name for this reference"))
     type = models.CharField(max_length=15, choices=REF_TYPE_CHOICES,default=NUMERICAL)
     value = models.FloatField(help_text=_("Enter the reference value for this test."))
 
@@ -359,9 +359,9 @@ class Tolerance(models.Model):
 class Category(models.Model):
     """A model used for categorizing :model:`Test`s"""
 
-    name = models.CharField(max_length=256, unique=True)
+    name = models.CharField(max_length=255, unique=True)
     slug = models.SlugField(
-        max_length=256, unique=True,
+        max_length=255, unique=True,
         help_text=_("Unique identifier made of lowercase characters and underscores")
     )
     description = models.TextField(
@@ -384,7 +384,7 @@ class Test(models.Model):
     VARIABLE_RE = re.compile("^[a-zA-Z_]+[0-9a-zA-Z_]*$")
     RESULT_RE = re.compile("^result\s*=\s*[(\-+_0-9.a-zA-Z]+.*$",re.MULTILINE)
 
-    name = models.CharField(max_length=256, help_text=_("Name for this test"),unique=True,db_index=True)
+    name = models.CharField(max_length=255, help_text=_("Name for this test"),unique=True,db_index=True)
     slug = models.SlugField(
         verbose_name="Macro name", max_length=128,
         help_text=_("A short variable name consisting of alphanumeric characters and underscores for this test (to be used in composite calculations). "),
@@ -620,7 +620,7 @@ class TestListMembership(models.Model):
 class TestCollectionInterface(models.Model):
     """abstract base class for Tests collection (i.e. TestList's and TestListCycles"""
 
-    name = models.CharField(max_length=256,db_index=True)
+    name = models.CharField(max_length=255,db_index=True)
     slug = models.SlugField(unique=True, help_text=_("A short unique name for use in the URL of this list"),db_index=True)
     description = models.TextField(help_text=_("A concise description of this test checklist"),null=True,blank=True)
 
