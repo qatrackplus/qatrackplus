@@ -254,10 +254,10 @@ class Tolerance(models.Model):
     """
     name = models.CharField(max_length=50, unique=True, help_text=_("Enter a short name for this tolerance type"))
     type = models.CharField(max_length=20, help_text=_("Select whether this will be an absolute or relative tolerance criteria"),choices=TOL_TYPE_CHOICES)
-    act_low = models.FloatField(verbose_name=_("Action Low"), help_text=_("Absolute value of lower action level"), null=True,blank=True)
-    tol_low = models.FloatField(verbose_name=_("Tolerance Low"), help_text=_("Absolute value of lower tolerance level"), null=True,blank=True)
-    tol_high = models.FloatField(verbose_name=_("Tolerance High"), help_text=_("Absolute value of upper tolerance level"), null=True,blank=True)
-    act_high = models.FloatField(verbose_name=_("Action High"), help_text=_("Absolute value of upper action level"), null=True, blank=True)
+    act_low = models.FloatField(verbose_name=_("Action Low"), help_text=_("Lower action level value"), null=True,blank=True)
+    tol_low = models.FloatField(verbose_name=_("Tolerance Low"), help_text=_("Lower tolerance level value"), null=True,blank=True)
+    tol_high = models.FloatField(verbose_name=_("Tolerance High"), help_text=_("Upper tolerance level value"), null=True,blank=True)
+    act_high = models.FloatField(verbose_name=_("Action High"), help_text=_("Upper action level value"), null=True, blank=True)
 
     mc_pass_choices = models.CharField(verbose_name=_("Multiple Choice Pass Values"),max_length=2048,help_text=_("Comma seperated list of choices that are considered passing"),null=True,blank=True)
     mc_tol_choices = models.CharField(verbose_name=_("Multiple Choice Tolerance Values"), max_length=2048,help_text=_("Comma seperated list of choices that are considered at tolerance"),null=True,blank=True)
