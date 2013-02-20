@@ -381,8 +381,6 @@ option.unreviewed {
     padding:5px;
     padding-bottom:3px;
     margin-bottom:3px;
-    max-height: 175px;
-    overflow-y:auto;
 }
 .overview-utc-container {
     float: left;
