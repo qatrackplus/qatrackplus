@@ -1,19 +1,26 @@
 <table class="data-table table table-striped table-bordered table-condensed">
     <thead>
         <tr>
-
             {% for header in headers %}
-                <th>Date</th>
-                <th>{{header}}</th>
+                <th class="header" colspan="3">{{header}}</th>
             {% endfor %}
         </tr>
+        <tr>
+            {% for header in headers %}
+                <th>Date</th>
+                <th>Value</th>
+                <th>Ref</th>
+            {% endfor %}
+        </tr>
+
     </thead>
     <tbody>
         {% for row in rows %}
             <tr>
-                {% for da,val in row %}
+                {% for da,val,ref in row %}
                     <td>{{da}}</td>
-                    <td>{{val}}</td>
+                    <td class="number">{{val}}</td>
+                    <td class="number">{{ref}}</td>
                 {% endfor  %}
             </tr>
         {% endfor %}
@@ -24,6 +31,7 @@
             {% for header in headers %}
             <th>Date</th>
             <th>{{header}}</th>
+            <th>Ref</th>
             {% endfor %}
         </tr>
     </tfoot>
