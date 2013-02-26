@@ -210,7 +210,7 @@ class TestInstanceStatus(models.Model):
 class Reference(models.Model):
     """Reference values for various QA :model:`Test`s"""
 
-    name = models.CharField(max_length=256, help_text=_("Enter a short name for this reference"))
+    name = models.CharField(max_length=255, help_text=_("Enter a short name for this reference"))
     type = models.CharField(max_length=15, choices=REF_TYPE_CHOICES,default=NUMERICAL)
     value = models.FloatField(help_text=_("Enter the reference value for this test."))
 
@@ -254,10 +254,10 @@ class Tolerance(models.Model):
     """
     name = models.CharField(max_length=50, unique=True, help_text=_("Enter a short name for this tolerance type"))
     type = models.CharField(max_length=20, help_text=_("Select whether this will be an absolute or relative tolerance criteria"),choices=TOL_TYPE_CHOICES)
-    act_low = models.FloatField(verbose_name=_("Action Low"), help_text=_("Absolute value of lower action level"), null=True,blank=True)
-    tol_low = models.FloatField(verbose_name=_("Tolerance Low"), help_text=_("Absolute value of lower tolerance level"), null=True,blank=True)
-    tol_high = models.FloatField(verbose_name=_("Tolerance High"), help_text=_("Absolute value of upper tolerance level"), null=True,blank=True)
-    act_high = models.FloatField(verbose_name=_("Action High"), help_text=_("Absolute value of upper action level"), null=True, blank=True)
+    act_low = models.FloatField(verbose_name=_("Action Low"), help_text=_("Value of lower action level"), null=True,blank=True)
+    tol_low = models.FloatField(verbose_name=_("Tolerance Low"), help_text=_("Value of lower tolerance level"), null=True,blank=True)
+    tol_high = models.FloatField(verbose_name=_("Tolerance High"), help_text=_("Value of upper tolerance level"), null=True,blank=True)
+    act_high = models.FloatField(verbose_name=_("Action High"), help_text=_("Value of upper action level"), null=True, blank=True)
 
     mc_pass_choices = models.CharField(verbose_name=_("Multiple Choice Pass Values"),max_length=2048,help_text=_("Comma seperated list of choices that are considered passing"),null=True,blank=True)
     mc_tol_choices = models.CharField(verbose_name=_("Multiple Choice Tolerance Values"), max_length=2048,help_text=_("Comma seperated list of choices that are considered at tolerance"),null=True,blank=True)
@@ -359,9 +359,9 @@ class Tolerance(models.Model):
 class Category(models.Model):
     """A model used for categorizing :model:`Test`s"""
 
-    name = models.CharField(max_length=256, unique=True)
+    name = models.CharField(max_length=255, unique=True)
     slug = models.SlugField(
-        max_length=256, unique=True,
+        max_length=255, unique=True,
         help_text=_("Unique identifier made of lowercase characters and underscores")
     )
     description = models.TextField(
@@ -384,7 +384,7 @@ class Test(models.Model):
     VARIABLE_RE = re.compile("^[a-zA-Z_]+[0-9a-zA-Z_]*$")
     RESULT_RE = re.compile("^result\s*=\s*[(\-+_0-9.a-zA-Z]+.*$",re.MULTILINE)
 
-    name = models.CharField(max_length=256, help_text=_("Name for this test"),unique=True,db_index=True)
+    name = models.CharField(max_length=255, help_text=_("Name for this test"),unique=True,db_index=True)
     slug = models.SlugField(
         verbose_name="Macro name", max_length=128,
         help_text=_("A short variable name consisting of alphanumeric characters and underscores for this test (to be used in composite calculations). "),
@@ -620,7 +620,7 @@ class TestListMembership(models.Model):
 class TestCollectionInterface(models.Model):
     """abstract base class for Tests collection (i.e. TestList's and TestListCycles"""
 
-    name = models.CharField(max_length=256,db_index=True)
+    name = models.CharField(max_length=255,db_index=True)
     slug = models.SlugField(unique=True, help_text=_("A short unique name for use in the URL of this list"),db_index=True)
     description = models.TextField(help_text=_("A concise description of this test checklist"),null=True,blank=True)
 

@@ -3,6 +3,8 @@
 ## v0.2.6
 This release does
 
+Requires migrate qa to add new permission "Can skip without comment" and make
+256 column widths to be 255.
 
 ### To upgrade from v0.2.5
 

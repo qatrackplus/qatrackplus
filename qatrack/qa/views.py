@@ -191,7 +191,8 @@ class BaseChartView(View):
         cols = []
         for uti in utis:
             headers.append("%s %s" %(uti.unit.name,uti.test.name))
-            col = [(ti.work_completed,ti.value_display()) for ti in self.tis if ti.unit_test_info == uti]
+            r = lambda x: ti.reference.value if ti.reference else ""
+            col = [(ti.work_completed,ti.value_display(),r(ti)) for ti in self.tis if ti.unit_test_info == uti]
             cols.append(col)
             max_len = max(len(col),max_len)
 
