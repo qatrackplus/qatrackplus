@@ -80,7 +80,9 @@ input.date-only-input{
     overflow-x: auto;
     overflow-y:auto;
 }
-
+#status-checkboxes {
+    height:50px;
+}
 .test-filter{
     height:235px;;
 }
