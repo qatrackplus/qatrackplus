@@ -41,7 +41,13 @@
         <input type="hidden" class="qa-testtype" value="{{test.type}}"/>
 
         <td class="qa-category">{{test.category.name}}</td>
-        <td class="qa-name qa-showproc"><a href="#" class="revealprocedure" title="Show/hide procedure for this test">{{test.name}}</a></td>
+        <td class="qa-name qa-showproc">
+            {%if test.procedure or test.description %}
+                <a href="#" class="revealprocedure" title="Show/hide procedure for this test">{{test.name}}</a>
+            {% else %}
+                {{test.name}}               
+            {% endif %}
+        </td>
         <td class="qa-value" width=100 title="{{form.value.help_text|safe}}">
             {% if test.is_boolean %}
                 <span class="pull-left">{{form.value.0}}</span>

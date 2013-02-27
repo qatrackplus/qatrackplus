@@ -312,7 +312,10 @@ function set_comment_icon(input){
 $(document).ready(function(){
     var that = $(this);
 
-
+    $(" #test-list-info-toggle").click(function(){
+        $("#test-list-info").toggle(600);
+    });
+    
     //show comment when clicked
     $(".qa-showcmt a").click(function(){
       $(this).parent().parent().nextAll(".qa-comment").first().toggle(600);

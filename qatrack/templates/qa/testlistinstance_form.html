@@ -9,8 +9,7 @@
     {% endif %}
 {%endspaceless%}{% endblock %}
 
-{% block extra_style %}
-    <link href="{% static "css/qa.css" %}?v={{VERSION}}" rel="stylesheet">
+{% block page_style %}
     <link href="{% static "datepicker/css/datepicker.css" %}?v={{VERSION}}" rel="stylesheet">
 {% endblock %}
 
@@ -27,6 +26,7 @@
             {% else %}
                 Perform {{unit_test_collection.unit.name}} : {{test_list.name}}
             {% endif %}
+            <a id="test-list-info-toggle" class="show-hide" title="Click to view description and general instructions for this test list"><i class="icon-info-sign" ></i></a>
         </h3>
         <div id="float-right-container">
             <div id="contact-container" class="alert alert-info">
@@ -48,6 +48,16 @@
         </div>
     </div>
 </div>
+
+{% if test_list.description %}
+<div id="test-list-info" class="row-fluid" style="display:none;">
+    <div class="span12">        
+        <pre >
+            {{test_list.description|safe}}
+        </pre>
+    </div>
+</div>
+{% endif %}
 
 {% if days and last_instance %}
     <div class="row-fluid">
@@ -192,7 +202,7 @@
 
             <div class="row-fluid">
                 <div class="span12">
-                    <a id="toggle-gen-comment" class="btn pull-right" href="#" title="Click here to add a general comment about this set of tests"><i class="icon-comment"></i> Add Comment</a>
+                    <a id="toggle-gen-comment" class="btn pull-right" href="#" title="Click here to add a general comment about this set of tests"><i class="icon-edit"></i> Add Comment</a>
                 </div>
             </div>
             <div class="row-fluid">
