@@ -298,7 +298,8 @@ function convert_data_to_highchart_series(data){
 					marker : {
 						enabled : false
 					},
-					showInLegend:true
+					showInLegend:true,
+					enableMouseTracking:true
 				});
 			}
 			var tol_color = 'rgba(255, 255, 17, 0.2)';
@@ -311,8 +312,8 @@ function convert_data_to_highchart_series(data){
 					lineWidth:0,
 					fillColor: tol_color,
 					name:series.unit.name+" " +series.test.name + " Tol High",
-					showInLegend:false
-
+					showInLegend:false,
+					enableMouseTracking:false
 			});
 
 			hc_series.push({
@@ -321,7 +322,8 @@ function convert_data_to_highchart_series(data){
 				lineWidth:0,
 				fillColor: act_color,
 				name:series.unit.name+" " +series.test.name + " OK",
-				showInLegend:false
+				showInLegend:false,
+				enableMouseTracking:false
 			});
 			hc_series.push({
 				data:tolerance_low,
@@ -329,7 +331,8 @@ function convert_data_to_highchart_series(data){
 				fillColor: tol_color,
 				lineWidth:0,
 				name:series.unit.name+" " +series.test.name + " Tol Low",
-				showInLegend:false
+				showInLegend:false,
+				enableMouseTracking:false
 			});
 
 		}
@@ -363,8 +366,15 @@ function create_stockchart(data){
             ordinal: false
         },
         tooltip: {
-            pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b> ({point.change})<br/>',
-            valueDecimals: 2
+			formatter:function(){
+				var i,s,tt='';
+
+				for (i=0; i < this.points.length;i++){
+					s = this.points[i].series;
+					tt += '<span style="color:'+s.color+'">'+s.name+'</span>: <b>'+ QAUtils.format_float(this.y) + '</b><br/>';
+				}
+				return tt;
+			}
         },
         series : data
     });
