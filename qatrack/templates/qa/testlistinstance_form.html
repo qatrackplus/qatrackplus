@@ -109,7 +109,7 @@
                         </label>
                         {{form.work_started}}
                         {% if perms.qa.can_override_date %}
-                            <span class="add-on"><i class="icon-th"></i></span>
+                            <span class="add-on"><i class="icon-calendar"></i></span>
                         {% endif %}
                     {% endspaceless %}
                 </div>
@@ -118,7 +118,7 @@
                     <div class="date input-prepend input-append" id="work-completed" data-date="{% now 'd-m-Y'%}" data-date-format="dd-mm-yyyy">
                         <label for="id_work_completed" class="add-on">
                             {{form.work_completed.label}}:
-                        </label>{{form.work_completed}}<span class="add-on"><i class="icon-th"></i></span>
+                        </label>{{form.work_completed}}<span class="add-on"><i class="icon-calendar"></i></span>
                     </div>
 
                     <div class="input-prepend input-append" id="status">

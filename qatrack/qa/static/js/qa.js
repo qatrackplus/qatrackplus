@@ -302,9 +302,9 @@ function set_comment_icon(input){
     var icon = $(input).parents("tr").prev("tr").find(".qa-showcmt i");
     icon.removeClass();
     if ($(input).val().trim().length>0){
-        icon.addClass("icon-check");
-    }else{
         icon.addClass("icon-comment");
+    }else{
+        icon.addClass("icon-edit");
     }
 
 }
