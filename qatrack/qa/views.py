@@ -665,6 +665,9 @@ class PerformQA(CreateView):
                     msg += msga
                     messages.error(self.request,_(msg))
 
+
+            self.unit_test_col.set_due_date()
+
             #let user know request succeeded and return to unit list
             messages.success(self.request,_("Successfully submitted %s "% self.object.test_list.name))
 

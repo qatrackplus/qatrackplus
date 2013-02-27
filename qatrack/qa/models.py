@@ -721,6 +721,8 @@ class UnitTestCollection(models.Model):
     unit = models.ForeignKey(Unit)
 
     frequency = models.ForeignKey(Frequency, help_text=_("Frequency with which this test list is to be performed"))
+    due_date = models.DateTimeField(help_text=_("Next time this item is due"),null=True,blank=True)
+    auto_schedule = models.BooleanField(help_text=_("If this is checked, due_date will be auto set based on the assigned frequency"),default=True)
 
     assigned_to = models.ForeignKey(Group,help_text = _("QA group that this test list should nominally be performed by"),null=True)
     visible_to = models.ManyToManyField(Group,help_text=_("Select groups who will be able to see this test collection on this unit"),related_name="test_collection_visibility",default=Group.objects.all)
@@ -740,9 +742,9 @@ class UnitTestCollection(models.Model):
     class Meta:
         unique_together = ("unit", "frequency", "content_type","object_id",)
         verbose_name_plural = _("Assign Test Lists to Units")
-        ordering = ("testlist__name","testlistcycle__name",)
+        #ordering = ("testlist__name","testlistcycle__name",)
     #----------------------------------------------------------------------
-    def due_date(self):
+    def calc_due_date(self):
         """return the next due date of this Unit/TestList pair
 
         due date for a TestList is calculated as minimum due date of all tests
@@ -752,14 +754,33 @@ class UnitTestCollection(models.Model):
         dates for its member TestLists
         """
 
-        if self.last_instance:
+        if self.last_instance and self.auto_schedule:
             return utils.due_date(self.last_instance,self.frequency)
 
     #----------------------------------------------------------------------
+    def set_due_date(self,due_date=None):
+
+        if self.auto_schedule and due_date is None:
+            due_date = self.calc_due_date()
+
+        if due_date is not None:
+            #use update here instead of save so post_save and pre_save signals are not
+            #triggered
+            UnitTestCollection.objects.filter(pk=self.pk).update(due_date=due_date)
+    #----------------------------------------------------------------------
     def due_status(self):
-        if self.last_instance:
-            return utils.due_status(self.last_instance,self.frequency)
-        return NOT_DUE
+        if not self.due_date:
+            return NOT_DUE
+
+        today = timezone.localtime(timezone.now()).date()
+        due = timezone.localtime(self.due_date).date()
+        overdue = due + timezone.timedelta(days=self.frequency.overdue_interval-self.frequency.due_interval)
+
+        if today < due:
+            return NOT_DUE
+        elif today < overdue:
+            return DUE
+        return OVERDUE
 
     #----------------------------------------------------------------------
     def last_done_date(self):
