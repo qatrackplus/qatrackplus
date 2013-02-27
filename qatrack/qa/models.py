@@ -867,7 +867,9 @@ def update_unit_test_infos(collection):
 
     all_tests = collection.all_tests()
 
+
     assigned_utcs = find_assigned_unit_test_collections(collection)
+
     for utc in assigned_utcs:
         existing_uti_units = UnitTestInfo.objects.filter(
             unit= utc.unit,
@@ -881,7 +883,7 @@ def update_unit_test_infos(collection):
                 unit=utc.unit,
                 test=test,
                 assigned_to = utc.assigned_to,
-                active = utc.active
+                active = True
             )
 
 
