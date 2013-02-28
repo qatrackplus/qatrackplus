@@ -27,7 +27,13 @@
                         <dd>{{tli.unit_test_collection.tests_object.name}}</dd>
 
                         <dt>Test List :</dt>
-                        <dd>{{tli.test_list.name}}</dd>
+                        <dd>
+                            {% if tli.test_list.description%}
+                            <a class="show-hide" id="test-list-info-toggle" title="Click to view description and general instructions for this test list">{{tli.test_list.name}} <i class="icon-info-sign" ></i></a></dd>
+                            {% else %}
+                               {{tli.test_list.name}} 
+                            {% endif %}
+                        </dd>
 
                         <dt>Performed By :</dt>
                         <dd>{{tli.created_by}}</dd>
@@ -42,6 +48,7 @@
                                 <a class="btn btn-primary btn-mini" title="Edit this list" href="{%url edit_tli pk=test_list_instance.pk%}?next={{request.get_full_path}}" >Edit</a>
                             {% endif %}
                         </dd>
+                        
                    </dl>
                 </div>
                 <div class="span4">
@@ -90,6 +97,16 @@
 
             {% endwith %}
         </div>
+        {% if test_list_instance.test_list.description %}
+        <div id="test-list-info" class="row-fluid" style="display:none;">
+            <div class="span12">        
+                <pre >
+                    {{test_list_instance.test_list.description|safe}}
+                </pre>
+            </div>
+        </div>
+        {% endif %}
+        
         <div class="row-fluid">
             <div class="span12">
 

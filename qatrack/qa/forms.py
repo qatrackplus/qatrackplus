@@ -12,6 +12,23 @@ import models
 
 BOOL_CHOICES = [(0,"No"),(1,"Yes")]
 
+#====================================================================================
+class UserFormsetMixin(object):
+    """A mixin to add a user object to every form in a formset (and the formset itself)"""
+
+    #----------------------------------------------------------------------
+    def __init__(self,*args,**kwargs):
+        self.user = kwargs.pop("user")
+        super(UserFormsetMixin,self).__init__(*args,**kwargs)
+    #---------------------------------------------------------------------------
+    def _construct_forms(self):
+        """add user to all children"""
+        self.forms = []
+        for i in xrange(self.total_form_count()):
+            f = self._construct_form(i)
+            f.user = self.user
+            self.forms.append(f)
+
 #============================================================================
 class TestInstanceWidgetsMixin(object):
     #----------------------------------------------------------------------
@@ -32,7 +49,8 @@ class TestInstanceWidgetsMixin(object):
         elif value is not None and skipped:
             self._errors["value"] = self.error_class(["Clear value if skipping"])
 
-        if self.skip_comment_required and skipped and not comment :
+            
+        if not self.user.has_perm("can_skip_without_comment") and skipped and not comment :
             self._errors["skipped"] = self.error_class(["Please add comment when skipping"])
             del cleaned_data["skipped"]
 
@@ -93,13 +111,17 @@ class CreateTestInstanceForm(TestInstanceWidgetsMixin,forms.Form):
             "test":self.unit_test_info.test,
         }
 
+        
+        
+    
+    
 #============================================================================
 BaseTestInstanceFormSet = forms.formsets.formset_factory(CreateTestInstanceForm,extra=0)
-class CreateTestInstanceFormSet(BaseTestInstanceFormSet):
+class CreateTestInstanceFormSet(UserFormsetMixin,BaseTestInstanceFormSet):
     #----------------------------------------------------------------------
     def __init__(self,*args,**kwargs):
         unit_test_infos = kwargs.pop("unit_test_infos")
-        user = kwargs.pop("user")
+
         initial = []
         for uti in unit_test_infos:
             init = {"value":None}
@@ -109,11 +131,8 @@ class CreateTestInstanceFormSet(BaseTestInstanceFormSet):
         kwargs.update(initial=initial)
         super(CreateTestInstanceFormSet,self).__init__(*args,**kwargs)
 
-        skip_comment_required = not user.has_perm("can_skip_without_comment")
-
         for form,uti in zip(self.forms,unit_test_infos):
             form.set_unit_test_info(uti)
-            form.skip_comment_required = skip_comment_required
 
 #============================================================================
 class UpdateTestInstanceForm(TestInstanceWidgetsMixin,forms.ModelForm):
@@ -142,7 +161,7 @@ class UpdateTestInstanceForm(TestInstanceWidgetsMixin,forms.ModelForm):
 
 #============================================================================
 BaseUpdateTestInstanceFormSet = inlineformset_factory(models.TestListInstance,models.TestInstance,form=UpdateTestInstanceForm,extra=0,can_delete=False)
-class UpdateTestInstanceFormSet(BaseUpdateTestInstanceFormSet):
+class UpdateTestInstanceFormSet(UserFormsetMixin,BaseUpdateTestInstanceFormSet):
 
     #----------------------------------------------------------------------
     def __init__(self,*args,**kwargs):
@@ -152,13 +171,7 @@ class UpdateTestInstanceFormSet(BaseUpdateTestInstanceFormSet):
             "unit_test_info__test__category"
         )
 
-        user = kwargs.pop("user")
-
         super(UpdateTestInstanceFormSet,self).__init__(*args,**kwargs)
-
-        skip_comment_required = not user.has_perm("can_skip_without_comment")
-        for form in self.forms:
-            form.skip_comment_required = skip_comment_required
 
 #============================================================================
 class ReviewTestInstanceForm(forms.ModelForm):
@@ -168,7 +181,9 @@ class ReviewTestInstanceForm(forms.ModelForm):
         model = models.TestInstance
         fields = ("status" , )
 
-ReviewTestInstanceFormSet = inlineformset_factory(models.TestListInstance,models.TestInstance,form=ReviewTestInstanceForm,extra=0,can_delete=False)
+BaseReviewTestInstanceFormSet = inlineformset_factory(models.TestListInstance,models.TestInstance,form=ReviewTestInstanceForm,extra=0,can_delete=False)
+class ReviewTestInstanceFormSet(UserFormsetMixin,BaseReviewTestInstanceFormSet):
+    pass
 
 #============================================================================
 class BaseTestListInstanceForm(forms.ModelForm):
