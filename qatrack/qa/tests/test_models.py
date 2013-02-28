@@ -621,7 +621,7 @@ class TestUnitTestCollection(TestCase):
 
         utc = models.UnitTestCollection.objects.get(pk=utc.pk)
 
-        self.assertTrue(utils.datetimes_same(utc.due_date(),ti.work_completed+daily.due_delta()))
+        self.assertTrue(utils.datetimes_same(utc.due_date,ti.work_completed+daily.due_delta()))
 
         tli2 = utils.create_test_list_instance(unit_test_collection=utc,work_completed=now+timezone.timedelta(days=3))
 
@@ -630,7 +630,7 @@ class TestUnitTestCollection(TestCase):
         ti2.save()
         utc = models.UnitTestCollection.objects.get(pk=utc.pk)
 
-        self.assertTrue(utils.datetimes_same(utc.due_date(),now+timezone.timedelta(days=4)))
+        self.assertTrue(utils.datetimes_same(utc.due_date,now+timezone.timedelta(days=4)))
     #---------------------------------------------------------------------------
     def test_cycle_due_date(self):
         test_lists = [utils.create_test_list(name="test list %d"% i) for i in range(2)]
@@ -652,12 +652,12 @@ class TestUnitTestCollection(TestCase):
         tli.save()
 
         utc = models.UnitTestCollection.objects.get(pk=utc.pk)
-        self.assertTrue(utils.datetimes_same(utc.due_date(),now+daily.due_delta()))
+        self.assertTrue(utils.datetimes_same(utc.due_date,now+daily.due_delta()))
 
         uti = models.UnitTestInfo.objects.get(test=test_lists[1].tests.all()[0],unit=utc.unit)
 
         utils.create_test_instance(unit_test_info=uti,work_completed=now,status=status)
-        self.assertTrue(utils.datetimes_same(utc.due_date(),now+daily.due_delta()))
+        self.assertTrue(utils.datetimes_same(utc.due_date,now+daily.due_delta()))
 
 
     #----------------------------------------------------------------------

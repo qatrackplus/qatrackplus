@@ -99,7 +99,7 @@ as_time_delta.safe = True
 @register.filter
 def as_data_attributes(unit_test_collection):
     utc = unit_test_collection
-    due_date = utc.due_date()
+    due_date = utc.due_date
     last_done = utc.last_done_date()
 
     attrs = {

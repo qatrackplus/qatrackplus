@@ -1222,11 +1222,16 @@ def update_last_instances(test_list_instance):
     to_update = [(cycle_ct,cycle_ids), (list_ct,test_list_ids)]
 
     for ct,object_ids in to_update:
-        UnitTestCollection.objects.filter(
+        
+        utcs = UnitTestCollection.objects.filter(
             content_type = ct,
             object_id__in = object_ids,
             unit = test_list_instance.unit_test_collection.unit,
-        ).update(last_instance=last_instance)
+        )
+        for utc in utcs:
+            utc.last_instance=last_instance
+            utc.save()
+            utc.set_due_date()
 
     if last_instance:
         for ti in last_instance.testinstance_set.all():
@@ -1245,7 +1250,7 @@ def on_test_list_instance_saved(*args,**kwargs):
 
     if not loaded_from_fixture(kwargs):
         update_last_instances(kwargs["instance"])
-
+        
 @receiver(post_delete,sender=TestListInstance)
 #----------------------------------------------------------------------
 def on_test_list_instance_deleted(*args,**kwargs):

@@ -645,6 +645,7 @@ class TestPerformQA(TestCase):
         self.url = reverse("perform_qa",kwargs={"pk":self.unit_test_list.pk})
         self.client.login(username="user",password="password")
         self.user = User.objects.get(username="user")
+        self.user.is_superuser = False
         self.user.save()
         self.user.groups.add(group)
         self.user.save()
