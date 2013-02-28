@@ -138,7 +138,7 @@ class ChartView(TemplateView):
 
         c = {
             "cc_available":CONTROL_CHART_AVAILABLE,
-            "from_date": timezone.now().date()-timezone.timedelta(days=180),
+            "from_date": timezone.now().date()-timezone.timedelta(days=365),
             "to_date":timezone.now().date()+timezone.timedelta(days=1),
             "frequencies":models.Frequency.objects.all(),
             "tests":self.tests,
@@ -238,7 +238,7 @@ class BaseChartView(View):
         statuses = self.request.GET.getlist("statuses[]",models.TestInstanceStatus.objects.values_list("pk",flat=True))
 
         now = timezone.datetime.now()
-        from_date = self.get_date("from_date",now-timezone.timedelta(days=180))
+        from_date = self.get_date("from_date",now-timezone.timedelta(days=365))
         to_date = self.get_date("to_date",now)
 
         self.tis = models.TestInstance.objects.filter(
