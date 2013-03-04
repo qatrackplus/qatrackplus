@@ -808,6 +808,10 @@ class UnitTestCollection(models.Model):
     def test_objects_name(self):
         return self.tests_object.name
     #----------------------------------------------------------------------
+    def get_absolute_url(self):
+        return urlresolvers.reverse("perform_qa",kwargs={"pk":self.pk})
+
+    #----------------------------------------------------------------------
     def __unicode__(self):
         return "UnitTestCollection(%s)"%self.pk
 
