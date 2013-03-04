@@ -15,6 +15,16 @@
     {% block page_style %}{% endblock %}
 {% endblock %}
 
+{% block script_base %}
+    <script type="text/javascript">
+        var QAURLs = {
+            base:"{{QATRACK_ROOT}}"
+        }
+    </script>
+
+    {{block.super}}
+{% endblock script_base %}
+
 {% block nav %}
     {% if user.is_authenticated %}
         <ul class="nav nav-pills">
@@ -106,7 +116,7 @@
     {% block end_body_script_base %}
         <script src="{% static "data_tables/js/jquery.dataTables.js" %}?v={{VERSION}}"></script>
         <script src="{% static "data_tables/js/jquery.dataTables.columnFilter.js" %}?v={{VERSION}}"></script>
-        <script src="{% static "data_tables/js/jquery.dataTables.searchPlugins.js" %}?v={{VERSION}}"></script>        
+        <script src="{% static "data_tables/js/jquery.dataTables.searchPlugins.js" %}?v={{VERSION}}"></script>
         <script src="{% static "data_tables/js/DT_bootstrap.js" %}?v={{VERSION}}"></script>
         <script src="{% static "data_tables/js/DT_sort.js" %}?v={{VERSION}}"></script>
         <script src="{% static "js/underscore-min.js" %}?v={{VERSION}}"></script>
