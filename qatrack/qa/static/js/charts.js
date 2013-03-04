@@ -473,7 +473,20 @@ function get_control_chart_url(){
 function update_data_table(data){
     $("#data-table-wrapper").html(data.table);
 }
+/*************************************************************************/
+//Return all test lists that contain one ore more of the input tests
+function get_test_lists_from_tests(tests){
+	var test_lists = [];
+    _.each(tests,function(test){
+		_.each(QACharts.test_info.test_lists,function(e,i){
+			if (_.contains(e,parseInt(test))){
+				test_lists.push(i);
+			}
+		});
+    });
 
+	return _.uniq(test_lists);
+}
 /**************************************************************************/
 //set initial options based on url hash
 function set_options_from_url(){
@@ -483,6 +496,7 @@ function set_options_from_url(){
 
     var units = get_filtered_option_values("units",options);
     var tests = get_filtered_option_values("tests",options);
+	var	test_lists = get_test_lists_from_tests(tests);
 
     if ((units.length === 0) || (tests.length === 0)){
         return;
@@ -490,11 +504,15 @@ function set_options_from_url(){
 
     unit_ids = _.map(units,function(pk){return "#unit-"+pk;});
     test_ids = _.map(tests,function(pk){return "#test-"+pk;});
+    test_list_ids = _.map(test_lists,function(pk){return "#test-list-"+pk;});
+
 
     var filters = ["#unit-container","#frequency-container","#test-list-container"];
 
     _.map(filters,show_all_inputs);
-    $(".test-list").attr("checked",true);
+
+	//    $(".test-list").attr("checked",true);
+    QAUtils.set_checked_state(test_list_ids,true);
     QAUtils.set_checked_state(unit_ids,true);
     update_tests();
     QAUtils.set_checked_state(test_ids,true);
