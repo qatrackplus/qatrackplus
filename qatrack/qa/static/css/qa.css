@@ -226,7 +226,9 @@ th.qa-history div{
 #admin_controls div.date label{
     width:100px;
 }
-
+#admin_controls .input-prepend.date .add-on i {
+    display:inline;
+}
 #admin_controls div.date input{
     width:100px;
 }

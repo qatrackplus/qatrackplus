@@ -302,9 +302,9 @@ function set_comment_icon(input){
     var icon = $(input).parents("tr").prev("tr").find(".qa-showcmt i");
     icon.removeClass();
     if ($(input).val().trim().length>0){
-        icon.addClass("icon-check");
-    }else{
         icon.addClass("icon-comment");
+    }else{
+        icon.addClass("icon-edit");
     }
 
 }
@@ -312,7 +312,10 @@ function set_comment_icon(input){
 $(document).ready(function(){
     var that = $(this);
 
-
+    $(" #test-list-info-toggle").click(function(){
+        $("#test-list-info").toggle(600);
+    });
+    
     //show comment when clicked
     $(".qa-showcmt a").click(function(){
       $(this).parent().parent().nextAll(".qa-comment").first().toggle(600);
