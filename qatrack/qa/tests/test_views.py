@@ -52,7 +52,6 @@ class TestURLS(TestCase):
             ("review_all",{}),
             ("review_utc",{"pk":"%d"%utc.pk}),
             ("choose_review_frequency",{}),
-            ("review_by_frequency",{"frequency":"short-interval"}),
             ("review_by_frequency",{"frequency":"daily/monthly"}),
             ("choose_review_unit",{}),
             ("review_by_unit",{"unit_number":"1"}),
@@ -69,11 +68,7 @@ class TestURLS(TestCase):
             ("edit_tli",{"pk":"%d"%(tli.pk)}),
             ("choose_unit",{}),
             ("perform_qa",{"pk":"%d"%utc.pk}),
-            ("qa_by_frequency_unit",{"unit_number":"1","frequency":"short-interval"}),
             ("qa_by_unit",{"unit_number":"1"}),
-            ("qa_by_frequency_unit",{"unit_number":"1","frequency":"short-interval"}),
-            ("qa_by_unit_frequency",{"unit_number":"1","frequency":"short-interval"}),
-            ("qa_by_frequency",{"frequency":"short-interval"}),
         )
 
         for url,kwargs in url_names:
@@ -765,7 +760,7 @@ class TestPerformQA(TestCase):
 
         #user is redirected if form submitted successfully
         self.assertEqual(response.status_code,302)
-        self.assertIn("short-interval",response._headers['location'][1])
+        self.assertIn("qa/unit/%d"%self.unit_test_list.unit.number,response._headers['location'][1])
 
 
     #---------------------------------------------------------------------------
