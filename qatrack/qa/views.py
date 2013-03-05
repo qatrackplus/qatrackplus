@@ -1206,12 +1206,15 @@ class FrequencyList(UTCList):
         freqs = self.kwargs["frequency"].split("/")
         self.frequencies = models.Frequency.objects.filter(slug__in=freqs)
 
-        return qs.filter(
-            frequency__in=self.frequencies,
-        ).distinct()
+        q = Q(frequency__in=self.frequencies)
+        if "ad-hoc" in freqs:
+            q |= Q(frequency=None)
+
+        return qs.filter(q).distinct()
     #----------------------------------------------------------------------
     def get_page_title(self):
-        return ",".join([x.name for x in self.frequencies]) + " Test Lists"
+        return ",".join([x.name if x else "ad-hoc" for x in self.frequencies]) + " Test Lists"
+
 #============================================================================
 class UnitFrequencyList(FrequencyList):
     """list daily/monthly/annual test lists for a unit"""
@@ -1225,7 +1228,7 @@ class UnitFrequencyList(FrequencyList):
     #----------------------------------------------------------------------
     def get_page_title(self):
         title = ", ".join([x.name for x in self.units])
-        title+= " " + ", ".join([x.name for x in self.frequencies]) + " Test Lists"
+        title+= " " + ", ".join([x.name if x else "ad-hoc" for x in self.frequencies]) + " Test Lists"
         return  title
 
 

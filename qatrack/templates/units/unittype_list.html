@@ -35,6 +35,9 @@
                                     <a href="{% url qa_by_frequency_unit frequency=freq.0 unit_number=unit.number %}">{{unit.name}} &mdash; {{freq.1}}</a>
                                 </li>
                                 {% endfor %}
+                                <li>
+                                    <a href="{% url qa_by_frequency_unit frequency="ad-hoc" unit_number=unit.number %}">{{unit.name}} &mdash; <em>Ad-Hoc</em></a>
+                                </li>
                             </ul>
                         </div>
                     {% endif %}
