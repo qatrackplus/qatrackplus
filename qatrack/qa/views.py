@@ -738,9 +738,6 @@ class PerformQA(CreateView):
             "frequency":self.unit_test_col.frequency.slug
         }
 
-        if not self.request.user.has_perm("qa.can_choose_frequency"):
-            kwargs["frequency"] = "short-interval"
-
         return reverse("qa_by_frequency_unit",kwargs=kwargs)
 
 
@@ -1160,10 +1157,7 @@ class UTCFrequencyReview(UTCReview):
         qs = super(UTCFrequencyReview,self).get_queryset()
 
         freq = self.kwargs["frequency"]
-        if freq == "short-interval":
-            self.frequencies = models.Frequency.objects.filter(due_interval__lte=14)
-        else:
-            self.frequencies = models.Frequency.objects.filter(slug__in=self.kwargs["frequency"].split("/"))
+        self.frequencies = models.Frequency.objects.filter(slug__in=self.kwargs["frequency"].split("/"))
 
         return qs.filter(
             frequency__slug__in=self.frequencies.values_list("slug",flat=True),
@@ -1210,10 +1204,7 @@ class FrequencyList(UTCList):
         qs = super(FrequencyList,self).get_queryset()
 
         freqs = self.kwargs["frequency"].split("/")
-        self.frequencies = list(models.Frequency.objects.filter(slug__in=freqs))
-
-        if "short-interval" in freqs:
-            self.frequencies.extend(list(models.Frequency.objects.filter(due_interval__lte=14)))
+        self.frequencies = models.Frequency.objects.filter(slug__in=freqs)
 
         return qs.filter(
             frequency__in=self.frequencies,
