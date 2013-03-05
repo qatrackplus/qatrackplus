@@ -594,13 +594,13 @@ class PerformQA(CreateView):
 
     #----------------------------------------------------------------------
     def add_histories(self):
-        """paste historical values onto unit test infos"""
+        """paste historical values onto unit test infos (ugh ugly)"""
 
         utc_hist = models.TestListInstance.objects.filter(unit_test_collection=self.unit_test_col,test_list=self.test_list).order_by("-work_completed").values_list("work_completed",flat=True)[:settings.NHIST]
         if utc_hist.count() > 0:
             from_date = list(utc_hist)[-1]
         else:
-            from_date = timezone.make_aware(timezone.datetime.now() - timezone.timedelta(days=10*self.unit_test_col.frequency.overdue_interval),timezone.get_current_timezone())
+            from_date = timezone.make_aware(timezone.datetime.now() - timezone.timedelta(days=365),timezone.get_current_timezone())
 
         histories = utils.tests_history(self.all_tests,self.unit_test_col.unit,from_date,test_list=self.test_list)
         self.unit_test_infos, self.history_dates = utils.add_history_to_utis(self.unit_test_infos,histories)
@@ -1081,7 +1081,7 @@ class UTCList(BaseDataTablesDataSource):
             ),
             (qa_tags.as_due_date, None,None),
             (lambda x:x.unit.name, "unit__name__exact", "unit__number"),
-            (lambda x:x.frequency.name, "frequency__name__exact", "frequency__due_interval"),
+            (lambda x:x.frequency.name if x.frequency else "Ad Hoc", "frequency__name__exact", "frequency__due_interval"),
 
             (lambda x:x.assigned_to.name,"assigned_to__name__icontains","assigned_to__name"),
             (self.get_last_instance_work_completed,None,"last_instance__work_completed"),

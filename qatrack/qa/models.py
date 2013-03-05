@@ -720,7 +720,7 @@ class UnitTestCollection(models.Model):
 
     unit = models.ForeignKey(Unit)
 
-    frequency = models.ForeignKey(Frequency, help_text=_("Frequency with which this test list is to be performed"))
+    frequency = models.ForeignKey(Frequency, help_text=_("Frequency with which this test list is to be performed"),null=True,blank=True)
     due_date = models.DateTimeField(help_text=_("Next time this item is due"),null=True,blank=True)
     auto_schedule = models.BooleanField(help_text=_("If this is checked, due_date will be auto set based on the assigned frequency"),default=True)
 
