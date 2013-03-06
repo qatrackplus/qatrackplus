@@ -43,7 +43,7 @@
                         <div class="span4">
                             <div class="well overview-freq-container">
 
-                                <h4>{{freq.name}}</h4>
+                                <h4>{% if freq %}{{freq.name}}{% else %}<em>Ad-hoc</em>{% endif %}</h4>
                                 <div class="overview-utc-container">
                                     <div class="overview-test-list-name pull-left">
                                         <h5>Test List</h5>

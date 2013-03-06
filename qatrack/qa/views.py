@@ -1161,9 +1161,11 @@ class UTCFrequencyReview(UTCReview):
         freq = self.kwargs["frequency"]
         self.frequencies = models.Frequency.objects.filter(slug__in=self.kwargs["frequency"].split("/"))
 
-        return qs.filter(
-            frequency__slug__in=self.frequencies.values_list("slug",flat=True),
-        ).distinct()
+        q = Q(frequency__in=self.frequencies)
+        if "ad-hoc" in freq:
+            q |= Q(frequency=None)
+
+        return qs.filter(q).distinct()
 
     #---------------------------------------------------------------------------
     def get_page_title(self):
@@ -1459,7 +1461,7 @@ class Overview(TemplateView):
         next_month_end = timezone.datetime(next_month_start.year, next_month_start.month, calendar.mdays[next_month_start.month]).date()
 
         units = Unit.objects.order_by("number")
-        frequencies = models.Frequency.objects.order_by("nominal_interval")
+        frequencies = list(models.Frequency.objects.order_by("nominal_interval"))+[None]
 
         due = collections.defaultdict(list)
         unit_lists = []
