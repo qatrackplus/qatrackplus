@@ -93,8 +93,10 @@ class ChartView(TemplateView):
         self.unit_frequencies = collections.defaultdict(lambda:collections.defaultdict(list))
 
         for utc in utcs:
-            unit = utc["unit"]#.unit.pk
-            freq = utc["frequency"]#.pk
+            if utc["frequency"] is None:
+                utc["frequency"] =  0
+            unit = utc["unit"]
+            freq = utc["frequency"]
             if utc["content_type"] == tlc_content_type:
                 test_list = utc["testlistcycle__test_lists"]
             else:
