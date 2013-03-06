@@ -26,7 +26,9 @@
             {% else %}
                 Perform {{unit_test_collection.unit.name}} : {{test_list.name}}
             {% endif %}
+            {% if test_list.description %}
             <a id="test-list-info-toggle" class="show-hide" title="Click to view description and general instructions for this test list"><i class="icon-info-sign" ></i></a>
+            {% endif %}
         </h3>
         <div id="float-right-container">
             <div id="contact-container" class="alert alert-info">
@@ -51,7 +53,7 @@
 
 {% if test_list.description %}
 <div id="test-list-info" class="row-fluid" style="display:none;">
-    <div class="span12">        
+    <div class="span12">
         <pre >
             {{test_list.description|safe}}
         </pre>
