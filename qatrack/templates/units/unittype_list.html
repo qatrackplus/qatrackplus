@@ -49,7 +49,7 @@
     {% endfor %}
     <script type="text/javascript">
         $(".btn.top-level").click(function(){
-            window.location = $(this).nextAll("ul").find("a").first().attr("href");
+            window.location = $(this).find("a").first().attr("href");
         });
     </script>
 
