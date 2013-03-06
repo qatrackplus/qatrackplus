@@ -1,4 +1,10 @@
 "use strict";
+/***************************************************************/
+//Test statuse and Table context used to narrow down jQuery selectors.
+//Improves performance in IE
+var context = $("#perform-qa-table")[0];
+var test_statuses = $("td.qa-status",context);
+var fail_warnings = $("#do-not-treat-bottom, #do-not-treat-top");
 
 /***************************************************************/
 //Set up the values we will need to do validation on data
@@ -9,26 +15,27 @@ var composite_ids = {};
 //set the intitial values, tolerances & refs for all of our tests
 function initialize_qa(){
 
-    $(".qa-valuerow").each(function(order){
+    var rows = $(".qa-valuerow",context);
+    var i;
+    for (i=0; i< rows.length; i++){
         //loop over each row containing a qa test and grab relevant info
-
-
-        var context_name = $(this).find(".qa-contextname").val();
+        var row = $(rows[i]);
+        var context_name = row.find(".qa-contextname").val();
 
         var reference = {
-            value:parseFloat($(this).find(".qa-reference-val").val()),
-            pk:$(this).find(".qa-reference-pk").val()
+            value:parseFloat(row.find(".qa-reference-val").val()),
+            pk:row.find(".qa-reference-pk").val()
         };
 
         var tolerances = {
-            act_low:parseFloat($(this).find(".act_low").val()),
-            tol_low:parseFloat($(this).find(".tol_low").val()),
-            tol_high:parseFloat($(this).find(".tol_high").val()),
-            act_high:parseFloat($(this).find(".act_high").val()),
-            mc_pass_choices:QAUtils.non_empty($(this).find(".mc_pass_choices").val().split(',')),
-            mc_tol_choices:QAUtils.non_empty($(this).find(".mc_tol_choices").val().split(',')),
-            type:$(this).find(".qa-tolerance-type").val(),
-            pk:$(this).find(".qa-tolerance-pk").val()
+            act_low:parseFloat(row.find(".act_low").val()),
+            tol_low:parseFloat(row.find(".tol_low").val()),
+            tol_high:parseFloat(row.find(".tol_high").val()),
+            act_high:parseFloat(row.find(".act_high").val()),
+            mc_pass_choices:QAUtils.non_empty(row.find(".mc_pass_choices").val().split(',')),
+            mc_tol_choices:QAUtils.non_empty(row.find(".mc_tol_choices").val().split(',')),
+            type:row.find(".qa-tolerance-type").val(),
+            pk:row.find(".qa-tolerance-pk").val()
 
         };
 
@@ -37,14 +44,14 @@ function initialize_qa(){
             name:context_name,
             tolerances:tolerances,
             reference:reference,
-            current_value: get_value_for_row($(this))
+            current_value: get_value_for_test(name)
         };
 
-    });
+    }
 
 
     //store ids and names for all composite tests
-    $('.qa-testtype[value="composite"]').each(function(){
+    $('.qa-testtype[value="composite"]',context).each(function(){
         var row = $(this).parents(".qa-valuerow");
         var test_id = row.find('.qa-test-id').val();
         var name = row.find('.qa-contextname').val();
@@ -54,20 +61,18 @@ function initialize_qa(){
 /***************************************************************/
 //Perform Ajax calls to calculate all composite values
 function calculate_composites(){
-
-    var composites = $('.qa-testtype[value="composite"]');
-    if (composites.length <= 0){
-        return;
+    if ($("#contains-composites").val() !== "yes"){
+        return
     }
-
-    $('button[type=submit]').attr("disabled", true);
+    var submit = $('#submit-qa');
+    submit.attr("disabled", true);
     var data = {
         qavalues:JSON.stringify(validation_data),
         composite_ids:JSON.stringify(composite_ids)
     };
 
     var on_success = function(data){
-        $('button[type=submit]').attr("disabled", false);
+        submit.attr("disabled", false);
 
         if (data.success){
             $.each(data.results,function(name,result){
@@ -77,7 +82,7 @@ function calculate_composites(){
     }
 
     var on_error = function(){
-        $('button[type=submit]').attr("disabled", false);
+        submit.attr("disabled", false);
     }
 
     QAUtils.call_api(QAUtils.COMPOSITE_URL,"POST",data,on_success,on_error);
@@ -85,13 +90,11 @@ function calculate_composites(){
 
 /***************************************************************/
 //Check the tolerances for a single input and format appropriately
-function check_test_status(input_element){
+function check_test_status(name){
 
-    var parent = input_element.parents("tr:first");
-    var name = parent.find(".qa-contextname").val();
-    var test_type = parent.find(".qa-testtype").val();
-    var qastatus = parent.find(".qa-status");
-    var val = get_value_for_row(input_element.parents(".qa-valuerow"));
+    var test_type = $("#testtype-"+name).val();
+    var qastatus = $("#status-"+name);
+    var val = get_value_for_test(name);
 
     //update the current value of the test that just changed and check tolerances
     validation_data[name].current_value = val;
@@ -100,7 +103,7 @@ function check_test_status(input_element){
     qastatus.removeClass("btn-danger btn-warning btn-success btn-info");
     qastatus.text("Not Done");
 
-    if (parent.find(".qa-skip input").is(":checked")){
+    if ($("#skip-"+name+" input").is(":checked")){
         return;
     }
 
@@ -131,18 +134,22 @@ function check_test_status(input_element){
 }
 
 /***************************************************************/
-//Take an qavaluerow and return the value of the input contained within it
-function get_value_for_row(input_row_element){
-    var test_type = $(input_row_element).find(".qa-testtype").val();
+//Return the value of the input for the given test name (slug)
+function get_value_for_test(name){
+    var test_type = $("#testtype-"+name).val();
     var val;
+
     if (test_type === QAUtils.BOOLEAN){
-        if ($(input_row_element).find(":checked").length > 0){
-            return parseFloat($(input_row_element).find(":checked").val());
+        var checked = $("#value-"+name+" :checked");
+        if (checked.length > 0){
+            return parseFloat(checked.val());
         }else{
             return null;
         }
     }else if (test_type === QAUtils.MULTIPLE_CHOICE){
-        val = $.trim($(input_row_element).find(":selected").text());
+        var selected = $("#value-"+name+" :selected");
+
+        val = $.trim(selected.text());
         if (val !== ""){
             return val;
         }else{
@@ -150,7 +157,7 @@ function get_value_for_row(input_row_element){
         }
 
     }else {
-        val = input_row_element.find(".qa-value input").val();
+        val = $("#value-"+name+" input").val();
         if ($.trim(val) === ""){
             return "";
         }
@@ -168,14 +175,13 @@ function get_value_for_row(input_row_element){
 /***************************************************************/
 //set the value of an input by using it's name
 function set_value_by_name(name, value){
-    var row = $('.qa-contextname[value="'+name+'"]').parents(".qa-valuerow");
-    var input = row.find(".qa-value input");
+    var input = $("#value-"+name+" input");
     if (QAUtils.is_number(value)){
         value =QAUtils.format_float(value);
     }
     input.val(value);
-    check_test_status(input);
-    check_skip_status(input);
+    check_test_status(name);
+    check_skip_status(name);
     update_qa_status();
 }
 
@@ -190,9 +196,11 @@ function valid_input(input_element){
 function full_validation(){
     calculate_composites();
 
-    $(".qa-input").each(function(){
-        check_test_status($(this));
-    });
+    var i;
+    var names = $(".qa-contextname",context);
+    for (i=0; i < names.length; i++){
+        check_test_status(names[i].value);
+    }
 
     update_qa_status();
 
@@ -274,20 +282,23 @@ function confirm_leave_page(){
 }
 
 /****************************************************************/
-function check_skip_status(input){
-    var row = input.parents(".qa-valuerow");
-    var val = get_value_for_row(row);
+function check_skip_status(name){
+    var val = get_value_for_test(name);
     if (val !== "") {
-        row.find(".qa-skip input").attr("checked",false);
+        $("#skip-"+name+" input").attr("checked",false);
     }
 }
 /****************************************************************/
 function update_qa_status(){
-    if ($(".btn-danger").length >0){
-        $(".do-not-treat").show();
-    }else{
-        $(".do-not-treat").hide();
+    var i;
+    for (i=0;i<test_statuses.length;i++){
+        if ($(test_statuses[i]).hasClass("btn-danger")){
+            fail_warnings.show();
+            return;
+        }
     }
+
+    fail_warnings.hide();
 }
 
 function update_time(input){
@@ -312,12 +323,19 @@ function set_comment_icon(input){
 $(document).ready(function(){
     var that = $(this);
 
-    $(" #test-list-info-toggle").click(function(){
+    var composites = $('.qa-testtype[value="composite"]',context);
+    if (composites.length <= 0){
+        $("#contains-composites").val("no");
+    }else{
+        $("#contains-composites").val("yes");
+    }
+
+    $("#test-list-info-toggle").click(function(){
         $("#test-list-info").toggle(600);
     });
 
     //show comment when clicked
-    $(".qa-showcmt a").click(function(){
+    $(".qa-showcmt a",context).click(function(){
       $(this).parent().parent().nextAll(".qa-comment").first().toggle(600);
       return false;
     });
@@ -328,7 +346,7 @@ $(document).ready(function(){
       return false;
     });
 
-    $(".qa-comment textarea").blur(function(){
+    $(".qa-comment textarea",context).blur(function(){
         set_comment_icon($(this));
     });
     _.map($(".qa-comment textarea"),set_comment_icon);
@@ -355,23 +373,28 @@ $(document).ready(function(){
 
     initialize_qa();
 
-    var user_inputs=  $('.qa-input').not("[readonly=readonly]").not("[type=hidden]");
+    var user_inputs=  $('.qa-input',context).not("[readonly=readonly]").not("[type=hidden]");
+    var visible_user_inputs = user_inputs;
 
     //anytime an input changes run validation
     user_inputs.change(function(){
-
-        check_skip_status($(this));
+//        var name = $(this).parents("td").siblings(".qa-contextname").val();
+        var name = $(this).parents("tr.qa-valuerow").find(".qa-contextname").val();
+        check_skip_status(name);
 
         if (this.type === "text"){
             this.value = QAUtils.clean_numerical_value(this.value);
         }
-        check_test_status($(this));
+        check_test_status(name);
         calculate_composites();
         update_qa_status();
     });
 
     //run filter routine anytime user alters the categories
-    $("#category_filter").change(filter_by_category);
+    $("#category_filter").change(function(){
+        filter_by_category();
+        visible_user_inputs = user_inputs.filter(':visible');
+    });
 
     //update the link for user to change cycles
     $("#cycle-day").change(set_cycle_link);
@@ -379,18 +402,15 @@ $(document).ready(function(){
     //allow arrow key and enter navigation
     $(that).on("keydown","input, select", function(e) {
 
-        //reset user_inputs to account for any change in visibility
-        user_inputs=  $('.qa-input').filter(':visible').not("[readonly=readonly]").not("[type=hidden]");
-
-        var idx = user_inputs.index(this);
         var to_focus;
         //rather than submitting form on enter, move to next value
         if (e.which == QAUtils.KC_ENTER  || e.which == QAUtils.KC_DOWN ) {
+            var idx = visible_user_inputs.index(this);
 
             if (idx == user_inputs.length - 1) {
-                to_focus=user_inputs.first();
+                to_focus= visible_user_inputs.first();
             } else {
-                to_focus = user_inputs[idx+1];
+                to_focus = visible_user_inputs[idx+1];
             }
             to_focus.focus()
             if (to_focus.type === "text"){
@@ -398,10 +418,12 @@ $(document).ready(function(){
             }
             return false;
         }else if (e.which == QAUtils.KC_UP ){
+            var idx = visible_user_inputs.index(this);
+
             if (idx == 0) {
-                to_focus = user_inputs.last();
+                to_focus = visible_user_inputs.last();
             } else {
-                to_focus = user_inputs[idx-1];
+                to_focus = visible_user_inputs[idx-1];
             }
             to_focus.focus()
             if (to_focus.type === "text"){
