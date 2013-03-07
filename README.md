@@ -35,7 +35,7 @@ local institution policies.
 
 ## Documentation & Release Notes
 
-The latest version is 0.2.5 Please review the [release_notes](https://bitbucket.org/tohccmedphys/qatrackplus/src/master/release_notes.md) before
+The latest version is 0.2.6 Please review the [release_notes](https://bitbucket.org/tohccmedphys/qatrackplus/src/master/release_notes.md) before
 installing or upgrading.
 
 The [documentation can be found
