@@ -65,6 +65,9 @@ BEFORE ATTEMPTING THIS UPGRADE**
 3. python manage.py migrate qa
 4. python manage.py auto_schedule
 
+The last step will set all of the initial due dates and is required *unless*
+you want to set them all manually.
+
 ## v0.2.5 ##
 
 This release fixes some issues with control charts and makes test list pages
