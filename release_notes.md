@@ -5,7 +5,7 @@
 **Note: this release introduces some database shema changes.  BACK UP
 YOUR DATABASE BEFORE ATTEMPTING THIS UPGRADE**
 
-This release 
+v0.2.6 includes a number of bug fixes 
 
 Thank you to Eric Reynard and Darcy Mason for their bug reports.
 
@@ -36,6 +36,7 @@ Thank you to Eric Reynard and Darcy Mason for their bug reports.
 * There is now a **View on Site** button that will allow you to go
   directly to the Perform QA page from a UnitTestCollection (Assign
   Test List to Unit) page in the admin
+* Some other minor cosmetic enhancements
 
 ### Bug Fixes ###
 
@@ -60,10 +61,13 @@ Thank you to Eric Reynard and Darcy Mason for their bug reports.
 **Note: this release introduces some database shema changes.  BACK UP YOUR DATABASE
 BEFORE ATTEMPTING THIS UPGRADE**
 
-1. Check out latest version from git (e.g. git pull origin master)
-2. python manage syncdb
-3. python manage.py migrate qa
-4. python manage.py auto_schedule
+From the git bash shell in the root directory of your QATrack+ project
+
+1. git pull origin master
+1. python manage syncdb
+1. python manage.py migrate qa
+1. python manage.py collectstatic
+1. python manage.py auto_schedule
 
 The last step will set all of the initial due dates and is required *unless*
 you want to set them all manually.
@@ -136,4 +140,21 @@ This release has a number of small features and bug fixes included.
 * [more](https://bitbucket.org/randlet/qatrack/issues?milestone=0.2.3)
 
 
+## Release Checklist ##
+
+* Run test suite
+* Bump version number
+* Update README.md with latest version number
+* Ad-hoc testing
+    * Perform test list with all types of tests including comments and skipped tests
+    * Review test list
+    * chart data 
+    * configure new test list
+    * assign test list to unit with & without assigned frequencies
+* Release notes
+    * include upgrade commands
+    * don't forget changes to requirements
+* Update wiki
+    
+    
 
