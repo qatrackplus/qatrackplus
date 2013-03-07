@@ -63,7 +63,7 @@ BEFORE ATTEMPTING THIS UPGRADE**
 1. Check out latest version from git (e.g. git pull origin master)
 2. python manage syncdb
 3. python manage.py migrate qa
-
+4. python manage.py auto_schedule
 
 ## v0.2.5 ##
 
