@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.core.urlresolvers import reverse
+from django.http import HttpResponse,HttpResponseRedirect, Http404
 from django.test import TestCase
 from django.test.client import RequestFactory
 from django.test.utils import setup_test_environment
@@ -49,10 +50,9 @@ class TestURLS(TestCase):
             ("overview",{}),
             ("overview_due_dates",{}),
             ("review_all",{}),
-            ("review_all",{}),
             ("review_utc",{"pk":"%d"%utc.pk}),
             ("choose_review_frequency",{}),
-            ("review_by_frequency",{"frequency":"daily/monthly"}),
+            ("review_by_frequency",{"frequency":"daily/monthly/ad-hoc"}),
             ("choose_review_unit",{}),
             ("review_by_unit",{"unit_number":"1"}),
             ("review_by_unit",{"unit_number":"1/2"}),
@@ -69,6 +69,8 @@ class TestURLS(TestCase):
             ("choose_unit",{}),
             ("perform_qa",{"pk":"%d"%utc.pk}),
             ("qa_by_unit",{"unit_number":"1"}),
+            ("qa_by_frequency",{"frequency":"daily/ad-hoc"}),
+            ("qa_by_unit_frequency",{"unit_number":"1","frequency":"daily/ad-hoc"}),
         )
 
         for url,kwargs in url_names:
@@ -93,6 +95,12 @@ class TestURLS(TestCase):
         url = reverse("perform_qa",kwargs={"pk":"2"})
 
         self.assertTrue(404==self.client.get(url).status_code)
+    #----------------------------------------------------------------------
+    def test_utc_fail(self):
+        utils.create_status()
+        url = reverse("review_utc",kwargs={"pk":101})
+        self.assertEqual(self.client.get(url).status_code,404)
+
 
 
 #============================================================================
@@ -119,7 +127,10 @@ class TestDataTables(TestCase):
         self.utc.assigned_to = self.user.groups.all()[0]
         self.utc.save()
         tli = utils.create_test_list_instance(unit_test_collection=self.utc)
-
+    #----------------------------------------------------------------------
+    def test_base_set_columns_fails(self):
+        bdt = views.BaseDataTablesDataSource()
+        self.assertRaises(NotImplementedError,bdt.set_columns)
     #----------------------------------------------------------------------
     def test_utc_display(self):
 
@@ -158,7 +169,7 @@ class TestDataTables(TestCase):
 
 
 #============================================================================
-class TestControlChartImage(TestCase):
+class TestControlImage(TestCase):
 
     #----------------------------------------------------------------------
     def setUp(self):
@@ -288,6 +299,43 @@ class TestControlChartImage(TestCase):
         response =  self.view(request)
         self.assertTrue(response.get("content-type"),"image/png")
 
+    #----------------------------------------------------------------------
+    def test_fails(self):
+        test = utils.create_test()
+        unit = utils.create_unit()
+        uti = utils.create_unit_test_info(test=test,unit=unit)
+
+        status = utils.create_status()
+        yesterday = timezone.datetime.today()-timezone.timedelta(days=1)
+        yesterday = timezone.make_aware(yesterday,timezone.get_current_timezone())
+        tomorrow = yesterday+timezone.timedelta(days=2)
+
+        url = self.make_url(test.pk,unit.number,yesterday,yesterday)
+        request = self.factory.get(url)
+        response =  self.view(request)
+        self.assertTrue(response.get("content-type"),"image/png")
+
+        url = self.make_url(test.pk,unit.number,yesterday,tomorrow,fit="true")
+        import qatrack.qa.control_chart
+        old_display = qatrack.qa.control_chart.control_chart.display
+
+        def mock_display(*args,**kwargs):
+            raise RuntimeError("test")
+
+        qatrack.qa.control_chart.control_chart.display = mock_display
+        #generate some data that the control chart fit function won't be able to fit
+        for x in range(10):
+            utils.create_test_instance(
+                value=x,
+                status=status,
+                unit_test_info=uti
+            )
+
+        request = self.factory.get(url)
+        response =  self.view(request)
+        self.assertTrue(response.get("content-type"),"image/png")
+        qatrack.qa.control_chart.control_chart.display = old_display
+
 #====================================================================================
 class TestChartView(TestCase):
 
@@ -311,7 +359,7 @@ class TestChartView(TestCase):
         self.tlc2 = utils.create_test_list("cycle2")
         self.tlc = utils.create_cycle(test_lists=[self.tlc1,self.tlc2])
 
-        self.utc2 = utils.create_unit_test_collection(test_collection=self.tlc,unit=self.utc.unit,frequency=self.utc.frequency)
+        self.utc2 = utils.create_unit_test_collection(test_collection=self.tlc,unit=self.utc.unit,null_frequency=True)
 
         self.view.set_test_lists()
         self.view.set_tests()
@@ -328,7 +376,8 @@ class TestChartView(TestCase):
             },
             'unit_frequency_lists': {
                 "%d"%self.utc.unit.pk: {
-                    "%d"%self.utc.frequency.pk: [self.tl.pk,self.tlc1.pk,self.tlc2.pk]
+                    "%d"%self.utc.frequency.pk: [self.tl.pk],
+                    "0": [self.tlc1.pk,self.tlc2.pk]
                 }
             }
         }

@@ -956,6 +956,7 @@ class BaseDataTablesDataSource(ListView):
     def set_columns(self):
         """must be overridden in child class"""
         self.columns = ()
+        raise NotImplementedError
     #----------------------------------------------------------------------
     def set_orderings(self):
         n_orderings = int(self.request.GET.get("iSortingCols",0))

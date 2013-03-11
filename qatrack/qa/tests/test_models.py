@@ -632,6 +632,35 @@ class TestUnitTestCollection(TestCase):
 
         self.assertTrue(utils.datetimes_same(utc.due_date,now+timezone.timedelta(days=4)))
     #---------------------------------------------------------------------------
+    def test_due_date_for_invalid(self):
+        #ensure that when test get marked as invalid, the due date gets set to
+        #todays date
+        now = timezone.localtime(timezone.now())
+
+        test = utils.create_test()
+        test_list = utils.create_test_list()
+        utils.create_test_list_membership(test=test,test_list=test_list)
+
+        monthly = utils.create_frequency(nom=28,due=28,overdue=28)
+        status = models.TestInstanceStatus(name="invalid",slug="invalid",valid=False)
+        status.save()
+
+        utc = utils.create_unit_test_collection(test_collection=test_list,frequency=monthly)
+
+        tli = utils.create_test_list_instance(unit_test_collection=utc,work_completed=now-timezone.timedelta(days=14))
+
+        uti = models.UnitTestInfo.objects.get(test=test,unit=utc.unit)
+        ti = utils.create_test_instance(unit_test_info=uti,work_completed=now)
+
+        tli.testinstance_set.add(ti)
+        tli.save()
+        ti.status = status
+        ti.save()
+        tli.save()
+        utc=models.UnitTestCollection.objects.get(pk=utc.pk)
+        self.assertTrue(utils.datetimes_same(utc.due_date.date(),now.date()))
+
+    #---------------------------------------------------------------------------
     def test_cycle_due_date(self):
         test_lists = [utils.create_test_list(name="test list %d"% i) for i in range(2)]
         for i,test_list in enumerate(test_lists):
