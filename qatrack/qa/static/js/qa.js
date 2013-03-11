@@ -255,9 +255,12 @@ function filter_by_category(){
 
 /***************************************************************/
 //set link for cycle when user changes cycle day dropdown
-function set_cycle_link(){
+function set_cycle_day(){
     var day = $("#cycle-day option:selected").val();
-    $("#change-test-list").attr("href",window.location.pathname+"?day="+day);
+    var cur = document.location.href;
+    var next = cur.replace(/day=(next|[1-9])/,"day="+day);
+
+    document.location.href = next;
 }
 
 /***************************************************************/
@@ -397,7 +400,7 @@ $(document).ready(function(){
     });
 
     //update the link for user to change cycles
-    $("#cycle-day").change(set_cycle_link);
+    $("#cycle-day").change(set_cycle_day);
 
     //allow arrow key and enter navigation
     $(that).on("keydown","input, select", function(e) {

@@ -141,8 +141,8 @@
 
                 {% endif %}
 
-
-                <div class="input-prepend input-append" id="cycle-day-wrapper">
+                {% if days %}
+                <div class="input-prepend" id="cycle-day-wrapper">
                     <label for="cycle-day" class="add-on">
                         Choose Day:
                     </label>
@@ -153,8 +153,9 @@
                                 Day {{day}}
                             </option>
                         {% endfor %}
-                    </select><a href="#" class="btn add-on" type="button" {% if days %}id="change-test-list"{%else%}disabled="disabled"{%endif%}>Go</a>
+                    </select>
                 </div>
+                {% endif %}
 
             </div>
 
