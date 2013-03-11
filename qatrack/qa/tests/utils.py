@@ -14,12 +14,14 @@ from qatrack.units.models import Unit, UnitType, Modality, ELECTRON, PHOTON
 
 #----------------------------------------------------------------------
 def create_user(is_staff=True,is_superuser=True,uname="user",pwd="password"):
-
-    u,_ = User.objects.get_or_create(
-        username=uname,is_staff=is_staff,is_superuser=is_superuser,
-    )
-    u.set_password(pwd)
-    u.save()
+    try:
+        u = User.objects.get(username=uname)
+    except:
+        u = User(
+            username=uname,is_staff=is_staff,is_superuser=is_superuser
+        )
+        u.set_password(pwd)
+        u.save()
     return u
 #----------------------------------------------------------------------
 def create_category(name="cat"):

@@ -22,23 +22,22 @@
                 <h4 class="header-spacer">{{unit_type.name}}</h4>
                 {% for unit in unit_type.unit_set.all %}
                     {% if not perms.qa.can_choose_frequency %}
-                            <a class="btn" href="{% url qa_by_frequency_unit frequency="short-interval" unit_number=unit.number %}">{{unit.name}}</a>
+                            <a class="btn" href="{% url qa_by_unit unit_number=unit.number %}">{{unit.name}}</a>
                     {% else %}
                         <div class="btn-group" style="float:left">
-                            <button class="btn top-level"><a href="{% url qa_by_frequency_unit frequency="short-interval" unit_number=unit.number %}">{{unit.name}}</a></button>
+                            <button class="btn top-level"><a href="{% url qa_by_unit unit_number=unit.number %}">{{unit.name}}</a></button>
                             <button class="btn dropdown-toggle" data-toggle="dropdown">
                                 <span class="caret"></span>
                             </button>
                             <ul class="dropdown-menu">
-                                <li>
-                                    <a href="{% url qa_by_frequency_unit frequency="short-interval" unit_number=unit.number %}">{{unit.name}} &mdash; Daily &amp; Weekly</a>
-                                </li>
                                 {% for freq in QA_FREQUENCIES %}
                                 <li>
                                     <a href="{% url qa_by_frequency_unit frequency=freq.0 unit_number=unit.number %}">{{unit.name}} &mdash; {{freq.1}}</a>
                                 </li>
                                 {% endfor %}
-
+                                <li>
+                                    <a href="{% url qa_by_frequency_unit frequency="ad-hoc" unit_number=unit.number %}">{{unit.name}} &mdash; <em>Ad-Hoc</em></a>
+                                </li>
                             </ul>
                         </div>
                     {% endif %}
@@ -50,7 +49,7 @@
     {% endfor %}
     <script type="text/javascript">
         $(".btn.top-level").click(function(){
-            window.location = $(this).nextAll("ul").find("a").first().attr("href");
+            window.location = $(this).find("a").first().attr("href");
         });
     </script>
 

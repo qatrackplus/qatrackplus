@@ -93,8 +93,10 @@ class ChartView(TemplateView):
         self.unit_frequencies = collections.defaultdict(lambda:collections.defaultdict(list))
 
         for utc in utcs:
-            unit = utc["unit"]#.unit.pk
-            freq = utc["frequency"]#.pk
+            if utc["frequency"] is None:
+                utc["frequency"] =  0
+            unit = utc["unit"]
+            freq = utc["frequency"]
             if utc["content_type"] == tlc_content_type:
                 test_list = utc["testlistcycle__test_lists"]
             else:
@@ -594,13 +596,13 @@ class PerformQA(CreateView):
 
     #----------------------------------------------------------------------
     def add_histories(self):
-        """paste historical values onto unit test infos"""
+        """paste historical values onto unit test infos (ugh ugly)"""
 
         utc_hist = models.TestListInstance.objects.filter(unit_test_collection=self.unit_test_col,test_list=self.test_list).order_by("-work_completed").values_list("work_completed",flat=True)[:settings.NHIST]
         if utc_hist.count() > 0:
             from_date = list(utc_hist)[-1]
         else:
-            from_date = timezone.make_aware(timezone.datetime.now() - timezone.timedelta(days=10*self.unit_test_col.frequency.overdue_interval),timezone.get_current_timezone())
+            from_date = timezone.make_aware(timezone.datetime.now() - timezone.timedelta(days=365),timezone.get_current_timezone())
 
         histories = utils.tests_history(self.all_tests,self.unit_test_col.unit,from_date,test_list=self.test_list)
         self.unit_test_infos, self.history_dates = utils.add_history_to_utis(self.unit_test_infos,histories)
@@ -737,9 +739,6 @@ class PerformQA(CreateView):
             "unit_number":self.unit_test_col.unit.number,
             "frequency":self.unit_test_col.frequency.slug
         }
-
-        if not self.request.user.has_perm("qa.can_choose_frequency"):
-            kwargs["frequency"] = "short-interval"
 
         return reverse("qa_by_frequency_unit",kwargs=kwargs)
 
@@ -1081,7 +1080,7 @@ class UTCList(BaseDataTablesDataSource):
             ),
             (qa_tags.as_due_date, None,None),
             (lambda x:x.unit.name, "unit__name__exact", "unit__number"),
-            (lambda x:x.frequency.name, "frequency__name__exact", "frequency__due_interval"),
+            (lambda x:x.frequency.name if x.frequency else "Ad Hoc", "frequency__name__exact", "frequency__due_interval"),
 
             (lambda x:x.assigned_to.name,"assigned_to__name__icontains","assigned_to__name"),
             (self.get_last_instance_work_completed,None,"last_instance__work_completed"),
@@ -1160,14 +1159,13 @@ class UTCFrequencyReview(UTCReview):
         qs = super(UTCFrequencyReview,self).get_queryset()
 
         freq = self.kwargs["frequency"]
-        if freq == "short-interval":
-            self.frequencies = models.Frequency.objects.filter(due_interval__lte=14)
-        else:
-            self.frequencies = models.Frequency.objects.filter(slug__in=self.kwargs["frequency"].split("/"))
+        self.frequencies = models.Frequency.objects.filter(slug__in=self.kwargs["frequency"].split("/"))
 
-        return qs.filter(
-            frequency__slug__in=self.frequencies.values_list("slug",flat=True),
-        ).distinct()
+        q = Q(frequency__in=self.frequencies)
+        if "ad-hoc" in freq:
+            q |= Q(frequency=None)
+
+        return qs.filter(q).distinct()
 
     #---------------------------------------------------------------------------
     def get_page_title(self):
@@ -1210,17 +1208,17 @@ class FrequencyList(UTCList):
         qs = super(FrequencyList,self).get_queryset()
 
         freqs = self.kwargs["frequency"].split("/")
-        self.frequencies = list(models.Frequency.objects.filter(slug__in=freqs))
+        self.frequencies = models.Frequency.objects.filter(slug__in=freqs)
 
-        if "short-interval" in freqs:
-            self.frequencies.extend(list(models.Frequency.objects.filter(due_interval__lte=14)))
+        q = Q(frequency__in=self.frequencies)
+        if "ad-hoc" in freqs:
+            q |= Q(frequency=None)
 
-        return qs.filter(
-            frequency__in=self.frequencies,
-        ).distinct()
+        return qs.filter(q).distinct()
     #----------------------------------------------------------------------
     def get_page_title(self):
-        return ",".join([x.name for x in self.frequencies]) + " Test Lists"
+        return ",".join([x.name if x else "ad-hoc" for x in self.frequencies]) + " Test Lists"
+
 #============================================================================
 class UnitFrequencyList(FrequencyList):
     """list daily/monthly/annual test lists for a unit"""
@@ -1234,7 +1232,7 @@ class UnitFrequencyList(FrequencyList):
     #----------------------------------------------------------------------
     def get_page_title(self):
         title = ", ".join([x.name for x in self.units])
-        title+= " " + ", ".join([x.name for x in self.frequencies]) + " Test Lists"
+        title+= " " + ", ".join([x.name if x else "ad-hoc" for x in self.frequencies]) + " Test Lists"
         return  title
 
 
@@ -1400,8 +1398,8 @@ class DueDateOverview(TemplateView):
         )
 
         for utc in qs:
-            if utc.last_instance:
-                due_date = utc.due_date().date()
+            if utc.due_date:
+                due_date = utc.due_date.date()
                 if  due_date <= today:
                     due["overdue"].append(utc)
                 elif due_date <= friday:
@@ -1463,7 +1461,7 @@ class Overview(TemplateView):
         next_month_end = timezone.datetime(next_month_start.year, next_month_start.month, calendar.mdays[next_month_start.month]).date()
 
         units = Unit.objects.order_by("number")
-        frequencies = models.Frequency.objects.order_by("nominal_interval")
+        frequencies = list(models.Frequency.objects.order_by("nominal_interval"))+[None]
 
         due = collections.defaultdict(list)
         unit_lists = []
