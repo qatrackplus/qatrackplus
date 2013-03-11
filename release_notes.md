@@ -5,7 +5,7 @@
 **Note: this release introduces some database shema changes.  BACK UP
 YOUR DATABASE BEFORE ATTEMPTING THIS UPGRADE**
 
-v0.2.6 includes a number of bug fixes 
+v0.2.6 includes a number of bug fixes
 
 Thank you to Eric Reynard and Darcy Mason for their bug reports.
 
@@ -16,6 +16,7 @@ Thank you to Eric Reynard and Darcy Mason for their bug reports.
   Units
 * Test Lists no longer need to have a Frequency associated with them
   when assigned to a Unit (allows for ad-hoc Tests)
+* Selecting a different day in a Test List Cycle  no longer requires you to click *Go*
 * Minor improvements to the charts page layout
 * Reference values are now included in data displayed on chart page
 * Test List description can now be displayed on the page when
@@ -148,13 +149,14 @@ This release has a number of small features and bug fixes included.
 * Ad-hoc testing
     * Perform test list with all types of tests including comments and skipped tests
     * Review test list
-    * chart data 
+    * chart data
     * configure new test list
     * assign test list to unit with & without assigned frequencies
+    * mark some data as invalid and confirm the due date is reset correctly
 * Release notes
     * include upgrade commands
     * don't forget changes to requirements
 * Update wiki
-    
-    
+
+
 
