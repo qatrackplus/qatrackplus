@@ -8,30 +8,10 @@ import tokenize
 import token
 
 #----------------------------------------------------------------------
-def due_status(last_instance,frequency):
-    if last_instance is None:
-        return models.NOT_DUE
-
-    last_done = last_instance.work_completed
-
-    invalids = [1 for x in last_instance.testinstance_set.all() if not x.status.valid]
-    if invalids:
-        return models.OVERDUE
-
-    day_delta = (timezone.localtime(timezone.now()).date()-timezone.localtime(last_done).date()).days
-
-    if day_delta >= frequency.overdue_interval:
-        return models.OVERDUE
-    elif day_delta >= frequency.due_interval:
-        return models.DUE
-
-    return models.NOT_DUE
-
-#----------------------------------------------------------------------
 def due_date(last_instance,frequency):
     invalids = [1 for x in last_instance.testinstance_set.all() if not x.status.valid]
     if invalids:
-        return timezone.localtime(timezone.datetime.now())
+        return timezone.make_aware(timezone.datetime.now(),timezone.get_current_timezone())
     last_done = last_instance.work_completed
     return timezone.localtime(last_done+frequency.due_delta())
 
