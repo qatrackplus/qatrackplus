@@ -510,7 +510,7 @@ class ChooseUnit(ListView):
         return context
 
 
-
+from django.db import connection
 #============================================================================
 class PerformQA(CreateView):
     """view for users to complete a qa test list"""
@@ -626,7 +626,8 @@ class PerformQA(CreateView):
 
             if self.object.work_completed is None:
                 self.object.work_completed = timezone.make_aware(timezone.datetime.now(),timezone=timezone.get_current_timezone())
-
+            from django.db import connection
+        
             self.object.save()
 
             status=models.TestInstanceStatus.objects.default()
@@ -635,6 +636,7 @@ class PerformQA(CreateView):
                 if val not in ("", None):
                     status = models.TestInstanceStatus.objects.get(pk=val)
 
+            to_save = []
             for ti_form in formset:
                 ti = models.TestInstance(
                     value=ti_form.cleaned_data.get("value",None),
@@ -651,22 +653,11 @@ class PerformQA(CreateView):
                     work_started=self.object.work_started,
                     work_completed=self.object.work_completed,
                 )
-                try:
-                    ti.save()
-                except ZeroDivisionError:
+                ti.calculate_pass_fail()
+                to_save.append(ti)
 
-                    msga = "Tried to calculate percent diff with a zero reference value. "
-
-                    ti.skipped = True
-                    ti.comment = msga + " Original value was %s" % ti.value
-                    ti.value = None
-                    ti.save()
-
-                    logger.error(msga+ " UTI=%d"%ti.unit_test_info.pk)
-                    msg =  "Please call physics.  Test %s is configured incorrectly on this unit. "% ti.unit_test_info.test.name
-                    msg += msga
-                    messages.error(self.request,_(msg))
-
+            models.TestInstance.objects.bulk_create(to_save)
+            
             #let user know request succeeded and return to unit list
             messages.success(self.request,_("Successfully submitted %s "% self.object.test_list.name))
 

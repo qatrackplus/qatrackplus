@@ -943,40 +943,40 @@ class TestPerformQA(TestCase):
         self.assertTrue(len(list(response.context['messages']))==1)
 
     #---------------------------------------------------------------------------
-    def test_perform_invalid_ref(self):
-        data = {
+    #def test_perform_invalid_ref(self):
+        #data = {
 
-            "work_completed":"11-07-2012 00:10",
-            "work_started":"11-07-2012 00:09",
-            "status":self.status.pk,
-            "form-TOTAL_FORMS":len(self.tests),
-            "form-INITIAL_FORMS":len(self.tests),
-            "form-MAX_NUM_FORMS":"",
-        }
+            #"work_completed":"11-07-2012 00:10",
+            #"work_started":"11-07-2012 00:09",
+            #"status":self.status.pk,
+            #"form-TOTAL_FORMS":len(self.tests),
+            #"form-INITIAL_FORMS":len(self.tests),
+            #"form-MAX_NUM_FORMS":"",
+        #}
 
-        ref = utils.create_reference()
-        ref.value = 0
-        ref.save()
+        #ref = utils.create_reference()
+        #ref.value = 0
+        #ref.save()
 
-        tol = utils.create_tolerance()
-        tol.type = models.PERCENT
-        tol.save()
+        #tol = utils.create_tolerance()
+        #tol.type = models.PERCENT
+        #tol.save()
 
-        self.unit_test_infos[0].reference = ref
-        self.unit_test_infos[0].tolerance = tol
-        self.unit_test_infos[0].save()
+        #self.unit_test_infos[0].reference = ref
+        #self.unit_test_infos[0].tolerance = tol
+        #self.unit_test_infos[0].save()
 
-        for test_idx, uti in enumerate(self.unit_test_infos):
-            data["form-%d-value"%test_idx] =  1
-            data["form-%d-comment"%test_idx]= ""
+        #for test_idx, uti in enumerate(self.unit_test_infos):
+            #data["form-%d-value"%test_idx] =  1
+            #data["form-%d-comment"%test_idx]= ""
 
 
-        response = self.client.post(self.url,data=data)
+        #response = self.client.post(self.url,data=data)
 
-        #no values sent so there should be form errors and a 200 status
-        self.assertEqual(response.status_code,302)
-        ti = models.TestInstance.objects.get(unit_test_info=self.unit_test_infos[0])
-        self.assertIsNone(ti.value)
+        ##no values sent so there should be form errors and a 200 status
+        #self.assertEqual(response.status_code,302)
+        #ti = models.TestInstance.objects.get(unit_test_info=self.unit_test_infos[0])
+        #self.assertIsNone(ti.value)
     #----------------------------------------------------------------------
     def test_missing_unit_test_info(self):
         self.unit_test_infos[0].delete()

@@ -18,8 +18,6 @@ from qatrack.qa import utils
 
 import re
 
-
-
 BOOLEAN = "boolean"
 NUMERICAL = "numerical"
 SIMPLE = "simple"
@@ -556,7 +554,7 @@ class UnitTestInfo(models.Model):
     active = models.BooleanField(help_text=_("Uncheck to disable this test on this unit"), default=True,db_index=True)
 
     assigned_to = models.ForeignKey(Group,help_text = _("QA group that this test list should nominally be performed by"),null=True, blank=True,on_delete=models.SET_NULL)
-    last_instance = models.ForeignKey("TestInstance",null=True, editable=False,on_delete=models.SET_NULL)
+    #last_instance = models.ForeignKey("TestInstance",null=True, editable=False,on_delete=models.SET_NULL)
     objects = UnitTestInfoManager()
     #============================================================================
     class Meta:
@@ -759,9 +757,10 @@ class UnitTestCollection(models.Model):
 
     #----------------------------------------------------------------------
     def set_due_date(self,due_date=None):
-
+        """Set due date field for this UTC. Note model is not saved to db.
+        That must be done manually"""
         if self.auto_schedule and due_date is None:
-            due_date = self.calc_due_date()
+            self.due_date = self.calc_due_date()
 
         if due_date is not None:
             #use update here instead of save so post_save and pre_save signals are not
@@ -1102,7 +1101,7 @@ class TestInstance(models.Model):
         return "TestInstance(pk=%s)" % self.pk
 
 #----------------------------------------------------------------------
-@receiver(post_save,sender=TestInstance)
+#@receiver(post_save,sender=TestInstance)
 def on_test_instance_saved(*args,**kwargs):
 
     if (not loaded_from_fixture(kwargs)):
@@ -1232,19 +1231,18 @@ def update_last_instances(test_list_instance):
             object_id__in = object_ids,
             unit = test_list_instance.unit_test_collection.unit,
         )
-        for utc in utcs:
-            utc.last_instance=last_instance
-            utc.save()
-            utc.set_due_date()
 
-    if last_instance:
-        for ti in last_instance.testinstance_set.all():
-            ti.unit_test_info.last_instance = ti
-            ti.unit_test_info.save()
-    else:
-        for ti in test_list_instance.testinstance_set.all():
-            ti.unit_test_info.last_instance = None
-            ti.unit_test_info.save()
+        for utc in utcs:
+            utc.last_instance = last_instance
+            due_date = utc.calc_due_date()
+
+            #Use update here rather than just calling utc.save()
+            #since utc.save kicks off a bunch of other db queries
+            #due to the UnitTestCollection post_save signal
+            UnitTestCollection.objects.filter(pk=utc.pk).update(
+                due_date=due_date,
+                last_instance=last_instance,
+            )
 
 
 #----------------------------------------------------------------------

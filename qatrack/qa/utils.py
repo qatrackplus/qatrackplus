@@ -9,8 +9,9 @@ import token
 
 #----------------------------------------------------------------------
 def due_date(last_instance,frequency):
-    invalids = [1 for x in last_instance.testinstance_set.all() if not x.status.valid]
-    if invalids:
+    #invalids = [1 for x in last_instance.testinstance_set.all() if not x.status.valid]
+    invalids = last_instance.testinstance_set.filter(status__valid=False)
+    if list(invalids):
         return timezone.make_aware(timezone.datetime.now(),timezone.get_current_timezone())
     last_done = last_instance.work_completed
     return timezone.localtime(last_done+frequency.due_delta())
