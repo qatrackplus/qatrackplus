@@ -760,7 +760,7 @@ class UnitTestCollection(models.Model):
         """Set due date field for this UTC. Note model is not saved to db.
         That must be done manually"""
         if self.auto_schedule and due_date is None:
-            self.due_date = self.calc_due_date()
+            due_date = self.calc_due_date()
 
         if due_date is not None:
             #use update here instead of save so post_save and pre_save signals are not
