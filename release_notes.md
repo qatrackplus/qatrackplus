@@ -21,6 +21,7 @@ Thank you to Eric Reynard and Darcy Mason for their bug reports.
 * Reference values are now included in data displayed on chart page
 * Test List description can now be displayed on the page when
   performing or reviewing QA
+* Improved performance when saving data from test lists with lots of tests.
 * New permission **Can skip without comment** added to allow some
   users/groups to skip tests without adding a comment
 * Comment counts are now displayed in Test List history listings
@@ -28,7 +29,7 @@ Thank you to Eric Reynard and Darcy Mason for their bug reports.
   displayed.
 * The first page of all listings is now pre-rendered for faster page
   load times
-* Performance problems when performing QA using IE have now been
+* Input lag when performing QA using IE has now been
   reduced (although it is still highly recommended that you use Chrome
   or Firefox!)
 * Deploying QATrack+ under a sub directory of your server should now
