@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 import datetime
-from south.db import db
+from south.db import db,engine
 from south.v2 import SchemaMigration
 from django.db import models
-
 
 class Migration(SchemaMigration):
 
@@ -21,12 +20,22 @@ class Migration(SchemaMigration):
         # Changing field 'Test.name'
         db.alter_column('qa_test', 'name', self.gf('django.db.models.fields.CharField')(unique=True, max_length=255))
 
+        if 'sql_server' in engine:
+            sql_server_idxs = (('qa_testlist','name'),('qa_testlistcycle','name'),)
+            for table_name,column_name in sql_server_idxs:
+                db.drop_index(table_name,column_name)
+                #sqlserver_utils.drop_index(db,table_name,column_name)
+                
         # Changing field 'TestList.name'
         db.alter_column('qa_testlist', 'name', self.gf('django.db.models.fields.CharField')(max_length=255))
 
         # Changing field 'TestListCycle.name'
         db.alter_column('qa_testlistcycle', 'name', self.gf('django.db.models.fields.CharField')(max_length=255))
-
+        
+        if 'sql_server' in engine:
+            for table_name,column_name in sql_server_idxs:
+                db.create_index(table_name,[column_name])
+            
     def backwards(self, orm):
 
         # Changing field 'Category.slug'
