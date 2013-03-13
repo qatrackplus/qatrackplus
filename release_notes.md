@@ -16,6 +16,7 @@ Thank you to Eric Reynard and Darcy Mason for their bug reports.
   Units
 * Test Lists no longer need to have a Frequency associated with them
   when assigned to a Unit (allows for ad-hoc Tests)
+* new management command `auto_schedule` (see wiki)
 * Selecting a different day in a Test List Cycle  no longer requires you to click *Go*
 * Minor improvements to the charts page layout
 * Reference values are now included in data displayed on chart page
@@ -69,7 +70,7 @@ From the git bash shell in the root directory of your QATrack+ project
 1. python manage syncdb
 1. python manage.py migrate qa
 1. python manage.py collectstatic
-1. python manage.py auto_schedule
+1. python manage.py auto_schedule schedule-all
 
 The last step will set all of the initial due dates and is required *unless*
 you want to set them all manually.
