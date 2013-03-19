@@ -2,7 +2,7 @@
 
 ## v0.2.6
 
-**Note: this release introduces some database shema changes.  BACK UP
+**Note: this release introduces some database schema changes.  BACK UP
 YOUR DATABASE BEFORE ATTEMPTING THIS UPGRADE**
 
 v0.2.6 includes a number of bug fixes
@@ -68,7 +68,7 @@ From the git bash shell in the root directory of your QATrack+ project
 
 1. git pull origin master
 1. python manage syncdb
-1. python manage.py migrate qa
+1. python manage.py migrate
 1. python manage.py collectstatic
 1. python manage.py auto_schedule schedule-all
 
