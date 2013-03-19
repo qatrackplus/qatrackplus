@@ -4,6 +4,7 @@ from south.db import db
 from south.v2 import DataMigration
 from django.db import models
 
+
 class Migration(DataMigration):
 
     def forwards(self, orm):
@@ -13,8 +14,8 @@ class Migration(DataMigration):
         from django.utils import timezone
         for utc in orm["qa.UnitTestCollection"].objects.all():
             if utc.last_instance and utc.auto_schedule:
-                utc.frequency.due_delta = lambda:timezone.timedelta(days=utc.frequency.due_interval)
-                utc.due_date = utils.due_date(utc.last_instance,utc.frequency)
+                utc.frequency.due_delta = lambda: timezone.timedelta(days=utc.frequency.due_interval)
+                utc.due_date = utils.due_date(utc.last_instance, utc.frequency)
                 utc.save()
 
     def backwards(self, orm):
@@ -205,7 +206,7 @@ class Migration(DataMigration):
             'type': ('django.db.models.fields.CharField', [], {'max_length': '20'})
         },
         'qa.unittestcollection': {
-            'Meta': { 'unique_together': "(('unit', 'frequency', 'content_type', 'object_id'),)", 'object_name': 'UnitTestCollection'},
+            'Meta': {'unique_together': "(('unit', 'frequency', 'content_type', 'object_id'),)", 'object_name': 'UnitTestCollection'},
             'active': ('django.db.models.fields.BooleanField', [], {'default': 'True', 'db_index': 'True'}),
             'assigned_to': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.Group']", 'null': 'True'}),
             'auto_schedule': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),

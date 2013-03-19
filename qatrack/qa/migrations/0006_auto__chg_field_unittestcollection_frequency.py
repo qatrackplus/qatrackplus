@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import datetime
-from south.db import db,engine
+from south.db import db, engine
 from south.v2 import SchemaMigration
 from django.db import models
 
@@ -13,16 +13,17 @@ class Migration(SchemaMigration):
         if "sql_server" not in engine:
             db.alter_column('qa_unittestcollection', 'frequency_id', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['qa.Frequency'], null=True))
         else:
-            db.execute("ALTER TABLE qa_unittestcollection ALTER COLUMN frequency_id int NULL")            
-        
+            db.execute("ALTER TABLE qa_unittestcollection ALTER COLUMN frequency_id int NULL")
+
         db
+
     def backwards(self, orm):
-        
+
         # Changing field 'UnitTestCollection.frequency'
         if "sql_server" not in engine:
             db.alter_column('qa_unittestcollection', 'frequency_id', self.gf('django.db.models.fields.related.ForeignKey')(default=None, to=orm['qa.Frequency']))
         else:
-            db.execute("ALTER TABLE qa_unittestcollection ALTER COLUMN frequency_id int NOT NULL")                        
+            db.execute("ALTER TABLE qa_unittestcollection ALTER COLUMN frequency_id int NOT NULL")
 
     models = {
         'auth.group': {

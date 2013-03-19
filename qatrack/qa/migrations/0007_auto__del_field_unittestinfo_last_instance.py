@@ -11,13 +11,11 @@ class Migration(SchemaMigration):
         # Deleting field 'UnitTestInfo.last_instance'
         db.delete_column('qa_unittestinfo', 'last_instance_id')
 
-
     def backwards(self, orm):
         # Adding field 'UnitTestInfo.last_instance'
         db.add_column('qa_unittestinfo', 'last_instance',
                       self.gf('django.db.models.fields.related.ForeignKey')(to=orm['qa.TestInstance'], null=True, on_delete=models.SET_NULL),
                       keep_default=False)
-
 
     models = {
         'auth.group': {

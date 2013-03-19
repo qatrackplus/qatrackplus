@@ -13,11 +13,9 @@ class Migration(SchemaMigration):
                       self.gf('django.db.models.fields.TextField')(null=True, blank=True),
                       keep_default=False)
 
-
     def backwards(self, orm):
         # Deleting field 'TestInstanceStatus.description'
         db.delete_column('qa_testinstancestatus', 'description')
-
 
     models = {
         'auth.group': {

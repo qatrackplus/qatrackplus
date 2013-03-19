@@ -18,14 +18,12 @@ class Migration(SchemaMigration):
                       self.gf('django.db.models.fields.BooleanField')(default=True),
                       keep_default=False)
 
-
     def backwards(self, orm):
         # Deleting field 'UnitTestCollection.due_date'
         db.delete_column('qa_unittestcollection', 'due_date')
 
         # Deleting field 'UnitTestCollection.auto_schedule'
         db.delete_column('qa_unittestcollection', 'auto_schedule')
-
 
     models = {
         'auth.group': {

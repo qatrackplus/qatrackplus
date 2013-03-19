@@ -226,7 +226,6 @@ class Migration(SchemaMigration):
         ))
         db.send_create_signal('qa', ['TestListCycleMembership'])
 
-
     def backwards(self, orm):
         # Removing unique constraint on 'UnitTestCollection', fields ['unit', 'frequency', 'content_type', 'object_id']
         db.delete_unique('qa_unittestcollection', ['unit_id', 'frequency_id', 'content_type_id', 'object_id'])
@@ -284,7 +283,6 @@ class Migration(SchemaMigration):
 
         # Deleting model 'TestListCycleMembership'
         db.delete_table('qa_testlistcyclemembership')
-
 
     models = {
         'auth.group': {
