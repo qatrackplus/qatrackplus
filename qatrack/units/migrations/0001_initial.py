@@ -51,7 +51,6 @@ class Migration(SchemaMigration):
         ))
         db.create_unique('units_unit_modalities', ['unit_id', 'modality_id'])
 
-
     def backwards(self, orm):
         # Removing unique constraint on 'Modality', fields ['type', 'energy']
         db.delete_unique('units_modality', ['type', 'energy'])
@@ -70,7 +69,6 @@ class Migration(SchemaMigration):
 
         # Removing M2M table for field modalities on 'Unit'
         db.delete_table('units_unit_modalities')
-
 
     models = {
         'units.modality': {

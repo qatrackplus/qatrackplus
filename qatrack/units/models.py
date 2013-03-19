@@ -5,6 +5,8 @@ PHOTON = "photon"
 ELECTRON = "electron"
 
 #==========================================================================
+
+
 class UnitType(models.Model):
     """Radiation Device Type
 
@@ -20,7 +22,7 @@ class UnitType(models.Model):
     model = models.CharField(max_length=50, help_text=_("Optional model name for this group"), null=True, blank=True)
 
     class Meta:
-        unique_together = [("name","model")]
+        unique_together = [("name", "model")]
 
     #---------------------------------------------------------------------------
     def __unicode__(self):
@@ -28,6 +30,8 @@ class UnitType(models.Model):
         return "<UnitType(%s)>" % self.name
 
 #============================================================================
+
+
 class Modality(models.Model):
     """Treatment modalities
 
@@ -41,7 +45,7 @@ class Modality(models.Model):
 
     class Meta:
         verbose_name_plural = "Modalities"
-        unique_together = [("type","energy")]
+        unique_together = [("type", "energy")]
 
     #---------------------------------------------------------------------------
     def __unicode__(self):
@@ -51,12 +55,14 @@ class Modality(models.Model):
             unit, particle = "MeV", "Electron"
         return "<Modality(%.2f%s,%s)>" % (self.energy, unit, particle)
 
-#class UnitManager(models.Manager):
+# class UnitManager(models.Manager):
     #---------------------------------------------------------------------------
 #    def get_query_set(self):
 #        return super(UnitManager,self).get_query_set().select_related("type")
 
 #============================================================================
+
+
 class Unit(models.Model):
     """Radiation devices
 
@@ -66,14 +72,15 @@ class Unit(models.Model):
 
     number = models.PositiveIntegerField(null=False, unique=True, help_text=_("A unique number for this unit"))
     name = models.CharField(max_length=256, help_text=_("The display name for this unit"))
-    serial_number = models.CharField(max_length=256, null=True, blank=True,help_text=_("Optional serial number"))
+    serial_number = models.CharField(max_length=256, null=True, blank=True, help_text=_("Optional serial number"))
     location = models.CharField(max_length=256, null=True, blank=True, help_text=_("Optional location information"))
-    install_date = models.DateField(null=True, blank=True, help_text = _("Optional install date"))
+    install_date = models.DateField(null=True, blank=True, help_text=_("Optional install date"))
 
     type = models.ForeignKey(UnitType)
 
     modalities = models.ManyToManyField(Modality)
-    #objects = UnitManager()
+    # objects = UnitManager()
+
     class Meta:
         ordering = ["number"]
 
