@@ -4,6 +4,7 @@ from django.http import HttpResponseRedirect
 from django.utils.translation import ugettext as _
 decorator_with_arguments = lambda decorator: lambda *args, **kwargs: lambda func: decorator(func, *args, **kwargs)
 
+
 @decorator_with_arguments
 def custom_permission_required(function, perm):
     def _function(request, *args, **kwargs):
@@ -11,7 +12,7 @@ def custom_permission_required(function, perm):
         if request.user.has_perm(perm):
             return function(request, *args, **kwargs)
         else:
-            messages.add_message(request,messages.WARNING,insufficient_perm_msg)
+            messages.add_message(request, messages.WARNING, insufficient_perm_msg)
             return HttpResponseRedirect(reverse("home"))
 
     return _function

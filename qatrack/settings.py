@@ -4,13 +4,13 @@ import os
 
 
 #-----------------------------------------------------------------------------
-#Debug settings - remember to set both DEBUG & TEMPLATE_DEBUG to false when
-#deploying (either here or in local_settings.py)
+# Debug settings - remember to set both DEBUG & TEMPLATE_DEBUG to false when
+# deploying (either here or in local_settings.py)
 DEBUG = True
 TEMPLATE_DEBUG = True
 
 
-#Who to email when server errors occur
+# Who to email when server errors occur
 ADMINS = (
     ('Admin Name', 'admin.email@yourplace.com'),
 )
@@ -18,7 +18,7 @@ MANAGERS = ADMINS
 SEND_BROKEN_LINK_EMAILS = True
 
 #-----------------------------------------------------------------------------
-#misc settings
+# misc settings
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
 VERSION = "0.2.6"
@@ -36,13 +36,13 @@ SITE_ID = 1
 SITE_NAME = "QATrack+"
 
 #-----------------------------------------------------------------------------
-#Database settings
+# Database settings
 
-#if you wish to override the database settings below (e.g. for deployment),
-#please do so here or in a local_settings.py file
+# if you wish to override the database settings below (e.g. for deployment),
+# please do so here or in a local_settings.py file
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+        'ENGINE': 'django.db.backends.sqlite3',  # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
         'NAME': 'db/default.db',                      # Or path to database file if using sqlite3.
         'USER': '',                      # Not used with sqlite3.
         'PASSWORD': '',                  # Not used with sqlite3.S
@@ -52,7 +52,7 @@ DATABASES = {
 }
 
 #----------------------------------------------------------------------------
-#Default local settings
+# Default local settings
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -89,11 +89,11 @@ USE_I18N = True
 
 
 #----------------------------------------------------------------------------
-#static media settings
+# static media settings
 
 #  Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
-MEDIA_ROOT = os.path.join(PROJECT_ROOT,"uploads")
+MEDIA_ROOT = os.path.join(PROJECT_ROOT, "uploads")
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
@@ -104,7 +104,7 @@ MEDIA_URL = '/media/'
 # Don't put anything in this directory yourself; store your static files
 # in apps' "static/" subdirectories and in STATICFILES_DIRS.
 # Example: "/home/media/media.lawrence.com/static/"
-STATIC_ROOT = os.path.join(PROJECT_ROOT,"static")
+STATIC_ROOT = os.path.join(PROJECT_ROOT, "static")
 
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
@@ -123,12 +123,12 @@ STATICFILES_DIRS = (
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-#    'django.contrib.staticfiles.finders.DefaultStorageFinder',
+    #    'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
 
 #------------------------------------------------------------------------------
-#Middleware
+# Middleware
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -140,34 +140,33 @@ MIDDLEWARE_CLASSES = (
     'debug_toolbar.middleware.DebugToolbarMiddleware',
 )
 
-#for django-debug-toolbar
+# for django-debug-toolbar
 INTERNAL_IPS = ('127.0.0.1',)
 
 
-
-#login required middleware settings
-LOGIN_EXEMPT_URLS = [r"^accounts/",]
+# login required middleware settings
+LOGIN_EXEMPT_URLS = [r"^accounts/", ]
 LOGIN_REDIRECT_URL = '/qa/unit/'
 LOGIN_URL = "/accounts/login/"
 ACCOUNT_ACTIVATION_DAYS = 7
 
 
 #------------------------------------------------------------------------------
-#Template settings
+# Template settings
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
     #('django.template.loaders.cached.Loader', (
     'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
     #)),
-#     'django.template.loaders.eggs.Loader',
+    #     'django.template.loaders.eggs.Loader',
 )
 
 TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
-    os.path.join(PROJECT_ROOT,"templates"),
+    os.path.join(PROJECT_ROOT, "templates"),
     "genericdropdown/templates",
 )
 
@@ -178,8 +177,8 @@ TEMPLATE_CONTEXT_PROCESSORS += [
 ]
 
 #------------------------------------------------------------------------------
-#Fixtures
-#you can add more default fixture locations here
+# Fixtures
+# you can add more default fixture locations here
 FIXTURE_DIRS = (
     'fixtures/',
 )
@@ -213,59 +212,57 @@ INSTALLED_APPS = [
 
 ]
 #-----------------------------------------------------------------------------
-#Session Settings
+# Session Settings
 SESSION_COOKIE_AGE = 14*24*60*60
 
 #-----------------------------------------------------------------------------
-#Email and notification settings
+# Email and notification settings
 EMAIL_NOTIFICATION_USER = None
 EMAIL_NOTIFICATION_PWD = None
 EMAIL_NOTIFICATION_TEMPLATE = "notification_email.txt"
 EMAIL_NOTIFICATION_SENDER = "qatrack"
 EMAIL_NOTIFICATION_SUBJECT = "QATrack+ Test Status Notification"
 
-EMAIL_HOST = "" #e.g. 'smtp.gmail.com'
-EMAIL_HOST_USER = '' # e.g. "randle.taylor@gmail.com"
+EMAIL_HOST = ""  # e.g. 'smtp.gmail.com'
+EMAIL_HOST_USER = ''  # e.g. "randle.taylor@gmail.com"
 EMAIL_HOST_PASSWORD = 'your_password_here'
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 
 
 #-----------------------------------------------------------------------------
-#Account settings
-#a list of group names to automatically add users to when they sign up
-DEFAULT_GROUP_NAMES = [] # eg ["Therapists"]
+# Account settings
+# a list of group names to automatically add users to when they sign up
+DEFAULT_GROUP_NAMES = []  # eg ["Therapists"]
 
 #-----------------------------------------------------------------------------
-#Authentication backend settings
+# Authentication backend settings
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
     #'qatrack.accounts.backends.ActiveDirectoryGroupMembershipSSLBackend',
 )
 
-#active directory settings (not required if only using ModelBackend
-AD_DNS_NAME='' # e.g. ad.civic1.ottawahospital.on.ca
+# active directory settings (not required if only using ModelBackend
+AD_DNS_NAME = ''  # e.g. ad.civic1.ottawahospital.on.ca
 
 # If using non-SSL use these
-AD_LDAP_PORT=389
-AD_LDAP_URL='ldap://%s:%s' % (AD_DNS_NAME,AD_LDAP_PORT)
+AD_LDAP_PORT = 389
+AD_LDAP_URL = 'ldap://%s:%s' % (AD_DNS_NAME, AD_LDAP_PORT)
 
 # If using SSL use these:
-#AD_LDAP_PORT=636
-#AD_LDAP_URL='ldaps://%s:%s' % (AD_DNS_NAME,AD_LDAP_PORT)
+# AD_LDAP_PORT=636
+# AD_LDAP_URL='ldaps://%s:%s' % (AD_DNS_NAME,AD_LDAP_PORT)
 
-AD_SEARCH_DN = "" #eg "dc=ottawahospital,dc=on,dc=ca"
-AD_NT4_DOMAIN= "" #Network domain that AD server is part of
+AD_SEARCH_DN = ""  # eg "dc=ottawahospital,dc=on,dc=ca"
+AD_NT4_DOMAIN = ""  # Network domain that AD server is part of
 
-AD_SEARCH_FIELDS= ['mail','givenName','sn','sAMAccountName','memberOf']
-AD_MEMBERSHIP_REQ= [] # eg ["*TOHCC - All Staff | Tout le personnel  - CCLHO"]
-#AD_CERT_FILE='/path/to/your/cert.txt'
-
+AD_SEARCH_FIELDS = ['mail', 'givenName', 'sn', 'sAMAccountName', 'memberOf']
+AD_MEMBERSHIP_REQ = []  # eg ["*TOHCC - All Staff | Tout le personnel  - CCLHO"]
+# AD_CERT_FILE='/path/to/your/cert.txt'
 
 
 #------------------------------------------------------------------------------
-#Logging Settings
-
+# Logging Settings
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
 # the site admins on every HTTP 500 error.
@@ -280,15 +277,15 @@ LOGGING = {
         }
     },
     'handlers': {
-         'mail_admins': {
+        'mail_admins': {
             'level': 'ERROR',
             'filters': ['require_debug_false'],
             'class': 'django.utils.log.AdminEmailHandler'
-         },
-         'console':{
-              'level':'DEBUG',
-              'class':'logging.StreamHandler',
-          },
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+        },
     },
     'loggers': {
 
@@ -307,18 +304,18 @@ LOGGING = {
 
 
 #------------------------------------------------------------------------------
-#QA Settings
-PAGINATE_DEFAULT=50 #remember to change iDisplayLength in unittestcollection.js and testlistinstance.js if you change this
+# QA Settings
+PAGINATE_DEFAULT = 50  # remember to change iDisplayLength in unittestcollection.js and testlistinstance.js if you change this
 
-NHIST=5 #number of historical test results to show when reviewing/performing qa
+NHIST = 5  # number of historical test results to show when reviewing/performing qa
 #------------------------------------------------------------------------------
-#Testing settings
+# Testing settings
 TEST_RUNNER = 'django_coverage.coverage_runner.CoverageRunner'
 COVERAGE_ADDITIONAL_MODULES = ["qatrack.tests"]
 
 #------------------------------------------------------------------------------
-#local_settings contains anything that should be overridden
-#based on site specific requirements (e.g. deployment, development etc)
+# local_settings contains anything that should be overridden
+# based on site specific requirements (e.g. deployment, development etc)
 try:
     from local_settings import *
 except ImportError:
