@@ -752,14 +752,14 @@ class UnitTestCollection(models.Model):
         dates for its member TestLists
         """
 
-        if self.last_instance and self.auto_schedule and self.frequency:
+        if self.last_instance and self.auto_schedule and self.frequency is not None:
             return utils.due_date(self.last_instance,self.frequency)
 
     #----------------------------------------------------------------------
     def set_due_date(self,due_date=None):
         """Set due date field for this UTC. Note model is not saved to db.
         That must be done manually"""
-        if self.auto_schedule and due_date is None:
+        if self.auto_schedule and due_date is None and self.frequency is not None:
             due_date = self.calc_due_date()
 
         if due_date is not None:
@@ -773,7 +773,11 @@ class UnitTestCollection(models.Model):
 
         today = timezone.localtime(timezone.now()).date()
         due = timezone.localtime(self.due_date).date()
-        overdue = due + timezone.timedelta(days=self.frequency.overdue_interval-self.frequency.due_interval)
+        
+        if self.frequency is not None:
+            overdue = due + timezone.timedelta(days=self.frequency.overdue_interval-self.frequency.due_interval)
+        else:
+            overdue = due
 
         if today < due:
             return NOT_DUE
