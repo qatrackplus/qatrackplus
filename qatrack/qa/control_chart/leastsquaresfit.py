@@ -7,6 +7,7 @@ from scipy.optimize import curve_fit
 
 np.seterr("log")
 
+
 def gauss_fit(data, freq, bins, binwidth):
     """
     Fits a Gaussian pdf to a histogram using
@@ -25,15 +26,13 @@ def gauss_fit(data, freq, bins, binwidth):
     return optParam, cov
 
 
-
 def bincenters(bins):
     """
     Finds the midpoint of histogram bins from plots generated
     with matplotlib.
     """
-    bincenters = 0.5 * (bins[1: ] + bins[:- 1])
+    bincenters = 0.5 * (bins[1:] + bins[:- 1])
     return bincenters
-
 
 
 def gauss_pdf(x, norm, mu, sigma):
@@ -45,7 +44,7 @@ def gauss_pdf(x, norm, mu, sigma):
     1.000 unless you have a reason for it to be otherwise.
     """
 
-    if any(np.isnan([norm,mu,sigma])) or any(np.isnan(x)):
+    if any(np.isnan([norm, mu, sigma])) or any(np.isnan(x)):
         return np.NaN
 
     GaussPdf = norm * mlab.normpdf(x, mu, sigma)

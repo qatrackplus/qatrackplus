@@ -6,6 +6,7 @@ import scipy.special as sps
 
 MAX_NEWTON_ITERATIONS = 1000
 
+
 def gauss_fit(data, binwidth=None):
     """
     Fits a Gaussian pdf to a set of independent values (data) using
@@ -17,7 +18,7 @@ def gauss_fit(data, binwidth=None):
     else:
         norm = np.float(np.size(data) * binwidth)
     mean = np.mean(data)
-    std  = np.std(data)
+    std = np.std(data)
 
     optParam = norm, mean, std
 
@@ -68,7 +69,7 @@ def k_param(kguess, s):
     val = np.log(k) - sps.psi(k) - s
     counter = 0
     while np.abs(val) >= 0.0001:
-        k = k - (np.log(k)-sps.psi(k)-s)/(1/k-sps.polygamma(1,k))
+        k = k - (np.log(k)-sps.psi(k)-s)/(1/k-sps.polygamma(1, k))
         val = np.log(k) - sps.psi(k) - s
         # sps.polygamma(1,k) is first derivative of sps.psi(k)
 
@@ -87,5 +88,5 @@ def gamma_pdf(x, norm, k, theta):
     and so 'norm' should equal 1.000 unless you have a reason for it
     to be otherwise.
     """
-    GammaPdf = norm *np.power(x, k-1.0) *np.exp(-x/theta) /(sps.gamma(k) *np.power(theta, k))
+    GammaPdf = norm * np.power(x, k-1.0) * np.exp(-x/theta) / (sps.gamma(k) * np.power(theta, k))
     return GammaPdf

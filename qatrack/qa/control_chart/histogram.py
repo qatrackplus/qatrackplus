@@ -2,7 +2,8 @@
 
 import numpy as np
 
-def binwidth(x, maxBins = None):
+
+def binwidth(x, maxBins=None):
     """
     This method determines the optimal binwidth for a sample of data
     The algorithm is taken from Neural Computation 19, 6, 1503 - 1527.
@@ -19,14 +20,13 @@ def binwidth(x, maxBins = None):
         return 1.
 
     numOfBins = np.linspace(minBins, maxBins, maxBins - minBins + 1)
-    C =  np.zeros( len(numOfBins) )
+    C = np.zeros(len(numOfBins))
 
     for i in np.arange(0, len(numOfBins)):
-        k, edges = np.histogram(x, bins = numOfBins[i])
+        k, edges = np.histogram(x, bins=numOfBins[i])
         C[i] = get_cost_func(k, span, numOfBins[i])
 
-
-    minCindex = np.where( C == np.min(C) )[0][0]
+    minCindex = np.where(C == np.min(C))[0][0]
     optBinWidth = span / numOfBins[minCindex]
 
     if optBinWidth == 0:
@@ -35,14 +35,13 @@ def binwidth(x, maxBins = None):
     return optBinWidth
 
 
-
 def get_cost_func(k, span, numOfBins):
     """ Calculates the cost function for a given bin width. """
 
     binwidth = span / numOfBins
     kmean = np.sum(k) / numOfBins
-    var = np.sum( np.power(k - kmean, 2) ) / numOfBins
+    var = np.sum(np.power(k - kmean, 2)) / numOfBins
 
-    cost_func = (2.* kmean - var) / np.power(binwidth, 2)
+    cost_func = (2. * kmean - var) / np.power(binwidth, 2)
 
     return cost_func
