@@ -4,6 +4,6 @@ from qatrack.qa.tests.test_tags import *
 
 __test__ = {
     "views": ["test_views"],
-    "models":["test_models"],
-    "tags":["test_tags"],
+    "models": ["test_models"],
+    "tags": ["test_tags"],
 }
