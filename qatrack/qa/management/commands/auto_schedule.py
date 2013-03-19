@@ -23,6 +23,7 @@ class Command(BaseCommand):
             raise CommandError("Valid arguments are %s"%(valid))
 
         handlers[args[0]]()
+        
     #----------------------------------------------------------------------
     def enable_all(self):
         """Sets auto_schedule = True on all UnitTestCollections with assigned frequencies"""
