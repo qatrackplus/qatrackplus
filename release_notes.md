@@ -12,18 +12,18 @@ Thank you to Eric Reynard and Darcy Mason for their bug reports.
 ### New Features ###
 
 * You can now manually override the due date for a Test List on a Unit
-* You can turn off the auto scheduling of due dates for Test Lists on
+* You can [turn off the auto scheduling](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/admin/assign_to_unit.md) of due dates for Test Lists on
   Units
 * Test Lists no longer need to have a Frequency associated with them
-  when assigned to a Unit (allows for ad-hoc Tests)
-* new management command `auto_schedule` (see wiki)
+  when [assigned to a Unit](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/admin/assign_to_unit.md) (allows for ad-hoc Tests)
+* new management command `auto_schedule` (see [wiki](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/admin/auto-schedule.md))
 * Selecting a different day in a Test List Cycle  no longer requires you to click *Go*
 * Minor improvements to the charts page layout
 * Reference values are now included in data displayed on chart page
 * Test List description can now be displayed on the page when
   performing or reviewing QA
 * Improved performance when saving data from test lists with lots of tests.
-* New permission **Can skip without comment** added to allow some
+* New [permission](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/admin/auth.md) **Can skip without comment** added to allow some
   users/groups to skip tests without adding a comment
 * Comment counts are now displayed in Test List history listings
 * Now only Units which have Test Lists visible to the user will be
