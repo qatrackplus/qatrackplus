@@ -44,13 +44,15 @@ class BasicSaveUserAdmin(SaveUserMixin, admin.ModelAdmin):
 #============================================================================
 class CategoryAdmin(admin.ModelAdmin):
     """QA categories admin"""
-    prepopulated_fields =  {'slug': ('name',)}
+    prepopulated_fields = {'slug': ('name',)}
 
 #============================================================================
+
+
 class TestInfoForm(forms.ModelForm):
-    reference_value = forms.FloatField(label=_("New reference value"),required=False,)
-    reference_set_by = forms.CharField(label=_("Set by"),required=False)
-    reference_set = forms.CharField(label=_("Date"),required=False)
+    reference_value = forms.FloatField(label=_("New reference value"), required=False,)
+    reference_set_by = forms.CharField(label=_("Set by"), required=False)
+    reference_set = forms.CharField(label=_("Date"), required=False)
     test_type = forms.CharField(required=False)
 
     class Meta:
@@ -68,7 +70,7 @@ class TestInfoForm(forms.ModelForm):
             self.fields["test_type"].initial = models.TEST_TYPE_CHOICES[i][1]
 
             if tt == models.BOOLEAN:
-                self.fields["reference_value"].widget = forms.Select(choices=[("","---"),(0,"No"),(1,"Yes")])
+                self.fields["reference_value"].widget = forms.Select(choices=[("", "---"), (0, "No"), (1, "Yes")])
                 self.fields["tolerance"].widget = forms.HiddenInput()
 
             elif tt == models.MULTIPLE_CHOICE:
@@ -99,7 +101,7 @@ class TestInfoForm(forms.ModelForm):
 
             ref_value = self.cleaned_data["reference_value"]
 
-            tol =self.cleaned_data["tolerance"]
+            tol = self.cleaned_data["tolerance"]
             if tol is not None:
                 if ref_value == 0 and tol.type == models.PERCENT:
                     raise forms.ValidationError(_("Percentage based tolerances can not be used with reference value of zero (0)"))
@@ -112,27 +114,30 @@ class TestInfoForm(forms.ModelForm):
 
 #----------------------------------------------------------------------
 def test_type(obj):
-    for tt,display in models.TEST_TYPE_CHOICES:
+    for tt, display in models.TEST_TYPE_CHOICES:
         if obj.test.type == tt:
             return display
 test_type.admin_order_field = "test__type"
 #============================================================================
+
+
 class UnitTestInfoAdmin(admin.ModelAdmin):
     """"""
     form = TestInfoForm
     fields = (
-        "unit", "test","test_type",
+        "unit", "test", "test_type",
         "reference", "reference_set_by", "reference_set", "tolerance",
         "reference_value",
     )
-    list_display = ["test",test_type, "unit", "reference", "tolerance"]
-    list_filter = ["unit","test__category"]
-    readonly_fields = ("reference","test", "unit",)
-    search_fields = ("test__name","test__slug","unit__name",)
+    list_display = ["test", test_type, "unit", "reference", "tolerance"]
+    list_filter = ["unit", "test__category"]
+    readonly_fields = ("reference", "test", "unit",)
+    search_fields = ("test__name", "test__slug", "unit__name",)
     #----------------------------------------------------------------------
-    def queryset(self,*args,**kwargs):
+
+    def queryset(self, *args, **kwargs):
         """"""
-        qs = super(UnitTestInfoAdmin,self).queryset(*args,**kwargs)
+        qs = super(UnitTestInfoAdmin, self).queryset(*args, **kwargs)
         return qs.select_related(
             "reference",
             "tolerance",
@@ -141,7 +146,7 @@ class UnitTestInfoAdmin(admin.ModelAdmin):
         )
 
     #---------------------------------------------------------------------------
-    def has_add_permission(self,request):
+    def has_add_permission(self, request):
         """unittestinfo's are created automatically"""
         return False
 
@@ -160,17 +165,17 @@ class UnitTestInfoAdmin(admin.ModelAdmin):
                 if not(test_info.reference and test_info.reference.value == float(val)):
                     ref = models.Reference(
                         value=val,
-                        type = ref_type,
-                        created_by = request.user,
-                        modified_by = request.user,
-                        name = "%s %s" % (test_info.unit.name,test_info.test.name)[:255]
+                        type=ref_type,
+                        created_by=request.user,
+                        modified_by=request.user,
+                        name="%s %s" % (test_info.unit.name, test_info.test.name)[:255]
                     )
                     ref.save()
                     test_info.reference = ref
             else:
                 test_info.reference = None
 
-        super(UnitTestInfoAdmin,self).save_model(request,test_info,form,change)
+        super(UnitTestInfoAdmin, self).save_model(request, test_info, form, change)
 
 
 #============================================================================
@@ -194,25 +199,27 @@ class TestListAdminForm(forms.ModelForm):
         return sublists
 
 #============================================================================
+
+
 class TestListMembershipInlineFormSet(forms.models.BaseInlineFormSet):
     #---------------------------------------------------------------------------
-    def __init__(self,*args,**kwargs):
+    def __init__(self, *args, **kwargs):
         qs = kwargs["queryset"].filter(test_list=kwargs["instance"]).select_related("test")
         kwargs["queryset"] = qs
-        super(TestListMembershipInlineFormSet,self).__init__(*args,**kwargs)
+        super(TestListMembershipInlineFormSet, self).__init__(*args, **kwargs)
 
     #----------------------------------------------------------------------
     def clean(self):
         """Make sure there are no duplicated slugs in a TestList"""
-        super(TestListMembershipInlineFormSet,self).clean()
+        super(TestListMembershipInlineFormSet, self).clean()
 
-        if not hasattr(self,"cleaned_data"):
-            #something else went wrong already
+        if not hasattr(self, "cleaned_data"):
+            # something else went wrong already
             return {}
 
-        slugs = [f.instance.test.slug for f in self.forms if (hasattr(f.instance,"test") and not f.cleaned_data["DELETE"])]
+        slugs = [f.instance.test.slug for f in self.forms if (hasattr(f.instance, "test") and not f.cleaned_data["DELETE"])]
         slugs = [x for x in slugs if x]
-        duplicates = list(set([sn for sn in slugs if slugs.count(sn)>1]))
+        duplicates = list(set([sn for sn in slugs if slugs.count(sn) > 1]))
         if duplicates:
             raise forms.ValidationError(
                 "The following macro names are duplicated :: " + ",".join(duplicates)
@@ -224,10 +231,14 @@ class TestListMembershipInlineFormSet(forms.models.BaseInlineFormSet):
 def test_name(obj):
     return obj.test.name
 #----------------------------------------------------------------------
+
+
 def macro_name(obj):
     return obj.test.slug
 
 #============================================================================
+
+
 class TestListMembershipForm(forms.ModelForm):
 
     model = models.TestListMembership
@@ -244,6 +255,8 @@ class TestListMembershipForm(forms.ModelForm):
         """
 
 #============================================================================
+
+
 class TestListMembershipInline(admin.TabularInline):
     """"""
     model = models.TestListMembership
@@ -255,27 +268,26 @@ class TestListMembershipInline(admin.TabularInline):
     raw_id_fields = ("test",)
 
     #---------------------------------------------------------------------------
-    def label_for_value(self,value):
+    def label_for_value(self, value):
         try:
             name = self.test_names[value]
             return '&nbsp;<strong>%s</strong>' % escape(Truncator(name).words(14, truncate='...'))
         except (ValueError, KeyError):
             return ''
 
-
-    def formfield_for_foreignkey(self,db_field, request=None,**kwargs):
-        #copied from django.contrib.admin.wigets so we can override the label_for_value function
-        #for the test raw id widget
+    def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
+        # copied from django.contrib.admin.wigets so we can override the label_for_value function
+        # for the test raw id widget
         db = kwargs.get('using')
         if db_field.name == "test":
             widget = widgets.ForeignKeyRawIdWidget(db_field.rel,
-                                    self.admin_site, using=db)
+                                                   self.admin_site, using=db)
             widget.label_for_value = self.label_for_value
             kwargs['widget'] = widget
 
         elif db_field.name in self.raw_id_fields:
             kwargs['widget'] = widgets.ForeignKeyRawIdWidget(db_field.rel,
-                                    self.admin_site, using=db)
+                                                             self.admin_site, using=db)
         elif db_field.name in self.radio_fields:
             kwargs['widget'] = widgets.AdminRadioSelect(attrs={
                 'class': get_ul_class(self.radio_fields[db_field.name]),
@@ -283,47 +295,51 @@ class TestListMembershipInline(admin.TabularInline):
             kwargs['empty_label'] = db_field.blank and _('None') or None
         return db_field.formfield(**kwargs)
 
-
-    def get_formset(self,request,obj=None,**kwargs):
-        #hacky method for getting test names so they don't need to be looked up again
+    def get_formset(self, request, obj=None, **kwargs):
+        # hacky method for getting test names so they don't need to be looked up again
         # in the label_for_value in contrib/admin/widgets.py
         if obj:
-            self.test_names = dict(obj.tests.values_list("pk","name"))
+            self.test_names = dict(obj.tests.values_list("pk", "name"))
         else:
             self.test_names = {}
-        return super(TestListMembershipInline,self).get_formset(request,obj,**kwargs)
+        return super(TestListMembershipInline, self).get_formset(request, obj, **kwargs)
 
 
 #============================================================================
 class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
-    prepopulated_fields =  {'slug': ('name',)}
+    prepopulated_fields = {'slug': ('name',)}
     list_display = ("name", "modified", "modified_by",)
-    search_fields = ("name", "description","slug",)
-    filter_horizontal= ("tests", "sublists", )
+    search_fields = ("name", "description", "slug",)
+    filter_horizontal = ("tests", "sublists", )
 
     form = TestListAdminForm
     inlines = [TestListMembershipInline]
     save_as = True
     #============================================================================
+
     class Media:
         js = (
             settings.STATIC_URL+"js/jquery-1.7.1.min.js",
             settings.STATIC_URL+"js/jquery-ui.min.js",
-            #settings.STATIC_URL+"js/collapsed_stacked_inlines.js",
+            # settings.STATIC_URL+"js/collapsed_stacked_inlines.js",
             settings.STATIC_URL+"js/m2m_drag_admin.js",
         )
     #----------------------------------------------------------------------
-    def queryset(self,*args,**kwargs):
-        qs = super(TestListAdmin,self).queryset(*args,**kwargs)
+
+    def queryset(self, *args, **kwargs):
+        qs = super(TestListAdmin, self).queryset(*args, **kwargs)
         return qs.select_related("modified_by")
 
 #============================================================================
-class TestAdmin(SaveUserMixin,admin.ModelAdmin):
-    list_display = ["name","slug","category", "type"]
-    list_filter = ["category","type"]
-    search_fields = ["name","slug","category__name"]
+
+
+class TestAdmin(SaveUserMixin, admin.ModelAdmin):
+    list_display = ["name", "slug", "category", "type"]
+    list_filter = ["category", "type"]
+    search_fields = ["name", "slug", "category__name"]
     save_as = True
     #============================================================================
+
     class Media:
         js = (
             settings.STATIC_URL+"js/jquery-1.7.1.min.js",
@@ -331,52 +347,65 @@ class TestAdmin(SaveUserMixin,admin.ModelAdmin):
         )
 
 #----------------------------------------------------------------------
+
+
 def unit_name(obj):
     return obj.unit.name
 unit_name.admin_order_field = "unit__name"
 unit_name.short_description = "Unit"
+
+
 def freq_name(obj):
     return obj.frequency.name
 freq_name.admin_order_field = "frequency__name"
 freq_name.short_description = "Frequency"
+
+
 def assigned_to_name(obj):
     return obj.assigned_to.name
 assigned_to_name.admin_order_field = "assigned_to__name"
 assigned_to_name.short_description = "Assigned To"
 
 #============================================================================
+
+
 class UnitTestCollectionAdmin(admin.ModelAdmin):
-    #readonly_fields = ("unit","frequency",)
+    # readonly_fields = ("unit","frequency",)
     filter_horizontal = ("visible_to",)
-    list_display = ["test_objects_name", unit_name, freq_name,assigned_to_name,"active"]
-    list_filter = ["unit__name", "frequency__name","assigned_to__name"]
-    search_fields = ["unit__name","frequency__name","testlist__name","testlistcycle__name"]
+    list_display = ["test_objects_name", unit_name, freq_name, assigned_to_name, "active"]
+    list_filter = ["unit__name", "frequency__name", "assigned_to__name"]
+    search_fields = ["unit__name", "frequency__name", "testlist__name", "testlistcycle__name"]
     change_form_template = "admin/treenav/menuitem/change_form.html"
     list_editable = ["active"]
     save_as = True
     #----------------------------------------------------------------------
-    def queryset(self,*args,**kwargs):
+
+    def queryset(self, *args, **kwargs):
         """"""
-        qs = super(UnitTestCollectionAdmin,self).queryset(*args,**kwargs)
+        qs = super(UnitTestCollectionAdmin, self).queryset(*args, **kwargs)
         return qs.select_related(
             "unit__name",
             "frequency__name",
             "assigned_to__name"
-            ).prefetch_related(
-                "tests_object",
-            )
+        ).prefetch_related(
+            "tests_object",
+        )
 #============================================================================
+
+
 class TestListCycleMembershipInline(admin.TabularInline):
 
     model = models.TestListCycleMembership
     raw_id_fields = ("test_list",)
 
 #============================================================================
+
+
 class TestListCycleAdmin(SaveUserMixin, admin.ModelAdmin):
     """Admin for daily test list cycles"""
     inlines = [TestListCycleMembershipInline]
-    prepopulated_fields =  {'slug': ('name',)}
-    search_fields = ("name","slug",)
+    prepopulated_fields = {'slug': ('name',)}
+    search_fields = ("name", "slug",)
 
     #============================================================================
     class Media:
@@ -390,32 +419,38 @@ class TestListCycleAdmin(SaveUserMixin, admin.ModelAdmin):
 
 #============================================================================
 class FrequencyAdmin(admin.ModelAdmin):
-    prepopulated_fields =  {'slug': ('name',)}
+    prepopulated_fields = {'slug': ('name',)}
     model = models.Frequency
 
 #============================================================================
+
+
 class StatusAdmin(admin.ModelAdmin):
-    prepopulated_fields =  {'slug': ('name',)}
+    prepopulated_fields = {'slug': ('name',)}
     model = models.TestInstanceStatus
 #----------------------------------------------------------------------
+
+
 def utc_unit_name(obj):
     return obj.unit_test_collection.unit.name
 utc_unit_name.admin_order_field = "unit_test_collection__unit__name"
 utc_unit_name.short_description = "Unit"
 
 #====================================================================================
+
+
 class TestListInstanceAdmin(admin.ModelAdmin):
-    list_display = ["__unicode__",utc_unit_name,"test_list","work_completed","created_by"]
+    list_display = ["__unicode__", utc_unit_name, "test_list", "work_completed", "created_by"]
 
 
 admin.site.register([models.Tolerance], BasicSaveUserAdmin)
 admin.site.register([models.Category], CategoryAdmin)
-admin.site.register([models.TestList],TestListAdmin)
-admin.site.register([models.Test],TestAdmin)
-admin.site.register([models.UnitTestInfo],UnitTestInfoAdmin)
-admin.site.register([models.UnitTestCollection],UnitTestCollectionAdmin)
+admin.site.register([models.TestList], TestListAdmin)
+admin.site.register([models.Test], TestAdmin)
+admin.site.register([models.UnitTestInfo], UnitTestInfoAdmin)
+admin.site.register([models.UnitTestCollection], UnitTestCollectionAdmin)
 
-admin.site.register([models.TestListCycle],TestListCycleAdmin)
+admin.site.register([models.TestListCycle], TestListCycleAdmin)
 admin.site.register([models.Frequency], FrequencyAdmin)
 admin.site.register([models.TestInstanceStatus], StatusAdmin)
 admin.site.register([models.TestListInstance], TestListInstanceAdmin)
