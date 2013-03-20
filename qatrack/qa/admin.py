@@ -268,7 +268,7 @@ class TestListMembershipInline(admin.TabularInline):
             return '&nbsp;<strong>%s</strong>' % escape(Truncator(name).words(14, truncate='...'))
         except (ValueError, KeyError):
             return ''
-    from django.contrib.admin.widgets import ge
+
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
         # copied from django.contrib.admin.wigets so we can override the label_for_value function
         # for the test raw id widget
