@@ -742,6 +742,18 @@ class TestUnitTestCollection(TestCase):
         self.assertTrue(utils.datetimes_same(timezone.localtime(utc.due_date), now+daily.due_delta()))
 
     #----------------------------------------------------------------------
+    def test_adhoc_due_status(self):
+        now = timezone.now()
+
+        utc = utils.create_unit_test_collection(frequency=None,null_frequency=True)
+
+        self.assertEqual(models.NOT_DUE, utc.due_status())
+        utc.set_due_date(now-timezone.timedelta(days=1))
+        
+        utc = models.UnitTestCollection.objects.get(pk=utc.pk)
+        self.assertEqual(utc.due_status(), models.OVERDUE)
+
+    #----------------------------------------------------------------------
     def test_daily_due_status(self):
         now = timezone.now()
 
