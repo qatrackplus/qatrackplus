@@ -4,18 +4,12 @@ import django.db
 from django.utils.translation import ugettext as _
 from django.conf import settings
 from django.contrib import admin
-from django.contrib.admin import widgets
-from django.contrib.admin.templatetags.admin_static import static
-from django.utils.safestring import mark_safe
+from django.contrib.admin import widgets,options
 from django.utils import timezone
 from django.utils.text import Truncator
 from django.utils.html import escape
 
 import qatrack.qa.models as models
-from qatrack.units.models import Unit
-
-import os
-import re
 
 
 #============================================================================
@@ -274,7 +268,7 @@ class TestListMembershipInline(admin.TabularInline):
             return '&nbsp;<strong>%s</strong>' % escape(Truncator(name).words(14, truncate='...'))
         except (ValueError, KeyError):
             return ''
-
+    from django.contrib.admin.widgets import ge
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
         # copied from django.contrib.admin.wigets so we can override the label_for_value function
         # for the test raw id widget
@@ -290,7 +284,7 @@ class TestListMembershipInline(admin.TabularInline):
                                                              self.admin_site, using=db)
         elif db_field.name in self.radio_fields:
             kwargs['widget'] = widgets.AdminRadioSelect(attrs={
-                'class': get_ul_class(self.radio_fields[db_field.name]),
+                'class': options.get_ul_class(self.radio_fields[db_field.name]),
             })
             kwargs['empty_label'] = db_field.blank and _('None') or None
         return db_field.formfield(**kwargs)

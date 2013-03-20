@@ -40,6 +40,7 @@ Thank you to Eric Reynard and Darcy Mason for their bug reports.
   directly to the Perform QA page from a UnitTestCollection (Assign
   Test List to Unit) page in the admin
 * Some other minor cosmetic enhancements
+* majority of code now conforms with pep8
 
 ### Bug Fixes ###
 
@@ -145,7 +146,9 @@ This release has a number of small features and bug fixes included.
 
 ## Release Checklist ##
 
-* Run test suite
+* run pep8 and fix errors
+* run pyflakes and fix errors
+* Run test suite one last time :)
 * Bump version number
 * Update README.md with latest version number
 * Ad-hoc testing
