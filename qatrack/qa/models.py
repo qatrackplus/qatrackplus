@@ -812,7 +812,7 @@ class UnitTestCollection(models.Model):
         if self.frequency is not None:
             overdue = due + timezone.timedelta(days=self.frequency.overdue_interval-self.frequency.due_interval)
         else:
-            overdue = due
+            overdue = due + timezone.timedelta(days=1)
 
         if today < due:
             return NOT_DUE
@@ -1157,24 +1157,6 @@ class TestInstance(models.Model):
         """return display representation of object"""
         return "TestInstance(pk=%s)" % self.pk
 
-#----------------------------------------------------------------------
-#@receiver(post_save,sender=TestInstance)
-
-
-def on_test_instance_saved(*args, **kwargs):
-
-    if (not loaded_from_fixture(kwargs)):
-
-        test_instance = kwargs["instance"]
-        try:
-            latest = TestInstance.objects.complete().filter(
-                unit_test_info=test_instance.unit_test_info
-            ).latest("work_completed")
-        except TestInstance.DoesNotExist:
-            latest = None
-
-        test_instance.unit_test_info.last_instance = latest
-        test_instance.unit_test_info.save()
 
 #============================================================================
 
