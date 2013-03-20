@@ -1,8 +1,7 @@
 from django import forms
 
-from django.forms.models import inlineformset_factory, modelformset_factory, model_to_dict
+from django.forms.models import inlineformset_factory
 from django.forms.widgets import RadioSelect, Select
-from django.contrib import messages
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 

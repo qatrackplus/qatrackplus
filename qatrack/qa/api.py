@@ -1,7 +1,7 @@
 import csv
 import StringIO
 from django.conf import settings
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group
 from qatrack.formats.en.formats import DATETIME_FORMAT
 import django.utils.dateformat as dateformat
 import tastypie
