@@ -152,8 +152,8 @@ class ChartView(TemplateView):
         }
         context.update(c)
         return context
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def set_tests(self):
         self.tests = models.Test.objects.order_by("name").values(
             "pk",
@@ -172,8 +172,8 @@ class ChartView(TemplateView):
 
 class BaseChartView(View):
     ISO_FORMAT = False
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def get(self, request):
 
         data = self.get_plot_data()
@@ -215,8 +215,8 @@ class BaseChartView(View):
         template = get_template("qa/qa_data_table.html")
 
         return template.render(context)
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def get_date(self, key, default):
         try:
             d = timezone.datetime.strptime(self.request.GET.get(key), settings.SIMPLE_DATE_FORMAT)
@@ -231,8 +231,8 @@ class BaseChartView(View):
     #---------------------------------------------------------------------------
     def convert_date(self, dt):
         return dt.isoformat()
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def get_plot_data(self):
 
         tests = self.request.GET.getlist("tests[]", [])
@@ -305,8 +305,8 @@ class ControlChartImage(BaseChartView):
         except:
             v = default
         return v
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def render_to_response(self, context):
         if not CONTROL_CHART_AVAILABLE:
             raise Http404
@@ -414,8 +414,8 @@ class CompositeCalculation(JSONResponseMixin, View):
                     del self.calculation_context["result"]
 
         return self.render_to_response({"success": True, "errors": [], "results": results})
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def set_composite_test_data(self):
         composite_ids = self.get_json_data("composite_ids")
 
@@ -433,8 +433,8 @@ class CompositeCalculation(JSONResponseMixin, View):
     def process_procedure(self, procedure):
         """prepare raw procedure for evaluation"""
         return "\n".join(["from __future__ import division", procedure, "\n"]).replace('\r', '\n')
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def set_calculation_context(self):
         """set up the environment that the composite test will be calculated in"""
         values = self.get_json_data("qavalues")
@@ -501,8 +501,8 @@ class ChooseUnit(ListView):
         groups = self.request.user.groups.all()
         units = list(set(models.UnitTestCollection.objects.by_visibility(groups).values_list("unit", flat=True)))
         return UnitType.objects.all().filter(unit__pk__in=units).order_by("unit__number").prefetch_related("unit_set")
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def get_context_data(self, *args, **kwargs):
         """reorder unit types"""
         context = super(ChooseUnit, self).get_context_data(*args, **kwargs)
@@ -529,15 +529,15 @@ class PerformQA(CreateView):
             raise Http404
 
         self.all_lists = [self.test_list]+list(self.test_list.sublists.all())
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def set_all_tests(self):
         self.all_tests = []
         for test_list in self.all_lists:
             tests = test_list.tests.all().order_by("testlistmembership__order")
             self.all_tests.extend(tests)
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def set_unit_test_collection(self):
         self.unit_test_col = get_object_or_404(
             models.UnitTestCollection.objects.select_related(
@@ -548,8 +548,8 @@ class PerformQA(CreateView):
             ).distinct(),
             pk=self.kwargs["pk"]
         )
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def set_actual_day(self):
         cycle_membership = models.TestListCycleMembership.objects.filter(
             test_list=self.test_list,
@@ -561,8 +561,8 @@ class PerformQA(CreateView):
         if cycle_membership:
             self.is_cycle = True
             self.actual_day = cycle_membership[0].order
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def set_last_day(self):
 
         self.last_day = None
@@ -725,8 +725,8 @@ class PerformQA(CreateView):
         except (ValueError, TypeError, KeyError):
             day = None
         return day
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def get_success_url(self):
         next_ = self.request.GET.get("next", None)
         if next_ is not None:
@@ -801,8 +801,8 @@ class BaseEditTestListInstance(UpdateView):
     #----------------------------------------------------------------------
     def form_valid(self, form):
         raise NotImplementedError
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def get_success_url(self):
         next_ = self.request.GET.get("next", None)
         if next_ is not None:
@@ -904,16 +904,16 @@ class EditTestListInstance(BaseEditTestListInstance):
             self.object.work_completed = timezone.make_aware(timezone.datetime.now(), timezone=timezone.get_current_timezone())
 
         self.object.save()
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def get_status_object(self, status_pk):
         try:
             status = models.TestInstanceStatus.objects.get(pk=status_pk)
         except (models.TestInstanceStatus.DoesNotExist, ValueError):
             status = models.TestInstanceStatus.objects.default()
         return status
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def update_test_instance(self, test_instance, status):
         ti = test_instance
         ti.status = status
@@ -958,8 +958,8 @@ class BaseDataTablesDataSource(ListView):
         """must be overridden in child class"""
         self.columns = ()
         raise NotImplementedError
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def set_orderings(self):
         n_orderings = int(self.request.GET.get("iSortingCols", 0))
 
@@ -1008,8 +1008,8 @@ class BaseDataTablesDataSource(ListView):
         per_page = int(self.request.GET.get("iDisplayLength", 100))
         offset = int(self.request.GET.get("iDisplayStart", 0))
         self.cur_page_objects = self.filtered_objects[offset:offset+per_page]
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def tabulate_data(self):
         self.table_data = []
         for obj in self.cur_page_objects:
@@ -1030,8 +1030,8 @@ class BaseDataTablesDataSource(ListView):
         else:
             context.update(table_data)
             return self.get_template_context_data(context)
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def get_table_context_data(self, base_context):
 
         all_objects = base_context["object_list"]
@@ -1057,8 +1057,8 @@ class BaseDataTablesDataSource(ListView):
     #----------------------------------------------------------------------
     def get_page_title(self):
         return "Generic Data Tables Template View"
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def get_template_context_data(self, context):
         context["page_title"] = self.get_page_title()
         return context
@@ -1104,8 +1104,8 @@ class UTCList(BaseDataTablesDataSource):
         template = get_template("qa/testlistinstance_work_completed.html")
         c = Context({"instance": utc.last_instance})
         return template.render(c)
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def get_last_instance_review_status(self, utc):
         template = get_template("qa/testlistinstance_review_status.html")
         c = Context({"instance": utc.last_instance, "perms": PermWrapper(self.request.user), "request": self.request})
@@ -1114,8 +1114,8 @@ class UTCList(BaseDataTablesDataSource):
     #----------------------------------------------------------------------
     def get_last_instance_pass_fail(self, utc):
         return qa_tags.as_pass_fail_status(utc.last_instance)
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def get_queryset(self):
 
         qs = super(UTCList, self).get_queryset().filter(
@@ -1233,8 +1233,8 @@ class FrequencyList(UTCList):
             q |= Q(frequency=None)
 
         return qs.filter(q).distinct()
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def get_page_title(self):
         return ",".join([x.name if x else "ad-hoc" for x in self.frequencies]) + " Test Lists"
 
@@ -1250,8 +1250,8 @@ class UnitFrequencyList(FrequencyList):
         qs = super(UnitFrequencyList, self).get_queryset()
         self.units = Unit.objects.filter(number__in=self.kwargs["unit_number"].split("/"))
         return qs.filter(unit__in=self.units)
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def get_page_title(self):
         title = ", ".join([x.name for x in self.units])
         title += " " + ", ".join([x.name if x else "ad-hoc" for x in self.frequencies]) + " Test Lists"
@@ -1318,8 +1318,8 @@ class TestListInstances(BaseDataTablesDataSource):
         template = get_template("qa/testlistinstance_work_completed.html")
         c = Context({"instance": tli})
         return template.render(c)
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def get_review_status(self, tli):
         template = get_template("qa/testlistinstance_review_status.html")
         c = Context({"instance": tli, "perms": PermWrapper(self.request.user)})
@@ -1346,8 +1346,8 @@ class UTCInstances(TestListInstances):
 class InProgress(TestListInstances):
     """view for grouping all test lists with a certain frequency for all units"""
     queryset = models.TestListInstance.objects.in_progress
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def get_page_title(self):
         return "In Progress Test Lists"
 
@@ -1357,8 +1357,8 @@ class InProgress(TestListInstances):
 class Unreviewed(TestListInstances):
     """view for grouping all test lists with a certain frequency for all units"""
     queryset = models.TestListInstance.objects.unreviewed
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def get_page_title(self):
         return "Unreviewed Test Lists"
 
@@ -1380,8 +1380,8 @@ class ExportToCSV(View):
 class DueDateOverview(TemplateView):
     """Overall status of the QA Program"""
     template_name = "qa/overview_by_due_date.html"
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def get_queryset(self):
 
         qs = models.UnitTestCollection.objects.filter(
@@ -1456,8 +1456,8 @@ class DueDateOverview(TemplateView):
 class Overview(TemplateView):
     """Overall status of the QA Program"""
     template_name = "qa/overview.html"
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def get_queryset(self):
 
         qs = models.UnitTestCollection.objects.filter(
