@@ -7,18 +7,16 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
-from django.forms.models import inlineformset_factory
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import get_object_or_404
 from django.core.urlresolvers import reverse
-from django.core.paginator import Paginator
 from django.template import Context
 from django.contrib.auth.context_processors import PermWrapper
 from django.template.loader import get_template
 
-from django.views.generic import ListView, UpdateView, View, TemplateView, CreateView, DetailView
+from django.views.generic import ListView, UpdateView, View, TemplateView, CreateView
 from django.utils.translation import ugettext as _
-from django.utils import timezone, formats
+from django.utils import timezone
 
 from qatrack.qa import models, utils
 from qatrack.qa.templatetags import qa_tags
@@ -31,7 +29,6 @@ logger = logging.getLogger(__name__)
 
 import forms
 import math
-import os
 import textwrap
 
 CONTROL_CHART_AVAILABLE = True
@@ -39,7 +36,6 @@ try:
     from qatrack.qa.control_chart import control_chart
     from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
     from matplotlib.figure import Figure
-    from matplotlib.dates import DateFormatter
     import numpy
 except ImportError:
     CONTROL_CHART_AVAILABLE = False
