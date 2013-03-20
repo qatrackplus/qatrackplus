@@ -648,8 +648,8 @@ class TestUnitTestCollection(TestCase):
     def test_manager_test_lists(self):
         utc = utils.create_unit_test_collection()
         self.assertListEqual(list(models.UnitTestCollection.objects.test_lists()), [utc])
-
     #---------------------------------------------------------------------------
+
     def test_due_date(self):
 
         now = timezone.now()
@@ -712,8 +712,8 @@ class TestUnitTestCollection(TestCase):
         tli.save()
         utc = models.UnitTestCollection.objects.get(pk=utc.pk)
         self.assertTrue(utils.datetimes_same(timezone.localtime(utc.due_date).date(), now.date()))
-
     #---------------------------------------------------------------------------
+    
     def test_cycle_due_date(self):
         test_lists = [utils.create_test_list(name="test list %d" % i) for i in range(2)]
         for i, test_list in enumerate(test_lists):
@@ -785,8 +785,26 @@ class TestUnitTestCollection(TestCase):
             tli = utils.create_test_list_instance(unit_test_collection=utc, work_completed=wc)
             utc = models.UnitTestCollection.objects.get(pk=utc.pk)
             self.assertEqual(utc.due_status(), due_status)
-    #----------------------------------------------------------------------
+    #---------------------------------------------------------------------------
+    def test_set_due_date(self):
 
+        due_date = timezone.now()+ timezone.timedelta(days=1)
+        utc = utils.create_unit_test_collection()
+        utc.set_due_date(due_date)
+        self.assertEqual(utc.due_date,due_date)
+
+    #---------------------------------------------------------------------------
+    def test_set_due_date_none(self):
+        now = timezone.now()
+        utc = utils.create_unit_test_collection()
+        tli = utils.create_test_list_instance(unit_test_collection=utc, work_completed=now)
+        utc = models.UnitTestCollection.objects.get(pk=utc.pk)
+        utc.set_due_date()
+        due =  now+ timezone.timedelta(utc.frequency.due_interval)
+
+        self.assertEqual(utc.due_date,due)
+        
+    #----------------------------------------------------------------------
     def test_last_done_date(self):
         now = timezone.now()
         utc = utils.create_unit_test_collection()

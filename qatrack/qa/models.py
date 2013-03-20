@@ -798,6 +798,7 @@ class UnitTestCollection(models.Model):
         if due_date is not None:
             # use update here instead of save so post_save and pre_save signals are not
             # triggered
+            self.due_date = due_date
             UnitTestCollection.objects.filter(pk=self.pk).update(due_date=due_date)
     #----------------------------------------------------------------------
 
