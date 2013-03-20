@@ -1,9 +1,5 @@
-from django.contrib.auth.decorators import permission_required
 from django.conf.urls.defaults import patterns, include, url
-from django.views.generic.simple import direct_to_template
-from django.views.generic import ListView
 
-import models
 import views
 from qatrack.decorators import custom_permission_required as cpr
 from qatrack.qa import api
