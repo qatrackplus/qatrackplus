@@ -1,6 +1,6 @@
 import ldap
 from django.conf import settings
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User
 
 #stripped down version of http://djangosnippets.org/snippets/901/
 class ActiveDirectoryGroupMembershipSSLBackend:
@@ -44,9 +44,6 @@ class ActiveDirectoryGroupMembershipSSLBackend:
 
                 # search
                 result = l.search_ext_s(settings.AD_SEARCH_DN,ldap.SCOPE_SUBTREE,"sAMAccountName=%s" % username,settings.AD_SEARCH_FIELDS)[0][1]
-
-                # Validate that they are a member of review board group
-                membership = result.get('memberOf',None)
 
                 # get personal info
                 mail = result.get("mail",[None])[0]
