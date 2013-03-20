@@ -403,7 +403,7 @@ class CompositeCalculation(JSONResponseMixin, View):
                 result = self.calculation_context["result"]
                 results[slug] = {'value': result, 'error': None}
                 self.calculation_context[slug] = result
-            except Exception as e:
+            except Exception:
                 results[slug] = {'value': None, 'error': "Invalid Test"}
             finally:
                 if "result" in self.calculation_context:
@@ -507,10 +507,7 @@ class ChooseUnit(ListView):
         return context
 
 
-from django.db import connection
 #============================================================================
-
-
 class PerformQA(CreateView):
     """view for users to complete a qa test list"""
 
@@ -628,7 +625,6 @@ class PerformQA(CreateView):
 
             if self.object.work_completed is None:
                 self.object.work_completed = timezone.make_aware(timezone.datetime.now(), timezone=timezone.get_current_timezone())
-            from django.db import connection
 
             self.object.save()
 
@@ -1478,19 +1474,10 @@ class Overview(TemplateView):
     def get_context_data(self):
         context = super(Overview, self).get_context_data()
         qs = self.get_queryset()
-        now = timezone.localtime(timezone.datetime.now())
-
-        today = now.date()
-        friday = today + timezone.timedelta(days=(4-today.weekday()) % 7)
-        next_friday = friday + timezone.timedelta(days=7)
-        month_end = timezone.datetime(now.year, now.month, calendar.mdays[now.month]).date()
-        next_month_start = month_end + timezone.timedelta(days=1)
-        next_month_end = timezone.datetime(next_month_start.year, next_month_start.month, calendar.mdays[next_month_start.month]).date()
 
         units = Unit.objects.order_by("number")
         frequencies = list(models.Frequency.objects.order_by("nominal_interval"))+[None]
 
-        due = collections.defaultdict(list)
         unit_lists = []
 
         for unit in units:
