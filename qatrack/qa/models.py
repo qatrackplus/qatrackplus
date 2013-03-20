@@ -8,8 +8,7 @@ from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 from django.dispatch import receiver
-from django.db.models.signals import pre_save, post_save, post_delete, m2m_changed
-from django.db.models import signals
+from django.db.models.signals import pre_save, post_save, post_delete
 from django.utils import timezone
 
 
@@ -1300,7 +1299,6 @@ def on_test_list_instance_saved(*args, **kwargs):
 @receiver(post_delete, sender=TestListInstance)
 def on_test_list_instance_deleted(*args, **kwargs):
     """update last_instance if available"""
-    test_list_instance = kwargs["instance"]
     update_last_instances(kwargs["instance"])
 
 
