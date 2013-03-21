@@ -1281,7 +1281,7 @@ class TestListInstances(BaseDataTablesDataSource):
         self.columns = (
             (self.get_actions, None, None),
             (lambda x: x.unit_test_collection.unit.name, "unit_test_collection__unit__name__exact", "unit_test_collection__unit__number"),
-            (lambda x: x.unit_test_collection.frequency.name, "unit_test_collection__frequency__name__exact", "unit_test_collection__frequency__name"),
+            (lambda x: x.unit_test_collection.frequency.name if x.unit_test_collection.frequency else "Ad-Hoc", "unit_test_collection__frequency__name__exact", "unit_test_collection__frequency__name"),
             (lambda x: x.test_list.name, "test_list__name__icontains", "test_list__name"),
             (self.get_work_completed, None, "work_completed"),
             (lambda x: x.created_by.username, "created_by__username__icontains", "created_by__username"),
