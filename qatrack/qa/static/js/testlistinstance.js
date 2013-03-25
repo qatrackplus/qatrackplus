@@ -3,9 +3,10 @@
 function init_test_list_instance_tables(units, frequencies){
 
     var unit_names = _.pluck(units[0].objects,"name");
-    var freq_names = _.pluck(frequencies[0].objects,"name");
+    var freq_names = _.map(frequencies[0].objects,function(e){return {value:e.id,label:e.name};});
+    freq_names.push({value:null,label:"Ad hoc"});
 
-    var pagination = [$("#total_records").val(),$("#filtered_records").val()];
+    var pagination = [$("#filtered_records").val(),$("#total_records").val()];
 
     var cols = [
         {bSortable:false},
@@ -38,9 +39,9 @@ function init_test_list_instance_tables(units, frequencies){
         fnAdjustColumnSizing:false,
         bFilter:true,
         bPaginate:true,
-        bSaveState:true,/*save sort/filter state*/
-        iDeferLoading:pagination,
+        bStateSave:true, /*remember filter/sort state on page load*/
         iDisplayLength:50,
+        iDeferLoading:pagination,
         aaSorting:[[1,"asc"],[4,"desc"]],
         aoColumns:cols,
         sDom: '<"row-fluid"<"span6"ir><"span6"p>>t<"row-fluid"<"span12"lp>>',

@@ -4,10 +4,11 @@
 function init_test_collection_tables(units, frequencies, groups){
     /*pagination_info is array like [total_records, num_filtered_records]*/
     var unit_names = _.pluck(units[0].objects,"name");
-    var freq_names = _.pluck(frequencies[0].objects,"name");
+    var freq_names = _.map(frequencies[0].objects,function(e){return {value:e.id,label:e.name};});
+    freq_names.push({value:null,label:"Ad hoc"});
     var group_names = _.pluck(groups[0].objects,"name");
 
-    var pagination = [$("#total_records").val(),$("#filtered_records").val()];
+    var pagination = [$("#filtered_records").val(),$("#total_records").val()];
 
     var cols = [
         {bSortable:false},

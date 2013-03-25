@@ -1,6 +1,8 @@
 import collections
 import json
 import calendar
+import urllib
+
 from api import ValueResource
 
 from django.conf import settings
@@ -953,7 +955,7 @@ class BaseDataTablesDataSource(ListView):
 
     #----------------------------------------------------------------------
     def set_orderings(self):
-        n_orderings = int(self.request.GET.get("iSortingCols", 0))
+        n_orderings = int(self.search_filter_context.get("iSortingCols", 0))
 
         if n_orderings == 0:
             self.orderings = self.initial_orderings
@@ -961,8 +963,8 @@ class BaseDataTablesDataSource(ListView):
 
         order_cols = []
         for x in range(n_orderings):
-            col = int(self.request.GET.get("iSortCol_%d" % x))
-            direction = "" if self.request.GET.get("sSortDir_%d" % x, "asc") == "asc" else "-"
+            col = int(self.search_filter_context.get("iSortCol_%d" % x))
+            direction = "" if self.search_filter_context.get("sSortDir_%d" % x, "asc") == "asc" else "-"
             order_cols.append((col, direction))
 
         self.orderings = []
@@ -978,10 +980,15 @@ class BaseDataTablesDataSource(ListView):
     #----------------------------------------------------------------------
     def set_filters(self):
         self.filters = []
+
         for col, (display, search, ordering) in enumerate(self.columns):
 
-            search_term = self.request.GET.get("sSearch_%d" % col)
+            search_term = self.search_filter_context.get("sSearch_%d" % col)
+
             if search and search_term:
+                if search_term == "null":
+                    search_term = None
+
                 if not isinstance(search, basestring):
                     f = None
                     for s, ct in search:
@@ -994,11 +1001,10 @@ class BaseDataTablesDataSource(ListView):
                 else:
                     f = Q(**{search: search_term})
                 self.filters.append(f)
-
     #----------------------------------------------------------------------
     def set_current_page_objects(self):
-        per_page = int(self.request.GET.get("iDisplayLength", 100))
-        offset = int(self.request.GET.get("iDisplayStart", 0))
+        per_page = int(self.search_filter_context.get("iDisplayLength", 100))
+        offset = int(self.search_filter_context.get("iDisplayStart", 0))
         self.cur_page_objects = self.filtered_objects[offset:offset+per_page]
 
     #----------------------------------------------------------------------
@@ -1024,13 +1030,51 @@ class BaseDataTablesDataSource(ListView):
             return self.get_template_context_data(context)
 
     #----------------------------------------------------------------------
+    def set_search_filter_context(self):
+        """create a search and filter context, overridng any cookie values
+        with request values"""
+
+        self.search_filter_context = {}
+
+        try:
+            for k,v in self.request.COOKIES.items():
+                if k.startswith("SpryMedia_DataTables"):
+                    break
+            else:
+                raise KeyError
+
+            cookie_filters = json.loads(urllib.unquote(v))
+
+            for idx, search in enumerate(cookie_filters["aoSearchCols"]):
+                for k,v in search.items():
+                    self.search_filter_context["%s_%d"%(k,idx)] = v
+
+            self.search_filter_context["iSortingCols"] = 0
+            for idx, (col,dir_,_) in enumerate(cookie_filters["aaSorting"]):
+                self.search_filter_context["iSortCol_%d" %(idx)] = col
+                self.search_filter_context["sSortDir_%d" %(idx)] = dir_
+                self.search_filter_context["iSortingCols"] += 1
+
+            self.search_filter_context["iDisplayLength"] = cookie_filters["iLength"]
+            self.search_filter_context["iDisplayStart"] = cookie_filters["iStart"]
+            self.search_filter_context["iDisplayEnd"] = cookie_filters["iEnd"]
+
+        except KeyError:
+            pass
+
+        self.search_filter_context.update(self.request.GET.dict())
+
+    #----------------------------------------------------------------------
     def get_table_context_data(self, base_context):
 
         all_objects = base_context["object_list"]
 
+        self.set_search_filter_context()
+
         self.set_columns()
-        self.set_filters()
         self.set_orderings()
+        self.set_filters()
+
 
         self.filtered_objects = all_objects.filter(*self.filters).order_by(*self.orderings)
 
@@ -1041,7 +1085,7 @@ class BaseDataTablesDataSource(ListView):
             "data": self.table_data,
             "iTotalRecords": all_objects.count(),
             "iTotalDisplayRecords": self.filtered_objects.count(),
-            "sEcho": self.request.GET.get("sEcho"),
+            "sEcho": self.search_filter_context.get("sEcho"),
         }
 
         return context
@@ -1077,7 +1121,7 @@ class UTCList(BaseDataTablesDataSource):
             ),
             (qa_tags.as_due_date, None, None),
             (lambda x: x.unit.name, "unit__name__exact", "unit__number"),
-            (lambda x: x.frequency.name if x.frequency else "Ad Hoc", "frequency__name__exact", "frequency__due_interval"),
+            (lambda x: x.frequency.name if x.frequency else "Ad Hoc", "frequency", "frequency__due_interval"),
 
             (lambda x: x.assigned_to.name, "assigned_to__name__icontains", "assigned_to__name"),
             (self.get_last_instance_work_completed, None, "last_instance__work_completed"),
@@ -1281,7 +1325,7 @@ class TestListInstances(BaseDataTablesDataSource):
         self.columns = (
             (self.get_actions, None, None),
             (lambda x: x.unit_test_collection.unit.name, "unit_test_collection__unit__name__exact", "unit_test_collection__unit__number"),
-            (lambda x: x.unit_test_collection.frequency.name if x.unit_test_collection.frequency else "Ad-Hoc", "unit_test_collection__frequency__name__exact", "unit_test_collection__frequency__name"),
+            (lambda x: x.unit_test_collection.frequency.name if x.unit_test_collection.frequency else "Ad-Hoc", "unit_test_collection__frequency", "unit_test_collection__frequency"),
             (lambda x: x.test_list.name, "test_list__name__icontains", "test_list__name"),
             (self.get_work_completed, None, "work_completed"),
             (lambda x: x.created_by.username, "created_by__username__icontains", "created_by__username"),
@@ -1353,6 +1397,7 @@ class Unreviewed(TestListInstances):
     #----------------------------------------------------------------------
     def get_page_title(self):
         return "Unreviewed Test Lists"
+
 
 #============================================================================
 
