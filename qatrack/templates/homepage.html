@@ -10,16 +10,26 @@
     <h1>{% trans "Welcome to QATrack+" %}</h1>
     <p>Please choose one of the following available items</p>
 
+    <h3>Perform QA</h3>
     <ul>
         <li>
             <a title="Choose a Unit to perform qa on" href="{% url choose_unit %}">Choose a Unit to perform QA for</a>
         </li>
 
         <li>
-            <a title="View available test lists to perform" href="{% url all_lists %}">View QA Test Lists for all units</a>
+            <a title="View available test lists to perform" href="{% url all_lists %}">View All Test Lists Available to Perform</a>
+        </li>
+    </ul>
+
+    {% if perms.qa.can_review or perms.qa.can_view_history %}
+
+    <h3>Review QA</h3>
+    {% if perms.qa.can_review %}
+    <ul>
+        <li>
+            <a title="Choose a Unit to review qa for" href="{% url choose_review_unit %}">Choose a Unit to review QA for</a>
         </li>
 
-        {% if perms.qa.can_review %}
         <li>
             <a title="Review data" href="{% url unreviewed %}">View QA data awaiting review</a>
         </li>
@@ -31,5 +41,7 @@
         </li>
         {% endif %}
     </ul>
+
+    {% endif %}
 
  {% endblock %}
