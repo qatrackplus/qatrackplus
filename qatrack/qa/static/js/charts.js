@@ -272,48 +272,48 @@ function convert_data_to_highchart_series(data){
 				tolerance_low.push([date,series.tol_low[idx],series.act_low[idx]]);
 				tolerance_high.push([date,series.tol_high[idx],series.act_high[idx]]);
 
-			});
+		});
 
-			hc_series.push({
-				name:series.unit.name+" " +series.test.name,
-				data:series_data,
-				showInLegend:true,
-				lineWidth : get_line_width(),
-				fillOpacity:1,
-				color:series_color,
-				marker : {
-					enabled : true,
-					radius : 4
-				}
-			});
-
-			if ($("#show-references").is(":checked")){
-				hc_series.push({
-					name:series.unit.name+" " +series.test.name + " References",
-					data:ref_data,
-					lineWidth : 2,
-					dashStyle:"ShortDash",
-					color:series_color,
-					fillOpacity:1,
-					marker : {
-						enabled : false
-					},
-					showInLegend:true,
-					enableMouseTracking:true
-				});
+		hc_series.push({
+			name:series.unit.name+" " +series.test.name,
+			data:series_data,
+			showInLegend:true,
+			lineWidth : get_line_width(),
+			fillOpacity:1,
+			color:series_color,
+			marker : {
+				enabled : true,
+				radius : 4
 			}
-			var tol_color = 'rgba(255, 255, 17, 0.2)';
-			var act_color = 'rgba(46, 217, 49, 0.2)';
+		});
 
-			if ($("#show-tolerances").is(":checked")){
-				hc_series.push({
-					data:tolerance_high,
-					type:'arearange',
-					lineWidth:0,
-					fillColor: tol_color,
-					name:series.unit.name+" " +series.test.name + " Tol High",
-					showInLegend:false,
-					enableMouseTracking:false
+		if ($("#show-references").is(":checked")){
+			hc_series.push({
+				name:series.unit.name+" " +series.test.name + " References",
+				data:ref_data,
+				lineWidth : 2,
+				dashStyle:"ShortDash",
+				color:series_color,
+				fillOpacity:1,
+				marker : {
+					enabled : false
+				},
+				showInLegend:true,
+				enableMouseTracking:true
+			});
+		}
+		var tol_color = 'rgba(255, 255, 17, 0.2)';
+		var act_color = 'rgba(46, 217, 49, 0.2)';
+
+		if ($("#show-tolerances").is(":checked")){
+			hc_series.push({
+				data:tolerance_high,
+				type:'arearange',
+				lineWidth:0,
+				fillColor: tol_color,
+				name:series.unit.name+" " +series.test.name + " Tol High",
+				showInLegend:false,
+				enableMouseTracking:true
 			});
 
 			hc_series.push({
@@ -323,7 +323,10 @@ function convert_data_to_highchart_series(data){
 				fillColor: act_color,
 				name:series.unit.name+" " +series.test.name + " OK",
 				showInLegend:false,
-				enableMouseTracking:false
+				enableMouseTracking:true,
+				toolTipOptions :{
+					formatter:function(){return "foobar";}
+				}
 			});
 			hc_series.push({
 				data:tolerance_low,
@@ -332,12 +335,12 @@ function convert_data_to_highchart_series(data){
 				lineWidth:0,
 				name:series.unit.name+" " +series.test.name + " Tol Low",
 				showInLegend:false,
-				enableMouseTracking:false
+				enableMouseTracking:true
 			});
 
 		}
 
-    });
+	});
     return hc_series;
 }
 
@@ -346,6 +349,11 @@ function convert_data_to_highchart_series(data){
 function create_stockchart(data){
 
 	var prev_range = window.chart.rangeSelector ? window.chart.rangeSelector.selected:"";
+
+	var show_tol = $("#show-tolerances").is(":checked");
+	var show_ref = $("#show-references").is(":checked");
+
+	var ntests = QAUtils.get_checked("#test-container").length;
 
     window.chart = new Highcharts.StockChart({
         chart : {
@@ -367,11 +375,31 @@ function create_stockchart(data){
         },
         tooltip: {
 			formatter:function(){
-				var i,s,tt='';
+				var i,j,s,r,tl,th,ah,al,tt='';
+				j = 0;
+				for (i=0; i < ntests;i++){
+					s = this.points[j].series;
+					tt += '<span style="color:'+s.color+'">'+s.name+'</span>: <b>'+ QAUtils.format_float(this.points[j].y) + '</b>';
+					j += 1;
 
-				for (i=0; i < this.points.length;i++){
-					s = this.points[i].series;
-					tt += '<span style="color:'+s.color+'">'+s.name+'</span>: <b>'+ QAUtils.format_float(this.y) + '</b><br/>';
+					if (show_ref){
+						tt+= " <br/> Reference = "+QAUtils.format_float(this.points[j].y);
+						j += 1;
+					}
+
+					if (show_tol && !_.isUndefined(this.points[j].point) && !_.isUndefined(this.points[j+2])){
+						ah = this.points[j].point.high
+						th = this.points[j].point.low;
+						al = this.points[j+2].point.high
+						tl = this.points[j+2].point.low;
+
+						tt+= " <br/>AL = " + QAUtils.format_float(al);
+						tt+= " TL = " + QAUtils.format_float(tl);
+						tt+= " TH = " + QAUtils.format_float(th);
+						tt+= " AH = " + QAUtils.format_float(ah);
+						j += 3;
+					}
+					tt += "<br/>";
 				}
 				return tt;
 			}
