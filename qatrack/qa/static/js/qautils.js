@@ -24,6 +24,7 @@ var QAUtils = new function() {
     this.WITHIN_TOL_DISP =  "OK";
     this.TOLERANCE_DISP = "TOL";
     this.ACTION_DISP = "ACT";
+    this.FAIL_DISP = "FAIL";
     this.NOT_DONE_DISP = "Not Done";
     this.NO_TOL_DISP = "No Tol Set";
 
@@ -122,65 +123,80 @@ var QAUtils = new function() {
         return measured - reference;
     };
 
-    this.test_tolerance = function(value, reference, tolerances, test_type){
+    this.test_tolerance = function(value, reference, tolerances, test_type, pass_fail_only){
         //compare a value to a reference value and check whether it is
         //within tolerances or not.
         //Return an object with a 'diff' and 'result' value
         var diff;
         var status, gen_status;
         var message;
-
+        var result;
+        
         if (test_type === this.BOOLEAN){
-            return this.test_bool(value, reference);
+            result = this.test_bool(value, reference);
         }else if  (test_type === this.MULTIPLE_CHOICE){
-            return this.test_multi(value,tolerances)
-        }
-
-        if ( !this.is_number(reference) || !tolerances.type){
-            return {
-                status:this.NO_TOL,
-                gen_status:this.NO_TOL,
-                diff:"",
-                message: this.NO_TOL_DISP
-            };
-        }
-
-        if (tolerances.type === this.PERCENT){
-            diff = this.percent_difference(value,reference);
-            message = "(" + diff.toFixed(1)+"%)";
-
+            result = this.test_multi(value,tolerances)
         }else{
-            diff = this.absolute_difference(value,reference);
-            message = "(" + diff.toFixed(2)+")";
+
+            if ( !this.is_number(reference) || !tolerances.type){
+                result = {
+                    status:this.NO_TOL,
+                    gen_status:this.NO_TOL,
+                    diff:"",
+                    message: this.NO_TOL_DISP
+                };
+            }else{
+    
+                if (tolerances.type === this.PERCENT){
+                    diff = this.percent_difference(value,reference);
+                    message = "(" + diff.toFixed(1)+"%)";
+        
+                }else{
+                    diff = this.absolute_difference(value,reference);
+                    message = "(" + diff.toFixed(2)+")";
+                }
+        
+                var right_at_tolerance = this.almost_equal(tolerances.tol_low,diff) || this.almost_equal(tolerances.tol_high,diff);
+                var right_at_low_action = this.almost_equal(tolerances.act_low,diff);
+                var right_at_high_action = this.almost_equal(tolerances.act_high,diff);
+        
+                if ( right_at_tolerance || ((tolerances.tol_low <= diff) && (diff <= tolerances.tol_high))){
+                    status = this.WITHIN_TOL;
+                    gen_status = this.WITHIN_TOL;
+                    message = this.WITHIN_TOL_DISP + message;
+                }else if (right_at_low_action || ((tolerances.act_low <= diff) && (diff <= tolerances.tol_low))){
+                    status = this.TOL_LOW;
+                    gen_status = this.TOLERANCE;
+                    message = this.TOLERANCE_DISP + message;
+                }else if (right_at_high_action || ((tolerances.tol_high <= diff) && (diff <= tolerances.act_high))){
+                    status = this.TOL_HIGH;
+                    message = this.TOLERANCE_DISP + message;
+                    gen_status = this.TOLERANCE;
+                }else if (diff <= tolerances.act_low){
+                    status = this.ACT_LOW;
+                    message = this.ACTION_DISP + message;
+                    gen_status = this.ACTION;
+                }else{
+                    status = this.ACT_HIGH;
+                    message = this.ACTION_DISP + message;
+                    gen_status = this.ACTION;
+                }
+        
+                result = {status:status, gen_status:gen_status, diff:diff, message:message};
+            }
         }
-
-        var right_at_tolerance = this.almost_equal(tolerances.tol_low,diff) || this.almost_equal(tolerances.tol_high,diff);
-        var right_at_low_action = this.almost_equal(tolerances.act_low,diff);
-        var right_at_high_action = this.almost_equal(tolerances.act_high,diff);
-
-        if ( right_at_tolerance || ((tolerances.tol_low <= diff) && (diff <= tolerances.tol_high))){
-            status = this.WITHIN_TOL;
-            gen_status = this.WITHIN_TOL;
-            message = this.WITHIN_TOL_DISP + message;
-        }else if (right_at_low_action || ((tolerances.act_low <= diff) && (diff <= tolerances.tol_low))){
-            status = this.TOL_LOW;
-            gen_status = this.TOLERANCE;
-            message = this.TOLERANCE_DISP + message;
-        }else if (right_at_high_action || ((tolerances.tol_high <= diff) && (diff <= tolerances.act_high))){
-            status = this.TOL_HIGH;
-            message = this.TOLERANCE_DISP + message;
-            gen_status = this.TOLERANCE;
-        }else if (diff <= tolerances.act_low){
-            status = this.ACT_LOW;
-            message = this.ACTION_DISP + message;
-            gen_status = this.ACTION;
-        }else{
-            status = this.ACT_HIGH;
-            message = this.ACTION_DISP + message;
-            gen_status = this.ACTION;
+        if (pass_fail_only){
+            if (result.gen_status === this.ACTION){
+                result.message = this.FAIL_DISP;
+            }else if (result.gen_status === this.TOLERANCE || result.gen_status === this.NO_TOL){
+                result.message = this.WITHIN_TOL_DISP;
+                result.gen_status = this.WITHIN_TOL;
+            }else{
+                result.message = this.WITHIN_TOL_DISP;
+            }
+            
         }
-
-        return {status:status, gen_status:gen_status, diff:diff, message:message};
+        return result;        
     };
 
     this.test_bool = function(value,reference){
@@ -203,10 +219,10 @@ var QAUtils = new function() {
             }else{
                 status = this.ACT_HIGH;
             }
-            message = "FAIL";
+            message = this.ACTION_DISP;
             gen_status = this.ACTION;
         }else{
-            message = "PASS";
+            message = this.WITHIN_TOL_DISP;
             gen_status = this.WITHIN_TOL;
         }
 
@@ -230,13 +246,13 @@ var QAUtils = new function() {
 
         if (tolerance.mc_pass_choices.indexOf(value)>=0){
             gen_status = this.WITHIN_TOL;
-            message = "PASS";
+            message = this.WITHIN_TOL_DISP;
         }else if (tolerance.mc_tol_choices.indexOf(value)>=0){
             gen_status = this.TOLERANCE;
-            message = "TOL";
+            message = this.TOLERANCE_DISP;
         }else{
             gen_status = this.ACTION;
-            message = "FAIL";
+            message = this.ACTION_DISP;
         }
 
         return {status:status, gen_status:gen_status, diff:diff, message:message};

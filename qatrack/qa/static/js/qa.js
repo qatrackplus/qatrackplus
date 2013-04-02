@@ -5,6 +5,7 @@
 var context = $("#perform-qa-table")[0];
 var test_statuses = $("td.qa-status",context);
 var fail_warnings = $("#do-not-treat-bottom, #do-not-treat-top");
+var pass_fail_only = $("#pass-fail-only").val() === "yes" ? true : false;
 
 /***************************************************************/
 //Set up the values we will need to do validation on data
@@ -117,7 +118,7 @@ function check_test_status(name){
     var tolerances = validation_data[name].tolerances;
     var reference = validation_data[name].reference;
 
-    var result = QAUtils.test_tolerance(val,reference.value,tolerances, test_type);
+    var result = QAUtils.test_tolerance(val,reference.value,tolerances, test_type,pass_fail_only);
 
     //update formatting with result
     qastatus.text(result.message);

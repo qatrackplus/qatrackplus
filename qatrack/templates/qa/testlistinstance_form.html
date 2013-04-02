@@ -83,6 +83,9 @@
 
             {% csrf_token %}
             <input type="hidden" id="contains-composites" value="no"/>
+            
+            <input type="hidden" id="pass-fail-only" value="{% if perms.qa.can_view_ref_tol %}no{% else %}yes{% endif %}"/>
+            
             <div id="admin_controls" class="well">
 
                 {# display any form errors up top #}
