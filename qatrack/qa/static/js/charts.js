@@ -383,7 +383,7 @@ function create_stockchart(data){
 					j += 1;
 
 					if (show_ref){
-						tt+= " <br/> Reference = "+QAUtils.format_float(this.points[j].y);
+						tt+= " <br/><em>Ref = "+QAUtils.format_float(this.points[j].y)+"</em>";
 						j += 1;
 					}
 
@@ -392,11 +392,13 @@ function create_stockchart(data){
 						th = this.points[j].point.low;
 						al = this.points[j+2].point.high
 						tl = this.points[j+2].point.low;
-
-						tt+= " <br/>AL = " + QAUtils.format_float(al);
+						if (!show_ref){
+							tt+= "<br/>";
+						}
+						tt+= "<em> AL = " + QAUtils.format_float(al);
 						tt+= " TL = " + QAUtils.format_float(tl);
 						tt+= " TH = " + QAUtils.format_float(th);
-						tt+= " AH = " + QAUtils.format_float(ah);
+						tt+= " AH = " + QAUtils.format_float(ah) +"</em>";
 						j += 3;
 					}
 					tt += "<br/>";
