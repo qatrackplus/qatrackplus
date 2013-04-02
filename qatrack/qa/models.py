@@ -1362,7 +1362,10 @@ class TestListCycle(TestCollectionInterface):
         if not test_list:
             return self.first()
 
-        inp_membership = self.testlistcyclemembership_set.get(test_list=test_list)
+        try:
+            inp_membership = self.testlistcyclemembership_set.get(test_list=test_list)
+        except TestListCycleMembership.DoesNotExist:
+            return self.first()
 
         if inp_membership.order >= (len(self) - 1):
             return self.first()
