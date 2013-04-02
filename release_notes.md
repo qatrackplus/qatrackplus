@@ -146,8 +146,8 @@ This release has a number of small features and bug fixes included.
 
 ## Release Checklist ##
 
-* run pep8 and fix errors
 * run pyflakes and fix errors
+* run pep8 and fix errors
 * Run test suite one last time :)
 * Bump version number
 * Update README.md with latest version number
