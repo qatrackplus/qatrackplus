@@ -1367,10 +1367,10 @@ class TestListCycle(TestCollectionInterface):
         except TestListCycleMembership.DoesNotExist:
             return self.first()
 
-        if inp_membership.order >= (len(self) - 1):
+        try:
+            return self.testlistcyclemembership_set.get(order=inp_membership.order+1).test_list
+        except TestListCycleMembership.DoesNotExist:
             return self.first()
-
-        return self.testlistcyclemembership_set.get(order=inp_membership.order+1).test_list
 
     #----------------------------------------------------------------------
     def __unicode__(self):
