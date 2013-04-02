@@ -1362,12 +1362,15 @@ class TestListCycle(TestCollectionInterface):
         if not test_list:
             return self.first()
 
-        inp_membership = self.testlistcyclemembership_set.get(test_list=test_list)
-
-        if inp_membership.order >= (len(self) - 1):
+        try:
+            inp_membership = self.testlistcyclemembership_set.get(test_list=test_list)
+        except TestListCycleMembership.DoesNotExist:
             return self.first()
 
-        return self.testlistcyclemembership_set.get(order=inp_membership.order+1).test_list
+        try:
+            return self.testlistcyclemembership_set.get(order=inp_membership.order+1).test_list
+        except TestListCycleMembership.DoesNotExist:
+            return self.first()
 
     #----------------------------------------------------------------------
     def __unicode__(self):

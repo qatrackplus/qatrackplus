@@ -847,7 +847,6 @@ class TestUnitTestCollection(TestCase):
         ti.save()
         self.assertEqual([tli], list(utc.unreviewed_instances()))
     #----------------------------------------------------------------------
-
     def test_last_completed_instance(self):
         utc = utils.create_unit_test_collection()
         self.assertFalse(utc.unreviewed_instances())
@@ -864,8 +863,8 @@ class TestUnitTestCollection(TestCase):
         ti.test_list_instance = tli
         ti.save()
         self.assertEqual(tli, utc.last_instance)
+        
     #----------------------------------------------------------------------
-
     def test_unreview_test_instances(self):
         utc = utils.create_unit_test_collection()
         self.assertFalse(utc.unreviewed_instances())
@@ -956,6 +955,23 @@ class TestUnitTestCollection(TestCase):
             self.assertEqual(utc.get_list(i), test_list)
 
         self.assertEqual(utc.get_list(), test_lists[0])
+    #----------------------------------------------------------------------
+    def test_cycle_delete_day(self):
+
+        test_lists = [utils.create_test_list(name="test list %d" % i) for i in range(2)]
+        for i, test_list in enumerate(test_lists):
+            test = utils.create_test(name="test %d" % i)
+            utils.create_test_list_membership(test_list, test)
+
+        cycle = utils.create_cycle(test_lists=test_lists)
+        utc = utils.create_unit_test_collection(test_collection=cycle)
+
+        self.assertEqual(utc.next_list(), test_lists[0])
+        tli = utils.create_test_list_instance(unit_test_collection=utc, test_list=test_lists[0])
+        
+        membership = cycle.testlistcyclemembership_set.get(test_list=tli.test_list)
+        membership.delete()
+        self.assertEqual(cycle.next_list(tli.test_list),cycle.first())
 
     #----------------------------------------------------------------------
     def test_name(self):
