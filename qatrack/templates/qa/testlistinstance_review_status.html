@@ -4,7 +4,7 @@
         <abbr title="Started {{instance.work_started}} by {{instance.created_by}}"><em>In Progress</em></abbr>
     {% else %}
         {% if perms.qa.can_review %}
-            <a class="pull-right" title="Review this session" href="{% url review_test_list_instance instance.pk %}?next={{request.path}}"><i class="icon-zoom-in"></i></a>
+            <a class="pull-right" title="Review this session" href="{% url review_test_list_instance instance.pk %}?next={{request.path|cut:"data/"}}"><i class="icon-zoom-in"></i></a>
         {% endif %}
         {{instance|as_review_status}}
     {% endif %}
