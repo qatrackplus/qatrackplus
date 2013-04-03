@@ -24,7 +24,10 @@ class Migration(SchemaMigration):
         if 'sql_server' in engine:
             sql_server_idxs = (('qa_testlist', 'name'), ('qa_testlistcycle', 'name'),)
             for table_name, column_name in sql_server_idxs:
-                db.drop_index(table_name, column_name)
+                try:
+                    db.drop_index(table_name, column_name)
+                except:
+                    pass
                 # sqlserver_utils.drop_index(db,table_name,column_name)
 
         # Changing field 'TestList.name'
