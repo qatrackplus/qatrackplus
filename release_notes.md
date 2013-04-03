@@ -18,6 +18,7 @@ Thank you to Eric Reynard and Darcy Mason for their bug reports.
   when [assigned to a Unit](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/admin/assign_to_unit.md) (allows for ad-hoc Tests)
 * new management command `auto_schedule` (see [wiki](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/admin/auto-schedule.md))
 * Selecting a different day in a Test List Cycle  no longer requires you to click *Go*
+* When references aren't visible, Users will only be shown 'OK' or 'FAIL' instead of 'OK', 'TOL' or 'ACT'
 * Minor improvements to the charts page layout
 * Reference values are now included in data displayed on chart page
 * Test List description can now be displayed on the page when
