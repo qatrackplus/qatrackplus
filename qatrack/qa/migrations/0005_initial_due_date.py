@@ -12,7 +12,7 @@ class Migration(DataMigration):
         # Note: Remember to use orm['appname.ModelName'] rather than "from appname.models..."
         from qatrack.qa import utils
         from django.utils import timezone
-        for utc in orm["qa.UnitTestCollection"].objects.all():
+        for utc in list(orm["qa.UnitTestCollection"].objects.all()):
             if utc.last_instance and utc.auto_schedule:
                 utc.frequency.due_delta = lambda: timezone.timedelta(days=utc.frequency.due_interval)
                 utc.due_date = utils.due_date(utc.last_instance, utc.frequency)
