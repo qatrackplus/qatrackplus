@@ -379,7 +379,7 @@ function create_stockchart(data){
 				j = 0;
 				for (i=0; i < ntests;i++){
 					s = this.points[j].series;
-					tt += '<span style="color:'+s.color+'">'+s.name+'</span>: <b>'+ QAUtils.format_float(this.points[j].y) + '</b>';
+					tt += '<span style="color:'+s.color+'"><strong>'+s.name+'</strong></span>: <b>'+ QAUtils.format_float(this.points[j].y) + '</b>';
 					j += 1;
 
 					if (show_ref){
