@@ -1,5 +1,5 @@
 from django.conf.urls.defaults import patterns, include, url
-from django.views.generic.simple import direct_to_template
+from django.views.generic.base import TemplateView
 
 from django.contrib import admin
 admin.autodiscover()
@@ -8,11 +8,7 @@ import settings
 
 urlpatterns = patterns('',
 
-    url(r'^$', direct_to_template, {
-        'template': "homepage.html",
-        'extra_context': {},
-        }, name='home'
-        ),
+    url(r'^$', TemplateView.as_view(template_name="homepage.html"), name="home"),
 
     url(r'^accounts/logout/$', 'django.contrib.auth.views.logout', {'next_page': settings.LOGIN_URL}),
 
