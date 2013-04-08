@@ -10,9 +10,6 @@ $(document).ready(function(){
 		$("#test-list-info").toggle(600);
 	});
 	$("#bulk-status").live('change',function(){
-		$("#bulk-status").attr("title",$("#bulk-status :selected").attr("title") || "Choose a status");
-	});
-	$("#apply-status").live("click",function(){
 		var val = $("#bulk-status").val();
 		if (val !== ""){
 			$("input.test-selected:checked").parents("tr").find("select").val(val);
