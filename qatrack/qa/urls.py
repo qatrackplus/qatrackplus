@@ -26,7 +26,7 @@ for resource in resources:
     v1_api.register(resource)
 
 can_view_history = cpr("qa.can_view_history")
-can_edit = cpr("qa.change_testinstance")
+can_edit = cpr("qa.change_testinstance") 
 
 urlpatterns = patterns('',
 
@@ -50,16 +50,16 @@ urlpatterns = patterns('',
                        url(r"^review/due-dates/$", can_view_history(views.DueDateOverview.as_view()), name="overview_due_dates"),
 
                        # review utc's
-                       url(r"^review/all/(?P<data>data/)?$", can_view_history(views.UTCReview.as_view()), name="review_all"),
-                       url(r"^review/utc/(?P<pk>\d+)/(?P<data>data/)?$", can_view_history(views.UTCInstances.as_view()), name="review_utc"),
-                       url(r"^review/frequency/$", can_view_history(views.ChooseFrequencyForReview.as_view()), name="choose_review_frequency"),
-                       url(r"^review/frequency/(?P<frequency>[/\w-]+?)/(?P<data>data/)?$", can_view_history(views.UTCFrequencyReview.as_view()), name="review_by_frequency"),
-                       url(r"^review/unit/$", can_view_history(views.ChooseUnitForReview.as_view()), name="choose_review_unit"),
-                       url(r"^review/unit/(?P<unit_number>[/\d]+)/(?P<data>data/)?$", can_view_history(views.UTCUnitReview.as_view()), name="review_by_unit"),
+                       url(r"^review/all/(?P<data>data/)?$", can_edit(views.UTCReview.as_view()), name="review_all"),
+                       url(r"^review/utc/(?P<pk>\d+)/(?P<data>data/)?$", can_edit(views.UTCInstances.as_view()), name="review_utc"),
+                       url(r"^review/frequency/$", can_edit(views.ChooseFrequencyForReview.as_view()), name="choose_review_frequency"),
+                       url(r"^review/frequency/(?P<frequency>[/\w-]+?)/(?P<data>data/)?$", can_edit(views.UTCFrequencyReview.as_view()), name="review_by_frequency"),
+                       url(r"^review/unit/$", can_edit(views.ChooseUnitForReview.as_view()), name="choose_review_unit"),
+                       url(r"^review/unit/(?P<unit_number>[/\d]+)/(?P<data>data/)?$", can_edit(views.UTCUnitReview.as_view()), name="review_by_unit"),
 
                        # test list instances
-                       url(r"^session/details/(?P<data>data/)?$", can_view_history(views.TestListInstances.as_view()), name="complete_instances"),
-                       url(r"^session/details/(?P<pk>\d+)/$", can_view_history(views.ReviewTestListInstance.as_view()), name="review_test_list_instance"),
+                       url(r"^session/details/(?P<data>data/)?$", can_edit(views.TestListInstances.as_view()), name="complete_instances"),
+                       url(r"^session/details/(?P<pk>\d+)/$", can_edit(views.ReviewTestListInstance.as_view()), name="review_test_list_instance"),
                        url(r"^session/unreviewed/(?P<data>data/)?$", can_view_history(views.Unreviewed.as_view()), name="unreviewed"),
                        url(r"^session/in-progress/(?P<data>data/)?$", views.InProgress.as_view(), name="in_progress"),
                        url(r"^session/edit/(?P<pk>\d+)/$", can_edit(views.EditTestListInstance.as_view()), name="edit_tli"),
