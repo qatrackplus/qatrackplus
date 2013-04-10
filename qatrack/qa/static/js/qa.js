@@ -45,7 +45,7 @@ function initialize_qa(){
             name:context_name,
             tolerances:tolerances,
             reference:reference,
-            current_value: get_value_for_test(name)
+            current_value: get_value_for_test(context_name)
         };
 
     }
@@ -71,7 +71,7 @@ function calculate_composites(){
         qavalues:JSON.stringify(validation_data),
         composite_ids:JSON.stringify(composite_ids)
     };
-
+    console.log(data);
     var on_success = function(data){
         submit.attr("disabled", false);
 
