@@ -71,7 +71,7 @@ function calculate_composites(){
         qavalues:JSON.stringify(validation_data),
         composite_ids:JSON.stringify(composite_ids)
     };
-    console.log(data);
+    
     var on_success = function(data){
         submit.attr("disabled", false);
 

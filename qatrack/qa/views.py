@@ -772,7 +772,7 @@ class BaseEditTestListInstance(UpdateView):
     def get_context_data(self, **kwargs):
 
         context = super(BaseEditTestListInstance, self).get_context_data(**kwargs)
-
+        
         # we need to override the default queryset for the formset so that we can pull
         # in all the reference/tolerance data without the ORM generating 100's of queries
         self.test_instances = models.TestInstance.objects.filter(
@@ -868,7 +868,6 @@ class EditTestListInstance(BaseEditTestListInstance):
             ti_form.in_progress = form.instance.in_progress
 
         if formset.is_valid():
-
             self.object = form.save(commit=False)
             self.update_test_list_instance()
 
@@ -893,7 +892,7 @@ class EditTestListInstance(BaseEditTestListInstance):
     def update_test_list_instance(self):
         self.object.created_by = self.request.user
         self.object.modified_by = self.request.user
-
+      
         if self.object.work_completed is None:
             self.object.work_completed = timezone.make_aware(timezone.datetime.now(), timezone=timezone.get_current_timezone())
 
