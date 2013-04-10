@@ -12,8 +12,6 @@ import models
 BOOL_CHOICES = [(0, "No"), (1, "Yes")]
 
 #====================================================================================
-
-
 class UserFormsetMixin(object):
     """A mixin to add a user object to every form in a formset (and the formset itself)"""
 
@@ -32,8 +30,6 @@ class UserFormsetMixin(object):
             self.forms.append(f)
 
 #============================================================================
-
-
 class TestInstanceWidgetsMixin(object):
     #----------------------------------------------------------------------
     def clean(self):
@@ -245,7 +241,12 @@ class BaseTestListInstanceForm(forms.ModelForm):
                 self.errors[field][0] += " %s" % settings.DATETIME_HELP
 
         work_started = cleaned_data.get("work_started")
-        work_completed = cleaned_data.get("work_completed")
+        work_completed = cleaned_data.get("work_completed") 
+
+        # keep previous work completed date if present
+        if not work_completed and self.instance:
+            work_completed = self.instance.work_completed
+            cleaned_data["work_completed"] = work_completed 
 
         if work_started and work_completed:
 
