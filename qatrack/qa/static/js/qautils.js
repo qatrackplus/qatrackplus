@@ -583,26 +583,5 @@ var QAUtils = new function() {
     };
 
 
-    //call using $.when() before using QAUTils in any scripts
-    //e.g. in a script where you want to use QAUTils you would do
-    // $.when(QAUTils.init()).done(function(){
-    //	   do_things_requiring_QAUtils();
-    //})
-    this.init = function(){
-        var that = this;
-
-        this.get_resources("status",function(results){
-            $.each(results.objects,function(idx,status){
-                that.STATUSES[status.slug] = status;
-            });
-        });
-
-        return this.get_resources("frequency",function(results){
-            $.each(results.objects,function(idx,freq){
-                that.FREQUENCIES[freq.slug] = freq;
-            });
-        });
-
-    };
 }();
 
