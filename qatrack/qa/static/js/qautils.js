@@ -334,21 +334,6 @@ var QAUtils = new function() {
         return parseFloat(val).toPrecision(6);
     }
 
-    //return a string representation of an instance value
-    this.format_instance_value= function(instance){
-        var s;
-        if (instance.skipped){
-            s = "<em>Skipped</em>";
-        }else if (instance.test.type === this.BOOLEAN){
-            s = Math.abs(instance.value -1.) < this.EPSILON ? "Yes" : "No";
-        }else if (instance.test.type === this.MULTIPLE_CHOICE){
-            s = instance.test.choices.split(',')[instance.value];
-        }else{
-            s = this.format_float(instance.value);
-        }
-        return s;
-    };
-
 
     this.clean_numerical_value = function(value){
 
