@@ -1357,7 +1357,7 @@ class TestListInstances(BaseDataTablesDataSource):
     #----------------------------------------------------------------------
     def get_review_status(self, tli):
         template = get_template("qa/testlistinstance_review_status.html")
-        c = Context({"instance": tli, "perms": PermWrapper(self.request.user)})
+        c = Context({"instance": tli, "perms": PermWrapper(self.request.user), "request":self.request})
         return template.render(c)
 
 
