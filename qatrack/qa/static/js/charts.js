@@ -264,18 +264,35 @@ function convert_data_to_highchart_series(data){
         var tolerance_high = [],tolerance_low=[],ok=[];
         var series_color = next_color();
 
+        var name =series.unit.name+" " +series.test.name;
+
         $.each(series.dates,function(idx,date){
                 date = QAUtils.parse_iso8601_date(date).getTime();
-                series_data.push([date,series.values[idx]]);
-                ref_data.push([date,series.references[idx]]);
-                ok.push([date,series.tol_low[idx],series.tol_high[idx]]);
-                tolerance_low.push([date,series.tol_low[idx],series.act_low[idx]]);
-                tolerance_high.push([date,series.tol_high[idx],series.act_high[idx]]);
+                var display = '<span style="color:'+series_color+'"><strong>'+name+'</strong></span>: <b>'+ QAUtils.format_float(series.values[idx]) + '</b>';
+                
+                if (!_.isNull(series.references[idx])){
+                    display += "<br/><em>Ref:" + QAUtils.format_float(series.references[idx])+"</em>";
+                }
 
+                if (!_.isNull(series.act_low[idx])){
+                    if (_.isNull(series.references[idx])){
+                        display += "<br/>";
+                    }
+                    display += " <em>Act Low: " + QAUtils.format_float(series.act_low[idx]);
+                    display +=         " Tol Low: " + QAUtils.format_float(series.tol_low[idx]);
+                    display +=         " Tol High: " + QAUtils.format_float(series.tol_high[idx]);
+                    display +=         " Act High: " + QAUtils.format_float(series.act_high[idx])+"</em>";
+                }
+                series_data.push({name:display,x:date,y:series.values[idx]});
+                ref_data.push({name:"",x:date,y:series.references[idx]});
+                ok.push({name:"",x:date,low:series.tol_low[idx],high:series.tol_high[idx]});
+                tolerance_low.push({name:"",x:date,low:series.tol_low[idx],high:series.act_low[idx]});
+                tolerance_high.push({name:"",x:date,low:series.tol_high[idx],high:series.act_high[idx]});
         });
 
         hc_series.push({
-            name:series.unit.name+" " +series.test.name,
+            name:name,
+            number:idx,
             data:series_data,
             showInLegend:true,
             lineWidth : get_line_width(),
@@ -287,58 +304,53 @@ function convert_data_to_highchart_series(data){
             }
         });
 
-        if ($("#show-references").is(":checked")){
-            hc_series.push({
-                name:series.unit.name+" " +series.test.name + " References",
-                data:ref_data,
-                lineWidth : 2,
-                dashStyle:"ShortDash",
-                color:series_color,
-                fillOpacity:1,
-                marker : {
-                    enabled : false
-                },
-                showInLegend:true,
-                enableMouseTracking:true
-            });
-        }
+        hc_series.push({
+            name:name + " References",
+            data:ref_data,
+            lineWidth : 2,
+            dashStyle:"ShortDash",
+            color:series_color,
+            fillOpacity:1,
+            marker : {
+                enabled : false
+            },
+            showInLegend:true,
+            enableMouseTracking:false
+        });
+ 
         var tol_color = 'rgba(255, 255, 17, 0.2)';
         var act_color = 'rgba(46, 217, 49, 0.2)';
 
-        if ($("#show-tolerances").is(":checked")){
-            hc_series.push({
-                data:tolerance_high,
-                type:'arearange',
-                lineWidth:0,
-                fillColor: tol_color,
-                name:series.unit.name+" " +series.test.name + " Tol High",
-                showInLegend:false,
-                enableMouseTracking:true
-            });
+        hc_series.push({
+            data:tolerance_high,
+            type:'arearange',
+            lineWidth:0,
+            fillColor: tol_color,
+            name:name+" Tol High",
+            showInLegend:false,
+            enableMouseTracking:false
+        });
 
-            hc_series.push({
-                data:ok,
-                type:'arearange',
-                lineWidth:0,
-                fillColor: act_color,
-                name:series.unit.name+" " +series.test.name + " OK",
-                showInLegend:false,
-                enableMouseTracking:true,
-                toolTipOptions :{
-                    formatter:function(){return "foobar";}
-                }
-            });
-            hc_series.push({
-                data:tolerance_low,
-                type:'arearange',
-                fillColor: tol_color,
-                lineWidth:0,
-                name:series.unit.name+" " +series.test.name + " Tol Low",
-                showInLegend:false,
-                enableMouseTracking:true
-            });
+        hc_series.push({
+            data:ok,
+            type:'arearange',
+            lineWidth:0,
+            fillColor: act_color,
+            name:name + " OK",
+            showInLegend:false,
+            enableMouseTracking:false
+        });
+        hc_series.push({
+            data:tolerance_low,
+            type:'arearange',
+            fillColor: tol_color,
+            lineWidth:0,
+            name:name+ " Tol Low",
+            showInLegend:false,
+            enableMouseTracking:false
+        });
 
-        }
+    
 
     });
     return hc_series;
@@ -373,38 +385,13 @@ function create_stockchart(data){
         xAxis:{
             ordinal: false
         },
-        tooltip: {
-            formatter:function(){
-                var i,j,s,r,tl,th,ah,al,tt='';
-                j = 0;
-                for (i=0; i < ntests;i++){
-                    s = this.points[j].series;
-                    tt += '<span style="color:'+s.color+'"><strong>'+s.name+'</strong></span>: <b>'+ QAUtils.format_float(this.points[j].y) + '</b>';
-                    j += 1;
-
-                    if (show_ref && !_.isUndefined(this.points[j]) ){
-                        tt+= " <br/><em>Ref = "+QAUtils.format_float(this.points[j].y)+"</em>";
-                        j += 1;
-                    }
-
-                    if (show_tol && !_.isUndefined(this.points[j]) && !_.isUndefined(this.points[j+2])){
-                        ah = this.points[j].point.high
-                        th = this.points[j].point.low;
-                        al = this.points[j+2].point.high
-                        tl = this.points[j+2].point.low;
-                        if (!show_ref){
-                            tt+= "<br/>";
-                        }
-                        tt+= "<em> AL = " + QAUtils.format_float(al);
-                        tt+= " TL = " + QAUtils.format_float(tl);
-                        tt+= " TH = " + QAUtils.format_float(th);
-                        tt+= " AH = " + QAUtils.format_float(ah) +"</em>";
-                        j += 3;
-                    }
-                    tt += "<br/>";
-                }
-                return tt;
-            }
+        tooltip:{
+ 
+            formatter: function() {
+                var tip = _.pluck(this.points,"key").join("<br/>");
+                return tip;
+            },
+            useHTML:true
         },
         series : data
     });
