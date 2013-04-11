@@ -2,12 +2,6 @@
 
 var QAUtils = new function() {
 
-    this.ACT_COLOR = "#b94a48";
-    this.TOL_COLOR = "#f89406";
-    this.OK_COLOR = "#468847";
-    this.NOT_DONE_COLOR = "#3a87ad";
-    this.REVIEW_COLOR = "#D9EDF7";
-
     this.ACT_LOW = "act_low";
     this.TOL_LOW = "tol_low";
     this.TOL_HIGH = "tol_high";
@@ -371,18 +365,6 @@ var QAUtils = new function() {
         return this.qa_displays[pass_fail.toLowerCase()] || "";
     };
 
-    //return an appropriate colour for a given pass_fail status
-    this.qa_colors = {};
-    this.qa_colors[this.ACTION] = this.ACT_COLOR;
-    this.qa_colors[this.TOLERANCE] = this.TOL_COLOR;
-    this.qa_colors[this.WITHIN_TOL] = this.OK_COLOR;
-    this.qa_colors[this.NOT_DONE] = this.NOT_DONE_COLOR;
-    this.qa_colors[this.NO_TOL] = this.NOT_DONE_COLOR;
-    this.qa_colors[""] = this.NOT_DONE_COLOR;
-    this.qa_color = function(pass_fail){
-        return this.qa_colors[pass_fail.toLowerCase()] || "";
-
-    };
     /********************************************************************/
     //AJAX calls
 
