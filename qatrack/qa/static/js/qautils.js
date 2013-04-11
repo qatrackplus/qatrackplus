@@ -582,52 +582,6 @@ var QAUtils = new function() {
         return new Date(ms);
     };
 
-    this.format_date = function(d,with_time){
-        var date = [d.getDate(), this.MONTHS[d.getMonth()], d.getFullYear()];
-        if (with_time){
-            date.push(d.getHours()+':'+d.getMinutes());
-        }
-        return date.join(" ");
-    };
-    this.milliseconds_to_days = function(ms){
-        return ms/(1000*60*60*24);
-    };
-    this.compare_due_date_delta = function(delta,due,overdue){
-        if (delta < due){
-            return this.NOT_DUE;
-        }else if ((delta == due) || (delta < overdue )){
-            return this.DUE;
-        }
-        return this.OVERDUE;
-    };
-    this.due_status = function(last_done,test_frequency){
-        last_done.setHours(0,0,0,0)
-
-        var today = new Date().setHours(0,0,0,0);
-        var delta_time = last_done - today; //in ms
-        if (delta_time > 0){
-            return this.NOT_DUE;
-        }
-        var delta_days = Math.floor(Math.abs(this.milliseconds_to_days(delta_time)));
-        var due,overdue;
-
-        var frequency = this.FREQUENCIES[test_frequency];
-
-        return this.compare_due_date_delta(delta_days,frequency.due_interval,frequency.overdue_interval);
-    };
-
-    this.set_due_status_color = function(elem,last_done,frequency){
-        var status;
-
-        if (last_done === null){
-            status = this.OK;
-        }else{
-            status = this.due_status(last_done,frequency);
-        }
-
-        $(elem).removeClass([this.ACTION, this.TOLERANCE, this.OK].join(" "));
-        $(elem).addClass(status);
-    };
 
     this.make_select = function(id,cls,options){
         var l = [];
