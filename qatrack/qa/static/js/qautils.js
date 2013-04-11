@@ -493,9 +493,6 @@ var QAUtils = new function() {
     this.non_empty = function(arr){
         return	arr.filter(function(elem,idx){return elem !== "";});
     };
-    this.intersection = function(a1,a2){
-        return $(a1).filter(function(idx,elem){return $.inArray(elem,a2)>=0;});
-    };
 
 
     this.options_from_url_hash = function(hash){
