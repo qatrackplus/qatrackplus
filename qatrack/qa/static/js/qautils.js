@@ -490,11 +490,6 @@ var QAUtils = new function() {
     };
 
 
-    this.non_empty = function(arr){
-        return	arr.filter(function(elem,idx){return elem !== "";});
-    };
-
-
     this.options_from_url_hash = function(hash){
         var options = [];
         if (hash.slice(0,1) === "#"){

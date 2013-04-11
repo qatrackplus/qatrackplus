@@ -33,8 +33,8 @@ function initialize_qa(){
             tol_low:parseFloat(row.find(".tol_low").val()),
             tol_high:parseFloat(row.find(".tol_high").val()),
             act_high:parseFloat(row.find(".act_high").val()),
-            mc_pass_choices:QAUtils.non_empty(row.find(".mc_pass_choices").val().split(',')),
-            mc_tol_choices:QAUtils.non_empty(row.find(".mc_tol_choices").val().split(',')),
+            mc_pass_choices:_.compact(row.find(".mc_pass_choices").val().split(',')),
+            mc_tol_choices:_.compact(row.find(".mc_tol_choices").val().split(',')),
             type:row.find(".qa-tolerance-type").val(),
             pk:row.find(".qa-tolerance-pk").val()
 
