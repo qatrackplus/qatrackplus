@@ -405,23 +405,6 @@ var QAUtils = new function() {
         });
     };
 
-    //get resources for a given resource name
-    this.get_resources = function(resource_name,callback, data){
-
-        //make sure limit option is set
-        if (data === null || data === undefined){
-            data = {limit:0};
-        }else if (!data.hasOwnProperty("limit")){
-            data["limit"] = 0;
-        }
-
-        //default to json format
-        if (!data.hasOwnProperty("format")){
-            data["format"] = "json";
-        }
-
-        return this.call_api(this.API_URL+resource_name,"GET",data,callback );
-    };
 
     //values for a group of tests
     this.test_values = function(options,callback){
