@@ -424,15 +424,6 @@ var QAUtils = new function() {
         }
     };
 
-    this.get_selected_option_vals = function(select_id){
-        var selected = [];
-
-        $(select_id).find(":selected").each(function(){
-            selected.push(parseInt($(this).val()));
-        });
-        return selected;
-    };
-
 
     this.options_from_url_hash = function(hash){
         var options = [];
