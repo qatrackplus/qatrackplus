@@ -583,17 +583,6 @@ var QAUtils = new function() {
     };
 
 
-    this.default_exported_statuses = function(){
-        var exported = [];
-        var status;
-        for (status in this.STATUSES){
-            if (this.STATUSES[status].export_by_default){
-                exported.push(status)
-            }
-        }
-        return exported;
-    };
-
     //call using $.when() before using QAUTils in any scripts
     //e.g. in a script where you want to use QAUTils you would do
     // $.when(QAUTils.init()).done(function(){
