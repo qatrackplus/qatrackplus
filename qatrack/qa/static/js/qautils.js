@@ -386,8 +386,6 @@ var QAUtils = new function() {
     /********************************************************************/
     //AJAX calls
 
-    /********************************************************************/
-    //API calls
     this.call_api = function(url,method,data,success_callback,error_callback){
         return $.ajax({
             type:method,
@@ -405,14 +403,6 @@ var QAUtils = new function() {
         });
     };
 
-
-    //values for a group of tests
-    this.test_values = function(options,callback){
-        if (!options.hasOwnProperty("limit")){
-            options["limit"] = 0;
-        }
-        return this.call_api(this.API_URL+"grouped_values","GET",options,callback );
-    };
 
     //*************************************************************
     //General
