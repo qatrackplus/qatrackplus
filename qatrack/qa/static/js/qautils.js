@@ -131,7 +131,7 @@ var QAUtils = new function() {
         var status, gen_status;
         var message;
         var result;
-        
+
         if (test_type === this.BOOLEAN){
             result = this.test_bool(value, reference);
         }else if  (test_type === this.MULTIPLE_CHOICE){
@@ -146,20 +146,20 @@ var QAUtils = new function() {
                     message: this.NO_TOL_DISP
                 };
             }else{
-    
+
                 if (tolerances.type === this.PERCENT){
                     diff = this.percent_difference(value,reference);
                     message = "(" + diff.toFixed(1)+"%)";
-        
+
                 }else{
                     diff = this.absolute_difference(value,reference);
                     message = "(" + diff.toFixed(2)+")";
                 }
-        
+
                 var right_at_tolerance = this.almost_equal(tolerances.tol_low,diff) || this.almost_equal(tolerances.tol_high,diff);
                 var right_at_low_action = this.almost_equal(tolerances.act_low,diff);
                 var right_at_high_action = this.almost_equal(tolerances.act_high,diff);
-        
+
                 if ( right_at_tolerance || ((tolerances.tol_low <= diff) && (diff <= tolerances.tol_high))){
                     status = this.WITHIN_TOL;
                     gen_status = this.WITHIN_TOL;
@@ -181,7 +181,7 @@ var QAUtils = new function() {
                     message = this.ACTION_DISP + message;
                     gen_status = this.ACTION;
                 }
-        
+
                 result = {status:status, gen_status:gen_status, diff:diff, message:message};
             }
         }
@@ -194,9 +194,9 @@ var QAUtils = new function() {
             }else{
                 result.message = this.WITHIN_TOL_DISP;
             }
-            
+
         }
-        return result;        
+        return result;
     };
 
     this.test_bool = function(value,reference){
@@ -403,20 +403,6 @@ var QAUtils = new function() {
                 error_callback(result,status, jqXHR,this.url);
             }
         });
-    };
-
-    //update all instances in instance_uris with a given status
-    this.set_test_instances_status = function(instance_uris,status,callback){
-        var objects = $.map(instance_uris,function(uri){
-            return {resource_uri:uri,status:status};
-        });
-
-        return this.call_api(
-            this.API_URL+"values/",
-            "PATCH",
-            JSON.stringify({objects:objects}),
-            callback
-        );
     };
 
     //get resources for a given resource name
