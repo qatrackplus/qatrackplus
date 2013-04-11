@@ -489,14 +489,6 @@ var QAUtils = new function() {
         return selected;
     };
 
-    this.zip = function(a1,a2){
-        var ii;
-        var zipped = [];
-        for (ii=0;ii<a1.length;ii++){
-            zipped.push([a1[ii],a2[ii]]);
-        }
-        return zipped;
-    };
 
     this.non_empty = function(arr){
         return	arr.filter(function(elem,idx){return elem !== "";});
