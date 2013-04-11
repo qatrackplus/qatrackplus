@@ -177,7 +177,7 @@ function get_value_for_test(name){
 //set the value of an input by using it's name
 function set_value_by_name(name, value){
     var input = $("#value-"+name+" input");
-    if (QAUtils.is_number(value)){
+    if (_.isNumber(value)){
         value =QAUtils.format_float(value);
     }
     input.val(value);

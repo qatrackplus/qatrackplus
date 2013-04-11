@@ -138,7 +138,7 @@ var QAUtils = new function() {
             result = this.test_multi(value,tolerances)
         }else{
 
-            if ( !this.is_number(reference) || !tolerances.type){
+            if ( !_.isNumber(reference) || !tolerances.type){
                 result = {
                     status:this.NO_TOL,
                     gen_status:this.NO_TOL,
@@ -200,7 +200,7 @@ var QAUtils = new function() {
     };
 
     this.test_bool = function(value,reference){
-        if ( !this.is_number(reference)){
+        if ( !_.isNumber(reference)){
             return {
                 status:this.NO_TOL,
                 gen_status:this.NO_TOL,
@@ -497,9 +497,6 @@ var QAUtils = new function() {
         return $(a1).filter(function(idx,elem){return $.inArray(elem,a2)>=0;});
     };
 
-    this.is_number = function(n){
-        return !isNaN(parseFloat(n)) && isFinite(n);
-    };
 
     this.options_from_url_hash = function(hash){
         var options = [];
