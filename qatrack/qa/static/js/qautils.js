@@ -452,9 +452,6 @@ var QAUtils = new function() {
         return '<a href="'+url+'" title="'+title+'">'+text+'</a>';
     };
 
-    this.instance_has_ref_tol = function(instance){
-        return (instance.reference !== null) && (instance.tolerance !== null);
-    };
 
     //*********************************************************************
     //Date/Time Functions
