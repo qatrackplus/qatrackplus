@@ -354,16 +354,6 @@ var QAUtils = new function() {
 
     };
 
-    //return an appropriate display for a given pass_fail status
-    this.qa_displays = {};
-    this.qa_displays[this.ACTION] = this.ACTION_DISP;
-    this.qa_displays[this.TOLERANCE] = this.TOLERANCE_DISP;
-    this.qa_displays[this.WITHIN_TOL] = this.WITHIN_TOL_DISP;
-    this.qa_displays[this.NOT_DONE] = this.NOT_DONE_DISP;
-    this.qa_displays[this.NO_TOL] = this.NO_TOL_DISP;
-    this.qa_display = function(pass_fail){
-        return this.qa_displays[pass_fail.toLowerCase()] || "";
-    };
 
     /********************************************************************/
     //AJAX calls
