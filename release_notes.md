@@ -72,10 +72,7 @@ From the git bash shell in the root directory of your QATrack+ project
 1. python manage syncdb
 1. python manage.py migrate
 1. python manage.py collectstatic
-1. python manage.py auto_schedule schedule-all
 
-The last step will set all of the initial due dates and is required *unless*
-you want to set them all manually.
 
 ## v0.2.5 ##
 
