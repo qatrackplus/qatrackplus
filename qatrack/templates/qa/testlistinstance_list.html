@@ -14,9 +14,26 @@
 
     <div class="row-fluid" >
         <div class="span12 container form-inline">
-			<input type="hidden" id="total_records" value="{{iTotalRecords}}"/>
-			<input type="hidden" id="filtered_records" value="{{iTotalDisplayRecords}}"/>
+            <input type="hidden" id="total_records" value="{{iTotalRecords}}"/>
+            <input type="hidden" id="filtered_records" value="{{iTotalDisplayRecords}}"/>
 
+            <!-- datatables pagination placeholder. Gets deleted just before datatables renders--> 
+            <div class="row-fluid" id="pagination-placeholder">
+                <div class="span6">
+                    <div class="dataTables_info" id="DataTables_Table_0_info">
+                        <em>Loading table info...</em>
+                    </div>
+                </div>
+                <div class="span6">
+                    <div class="dataTables_paginate paging_bootstrap pagination">
+                        <ul>
+                            <li class="prev disabled"><a href="#">? Previous</a></li>
+                            <li class="active"><a href="#">1</a></li>
+                            <li class="next disabled"><a href="#">Next ? </a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
             <table id="testlistinstance-table" class="table table-bordered table-striped table-condensed test-list-instance-table">
 
                 <thead>
@@ -42,13 +59,13 @@
                     </tr>
                 </thead>
                 <tbody>
-					{% for row in data %}
-						<tr>
-							{% for col in row %}
-								<td>{{col}}</td>
-							{% endfor %}
-						</tr>
-					{% endfor %}
+                    {% for row in data %}
+                        <tr>
+                            {% for col in row %}
+                                <td>{{col}}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
                 </tbody>
                 <tfoot>
                     <tr>

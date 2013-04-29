@@ -439,3 +439,7 @@ h3.overview-unit-title{
   width: 80px;
 
 }
+
+#pagination-placeholder {
+    min-height:50px;
+}
