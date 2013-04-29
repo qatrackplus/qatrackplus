@@ -259,8 +259,20 @@ class Tolerance(models.Model):
     tol_high = models.FloatField(verbose_name=_("Tolerance High"), help_text=_("Value of upper tolerance level"), null=True, blank=True)
     act_high = models.FloatField(verbose_name=_("Action High"), help_text=_("Value of upper action level"), null=True, blank=True)
 
-    mc_pass_choices = models.CharField(verbose_name=_("Multiple Choice Pass Values"), max_length=2048, help_text=_("Comma seperated list of choices that are considered passing"), null=True, blank=True)
-    mc_tol_choices = models.CharField(verbose_name=_("Multiple Choice Tolerance Values"), max_length=2048, help_text=_("Comma seperated list of choices that are considered at tolerance"), null=True, blank=True)
+    mc_pass_choices = models.CharField(
+            verbose_name=_("Multiple Choice Pass Values"),
+            max_length=2048,
+            help_text=_("Comma seperated list of choices that are considered passing"),
+            null=True,
+            blank=True,
+    )
+    mc_tol_choices = models.CharField(
+        verbose_name=_("Multiple Choice Tolerance Values"),
+        max_length=2048,
+        help_text=_("Comma seperated list of choices that are considered at tolerance"),
+        null=True,
+        blank=True,
+    )
 
     # who created this tolerance
     created_date = models.DateTimeField(auto_now_add=True)
