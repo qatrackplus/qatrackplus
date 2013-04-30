@@ -49,7 +49,7 @@ class TestInstanceWidgetsMixin(object):
         elif value is not None and skipped:
             self._errors["value"] = self.error_class(["Clear value if skipping"])
 
-        if not self.user.has_perm("can_skip_without_comment") and skipped and not comment:
+        if not self.user.has_perm("qa.can_skip_without_comment") and skipped and not comment:
             self._errors["skipped"] = self.error_class(["Please add comment when skipping"])
             del cleaned_data["skipped"]
 
