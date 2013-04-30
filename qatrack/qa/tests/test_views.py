@@ -181,21 +181,8 @@ class TestControlImage(TestCase):
     #----------------------------------------------------------------------
     def setUp(self):
         self.factory = RequestFactory()
-        self.old_cc_available = views.CONTROL_CHART_AVAILABLE
-
         self.view = views.ControlChartImage.as_view()
         self.url = reverse("control_chart")
-    #----------------------------------------------------------------------
-
-    def tearDown(self):
-        views.CONTROL_CHART_AVAILABLE = self.old_cc_available
-
-    #----------------------------------------------------------------------
-    def test_cc_not_available(self):
-        views.CONTROL_CHART_AVAILABLE = False
-        from django.http import Http404
-        request = self.factory.get(self.url)
-        self.assertRaises(Http404, self.view, request)
 
     #----------------------------------------------------------------------
     def test_not_enough_data(self):

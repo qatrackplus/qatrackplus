@@ -9,3 +9,6 @@ python-dateutil>=1.5
 python-ntlm>=1.0.1
 pytz>=2012c
 South>=0.7.6
+numpy>=1.6.2
+scipy>=0.10.0
+matplotlib>=1.0.1

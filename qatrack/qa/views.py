@@ -34,21 +34,11 @@ import forms
 import math
 import textwrap
 
-CONTROL_CHART_AVAILABLE = True
-try:
-    from qatrack.qa.control_chart import control_chart
-    from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-    from matplotlib.figure import Figure
-    import numpy
-except ImportError:
-    CONTROL_CHART_AVAILABLE = False
-
-try:
-    import numpy
-    import scipy
-    SCIPY_AVAILABLE = True
-except:
-    SCIPY_AVAILABLE = False
+from qatrack.qa.control_chart import control_chart
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib.figure import Figure
+import numpy
+import scipy
 
 
 class JSONResponseMixin(object):
@@ -70,7 +60,6 @@ class JSONResponseMixin(object):
 
 
 #============================================================================
-
 class ChartView(TemplateView):
     """view for creating charts/graphs from data"""
     template_name = "qa/charts.html"
@@ -135,7 +124,6 @@ class ChartView(TemplateView):
         test_data = self.create_test_data()
 
         c = {
-            "cc_available": CONTROL_CHART_AVAILABLE,
             "from_date": timezone.now().date()-timezone.timedelta(days=365),
             "to_date": timezone.now().date()+timezone.timedelta(days=1),
             "frequencies": models.Frequency.objects.all(),
@@ -307,8 +295,6 @@ class ControlChartImage(BaseChartView):
 
     #----------------------------------------------------------------------
     def render_to_response(self, context):
-        if not CONTROL_CHART_AVAILABLE:
-            raise Http404
 
         fig = Figure(dpi=72, facecolor="white")
         dpi = fig.get_dpi()
@@ -443,11 +429,9 @@ class CompositeCalculation(JSONResponseMixin, View):
 
         self.calculation_context = {
             "math": math,
+            "scipy": scipy,
+            "numpy": numpy,
         }
-
-        if SCIPY_AVAILABLE:
-            self.calculation_context["scipy"] = scipy
-            self.calculation_context["numpy"] = numpy
 
         for slug, info in values.iteritems():
             val = info["current_value"]

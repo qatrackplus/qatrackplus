@@ -107,9 +107,7 @@
                                 Type:
                                 <select id="chart-type" class="inline input-medium">
                                     <option value="basic">Basic</option>
-                                    {% if cc_available %}
-                                        <option value="control">Control Chart</option>
-                                    {% endif %}
+                                    <option value="control">Control Chart</option>
                                 </select>
                             </label>
                         </div>
@@ -134,33 +132,31 @@
                             </label>
                         </div>
                     </div>
-                    {% if cc_available %}
-                        <div id="cc-chart-options">
+                    <div id="cc-chart-options">
 
-                            {% spaceless %}
-                            <div class="input-prepend">
-                                <span title="Set the subgroup size (Control Chart Only)" class="control-label control-chart-option add-on" for="subgroup-size">
-                                    SG Size
-                                </span>
-                                <input type="number" min="1" step="1" value ="1" id="subgroup-size"  class="input-mini"/>
-                            </div>
-                            <div class="input-prepend">
-                                <span title="Set the number of subgroups for the baseline (Control Chart Only)" class="control-label control-chart-option add-on" for="n-baseline-subgroups">
-                                    # SG's
-                                </span>
-                                <input type="number" min="2" step="1" value ="2" id="n-baseline-subgroups" class="input-mini" />
-                            </div>
-
-                            <span title="Include a gaussian fit to histogrammed data (slow) (Control Chart Only)" class="control-label control-chart-option" for="include-fit">
-                                Fit
-                                <input type="checkbox" id="include-fit"/>
+                        {% spaceless %}
+                        <div class="input-prepend">
+                            <span title="Set the subgroup size (Control Chart Only)" class="control-label control-chart-option add-on" for="subgroup-size">
+                                SG Size
                             </span>
-
-                            {% endspaceless %}
-
-
+                            <input type="number" min="1" step="1" value ="1" id="subgroup-size"  class="input-mini"/>
                         </div>
-                    {% endif %}
+                        <div class="input-prepend">
+                            <span title="Set the number of subgroups for the baseline (Control Chart Only)" class="control-label control-chart-option add-on" for="n-baseline-subgroups">
+                                # SG's
+                            </span>
+                            <input type="number" min="2" step="1" value ="2" id="n-baseline-subgroups" class="input-mini" />
+                        </div>
+
+                        <span title="Include a gaussian fit to histogrammed data (slow) (Control Chart Only)" class="control-label control-chart-option" for="include-fit">
+                            Fit
+                            <input type="checkbox" id="include-fit"/>
+                        </span>
+
+                        {% endspaceless %}
+
+
+                    </div>
                     <h5>Dates</h5>
                     <div id="chart-date-wrapper">
                         <div class="date input-prepend" id="from-date-wrapper" data-date="{{ from_date|date:'d-m-Y'}}" data-date-format="dd-mm-yyyy">
