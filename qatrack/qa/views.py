@@ -1,3 +1,4 @@
+import signals #signals import needs to be here so signals get registered
 import collections
 import json
 import calendar
