@@ -774,22 +774,20 @@ class UnitTestCollection(models.Model):
 
     #----------------------------------------------------------------------
     def calc_due_date(self):
-        """return the next due date of this Unit/TestList pair
+        """return the next due date of this Unit/TestList pair """
 
-        due date for a TestList is calculated as minimum due date of all tests
-        making up this list.
-
-        due date for a TestCycle is calculated as the maximum of the due
-        dates for its member TestLists
-        """
-
-        if self.last_instance and self.auto_schedule and self.frequency is not None:
-            return utils.due_date(self.last_instance, self.frequency)
+        if self.auto_schedule and self.frequency is not None:
+            last_valid = self.last_valid_instance()
+            if last_valid is None and self.last_instance is not None:
+                # Done before but no valid lists
+                return timezone.localtime(timezone.now())
+            elif last_valid is not None:
+                return timezone.localtime(last_valid.work_completed + self.frequency.due_delta())
 
     #----------------------------------------------------------------------
     def set_due_date(self, due_date=None):
         """Set due date field for this UTC. Note model is not saved to db.
-        That must be done manually"""
+        Saving be done manually"""
         if self.auto_schedule and due_date is None and self.frequency is not None:
             due_date = self.calc_due_date()
 
@@ -818,6 +816,14 @@ class UnitTestCollection(models.Model):
             return DUE
         return OVERDUE
 
+    #----------------------------------------------------------------------
+    def last_valid_instance(self):
+        """ return last test_list_instance with all valid tests """
+
+        try:
+             return self.testlistinstance_set.exclude(testinstance__status__valid=False).latest("work_completed")
+        except TestListInstance.DoesNotExist:
+            pass
     #----------------------------------------------------------------------
     def last_done_date(self):
         """return date this test list was last performed"""

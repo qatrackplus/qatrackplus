@@ -15,7 +15,7 @@ class Migration(DataMigration):
         for utc in list(orm["qa.UnitTestCollection"].objects.all()):
             if utc.last_instance and utc.auto_schedule:
                 utc.frequency.due_delta = lambda: timezone.timedelta(days=utc.frequency.due_interval)
-                utc.due_date = utils.due_date(utc.last_instance, utc.frequency)
+                utc.due_date = utc.calc_due_date()
                 utc.save()
 
     def backwards(self, orm):

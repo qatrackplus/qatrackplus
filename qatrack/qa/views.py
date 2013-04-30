@@ -628,6 +628,8 @@ class PerformQA(CreateView):
             if self.object.work_completed is None:
                 self.object.work_completed = timezone.make_aware(timezone.datetime.now(), timezone=timezone.get_current_timezone())
 
+            # save here so pk is set when saving test instances
+            # and save below to get due deate set ocrrectly
             self.object.save()
 
             status = models.TestInstanceStatus.objects.default()
@@ -635,6 +637,7 @@ class PerformQA(CreateView):
                 val = form["status"].value()
                 if val not in ("", None):
                     status = models.TestInstanceStatus.objects.get(pk=val)
+
 
             to_save = []
             for ti_form in formset:
@@ -657,6 +660,10 @@ class PerformQA(CreateView):
                 to_save.append(ti)
 
             models.TestInstance.objects.bulk_create(to_save)
+
+            #set due date to account for any non default stattuses
+            self.object.unit_test_collection.set_due_date()
+
 
             # let user know request succeeded and return to unit list
             messages.success(self.request, _("Successfully submitted %s " % self.object.test_list.name))
@@ -845,6 +852,8 @@ class ReviewTestListInstance(BaseEditTestListInstance):
                 modified_by=update_user,
                 modified=update_time
             )
+
+        test_list_instance.unit_test_collection.set_due_date()
 
         # let user know request succeeded and return to unit list
         messages.success(self.request, _("Successfully updated %s " % self.object.test_list.name))

@@ -7,17 +7,6 @@ import StringIO
 import tokenize
 import token
 
-#----------------------------------------------------------------------
-
-
-def due_date(last_instance, frequency):
-    # invalids = [1 for x in last_instance.testinstance_set.all() if not x.status.valid]
-    invalids = last_instance.testinstance_set.filter(status__valid=False)
-    if list(invalids):
-        return timezone.make_aware(timezone.datetime.now(), timezone.get_current_timezone())
-    last_done = last_instance.work_completed
-    return timezone.localtime(last_done+frequency.due_delta())
-
 
 #----------------------------------------------------------------------
 def tests_history(tests, unit, from_date, test_list=None):
@@ -58,8 +47,6 @@ def tests_history(tests, unit, from_date, test_list=None):
     return hist_dict
 
 #----------------------------------------------------------------------
-
-
 def add_history_to_utis(unit_test_infos, histories):
     # figure out 5 most recent dates that a test from this list was performed
     dates = set()
@@ -89,8 +76,6 @@ def tokenize_composite_calc(calc_procedure):
     return [t[token.NAME] for t in tokens if t[token.NAME]]
 
 #----------------------------------------------------------------------
-
-
 def unique(seq, idfun=None):
     """f5 from http://www.peterbe.com/plog/uniqifiers-benchmark"""
     # order preserving
