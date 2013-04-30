@@ -352,7 +352,7 @@ class ControlChartImage(BaseChartView):
             except (RuntimeError, OverflowError) as e:
                 fig.clf()
                 msg = "There was a problem generating your control chart:\n"
-                msg += e.message
+                msg += str(e)
                 fig.text(0.1, 0.9, "\n".join(textwrap.wrap(msg, 40)), fontsize=12)
                 canvas.print_png(response)
 
