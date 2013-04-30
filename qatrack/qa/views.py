@@ -890,6 +890,8 @@ class EditTestListInstance(BaseEditTestListInstance):
                 ti = ti_form.save(commit=False)
                 self.update_test_instance(ti, status)
 
+            self.object.unit_test_collection.set_due_date()
+
             # let user know request succeeded and return to unit list
             messages.success(self.request, _("Successfully submitted %s " % self.object.test_list.name))
 
@@ -1396,9 +1398,8 @@ class InProgress(TestListInstances):
     def get_page_title(self):
         return "In Progress Test Lists"
 
+
 #============================================================================
-
-
 class Unreviewed(TestListInstances):
     """view for grouping all test lists with a certain frequency for all units"""
     queryset = models.TestListInstance.objects.unreviewed
@@ -1409,8 +1410,6 @@ class Unreviewed(TestListInstances):
 
 
 #============================================================================
-
-
 class ExportToCSV(View):
     """A simple api wrapper to give exported api data a filename for downloads"""
 
