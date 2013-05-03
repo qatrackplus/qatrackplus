@@ -6,8 +6,8 @@ import os
 #-----------------------------------------------------------------------------
 # Debug settings - remember to set both DEBUG & TEMPLATE_DEBUG to false when
 # deploying (either here or in local_settings.py)
-DEBUG = False
-TEMPLATE_DEBUG = False
+DEBUG = True
+TEMPLATE_DEBUG = True
 
 # Who to email when server errors occur
 ADMINS = (
