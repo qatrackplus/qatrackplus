@@ -69,7 +69,6 @@ class JSONResponseMixin(object):
 
 
 #============================================================================
-
 class ChartView(TemplateView):
     """view for creating charts/graphs from data"""
     template_name = "qa/charts.html"
@@ -159,8 +158,8 @@ class ChartView(TemplateView):
             "name",
             "description",
         )
-    #---------------------------------------------------------------------------
 
+    #---------------------------------------------------------------------------
     def set_test_lists(self):
         self.test_lists = models.TestList.objects.order_by("name").prefetch_related(
             "sublists",
@@ -168,6 +167,7 @@ class ChartView(TemplateView):
         )
 
 
+#============================================================================
 class BaseChartView(View):
     ISO_FORMAT = False
 
@@ -281,9 +281,8 @@ class BaseChartView(View):
 
         return data
 
+
 #============================================================================
-
-
 class BasicChartData(JSONResponseMixin, BaseChartView):
     pass
 
@@ -772,7 +771,7 @@ class BaseEditTestListInstance(UpdateView):
     def get_context_data(self, **kwargs):
 
         context = super(BaseEditTestListInstance, self).get_context_data(**kwargs)
-        
+
         # we need to override the default queryset for the formset so that we can pull
         # in all the reference/tolerance data without the ORM generating 100's of queries
         self.test_instances = models.TestInstance.objects.filter(
@@ -892,7 +891,7 @@ class EditTestListInstance(BaseEditTestListInstance):
     def update_test_list_instance(self):
         self.object.created_by = self.request.user
         self.object.modified_by = self.request.user
-      
+
         if self.object.work_completed is None:
             self.object.work_completed = timezone.make_aware(timezone.datetime.now(), timezone=timezone.get_current_timezone())
 
