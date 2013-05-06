@@ -71,7 +71,7 @@ function calculate_composites(){
         qavalues:JSON.stringify(validation_data),
         composite_ids:JSON.stringify(composite_ids)
     };
-    
+
     var on_success = function(data){
         submit.attr("disabled", false);
 
@@ -465,6 +465,33 @@ $(document).ready(function(){
         update_time($(this).find("input"));
     });
 
+
+    $('.file-upload').each(function(idx,elem){
+        var that = $(this);
+        var test_id = that.parents("tr").find("input.qa-test-id").val();
+        var status = $(this).parents("tr").find(".qa-status");
+
+        $(this).fileupload({
+            dataType: 'json',
+            url: QAUtils.UPLOAD_URL,
+            dropZone:$(this).parents("tr").children(),
+            singleFileUploads: true,
+            paramName:"upload",
+            formData: function(){
+                return [{ name:"id", value:test_id}]
+            },
+            done: function (e, data) {
+                console.log(data.result);
+                //data.context.text('Upload finished.');
+                status.addClass("ok").text("Done");
+            },
+
+            progressall: function (e, data) {
+                var progress = parseInt(data.loaded / data.total * 100, 10);
+                status.text("Uploaded: "+progress+"%");
+            }
+        });
+    });
     //run a full validation on page load
     full_validation();
 

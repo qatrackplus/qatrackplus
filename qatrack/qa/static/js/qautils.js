@@ -45,6 +45,7 @@ var QAUtils = new function() {
     this.API_VERSION = "v1";
     this.API_URL = QAURLs.base+"/qa/api/"+this.API_VERSION+"/";
     this.COMPOSITE_URL = QAURLs.base+"/qa/composite/";
+    this.UPLOAD_URL = QAURLs.base+"/qa/upload/";
     this.CHARTS_URL = QAURLs.base+"/qa/charts/";
     this.OPTION_DELIM = "=";
     this.OPTION_SEP = "&";
@@ -131,7 +132,7 @@ var QAUtils = new function() {
         var status, gen_status;
         var message;
         var result;
-        
+
         if (test_type === this.BOOLEAN){
             result = this.test_bool(value, reference);
         }else if  (test_type === this.MULTIPLE_CHOICE){
@@ -146,20 +147,20 @@ var QAUtils = new function() {
                     message: this.NO_TOL_DISP
                 };
             }else{
-    
+
                 if (tolerances.type === this.PERCENT){
                     diff = this.percent_difference(value,reference);
                     message = "(" + diff.toFixed(1)+"%)";
-        
+
                 }else{
                     diff = this.absolute_difference(value,reference);
                     message = "(" + diff.toFixed(2)+")";
                 }
-        
+
                 var right_at_tolerance = this.almost_equal(tolerances.tol_low,diff) || this.almost_equal(tolerances.tol_high,diff);
                 var right_at_low_action = this.almost_equal(tolerances.act_low,diff);
                 var right_at_high_action = this.almost_equal(tolerances.act_high,diff);
-        
+
                 if ( right_at_tolerance || ((tolerances.tol_low <= diff) && (diff <= tolerances.tol_high))){
                     status = this.WITHIN_TOL;
                     gen_status = this.WITHIN_TOL;
@@ -181,7 +182,7 @@ var QAUtils = new function() {
                     message = this.ACTION_DISP + message;
                     gen_status = this.ACTION;
                 }
-        
+
                 result = {status:status, gen_status:gen_status, diff:diff, message:message};
             }
         }
@@ -194,9 +195,9 @@ var QAUtils = new function() {
             }else{
                 result.message = this.WITHIN_TOL_DISP;
             }
-            
+
         }
-        return result;        
+        return result;
     };
 
     this.test_bool = function(value,reference){

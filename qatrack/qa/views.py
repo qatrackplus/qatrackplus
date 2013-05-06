@@ -357,9 +357,48 @@ class ControlChartImage(BaseChartView):
 
         return response
 
+class Upload(JSONResponseMixin, View):
+    """validate all qa tests in the request for the :model:`TestList` with id test_list_id"""
+
+    #----------------------------------------------------------------------
+    def post(self, *args, **kwargs):
+        """calculate and return all composite values"""
+
+        self.set_calculation_context()
+
+        try:
+            procedure = models.Test.objects.get(pk=self.request.POST.get("id")).calculation_procedure
+        except models.Test.DoesNotExist:
+            raise Http404("Test with that ID does not exist")
+
+        results = {}
+
+        try:
+            code = compile(procedure, "<string>", "exec")
+            exec code in self.calculation_context
+            results = self.calculation_context["result"]
+            errors = []
+        except Exception:
+            results = [ ]
+            errors = ["Invalid Test"]
+
+        return self.render_to_response({"success": True, "errors": results, "results": results})
+
+    #----------------------------------------------------------------------
+    def set_calculation_context(self):
+        """set up the environment that the composite test will be calculated in"""
+
+        self.calculation_context = {
+            "upload":self.request.FILES.get("upload"),
+            "math": math,
+        }
+
+        if SCIPY_AVAILABLE:
+            self.calculation_context["scipy"] = scipy
+            self.calculation_context["numpy"] = numpy
+
+
 #============================================================================
-
-
 class CompositeCalculation(JSONResponseMixin, View):
     """validate all qa tests in the request for the :model:`TestList` with id test_list_id"""
 

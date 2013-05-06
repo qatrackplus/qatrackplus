@@ -23,6 +23,7 @@ SIMPLE = "simple"
 CONSTANT = "constant"
 COMPOSITE = "composite"
 MULTIPLE_CHOICE = "multchoice"
+UPLOAD = "upload"
 
 TEST_TYPE_CHOICES = (
     (BOOLEAN, "Boolean"),
@@ -30,6 +31,7 @@ TEST_TYPE_CHOICES = (
     (MULTIPLE_CHOICE, "Multiple Choice"),
     (CONSTANT, "Constant"),
     (COMPOSITE, "Composite"),
+    (UPLOAD, "File Upload"),
 )
 
 # tolerance types
@@ -435,6 +437,11 @@ class Test(models.Model):
         return self.type in (COMPOSITE, CONSTANT, SIMPLE)
 
     #----------------------------------------------------------------------
+    def is_upload(self):
+        """Return whether or not this is a boolean test"""
+        return self.type == UPLOAD
+
+    #----------------------------------------------------------------------
     def is_boolean(self):
         """Return whether or not this is a boolean test"""
         return self.type == BOOLEAN
@@ -445,13 +452,16 @@ class Test(models.Model):
         return self.type == MULTIPLE_CHOICE
 
     #---------------------------------------------------------------------------
-    def check_test_type(self, field, test_type, display):
+    def check_test_type(self, field, test_types, display):
         #"""check that correct test type is set"""
+        if isinstance(test_types, basestring):
+            test_types = [test_types]
+
         errors = []
-        if field is not None and self.type != test_type:
+        if field is not None and self.type not in test_types:
             errors.append(_("%s value provided, but Test Type is not %s" % (display, display)))
 
-        if field is None and self.type == test_type:
+        if field is None and self.type in test_types:
             errors.append(_("Test Type is %s but no %s value provided" % (display, display)))
         return errors
 
@@ -459,16 +469,13 @@ class Test(models.Model):
     def clean_calculation_procedure(self):
         """make sure a valid calculation procedure"""
 
-        if not self.calculation_procedure and self.type != COMPOSITE:
+        if not self.calculation_procedure and self.type not in (UPLOAD, COMPOSITE):
             return
 
-        errors = self.check_test_type(self.calculation_procedure, COMPOSITE, "Composite")
+        errors = self.check_test_type(self.calculation_procedure, [UPLOAD, COMPOSITE], "Calculation Procedure")
         self.calculation_procedure = str(self.calculation_procedure)
         if not self.RESULT_RE.findall(self.calculation_procedure):
             errors.append(_('Snippet must contain a result line (e.g. result = my_var/another_var*2)'))
-
-        if self.calculation_procedure.find("__") >= 0:
-            errors.append(_('No double underscore methods allowed in calculations'))
 
         try:
             utils.tokenize_composite_calc(self.calculation_procedure)
@@ -630,6 +637,7 @@ class UnitTestInfo(models.Model):
     #----------------------------------------------------------------------
     def __unicode__(self):
         return "UnitTestInfo(%s)" % self.pk
+
 
 
 #============================================================================

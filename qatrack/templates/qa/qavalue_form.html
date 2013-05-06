@@ -52,6 +52,11 @@
             {% if test.is_boolean %}
                 <span class="pull-left">{{form.value.0}}</span>
                 <span class="pull-right">{{form.value.1}}</span>
+            {% elif test.is_upload %}
+                <span>
+                    <input class="file-upload" type="file"  >
+                    <span class="bar" style="width: 0%; height:90%; background-color:red;"></span>
+                </span>
             {% else %}
                  <span class="">{{form.value}}</span>
             {% endif %}
