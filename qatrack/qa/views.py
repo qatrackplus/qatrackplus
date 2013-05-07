@@ -363,6 +363,7 @@ class Upload(JSONResponseMixin, View):
     #----------------------------------------------------------------------
     def post(self, *args, **kwargs):
         """calculate and return all composite values"""
+        self.handle_upload()
 
         self.set_calculation_context()
 
@@ -371,31 +372,40 @@ class Upload(JSONResponseMixin, View):
         except models.Test.DoesNotExist:
             raise Http404("Test with that ID does not exist")
 
-        results = {}
+        results = {
+            'temp_file_name': self.upload.name,
+        }
 
         try:
             code = compile(procedure, "<string>", "exec")
             exec code in self.calculation_context
-            results = self.calculation_context["result"]
+            results["result"] = self.calculation_context["result"]
             errors = []
+            success = False
         except Exception:
-            results = [ ]
+            results["result"] = None
+            success = True
             errors = ["Invalid Test"]
 
-        return self.render_to_response({"success": True, "errors": results, "results": results})
+        return self.render_to_response({"success": success, "errors": errors, "result": result})
 
+    def handle_upload(self):
+        f = self.request.FILES.get("upload")
+        import tempfile
+        self.upload = tempfile.NamedTemporaryFile(delete=False, dir=settings.MEDIA_ROOT)
+        for chunk in f.chunks():
+            self.upload.write(chunk)
+        self.upload.seek(0)
     #----------------------------------------------------------------------
     def set_calculation_context(self):
         """set up the environment that the composite test will be calculated in"""
 
         self.calculation_context = {
-            "upload":self.request.FILES.get("upload"),
+            "upload":self.upload,
             "math": math,
+            "scipy": scipy,
+            "numpy": numpy,
         }
-
-        if SCIPY_AVAILABLE:
-            self.calculation_context["scipy"] = scipy
-            self.calculation_context["numpy"] = numpy
 
 
 #============================================================================
@@ -648,7 +658,7 @@ class PerformQA(CreateView):
 
     #----------------------------------------------------------------------
     def form_valid(self, form):
-
+        import ipdb; ipdb.set_trace()
         context = self.get_context_data()
         formset = context["formset"]
 

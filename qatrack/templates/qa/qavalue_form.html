@@ -48,14 +48,14 @@
                 {{test.name}}
             {% endif %}
         </td>
-        <td id="value-{{test.slug}}" class="qa-value" width=100 title="{{form.value.help_text|safe}}">
+        <td id="value-{{test.slug}}" class="qa-value" title="{{form.value.help_text|safe}}">
             {% if test.is_boolean %}
                 <span class="pull-left">{{form.value.0}}</span>
                 <span class="pull-right">{{form.value.1}}</span>
             {% elif test.is_upload %}
-                <span>
-                    <input class="file-upload" type="file"  >
-                    <span class="bar" style="width: 0%; height:90%; background-color:red;"></span>
+                <span class="upload-button">
+                    <a type="button" class="btn btn-primary btn-mini ">Upload</a>
+                    <input id="id_{{form.value.html_name}}" class="file-upload" type="file" name="{{form.value.html_name}}"/>
                 </span>
             {% else %}
                  <span class="">{{form.value}}</span>

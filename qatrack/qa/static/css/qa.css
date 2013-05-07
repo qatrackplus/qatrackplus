@@ -233,7 +233,29 @@ th.qa-history div{
     width:100px;
 }
 
-
+.upload-button input[type="file"] {
+    position: absolute;
+    right: 0px;
+    top: 0px;
+    font-family: Arial;
+    font-size: 118px;
+    margin: 0px;
+    padding: 0px;
+    cursor: pointer;
+    opacity:0;
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+    filter: alpha(opacity=0);
+    width:100px;
+    height:20px;
+}
+.upload-button {
+    display: block;
+    width: 105px;
+    text-align: centre;
+    position:relative;
+    overflow:hidden;
+    direction:ltr;
+}
 .inline-block {
     display:inline-block;
 }
@@ -313,6 +335,7 @@ th.review-status{
 #qa-test-review-table input{
     width:80px;
 }
+
 .show-hide{
     cursor: hand; cursor: pointer;
 }

@@ -466,8 +466,10 @@ $(document).ready(function(){
     });
 
 
-    $('.file-upload').each(function(idx,elem){
+   $('.file-upload').each(function(idx,elem){
         var that = $(this);
+        var button = that.prev();
+        var fname = that.next();
         var test_id = that.parents("tr").find("input.qa-test-id").val();
         var status = $(this).parents("tr").find(".qa-status");
 
@@ -477,21 +479,33 @@ $(document).ready(function(){
             dropZone:$(this).parents("tr").children(),
             singleFileUploads: true,
             paramName:"upload",
+            replaceFileInput:false,
             formData: function(){
                 return [{ name:"id", value:test_id}]
             },
             done: function (e, data) {
-                console.log(data.result);
-                //data.context.text('Upload finished.');
-                status.addClass("ok").text("Done");
+                if (console){
+                    window.console.log(data.result);
+                }
+                button.removeClass("btn-primary, btn-danger, btn-success");
+                if (data.result.errors.length > 0){
+                    button.addClass("btn-danger").text("Upload Failed");
+                }else{
+                    button.addClass("btn-success").text("Success");
+                    fname.val(data.result['temp_file_name']) ;
+                }
             },
-
+            fail: function(e,data){
+                    button.addClass("btn-danger").text("Server Error");
+            },
             progressall: function (e, data) {
                 var progress = parseInt(data.loaded / data.total * 100, 10);
-                status.text("Uploaded: "+progress+"%");
+                button.removeClass("btn-primary, btn-danger, btn-success");
+                button.addClass("btn-warning").text("Uploading: " + progress+"%");
             }
         });
     });
+
     //run a full validation on page load
     full_validation();
 
