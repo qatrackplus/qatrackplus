@@ -64,7 +64,7 @@ urlpatterns = patterns('',
     url(r"^session/details/(?P<pk>\d+)/$", can_edit(views.ReviewTestListInstance.as_view()), name="review_test_list_instance"),
     url(r"^session/unreviewed/(?P<data>data/)?$", can_view_history(views.Unreviewed.as_view()), name="unreviewed"),
     url(r"^session/in-progress/(?P<data>data/)?$", views.InProgress.as_view(), name="in_progress"),
-    url(r"^session/edit/(?P<pk>\d+)/$", can_edit(views.EditTestListInstance.as_view()), name="edit_tli"),
+    url(r"^session/edit/(?P<pk>\d+)/$", views.EditTestListInstance.as_view(), name="edit_tli"),
 
 
     url(r"^unit/$", views.ChooseUnit.as_view(), name="choose_unit"),
