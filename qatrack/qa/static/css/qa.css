@@ -204,6 +204,9 @@ th.qa-history div{
     width: 50px;
     text-align:right;
     margin-right: 1px; /*fix ie inline block bug*/
+    text-overflow:ellipsis;
+    white-space: nowrap;
+    overflow:hidden;
 }
 
 .history-label {
@@ -305,7 +308,13 @@ th.review-value {
     width:60px;
     text-align:center;
 }
-
+td.review-value span {
+    display:inline-block;
+    width:60px;
+    text-overflow:ellipsis;
+    white-space: nowrap;
+    overflow:hidden;
+}
 td.review-ref,
 th.review-ref {
     width:60px;

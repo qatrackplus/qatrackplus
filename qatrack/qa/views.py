@@ -2,6 +2,7 @@ import collections
 import json
 import calendar
 import os
+import shutil
 import urllib
 
 from api import ValueResource
@@ -368,43 +369,52 @@ class Upload(JSONResponseMixin, View):
 
         self.set_calculation_context()
 
-        try:
-            procedure = models.Test.objects.get(pk=self.request.POST.get("test_id")).calculation_procedure
-        except models.Test.DoesNotExist:
-            raise Http404("Test with that ID does not exist")
-
         results = {
             'temp_file_name': self.file_name,
+            'success':False,
+            'errors':[],
+            "result":None,
         }
 
         try:
+            procedure = models.Test.objects.get(pk=self.request.POST.get("test_id")).calculation_procedure
             code = compile(procedure, "<string>", "exec")
             exec code in self.calculation_context
             results["result"] = self.calculation_context["result"]
-            errors = []
-            success = True
+            results["success"] = True
+        except models.Test.DoesNotExist:
+            results["errors"].append("Test with that ID does not exist")
         except Exception:
-            results["result"] = None
-            success = False
-            errors = ["Invalid Test"]
+            results["errors"].append("Invalid Test")
 
-        return self.render_to_response({"success": success, "errors": errors, "result": results})
+        return self.render_to_response(results)
 
     #---------------------------------------------------------------
-    def get_file_name(self):
+    @staticmethod
+    def get_upload_name(session_id, unit_test_info, name):
         """construct a unique file name for uploaded file"""
+        name = name.rsplit(".")
+        if len(name) == 1:
+            name.append("")
+        name ,ext = name
+
         name_parts = (
-            self.request.COOKIES.get('sessionid')[:6],
-            self.request.POST.get("test_id"),
+            name,
+            unit_test_info,
             "%s" % (timezone.now().date(),),
-            self.request.FILES.get("upload").name,
+            session_id[:6],
         )
-        return "_".join(name_parts)
+        return "_".join(name_parts)+"."+ext
 
     #----------------------------------------------------------------------
     def handle_upload(self):
 
-        self.file_name = self.get_file_name()
+        self.file_name = self.get_upload_name(
+            self.request.COOKIES.get('sessionid'),
+            self.request.POST.get("unit_test_info"),
+            self.request.FILES.get("upload").name,
+        )
+
         self.upload = open(os.path.join(settings.TMP_UPLOAD_ROOT,self.file_name),"w+b")
 
         for chunk in self.request.FILES.get("upload").chunks():
@@ -674,7 +684,6 @@ class PerformQA(CreateView):
 
     #----------------------------------------------------------------------
     def form_valid(self, form):
-        import ipdb; ipdb.set_trace()
         context = self.get_context_data()
         formset = context["formset"]
 
@@ -702,8 +711,19 @@ class PerformQA(CreateView):
 
             to_save = []
             for ti_form in formset:
+                if ti_form.unit_test_info.test.is_upload():
+                    fname = ti_form.cleaned_data["string_value"]
+                    src = os.path.join(settings.TMP_UPLOAD_ROOT,fname)
+                    d = os.path.join(settings.MEDIA_ROOT, "%s" % self.object.pk)
+                    if not os.path.exists(d):
+                        os.mkdir(d)
+                    dest = os.path.join(settings.MEDIA_ROOT,d,fname)
+                    shutil.move(src,dest)
+
+
                 ti = models.TestInstance(
                     value=ti_form.cleaned_data.get("value", None),
+                    string_value = ti_form.cleaned_data.get("string_value",""),
                     skipped=ti_form.cleaned_data.get("skipped", False),
                     comment=ti_form.cleaned_data.get("comment", ""),
                     unit_test_info=ti_form.unit_test_info,

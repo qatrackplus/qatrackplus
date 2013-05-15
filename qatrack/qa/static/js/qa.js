@@ -383,10 +383,12 @@ $(document).ready(function(){
     //anytime an input changes run validation
     user_inputs.change(function(){
 //        var name = $(this).parents("td").siblings(".qa-contextname").val();
-        var name = $(this).parents("tr.qa-valuerow").find(".qa-contextname").val();
+        var row = $(this).parents("tr.qa-valuerow");
+        var name = row.find(".qa-contextname").val();
+        var test_type = row.find(".qa-testtype").val();
         check_skip_status(name);
 
-        if (this.type === "text"){
+        if (this.type === "text" && test_type !== "string"){
             this.value = QAUtils.clean_numerical_value(this.value);
         }
         check_test_status(name);
@@ -472,6 +474,7 @@ $(document).ready(function(){
         var fname = that.next();
         var row = that.parents("tr");
         var name = row.find('.qa-contextname').val();
+        var unit_test_info = row.find("input.qa-unittestinfo").val();
         var test_id = row.find("input.qa-test-id").val();
         var status = row.find(".qa-status");
 
@@ -483,7 +486,10 @@ $(document).ready(function(){
             paramName:"upload",
             replaceFileInput:false,
             formData: function(){
-                return [{ name:"test_id", value:test_id}]
+                return [
+                    { name:"unit_test_info", value:unit_test_info},
+                    { name:"test_id", value: test_id}
+                ]
             },
             done: function (e, data) {
                 if (console){

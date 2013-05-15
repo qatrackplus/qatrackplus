@@ -23,6 +23,7 @@ SIMPLE = "simple"
 CONSTANT = "constant"
 COMPOSITE = "composite"
 MULTIPLE_CHOICE = "multchoice"
+STRING = "string"
 UPLOAD = "upload"
 
 TEST_TYPE_CHOICES = (
@@ -31,6 +32,7 @@ TEST_TYPE_CHOICES = (
     (MULTIPLE_CHOICE, "Multiple Choice"),
     (CONSTANT, "Constant"),
     (COMPOSITE, "Composite"),
+    (STRING, "String"),
     (UPLOAD, "File Upload"),
 )
 
@@ -436,6 +438,8 @@ class Test(models.Model):
         """return whether or not this is a numerical test"""
         return self.type in (COMPOSITE, CONSTANT, SIMPLE)
 
+    def is_string(self):
+        return self.type == STRING
     #----------------------------------------------------------------------
     def is_upload(self):
         """Return whether or not this is a boolean test"""
@@ -1024,6 +1028,8 @@ class TestInstance(models.Model):
 
     # values set by user
     value = models.FloatField(help_text=_("For boolean Tests a value of 0 equals False and any non zero equals True"), null=True)
+    string_value = models.CharField(max_length=1024, null=True, blank=True)
+
     skipped = models.BooleanField(help_text=_("Was this test skipped for some reason (add comment)"))
     comment = models.TextField(help_text=_("Add a comment to this test"), null=True, blank=True)
 
@@ -1141,7 +1147,7 @@ class TestInstance(models.Model):
     def value_display(self):
         if self.skipped:
             return "Skipped"
-        elif self.value is None:
+        elif self.value is None and self.string_value is None:
             return "Not Done"
 
         test = self.unit_test_info.test
@@ -1149,6 +1155,10 @@ class TestInstance(models.Model):
             return "Yes" if int(self.value) == 1 else "No"
         elif test.is_mult_choice():
             return test.get_choice_value(self.value)
+        elif test.is_string():
+            return self.string_value
+        elif test.is_upload():
+            return self.upload_url()
         return "%.4g" % self.value
 
     #----------------------------------------------------------------------
@@ -1165,6 +1175,12 @@ class TestInstance(models.Model):
                 display = "Zero ref with % diff tol"
         return display
 
+    #---------------------------------------------------------------
+    def upload_url(self):
+        if not self.unit_test_info.test.is_upload():
+            return None
+        url = "%s%d/%s"%(settings.MEDIA_URL,self.test_list_instance.pk,self.string_value)
+        return '<a href="%s" title="%s">%s</a>' % (url,self.string_value, self.string_value)
     #----------------------------------------------------------------------
     def __unicode__(self):
         """return display representation of object"""
