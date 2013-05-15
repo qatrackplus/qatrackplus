@@ -1,6 +1,7 @@
 import collections
 import json
 import calendar
+import os
 import urllib
 
 from api import ValueResource
@@ -368,12 +369,12 @@ class Upload(JSONResponseMixin, View):
         self.set_calculation_context()
 
         try:
-            procedure = models.Test.objects.get(pk=self.request.POST.get("id")).calculation_procedure
+            procedure = models.Test.objects.get(pk=self.request.POST.get("test_id")).calculation_procedure
         except models.Test.DoesNotExist:
             raise Http404("Test with that ID does not exist")
 
         results = {
-            'temp_file_name': self.upload.name,
+            'temp_file_name': self.file_name,
         }
 
         try:
@@ -381,21 +382,36 @@ class Upload(JSONResponseMixin, View):
             exec code in self.calculation_context
             results["result"] = self.calculation_context["result"]
             errors = []
-            success = False
+            success = True
         except Exception:
             results["result"] = None
-            success = True
+            success = False
             errors = ["Invalid Test"]
 
-        return self.render_to_response({"success": success, "errors": errors, "result": result})
+        return self.render_to_response({"success": success, "errors": errors, "result": results})
 
+    #---------------------------------------------------------------
+    def get_file_name(self):
+        """construct a unique file name for uploaded file"""
+        name_parts = (
+            self.request.COOKIES.get('sessionid')[:6],
+            self.request.POST.get("test_id"),
+            "%s" % (timezone.now().date(),),
+            self.request.FILES.get("upload").name,
+        )
+        return "_".join(name_parts)
+
+    #----------------------------------------------------------------------
     def handle_upload(self):
-        f = self.request.FILES.get("upload")
-        import tempfile
-        self.upload = tempfile.NamedTemporaryFile(delete=False, dir=settings.MEDIA_ROOT)
-        for chunk in f.chunks():
+
+        self.file_name = self.get_file_name()
+        self.upload = open(os.path.join(settings.TMP_UPLOAD_ROOT,self.file_name),"w+b")
+
+        for chunk in self.request.FILES.get("upload").chunks():
             self.upload.write(chunk)
+
         self.upload.seek(0)
+
     #----------------------------------------------------------------------
     def set_calculation_context(self):
         """set up the environment that the composite test will be calculated in"""

@@ -481,7 +481,7 @@ $(document).ready(function(){
             paramName:"upload",
             replaceFileInput:false,
             formData: function(){
-                return [{ name:"id", value:test_id}]
+                return [{ name:"test_id", value:test_id}]
             },
             done: function (e, data) {
                 if (console){
