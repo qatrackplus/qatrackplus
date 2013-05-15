@@ -470,8 +470,10 @@ $(document).ready(function(){
         var that = $(this);
         var button = that.prev();
         var fname = that.next();
-        var test_id = that.parents("tr").find("input.qa-test-id").val();
-        var status = $(this).parents("tr").find(".qa-status");
+        var row = that.parents("tr");
+        var name = row.find('.qa-contextname').val();
+        var test_id = row.find("input.qa-test-id").val();
+        var status = row.find(".qa-status");
 
         $(this).fileupload({
             dataType: 'json',
