@@ -22,4 +22,5 @@ local_settings.py
 fixtures/dev
 questions_*
 qatrack/static
+qatrack/uploads
 ldap.debug

@@ -34,6 +34,7 @@ function init_test_collection_tables(units, frequencies, groups){
         null //review-status
     ];
 
+    
 
     $(".test-collection-table").dataTable({
         bProcessing:true,
@@ -42,6 +43,7 @@ function init_test_collection_tables(units, frequencies, groups){
         sAjaxDataProp:"data",
         bAutoWidth:false,
         fnAdjustColumnSizing:false,
+        fnPreDrawCallback:function(){$("#pagination-placeholder").remove()},
         bFilter:true,
         bPaginate:true,
         bStateSave:true, /*remember filter/sort state on page load*/

@@ -39,6 +39,7 @@ var QAUtils = new function() {
     this.API_VERSION = "v1";
     this.API_URL = QAURLs.base+"/qa/api/"+this.API_VERSION+"/";
     this.COMPOSITE_URL = QAURLs.base+"/qa/composite/";
+    this.UPLOAD_URL = QAURLs.base+"/qa/upload/";
     this.CHARTS_URL = QAURLs.base+"/qa/charts/";
     this.OPTION_DELIM = "=";
     this.OPTION_SEP = "&";

@@ -83,9 +83,9 @@
 
             {% csrf_token %}
             <input type="hidden" id="contains-composites" value="no"/>
-            
+
             <input type="hidden" id="pass-fail-only" value="{% if perms.qa.can_view_ref_tol %}no{% else %}yes{% endif %}"/>
-            
+
             <div id="admin_controls" class="well">
 
                 {# display any form errors up top #}
@@ -240,6 +240,7 @@
             </div>
         </form>
 
+                <div id="progress"> <div class="bar" style="width: 0%; height:30px; background-color:red;"></div> </div>
 
     </div>
 </div>
@@ -250,4 +251,7 @@
 {% block end_body_extra_script %}
     <script src="{% static "js/qa.js" %}?v={{VERSION}}"></script>
     <script src="{% static "datepicker/js/bootstrap-datepicker.js" %}?v={{VERSION}}"></script>
+    <script src="{% static "js/jquery.ui.widget.js" %}"></script>
+    <script src="{% static "js/jquery.iframe-transport.js" %}"></script>
+    <script src="{% static "js/jquery.fileupload.js" %}"></script>
 {% endblock %}

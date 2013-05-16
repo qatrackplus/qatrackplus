@@ -21,6 +21,8 @@ SIMPLE = "simple"
 CONSTANT = "constant"
 COMPOSITE = "composite"
 MULTIPLE_CHOICE = "multchoice"
+STRING = "string"
+UPLOAD = "upload"
 
 TEST_TYPE_CHOICES = (
     (BOOLEAN, "Boolean"),
@@ -28,6 +30,8 @@ TEST_TYPE_CHOICES = (
     (MULTIPLE_CHOICE, "Multiple Choice"),
     (CONSTANT, "Constant"),
     (COMPOSITE, "Composite"),
+    (STRING, "String"),
+    (UPLOAD, "File Upload"),
 )
 
 # tolerance types
@@ -257,8 +261,20 @@ class Tolerance(models.Model):
     tol_high = models.FloatField(verbose_name=_("Tolerance High"), help_text=_("Value of upper tolerance level"), null=True, blank=True)
     act_high = models.FloatField(verbose_name=_("Action High"), help_text=_("Value of upper action level"), null=True, blank=True)
 
-    mc_pass_choices = models.CharField(verbose_name=_("Multiple Choice Pass Values"), max_length=2048, help_text=_("Comma seperated list of choices that are considered passing"), null=True, blank=True)
-    mc_tol_choices = models.CharField(verbose_name=_("Multiple Choice Tolerance Values"), max_length=2048, help_text=_("Comma seperated list of choices that are considered at tolerance"), null=True, blank=True)
+    mc_pass_choices = models.CharField(
+            verbose_name=_("Multiple Choice Pass Values"),
+            max_length=2048,
+            help_text=_("Comma seperated list of choices that are considered passing"),
+            null=True,
+            blank=True,
+    )
+    mc_tol_choices = models.CharField(
+        verbose_name=_("Multiple Choice Tolerance Values"),
+        max_length=2048,
+        help_text=_("Comma seperated list of choices that are considered at tolerance"),
+        null=True,
+        blank=True,
+    )
 
     # who created this tolerance
     created_date = models.DateTimeField(auto_now_add=True)
@@ -420,6 +436,13 @@ class Test(models.Model):
         """return whether or not this is a numerical test"""
         return self.type in (COMPOSITE, CONSTANT, SIMPLE)
 
+    def is_string(self):
+        return self.type == STRING
+    #----------------------------------------------------------------------
+    def is_upload(self):
+        """Return whether or not this is a boolean test"""
+        return self.type == UPLOAD
+
     #----------------------------------------------------------------------
     def is_boolean(self):
         """Return whether or not this is a boolean test"""
@@ -431,13 +454,16 @@ class Test(models.Model):
         return self.type == MULTIPLE_CHOICE
 
     #---------------------------------------------------------------------------
-    def check_test_type(self, field, test_type, display):
+    def check_test_type(self, field, test_types, display):
         #"""check that correct test type is set"""
+        if isinstance(test_types, basestring):
+            test_types = [test_types]
+
         errors = []
-        if field is not None and self.type != test_type:
+        if field is not None and self.type not in test_types:
             errors.append(_("%s value provided, but Test Type is not %s" % (display, display)))
 
-        if field is None and self.type == test_type:
+        if field is None and self.type in test_types:
             errors.append(_("Test Type is %s but no %s value provided" % (display, display)))
         return errors
 
@@ -445,16 +471,13 @@ class Test(models.Model):
     def clean_calculation_procedure(self):
         """make sure a valid calculation procedure"""
 
-        if not self.calculation_procedure and self.type != COMPOSITE:
+        if not self.calculation_procedure and self.type not in (UPLOAD, COMPOSITE):
             return
 
-        errors = self.check_test_type(self.calculation_procedure, COMPOSITE, "Composite")
+        errors = self.check_test_type(self.calculation_procedure, [UPLOAD, COMPOSITE], "Calculation Procedure")
         self.calculation_procedure = str(self.calculation_procedure)
         if not self.RESULT_RE.findall(self.calculation_procedure):
             errors.append(_('Snippet must contain a result line (e.g. result = my_var/another_var*2)'))
-
-        if self.calculation_procedure.find("__") >= 0:
-            errors.append(_('No double underscore methods allowed in calculations'))
 
         try:
             utils.tokenize_composite_calc(self.calculation_procedure)
@@ -596,6 +619,7 @@ class UnitTestInfo(models.Model):
     #----------------------------------------------------------------------
     def __unicode__(self):
         return "UnitTestInfo(%s)" % self.pk
+
 
 
 #============================================================================
@@ -888,6 +912,8 @@ class TestInstance(models.Model):
 
     # values set by user
     value = models.FloatField(help_text=_("For boolean Tests a value of 0 equals False and any non zero equals True"), null=True)
+    string_value = models.CharField(max_length=1024, null=True, blank=True)
+
     skipped = models.BooleanField(help_text=_("Was this test skipped for some reason (add comment)"))
     comment = models.TextField(help_text=_("Add a comment to this test"), null=True, blank=True)
 
@@ -1005,7 +1031,7 @@ class TestInstance(models.Model):
     def value_display(self):
         if self.skipped:
             return "Skipped"
-        elif self.value is None:
+        elif self.value is None and self.string_value is None:
             return "Not Done"
 
         test = self.unit_test_info.test
@@ -1013,6 +1039,10 @@ class TestInstance(models.Model):
             return "Yes" if int(self.value) == 1 else "No"
         elif test.is_mult_choice():
             return test.get_choice_value(self.value)
+        elif test.is_string():
+            return self.string_value
+        elif test.is_upload():
+            return self.upload_url()
         return "%.4g" % self.value
 
     #----------------------------------------------------------------------
@@ -1029,6 +1059,12 @@ class TestInstance(models.Model):
                 display = "Zero ref with % diff tol"
         return display
 
+    #---------------------------------------------------------------
+    def upload_url(self):
+        if not self.unit_test_info.test.is_upload():
+            return None
+        url = "%s%d/%s"%(settings.MEDIA_URL,self.test_list_instance.pk,self.string_value)
+        return '<a href="%s" title="%s">%s</a>' % (url,self.string_value, self.string_value)
     #----------------------------------------------------------------------
     def __unicode__(self):
         """return display representation of object"""

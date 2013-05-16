@@ -41,12 +41,13 @@ class TestInstanceWidgetsMixin(object):
 
         skipped = cleaned_data.get("skipped")
         comment = cleaned_data.get("comment")
-        value = cleaned_data.get("value")
+        value = cleaned_data.get("value", None)
+        string_value = cleaned_data.get("string_value", None)
 
         # force user to enter value unless skipping test
-        if value is None and not skipped:
+        if (value is None and string_value is None) and not skipped:
             self._errors["value"] = self.error_class(["Value required if not skipping"])
-        elif value is not None and skipped:
+        elif (value is not None or string_value is None) and skipped:
             self._errors["value"] = self.error_class(["Clear value if skipping"])
 
         if not self.user.has_perm("qa.can_skip_without_comment") and skipped and not comment:
@@ -63,6 +64,7 @@ class TestInstanceWidgetsMixin(object):
         """add custom widget for boolean values (after form has been """
 
         # temp store attributes so they can be restored to reset widget
+        self.fields["string_value"].widget.attrs["class"] = "qa-input"
         self.fields["value"].widget.attrs["class"] = "qa-input"
         attrs = self.fields["value"].widget.attrs
         test_type = self.unit_test_info.test.type
@@ -87,6 +89,8 @@ class TestInstanceWidgetsMixin(object):
 #============================================================================
 class CreateTestInstanceForm(TestInstanceWidgetsMixin, forms.Form):
     value = forms.FloatField(required=False, widget=forms.widgets.TextInput(attrs={"class": "qa-input"}))
+    string_value = forms.CharField(required=False)
+
     skipped = forms.BooleanField(required=False, help_text=_("Was this test skipped for some reason (add comment)"))
     comment = forms.CharField(widget=forms.Textarea, required=False, help_text=_("Show or hide comment field"))
 
@@ -241,12 +245,12 @@ class BaseTestListInstanceForm(forms.ModelForm):
                 self.errors[field][0] += " %s" % settings.DATETIME_HELP
 
         work_started = cleaned_data.get("work_started")
-        work_completed = cleaned_data.get("work_completed") 
+        work_completed = cleaned_data.get("work_completed")
 
         # keep previous work completed date if present
         if not work_completed and self.instance:
             work_completed = self.instance.work_completed
-            cleaned_data["work_completed"] = work_completed 
+            cleaned_data["work_completed"] = work_completed
 
         if work_started and work_completed:
 

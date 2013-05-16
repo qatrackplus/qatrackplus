@@ -191,19 +191,22 @@ th.qa-name div{
     margin-bottom:0px;
 }
 .qa-history{
-    min-width:250px;
+    min-width:320px;
 }
 th.qa-history div{
 /* hack to fix IE7 min-width*/
-    width:220px;
+    width:310px;
     height:1px;
 }
 
 .history-value,.history-label {
     display:inline-block;
-    width: 42px;
+    width: 50px;
     text-align:right;
     margin-right: 1px; /*fix ie inline block bug*/
+    text-overflow:ellipsis;
+    white-space: nowrap;
+    overflow:hidden;
 }
 
 .history-label {
@@ -233,7 +236,29 @@ th.qa-history div{
     width:100px;
 }
 
-
+.upload-button input[type="file"] {
+    position: absolute;
+    right: 0px;
+    top: 0px;
+    font-family: Arial;
+    font-size: 118px;
+    margin: 0px;
+    padding: 0px;
+    cursor: pointer;
+    opacity:0;
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+    filter: alpha(opacity=0);
+    width:100px;
+    height:20px;
+}
+.upload-button {
+    display: block;
+    width: 105px;
+    text-align: centre;
+    position:relative;
+    overflow:hidden;
+    direction:ltr;
+}
 .inline-block {
     display:inline-block;
 }
@@ -283,7 +308,13 @@ th.review-value {
     width:60px;
     text-align:center;
 }
-
+td.review-value span {
+    display:inline-block;
+    width:60px;
+    text-overflow:ellipsis;
+    white-space: nowrap;
+    overflow:hidden;
+}
 td.review-ref,
 th.review-ref {
     width:60px;
@@ -313,6 +344,7 @@ th.review-status{
 #qa-test-review-table input{
     width:80px;
 }
+
 .show-hide{
     cursor: hand; cursor: pointer;
 }
@@ -438,4 +470,8 @@ h3.overview-unit-title{
 
   width: 80px;
 
+}
+
+#pagination-placeholder {
+    min-height:50px;
 }

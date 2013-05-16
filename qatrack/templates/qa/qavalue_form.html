@@ -38,6 +38,7 @@
         <input type="hidden" class="qa-tolerance-type" id="tolerance-type-{{test.slug}}" value="{{tol.type}}"/>
         <input type="hidden" class="qa-contextname" id="context-name-{{test.slug}}" value="{{test.slug}}"/>
         <input type="hidden" class="qa-test-id" id="test-id-{{test.slug}}" value="{{test.pk}}"/>
+        <input type="hidden" class="qa-unittestinfo" id="unittestinfo-{{test.slug}}" value="{{uti.pk}}"/>
         <input type="hidden" class="qa-testtype" id="testtype-{{test.slug}}" value="{{test.type}}"/>
 
         <td class="qa-category">{{test.category.name}}</td>
@@ -48,10 +49,18 @@
                 {{test.name}}
             {% endif %}
         </td>
-        <td id="value-{{test.slug}}" class="qa-value" width=100 title="{{form.value.help_text|safe}}">
+        <td id="value-{{test.slug}}" class="qa-value" title="{{form.value.help_text|safe}}">
             {% if test.is_boolean %}
                 <span class="pull-left">{{form.value.0}}</span>
                 <span class="pull-right">{{form.value.1}}</span>
+            {% elif test.is_upload %}
+                <span class="upload-button">
+                    <a type="button" class="btn btn-primary btn-mini ">Upload</a>
+                    <input id="_id_{{form.string_value.html_name}}" class="file-upload" type="file" name="_{{form.string_value.html_name}}"/>
+                    <input id="id_{{form.string_value.html_name}}" class="file-upload" type="hidden" name="{{form.string_value.html_name}}"/>
+                </span>
+            {% elif test.is_string or test.is_upload %}
+                 <span class="">{{form.string_value}}</span>
             {% else %}
                  <span class="">{{form.value}}</span>
             {% endif %}

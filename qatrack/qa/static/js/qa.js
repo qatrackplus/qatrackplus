@@ -71,7 +71,7 @@ function calculate_composites(){
         qavalues:JSON.stringify(validation_data),
         composite_ids:JSON.stringify(composite_ids)
     };
-    
+
     var on_success = function(data){
         submit.attr("disabled", false);
 
@@ -383,10 +383,12 @@ $(document).ready(function(){
     //anytime an input changes run validation
     user_inputs.change(function(){
 //        var name = $(this).parents("td").siblings(".qa-contextname").val();
-        var name = $(this).parents("tr.qa-valuerow").find(".qa-contextname").val();
+        var row = $(this).parents("tr.qa-valuerow");
+        var name = row.find(".qa-contextname").val();
+        var test_type = row.find(".qa-testtype").val();
         check_skip_status(name);
 
-        if (this.type === "text"){
+        if (this.type === "text" && test_type !== "string"){
             this.value = QAUtils.clean_numerical_value(this.value);
         }
         check_test_status(name);
@@ -463,6 +465,53 @@ $(document).ready(function(){
         keyboardNavigation:false
     }).on('changeDate',function (ev){
         update_time($(this).find("input"));
+    });
+
+
+   $('.file-upload').each(function(idx,elem){
+        var that = $(this);
+        var button = that.prev();
+        var fname = that.next();
+        var row = that.parents("tr");
+        var name = row.find('.qa-contextname').val();
+        var unit_test_info = row.find("input.qa-unittestinfo").val();
+        var test_id = row.find("input.qa-test-id").val();
+        var status = row.find(".qa-status");
+
+        $(this).fileupload({
+            dataType: 'json',
+            url: QAUtils.UPLOAD_URL,
+            dropZone:$(this).parents("tr").children(),
+            singleFileUploads: true,
+            paramName:"upload",
+            replaceFileInput:false,
+            formData: function(){
+                return [
+                    { name:"unit_test_info", value:unit_test_info},
+                    { name:"test_id", value: test_id}
+                ]
+            },
+            done: function (e, data) {
+                if (console){
+                    window.console.log(data.result);
+                }
+                button.removeClass("btn-primary, btn-danger, btn-success");
+                if (data.result.errors.length > 0){
+                    button.addClass("btn-danger").text("Upload Failed");
+                }else{
+                    button.addClass("btn-success").text("Success");
+                    fname.val(data.result['temp_file_name']) ;
+                }
+            },
+            fail: function(e,data){
+                    button.addClass("btn-danger").text("Server Error");
+            },
+            progressall: function (e, data) {
+                var progress = parseInt(data.loaded / data.total * 100, 10);
+                button.removeClass("btn-primary, btn-danger, btn-success");
+                button.addClass("btn-warning").text("Uploading: " + progress+"%");
+            }
+        });
     });
 
     //run a full validation on page load

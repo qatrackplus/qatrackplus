@@ -37,6 +37,7 @@ function init_test_list_instance_tables(units, frequencies){
         sAjaxDataProp:"data",
         bAutoWidth:false,
         fnAdjustColumnSizing:false,
+        fnPreDrawCallback:function(){$("#pagination-placeholder").remove()},
         bFilter:true,
         bPaginate:true,
         bStateSave:true, /*remember filter/sort state on page load*/
