@@ -11,7 +11,7 @@ var pass_fail_only = $("#pass-fail-only").val() === "yes" ? true : false;
 //Set up the values we will need to do validation on data
 var validation_data = {};
 var composite_ids = {};
-
+var upload_data = {};
 /***************************************************************/
 //set the intitial values, tolerances & refs for all of our tests
 function initialize_qa(){
@@ -58,6 +58,12 @@ function initialize_qa(){
         var name = row.find('.qa-contextname').val();
         composite_ids[name] = test_id;
     });
+
+    $('.qa-testtype[value="upload"]',context).each(function(){
+        var row = $(this).parents(".qa-valuerow");
+        var name = row.find('.qa-contextname').val();
+        upload_data[name] = null ;
+    });
 }
 /***************************************************************/
 //Perform Ajax calls to calculate all composite values
@@ -69,7 +75,8 @@ function calculate_composites(){
     submit.attr("disabled", true);
     var data = {
         qavalues:JSON.stringify(validation_data),
-        composite_ids:JSON.stringify(composite_ids)
+        composite_ids:JSON.stringify(composite_ids),
+        upload_data:JSON.stringify(upload_data)
     };
 
     var on_success = function(data){
@@ -508,9 +515,13 @@ $(document).ready(function(){
                 status.removeClass("btn-primary, btn-danger, btn-success");
                 if (data.result.errors.length > 0){
                     status.addClass("btn-danger").text("Failed");
+                    upload_data[name] = null;
                 }else{
                     status.addClass("btn-success").text("Success");
                     fname.val(data.result['temp_file_name']) ;
+                    status.attr("title",data.result['temp_file_name']);
+                    upload_data[name] = data.result.result;
+
                 }
             },
             fail: function(e,data){

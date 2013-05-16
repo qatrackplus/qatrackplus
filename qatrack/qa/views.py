@@ -501,7 +501,9 @@ class CompositeCalculation(JSONResponseMixin, View):
     def set_calculation_context(self):
         """set up the environment that the composite test will be calculated in"""
         values = self.get_json_data("qavalues")
-        if values is None:
+        upload_data = self.get_json_data("upload_data");
+        import ipdb; ipdb.set_trace()
+        if values is None and upload_data is None:
             self.calculation_context = {}
             return
 
