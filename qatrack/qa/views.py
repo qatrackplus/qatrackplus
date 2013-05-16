@@ -348,8 +348,10 @@ class ControlChartImage(BaseChartView):
 
         return response
 
+
+#============================================================================
 class Upload(JSONResponseMixin, View):
-    """validate all qa tests in the request for the :model:`TestList` with id test_list_id"""
+    """Handle AJAX upload requests"""
 
     #----------------------------------------------------------------------
     def post(self, *args, **kwargs):

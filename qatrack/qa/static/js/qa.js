@@ -108,12 +108,20 @@ function check_test_status(name){
         return;
     }
 
-    //ensure numerical value and highlight input element appropriately
-
     if ((val === "") || (val === null)){
         return;
     }
 
+    if (test_type === QAUtils.UPLOAD){
+        qastatus.text("Success");
+        qastatus.attr("title",val);
+        qastatus.addClass("btn-success");
+        return;
+    }else if (test_type === QAUtils.STRING){
+        qastatus.text(QAUtils.DONE_DISP);
+        qastatus.addClass("btn-success");
+        return;
+    }
     //check the value versus the reference
     var tolerances = validation_data[name].tolerances;
     var reference = validation_data[name].reference;
@@ -157,6 +165,8 @@ function get_value_for_test(name){
             return null;
         }
 
+    } else if (test_type === QAUtils.UPLOAD || test_type === QAUtils.STRING){
+        return  $("#value-"+name+" input").val();
     }else {
         val = $("#value-"+name+" input").val();
         if ($.trim(val) === ""){
@@ -471,7 +481,7 @@ $(document).ready(function(){
    $('.file-upload').each(function(idx,elem){
         var that = $(this);
         var button = that.prev();
-        var fname = that.next();
+        var fname = button.prev();
         var row = that.parents("tr");
         var name = row.find('.qa-contextname').val();
         var unit_test_info = row.find("input.qa-unittestinfo").val();
@@ -495,11 +505,11 @@ $(document).ready(function(){
                 if (console){
                     window.console.log(data.result);
                 }
-                button.removeClass("btn-primary, btn-danger, btn-success");
+                status.removeClass("btn-primary, btn-danger, btn-success");
                 if (data.result.errors.length > 0){
-                    button.addClass("btn-danger").text("Upload Failed");
+                    status.addClass("btn-danger").text("Failed");
                 }else{
-                    button.addClass("btn-success").text("Success");
+                    status.addClass("btn-success").text("Success");
                     fname.val(data.result['temp_file_name']) ;
                 }
             },
@@ -508,8 +518,8 @@ $(document).ready(function(){
             },
             progressall: function (e, data) {
                 var progress = parseInt(data.loaded / data.total * 100, 10);
-                button.removeClass("btn-primary, btn-danger, btn-success");
-                button.addClass("btn-warning").text("Uploading: " + progress+"%");
+                status.removeClass("btn-primary, btn-danger, btn-success");
+                status.addClass("btn-warning").text(progress+"%");
             }
         });
     });

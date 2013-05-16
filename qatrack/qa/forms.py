@@ -1,7 +1,7 @@
 from django import forms
 
 from django.forms.models import inlineformset_factory
-from django.forms.widgets import RadioSelect, Select
+from django.forms.widgets import RadioSelect, Select, HiddenInput
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 
@@ -45,9 +45,9 @@ class TestInstanceWidgetsMixin(object):
         string_value = cleaned_data.get("string_value", None)
 
         # force user to enter value unless skipping test
-        if (value is None and string_value is None) and not skipped:
+        if not (value or string_value or skipped):
             self._errors["value"] = self.error_class(["Value required if not skipping"])
-        elif (value is not None or string_value is None) and skipped:
+        elif (value or string_value) and skipped:
             self._errors["value"] = self.error_class(["Clear value if skipping"])
 
         if not self.user.has_perm("qa.can_skip_without_comment") and skipped and not comment:
@@ -68,10 +68,13 @@ class TestInstanceWidgetsMixin(object):
         self.fields["value"].widget.attrs["class"] = "qa-input"
         attrs = self.fields["value"].widget.attrs
         test_type = self.unit_test_info.test.type
+
         if test_type == models.BOOLEAN:
             self.fields["value"].widget = RadioSelect(choices=BOOL_CHOICES)
         elif test_type == models.MULTIPLE_CHOICE:
             self.fields["value"].widget = Select(choices=[("", "")]+self.unit_test_info.test.get_choices())
+        elif test_type == models.UPLOAD:
+            self.fields["string_value"].widget = HiddenInput()
 
         if test_type in (models.BOOLEAN, models.MULTIPLE_CHOICE):
             if hasattr(self, "instance") and self.instance.value is not None:

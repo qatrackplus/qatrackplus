@@ -55,9 +55,9 @@
                 <span class="pull-right">{{form.value.1}}</span>
             {% elif test.is_upload %}
                 <span class="upload-button">
+                    {{form.string_value}}
                     <a type="button" class="btn btn-primary btn-mini ">Upload</a>
-                    <input id="_id_{{form.string_value.html_name}}" class="file-upload" type="file" name="_{{form.string_value.html_name}}"/>
-                    <input id="id_{{form.string_value.html_name}}" class="file-upload" type="hidden" name="{{form.string_value.html_name}}"/>
+                    <input class="file-upload" type="file" />
                 </span>
             {% elif test.is_string or test.is_upload %}
                  <span class="">{{form.string_value}}</span>

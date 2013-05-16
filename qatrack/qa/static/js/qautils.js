@@ -13,6 +13,7 @@ var QAUtils = new function() {
     this.TOLERANCE = "tolerance";
     this.ACTION = "action";
     this.NOT_DONE = "not_done";
+    this.DONE = "done";
     this.NO_TOL = "no_tol";
 
     this.WITHIN_TOL_DISP =  "OK";
@@ -20,6 +21,7 @@ var QAUtils = new function() {
     this.ACTION_DISP = "ACT";
     this.FAIL_DISP = "FAIL";
     this.NOT_DONE_DISP = "Not Done";
+    this.DONE_DISP = "Done";
     this.NO_TOL_DISP = "No Tol Set";
 
     this.PERCENT = "percent";
@@ -28,6 +30,8 @@ var QAUtils = new function() {
     this.NUMERICAL = "numerical";
     this.BOOLEAN = "boolean";
     this.MULTIPLE_CHOICE = "multchoice";
+    this.UPLOAD = "upload";
+    this.STRING = "string";
 
     this.NUMERIC_WHITELIST_REGEX = /[^0-9\.eE\-]/g;
     this.NUMERIC_REGEX = /^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$/;
