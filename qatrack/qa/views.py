@@ -41,6 +41,7 @@ import numpy
 import scipy
 
 
+#============================================================================
 class JSONResponseMixin(object):
     """bare bones JSON response mixin taken from Django docs"""
     def render_to_response(self, context):
@@ -157,6 +158,7 @@ class ChartView(TemplateView):
         )
 
 
+#============================================================================
 class BaseChartView(View):
     ISO_FORMAT = False
 
@@ -270,9 +272,8 @@ class BaseChartView(View):
 
         return data
 
+
 #============================================================================
-
-
 class BasicChartData(JSONResponseMixin, BaseChartView):
     pass
 
@@ -345,9 +346,8 @@ class ControlChartImage(BaseChartView):
 
         return response
 
+
 #============================================================================
-
-
 class CompositeCalculation(JSONResponseMixin, View):
     """validate all qa tests in the request for the :model:`TestList` with id test_list_id"""
 
@@ -764,7 +764,7 @@ class BaseEditTestListInstance(UpdateView):
     def get_context_data(self, **kwargs):
 
         context = super(BaseEditTestListInstance, self).get_context_data(**kwargs)
-        
+
         # we need to override the default queryset for the formset so that we can pull
         # in all the reference/tolerance data without the ORM generating 100's of queries
         self.test_instances = models.TestInstance.objects.filter(
@@ -844,9 +844,8 @@ class ReviewTestListInstance(BaseEditTestListInstance):
         messages.success(self.request, _("Successfully updated %s " % self.object.test_list.name))
         return HttpResponseRedirect(self.get_success_url())
 
+
 #============================================================================
-
-
 class EditTestListInstance(BaseEditTestListInstance):
     """view for users to complete a qa test list"""
 
@@ -888,7 +887,7 @@ class EditTestListInstance(BaseEditTestListInstance):
     def update_test_list_instance(self):
         self.object.created_by = self.request.user
         self.object.modified_by = self.request.user
-      
+
         if self.object.work_completed is None:
             self.object.work_completed = timezone.make_aware(timezone.datetime.now(), timezone=timezone.get_current_timezone())
 
@@ -936,13 +935,14 @@ class BaseDataTablesDataSource(ListView):
     queryset = None
     initial_orderings = []
 
+    #---------------------------------------------------------------------------
     def render_to_response(self, context):
         if self.kwargs["data"]:
             return HttpResponse(context, content_type='application/json')
         else:
             return super(BaseDataTablesDataSource, self).render_to_response(context)
-    #---------------------------------------------------------------------------
 
+    #---------------------------------------------------------------------------
     def set_columns(self):
         """must be overridden in child class"""
         self.columns = ()
@@ -996,6 +996,7 @@ class BaseDataTablesDataSource(ListView):
                 else:
                     f = Q(**{search: search_term})
                 self.filters.append(f)
+
     #----------------------------------------------------------------------
     def set_current_page_objects(self):
         per_page = int(self.search_filter_context.get("iDisplayLength", 100))
@@ -1102,8 +1103,8 @@ class UTCList(BaseDataTablesDataSource):
     action_display = "Perform"
 
     initial_orderings = ["unit__number", "frequency__due_interval", "testlist__name", "testlistcycle__name"]
-    #---------------------------------------------------------------------------
 
+    #---------------------------------------------------------------------------
     def set_columns(self):
         self.columns = (
             (self.get_actions, None, None),
@@ -1179,20 +1180,18 @@ class UTCList(BaseDataTablesDataSource):
         context["action_display"] = self.action_display
         return context
 
+
 #====================================================================================
-
-
 class UTCReview(UTCList):
     action = "review"
     action_display = "Review"
-    #---------------------------------------------------------------------------
 
+    #---------------------------------------------------------------------------
     def get_page_title(self):
         return "Review Test List Data"
 
+
 #====================================================================================
-
-
 class UTCFrequencyReview(UTCReview):
 
     #----------------------------------------------------------------------
@@ -1229,24 +1228,21 @@ class UTCUnitReview(UTCReview):
     def get_page_title(self):
         return "Review " + ", ".join([x.name for x in self.units]) + " Test Lists"
 
+
 #====================================================================================
-
-
 class ChooseUnitForReview(ChooseUnit):
     template_name_suffix = "_choose_for_review"
 
+
 #====================================================================================
-
-
 class ChooseFrequencyForReview(ListView):
 
     model = models.Frequency
     context_object_name = "frequencies"
     template_name_suffix = "_choose_for_review"
 
+
 #============================================================================
-
-
 class FrequencyList(UTCList):
     """list daily/monthly/annual test lists for a unit"""
 
@@ -1269,9 +1265,8 @@ class FrequencyList(UTCList):
     def get_page_title(self):
         return ",".join([x.name if x else "ad-hoc" for x in self.frequencies]) + " Test Lists"
 
+
 #============================================================================
-
-
 class UnitFrequencyList(FrequencyList):
     """list daily/monthly/annual test lists for a unit"""
 
@@ -1314,8 +1309,8 @@ class TestListInstances(BaseDataTablesDataSource):
     model = models.TestListInstance
     queryset = models.TestListInstance.objects.all
     initial_orderings = ["unit_test_collection__unit__number", "-work_completed"]
-    #---------------------------------------------------------------------------
 
+    #---------------------------------------------------------------------------
     def set_columns(self):
         self.columns = (
             (self.get_actions, None, None),
@@ -1479,9 +1474,8 @@ class DueDateOverview(TemplateView):
         context["due"] = ordered_due_lists
         return context
 
+
 #============================================================================
-
-
 class Overview(TemplateView):
     """Overall status of the QA Program"""
     template_name = "qa/overview.html"
