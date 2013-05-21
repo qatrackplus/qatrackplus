@@ -152,6 +152,7 @@ function check_test_status(name){
 /***************************************************************/
 //Return the value of the input for the given test name (slug)
 function get_value_for_test(name){
+
     var test_type = $("#testtype-"+name).val();
     var val;
 
@@ -175,8 +176,8 @@ function get_value_for_test(name){
     } else if (test_type === QAUtils.UPLOAD || test_type === QAUtils.STRING){
         return  $("#value-"+name+" input").val();
     }else {
-        val = $("#value-"+name+" input").val();
-        if ($.trim(val) === ""){
+        val = $.trim($("#value-"+name+" input").val());
+        if (val === ""){
             return "";
         }
 
@@ -521,11 +522,13 @@ $(document).ready(function(){
                     fname.val(data.result['temp_file_name']) ;
                     status.attr("title",data.result['temp_file_name']);
                     upload_data[name] = data.result.result;
-
                 }
+                full_validation();
             },
             fail: function(e,data){
-                    button.addClass("btn-danger").text("Server Error");
+                upload_data[name] = data.result.result;
+                status.removeClass("btn-primary, btn-danger, btn-success");
+                status.addClass("btn-danger").text("Server Error");
             },
             progressall: function (e, data) {
                 var progress = parseInt(data.loaded / data.total * 100, 10);

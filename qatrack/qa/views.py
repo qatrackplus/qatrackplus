@@ -377,7 +377,6 @@ class Upload(JSONResponseMixin, View):
             results["errors"].append("Test with that ID does not exist")
         except Exception:
             results["errors"].append("Invalid Test")
-
         return self.render_to_response(results)
 
     #---------------------------------------------------------------
@@ -502,7 +501,7 @@ class CompositeCalculation(JSONResponseMixin, View):
         """set up the environment that the composite test will be calculated in"""
         values = self.get_json_data("qavalues")
         upload_data = self.get_json_data("upload_data");
-        import ipdb; ipdb.set_trace()
+
         if values is None and upload_data is None:
             self.calculation_context = {}
             return
@@ -511,6 +510,7 @@ class CompositeCalculation(JSONResponseMixin, View):
             "math": math,
             "scipy": scipy,
             "numpy": numpy,
+            "uploads": json.loads(self.request.POST.get("upload_data",{})),
         }
 
         for slug, info in values.iteritems():
