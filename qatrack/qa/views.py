@@ -30,7 +30,7 @@ from qatrack.contacts.models import Contact
 
 
 import logging
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('qatrack.console')
 
 import forms
 import math
@@ -502,7 +502,7 @@ class CompositeCalculation(JSONResponseMixin, View):
         """set up the environment that the composite test will be calculated in"""
         values = self.get_json_data("qavalues")
         upload_data = self.get_json_data("upload_data");
-        import ipdb; ipdb.set_trace()
+
         if values is None and upload_data is None:
             self.calculation_context = {}
             return
