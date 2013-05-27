@@ -7,7 +7,7 @@ from django.utils.translation import ugettext as _
 
 from django.conf import settings
 
-import models
+from .. import models
 
 BOOL_CHOICES = [(0, "No"), (1, "Yes")]
 
