@@ -1,12 +1,12 @@
 import signals #signals import needs to be here so signals get registered
+
+import calendar
 import collections
 import json
-import calendar
 import os
 import shutil
 import urllib
 
-from api import ValueResource
 
 from django.conf import settings
 from django.contrib import messages
@@ -27,7 +27,7 @@ from qatrack.qa import models, utils
 from qatrack.qa.templatetags import qa_tags
 from qatrack.units.models import Unit, UnitType
 from qatrack.contacts.models import Contact
-
+from qatrack.qa.api import ValueResource
 
 import logging
 logger = logging.getLogger('qatrack.console')
