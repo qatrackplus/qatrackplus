@@ -3,8 +3,11 @@ import signals #signals import needs to be here so signals get registered
 import calendar
 import collections
 import json
+import logging
+import math
 import os
 import shutil
+import textwrap
 import urllib
 
 
@@ -23,29 +26,28 @@ from django.views.generic import ListView, UpdateView, View, TemplateView, Creat
 from django.utils.translation import ugettext as _
 from django.utils import timezone
 
-from qatrack.qa import models, utils
-from qatrack.qa.templatetags import qa_tags
-from qatrack.units.models import Unit, UnitType
-from qatrack.contacts.models import Contact
-from qatrack.qa.api import ValueResource
-
-import logging
-logger = logging.getLogger('qatrack.console')
-
-import forms
-import math
-import textwrap
-
-from qatrack.qa.control_chart import control_chart
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
+
 import numpy
 import scipy
+
+from qatrack.contacts.models import Contact
+from qatrack.qa import models, utils, forms
+from qatrack.qa.api import ValueResource
+from qatrack.qa.control_chart import control_chart
+from qatrack.qa.templatetags import qa_tags
+from qatrack.units.models import Unit, UnitType
+
+logger = logging.getLogger('qatrack.console')
+
+
 
 
 #============================================================================
 class JSONResponseMixin(object):
     """bare bones JSON response mixin taken from Django docs"""
+
     def render_to_response(self, context):
         """Returns a JSON response containing 'context' as payload"""
         return self.get_json_response(self.convert_context_to_json(context))
@@ -64,7 +66,10 @@ class JSONResponseMixin(object):
 
 #============================================================================
 class ChartView(TemplateView):
-    """view for creating charts/graphs from data"""
+    """View responsible for rendering the charts page.  The data used
+    for rendering charts is provided by the subclasses of BaseChartData below
+    """
+
     template_name = "qa/charts.html"
 
     #----------------------------------------------------------------------
