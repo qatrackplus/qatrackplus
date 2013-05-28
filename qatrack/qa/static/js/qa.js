@@ -12,7 +12,6 @@ var upload_data = {};
 
 /***************************************************************/
 //minimal Pub/Sub functionality
-
 var topics = {};
 jQuery.Topic = function( id ) {
     var callbacks,
@@ -426,23 +425,7 @@ function TestListInstance(){
 
 /***************************************************************/
 function confirm_leave_page(){
-    var confirm_msg = "If you leave this page now you will lose all entered values.";
-    var inp_type;
-    var inputs = $(".qa-input");
-    var inp;
-    var inp_idx;
-
-    for (inp_idx=0; inp_idx < inputs.length; inp_idx++){
-        inp = $(inputs[inp_idx]);
-        inp_type = inp.attr("type")
-        if ((inp_type === "radio") && inp.is(":checked")){
-            return confirm_msg;
-        }else if((inp_type === "text") && (inp.val() !== "")){
-            return confirm_msg;
-        }else if((inp_type !== "radio") && (inp_type !== "text")){
-            return "Unknown input type";
-        }
-    }
+    /* replaces this with someting based on test list instance*/
 }
 
 function set_tab_stops(){
@@ -496,6 +479,8 @@ function set_tab_stops(){
     });
 
 }
+
+
 var tli;
 
 
@@ -543,12 +528,15 @@ $(document).ready(function(){
     //this is here to help mitigate the risk that a user hits back or backspace key
     //by accident and completely hoses all the information they've entered during
     //a qa session
-    $(window).bind("beforeunload",confirm_leave_page);
-    $("#qa-form").submit(function(){
-        $(window).unbind("beforeunload")
+    $(window).bind("beforeunload",function(){
+        if (_.any(_.pluck(tli.test_instances,"value"))){
+            return  "If you leave this page now you will lose all entered values.";
+        }
     });
 
-    $("#qa-form").preventDoubleSubmit();
+    $("#qa-form").preventDoubleSubmit().submit(function(){
+        $(window).unbind("beforeunload")
+    });
 
     $("#work-completed, #work-started").datepicker({
         autoclose:true,
