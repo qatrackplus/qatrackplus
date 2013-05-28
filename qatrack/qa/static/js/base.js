@@ -46,4 +46,5 @@ $.fn.preventDoubleSubmit = function() {
       this.beenSubmitted = true;
 	}
   });
+  return jQuery(this);
 };
