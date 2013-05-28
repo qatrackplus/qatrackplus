@@ -424,10 +424,6 @@ function TestListInstance(){
 
 
 /***************************************************************/
-function confirm_leave_page(){
-    /* replaces this with someting based on test list instance*/
-}
-
 function set_tab_stops(){
 
     var user_inputs=  $('.qa-input',context).not("[readonly=readonly]").not("[type=hidden]");
@@ -482,7 +478,6 @@ function set_tab_stops(){
 
 
 var tli;
-
 
 /****************************************************************/
 $(document).ready(function(){
@@ -616,4 +611,3 @@ $(document).ready(function(){
     });
 
 });
-
