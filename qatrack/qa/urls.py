@@ -69,6 +69,7 @@ urlpatterns = patterns('',
 
     url(r"^unit/$", views.ChooseUnit.as_view(), name="choose_unit"),
     url(r"^utc/perform/(?P<pk>\d+)/$", views.PerformQA.as_view(), name="perform_qa"),
+    url(r"^utc/perform/info/(?P<unit>\d+)/(?P<test_list>\d+)/$", views.PerformQAInfo.as_view(), name="perform_qa_info"),
 
     url(r"^unit/(?P<unit_number>[/\d]+)/frequency/(?P<frequency>[/\w-]+?)/(?P<data>data/)?$", views.UnitFrequencyList.as_view(), name="qa_by_frequency_unit"),
     url(r"^unit/(?P<unit_number>[/\d]+)/(?P<data>data/)?$", views.UnitList.as_view(), name="qa_by_unit"),

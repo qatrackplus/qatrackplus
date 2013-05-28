@@ -28,10 +28,14 @@ var QAUtils = new function() {
     this.ABSOLUTE = "absolute";
 
     this.NUMERICAL = "numerical";
+    this.SIMPLE = "simple";
+    this.CONSTANT = "constant";
     this.BOOLEAN = "boolean";
     this.MULTIPLE_CHOICE = "multchoice";
+    this.COMPOSITE = "composite";
     this.UPLOAD = "upload";
     this.STRING = "string";
+    this.NUMBER_TEST_TYPES = [this.SIMPLE, this.CONSTANT, this.COMPOSITE];
 
     this.NUMERIC_WHITELIST_REGEX = /[^0-9\.eE\-]/g;
     this.NUMERIC_REGEX = /^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$/;
@@ -43,6 +47,7 @@ var QAUtils = new function() {
     this.API_VERSION = "v1";
     this.API_URL = QAURLs.base+"/qa/api/"+this.API_VERSION+"/";
     this.COMPOSITE_URL = QAURLs.base+"/qa/composite/";
+    this.INFO_URL = QAURLs.base+"/qa/utc/perform/info/";
     this.UPLOAD_URL = QAURLs.base+"/qa/upload/";
     this.CHARTS_URL = QAURLs.base+"/qa/charts/";
     this.OPTION_DELIM = "=";

@@ -1,286 +1,428 @@
 "use strict";
+
+ 
 /***************************************************************/
 //Test statuse and Table context used to narrow down jQuery selectors.
 //Improves performance in IE
-var context = $("#perform-qa-table")[0];
-var test_statuses = $("td.qa-status",context);
-var fail_warnings = $("#do-not-treat-bottom, #do-not-treat-top");
-var pass_fail_only = $("#pass-fail-only").val() === "yes" ? true : false;
+var context;
 
-/***************************************************************/
-//Set up the values we will need to do validation on data
-var validation_data = {};
-var composite_ids = {};
+var pass_fail_only;
+
 var upload_data = {};
+
 /***************************************************************/
-//set the intitial values, tolerances & refs for all of our tests
-function initialize_qa(){
+//minimal Pub/Sub functionality
 
-    var rows = $(".qa-valuerow",context);
-    var i;
-    for (i=0; i< rows.length; i++){
-        //loop over each row containing a qa test and grab relevant info
-        var row = $(rows[i]);
-        var context_name = row.find(".qa-contextname").val();
-
-        var reference = {
-            value:parseFloat(row.find(".qa-reference-val").val()),
-            pk:row.find(".qa-reference-pk").val()
+var topics = {};
+jQuery.Topic = function( id ) {
+    var callbacks,
+        method,
+        topic = id && topics[ id ];
+ 
+    if ( !topic ) {
+        callbacks = jQuery.Callbacks();
+        topic = {
+            publish: callbacks.fire,
+            subscribe: callbacks.add,
+            unsubscribe: callbacks.remove
         };
-
-        var tolerances = {
-            act_low:parseFloat(row.find(".act_low").val()),
-            tol_low:parseFloat(row.find(".tol_low").val()),
-            tol_high:parseFloat(row.find(".tol_high").val()),
-            act_high:parseFloat(row.find(".act_high").val()),
-            mc_pass_choices:_.compact(row.find(".mc_pass_choices").val().split(',')),
-            mc_tol_choices:_.compact(row.find(".mc_tol_choices").val().split(',')),
-            type:row.find(".qa-tolerance-type").val(),
-            pk:row.find(".qa-tolerance-pk").val()
-
-        };
-
-        //update global validation object with data
-        validation_data[context_name] = {
-            name:context_name,
-            tolerances:tolerances,
-            reference:reference,
-            current_value: get_value_for_test(context_name)
-        };
-
-    }
-
-
-    //store ids and names for all composite tests
-    $('.qa-testtype[value="composite"]',context).each(function(){
-        var row = $(this).parents(".qa-valuerow");
-        var test_id = row.find('.qa-test-id').val();
-        var name = row.find('.qa-contextname').val();
-        composite_ids[name] = test_id;
-    });
-
-    $('.qa-testtype[value="upload"]',context).each(function(){
-        var row = $(this).parents(".qa-valuerow");
-        var name = row.find('.qa-contextname').val();
-        upload_data[name] = null ;
-    });
-}
-/***************************************************************/
-//Perform Ajax calls to calculate all composite values
-function calculate_composites(){
-    if ($("#contains-composites").val() !== "yes"){
-        return
-    }
-    var submit = $('#submit-qa');
-    submit.attr("disabled", true);
-    var data = {
-        qavalues:JSON.stringify(validation_data),
-        composite_ids:JSON.stringify(composite_ids),
-        upload_data:JSON.stringify(upload_data)
-    };
-
-    var on_success = function(data){
-        submit.attr("disabled", false);
-
-        if (data.success){
-            $.each(data.results,function(name,result){
-                set_value_by_name(name,result.value);
-            });
+        if ( id ) {
+            topics[ id ] = topic;
         }
     }
-
-    var on_error = function(){
-        submit.attr("disabled", false);
-    }
-
-    QAUtils.call_api(QAUtils.COMPOSITE_URL,"POST",data,on_success,on_error);
-}
-
-/***************************************************************/
-//Check the tolerances for a single input and format appropriately
-function check_test_status(name){
-
-    var test_type = $("#testtype-"+name).val();
-    var qastatus = $("#status-"+name);
-    var val = get_value_for_test(name);
-
-    //update the current value of the test that just changed and check tolerances
-    validation_data[name].current_value = val;
-
-    //remove any previous formatting
-    qastatus.removeClass("btn-danger btn-warning btn-success btn-info");
-    qastatus.text("Not Done");
-
-    if ($("#skip-"+name+" input").is(":checked")){
-        return;
-    }
-
-    if ((val === "") || (val === null)){
-        return;
-    }
-
-    if (test_type === QAUtils.UPLOAD){
-        qastatus.text("Success");
-        qastatus.attr("title",val);
-        qastatus.addClass("btn-success");
-        return;
-    }else if (test_type === QAUtils.STRING){
-        qastatus.text(QAUtils.DONE_DISP);
-        qastatus.addClass("btn-success");
-        return;
-    }
-    //check the value versus the reference
-    var tolerances = validation_data[name].tolerances;
-    var reference = validation_data[name].reference;
-
-    var result = QAUtils.test_tolerance(val,reference.value,tolerances, test_type,pass_fail_only);
-
-    //update formatting with result
-    qastatus.text(result.message);
-    if (result.gen_status === QAUtils.WITHIN_TOL){
-        qastatus.addClass("btn-success");
-    }else if(result.gen_status === QAUtils.TOLERANCE){
-        qastatus.addClass("btn-warning");
-    }else if(result.gen_status === QAUtils.ACTION){
-        qastatus.addClass("btn-danger");
-    }else{
-        qastatus.addClass("btn-info");
-    }
-
-}
-
-/***************************************************************/
-//Return the value of the input for the given test name (slug)
-function get_value_for_test(name){
-
-    var test_type = $("#testtype-"+name).val();
-    var val;
-
-    if (test_type === QAUtils.BOOLEAN){
-        var checked = $("#value-"+name+" :checked");
-        if (checked.length > 0){
-            return parseFloat(checked.val());
-        }else{
-            return null;
-        }
-    }else if (test_type === QAUtils.MULTIPLE_CHOICE){
-        var selected = $("#value-"+name+" :selected");
-
-        val = $.trim(selected.text());
-        if (val !== ""){
-            return val;
-        }else{
-            return null;
-        }
-
-    } else if (test_type === QAUtils.UPLOAD || test_type === QAUtils.STRING){
-        return  $("#value-"+name+" input").val();
-    }else {
-        val = $.trim($("#value-"+name+" input").val());
-        if (val === ""){
-            return "";
-        }
-
-        val = parseFloat(val);
-        if (isNaN(val)){
-            return null;
-        }else{
-            return val;
-        }
-    }
-
-}
-
-/***************************************************************/
-//set the value of an input by using it's name
-function set_value_by_name(name, value){
-    var input = $("#value-"+name+" input");
-    if (_.isNumber(value)){
-        value =QAUtils.format_float(value);
-    }
-    input.val(value);
-    check_test_status(name);
-    check_skip_status(name);
-    update_qa_status();
-}
-
-/***************************************************************/
-//determine whether an input box contains a float
-function valid_input(input_element){
-    return (!isNaN(parseFloat(input_element.val())) && $.trim(input_element.val()) !== "") ;
-}
-
-/***************************************************************/
-//perform a full validation of all data (for example on page load after submit)
-function full_validation(){
-    calculate_composites();
-
-    var i;
-    var names = $(".qa-contextname",context);
-    for (i=0; i < names.length; i++){
-        check_test_status(names[i].value);
-    }
-
-    update_qa_status();
-
-}
-
-/***************************************************************/
-//Filter table rows by category and mark anything hidden as being skipped
-function filter_by_category(){
-
-    var selected_categories = new Array();
-    var not_performed = "Category not performed";
-
-    $("#category_filter option:selected").each(function(){
-        selected_categories.push($(this).val());
-    });
-
-    var show_all = (selected_categories.length === 0) ||
-        ($.inArray("all",selected_categories) >= 0);
-
-    var cmt;
-
-    if (show_all){
-        $(".qa-valuerow").show();
-        $(".qa-comment, .qa-procedure").hide();
-        $(".qa-skip input").attr("checked",false);
-        $(".qa-comment textarea").each(function(){
-            $(this).val($(this).val().replace(not_performed,""));
-        })
-        return;
-    }
-
-    //loop over each qa-value row and show or hide related rows
-    $(".qa-valuerow").each(function(e){
-
-        var category = $(this).find("td.qa-category").text().toLowerCase();
-
-        var to_toggle = $(this);
-        to_toggle.add($(this).nextUntil(".qa-valuerow"));
-        to_toggle.add($(this).prevUntil(".qa-valuerow"));
-
-        if ($.inArray(category,selected_categories) < 0){
-            $(this).find(".qa-skip input").attr("checked",true);
-            $(this).next().find("textarea").val(not_performed);
-            to_toggle.hide();
-        }else{
-            $(this).find(".qa-skip input").attr("checked",false);
-            $(this).next().find("textarea").val($(this).next().find("textarea").val().replace(not_performed,""));
-            to_toggle.show();
-        }
-    });
+    return topic;
 };
 
-/***************************************************************/
-//set link for cycle when user changes cycle day dropdown
-function set_cycle_day(){
-    var day = $("#cycle-day option:selected").val();
-    var cur = document.location.href;
-    var next = cur.replace(/day=(next|[1-9])/,"day="+day);
-
-    document.location.href = next;
+function Test(data){
+    _.extend(this,data);
 }
+
+function Reference(data){
+    _.extend(this,data);
+}
+
+function Tolerance(data){
+    _.extend(this,data);
+    if (this.type === QAUtils.MULTIPLE_CHOICE){
+        this.mc_pass_choices = this.mc_pass_choices ? this.mc_pass_choices.split(",") : [];
+        this.mc_tol_choices = this.mc_tol_choices ? this.mc_tol_choices.split(",") : [];
+    }
+}
+
+function Status(status,diff,message){
+    this.status = status;
+    this.diff = diff;
+    this.message = message;
+}
+var NO_TOL = new Status(QAUtils.NO_TOL,"",QAUtils.NO_TOL_DISP);
+var NOT_DONE = new Status(QAUtils.NOT_DONE,"",QAUtils.NOT_DONE_DISP);
+var DONE = new Status(QAUtils.DONE,"",QAUtils.DONE_DISP);
+
+function TestInfo(data){
+    var self = this;
+    this.id = data.id; 
+    this.test = new Test(data.test);
+    this.reference = new Reference(data.reference);
+    this.tolerance = new Tolerance(data.tolerance);
+
+
+    this.check_value = function(value){
+        var result = self.check_dispatch[self.test.type](value)
+        if (pass_fail_only){
+            if (result.status === QAUtils.ACTION){
+                result.message = QAUtils.FAIL_DISP;
+            }else if (result.status === QAUtils.TOLERANCE || result.status === QAUtils.NO_TOL){
+                result.message = QAUtils.WITHIN_TOL_DISP;
+                result.status = QAUtils.WITHIN_TOL;
+            }else{
+                result.message = QAUtils.WITHIN_TOL_DISP;
+            }
+        }
+        return result;
+    };
+
+    this.check_bool = function(value){
+        if (_.isEmpty(self.reference)){
+            return NO_TOL;
+        }else if (QAUtils.almost_equal(value,self.reference.value)){
+            return new Status(QAUtils.WITHIN_TOL,0,QAUtils.WITHIN_TOL_DISP);
+        }
+
+        return new Status(QAUtils.ACTION,1,QAUtils.ACTION_DISP);
+    };
+
+    this.check_multi = function(value){
+
+        if (_.isEmpty(self.tolerance) || self.tolerance.mc_pass_choices.length === 0){
+            return NO_TOL;
+        }
+        var status, message;
+        if (_.indexOf(self.tolerance.mc_pass_choices,value) >= 0){
+            status = QAUtils.WITHIN_TOL;
+            message = QAUtils.WITHIN_TOL_DISP;
+        }else if (_.indexOf(self.tolerance.mc_tol_choices,value) >= 0){
+            status = QAUtils.TOLERANCE;
+            message = QAUtils.TOLERANCE_DISP;
+        }else{
+            status = QAUtils.ACTION;
+            message = QAUtils.ACTION_DISP;
+        }
+
+        return new Status(status,null,message);
+    };
+
+    this.check_upload = function(value){
+        return value ? DONE : NOT_DONE;
+    };
+
+    this.check_string = function(value){
+        return value ? DONE : NOT_DONE;
+    };
+
+    this.check_numerical = function(value){
+
+        if (_.isEmpty(self.reference) || _.isEmpty(self.tolerance)){
+            return NO_TOL;
+        }
+
+        var diff = self.calculate_diff(value);
+        var status;
+        var message = self.diff_display(diff);
+
+        var right_at_tolerance = QAUtils.almost_equal(self.tolerance.tol_low,diff) || QAUtils.almost_equal(self.tolerance.tol_high,diff);
+        var right_at_action = QAUtils.almost_equal(self.tolerance.act_low,diff) || QAUtils.almost_equal(self.tolerance.act_high,diff);
+
+        var within_tol = (self.tolerance.tol_low <= diff) && (diff <= self.tolerance.tol_high);
+        var tol_low = (self.tolerance.act_low <= diff) && (diff <= self.tolerance.tol_low);
+        var tol_high = (self.tolerance.tol_high <= diff) && (diff <= self.tolerance.act_high);
+
+        if ( right_at_tolerance || within_tol){
+            status = QAUtils.WITHIN_TOL;
+            message = QAUtils.WITHIN_TOL_DISP + message;
+        }else if (right_at_action || tol_low || tol_high){
+            status = QAUtils.TOLERANCE;
+            message = QAUtils.TOLERANCE_DISP + message;
+        }else{
+            message = QAUtils.ACTION_DISP + message;
+            status = QAUtils.ACTION;
+        }
+
+        return new Status(status,diff,message);
+
+    };
+
+    this.check_dispatch = {}
+    this.check_dispatch[QAUtils.BOOLEAN]=this.check_bool;
+    this.check_dispatch[QAUtils.MULTIPLE_CHOICE]=this.check_multi;
+    this.check_dispatch[QAUtils.CONSTANT]=this.check_numerical;
+    this.check_dispatch[QAUtils.SIMPLE]=this.check_numerical;
+    this.check_dispatch[QAUtils.COMPOSITE]=this.check_numerical;
+    this.check_dispatch[QAUtils.STRING]=this.check_string;
+    this.check_dispatch[QAUtils.UPLOAD]=this.check_upload;
+
+    this.calculate_diff = function(value){
+        if (self.tolerance.type === QAUtils.PERCENT){
+            return 100.*(value-self.reference.value)/self.reference.value;
+        }
+        return value - self.reference.value;
+    };
+
+    this.diff_display = function(diff){
+
+        if (self.tolerance.type === QAUtils.PERCENT){
+            return "(" + diff.toFixed(1)+"%)";
+        }
+        return "(" + diff.toFixed(2)+")";
+    }
+
+}
+
+function TestInstance(test_info, row){
+    var self = this;
+    this.test_info = test_info;
+    this.row = $(row);
+    this.inputs = this.row.find("td.qa-value").find("input, textarea, select");
+
+    this.status = this.row.find("td.qa-status");
+    this.test_status = null;
+
+    this.skip = this.row.find("td.qa-skip input");
+    this.skipped = false;
+    this.set_skip = function(skipped){
+        self.skipped = skipped;
+        self.skip.prop("checked",self.skipped);
+        if (skipped){
+            self.set_value(null);
+        }
+    }
+    this.skip.change(function(){
+        self.skipped = self.skip.is(":checked");
+        if (self.skipped){
+            self.set_value(null);
+            self.comment.show(600);
+            $.Topic("valueChanged").publish();
+        }else{
+            self.comment.hide(600);
+        }
+        self.update_value();
+    });
+
+    this.show_comment = this.row.find("td.qa-showcmt a");
+    this.comment = this.row.next();
+    this.comment_box = this.comment.find("textarea");
+    this.comment_icon = this.row.find(".qa-showcmt i");
+
+    this.show_comment.click(function(){
+        self.comment.toggle(600);
+        return false;
+    });
+    this.set_comment_icon = function(){
+        self.comment_icon.removeClass();
+        if ( $.trim(self.comment_box.val()) != ''){
+            self.comment_icon.addClass("icon-comment");
+        }else{
+            self.comment_icon.addClass("icon-edit");
+        }
+    }
+    this.set_comment_icon(); //may already contain comment on initialization 
+    this.comment_box.blur(this.set_comment_icon);
+
+    this.show_procedure = this.row.find("td.qa-showproc a");
+    this.procedure = this.comment.next();
+    this.show_procedure.click(function(){
+        self.procedure.toggle(600);
+        return false;
+    });
+
+
+    //This will set value to null unless it's a constance
+    this.value = this.test_info.test.constant_value;
+
+    this.inputs.change(function(){
+        self.update_value();
+        if (self.skipped){
+            self.set_skip(false);
+        }
+        $.Topic("valueChanged").publish();
+    });
+
+    this.set_value = function(value){
+
+        var tt = self.test_info.test.type;
+
+        if (tt === QAUtils.BOOLEAN){
+            if (_.isNull(value)){
+                self.inputs.prop("checked",false);
+            }else if (value !== 0.){
+                self.inputs[0].checked = true;
+                self.inputs[1].checked = false;
+            }else {
+                self.inputs[0].checked = false;
+                self.inputs[1].checked = true;
+            }
+        }else if (tt=== QAUtils.UPLOAD || tt=== QAUtils.STRING || tt === QAUtils.MULTIPLE_CHOICE){
+            self.inputs.val(value);
+        }else if (tt === QAUtils.SIMPLE){ 
+            if (_.isNull(value)){
+                self.inputs.val("");
+            }else{
+                self.inputs.val(QAUtils.format_float(value));
+            }
+        }
+        this.update_value();
+
+    }
+
+    this.update_value = function(){
+
+        var tt = self.test_info.test.type;
+        if (tt === QAUtils.BOOLEAN){
+            var value = parseFloat(self.inputs.filter(":checked").val());
+            self.value = _.isNaN(value) ? null : value;
+        }else if (tt === QAUtils.MULTIPLE_CHOICE){
+            var value = $.trim(self.inputs.find(":selected").text());
+            self.value = value !== "" ? value : null;
+        } else if (tt=== QAUtils.UPLOAD || tt=== QAUtils.STRING){
+            self.value = self.inputs.val();
+        }else {
+            self.inputs.val(QAUtils.clean_numerical_value(self.inputs.val()));
+            var value = parseFloat(self.inputs.val());
+            self.value = _.isNaN(value) ? null : value;
+        }
+
+        this.update_status();
+    }
+    this.update_status = function(){
+        var status = _.isNull(self.value)? NOT_DONE : self.test_info.check_value(self.value);
+        self.set_status(status);
+    };
+    this.set_status = function(status){
+
+        self.status.text(status.message);
+        self.status.removeClass("btn-success btn-warning btn-danger btn-info");
+        self.test_status = status.status;
+        if (status.status === QAUtils.WITHIN_TOL){
+            self.status.addClass("btn-success");
+        }else if(status.status === QAUtils.TOLERANCE){
+            self.status.addClass("btn-warning");
+        }else if(status.status === QAUtils.ACTION){
+            self.status.addClass("btn-danger");
+        }else if(status.status !== QAUtils.NOT_DONE){
+            self.status.addClass("btn-info");
+        }
+    };
+
+    this.NOT_PERFORMED = "Category not performed";
+
+    this.show = function(){
+        self.row.show();
+        self.comment.hide();
+        self.procedure.hide();
+        self.set_skip(false);
+        self.comment_box.val(self.comment_box.val().replace(self.NOT_PERFORMED,""));
+    }
+
+    this.hide = function(){
+        self.row.hide();
+        self.comment.hide();
+        self.procedure.hide();
+        self.set_skip(true);
+        self.comment_box.val(self.NOT_PERFORMED);
+    }
+
+
+}
+
+
+function TestListInstance(){
+    var self = this;
+
+    this.test_instances = [];
+    this.tests_by_slug = {};
+    this.slugs = [];
+    this.composites = [];
+    this.composite_ids = [];
+
+    this.submit = $("#submit-qa");
+
+    /***************************************************************/
+    //set the intitial values, tolerances & refs for all of our tests
+    this.initialize = function(){
+        var url = QAUtils.INFO_URL+$("#unit-id").val()+"/"+$("#test-list-id").val()+"/";
+        $.getJSON(url,function(result){
+            var test_infos = _.map(result.unit_test_infos,function(e){ return new TestInfo(e)});
+
+            self.test_instances = _.map(_.zip(test_infos, $("#perform-qa-table tr.qa-valuerow")), function(uti_row){return new TestInstance(uti_row[0], uti_row[1])});
+            self.slugs = _.map(self.test_instances, function(ti){return ti.test_info.test.slug});
+            self.tests_by_slug = _.object(_.zip(self.slugs,self.test_instances));
+            self.composites = _.filter(self.test_instances,function(ti){return ti.test_info.test.type === QAUtils.COMPOSITE;});
+            self.composite_ids = _.map(self.composites,function(ti){return ti.test_info.test.id;});
+            self.update();
+            $.Topic("testDataRetrieved").publish("done");
+        });
+    }
+
+    this.update = function(){
+        self.calculate_composites();
+        _.each(self.test_instances,function(ti){
+            ti.update_status();
+        });
+        $.Topic("qaUpdated").publish();
+    }
+
+    this.calculate_composites = function(){
+
+        if (self.composites.length === 0){
+            return
+        }
+
+        self.submit.attr("disabled", true);
+
+        var cur_values = _.map(self.test_instances,function(ti){return ti.value;});
+        var qa_values = _.object(_.zip(self.slugs,cur_values)); 
+
+        var data = {
+            qavalues:JSON.stringify(qa_values),
+            composite_ids:JSON.stringify(self.composite_ids),
+            upload_data:JSON.stringify(upload_data)
+        };
+
+        var on_success = function(data){
+            self.submit.attr("disabled", false);
+
+            if (data.success){
+                _.each(data.results,function(result, name){
+                    self.tests_by_slug[name].set_value(result.value);
+                });
+            }
+        }
+
+        var on_error = function(){
+            self.submit.attr("disabled", false);
+        }
+
+        QAUtils.call_api(QAUtils.COMPOSITE_URL,"POST",data,on_success,on_error);
+    }
+
+    this.has_failing = function(){
+        return _.filter(self.test_instances,function(ti){return ti.test_status === QAUtils.ACTION}).length > 0;
+    }
+
+    $.Topic("categoryFilter").subscribe(function(categories){
+        _.each(self.test_instances,function(ti){
+            if (categories === "all" || _.contains(categories,ti.test_info.test.category.toString())){
+                ti.show();
+            }else{
+                ti.hide();
+            }
+        });
+        $.Topic("qaUpdated").publish();
+    });
+
+    $.Topic("valueChanged").subscribe(self.update);
+}
+
+
 
 /***************************************************************/
 function confirm_leave_page(){
@@ -303,135 +445,31 @@ function confirm_leave_page(){
     }
 }
 
-/****************************************************************/
-function check_skip_status(name){
-    var val = get_value_for_test(name);
-    if (val !== "") {
-        $("#skip-"+name+" input").attr("checked",false);
-    }
-}
-/****************************************************************/
-function update_qa_status(){
-    var i;
-    for (i=0;i<test_statuses.length;i++){
-        if ($(test_statuses[i]).hasClass("btn-danger")){
-            fail_warnings.show();
-            return;
-        }
-    }
-
-    fail_warnings.hide();
-}
-
-function update_time(input){
-    if (input.attr("name") === "work_completed"){
-        input.val(input.val()+" 20:30");
-    }else{
-        input.val(input.val()+" 19:30");
-    }
-}
-/****************************************************************/
-function set_comment_icon(input){
-    var icon = $(input).parents("tr").prev("tr").find(".qa-showcmt i");
-    icon.removeClass();
-    if ( $.trim($(input).val()) != ''){
-        icon.addClass("icon-comment");
-    }else{
-        icon.addClass("icon-edit");
-    }
-
-}
-/****************************************************************/
-$(document).ready(function(){
-    var that = $(this);
-
-    var composites = $('.qa-testtype[value="composite"]',context);
-    if (composites.length <= 0){
-        $("#contains-composites").val("no");
-    }else{
-        $("#contains-composites").val("yes");
-    }
-
-    $("#test-list-info-toggle").click(function(){
-        $("#test-list-info").toggle(600);
-    });
-
-    //show comment when clicked
-    $(".qa-showcmt a",context).click(function(){
-      $(this).parent().parent().nextAll(".qa-comment").first().toggle(600);
-      return false;
-    });
-
-    //show comment when clicked
-    $("#toggle-gen-comment").click(function(){
-      $(".qa-tli-comment textarea").toggle(600);
-      return false;
-    });
-
-    $(".qa-comment textarea",context).blur(function(){
-        set_comment_icon($(this));
-    });
-    _.map($(".qa-comment textarea"),set_comment_icon);
-
-    //toggle contacts
-    $("#toggle-contacts").click(function(){
-        $("#contacts").toggle();
-
-        var visible = $("#contacts").is(":visible");
-        var icon = "icon-plus-sign";
-        if (visible) {
-            icon = "icon-minus-sign";
-        }
-
-        $("#toggle-contacts i").removeClass("icon-plus-sign icon-minus-sign").addClass(icon);
-
-    });
-
-    $(".qa-showproc a").click(function(){
-      $(this).parent().parent().nextAll(".qa-procedure").first().toggle(600);
-      return false;
-    });
-
-
-    initialize_qa();
+function set_tab_stops(){
 
     var user_inputs=  $('.qa-input',context).not("[readonly=readonly]").not("[type=hidden]");
     var visible_user_inputs = user_inputs;
 
-    //anytime an input changes run validation
-    user_inputs.change(function(){
-//        var name = $(this).parents("td").siblings(".qa-contextname").val();
-        var row = $(this).parents("tr.qa-valuerow");
-        var name = row.find(".qa-contextname").val();
-        var test_type = row.find(".qa-testtype").val();
-        check_skip_status(name);
-
-        if (this.type === "text" && test_type !== "string"){
-            this.value = QAUtils.clean_numerical_value(this.value);
-        }
-        check_test_status(name);
-        calculate_composites();
-        update_qa_status();
+    var tabindex = 1;
+    user_inputs.each(function() {
+        $(this).attr("tabindex", tabindex);
+        tabindex++;
     });
+    user_inputs.first().focus();
 
-    //run filter routine anytime user alters the categories
-    $("#category_filter").change(function(){
-        filter_by_category();
-        visible_user_inputs = user_inputs.filter(':visible');
+    $.Topic("categoryFilterComplete").subscribe(function(){
+        visible_user_inputs = user_inputs.filter(":visible");
     });
-
-    //update the link for user to change cycles
-    $("#cycle-day").change(set_cycle_day);
 
     //allow arrow key and enter navigation
-    $(that).on("keydown","input, select", function(e) {
+    $(document).on("keydown","input, select", function(e) {
 
         var to_focus;
         //rather than submitting form on enter, move to next value
         if (e.which == QAUtils.KC_ENTER  || e.which == QAUtils.KC_DOWN ) {
             var idx = visible_user_inputs.index(this);
 
-            if (idx == user_inputs.length - 1) {
+            if (idx == visible_user_inputs.length - 1) {
                 to_focus= visible_user_inputs.first();
             } else {
                 to_focus = visible_user_inputs[idx+1];
@@ -457,6 +495,50 @@ $(document).ready(function(){
         }
     });
 
+}
+var tli;
+
+
+/****************************************************************/
+$(document).ready(function(){
+
+    tli = new TestListInstance();
+    tli.initialize();
+
+    context = $("#perform-qa-table")[0];
+
+    pass_fail_only = $("#pass-fail-only").val() === "yes" ? true : false;
+
+    $("#test-list-info-toggle").click(function(){ $("#test-list-info").toggle(600); });
+
+    //toggle contacts
+    $("#toggle-contacts").click(function(){
+        $("#contacts").toggle();
+
+        var icon = $("#contacts").is(":visible") ? "icon-minus-sign" : "icon-plus-sign";
+        $("#toggle-contacts i").removeClass("icon-plus-sign icon-minus-sign").addClass(icon);
+    });
+
+    //set link for cycle when user changes cycle day dropdown
+    $("#cycle-day").change(function(){
+        var day = $("#cycle-day option:selected").val();
+        var cur = document.location.href;
+        var next = cur.replace(/day=(next|[1-9])/,"day="+day);
+        document.location.href = next;
+    });
+
+    //run filter routine anytime user alters the categories
+    $("#category_filter").change(function(){
+        var categories = $(this).val();
+        if (categories === null  || _.contains(categories,"all")){
+            $.Topic("categoryFilter").publish("all");
+        }else{
+            $.Topic("categoryFilter").publish(categories);
+        }
+        $.Topic("categoryFilterComplete");
+    });
+
+
     //make sure user actually want's to go back
     //this is here to help mitigate the risk that a user hits back or backspace key
     //by accident and completely hoses all the information they've entered during
@@ -468,22 +550,29 @@ $(document).ready(function(){
 
     $("#qa-form").preventDoubleSubmit();
 
-    //automatically unhide comment if test is being skipped
-    $(".qa-skip input").click(function(){
-        if ($(this).is(':checked')){
-            $(this).parent().parent().next().show(600);
-            $(this).parents(".qa-valuerow").find("input[type=radio]").attr("checked",false);
-        }else{
-           $(this).parent().parent().next().hide(600);
-        }
-    });
-
     $("#work-completed, #work-started").datepicker({
         autoclose:true,
         keyboardNavigation:false
     }).on('changeDate',function (ev){
-        update_time($(this).find("input"));
+        var input = $(this).find("input");
+        if (input.attr("name") === "work_completed"){
+            input.val(input.val()+" 20:30");
+        }else{
+            input.val(input.val()+" 19:30");
+        }
     });
+
+    var fail_warnings = $("#do-not-treat-bottom, #do-not-treat-top");
+    $.Topic("qaUpdated").subscribe(function(){
+        if (self.tli.has_failing()){
+            fail_warnings.show();
+        }else{
+            fail_warnings.hide();
+        }
+    });
+
+
+    set_tab_stops();
 
 
    $('.file-upload').each(function(idx,elem){
@@ -537,16 +626,6 @@ $(document).ready(function(){
             }
         });
     });
-
-    //run a full validation on page load
-    full_validation();
-
-    var tabindex = 1;
-    user_inputs.each(function() {
-        $(this).attr("tabindex", tabindex);
-        tabindex++;
-    });
-    user_inputs.first().focus();
 
 });
 

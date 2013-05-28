@@ -484,9 +484,9 @@ class CompositeCalculation(JSONResponseMixin, View):
         if composite_ids is None:
             self.composite_tests = {}
             return
-
+        print composite_ids
         composite_tests = models.Test.objects.filter(
-            pk__in=composite_ids.values()
+            pk__in=composite_ids
         ).values_list("slug", "calculation_procedure")
 
         self.composite_tests = dict(composite_tests)
@@ -513,8 +513,7 @@ class CompositeCalculation(JSONResponseMixin, View):
             "uploads": json.loads(self.request.POST.get("upload_data",{})),
         }
 
-        for slug, info in values.iteritems():
-            val = info["current_value"]
+        for slug, val in values.iteritems():
             if slug not in self.composite_tests:
                 try:
                     self.calculation_context[slug] = float(val)
@@ -573,6 +572,61 @@ class ChooseUnit(ListView):
         context["unit_types"] = utils.unique(uts)
         return context
 
+
+from braces.views import JSONResponseMixin, AjaxResponseMixin
+from django.forms.models import model_to_dict
+#============================================================================
+class PerformQAInfo(JSONResponseMixin,  View):
+
+    #----------------------------------------------------------------------
+    def set_unit_test_infos(self):
+        utis = models.UnitTestInfo.objects.filter(
+            unit=self.unit,
+            test__in=self.all_tests,
+            active=True,
+        ).select_related(
+            "reference",
+            "test__category",
+            "test__pk",
+            "tolerance",
+            "unit",
+        )
+
+        # make sure utis are correctly ordered
+        uti_tests = [x.test.pk for x in utis]
+        self.unit_test_infos = []
+        for test in self.all_tests:
+            uti = utis[uti_tests.index(test.pk)]
+            self.unit_test_infos.append(  {
+                "id":uti.pk,
+                "test":model_to_dict(test),
+                "reference": model_to_dict(uti.reference) if uti.reference else None,
+                "tolerance": model_to_dict(uti.tolerance) if uti.tolerance else None,
+            })
+
+    #----------------------------------------------------------------------
+    def set_all_tests(self):
+        self.all_tests = []
+        for test_list in self.all_lists:
+            tests = test_list.tests.all().order_by("testlistmembership__order")
+            self.all_tests.extend(tests)
+
+    #----------------------------------------------------------------------
+    def get(self, request, *args, **kwargs):
+        self.test_list = get_object_or_404(models.TestList,pk=kwargs.get("test_list"))
+        self.all_lists = [self.test_list]+list(self.test_list.sublists.all())
+        self.set_all_tests()
+
+        self.unit = get_object_or_404(Unit,pk=kwargs.get("unit"))
+
+        self.set_unit_test_infos()
+
+        context = {
+            "test_list": self.test_list.pk,
+            "unit": self.unit.pk,
+            "unit_test_infos":self.unit_test_infos,
+        }
+        return self.render_json_response(context)
 
 #============================================================================
 class PerformQA(CreateView):
