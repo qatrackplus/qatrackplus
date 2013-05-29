@@ -203,7 +203,6 @@ function TestInstance(test_info, row){
         }else{
             self.comment.hide(600);
         }
-        self.update_value();
     });
 
     this.show_comment = this.row.find("td.qa-showcmt a");
@@ -238,7 +237,7 @@ function TestInstance(test_info, row){
     this.value = this.test_info.test.constant_value;
 
     this.inputs.change(function(){
-        self.update_value();
+        self.update_value_from_input();
         if (self.skipped){
             self.set_skip(false);
         }
@@ -246,8 +245,11 @@ function TestInstance(test_info, row){
     });
 
     this.set_value = function(value){
+        //set value manually and update inputs accordingly
 
         var tt = self.test_info.test.type;
+
+        self.value = value;
 
         if (tt === QAUtils.BOOLEAN){
             if (_.isNull(value)){
@@ -259,8 +261,10 @@ function TestInstance(test_info, row){
                 self.inputs[0].checked = false;
                 self.inputs[1].checked = true;
             }
-        }else if (tt=== QAUtils.UPLOAD || tt=== QAUtils.STRING || tt === QAUtils.MULTIPLE_CHOICE){
+        }else if (tt=== QAUtils.STRING || tt === QAUtils.MULTIPLE_CHOICE){
             self.inputs.val(value);
+        }else if (tt === QAUtils.UPLOAD){
+            self.inputs.filter(":hidden").val(value["temp_file_name"]);
         }else if (tt === QAUtils.SIMPLE){ 
             if (_.isNull(value)){
                 self.inputs.val("");
@@ -268,11 +272,12 @@ function TestInstance(test_info, row){
                 self.inputs.val(QAUtils.format_float(value));
             }
         }
-        this.update_value();
 
+        this.update_status();
+//        $.Topic("valueChanged").publish();
     }
 
-    this.update_value = function(){
+    this.update_value_from_input = function(){
 
         var tt = self.test_info.test.type;
         if (tt === QAUtils.BOOLEAN){
@@ -329,6 +334,51 @@ function TestInstance(test_info, row){
         self.comment_box.val(self.NOT_PERFORMED);
     }
 
+
+    this.inputs.filter(".file-upload").each(function(){
+
+        $(this).fileupload({
+
+            dataType: 'json',
+            url: QAUtils.UPLOAD_URL,
+            dropZone:self.row.children(),
+            singleFileUploads: true,
+            paramName:"upload",
+            replaceFileInput:false,
+            formData: function(){
+                return [
+                    { name:"unit_test_info", value:self.test_info.id},
+                    { name:"test_id", value: self.test_info.test.id}
+                ]
+            },
+            done: function (e, data) {
+                if (console){
+                    window.console.log(data.result);
+                }
+                self.status.removeClass("btn-primary btn-danger btn-success");
+                if (data.result.errors.length > 0){
+                    self.status.addClass("btn-danger").text("Failed");
+                    self.status.attr("title","");
+                    self.set_value(null);
+                }else{
+                    self.status.addClass("btn-success").text("Success");
+                    self.set_value(data.result);
+                    self.status.attr("title",data.result['temp_file_name']);
+                }
+            },
+            fail: function(e,data){
+                self.set_value(null);
+                self.status.removeClass("btn-primary, btn-danger, btn-success");
+                self.status.addClass("btn-danger").text("Server Error");
+            },
+            progressall: function (e, data) {
+                var progress = parseInt(data.loaded / data.total * 100, 10);
+                self.status.removeClass("btn-primary, btn-danger, btn-success");
+                self.status.addClass("btn-warning").text(progress+"%");
+            }
+
+        })
+    });
 
 }
 
@@ -557,57 +607,5 @@ $(document).ready(function(){
 
     set_tab_stops();
 
-
-   $('.file-upload').each(function(idx,elem){
-        var that = $(this);
-        var button = that.prev();
-        var fname = button.prev();
-        var row = that.parents("tr");
-        var name = row.find('.qa-contextname').val();
-        var unit_test_info = row.find("input.qa-unittestinfo").val();
-        var test_id = row.find("input.qa-test-id").val();
-        var status = row.find(".qa-status");
-
-        $(this).fileupload({
-            dataType: 'json',
-            url: QAUtils.UPLOAD_URL,
-            dropZone:$(this).parents("tr").children(),
-            singleFileUploads: true,
-            paramName:"upload",
-            replaceFileInput:false,
-            formData: function(){
-                return [
-                    { name:"unit_test_info", value:unit_test_info},
-                    { name:"test_id", value: test_id}
-                ]
-            },
-            done: function (e, data) {
-                if (console){
-                    window.console.log(data.result);
-                }
-                status.removeClass("btn-primary, btn-danger, btn-success");
-                if (data.result.errors.length > 0){
-                    status.addClass("btn-danger").text("Failed");
-                    upload_data[name] = null;
-                }else{
-                    status.addClass("btn-success").text("Success");
-                    fname.val(data.result['temp_file_name']) ;
-                    status.attr("title",data.result['temp_file_name']);
-                    upload_data[name] = data.result.result;
-                }
-                full_validation();
-            },
-            fail: function(e,data){
-                upload_data[name] = data.result.result;
-                status.removeClass("btn-primary, btn-danger, btn-success");
-                status.addClass("btn-danger").text("Server Error");
-            },
-            progressall: function (e, data) {
-                var progress = parseInt(data.loaded / data.total * 100, 10);
-                status.removeClass("btn-primary, btn-danger, btn-success");
-                status.addClass("btn-warning").text(progress+"%");
-            }
-        });
-    });
 
 });
