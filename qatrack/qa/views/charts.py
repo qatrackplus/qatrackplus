@@ -1,3 +1,8 @@
+import collections
+import json
+
+from django.contrib.contenttypes.models import ContentType
+from django.core.urlresolvers import reverse
 from django.utils import timezone
 from django.views.generic import TemplateView, View
 
@@ -9,7 +14,7 @@ import scipy
 from .. import models
 from .base import JSONResponseMixin
 from qatrack.qa.control_chart import control_chart
-
+from qatrack.units.models import Unit, UnitType
 
 #============================================================================
 class ChartView(TemplateView):

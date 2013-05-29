@@ -5,6 +5,7 @@ from . import forms
 from .base import BaseEditTestListInstance, TestListInstances, UTCList
 from .perform import ChooseUnit
 
+from qatrack.units.models import Unit, UnitType
 #============================================================================
 class ReviewTestListInstance(BaseEditTestListInstance):
     form_class = forms.ReviewTestListInstanceForm
