@@ -8,7 +8,7 @@ import leastsquaresfit as lsqfit
 import maximumlikelihoodfit as mlefit
 import histogram as htg
 
-from matplotlib.ticker import NullFormatter, FuncFormatter
+from matplotlib.ticker import NullFormatter
 from matplotlib.font_manager import FontProperties
 
 # Set some values:
@@ -94,7 +94,7 @@ def generate_fit(x, axes, freq, bins, binwidth):
     paramUnc = np.zeros(len(optParam))
     for i in np.arange(0, len(optParam)):
         paramUnc[i] = np.sqrt(abs(cov[i, 1]))
-    xdata = np.linspace(fitmean-fitsigma*10, fitmean+fitsigma*10, 500)
+    xdata = np.linspace(fitmean - fitsigma * 10, fitmean + fitsigma * 10, 500)
     ydata = lsqfit.gauss_pdf(xdata, norm, fitmean, fitsigma)
     axes.plot(ydata, xdata, GAUSSFORMAT, label=LBL_GAUSS, lw=LINEWIDTH)
 
@@ -204,18 +204,18 @@ def get_bins(x):
     xMax = np.max(x)
     xMin = np.min(x)
 
-    bins_min = xMin - binwidth/2.
+    bins_min = xMin - binwidth / 2.
     bins_max = xMax + binwidth
     bins = np.arange(bins_min, bins_max, binwidth)
 
     if len(bins) < NBIN_THRESH:
-        binwidth = 2.*(xMax-xMin)/NBIN_THRESH
+        binwidth = 2. * (xMax - xMin) / NBIN_THRESH
         if binwidth == 0:
             binwidth = 1
 
-        centre = (xMin+xMax)/2.
-        bins_min = centre-binwidth*(NBIN_THRESH/2+1)
-        bins_max = centre+binwidth*(NBIN_THRESH/2+1)
+        centre = (xMin + xMax) / 2.
+        bins_min = centre - binwidth * (NBIN_THRESH / 2 + 1)
+        bins_max = centre + binwidth * (NBIN_THRESH / 2 + 1)
 
         bins = np.arange(bins_min, bins_max, binwidth)
 
@@ -292,7 +292,7 @@ def format_plots(plots, xbar_thresh, range_thresh,
     # new y-axis limits to make room for string
     plots[0].autoscale(axis="y", tight=True)
     cc_ylim = plots[0].get_ylim()
-    cc_ylim = (cc_ylim[0], cc_ylim[1] + (cc_ylim[1]-cc_ylim[0])*DATA_TSPACE)
+    cc_ylim = (cc_ylim[0], cc_ylim[1] + (cc_ylim[1] - cc_ylim[0]) * DATA_TSPACE)
     plots[0].set_ylim(cc_ylim)
 
     range_lim = plots[2].get_ylim()
@@ -303,7 +303,7 @@ def format_plots(plots, xbar_thresh, range_thresh,
     # redefine x-axis limits for aesthetics
     cc_xlim = plots[0].get_xlim()
     # if not use_dates:
-    cc_xlim = (cc_xlim[0], cc_xlim[1] + (cc_xlim[1]-cc_xlim[0]) * DATA_HSPACE)
+    cc_xlim = (cc_xlim[0], cc_xlim[1] + (cc_xlim[1] - cc_xlim[0]) * DATA_HSPACE)
 
     plots[0].set_xlim(cc_xlim)     # white space after data ends
     plots[2].set_xlim(plots[0].get_xlim())  # Range chart shares x-axis with control chart
@@ -311,9 +311,9 @@ def format_plots(plots, xbar_thresh, range_thresh,
     plots[1].set_ylim(plots[0].get_ylim())  # Control chart shares y-axis with histogram
     plots[3].set_ylim(plots[2].get_ylim())  # Range chart shares y-axis with histogram
 
-    cc_string_xpos = cc_xlim[0] + (cc_xlim[1]-cc_xlim[0])*STRING_XPOS
+    cc_string_xpos = cc_xlim[0] + (cc_xlim[1] - cc_xlim[0]) * STRING_XPOS
 
-    cc_string_ypos = cc_ylim[1] - (cc_ylim[1] - cc_ylim[0]) * (1.-STRING_YPOS)
+    cc_string_ypos = cc_ylim[1] - (cc_ylim[1] - cc_ylim[0]) * (1. - STRING_YPOS)
 
     cchist_string_xpos = np.mean(plots[1].get_xlim()) * XPOS_MULT
     cchist_string_ypos = cc_ylim[0] + (cc_ylim[1] - cc_ylim[0]) * YPOS_MULT
@@ -323,7 +323,7 @@ def format_plots(plots, xbar_thresh, range_thresh,
     # rc_ylim = (rc_ylim[0], rc_ylim[1]*(1. + (rc_ylim[1]-rc_ylim[0])*DATA_TSPACE))
     # plots[2].set_ylim( rc_ylim )
 
-    r_string_ypos = _string_ypos = rc_ylim[1] - (rc_ylim[1] - rc_ylim[0]) * (1.-RSTRING_YPOS)
+    r_string_ypos = _string_ypos = rc_ylim[1] - (rc_ylim[1] - rc_ylim[0]) * (1. - RSTRING_YPOS)
 
     rhist_string_xpos = np.mean(plots[3].get_xlim()) * XPOS_MULT
     rhist_string_ypos = np.mean(plots[3].get_ylim())
@@ -383,7 +383,7 @@ def format_plots(plots, xbar_thresh, range_thresh,
     if use_dates:
         # plots[2].xaxis.set_major_locator(matplotlib.dates.MonthLocator())
         plots[2].xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%d %b %Y"))
-        [(tick.set_rotation(25), tick.set_fontsize(TLFS/1.5)) for tick in plots[2].get_xticklabels()]
+        [(tick.set_rotation(25), tick.set_fontsize(TLFS / 1.5)) for tick in plots[2].get_xticklabels()]
 
 
 ################################################################################
