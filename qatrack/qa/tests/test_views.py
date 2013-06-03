@@ -1,7 +1,6 @@
 from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.core.urlresolvers import reverse
-from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.test import TestCase
 from django.test.client import RequestFactory
 from django.test.utils import setup_test_environment
@@ -13,16 +12,16 @@ import qatrack.qa.views.perform
 import qatrack.qa.views.charts
 import qatrack.qa.views.review
 import qatrack.qa.views.base
-logger = qatrack.qa.views.base.logger
 import django.forms
 import json
-import os
 import random
 import utils
 
+
+logger = qatrack.qa.views.base.logger
+
+
 #====================================================================================
-
-
 class TestURLS(TestCase):
     """just test urls to make sure at the very least they are valid and return 200"""
 
@@ -33,11 +32,12 @@ class TestURLS(TestCase):
         g = utils.create_group()
         u.groups.add(g)
         u.save()
-    #---------------------------------------------------------------------------
 
+    #---------------------------------------------------------------------------
     def returns_200(self, url, method="get"):
         return getattr(self.client, method)(url).status_code == 200
 
+    #---------------------------------------------------------------------------
     def test_qa_urls(self):
 
         utils.create_status()
@@ -82,25 +82,25 @@ class TestURLS(TestCase):
         )
 
         for url, kwargs in url_names:
-            logger.info("\t > testing: "+url)
+            logger.info("\t > testing: " + url)
 
             self.assertTrue(self.returns_200(reverse(url, kwargs=kwargs)))
-    #---------------------------------------------------------------------------
 
+    #---------------------------------------------------------------------------
     def test_login(self):
         self.assertTrue(self.returns_200(settings.LOGIN_URL))
-    #---------------------------------------------------------------------------
 
+    #---------------------------------------------------------------------------
     def test_login_redirect(self):
         self.assertTrue(self.returns_200(settings.LOGIN_REDIRECT_URL))
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def test_composite(self):
         url = reverse("composite")
 
         self.assertTrue(self.returns_200(url, method="post"))
-    #--------------------------------------------------------------------------
 
+    #--------------------------------------------------------------------------
     def test_perform(self):
         utils.create_status()
         utc = utils.create_unit_test_collection()
@@ -109,8 +109,8 @@ class TestURLS(TestCase):
         url = reverse("perform_qa", kwargs={"pk": "2"})
 
         self.assertTrue(404 == self.client.get(url).status_code)
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def test_utc_fail(self):
         utils.create_status()
         url = reverse("review_utc", kwargs={"pk": 101})
@@ -139,7 +139,7 @@ class TestDataTables(TestCase):
         self.utc = utils.create_unit_test_collection(unit=u1)
         self.utc.assigned_to = self.user.groups.all()[0]
         self.utc.save()
-        tli = utils.create_test_list_instance(unit_test_collection=self.utc)
+        utils.create_test_list_instance(unit_test_collection=self.utc)
     #----------------------------------------------------------------------
 
     def test_base_set_columns_fails(self):
@@ -160,7 +160,7 @@ class TestDataTables(TestCase):
             "sSearch_1": "test"
         }
 
-        resp = self.client.get(self.url, data=data)
+        self.client.get(self.url, data=data)
 
     #----------------------------------------------------------------------
     def test_gen_tli_display(self):
@@ -179,7 +179,7 @@ class TestDataTables(TestCase):
 
         }
 
-        resp = self.client.get(url, data=data)
+        self.client.get(url, data=data)
 
 
 #============================================================================
@@ -202,12 +202,12 @@ class TestControlImage(TestCase):
     def test_baseline_subgroups(self):
         test = utils.create_test()
         unit = utils.create_unit()
-        uti = utils.create_unit_test_info(test=test, unit=unit)
+        utils.create_unit_test_info(test=test, unit=unit)
 
-        status = utils.create_status()
-        yesterday = timezone.datetime.today()-timezone.timedelta(days=1)
+        utils.create_status()
+        yesterday = timezone.datetime.today() - timezone.timedelta(days=1)
         yesterday = timezone.make_aware(yesterday, timezone.get_current_timezone())
-        tomorrow = yesterday+timezone.timedelta(days=2)
+        tomorrow = yesterday + timezone.timedelta(days=2)
 
         for n in [-1, 0, 1, 2, "nonnumber"]:
             url = self.make_url(test.pk, unit.number, yesterday, tomorrow, n_base=n)
@@ -219,12 +219,12 @@ class TestControlImage(TestCase):
     def test_invalid_subgroup_size(self):
         test = utils.create_test()
         unit = utils.create_unit()
-        uti = utils.create_unit_test_info(test=test, unit=unit)
+        utils.create_unit_test_info(test=test, unit=unit)
 
-        status = utils.create_status()
-        yesterday = timezone.datetime.today()-timezone.timedelta(days=1)
+        utils.create_status()
+        yesterday = timezone.datetime.today() - timezone.timedelta(days=1)
         yesterday = timezone.make_aware(yesterday, timezone.get_current_timezone())
-        tomorrow = yesterday+timezone.timedelta(days=2)
+        tomorrow = yesterday + timezone.timedelta(days=2)
 
         for n in [-1, 0, 101, "nonnumber"]:
             url = self.make_url(test.pk, unit.number, yesterday, tomorrow, sg_size=n)
@@ -235,13 +235,13 @@ class TestControlImage(TestCase):
     #----------------------------------------------------------------------
     def test_include_fit(self):
         for f in ["true", "false"]:
-            request = self.factory.get(self.url+"?fit_data=%s" % f)
+            request = self.factory.get(self.url + "?fit_data=%s" % f)
             response = self.view(request)
             self.assertTrue(response.get("content-type"), "image/png")
     #----------------------------------------------------------------------
 
     def make_url(self, pk, unumber, from_date, to_date, sg_size=2, n_base=2, fit="true"):
-        url = self.url+"?subgroup_size=%s&n_baseline_subgroups=%s&fit_data=%s" % (sg_size, n_base, fit)
+        url = self.url + "?subgroup_size=%s&n_baseline_subgroups=%s&fit_data=%s" % (sg_size, n_base, fit)
         url += "&tests[]=%s" % pk
         url += "&units[]=%s" % unumber
         url += "&from_date=%s" % from_date.strftime(settings.SIMPLE_DATE_FORMAT)
@@ -255,9 +255,9 @@ class TestControlImage(TestCase):
         uti = utils.create_unit_test_info(test=test, unit=unit)
 
         status = utils.create_status()
-        yesterday = timezone.datetime.today()-timezone.timedelta(days=1)
+        yesterday = timezone.datetime.today() - timezone.timedelta(days=1)
         yesterday = timezone.make_aware(yesterday, timezone.get_current_timezone())
-        tomorrow = yesterday+timezone.timedelta(days=2)
+        tomorrow = yesterday + timezone.timedelta(days=2)
 
         url = self.make_url(test.pk, unit.number, yesterday, tomorrow)
 
@@ -280,9 +280,9 @@ class TestControlImage(TestCase):
         uti = utils.create_unit_test_info(test=test, unit=unit)
 
         status = utils.create_status()
-        yesterday = timezone.datetime.today()-timezone.timedelta(days=1)
+        yesterday = timezone.datetime.today() - timezone.timedelta(days=1)
         yesterday = timezone.make_aware(yesterday, timezone.get_current_timezone())
-        tomorrow = yesterday+timezone.timedelta(days=2)
+        tomorrow = yesterday + timezone.timedelta(days=2)
 
         url = self.make_url(test.pk, unit.number, yesterday, yesterday)
         request = self.factory.get(url)
@@ -310,9 +310,9 @@ class TestControlImage(TestCase):
         uti = utils.create_unit_test_info(test=test, unit=unit)
 
         status = utils.create_status()
-        yesterday = timezone.datetime.today()-timezone.timedelta(days=1)
+        yesterday = timezone.datetime.today() - timezone.timedelta(days=1)
         yesterday = timezone.make_aware(yesterday, timezone.get_current_timezone())
-        tomorrow = yesterday+timezone.timedelta(days=2)
+        tomorrow = yesterday + timezone.timedelta(days=2)
 
         url = self.make_url(test.pk, unit.number, yesterday, yesterday)
         request = self.factory.get(url)
@@ -440,7 +440,7 @@ class TestChartData(TestCase):
             "units[]": [self.utc1.unit.pk],
             "statuses[]": [self.status.pk],
         }
-        response = self.client.get(self.url, data=data)
+        self.client.get(self.url, data=data)
 
 
 #============================================================================
@@ -803,7 +803,7 @@ class TestPerformQA(TestCase):
             data["form-%d-value" % test_idx] = 1
             data["form-%d-comment" % test_idx] = ""
 
-        response = self.client.post(self.url+"?next=%s" % reverse("home"), data=data)
+        response = self.client.post(self.url + "?next=%s" % reverse("home"), data=data)
 
         # user is redirected if form submitted successfully
         self.assertEqual(response.status_code, 302)
@@ -945,7 +945,6 @@ class TestPerformQA(TestCase):
 
     #----------------------------------------------------------------------
     def test_no_status(self):
-        from django.contrib import messages
         models.TestInstanceStatus.objects.all().delete()
         response = self.client.get(self.url)
         self.assertTrue(len(list(response.context['messages'])) == 1)
@@ -1000,7 +999,8 @@ class TestPerformQA(TestCase):
             unit=self.unit_test_list.unit,
             frequency=self.unit_test_list.frequency,
         )
-        url = reverse("perform_qa", kwargs={"pk": utc.pk})+"?day=22"
+
+        url = reverse("perform_qa", kwargs={"pk": utc.pk}) + "?day=22"
 
         response = self.client.get(url)
 
@@ -1107,11 +1107,11 @@ class TestEditTestListInstance(TestCase):
             "in_progress": True
         })
 
-        response = self.client.post(self.url, data=self.base_data)
+        self.client.post(self.url, data=self.base_data)
         ntests = models.Test.objects.count()
         self.assertEqual(models.TestInstance.objects.in_progress().count(), ntests)
         del self.base_data["in_progress"]
-        response = self.client.post(self.url, data=self.base_data)
+        self.client.post(self.url, data=self.base_data)
         self.assertEqual(models.TestInstance.objects.in_progress().count(), 0)
 
     #----------------------------------------------------------------------
@@ -1164,7 +1164,7 @@ class TestEditTestListInstance(TestCase):
     #----------------------------------------------------------------------
     def test_next_redirect(self):
         """"""
-        response = self.client.post(self.url+"?next=%s" % reverse("home"), data=self.base_data)
+        response = self.client.post(self.url + "?next=%s" % reverse("home"), data=self.base_data)
         self.assertEqual(302, response.status_code)
 
     #----------------------------------------------------------------------

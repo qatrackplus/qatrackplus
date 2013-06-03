@@ -1,11 +1,5 @@
-from django.db import IntegrityError
 from django.contrib.contenttypes.models import ContentType
-from django.core.urlresolvers import reverse
-from django.core.exceptions import ValidationError
-from django.test import TestCase
-from django.test.client import Client
-from django.test.utils import setup_test_environment
-from django.utils import unittest, timezone
+from django.utils import timezone
 
 from django.contrib.auth.models import User, Group
 from qatrack.qa import models
