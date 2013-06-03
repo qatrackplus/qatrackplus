@@ -94,7 +94,7 @@ USE_I18N = True
 #  Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
 MEDIA_ROOT = os.path.join(PROJECT_ROOT, "uploads")
-TMP_UPLOAD_ROOT = os.path.join(MEDIA_ROOT,"tmp")
+TMP_UPLOAD_ROOT = os.path.join(MEDIA_ROOT, "tmp")
 for d in (MEDIA_ROOT, TMP_UPLOAD_ROOT):
     if not os.path.isdir(d):
         os.mkdir(d)
@@ -217,7 +217,7 @@ INSTALLED_APPS = [
 ]
 #-----------------------------------------------------------------------------
 # Session Settings
-SESSION_COOKIE_AGE = 14*24*60*60
+SESSION_COOKIE_AGE = 14 * 24 * 60 * 60
 
 #-----------------------------------------------------------------------------
 # Email and notification settings

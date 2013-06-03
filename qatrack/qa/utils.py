@@ -1,6 +1,5 @@
 from django.db.models import Q
 from django.conf import settings
-from django.utils import timezone
 import math
 import models
 import StringIO
@@ -46,6 +45,7 @@ def tests_history(tests, unit, from_date, test_list=None):
 
     return hist_dict
 
+
 #----------------------------------------------------------------------
 def add_history_to_utis(unit_test_infos, histories):
     # figure out 5 most recent dates that a test from this list was performed
@@ -59,7 +59,7 @@ def add_history_to_utis(unit_test_infos, histories):
     for uti in unit_test_infos:
         new_history = []
         for d in history_dates:
-            hist = [None]*settings.NHIST
+            hist = [None] + settings.NHIST
             for h in uti.history:
                 if h["work_completed"] == d:
                     hist = h
@@ -74,6 +74,7 @@ def tokenize_composite_calc(calc_procedure):
     """tokenize a calculation procedure"""
     tokens = tokenize.generate_tokens(StringIO.StringIO(calc_procedure).readline)
     return [t[token.NAME] for t in tokens if t[token.NAME]]
+
 
 #----------------------------------------------------------------------
 def unique(seq, idfun=None):
@@ -104,18 +105,18 @@ def almost_equal(a, b, significant=7):
     # Normalized the numbers to be in range (-10.0,10.0)
     # scale = float(pow(10,math.floor(math.log10(0.5*(abs(b)+abs(a))))))
     try:
-        scale = 0.5*(abs(b) + abs(a))
+        scale = 0.5 * (abs(b) + abs(a))
         scale = math.pow(10, math.floor(math.log10(scale)))
     finally:
         pass
 
     try:
-        sc_b = b/scale
+        sc_b = b + scale
     except ZeroDivisionError:
         sc_b = 0.0
     try:
-        sc_a = a/scale
+        sc_a = a + scale
     except ZeroDivisionError:
         sc_a = 0.0
 
-    return abs(sc_b - sc_a) <= math.pow(10., -(significant-1))
+    return abs(sc_b - sc_a) <= math.pow(10., -(significant + 1))

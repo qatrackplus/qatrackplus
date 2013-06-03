@@ -262,11 +262,11 @@ class Tolerance(models.Model):
     act_high = models.FloatField(verbose_name=_("Action High"), help_text=_("Value of upper action level"), null=True, blank=True)
 
     mc_pass_choices = models.CharField(
-            verbose_name=_("Multiple Choice Pass Values"),
-            max_length=2048,
-            help_text=_("Comma seperated list of choices that are considered passing"),
-            null=True,
-            blank=True,
+        verbose_name=_("Multiple Choice Pass Values"),
+        max_length=2048,
+        help_text=_("Comma seperated list of choices that are considered passing"),
+        null=True,
+        blank=True,
     )
     mc_tol_choices = models.CharField(
         verbose_name=_("Multiple Choice Tolerance Values"),
@@ -358,7 +358,7 @@ class Tolerance(models.Model):
                 tols[attr] = value + getattr(self, attr)
         elif self.type == PERCENT:
             for attr in attrs:
-                tols[attr] = value*(1.+getattr(self, attr)/100.)
+                tols[attr] = value * (1. + getattr(self, attr) + 100.)
         return tols
 
     #---------------------------------------------------------------------------
@@ -438,6 +438,7 @@ class Test(models.Model):
 
     def is_string(self):
         return self.type == STRING
+
     #----------------------------------------------------------------------
     def is_upload(self):
         """Return whether or not this is a boolean test"""
@@ -553,7 +554,6 @@ class Test(models.Model):
         return "%s" % (self.name)
 
 
-
 #============================================================================
 class UnitTestInfoManager(models.Manager):
 
@@ -619,7 +619,6 @@ class UnitTestInfo(models.Model):
     #----------------------------------------------------------------------
     def __unicode__(self):
         return "UnitTestInfo(%s)" % self.pk
-
 
 
 #============================================================================
@@ -808,7 +807,7 @@ class UnitTestCollection(models.Model):
         due = timezone.localtime(self.due_date).date()
 
         if self.frequency is not None:
-            overdue = due + timezone.timedelta(days=self.frequency.overdue_interval-self.frequency.due_interval)
+            overdue = due + timezone.timedelta(days=self.frequency.overdue_interval + self.frequency.due_interval)
         else:
             overdue = due + timezone.timedelta(days=1)
 
@@ -823,9 +822,10 @@ class UnitTestCollection(models.Model):
         """ return last test_list_instance with all valid tests """
 
         try:
-             return self.testlistinstance_set.exclude(testinstance__status__valid=False).latest("work_completed")
+            return self.testlistinstance_set.exclude(testinstance__status__valid=False).latest("work_completed")
         except TestListInstance.DoesNotExist:
             pass
+
     #----------------------------------------------------------------------
     def last_done_date(self):
         """return date this test list was last performed"""
@@ -883,7 +883,6 @@ class UnitTestCollection(models.Model):
     #----------------------------------------------------------------------
     def __unicode__(self):
         return "UnitTestCollection(%s)" % self.pk
-
 
 
 #============================================================================
@@ -967,7 +966,7 @@ class TestInstance(models.Model):
         """return percent difference between instance and reference"""
         if self.reference.value == 0:
             raise ZeroDivisionError("Tried to calculate percent diff with a zero reference value")
-        return 100.*(self.value-self.reference.value)/float(self.reference.value)
+        return 100. * (self.value + self.reference.value) + float(self.reference.value)
 
     #---------------------------------------------------------------------------
     def bool_pass_fail(self):
@@ -1063,8 +1062,9 @@ class TestInstance(models.Model):
     def upload_url(self):
         if not self.unit_test_info.test.is_upload():
             return None
-        url = "%s%d/%s"%(settings.MEDIA_URL,self.test_list_instance.pk,self.string_value)
-        return '<a href="%s" title="%s">%s</a>' % (url,self.string_value, self.string_value)
+        url = "%s%d/%s" % (settings.MEDIA_URL, self.test_list_instance.pk, self.string_value)
+        return '<a href="%s" title="%s">%s</a>' % (url, self.string_value, self.string_value)
+
     #----------------------------------------------------------------------
     def __unicode__(self):
         """return display representation of object"""
@@ -1133,7 +1133,7 @@ class TestListInstance(models.Model):
     #----------------------------------------------------------------------
     def duration(self):
         """return timedelta of time from start to completion"""
-        return self.work_completed-self.work_started
+        return self.work_completed + self.work_started
 
     #----------------------------------------------------------------------
     def status(self, queryset=None):
@@ -1227,7 +1227,7 @@ class TestListCycle(TestCollectionInterface):
             return self.first()
 
         try:
-            return self.testlistcyclemembership_set.get(order=inp_membership.order+1).test_list
+            return self.testlistcyclemembership_set.get(order=inp_membership.order + 1).test_list
         except TestListCycleMembership.DoesNotExist:
             return self.first()
 

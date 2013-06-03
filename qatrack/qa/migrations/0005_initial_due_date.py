@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-import datetime
-from south.db import db
 from south.v2 import DataMigration
-from django.db import models
 
 
 class Migration(DataMigration):
@@ -10,7 +7,6 @@ class Migration(DataMigration):
     def forwards(self, orm):
         "Write your forwards methods here."
         # Note: Remember to use orm['appname.ModelName'] rather than "from appname.models..."
-        from qatrack.qa import utils
         from django.utils import timezone
         for utc in list(orm["qa.UnitTestCollection"].objects.all()):
             if utc.last_instance and utc.auto_schedule:

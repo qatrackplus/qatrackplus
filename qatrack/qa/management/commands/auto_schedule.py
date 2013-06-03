@@ -29,13 +29,13 @@ class Command(BaseCommand):
     #----------------------------------------------------------------------
     def enable_all(self):
         """Sets auto_schedule = True on all UnitTestCollections with assigned frequencies"""
-        utcs = UnitTestCollection.objects.exclude(frequency=None).update(auto_schedule=True)
+        UnitTestCollection.objects.exclude(frequency=None).update(auto_schedule=True)
         self.stdout.write("Successfully enabled auto scheduling for all test lists")
 
     #----------------------------------------------------------------------
     def disable_all(self):
         """Sets auto_schedule = False on all UnitTestCollections"""
-        utcs = UnitTestCollection.objects.update(auto_schedule=False)
+        UnitTestCollection.objects.update(auto_schedule=False)
         self.stdout.write("Successfully disabled auto scheduling for all test lists")
 
     #----------------------------------------------------------------------
@@ -50,5 +50,5 @@ class Command(BaseCommand):
     #----------------------------------------------------------------------
     def unschedule_all(self):
         """Sets due_date=None on all UnitTestCollections"""
-        utcs = UnitTestCollection.objects.update(due_date=None)
+        UnitTestCollection.objects.update(due_date=None)
         self.stdout.write("Successfully un-set all due dates")

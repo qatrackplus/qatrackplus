@@ -1,14 +1,9 @@
 import collections
-import urlparse
 
 from django.template import Context
 from django.template.loader import get_template
 from django import template
 from django.utils.safestring import mark_safe
-from django.utils import formats
-
-from decimal import Decimal, ROUND_HALF_UP
-from django.utils.encoding import force_unicode
 
 import qatrack.qa.models as models
 register = template.Library()
@@ -25,9 +20,8 @@ def qa_value_form(form, include_history=False, include_ref_tols=False, test_info
     })
     return template.render(c)
 
+
 #----------------------------------------------------------------------
-
-
 @register.simple_tag
 def reference_tolerance_span(test, ref, tol):
 
@@ -50,18 +44,16 @@ def reference_tolerance_span(test, ref, tol):
     elif tol.type == models.PERCENT:
         return mark_safe('<span> <abbr title="(ACT L, TOL L, TOL H, ACT H) = (%.1f%%, %.1f%%, %.1f%%, %.1f%%)">%s</abbr></span>' % (tol.act_low, tol.tol_low, tol.tol_high, tol.act_high, ref.value_display()))
 
+
 #----------------------------------------------------------------------
-
-
 @register.filter
 def history_display(history, test):
     template = get_template("qa/history.html")
     c = Context({"history": history, "test": test})
     return template.render(c)
 
+
 #----------------------------------------------------------------------
-
-
 @register.filter
 def as_pass_fail_status(test_list_instance, show_label=True):
     template = get_template("qa/pass_fail_status.html")
@@ -69,9 +61,8 @@ def as_pass_fail_status(test_list_instance, show_label=True):
     c = Context({"instance": test_list_instance, "exclude": statuses_to_exclude, "show_label": show_label})
     return template.render(c)
 
+
 #----------------------------------------------------------------------
-
-
 @register.filter
 def as_review_status(test_list_instance):
     statuses = collections.defaultdict(lambda: {"count": 0})
@@ -90,27 +81,25 @@ def as_review_status(test_list_instance):
     c = Context({"statuses": dict(statuses), "comments": comment_count})
     return template.render(c)
 
+
 #----------------------------------------------------------------------
-
-
 @register.filter(expects_local_time=True)
 def as_due_date(unit_test_collection):
     template = get_template("qa/due_date.html")
     c = Context({"unit_test_collection": unit_test_collection})
     return template.render(c)
 
+
 #----------------------------------------------------------------------
-
-
 @register.filter(is_safe=True, expects_local_time=True)
 def as_time_delta(time_delta):
-    hours, remainder = divmod(time_delta.seconds, 60*60)
+    hours, remainder = divmod(time_delta.seconds, 60 * 60)
     minutes, seconds = divmod(remainder, 60)
     return '%dd %dh %dm %ds' % (time_delta.days, hours, minutes, seconds)
 as_time_delta.safe = True
+
+
 #----------------------------------------------------------------------
-
-
 @register.filter
 def as_data_attributes(unit_test_collection):
     utc = unit_test_collection
