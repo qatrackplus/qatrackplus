@@ -1,5 +1,6 @@
 import json
 import math
+import os
 import numpy
 import scipy
 
@@ -381,13 +382,12 @@ class PerformQA(CreateView):
                     d = os.path.join(settings.MEDIA_ROOT, "%s" % self.object.pk)
                     if not os.path.exists(d):
                         os.mkdir(d)
-                    dest = os.path.join(settings.MEDIA_ROOT,d,fname)
-                    shutil.move(src,dest)
-
+                    dest = os.path.join(settings.MEDIA_ROOT, d, fname)
+                    shutil.move(src, dest)
 
                 ti = models.TestInstance(
                     value=ti_form.cleaned_data.get("value", None),
-                    string_value = ti_form.cleaned_data.get("string_value",""),
+                    string_value=ti_form.cleaned_data.get("string_value", ""),
                     skipped=ti_form.cleaned_data.get("skipped", False),
                     comment=ti_form.cleaned_data.get("comment", ""),
                     unit_test_info=ti_form.unit_test_info,
@@ -408,7 +408,6 @@ class PerformQA(CreateView):
 
             #set due date to account for any non default stattuses
             self.object.unit_test_collection.set_due_date()
-
 
             # let user know request succeeded and return to unit list
             messages.success(self.request, _("Successfully submitted %s " % self.object.test_list.name))
@@ -451,12 +450,12 @@ class PerformQA(CreateView):
 
         context["history_dates"] = self.history_dates
         context['categories'] = set([x.test.category for x in self.unit_test_infos])
-        context['current_day'] = self.actual_day+1
+        context['current_day'] = self.actual_day + 1
         context["last_instance"] = self.unit_test_col.last_instance
         context['last_day'] = self.last_day
         ndays = len(self.unit_test_col.tests_object)
         if ndays > 1:
-            context['days'] = range(1, ndays+1)
+            context['days'] = range(1, ndays + 1)
 
         context["test_list"] = self.test_list
         context["unit_test_collection"] = self.unit_test_col
@@ -467,7 +466,7 @@ class PerformQA(CreateView):
     def get_requested_day_to_perform(self):
         """request comes in as 1 based day, convert to zero based"""
         try:
-            day = int(self.request.GET.get("day"))-1
+            day = int(self.request.GET.get("day")) - 1
         except (ValueError, TypeError, KeyError):
             day = None
         return day
@@ -484,6 +483,7 @@ class PerformQA(CreateView):
         }
 
         return reverse("qa_by_frequency_unit", kwargs=kwargs)
+
 
 #============================================================================
 class EditTestListInstance(BaseEditTestListInstance):
@@ -567,6 +567,7 @@ class EditTestListInstance(BaseEditTestListInstance):
             msg += msga
             messages.error(self.request, _(msg))
 
+
 #============================================================================
 class InProgress(TestListInstances):
     """view for grouping all test lists with a certain frequency for all units"""
@@ -575,9 +576,6 @@ class InProgress(TestListInstances):
     #----------------------------------------------------------------------
     def get_page_title(self):
         return "In Progress Test Lists"
-
-
-
 
 
 #============================================================================
@@ -639,4 +637,3 @@ class UnitList(UTCList):
     def get_page_title(self):
         title = ", ".join([x.name for x in self.units]) + " Test Lists"
         return title
-
