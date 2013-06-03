@@ -1,6 +1,8 @@
 import json
 import math
 import os
+import shutil
+
 import numpy
 import scipy
 
@@ -8,7 +10,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.core.urlresolvers import reverse
 from django.db.models import Q
-from django.http import HttpResponse, HttpResponseRedirect, Http404
+from django.http import HttpResponseRedirect, Http404
 from django.shortcuts import get_object_or_404
 from django.views.generic import View, ListView, CreateView
 from django.utils import timezone
@@ -19,6 +21,7 @@ from .. import models, utils
 from .base import BaseEditTestListInstance, TestListInstances, UTCList, JSONResponseMixin, logger
 from qatrack.contacts.models import Contact
 from qatrack.units.models import UnitType, Unit
+
 
 #============================================================================
 class Upload(JSONResponseMixin, View):
@@ -33,9 +36,9 @@ class Upload(JSONResponseMixin, View):
 
         results = {
             'temp_file_name': self.file_name,
-            'success':False,
-            'errors':[],
-            "result":None,
+            'success': False,
+            'errors': [],
+            "result": None,
         }
 
         try:
@@ -58,7 +61,7 @@ class Upload(JSONResponseMixin, View):
         name = name.rsplit(".")
         if len(name) == 1:
             name.append("")
-        name ,ext = name
+        name, ext = name
 
         name_parts = (
             name,
@@ -66,7 +69,7 @@ class Upload(JSONResponseMixin, View):
             "%s" % (timezone.now().date(),),
             session_id[:6],
         )
-        return "_".join(name_parts)+"."+ext
+        return "_".join(name_parts) + "." + ext
 
     #----------------------------------------------------------------------
     def handle_upload(self):
@@ -77,7 +80,7 @@ class Upload(JSONResponseMixin, View):
             self.request.FILES.get("upload").name,
         )
 
-        self.upload = open(os.path.join(settings.TMP_UPLOAD_ROOT,self.file_name),"w+b")
+        self.upload = open(os.path.join(settings.TMP_UPLOAD_ROOT, self.file_name), "w+b")
 
         for chunk in self.request.FILES.get("upload").chunks():
             self.upload.write(chunk)
@@ -89,7 +92,7 @@ class Upload(JSONResponseMixin, View):
         """set up the environment that the composite test will be calculated in"""
 
         self.calculation_context = {
-            "upload":self.upload,
+            "upload": self.upload,
             "math": math,
             "scipy": scipy,
             "numpy": numpy,
@@ -172,7 +175,7 @@ class CompositeCalculation(JSONResponseMixin, View):
     def set_calculation_context(self):
         """set up the environment that the composite test will be calculated in"""
         values = self.get_json_data("qavalues")
-        upload_data = self.get_json_data("upload_data");
+        upload_data = self.get_json_data("upload_data")
 
         if values is None and upload_data is None:
             self.calculation_context = {}
@@ -259,7 +262,7 @@ class PerformQA(CreateView):
         if self.test_list is None:
             raise Http404
 
-        self.all_lists = [self.test_list]+list(self.test_list.sublists.all())
+        self.all_lists = [self.test_list] + list(self.test_list.sublists.all())
 
     #----------------------------------------------------------------------
     def set_all_tests(self):
@@ -373,12 +376,11 @@ class PerformQA(CreateView):
                 if val not in ("", None):
                     status = models.TestInstanceStatus.objects.get(pk=val)
 
-
             to_save = []
             for ti_form in formset:
                 if ti_form.unit_test_info.test.is_upload():
                     fname = ti_form.cleaned_data["string_value"]
-                    src = os.path.join(settings.TMP_UPLOAD_ROOT,fname)
+                    src = os.path.join(settings.TMP_UPLOAD_ROOT, fname)
                     d = os.path.join(settings.MEDIA_ROOT, "%s" % self.object.pk)
                     if not os.path.exists(d):
                         os.mkdir(d)
