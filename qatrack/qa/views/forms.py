@@ -148,7 +148,7 @@ class UpdateTestInstanceForm(TestInstanceWidgetsMixin, forms.ModelForm):
     #============================================================================
     class Meta:
         model = models.TestInstance
-        fields = ("value", "skipped", "comment",)
+        fields = ("value","string_value", "skipped", "comment",)
     #----------------------------------------------------------------------
 
     def __init__(self, *args, **kwargs):

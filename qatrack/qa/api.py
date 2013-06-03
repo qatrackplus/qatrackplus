@@ -297,6 +297,7 @@ class ValueResource(Resource):
         serializer = ValueResourceCSVSerializer()
         resource_name = "grouped_values"
         allowed_methods = ["get"]
+        object_class = object
     #----------------------------------------------------------------------
 
     def dehydrate_slug(self, bundle):

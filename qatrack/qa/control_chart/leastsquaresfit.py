@@ -5,7 +5,10 @@ import numpy as np
 import matplotlib.mlab as mlab
 from scipy.optimize import curve_fit
 
+import logging
+logger = logging.getLogger('qatrack.console')
 np.seterr("log")
+np.seterrcall(logger.info)
 
 
 def gauss_fit(data, freq, bins, binwidth):

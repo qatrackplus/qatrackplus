@@ -5,7 +5,8 @@ from django.test import TestCase
 from django.test.client import RequestFactory
 from django.test.utils import setup_test_environment
 from django.utils import unittest, timezone
-from qatrack.qa import models, views, forms
+from qatrack.qa import models, views
+from qatrack.qa.views import forms
 
 from qatrack.qa.templatetags import qa_tags
 

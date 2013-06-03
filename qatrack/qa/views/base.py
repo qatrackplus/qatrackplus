@@ -7,12 +7,10 @@ import logging
 import math
 import os
 import shutil
-import textwrap
 import urllib
 
 
 from django.conf import settings
-from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 from django.http import HttpResponse, HttpResponseRedirect, Http404
@@ -33,9 +31,8 @@ import numpy
 import scipy
 
 from qatrack.contacts.models import Contact
-from qatrack.qa import models, utils, forms
-from qatrack.qa.api import ValueResource
-from qatrack.qa.control_chart import control_chart
+from qatrack.qa import models, utils
+from qatrack.qa.views import forms
 from qatrack.qa.templatetags import qa_tags
 from qatrack.units.models import Unit, UnitType
 

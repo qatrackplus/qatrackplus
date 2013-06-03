@@ -1,14 +1,23 @@
-from .base import JSONResponseMixin
+import json
+import math
+import numpy
+import scipy
 
-#from django.views.generic import ListView, UpdateView, View, TemplateView, CreateView
 from django.conf import settings
+from django.contrib import messages
+from django.core.urlresolvers import reverse
+from django.db.models import Q
+from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import get_object_or_404
 from django.views.generic import View, ListView, CreateView
+from django.utils import timezone
+from django.utils.translation import ugettext as _
 
-from .. import models, utils, forms
-from .base import BaseEditTestListInstance, TestListInstances, UTCList
+from . import forms
+from .. import models, utils
+from .base import BaseEditTestListInstance, TestListInstances, UTCList, JSONResponseMixin, logger
 from qatrack.contacts.models import Contact
-from qatrack.units.models import UnitType
+from qatrack.units.models import UnitType, Unit
 
 #============================================================================
 class Upload(JSONResponseMixin, View):

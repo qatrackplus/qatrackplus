@@ -6,9 +6,14 @@ from django.test import TestCase
 from django.test.client import RequestFactory
 from django.test.utils import setup_test_environment
 from django.utils import unittest, timezone
-from qatrack.qa import models, views, forms
+from qatrack.qa import models, views
+from qatrack.qa.views import forms
 
-
+import qatrack.qa.views.perform
+import qatrack.qa.views.charts
+import qatrack.qa.views.review
+import qatrack.qa.views.base
+logger = qatrack.qa.views.base.logger
 import django.forms
 import json
 import os
@@ -47,7 +52,7 @@ class TestURLS(TestCase):
             ("all_lists", {}),
 
             ("charts", {}),
-            ("export_data", {}),
+            #            ("export_data", {}),
             ("chart_data", {}),
             ("control_chart", {}),
             ("overview", {}),
@@ -77,6 +82,8 @@ class TestURLS(TestCase):
         )
 
         for url, kwargs in url_names:
+            logger.info("\t > testing: "+url)
+
             self.assertTrue(self.returns_200(reverse(url, kwargs=kwargs)))
     #---------------------------------------------------------------------------
 
@@ -122,7 +129,7 @@ class TestDataTables(TestCase):
         self.user.save()
 
         self.factory = RequestFactory()
-        self.view = views.UTCList.as_view()
+        self.view = views.base.UTCList.as_view()
 
         self.url = reverse("all_lists", kwargs={"data": "data/"})
 
@@ -136,7 +143,7 @@ class TestDataTables(TestCase):
     #----------------------------------------------------------------------
 
     def test_base_set_columns_fails(self):
-        bdt = views.BaseDataTablesDataSource()
+        bdt = views.base.BaseDataTablesDataSource()
         self.assertRaises(NotImplementedError, bdt.set_columns)
     #----------------------------------------------------------------------
 
@@ -181,7 +188,7 @@ class TestControlImage(TestCase):
     #----------------------------------------------------------------------
     def setUp(self):
         self.factory = RequestFactory()
-        self.view = views.ControlChartImage.as_view()
+        self.view = views.charts.ControlChartImage.as_view()
         self.url = reverse("control_chart")
 
     #----------------------------------------------------------------------
@@ -340,7 +347,7 @@ class TestChartView(TestCase):
 
     #----------------------------------------------------------------------
     def setUp(self):
-        self.view = views.ChartView()
+        self.view = views.charts.ChartView()
         self.tl = utils.create_test_list()
         self.test1 = utils.create_test(name="test1")
         utils.create_test_list_membership(self.tl, self.test1)
@@ -391,7 +398,7 @@ class TestChartData(TestCase):
     #----------------------------------------------------------------------
     def setUp(self):
         self.url = reverse("chart_data")
-        self.view = views.BasicChartData.as_view()
+        self.view = views.charts.BasicChartData.as_view()
 
         self.status = utils.create_status()
         ref = utils.create_reference()
@@ -441,7 +448,7 @@ class TestComposite(TestCase):
     #----------------------------------------------------------------------
     def setUp(self):
         self.factory = RequestFactory()
-        self.view = views.CompositeCalculation.as_view()
+        self.view = views.perform.CompositeCalculation.as_view()
         self.url = reverse("composite")
 
         self.t1 = utils.create_test(name="test1")
@@ -648,7 +655,7 @@ class TestPerformQA(TestCase):
     #----------------------------------------------------------------------
     def setUp(self):
         self.factory = RequestFactory()
-        self.view = views.PerformQA.as_view()
+        self.view = views.perform.PerformQA.as_view()
         self.status = utils.create_status()
 
         self.test_list = utils.create_test_list()
@@ -1005,7 +1012,7 @@ class TestPerformQA(TestCase):
 class TestBaseEditTestListInstance(TestCase):
     #----------------------------------------------------------------------
     def setUp(self):
-        self.view = views.BaseEditTestListInstance()
+        self.view = views.perform.BaseEditTestListInstance()
     #----------------------------------------------------------------------
 
     def test_form_valid_not_implemented(self):
@@ -1019,7 +1026,7 @@ class TestEditTestListInstance(TestCase):
     #----------------------------------------------------------------------
     def setUp(self):
 
-        self.view = views.EditTestListInstance.as_view()
+        self.view = views.perform.EditTestListInstance.as_view()
         self.factory = RequestFactory()
 
         self.status = utils.create_status()
@@ -1197,7 +1204,7 @@ class TestReviewTestListInstance(TestCase):
     #----------------------------------------------------------------------
     def setUp(self):
 
-        self.view = views.ReviewTestListInstance.as_view()
+        self.view = views.review.ReviewTestListInstance.as_view()
         self.factory = RequestFactory()
 
         self.status = utils.create_status()
