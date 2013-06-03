@@ -29,8 +29,10 @@ class UserFormsetMixin(object):
             f.user = self.user
             self.forms.append(f)
 
+
 #============================================================================
 class TestInstanceWidgetsMixin(object):
+
     #----------------------------------------------------------------------
     def clean(self):
         """do some custom form validation"""
@@ -81,8 +83,8 @@ class TestInstanceWidgetsMixin(object):
                 self.initial["value"] = int(self.instance.value)
 
         self.fields["value"].widget.attrs.update(attrs)
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def disable_read_only_fields(self):
         """disable some fields for constant and composite tests"""
         if self.unit_test_info.test.type in (models.CONSTANT, models.COMPOSITE,):
@@ -124,6 +126,7 @@ BaseTestInstanceFormSet = forms.formsets.formset_factory(CreateTestInstanceForm,
 
 
 class CreateTestInstanceFormSet(UserFormsetMixin, BaseTestInstanceFormSet):
+
     #----------------------------------------------------------------------
     def __init__(self, *args, **kwargs):
         unit_test_infos = kwargs.pop("unit_test_infos")
@@ -140,17 +143,16 @@ class CreateTestInstanceFormSet(UserFormsetMixin, BaseTestInstanceFormSet):
         for form, uti in zip(self.forms, unit_test_infos):
             form.set_unit_test_info(uti)
 
+
 #============================================================================
-
-
 class UpdateTestInstanceForm(TestInstanceWidgetsMixin, forms.ModelForm):
 
     #============================================================================
     class Meta:
         model = models.TestInstance
         fields = ("value","string_value", "skipped", "comment",)
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def __init__(self, *args, **kwargs):
 
         super(UpdateTestInstanceForm, self).__init__(*args, **kwargs)
@@ -168,10 +170,9 @@ class UpdateTestInstanceForm(TestInstanceWidgetsMixin, forms.ModelForm):
             "test": self.instance.unit_test_info.test,
         }
 
+
 #============================================================================
 BaseUpdateTestInstanceFormSet = inlineformset_factory(models.TestListInstance, models.TestInstance, form=UpdateTestInstanceForm, extra=0, can_delete=False)
-
-
 class UpdateTestInstanceFormSet(UserFormsetMixin, BaseUpdateTestInstanceFormSet):
 
     #----------------------------------------------------------------------
@@ -184,9 +185,8 @@ class UpdateTestInstanceFormSet(UserFormsetMixin, BaseUpdateTestInstanceFormSet)
 
         super(UpdateTestInstanceFormSet, self).__init__(*args, **kwargs)
 
+
 #============================================================================
-
-
 class ReviewTestInstanceForm(forms.ModelForm):
 
     #============================================================================
@@ -194,15 +194,14 @@ class ReviewTestInstanceForm(forms.ModelForm):
         model = models.TestInstance
         fields = ("status", )
 
+
+#============================================================================
 BaseReviewTestInstanceFormSet = inlineformset_factory(models.TestListInstance, models.TestInstance, form=ReviewTestInstanceForm, extra=0, can_delete=False)
-
-
 class ReviewTestInstanceFormSet(UserFormsetMixin, BaseReviewTestInstanceFormSet):
     pass
 
+
 #============================================================================
-
-
 class BaseTestListInstanceForm(forms.ModelForm):
     """parent form for performing or updating a qa test list"""
     status = forms.ModelChoiceField(
@@ -267,9 +266,8 @@ class BaseTestListInstanceForm(forms.ModelForm):
                 del cleaned_data["work_started"]
         return cleaned_data
 
+
 #============================================================================
-
-
 class CreateTestListInstanceForm(BaseTestListInstanceForm):
     """form for doing qa test list"""
 
@@ -278,9 +276,8 @@ class CreateTestListInstanceForm(BaseTestListInstanceForm):
         super(CreateTestListInstanceForm, self).__init__(*args, **kwargs)
         self.fields["work_started"].initial = timezone.now()
 
+
 #============================================================================
-
-
 class UpdateTestListInstanceForm(BaseTestListInstanceForm):
 
     #----------------------------------------------------------------------
