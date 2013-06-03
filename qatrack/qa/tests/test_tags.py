@@ -1,11 +1,5 @@
-from django.conf import settings
-from django.contrib.auth.models import User, Group
-from django.core.urlresolvers import reverse
 from django.test import TestCase
-from django.test.client import RequestFactory
-from django.test.utils import setup_test_environment
-from django.utils import unittest, timezone
-from qatrack.qa import models, views
+from qatrack.qa import models
 from qatrack.qa.views import forms
 
 from qatrack.qa.templatetags import qa_tags
@@ -86,7 +80,6 @@ class TestRefTolSpan(TestCase):
 
     def test_multiple_choice(self):
         t = models.Test(type=models.MULTIPLE_CHOICE, choices="foo,bar,baz")
-        r = models.Reference()
         tol = models.Tolerance(type=models.MULTIPLE_CHOICE, mc_tol_choices="foo", mc_pass_choices="")
         result = qa_tags.reference_tolerance_span(t, None, tol)
         self.assertIn("Tolerance Values", result)
