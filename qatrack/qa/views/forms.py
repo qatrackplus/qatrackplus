@@ -11,6 +11,7 @@ from .. import models
 
 BOOL_CHOICES = [(0, "No"), (1, "Yes")]
 
+
 #====================================================================================
 class UserFormsetMixin(object):
     """A mixin to add a user object to every form in a formset (and the formset itself)"""
@@ -74,7 +75,7 @@ class TestInstanceWidgetsMixin(object):
         if test_type == models.BOOLEAN:
             self.fields["value"].widget = RadioSelect(choices=BOOL_CHOICES)
         elif test_type == models.MULTIPLE_CHOICE:
-            self.fields["value"].widget = Select(choices=[("", "")]+self.unit_test_info.test.get_choices())
+            self.fields["value"].widget = Select(choices=[("", "")] + self.unit_test_info.test.get_choices())
         elif test_type == models.UPLOAD:
             self.fields["string_value"].widget = HiddenInput()
 
@@ -150,7 +151,7 @@ class UpdateTestInstanceForm(TestInstanceWidgetsMixin, forms.ModelForm):
     #============================================================================
     class Meta:
         model = models.TestInstance
-        fields = ("value","string_value", "skipped", "comment",)
+        fields = ("value", "string_value", "skipped", "comment",)
 
     #----------------------------------------------------------------------
     def __init__(self, *args, **kwargs):
@@ -173,6 +174,8 @@ class UpdateTestInstanceForm(TestInstanceWidgetsMixin, forms.ModelForm):
 
 #============================================================================
 BaseUpdateTestInstanceFormSet = inlineformset_factory(models.TestListInstance, models.TestInstance, form=UpdateTestInstanceForm, extra=0, can_delete=False)
+
+
 class UpdateTestInstanceFormSet(UserFormsetMixin, BaseUpdateTestInstanceFormSet):
 
     #----------------------------------------------------------------------
@@ -197,6 +200,8 @@ class ReviewTestInstanceForm(forms.ModelForm):
 
 #============================================================================
 BaseReviewTestInstanceFormSet = inlineformset_factory(models.TestListInstance, models.TestInstance, form=ReviewTestInstanceForm, extra=0, can_delete=False)
+
+
 class ReviewTestInstanceFormSet(UserFormsetMixin, BaseReviewTestInstanceFormSet):
     pass
 

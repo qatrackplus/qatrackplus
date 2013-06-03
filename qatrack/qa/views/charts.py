@@ -2,6 +2,7 @@ import collections
 import json
 import textwrap
 
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
@@ -13,13 +14,13 @@ from django.views.generic import TemplateView, View
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 import numpy
-import scipy
 
 from .. import models
 from .base import JSONResponseMixin
 from qatrack.qa.api import ValueResource
 from qatrack.qa.control_chart import control_chart
-from qatrack.units.models import Unit, UnitType
+from qatrack.units.models import Unit
+
 
 #============================================================================
 class ChartView(TemplateView):
@@ -89,8 +90,8 @@ class ChartView(TemplateView):
         test_data = self.create_test_data()
 
         c = {
-            "from_date": timezone.now().date()-timezone.timedelta(days=365),
-            "to_date": timezone.now().date()+timezone.timedelta(days=1),
+            "from_date": timezone.now().date() - timezone.timedelta(days=365),
+            "to_date": timezone.now().date() + timezone.timedelta(days=1),
             "frequencies": models.Frequency.objects.all(),
             "tests": self.tests,
             "test_lists": self.test_lists,
@@ -193,7 +194,7 @@ class BaseChartView(View):
         statuses = self.request.GET.getlist("statuses[]", models.TestInstanceStatus.objects.values_list("pk", flat=True))
 
         now = timezone.datetime.now()
-        from_date = self.get_date("from_date", now-timezone.timedelta(days=365))
+        from_date = self.get_date("from_date", now - timezone.timedelta(days=365))
         to_date = self.get_date("to_date", now)
 
         self.tis = models.TestInstance.objects.filter(
@@ -264,8 +265,8 @@ class ControlChartImage(BaseChartView):
         fig = Figure(dpi=72, facecolor="white")
         dpi = fig.get_dpi()
         fig.set_size_inches(
-            self.get_number_from_request("width", 700)/dpi,
-            self.get_number_from_request("height", 480)/dpi,
+            self.get_number_from_request("width", 700) / dpi,
+            self.get_number_from_request("height", 480) / dpi,
         )
         canvas = FigureCanvas(fig)
 
@@ -291,7 +292,7 @@ class ControlChartImage(BaseChartView):
             include_fit = False
 
         response = HttpResponse(mimetype="image/png")
-        if n_baseline_subgroups < 1 or n_baseline_subgroups > len(data)/subgroup_size:
+        if n_baseline_subgroups < 1 or n_baseline_subgroups > len(data) / subgroup_size:
             fig.text(0.1, 0.9, "Not enough data for control chart", fontsize=20)
             canvas.print_png(response)
         else:
@@ -310,6 +311,7 @@ class ControlChartImage(BaseChartView):
 
         return response
 
+
 #============================================================================
 class ExportToCSV(View):
     """A simple api wrapper to give exported api data a filename for downloads"""
@@ -320,4 +322,3 @@ class ExportToCSV(View):
         response = ValueResource().get_list(request)
         response["Content-Disposition"] = 'attachment; filename=exported_data.csv'
         return response
-
