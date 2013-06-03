@@ -157,7 +157,14 @@ class DueDateOverview(TemplateView):
             "last_instance__testinstance_set__status",
             "last_instance__modified_by",
             "tests_object",
-        ).order_by("frequency__nominal_interval", "unit__number", "testlist__name", "testlistcycle__name",)
+        ).exclude(
+            due_date=None
+        ).order_by(
+            "frequency__nominal_interval",
+            "unit__number",
+            "testlist__name",
+            "testlistcycle__name",
+        )
 
         return qs.distinct()
 
@@ -181,27 +188,21 @@ class DueDateOverview(TemplateView):
             ("next_week", "Due Next Week"),
             ("this_month", "Due This Month"),
             ("next_month", "Due Next Month"),
-            #("later","Later"),
         )
 
         for utc in qs:
-            if utc.due_date:
-                due_date = utc.due_date.date()
-                if due_date <= today:
-                    due["overdue"].append(utc)
-                elif due_date <= friday:
-                    if utc.last_instance.work_completed.date() != today:
-                        due["this_week"].append(utc)
-                elif due_date <= next_friday:
-                    due["next_week"].append(utc)
-                elif due_date <= month_end:
-                    due["this_month"].append(utc)
-                elif due_date <= next_month_end:
-                    due["next_month"].append(utc)
-                else:
-                    due["later"].append(utc)
-            else:
-                due["new"].append(utc)
+            due_date = utc.due_date.date()
+            if due_date <= today:
+                due["overdue"].append(utc)
+            elif due_date <= friday:
+                if utc.last_instance.work_completed.date() != today:
+                    due["this_week"].append(utc)
+            elif due_date <= next_friday:
+                due["next_week"].append(utc)
+            elif due_date <= month_end:
+                due["this_month"].append(utc)
+            elif due_date <= next_month_end:
+                due["next_month"].append(utc)
 
         ordered_due_lists = []
         for key, display in due_display_order:
