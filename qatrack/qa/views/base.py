@@ -1,44 +1,26 @@
-from .. import signals #signals import needs to be here so signals get registered
+from .. import signals  # signals import needs to be here so signals get registered
 
-import calendar
-import collections
 import json
 import logging
-import math
-import os
-import shutil
 import urllib
 
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
-from django.http import HttpResponse, HttpResponseRedirect, Http404
-from django.shortcuts import get_object_or_404
+from django.http import HttpResponse
 from django.core.urlresolvers import reverse
 from django.template import Context
 from django.contrib.auth.context_processors import PermWrapper
 from django.template.loader import get_template
 
-from django.views.generic import ListView, UpdateView, View, TemplateView, CreateView
-from django.utils.translation import ugettext as _
+from django.views.generic import ListView, UpdateView
 from django.utils import timezone
 
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from matplotlib.figure import Figure
-
-import numpy
-import scipy
-
-from qatrack.contacts.models import Contact
 from qatrack.qa import models, utils
-from qatrack.qa.views import forms
 from qatrack.qa.templatetags import qa_tags
-from qatrack.units.models import Unit, UnitType
 
 logger = logging.getLogger('qatrack.console')
-
-
 
 
 #============================================================================
@@ -86,7 +68,7 @@ class BaseEditTestListInstance(UpdateView):
         if utc_hist.count() > 0:
             from_date = list(utc_hist)[-1]
         else:
-            from_date = timezone.make_aware(timezone.datetime.now() - timezone.timedelta(days=10*self.object.unit_test_collection.frequency.overdue_interval), timezone.get_current_timezone())
+            from_date = timezone.make_aware(timezone.datetime.now() - timezone.timedelta(days=10 * self.object.unit_test_collection.frequency.overdue_interval), timezone.get_current_timezone())
 
         tests = [x.unit_test_info.test for x in self.test_instances]
         histories = utils.tests_history(tests, self.object.unit_test_collection.unit, from_date, test_list=self.object.test_list)
@@ -205,7 +187,7 @@ class BaseDataTablesDataSource(ListView):
     def set_current_page_objects(self):
         per_page = int(self.search_filter_context.get("iDisplayLength", 100))
         offset = int(self.search_filter_context.get("iDisplayStart", 0))
-        self.cur_page_objects = self.filtered_objects[offset:offset+per_page]
+        self.cur_page_objects = self.filtered_objects[offset:offset + per_page]
 
     #----------------------------------------------------------------------
     def tabulate_data(self):
@@ -237,7 +219,7 @@ class BaseDataTablesDataSource(ListView):
         self.search_filter_context = {}
 
         try:
-            for k,v in self.request.COOKIES.items():
+            for k, v in self.request.COOKIES.items():
                 if k.startswith("SpryMedia_DataTables"):
                     break
             else:
@@ -246,13 +228,13 @@ class BaseDataTablesDataSource(ListView):
             cookie_filters = json.loads(urllib.unquote(v))
 
             for idx, search in enumerate(cookie_filters["aoSearchCols"]):
-                for k,v in search.items():
-                    self.search_filter_context["%s_%d"%(k,idx)] = v
+                for k, v in search.items():
+                    self.search_filter_context["%s_%d" % (k, idx)] = v
 
             self.search_filter_context["iSortingCols"] = 0
-            for idx, (col,dir_,_) in enumerate(cookie_filters["aaSorting"]):
-                self.search_filter_context["iSortCol_%d" %(idx)] = col
-                self.search_filter_context["sSortDir_%d" %(idx)] = dir_
+            for idx, (col, dir_, _) in enumerate(cookie_filters["aaSorting"]):
+                self.search_filter_context["iSortCol_%d" % (idx)] = col
+                self.search_filter_context["sSortDir_%d" % (idx)] = dir_
                 self.search_filter_context["iSortingCols"] += 1
 
             self.search_filter_context["iDisplayLength"] = cookie_filters["iLength"]
@@ -274,7 +256,6 @@ class BaseDataTablesDataSource(ListView):
         self.set_columns()
         self.set_orderings()
         self.set_filters()
-
 
         self.filtered_objects = all_objects.filter(*self.filters).order_by(*self.orderings)
 
@@ -430,7 +411,5 @@ class TestListInstances(BaseDataTablesDataSource):
     #----------------------------------------------------------------------
     def get_review_status(self, tli):
         template = get_template("qa/testlistinstance_review_status.html")
-        c = Context({"instance": tli, "perms": PermWrapper(self.request.user), "request":self.request})
+        c = Context({"instance": tli, "perms": PermWrapper(self.request.user), "request": self.request})
         return template.render(c)
-
-
