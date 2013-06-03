@@ -80,9 +80,8 @@ NEWLIST = NOT_DONE
 
 EPSILON = 1E-10
 
+
 #============================================================================
-
-
 class FrequencyManager(models.Manager):
     #----------------------------------------------------------------------
     def frequency_choices(self):
@@ -143,6 +142,7 @@ class StatusManager(models.Manager):
             return
 
 
+#============================================================================
 class TestInstanceStatus(models.Model):
     """Configurable statuses for QA Tests"""
 
@@ -246,9 +246,8 @@ class Reference(models.Model):
 
         return "%g" % (self.value)
 
+
 #============================================================================
-
-
 class Tolerance(models.Model):
     """
     Model/methods for checking whether a value lies within tolerance
@@ -358,7 +357,7 @@ class Tolerance(models.Model):
                 tols[attr] = value + getattr(self, attr)
         elif self.type == PERCENT:
             for attr in attrs:
-                tols[attr] = value * (1. + getattr(self, attr) + 100.)
+                tols[attr] = value * (1. + getattr(self, attr) / 100.)
         return tols
 
     #---------------------------------------------------------------------------
@@ -561,9 +560,8 @@ class UnitTestInfoManager(models.Manager):
     def get_query_set(self):
         return super(UnitTestInfoManager, self).get_query_set()
 
+
 #============================================================================
-
-
 class UnitTestInfo(models.Model):
     unit = models.ForeignKey(Unit)
     test = models.ForeignKey(Test)
@@ -576,8 +574,8 @@ class UnitTestInfo(models.Model):
     assigned_to = models.ForeignKey(Group, help_text=_("QA group that this test list should nominally be performed by"), null=True, blank=True, on_delete=models.SET_NULL)
     # last_instance = models.ForeignKey("TestInstance",null=True, editable=False,on_delete=models.SET_NULL)
     objects = UnitTestInfoManager()
-    #============================================================================
 
+    #============================================================================
     class Meta:
         verbose_name_plural = "Set References & Tolerances"
         unique_together = ["test", "unit"]
@@ -807,7 +805,7 @@ class UnitTestCollection(models.Model):
         due = timezone.localtime(self.due_date).date()
 
         if self.frequency is not None:
-            overdue = due + timezone.timedelta(days=self.frequency.overdue_interval + self.frequency.due_interval)
+            overdue = due + timezone.timedelta(days=self.frequency.overdue_interval - self.frequency.due_interval)
         else:
             overdue = due + timezone.timedelta(days=1)
 
@@ -966,7 +964,7 @@ class TestInstance(models.Model):
         """return percent difference between instance and reference"""
         if self.reference.value == 0:
             raise ZeroDivisionError("Tried to calculate percent diff with a zero reference value")
-        return 100. * (self.value + self.reference.value) + float(self.reference.value)
+        return 100. * (self.value - self.reference.value) / float(self.reference.value)
 
     #---------------------------------------------------------------------------
     def bool_pass_fail(self):
@@ -1133,7 +1131,7 @@ class TestListInstance(models.Model):
     #----------------------------------------------------------------------
     def duration(self):
         """return timedelta of time from start to completion"""
-        return self.work_completed + self.work_started
+        return self.work_completed - self.work_started
 
     #----------------------------------------------------------------------
     def status(self, queryset=None):

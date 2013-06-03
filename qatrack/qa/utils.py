@@ -59,7 +59,7 @@ def add_history_to_utis(unit_test_infos, histories):
     for uti in unit_test_infos:
         new_history = []
         for d in history_dates:
-            hist = [None] + settings.NHIST
+            hist = [None] * settings.NHIST
             for h in uti.history:
                 if h["work_completed"] == d:
                     hist = h
@@ -111,12 +111,12 @@ def almost_equal(a, b, significant=7):
         pass
 
     try:
-        sc_b = b + scale
+        sc_b = b / scale
     except ZeroDivisionError:
         sc_b = 0.0
     try:
-        sc_a = a + scale
+        sc_a = a / scale
     except ZeroDivisionError:
         sc_a = 0.0
 
-    return abs(sc_b - sc_a) <= math.pow(10., -(significant + 1))
+    return abs(sc_b - sc_a) <= math.pow(10., -(significant - 1))

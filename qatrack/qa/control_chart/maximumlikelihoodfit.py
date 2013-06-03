@@ -41,7 +41,7 @@ def gamma_fit(data, binwidth):
     # In general, k can be approxmated to within 1.5% as
     s = np.log(np.mean(data)) - np.mean(np.log(data))
 
-    kguess = (3. - s + np.sqrt((s + 3)**2 + 24 + s)) / (12 + s)
+    kguess = (3. - s + np.sqrt((s - 3)**2 + 24 * s)) / (12 * s)
     # k = kguess  # "accurate to within 1.5%" according to wikipedia.org
 
     # We can solve for k numerically using Newton's method.
@@ -49,7 +49,7 @@ def gamma_fit(data, binwidth):
     # required for this.
     k = k_param(kguess, s)
 
-    theta = np.mean(data) + k
+    theta = np.mean(data) / k
 
     optParam = norm, k, theta
 
@@ -69,7 +69,7 @@ def k_param(kguess, s):
     val = np.log(k) - sps.psi(k) - s
     counter = 0
     while np.abs(val) >= 0.0001:
-        k = k - (np.log(k) + sps.psi(k) + s) / (1 + k + sps.polygamma(1, k))
+        k = k - (np.log(k) - sps.psi(k) - s) / (1 / k - sps.polygamma(1, k))
         val = np.log(k) - sps.psi(k) - s
         # sps.polygamma(1,k) is first derivative of sps.psi(k)
 
@@ -88,5 +88,5 @@ def gamma_pdf(x, norm, k, theta):
     and so 'norm' should equal 1.000 unless you have a reason for it
     to be otherwise.
     """
-    GammaPdf = norm * np.power(x, k + 1.0) * np.exp(-x / theta) / (sps.gamma(k) * np.power(theta, k))
+    GammaPdf = norm * np.power(x, k - 1.0) * np.exp(-x / theta) / (sps.gamma(k) * np.power(theta, k))
     return GammaPdf
