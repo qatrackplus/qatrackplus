@@ -13,7 +13,9 @@ from . import forms
 from .base import BaseEditTestListInstance, TestListInstances, UTCList
 from .perform import ChooseUnit
 
-from qatrack.units.models import Unit, UnitType
+from qatrack.units.models import Unit
+
+
 #============================================================================
 class ReviewTestListInstance(BaseEditTestListInstance):
     form_class = forms.ReviewTestListInstanceForm
@@ -60,7 +62,6 @@ class ReviewTestListInstance(BaseEditTestListInstance):
         # let user know request succeeded and return to unit list
         messages.success(self.request, _("Successfully updated %s " % self.object.test_list.name))
         return HttpResponseRedirect(self.get_success_url())
-
 
 
 #====================================================================================
@@ -123,6 +124,7 @@ class ChooseFrequencyForReview(ListView):
     context_object_name = "frequencies"
     template_name_suffix = "_choose_for_review"
 
+
 #============================================================================
 class Unreviewed(TestListInstances):
     """view for grouping all test lists with a certain frequency for all units"""
@@ -166,7 +168,7 @@ class DueDateOverview(TemplateView):
         now = timezone.localtime(timezone.datetime.now())
 
         today = now.date()
-        friday = today + timezone.timedelta(days=(4-today.weekday()) % 7)
+        friday = today + timezone.timedelta(days=(4 - today.weekday()) % 7)
         next_friday = friday + timezone.timedelta(days=7)
         month_end = timezone.datetime(now.year, now.month, calendar.mdays[now.month]).date()
         next_month_start = month_end + timezone.timedelta(days=1)
@@ -240,7 +242,7 @@ class Overview(TemplateView):
         qs = self.get_queryset()
 
         units = Unit.objects.order_by("number")
-        frequencies = list(models.Frequency.objects.order_by("nominal_interval"))+[None]
+        frequencies = list(models.Frequency.objects.order_by("nominal_interval")) + [None]
 
         unit_lists = []
 
@@ -251,7 +253,6 @@ class Overview(TemplateView):
 
         context["unit_lists"] = unit_lists
         return context
-
 
 
 #====================================================================================
@@ -268,5 +269,3 @@ class UTCInstances(TestListInstances):
     def get_queryset(self):
         qs = super(UTCInstances, self).get_queryset()
         return qs.filter(unit_test_collection__pk=self.kwargs["pk"])
-
-
