@@ -15,9 +15,12 @@ from .perform import ChooseUnit
 
 from qatrack.units.models import Unit
 
+from braces.views import PermissionRequiredMixin
 
 #============================================================================
-class ReviewTestListInstance(BaseEditTestListInstance):
+class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
+    permission_required = "qa.can_review"
+
     form_class = forms.ReviewTestListInstanceForm
     formset_class = forms.ReviewTestInstanceFormSet
     template_name_suffix = "_review"
@@ -65,7 +68,8 @@ class ReviewTestListInstance(BaseEditTestListInstance):
 
 
 #====================================================================================
-class UTCReview(UTCList):
+class UTCReview(PermissionRequiredMixin, UTCList):
+    permission_required = "qa.change_testinstance"
     action = "review"
     action_display = "Review"
 
@@ -136,9 +140,11 @@ class Unreviewed(TestListInstances):
 
 
 #============================================================================
-class DueDateOverview(TemplateView):
+class DueDateOverview(PermissionRequiredMixin, TemplateView):
     """Overall status of the QA Program"""
     template_name = "qa/overview_by_due_date.html"
+
+    permission_required = "qa.can_view_history"
 
     #----------------------------------------------------------------------
     def get_queryset(self):
@@ -212,9 +218,11 @@ class DueDateOverview(TemplateView):
 
 
 #============================================================================
-class Overview(TemplateView):
+class Overview(PermissionRequiredMixin, TemplateView):
     """Overall status of the QA Program"""
     template_name = "qa/overview.html"
+
+    permission_required = "qa.can_view_history"
 
     #----------------------------------------------------------------------
     def get_queryset(self):

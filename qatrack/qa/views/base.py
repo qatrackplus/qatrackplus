@@ -72,15 +72,19 @@ class BaseEditTestListInstance(UpdateView):
             "reference", "tolerance", "status", "unit_test_info", "unit_test_info__test", "status"
         )
 
+        instance=self.get_object()
+
         if self.request.method == "POST":
             formset = self.formset_class(self.request.POST, self.request.FILES, instance=self.get_object(), queryset=self.test_instances, user=self.request.user)
         else:
-            formset = self.formset_class(instance=self.get_object(), queryset=self.test_instances, user=self.request.user)
+            formset = self.formset_class(instance=instance, queryset=self.test_instances, user=self.request.user)
 
         self.add_histories(formset.forms)
         context["formset"] = formset
         context["history_dates"] = self.history_dates
         context["statuses"] = models.TestInstanceStatus.objects.all()
+        context["test_list"] = instance.test_list
+        context["unit_test_collection"] = instance.unit_test_collection
         return context
 
     #----------------------------------------------------------------------

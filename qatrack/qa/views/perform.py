@@ -23,7 +23,7 @@ from .base import BaseEditTestListInstance, TestListInstances, UTCList, logger
 from qatrack.contacts.models import Contact
 from qatrack.units.models import UnitType, Unit
 
-from braces.views import JSONResponseMixin
+from braces.views import JSONResponseMixin, PermissionRequiredMixin
 
 
 #============================================================================
@@ -546,9 +546,10 @@ class PerformQA(CreateView):
 
 
 #============================================================================
-class EditTestListInstance(BaseEditTestListInstance):
+class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
     """view for users to complete a qa test list"""
 
+    permission_required = "qa.change_testlistinstance"
     form_class = forms.UpdateTestListInstanceForm
     formset_class = forms.UpdateTestInstanceFormSet
 
@@ -627,11 +628,14 @@ class EditTestListInstance(BaseEditTestListInstance):
             msg += msga
             messages.error(self.request, _(msg))
 
+class ContinueTestListInstance(EditTestListInstance):
+
+    permission_required = "qa.add_testlistinstance"
 
 #============================================================================
 class InProgress(TestListInstances):
     """view for grouping all test lists with a certain frequency for all units"""
-    permission_required = None
+
     queryset = models.TestListInstance.objects.in_progress
 
     #----------------------------------------------------------------------

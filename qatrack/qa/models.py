@@ -1119,6 +1119,7 @@ class TestListInstance(models.Model):
         permissions = (
             ("can_override_date", "Can override date"),
             ("can_perform_subset", "Can perform subset of tests"),
+            ("can_view_completed", "Can look at previously completed results"),
         )
 
     #----------------------------------------------------------------------

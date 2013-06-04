@@ -61,6 +61,7 @@ urlpatterns = patterns('',
     url(r"^session/details/(?P<pk>\d+)/$", review.ReviewTestListInstance.as_view(), name="review_test_list_instance"),
     url(r"^session/unreviewed/(?P<data>data/)?$", review.Unreviewed.as_view(), name="unreviewed"),
     url(r"^session/in-progress/(?P<data>data/)?$", perform.InProgress.as_view(), name="in_progress"),
+    url(r"^session/continue/(?P<pk>\d+)/$", perform.ContinueTestListInstance.as_view(), name="continue_tli"),
     url(r"^session/edit/(?P<pk>\d+)/$", perform.EditTestListInstance.as_view(), name="edit_tli"),
 
 
