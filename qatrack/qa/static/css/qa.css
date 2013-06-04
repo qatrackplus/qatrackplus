@@ -201,12 +201,13 @@ th.qa-history div{
 
 .history-value,.history-label {
     display:inline-block;
-    width: 50px;
+    width: 56px;
     text-align:right;
     margin-right: 1px; /*fix ie inline block bug*/
     text-overflow:ellipsis;
     white-space: nowrap;
     overflow:hidden;
+    padding: 1px 1px 2px;
 }
 
 .history-label {

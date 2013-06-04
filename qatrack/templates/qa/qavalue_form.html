@@ -19,7 +19,7 @@
         </tr>
     {% endif %}
 {% endfor %}
-<tr class="control-group qa-valuerow" id="valuerow-{{test_info.test.slug}}">
+<tr class="control-group qa-valuerow" id="valuerow-{{test_info.test.slug}}" data-uti="{{test_info.unit_test_info.pk}}">
     {% for hidden in form.hidden_fields %}
         {{ hidden }}
     {% endfor %}
@@ -27,19 +27,6 @@
     {% with ref=test_info.reference  tol=test_info.tolerance  test=test_info.test uti=test_info.unit_test_info %}
 
         {# Hidden inputs required for checking pass/fail status #}
-        <input type="hidden" class="qa-reference-val" value="{{ref.value}}"/>
-        <input type="hidden" class="qa-tolerance act_low" value="{{tol.act_low}}"/>
-        <input type="hidden" class="qa-tolerance tol_low" value="{{tol.tol_low}}"/>
-        <input type="hidden" class="qa-tolerance tol_high" value="{{tol.tol_high}}"/>
-        <input type="hidden" class="qa-tolerance act_high" value="{{tol.act_high}}"/>
-        <input type="hidden" class="qa-tolerance mc_pass_choices" value="{{tol.mc_pass_choices}}"/>
-        <input type="hidden" class="qa-tolerance mc_tol_choices" value="{{tol.mc_tol_choices}}"/>
-
-        <input type="hidden" class="qa-tolerance-type" id="tolerance-type-{{test.slug}}" value="{{tol.type}}"/>
-        <input type="hidden" class="qa-contextname" id="context-name-{{test.slug}}" value="{{test.slug}}"/>
-        <input type="hidden" class="qa-test-id" id="test-id-{{test.slug}}" value="{{test.pk}}"/>
-        <input type="hidden" class="qa-unittestinfo" id="unittestinfo-{{test.slug}}" value="{{uti.pk}}"/>
-        <input type="hidden" class="qa-testtype" id="testtype-{{test.slug}}" value="{{test.type}}"/>
 
         <td class="qa-category">{{test.category.name}}</td>
         <td class="qa-name qa-showproc">
@@ -49,7 +36,7 @@
                 {{test.name}}
             {% endif %}
         </td>
-        <td id="value-{{test.slug}}" class="qa-value" title="{{form.value.help_text|safe}}">
+        <td id="value-{{test.slug}}" class="qa-value" title="{{form.value.help_text|safe}}" data-uti="{{uti.pk}}" data-name="{{test.slug}}">
             {% if test.is_boolean %}
                 <span class="pull-left">{{form.value.0}}</span>
                 <span class="pull-right">{{form.value.1}}</span>

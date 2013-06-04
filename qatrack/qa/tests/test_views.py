@@ -462,14 +462,16 @@ class TestComposite(TestCase):
 
         data = {
             u'qavalues': [
-                u'{"testc":{"name":"testc","current_value":""},"test1":{"name":"test1","current_value":1},"test2":{"name":"test2","current_value":2}}'
+                u'{"testc":"","test1":1,"test2":2}'
             ],
-            u'composite_ids': [u'{"testc":"%d"}' % self.tc.pk]
+            u'composite_ids': [u'[%d]' % self.tc.pk],
+            u'upload_data': ['null'],
         }
 
         request = self.factory.post(self.url, data=data)
         response = self.view(request)
         values = json.loads(response.content)
+
         expected = {
             "errors": [],
             "results": {
@@ -485,7 +487,7 @@ class TestComposite(TestCase):
 
     def test_invalid_values(self):
 
-        data = {u'composite_ids': [u'{"testc":"%d"}' % self.tc.pk]}
+        data = {u'composite_ids': [u'[%d]' % self.tc.pk]}
 
         request = self.factory.post(self.url, data=data)
         response = self.view(request)
@@ -504,7 +506,7 @@ class TestComposite(TestCase):
             u'qavalues': [
                 u'{"testc":{"name":"testc","current_value":""},"test1":{"name":"test1","current_value":1},"test2":{"name":"test2","current_value":"abc"}}'
             ],
-            u'composite_ids': [u'{"testc":"%d"}' % self.tc.pk]
+            u'composite_ids': [u'[%d]' % self.tc.pk],
         }
 
         request = self.factory.post(self.url, data=data)
@@ -528,7 +530,7 @@ class TestComposite(TestCase):
 
         data = {
             u'qavalues': [
-                u'{"testc":{"name":"testc","current_value":""},"test1":{"name":"test1","current_value":1},"test2":{"name":"test2","current_value":"abc"}}'
+                u'{"testc":"","test1":1,"test2":"abc"}'
             ],
 
             u'composite_ids': [u' ']
@@ -549,7 +551,7 @@ class TestComposite(TestCase):
 
         data = {
             u'qavalues': [
-                u'{"testc":{"name":"testc","current_value":""},"test1":{"name":"test1","current_value":1},"test2":{"name":"test2","current_value":2}}'
+                u'{"testc":"","test1":1,"test2":2}'
             ],
         }
 
@@ -584,9 +586,9 @@ class TestComposite(TestCase):
 
         data = {
             u'qavalues': [
-                u'{"testc":{"name":"testc","current_value":""},"test1":{"name":"test1","current_value":1},"test2":{"name":"test2","current_value":2}}'
+                u'{"testc":"","test1":1,"test2":2}'
             ],
-            u'composite_ids': [u'{"testc":"%d"}' % self.tc.pk]
+            u'composite_ids': [u'[%d]' % self.tc.pk],
         }
 
         request = self.factory.post(self.url, data=data)
@@ -617,9 +619,9 @@ class TestComposite(TestCase):
 
         data = {
             u'qavalues': [
-                u'{"testc":{"name":"testc","current_value":""},"cyclic1":{"name":"cyclic1","current_value":""},"cyclic2":{"name":"cyclic2","current_value":""},"test1":{"name":"test1","current_value":1},"test2":{"name":"test2","current_value":2}}'
+                u'{"testc":"","cyclic1":"","cyclic2":"","test1":1,"test2":2}'
             ],
-            u'composite_ids': [u'{"testc":"%d","cyclic1":"%d","cyclic2":"%d"}' % (self.tc.pk, self.cyclic1.pk, self.cyclic2.pk)]
+            u'composite_ids': [u'[%d, %d, %d]' % (self.tc.pk, self.cyclic1.pk, self.cyclic2.pk)]
         }
 
         request = self.factory.post(self.url, data=data)
