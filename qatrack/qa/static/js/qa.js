@@ -264,7 +264,7 @@ function TestInstance(test_info, row){
             self.inputs.val(value);
         }else if (tt === QAUtils.UPLOAD){
             self.inputs.filter(":hidden").val(value["temp_file_name"]);
-        }else if (tt === QAUtils.SIMPLE){ 
+        }else if (tt === QAUtils.SIMPLE || tt === QAUtils.COMPOSITE){ 
             if (_.isNull(value)){
                 self.inputs.val("");
             }else{
@@ -407,24 +407,15 @@ function TestListInstance(){
             self.tests_by_slug = _.object(_.zip(self.slugs,self.test_instances));
             self.composites = _.filter(self.test_instances,function(ti){return ti.test_info.test.type === QAUtils.COMPOSITE;});
             self.composite_ids = _.map(self.composites,function(ti){return ti.test_info.test.id;});
-            self.update();
+            self.calculate_composites();
             $.Topic("testDataRetrieved").publish("done");
         });
     }
 
-    this.update = function(){
-        self.calculate_composites(function(){
-            _.each(self.test_instances,function(ti){
-                ti.update_status();
-            });
-            $.Topic("qaUpdated").publish();
-        });
-    }
 
-    this.calculate_composites = function(callback){
+    this.calculate_composites = function(){
 
         if (self.composites.length === 0){
-            callback();
             return;
         }
 
@@ -447,12 +438,10 @@ function TestListInstance(){
                     self.tests_by_slug[name].set_value(result.value);
                 });
             }
-            callback();
         }
 
         var on_error = function(){
             self.submit.attr("disabled", false);
-            callback();
         }
 
         QAUtils.call_api(QAUtils.COMPOSITE_URL,"POST",data,on_success,on_error);
@@ -473,7 +462,7 @@ function TestListInstance(){
         $.Topic("qaUpdated").publish();
     });
 
-    $.Topic("valueChanged").subscribe(self.update);
+    $.Topic("valueChanged").subscribe(self.calculate_composites);
 }
 
 
