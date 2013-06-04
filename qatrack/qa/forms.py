@@ -45,9 +45,9 @@ class TestInstanceWidgetsMixin(object):
         string_value = cleaned_data.get("string_value", None)
 
         # force user to enter value unless skipping test
-        if not (value or string_value or skipped):
+        if value is None and not string_value and not skipped:
             self._errors["value"] = self.error_class(["Value required if not skipping"])
-        elif (value or string_value) and skipped:
+        elif (value is not None or string_value) and skipped:
             self._errors["value"] = self.error_class(["Clear value if skipping"])
 
         if not self.user.has_perm("qa.can_skip_without_comment") and skipped and not comment:
