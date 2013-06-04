@@ -791,7 +791,7 @@ class TestUnitTestCollection(TestCase):
         )
         for delta, due_status in daily_statuses:
             wc = now + timezone.timedelta(days=delta)
-            tli = utils.create_test_list_instance(unit_test_collection=utc, work_completed=wc)
+            utils.create_test_list_instance(unit_test_collection=utc, work_completed=wc)
 
             utc = models.UnitTestCollection.objects.get(pk=utc.pk)
             self.assertEqual(utc.due_status(), due_status)
@@ -814,7 +814,7 @@ class TestUnitTestCollection(TestCase):
         )
         for delta, due_status in weekly_statuses:
             wc = now + timezone.timedelta(days=delta)
-            tli = utils.create_test_list_instance(unit_test_collection=utc, work_completed=wc)
+            utils.create_test_list_instance(unit_test_collection=utc, work_completed=wc)
             utc = models.UnitTestCollection.objects.get(pk=utc.pk)
             self.assertEqual(utc.due_status(), due_status)
 

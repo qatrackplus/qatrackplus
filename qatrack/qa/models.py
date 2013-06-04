@@ -475,7 +475,7 @@ class Test(models.Model):
             return
 
         errors = self.check_test_type(self.calculation_procedure, [UPLOAD, COMPOSITE], "Calculation Procedure")
-        self.calculation_procedure = str(self.calculation_procedure).replace("\r\n","\n")
+        self.calculation_procedure = str(self.calculation_procedure).replace("\r\n", "\n")
         if not self.RESULT_RE.findall(self.calculation_procedure):
             errors.append(_('Snippet must contain a result line (e.g. result = my_var/another_var*2)'))
 

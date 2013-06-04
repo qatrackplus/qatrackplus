@@ -154,7 +154,7 @@ class CompositeCalculation(JSONResponseMixin, View):
 
     #----------------------------------------------------------------------
     def set_composite_test_data(self):
-        
+
         composite_ids = self.get_json_data("composite_ids")
 
         if composite_ids is None:
@@ -176,7 +176,7 @@ class CompositeCalculation(JSONResponseMixin, View):
     def set_calculation_context(self):
         """set up the environment that the composite test will be calculated in"""
         values = self.get_json_data("qavalues")
-        upload_data = self.get_json_data("upload_data");
+        upload_data = self.get_json_data("upload_data")
 
         if values is None and upload_data is None:
             self.calculation_context = {}
@@ -186,7 +186,7 @@ class CompositeCalculation(JSONResponseMixin, View):
             "math": math,
             "scipy": scipy,
             "numpy": numpy,
-            "uploads":upload_data,
+            "uploads": upload_data,
         }
 
         for slug, val in values.iteritems():
@@ -249,10 +249,12 @@ class ChooseUnit(ListView):
         return context
 
 
-from braces.views import JSONResponseMixin, AjaxResponseMixin
+from braces.views import JSONResponseMixin
 from django.forms.models import model_to_dict
+
+
 #============================================================================
-class PerformQAInfo(JSONResponseMixin,  View):
+class PerformQAInfo(JSONResponseMixin, View):
 
     #----------------------------------------------------------------------
     def set_unit_test_infos(self):
@@ -273,9 +275,9 @@ class PerformQAInfo(JSONResponseMixin,  View):
         self.unit_test_infos = []
         for test in self.all_tests:
             uti = utis[uti_tests.index(test.pk)]
-            self.unit_test_infos.append(  {
-                "id":uti.pk,
-                "test":model_to_dict(test),
+            self.unit_test_infos.append({
+                "id": uti.pk,
+                "test": model_to_dict(test),
                 "reference": model_to_dict(uti.reference) if uti.reference else None,
                 "tolerance": model_to_dict(uti.tolerance) if uti.tolerance else None,
             })
@@ -289,20 +291,21 @@ class PerformQAInfo(JSONResponseMixin,  View):
 
     #----------------------------------------------------------------------
     def get(self, request, *args, **kwargs):
-        self.test_list = get_object_or_404(models.TestList,pk=kwargs.get("test_list"))
-        self.all_lists = [self.test_list]+list(self.test_list.sublists.all())
+        self.test_list = get_object_or_404(models.TestList, pk=kwargs.get("test_list"))
+        self.all_lists = [self.test_list] + list(self.test_list.sublists.all())
         self.set_all_tests()
 
-        self.unit = get_object_or_404(Unit,pk=kwargs.get("unit"))
+        self.unit = get_object_or_404(Unit, pk=kwargs.get("unit"))
 
         self.set_unit_test_infos()
 
         context = {
             "test_list": self.test_list.pk,
             "unit": self.unit.pk,
-            "unit_test_infos":self.unit_test_infos,
+            "unit_test_infos": self.unit_test_infos,
         }
         return self.render_json_response(context)
+
 
 #============================================================================
 class PerformQA(CreateView):

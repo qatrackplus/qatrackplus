@@ -323,7 +323,7 @@ def format_plots(plots, xbar_thresh, range_thresh,
     # rc_ylim = (rc_ylim[0], rc_ylim[1]*(1. + (rc_ylim[1]-rc_ylim[0])*DATA_TSPACE))
     # plots[2].set_ylim( rc_ylim )
 
-    r_string_ypos = _string_ypos = rc_ylim[1] - (rc_ylim[1] - rc_ylim[0]) * (1. - RSTRING_YPOS)
+    r_string_ypos = rc_ylim[1] - (rc_ylim[1] - rc_ylim[0]) * (1. - RSTRING_YPOS)
 
     rhist_string_xpos = np.mean(plots[3].get_xlim()) * XPOS_MULT
     rhist_string_ypos = np.mean(plots[3].get_ylim())
