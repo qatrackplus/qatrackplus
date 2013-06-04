@@ -3,9 +3,9 @@ from django.db.models.signals import pre_save, post_save, post_delete
 
 from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes import generic
 
 import models
+
 
 #============================================================================
 def loaded_from_fixture(kwargs):
@@ -56,6 +56,7 @@ def update_last_instances(test_list_instance):
                 last_instance=last_instance,
             )
 
+
 #----------------------------------------------------------------------
 def get_or_create_unit_test_info(unit, test, assigned_to=None, active=True):
 
@@ -81,7 +82,7 @@ def find_assigned_unit_test_collections(collection):
         ContentType.objects.get_for_model(collection): [collection],
     }
 
-    parent_types = [x._meta.module_name+"_set" for x in models.TestCollectionInterface.__subclasses__()]
+    parent_types = [x._meta.module_name + "_set" for x in models.TestCollectionInterface.__subclasses__()]
 
     for parent_type in parent_types:
 
@@ -145,6 +146,7 @@ def on_test_save(*args, **kwargs):
             if ua.reference and ua.reference.value not in (0., 1.,):
                 raise ValidationError("Can't change test type to %s while this test is still assigned to %s with a non-boolean reference" % (test.type, ua.unit.name))
 
+
 #----------------------------------------------------------------------
 @receiver(post_save, sender=models.TestListInstance)
 def on_test_list_instance_saved(*args, **kwargs):
@@ -186,4 +188,3 @@ def test_list_saved(*args, **kwargs):
     """TestList was saved. Recreate any UTI's that may have been deleted in past"""
     if not loaded_from_fixture(kwargs):
         update_unit_test_infos(kwargs["instance"])
-
