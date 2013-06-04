@@ -16,11 +16,11 @@ from matplotlib.figure import Figure
 import numpy
 
 from .. import models
-from .base import JSONResponseMixin
 from qatrack.qa.api import ValueResource
 from qatrack.qa.control_chart import control_chart
 from qatrack.units.models import Unit
 
+from braces.views import JSONResponseMixin
 
 #============================================================================
 class ChartView(TemplateView):
@@ -237,6 +237,9 @@ class BaseChartView(View):
 
         return data
 
+    #---------------------------------------------------------------------------
+    def render_to_response(self, context):
+        return self.render_json_response(context)
 
 #============================================================================
 class BasicChartData(JSONResponseMixin, BaseChartView):

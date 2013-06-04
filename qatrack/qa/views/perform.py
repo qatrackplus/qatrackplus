@@ -10,6 +10,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.core.urlresolvers import reverse
 from django.db.models import Q
+from django.forms.models import model_to_dict
 from django.http import HttpResponseRedirect, Http404
 from django.shortcuts import get_object_or_404
 from django.views.generic import View, ListView, CreateView
@@ -18,9 +19,11 @@ from django.utils.translation import ugettext as _
 
 from . import forms
 from .. import models, utils
-from .base import BaseEditTestListInstance, TestListInstances, UTCList, JSONResponseMixin, logger
+from .base import BaseEditTestListInstance, TestListInstances, UTCList, logger
 from qatrack.contacts.models import Contact
 from qatrack.units.models import UnitType, Unit
+
+from braces.views import JSONResponseMixin
 
 
 #============================================================================
@@ -121,11 +124,11 @@ class CompositeCalculation(JSONResponseMixin, View):
 
         self.set_composite_test_data()
         if not self.composite_tests:
-            return self.render_to_response({"success": False, "errors": ["No Valid Composite ID's"]})
+            return self.render_json_response({"success": False, "errors": ["No Valid Composite ID's"]})
 
         self.set_calculation_context()
         if not self.calculation_context:
-            return self.render_to_response({"success": False, "errors": ["Invalid QA Values"]})
+            return self.render_json_response({"success": False, "errors": ["Invalid QA Values"]})
 
         self.set_dependencies()
         self.resolve_dependency_order()
@@ -150,7 +153,7 @@ class CompositeCalculation(JSONResponseMixin, View):
                 if "result" in self.calculation_context:
                     del self.calculation_context["result"]
 
-        return self.render_to_response({"success": True, "errors": [], "results": results})
+        return self.render_json_response({"success": True, "errors": [], "results": results})
 
     #----------------------------------------------------------------------
     def set_composite_test_data(self):
@@ -247,10 +250,6 @@ class ChooseUnit(ListView):
         uts = [ut for ut in context["unit_types"] if len(ut.unit_set.all()) > 0]
         context["unit_types"] = utils.unique(uts)
         return context
-
-
-from braces.views import JSONResponseMixin
-from django.forms.models import model_to_dict
 
 
 #============================================================================
