@@ -20,6 +20,8 @@ from django.utils import timezone
 from qatrack.qa import models, utils
 from qatrack.qa.templatetags import qa_tags
 
+from braces.views import PermissionRequiredMixin
+
 logger = logging.getLogger('qatrack.console')
 
 

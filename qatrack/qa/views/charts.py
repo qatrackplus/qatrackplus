@@ -20,13 +20,15 @@ from qatrack.qa.api import ValueResource
 from qatrack.qa.control_chart import control_chart
 from qatrack.units.models import Unit
 
-from braces.views import JSONResponseMixin
+from braces.views import JSONResponseMixin, PermissionRequiredMixin
 
 #============================================================================
-class ChartView(TemplateView):
+class ChartView(PermissionRequiredMixin, TemplateView):
     """View responsible for rendering the charts page.  The data used
     for rendering charts is provided by the subclasses of BaseChartData below
     """
+
+    permission_required = "qa.can_view_history"
 
     template_name = "qa/charts.html"
 
@@ -242,13 +244,16 @@ class BaseChartView(View):
         return self.render_json_response(context)
 
 #============================================================================
-class BasicChartData(JSONResponseMixin, BaseChartView):
-    pass
+class BasicChartData(PermissionRequiredMixin, JSONResponseMixin, BaseChartView):
+
+    permission_required = "qa.can_view_history"
 
 
 #============================================================================
-class ControlChartImage(BaseChartView):
+class ControlChartImage(PermissionRequiredMixin, BaseChartView):
     """Return a control chart image from given qa data"""
+
+    permission_required = "qa.can_view_history"
 
     #---------------------------------------------------------------------------
     def convert_date(self, dt):
@@ -316,8 +321,10 @@ class ControlChartImage(BaseChartView):
 
 
 #============================================================================
-class ExportToCSV(View):
+class ExportToCSV(PermissionRequiredMixin, View):
     """A simple api wrapper to give exported api data a filename for downloads"""
+
+    permission_required = "qa.can_view_history"
 
     #----------------------------------------------------------------------
     def get(self, request, *args, **kwargs):

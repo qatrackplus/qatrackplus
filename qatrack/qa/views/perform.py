@@ -631,6 +631,7 @@ class EditTestListInstance(BaseEditTestListInstance):
 #============================================================================
 class InProgress(TestListInstances):
     """view for grouping all test lists with a certain frequency for all units"""
+    permission_required = None
     queryset = models.TestListInstance.objects.in_progress
 
     #----------------------------------------------------------------------
