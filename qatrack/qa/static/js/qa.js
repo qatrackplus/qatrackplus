@@ -233,8 +233,7 @@ function TestInstance(test_info, row){
     });
 
 
-    //This will set value to null unless it's a constance
-    this.value = this.test_info.test.constant_value;
+    this.value = null;
 
     this.inputs.change(function(){
         self.update_value_from_input();
@@ -379,6 +378,8 @@ function TestInstance(test_info, row){
 
         })
     });
+    //Set initial value 
+    this.update_value_from_input();
 
 }
 
@@ -412,17 +413,19 @@ function TestListInstance(){
     }
 
     this.update = function(){
-        self.calculate_composites();
-        _.each(self.test_instances,function(ti){
-            ti.update_status();
+        self.calculate_composites(function(){
+            _.each(self.test_instances,function(ti){
+                ti.update_status();
+            });
+            $.Topic("qaUpdated").publish();
         });
-        $.Topic("qaUpdated").publish();
     }
 
-    this.calculate_composites = function(){
+    this.calculate_composites = function(callback){
 
         if (self.composites.length === 0){
-            return
+            callback();
+            return;
         }
 
         self.submit.attr("disabled", true);
@@ -444,10 +447,12 @@ function TestListInstance(){
                     self.tests_by_slug[name].set_value(result.value);
                 });
             }
+            callback();
         }
 
         var on_error = function(){
             self.submit.attr("disabled", false);
+            callback();
         }
 
         QAUtils.call_api(QAUtils.COMPOSITE_URL,"POST",data,on_success,on_error);
