@@ -34,12 +34,12 @@ function init_test_collection_tables(units, frequencies, groups){
         null //review-status
     ];
 
-    
+
 
     $(".test-collection-table").dataTable({
         bProcessing:true,
         bServerSide:true,
-        sAjaxSource:"./data/",
+        sAjaxSource:"./",
         sAjaxDataProp:"data",
         bAutoWidth:false,
         fnAdjustColumnSizing:false,

@@ -6,7 +6,7 @@ from django.db.models import Q
 from django.http import HttpResponseRedirect, Http404
 from django.utils import timezone
 from django.utils.translation import ugettext as _
-from django.views.generic import ListView, TemplateView
+from django.views.generic import ListView, TemplateView, DetailView
 
 from .. import models
 from . import forms
@@ -15,12 +15,33 @@ from .perform import ChooseUnit
 
 from qatrack.units.models import Unit
 
-from braces.views import PermissionRequiredMixin
+from braces.views import PermissionRequiredMixin, PrefetchRelatedMixin, SelectRelatedMixin
 
+#============================================================================
+class TestListInstanceDetails(PrefetchRelatedMixin, SelectRelatedMixin, DetailView):
+
+    model = models.TestListInstance
+    context_object_name = "test_list_instance"
+    prefetch_related = [
+        "testinstance_set__unit_test_info__test",
+        "testinstance_set__reference",
+        "testinstance_set__tolerance",
+        "testinstance_set__status",
+    ]
+    select_related = ["unittestcollection__unit"]
+    #----------------------------------------------------------------------
+    def get_queryset(self):
+        return super(TestListInstanceDetails,self).get_queryset()
+
+    #----------------------------------------------------------------------
+    def get_context_data(self, **kwargs):
+        """"""
+        context = super(TestListInstanceDetails,self).get_context_data(**kwargs)
+        print self.object.history()
+        return context
 #============================================================================
 class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
     permission_required = "qa.can_review"
-
     form_class = forms.ReviewTestListInstanceForm
     formset_class = forms.ReviewTestInstanceFormSet
     template_name_suffix = "_review"

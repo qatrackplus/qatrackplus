@@ -33,7 +33,7 @@ function init_test_list_instance_tables(units, frequencies){
     $("#testlistinstance-table").dataTable({
         bProcessing:true,
         bServerSide:true,
-        sAjaxSource:"./data/",
+        sAjaxSource:"./",
         sAjaxDataProp:"data",
         bAutoWidth:false,
         fnAdjustColumnSizing:false,

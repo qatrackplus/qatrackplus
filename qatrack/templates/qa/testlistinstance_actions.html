@@ -1,9 +1,8 @@
 {% load qa_tags %}
 {% if perms.qa.can_review %}
 <a class="btn btn-primary btn-mini" href="{% url review_test_list_instance instance.pk %}?next={{request.path|cut:"data/"}}">Review</a>
-{% endif %}
-{% if perms.qa.can_view_completed %}
-<a class="btn btn-primary btn-mini" href="{% url view_test_list_instance instance.pk %}?next={{request.path|cut:"data/"}}">View</a>
+{% elif perms.qa.can_view_completed %}
+<a class="btn btn-primary btn-mini" href="{% url review_test_list_instance instance.pk %}?next={{request.path|cut:"data/"}}">View</a>
 {% endif %}
 {% if instance.in_progress %}
     <a class="btn btn-primary btn-mini" title="Continue this list" href="{%url continue_tli pk=instance.pk%}?next={{request.path|cut:"data/"}}" >Continue</a>

@@ -1155,6 +1155,24 @@ class TestListInstance(models.Model):
     def failing_tests(self):
         return self.testinstance_set.filter(pass_fail=ACTION)
 
+    #----------------------------------------------------------------------
+    def history(self):
+        most_recent = TestListInstance.objects.filter(
+            unit_test_collection=self.unit_test_collection,
+            work_completed__lte=self.work_completed,
+        )[:settings.NHIST]
+
+
+        tis = TestInstance.objects.filter(test_list_instance__in=most_recent)
+        history  = []
+        for ti in self.testinstance_set.all():
+            history.append((ti,tis.filter(unit_test_info= ti.unit_test_info)))
+
+        return history
+
+
+
+
     #---------------------------------------------------------------------------
     def __unicode__(self):
         return "TestListInstance(pk=%s)" % self.pk

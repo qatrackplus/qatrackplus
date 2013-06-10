@@ -20,6 +20,10 @@ import utils
 
 logger = qatrack.qa.views.base.logger
 
+class MockUser(object):
+    def has_perm(self,*args):
+        return True
+superuser = MockUser()
 
 #====================================================================================
 class TestURLS(TestCase):
@@ -194,6 +198,7 @@ class TestControlImage(TestCase):
     #----------------------------------------------------------------------
     def test_not_enough_data(self):
         request = self.factory.get(self.url)
+        request.user = superuser
         response = self.view(request)
 
         self.assertTrue(response.get("content-type"), "image/png")
@@ -212,6 +217,7 @@ class TestControlImage(TestCase):
         for n in [-1, 0, 1, 2, "nonnumber"]:
             url = self.make_url(test.pk, unit.number, yesterday, tomorrow, n_base=n)
             request = self.factory.get(url)
+            request.user = superuser
             response = self.view(request)
             self.assertTrue(response.get("content-type"), "image/png")
     #----------------------------------------------------------------------
@@ -229,6 +235,7 @@ class TestControlImage(TestCase):
         for n in [-1, 0, 101, "nonnumber"]:
             url = self.make_url(test.pk, unit.number, yesterday, tomorrow, sg_size=n)
             request = self.factory.get(url)
+            request.user = superuser
             response = self.view(request)
             self.assertTrue(response.get("content-type"), "image/png")
 
@@ -236,6 +243,7 @@ class TestControlImage(TestCase):
     def test_include_fit(self):
         for f in ["true", "false"]:
             request = self.factory.get(self.url + "?fit_data=%s" % f)
+            request.user = superuser
             response = self.view(request)
             self.assertTrue(response.get("content-type"), "image/png")
     #----------------------------------------------------------------------
@@ -270,6 +278,7 @@ class TestControlImage(TestCase):
                 )
 
             request = self.factory.get(url)
+            request.user = superuser
             response = self.view(request)
             self.assertTrue(response.get("content-type"), "image/png")
 
@@ -286,6 +295,7 @@ class TestControlImage(TestCase):
 
         url = self.make_url(test.pk, unit.number, yesterday, yesterday)
         request = self.factory.get(url)
+        request.user = superuser
         response = self.view(request)
         self.assertTrue(response.get("content-type"), "image/png")
 
@@ -300,6 +310,7 @@ class TestControlImage(TestCase):
             )
 
         request = self.factory.get(url)
+        request.user = superuser
         response = self.view(request)
         self.assertTrue(response.get("content-type"), "image/png")
 
@@ -316,6 +327,7 @@ class TestControlImage(TestCase):
 
         url = self.make_url(test.pk, unit.number, yesterday, yesterday)
         request = self.factory.get(url)
+        request.user = superuser
         response = self.view(request)
         self.assertTrue(response.get("content-type"), "image/png")
 
@@ -336,6 +348,7 @@ class TestControlImage(TestCase):
             )
 
         request = self.factory.get(url)
+        request.user = superuser
         response = self.view(request)
         self.assertTrue(response.get("content-type"), "image/png")
         qatrack.qa.control_chart.control_chart.display = old_display
