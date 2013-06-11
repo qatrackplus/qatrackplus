@@ -393,9 +393,16 @@ class PerformQA(CreateView):
                 messages.error(self.request, _(msg))
 
     #----------------------------------------------------------------------
-    def add_histories(self):
+    def add_histories(self, forms):
         """paste historical values onto unit test infos (ugh ugly)"""
-
+        history, history_dates = self.unit_test_col.history()
+        self.history_dates = history_dates
+        for form in forms:
+            for test, hist in history:
+                if test == form.unit_test_info.test:
+                    form.history = hist
+                    break
+        return
         utc_hist = models.TestListInstance.objects.filter(unit_test_collection=self.unit_test_col, test_list=self.test_list).order_by("-work_completed").values_list("work_completed", flat=True)[:settings.NHIST]
         if utc_hist.count() > 0:
             from_date = list(utc_hist)[-1]
@@ -499,13 +506,13 @@ class PerformQA(CreateView):
         self.set_last_day()
         self.set_all_tests()
         self.set_unit_test_infos()
-        self.add_histories()
 
         if self.request.method == "POST":
             formset = forms.CreateTestInstanceFormSet(self.request.POST, self.request.FILES, unit_test_infos=self.unit_test_infos, user=self.request.user)
         else:
             formset = forms.CreateTestInstanceFormSet(unit_test_infos=self.unit_test_infos, user=self.request.user)
 
+        self.add_histories(formset.forms)
         context["formset"] = formset
 
         context["history_dates"] = self.history_dates

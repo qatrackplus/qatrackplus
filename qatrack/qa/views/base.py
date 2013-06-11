@@ -22,71 +22,70 @@ from qatrack.qa.templatetags import qa_tags
 
 from qatrack.data_tables.views import BaseDataTablesDataSource
 
-from braces.views import PermissionRequiredMixin
+from braces.views import PermissionRequiredMixin, PrefetchRelatedMixin, SelectRelatedMixin
 
 logger = logging.getLogger('qatrack.console')
 
+class TestListInstanceMixin(SelectRelatedMixin, PrefetchRelatedMixin):
 
-#============================================================================
-class BaseEditTestListInstance(UpdateView):
     model = models.TestListInstance
     context_object_name = "test_list_instance"
-    #---------------------------------------------------------------------------
 
-    def get_queryset(self):
-        qs = super(BaseEditTestListInstance, self).get_queryset()
-        qs = qs.select_related(
-            "unit_test_collection",
-            "unit_test_collection__unit",
-            "test_list",
-            "created_by",
-            "modified_by",
-        )
-        return qs
+    prefetch_related = [
+        "testinstance_set__unit_test_info",
+        "testinstance_set__unit_test_info__test",
+        "testinstance_set__reference",
+        "testinstance_set__tolerance",
+        "testinstance_set__status",
+    ]
+    select_related = [
+        "unittestcollection",
+        "unittestcollection__unit",
+        "created_by",
+        "modified_by",
+        "test_list",
+    ]
+
+#============================================================================
+class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
+
 
     #----------------------------------------------------------------------
     def add_histories(self, forms):
-        """paste historical values onto unit test infos"""
+        """paste historical values onto forms"""
 
-        utc_hist = models.TestListInstance.objects.filter(unit_test_collection=self.object.unit_test_collection, test_list=self.object.test_list).order_by("-work_completed").values_list("work_completed", flat=True)[:settings.NHIST]
-        if utc_hist.count() > 0:
-            from_date = list(utc_hist)[-1]
-        else:
-            from_date = timezone.make_aware(timezone.datetime.now() - timezone.timedelta(days=10 * self.object.unit_test_collection.frequency.overdue_interval), timezone.get_current_timezone())
-
-        tests = [x.unit_test_info.test for x in self.test_instances]
-        histories = utils.tests_history(tests, self.object.unit_test_collection.unit, from_date, test_list=self.object.test_list)
-        unit_test_infos = [f.instance.unit_test_info for f in forms]
-        unit_test_infos, self.history_dates = utils.add_history_to_utis(unit_test_infos, histories)
-        for uti, f in zip(unit_test_infos, forms):
-            f.history = uti.history
+        history, history_dates = self.object.test_instances_with_history()
+        self.history_dates = history_dates
+        for (instance, instance_history), f in zip(history, forms):
+            f.history = instance_history
 
     #----------------------------------------------------------------------
     def get_context_data(self, **kwargs):
 
         context = super(BaseEditTestListInstance, self).get_context_data(**kwargs)
 
-        # we need to override the default queryset for the formset so that we can pull
-        # in all the reference/tolerance data without the ORM generating 100's of queries
-        self.test_instances = models.TestInstance.objects.filter(
-            test_list_instance=self.object
-        ).select_related(
-            "reference", "tolerance", "status", "unit_test_info", "unit_test_info__test", "status"
+        # override the default queryset for the formset so that we can pull in all the
+        # reference/tolerance data without the ORM generating lots of extra queries
+        test_instances = self.object.testinstance_set.select_related(
+            "status",
+            "reference",
+            "tolerance",
+            "unit_test_info__test__category",
         )
 
-        instance=self.get_object()
 
         if self.request.method == "POST":
-            formset = self.formset_class(self.request.POST, self.request.FILES, instance=self.get_object(), queryset=self.test_instances, user=self.request.user)
+            formset = self.formset_class(self.request.POST, self.request.FILES, instance=self.object, queryset=test_instances, user=self.request.user)
         else:
-            formset = self.formset_class(instance=instance, queryset=self.test_instances, user=self.request.user)
+            formset = self.formset_class(instance=self.object, queryset=test_instances, user=self.request.user)
 
         self.add_histories(formset.forms)
         context["formset"] = formset
         context["history_dates"] = self.history_dates
+        context["categories"] = set([x.unit_test_info.test.category for x in test_instances])
         context["statuses"] = models.TestInstanceStatus.objects.all()
-        context["test_list"] = instance.test_list
-        context["unit_test_collection"] = instance.unit_test_collection
+        context["test_list"] = self.object.test_list
+        context["unit_test_collection"] = self.object.unit_test_collection
         return context
 
     #----------------------------------------------------------------------

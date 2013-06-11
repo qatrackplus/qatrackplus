@@ -47,9 +47,9 @@ def reference_tolerance_span(test, ref, tol):
 
 #----------------------------------------------------------------------
 @register.filter
-def history_display(history, test):
+def history_display(history):
     template = get_template("qa/history.html")
-    c = Context({"history": history, "test": test})
+    c = Context({"history": history})
     return template.render(c)
 
 

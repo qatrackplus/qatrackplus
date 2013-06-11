@@ -175,18 +175,8 @@ class UpdateTestInstanceForm(TestInstanceWidgetsMixin, forms.ModelForm):
 #============================================================================
 BaseUpdateTestInstanceFormSet = inlineformset_factory(models.TestListInstance, models.TestInstance, form=UpdateTestInstanceForm, extra=0, can_delete=False)
 
-
 class UpdateTestInstanceFormSet(UserFormsetMixin, BaseUpdateTestInstanceFormSet):
-
-    #----------------------------------------------------------------------
-    def __init__(self, *args, **kwargs):
-
-        kwargs["queryset"] = kwargs["queryset"].prefetch_related(
-            "reference",
-            "unit_test_info__test__category"
-        )
-
-        super(UpdateTestInstanceFormSet, self).__init__(*args, **kwargs)
+    pass
 
 
 #============================================================================

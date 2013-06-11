@@ -847,6 +847,39 @@ class UnitTestCollection(models.Model):
     def history(self, number=10):
         """returns the last num_instances performed for this object"""
         return reversed(self.testlistinstance_set.all().order_by("-work_completed", "-pk")[:number])
+    #---------------------------------------------------------------------------
+    def history(self, before=None):
+        """"""
+        before = before or timezone.now()
+
+        #grab NHIST number of previous results
+        tlis = TestListInstance.objects.filter(
+            unit_test_collection=self,
+            work_completed__lt=before,
+        ).order_by(
+            "-work_completed"
+        ).prefetch_related(
+            "testinstance_set__status",
+            "testinstance_set__reference",
+            "testinstance_set__tolerance",
+            "testinstance_set__unit_test_info",
+            "testinstance_set__unit_test_info__unit",
+            "testinstance_set__unit_test_info__test",
+            "testinstance_set__created_by",
+        )[:settings.NHIST]
+
+        dates = tlis.values_list("work_completed", flat=True)
+
+        instances = []
+        for test in self.tests_object.ordered_tests():
+            test_history = []
+            for tli in tlis:
+                match = [x for x in tli.testinstance_set.all() if x.unit_test_info.test == test]
+                test_history.append(match[0] if match else None)
+
+            instances.append((test, test_history))
+
+        return instances, dates
 
     #----------------------------------------------------------------------
     def next_list(self):
@@ -1156,19 +1189,45 @@ class TestListInstance(models.Model):
         return self.testinstance_set.filter(pass_fail=ACTION)
 
     #----------------------------------------------------------------------
-    def history(self):
-        most_recent = TestListInstance.objects.filter(
+    def test_instances_with_history(self):
+        # note when using, your view should likely prefetch and select related
+        # as follows
+        # prefetch_related = [
+        #     "testinstance_set__unit_test_info__test",
+        #     "testinstance_set__reference",
+        #     "testinstance_set__tolerance",
+        #     "testinstance_set__status",
+        # ]
+        # select_related = ["unittestcollection__unit"]
+
+
+
+        #grab NHIST number of previous results
+        tlis = TestListInstance.objects.filter(
             unit_test_collection=self.unit_test_collection,
-            work_completed__lte=self.work_completed,
+            work_completed__lt=self.work_completed,
+        ).order_by(
+            "-work_completed"
+        ).prefetch_related(
+            "testinstance_set__status",
+            "testinstance_set__reference",
+            "testinstance_set__tolerance",
+            "testinstance_set__unit_test_info",
+            "testinstance_set__created_by",
         )[:settings.NHIST]
 
+        dates = tlis.values_list("work_completed", flat=True)
 
-        tis = TestInstance.objects.filter(test_list_instance__in=most_recent)
-        history  = []
+        instances = []
         for ti in self.testinstance_set.all():
-            history.append((ti,tis.filter(unit_test_info= ti.unit_test_info)))
+            test_history = []
+            for tli in tlis:
+                match = [x for x in tli.testinstance_set.all() if x.unit_test_info == ti.unit_test_info]
+                test_history.append(match[0] if match else None)
 
-        return history
+            instances.append((ti,test_history))
+
+        return instances, dates
 
 
 
@@ -1223,6 +1282,7 @@ class TestListCycle(TestCollectionInterface):
             query |= test_list.all_tests()
         return query.distinct()
 
+    ordered_tests = all_tests
     #----------------------------------------------------------------------
     def get_list(self, day=0):
         """get test list for given day"""

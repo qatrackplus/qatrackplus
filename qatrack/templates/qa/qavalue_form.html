@@ -66,8 +66,7 @@
             {% endif %}
             {% if include_history %}
                 <td class="qa-history">
-                    {{uti.history|history_display:test}}
-                    <a title="View chart of this data" target="_blank" href="{% url charts %}#units={{uti.unit.pk}}&tests={{uti.test.pk}}"><i class="icon-picture"></i></a>
+                    {{form.history|history_display}}
                 </td>
             {% endif %}
         {% else %}
