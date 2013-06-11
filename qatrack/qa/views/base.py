@@ -54,10 +54,10 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
     def add_histories(self, forms):
         """paste historical values onto forms"""
 
-        history, history_dates = self.object.test_instances_with_history()
+        history, history_dates = self.object.history()
         self.history_dates = history_dates
-        for (instance, instance_history), f in zip(history, forms):
-            f.history = instance_history
+        for (instance, test_history), f in zip(history, forms):
+            f.history = test_history
 
     #----------------------------------------------------------------------
     def get_context_data(self, **kwargs):

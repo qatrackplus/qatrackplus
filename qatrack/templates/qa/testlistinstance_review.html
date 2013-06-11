@@ -173,7 +173,6 @@
                                 </td>
                                 <td class="qa-history">
                                     {{ti_form.history|history_display}}
-                                    <a title="View chart of this data" target="_blank" href="{% url charts %}#units={{test_list_instance.unit_test_collection.unit.pk}}&tests={{ti.unit_test_info.test.pk}}"><i class="icon-picture"></i></a>
                                 </td>
                                 {% if perms.qa.can_review %}
                                 {# note we render this manually to prevent the Django ORM from running a query for every form #}

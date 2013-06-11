@@ -843,10 +843,6 @@ class UnitTestCollection(models.Model):
             unit_test_info__test__in=self.tests_object.all_tests()
         )
 
-    #----------------------------------------------------------------------
-    def history(self, number=10):
-        """returns the last num_instances performed for this object"""
-        return reversed(self.testlistinstance_set.all().order_by("-work_completed", "-pk")[:number])
     #---------------------------------------------------------------------------
     def history(self, before=None):
         """"""
@@ -1189,7 +1185,7 @@ class TestListInstance(models.Model):
         return self.testinstance_set.filter(pass_fail=ACTION)
 
     #----------------------------------------------------------------------
-    def test_instances_with_history(self):
+    def history(self):
         # note when using, your view should likely prefetch and select related
         # as follows
         # prefetch_related = [
@@ -1199,8 +1195,6 @@ class TestListInstance(models.Model):
         #     "testinstance_set__status",
         # ]
         # select_related = ["unittestcollection__unit"]
-
-
 
         #grab NHIST number of previous results
         tlis = TestListInstance.objects.filter(
@@ -1229,9 +1223,6 @@ class TestListInstance(models.Model):
 
         return instances, dates
 
-
-
-
     #---------------------------------------------------------------------------
     def __unicode__(self):
         return "TestListInstance(pk=%s)" % self.pk
@@ -1246,7 +1237,6 @@ class TestListCycle(TestCollectionInterface):
     at different frequencies may be added sometime in the future.
     """
 
-    # name = models.CharField(max_length=256,help_text=_("The name for this test list cycle"))
     test_lists = models.ManyToManyField(TestList, through="TestListCycleMembership")
 
     #----------------------------------------------------------------------
