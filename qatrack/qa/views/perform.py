@@ -402,15 +402,6 @@ class PerformQA(CreateView):
                 if test == form.unit_test_info.test:
                     form.history = hist
                     break
-        return
-        utc_hist = models.TestListInstance.objects.filter(unit_test_collection=self.unit_test_col, test_list=self.test_list).order_by("-work_completed").values_list("work_completed", flat=True)[:settings.NHIST]
-        if utc_hist.count() > 0:
-            from_date = list(utc_hist)[-1]
-        else:
-            from_date = timezone.make_aware(timezone.datetime.now() - timezone.timedelta(days=365), timezone.get_current_timezone())
-
-        histories = utils.tests_history(self.all_tests, self.unit_test_col.unit, from_date, test_list=self.test_list)
-        self.unit_test_infos, self.history_dates = utils.add_history_to_utis(self.unit_test_infos, histories)
 
     #----------------------------------------------------------------------
     def form_valid(self, form):
