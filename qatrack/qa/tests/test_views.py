@@ -12,6 +12,7 @@ import qatrack.qa.views.perform
 import qatrack.qa.views.charts
 import qatrack.qa.views.review
 import qatrack.qa.views.base
+from qatrack.data_tables.views import BaseDataTablesDataSource
 import django.forms
 import json
 import random
@@ -135,7 +136,7 @@ class TestDataTables(TestCase):
         self.factory = RequestFactory()
         self.view = views.base.UTCList.as_view()
 
-        self.url = reverse("all_lists", kwargs={"data": "data/"})
+        self.url = reverse("all_lists")
 
         utils.create_status()
         u1 = utils.create_unit(number=1, name="u1")
@@ -147,7 +148,7 @@ class TestDataTables(TestCase):
     #----------------------------------------------------------------------
 
     def test_base_set_columns_fails(self):
-        bdt = views.base.BaseDataTablesDataSource()
+        bdt = BaseDataTablesDataSource()
         self.assertRaises(NotImplementedError, bdt.set_columns)
     #----------------------------------------------------------------------
 
@@ -164,11 +165,11 @@ class TestDataTables(TestCase):
             "sSearch_1": "test"
         }
 
-        self.client.get(self.url, data=data)
+        self.client.get(self.url, data=data, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
 
     #----------------------------------------------------------------------
     def test_gen_tli_display(self):
-        url = reverse("complete_instances", kwargs={"data": "data/"})
+        url = reverse("complete_instances")
 
         data = {
             "iDisplayLength": 100,
@@ -183,7 +184,7 @@ class TestDataTables(TestCase):
 
         }
 
-        self.client.get(url, data=data)
+        self.client.get(url, data=data, HTTP_X_REQUESTED_WITH='XMLHttpRequest' )
 
 
 #============================================================================
