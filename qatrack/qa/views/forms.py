@@ -64,7 +64,7 @@ class TestInstanceWidgetsMixin(object):
 
     #---------------------------------------------------------------------------
     def set_value_widget(self):
-        """add custom widget for boolean values (after form has been """
+        """add custom widget for boolean values (after form has been initialized)"""
 
         # temp store attributes so they can be restored to reset widget
         self.fields["string_value"].widget.attrs["class"] = "qa-input"
