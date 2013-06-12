@@ -403,6 +403,15 @@ class PerformQA(CreateView):
                     form.history = hist
                     break
 
+    #---------------------------------------------------------------------------
+    def get_test_status(self, form):
+        """return default or user requested test status"""
+
+        try:
+            return models.TestInstanceStatus.objects.get(pk=form["status"].value())
+        except (KeyError, models.TestInstanceStatus.DoesNotExist):
+            return models.TestInstanceStatus.objects.default()
+
     #----------------------------------------------------------------------
     def form_valid(self, form):
         context = self.get_context_data()
@@ -411,69 +420,62 @@ class PerformQA(CreateView):
         for ti_form in formset:
             ti_form.in_progress = form.instance.in_progress
 
-        if formset.is_valid():
-
-            self.object = form.save(commit=False)
-            self.object.test_list = self.test_list
-            self.object.unit_test_collection = self.unit_test_col
-            self.object.created_by = self.request.user
-            self.object.modified_by = self.request.user
-
-            if self.object.work_completed is None:
-                self.object.work_completed = timezone.make_aware(timezone.datetime.now(), timezone=timezone.get_current_timezone())
-
-            # save here so pk is set when saving test instances
-            # and save below to get due deate set ocrrectly
-            self.object.save()
-
-            status = models.TestInstanceStatus.objects.default()
-            if "status" in form.fields:
-                val = form["status"].value()
-                if val not in ("", None):
-                    status = models.TestInstanceStatus.objects.get(pk=val)
-
-            to_save = []
-            for ti_form in formset:
-                if ti_form.unit_test_info.test.is_upload():
-                    fname = ti_form.cleaned_data["string_value"]
-                    src = os.path.join(settings.TMP_UPLOAD_ROOT, fname)
-                    d = os.path.join(settings.MEDIA_ROOT, "%s" % self.object.pk)
-                    if not os.path.exists(d):
-                        os.mkdir(d)
-                    dest = os.path.join(settings.MEDIA_ROOT, d, fname)
-                    shutil.move(src, dest)
-
-                ti = models.TestInstance(
-                    value=ti_form.cleaned_data.get("value", None),
-                    string_value=ti_form.cleaned_data.get("string_value", ""),
-                    skipped=ti_form.cleaned_data.get("skipped", False),
-                    comment=ti_form.cleaned_data.get("comment", ""),
-                    unit_test_info=ti_form.unit_test_info,
-                    reference=ti_form.unit_test_info.reference,
-                    tolerance=ti_form.unit_test_info.tolerance,
-                    status=status,
-                    created_by=self.request.user,
-                    modified_by=self.request.user,
-                    in_progress=self.object.in_progress,
-                    test_list_instance=self.object,
-                    work_started=self.object.work_started,
-                    work_completed=self.object.work_completed,
-                )
-                ti.calculate_pass_fail()
-                to_save.append(ti)
-
-            models.TestInstance.objects.bulk_create(to_save)
-
-            #set due date to account for any non default stattuses
-            self.object.unit_test_collection.set_due_date()
-
-            # let user know request succeeded and return to unit list
-            messages.success(self.request, _("Successfully submitted %s " % self.object.test_list.name))
-
-            return HttpResponseRedirect(self.get_success_url())
-        else:
+        if not formset.is_valid():
             context["form"] = form
             return self.render_to_response(context)
+
+        self.object = form.save(commit=False)
+        self.object.test_list = self.test_list
+        self.object.unit_test_collection = self.unit_test_col
+        self.object.created_by = self.request.user
+        self.object.modified_by = self.request.user
+
+        if self.object.work_completed is None:
+            self.object.work_completed = timezone.make_aware(timezone.datetime.now(), timezone=timezone.get_current_timezone())
+
+        # save here so pk is set when saving test instances
+        # and save below to get due deate set ocrrectly
+        self.object.save()
+
+        to_save = []
+        for ti_form in formset:
+            if ti_form.unit_test_info.test.is_upload():
+                fname = ti_form.cleaned_data["string_value"]
+                src = os.path.join(settings.TMP_UPLOAD_ROOT, fname)
+                d = os.path.join(settings.MEDIA_ROOT, "%s" % self.object.pk)
+                if not os.path.exists(d):
+                    os.mkdir(d)
+                dest = os.path.join(settings.MEDIA_ROOT, d, fname)
+                shutil.move(src, dest)
+
+            ti = models.TestInstance(
+                value=ti_form.cleaned_data.get("value", None),
+                string_value=ti_form.cleaned_data.get("string_value", ""),
+                skipped=ti_form.cleaned_data.get("skipped", False),
+                comment=ti_form.cleaned_data.get("comment", ""),
+                unit_test_info=ti_form.unit_test_info,
+                reference=ti_form.unit_test_info.reference,
+                tolerance=ti_form.unit_test_info.tolerance,
+                status=self.get_test_status(form),
+                created_by=self.request.user,
+                modified_by=self.request.user,
+                in_progress=self.object.in_progress,
+                test_list_instance=self.object,
+                work_started=self.object.work_started,
+                work_completed=self.object.work_completed,
+            )
+            ti.calculate_pass_fail()
+            to_save.append(ti)
+
+        models.TestInstance.objects.bulk_create(to_save)
+
+        #set due date to account for any non default stattuses
+        self.object.unit_test_collection.set_due_date()
+
+        # let user know request succeeded and return to unit list
+        messages.success(self.request, _("Successfully submitted %s " % self.object.test_list.name))
+
+        return HttpResponseRedirect(self.get_success_url())
 
     #----------------------------------------------------------------------
     def get_context_data(self, **kwargs):
