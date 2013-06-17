@@ -780,7 +780,7 @@ class UnitTestCollection(models.Model):
             if last_valid is None and self.last_instance is not None:
                 # Done before but no valid lists
                 return timezone.localtime(timezone.now())
-            elif last_valid is not None:
+            elif last_valid is not None and last_valid.work_completed:
                 return timezone.localtime(last_valid.work_completed + self.frequency.due_delta())
 
     #----------------------------------------------------------------------
@@ -1199,8 +1199,13 @@ class TestListInstance(models.Model):
         #grab NHIST number of previous results
         tlis = TestListInstance.objects.filter(
             unit_test_collection=self.unit_test_collection,
-            work_completed__lt=self.work_completed,
-        ).order_by(
+        )
+        if self.work_completed:
+            tlis.filter(
+                work_completed__lt=self.work_completed,
+            )
+
+        tlis.order_by(
             "-work_completed"
         ).prefetch_related(
             "testinstance_set__status",
