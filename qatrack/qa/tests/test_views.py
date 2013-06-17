@@ -15,7 +15,9 @@ import qatrack.qa.views.base
 from qatrack.data_tables.views import BaseDataTablesDataSource
 import django.forms
 import json
+import os
 import random
+import StringIO
 import utils
 
 
@@ -25,6 +27,8 @@ class MockUser(object):
     def has_perm(self,*args):
         return True
 superuser = MockUser()
+
+TEST_ROOT = os.path.abspath(os.path.dirname(__file__))
 
 #====================================================================================
 class TestURLS(TestCase):
@@ -1022,9 +1026,65 @@ class TestPerformQA(TestCase):
 
         self.assertEqual(response.status_code, 404)
 
+class TestAJAXUpload(TestCase):
+
+    def setUp(self):
+        self.view = qatrack.qa.views.perform.Upload
+        self.url = reverse("upload")
+        self.test = utils.create_test('test upload')
+        self.test.type = models.UPLOAD
+        self.test.calculation_procedure = """
+import json
+result = json.load(upload)
+"""
+        self.test.save()
+
+        self.test_file = StringIO.StringIO("""
+{
+    "foo":1.2,
+    "bar":[1,2,3,4],
+    "baz":{
+        "baz1":"test"
+    }
+}
+""")
+
+        self.test_file.name = "TESTRUNNER_test_file"
+        self.unit_test_info = utils.create_unit_test_info(test=self.test)
+        self.client.login(username="user", password="password")
+    #---------------------------------------------------------------
+    def tearDown(self):
+        import glob
+        for f in glob.glob(os.path.join(settings.TMP_UPLOAD_ROOT,"TESTRUNNER*")):
+            os.remove(f)
+    #---------------------------------------------------------------
+    def test_upload_results(self):
+        response = self.client.post(self.url,{"test_id":self.test.pk,"upload":self.test_file})
+        data = json.loads(response.content)
+        self.assertEqual(data["result"]["baz"]["baz1"],"test")
+
+    #---------------------------------------------------------------
+    def test_upload_fname_exists(self):
+        response = self.client.post(self.url,{"test_id":self.test.pk,"upload":self.test_file})
+        data = json.loads(response.content)
+        self.assertTrue(os.path.exists(os.path.join(settings.TMP_UPLOAD_ROOT,data["temp_file_name"])))
+
+    #---------------------------------------------------------------
+    def test_invalid_test_id(self):
+        response = self.client.post(self.url,{"test_id":200,"upload":self.test_file})
+        data = json.loads(response.content)
+        self.assertEqual(data["errors"][0],"Test with that ID does not exist")
+
+    #---------------------------------------------------------------
+    def test_invalid_test(self):
+        self.test.calculation_procedure = "result = 1/0"
+        self.test.save()
+        response = self.client.post(self.url,{"test_id":self.test.pk,"upload":self.test_file})
+        data = json.loads(response.content)
+        self.assertEqual(data["errors"][0],"Invalid Test")
+
+
 #============================================================================
-
-
 class TestBaseEditTestListInstance(TestCase):
     #----------------------------------------------------------------------
     def setUp(self):
