@@ -778,8 +778,8 @@ class TestPerformQA(TestCase):
 
         self.assertTrue(isinstance(widget, django.forms.Select))
         self.assertEqual(widget.choices, [('', ''), (0, 'c1'), (1, 'c2'), (2, 'c3')])
-    #---------------------------------------------------------------------------
 
+    #---------------------------------------------------------------------------
     def test_perform_in_progress(self):
         data = {
             "work_started": "11-07-2012 00:09",
@@ -807,6 +807,7 @@ class TestPerformQA(TestCase):
             else:
                 data["form-%d-value" % test_idx] = 1
             data["form-%d-comment" % test_idx] = ""
+
     #---------------------------------------------------------------------------
     def test_perform_valid(self):
         data = {
