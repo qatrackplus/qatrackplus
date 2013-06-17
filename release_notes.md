@@ -1,6 +1,10 @@
 # QATrack+ Release Notes #
 
-## v0.2.6
+## v0.2.7 ##
+
+* upgrade django-regisration
+
+## v0.2.6 ##
 
 **Note: this release introduces some database schema changes.  BACK UP
 YOUR DATABASE BEFORE ATTEMPTING THIS UPGRADE**
