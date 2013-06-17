@@ -16,6 +16,7 @@ from qatrack.data_tables.views import BaseDataTablesDataSource
 import django.forms
 import json
 import os
+import glob
 import random
 import StringIO
 import utils
@@ -27,8 +28,6 @@ class MockUser(object):
     def has_perm(self,*args):
         return True
 superuser = MockUser()
-
-TEST_ROOT = os.path.abspath(os.path.dirname(__file__))
 
 #====================================================================================
 class TestURLS(TestCase):
@@ -207,8 +206,8 @@ class TestControlImage(TestCase):
         response = self.view(request)
 
         self.assertTrue(response.get("content-type"), "image/png")
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def test_baseline_subgroups(self):
         test = utils.create_test()
         unit = utils.create_unit()
@@ -225,8 +224,8 @@ class TestControlImage(TestCase):
             request.user = superuser
             response = self.view(request)
             self.assertTrue(response.get("content-type"), "image/png")
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def test_invalid_subgroup_size(self):
         test = utils.create_test()
         unit = utils.create_unit()
@@ -251,8 +250,8 @@ class TestControlImage(TestCase):
             request.user = superuser
             response = self.view(request)
             self.assertTrue(response.get("content-type"), "image/png")
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def make_url(self, pk, unumber, from_date, to_date, sg_size=2, n_base=2, fit="true"):
         url = self.url + "?subgroup_size=%s&n_baseline_subgroups=%s&fit_data=%s" % (sg_size, n_base, fit)
         url += "&tests[]=%s" % pk
@@ -260,8 +259,8 @@ class TestControlImage(TestCase):
         url += "&from_date=%s" % from_date.strftime(settings.SIMPLE_DATE_FORMAT)
         url += "&to_date=%s" % to_date.strftime(settings.SIMPLE_DATE_FORMAT)
         return url
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def test_valid(self):
         test = utils.create_test()
         unit = utils.create_unit()
@@ -697,7 +696,18 @@ class TestPerformQA(TestCase):
         self.t_bool = utils.create_test(name="test_bool", test_type=models.BOOLEAN)
         self.t_bool.save()
 
-        self.tests = [self.t_simple, self.t_const, self.t_comp, self.t_mult, self.t_bool]
+        self.t_string = utils.create_test(name="test string", test_type=models.STRING)
+        self.t_string.save()
+
+        self.t_upload= utils.create_test(name="test upload", test_type=models.UPLOAD)
+        self.t_upload.save()
+        self.filename = "TESTRUNNER.tmp"
+        self.filepath= os.path.join(settings.TMP_UPLOAD_ROOT,self.filename)
+
+        with open(self.filepath,"w") as f:
+            f.write("")
+
+        self.tests = [self.t_simple, self.t_const, self.t_comp, self.t_mult, self.t_bool, self.t_string, self.t_upload]
 
         for test in self.tests:
             utils.create_test_list_membership(self.test_list, test)
@@ -719,6 +729,11 @@ class TestPerformQA(TestCase):
         self.user.save()
         self.user.groups.add(group)
         self.user.save()
+
+    #---------------------------------------------------------------
+    def tearDown(self):
+        for f in glob.glob(os.path.join(settings.MEDIA_ROOT,"*","TESTRUNNER*")):
+            os.remove(f)
     #----------------------------------------------------------------------
 
     def test_test_forms_present(self):
@@ -774,10 +789,7 @@ class TestPerformQA(TestCase):
             "form-MAX_NUM_FORMS": "",
             "in_progress": True,
         }
-
-        for test_idx, uti in enumerate(self.unit_test_infos):
-            data["form-%d-value" % test_idx] = 1
-            data["form-%d-comment" % test_idx] = ""
+        self.set_form_data(data)
 
         response = self.client.post(self.url, data=data)
 
@@ -785,7 +797,16 @@ class TestPerformQA(TestCase):
         self.assertTrue(len(self.tests), models.TestInstance.objects.in_progress().count())
         # user is redirected if form submitted successfully
         self.assertEqual(response.status_code, 302)
-
+    #---------------------------------------------------------------
+    def set_form_data(self, data):
+        for test_idx, uti in enumerate(self.unit_test_infos):
+            if uti.test.type == models.UPLOAD:
+                data["form-%d-string_value" % test_idx] = self.filename
+            if uti.test.type in (models.STRING, ):
+                data["form-%d-string_value" % test_idx] = "test"
+            else:
+                data["form-%d-value" % test_idx] = 1
+            data["form-%d-comment" % test_idx] = ""
     #---------------------------------------------------------------------------
     def test_perform_valid(self):
         data = {
@@ -796,19 +817,17 @@ class TestPerformQA(TestCase):
             "form-MAX_NUM_FORMS": "",
         }
 
-        for test_idx, uti in enumerate(self.unit_test_infos):
-
-            data["form-%d-value" % test_idx] = 1
-            data["form-%d-comment" % test_idx] = ""
+        self.set_form_data(data)
 
         response = self.client.post(self.url, data=data)
+        #print response
         self.assertTrue(1, models.TestListInstance.objects.count())
         self.assertTrue(len(self.tests), models.TestInstance.objects.count())
 
         # user is redirected if form submitted successfully
         self.assertEqual(response.status_code, 302)
-    #---------------------------------------------------------------------------
 
+    #---------------------------------------------------------------------------
     def test_perform_valid_redirect(self):
         data = {
             "work_started": "11-07-2012 00:09",
@@ -818,16 +837,25 @@ class TestPerformQA(TestCase):
             "form-MAX_NUM_FORMS": "",
         }
 
-        for test_idx, uti in enumerate(self.unit_test_infos):
-
-            data["form-%d-value" % test_idx] = 1
-            data["form-%d-comment" % test_idx] = ""
+        self.set_form_data(data)
 
         response = self.client.post(self.url + "?next=%s" % reverse("home"), data=data)
 
         # user is redirected if form submitted successfully
         self.assertEqual(response.status_code, 302)
         self.assertEqual("http://testserver/", response._headers['location'][1])
+
+    #---------------------------------------------------------------------------
+    def test_perform_valid_redirect_non_statff(self):
+        data = {
+            "work_started": "11-07-2012 00:09",
+            "status": self.status.pk,
+            "form-TOTAL_FORMS": len(self.tests),
+            "form-INITIAL_FORMS": len(self.tests),
+            "form-MAX_NUM_FORMS": "",
+        }
+
+        self.set_form_data(data)
 
         u2 = utils.create_user(is_staff=False, is_superuser=False, uname="u2")
         u2.groups.add(Group.objects.latest("pk"))
@@ -840,7 +868,6 @@ class TestPerformQA(TestCase):
         # user is redirected if form submitted successfully
         self.assertEqual(response.status_code, 302)
         self.assertIn("qa/unit/%d" % self.unit_test_list.unit.number, response._headers['location'][1])
-
     #---------------------------------------------------------------------------
     def test_perform_invalid(self):
         data = {
@@ -1052,6 +1079,7 @@ result = json.load(upload)
         self.test_file.name = "TESTRUNNER_test_file"
         self.unit_test_info = utils.create_unit_test_info(test=self.test)
         self.client.login(username="user", password="password")
+
     #---------------------------------------------------------------
     def tearDown(self):
         import glob
@@ -1067,7 +1095,7 @@ result = json.load(upload)
     def test_upload_fname_exists(self):
         response = self.client.post(self.url,{"test_id":self.test.pk,"upload":self.test_file})
         data = json.loads(response.content)
-        self.assertTrue(os.path.exists(os.path.join(settings.TMP_UPLOAD_ROOT,data["temp_file_name"])))
+        self.assertTrue(os.path.exists(os.path.join(settings.TMP_UPLOAD_ROOT)),data["temp_file_name"])
 
     #---------------------------------------------------------------
     def test_invalid_test_id(self):
@@ -1162,8 +1190,8 @@ class TestEditTestListInstance(TestCase):
 
         self.assertEqual(302, response.status_code)
         self.assertEqual(88, models.TestInstance.objects.get(pk=self.ti.pk).value)
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def test_blank_status_edit(self):
 
         self.base_data.update({
@@ -1176,6 +1204,15 @@ class TestEditTestListInstance(TestCase):
         self.assertEqual(302, response.status_code)
         self.assertEqual(88, models.TestInstance.objects.get(pk=self.ti.pk).value)
 
+    #----------------------------------------------------------------------
+    def test_blank_work_completed(self):
+        self.tli.work_completed=None
+        self.tli.save()
+        self.base_data.pop("work_completed")
+
+        response = self.client.post(self.url, data=self.base_data)
+
+        self.assertEqual(302, response.status_code)
     #----------------------------------------------------------------------
     def test_in_progress(self):
 
