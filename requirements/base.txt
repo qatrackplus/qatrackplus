@@ -1,7 +1,7 @@
 Django==1.4
 -e git+https://github.com/peppelorum/Django-genericdropdown.git#egg=django-genericdropdown
--e git+https://github.com/toastdriven/django-tastypie.git#egg=django-tastypie
-django-registration>=0.8
+django-tastypie>=0.9.15
+django-registration>=1.0
 logilab-astng>=0.23.1
 logilab-common>=0.57.1
 mimeparse>=0.1.3
