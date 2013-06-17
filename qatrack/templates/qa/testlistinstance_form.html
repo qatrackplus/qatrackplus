@@ -16,6 +16,14 @@
 
 {% load qa_tags %}
 
+{% block script_base %}
+    {{block.super}}
+
+    <script type="text/javascript">
+        var unit_test_infos = {{unit_test_infos|safe}};
+    </script>
+{% endblock script_base %}
+
 {% block body %}
 
 <div class="row-fluid">

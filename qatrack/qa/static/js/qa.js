@@ -1,6 +1,6 @@
 "use strict";
 
- 
+
 /***************************************************************/
 //Test statuse and Table context used to narrow down jQuery selectors.
 //Improves performance in IE
@@ -17,7 +17,7 @@ jQuery.Topic = function( id ) {
     var callbacks,
         method,
         topic = id && topics[ id ];
- 
+
     if ( !topic ) {
         callbacks = jQuery.Callbacks();
         topic = {
@@ -59,7 +59,7 @@ var DONE = new Status(QAUtils.DONE,"",QAUtils.DONE_DISP);
 
 function TestInfo(data){
     var self = this;
-    this.id = data.id; 
+    this.id = data.id;
     this.test = new Test(data.test);
     this.reference = new Reference(data.reference);
     this.tolerance = new Tolerance(data.tolerance);
@@ -222,7 +222,7 @@ function TestInstance(test_info, row){
             self.comment_icon.addClass("icon-edit");
         }
     }
-    this.set_comment_icon(); //may already contain comment on initialization 
+    this.set_comment_icon(); //may already contain comment on initialization
     this.comment_box.blur(this.set_comment_icon);
 
     this.show_procedure = this.row.find("td.qa-showproc a");
@@ -264,7 +264,7 @@ function TestInstance(test_info, row){
             self.inputs.val(value);
         }else if (tt === QAUtils.UPLOAD){
             self.inputs.filter(":hidden").val(value["temp_file_name"]);
-        }else if (tt === QAUtils.SIMPLE || tt === QAUtils.COMPOSITE){ 
+        }else if (tt === QAUtils.SIMPLE || tt === QAUtils.COMPOSITE){
             if (_.isNull(value)){
                 self.inputs.val("");
             }else{
@@ -346,7 +346,6 @@ function TestInstance(test_info, row){
             replaceFileInput:false,
             formData: function(){
                 return [
-                    { name:"unit_test_info", value:self.test_info.id},
                     { name:"test_id", value: self.test_info.test.id}
                 ]
             },
@@ -378,7 +377,7 @@ function TestInstance(test_info, row){
 
         })
     });
-    //Set initial value 
+    //Set initial value
     this.update_value_from_input();
 
 }
@@ -398,18 +397,14 @@ function TestListInstance(){
     /***************************************************************/
     //set the intitial values, tolerances & refs for all of our tests
     this.initialize = function(){
-        var url = QAUtils.INFO_URL+$("#unit-id").val()+"/"+$("#test-list-id").val()+"/";
-        $.getJSON(url,function(result){
-            var test_infos = _.map(result.unit_test_infos,function(e){ return new TestInfo(e)});
+        var test_infos = _.map(window.unit_test_infos,function(e){ return new TestInfo(e)});
 
-            self.test_instances = _.map(_.zip(test_infos, $("#perform-qa-table tr.qa-valuerow")), function(uti_row){return new TestInstance(uti_row[0], uti_row[1])});
-            self.slugs = _.map(self.test_instances, function(ti){return ti.test_info.test.slug});
-            self.tests_by_slug = _.object(_.zip(self.slugs,self.test_instances));
-            self.composites = _.filter(self.test_instances,function(ti){return ti.test_info.test.type === QAUtils.COMPOSITE;});
-            self.composite_ids = _.map(self.composites,function(ti){return ti.test_info.test.id;});
-            self.calculate_composites();
-            $.Topic("testDataRetrieved").publish("done");
-        });
+        self.test_instances = _.map(_.zip(test_infos, $("#perform-qa-table tr.qa-valuerow")), function(uti_row){return new TestInstance(uti_row[0], uti_row[1])});
+        self.slugs = _.map(self.test_instances, function(ti){return ti.test_info.test.slug});
+        self.tests_by_slug = _.object(_.zip(self.slugs,self.test_instances));
+        self.composites = _.filter(self.test_instances,function(ti){return ti.test_info.test.type === QAUtils.COMPOSITE;});
+        self.composite_ids = _.map(self.composites,function(ti){return ti.test_info.test.id;});
+        self.calculate_composites();
     }
 
 
@@ -422,7 +417,7 @@ function TestListInstance(){
         self.submit.attr("disabled", true);
 
         var cur_values = _.map(self.test_instances,function(ti){return ti.value;});
-        var qa_values = _.object(_.zip(self.slugs,cur_values)); 
+        var qa_values = _.object(_.zip(self.slugs,cur_values));
 
         var data = {
             qavalues:JSON.stringify(qa_values),
