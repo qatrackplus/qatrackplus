@@ -1188,7 +1188,7 @@ class TestListInstance(models.Model):
     def history(self):
         # note when using, your view should likely prefetch and select related
         # as follows
-        # prefetch_related = [
+        # prefetch_related = [
         #     "testinstance_set__unit_test_info__test",
         #     "testinstance_set__reference",
         #     "testinstance_set__tolerance",
