@@ -1077,9 +1077,37 @@ class TestSignals(TestCase):
         utis = list(models.UnitTestInfo.objects.all())
         self.assertEqual(len(utis), 3)
 
+    #---------------------------------------------------------------
+    def test_test_cycle_changed(self):
+
+        test_lists = [utils.create_test_list(name="test list %d" % i) for i in range(4)]
+        tests = []
+        for i, test_list in enumerate(test_lists):
+            test = utils.create_test(name="test %d" % i)
+            utils.create_test_list_membership(test_list, test)
+            tests.append(test)
+
+        cycle1 = utils.create_cycle(test_lists=test_lists[:2])
+        cycle2 = utils.create_cycle(name="cycle2", test_lists=test_lists[2:])
+
+        utc = utils.create_unit_test_collection(test_collection=cycle1)
+
+        utis = list(models.UnitTestInfo.objects.all())
+
+        # test list on its own
+        self.assertEqual(len(utis), 2)
+
+        #change test collection
+        utc.tests_object = cycle2
+        utc.save()
+
+        utis = list(models.UnitTestInfo.objects.all())
+
+        # test list on its own
+        self.assertEqual(len(utis), 4)
+        self.assertListEqual(tests, [x.test for x in utis])
+
 #============================================================================
-
-
 class TestTestInstance(TestCase):
 
     #----------------------------------------------------------------------

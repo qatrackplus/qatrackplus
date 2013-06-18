@@ -102,7 +102,7 @@ def find_assigned_unit_test_collections(collection):
             content_type=ct,
         ).select_related("unit", "assigned_to")
         assigned_utcs.extend(utcs)
-    return assigned_utcs
+    return list(set(assigned_utcs))
 
 
 #----------------------------------------------------------------------
@@ -168,7 +168,9 @@ def on_test_list_instance_deleted(*args, **kwargs):
 def list_assigned_to_unit(*args, **kwargs):
     """UnitTestCollection was saved.  Create UnitTestInfo's for all Tests."""
     if not loaded_from_fixture(kwargs):
-        update_unit_test_infos(kwargs["instance"].tests_object)
+        utc = kwargs["instance"]
+        tests_object = utc.content_type.get_object_for_this_type(pk=utc.object_id)
+        update_unit_test_infos(tests_object)
 
 
 #----------------------------------------------------------------------
