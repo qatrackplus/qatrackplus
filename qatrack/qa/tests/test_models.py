@@ -244,7 +244,6 @@ class TestTest(TestCase):
             "resul t = a + b",
             "_result = a + b",
             "0result = a+b",
-            " result = a + b",
             "result_=foo",
             "",
             "foo = a +b",
