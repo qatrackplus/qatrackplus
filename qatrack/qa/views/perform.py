@@ -144,7 +144,11 @@ class CompositeCalculation(JSONResponseMixin, View):
             try:
                 code = compile(procedure, "<string>", "exec")
                 exec code in self.calculation_context
-                result = self.calculation_context["result"]
+                try:
+                    result = self.calculation_context["result"]
+                except:
+                    result = self.calculation_context[slug]
+
                 results[slug] = {'value': result, 'error': None}
                 self.calculation_context[slug] = result
             except Exception:
