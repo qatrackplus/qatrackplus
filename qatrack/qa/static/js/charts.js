@@ -258,6 +258,9 @@ function plot_data(data){
 function convert_data_to_highchart_series(data){
     var hc_series = [];
 
+    var show_tol = $("#show-tolerances").is(":checked");
+    var show_ref = $("#show-references").is(":checked");
+
     $.each(data,function(idx,series){
         var series_data = [];
         var ref_data = [];
@@ -269,7 +272,7 @@ function convert_data_to_highchart_series(data){
         $.each(series.dates,function(idx,date){
                 date = QAUtils.parse_iso8601_date(date).getTime();
                 var display = '<span style="color:'+series_color+'"><strong>'+name+'</strong></span>: <b>'+ QAUtils.format_float(series.values[idx]) + '</b>';
-                
+
                 if (!_.isNull(series.references[idx])){
                     display += "<br/><em>Ref:" + QAUtils.format_float(series.references[idx])+"</em>";
                 }
@@ -307,19 +310,24 @@ function convert_data_to_highchart_series(data){
         hc_series.push({
             name:name + " References",
             data:ref_data,
-            lineWidth : 2,
+            lineWidth : show_ref ? 2 : 0,
             dashStyle:"ShortDash",
             color:series_color,
-            fillOpacity:1,
+            fillOpacity: 1,
             marker : {
                 enabled : false
             },
             showInLegend:true,
             enableMouseTracking:false
         });
- 
+
         var tol_color = 'rgba(255, 255, 17, 0.2)';
         var act_color = 'rgba(46, 217, 49, 0.2)';
+
+        if (!show_tol){
+            tol_color = 'rgba(255, 255, 255, 0)';
+            act_color = 'rgba(255, 255, 255, 0)';
+        }
 
         hc_series.push({
             data:tolerance_high,
@@ -350,7 +358,7 @@ function convert_data_to_highchart_series(data){
             enableMouseTracking:false
         });
 
-    
+
 
     });
     return hc_series;
@@ -362,8 +370,6 @@ function create_stockchart(data){
 
     var prev_range = window.chart.rangeSelector ? window.chart.rangeSelector.selected:"";
 
-    var show_tol = $("#show-tolerances").is(":checked");
-    var show_ref = $("#show-references").is(":checked");
 
     var ntests = QAUtils.get_checked("#test-container").length;
 
@@ -386,7 +392,7 @@ function create_stockchart(data){
             ordinal: false
         },
         tooltip:{
- 
+
             formatter: function() {
                 var tip = _.pluck(this.points,"key").join("<br/>");
                 return tip;
