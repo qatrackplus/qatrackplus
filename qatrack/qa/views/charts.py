@@ -22,6 +22,12 @@ from qatrack.units.models import Unit
 
 from braces.views import JSONResponseMixin, PermissionRequiredMixin
 
+class SetEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, set):
+            return list(obj)
+        return json.JSONEncoder.default(self, obj)
+
 #============================================================================
 class ChartView(PermissionRequiredMixin, TemplateView):
     """View responsible for rendering the charts page.  The data used
@@ -34,23 +40,28 @@ class ChartView(PermissionRequiredMixin, TemplateView):
 
     #----------------------------------------------------------------------
     def create_test_data(self):
+        # note: leaving off the distinct queryhere results in a factor of 3 speedup
+        # (250ms vs 750ms for 150k total test instances)  for a sqlite query.  The
+        # distinctness/uniqueness is guarannteed by using sets below.
+
         q = models.TestInstance.objects.values_list(
             "unit_test_info__unit",
             "unit_test_info__test",
-            "test_list_instance__test_list_id",
+            "test_list_instance__test_list",
             "test_list_instance__unit_test_collection__frequency"
-        ).distinct()
+        )#.distinct()
 
         data = {
-            'test_lists' : collections.defaultdict(list),
-            'unit_frequency_lists':collections.defaultdict(lambda: collections.defaultdict(list)),
+            'test_lists' : collections.defaultdict(set),
+            'unit_frequency_lists':collections.defaultdict(lambda: collections.defaultdict(set)),
         }
 
         for unit, test, test_list, frequency in q:
-            data["test_lists"][test_list].append(test)
-            data["unit_frequency_lists"][unit][frequency].append(test_list)
+            data["test_lists"][test_list].add(test)
+            data["unit_frequency_lists"][unit][frequency].add(test_list)
 
-        return json.dumps(data)
+        return json.dumps(data,cls=SetEncoder)
+
 
     #----------------------------------------------------------------------
     def get_context_data(self, **kwargs):
