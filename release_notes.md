@@ -3,6 +3,11 @@
 ## v0.2.7 ##
 
 * upgrade django-regisration
+* AD logging
+* assign composite values with macro name instead of result
+* upload test type
+* string test type
+* qa/views.py refactored into qa/views/\*.py
 
 ## v0.2.6 ##
 
