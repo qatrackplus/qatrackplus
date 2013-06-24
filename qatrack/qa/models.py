@@ -971,7 +971,7 @@ class TestInstance(models.Model):
     objects = TestInstanceManager()
 
     class Meta:
-        ordering = ("work_completed",)
+        #ordering = ("work_completed",)
         get_latest_by = "work_completed"
         permissions = (
             ("can_view_history", "Can view test history"),
@@ -1145,7 +1145,7 @@ class TestListInstance(models.Model):
     objects = TestListInstanceManager()
 
     class Meta:
-        ordering = ("work_completed",)
+        #ordering = ("work_completed",)
         get_latest_by = "work_completed"
         permissions = (
             ("can_override_date", "Can override date"),

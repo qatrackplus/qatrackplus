@@ -34,60 +34,31 @@ class ChartView(PermissionRequiredMixin, TemplateView):
 
     #----------------------------------------------------------------------
     def create_test_data(self):
-        tlc_content_type = ContentType.objects.get_for_model(models.TestListCycle).pk
+        q = models.TestInstance.objects.values_list(
+            "unit_test_info__unit",
+            "unit_test_info__test",
+            "test_list_instance__test_list_id",
+            "test_list_instance__unit_test_collection__frequency"
+        ).distinct()
 
-        utcs = models.UnitTestCollection.objects.all().values(
-            "frequency",
-            "content_type",
-            "testlist",
-            "testlistcycle",
-            "unit",
-            "testlistcycle__test_lists"
-        )
-
-        self.unit_frequencies = collections.defaultdict(lambda: collections.defaultdict(list))
-
-        for utc in utcs:
-            if utc["frequency"] is None:
-                utc["frequency"] = 0
-            unit = utc["unit"]
-            freq = utc["frequency"]
-            if utc["content_type"] == tlc_content_type:
-                test_list = utc["testlistcycle__test_lists"]
-            else:
-                test_list = utc["testlist"]
-
-            self.unit_frequencies[unit][freq].append(test_list)
-
-        # uniquify unit/freq lists
-        for utc in utcs:
-            unit = utc["unit"]
-            freq = utc["frequency"]
-            self.unit_frequencies[unit][freq] = list(sorted(set(self.unit_frequencies[unit][freq])))
-
-        self.test_data = {
-            "test_lists": {},
-            "unit_frequency_lists": self.unit_frequencies,
+        data = {
+            'test_lists' : collections.defaultdict(list),
+            'unit_frequency_lists':collections.defaultdict(lambda: collections.defaultdict(list)),
         }
 
-        for test_list in self.test_lists:
+        for unit, test, test_list, frequency in q:
+            data["test_lists"][test_list].append(test)
+            data["unit_frequency_lists"][unit][frequency].append(test_list)
 
-            tests = [x.pk for x in test_list.tests.all()]
-            if test_list.sublists:
-                for sublist in test_list.sublists.all():
-                    tests.extend(list(sublist.tests.values_list("pk", flat=True)))
-
-            self.test_data["test_lists"][test_list.pk] = tests
-
-        return json.dumps(self.test_data)
+        return json.dumps(data)
 
     #----------------------------------------------------------------------
     def get_context_data(self, **kwargs):
         """add default dates to context"""
         context = super(ChartView, self).get_context_data(**kwargs)
 
-        self.set_test_lists()
-        self.set_tests()
+        self.test_lists = models.TestList.objects.order_by("name").values( "pk", "description", "name",)
+        self.tests = models.Test.objects.order_by("name").values( "pk", "category", "name", "description",)
 
         test_data = self.create_test_data()
 
@@ -99,7 +70,7 @@ class ChartView(PermissionRequiredMixin, TemplateView):
             "test_lists": self.test_lists,
             "categories": models.Category.objects.all(),
             "statuses": models.TestInstanceStatus.objects.all(),
-            "units": Unit.objects.all().select_related("type"),
+            "units": Unit.objects.values("pk","name"),
             "test_data": test_data,
             "chart_data_url": reverse("chart_data"),
             "control_chart_url": reverse("control_chart"),
@@ -107,22 +78,6 @@ class ChartView(PermissionRequiredMixin, TemplateView):
         }
         context.update(c)
         return context
-
-    #----------------------------------------------------------------------
-    def set_tests(self):
-        self.tests = models.Test.objects.order_by("name").values(
-            "pk",
-            "category",
-            "name",
-            "description",
-        )
-
-    #---------------------------------------------------------------------------
-    def set_test_lists(self):
-        self.test_lists = models.TestList.objects.order_by("name").prefetch_related(
-            "sublists",
-            "tests",
-        )
 
 
 #============================================================================
