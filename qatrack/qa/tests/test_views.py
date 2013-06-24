@@ -357,9 +357,8 @@ class TestControlImage(TestCase):
         self.assertTrue(response.get("content-type"), "image/png")
         qatrack.qa.control_chart.control_chart.display = old_display
 
+
 #====================================================================================
-
-
 class TestChartView(TestCase):
 
     #----------------------------------------------------------------------
@@ -382,12 +381,18 @@ class TestChartView(TestCase):
         self.tlc2 = utils.create_test_list("cycle2")
         self.tlc = utils.create_cycle(test_lists=[self.tlc1, self.tlc2])
 
+        self.uti1 = models.UnitTestInfo.objects.get(test=self.test1)
+        self.uti2 = models.UnitTestInfo.objects.get(test=self.test2)
+
+        self.status = utils.create_status()
+
+        utils.create_test_list_instance(unit_test_collection=self.utc)
+        utils.create_test_instance(value=1., status=self.status, unit_test_info=self.uti1)
+        utils.create_test_instance(value=1., status=self.status, unit_test_info=self.uti2)
+
         self.utc2 = utils.create_unit_test_collection(test_collection=self.tlc, unit=self.utc.unit, null_frequency=True)
 
-        self.view.set_test_lists()
-        self.view.set_tests()
     #---------------------------------------------------------------------------
-
     def test_create_test_data(self):
 
         data = json.loads(self.view.get_context_data()["test_data"])
