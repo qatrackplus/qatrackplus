@@ -1092,10 +1092,6 @@ class TestSignals(TestCase):
 
         utc = utils.create_unit_test_collection(test_collection=cycle1)
 
-        utis = list(models.UnitTestInfo.objects.all())
-
-        # test list on its own
-        self.assertEqual(len(utis), 2)
 
         #change test collection
         utc.tests_object = cycle2
