@@ -8,6 +8,8 @@
 * upload test type
 * string test type
 * qa/views.py refactored into qa/views/\*.py
+* page load time reduced by using more efficient unreviewed count query
+* charts page now allows plotting of data for tests which are no longer active
 
 ## v0.2.6 ##
 
