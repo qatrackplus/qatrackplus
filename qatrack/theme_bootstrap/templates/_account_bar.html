@@ -11,9 +11,7 @@
                 <b class="caret"></b>
             </a>
             <ul class="dropdown-menu">
-                {% comment %}
                 <li><a href="{% url acct_email %}"><i class="icon-user"></i> Account</a></li>
-                {% endcomment %}
                 {% if user.is_staff %}
                     <li><a href="{% url admin:index %}"><i class="icon-cog"></i> Admin</a></li>
                 {% endif %}
