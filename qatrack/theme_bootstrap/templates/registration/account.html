@@ -1,0 +1,32 @@
+{% extends "registration/base.html" %}
+
+{% load i18n %}
+
+{% block head_title %}Account Details for {{user.username}}{% endblock %}
+
+{% block body %}
+<h1>{% trans "Account Details for " %}{{user.get_full_name}}</h1>
+
+    <dl class="dl-horizontal">
+        <dt>Username:</dt>
+        <dd>{{user.username}}</dt>
+        <dt>Email:</dt>
+        <dd>{{user.email}}</dt>
+        <dt>Registered:</dt>
+        <dd>{{user.date_joined}}</dt>
+        <dt>Last Login:</dt>
+        <dd>{{user.last_login}}</dt>
+        <dt>Groups</dt>
+        <dd>
+            <ul>
+                {% for group in user.groups.all %}
+                <li>{{group.name}}</li>
+                {% endfor %}
+            </ul>
+        </dd>
+        <dt>Can Access Admin</dt>
+        <dd>{{user.is_staff}}</dd>
+        <dt>Superuser</dt>
+        <dd>{{user.is_superuser}}</dd>
+    </dl>
+{% endblock %}
