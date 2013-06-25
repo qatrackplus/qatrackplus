@@ -5,6 +5,7 @@ import textwrap
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
+from django.db.models import Count
 from django.http import HttpResponse
 from django.template import Context
 from django.template.loader import get_template
@@ -68,8 +69,8 @@ class ChartView(PermissionRequiredMixin, TemplateView):
         """add default dates to context"""
         context = super(ChartView, self).get_context_data(**kwargs)
 
-        self.test_lists = models.TestList.objects.order_by("name").values( "pk", "description", "name",)
-        self.tests = models.Test.objects.order_by("name").values( "pk", "category", "name", "description",)
+        self.set_test_lists()
+        self.set_tests()
 
         test_data = self.create_test_data()
 
@@ -90,6 +91,29 @@ class ChartView(PermissionRequiredMixin, TemplateView):
         context.update(c)
         return context
 
+    #----------------------------------------------------------------------
+    def set_test_lists(self):
+        """self.test_lists is set to all test lists that have been completed
+        one or more times"""
+
+        self.test_lists = models.TestList.objects.annotate(
+            instance_count=Count("testlistinstance")
+        ).filter(
+            instance_count__gt=0
+        ).order_by(
+            "name"
+        ).values(
+            "pk", "description", "name",
+        )
+    #----------------------------------------------------------------------
+    def set_tests(self):
+        """self.tests is set to all tests that have been completed
+        one or more times"""
+        self.tests = models.Test.objects.order_by(
+            "name"
+        ).values(
+            "pk", "category", "name", "description",
+        )
 
 #============================================================================
 class BaseChartView(View):

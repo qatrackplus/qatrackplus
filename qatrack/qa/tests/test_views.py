@@ -386,9 +386,9 @@ class TestChartView(TestCase):
 
         self.status = utils.create_status()
 
-        utils.create_test_list_instance(unit_test_collection=self.utc)
-        utils.create_test_instance(value=1., status=self.status, unit_test_info=self.uti1)
-        utils.create_test_instance(value=1., status=self.status, unit_test_info=self.uti2)
+        self.tli = utils.create_test_list_instance(unit_test_collection=self.utc)
+        self.ti1 = utils.create_test_instance(value=1., status=self.status, unit_test_info=self.uti1, test_list_instance=self.tli)
+        self.ti2 = utils.create_test_instance(value=1., status=self.status, unit_test_info=self.uti2, test_list_instance=self.tli)
 
         self.utc2 = utils.create_unit_test_collection(test_collection=self.tlc, unit=self.utc.unit, null_frequency=True)
 
@@ -399,14 +399,10 @@ class TestChartView(TestCase):
         expected = {
             "test_lists": {
                 "%d" % self.tl.pk: [self.test1.pk, self.test2.pk],
-                "%d" % self.sl.pk: [self.test2.pk],
-                "%d" % self.tlc1.pk: [],
-                "%d" % self.tlc2.pk: []
             },
             'unit_frequency_lists': {
                 "%d" % self.utc.unit.pk: {
                     "%d" % self.utc.frequency.pk: [self.tl.pk],
-                    "0": [self.tlc1.pk, self.tlc2.pk]
                 }
             }
         }
