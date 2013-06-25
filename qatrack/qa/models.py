@@ -1106,11 +1106,13 @@ class TestListInstanceManager(models.Manager):
     #----------------------------------------------------------------------
     def unreviewed(self):
         return self.complete().filter(testinstance__status__requires_review=True).distinct()
-
+    #----------------------------------------------------------------------
+    def unreviewed_count(self):
+        tlis = TestInstance.objects.filter(status__requires_review=True,in_progress=False)
+        return len(set(tlis.values_list("test_list_instance",flat=True)))
     #----------------------------------------------------------------------
     def in_progress(self):
         return self.get_query_set().filter(in_progress=True)
-
     #----------------------------------------------------------------------
     def complete(self):
         return self.get_query_set().filter(in_progress=False)

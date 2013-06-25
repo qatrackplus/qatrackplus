@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.contrib.sites.models import Site
-from qatrack.qa.models import Frequency, TestListInstance
+from qatrack.qa.models import Frequency, TestListInstance, TestInstance
 
 
 def site(request):
@@ -17,5 +17,5 @@ def site(request):
 
         # forcing list cuts down number of queries on some pages
         'QA_FREQUENCIES': list(Frequency.objects.frequency_choices()),
-        'UNREVIEWED': TestListInstance.objects.unreviewed().count(),
+        'UNREVIEWED':TestListInstance.objects.unreviewed_count()
     }
