@@ -1,4 +1,4 @@
-from django.dispatch import receiver
+from django.dispatch import receiver, Signal
 from django.db.models.signals import pre_save, post_save, post_delete
 
 from django.core.exceptions import ValidationError
@@ -11,6 +11,8 @@ import models
 def loaded_from_fixture(kwargs):
     return kwargs.get("raw", False)
 
+
+testlist_complete = Signal(providing_args=["instance","created"])
 
 #----------------------------------------------------------------------
 def update_last_instances(test_list_instance):

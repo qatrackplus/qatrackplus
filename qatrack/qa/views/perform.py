@@ -18,7 +18,7 @@ from django.utils import timezone
 from django.utils.translation import ugettext as _
 
 from . import forms
-from .. import models, utils
+from .. import models, utils, signals
 from .base import BaseEditTestListInstance, TestListInstances, UTCList, logger
 from qatrack.contacts.models import Contact
 from qatrack.units.models import UnitType, Unit
@@ -430,8 +430,11 @@ class PerformQA(CreateView):
 
         models.TestInstance.objects.bulk_create(to_save)
 
-        #set due date to account for any non default stattuses
+        #set due date to account for any non default statuses
         self.object.unit_test_collection.set_due_date()
+
+        if not self.object.in_progress:
+            signals.testlist_complete.send(sender=self,instance=self.object, created=False)
 
         # let user know request succeeded and return to unit list
         messages.success(self.request, _("Successfully submitted %s " % self.object.test_list.name))
@@ -538,6 +541,8 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
             self.object.unit_test_collection.set_due_date()
 
+            if not self.object.in_progress:
+                signals.testlist_complete.send(sender=self,instance=self.object, created=False)
             # let user know request succeeded and return to unit list
             messages.success(self.request, _("Successfully submitted %s " % self.object.test_list.name))
 

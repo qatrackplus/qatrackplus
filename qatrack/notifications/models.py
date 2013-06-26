@@ -5,13 +5,6 @@ from django.contrib.auth.models import Group, User
 import handlers
 
 
-#----------------------------------------------------------------------
-def users_subscribed_to_failures():
-    return User.objects.filter(
-        groups__notificationsubscription_set__notify_on_failure=True
-    ).distinct()
-
-
 TOLERANCE = 10
 ACTION = 20
 
