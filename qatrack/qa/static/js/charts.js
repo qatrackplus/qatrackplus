@@ -48,6 +48,8 @@ $(document).ready(function(){
 
     $("#gen-chart").click(update_chart);
 
+    $("#csv-export").click(export_csv);
+
     set_chart_options();
     set_options_from_url();
 
@@ -549,4 +551,9 @@ function get_filtered_option_values(opt_type,options){
     var opt_value = function(opt){return opt[1];};
     var f = function(opt){return opt[0] == opt_type;};
     return _.map(_.filter(options,f),opt_value);
+}
+
+function export_csv(){
+    var blob = new Blob(["Hello, world!"], {type: "text/plain;charset=utf-8"});
+    saveAs(blob, "hello world.txt");
 }
