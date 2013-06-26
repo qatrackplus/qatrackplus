@@ -554,6 +554,19 @@ function get_filtered_option_values(opt_type,options){
 }
 
 function export_csv(){
-    var blob = new Blob(["Hello, world!"], {type: "text/plain;charset=utf-8"});
-    saveAs(blob, "hello world.txt");
+    var header = [];
+    _.each($("#data-table-wrapper table thead tr:first-child th"),function(e){
+        header.push(["Date",e.innerText,"Value","Ref"].join(","));
+    });
+    header = header.join(",");
+    var lines = [header];
+
+    _.each($("#data-table-wrapper table tbody tr"),function(row){
+        lines.push(_.map($(row).find("td"),function(e){return e.innerText;}).join(","));
+    });
+    console.log(lines.join("\n"));
+
+    var blob = new Blob([lines.join("\n")], {type: "text/plain;charset=utf-8"});
+    saveAs(blob, "qatrack_export.csv");
+
 }
