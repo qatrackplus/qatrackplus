@@ -9,6 +9,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
+from django.db import signals
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import get_object_or_404
 from django.core.urlresolvers import reverse
@@ -66,6 +67,7 @@ class JSONResponseMixin(object):
         # objects -- such as Django model instances or querysets
         # -- can be serialized as JSON.
         return json.dumps(context)
+
 
 
 #============================================================================
@@ -658,6 +660,9 @@ class PerformQA(CreateView):
 
             models.TestInstance.objects.bulk_create(to_save)
 
+            if not self.object.in_progress:
+                models.testlist_complete.send(sender=self,instance=self.object, created=True)
+
             # let user know request succeeded and return to unit list
             messages.success(self.request, _("Successfully submitted %s " % self.object.test_list.name))
 
@@ -772,7 +777,7 @@ class BaseEditTestListInstance(UpdateView):
     def get_context_data(self, **kwargs):
 
         context = super(BaseEditTestListInstance, self).get_context_data(**kwargs)
-        
+
         # we need to override the default queryset for the formset so that we can pull
         # in all the reference/tolerance data without the ORM generating 100's of queries
         self.test_instances = models.TestInstance.objects.filter(
@@ -880,6 +885,8 @@ class EditTestListInstance(BaseEditTestListInstance):
                 ti = ti_form.save(commit=False)
                 self.update_test_instance(ti, status)
 
+            if not self.object.in_progress:
+                models.testlist_complete.send(sender=self,instance=self.object, created=False)
             # let user know request succeeded and return to unit list
             messages.success(self.request, _("Successfully submitted %s " % self.object.test_list.name))
 
@@ -892,7 +899,7 @@ class EditTestListInstance(BaseEditTestListInstance):
     def update_test_list_instance(self):
         self.object.created_by = self.request.user
         self.object.modified_by = self.request.user
-      
+
         if self.object.work_completed is None:
             self.object.work_completed = timezone.make_aware(timezone.datetime.now(), timezone=timezone.get_current_timezone())
 

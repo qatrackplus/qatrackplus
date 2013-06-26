@@ -222,6 +222,7 @@ EMAIL_NOTIFICATION_TEMPLATE = "notification_email.txt"
 EMAIL_NOTIFICATION_SENDER = "qatrack"
 EMAIL_NOTIFICATION_SUBJECT = "QATrack+ Test Status Notification"
 
+EMAIL_FAIL_SILENTLY = True
 EMAIL_HOST = ""  # e.g. 'smtp.gmail.com'
 EMAIL_HOST_USER = ''  # e.g. "randle.taylor@gmail.com"
 EMAIL_HOST_PASSWORD = 'your_password_here'

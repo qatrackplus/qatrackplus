@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import models
 from django.db.models import Q
+from django.dispatch import Signal
 from django.contrib.auth.models import User, Group
 from django.utils.translation import ugettext as _
 from django.core import urlresolvers
@@ -77,6 +78,8 @@ OVERDUE = ACTION
 NEWLIST = NOT_DONE
 
 EPSILON = 1E-10
+
+testlist_complete = Signal(providing_args=["instance","created"])
 
 #============================================================================
 
@@ -1287,7 +1290,7 @@ def update_last_instances(test_list_instance):
 
 
 #----------------------------------------------------------------------
-@receiver(post_save, sender=TestListInstance)
+@receiver(post_save, sender=TestListInstance, dispatch_uid="update_last_instances_on_save")
 def on_test_list_instance_saved(*args, **kwargs):
     """set last instance for UnitTestInfo"""
 
@@ -1296,7 +1299,7 @@ def on_test_list_instance_saved(*args, **kwargs):
 
 
 #----------------------------------------------------------------------
-@receiver(post_delete, sender=TestListInstance)
+@receiver(post_delete, sender=TestListInstance,dispatch_uid="update_last_instances_on_delete")
 def on_test_list_instance_deleted(*args, **kwargs):
     """update last_instance if available"""
     update_last_instances(kwargs["instance"])

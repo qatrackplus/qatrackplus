@@ -6,19 +6,16 @@ from django.dispatch import receiver
 from django.template import Context
 from django.template.loader import get_template
 
-from qatrack.qa.models import TestListInstance
+from qatrack.qa.models import TestListInstance, testlist_complete
 
 
 import models
 
 #----------------------------------------------------------------------
-
-
-@receiver(signals.post_save, sender=TestListInstance)
+@receiver(testlist_complete)
 def email_on_testlist_save(*args, **kwargs):
     """TestListInstance was completed.  Send email notification if applicable"""
-    if not kwargs["created"]:
-        return
+
     test_list_instance = kwargs["instance"]
 
     failing = failing_tests_to_report(test_list_instance)
@@ -40,6 +37,7 @@ def email_on_testlist_save(*args, **kwargs):
     template = getattr(settings, "EMAIL_NOTIFICATION_TEMPLATE", "notification_email.txt")
     user = getattr(settings, "EMAIL_NOTIFICATION_USER", None)
     pwd = getattr(settings, "EMAIL_NOTIFICATION_PWD", None)
+    fail_silently = getattr(settings, "EMAIL_FAIL_SILENTLY", True)
 
     body = get_template(template).render(
         Context({
@@ -53,6 +51,7 @@ def email_on_testlist_save(*args, **kwargs):
     send_mail(
         subject, body, from_address, recipient_emails,
         auth_user=user, auth_password=pwd,
+        fail_silently=fail_silently
     )
 
 
@@ -72,7 +71,7 @@ def tolerance_tests_to_report(test_list_instance):
 
 
 def get_notification_recipients():
-    tolerance_users = User.objects.filter(groups__notificationsubscription__warning_level__lte=models.TOLERANCE)
-    action_users = User.objects.filter(groups__notificationsubscription__warning_level__lte=models.ACTION)
+    tolerance_users = User.objects.filter(groups__notificationsubscription__warning_level__lte=models.TOLERANCE).distinct()
+    action_users = User.objects.filter(groups__notificationsubscription__warning_level__lte=models.ACTION).distinct()
 
     return tolerance_users, action_users
