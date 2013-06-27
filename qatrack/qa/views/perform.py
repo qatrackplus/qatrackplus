@@ -594,6 +594,26 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
             msg += msga
             messages.error(self.request, _(msg))
 
+    #---------------------------------------------------------------
+    def template_unit_test_infos(self):
+        """prepare the unit test infos for rendering in template"""
+        template_utis = []
+        for uti in self.unit_test_infos:
+            template_utis.append({
+                "id": uti.pk,
+                "test": model_to_dict(uti.test),
+                "reference": model_to_dict(uti.reference) if uti.reference else None,
+                "tolerance": model_to_dict(uti.tolerance) if uti.tolerance else None,
+            })
+        return template_utis
+    #---------------------------------------------------------------
+    def get_context_data(self, **kwargs):
+        """"""
+        context = super(EditTestListInstance,self).get_context_data(**kwargs)
+        self.unit_test_infos =[f.instance.unit_test_info for f in context["formset"]]
+        context["unit_test_infos"] = json.dumps(self.template_unit_test_infos())
+        return context
+
 class ContinueTestListInstance(EditTestListInstance):
 
     permission_required = "qa.add_testlistinstance"

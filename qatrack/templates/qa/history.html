@@ -1,6 +1,6 @@
 {% load qa_tags %}
 {% if history %}
-    {% with test=history.0.unit_test_info.test unit=history.0.unit_test_info.unit %}
+{% with test=history.0.unit_test_info.test unit=unit_test_collection.unit %}
         {% for hist in history %}
             {% if test.is_upload or test.is_string_type %}
             <span class="history-value">

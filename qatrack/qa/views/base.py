@@ -49,7 +49,6 @@ class TestListInstanceMixin(SelectRelatedMixin, PrefetchRelatedMixin):
 #============================================================================
 class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
 
-
     #----------------------------------------------------------------------
     def add_histories(self, forms):
         """paste historical values onto forms"""
