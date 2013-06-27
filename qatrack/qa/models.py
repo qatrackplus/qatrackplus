@@ -1210,7 +1210,7 @@ class TestListInstance(models.Model):
                 work_completed__lt=self.work_completed,
             )
 
-        tlis.order_by(
+        tlis = tlis.order_by(
             "-work_completed"
         ).prefetch_related(
             "testinstance_set__status",
