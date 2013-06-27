@@ -155,6 +155,7 @@ class BaseChartView(View):
             rows.append(row)
 
         context = Context({
+            "ncols": 3*len(rows[0]) if rows else 0,
             "rows": rows,
             "headers": headers
         })
@@ -309,16 +310,3 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
 
         return response
 
-
-#============================================================================
-class ExportToCSV(PermissionRequiredMixin, View):
-    """A simple api wrapper to give exported api data a filename for downloads"""
-
-    permission_required = "qa.can_view_history"
-
-    #----------------------------------------------------------------------
-    def get(self, request, *args, **kwargs):
-        """takes request, passes it to api and returns a file"""
-        response = ValueResource().get_list(request)
-        response["Content-Disposition"] = 'attachment; filename=exported_data.csv'
-        return response

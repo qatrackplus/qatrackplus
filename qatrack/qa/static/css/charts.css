@@ -100,9 +100,21 @@ tr.col-group th{
 #data-container .well{
     overflow-x:auto;
 }
+table.data-table{
+    width:auto;
+}
 .data-table th{
     text-align:center;
+    max-width:100px;
+}
+.data-table td{
+}
+.data-table td.date{
+    width:170px;
 }
 .data-table td.number{
     text-align:right;
+}
+#csv-export {
+    margin: 5px;
 }

@@ -60,7 +60,6 @@ class TestURLS(TestCase):
             ("all_lists", {}),
 
             ("charts", {}),
-            #            ("export_data", {}),
             ("chart_data", {}),
             ("control_chart", {}),
             ("overview", {}),
