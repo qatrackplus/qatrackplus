@@ -264,6 +264,7 @@ function TestInstance(test_info, row){
             self.inputs.val(value);
         }else if (tt === QAUtils.UPLOAD){
             self.inputs.filter(":hidden").val(value["temp_file_name"]);
+            self.value = value.result;
         }else if (tt === QAUtils.SIMPLE || tt === QAUtils.COMPOSITE){
             if (_.isNull(value)){
                 self.inputs.val("");
@@ -273,7 +274,6 @@ function TestInstance(test_info, row){
         }
 
         this.update_status();
-//        $.Topic("valueChanged").publish();
     }
 
     this.update_value_from_input = function(){
@@ -350,10 +350,8 @@ function TestInstance(test_info, row){
                 ]
             },
             done: function (e, data) {
-                if (console){
-                    window.console.log(data.result);
-                }
                 self.status.removeClass("btn-primary btn-danger btn-success");
+                console.log(data);
                 if (data.result.errors.length > 0){
                     self.status.addClass("btn-danger").text("Failed");
                     self.status.attr("title","");
@@ -362,6 +360,7 @@ function TestInstance(test_info, row){
                     self.status.addClass("btn-success").text("Success");
                     self.set_value(data.result);
                     self.status.attr("title",data.result['temp_file_name']);
+                    $.Topic("valueChanged").publish();
                 }
             },
             fail: function(e,data){

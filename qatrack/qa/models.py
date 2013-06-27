@@ -476,10 +476,11 @@ class Test(models.Model):
 
         errors = self.check_test_type(self.calculation_procedure, [UPLOAD, COMPOSITE], "Calculation Procedure")
         self.calculation_procedure = str(self.calculation_procedure).replace("\r\n", "\n")
-        macro_var_set = re.findall("^\s*%s\s*=\s*[(\-+_0-9.a-zA-Z]+.*$"%(self.slug), self.calculation_procedure, re.MULTILINE)
+
+        macro_var_set = re.findall("^\s*%s\s*=\s*[{\[(\-+_0-9.a-zA-Z]+.*$"%(self.slug), self.calculation_procedure, re.MULTILINE)
         result_line = self.RESULT_RE.findall(self.calculation_procedure)
         if not (result_line or macro_var_set):
-            errors.append(_('Snippet must set macro name to a value or contain a result line (e.g. my_macro_name = my_var/another_var*2 or result = my_var/another_var*2)'))
+            errors.append(_('Snippet must set macro name to a value or contain a result line (e.g. %s = my_var/another_var*2 or result = my_var/another_var*2)'%self.slug))
 
         try:
             utils.tokenize_composite_calc(self.calculation_procedure)

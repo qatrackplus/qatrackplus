@@ -2,10 +2,10 @@
 {% if history %}
     {% with test=history.0.unit_test_info.test unit=history.0.unit_test_info.unit %}
         {% for hist in history %}
-            {% if test.is_upload %}
+            {% if test.is_upload or test.is_string %}
             <span class="history-value">
-                        {{hist.value|safe}}
-                </span>
+                    {{hist.string_value|safe}}
+            </span>
             {% elif hist.work_completed and hist.pass_fail != "not_done" %}
 
                 <span class="label {{hist.pass_fail}} history-value" title="Diff from ref={% if hist.diff %}{{hist.diff}}{%else%}N/A{%endif%};  {{hist.created_by}} on {{hist.work_completed}}; {{hist.status}}">
@@ -15,7 +15,8 @@
                 <span class="label history-value" title="N/A">N/A</span>
             {% endif %}
         {% endfor %}
+        {% if not test.is_upload and not test.is_string %}
         <a title="View chart of this data" target="_blank" href="{% url charts %}#units={{unit.pk}}&tests={{test.pk}}"><i class="icon-picture"></i></a>
-
+        {% endif %}
     {% endwith %}
 {% endif %}

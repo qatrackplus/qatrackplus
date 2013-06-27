@@ -25,6 +25,16 @@ from qatrack.units.models import UnitType, Unit
 
 from braces.views import JSONResponseMixin, PermissionRequiredMixin
 
+DEFAULT_CALCULATION_CONTEXT = {
+    "math": math,
+    "scipy": scipy,
+    "numpy": numpy,
+}
+
+#---------------------------------------------------------------------------
+def process_procedure(procedure):
+    """prepare raw calculation procedure for evaluation"""
+    return "\n".join(["from __future__ import division", procedure, "\n"]).replace('\r', '\n')
 
 #============================================================================
 class Upload(JSONResponseMixin, View):
@@ -45,10 +55,11 @@ class Upload(JSONResponseMixin, View):
         }
 
         try:
-            procedure = models.Test.objects.get(pk=self.request.POST.get("test_id")).calculation_procedure
-            code = compile(procedure, "<string>", "exec")
+            test = models.Test.objects.get(pk=self.request.POST.get("test_id"))
+            code = compile(process_procedure(test.calculation_procedure), "<string>", "exec")
             exec code in self.calculation_context
-            results["result"] = self.calculation_context["result"]
+            key = "result" if "result" in self.calculation_context else test.slug
+            results["result"] = self.calculation_context[key]
             results["success"] = True
         except models.Test.DoesNotExist:
             results["errors"].append("Test with that ID does not exist")
@@ -95,11 +106,9 @@ class Upload(JSONResponseMixin, View):
         """set up the environment that the composite test will be calculated in"""
 
         self.calculation_context = {
-            "upload": self.upload,
-            "math": math,
-            "scipy": scipy,
-            "numpy": numpy,
+            "file_object": self.upload,
         }
+        self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
 
 
 #============================================================================
@@ -140,14 +149,12 @@ class CompositeCalculation(JSONResponseMixin, View):
 
         for slug in self.calculation_order:
             raw_procedure = self.composite_tests[slug]
-            procedure = self.process_procedure(raw_procedure)
+            procedure = process_procedure(raw_procedure)
             try:
                 code = compile(procedure, "<string>", "exec")
                 exec code in self.calculation_context
-                try:
-                    result = self.calculation_context["result"]
-                except:
-                    result = self.calculation_context[slug]
+                key = "result" if "result" in self.calculation_context else slug
+                result = self.calculation_context[key]
 
                 results[slug] = {'value': result, 'error': None}
                 self.calculation_context[slug] = result
@@ -174,11 +181,6 @@ class CompositeCalculation(JSONResponseMixin, View):
 
         self.composite_tests = dict(composite_tests)
 
-    #---------------------------------------------------------------------------
-    def process_procedure(self, procedure):
-        """prepare raw procedure for evaluation"""
-        return "\n".join(["from __future__ import division", procedure, "\n"]).replace('\r', '\n')
-
     #----------------------------------------------------------------------
     def set_calculation_context(self):
         """set up the environment that the composite test will be calculated in"""
@@ -189,12 +191,9 @@ class CompositeCalculation(JSONResponseMixin, View):
             self.calculation_context = {}
             return
 
-        self.calculation_context = {
-            "math": math,
-            "scipy": scipy,
-            "numpy": numpy,
-            "uploads": upload_data,
-        }
+        self.calculation_context = {"uploads": upload_data,}
+
+        self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
 
         for slug, val in values.iteritems():
             if slug not in self.composite_tests:
@@ -504,7 +503,7 @@ class PerformQA(CreateView):
 
         kwargs = {
             "unit_number": self.unit_test_col.unit.number,
-            "frequency": self.unit_test_col.frequency.slug
+            "frequency": self.unit_test_col.frequency.slug if self.unit_test_col.frequency else "ad-hoc"
         }
 
         return reverse("qa_by_frequency_unit", kwargs=kwargs)

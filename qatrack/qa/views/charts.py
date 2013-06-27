@@ -48,6 +48,7 @@ class ChartView(PermissionRequiredMixin, TemplateView):
         q = models.TestInstance.objects.values_list(
             "unit_test_info__unit",
             "unit_test_info__test",
+            "unit_test_info__test__type",
             "test_list_instance__test_list",
             "test_list_instance__unit_test_collection__frequency"
         )#.distinct()
@@ -57,9 +58,11 @@ class ChartView(PermissionRequiredMixin, TemplateView):
             'unit_frequency_lists':collections.defaultdict(lambda: collections.defaultdict(set)),
         }
 
-        for unit, test, test_list, frequency in q:
-            data["test_lists"][test_list].add(test)
-            data["unit_frequency_lists"][unit][frequency].add(test_list)
+        for unit, test, test_type, test_list, frequency in q:
+            if test_type not in (models.UPLOAD, models.STRING):
+                data["test_lists"][test_list].add(test)
+                frequency = frequency or 0
+                data["unit_frequency_lists"][unit][frequency].add(test_list)
 
         return json.dumps(data,cls=SetEncoder)
 
