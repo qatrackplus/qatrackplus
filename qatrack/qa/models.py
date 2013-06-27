@@ -23,6 +23,7 @@ COMPOSITE = "composite"
 MULTIPLE_CHOICE = "multchoice"
 STRING = "string"
 UPLOAD = "upload"
+STRING_COMPOSITE = "scomposite"
 
 TEST_TYPE_CHOICES = (
     (BOOLEAN, "Boolean"),
@@ -31,6 +32,7 @@ TEST_TYPE_CHOICES = (
     (CONSTANT, "Constant"),
     (COMPOSITE, "Composite"),
     (STRING, "String"),
+    (STRING_COMPOSITE, "String Composite"),
     (UPLOAD, "File Upload"),
 )
 
@@ -431,11 +433,20 @@ class Test(models.Model):
     modified_by = models.ForeignKey(User, editable=False, related_name="test_modifier")
 
     #----------------------------------------------------------------------
-    def is_numerical(self):
+    def is_numerical_type(self):
         """return whether or not this is a numerical test"""
         return self.type in (COMPOSITE, CONSTANT, SIMPLE)
 
+    #---------------------------------------------------------------
+    def is_string_type(self):
+        return not self.is_numerical_type()
+
+    #----------------------------------------------------------------------
     def is_string(self):
+        return self.type == STRING
+
+    #----------------------------------------------------------------------
+    def is_string_composite(self):
         return self.type == STRING
 
     #----------------------------------------------------------------------
@@ -471,10 +482,10 @@ class Test(models.Model):
     def clean_calculation_procedure(self):
         """make sure a valid calculation procedure"""
 
-        if not self.calculation_procedure and self.type not in (UPLOAD, COMPOSITE):
+        if not self.calculation_procedure and self.type not in (UPLOAD, COMPOSITE, STRING_COMPOSITE):
             return
 
-        errors = self.check_test_type(self.calculation_procedure, [UPLOAD, COMPOSITE], "Calculation Procedure")
+        errors = self.check_test_type(self.calculation_procedure, [UPLOAD, COMPOSITE, STRING_COMPOSITE], "Calculation Procedure")
         self.calculation_procedure = str(self.calculation_procedure).replace("\r\n", "\n")
 
         macro_var_set = re.findall("^\s*%s\s*=\s*[{\[(\-+_0-9.a-zA-Z]+.*$"%(self.slug), self.calculation_procedure, re.MULTILINE)
@@ -1068,16 +1079,16 @@ class TestInstance(models.Model):
             return "Yes" if int(self.value) == 1 else "No"
         elif test.is_mult_choice():
             return test.get_choice_value(self.value)
-        elif test.is_string():
-            return self.string_value
         elif test.is_upload():
             return self.upload_url()
+        elif test.is_string_type():
+            return self.string_value
         return "%.4g" % self.value
 
     #----------------------------------------------------------------------
     def diff_display(self):
         display = ""
-        if self.unit_test_info.test.is_numerical() and self.value is not None:
+        if self.unit_test_info.test.is_numerical_type() and self.value is not None:
             try:
                 diff = self.calculate_diff()
                 if diff is not None:

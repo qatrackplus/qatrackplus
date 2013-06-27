@@ -156,6 +156,7 @@ function TestInfo(data){
     this.check_dispatch[QAUtils.CONSTANT]=this.check_numerical;
     this.check_dispatch[QAUtils.SIMPLE]=this.check_numerical;
     this.check_dispatch[QAUtils.COMPOSITE]=this.check_numerical;
+    this.check_dispatch[QAUtils.STRING_COMPOSITE]=this.check_string;
     this.check_dispatch[QAUtils.STRING]=this.check_string;
     this.check_dispatch[QAUtils.UPLOAD]=this.check_upload;
 
@@ -260,7 +261,7 @@ function TestInstance(test_info, row){
                 self.inputs[0].checked = false;
                 self.inputs[1].checked = true;
             }
-        }else if (tt=== QAUtils.STRING || tt === QAUtils.MULTIPLE_CHOICE){
+        }else if (tt=== QAUtils.STRING || tt === QAUtils.MULTIPLE_CHOICE || tt === QAUtils.STRING_COMPOSITE){
             self.inputs.val(value);
         }else if (tt === QAUtils.UPLOAD){
             self.inputs.filter(":hidden").val(value["temp_file_name"]);
@@ -401,7 +402,7 @@ function TestListInstance(){
         self.test_instances = _.map(_.zip(test_infos, $("#perform-qa-table tr.qa-valuerow")), function(uti_row){return new TestInstance(uti_row[0], uti_row[1])});
         self.slugs = _.map(self.test_instances, function(ti){return ti.test_info.test.slug});
         self.tests_by_slug = _.object(_.zip(self.slugs,self.test_instances));
-        self.composites = _.filter(self.test_instances,function(ti){return ti.test_info.test.type === QAUtils.COMPOSITE;});
+        self.composites = _.filter(self.test_instances,function(ti){return ti.test_info.test.type === QAUtils.COMPOSITE || ti.test_info.test.type === QAUtils.STRING_COMPOSITE;});
         self.composite_ids = _.map(self.composites,function(ti){return ti.test_info.test.id;});
         self.calculate_composites();
     }

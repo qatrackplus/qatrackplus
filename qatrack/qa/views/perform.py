@@ -197,10 +197,10 @@ class CompositeCalculation(JSONResponseMixin, View):
 
         for slug, val in values.iteritems():
             if slug not in self.composite_tests:
-                try:
-                    self.calculation_context[slug] = float(val)
-                except (ValueError, TypeError):
-                    self.calculation_context[slug] = val
+                self.calculation_context[slug] = val
+                #try:
+                #    self.calculation_context[slug] = float(val)
+                #except (ValueError, TypeError):
 
     #----------------------------------------------------------------------
     def set_dependencies(self):

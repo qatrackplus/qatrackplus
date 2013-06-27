@@ -2,7 +2,7 @@
 {% if history %}
     {% with test=history.0.unit_test_info.test unit=history.0.unit_test_info.unit %}
         {% for hist in history %}
-            {% if test.is_upload or test.is_string %}
+            {% if test.is_upload or test.is_string_type %}
             <span class="history-value">
                     {{hist.string_value|safe}}
             </span>

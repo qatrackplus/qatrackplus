@@ -40,7 +40,7 @@
                     <a type="button" class="btn btn-primary btn-mini ">Upload</a>
                     <input class="file-upload" type="file" />
                 </span>
-            {% elif test.is_string or test.is_upload %}
+            {% elif test.is_string_type %}
                  <span class="">{{form.string_value}}</span>
             {% else %}
                  <span class="">{{form.value}}</span>

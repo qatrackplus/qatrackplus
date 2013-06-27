@@ -184,9 +184,8 @@ class TestTolerance(TestCase):
 class TestCategory(TestCase):
     pass
 
+
 #====================================================================================
-
-
 class TestTest(TestCase):
 
     #---------------------------------------------------------------------------
@@ -195,10 +194,10 @@ class TestTest(TestCase):
         self.assertTrue(test.is_boolean())
 
     #----------------------------------------------------------------------
-    def test_is_numerical(self):
+    def test_is_numerical_type(self):
         for t in (models.COMPOSITE, models.CONSTANT, models.SIMPLE):
             test = utils.create_test(name="num", test_type=t)
-            self.assertTrue(test.is_numerical())
+            self.assertTrue(test.is_numerical_type())
 
     #---------------------------------------------------------------------------
     def test_valid_check_test_type(self):

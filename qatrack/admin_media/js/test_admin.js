@@ -10,7 +10,7 @@ function toggle_test_type(){
         $(".field-constant_value").show();
         $(".field-calculation_procedure, .field-choices").hide();
 
-    }else if (val == "composite" || val === "upload" ){
+    }else if (val == "composite" || val === "upload" || val === "scomposite" ){
         $(".field-calculation_procedure").show();
         $(".field-constant_value, .field-choices").hide();
     }else if (val == "multchoice"){

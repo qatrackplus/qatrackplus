@@ -33,6 +33,7 @@ var QAUtils = new function() {
     this.BOOLEAN = "boolean";
     this.MULTIPLE_CHOICE = "multchoice";
     this.COMPOSITE = "composite";
+    this.STRING_COMPOSITE = "scomposite";
     this.UPLOAD = "upload";
     this.STRING = "string";
     this.NUMBER_TEST_TYPES = [this.SIMPLE, this.CONSTANT, this.COMPOSITE];
