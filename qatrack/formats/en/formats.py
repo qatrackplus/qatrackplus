@@ -1,2 +1,2 @@
-DATETIME_FORMAT = "j N Y g:i A"
-DATE_FORMAT = "j N Y"
+DATETIME_FORMAT = "j M Y g:i A"
+DATE_FORMAT = "j M Y"
