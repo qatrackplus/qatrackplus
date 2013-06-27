@@ -1063,7 +1063,7 @@ class TestAJAXUpload(TestCase):
         self.test.type = models.UPLOAD
         self.test.calculation_procedure = """
 import json
-result = json.load(upload)
+result = json.load(file_object)
 """
         self.test.save()
 
@@ -1086,11 +1086,6 @@ result = json.load(upload)
         import glob
         for f in glob.glob(os.path.join(settings.TMP_UPLOAD_ROOT,"TESTRUNNER*")):
             os.remove(f)
-    #---------------------------------------------------------------
-    def test_upload_results(self):
-        response = self.client.post(self.url,{"test_id":self.test.pk,"upload":self.test_file})
-        data = json.loads(response.content)
-        self.assertEqual(data["result"]["baz"]["baz1"],"test")
 
     #---------------------------------------------------------------
     def test_upload_fname_exists(self):
@@ -1112,6 +1107,11 @@ result = json.load(upload)
         data = json.loads(response.content)
         self.assertEqual(data["errors"][0],"Invalid Test")
 
+    #---------------------------------------------------------------
+    def test_upload_results(self):
+        response = self.client.post(self.url,{"test_id":self.test.pk,"upload":self.test_file})
+        data = json.loads(response.content)
+        self.assertEqual(data["result"]["baz"]["baz1"],"test")
 
 #============================================================================
 class TestBaseEditTestListInstance(TestCase):
