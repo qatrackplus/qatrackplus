@@ -971,7 +971,7 @@ class TestInstance(models.Model):
     in_progress = models.BooleanField(default=False, editable=False, db_index=True)
 
     # for keeping a very basic history
-    created = models.DateTimeField()
+    created = models.DateTimeField(default=timezone.now)
     created_by = models.ForeignKey(User, editable=False, related_name="test_instance_creator")
     modified = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(User, editable=False, related_name="test_instance_modifier")
@@ -1212,7 +1212,7 @@ class TestListInstance(models.Model):
         tlis = TestListInstance.objects.filter(
             unit_test_collection=self.unit_test_collection,
         )
-        import ipdb; ipdb.set_trace()
+
         if self.work_completed:
             tlis = tlis.filter(
                 work_completed__lt=self.work_completed,
