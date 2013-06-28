@@ -20,6 +20,10 @@
 {% endfor %}
 <tr class="control-group qa-valuerow" >
 
+    {% for hidden in form.hidden_fields %}
+        {{ hidden }}
+    {% endfor %}
+
     {% with ref=test_info.reference  tol=test_info.tolerance  test=test_info.test uti=test_info.unit_test_info %}
 
         <td class="qa-category">{{test.category.name}}</td>
