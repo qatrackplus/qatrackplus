@@ -11,10 +11,17 @@ class Migration(SchemaMigration):
                       self.gf('django.db.models.fields.CharField')(max_length=1024, null=True, blank=True),
                       keep_default=False)
 
+        # Deleting field 'TestInstanceStatus.requires_comment'
+        db.delete_column('qa_testinstancestatus', 'requires_comment')
+
     def backwards(self, orm):
         # Deleting field 'TestInstance.string_value'
         db.delete_column('qa_testinstance', 'string_value')
 
+        # Adding field 'TestInstanceStatus.requires_comment'
+        db.add_column('qa_testinstancestatus', 'requires_comment',
+                      self.gf('django.db.models.fields.BooleanField')(default=False),
+                      keep_default=False)
     models = {
         'auth.group': {
             'Meta': {'object_name': 'Group'},
@@ -126,7 +133,6 @@ class Migration(SchemaMigration):
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'is_default': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '50'}),
-            'requires_comment': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'requires_review': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '50'}),
             'valid': ('django.db.models.fields.BooleanField', [], {'default': 'True'})

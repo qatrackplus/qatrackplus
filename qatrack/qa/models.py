@@ -168,10 +168,6 @@ class TestInstanceStatus(models.Model):
         default=True,
         help_text=_("Check to indicate that Test Instances with this status require further review"),
     )
-    requires_comment = models.BooleanField(
-        default=False,
-        help_text=_("Check to force users to add a comment to the Test Instances when setting to this status type."),
-    )
 
     export_by_default = models.BooleanField(
         default=True,
