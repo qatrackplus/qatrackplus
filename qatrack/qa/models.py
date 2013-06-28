@@ -1216,8 +1216,9 @@ class TestListInstance(models.Model):
         tlis = TestListInstance.objects.filter(
             unit_test_collection=self.unit_test_collection,
         )
+        import ipdb; ipdb.set_trace()
         if self.work_completed:
-            tlis.filter(
+            tlis = tlis.filter(
                 work_completed__lt=self.work_completed,
             )
 
