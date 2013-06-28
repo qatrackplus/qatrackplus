@@ -59,7 +59,7 @@ class ChartView(PermissionRequiredMixin, TemplateView):
         }
 
         for unit, test, test_type, test_list, frequency in q:
-            if test_type not in (models.UPLOAD, models.STRING):
+            if test_type not in (models.UPLOAD, ):
                 data["test_lists"][test_list].add(test)
                 frequency = frequency or 0
                 data["unit_frequency_lists"][unit][frequency].add(test_list)
