@@ -975,7 +975,7 @@ class TestInstance(models.Model):
     in_progress = models.BooleanField(default=False, editable=False, db_index=True)
 
     # for keeping a very basic history
-    created = models.DateTimeField(auto_now_add=True)
+    created = models.DateTimeField()
     created_by = models.ForeignKey(User, editable=False, related_name="test_instance_creator")
     modified = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(User, editable=False, related_name="test_instance_modifier")
@@ -1227,18 +1227,18 @@ class TestListInstance(models.Model):
             "testinstance_set__status",
             "testinstance_set__reference",
             "testinstance_set__tolerance",
-            "testinstance_set__unit_test_info",
             "testinstance_set__unit_test_info__test",
             "testinstance_set__created_by",
+            "testinstance_set__test_list_instance"
         )[:settings.NHIST]
 
         dates = tlis.values_list("work_completed", flat=True)
 
         instances = []
-        for ti in self.testinstance_set.all():
+        for ti in self.testinstance_set.values("unit_test_info").order_by("created"):
             test_history = []
             for tli in tlis:
-                match = [x for x in tli.testinstance_set.all() if x.unit_test_info == ti.unit_test_info]
+                match = [x for x in tli.testinstance_set.all() if x.unit_test_info_id == ti["unit_test_info"]]
                 test_history.append(match[0] if match else None)
 
             instances.append((ti,test_history))

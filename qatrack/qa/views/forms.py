@@ -88,9 +88,10 @@ class TestInstanceWidgetsMixin(object):
     #----------------------------------------------------------------------
     def disable_read_only_fields(self):
         """disable some fields for constant and composite tests"""
-        if self.unit_test_info.test.type in (models.CONSTANT, models.COMPOSITE, models.STRING_COMPOSITE,):
+        if self.unit_test_info.test.type in (models.CONSTANT, models.COMPOSITE, ):
             self.fields["value"].widget.attrs["readonly"] = "readonly"
-
+        elif self.unit_test_info.test.type in (models.STRING_COMPOSITE,):
+            self.fields["string_value"].widget.attrs["readonly"] = "readonly"
 
 #============================================================================
 class CreateTestInstanceForm(TestInstanceWidgetsMixin, forms.Form):

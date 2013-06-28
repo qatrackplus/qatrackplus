@@ -417,6 +417,7 @@ class PerformQA(CreateView):
                 reference=ti_form.unit_test_info.reference,
                 tolerance=ti_form.unit_test_info.tolerance,
                 status=self.get_test_status(form),
+                created=timezone.now(),
                 created_by=self.request.user,
                 modified_by=self.request.user,
                 in_progress=self.object.in_progress,
