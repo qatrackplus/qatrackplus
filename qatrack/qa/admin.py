@@ -158,14 +158,17 @@ class UnitTestInfoAdmin(admin.ModelAdmin):
             val = form["reference_value"].value()
             if val not in ("", None):
                 if not(test_info.reference and test_info.reference.value == float(val)):
-                    ref = models.Reference(
-                        value=val,
-                        type=ref_type,
-                        created_by=request.user,
-                        modified_by=request.user,
-                        name="%s %s" % (test_info.unit.name, test_info.test.name)[:255]
-                    )
-                    ref.save()
+                    try:
+                        ref = models.Reference.objects.filter(value=val,type=ref_type)[0]
+                    except IndexError:
+                        ref = models.Reference(
+                            value=val,
+                            type=ref_type,
+                            created_by=request.user,
+                            modified_by=request.user,
+                            name="%s %s" % (test_info.unit.name, test_info.test.name)[:255]
+                        )
+                        ref.save()
                     test_info.reference = ref
             else:
                 test_info.reference = None
