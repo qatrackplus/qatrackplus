@@ -196,32 +196,6 @@ var QAUtils = new function() {
     };
 
 
-    this.options_from_url_hash = function(hash){
-        var options = [];
-        if (hash.slice(0,1) === "#"){
-            hash = hash.slice(1);
-        }
-        var that = this;
-        $.each(hash.split(this.OPTION_SEP),function(i,elem){
-            var k_v = elem.split(that.OPTION_DELIM);
-            options.push([k_v[0],k_v[1]]);
-        });
-        return options;
-    };
-
-
-    this.unit_test_chart_url = function(unit,test){
-        var unit_option = 'unit'+this.OPTION_DELIM+unit.number;
-        var test_option = 'slug'+this.OPTION_DELIM+test.slug;
-        return this.CHARTS_URL+'#'+[unit_option,test_option].join(this.OPTION_SEP);
-    };
-    this.unit_test_chart_link = function(unit,test,text,title){
-        var url = this.unit_test_chart_url(unit,test);
-        if (title === undefined){
-            title = ["View Data for", unit.name, test.name, "data"].join(" ");
-        }
-        return '<a href="'+url+'" title="'+title+'">'+text+'</a>';
-    };
 
 
     //*********************************************************************

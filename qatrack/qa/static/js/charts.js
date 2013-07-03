@@ -517,7 +517,7 @@ function get_test_lists_from_tests(tests){
 function set_options_from_url(){
     var unit_ids,test_ids,freq_ids,test_list_ids;
 
-    var options = QAUtils.options_from_url_hash(document.location.hash);
+    var options = QAURLs.options_from_url_hash(document.location.hash);
 
     var units = get_filtered_option_values("units",options);
     var tests = get_filtered_option_values("tests",options);
