@@ -24,3 +24,5 @@ questions_*
 qatrack/static
 qatrack/uploads
 ldap.debug
+*.pyproj
+*.suo
