@@ -246,7 +246,6 @@ function TestInstance(test_info, row){
 
     this.set_value = function(value){
         //set value manually and update inputs accordingly
-
         var tt = self.test_info.test.type;
 
         self.value = value;
@@ -433,7 +432,10 @@ function TestListInstance(){
 
             if (data.success){
                 _.each(data.results,function(result, name){
-                    self.tests_by_slug[name].set_value(result.value);
+                    var ti = self.tests_by_slug[name];
+                    if (!ti.skipped){
+                        ti.set_value(result.value);
+                    }
                 });
             }
         }
@@ -463,6 +465,7 @@ function TestListInstance(){
             if (categories === "all" || _.contains(categories,ti.test_info.test.category.toString())){
                 ti.show();
             }else{
+                ti.set_value(null);
                 ti.hide();
             }
         });
