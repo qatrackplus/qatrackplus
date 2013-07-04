@@ -86,10 +86,7 @@ class ChartView(PermissionRequiredMixin, TemplateView):
             "categories": models.Category.objects.all(),
             "statuses": models.TestInstanceStatus.objects.all(),
             "units": Unit.objects.values("pk","name"),
-            "test_data": test_data,
-            "chart_data_url": reverse("chart_data"),
-            "control_chart_url": reverse("control_chart"),
-
+            "test_data": test_data
         }
         context.update(c)
         return context

@@ -340,7 +340,7 @@ function TestInstance(test_info, row){
         $(this).fileupload({
 
             dataType: 'json',
-            url: QAUtils.UPLOAD_URL,
+            url: QAURLs.UPLOAD_URL,
             dropZone:self.row.children(),
             singleFileUploads: true,
             paramName:"upload",
@@ -352,7 +352,6 @@ function TestInstance(test_info, row){
             },
             done: function (e, data) {
                 self.status.removeClass("btn-primary btn-danger btn-success");
-                console.log(data);
                 if (data.result.errors.length > 0){
                     self.status.addClass("btn-danger").text("Failed");
                     self.status.attr("title","");
@@ -439,7 +438,16 @@ function TestListInstance(){
             self.submit.attr("disabled", false);
         }
 
-        QAUtils.call_api(QAUtils.COMPOSITE_URL,"POST",data,on_success,on_error);
+        $.ajax({
+            type:"POST",
+            url:QAURLs.COMPOSITE_URL,
+            data:data,
+            contentType:"application/json",
+            dataType:"json",
+            success: on_success,
+            traditional:true,
+            error:on_error
+        });
     }
 
     this.has_failing = function(){

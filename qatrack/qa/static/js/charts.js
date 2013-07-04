@@ -234,7 +234,7 @@ function retrieve_data(callback,error){
 
     $.ajax({
         type:"get",
-        url:QACharts.data_url,
+        url:QAURLs.CHART_DATA_URL,
         data:data_filters,
         contentType:"application/json",
         dataType:"json",
@@ -491,7 +491,7 @@ function get_control_chart_url(){
         }
     });
 
-    return QACharts.control_chart_url+"?"+props.join("&");
+    return QACharts.CONTROL_CHART_URL+"?"+props.join("&");
 }
 
 

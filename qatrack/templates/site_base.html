@@ -18,10 +18,11 @@
 {% block script_base %}
     <script type="text/javascript">
         var QAURLs = {
-            api:"{% url api_v1_top_level 'v1'%}",
-            composite:"{% url composite %}",
-            upload:"{% url upload %}",
-            charts:"{% url chart_data %}",
+            API_URL:"{% url api_v1_top_level 'v1'%}",
+            COMPOSITE_URL:"{% url composite %}",
+            UPLOAD_URL:"{% url upload %}",
+            CHART_DATA_URL:"{% url chart_data%}",
+            CONTROL_CHART_URL:"{% url control_chart %}",
             OPTION_DELIM: "=",
             OPTION_SEP: "&",
 
