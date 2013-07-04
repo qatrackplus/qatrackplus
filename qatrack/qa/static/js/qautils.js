@@ -153,28 +153,6 @@ var QAUtils = new function() {
 
     };
 
-
-    /********************************************************************/
-    //AJAX calls
-
-    this.call_api = function(url,method,data,success_callback,error_callback){
-        return $.ajax({
-            type:method,
-            url:url,
-            data:data,
-            contentType:"application/json",
-            dataType:"json",
-            success: function(result,status,jqXHR){
-                success_callback(result,status, jqXHR,this.url);
-            },
-            traditional:true,
-            error: function(result,status,jqXHR){
-                error_callback(result,status, jqXHR,this.url);
-            }
-        });
-    };
-
-
     //*************************************************************
     //General
 
