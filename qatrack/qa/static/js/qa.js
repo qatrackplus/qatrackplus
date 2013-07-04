@@ -264,8 +264,12 @@ function TestInstance(test_info, row){
         }else if (tt=== QAUtils.STRING || tt === QAUtils.MULTIPLE_CHOICE || tt === QAUtils.STRING_COMPOSITE){
             self.inputs.val(value);
         }else if (tt === QAUtils.UPLOAD){
-            self.inputs.filter(":hidden").val(value["temp_file_name"]);
-            self.value = value.result;
+            if (_.isNull(value)){
+                self.inputs.filter(":hidden").val("");
+            }else{
+                self.inputs.filter(":hidden").val(value["temp_file_name"]);
+                self.value = value.result;
+            }
         }else if (tt === QAUtils.SIMPLE || tt === QAUtils.COMPOSITE){
             if (_.isNull(value)){
                 self.inputs.val("");

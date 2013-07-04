@@ -68,9 +68,9 @@ function init_test_collection_tables(units, frequencies, groups){
 $(document).ready(function(){
 
     $.when(
-        $.getJSON(QAUtils.API_URL+"unit/?format=json"),
-        $.getJSON(QAUtils.API_URL+"frequency/?format=json"),
-        $.getJSON(QAUtils.API_URL+"group/?format=json")
+        $.getJSON(QAURLs.API_URL+"unit/?format=json"),
+        $.getJSON(QAURLs.API_URL+"frequency/?format=json"),
+        $.getJSON(QAURLs.API_URL+"group/?format=json")
     ).then(init_test_collection_tables);
 
 });
