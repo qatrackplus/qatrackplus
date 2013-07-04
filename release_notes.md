@@ -10,7 +10,7 @@
 * qa/views.py refactored into qa/views/\*.py
 * page load time reduced by using more efficient unreviewed count query
 * charts page now allows plotting of data for tests which are no longer active
-
+* jQuery updated to 1.10.2
 ## v0.2.6 ##
 
 **Note: this release introduces some database schema changes.  BACK UP
