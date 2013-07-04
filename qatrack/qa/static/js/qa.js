@@ -333,6 +333,7 @@ function TestInstance(test_info, row){
         self.row.hide();
         self.comment.hide();
         self.procedure.hide();
+        self.set_value(null);
         self.set_skip(true);
         self.comment_box.val(self.NOT_PERFORMED);
     }
@@ -465,7 +466,6 @@ function TestListInstance(){
             if (categories === "all" || _.contains(categories,ti.test_info.test.category.toString())){
                 ti.show();
             }else{
-                ti.set_value(null);
                 ti.hide();
             }
         });
