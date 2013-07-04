@@ -157,6 +157,9 @@ This release has a number of small features and bug fixes included.
 
 * run pyflakes and fix errors
 * run pep8 and fix errors
+* grep for any print statements in py files
+* grep for any pdb statements in py files
+* grep for any console statements in js files
 * Run test suite one last time :)
 * Bump version number
 * Update README.md with latest version number
