@@ -179,7 +179,14 @@ class TestTolerance(TestCase):
         t = models.Tolerance(act_high=2, act_low=-2, tol_high=1, tol_low=-1, type=models.PERCENT)
         self.assertDictEqual(expected, t.tolerances_for_value(1))
 
-
+    #---------------------------------------------------------------
+    def test_percent_string_rep(self):
+        t = models.Tolerance(act_high=None, act_low=-2, tol_high=1, tol_low=None, type=models.PERCENT)
+        self.assertEqual(t.__unicode__(),"Percent(-2.00%, --, 1.00%, --)")
+    #---------------------------------------------------------------
+    def test_absolute(self):
+        t = models.Tolerance(act_high=None, act_low=-2, tol_high=1, tol_low=None, type=models.ABSOLUTE)
+        self.assertEqual(t.__unicode__(),"Absolute(-2.000, --, 1.000, --)")
 #====================================================================================
 class TestCategory(TestCase):
     pass

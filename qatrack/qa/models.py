@@ -283,11 +283,11 @@ class Tolerance(models.Model):
 
     #---------------------------------------------------------------------------
     def pass_choices(self):
-        return self.mc_pass_choices.split(",")
+        return self.mc_pass_choices.split(",") if self.mc_pass_choices else []
 
     #---------------------------------------------------------------------------
     def tol_choices(self):
-        return self.mc_tol_choices.split(",")
+        return self.mc_tol_choices.split(",") if self.mc_tol_choices else []
 
     #---------------------------------------------------------------------------
     def clean_choices(self):
@@ -325,14 +325,8 @@ class Tolerance(models.Model):
     #----------------------------------------------------------------------
     def clean_tols(self):
         if self.type in (ABSOLUTE, PERCENT):
-            errors = {}
-            check = (ACT_HIGH, ACT_LOW, TOL_HIGH, TOL_LOW,)
-            for c in check:
-                if getattr(self, c) is None:
-                    errors[c] = ["You can not leave this field blank for this test type"]
-
-            if errors:
-                raise ValidationError(errors)
+            if all([getattr(self,c) is None for c in (ACT_HIGH, ACT_LOW, TOL_HIGH, TOL_LOW,)]):
+                raise ValidationError({ACT_LOW:["You must set at least one tolerance or action level for this tolerance type"]})
 
     #----------------------------------------------------------------------
     def clean_fields(self, exclude=None):
@@ -352,22 +346,26 @@ class Tolerance(models.Model):
             return tols
         elif self.type == ABSOLUTE:
             for attr in attrs:
-                tols[attr] = value + getattr(self, attr)
+                tv = getattr(self, attr)
+                tols[attr] = value + tv if tv is not None else None
         elif self.type == PERCENT:
             for attr in attrs:
-                tols[attr] = value * (1. + getattr(self, attr) / 100.)
+                tv = getattr(self, attr)
+                tols[attr] = value * (1. + tv / 100.) if tv is not None else None
         return tols
 
     #---------------------------------------------------------------------------
     def __unicode__(self):
         """more helpful interactive display name"""
-        vals = (self.name, self.act_low, self.tol_low, self.tol_high, self.act_high)
+        vals = (self.act_low, self.tol_low, self.tol_high, self.act_high)
         if self.type == ABSOLUTE:
-            return "%s(%s, %s, %s, %s)" % vals
+            vals = ["%.3f" % v if v else '--' for v in vals]
+            return "Absolute(%s, %s, %s, %s)" % tuple(vals)
         elif self.type == PERCENT:
-            return "%s(%.1f%%, %.1f%%, %.1f%%, %.1f%%)" % vals
+            vals = ["%.2f%%" % v if v else '--' for v in vals]
+            return "Percent(%s, %s, %s, %s)" % tuple(vals)
         elif self.type == MULTIPLE_CHOICE:
-            return "%s(Multiple Choices)" % self.name
+            return "M.C.(%d pass choices, %d tol choices)" % (len(self.pass_choices()),len(self.tol_choices()))
 
 
 #============================================================================
