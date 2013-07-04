@@ -169,7 +169,7 @@ var QAUtils = new function() {
     this.set_checked_state = function(checkbox_selectors,state){
         var i;
         for (i=0; i < checkbox_selectors.length; i++){
-            $(checkbox_selectors[i]).attr("checked",state);
+            $(checkbox_selectors[i]).prop("checked",state);
         }
     };
 
