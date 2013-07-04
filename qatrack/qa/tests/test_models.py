@@ -130,11 +130,6 @@ class TestTolerance(TestCase):
         self.assertListEqual(t.tol_choices(), ["b"])
         self.assertListEqual(t.pass_choices(), ["a"])
 
-    #----------------------------------------------------------------------
-    def test_mc_repr(self):
-
-        t = models.Tolerance(name="foo", type=models.MULTIPLE_CHOICE)
-        self.assertIsInstance(t.__unicode__(), basestring)
 
     #----------------------------------------------------------------------
     def test_without_act(self):
@@ -182,11 +177,15 @@ class TestTolerance(TestCase):
     #---------------------------------------------------------------
     def test_percent_string_rep(self):
         t = models.Tolerance(act_high=None, act_low=-2, tol_high=1, tol_low=None, type=models.PERCENT)
-        self.assertEqual(t.__unicode__(),"Percent(-2.00%, --, 1.00%, --)")
+        self.assertEqual(t.name,"Percent(-2.00%, --, 1.00%, --)")
     #---------------------------------------------------------------
-    def test_absolute(self):
+    def test_absolute_string_rep(self):
         t = models.Tolerance(act_high=None, act_low=-2, tol_high=1, tol_low=None, type=models.ABSOLUTE)
-        self.assertEqual(t.__unicode__(),"Absolute(-2.000, --, 1.000, --)")
+        self.assertEqual(t.name,"Absolute(-2.000, --, 1.000, --)")
+    #----------------------------------------------------------------------
+    def test_mc_string_rep(self):
+        t = models.Tolerance(mc_pass_choices="a,b,c",mc_tol_choices="d,e", type=models.MULTIPLE_CHOICE)
+        self.assertEqual(t.name, "M.C.(3 pass choices, 2 tol choices)")
 #====================================================================================
 class TestCategory(TestCase):
     pass
@@ -1226,6 +1225,34 @@ class TestTestInstance(TestCase):
         for result, val in tests:
             ti.value = val
             ti.calculate_pass_fail()
+            self.assertEqual(result, ti.pass_fail)
+
+    #----------------------------------------------------------------------
+    def test_absolute_no_action(self):
+        test = models.Test(type=models.SIMPLE)
+        uti = models.UnitTestInfo(test=test)
+        ti = models.TestInstance(unit_test_info=uti)
+        ref = models.Reference(type=models.NUMERICAL, value=100.)
+        ti.reference = ref
+        tol = models.Tolerance(
+            type=models.ABSOLUTE,
+            tol_low=-2,
+            tol_high=2,
+        )
+        ti.tolerance = tol
+        tests = (
+            (models.TOLERANCE, 97),
+            (models.TOLERANCE, 102.1),
+            (models.OK, 100),
+            (models.OK, 102),
+            (models.OK, 98),
+        )
+
+        for result, val in tests:
+
+            ti.value = val
+            ti.calculate_pass_fail()
+            print result, val, ti.pass_fail
             self.assertEqual(result, ti.pass_fail)
 
     #----------------------------------------------------------------------

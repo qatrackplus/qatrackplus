@@ -37,6 +37,9 @@ def almost_equal(a, b, significant=7):
     """determine if two numbers are nearly equal to significant figures
     copied from numpy.testing.assert_approx_equal
     """
+    if a is None or b is None:
+        return
+
     a, b = map(float, (a, b))
     if b == a:
         return

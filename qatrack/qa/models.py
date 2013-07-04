@@ -251,7 +251,6 @@ class Tolerance(models.Model):
     Model/methods for checking whether a value lies within tolerance
     and action levels
     """
-    name = models.CharField(max_length=50, unique=True, help_text=_("Enter a short name for this tolerance type"))
     type = models.CharField(max_length=20, help_text=_("Select whether this will be an absolute or relative tolerance criteria"), choices=TOL_TYPE_CHOICES)
     act_low = models.FloatField(verbose_name=_("Action Low"), help_text=_("Value of lower action level"), null=True, blank=True)
     tol_low = models.FloatField(verbose_name=_("Tolerance Low"), help_text=_("Value of lower tolerance level"), null=True, blank=True)
@@ -354,6 +353,10 @@ class Tolerance(models.Model):
                 tols[attr] = value * (1. + tv / 100.) if tv is not None else None
         return tols
 
+    #---------------------------------------------------------------
+    @property
+    def name(self):
+        return self.__unicode__()
     #---------------------------------------------------------------------------
     def __unicode__(self):
         """more helpful interactive display name"""
@@ -1027,9 +1030,29 @@ class TestInstance(models.Model):
         right_at_tolerance = utils.almost_equal(self.tolerance.tol_low, diff) or utils.almost_equal(self.tolerance.tol_high, diff)
         right_at_action = utils.almost_equal(self.tolerance.act_low, diff) or utils.almost_equal(self.tolerance.act_high, diff)
 
-        if right_at_tolerance or (self.tolerance.tol_low <= diff <= self.tolerance.tol_high):
+        t = self.tolerance
+        al, tl, th, ah = t.act_low, t.tol_low, t.tol_high, t.act_high
+
+        within_tol = (
+                (tl is None and th is None) or
+                (th is None and diff >= tl) or
+                (tl is None and diff <= th) or
+                (tl <= diff <= th) or
+                right_at_tolerance
+        )
+
+        within_act = (
+                (al is None and ah is None) or
+                (ah is None and diff >= al) or
+                (al is None and diff <= ah) or
+                (al <= diff < ah) or
+                right_at_action
+        )
+
+        print "**",within_tol, within_act, tl <= diff <= th, diff
+        if within_tol and within_act:
             self.pass_fail = OK
-        elif right_at_action or (self.tolerance.act_low <= diff <= self.tolerance.tol_low or self.tolerance.tol_high <= diff <= self.tolerance.act_high):
+        elif within_act:
             self.pass_fail = TOLERANCE
         else:
             self.pass_fail = ACTION
