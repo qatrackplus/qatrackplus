@@ -13,9 +13,9 @@ class Migration(SchemaMigration):
 
 
     def backwards(self, orm):
-
+        db.add_column('qa_tolerance', 'name',models.CharField(max_length=255,default="<Tolerance(Auto)>"),keep_default=False)
         # User chose to not deal with backwards NULL issues for 'Tolerance.name'
-        raise RuntimeError("Cannot reverse this migration. 'Tolerance.name' and its values cannot be restored.")
+        #raise RuntimeError("Cannot reverse this migration. 'Tolerance.name' and its values cannot be restored.")
 
     models = {
         'auth.group': {
