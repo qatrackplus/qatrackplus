@@ -375,7 +375,6 @@ class UnitTestCollectionAdmin(admin.ModelAdmin):
 
     #----------------------------------------------------------------------
     def queryset(self, *args, **kwargs):
-        """"""
         qs = super(UnitTestCollectionAdmin, self).queryset(*args, **kwargs)
         return qs.select_related(
             "unit__name",
@@ -434,7 +433,25 @@ class TestListInstanceAdmin(admin.ModelAdmin):
     list_display = ["__unicode__", utc_unit_name, "test_list", "work_completed", "created_by"]
 
 
-admin.site.register([models.Tolerance], BasicSaveUserAdmin)
+#============================================================================
+class ToleranceForm(forms.ModelForm):
+
+    model = models.Tolerance
+
+    #----------------------------------------------------------------------
+    def validate_unique(self):
+        super(ToleranceForm,self).validate_unique()
+        if not self.instance.pk:
+            params = forms.model_to_dict(self.instance)
+            params.pop("id")
+            if models.Tolerance.objects.filter(**params).count()>0:
+                self._update_errors({forms.models.NON_FIELD_ERRORS:["Duplicate Tolerance. A Tolerance with these values already exists"]})
+
+#====================================================================================
+class ToleranceAdmin(BasicSaveUserAdmin):
+    form = ToleranceForm
+
+admin.site.register([models.Tolerance], ToleranceAdmin)
 admin.site.register([models.Category], CategoryAdmin)
 admin.site.register([models.TestList], TestListAdmin)
 admin.site.register([models.Test], TestAdmin)
