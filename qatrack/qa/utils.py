@@ -38,11 +38,12 @@ def almost_equal(a, b, significant=7):
     copied from numpy.testing.assert_approx_equal
     """
     if a is None or b is None:
-        return
+        return False
 
     a, b = map(float, (a, b))
     if b == a:
-        return
+        return True
+
     # Normalized the numbers to be in range (-10.0,10.0)
     # scale = float(pow(10,math.floor(math.log10(0.5*(abs(b)+abs(a))))))
     try:

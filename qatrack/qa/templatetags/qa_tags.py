@@ -40,9 +40,9 @@ def reference_tolerance_span(test, ref, tol):
         return mark_safe('<span><abbr title="Passing Values: %s;  Tolerance Values: %s; All other choices are failing"><em>Mult. Choice</em></abbr></span>' % (", ".join(tol.pass_choices()), ', '.join(tol.tol_choices())))
 
     if tol.type == models.ABSOLUTE:
-        return mark_safe('<span> <abbr title="(ACT L, TOL L, TOL H, ACT H) = (%s, %s, %s, %s)">%s</abbr></span>' % (tol.act_low, tol.tol_low, tol.tol_high, tol.act_high, ref.value_display()))
+        return mark_safe('<span> <abbr title="(ACT L, TOL L, TOL H, ACT H) = %s ">%s</abbr></span>' % (str(tol).replace("Absolute",""), ref.value_display()))
     elif tol.type == models.PERCENT:
-        return mark_safe('<span> <abbr title="(ACT L, TOL L, TOL H, ACT H) = (%.1f%%, %.1f%%, %.1f%%, %.1f%%)">%s</abbr></span>' % (tol.act_low, tol.tol_low, tol.tol_high, tol.act_high, ref.value_display()))
+        return mark_safe('<span> <abbr title="(ACT L, TOL L, TOL H, ACT H) = %s ">%s</abbr></span>' % (str(tol).replace("Percent",""), ref.value_display()))
 
 
 #----------------------------------------------------------------------

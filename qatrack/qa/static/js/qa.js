@@ -125,25 +125,35 @@ function TestInfo(data){
         }
 
         var diff = self.calculate_diff(value);
-        var status;
         var message = self.diff_display(diff);
 
-        var right_at_tolerance = QAUtils.almost_equal(self.tolerance.tol_low,diff) || QAUtils.almost_equal(self.tolerance.tol_high,diff);
-        var right_at_action = QAUtils.almost_equal(self.tolerance.act_low,diff) || QAUtils.almost_equal(self.tolerance.act_high,diff);
+        var al=self.tolerance.act_low,
+            tl=self.tolerance.tol_low,
+            th=self.tolerance.tol_high,
+            ah=self.tolerance.act_high;
 
-        var within_tol = (self.tolerance.tol_low <= diff) && (diff <= self.tolerance.tol_high);
-        var tol_low = (self.tolerance.act_low <= diff) && (diff <= self.tolerance.tol_low);
-        var tol_high = (self.tolerance.tol_high <= diff) && (diff <= self.tolerance.act_high);
+        al = !_.isNull(al) ? al : -1.E99;
+        tl = !_.isNull(tl) ? tl : -1.E99;
+        th = !_.isNull(th) ? th : 1.E99;
+        ah = !_.isNull(ah) ? ah : 1.E99;
 
-        if ( right_at_tolerance || within_tol){
-            status = QAUtils.WITHIN_TOL;
-            message = QAUtils.WITHIN_TOL_DISP + message;
-        }else if (right_at_action || tol_low || tol_high){
+        var on_action_border = QAUtils.almost_equal(al, diff) || QAUtils.almost_equal(ah, diff);
+        var on_tolerance_border = QAUtils.almost_equal(tl, diff) || QAUtils.almost_equal(th, diff);
+
+        var inside_action = ((al <= diff) && (diff <= ah )) || on_action_border;
+        var inside_tolerance = (tl < diff) && (diff < th ) || on_tolerance_border;
+
+
+        var status;
+        if (!inside_action){
+            message = QAUtils.ACTION_DISP + message;
+            status = QAUtils.ACTION;
+        }else if (!inside_tolerance){
             status = QAUtils.TOLERANCE;
             message = QAUtils.TOLERANCE_DISP + message;
         }else{
-            message = QAUtils.ACTION_DISP + message;
-            status = QAUtils.ACTION;
+            status = QAUtils.WITHIN_TOL;
+            message = QAUtils.WITHIN_TOL_DISP + message;
         }
 
         return new Status(status,diff,message);

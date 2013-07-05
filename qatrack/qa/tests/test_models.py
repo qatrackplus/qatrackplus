@@ -1249,10 +1249,8 @@ class TestTestInstance(TestCase):
         )
 
         for result, val in tests:
-
             ti.value = val
             ti.calculate_pass_fail()
-            print result, val, ti.pass_fail
             self.assertEqual(result, ti.pass_fail)
 
     #----------------------------------------------------------------------

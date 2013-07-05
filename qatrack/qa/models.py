@@ -1027,35 +1027,25 @@ class TestInstance(models.Model):
     #---------------------------------------------------------------------------
     def float_pass_fail(self):
         diff = self.calculate_diff()
-        right_at_tolerance = utils.almost_equal(self.tolerance.tol_low, diff) or utils.almost_equal(self.tolerance.tol_high, diff)
-        right_at_action = utils.almost_equal(self.tolerance.act_low, diff) or utils.almost_equal(self.tolerance.act_high, diff)
 
         t = self.tolerance
         al, tl, th, ah = t.act_low, t.tol_low, t.tol_high, t.act_high
+        al = al if al is not None else -1E99
+        tl = tl if tl is not None else -1E99
+        th = th if th is not None else 1E99
+        ah = ah if ah is not None else 1E99
 
-        within_tol = (
-                (tl is None and th is None) or
-                (th is None and diff >= tl) or
-                (tl is None and diff <= th) or
-                (tl <= diff <= th) or
-                right_at_tolerance
-        )
+        on_action_border = utils.almost_equal(diff, al) or utils.almost_equal(diff, ah)
+        on_tolerance_border = utils.almost_equal(diff, tl) or utils.almost_equal(diff, th)
+        inside_action = (al <= diff <= ah) or on_action_border
+        inside_tolerance = (tl <= diff <= th) or on_tolerance_border
 
-        within_act = (
-                (al is None and ah is None) or
-                (ah is None and diff >= al) or
-                (al is None and diff <= ah) or
-                (al <= diff < ah) or
-                right_at_action
-        )
-
-        print "**",within_tol, within_act, tl <= diff <= th, diff
-        if within_tol and within_act:
-            self.pass_fail = OK
-        elif within_act:
+        if not inside_action:
+            self.pass_fail = ACTION
+        elif not inside_tolerance:
             self.pass_fail = TOLERANCE
         else:
-            self.pass_fail = ACTION
+            self.pass_fail = OK
 
     #----------------------------------------------------------------------
     def calculate_diff(self):

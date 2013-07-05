@@ -263,6 +263,8 @@ function convert_data_to_highchart_series(data){
     var show_tol = $("#show-tolerances").is(":checked");
     var show_ref = $("#show-references").is(":checked");
 
+    var data_max=-1E10, data_min=1E10;
+    var notNull = function(x){return !_.isNull(x);};
     $.each(data,function(idx,series){
         var series_data = [];
         var ref_data = [];
@@ -270,29 +272,44 @@ function convert_data_to_highchart_series(data){
         var series_color = next_color();
 
         var name =series.unit.name+" " +series.test.name;
+        var al, tl, th, ah;
 
         $.each(series.dates,function(idx,date){
-                date = QAUtils.parse_iso8601_date(date).getTime();
-                var display = '<span style="color:'+series_color+'"><strong>'+name+'</strong></span>: <b>'+ QAUtils.format_float(series.values[idx]) + '</b>';
+            date = QAUtils.parse_iso8601_date(date).getTime();
+            var display = '<span style="color:'+series_color+'"><strong>'+name+'</strong></span>: <b>'+ QAUtils.format_float(series.values[idx]) + '</b>';
 
-                if (!_.isNull(series.references[idx])){
-                    display += "<br/><em>Ref:" + QAUtils.format_float(series.references[idx])+"</em>";
-                }
+            if (!_.isNull(series.references[idx])){
+                display += "<br/><em>Ref:" + QAUtils.format_float(series.references[idx])+"</em><br/>";
+            }
 
-                if (!_.isNull(series.act_low[idx])){
-                    if (_.isNull(series.references[idx])){
-                        display += "<br/>";
-                    }
-                    display += " <em>Act Low: " + QAUtils.format_float(series.act_low[idx]);
-                    display +=         " Tol Low: " + QAUtils.format_float(series.tol_low[idx]);
-                    display +=         " Tol High: " + QAUtils.format_float(series.tol_high[idx]);
-                    display +=         " Act High: " + QAUtils.format_float(series.act_high[idx])+"</em>";
-                }
-                series_data.push({name:display,x:date,y:series.values[idx]});
-                ref_data.push({name:"",x:date,y:series.references[idx]});
-                ok.push({name:"",x:date,low:series.tol_low[idx],high:series.tol_high[idx]});
-                tolerance_low.push({name:"",x:date,low:series.tol_low[idx],high:series.act_low[idx]});
-                tolerance_high.push({name:"",x:date,low:series.tol_high[idx],high:series.act_high[idx]});
+            al = series.act_low[idx];
+            tl = series.tol_low[idx];
+            th = series.tol_high[idx];
+            ah = series.act_high[idx];
+
+            display += " <em>Act Low: " + (!_.isNull(al) ? QAUtils.format_float(al) : "--");
+            display += " Tol Low: " + (!_.isNull(tl) ? QAUtils.format_float(tl) : "--");
+            display += " Tol High: " + (!_.isNull(th) ? QAUtils.format_float(th) : "--");
+            display += " Act High: " + (!_.isNull(ah) ? QAUtils.format_float(ah) : "--");
+
+            data_max = _.max(_.filter([data_max, ah, th, series.references[idx], series.values[idx]],notNull));
+            data_min = _.min(_.filter([data_min, al, tl, series.references[idx], series.values[idx]],notNull));
+
+            al = !_.isNull(al) ? al : -1.e10;
+            tl = !_.isNull(tl) ? tl : -1.e10;
+            th = !_.isNull(th) ? th : 1.e10;
+            ah = !_.isNull(ah) ? ah : 1.e10;
+
+            /*display += " <em>Act Low: " + QAUtils.format_float(al);
+            display +=         " Tol Low: " + QAUtils.format_float(tl);
+            display +=         " Tol High: " + QAUtils.format_float(th);
+            display +=         " Act High: " + QAUtils.format_float(ah)+"</em>";
+*/
+            series_data.push({name:display,x:date,y:series.values[idx]});
+            ref_data.push({name:"",x:date,y:series.references[idx]});
+            ok.push({name:"",x:date,low:tl,high:th});
+            tolerance_low.push({name:"",x:date,low:tl,high:al});
+            tolerance_high.push({name:"",x:date,low:th,high:ah});
         });
 
         hc_series.push({
@@ -312,7 +329,7 @@ function convert_data_to_highchart_series(data){
         hc_series.push({
             name:name + " References",
             data:ref_data,
-            lineWidth : show_ref ? 2 : 0,
+            lineWidth : 2,
             dashStyle:"ShortDash",
             color:series_color,
             fillOpacity: 1,
@@ -320,7 +337,8 @@ function convert_data_to_highchart_series(data){
                 enabled : false
             },
             showInLegend:true,
-            enableMouseTracking:false
+            enableMouseTracking:false,
+            visible: show_ref
         });
 
         var tol_color = 'rgba(255, 255, 17, 0.2)';
@@ -332,32 +350,49 @@ function convert_data_to_highchart_series(data){
         }
 
         hc_series.push({
-            data:tolerance_high,
+            data:_.map(tolerance_high,function(th){
+                th.low= _.min([th.low,data_max]);
+                th.high=_.min([th.high,data_max]);
+                return th;
+            }),
             type:'arearange',
             lineWidth:0,
             fillColor: tol_color,
             name:name+" Tol High",
             showInLegend:false,
-            enableMouseTracking:false
+            enableMouseTracking:false,
+            visible:show_tol
         });
 
         hc_series.push({
-            data:ok,
+            data:_.map(ok,function(v){
+                v.low= _.max([v.low,data_min]);
+                v.high=_.min([v.high,data_max]);
+                return v;
+            }),
             type:'arearange',
             lineWidth:0,
             fillColor: act_color,
             name:name + " OK",
             showInLegend:false,
-            enableMouseTracking:false
+            enableMouseTracking:false,
+
+            visible:show_tol
         });
         hc_series.push({
-            data:tolerance_low,
+            data:_.map(tolerance_low,function(tl){
+                tl.low =_.max([tl.low,data_min]);
+                tl.high=_.max([tl.high,data_min]);
+                return tl;
+            }),
             type:'arearange',
             fillColor: tol_color,
             lineWidth:0,
             name:name+ " Tol Low",
             showInLegend:false,
-            enableMouseTracking:false
+            enableMouseTracking:false,
+
+            visible:show_tol
         });
 
 
