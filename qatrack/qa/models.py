@@ -280,6 +280,9 @@ class Tolerance(models.Model):
     modified_date = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(User, editable=False, related_name="tolerance_modifiers")
 
+    class Meta:
+
+        ordering = ["type","act_low","tol_low","tol_high","act_high"]
     #---------------------------------------------------------------------------
     def pass_choices(self):
         return self.mc_pass_choices.split(",") if self.mc_pass_choices else []
