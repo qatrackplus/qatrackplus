@@ -104,4 +104,4 @@ class TestRefTolSpan(TestCase):
             act_low=-2, tol_low=-1, tol_high=1, act_high=2,
         )
         result = qa_tags.reference_tolerance_span(t, r, tol)
-        self.assertIn("(-2.0%", result)
+        self.assertIn("(-2.00%", result)
