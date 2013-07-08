@@ -35,6 +35,18 @@
 
                         <dt>Performed By :</dt>
                         <dd>{{tli.created_by}}</dd>
+                        <dt>Actions:</dt>
+                        <dd>
+
+                            {% if perms.qa.delete_testlistinstance %}
+                            <a class="btn btn-danger btn-mini" title="This will redirect you to the admin site where you can permanently delete this qa session" href="{% url admin:qa_testlistinstance_delete test_list_instance.pk%}">Delete</a>
+                            {% endif %}
+                            {% if tli.in_progress %}
+                                <a class="btn btn-primary btn-mini" title="Continue this list" href="{%url continue_tli pk=tli.pk%}?next={{request.get_full_path}}" >Continue</a>
+                            {% elif perms.qa.change_testlistinstance %}
+                                <a class="btn btn-primary btn-mini" title="Edit this list" href="{%url edit_tli pk=tli.pk%}?next={{request.get_full_path}}" >Edit</a>
+                            {% endif %}
+                        </dd>
                    </dl>
                 </div>
                 <div class="span4">
@@ -117,7 +129,7 @@
 
                             {% with test=ti.unit_test_info.test %}
                             <tr>
-                                <td><strong>{{ti.unit_test_info.test.name}}</strong></td>
+                                <td><strong>{{test.name}}</strong></td>
                                 <td class="review-value">
                                     {% if ti.string_value %}
                                     <span class="" title="{{ti.value_display}}">{{ti.value_display|safe}}</span>
@@ -126,7 +138,7 @@
                                     {% endif %}
                                 </td>
                                 <td class="review-ref">
-                                    {% reference_tolerance_span ti.unit_test_info.test ti.reference ti.tolerance%}
+                                    {% reference_tolerance_span test ti.reference ti.tolerance%}
                                 </td>
                                 <td>
                                     {% if ti.comment %}

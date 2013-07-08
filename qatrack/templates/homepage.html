@@ -21,7 +21,7 @@
         </li>
     </ul>
 
-    {% if perms.qa.can_review or perms.qa.can_view_history %}
+    {% if perms.qa.can_review or perms.qa.can_view_completed %}
 
     <h3>Review QA</h3>
     {% if perms.qa.can_review %}
@@ -35,7 +35,7 @@
         </li>
         {% endif %}
 
-        {% if perms.qa.can_view_history %}
+        {% if perms.qa.can_view_completed %}
         <li>
             <a title="View trends and control charts" href="{% url charts %}">View Trends &amp; Control Charts</a>
         </li>

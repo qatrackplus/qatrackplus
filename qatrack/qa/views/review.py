@@ -72,7 +72,7 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
 #====================================================================================
 class UTCReview(PermissionRequiredMixin, UTCList):
-    permission_required = "qa.change_testinstance"
+    permission_required = "qa.can_view_completed"
     action = "review"
     action_display = "Review"
 
@@ -147,7 +147,7 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
     """Overall status of the QA Program"""
     template_name = "qa/overview_by_due_date.html"
 
-    permission_required = "qa.can_view_history"
+    permission_required = "qa.can_review"
 
     #----------------------------------------------------------------------
     def get_queryset(self):
@@ -225,7 +225,7 @@ class Overview(PermissionRequiredMixin, TemplateView):
     """Overall status of the QA Program"""
     template_name = "qa/overview.html"
 
-    permission_required = "qa.can_view_history"
+    permission_required = "qa.can_review"
 
     #----------------------------------------------------------------------
     def get_queryset(self):

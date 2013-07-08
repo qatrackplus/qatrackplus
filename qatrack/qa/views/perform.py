@@ -256,9 +256,10 @@ class ChooseUnit(ListView):
 
 
 #============================================================================
-class PerformQA(CreateView):
+class PerformQA(PermissionRequiredMixin, CreateView):
     """view for users to complete a qa test list"""
 
+    permission_required = "qa.add_testlistinstance"
     form_class = forms.CreateTestListInstanceForm
     model = models.TestListInstance
 

@@ -476,3 +476,54 @@ h3.overview-unit-title{
 #pagination-placeholder {
     min-height:50px;
 }
+
+
+.muted {
+  color: #999999;
+}
+
+a.muted:hover,
+a.muted:focus {
+  color: #808080;
+}
+
+.text-warning {
+  color: #c09853;
+}
+
+a.text-warning:hover,
+a.text-warning:focus {
+  color: #a47e3c;
+}
+
+.text-error {
+  color: #b94a48;
+}
+
+a.text-error:hover,
+a.text-error:focus {
+  color: #953b39;
+}
+
+.text-info {
+  color: #3a87ad;
+}
+
+a.text-info:hover,
+a.text-info:focus {
+  color: #2d6987;
+}
+
+.text-success {
+  color: #468847;
+}
+
+a.text-success:hover,
+a.text-success:focus {
+  color: #356635;
+}
+
+.permissions-dl dt{
+
+    width:300px;
+}

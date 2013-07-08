@@ -82,6 +82,30 @@ NEWLIST = NOT_DONE
 
 EPSILON = 1E-10
 
+PERMISSIONS = (
+    (
+        "Performing",
+        (
+            ("qa.add_testlistinstance", "Can add test list instance", "Allow user to perform test lists and continue in-progress lists"),
+            ("qa.can_choose_frequency", "Choose QA by frequency", "Allows user to pre-emptively filter test lists based on frequency."),
+            ("qa.can_view_ref_tol", "Can view refs and tols", "Makes reference and tolerance values visible when performing a test list."),
+            ("qa.can_view_history", "Can view test history", "Makes test history visible when performing a test list."),
+            ("qa.can_skip_without_comment", "Can skip without comment", "Allow a user to skip tests with adding a comment"),
+            ("qa.can_override_date", "Can override date", "Allow a user to override the work_completed data"),
+            ("qa.can_perform_subset", "Can perform subset of tests", "Allow a user to filter tests to perform  based on a tests category"),
+            ("qa.edit_testinstance", "Can edit prior test results", "Allow a user to edit already completed test results"),
+        ),
+    ),
+    (
+        "Reviewing",
+        (
+            ("can_view_completed", "Can view previously completed instances", "Allow a user to view previous test list results"),
+            ("can_review", "Can review tests", "Allows a user to perform review & approval functions"),
+            ("can_view_charts", "Can chart test history", "Gives user the ability to view and create charts of historical test results"),
+        ),
+    ),
+)
+
 
 #============================================================================
 class FrequencyManager(models.Manager):
@@ -986,9 +1010,10 @@ class TestInstance(models.Model):
         #ordering = ("work_completed",)
         get_latest_by = "work_completed"
         permissions = (
-            ("can_view_history", "Can view test history"),
-            ("can_review", "Can review tests"),
-            ("can_skip_without_comment", "Can skip without comment"),
+            ("can_view_history", "Can see test history when performing QA"),
+            ("can_view_charts", "Can chart test history"),
+            ("can_review", "Can review & approve tests"),
+            ("can_skip_without_comment", "Can skip tests without comment"),
         )
 
     #----------------------------------------------------------------------
@@ -1174,7 +1199,7 @@ class TestListInstance(models.Model):
         permissions = (
             ("can_override_date", "Can override date"),
             ("can_perform_subset", "Can perform subset of tests"),
-            ("can_view_completed", "Can look at previously completed results"),
+            ("can_view_completed", "Can view previously completed instances"),
         )
 
     #----------------------------------------------------------------------
@@ -1246,14 +1271,22 @@ class TestListInstance(models.Model):
         dates = tlis.values_list("work_completed", flat=True)
 
         instances = []
-        for ti in self.testinstance_set.values("unit_test_info").order_by("created"):
+        #note sort  here rather than using self.testinstance_set.order_by(("created")
+        #because that causes Django to requery db and negates the advantage of using
+        #prefetch_related above
+
+        test_instances = sorted(self.testinstance_set.all(),key=lambda x: x.created)
+        for ti in test_instances:
+
             test_history = []
             for tli in tlis:
-                match = [x for x in tli.testinstance_set.all() if x.unit_test_info_id == ti["unit_test_info"]]
+                q = tli.testinstance_set.all()
+                match = [x for x in q if x.unit_test_info_id == ti.unit_test_info_id]
                 test_history.append(match[0] if match else None)
 
             instances.append((ti,test_history))
 
+        print instances
         return instances, dates
 
     #---------------------------------------------------------------------------
