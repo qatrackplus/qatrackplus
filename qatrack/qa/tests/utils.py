@@ -1,7 +1,7 @@
 from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User, Group, Permission
 from qatrack.qa import models
 from qatrack.units.models import Unit, UnitType, Modality, PHOTON
 
@@ -16,6 +16,7 @@ def create_user(is_staff=True, is_superuser=True, uname="user", pwd="password"):
         )
         u.set_password(pwd)
         u.save()
+        u.user_permissions.add(Permission.objects.get(codename="add_testlistinstance"))
     return u
 
 
@@ -204,6 +205,7 @@ def create_tolerance(tol_type=models.ABSOLUTE, act_low=-2, tol_low=-1, tol_high=
 def create_group(name="group"):
     g = Group(name=name)
     g.save()
+    g.permissions.add(Permission.objects.get(codename="add_testlistinstance"))
     return g
 
 
