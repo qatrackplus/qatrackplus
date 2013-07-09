@@ -208,6 +208,8 @@ class BaseTestListInstanceForm(forms.ModelForm):
 
     work_completed = forms.DateTimeField(required=False)
 
+    modified = forms.DateTimeField(required=False)
+
     #----------------------------------------------------------------------
     class Meta:
         model = models.TestListInstance
@@ -215,6 +217,7 @@ class BaseTestListInstanceForm(forms.ModelForm):
     #----------------------------------------------------------------------
     def __init__(self, *args, **kwargs):
         super(BaseTestListInstanceForm, self).__init__(*args, **kwargs)
+
         for field in ("work_completed", "work_started"):
             self.fields[field].widget = forms.widgets.DateTimeInput()
             self.fields[field].widget.format = settings.INPUT_DATE_FORMATS[0]

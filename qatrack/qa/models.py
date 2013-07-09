@@ -1152,11 +1152,10 @@ class TestListInstanceManager(models.Manager):
 
     #----------------------------------------------------------------------
     def unreviewed(self):
-        return self.complete().filter(testinstance__status__requires_review=True).distinct()
+        return self.complete().filter(all_reviewed=False)
     #----------------------------------------------------------------------
     def unreviewed_count(self):
-        tlis = TestInstance.objects.filter(status__requires_review=True,in_progress=False)
-        return len(set(tlis.values_list("test_list_instance",flat=True)))
+        return self.unreviewed().count()
     #----------------------------------------------------------------------
     def in_progress(self):
         return self.get_query_set().filter(in_progress=True)
@@ -1185,10 +1184,15 @@ class TestListInstance(models.Model):
 
     in_progress = models.BooleanField(help_text=_("Mark this session as still in progress so you can complete later (will not be submitted for review)"), default=False, db_index=True)
 
+    reviewed = models.DateTimeField(null=True, blank=True)
+    reviewed_by = models.ForeignKey(User, editable=False, null=True, blank=True, related_name="test_list_instance_reviewer")
+
+    all_reviewed = models.BooleanField( default=False)
+
     # for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, editable=False, related_name="test_list_instance_creator")
-    modified = models.DateTimeField(auto_now=True)
+    modified = models.DateTimeField()
     modified_by = models.ForeignKey(User, editable=False, related_name="test_list_instance_modifier")
 
     objects = TestListInstanceManager()

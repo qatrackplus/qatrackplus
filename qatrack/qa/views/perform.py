@@ -385,20 +385,29 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             context["form"] = form
             return self.render_to_response(context)
 
+        status = self.get_test_status(form)
+
         self.object = form.save(commit=False)
         self.object.test_list = self.test_list
         self.object.unit_test_collection = self.unit_test_col
         self.object.created_by = self.request.user
         self.object.modified_by = self.request.user
+        self.object.modified = timezone.make_aware(timezone.datetime.now(), timezone=timezone.get_current_timezone())
+
+        self.object.reviewed= None if status.requires_review else self.object.modified 
+        self.object.reviewed_by = None if status.requires_review else self.request.user
+        self.object.all_reviewed= not status.requires_review
 
         if self.object.work_completed is None:
-            self.object.work_completed = timezone.make_aware(timezone.datetime.now(), timezone=timezone.get_current_timezone())
+            self.object.work_completed = self.object.modified
+
 
         # save here so pk is set when saving test instances
         # and save below to get due deate set ocrrectly
         self.object.save()
 
         to_save = []
+
         for ti_form in formset:
             if ti_form.unit_test_info.test.is_upload():
                 fname = ti_form.cleaned_data["string_value"]
@@ -409,6 +418,8 @@ class PerformQA(PermissionRequiredMixin, CreateView):
                 dest = os.path.join(settings.MEDIA_ROOT, d, fname)
                 shutil.move(src, dest)
 
+            now = timezone.now()
+
             ti = models.TestInstance(
                 value=ti_form.cleaned_data.get("value", None),
                 string_value=ti_form.cleaned_data.get("string_value", ""),
@@ -417,10 +428,11 @@ class PerformQA(PermissionRequiredMixin, CreateView):
                 unit_test_info=ti_form.unit_test_info,
                 reference=ti_form.unit_test_info.reference,
                 tolerance=ti_form.unit_test_info.tolerance,
-                status=self.get_test_status(form),
-                created=timezone.now(),
+                status=status,
+                created=now,
                 created_by=self.request.user,
                 modified_by=self.request.user,
+
                 in_progress=self.object.in_progress,
                 test_list_instance=self.object,
                 work_started=self.object.work_started,
@@ -529,16 +541,17 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
         if formset.is_valid():
             self.object = form.save(commit=False)
-            self.update_test_list_instance()
 
             status_pk = None
             if "status" in form.fields:
                 status_pk = form["status"].value()
-            status = self.get_status_object(status_pk)
+            self.set_status_object(status_pk)
+
+            self.update_test_list_instance()
 
             for ti_form in formset:
                 ti = ti_form.save(commit=False)
-                self.update_test_instance(ti, status)
+                self.update_test_instance(ti)
 
             self.object.unit_test_collection.set_due_date()
 
@@ -556,24 +569,33 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
     def update_test_list_instance(self):
         self.object.created_by = self.request.user
         self.object.modified_by = self.request.user
+        now = timezone.make_aware(timezone.datetime.now(), timezone=timezone.get_current_timezone())
+        self.object.modified = now
+        if self.status.requires_review:
+            self.object.reviewed = None
+            self.object.reviewed_by = None
+            self.object.all_reviewed = False
+        else:
+            self.reviewed = now
+            self.reviewed_by = self.request.user
+            self.object.all_reviewed = True
 
         if self.object.work_completed is None:
-            self.object.work_completed = timezone.make_aware(timezone.datetime.now(), timezone=timezone.get_current_timezone())
+            self.object.work_completed = now
 
         self.object.save()
 
     #----------------------------------------------------------------------
-    def get_status_object(self, status_pk):
+    def set_status_object(self, status_pk):
         try:
-            status = models.TestInstanceStatus.objects.get(pk=status_pk)
+            self.status = models.TestInstanceStatus.objects.get(pk=status_pk)
         except (models.TestInstanceStatus.DoesNotExist, ValueError):
-            status = models.TestInstanceStatus.objects.default()
-        return status
+            self.status = models.TestInstanceStatus.objects.default()
 
     #----------------------------------------------------------------------
-    def update_test_instance(self, test_instance, status):
+    def update_test_instance(self, test_instance):
         ti = test_instance
-        ti.status = status
+        ti.status = self.status
         ti.created_by = self.request.user
         ti.modified_by = self.request.user
         ti.in_progress = self.object.in_progress

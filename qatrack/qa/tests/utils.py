@@ -82,6 +82,7 @@ def create_test_list_instance(unit_test_collection=None, work_completed=None, cr
         unit_test_collection=unit_test_collection,
         created_by=created_by,
         modified_by=created_by,
+        modified=timezone.now(),
         work_completed=work_completed,
         work_started=work_started,
         test_list=test_list

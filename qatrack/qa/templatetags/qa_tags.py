@@ -71,8 +71,8 @@ def as_review_status(test_list_instance):
         statuses[ti.status.name]["count"] += 1
         statuses[ti.status.name]["valid"] = ti.status.valid
         statuses[ti.status.name]["requires_review"] = ti.status.requires_review
-        statuses[ti.status.name]["reviewed_by"] = test_list_instance.modified_by
-        statuses[ti.status.name]["reviewed"] = test_list_instance.modified
+        statuses[ti.status.name]["reviewed_by"] = test_list_instance.reviewed_by
+        statuses[ti.status.name]["reviewed"] = test_list_instance.reviewed
         if ti.comment:
             comment_count += 1
     if test_list_instance.comment:

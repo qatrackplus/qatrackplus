@@ -33,12 +33,13 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         context = self.get_context_data()
         formset = context["formset"]
 
-        update_time = timezone.make_aware(timezone.datetime.now(), timezone.get_current_timezone())
-        update_user = self.request.user
+        review_time = timezone.make_aware(timezone.datetime.now(), timezone.get_current_timezone())
+        review_user = self.request.user
 
         test_list_instance = form.save(commit=False)
-        test_list_instance.modified = update_time
-        test_list_instance.modified_by = update_user
+        test_list_instance.reviewed = review_time
+        test_list_instance.reviewed_by = review_user
+        test_list_instance.all_reviewed = True
         test_list_instance.save()
 
         # note we are not calling if formset.is_valid() here since we assume
@@ -49,6 +50,7 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         # If you add something here be very careful to check that the data
         # is clean before updating the db
 
+        still_requires_review = False
         # for efficiency update statuses in bulk rather than test by test basis
         status_groups = collections.defaultdict(list)
         for ti_form in formset:
@@ -57,11 +59,13 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
         for status_pk, test_instance_pks in status_groups.items():
             status = models.TestInstanceStatus.objects.get(pk=status_pk)
-            models.TestInstance.objects.filter(pk__in=test_instance_pks).update(
-                status=status,
-                modified_by=update_user,
-                modified=update_time
-            )
+            if status.requires_review:
+                still_requires_review = True
+            models.TestInstance.objects.filter(pk__in=test_instance_pks).update(status=status)
+
+        if still_requires_review:
+            test_list_instance.all_reviewed=False
+            test_list_instance.save()
 
         test_list_instance.unit_test_collection.set_due_date()
 

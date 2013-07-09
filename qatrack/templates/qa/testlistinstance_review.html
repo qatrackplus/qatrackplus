@@ -84,6 +84,9 @@
                         <dt>Last Modification :</dt>
                         <dd>{{tli.modified_by}} @ {{tli.modified}}</dd>
 
+                        <dt>Last Review:</dt>
+                        <dd>{% if tli.reviewed_by %}{{tli.reviewed_by}} @ {{tli.reviewed}}{% endif %}</dd>
+
                    </dl>
                 </div>
                 <div class="span4 actions review-buttons">

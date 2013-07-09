@@ -166,6 +166,7 @@ class UTCList(BaseDataTablesDataSource):
         ).prefetch_related(
             "last_instance__testinstance_set",
             "last_instance__testinstance_set__status",
+            "last_instance__reviewed_by",
             "last_instance__modified_by",
             "tests_object",
         )
