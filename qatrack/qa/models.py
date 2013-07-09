@@ -1286,7 +1286,6 @@ class TestListInstance(models.Model):
 
             instances.append((ti,test_history))
 
-        print instances
         return instances, dates
 
     #---------------------------------------------------------------------------
