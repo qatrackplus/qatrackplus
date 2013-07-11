@@ -252,6 +252,7 @@ function TestInstance(test_info, row){
             self.set_skip(false);
         }
         $.Topic("valueChanged").publish();
+        $.Topic("qaUpdated").publish();
     });
 
     this.set_value = function(value){
