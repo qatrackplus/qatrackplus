@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import datetime
-from south.db import db
+from south.db import db, engine
 from south.v2 import SchemaMigration
 from django.db import models
 
@@ -9,6 +9,11 @@ class Migration(SchemaMigration):
 
     def forwards(self, orm):
         # Deleting field 'Tolerance.name'
+
+        if 'sql_server' in engine:
+            #remove unique constrainr first for SQL Server
+            db.alter_column('qa_tolerance', 'name', self.gf('django.db.models.fields.CharField')(unique=False,max_length=255))
+
         db.delete_column('qa_tolerance', 'name')
 
 
