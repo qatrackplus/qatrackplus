@@ -33,7 +33,7 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         context = self.get_context_data()
         formset = context["formset"]
 
-        update_time = timezone.make_aware(timezone.datetime.now(), timezone.get_current_timezone())
+        update_time = timezone.now()
         update_user = self.request.user
 
         test_list_instance = form.save(commit=False)

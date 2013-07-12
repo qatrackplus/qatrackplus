@@ -391,7 +391,7 @@ class PerformQA(CreateView):
         self.object.modified_by = self.request.user
 
         if self.object.work_completed is None:
-            self.object.work_completed = timezone.make_aware(timezone.datetime.now(), timezone=timezone.get_current_timezone())
+            self.object.work_completed = timezone.datetime.now()
 
         # save here so pk is set when saving test instances
         # and save below to get due deate set ocrrectly
@@ -557,7 +557,7 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         self.object.modified_by = self.request.user
 
         if self.object.work_completed is None:
-            self.object.work_completed = timezone.make_aware(timezone.datetime.now(), timezone=timezone.get_current_timezone())
+            self.object.work_completed = timezone.now()
 
         self.object.save()
 

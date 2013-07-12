@@ -840,7 +840,7 @@ class TestUnitTestCollection(TestCase):
         utc.set_due_date()
         due = now + timezone.timedelta(utc.frequency.due_interval)
 
-        self.assertEqual(utc.due_date, due)
+        self.assertTrue(utils.datetimes_same(utc.due_date, due))
 
     #----------------------------------------------------------------------
     def test_last_done_date(self):

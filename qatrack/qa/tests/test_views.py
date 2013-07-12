@@ -213,8 +213,7 @@ class TestControlImage(TestCase):
         utils.create_unit_test_info(test=test, unit=unit)
 
         utils.create_status()
-        yesterday = timezone.datetime.today() - timezone.timedelta(days=1)
-        yesterday = timezone.make_aware(yesterday, timezone.get_current_timezone())
+        yesterday = timezone.now().date()-timezone.timedelta(days=1)
         tomorrow = yesterday + timezone.timedelta(days=2)
 
         for n in [-1, 0, 1, 2, "nonnumber"]:
@@ -231,8 +230,7 @@ class TestControlImage(TestCase):
         utils.create_unit_test_info(test=test, unit=unit)
 
         utils.create_status()
-        yesterday = timezone.datetime.today() - timezone.timedelta(days=1)
-        yesterday = timezone.make_aware(yesterday, timezone.get_current_timezone())
+        yesterday = timezone.now().date()-timezone.timedelta(days=1)
         tomorrow = yesterday + timezone.timedelta(days=2)
 
         for n in [-1, 0, 101, "nonnumber"]:
@@ -266,10 +264,9 @@ class TestControlImage(TestCase):
         uti = utils.create_unit_test_info(test=test, unit=unit)
 
         status = utils.create_status()
-        yesterday = timezone.datetime.today() - timezone.timedelta(days=1)
-        yesterday = timezone.make_aware(yesterday, timezone.get_current_timezone())
-        tomorrow = yesterday + timezone.timedelta(days=2)
 
+        yesterday = timezone.now().date()-timezone.timedelta(days=1)
+        tomorrow = yesterday + timezone.timedelta(days=2)
         url = self.make_url(test.pk, unit.number, yesterday, tomorrow)
 
         for n in (1, 1, 8, 90):
@@ -292,8 +289,8 @@ class TestControlImage(TestCase):
         uti = utils.create_unit_test_info(test=test, unit=unit)
 
         status = utils.create_status()
-        yesterday = timezone.datetime.today() - timezone.timedelta(days=1)
-        yesterday = timezone.make_aware(yesterday, timezone.get_current_timezone())
+
+        yesterday = timezone.now().date()-timezone.timedelta(days=1)
         tomorrow = yesterday + timezone.timedelta(days=2)
 
         url = self.make_url(test.pk, unit.number, yesterday, yesterday)
@@ -324,8 +321,8 @@ class TestControlImage(TestCase):
         uti = utils.create_unit_test_info(test=test, unit=unit)
 
         status = utils.create_status()
-        yesterday = timezone.datetime.today() - timezone.timedelta(days=1)
-        yesterday = timezone.make_aware(yesterday, timezone.get_current_timezone())
+
+        yesterday = timezone.now().date()-timezone.timedelta(days=1)
         tomorrow = yesterday + timezone.timedelta(days=2)
 
         url = self.make_url(test.pk, unit.number, yesterday, yesterday)

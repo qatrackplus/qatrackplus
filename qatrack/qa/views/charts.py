@@ -76,10 +76,11 @@ class ChartView(PermissionRequiredMixin, TemplateView):
         self.set_tests()
 
         test_data = self.create_test_data()
+        now = timezone.now().astimezone(timezone.get_current_timezone()).date()
 
         c = {
-            "from_date": timezone.now().date() - timezone.timedelta(days=365),
-            "to_date": timezone.now().date() + timezone.timedelta(days=1),
+            "from_date": now - timezone.timedelta(days=365),
+            "to_date": now + timezone.timedelta(days=1),
             "frequencies": models.Frequency.objects.all(),
             "tests": self.tests,
             "test_lists": self.test_lists,
@@ -165,6 +166,9 @@ class BaseChartView(View):
 
     #----------------------------------------------------------------------
     def get_date(self, key, default):
+        #datetime strings coming in will be in local time, make sure they get
+        #converted to utc
+
         try:
             d = timezone.datetime.strptime(self.request.GET.get(key), settings.SIMPLE_DATE_FORMAT)
         except:
@@ -173,12 +177,10 @@ class BaseChartView(View):
         if timezone.is_naive(d):
             d = timezone.make_aware(d, timezone.get_current_timezone())
 
-        return d
-
-    #---------------------------------------------------------------------------
-    def convert_date(self, dt):
-        return dt.isoformat()
-
+        return d.astimezone(timezone.utc)
+    #---------------------------------------------------------------
+    def convert_date(self, date):
+        return date.isoformat()
     #----------------------------------------------------------------------
     def get_plot_data(self):
 
@@ -186,7 +188,7 @@ class BaseChartView(View):
         units = self.request.GET.getlist("units[]", [])
         statuses = self.request.GET.getlist("statuses[]", models.TestInstanceStatus.objects.values_list("pk", flat=True))
 
-        now = timezone.datetime.now()
+        now = timezone.now()
         from_date = self.get_date("from_date", now - timezone.timedelta(days=365))
         to_date = self.get_date("to_date", now)
 
@@ -204,11 +206,10 @@ class BaseChartView(View):
 
         vals_dict = lambda: {"data": [], "values": [], "dates": [], "references": [], "act_low": [], "tol_low": [], "tol_high": [], "act_high": []}
         data = collections.defaultdict(vals_dict)
-
+        local_tz = timezone.get_current_timezone()
         for ti in self.tis:
             uti = ti.unit_test_info
-            d = timezone.make_naive(ti.work_completed, timezone.get_current_timezone())
-            d = self.convert_date(d)
+            d = self.convert_date(timezone.make_naive(ti.work_completed, local_tz))
             data[uti.pk]["data"].append([d, ti.value])
             data[uti.pk]["values"].append(ti.value)
 
@@ -285,10 +286,7 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
         if subgroup_size < 1 or subgroup_size > 100:
             subgroup_size = 1
 
-        if self.request.GET.get("fit_data", "") == "true":
-            include_fit = True
-        else:
-            include_fit = False
+        include_fit = self.request.GET.get("fit_data", "") == "true"
 
         response = HttpResponse(mimetype="image/png")
         if n_baseline_subgroups < 1 or n_baseline_subgroups > len(data) / subgroup_size:
