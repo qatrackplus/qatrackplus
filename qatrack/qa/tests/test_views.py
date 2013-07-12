@@ -393,19 +393,21 @@ class TestChartView(TestCase):
 
     #---------------------------------------------------------------------------
     def test_create_test_data(self):
-
-        data = json.loads(self.view.get_context_data()["test_data"])
+        data = self.view.create_test_data()
         expected = {
             "test_lists": {
-                "%d" % self.tl.pk: [self.test1.pk, self.test2.pk],
+                self.tl.pk: set([self.test1.pk, self.test2.pk]),
             },
             'unit_frequency_lists': {
-                "%d" % self.utc.unit.pk: {
-                    "%d" % self.utc.frequency.pk: [self.tl.pk],
+                self.utc.unit.pk: {
+                    self.utc.frequency.pk: set([self.tl.pk]),
                 }
             }
         }
 
+        data["test_lists"] = dict(data["test_lists"])
+        for k,v in data["unit_frequency_lists"].items():
+            data["unit_frequency_lists"][k] = dict(v)
         self.assertDictEqual(data, expected)
 
 
