@@ -64,7 +64,7 @@ class ChartView(PermissionRequiredMixin, TemplateView):
                 frequency = frequency or 0
                 data["unit_frequency_lists"][unit][frequency].add(test_list)
 
-        return json.dumps(data,cls=SetEncoder)
+        return data
 
 
     #----------------------------------------------------------------------
@@ -86,7 +86,7 @@ class ChartView(PermissionRequiredMixin, TemplateView):
             "categories": models.Category.objects.all(),
             "statuses": models.TestInstanceStatus.objects.all(),
             "units": Unit.objects.values("pk","name"),
-            "test_data": test_data
+            "test_data": json.dumps(test_data, cls=SetEncoder)
         }
         context.update(c)
         return context
