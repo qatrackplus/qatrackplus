@@ -817,9 +817,9 @@ class UnitTestCollection(models.Model):
             last_valid = self.last_valid_instance()
             if last_valid is None and self.last_instance is not None:
                 # Done before but no valid lists
-                return timezone.localtime(timezone.now())
+                return timezone.now()
             elif last_valid is not None and last_valid.work_completed:
-                return timezone.localtime(last_valid.work_completed + self.frequency.due_delta())
+                return last_valid.work_completed + self.frequency.due_delta()
 
     #----------------------------------------------------------------------
     def set_due_date(self, due_date=None):
@@ -839,8 +839,8 @@ class UnitTestCollection(models.Model):
         if not self.due_date:
             return NOT_DUE
 
-        today = timezone.localtime(timezone.now()).date()
-        due = timezone.localtime(self.due_date).date()
+        today = timezone.now().date()
+        due = self.due_date.date()
 
         if self.frequency is not None:
             overdue = due + timezone.timedelta(days=self.frequency.overdue_interval - self.frequency.due_interval)

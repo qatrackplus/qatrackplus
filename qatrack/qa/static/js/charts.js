@@ -48,7 +48,8 @@ $(document).ready(function(){
 
     $("#gen-chart").click(update_chart);
 
-    $("#csv-export").click(export_csv);
+    $("#data-table-wrapper").on('click',"#csv-export",export_csv);
+
 
     set_chart_options();
     set_options_from_url();

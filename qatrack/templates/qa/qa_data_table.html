@@ -1,11 +1,8 @@
+            <span class="">
+                <button id="csv-export" class="btn btn-primary btn-mini "><i class="icon-download icon-large"></i> Save as csv</button>
+            </span>
 <table class="table table-striped table-bordered table-condensed data-table">
     <thead>
-        <tr>
-
-            <th colspan="{{ncols}}">
-                <button id="csv-export" class="btn btn-primary btn-mini pull-right"><i class="icon-download icon-large"></i> Save as csv</button>
-            </th>
-        </tr>
         <tr>
             {% for header in headers %}
                 <th class="header" colspan="3">{{header}}</th>

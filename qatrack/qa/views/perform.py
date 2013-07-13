@@ -392,7 +392,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         self.object.unit_test_collection = self.unit_test_col
         self.object.created_by = self.request.user
         self.object.modified_by = self.request.user
-        self.object.modified = timezone.make_aware(timezone.datetime.now(), timezone=timezone.get_current_timezone())
+        self.object.modified = timezone.now()
 
         self.object.reviewed= None if status.requires_review else self.object.modified 
         self.object.reviewed_by = None if status.requires_review else self.request.user
@@ -569,7 +569,8 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
     def update_test_list_instance(self):
         self.object.created_by = self.request.user
         self.object.modified_by = self.request.user
-        now = timezone.make_aware(timezone.datetime.now(), timezone=timezone.get_current_timezone())
+        now = timezone.now()
+
         self.object.modified = now
         if self.status.requires_review:
             self.object.reviewed = None

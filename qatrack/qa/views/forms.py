@@ -260,7 +260,7 @@ class BaseTestListInstanceForm(forms.ModelForm):
                 del cleaned_data["work_started"]
 
         elif work_started:
-            if work_started >= timezone.make_aware(timezone.datetime.now(), timezone.get_current_timezone()):
+            if work_started >= timezone.now().astimezone(timezone.get_current_timezone()):
                 self._errors["work_started"] = self.error_class(["Work started date/time can not be in the future"])
                 del cleaned_data["work_started"]
         return cleaned_data

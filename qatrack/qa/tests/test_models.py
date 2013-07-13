@@ -680,7 +680,7 @@ class TestUTCDueDates(TestCase):
         self.utc_hist = models.UnitTestCollection.objects.get(pk=self.utc_hist.pk)
         self.utc_hist.set_due_date()
 
-        self.assertEqual(self.utc_hist.due_date.date(), timezone.localtime(tli1.work_completed + self.utc_hist.frequency.due_delta()).date())
+        self.assertEqual(self.utc_hist.due_date.date(), (tli1.work_completed + self.utc_hist.frequency.due_delta()).date())
 
     def test_modified_to_valid(self):
         # test case where test list was saved with invalid status and later
@@ -712,7 +712,7 @@ class TestUTCDueDates(TestCase):
         self.utc_hist.set_due_date()
 
         # due date should now be based on tli2 since it is valid
-        self.assertEqual(self.utc_hist.due_date.date(), timezone.localtime(tli2.work_completed + self.utc_hist.frequency.due_delta()).date())
+        self.assertEqual(self.utc_hist.due_date.date(), (tli2.work_completed + self.utc_hist.frequency.due_delta()).date())
 
     #---------------------------------------------------------------------------
     def test_cycle_due_date(self):
@@ -840,7 +840,7 @@ class TestUnitTestCollection(TestCase):
         utc.set_due_date()
         due = now + timezone.timedelta(utc.frequency.due_interval)
 
-        self.assertEqual(utc.due_date, due)
+        self.assertTrue(utils.datetimes_same(utc.due_date, due))
 
     #----------------------------------------------------------------------
     def test_last_done_date(self):
