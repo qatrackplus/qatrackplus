@@ -243,7 +243,7 @@ class ChooseUnit(ListView):
     #---------------------------------------------------------------------------
     def get_queryset(self):
         groups = self.request.user.groups.all()
-        units = list(set(models.UnitTestCollection.objects.by_visibility(groups).values_list("unit", flat=True)))
+        units = models.UnitTestCollection.objects.by_visibility(groups).filter(active=True).values_list("unit", flat=True).distinct()
         return UnitType.objects.all().filter(unit__pk__in=units).order_by("unit__number").prefetch_related("unit_set")
 
     #----------------------------------------------------------------------
