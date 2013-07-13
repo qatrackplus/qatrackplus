@@ -203,7 +203,9 @@ function get_data_filters(){
         statuses:QAUtils.get_checked("#status-container"),
         from_date:get_date("#from-date"),
         to_date:get_date("#to-date"),
-        tests:QAUtils.get_checked("#test-container")    ,
+        tests:QAUtils.get_checked("#test-container"),
+        test_lists:QAUtils.get_checked("#test-list-container"),
+        frequencies:QAUtils.get_checked("#frequency-container"),
         n_baseline_subgroups:$("#n-baseline-subgroups").val(),
         subgroup_size:$("#subgroup-size").val(),
         fit_data:$("#include-fit").is(":checked")

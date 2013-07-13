@@ -185,6 +185,7 @@ class BaseChartView(View):
     def get_plot_data(self):
 
         tests = self.request.GET.getlist("tests[]", [])
+        test_lists = self.request.GET.getlist("test_lists[]", [])
         units = self.request.GET.getlist("units[]", [])
         statuses = self.request.GET.getlist("statuses[]", models.TestInstanceStatus.objects.values_list("pk", flat=True))
 
@@ -193,6 +194,7 @@ class BaseChartView(View):
         to_date = self.get_date("to_date", now)
 
         self.tis = models.TestInstance.objects.filter(
+            test_list_instance__test_list__pk__in=test_lists,
             unit_test_info__test__pk__in=tests,
             unit_test_info__unit__pk__in=units,
             status__pk__in=statuses,
@@ -213,15 +215,14 @@ class BaseChartView(View):
             data[uti.pk]["data"].append([d, ti.value])
             data[uti.pk]["values"].append(ti.value)
 
-            if ti.reference is not None:
-                data[uti.pk]["references"].append(ti.reference.value)
-            else:
-                data[uti.pk]["references"].append(None)
+            r = ti.reference.value if ti.reference is not None else None
+            data[uti.pk]["references"].append(r)
 
             if ti.tolerance is not None and ti.reference is not None:
                 tols = ti.tolerance.tolerances_for_value(ti.reference.value)
             else:
                 tols = {"act_high": None, "act_low": None, "tol_low": None, "tol_high": None}
+
             for k, v in tols.items():
                 data[uti.pk][k].append(v)
 
