@@ -255,7 +255,7 @@ function retrieve_data(callback,error){
 
 /*****************************************************/
 function plot_data(data){
-    var data_to_plot = convert_data_to_highchart_series_new(data.data);
+    var data_to_plot = convert_data_to_highchart_series(data.data);
     create_stockchart(data_to_plot);
     update_data_table(data);
 }
@@ -494,6 +494,7 @@ function control_chart_error(){
 }
 function control_chart_finished(){
     $("#control-chart-container div.please-wait").remove();
+    $("#data-table-wrapper").html("");
     clearInterval(waiting_timeout);
     retrieve_data(update_data_table);
 }
@@ -517,7 +518,7 @@ function get_control_chart_url(){
         }
     });
 
-    return QACharts.CONTROL_CHART_URL+"?"+props.join("&");
+    return QAURLs.CONTROL_CHART_URL+"?"+props.join("&");
 }
 
 

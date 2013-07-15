@@ -126,7 +126,7 @@ class BaseChartView(View):
     #----------------------------------------------------------------------
     def get(self, request):
 
-        data = self.get_plot_data()
+        self.get_plot_data()
         table = self.create_data_table()
         resp = self.render_to_response({"data":self.plot_data, "table": table})
 
@@ -143,7 +143,7 @@ class BaseChartView(View):
 
         for name, points in self.plot_data.iteritems():
             headers.append(name)
-            col = [(p["date"], p["display"],r(p["reference"])) for p in points]
+            col = [(p["display_date"], p["display"],r(p["reference"])) for p in points]
             cols.append(col)
             max_len = max(len(col), max_len)
 
@@ -189,6 +189,7 @@ class BaseChartView(View):
         point = {
             "act_high": None, "act_low": None, "tol_low": None, "tol_high": None,
             "date": self.convert_date(timezone.make_naive(ti.work_completed, local_tz)),
+            "display_date": ti.work_completed,
             "value":ti.value,
             "display":ti.value_display(),
             "reference":ti.reference.value if ti.reference else None,
@@ -266,6 +267,11 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
             v = default
         return v
 
+    #---------------------------------------------------------------
+    def get_plot_data(self):
+        """only use one data series"""
+        super(ControlChartImage,self).get_plot_data()
+        self.plot_data = dict([self.plot_data.popitem()])
     #----------------------------------------------------------------------
     def render_to_response(self, context):
 
@@ -277,14 +283,9 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
         )
         canvas = FigureCanvas(fig)
 
-        dates, data = [], []
-
         if context["data"] and context["data"].values():
-
-            for d, v in context["data"].values()[0]["data"]:
-                if None not in (d, v):
-                    dates.append(d)
-                    data.append(v)
+            name, points = context["data"].items()[0]
+            dates, data = zip(*[(ti["date"],ti["value"]) for ti in points])
 
         n_baseline_subgroups = self.get_number_from_request("n_baseline_subgroups", 2, dtype=int)
         n_baseline_subgroups = max(2, n_baseline_subgroups)
