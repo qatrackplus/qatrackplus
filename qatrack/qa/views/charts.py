@@ -1,4 +1,5 @@
 import collections
+import itertools
 import json
 import textwrap
 
@@ -28,6 +29,8 @@ class SetEncoder(json.JSONEncoder):
         if isinstance(obj, set):
             return list(obj)
         return json.JSONEncoder.default(self, obj)
+
+local_tz = timezone.get_current_timezone()
 
 #============================================================================
 class ChartView(PermissionRequiredMixin, TemplateView):
@@ -125,22 +128,22 @@ class BaseChartView(View):
 
         data = self.get_plot_data()
         table = self.create_data_table()
-        resp = self.render_to_response({"data": data, "table": table})
+        resp = self.render_to_response({"data":self.plot_data, "table": table})
 
         return resp
 
     #----------------------------------------------------------------------
     def create_data_table(self):
 
-        utis = list(set([x.unit_test_info for x in self.tis]))
-
         headers = []
         max_len = 0
         cols = []
-        for uti in utis:
-            headers.append("%s %s" % (uti.unit.name, uti.test.name))
-            r = lambda x: ti.reference.value if ti.reference else ""
-            col = [(ti.work_completed, ti.value_display(), r(ti)) for ti in self.tis if ti.unit_test_info == uti]
+
+        r = lambda ref: ref if ref is not None else ""
+
+        for name, points in self.plot_data.iteritems():
+            headers.append(name)
+            col = [(p["date"], p["display"],r(p["reference"])) for p in points]
             cols.append(col)
             max_len = max(len(col), max_len)
 
@@ -152,7 +155,6 @@ class BaseChartView(View):
                     row.append(col[idx])
                 except IndexError:
                     row.append(["", ""])
-                    pass
             rows.append(row)
 
         context = Context({
@@ -181,56 +183,59 @@ class BaseChartView(View):
     #---------------------------------------------------------------
     def convert_date(self, date):
         return date.isoformat()
+    #---------------------------------------------------------------
+    def test_instance_to_point(self, ti):
+
+        point = {
+            "act_high": None, "act_low": None, "tol_low": None, "tol_high": None,
+            "date": self.convert_date(timezone.make_naive(ti.work_completed, local_tz)),
+            "value":ti.value,
+            "display":ti.value_display(),
+            "reference":ti.reference.value if ti.reference else None,
+        }
+        if ti.tolerance is not None and ti.reference is not None:
+            point.update(ti.tolerance.tolerances_for_value(ti.reference.value))
+
+        return point
+
     #----------------------------------------------------------------------
     def get_plot_data(self):
-
-        tests = self.request.GET.getlist("tests[]", [])
-        test_lists = self.request.GET.getlist("test_lists[]", [])
-        units = self.request.GET.getlist("units[]", [])
-        statuses = self.request.GET.getlist("statuses[]", models.TestInstanceStatus.objects.values_list("pk", flat=True))
 
         now = timezone.now()
         from_date = self.get_date("from_date", now - timezone.timedelta(days=365))
         to_date = self.get_date("to_date", now)
 
-        self.tis = models.TestInstance.objects.filter(
-            test_list_instance__test_list__pk__in=test_lists,
-            unit_test_info__test__pk__in=tests,
-            unit_test_info__unit__pk__in=units,
-            status__pk__in=statuses,
-            work_completed__gte=from_date,
-            work_completed__lte=to_date,
-        ).select_related(
-            "reference", "tolerance", "status", "unit_test_info", "unit_test_info__test", "unit_test_info__unit", "status"
-        ).order_by(
-            "work_completed"
-        )
 
-        vals_dict = lambda: {"data": [], "values": [], "dates": [], "references": [], "act_low": [], "tol_low": [], "tol_high": [], "act_high": []}
-        data = collections.defaultdict(vals_dict)
-        local_tz = timezone.get_current_timezone()
-        for ti in self.tis:
-            uti = ti.unit_test_info
-            d = self.convert_date(timezone.make_naive(ti.work_completed, local_tz))
-            data[uti.pk]["data"].append([d, ti.value])
-            data[uti.pk]["values"].append(ti.value)
+        tests = self.request.GET.getlist("tests[]", [])
+        test_lists = self.request.GET.getlist("test_lists[]", [])
+        units = self.request.GET.getlist("units[]", [])
+        statuses = self.request.GET.getlist("statuses[]", [])
 
-            r = ti.reference.value if ti.reference is not None else None
-            data[uti.pk]["references"].append(r)
+        if not (tests and test_lists and units and statuses):
+            return
 
-            if ti.tolerance is not None and ti.reference is not None:
-                tols = ti.tolerance.tolerances_for_value(ti.reference.value)
-            else:
-                tols = {"act_high": None, "act_low": None, "tol_low": None, "tol_high": None}
+        tests = models.Test.objects.filter(pk__in=tests)
+        test_lists = models.TestList.objects.filter(pk__in=test_lists)
+        units = Unit.objects.filter(pk__in=units)
+        statuses = models.TestInstanceStatus.objects.filter(pk__in=statuses)
 
-            for k, v in tols.items():
-                data[uti.pk][k].append(v)
-
-            data[uti.pk]["dates"].append(d)
-            data[uti.pk]["unit"] = {"name": uti.unit.name, "pk": uti.unit.pk}
-            data[uti.pk]["test"] = {"name": uti.test.name, "pk": uti.test.pk}
-
-        return data
+        self.plot_data = {}
+        for tl, t, u in itertools.product(test_lists, tests, units):
+            tis = models.TestInstance.objects.filter(
+                test_list_instance__test_list=tl,
+                unit_test_info__test=t,
+                unit_test_info__unit=u,
+                status__pk__in=statuses,
+                work_completed__gte=from_date,
+                work_completed__lte=to_date,
+            ).select_related(
+                "reference", "tolerance", "unit_test_info__test", "unit_test_info__unit", "status"
+            ).order_by(
+                "work_completed"
+            )
+            if tis:
+                name = "%s - %s :: %s" %(u.name, tl.name, t.name)
+                self.plot_data[name] = [self.test_instance_to_point(ti) for ti in tis]
 
     #---------------------------------------------------------------------------
     def render_to_response(self, context):

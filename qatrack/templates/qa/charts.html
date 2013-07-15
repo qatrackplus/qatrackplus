@@ -178,7 +178,7 @@
 
 
                     <h5>Review Status Filter</h5>
-                    <div id="status-checkboxes" class="checkbox-container">
+                    <div id="status-container" class="checkbox-container">
                         {% for status in statuses %}
                             <label class="checkbox">
                                 <input type="checkbox" name="status[]" id="status-{{status.pk}}" value="{{status.pk}}" title="{{status.name}}" class="status status-{{status.pk}}" {% if status.export_by_default %}checked="checked"{% endif %}></input>

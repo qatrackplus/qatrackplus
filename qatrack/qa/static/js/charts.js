@@ -255,11 +255,10 @@ function retrieve_data(callback,error){
 
 /*****************************************************/
 function plot_data(data){
-    var data_to_plot = convert_data_to_highchart_series(data.data);
+    var data_to_plot = convert_data_to_highchart_series_new(data.data);
     create_stockchart(data_to_plot);
     update_data_table(data);
 }
-/****************************************************/
 function convert_data_to_highchart_series(data){
     var hc_series = [];
 
@@ -268,48 +267,38 @@ function convert_data_to_highchart_series(data){
 
     var data_max=-1E10, data_min=1E10;
     var notNull = function(x){return !_.isNull(x);};
-    $.each(data,function(idx,series){
+
+    _.each(_.keys(data), function(name){
         var series_data = [];
         var ref_data = [];
         var tolerance_high = [],tolerance_low=[],ok=[];
         var series_color = next_color();
 
-        var name =series.unit.name+" " +series.test.name;
         var al, tl, th, ah;
 
-        $.each(series.dates,function(idx,date){
-            date = QAUtils.parse_iso8601_date(date).getTime();
-            var display = '<span style="color:'+series_color+'"><strong>'+name+'</strong></span>: <b>'+ QAUtils.format_float(series.values[idx]) + '</b>';
+        _.each(data[name], function(point){
+            var date = QAUtils.parse_iso8601_date(point.date).getTime();
+            var display = '<span style="color:'+series_color+'"><strong>'+name+'</strong></span>: <b>'+ QAUtils.format_float(point.value) + '</b>';
 
-            if (!_.isNull(series.references[idx])){
-                display += "<br/><em>Ref:" + QAUtils.format_float(series.references[idx])+"</em><br/>";
+            if (!_.isNull(point.reference)){
+                display += "<br/><em>Ref:" + QAUtils.format_float(point.reference)+"</em><br/>";
             }
 
-            al = series.act_low[idx];
-            tl = series.tol_low[idx];
-            th = series.tol_high[idx];
-            ah = series.act_high[idx];
+            display += " <em>Act Low: " + (!_.isNull(point.act_low) ? QAUtils.format_float(point.act_low) : "--");
+            display += " Tol Low: " + (!_.isNull(point.tol_low) ? QAUtils.format_float(point.tol_low) : "--");
+            display += " Tol High: " + (!_.isNull(point.tol_high) ? QAUtils.format_float(point.tol_high) : "--");
+            display += " Act High: " + (!_.isNull(point.act_high) ? QAUtils.format_float(point.act_high) : "--");
 
-            display += " <em>Act Low: " + (!_.isNull(al) ? QAUtils.format_float(al) : "--");
-            display += " Tol Low: " + (!_.isNull(tl) ? QAUtils.format_float(tl) : "--");
-            display += " Tol High: " + (!_.isNull(th) ? QAUtils.format_float(th) : "--");
-            display += " Act High: " + (!_.isNull(ah) ? QAUtils.format_float(ah) : "--");
+            data_max = _.max(_.filter([data_max, point.act_high, point.tol_high, point.reference, point.value],notNull));
+            data_min = _.min(_.filter([data_min, point.act_low, point.tol_low, point.reference, point.value],notNull));
 
-            data_max = _.max(_.filter([data_max, ah, th, series.references[idx], series.values[idx]],notNull));
-            data_min = _.min(_.filter([data_min, al, tl, series.references[idx], series.values[idx]],notNull));
+            al = !_.isNull(point.act_low) ? point.act_low : -1.e10;
+            tl = !_.isNull(point.tol_low) ? point.tol_low : -1.e10;
+            th = !_.isNull(point.tol_high) ? point.tol_high : 1.e10;
+            ah = !_.isNull(point.act_high) ? point.act_high : 1.e10;
 
-            al = !_.isNull(al) ? al : -1.e10;
-            tl = !_.isNull(tl) ? tl : -1.e10;
-            th = !_.isNull(th) ? th : 1.e10;
-            ah = !_.isNull(ah) ? ah : 1.e10;
-
-            /*display += " <em>Act Low: " + QAUtils.format_float(al);
-            display +=         " Tol Low: " + QAUtils.format_float(tl);
-            display +=         " Tol High: " + QAUtils.format_float(th);
-            display +=         " Act High: " + QAUtils.format_float(ah)+"</em>";
-*/
-            series_data.push({name:display,x:date,y:series.values[idx]});
-            ref_data.push({name:"",x:date,y:series.references[idx]});
+            series_data.push({name:display,x:date,y:point.value});
+            ref_data.push({name:"",x:date,y:point.reference});
             ok.push({name:"",x:date,low:tl,high:th});
             tolerance_low.push({name:"",x:date,low:tl,high:al});
             tolerance_high.push({name:"",x:date,low:th,high:ah});
@@ -317,7 +306,6 @@ function convert_data_to_highchart_series(data){
 
         hc_series.push({
             name:name,
-            number:idx,
             data:series_data,
             showInLegend:true,
             lineWidth : get_line_width(),
