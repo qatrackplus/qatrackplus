@@ -284,7 +284,7 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
         n_baseline_subgroups = max(2, n_baseline_subgroups)
 
         subgroup_size = self.get_number_from_request("subgroup_size", 2, dtype=int)
-        if subgroup_size < 1 or subgroup_size > 100:
+        if not (1 < subgroup_size < 100):
             subgroup_size = 1
 
         include_fit = self.request.GET.get("fit_data", "") == "true"
