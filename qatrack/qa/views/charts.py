@@ -271,7 +271,8 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
     def get_plot_data(self):
         """only use one data series"""
         super(ControlChartImage,self).get_plot_data()
-        self.plot_data = dict([self.plot_data.popitem()])
+        if self.plot_data:
+            self.plot_data = dict([self.plot_data.popitem()])
     #----------------------------------------------------------------------
     def render_to_response(self, context):
 
@@ -282,7 +283,7 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
             self.get_number_from_request("height", 480) / dpi,
         )
         canvas = FigureCanvas(fig)
-
+        dates, data = [], []
         if context["data"] and context["data"].values():
             name, points = context["data"].items()[0]
             dates, data = zip(*[(ti["date"],ti["value"]) for ti in points])
