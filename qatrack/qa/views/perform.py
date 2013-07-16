@@ -13,7 +13,7 @@ from django.db.models import Q
 from django.forms.models import model_to_dict
 from django.http import HttpResponseRedirect, Http404
 from django.shortcuts import get_object_or_404
-from django.views.generic import View, ListView, CreateView
+from django.views.generic import View, ListView, CreateView, TemplateView
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 
@@ -235,23 +235,24 @@ class CompositeCalculation(JSONResponseMixin, View):
 
 
 #====================================================================================
-class ChooseUnit(ListView):
+class ChooseUnit(TemplateView):
     """choose a unit to perform qa on for this session"""
-    model = UnitType
-    context_object_name = "unit_types"
-
-    #---------------------------------------------------------------------------
-    def get_queryset(self):
-        groups = self.request.user.groups.all()
-        units = models.UnitTestCollection.objects.by_visibility(groups).filter(active=True).values_list("unit", flat=True).distinct()
-        return UnitType.objects.all().filter(unit__pk__in=units).order_by("unit__number").prefetch_related("unit_set")
+    template_name = "units/unittype_list.html"
+    active_only = True
 
     #----------------------------------------------------------------------
     def get_context_data(self, *args, **kwargs):
         """reorder unit types"""
         context = super(ChooseUnit, self).get_context_data(*args, **kwargs)
-        uts = [ut for ut in context["unit_types"] if len(ut.unit_set.all()) > 0]
-        context["unit_types"] = utils.unique(uts)
+
+        groups = self.request.user.groups.all()
+        q = models.UnitTestCollection.objects.by_visibility(groups)
+        if self.active_only:
+            q = q.filter(active=True)
+
+        q = q.values("unit","unit__type","unit__type__name","unit__name","unit__number").order_by("unit__number").distinct()
+
+        context["units"] = q
         return context
 
 
@@ -394,7 +395,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         self.object.modified_by = self.request.user
         self.object.modified = timezone.now()
 
-        self.object.reviewed= None if status.requires_review else self.object.modified 
+        self.object.reviewed= None if status.requires_review else self.object.modified
         self.object.reviewed_by = None if status.requires_review else self.request.user
         self.object.all_reviewed= not status.requires_review
 

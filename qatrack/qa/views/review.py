@@ -79,6 +79,7 @@ class UTCReview(PermissionRequiredMixin, UTCList):
     permission_required = "qa.can_view_completed"
     action = "review"
     action_display = "Review"
+    active_only = False
 
     #---------------------------------------------------------------------------
     def get_page_title(self):
@@ -125,7 +126,8 @@ class UTCUnitReview(UTCReview):
 
 #====================================================================================
 class ChooseUnitForReview(ChooseUnit):
-    template_name_suffix = "_choose_for_review"
+    active_only = False
+    template_name = "units/unittype_choose_for_review.html"
 
 
 #====================================================================================

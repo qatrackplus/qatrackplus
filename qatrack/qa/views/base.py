@@ -106,6 +106,8 @@ class UTCList(BaseDataTablesDataSource):
     action = "perform"
     action_display = "Perform"
 
+    active_only = True
+
     initial_orderings = ["unit__number", "frequency__due_interval", "testlist__name", "testlistcycle__name"]
 
     #---------------------------------------------------------------------------
@@ -155,9 +157,13 @@ class UTCList(BaseDataTablesDataSource):
     def get_queryset(self):
 
         qs = super(UTCList, self).get_queryset().filter(
-            active=True,
             visible_to__in=self.request.user.groups.all(),
-        ).select_related(
+        )
+
+        if self.active_only:
+            qs = qs.filter(active=True)
+
+        qs = qs.select_related(
             "last_instance__work_completed",
             "last_instance__created_by",
             "frequency",
