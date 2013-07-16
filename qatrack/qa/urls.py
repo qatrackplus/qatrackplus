@@ -1,6 +1,6 @@
 from django.conf.urls.defaults import patterns, include, url
 
-from views import base, perform, review, charts
+from views import base, perform, review, charts, backup
 
 from qatrack.qa import api
 from tastypie.api import Api
@@ -73,5 +73,8 @@ urlpatterns = patterns('',
 
     url(r"^frequency/(?P<frequency>[/\w-]+)/unit/(?P<unit_number>[/\d]+)/$", perform.UnitFrequencyList.as_view(), name="qa_by_unit_frequency"),
     url(r"^frequency/(?P<frequency>[/\w-]+?)/$", perform.FrequencyList.as_view(), name="qa_by_frequency"),
+
+
+    url(r"^backup/paper/$", backup.PaperForms.as_view(), name="qa_paper_forms"),
 
 )

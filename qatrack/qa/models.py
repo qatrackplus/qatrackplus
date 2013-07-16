@@ -716,6 +716,10 @@ class TestCollectionInterface(models.Model):
             testlistmembership__test_list__in=self.all_lists()
         ).distinct().prefetch_related("category")
 
+    #---------------------------------------------------------------
+    def test_list_members(self):
+        """return all days from this collection"""
+        raise NotImplementedError
     #----------------------------------------------------------------------
     def content_type(self):
         """return content type of this object"""
@@ -733,6 +737,10 @@ class TestList(TestCollectionInterface):
                                       help_text=_("Choose any sublists that should be performed as part of this list.")
                                       )
 
+    #---------------------------------------------------------------
+    def test_list_members(self):
+        """return all days from this collection"""
+        return TestList.objects.filter(pk=self.pk)
     #----------------------------------------------------------------------
     def all_lists(self):
         """return query for self and all sublists"""
@@ -1315,6 +1323,11 @@ class TestListCycle(TestCollectionInterface):
             return self.test_lists.count()
         else:
             return 0
+
+    #---------------------------------------------------------------
+    def test_list_members(self):
+        """return all days from this collection"""
+        return self.test_lists.all()
 
     #----------------------------------------------------------------------
     def first(self):
