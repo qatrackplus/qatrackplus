@@ -46,6 +46,29 @@ def reference_tolerance_span(test, ref, tol):
 
 
 #----------------------------------------------------------------------
+@register.simple_tag
+def tolerance_for_reference(tol, ref):
+
+    if not ref and tol and tol.type != models.MULTIPLE_CHOICE:
+        return ""
+
+    if ref and ref.type == models.BOOLEAN:
+        expected = ref.value_display()
+        return mark_safe('<span>Pass: %s; Fail: %s</span>' % (expected, "Yes" if expected == "No" else "No"))
+
+    if not tol:
+        return mark_safe('<span><em>N/A</em></span>')
+
+    if tol.type == models.MULTIPLE_CHOICE:
+        return mark_safe('<span>Pass: %s</br>  Tol.: %s</br> All others fail</span>' % (", ".join(tol.pass_choices()), ', '.join(tol.tol_choices())))
+
+    tols = tol.tolerances_for_value(ref.value)
+    for key in tols:
+        tols[key] = "-" if tols[key] is None else "%.4g" % tols[key]
+    return mark_safe('<span>Pass: Between %(tol_low)s &amp; %(tol_high)s</br> Tol. Between %(act_low)s &amp; %(act_high)s</br> Fail: < %(act_low)s or > %(act_high)s</span>' % tols)
+
+
+#----------------------------------------------------------------------
 @register.filter
 def history_display(history):
     template = get_template("qa/history.html")

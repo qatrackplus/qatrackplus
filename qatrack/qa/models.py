@@ -152,7 +152,7 @@ class Frequency(models.Model):
 
     #----------------------------------------------------------------------
     def __unicode__(self):
-        return "<Frequency(%s)>" % (self.name)
+        return self.name
 
 
 #============================================================================
@@ -417,7 +417,7 @@ class Category(models.Model):
     #----------------------------------------------------------------------
     def __unicode__(self):
         """return display representation of object"""
-        return "Category(%s)" % self.name
+        return self.name
 
 
 #============================================================================

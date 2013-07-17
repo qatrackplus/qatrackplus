@@ -75,6 +75,7 @@ urlpatterns = patterns('',
     url(r"^frequency/(?P<frequency>[/\w-]+?)/$", perform.FrequencyList.as_view(), name="qa_by_frequency"),
 
 
+    url(r"^backup/$", backup.PaperFormRequest.as_view(), name="qa_paper_forms_request"),
     url(r"^backup/paper/$", backup.PaperForms.as_view(), name="qa_paper_forms"),
 
 )

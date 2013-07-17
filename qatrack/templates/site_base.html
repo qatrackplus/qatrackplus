@@ -136,6 +136,17 @@
 
             </li>
             {% endif %}
+            {% if user.is_staff %}
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" >
+                    Tools
+                    <b class="caret"></b>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a href="{% url qa_paper_forms_request%}" title="Create a set of paper backup forms"><i class="icon-file"></i> Paper Backup Forms</a></li>
+                </ul>
+            </li>
+            {% endif %}
         </ul>
     {% endif %}
 
