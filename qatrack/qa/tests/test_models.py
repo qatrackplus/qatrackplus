@@ -969,6 +969,31 @@ class TestUnitTestCollection(TestCase):
 
 
     #----------------------------------------------------------------------
+    def test_cycle_next_list_with_repeats(self):
+
+        test_lists = [utils.create_test_list(name="test list %d" % i) for i in range(2)]
+        test_lists = test_lists + test_lists
+
+        for i, test_list in enumerate(test_lists):
+            test = utils.create_test(name="test %d" % i)
+            utils.create_test_list_membership(test_list, test)
+
+        cycle = utils.create_cycle(test_lists=test_lists)
+        utc = utils.create_unit_test_collection(test_collection=cycle)
+
+        self.assertEqual(utc.next_list(), test_lists[0])
+        utils.create_test_list_instance(unit_test_collection=utc, test_list=test_lists[0], day=2)
+
+        # need to regrab from db since since last_instance was updated in the db
+        # by signal handler
+        utc = models.UnitTestCollection.objects.get(pk=utc.pk)
+        self.assertEqual(utc.next_list(), test_lists[3])
+
+        tli = utils.create_test_list_instance(unit_test_collection=utc, test_list=test_lists[3], day=3)
+        utc = models.UnitTestCollection.objects.get(pk=utc.pk)
+        self.assertEqual(utc.next_list(), test_lists[0])
+
+    #----------------------------------------------------------------------
     def test_cycle_get_list(self):
 
         test_lists = [utils.create_test_list(name="test list %d" % i) for i in range(2)]
