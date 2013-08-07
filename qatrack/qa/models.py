@@ -701,8 +701,8 @@ class TestCollectionInterface(models.Model):
         return self
 
     #----------------------------------------------------------------------
-    def next_list(self, test_list):
-        """Return the list following the input list"""
+    def next_list(self, day):
+        """Return the list following the input day"""
         return self
 
     #----------------------------------------------------------------------
@@ -930,7 +930,7 @@ class UnitTestCollection(models.Model):
         if not hasattr(self, "last_instance") or not self.last_instance:
             return self.tests_object.first()
 
-        return self.tests_object.next_list(self.last_instance.test_list)
+        return self.tests_object.next_list(self.last_instance.day)
 
     #----------------------------------------------------------------------
     def get_list(self, day=None):
@@ -1197,6 +1197,8 @@ class TestListInstance(models.Model):
 
     all_reviewed = models.BooleanField( default=False)
 
+    day = models.IntegerField(default=0)
+
     # for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, editable=False, related_name="test_list_instance_creator")
@@ -1365,18 +1367,13 @@ class TestListCycle(TestCollectionInterface):
             return None
 
     #----------------------------------------------------------------------
-    def next_list(self, test_list):
-        """return list folling input list in cycle order"""
-        if not test_list:
+    def next_list(self, day):
+        """return test list following input day in cycle order"""
+        if day is None:
             return self.first()
 
         try:
-            inp_membership = self.testlistcyclemembership_set.get(test_list=test_list)
-        except TestListCycleMembership.DoesNotExist:
-            return self.first()
-
-        try:
-            return self.testlistcyclemembership_set.get(order=inp_membership.order + 1).test_list
+            return self.testlistcyclemembership_set.get(order=day + 1).test_list
         except TestListCycleMembership.DoesNotExist:
             return self.first()
 

@@ -399,6 +399,9 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         self.object.reviewed_by = None if status.requires_review else self.request.user
         self.object.all_reviewed= not status.requires_review
 
+        self.object.day = self.actual_day
+
+
         if self.object.work_completed is None:
             self.object.work_completed = self.object.modified
 

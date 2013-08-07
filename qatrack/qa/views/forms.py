@@ -213,6 +213,7 @@ class BaseTestListInstanceForm(forms.ModelForm):
     #----------------------------------------------------------------------
     class Meta:
         model = models.TestListInstance
+        exclude = ("day",)
 
     #----------------------------------------------------------------------
     def __init__(self, *args, **kwargs):

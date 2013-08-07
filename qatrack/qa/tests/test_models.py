@@ -572,12 +572,11 @@ class TestTestListCycle(TestCase):
 
     #---------------------------------------------------------------------------
     def test_get_next_list(self):
-        first = self.cycle.first()
-        next_ = self.cycle.next_list(first)
+        next_ = self.cycle.next_list(0)
         self.assertEqual(next_, self.test_lists[1])
 
-        next_ = self.cycle.next_list(next_)
-        self.assertEqual(first, next_)
+        next_ = self.cycle.next_list(1)
+        self.assertEqual(self.cycle.first(), next_)
 
         self.assertFalse(self.empty_cycle.next_list(None))
 
@@ -963,10 +962,11 @@ class TestUnitTestCollection(TestCase):
         utc = models.UnitTestCollection.objects.get(pk=utc.pk)
         self.assertEqual(utc.next_list(), test_lists[1])
 
-        utils.create_test_list_instance(unit_test_collection=utc, test_list=test_lists[1])
+        tli = utils.create_test_list_instance(unit_test_collection=utc, test_list=test_lists[1], day=1)
         utc = models.UnitTestCollection.objects.get(pk=utc.pk)
 
         self.assertEqual(utc.next_list(), test_lists[0])
+
 
     #----------------------------------------------------------------------
     def test_cycle_get_list(self):
@@ -1000,7 +1000,8 @@ class TestUnitTestCollection(TestCase):
 
         membership = cycle.testlistcyclemembership_set.get(test_list=tli.test_list)
         membership.delete()
-        self.assertEqual(cycle.next_list(tli.test_list), cycle.first())
+        cycle.testlistcyclemembership_set.filter(test_list=test_lists[1]).update(order=0)
+        self.assertEqual(cycle.next_list(tli.day), cycle.first())
 
     #----------------------------------------------------------------------
     def test_name(self):
