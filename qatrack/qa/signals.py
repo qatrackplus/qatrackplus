@@ -192,3 +192,15 @@ def test_list_saved(*args, **kwargs):
     """TestList was saved. Recreate any UTI's that may have been deleted in past"""
     if not loaded_from_fixture(kwargs):
         update_unit_test_infos(kwargs["instance"])
+
+#----------------------------------------------------------------------
+@receiver(post_save, sender=models.TestListCycleMembership)
+def test_list_added_to_cycle(*args, **kwargs):
+    """
+    Test List was added to a cycle . Find all units this list
+    is performed on and create UnitTestInfo for the Unit, Test pair.
+    """
+    if (not loaded_from_fixture(kwargs)):
+        update_unit_test_infos(kwargs["instance"].test_list)
+
+

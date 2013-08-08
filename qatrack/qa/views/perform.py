@@ -267,9 +267,16 @@ class PerformQA(PermissionRequiredMixin, CreateView):
     #----------------------------------------------------------------------
     def set_test_lists(self, current_day):
 
-        self.test_list = self.unit_test_col.get_list(current_day)
+        requested_day = self.get_requested_day_to_perform()
+        self.actual_day, self.test_list= self.unit_test_col.get_list(requested_day)
+
+        #self.test_list = self.unit_test_col.get_list(requested_day)
+
+
         if self.test_list is None:
             raise Http404
+
+        #self.actual_day = current_day or 0
 
         self.all_lists = [self.test_list] + list(self.test_list.sublists.all())
 
@@ -311,12 +318,8 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         self.last_day = None
 
         if self.unit_test_col.last_instance:
-            last_membership = models.TestListCycleMembership.objects.filter(
-                test_list=self.unit_test_col.last_instance.test_list,
-                cycle=self.unit_test_col.tests_object
-            )
-            if last_membership:
-                self.last_day = last_membership[0].order + 1
+            self.last_day = self.unit_test_col.last_instance.day + 1
+
     #---------------------------------------------------------------
     def template_unit_test_infos(self):
         """prepare the unit test infos for rendering in template"""
@@ -413,7 +416,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         to_save = []
 
         for ti_form in formset:
-            if ti_form.unit_test_info.test.is_upload():
+            if ti_form.unit_test_info.test.is_upload() and not ti_form.cleaned_data["skipped"]:
                 fname = ti_form.cleaned_data["string_value"]
                 src = os.path.join(settings.TMP_UPLOAD_ROOT, fname)
                 d = os.path.join(settings.MEDIA_ROOT, "%s" % self.object.pk)
@@ -476,7 +479,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
         self.set_unit_test_collection()
         self.set_test_lists(self.get_requested_day_to_perform())
-        self.set_actual_day()
+        #self.set_actual_day()
         self.set_last_day()
         self.set_all_tests()
         self.set_unit_test_infos()

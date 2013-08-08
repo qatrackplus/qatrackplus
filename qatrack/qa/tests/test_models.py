@@ -488,12 +488,12 @@ class TestTestList(TestCase):
     #---------------------------------------------------------------------------
     def test_get_list(self):
         tl = models.TestList()
-        self.assertEqual(tl, tl.get_list())
+        self.assertEqual((0, tl), tl.get_list())
 
     #---------------------------------------------------------------------------
     def test_get_next_list(self):
         tl = models.TestList()
-        self.assertEqual(tl, tl.next_list(None))
+        self.assertEqual((0, tl), tl.next_list(None))
 
     #---------------------------------------------------------------------------
     def test_first(self):
@@ -566,19 +566,19 @@ class TestTestListCycle(TestCase):
     #---------------------------------------------------------------------------
     def test_get_list(self):
         for day, test_list in enumerate(self.test_lists):
-            self.assertEqual(test_list, self.cycle.get_list(day))
+            self.assertEqual((day, test_list), self.cycle.get_list(day))
 
-        self.assertFalse(self.empty_cycle.get_list())
+        self.assertEqual((None, None), self.empty_cycle.get_list())
 
     #---------------------------------------------------------------------------
     def test_get_next_list(self):
         next_ = self.cycle.next_list(0)
-        self.assertEqual(next_, self.test_lists[1])
+        self.assertEqual((1, self.test_lists[1]), next_)
 
         next_ = self.cycle.next_list(1)
-        self.assertEqual(self.cycle.first(), next_)
+        self.assertEqual((0, self.cycle.first()), next_)
 
-        self.assertFalse(self.empty_cycle.next_list(None))
+        self.assertEqual((None, None), self.empty_cycle.next_list(None))
 
     #---------------------------------------------------------------------------
     def test_first(self):
@@ -725,7 +725,7 @@ class TestUTCDueDates(TestCase):
         utc = utils.create_unit_test_collection(test_collection=cycle, frequency=daily, unit=self.utc_hist.unit)
 
         now = timezone.now()
-        tl = utc.next_list()
+        day, tl = utc.next_list()
         uti = models.UnitTestInfo.objects.get(test=tl.all_tests()[0], unit=utc.unit)
         ti = utils.create_test_instance(unit_test_info=uti, work_completed=now, status=status)
 
@@ -938,10 +938,10 @@ class TestUnitTestCollection(TestCase):
 
         utc = utils.create_unit_test_collection()
 
-        self.assertEqual(utc.next_list(), utc.tests_object)
+        self.assertEqual(utc.next_list(), (0, utc.tests_object))
 
         utils.create_test_list_instance(unit_test_collection=utc)
-        self.assertEqual(utc.next_list(), utc.tests_object)
+        self.assertEqual(utc.next_list(), (0, utc.tests_object))
 
     #----------------------------------------------------------------------
     def test_cycle_next_list(self):
@@ -954,18 +954,18 @@ class TestUnitTestCollection(TestCase):
         cycle = utils.create_cycle(test_lists=test_lists)
         utc = utils.create_unit_test_collection(test_collection=cycle)
 
-        self.assertEqual(utc.next_list(), test_lists[0])
+        self.assertEqual(utc.next_list(), (0, test_lists[0]))
         utils.create_test_list_instance(unit_test_collection=utc, test_list=test_lists[0])
 
         # need to regrab from db since since last_instance was updated in the db
         # by signal handler
         utc = models.UnitTestCollection.objects.get(pk=utc.pk)
-        self.assertEqual(utc.next_list(), test_lists[1])
+        self.assertEqual(utc.next_list(), (1, test_lists[1]))
 
         tli = utils.create_test_list_instance(unit_test_collection=utc, test_list=test_lists[1], day=1)
         utc = models.UnitTestCollection.objects.get(pk=utc.pk)
 
-        self.assertEqual(utc.next_list(), test_lists[0])
+        self.assertEqual(utc.next_list(), (0,test_lists[0]))
 
 
     #----------------------------------------------------------------------
@@ -981,17 +981,17 @@ class TestUnitTestCollection(TestCase):
         cycle = utils.create_cycle(test_lists=test_lists)
         utc = utils.create_unit_test_collection(test_collection=cycle)
 
-        self.assertEqual(utc.next_list(), test_lists[0])
+        self.assertEqual(utc.next_list(), (0, test_lists[0]))
         utils.create_test_list_instance(unit_test_collection=utc, test_list=test_lists[0], day=2)
 
         # need to regrab from db since since last_instance was updated in the db
         # by signal handler
         utc = models.UnitTestCollection.objects.get(pk=utc.pk)
-        self.assertEqual(utc.next_list(), test_lists[3])
+        self.assertEqual(utc.next_list(), (3, test_lists[3]))
 
         tli = utils.create_test_list_instance(unit_test_collection=utc, test_list=test_lists[3], day=3)
         utc = models.UnitTestCollection.objects.get(pk=utc.pk)
-        self.assertEqual(utc.next_list(), test_lists[0])
+        self.assertEqual(utc.next_list(), (0, test_lists[0]))
 
     #----------------------------------------------------------------------
     def test_cycle_get_list(self):
@@ -1005,9 +1005,9 @@ class TestUnitTestCollection(TestCase):
         utc = utils.create_unit_test_collection(test_collection=cycle)
 
         for i, test_list in enumerate(test_lists):
-            self.assertEqual(utc.get_list(i), test_list)
+            self.assertEqual(utc.get_list(i), (i, test_list))
 
-        self.assertEqual(utc.get_list(), test_lists[0])
+        self.assertEqual(utc.get_list(), (0,test_lists[0]))
 
     #----------------------------------------------------------------------
     def test_cycle_delete_day(self):
@@ -1020,13 +1020,13 @@ class TestUnitTestCollection(TestCase):
         cycle = utils.create_cycle(test_lists=test_lists)
         utc = utils.create_unit_test_collection(test_collection=cycle)
 
-        self.assertEqual(utc.next_list(), test_lists[0])
+        self.assertEqual(utc.next_list(), (0, test_lists[0]))
         tli = utils.create_test_list_instance(unit_test_collection=utc, test_list=test_lists[0])
 
         membership = cycle.testlistcyclemembership_set.get(test_list=tli.test_list)
         membership.delete()
         cycle.testlistcyclemembership_set.filter(test_list=test_lists[1]).update(order=0)
-        self.assertEqual(cycle.next_list(tli.day), cycle.first())
+        self.assertEqual(cycle.next_list(tli.day), (0, cycle.first()))
 
     #----------------------------------------------------------------------
     def test_name(self):

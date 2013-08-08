@@ -698,12 +698,12 @@ class TestCollectionInterface(models.Model):
 
     #----------------------------------------------------------------------
     def get_list(self, day=0):
-        return self
+        return 0, self
 
     #----------------------------------------------------------------------
     def next_list(self, day):
-        """Return the list following the input day"""
-        return self
+        """Return the day and list following the input day"""
+        return 0, self
 
     #----------------------------------------------------------------------
     def first(self):
@@ -928,13 +928,16 @@ class UnitTestCollection(models.Model):
         """return next list to be completed from tests_object"""
 
         if not hasattr(self, "last_instance") or not self.last_instance:
-            return self.tests_object.first()
+            first =self.tests_object.first()
+            if not first:
+                return None, None
+            return 0, first
 
         return self.tests_object.next_list(self.last_instance.day)
 
     #----------------------------------------------------------------------
     def get_list(self, day=None):
-        """return next list to be completed from tests_object"""
+        """return day and next list to be completed from tests_object"""
 
         if day is None:
             return self.next_list()
@@ -1359,23 +1362,24 @@ class TestListCycle(TestCollectionInterface):
     ordered_tests = all_tests
     #----------------------------------------------------------------------
     def get_list(self, day=0):
-        """get test list for given day"""
+        """get actual day and test list for given input day"""
         try:
             membership = self.testlistcyclemembership_set.get(order=day)
-            return membership.test_list
+            return day, membership.test_list
         except TestListCycleMembership.DoesNotExist:
-            return None
+            return None, None
 
     #----------------------------------------------------------------------
     def next_list(self, day):
-        """return test list following input day in cycle order"""
-        if day is None:
-            return self.first()
+        """return day and test list following input day in cycle order"""
 
         try:
-            return self.testlistcyclemembership_set.get(order=day + 1).test_list
-        except TestListCycleMembership.DoesNotExist:
-            return self.first()
+            return day+1, self.testlistcyclemembership_set.get(order=day + 1).test_list
+        except (TypeError, TestListCycleMembership.DoesNotExist):
+            first = self.first()
+            if not first:
+                return None, None
+            return 0, self.first()
 
     #----------------------------------------------------------------------
     def __unicode__(self):

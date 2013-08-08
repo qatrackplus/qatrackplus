@@ -71,7 +71,7 @@ def create_test_list_instance(unit_test_collection=None, work_completed=None, cr
     if unit_test_collection is None:
         unit_test_collection = create_unit_test_collection()
     if test_list is None:
-        test_list = unit_test_collection.next_list()
+        day, test_list = unit_test_collection.get_list(day)
     if work_completed is None:
         work_completed = timezone.now()
     work_started = work_completed - timezone.timedelta(seconds=60)
