@@ -265,18 +265,13 @@ class PerformQA(PermissionRequiredMixin, CreateView):
     model = models.TestListInstance
 
     #----------------------------------------------------------------------
-    def set_test_lists(self, current_day):
+    def set_test_lists(self):
 
         requested_day = self.get_requested_day_to_perform()
         self.actual_day, self.test_list= self.unit_test_col.get_list(requested_day)
 
-        #self.test_list = self.unit_test_col.get_list(requested_day)
-
-
         if self.test_list is None:
             raise Http404
-
-        #self.actual_day = current_day or 0
 
         self.all_lists = [self.test_list] + list(self.test_list.sublists.all())
 
@@ -298,19 +293,6 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             ).distinct(),
             pk=self.kwargs["pk"]
         )
-
-    #----------------------------------------------------------------------
-    def set_actual_day(self):
-        cycle_membership = models.TestListCycleMembership.objects.filter(
-            test_list=self.test_list,
-            cycle=self.unit_test_col.tests_object
-        )
-
-        self.actual_day = 0
-        self.is_cycle = False
-        if cycle_membership:
-            self.is_cycle = True
-            self.actual_day = cycle_membership[0].order
 
     #----------------------------------------------------------------------
     def set_last_day(self):
@@ -478,8 +460,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             return context
 
         self.set_unit_test_collection()
-        self.set_test_lists(self.get_requested_day_to_perform())
-        #self.set_actual_day()
+        self.set_test_lists()
         self.set_last_day()
         self.set_all_tests()
         self.set_unit_test_infos()
