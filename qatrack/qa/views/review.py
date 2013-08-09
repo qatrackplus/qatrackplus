@@ -155,6 +155,14 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
 
     permission_required = "qa.can_review"
 
+    DUE_DISPLAY_ORDER = (
+        ("overdue", "Due & Overdue"),
+        ("this_week", "Due This Week"),
+        ("next_week", "Due Next Week"),
+        ("this_month", "Due This Month"),
+        ("next_month", "Due Next Month"),
+    )
+
     #----------------------------------------------------------------------
     def get_queryset(self):
 
@@ -187,7 +195,7 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
     def get_context_data(self):
         context = super(DueDateOverview, self).get_context_data()
         qs = self.get_queryset()
-        now = timezone.localtime(timezone.datetime.now())
+        now = timezone.now()
 
         today = now.date()
         friday = today + timezone.timedelta(days=(4 - today.weekday()) % 7)
@@ -197,20 +205,13 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
         next_month_end = timezone.datetime(next_month_start.year, next_month_start.month, calendar.mdays[next_month_start.month]).date()
 
         due = collections.defaultdict(list)
-        due_display_order = (
-            ("overdue", "Due & Overdue"),
-            ("this_week", "Due This Week"),
-            ("next_week", "Due Next Week"),
-            ("this_month", "Due This Month"),
-            ("next_month", "Due Next Month"),
-        )
 
         for utc in qs:
             due_date = utc.due_date.date()
             if due_date <= today:
                 due["overdue"].append(utc)
             elif due_date <= friday:
-                if utc.last_instance.work_completed.date() != today:
+                if utc.last_instance is None or utc.last_instance.work_completed.date() != today:
                     due["this_week"].append(utc)
             elif due_date <= next_friday:
                 due["next_week"].append(utc)
@@ -220,7 +221,7 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
                 due["next_month"].append(utc)
 
         ordered_due_lists = []
-        for key, display in due_display_order:
+        for key, display in self.DUE_DISPLAY_ORDER:
             ordered_due_lists.append((display, due[key]))
         context["due"] = ordered_due_lists
         return context
