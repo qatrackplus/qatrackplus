@@ -8,6 +8,7 @@ from django.utils import unittest, timezone
 from qatrack.qa import models, views
 from qatrack.qa.views import forms
 
+import calendar
 import qatrack.qa.views.perform
 import qatrack.qa.views.charts
 import qatrack.qa.views.review
@@ -698,6 +699,10 @@ class TestPerformQA(TestCase):
         self.t_string = utils.create_test(name="test string", test_type=models.STRING)
         self.t_string.save()
 
+        self.t_string_comp = utils.create_test(name="test string comp", test_type=models.STRING_COMPOSITE)
+        self.t_string_comp.calculation_procedure = "result = 'test'"
+        self.t_string_comp.save()
+
         self.t_upload= utils.create_test(name="test upload", test_type=models.UPLOAD)
         self.t_upload.save()
         self.filename = "TESTRUNNER.tmp"
@@ -706,10 +711,10 @@ class TestPerformQA(TestCase):
         with open(self.filepath,"w") as f:
             f.write("")
 
-        self.tests = [self.t_simple, self.t_const, self.t_comp, self.t_mult, self.t_bool, self.t_string, self.t_upload]
+        self.tests = [self.t_simple, self.t_const, self.t_comp, self.t_mult, self.t_bool, self.t_string, self.t_upload, self.t_string_comp]
 
-        for test in self.tests:
-            utils.create_test_list_membership(self.test_list, test)
+        for idx, test in enumerate(self.tests):
+            utils.create_test_list_membership(self.test_list, test, idx)
 
         group = Group(name="foo")
         group.save()
@@ -751,14 +756,20 @@ class TestPerformQA(TestCase):
 
     def test_readonly(self):
         response = self.client.get(self.url)
-        readonly = [self.t_comp, self.t_const]
+        readonly = [self.t_comp, self.t_const, self.t_string_comp]
 
         idxs = [self.tests.index(t) for t in readonly]
         for idx in idxs:
-            self.assertEqual(
-                response.context["formset"].forms[idx].fields["value"].widget.attrs["readonly"],
-                "readonly"
-            )
+            if not self.tests[idx].type == models.STRING_COMPOSITE:
+                self.assertEqual(
+                    response.context["formset"].forms[idx].fields["value"].widget.attrs["readonly"],
+                    "readonly"
+                )
+            else:
+                self.assertEqual(
+                    response.context["formset"].forms[idx].fields["string_value"].widget.attrs["readonly"],
+                    "readonly"
+                )
     #----------------------------------------------------------------------
 
     def test_bool_widget(self):
@@ -796,6 +807,7 @@ class TestPerformQA(TestCase):
         self.assertTrue(len(self.tests), models.TestInstance.objects.in_progress().count())
         # user is redirected if form submitted successfully
         self.assertEqual(response.status_code, 302)
+
     #---------------------------------------------------------------
     def set_form_data(self, data):
         for test_idx, uti in enumerate(self.unit_test_infos):
@@ -819,6 +831,11 @@ class TestPerformQA(TestCase):
 
         self.set_form_data(data)
 
+        # make sure tli directory doesn't already exist
+        d = os.path.join(settings.MEDIA_ROOT, "1")
+        import shutil
+        shutil.rmtree(d)
+
         response = self.client.post(self.url, data=data)
         #print response
         self.assertTrue(1, models.TestListInstance.objects.count())
@@ -826,6 +843,41 @@ class TestPerformQA(TestCase):
 
         # user is redirected if form submitted successfully
         self.assertEqual(response.status_code, 302)
+
+    #---------------------------------------------------------------------------
+    def test_perform_valid_invalid_status(self):
+        data = {
+            "work_started": "11-07-2012 00:09",
+            #"status": None,
+            "form-TOTAL_FORMS": len(self.tests),
+            "form-INITIAL_FORMS": len(self.tests),
+            "form-MAX_NUM_FORMS": "",
+        }
+
+        self.set_form_data(data)
+
+        response = self.client.post(self.url, data=data)
+        #print response
+        self.assertTrue(1, models.TestListInstance.objects.count())
+
+    #---------------------------------------------------------------------------
+    def test_perform_invalid_work_started(self):
+        data = {
+
+            "work_completed": "11-07-2050 00:10",
+            "work_started": "11-07-2050 00:09",
+            "status": self.status.pk,
+            "form-TOTAL_FORMS": len(self.tests),
+            "form-INITIAL_FORMS": len(self.tests),
+            "form-MAX_NUM_FORMS": "",
+        }
+
+        self.set_form_data(data)
+
+        response = self.client.post(self.url, data=data)
+
+        self.assertEqual(response.status_code, 200)
+
 
     #---------------------------------------------------------------------------
     def test_perform_valid_redirect(self):
@@ -1205,6 +1257,18 @@ class TestEditTestListInstance(TestCase):
         self.assertEqual(88, models.TestInstance.objects.get(pk=self.ti.pk).value)
 
     #----------------------------------------------------------------------
+    def test_no_review_status_edit(self):
+
+        self.status.requires_review = False
+        self.status.save()
+        self.base_data.update({
+            "status": self.status.pk
+        })
+
+        response = self.client.post(self.url, data=self.base_data)
+
+        self.assertEqual(True, models.TestListInstance.objects.get(pk=self.tli.pk).all_reviewed)
+    #----------------------------------------------------------------------
     def test_blank_work_completed(self):
         self.tli.work_completed=None
         self.tli.save()
@@ -1238,8 +1302,8 @@ class TestEditTestListInstance(TestCase):
         response = self.client.post(self.url, data=self.base_data)
 
         self.assertEqual(302, response.status_code)
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def test_no_value(self):
 
         self.base_data.update({
@@ -1257,16 +1321,16 @@ class TestEditTestListInstance(TestCase):
 
         response = self.client.post(self.url, data=self.base_data)
         self.assertEqual(200, response.status_code)
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def test_start_after_complete(self):
 
         self.base_data["work_completed"] = "10-07-2012 00:10",
 
         response = self.client.post(self.url, data=self.base_data)
         self.assertEqual(200, response.status_code)
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def test_start_future(self):
         del self.base_data["work_completed"]
         self.base_data["work_started"] = "10-07-2050 00:10",
@@ -1309,9 +1373,8 @@ class TestEditTestListInstance(TestCase):
         self.assertIsNone(ti.value)
         self.assertNotIn(ti.comment, ("", None))
 
+
 #============================================================================
-
-
 class TestReviewTestListInstance(TestCase):
 
     #----------------------------------------------------------------------
@@ -1367,6 +1430,112 @@ class TestReviewTestListInstance(TestCase):
         ti = models.TestInstance.objects.get(pk=self.ti.pk)
         self.assertEqual(ti.status, self.review_status)
         self.assertEqual(0, models.TestListInstance.objects.unreviewed().count())
+
+    #----------------------------------------------------------------------
+    def test_update_still_requires_review(self):
+
+        response = self.client.get(self.url)
+
+        self.review_status.requires_review = True
+        self.review_status.save()
+
+        self.base_data.update({
+            "testinstance_set-0-status": self.review_status.pk,
+        })
+
+        self.assertEqual(1, models.TestListInstance.objects.unreviewed().count())
+        response = self.client.post(self.url, data=self.base_data)
+
+        self.assertEqual(302, response.status_code)
+        tli = models.TestListInstance.objects.get(pk=self.tli.pk)
+        self.assertFalse(tli.all_reviewed)
+
+#============================================================================
+class TestDueDateOverView(TestCase):
+
+    #----------------------------------------------------------------------
+    def setUp(self):
+
+        self.view = views.review.DueDateOverview.as_view()
+        self.factory = RequestFactory()
+
+        self.status = utils.create_status()
+        self.review_status = utils.create_status(name="reviewed", slug="reviewed", is_default=False)
+        self.review_status.requires_review = False
+        self.review_status.save()
+
+        self.test_list = utils.create_test_list()
+        self.test = utils.create_test(name="test_simple")
+        utils.create_test_list_membership(self.test_list, self.test)
+
+        intervals = (
+            ("Daily", "daily", 1, 1, 1),
+            ("Weekly", "weekly", 7, 7, 9),
+            ("Monthly", "monthly", 28, 28, 35),
+        )
+        self.frequencies = {}
+        for t, s, nom, due, overdue in intervals:
+            f = utils.create_frequency(name=t, slug=s, nom=nom, due=due, overdue=overdue)
+            self.frequencies[s] = f
+
+        self.utc = utils.create_unit_test_collection(test_collection=self.test_list)
+        self.tli = utils.create_test_list_instance(unit_test_collection=self.utc)
+
+        self.url = reverse("overview_due_dates")
+        self.client.login(username="user", password="password")
+        self.user = User.objects.get(username="user")
+        self.user.save()
+
+        self.user.groups.add(Group.objects.latest("pk"))
+        self.user.save()
+
+        self.utc.assigned_to =  Group.objects.latest("pk")
+        self.utc.save()
+
+        now = timezone.now()
+        self.today = now
+        self.friday = self.today + timezone.timedelta(days=(4 - self.today.weekday()) % 7)
+        self.next_friday = self.friday + timezone.timedelta(days=7)
+        self.month_end = timezone.make_aware(timezone.datetime(now.year, now.month, calendar.mdays[now.month]), timezone.get_current_timezone())
+        self.next_month_start = self.month_end + timezone.timedelta(days=1)
+
+    #----------------------------------------------------------------------
+    def test_overdue(self):
+        self.utc.due_date = self.today-timezone.timedelta(days=1)
+        self.utc.save()
+        response = self.client.get(self.url)
+        self.assertListEqual(response.context_data["due"][0][1], [self.utc])
+
+    #----------------------------------------------------------------------
+    def test_due_this_week(self):
+        self.utc.due_date = self.friday
+        self.utc.save()
+        response = self.client.get(self.url)
+        if self.today == self.friday:
+            self.assertListEqual(response.context_data["due"][0][1], [self.utc])
+        else:
+            self.assertListEqual(response.context_data["due"][1][1], [self.utc])
+
+    #----------------------------------------------------------------------
+    def test_due_next_week(self):
+        self.utc.due_date = self.friday+timezone.timedelta(days=3)
+        self.utc.save()
+        response = self.client.get(self.url)
+        self.assertListEqual(response.context_data["due"][2][1], [self.utc])
+
+    #----------------------------------------------------------------------
+    def test_due_this_month(self):
+        self.utc.due_date = self.next_friday+timezone.timedelta(days=3)
+        self.utc.save()
+        response = self.client.get(self.url)
+        self.assertListEqual(response.context_data["due"][3][1], [self.utc])
+
+    #----------------------------------------------------------------------
+    def test_due_next_month(self):
+        self.utc.due_date = self.next_month_start+timezone.timedelta(days=3)
+        self.utc.save()
+        response = self.client.get(self.url)
+        self.assertListEqual(response.context_data["due"][4][1], [self.utc])
 
 
 if __name__ == "__main__":

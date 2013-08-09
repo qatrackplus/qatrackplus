@@ -26,7 +26,7 @@ from braces.views import JSONResponseMixin, PermissionRequiredMixin
 
 class SetEncoder(json.JSONEncoder):
     def default(self, obj):
-        if isinstance(obj, set):
+        if isinstance(obj, set): #pragma: no vover
             return list(obj)
         return json.JSONEncoder.default(self, obj)
 

@@ -379,17 +379,14 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         self.object.created_by = self.request.user
         self.object.modified_by = self.request.user
         self.object.modified = timezone.now()
+        wc = self.object.work_completed
+        self.object.work_completed = wc if wc else self.object.modified
 
         self.object.reviewed= None if status.requires_review else self.object.modified
         self.object.reviewed_by = None if status.requires_review else self.request.user
         self.object.all_reviewed= not status.requires_review
 
         self.object.day = self.actual_day
-
-
-        if self.object.work_completed is None:
-            self.object.work_completed = self.object.modified
-
 
         # save here so pk is set when saving test instances
         # and save below to get due deate set ocrrectly

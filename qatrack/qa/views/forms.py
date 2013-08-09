@@ -70,6 +70,8 @@ class TestInstanceWidgetsMixin(object):
         self.fields["string_value"].widget.attrs["class"] = "qa-input"
         self.fields["value"].widget.attrs["class"] = "qa-input"
         attrs = self.fields["value"].widget.attrs
+        str_attrs = self.fields["string_value"].widget.attrs
+
         test_type = self.unit_test_info.test.type
 
         if test_type == models.BOOLEAN:
@@ -84,6 +86,7 @@ class TestInstanceWidgetsMixin(object):
                 self.initial["value"] = int(self.instance.value)
 
         self.fields["value"].widget.attrs.update(attrs)
+        self.fields["string_value"].widget.attrs.update(str_attrs)
 
     #----------------------------------------------------------------------
     def disable_read_only_fields(self):
@@ -92,6 +95,7 @@ class TestInstanceWidgetsMixin(object):
             self.fields["value"].widget.attrs["readonly"] = "readonly"
         elif self.unit_test_info.test.type in (models.STRING_COMPOSITE,):
             self.fields["string_value"].widget.attrs["readonly"] = "readonly"
+
 
 #============================================================================
 class CreateTestInstanceForm(TestInstanceWidgetsMixin, forms.Form):
@@ -260,10 +264,11 @@ class BaseTestListInstanceForm(forms.ModelForm):
                 self._errors["work_started"] = self.error_class(["Work started date/time can not be after work completed date/time"])
                 del cleaned_data["work_started"]
 
-        elif work_started:
+        if work_started:
             if work_started >= timezone.now().astimezone(timezone.get_current_timezone()):
                 self._errors["work_started"] = self.error_class(["Work started date/time can not be in the future"])
-                del cleaned_data["work_started"]
+                if "work_started" in cleaned_data:
+                    del cleaned_data["work_started"]
         return cleaned_data
 
 
