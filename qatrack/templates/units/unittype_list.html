@@ -14,14 +14,14 @@
         Click a button to perform QA for one of the units below.
     </div>
 </div>
-    {% regroup units by unit__type__name as unit_types %}
 
-    {% for unit_type in unit_types %}
+    {% for unit_type, units in unit_types%}
+
         <div class="row-fluid row-spacer">
             <div class="span12">
 
-                <h4 class="header-spacer">{{unit_type.grouper}}</h4>
-                {% for unit in unit_type.list %}
+                <h4 class="header-spacer">{{unit_type}}</h4>
+                {% for unit in units %}
 
                     {% if not perms.qa.can_choose_frequency %}
                             <a class="btn" href="{% url qa_by_unit unit_number=unit.unit__number %}">{{unit.unit__name}}</a>
@@ -49,6 +49,7 @@
         </div>
 
     {% endfor %}
+
     <script type="text/javascript">
         $(".btn.top-level").click(function(){
             window.location = $(this).find("a").first().attr("href");

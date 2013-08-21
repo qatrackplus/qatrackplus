@@ -1,3 +1,4 @@
+import collections
 import json
 import math
 import os
@@ -252,9 +253,13 @@ class ChooseUnit(TemplateView):
         if self.active_only:
             q = q.filter(active=True)
 
-        q = q.values("unit", "unit__type", "unit__type__name", "unit__name", "unit__number").order_by("unit__number").distinct()
+        q = q.values("unit", "unit__type__name", "unit__name", "unit__number").order_by("unit__number").distinct()
 
-        context["units"] = q
+        unit_types = collections.defaultdict(list)
+        for unit in q:
+            unit_types[unit["unit__type__name"]].append(unit)
+
+        context["unit_types"] = sorted(unit_types.items(), key=lambda x: min([u["unit__number"] for u in x[1]]))
         return context
 
 
