@@ -437,8 +437,8 @@ def get_param(sg, xbar, r, bl, n):
 
     Ac = [np.mean(xbar[0: bl]), np.mean(xbar[0: bl])]
 
-    bias_corr = np.float(len(r[0:bl]))/np.float(len(r[0:bl])-1)
-    Rc = [np.mean(r[0: bl])*bias_corr, np.mean(r[0: bl])*bias_corr]
+    bias_corr = np.float(len(r[0:bl])) / np.float(len(r[0:bl]) - 1)
+    Rc = [np.mean(r[0: bl]) * bias_corr, np.mean(r[0: bl])*bias_corr]
 
     Afactor = 3.0 * Rc[0] / (d2 * np.sqrt(n))
     Au = [Ac[0] + Afactor, Ac[0] + Afactor]

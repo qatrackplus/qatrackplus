@@ -117,7 +117,7 @@ class TestToleranceForReference(TestCase):
 
     #----------------------------------------------------------------------
     def test_no_ref(self):
-        tol = models.Tolerance( type=models.PERCENT)
+        tol = models.Tolerance(type=models.PERCENT)
         self.assertEqual("", qa_tags.tolerance_for_reference(tol, None))
     #----------------------------------------------------------------------
 
@@ -127,14 +127,13 @@ class TestToleranceForReference(TestCase):
 
     #----------------------------------------------------------------------
     def test_no_tol(self):
-        t = models.Test(type=models.NUMERICAL)
         r = models.Reference(value=1)
         self.assertIn("N/A", qa_tags.tolerance_for_reference(None, r))
 
     #----------------------------------------------------------------------
     def test_multiple_choice(self):
         tol = models.Tolerance(type=models.MULTIPLE_CHOICE, mc_tol_choices="foo", mc_pass_choices="")
-        self.assertIn("Tol: foo", qa_tags.tolerance_for_reference(tol,None))
+        self.assertIn("Tol: foo", qa_tags.tolerance_for_reference(tol, None))
 
     #----------------------------------------------------------------------
     def test_absolute(self):
@@ -144,4 +143,4 @@ class TestToleranceForReference(TestCase):
             act_low=-2, tol_low=-1, tol_high=1, act_high=2,
         )
 
-        self.assertIn("Between 0 &amp; 2", qa_tags.tolerance_for_reference(tol,r))
+        self.assertIn("Between 0 &amp; 2", qa_tags.tolerance_for_reference(tol, r))

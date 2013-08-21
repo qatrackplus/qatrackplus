@@ -159,7 +159,7 @@ class UnitTestInfoAdmin(admin.ModelAdmin):
             if val not in ("", None):
                 if not(test_info.reference and test_info.reference.value == float(val)):
                     try:
-                        ref = models.Reference.objects.filter(value=val,type=ref_type)[0]
+                        ref = models.Reference.objects.filter(value=val, type=ref_type)[0]
                     except IndexError:
                         ref = models.Reference(
                             value=val,
@@ -440,12 +440,13 @@ class ToleranceForm(forms.ModelForm):
 
     #----------------------------------------------------------------------
     def validate_unique(self):
-        super(ToleranceForm,self).validate_unique()
+        super(ToleranceForm, self).validate_unique()
         if not self.instance.pk:
             params = forms.model_to_dict(self.instance)
             params.pop("id")
-            if models.Tolerance.objects.filter(**params).count()>0:
-                self._update_errors({forms.models.NON_FIELD_ERRORS:["Duplicate Tolerance. A Tolerance with these values already exists"]})
+            if models.Tolerance.objects.filter(**params).count() > 0:
+                self._update_errors({forms.models.NON_FIELD_ERRORS: ["Duplicate Tolerance. A Tolerance with these values already exists"]})
+
 
 #====================================================================================
 class ToleranceAdmin(BasicSaveUserAdmin):

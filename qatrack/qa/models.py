@@ -306,7 +306,8 @@ class Tolerance(models.Model):
 
     class Meta:
 
-        ordering = ["type","act_low","tol_low","tol_high","act_high"]
+        ordering = ["type", "act_low", "tol_low", "tol_high", "act_high"]
+
     #---------------------------------------------------------------------------
     def pass_choices(self):
         return self.mc_pass_choices.split(",") if self.mc_pass_choices else []
@@ -351,8 +352,8 @@ class Tolerance(models.Model):
     #----------------------------------------------------------------------
     def clean_tols(self):
         if self.type in (ABSOLUTE, PERCENT):
-            if all([getattr(self,c) is None for c in (ACT_HIGH, ACT_LOW, TOL_HIGH, TOL_LOW,)]):
-                raise ValidationError({ACT_LOW:["You must set at least one tolerance or action level for this tolerance type"]})
+            if all([getattr(self, c) is None for c in (ACT_HIGH, ACT_LOW, TOL_HIGH, TOL_LOW,)]):
+                raise ValidationError({ACT_LOW: ["You must set at least one tolerance or action level for this tolerance type"]})
 
     #----------------------------------------------------------------------
     def clean_fields(self, exclude=None):
@@ -384,6 +385,7 @@ class Tolerance(models.Model):
     @property
     def name(self):
         return self.__unicode__()
+
     #---------------------------------------------------------------------------
     def __unicode__(self):
         """more helpful interactive display name"""
@@ -395,7 +397,7 @@ class Tolerance(models.Model):
             vals = ["%.2f%%" % v if v else '--' for v in vals]
             return "Percent(%s, %s, %s, %s)" % tuple(vals)
         elif self.type == MULTIPLE_CHOICE:
-            return "M.C.(%d pass choices, %d tol choices)" % (len(self.pass_choices()),len(self.tol_choices()))
+            return "M.C.(%d pass choices, %d tol choices)" % (len(self.pass_choices()), len(self.tol_choices()))
 
 
 #============================================================================
@@ -512,10 +514,10 @@ class Test(models.Model):
         errors = self.check_test_type(self.calculation_procedure, [UPLOAD, COMPOSITE, STRING_COMPOSITE], "Calculation Procedure")
         self.calculation_procedure = str(self.calculation_procedure).replace("\r\n", "\n")
 
-        macro_var_set = re.findall("^\s*%s\s*=\s*[{\[(\-+_0-9.a-zA-Z]+.*$"%(self.slug), self.calculation_procedure, re.MULTILINE)
+        macro_var_set = re.findall("^\s*%s\s*=\s*[{\[(\-+_0-9.a-zA-Z]+.*$" % (self.slug), self.calculation_procedure, re.MULTILINE)
         result_line = self.RESULT_RE.findall(self.calculation_procedure)
         if not (result_line or macro_var_set):
-            errors.append(_('Snippet must set macro name to a value or contain a result line (e.g. %s = my_var/another_var*2 or result = my_var/another_var*2)'%self.slug))
+            errors.append(_('Snippet must set macro name to a value or contain a result line (e.g. %s = my_var/another_var*2 or result = my_var/another_var*2)' % self.slug))
 
         try:
             utils.tokenize_composite_calc(self.calculation_procedure)
@@ -720,6 +722,7 @@ class TestCollectionInterface(models.Model):
     def test_list_members(self):
         """return all days from this collection"""
         raise NotImplementedError
+
     #----------------------------------------------------------------------
     def content_type(self):
         """return content type of this object"""
@@ -741,6 +744,7 @@ class TestList(TestCollectionInterface):
     def test_list_members(self):
         """return all days from this collection"""
         return TestList.objects.filter(pk=self.pk)
+
     #----------------------------------------------------------------------
     def all_lists(self):
         """return query for self and all sublists"""
@@ -897,7 +901,7 @@ class UnitTestCollection(models.Model):
 
         before = before or timezone.now()
 
-        tlis = TestListInstance.objects.filter( unit_test_collection=self)
+        tlis = TestListInstance.objects.filter(unit_test_collection=self)
 
         if before is not None:
             tlis = tlis.filter(work_completed__lt=before)
@@ -932,7 +936,7 @@ class UnitTestCollection(models.Model):
         """return next list to be completed from tests_object"""
 
         if not hasattr(self, "last_instance") or not self.last_instance:
-            first =self.tests_object.first()
+            first = self.tests_object.first()
             if not first:
                 return None, None
             return 0, first
@@ -1168,12 +1172,15 @@ class TestListInstanceManager(models.Manager):
     #----------------------------------------------------------------------
     def unreviewed(self):
         return self.complete().filter(all_reviewed=False)
+
     #----------------------------------------------------------------------
     def unreviewed_count(self):
         return self.unreviewed().count()
+
     #----------------------------------------------------------------------
     def in_progress(self):
         return self.get_query_set().filter(in_progress=True)
+
     #----------------------------------------------------------------------
     def complete(self):
         return self.get_query_set().filter(in_progress=False)
@@ -1202,7 +1209,7 @@ class TestListInstance(models.Model):
     reviewed = models.DateTimeField(null=True, blank=True)
     reviewed_by = models.ForeignKey(User, editable=False, null=True, blank=True, related_name="test_list_instance_reviewer")
 
-    all_reviewed = models.BooleanField( default=False)
+    all_reviewed = models.BooleanField(default=False)
 
     day = models.IntegerField(default=0)
 
@@ -1296,7 +1303,7 @@ class TestListInstance(models.Model):
         #because that causes Django to requery db and negates the advantage of using
         #prefetch_related above
 
-        test_instances = sorted(self.testinstance_set.all(),key=lambda x: x.created)
+        test_instances = sorted(self.testinstance_set.all(), key=lambda x: x.created)
         for ti in test_instances:
 
             test_history = []
@@ -1305,7 +1312,7 @@ class TestListInstance(models.Model):
                 match = [x for x in q if x.unit_test_info_id == ti.unit_test_info_id]
                 test_history.append(match[0] if match else None)
 
-            instances.append((ti,test_history))
+            instances.append((ti, test_history))
 
         return instances, dates
 
@@ -1364,6 +1371,7 @@ class TestListCycle(TestCollectionInterface):
         return query.distinct()
 
     ordered_tests = all_tests
+
     #----------------------------------------------------------------------
     def get_list(self, day=0):
         """get actual day and test list for given input day"""
@@ -1378,7 +1386,7 @@ class TestListCycle(TestCollectionInterface):
         """return day and test list following input day in cycle order"""
 
         try:
-            return day+1, self.testlistcyclemembership_set.get(order=day + 1).test_list
+            return day + 1, self.testlistcyclemembership_set.get(order=day + 1).test_list
         except (TypeError, TestListCycleMembership.DoesNotExist):
             first = self.first()
             if not first:

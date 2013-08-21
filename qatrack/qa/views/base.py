@@ -1,31 +1,26 @@
 from .. import signals  # signals import needs to be here so signals get registered
 
-import json
 import logging
-import urllib
 
-
-from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Q
-from django.http import HttpResponse
 from django.core.urlresolvers import reverse
 from django.template import Context
 from django.contrib.auth.context_processors import PermWrapper
 from django.template.loader import get_template
 
-from django.views.generic import ListView, UpdateView
-from django.utils import timezone
+from django.views.generic import UpdateView
 
-from qatrack.qa import models, utils
+from qatrack.qa import models
 from qatrack.qa.templatetags import qa_tags
 
 from qatrack.data_tables.views import BaseDataTablesDataSource
 
-from braces.views import PermissionRequiredMixin, PrefetchRelatedMixin, SelectRelatedMixin
+from braces.views import PrefetchRelatedMixin, SelectRelatedMixin
 
 logger = logging.getLogger('qatrack.console')
 
+
+#============================================================================
 class TestListInstanceMixin(SelectRelatedMixin, PrefetchRelatedMixin):
 
     model = models.TestListInstance
@@ -45,6 +40,7 @@ class TestListInstanceMixin(SelectRelatedMixin, PrefetchRelatedMixin):
         "modified_by",
         "test_list",
     ]
+
 
 #============================================================================
 class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
@@ -71,7 +67,6 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
             "tolerance",
             "unit_test_info__test__category",
         )
-
 
         if self.request.method == "POST":
             formset = self.formset_class(self.request.POST, self.request.FILES, instance=self.object, queryset=test_instances, user=self.request.user)

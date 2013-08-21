@@ -1,8 +1,5 @@
-from django.db.models import Q
-from django.conf import settings
 import json
 import math
-import models
 import StringIO
 import tokenize
 import token
@@ -14,7 +11,7 @@ class SetEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, set):
             return list(obj)
-        return json.JSONEncoder.default(self, obj)
+        return json.JSONEncoder.default(self, obj)  #pragma: nocover
 
 
 #----------------------------------------------------------------------

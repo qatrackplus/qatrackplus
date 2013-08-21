@@ -2,8 +2,9 @@ from django.test import TestCase
 from django.core import mail
 from qatrack.qa import models, signals
 from qatrack.qa.tests import utils
-import handlers
-from .models import NotificationSubscription, TOLERANCE, ACTION
+from .models import NotificationSubscription, TOLERANCE
+
+
 #============================================================================
 class TestEmailSent(TestCase):
 
@@ -58,19 +59,18 @@ class TestEmailSent(TestCase):
     #----------------------------------------------------------------------
     def test_email_sent(self):
 
-        notification = NotificationSubscription(group=self.group,warning_level=TOLERANCE)
+        notification = NotificationSubscription(group=self.group, warning_level=TOLERANCE)
         notification.save()
-        signals.testlist_complete.send(sender=self,instance=self.test_list_instance,created=True)
-        self.assertEqual(len(mail.outbox),1)
+        signals.testlist_complete.send(sender=self, instance=self.test_list_instance, created=True)
+        self.assertEqual(len(mail.outbox), 1)
 
     #----------------------------------------------------------------------
     def test_email_not_sent(self):
         #no failing tests so
 
-        notification = NotificationSubscription(group=self.group,warning_level=TOLERANCE)
+        notification = NotificationSubscription(group=self.group, warning_level=TOLERANCE)
         notification.save()
 
         self.test_list_instance.testinstance_set.update(pass_fail=models.OK)
-        signals.testlist_complete.send(sender=self,instance=self.test_list_instance,created=True)
-        self.assertEqual(len(mail.outbox),0)
-
+        signals.testlist_complete.send(sender=self, instance=self.test_list_instance, created=True)
+        self.assertEqual(len(mail.outbox), 0)

@@ -4,8 +4,6 @@ import json
 import textwrap
 
 from django.conf import settings
-from django.contrib.contenttypes.models import ContentType
-from django.core.urlresolvers import reverse
 from django.db.models import Count
 from django.http import HttpResponse
 from django.template import Context
@@ -18,7 +16,6 @@ from matplotlib.figure import Figure
 import numpy
 
 from .. import models
-from qatrack.qa.api import ValueResource
 from qatrack.qa.control_chart import control_chart
 from qatrack.units.models import Unit
 from qatrack.qa.utils import SetEncoder
@@ -26,6 +23,7 @@ from braces.views import JSONResponseMixin, PermissionRequiredMixin
 
 
 local_tz = timezone.get_current_timezone()
+
 
 #============================================================================
 class ChartView(PermissionRequiredMixin, TemplateView):
@@ -48,12 +46,12 @@ class ChartView(PermissionRequiredMixin, TemplateView):
             "unit_test_info__test",
             "unit_test_info__test__type",
             "test_list_instance__test_list",
-            "test_list_instance__unit_test_collection__frequency"
-        )#.distinct()
+            "test_list_instance__unit_test_collection__frequency",
+        )
 
         data = {
-            'test_lists' : collections.defaultdict(set),
-            'unit_frequency_lists':collections.defaultdict(lambda: collections.defaultdict(set)),
+            'test_lists': collections.defaultdict(set),
+            'unit_frequency_lists': collections.defaultdict(lambda: collections.defaultdict(set)),
         }
 
         for unit, test, test_type, test_list, frequency in q:
@@ -63,7 +61,6 @@ class ChartView(PermissionRequiredMixin, TemplateView):
                 data["unit_frequency_lists"][unit][frequency].add(test_list)
 
         return data
-
 
     #----------------------------------------------------------------------
     def get_context_data(self, **kwargs):
@@ -84,7 +81,7 @@ class ChartView(PermissionRequiredMixin, TemplateView):
             "test_lists": self.test_lists,
             "categories": models.Category.objects.all(),
             "statuses": models.TestInstanceStatus.objects.all(),
-            "units": Unit.objects.values("pk","name"),
+            "units": Unit.objects.values("pk", "name"),
             "test_data": json.dumps(test_data, cls=SetEncoder)
         }
         context.update(c)
@@ -104,6 +101,7 @@ class ChartView(PermissionRequiredMixin, TemplateView):
         ).values(
             "pk", "description", "name",
         )
+
     #----------------------------------------------------------------------
     def set_tests(self):
         """self.tests is set to all tests that have been completed
@@ -114,6 +112,7 @@ class ChartView(PermissionRequiredMixin, TemplateView):
             "pk", "category", "name", "description",
         )
 
+
 #============================================================================
 class BaseChartView(View):
     ISO_FORMAT = False
@@ -123,7 +122,7 @@ class BaseChartView(View):
 
         self.get_plot_data()
         table = self.create_data_table()
-        resp = self.render_to_response({"data":self.plot_data, "table": table})
+        resp = self.render_to_response({"data": self.plot_data, "table": table})
 
         return resp
 
@@ -138,7 +137,7 @@ class BaseChartView(View):
 
         for name, points in self.plot_data.iteritems():
             headers.append(name)
-            col = [(p["display_date"], p["display"],r(p["reference"])) for p in points]
+            col = [(p["display_date"], p["display"], r(p["reference"])) for p in points]
             cols.append(col)
             max_len = max(len(col), max_len)
 
@@ -153,7 +152,7 @@ class BaseChartView(View):
             rows.append(row)
 
         context = Context({
-            "ncols": 3*len(rows[0]) if rows else 0,
+            "ncols": 3 * len(rows[0]) if rows else 0,
             "rows": rows,
             "headers": headers
         })
@@ -175,9 +174,11 @@ class BaseChartView(View):
             d = timezone.make_aware(d, timezone.get_current_timezone())
 
         return d.astimezone(timezone.utc)
+
     #---------------------------------------------------------------
     def convert_date(self, date):
         return date.isoformat()
+
     #---------------------------------------------------------------
     def test_instance_to_point(self, ti):
 
@@ -185,9 +186,9 @@ class BaseChartView(View):
             "act_high": None, "act_low": None, "tol_low": None, "tol_high": None,
             "date": self.convert_date(timezone.make_naive(ti.work_completed, local_tz)),
             "display_date": ti.work_completed,
-            "value":ti.value,
-            "display":ti.value_display(),
-            "reference":ti.reference.value if ti.reference else None,
+            "value": ti.value,
+            "display": ti.value_display(),
+            "reference": ti.reference.value if ti.reference else None,
         }
         if ti.tolerance is not None and ti.reference is not None:
             point.update(ti.tolerance.tolerances_for_value(ti.reference.value))
@@ -202,7 +203,6 @@ class BaseChartView(View):
         now = timezone.now()
         from_date = self.get_date("from_date", now - timezone.timedelta(days=365))
         to_date = self.get_date("to_date", now)
-
 
         tests = self.request.GET.getlist("tests[]", [])
         test_lists = self.request.GET.getlist("test_lists[]", [])
@@ -231,12 +231,13 @@ class BaseChartView(View):
                 "work_completed"
             )
             if tis:
-                name = "%s - %s :: %s" %(u.name, tl.name, t.name)
+                name = "%s - %s :: %s" % (u.name, tl.name, t.name)
                 self.plot_data[name] = [self.test_instance_to_point(ti) for ti in tis]
 
     #---------------------------------------------------------------------------
     def render_to_response(self, context):
         return self.render_json_response(context)
+
 
 #============================================================================
 class BasicChartData(PermissionRequiredMixin, JSONResponseMixin, BaseChartView):
@@ -265,9 +266,10 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
     #---------------------------------------------------------------
     def get_plot_data(self):
         """only use one data series"""
-        super(ControlChartImage,self).get_plot_data()
+        super(ControlChartImage, self).get_plot_data()
         if self.plot_data:
             self.plot_data = dict([self.plot_data.popitem()])
+
     #----------------------------------------------------------------------
     def render_to_response(self, context):
 
@@ -282,7 +284,7 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
 
         if context["data"] and context["data"].values():
             name, points = context["data"].items()[0]
-            dates, data = zip(*[(ti["date"],ti["value"]) for ti in points])
+            dates, data = zip(*[(ti["date"], ti["value"]) for ti in points])
 
         n_baseline_subgroups = self.get_number_from_request("n_baseline_subgroups", 2, dtype=int)
         n_baseline_subgroups = max(2, n_baseline_subgroups)
@@ -301,15 +303,11 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
             try:
                 control_chart.display(fig, numpy.array(data), subgroup_size, n_baseline_subgroups, fit=include_fit, dates=dates)
                 fig.autofmt_xdate()
-
                 canvas.print_png(response)
-
-            except (RuntimeError, OverflowError) as e:
+            except (RuntimeError, OverflowError) as e:  #pragma: nocover
                 fig.clf()
-                msg = "There was a problem generating your control chart:\n"
-                msg += str(e)
+                msg = "There was a problem generating your control chart:\n%s" % str(e)
                 fig.text(0.1, 0.9, "\n".join(textwrap.wrap(msg, 40)), fontsize=12)
                 canvas.print_png(response)
 
         return response
-

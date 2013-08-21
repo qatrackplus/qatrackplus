@@ -15,11 +15,13 @@ from .perform import ChooseUnit
 
 from qatrack.units.models import Unit
 
-from braces.views import PermissionRequiredMixin, PrefetchRelatedMixin, SelectRelatedMixin
+from braces.views import PermissionRequiredMixin
+
 
 #============================================================================
 class TestListInstanceDetails(TestListInstanceMixin, DetailView):
     pass
+
 
 #============================================================================
 class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
@@ -64,7 +66,7 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
             models.TestInstance.objects.filter(pk__in=test_instance_pks).update(status=status)
 
         if still_requires_review:
-            test_list_instance.all_reviewed=False
+            test_list_instance.all_reviewed = False
             test_list_instance.save()
 
         test_list_instance.unit_test_collection.set_due_date()
@@ -216,7 +218,7 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
             elif due_date <= next_friday:
                 due["next_week"].append(utc)
             elif due_date <= month_end:
-                due["this_month"].append(utc)
+                due["this_month"].append(utc)  #pragma: nocover
             elif due_date <= next_month_end:
                 due["next_month"].append(utc)
 

@@ -4,7 +4,6 @@ from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
 from django.utils.translation import ugettext as _
-from django.contrib.contenttypes.models import ContentType
 from django.views.generic import ListView, FormView
 from django import forms
 
@@ -41,6 +40,8 @@ class PaperBackupRequestForm(forms.Form):
         required=False,
     )
 
+
+#============================================================================
 class PaperFormRequest(FormView):
 
     form_class = PaperBackupRequestForm
@@ -51,30 +52,31 @@ class PaperFormRequest(FormView):
 
         if self.request.method == "GET":
             return {
-                "units":Unit.objects.values_list("pk",flat=True),
-                "frequencies":models.Frequency.objects.filter(due_interval__lte=7).values_list("pk",flat=True),
-                "test_categories":models.Category.objects.values_list("pk",flat=True),
-                "assigned_to":Group.objects.values_list("pk",flat=True),
-                "include_refs":True,
-                "include_inactive":False,
+                "units": Unit.objects.values_list("pk", flat=True),
+                "frequencies": models.Frequency.objects.filter(due_interval__lte=7).values_list("pk", flat=True),
+                "test_categories": models.Category.objects.values_list("pk", flat=True),
+                "assigned_to": Group.objects.values_list("pk", flat=True),
+                "include_refs": True,
+                "include_inactive": False,
             }
-        return super(PaperFormRequest,self).get_initial()
+        return super(PaperFormRequest, self).get_initial()
 
     #---------------------------------------------------------------
     def form_valid(self, form):
 
         q = urlencode({
-            "unit":form.cleaned_data["units"].values_list("pk",flat=True),
-            "frequency":form.cleaned_data["frequencies"].values_list("pk",flat=True),
-            "category":form.cleaned_data["test_categories"].values_list("pk",flat=True),
-            "assigned_to":form.cleaned_data["assigned_to"].values_list("pk",flat=True),
-            "include_refs":form.cleaned_data["include_refs"],
-            "include_inactive":form.cleaned_data["include_inactive"],
+            "unit": form.cleaned_data["units"].values_list("pk", flat=True),
+            "frequency": form.cleaned_data["frequencies"].values_list("pk", flat=True),
+            "category": form.cleaned_data["test_categories"].values_list("pk", flat=True),
+            "assigned_to": form.cleaned_data["assigned_to"].values_list("pk", flat=True),
+            "include_refs": form.cleaned_data["include_refs"],
+            "include_inactive": form.cleaned_data["include_inactive"],
         }, doseq=True)
 
-        return HttpResponseRedirect("%s?%s"%(reverse("qa_paper_forms"), q))
+        return HttpResponseRedirect("%s?%s" % (reverse("qa_paper_forms"), q))
 
 
+#============================================================================
 class PaperForms(ListView):
     model = models.UnitTestCollection
 
@@ -82,31 +84,26 @@ class PaperForms(ListView):
 
     #---------------------------------------------------------------
     def get_queryset(self):
-        qs = super(PaperForms,self).get_queryset().filter(
+
+        qs = super(PaperForms, self).get_queryset().filter(
             unit__pk__in=self.request.GET.getlist("unit"),
             frequency__pk__in=self.request.GET.getlist("frequency"),
             assigned_to__pk__in=self.request.GET.getlist("assigned_to"),
         )
 
-        if self.request.GET.get("include_inactive","False") != "True":
+        if self.request.GET.get("include_inactive", "False") != "True":
             qs = qs.filter(active=True)
 
-        return qs .select_related(
-            "unit",
-            "testlist",
-        ).prefetch_related(
-            "tests_object",
-        )
+        return qs.select_related("unit", "testlist").prefetch_related("tests_object")
+
     #---------------------------------------------------------------
     def get_context_data(self, *args, **kwargs):
-        context = super(PaperForms,self).get_context_data(*args,**kwargs)
 
-        context["include_refs"] = self.request.GET.get("include_refs","True") != "False"
+        context = super(PaperForms, self).get_context_data(*args, **kwargs)
+
+        context["include_refs"] = self.request.GET.get("include_refs", "True") != "False"
         test_lists = {}
 
-        content_type_models = {}
-
-        test_collections = []
         for utc in context["object_list"]:
             key = (utc.content_type_id, utc.object_id)
 
@@ -125,8 +122,8 @@ class PaperForms(ListView):
                     test__category__pk__in=self.request.GET.getlist("category"),
                     unit=utc.unit,
                 ).select_related(
-                    "test","reference","tolerance"
+                    "test", "reference", "tolerance"
                 )
-                li.utis = list(sorted(utis,key = lambda uti: li.all_tests.index(uti.test)))
+                li.utis = list(sorted(utis, key=lambda uti: li.all_tests.index(uti.test)))
             utc.all_lists = all_lists
         return context

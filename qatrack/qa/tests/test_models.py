@@ -50,16 +50,16 @@ class TestStatus(TestCase):
     def test_save_without_default(self):
         """If there's only one status type force it to be default on save"""
         self.assertIsNone(models.TestInstanceStatus.objects.default())
-        status = models.TestInstanceStatus(name="foo", slug="foo", is_default=False,)
+        status = models.TestInstanceStatus(name="foo", slug="foo", is_default=False, )
         status.save()
         self.assertEqual(status, models.TestInstanceStatus.objects.default())
 
     #----------------------------------------------------------------------
     def test_new_default(self):
-        status = models.TestInstanceStatus(name="foo", slug="foo", is_default=True,)
+        status = models.TestInstanceStatus(name="foo", slug="foo", is_default=True, )
         status.save()
 
-        new_status = models.TestInstanceStatus(name="bar", slug="bar", is_default=True,)
+        new_status = models.TestInstanceStatus(name="bar", slug="bar", is_default=True, )
         new_status.save()
 
         defaults = models.TestInstanceStatus.objects.filter(is_default=True)
@@ -131,7 +131,6 @@ class TestTolerance(TestCase):
         self.assertListEqual(t.tol_choices(), ["b"])
         self.assertListEqual(t.pass_choices(), ["a"])
 
-
     #----------------------------------------------------------------------
     def test_without_act(self):
         t = models.Tolerance(name="foo", type=models.ABSOLUTE)
@@ -178,26 +177,31 @@ class TestTolerance(TestCase):
     #---------------------------------------------------------------
     def test_percent_string_rep(self):
         t = models.Tolerance(act_high=None, act_low=-2, tol_high=1, tol_low=None, type=models.PERCENT)
-        self.assertEqual(t.name,"Percent(-2.00%, --, 1.00%, --)")
+        self.assertEqual(t.name, "Percent(-2.00%, --, 1.00%, --)")
+
     #---------------------------------------------------------------
     def test_absolute_string_rep(self):
         t = models.Tolerance(act_high=None, act_low=-2, tol_high=1, tol_low=None, type=models.ABSOLUTE)
-        self.assertEqual(t.name,"Absolute(-2.000, --, 1.000, --)")
+        self.assertEqual(t.name, "Absolute(-2.000, --, 1.000, --)")
+
     #----------------------------------------------------------------------
     def test_mc_string_rep(self):
-        t = models.Tolerance(mc_pass_choices="a,b,c",mc_tol_choices="d,e", type=models.MULTIPLE_CHOICE)
+        t = models.Tolerance(mc_pass_choices="a,b,c", mc_tol_choices="d, e", type=models.MULTIPLE_CHOICE)
         self.assertEqual(t.name, "M.C.(3 pass choices, 2 tol choices)")
+
 
 #====================================================================================
 class TestCategory(TestCase):
     pass
+
 
 #====================================================================================
 class TestTestCollectionInterface(TestCase):
 
     #---------------------------------------------------------------
     def test_abstract_test_list_members(self):
-        self.assertRaises(NotImplementedError,models.TestCollectionInterface().test_list_members)
+        self.assertRaises(NotImplementedError, models.TestCollectionInterface().test_list_members)
+
 
 #====================================================================================
 class TestTest(TestCase):
@@ -249,7 +253,7 @@ class TestTest(TestCase):
     #---------------------------------------------------------------------------
     def test_invalid_check_test_type(self):
         test_types = (
-            ("choices", "foo,bar", models.CONSTANT, "Invalid"),
+            ("choices", "foo, bar", models.CONSTANT, "Invalid"),
             ("constant_value", 1., models.COMPOSITE, "Constant"),
             ("calculation_procedure", "result=foo", models.MULTIPLE_CHOICE, "Composite"),
             ("choices", None, models.MULTIPLE_CHOICE, "Multiple Choice"),
@@ -333,7 +337,7 @@ result = foo + bar
     #---------------------------------------------------------------------------
     def test_valid_mult_choice(self):
         test = utils.create_test(test_type=models.MULTIPLE_CHOICE)
-        valid = ("foo, bar, baz", "foo,bar,baz", "foo,\tbar")
+        valid = ("foo, bar, baz", "foo, bar, baz", "foo, \tbar")
         for v in valid:
             test.choices = v
             test.clean_choices()
@@ -345,7 +349,7 @@ result = foo + bar
     #---------------------------------------------------------------------------
     def test_invalid_mult_choice(self):
         test = utils.create_test(test_type=models.MULTIPLE_CHOICE)
-        invalid = (None, "", " ",)
+        invalid = (None, "", " ", )
         for i in invalid:
             test.choices = i
             self.assertRaises(ValidationError, test.clean_choices)
@@ -522,7 +526,7 @@ class TestTestList(TestCase):
     #---------------------------------------------------------------------------
     def test_test_list_members(self):
         tl = utils.create_test_list()
-        self.assertListEqual([tl],list(tl.test_list_members()))
+        self.assertListEqual([tl], list(tl.test_list_members()))
 
     #---------------------------------------------------------------------------
     def test_get_next_list(self):
@@ -606,7 +610,8 @@ class TestTestListCycle(TestCase):
 
     #---------------------------------------------------------------------------
     def test_cycle_test_list_members(self):
-        self.assertListEqual(self.test_lists,list(self.cycle.test_list_members()))
+        self.assertListEqual(self.test_lists, list(self.cycle.test_list_members()))
+
     #---------------------------------------------------------------------------
     def test_get_next_list(self):
         next_ = self.cycle.next_list(0)
@@ -902,7 +907,7 @@ class TestUnitTestCollection(TestCase):
         tli = utils.create_test_list_instance(unit_test_collection=utc)
         test = utils.create_test(name="tester")
         utils.create_test_list_membership(tli.test_list, test)
-        # uti = utils.create_unit_test_info(test=test,unit=utc.unit,frequency=utc.frequency)
+        # uti = utils.create_unit_test_info(test=test, unit=utc.unit, frequency=utc.frequency)
         uti = models.UnitTestInfo.objects.get(test=test, unit=utc.unit)
         ti = utils.create_test_instance(unit_test_info=uti)
         ti.test_list_instance = tli
@@ -953,7 +958,7 @@ class TestUnitTestCollection(TestCase):
         test = utils.create_test(name="tester")
         utils.create_test_list_membership(utc.tests_object, test)
 
-        uti = models.UnitTestInfo.objects.get(pk=1)# utils.create_unit_test_info(unit=utc.unit, test=test, assigned_to=models.Group.objects.get(pk=1))
+        uti = models.UnitTestInfo.objects.get(pk=1)
         status = utils.create_status()
 
         # values purposely utils.created out of order to make sure history
@@ -966,7 +971,7 @@ class TestUnitTestCollection(TestCase):
         tis = []
         for wc in history:
             tli = utils.create_test_list_instance(unit_test_collection=utc, work_completed=wc)
-            ti = utils.create_test_instance(unit_test_info=uti,test_list_instance=tli,work_completed=wc, status=status)
+            ti = utils.create_test_instance(unit_test_info=uti, test_list_instance=tli, work_completed=wc, status=status)
             tis.append(ti)
             tlis.append(tli)
 
@@ -984,7 +989,7 @@ class TestUnitTestCollection(TestCase):
         self.assertEqual(sorted_hist, wcs)
 
         # test returns correct number of results
-        self.assertEqual([(test,tis)],test_hist)
+        self.assertEqual([(test, tis)], test_hist)
 
     #----------------------------------------------------------------------
     def test_test_list_next_list(self):
@@ -1023,11 +1028,10 @@ class TestUnitTestCollection(TestCase):
         utc = models.UnitTestCollection.objects.get(pk=utc.pk)
         self.assertEqual(utc.next_list(), (1, test_lists[1]))
 
-        tli = utils.create_test_list_instance(unit_test_collection=utc, test_list=test_lists[1], day=1)
+        utils.create_test_list_instance(unit_test_collection=utc, test_list=test_lists[1], day=1)
         utc = models.UnitTestCollection.objects.get(pk=utc.pk)
 
-        self.assertEqual(utc.next_list(), (0,test_lists[0]))
-
+        self.assertEqual(utc.next_list(), (0, test_lists[0]))
 
     #----------------------------------------------------------------------
     def test_cycle_next_list_with_repeats(self):
@@ -1050,7 +1054,7 @@ class TestUnitTestCollection(TestCase):
         utc = models.UnitTestCollection.objects.get(pk=utc.pk)
         self.assertEqual(utc.next_list(), (3, test_lists[3]))
 
-        tli = utils.create_test_list_instance(unit_test_collection=utc, test_list=test_lists[3], day=3)
+        utils.create_test_list_instance(unit_test_collection=utc, test_list=test_lists[3], day=3)
         utc = models.UnitTestCollection.objects.get(pk=utc.pk)
         self.assertEqual(utc.next_list(), (0, test_lists[0]))
 
@@ -1068,7 +1072,7 @@ class TestUnitTestCollection(TestCase):
         for i, test_list in enumerate(test_lists):
             self.assertEqual(utc.get_list(i), (i, test_list))
 
-        self.assertEqual(utc.get_list(), (0,test_lists[0]))
+        self.assertEqual(utc.get_list(), (0, test_lists[0]))
 
     #----------------------------------------------------------------------
     def test_cycle_delete_day(self):
@@ -1184,7 +1188,6 @@ class TestSignals(TestCase):
 
         utc = utils.create_unit_test_collection(test_collection=cycle1)
 
-
         #change test collection
         utc.tests_object = cycle2
         utc.save()
@@ -1194,6 +1197,7 @@ class TestSignals(TestCase):
         # test list on its own
         self.assertEqual(len(utis), 4)
         self.assertListEqual(tests, [x.test for x in utis])
+
 
 #============================================================================
 class TestTestInstance(TestCase):
@@ -1232,8 +1236,8 @@ class TestTestInstance(TestCase):
         test = utils.create_test(test_type=models.BOOLEAN)
         uti = models.UnitTestInfo(test=test)
 
-        yes_ref = models.Reference(type=models.BOOLEAN, value=True,)
-        no_ref = models.Reference(type=models.BOOLEAN, value=False,)
+        yes_ref = models.Reference(type=models.BOOLEAN, value=True, )
+        no_ref = models.Reference(type=models.BOOLEAN, value=False, )
 
         yes_instance = models.TestInstance(value=1, unit_test_info=uti)
         no_instance = models.TestInstance(value=0, unit_test_info=uti)
@@ -1275,7 +1279,7 @@ class TestTestInstance(TestCase):
             instance.calculate_pass_fail()
             self.assertEqual(instance.pass_fail, models.TOLERANCE)
 
-        for c in (4,):
+        for c in (4, ):
             instance.value = c
             instance.calculate_pass_fail()
             self.assertEqual(instance.pass_fail, models.ACTION)
@@ -1431,7 +1435,7 @@ class TestTestInstance(TestCase):
     def test_upload_url_none(self):
         ti = utils.create_test_instance()
 
-        self.assertEqual(ti.upload_url(),None)
+        self.assertEqual(ti.upload_url(), None)
 
     #----------------------------------------------------------------------
     def test_upload_value_display(self):
@@ -1439,7 +1443,7 @@ class TestTestInstance(TestCase):
         t = utils.create_test(test_type=models.UPLOAD)
         uti = utils.create_unit_test_info(test=t, unit=utc.unit, assigned_to=models.Group.objects.get(pk=1))
 
-        tli = utils.create_test_list_instance(unit_test_collection=utc )
+        tli = utils.create_test_list_instance(unit_test_collection=utc)
         ti = utils.create_test_instance(unit_test_info=uti, test_list_instance=tli)
 
         fname = "test.tmp"
@@ -1455,7 +1459,7 @@ class TestTestInstance(TestCase):
         t = models.Test(type=models.STRING)
         uti = models.UnitTestInfo(test=t)
 
-        ti = models.TestInstance(unit_test_info=uti )
+        ti = models.TestInstance(unit_test_info=uti)
         ti.string_value = "test"
 
         self.assertEqual("test", ti.value_display())
@@ -1646,26 +1650,6 @@ class TestTestListInstance(TestCase):
         self.test_list_instance.delete()
         self.unit_test_collection = models.UnitTestCollection.objects.get(pk=self.unit_test_collection.pk)
         self.assertEqual(self.unit_test_collection.last_instance, None)
-
-    #----------------------------------------------------------------------
-    # def test_deleted_signal_uti_last_instance_updated(self):
-        # tli = self.create_test_list_instance()
-        # utc = self.unit_test_collection
-
-        # for test in self.tests:
-            # uti = models.UnitTestInfo.objects.get(test=test,unit=utc.unit)
-            # self.assertIn(uti.last_instance,tli.testinstance_set.all())
-
-        # tli.delete()
-
-        # for test in self.tests:
-            # uti = models.UnitTestInfo.objects.get(test=test,unit=utc.unit)
-            # self.assertIn(uti.last_instance,self.test_list_instance.testinstance_set.all())
-
-        # self.test_list_instance.delete()
-        # for test in self.tests:
-            # uti = models.UnitTestInfo.objects.get(test=test,unit=utc.unit)
-            # self.assertIsNone(uti.last_instance)
 
     #----------------------------------------------------------------------
     def test_input_later(self):

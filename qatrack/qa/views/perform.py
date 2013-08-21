@@ -13,7 +13,7 @@ from django.db.models import Q
 from django.forms.models import model_to_dict
 from django.http import HttpResponseRedirect, Http404
 from django.shortcuts import get_object_or_404
-from django.views.generic import View, ListView, CreateView, TemplateView
+from django.views.generic import View, CreateView, TemplateView
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 
@@ -21,7 +21,7 @@ from . import forms
 from .. import models, utils, signals
 from .base import BaseEditTestListInstance, TestListInstances, UTCList, logger
 from qatrack.contacts.models import Contact
-from qatrack.units.models import UnitType, Unit
+from qatrack.units.models import Unit
 
 from braces.views import JSONResponseMixin, PermissionRequiredMixin
 
@@ -31,10 +31,12 @@ DEFAULT_CALCULATION_CONTEXT = {
     "numpy": numpy,
 }
 
+
 #---------------------------------------------------------------------------
 def process_procedure(procedure):
     """prepare raw calculation procedure for evaluation"""
     return "\n".join(["from __future__ import division", procedure, "\n"]).replace('\r', '\n')
+
 
 #============================================================================
 class Upload(JSONResponseMixin, View):
@@ -191,7 +193,7 @@ class CompositeCalculation(JSONResponseMixin, View):
             self.calculation_context = {}
             return
 
-        self.calculation_context = {"uploads": upload_data,}
+        self.calculation_context = {"uploads": upload_data, }
 
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
 
@@ -250,7 +252,7 @@ class ChooseUnit(TemplateView):
         if self.active_only:
             q = q.filter(active=True)
 
-        q = q.values("unit","unit__type","unit__type__name","unit__name","unit__number").order_by("unit__number").distinct()
+        q = q.values("unit", "unit__type", "unit__type__name", "unit__name", "unit__number").order_by("unit__number").distinct()
 
         context["units"] = q
         return context
@@ -268,7 +270,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
     def set_test_lists(self):
 
         requested_day = self.get_requested_day_to_perform()
-        self.actual_day, self.test_list= self.unit_test_col.get_list(requested_day)
+        self.actual_day, self.test_list = self.unit_test_col.get_list(requested_day)
 
         if self.test_list is None:
             raise Http404
@@ -314,6 +316,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
                 "tolerance": model_to_dict(uti.tolerance) if uti.tolerance else None,
             })
         return template_utis
+
     #----------------------------------------------------------------------
     def set_unit_test_infos(self):
         utis = models.UnitTestInfo.objects.filter(
@@ -382,9 +385,9 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         wc = self.object.work_completed
         self.object.work_completed = wc if wc else self.object.modified
 
-        self.object.reviewed= None if status.requires_review else self.object.modified
+        self.object.reviewed = None if status.requires_review else self.object.modified
         self.object.reviewed_by = None if status.requires_review else self.request.user
-        self.object.all_reviewed= not status.requires_review
+        self.object.all_reviewed = not status.requires_review
 
         self.object.day = self.actual_day
 
@@ -433,7 +436,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         self.object.unit_test_collection.set_due_date()
 
         if not self.object.in_progress:
-            signals.testlist_complete.send(sender=self,instance=self.object, created=False)
+            signals.testlist_complete.send(sender=self, instance=self.object, created=False)
 
         # let user know request succeeded and return to unit list
         messages.success(self.request, _("Successfully submitted %s " % self.object.test_list.name))
@@ -541,7 +544,8 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
             self.object.unit_test_collection.set_due_date()
 
             if not self.object.in_progress:
-                signals.testlist_complete.send(sender=self,instance=self.object, created=False)
+                signals.testlist_complete.send(sender=self, instance=self.object, created=False)
+
             # let user know request succeeded and return to unit list
             messages.success(self.request, _("Successfully submitted %s " % self.object.test_list.name))
 
@@ -616,17 +620,20 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
                 "tolerance": model_to_dict(uti.tolerance) if uti.tolerance else None,
             })
         return template_utis
+
     #---------------------------------------------------------------
     def get_context_data(self, **kwargs):
-        """"""
-        context = super(EditTestListInstance,self).get_context_data(**kwargs)
-        self.unit_test_infos =[f.instance.unit_test_info for f in context["formset"]]
+        context = super(EditTestListInstance, self).get_context_data(**kwargs)
+        self.unit_test_infos = [f.instance.unit_test_info for f in context["formset"]]
         context["unit_test_infos"] = json.dumps(self.template_unit_test_infos())
         return context
 
+
+#============================================================================
 class ContinueTestListInstance(EditTestListInstance):
 
     permission_required = "qa.add_testlistinstance"
+
 
 #============================================================================
 class InProgress(TestListInstances):

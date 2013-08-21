@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-import datetime
 from south.db import db
 from south.v2 import SchemaMigration
-from django.db import models
 
 
 class Migration(SchemaMigration):
@@ -13,14 +11,12 @@ class Migration(SchemaMigration):
                       self.gf('django.db.models.fields.IntegerField')(default=0),
                       keep_default=False)
 
-
         # Changing field 'TestListInstance.modified'
         db.alter_column('qa_testlistinstance', 'modified', self.gf('django.db.models.fields.DateTimeField')())
 
     def backwards(self, orm):
         # Deleting field 'TestListInstance.day'
         db.delete_column('qa_testlistinstance', 'day')
-
 
         # Changing field 'TestListInstance.modified'
         db.alter_column('qa_testlistinstance', 'modified', self.gf('django.db.models.fields.DateTimeField')(auto_now=True))

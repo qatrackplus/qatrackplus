@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-import datetime
-from south.db import db
 from south.v2 import DataMigration
-from django.db import models
+
 
 class Migration(DataMigration):
 
@@ -13,38 +11,36 @@ class Migration(DataMigration):
         Reference = orm['qa.Reference']
         UnitTestInfo = orm['qa.UnitTestInfo']
         TestInstance = orm['qa.TestInstance']
-        distinct_refs = Reference.objects.values_list("value","type").distinct()
+        distinct_refs = Reference.objects.values_list("value", "type").distinct()
 
-        for v,t in distinct_refs:
-            q = Reference.objects.filter(value=v,type=t)
+        for v, t in distinct_refs:
+            q = Reference.objects.filter(value=v, type=t)
             if q.count() <= 1:
                 continue
 
-            head, tail = q[0],q[1:]
+            head, tail = q[0], q[1:]
 
             for r in tail:
                 TestInstance.objects.filter(reference=r).update(reference=head)
                 UnitTestInfo.objects.filter(reference=r).update(reference=head)
                 r.delete()
 
-
         Tolerance = orm['qa.Tolerance']
         UnitTestInfo = orm['qa.UnitTestInfo']
         TestInstance = orm['qa.TestInstance']
-        distinct_refs = Tolerance.objects.values_list("act_low","tol_low","tol_high", "act_high","type").distinct()
+        distinct_refs = Tolerance.objects.values_list("act_low", "tol_low", "tol_high", "act_high", "type").distinct()
 
         for al, tl, th, ah, t in distinct_refs:
             q = Tolerance.objects.filter(act_low=al, tol_low=tl, tol_high=th, act_high=ah, type=t)
             if q.count() <= 1:
                 continue
 
-            head, tail = q[0],q[1:]
+            head, tail = q[0], q[1:]
 
             for t in tail:
                 TestInstance.objects.filter(tolerance=t).update(tolerance=head)
                 UnitTestInfo.objects.filter(tolerance=t).update(tolerance=head)
                 t.delete()
-
 
     def backwards(self, orm):
         "Write your backwards methods here."

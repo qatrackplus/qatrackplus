@@ -1,16 +1,15 @@
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
-from django.db.models import signals
 from django.dispatch import receiver
 from django.template import Context
 from django.template.loader import get_template
 
-from qatrack.qa.models import TestListInstance
 from qatrack.qa.signals import testlist_complete
 
 
 import models
+
 
 #----------------------------------------------------------------------
 @receiver(testlist_complete)

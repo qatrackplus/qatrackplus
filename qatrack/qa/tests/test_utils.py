@@ -3,6 +3,7 @@ from django.test import TestCase
 from qatrack.qa import utils
 import json
 
+
 #============================================================================
 class TestUtils(TestCase):
 
@@ -21,7 +22,7 @@ class TestUtils(TestCase):
 
     #----------------------------------------------------------------------
     def test_almost_equal_small(self):
-        self.assertTrue(utils.almost_equal(1, 1+1E-10))
+        self.assertTrue(utils.almost_equal(1, 1 + 1E-10))
 
     #----------------------------------------------------------------------
     def test_almost_equal_zero(self):
@@ -30,13 +31,9 @@ class TestUtils(TestCase):
     #----------------------------------------------------------------------
     def test_tokenize(self):
         proc = "result = a + 2"
-        self.assertListEqual(proc.split(),utils.tokenize_composite_calc(proc))
+        self.assertListEqual(proc.split(), utils.tokenize_composite_calc(proc))
 
     #----------------------------------------------------------------------
     def test_set_encoder_set(self):
-        self.assertIsInstance(json.dumps([1,2], cls=utils.SetEncoder), basestring)
-
-    #----------------------------------------------------------------------
-    def test_set_encoder_list(self):
-        self.assertIsInstance(json.dumps(set((1,2)), cls=utils.SetEncoder), basestring)
+        self.assertIsInstance(json.dumps(set([1, 2]), cls=utils.SetEncoder), basestring)
 

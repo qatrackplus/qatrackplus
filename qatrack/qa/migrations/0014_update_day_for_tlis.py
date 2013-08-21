@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
-import datetime
-from south.db import db
 from south.v2 import DataMigration
-from django.db import models
 from django.contrib.contenttypes.models import ContentType
+
 
 class Migration(DataMigration):
 
@@ -11,7 +9,6 @@ class Migration(DataMigration):
         "Write your forwards methods here."
         # Note: Don't use "from appname.models import ModelName".
         # Use orm.ModelName to refer to models in this application,
-        TestListInstance = orm.TestListInstance
         content_type = ContentType.objects.get_for_model(orm.TestListCycle)
         utcs = orm.UnitTestCollection.objects.filter(content_type_id=content_type.id)
 

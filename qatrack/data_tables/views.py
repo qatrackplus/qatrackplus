@@ -185,4 +185,3 @@ class BaseDataTablesDataSource(ListView):
     def get_template_context_data(self, context):
         context["page_title"] = self.get_page_title()
         return context
-

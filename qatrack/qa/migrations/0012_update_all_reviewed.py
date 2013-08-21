@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-import datetime
-from south.db import db
 from south.v2 import DataMigration
 from django.db import models
+
 
 class Migration(DataMigration):
 
@@ -10,10 +9,10 @@ class Migration(DataMigration):
         "Write your forwards methods here."
 
         TestListInstance = orm["qa.TestListInstance"]
-        TestListInstance.objects.update(all_reviewed=True,reviewed_by=models.F("modified_by"), reviewed=models.F("modified"))
+        TestListInstance.objects.update(all_reviewed=True, reviewed_by=models.F("modified_by"), reviewed=models.F("modified"))
 
         q = TestListInstance.objects.filter(testinstance__status__requires_review=True).distinct()
-        q.update(all_reviewed=False,reviewed_by=None,reviewed=None)
+        q.update(all_reviewed=False, reviewed_by=None, reviewed=None)
 
     def backwards(self, orm):
         "Write your backwards methods here."

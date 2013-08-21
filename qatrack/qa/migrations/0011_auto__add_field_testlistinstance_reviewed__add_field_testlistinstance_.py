@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-import datetime
 from south.db import db
 from south.v2 import SchemaMigration
-from django.db import models
 
 
 class Migration(SchemaMigration):
@@ -23,8 +21,6 @@ class Migration(SchemaMigration):
                       self.gf('django.db.models.fields.BooleanField')(default=False),
                       keep_default=False)
 
-
-
     def backwards(self, orm):
         # Deleting field 'TestListInstance.reviewed'
         db.delete_column('qa_testlistinstance', 'reviewed')
@@ -34,7 +30,6 @@ class Migration(SchemaMigration):
 
         # Deleting field 'TestListInstance.all_reviewed'
         db.delete_column('qa_testlistinstance', 'all_reviewed')
-
 
     models = {
         'auth.group': {

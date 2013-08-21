@@ -10,7 +10,7 @@ class ActiveDirectoryGroupMembershipSSLBackend:
     def authenticate(self, username=None, password=None):
         debug = None
         if settings.AD_DEBUG_FILE and settings.AD_DEBUG:
-            debug = open(settings.AD_DEBUG_FILE,'w')
+            debug = open(settings.AD_DEBUG_FILE, 'w')
             print >>debug, "authenticate user %s" % username
 
         try:
@@ -46,7 +46,7 @@ class ActiveDirectoryGroupMembershipSSLBackend:
             try:
                 debug = None
                 if settings.AD_DEBUG_FILE and settings.AD_DEBUG:
-                    debug = open(settings.AD_DEBUG_FILE,'a')
+                    debug = open(settings.AD_DEBUG_FILE, 'a')
                     print >>debug, "create user %s" % username
 
                 #ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, settings.AD_CERT_FILE)

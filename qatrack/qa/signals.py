@@ -12,7 +12,8 @@ def loaded_from_fixture(kwargs):
     return kwargs.get("raw", False)
 
 
-testlist_complete = Signal(providing_args=["instance","created"])
+testlist_complete = Signal(providing_args=["instance", "created"])
+
 
 #----------------------------------------------------------------------
 def update_last_instances(test_list_instance):
@@ -193,6 +194,7 @@ def test_list_saved(*args, **kwargs):
     if not loaded_from_fixture(kwargs):
         update_unit_test_infos(kwargs["instance"])
 
+
 #----------------------------------------------------------------------
 @receiver(post_save, sender=models.TestListCycleMembership)
 def test_list_added_to_cycle(*args, **kwargs):
@@ -202,5 +204,3 @@ def test_list_added_to_cycle(*args, **kwargs):
     """
     if (not loaded_from_fixture(kwargs)):
         update_unit_test_infos(kwargs["instance"].test_list)
-
-

@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import datetime
 from south.db import db, engine
 from south.v2 import SchemaMigration
 from django.db import models
@@ -12,13 +11,12 @@ class Migration(SchemaMigration):
 
         if 'sql_server' in engine:
             #remove unique constrainr first for SQL Server
-            db.alter_column('qa_tolerance', 'name', self.gf('django.db.models.fields.CharField')(unique=False,max_length=255))
+            db.alter_column('qa_tolerance', 'name', self.gf('django.db.models.fields.CharField')(unique=False, max_length=255))
 
         db.delete_column('qa_tolerance', 'name')
 
-
     def backwards(self, orm):
-        db.add_column('qa_tolerance', 'name',models.CharField(max_length=255,default="<Tolerance(Auto)>"),keep_default=False)
+        db.add_column('qa_tolerance', 'name', models.CharField(max_length=255, default="<Tolerance(Auto)>"), keep_default=False)
         # User chose to not deal with backwards NULL issues for 'Tolerance.name'
         #raise RuntimeError("Cannot reverse this migration. 'Tolerance.name' and its values cannot be restored.")
 
