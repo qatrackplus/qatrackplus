@@ -471,7 +471,7 @@ class Test(models.Model):
 
     #----------------------------------------------------------------------
     def is_string_composite(self):
-        return self.type == STRING
+        return self.type == STRING_COMPOSITE
 
     #----------------------------------------------------------------------
     def is_upload(self):
@@ -873,17 +873,20 @@ class UnitTestCollection(models.Model):
     #----------------------------------------------------------------------
     def last_done_date(self):
         """return date this test list was last performed"""
+
         if hasattr(self, "last_instance") and self.last_instance is not None:
             return self.last_instance.work_completed
 
     #----------------------------------------------------------------------
     def unreviewed_instances(self):
         """return a query set of all TestListInstances for this object that have not been fully reviewed"""
+
         return self.testlistinstance_set.filter(testinstance__status__requires_review=True).distinct().select_related("test_list")
 
     #----------------------------------------------------------------------
     def unreviewed_test_instances(self):
         """return query set of all TestInstances for this object"""
+
         return TestInstance.objects.complete().filter(
             unit_test_info__unit=self.unit,
             unit_test_info__test__in=self.tests_object.all_tests()
@@ -891,14 +894,15 @@ class UnitTestCollection(models.Model):
 
     #---------------------------------------------------------------------------
     def history(self, before=None):
-        """"""
+
         before = before or timezone.now()
 
-        #grab NHIST number of previous results
-        tlis = TestListInstance.objects.filter(
-            unit_test_collection=self,
-            work_completed__lt=before,
-        ).order_by(
+        tlis = TestListInstance.objects.filter( unit_test_collection=self)
+
+        if before is not None:
+            tlis = tlis.filter(work_completed__lt=before)
+
+        tlis = tlis.order_by(
             "-work_completed"
         ).prefetch_related(
             "testinstance_set__status",

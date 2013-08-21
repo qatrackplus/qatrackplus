@@ -63,8 +63,13 @@ class TestRefTolSpan(TestCase):
     def test_no_ref(self):
         t = models.Test(type=models.BOOLEAN)
         self.assertIn("No Ref", qa_tags.reference_tolerance_span(t, None, None))
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
+    def test_no_ref_no_tol(self):
+        t = models.Test(type=models.MULTIPLE_CHOICE)
+        self.assertIn("No Tol", qa_tags.reference_tolerance_span(t, None, None))
+
+    #----------------------------------------------------------------------
     def test_bool(self):
         t = models.Test(type=models.BOOLEAN)
         r = models.Reference(value=1)
@@ -105,3 +110,38 @@ class TestRefTolSpan(TestCase):
         )
         result = qa_tags.reference_tolerance_span(t, r, tol)
         self.assertIn("(-2.00%", result)
+
+
+#============================================================================
+class TestToleranceForReference(TestCase):
+
+    #----------------------------------------------------------------------
+    def test_no_ref(self):
+        tol = models.Tolerance( type=models.PERCENT)
+        self.assertEqual("", qa_tags.tolerance_for_reference(tol, None))
+    #----------------------------------------------------------------------
+
+    def test_bool(self):
+        r = models.Reference(value=1, type=models.BOOLEAN)
+        self.assertIn("Pass: Yes", qa_tags.tolerance_for_reference(None, r))
+
+    #----------------------------------------------------------------------
+    def test_no_tol(self):
+        t = models.Test(type=models.NUMERICAL)
+        r = models.Reference(value=1)
+        self.assertIn("N/A", qa_tags.tolerance_for_reference(None, r))
+
+    #----------------------------------------------------------------------
+    def test_multiple_choice(self):
+        tol = models.Tolerance(type=models.MULTIPLE_CHOICE, mc_tol_choices="foo", mc_pass_choices="")
+        self.assertIn("Tol: foo", qa_tags.tolerance_for_reference(tol,None))
+
+    #----------------------------------------------------------------------
+    def test_absolute(self):
+        r = models.Reference(value=1)
+        tol = models.Tolerance(
+            type=models.ABSOLUTE,
+            act_low=-2, tol_low=-1, tol_high=1, act_high=2,
+        )
+
+        self.assertIn("Between 0 &amp; 2", qa_tags.tolerance_for_reference(tol,r))

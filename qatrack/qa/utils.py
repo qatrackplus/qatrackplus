@@ -1,10 +1,20 @@
 from django.db.models import Q
 from django.conf import settings
+import json
 import math
 import models
 import StringIO
 import tokenize
 import token
+
+
+#----------------------------------------------------------------------
+class SetEncoder(json.JSONEncoder):
+    """Allow handling of sets as lists"""
+    def default(self, obj):
+        if isinstance(obj, set):
+            return list(obj)
+        return json.JSONEncoder.default(self, obj)
 
 
 #----------------------------------------------------------------------
@@ -40,16 +50,14 @@ def almost_equal(a, b, significant=7):
     if a is None or b is None:
         return False
 
-    a, b = map(float, (a, b))
-    if b == a:
-        return True
+    a, b = float(a), float(b)
 
     # Normalized the numbers to be in range (-10.0,10.0)
     # scale = float(pow(10,math.floor(math.log10(0.5*(abs(b)+abs(a))))))
     try:
         scale = 0.5 * (abs(b) + abs(a))
         scale = math.pow(10, math.floor(math.log10(scale)))
-    finally:
+    except:
         pass
 
     try:

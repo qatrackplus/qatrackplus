@@ -60,7 +60,7 @@ def tolerance_for_reference(tol, ref):
         return mark_safe('<span><em>N/A</em></span>')
 
     if tol.type == models.MULTIPLE_CHOICE:
-        return mark_safe('<span>Pass: %s</br>  Tol.: %s</br> All others fail</span>' % (", ".join(tol.pass_choices()), ', '.join(tol.tol_choices())))
+        return mark_safe('<span>Pass: %s</br>  Tol: %s</br> All others fail</span>' % (", ".join(tol.pass_choices()), ', '.join(tol.tol_choices())))
 
     tols = tol.tolerances_for_value(ref.value)
     for key in tols:

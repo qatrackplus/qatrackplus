@@ -21,14 +21,9 @@ from .. import models
 from qatrack.qa.api import ValueResource
 from qatrack.qa.control_chart import control_chart
 from qatrack.units.models import Unit
-
+from qatrack.qa.utils import SetEncoder
 from braces.views import JSONResponseMixin, PermissionRequiredMixin
 
-class SetEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, set): #pragma: no vover
-            return list(obj)
-        return json.JSONEncoder.default(self, obj)
 
 local_tz = timezone.get_current_timezone()
 
@@ -284,6 +279,7 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
         )
         canvas = FigureCanvas(fig)
         dates, data = [], []
+
         if context["data"] and context["data"].values():
             name, points = context["data"].items()[0]
             dates, data = zip(*[(ti["date"],ti["value"]) for ti in points])

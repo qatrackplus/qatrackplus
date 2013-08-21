@@ -1,5 +1,6 @@
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
+from django.conf import settings
 from django.test import TestCase
 from django.test.utils import setup_test_environment
 from django.utils import unittest, timezone
@@ -186,10 +187,17 @@ class TestTolerance(TestCase):
     def test_mc_string_rep(self):
         t = models.Tolerance(mc_pass_choices="a,b,c",mc_tol_choices="d,e", type=models.MULTIPLE_CHOICE)
         self.assertEqual(t.name, "M.C.(3 pass choices, 2 tol choices)")
+
 #====================================================================================
 class TestCategory(TestCase):
     pass
 
+#====================================================================================
+class TestTestCollectionInterface(TestCase):
+
+    #---------------------------------------------------------------
+    def test_abstract_test_list_members(self):
+        self.assertRaises(NotImplementedError,models.TestCollectionInterface().test_list_members)
 
 #====================================================================================
 class TestTest(TestCase):
@@ -199,11 +207,32 @@ class TestTest(TestCase):
         test = utils.create_test(name="bool", test_type=models.BOOLEAN)
         self.assertTrue(test.is_boolean())
 
+    #---------------------------------------------------------------------------
+    def test_is_string(self):
+        test = utils.create_test(name="bool", test_type=models.STRING)
+        self.assertTrue(test.is_string())
+
+    #---------------------------------------------------------------------------
+    def test_is_string_composite(self):
+        test = utils.create_test(name="bool", test_type=models.STRING_COMPOSITE)
+        self.assertTrue(test.is_string_composite())
+
+    #---------------------------------------------------------------------------
+    def test_is_upload(self):
+        test = utils.create_test(name="upload", test_type=models.UPLOAD)
+        self.assertTrue(test.is_upload())
+
     #----------------------------------------------------------------------
     def test_is_numerical_type(self):
         for t in (models.COMPOSITE, models.CONSTANT, models.SIMPLE):
             test = utils.create_test(name="num", test_type=t)
             self.assertTrue(test.is_numerical_type())
+
+    #----------------------------------------------------------------------
+    def test_is_string_type(self):
+        for t in (models.STRING_COMPOSITE, models.STRING, models.UPLOAD):
+            test = utils.create_test(name="num", test_type=t)
+            self.assertTrue(test.is_string_type())
 
     #---------------------------------------------------------------------------
     def test_valid_check_test_type(self):
@@ -491,6 +520,11 @@ class TestTestList(TestCase):
         self.assertEqual((0, tl), tl.get_list())
 
     #---------------------------------------------------------------------------
+    def test_test_list_members(self):
+        tl = utils.create_test_list()
+        self.assertListEqual([tl],list(tl.test_list_members()))
+
+    #---------------------------------------------------------------------------
     def test_get_next_list(self):
         tl = models.TestList()
         self.assertEqual((0, tl), tl.next_list(None))
@@ -570,6 +604,9 @@ class TestTestListCycle(TestCase):
 
         self.assertEqual((None, None), self.empty_cycle.get_list())
 
+    #---------------------------------------------------------------------------
+    def test_cycle_test_list_members(self):
+        self.assertListEqual(self.test_lists,list(self.cycle.test_list_members()))
     #---------------------------------------------------------------------------
     def test_get_next_list(self):
         next_ = self.cycle.next_list(0)
@@ -909,29 +946,45 @@ class TestUnitTestCollection(TestCase):
 
     #---------------------------------------------------------------------------
     def test_history(self):
-        pass
-        #td = timezone.timedelta
-        #now = timezone.now()
-        #utc = utils.create_unit_test_collection()
-#
-        #utils.create_status()
-#
-        ## values purposely utils.created out of order to make sure history
-        ## returns in correct order (i.e. ordered by date)
-        #history = [
-        #    now + td(days=4), now + td(days=1), now + td(days=3), now + td(days=2),
-        #]
-#
-        #for wc in history:
-        #    utils.create_test_list_instance(unit_test_collection=utc, work_completed=wc)
-#
-        #sorted_hist = list(sorted([h.replace(second=0, microsecond=0) for h in history]))
-        #dates = [x.work_completed.replace(second=0, microsecond=0) for x in utc.history()]
-        #self.assertEqual(sorted_hist, dates)
-#
-        #limited_dates = [x.work_completed.replace(second=0, microsecond=0) for x in utc.history(number=2)]
-        ## test returns correct number of results
-        #self.assertListEqual(sorted_hist[-2:], limited_dates)
+        td = timezone.timedelta
+        now = timezone.now()
+        utc = utils.create_unit_test_collection()
+
+        test = utils.create_test(name="tester")
+        utils.create_test_list_membership(utc.tests_object, test)
+
+        uti = models.UnitTestInfo.objects.get(pk=1)# utils.create_unit_test_info(unit=utc.unit, test=test, assigned_to=models.Group.objects.get(pk=1))
+        status = utils.create_status()
+
+        # values purposely utils.created out of order to make sure history
+        # returns in correct order (i.e. ordered by date)
+        history = [
+            now - td(days=4), now - td(days=1), now - td(days=3), now - td(days=2),
+        ]
+
+        tlis = []
+        tis = []
+        for wc in history:
+            tli = utils.create_test_list_instance(unit_test_collection=utc, work_completed=wc)
+            ti = utils.create_test_instance(unit_test_info=uti,test_list_instance=tli,work_completed=wc, status=status)
+            tis.append(ti)
+            tlis.append(tli)
+
+        tlis.sort(key=lambda x: x.work_completed, reverse=True)
+        tis.sort(key=lambda x: x.work_completed, reverse=True)
+
+        sorted_hist = list(reversed(sorted([h.replace(second=0, microsecond=0) for h in history])))
+
+        test_hist, dates = utc.history(before=now)
+
+        dates = [x.replace(second=0, microsecond=0) for x in dates]
+        wcs = [x.work_completed.replace(second=0, microsecond=0) for x in tlis]
+
+        self.assertEqual(sorted_hist, dates)
+        self.assertEqual(sorted_hist, wcs)
+
+        # test returns correct number of results
+        self.assertEqual([(test,tis)],test_hist)
 
     #----------------------------------------------------------------------
     def test_test_list_next_list(self):
@@ -942,6 +995,14 @@ class TestUnitTestCollection(TestCase):
 
         utils.create_test_list_instance(unit_test_collection=utc)
         self.assertEqual(utc.next_list(), (0, utc.tests_object))
+
+    #----------------------------------------------------------------------
+    def test_cycle_next_list_empty(self):
+
+        cycle = utils.create_cycle()
+        utc = utils.create_unit_test_collection(test_collection=cycle)
+
+        self.assertEqual(utc.next_list(), (None, None))
 
     #----------------------------------------------------------------------
     def test_cycle_next_list(self):
@@ -1357,14 +1418,47 @@ class TestTestInstance(TestCase):
         ti = models.TestInstance(skipped=True)
         ti.calculate_pass_fail()
         self.assertEqual(models.NOT_DONE, ti.pass_fail)
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def test_in_progress(self):
         ti = utils.create_test_instance()
         ti.in_progress = True
         ti.save()
 
         self.assertEqual(models.TestInstance.objects.in_progress()[0], ti)
+
+    #----------------------------------------------------------------------
+    def test_upload_url_none(self):
+        ti = utils.create_test_instance()
+
+        self.assertEqual(ti.upload_url(),None)
+
+    #----------------------------------------------------------------------
+    def test_upload_value_display(self):
+        utc = utils.create_unit_test_collection()
+        t = utils.create_test(test_type=models.UPLOAD)
+        uti = utils.create_unit_test_info(test=t, unit=utc.unit, assigned_to=models.Group.objects.get(pk=1))
+
+        tli = utils.create_test_list_instance(unit_test_collection=utc )
+        ti = utils.create_test_instance(unit_test_info=uti, test_list_instance=tli)
+
+        fname = "test.tmp"
+        ti.string_value = fname
+
+        url = "%s%d/%s" % (settings.MEDIA_URL, tli.pk, fname)
+        display = '<a href="%s" title="%s">%s</a>' % (url, fname, fname)
+
+        self.assertEqual(display, ti.value_display())
+
+    #----------------------------------------------------------------------
+    def test_string_value_display(self):
+        t = models.Test(type=models.STRING)
+        uti = models.UnitTestInfo(test=t)
+
+        ti = models.TestInstance(unit_test_info=uti )
+        ti.string_value = "test"
+
+        self.assertEqual("test", ti.value_display())
 
     #----------------------------------------------------------------------
     def test_bool_display_value(self):
@@ -1433,6 +1527,18 @@ class TestTestInstance(TestCase):
 
         ti = models.TestInstance(unit_test_info=uti, value=0.995, reference=ref, tolerance=tol)
         self.assertEqual("-0.5%", ti.diff_display())
+
+    #----------------------------------------------------------------------
+    def test_diff_zero_div(self):
+        t = models.Test(type=models.SIMPLE)
+        uti = models.UnitTestInfo(test=t)
+
+        tol = models.Tolerance(act_high=2, act_low=-2, tol_high=1, tol_low=-1, type=models.PERCENT)
+        ref = models.Reference(type=models.NUMERICAL, value=0.)
+
+        display = "Zero ref with % diff tol"
+        ti = models.TestInstance(unit_test_info=uti, value=0.995, reference=ref, tolerance=tol)
+        self.assertEqual(display, ti.diff_display())
 
 
 #============================================================================

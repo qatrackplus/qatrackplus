@@ -1,3 +1,5 @@
+from urllib import urlencode
+
 from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.core.urlresolvers import reverse
@@ -13,6 +15,7 @@ import qatrack.qa.views.perform
 import qatrack.qa.views.charts
 import qatrack.qa.views.review
 import qatrack.qa.views.base
+import qatrack.qa.views.backup
 from qatrack.data_tables.views import BaseDataTablesDataSource
 import django.forms
 import json
@@ -209,6 +212,8 @@ class TestControlImage(TestCase):
 
     #----------------------------------------------------------------------
     def test_baseline_subgroups(self):
+
+        tl = utils.create_test_list()
         test = utils.create_test()
         unit = utils.create_unit()
         utils.create_unit_test_info(test=test, unit=unit)
@@ -218,7 +223,7 @@ class TestControlImage(TestCase):
         tomorrow = yesterday + timezone.timedelta(days=2)
 
         for n in [-1, 0, 1, 2, "nonnumber"]:
-            url = self.make_url(test.pk, unit.number, yesterday, tomorrow, n_base=n)
+            url = self.make_url(test.pk, tl.pk, unit.number, yesterday, tomorrow, n_base=n)
             request = self.factory.get(url)
             request.user = superuser
             response = self.view(request)
@@ -226,6 +231,7 @@ class TestControlImage(TestCase):
 
     #----------------------------------------------------------------------
     def test_invalid_subgroup_size(self):
+        tl = utils.create_test_list()
         test = utils.create_test()
         unit = utils.create_unit()
         utils.create_unit_test_info(test=test, unit=unit)
@@ -235,7 +241,7 @@ class TestControlImage(TestCase):
         tomorrow = yesterday + timezone.timedelta(days=2)
 
         for n in [-1, 0, 101, "nonnumber"]:
-            url = self.make_url(test.pk, unit.number, yesterday, tomorrow, sg_size=n)
+            url = self.make_url(test.pk, tl.pk, unit.number, yesterday, tomorrow, sg_size=n)
             request = self.factory.get(url)
             request.user = superuser
             response = self.view(request)
@@ -250,32 +256,39 @@ class TestControlImage(TestCase):
             self.assertTrue(response.get("content-type"), "image/png")
 
     #----------------------------------------------------------------------
-    def make_url(self, pk, unumber, from_date, to_date, sg_size=2, n_base=2, fit="true"):
+    def make_url(self, pk, tl_pk, unumber, from_date, to_date, sg_size=2, n_base=2, fit="true"):
         url = self.url + "?subgroup_size=%s&n_baseline_subgroups=%s&fit_data=%s" % (sg_size, n_base, fit)
         url += "&tests[]=%s" % pk
+        url += "&test_lists[]=%s" % tl_pk
         url += "&units[]=%s" % unumber
+        url += "&statuses[]=1"
         url += "&from_date=%s" % from_date.strftime(settings.SIMPLE_DATE_FORMAT)
         url += "&to_date=%s" % to_date.strftime(settings.SIMPLE_DATE_FORMAT)
         return url
 
     #----------------------------------------------------------------------
     def test_valid(self):
+        tl = utils.create_test_list()
         test = utils.create_test()
+        utils.create_test_list_membership(tl,test)
         unit = utils.create_unit()
-        uti = utils.create_unit_test_info(test=test, unit=unit)
+        utc = utils.create_unit_test_collection(test_collection=tl, unit=unit)
+        uti = models.UnitTestInfo.objects.get(test=test,unit=unit)
 
         status = utils.create_status()
 
         yesterday = timezone.now().date()-timezone.timedelta(days=1)
         tomorrow = yesterday + timezone.timedelta(days=2)
-        url = self.make_url(test.pk, unit.number, yesterday, tomorrow)
+        url = self.make_url(test.pk, tl.pk, unit.number, yesterday, tomorrow)
 
         for n in (1, 1, 8, 90):
             for x in range(n):
+                tli = utils.create_test_list_instance(unit_test_collection=utc)
                 utils.create_test_instance(
                     unit_test_info=uti,
                     value=random.gauss(1, 0.5),
-                    status=status
+                    status=status,
+                    test_list_instance=tli,
                 )
 
             request = self.factory.get(url)
@@ -285,6 +298,7 @@ class TestControlImage(TestCase):
 
     #----------------------------------------------------------------------
     def test_invalid(self):
+        tl = utils.create_test_list()
         test = utils.create_test()
         unit = utils.create_unit()
         uti = utils.create_unit_test_info(test=test, unit=unit)
@@ -294,13 +308,13 @@ class TestControlImage(TestCase):
         yesterday = timezone.now().date()-timezone.timedelta(days=1)
         tomorrow = yesterday + timezone.timedelta(days=2)
 
-        url = self.make_url(test.pk, unit.number, yesterday, yesterday)
+        url = self.make_url(test.pk,tl.pk, unit.number, yesterday, yesterday)
         request = self.factory.get(url)
         request.user = superuser
         response = self.view(request)
         self.assertTrue(response.get("content-type"), "image/png")
 
-        url = self.make_url(test.pk, unit.number, yesterday, tomorrow, fit="true")
+        url = self.make_url(test.pk, tl.pk, unit.number, yesterday, tomorrow, fit="true")
 
         # generate some data that the control chart fit function won't be able to fit
         for x in range(10):
@@ -317,6 +331,7 @@ class TestControlImage(TestCase):
 
     #----------------------------------------------------------------------
     def test_fails(self):
+        tl = utils.create_test_list()
         test = utils.create_test()
         unit = utils.create_unit()
         uti = utils.create_unit_test_info(test=test, unit=unit)
@@ -326,13 +341,13 @@ class TestControlImage(TestCase):
         yesterday = timezone.now().date()-timezone.timedelta(days=1)
         tomorrow = yesterday + timezone.timedelta(days=2)
 
-        url = self.make_url(test.pk, unit.number, yesterday, yesterday)
+        url = self.make_url(test.pk, tl.pk, unit.number, yesterday, yesterday)
         request = self.factory.get(url)
         request.user = superuser
         response = self.view(request)
         self.assertTrue(response.get("content-type"), "image/png")
 
-        url = self.make_url(test.pk, unit.number, yesterday, tomorrow, fit="true")
+        url = self.make_url(test.pk, tl.pk, unit.number, yesterday, tomorrow, fit="true")
         import qatrack.qa.control_chart
         old_display = qatrack.qa.control_chart.control_chart.display
 
@@ -438,14 +453,16 @@ class TestChartData(TestCase):
 
         self.uti2 = models.UnitTestInfo.objects.get(test=self.test2)
 
-        for x in range(100):
-            ti = utils.create_test_instance(value=1., status=self.status, unit_test_info=self.uti1)
+        for x in range(10):
+            tli = utils.create_test_list_instance(unit_test_collection=self.utc1)
+            ti = utils.create_test_instance(value=1., status=self.status, unit_test_info=self.uti1, test_list_instance=tli)
             ti.reference = ref
             ti.tolerance = tol
             ti.save()
 
-            if x > 0:
-                utils.create_test_instance(value=2., status=self.status, unit_test_info=self.uti2)
+            if x < 5:
+                ti2= utils.create_test_instance(value=1., status=self.status, unit_test_info=self.uti2, test_list_instance=tli)
+
 
         self.client.login(username="user", password="password")
 
@@ -454,6 +471,7 @@ class TestChartData(TestCase):
         """"""
         data = {
             "tests[]": [self.test1.pk, self.test2.pk],
+            "test_lists[]": [self.tl1.pk, self.tl2.pk],
             "units[]": [self.utc1.unit.pk],
             "statuses[]": [self.status.pk],
         }
@@ -1526,9 +1544,11 @@ class TestDueDateOverView(TestCase):
     #----------------------------------------------------------------------
     def test_due_this_month(self):
         self.utc.due_date = self.next_friday+timezone.timedelta(days=3)
-        self.utc.save()
-        response = self.client.get(self.url)
-        self.assertListEqual(response.context_data["due"][3][1], [self.utc])
+        if self.utc.due_date < self.next_month_start:
+            #test only makes sense if not near end of month
+            self.utc.save()
+            response = self.client.get(self.url)
+            self.assertListEqual(response.context_data["due"][3][1], [self.utc])
 
     #----------------------------------------------------------------------
     def test_due_next_month(self):
@@ -1536,6 +1556,120 @@ class TestDueDateOverView(TestCase):
         self.utc.save()
         response = self.client.get(self.url)
         self.assertListEqual(response.context_data["due"][4][1], [self.utc])
+
+
+#============================================================================
+class TestPaperFormRequest(TestCase):
+
+    #----------------------------------------------------------------------
+    def setUp(self):
+
+        self.view = views.backup.PaperFormRequest.as_view()
+        self.factory = RequestFactory()
+
+        self.status = utils.create_status()
+
+        self.test_list = utils.create_test_list()
+        self.test = utils.create_test(name="test_simple")
+        utils.create_test_list_membership(self.test_list, self.test)
+
+        intervals = (
+            ("Daily", "daily", 1, 1, 1),
+            ("Weekly", "weekly", 7, 7, 9),
+            ("Monthly", "monthly", 28, 28, 35),
+        )
+        self.frequencies = {}
+        for t, s, nom, due, overdue in intervals:
+            f = utils.create_frequency(name=t, slug=s, nom=nom, due=due, overdue=overdue)
+            self.frequencies[s] = f
+
+        self.utc = utils.create_unit_test_collection(test_collection=self.test_list)
+        self.tli = utils.create_test_list_instance(unit_test_collection=self.utc)
+
+        self.url = reverse("qa_paper_forms_request")
+        self.client.login(username="user", password="password")
+        self.user = User.objects.get(username="user")
+        self.user.save()
+
+        self.user.groups.add(Group.objects.latest("pk"))
+        self.user.save()
+
+        self.utc.assigned_to =  Group.objects.latest("pk")
+        self.utc.save()
+
+    #----------------------------------------------------------------------
+    def test_get(self):
+        response = self.client.get(self.url )
+        self.assertEqual(response.status_code,200)
+    #----------------------------------------------------------------------
+    def test_post(self):
+        data = {
+            "units":models.Unit.objects.values_list("pk",flat=True),
+            "frequencies":models.Frequency.objects.filter(due_interval__lte=7).values_list("pk",flat=True),
+            "test_categories":models.Category.objects.values_list("pk",flat=True),
+            "assigned_to":Group.objects.values_list("pk",flat=True),
+            "include_refs":True,
+            "include_inactive":False,
+        }
+
+        response = self.client.post(self.url, data=data)
+        self.assertEqual(response.status_code,302)
+
+
+#============================================================================
+class TestPaperForms(TestCase):
+
+    #----------------------------------------------------------------------
+    def setUp(self):
+
+        self.view = views.backup.PaperForms.as_view()
+        self.factory = RequestFactory()
+
+        self.status = utils.create_status()
+
+        self.test_list = utils.create_test_list()
+        self.test = utils.create_test(name="test_simple")
+        utils.create_test_list_membership(self.test_list, self.test)
+
+        intervals = (
+            ("Daily", "daily", 1, 1, 1),
+            ("Weekly", "weekly", 7, 7, 9),
+            ("Monthly", "monthly", 28, 28, 35),
+        )
+        self.frequencies = {}
+        for t, s, nom, due, overdue in intervals:
+            f = utils.create_frequency(name=t, slug=s, nom=nom, due=due, overdue=overdue)
+            self.frequencies[s] = f
+
+        self.utc = utils.create_unit_test_collection(test_collection=self.test_list)
+        self.tli = utils.create_test_list_instance(unit_test_collection=self.utc)
+
+        self.url = reverse("qa_paper_forms")
+        self.client.login(username="user", password="password")
+        self.user = User.objects.get(username="user")
+        self.user.save()
+
+        self.user.groups.add(Group.objects.latest("pk"))
+        self.user.save()
+
+        self.utc.assigned_to =  Group.objects.latest("pk")
+        self.utc.save()
+
+    #----------------------------------------------------------------------
+    def test_get(self):
+
+        q = urlencode({
+
+            "unit":models.Unit.objects.values_list("pk",flat=True),
+            "frequency":models.Frequency.objects.filter(due_interval__lte=7).values_list("pk",flat=True),
+            "category":models.Category.objects.values_list("pk",flat=True),
+            "assigned_to":Group.objects.values_list("pk",flat=True),
+            "include_refs":True,
+            "include_inactive":False,
+        }, doseq=True)
+
+        response = self.client.get(self.url + "?" + q)
+        self.assertEqual(response.status_code,200)
 
 
 if __name__ == "__main__":
