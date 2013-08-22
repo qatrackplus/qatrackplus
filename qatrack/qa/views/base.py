@@ -22,6 +22,11 @@ logger = logging.getLogger('qatrack.console')
 
 #============================================================================
 class TestListInstanceMixin(SelectRelatedMixin, PrefetchRelatedMixin):
+    """
+    A mixin for commonly required prefetch_related/select_related  for
+    :model:`qa.TestListInstance` views
+    """
+
 
     model = models.TestListInstance
     context_object_name = "test_list_instance"
@@ -44,6 +49,7 @@ class TestListInstanceMixin(SelectRelatedMixin, PrefetchRelatedMixin):
 
 #============================================================================
 class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
+    """A common base for editing existing :model:`qa.TestListInstance`'s"""
 
     #----------------------------------------------------------------------
     def add_histories(self, forms):
@@ -84,6 +90,7 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
 
     #----------------------------------------------------------------------
     def form_valid(self, form):
+        """This view should always be subclassed"""
         raise NotImplementedError
 
     #----------------------------------------------------------------------
@@ -97,6 +104,11 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
 
 #============================================================================
 class UTCList(BaseDataTablesDataSource):
+    """
+    This view provides a base for any sort of listing of
+    :model:`UnitTestCollection`'s.
+    """
+
     model = models.UnitTestCollection
     action = "perform"
     action_display = "Perform"
@@ -107,6 +119,11 @@ class UTCList(BaseDataTablesDataSource):
 
     #---------------------------------------------------------------------------
     def set_columns(self):
+        """
+        Setup the columns we want to be displayed for :model:`qa.UnitTestCollection`'s
+        See :view:`data_tables.BaseDataTablesDataSource`.set_columns for more information
+        """
+
         self.columns = (
             (self.get_actions, None, None),
             (
@@ -150,6 +167,7 @@ class UTCList(BaseDataTablesDataSource):
 
     #----------------------------------------------------------------------
     def get_queryset(self):
+        """filter queryset for visibility and fetch relevent related objects"""
 
         qs = super(UTCList, self).get_queryset().filter(
             visible_to__in=self.request.user.groups.all(),
@@ -180,7 +198,7 @@ class UTCList(BaseDataTablesDataSource):
 
     #----------------------------------------------------------------------
     def get_template_context_data(self, context):
-        # context = super(UTCList,self).get_context_data(*args,**kwargs)
+
         context["page_title"] = self.get_page_title()
         context["action"] = self.action
         context["action_display"] = self.action_display
@@ -189,6 +207,10 @@ class UTCList(BaseDataTablesDataSource):
 
 #============================================================================
 class TestListInstances(BaseDataTablesDataSource):
+    """
+    This view provides a base for any sort of listing of
+    :model:`qa.TestListInstance`'s.
+    """
 
     model = models.TestListInstance
     queryset = models.TestListInstance.objects.all
@@ -196,6 +218,11 @@ class TestListInstances(BaseDataTablesDataSource):
 
     #---------------------------------------------------------------------------
     def set_columns(self):
+        """
+        Setup the columns we want to be displayed for :model:`qa.TestListInstance`'s
+        See :view:`data_tables.BaseDataTablesDataSource`.set_columns for more information
+        """
+
         self.columns = (
             (self.get_actions, None, None),
             (lambda x: x.unit_test_collection.unit.name, "unit_test_collection__unit__name__exact", "unit_test_collection__unit__number"),
@@ -209,6 +236,8 @@ class TestListInstances(BaseDataTablesDataSource):
 
     #----------------------------------------------------------------------
     def get_queryset(self):
+        """fetch commonly used related objects"""
+
         return self.queryset().select_related(
             "test_list__name",
             "testinstance__status",

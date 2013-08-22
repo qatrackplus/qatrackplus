@@ -9,7 +9,7 @@ from django.views.generic import ListView
 
 #============================================================================
 class BaseDataTablesDataSource(ListView):
-    """This view serves a page with a pre-rendered"""
+    """This view serves a page with a pre-rendered data table"""
 
     model = None
     queryset = None
