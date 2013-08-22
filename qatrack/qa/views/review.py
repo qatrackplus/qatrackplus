@@ -25,6 +25,11 @@ class TestListInstanceDetails(TestListInstanceMixin, DetailView):
 
 #============================================================================
 class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
+    """
+    This views main purpose is for reviewing a completed :model:`qa.TestListInstance`
+    and updating the :model:`qa.TestInstance`s :model:`qa.TestInstanceStatus`
+    """
+
     permission_required = "qa.can_review"
     form_class = forms.ReviewTestListInstanceForm
     formset_class = forms.ReviewTestInstanceFormSet
@@ -32,6 +37,12 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
     #----------------------------------------------------------------------
     def form_valid(self, form):
+        """
+        Update users, times & statuses for the :model:`qa.TestListInstance`
+        and :model:`qa.TestInstance`s. TestListInstances all_reviewed is also
+        set.
+        """
+
         context = self.get_context_data()
         formset = context["formset"]
 
@@ -52,13 +63,13 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         # If you add something here be very careful to check that the data
         # is clean before updating the db
 
-        still_requires_review = False
         # for efficiency update statuses in bulk rather than test by test basis
         status_groups = collections.defaultdict(list)
         for ti_form in formset:
             status_pk = int(ti_form["status"].value())
             status_groups[status_pk].append(ti_form.instance.pk)
 
+        still_requires_review = False
         for status_pk, test_instance_pks in status_groups.items():
             status = models.TestInstanceStatus.objects.get(pk=status_pk)
             if status.requires_review:
@@ -78,6 +89,8 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
 #====================================================================================
 class UTCReview(PermissionRequiredMixin, UTCList):
+    """A simple :view:`qa.base.UTCList` wrapper to check required review permissions"""
+
     permission_required = "qa.can_view_completed"
     action = "review"
     action_display = "Review"
@@ -90,6 +103,7 @@ class UTCReview(PermissionRequiredMixin, UTCList):
 
 #====================================================================================
 class UTCFrequencyReview(UTCReview):
+    """A simple :view:`qa.review.UTCReview` wrapper to filter by :model:`qa.Frequency`"""
 
     #----------------------------------------------------------------------
     def get_queryset(self):
@@ -113,6 +127,7 @@ class UTCFrequencyReview(UTCReview):
 
 #====================================================================================
 class UTCUnitReview(UTCReview):
+    """A simple :view:`qa.review.UTCReview` wrapper to filter by :model:`units.Unit`"""
 
     #----------------------------------------------------------------------
     def get_queryset(self):
@@ -128,12 +143,15 @@ class UTCUnitReview(UTCReview):
 
 #====================================================================================
 class ChooseUnitForReview(ChooseUnit):
+    """Allow user to choose a :model:`units.Unit` to review :model:`qa.TestListInstance`s for"""
+
     active_only = False
     template_name = "units/unittype_choose_for_review.html"
 
 
 #====================================================================================
 class ChooseFrequencyForReview(ListView):
+    """Allow user to choose a :model:`qa.Frequency` to review :model:`qa.TestListInstance`s for"""
 
     model = models.Frequency
     context_object_name = "frequencies"
@@ -142,7 +160,8 @@ class ChooseFrequencyForReview(ListView):
 
 #============================================================================
 class Unreviewed(TestListInstances):
-    """view for grouping all test lists with a certain frequency for all units"""
+    """Display all :model:`qa.TestListInstance`s with all_reviewed=False"""
+
     queryset = models.TestListInstance.objects.unreviewed
 
     #----------------------------------------------------------------------
@@ -152,9 +171,9 @@ class Unreviewed(TestListInstances):
 
 #============================================================================
 class DueDateOverview(PermissionRequiredMixin, TemplateView):
-    """Overall status of the QA Program"""
-    template_name = "qa/overview_by_due_date.html"
+    """View which :model:`qa.UnitTestCollection` are overdue & coming due"""
 
+    template_name = "qa/overview_by_due_date.html"
     permission_required = "qa.can_review"
 
     DUE_DISPLAY_ORDER = (
@@ -195,10 +214,13 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
 
     #----------------------------------------------------------------------
     def get_context_data(self):
-        context = super(DueDateOverview, self).get_context_data()
-        qs = self.get_queryset()
-        now = timezone.now()
+        """Group all active :model:`qa.UnitTestCollection` by due date category"""
 
+        context = super(DueDateOverview, self).get_context_data()
+
+        qs = self.get_queryset()
+
+        now = timezone.now()
         today = now.date()
         friday = today + timezone.timedelta(days=(4 - today.weekday()) % 7)
         next_friday = friday + timezone.timedelta(days=7)
@@ -232,8 +254,8 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
 #============================================================================
 class Overview(PermissionRequiredMixin, TemplateView):
     """Overall status of the QA Program"""
-    template_name = "qa/overview.html"
 
+    template_name = "qa/overview.html"
     permission_required = "qa.can_review"
 
     #----------------------------------------------------------------------
@@ -259,6 +281,8 @@ class Overview(PermissionRequiredMixin, TemplateView):
 
     #----------------------------------------------------------------------
     def get_context_data(self):
+        """Group all active :model:`qa.UnitTestCollection` by unit"""
+
         context = super(Overview, self).get_context_data()
         qs = self.get_queryset()
 
@@ -278,6 +302,8 @@ class Overview(PermissionRequiredMixin, TemplateView):
 
 #====================================================================================
 class UTCInstances(TestListInstances):
+    """Show all :model:`qa.TestListInstance`s for a given :model:`qa.UnitTestCollection`"""
+
     #----------------------------------------------------------------------
     def get_page_title(self):
         try:
