@@ -958,7 +958,7 @@ class TestUnitTestCollection(TestCase):
         test = utils.create_test(name="tester")
         utils.create_test_list_membership(utc.tests_object, test)
 
-        uti = models.UnitTestInfo.objects.get(pk=1)
+        uti = models.UnitTestInfo.objects.latest("pk")
         status = utils.create_status()
 
         # values purposely utils.created out of order to make sure history
@@ -1441,7 +1441,7 @@ class TestTestInstance(TestCase):
     def test_upload_value_display(self):
         utc = utils.create_unit_test_collection()
         t = utils.create_test(test_type=models.UPLOAD)
-        uti = utils.create_unit_test_info(test=t, unit=utc.unit, assigned_to=models.Group.objects.get(pk=1))
+        uti = utils.create_unit_test_info(test=t, unit=utc.unit, assigned_to=models.Group.objects.latest("id"))
 
         tli = utils.create_test_list_instance(unit_test_collection=utc)
         ti = utils.create_test_instance(unit_test_info=uti, test_list_instance=tli)

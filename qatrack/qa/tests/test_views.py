@@ -852,9 +852,9 @@ class TestPerformQA(TestCase):
         self.set_form_data(data)
 
         # make sure tli directory doesn't already exist
-        d = os.path.join(settings.MEDIA_ROOT, "1")
-        import shutil
-        shutil.rmtree(d)
+        #d = os.path.join(settings.MEDIA_ROOT, "1")
+        #import shutil
+        #shutil.rmtree(d)
 
         response = self.client.post(self.url, data=data)
         #print response
