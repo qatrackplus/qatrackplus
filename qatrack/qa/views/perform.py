@@ -35,17 +35,24 @@ DEFAULT_CALCULATION_CONTEXT = {
 
 #---------------------------------------------------------------------------
 def process_procedure(procedure):
-    """prepare raw calculation procedure for evaluation"""
+    """
+    Cleans and sets new style division for calculations procedures. Used by
+    both the :view:`qa.perform.Upload` &
+    :view:`qa.perform.CompositeCalculation` views.
+
+    """
+
     return "\n".join(["from __future__ import division", procedure, "\n"]).replace('\r', '\n')
 
 
 #============================================================================
 class Upload(JSONResponseMixin, View):
-    """Handle AJAX upload requests"""
+    """View for handling AJAX upload requests when performing QA"""
 
     #----------------------------------------------------------------------
     def post(self, *args, **kwargs):
-        """calculate and return all composite values"""
+        """process file, apply calculation procedure and return results"""
+
         self.handle_upload()
 
         self.set_calculation_context()
@@ -75,6 +82,7 @@ class Upload(JSONResponseMixin, View):
     @staticmethod
     def get_upload_name(session_id, unit_test_info, name):
         """construct a unique file name for uploaded file"""
+
         name = name.rsplit(".")
         if len(name) == 1:
             name.append("")
@@ -90,6 +98,7 @@ class Upload(JSONResponseMixin, View):
 
     #----------------------------------------------------------------------
     def handle_upload(self):
+        """read incoming file and save tmp file to disk ready for processing"""
 
         self.file_name = self.get_upload_name(
             self.request.COOKIES.get('sessionid'),
@@ -102,6 +111,7 @@ class Upload(JSONResponseMixin, View):
         for chunk in self.request.FILES.get("upload").chunks():
             self.upload.write(chunk)
 
+        # rewind to beginning of file so it  can be read correctly by calc procedure
         self.upload.seek(0)
 
     #----------------------------------------------------------------------
@@ -121,6 +131,7 @@ class CompositeCalculation(JSONResponseMixin, View):
     #----------------------------------------------------------------------
     def get_json_data(self, name):
         """return python data from GET json data"""
+
         json_string = self.request.POST.get(name)
         if not json_string:
             return
@@ -171,6 +182,7 @@ class CompositeCalculation(JSONResponseMixin, View):
 
     #----------------------------------------------------------------------
     def set_composite_test_data(self):
+        """retrieve calculation procs for all composite tests"""
 
         composite_ids = self.get_json_data("composite_ids")
 
@@ -187,6 +199,7 @@ class CompositeCalculation(JSONResponseMixin, View):
     #----------------------------------------------------------------------
     def set_calculation_context(self):
         """set up the environment that the composite test will be calculated in"""
+
         values = self.get_json_data("qavalues")
         upload_data = self.get_json_data("upload_data")
 
@@ -201,9 +214,6 @@ class CompositeCalculation(JSONResponseMixin, View):
         for slug, val in values.iteritems():
             if slug not in self.composite_tests:
                 self.calculation_context[slug] = val
-                #try:
-                #    self.calculation_context[slug] = float(val)
-                #except (ValueError, TypeError):
 
     #----------------------------------------------------------------------
     def set_dependencies(self):
@@ -218,8 +228,19 @@ class CompositeCalculation(JSONResponseMixin, View):
 
     #----------------------------------------------------------------------
     def resolve_dependency_order(self):
-        """resolve calculation order dependencies using topological sort"""
-        # see http://code.activestate.com/recipes/577413-topological-sort/
+        """
+        Resolve calculation order dependencies using topological sort.
+
+        This allows composite calculations to be calculated in the correct
+        order for situations where you have composites that depend on
+        other composites. For example, if A & B are both composite tests,
+        but A is a function of B, then B must be calculated before A.
+        Cyclical dependencies are also flagged.
+
+        See http://code.activestate.com/recipes/577413-topological-sort/
+        """
+
+        #
         data = dict(self.dependencies)
         for k, v in data.items():
             v.discard(k)  # Ignore self dependencies
@@ -239,17 +260,27 @@ class CompositeCalculation(JSONResponseMixin, View):
 
 #====================================================================================
 class ChooseUnit(TemplateView):
-    """choose a unit to perform qa on for this session"""
+    """View for selecting a unit to perform QA on"""
+
     template_name = "units/unittype_list.html"
     active_only = True
 
     #----------------------------------------------------------------------
     def get_context_data(self, *args, **kwargs):
-        """reorder unit types"""
+        """
+        This is a view to present a list of :model:`units.Unit`'s grouped
+        by :model:`units.UnitType` sorted according to the lowest unit
+        number of its members.
+
+        Only units which have :model:`qa.UnitTestCollection`'s that are
+        visible to the user are included.
+        """
+
         context = super(ChooseUnit, self).get_context_data(*args, **kwargs)
 
         groups = self.request.user.groups.all()
         q = models.UnitTestCollection.objects.by_visibility(groups)
+
         if self.active_only:
             q = q.filter(active=True)
 
@@ -259,13 +290,19 @@ class ChooseUnit(TemplateView):
         for unit in q:
             unit_types[unit["unit__type__name"]].append(unit)
 
-        context["unit_types"] = sorted(unit_types.items(), key=lambda x: min([u["unit__number"] for u in x[1]]))
+        ordered = sorted(unit_types.items(), key=lambda x: min([u["unit__number"] for u in x[1]]))
+
+        context["unit_types"] = ordered
+
         return context
 
 
 #============================================================================
 class PerformQA(PermissionRequiredMixin, CreateView):
-    """view for users to complete a qa test list"""
+    """
+    This is the main view for users to complete a qa test list. i.e.
+    for creating :model:`qa.TestListInstance`'s and :model:`qa.TestInstance`s
+    """
 
     permission_required = "qa.add_testlistinstance"
     form_class = forms.CreateTestListInstanceForm
@@ -273,6 +310,11 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
     #----------------------------------------------------------------------
     def set_test_lists(self):
+        """
+        Set the :model:`qa.TestList` and the day that are to be performed.
+        The day is 0 for :model:`qa.TestList` or 0 - N-1 for
+        :model:`qa.TestListCycle`'s (where N is number of lists in the cycle).
+        """
 
         requested_day = self.get_requested_day_to_perform()
         self.actual_day, self.test_list = self.unit_test_col.get_list(requested_day)
@@ -284,6 +326,8 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
     #----------------------------------------------------------------------
     def set_all_tests(self):
+        """Find all tests to be performed, including tests from sublists"""
+
         self.all_tests = []
         for test_list in self.all_lists:
             tests = test_list.tests.all().order_by("testlistmembership__order")
@@ -291,6 +335,8 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
     #----------------------------------------------------------------------
     def set_unit_test_collection(self):
+        """Set the requested :model:`qa.UnitTestCollection` to be performed."""
+
         self.unit_test_col = get_object_or_404(
             models.UnitTestCollection.objects.select_related(
                 "unit", "frequency", "last_instance"
@@ -303,6 +349,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
     #----------------------------------------------------------------------
     def set_last_day(self):
+        """Set the last day performed for the current :model:`UnitTestCollection`"""
 
         self.last_day = None
 
@@ -311,7 +358,8 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
     #---------------------------------------------------------------
     def template_unit_test_infos(self):
-        """prepare the unit test infos for rendering in template"""
+        """Convert :model:`qa.UnitTestInfo` into dicts for rendering in template"""
+
         template_utis = []
         for uti in self.unit_test_infos:
             template_utis.append({
@@ -320,10 +368,14 @@ class PerformQA(PermissionRequiredMixin, CreateView):
                 "reference": model_to_dict(uti.reference) if uti.reference else None,
                 "tolerance": model_to_dict(uti.tolerance) if uti.tolerance else None,
             })
+
         return template_utis
 
     #----------------------------------------------------------------------
     def set_unit_test_infos(self):
+        """Find and order all :model:`qa.UniTestInfo` objects for tests to be performed"""
+
+
         utis = models.UnitTestInfo.objects.filter(
             unit=self.unit_test_col.unit,
             test__in=self.all_tests,
@@ -343,13 +395,15 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             try:
                 self.unit_test_infos.append(utis[uti_tests.index(test)])
             except ValueError:
+                # if this happens it usually indicates a bug somewhere. Please report.
                 msg = "Do not treat! Please call physics.  Test '%s' is missing information for this unit " % test.name
                 logger.error(msg + " Test=%d" % test.pk)
                 messages.error(self.request, _(msg))
 
     #----------------------------------------------------------------------
     def add_histories(self, forms):
-        """paste historical values onto unit test infos (ugh ugly)"""
+        """paste historical values onto unit test infos (ugly)"""
+
         history, history_dates = self.unit_test_col.history()
         self.history_dates = history_dates
         for form in forms:
@@ -360,7 +414,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
     #---------------------------------------------------------------------------
     def get_test_status(self, form):
-        """return default or user requested test status"""
+        """return default or user requested :model:`qa.TestInstanceStatus`"""
 
         try:
             return models.TestInstanceStatus.objects.get(pk=form["status"].value())
@@ -369,6 +423,12 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
     #----------------------------------------------------------------------
     def form_valid(self, form):
+        """
+        TestListInstance form has validated, now check for validity of
+        TestInstance formset, create all :model:`qa.TestInstance`s and do
+        some bookeeping for the :model:`qa.TestListInstance`.
+        """
+
         context = self.get_context_data()
         formset = context["formset"]
 
@@ -441,6 +501,8 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         self.object.unit_test_collection.set_due_date()
 
         if not self.object.in_progress:
+            # TestListInstance & TestInstances have been successfully create, fire signal
+            # to inform any listeners (e.g notifications.handlers.email_no_testlist_save)
             signals.testlist_complete.send(sender=self, instance=self.object, created=False)
 
         # let user know request succeeded and return to unit list
@@ -459,11 +521,10 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         self.request.session.set_expiry(settings.SESSION_COOKIE_AGE)
 
         if models.TestInstanceStatus.objects.default() is None:
-            messages.error(
-                self.request, "There must be at least one Test Status defined before performing a TestList"
-            )
+            messages.error( self.request, "There must be at least one Test Status defined before performing a TestList")
             return context
 
+        #setup our test list, tests, current day etc
         self.set_unit_test_collection()
         self.set_test_lists()
         self.set_last_day()
@@ -476,13 +537,14 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             formset = forms.CreateTestInstanceFormSet(unit_test_infos=self.unit_test_infos, user=self.request.user)
 
         self.add_histories(formset.forms)
-        context["formset"] = formset
 
+        context["formset"] = formset
         context["history_dates"] = self.history_dates
         context['categories'] = set([x.test.category for x in self.unit_test_infos])
         context['current_day'] = self.actual_day + 1
         context["last_instance"] = self.unit_test_col.last_instance
         context['last_day'] = self.last_day
+
         ndays = len(self.unit_test_col.tests_object)
         if ndays > 1:
             context['days'] = range(1, ndays + 1)
@@ -491,12 +553,14 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         context["unit_test_infos"] = json.dumps(self.template_unit_test_infos())
         context["unit_test_collection"] = self.unit_test_col
         context["contacts"] = list(Contact.objects.all().order_by("name"))
+
         return context
 
     #----------------------------------------------------------------------
     def get_requested_day_to_perform(self):
-        """request comes in as 1 based day, convert to zero based"""
+        """check GET to see if specific day requested by user"""
         try:
+            # request comes in as 1 based day, convert to zero based
             day = int(self.request.GET.get("day")) - 1
         except (ValueError, TypeError, KeyError):
             day = None
@@ -504,6 +568,8 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
     #----------------------------------------------------------------------
     def get_success_url(self):
+        """Redirect user to previous page they were on if possible"""
+
         next_ = self.request.GET.get("next", None)
         if next_ is not None:
             return next_
@@ -518,7 +584,13 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
 #============================================================================
 class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
-    """view for users to complete a qa test list"""
+    """
+    View for users to edit an existing :model:`qa.TestListInstance` and
+    its children :model:`qa.TestInstance`s.
+
+    Note: Some of this code is duplicated in :view:`qa.views.perform.PerformQA`
+    and the common parts may be able to be refactored into a mixin.
+    """
 
     permission_required = "qa.change_testlistinstance"
     form_class = forms.UpdateTestListInstanceForm
@@ -561,8 +633,10 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
     #----------------------------------------------------------------------
     def update_test_list_instance(self):
-        self.object.created_by = self.request.user
+        """do bookkeeping for :model:`qa.TestListInstance`"""
+
         self.object.modified_by = self.request.user
+
         now = timezone.now()
 
         self.object.modified = now
@@ -582,6 +656,7 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
     #----------------------------------------------------------------------
     def set_status_object(self, status_pk):
+
         try:
             self.status = models.TestInstanceStatus.objects.get(pk=status_pk)
         except (models.TestInstanceStatus.DoesNotExist, ValueError):
@@ -589,9 +664,10 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
     #----------------------------------------------------------------------
     def update_test_instance(self, test_instance):
+        """do bookkeeping for :model:`qa.TestInstance`"""
+
         ti = test_instance
         ti.status = self.status
-        ti.created_by = self.request.user
         ti.modified_by = self.request.user
         ti.in_progress = self.object.in_progress
         ti.work_started = self.object.work_started
@@ -616,6 +692,7 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
     #---------------------------------------------------------------
     def template_unit_test_infos(self):
         """prepare the unit test infos for rendering in template"""
+
         template_utis = []
         for uti in self.unit_test_infos:
             template_utis.append({
@@ -628,6 +705,7 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
     #---------------------------------------------------------------
     def get_context_data(self, **kwargs):
+
         context = super(EditTestListInstance, self).get_context_data(**kwargs)
         self.unit_test_infos = [f.instance.unit_test_info for f in context["formset"]]
         context["unit_test_infos"] = json.dumps(self.template_unit_test_infos())
@@ -636,13 +714,20 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
 #============================================================================
 class ContinueTestListInstance(EditTestListInstance):
+    """
+    View for continuing a :model:`qa.TestListInstance` that has previously
+    been marked as in progress.
+    """
 
     permission_required = "qa.add_testlistinstance"
 
 
 #============================================================================
 class InProgress(TestListInstances):
-    """view for grouping all test lists with a certain frequency for all units"""
+    """
+    View for choosing an existing from the :model:`qa.TestListInstance`s
+    which are marked as being in progress.
+    """
 
     queryset = models.TestListInstance.objects.in_progress
 
@@ -653,7 +738,7 @@ class InProgress(TestListInstances):
 
 #============================================================================
 class FrequencyList(UTCList):
-    """list daily/monthly/annual test lists for a unit"""
+    """List :model:`qa.UnitTestCollection`s for requested :model:`qa.Frequency`s"""
 
     #----------------------------------------------------------------------
     def get_queryset(self):
@@ -677,11 +762,15 @@ class FrequencyList(UTCList):
 
 #============================================================================
 class UnitFrequencyList(FrequencyList):
-    """list daily/monthly/annual test lists for a unit"""
+    """
+    List :model:`qa.UnitTestCollection`s for requested :model:`unit.Unit`s
+    and :model:`qa.Frequency`s.
+    """
 
     #----------------------------------------------------------------------
     def get_queryset(self):
-        """filter queryset by frequency"""
+        """filter queryset by Unit"""
+
         qs = super(UnitFrequencyList, self).get_queryset()
         self.units = Unit.objects.filter(number__in=self.kwargs["unit_number"].split("/"))
         return qs.filter(unit__in=self.units)
@@ -695,7 +784,7 @@ class UnitFrequencyList(FrequencyList):
 
 #====================================================================================
 class UnitList(UTCList):
-    """list qa filtered by unit"""
+    """ List :model:`qa.UnitTestCollection`s for requested :model:`unit.Unit`s """
 
     #----------------------------------------------------------------------
     def get_queryset(self):
