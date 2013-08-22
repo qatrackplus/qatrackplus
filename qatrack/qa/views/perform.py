@@ -301,7 +301,7 @@ class ChooseUnit(TemplateView):
 class PerformQA(PermissionRequiredMixin, CreateView):
     """
     This is the main view for users to complete a qa test list. i.e.
-    for creating :model:`qa.TestListInstance`'s and :model:`qa.TestInstance`s
+    for creating :model:`qa.TestListInstance` and :model:`qa.TestInstance`
     """
 
     permission_required = "qa.add_testlistinstance"
