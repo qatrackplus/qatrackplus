@@ -112,7 +112,7 @@ class WindowsIntegratedAuthenticationBackend(ModelBackend):
 
         By default, returns the username unchanged.
         """
-        return username.replace("QATRACKDOMAIN\\","")
+        return username.replace(settings.CLEAN_USERNAME_STRING,"")
 
     def configure_user(self, user):
         """
@@ -127,8 +127,8 @@ class WindowsIntegratedAuthenticationBackend(ModelBackend):
             l = ldap.initialize(settings.AD_LDAP_URL)
 
             # bind
-            binddn = "%s@%s" % ("therapist",settings.AD_NT4_DOMAIN)
-            l.bind_s(binddn,"Linac122")
+            binddn = "%s@%s" % (settings.AD_LDAP_USER,settings.AD_NT4_DOMAIN)
+            l.bind_s(binddn,settings.AD_LDAP_PW)
 
             # search
             result = l.search_ext_s(settings.AD_SEARCH_DN,ldap.SCOPE_SUBTREE,"sAMAccountName=%s" % user,settings.AD_SEARCH_FIELDS)[0][1]

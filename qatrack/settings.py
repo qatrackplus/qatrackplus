@@ -133,6 +133,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    #'django.contrib.auth.middleware.RemoteUserMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'qatrack.middleware.login_required.LoginRequiredMiddleware',
     'qatrack.middleware.maintain_filters.FilterPersistMiddleware',
@@ -240,6 +241,7 @@ DEFAULT_GROUP_NAMES = []  # eg ["Therapists"]
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
     #'qatrack.accounts.backends.ActiveDirectoryGroupMembershipSSLBackend',
+    #'qatrack.accounts.backends.WindowsIntegratedAuthenticationBackend',
 )
 
 # active directory settings (not required if only using ModelBackend
@@ -248,6 +250,8 @@ AD_DNS_NAME = ''  # e.g. ad.civic1.ottawahospital.on.ca
 # If using non-SSL use these
 AD_LDAP_PORT = 389
 AD_LDAP_URL = 'ldap://%s:%s' % (AD_DNS_NAME, AD_LDAP_PORT)
+AD_LDAP_USER = ''
+AD_LDAP_PW = ''
 
 # If using SSL use these:
 # AD_LDAP_PORT=636
@@ -260,6 +264,7 @@ AD_SEARCH_FIELDS = ['mail', 'givenName', 'sn', 'sAMAccountName', 'memberOf']
 AD_MEMBERSHIP_REQ = []  # eg ["*TOHCC - All Staff | Tout le personnel  - CCLHO"]
 # AD_CERT_FILE='/path/to/your/cert.txt'
 
+CLEAN_USERNAME_STRING = ''
 
 #------------------------------------------------------------------------------
 # Logging Settings
