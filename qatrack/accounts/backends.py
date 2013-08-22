@@ -1,6 +1,7 @@
 import ldap
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.contrib.auth.backends import ModelBackend
 
 #stripped down version of http://djangosnippets.org/snippets/901/
 class ActiveDirectoryGroupMembershipSSLBackend:
@@ -70,4 +71,81 @@ class ActiveDirectoryGroupMembershipSSLBackend:
             return User.objects.get(pk=user_id)
         except User.DoesNotExist:
             return None
+        
+
+class WindowsIntegratedAuthenticationBackend(ModelBackend):
+
+    # Create a User object if not already in the database?
+    create_unknown_user = True
+
+    def authenticate(self, remote_user):
+        """
+        The username passed as ``remote_user`` is considered trusted.  This
+        method simply returns the ``User`` object with the given username,
+        creating a new ``User`` object if ``create_unknown_user`` is ``True``.
+
+        Returns None if ``create_unknown_user`` is ``False`` and a ``User``
+        object with the given username is not found in the database.
+        """
+        if not remote_user:
+            return
+        username = self.clean_username(remote_user)
+
+        # Note that this could be accomplished in one try-except clause, but
+        # instead we use get_or_create when creating unknown users since it has
+        # built-in safeguards for multiple threads.
+        if self.create_unknown_user:
+            user, created = User.objects.get_or_create(username=username)
+            if created:
+                user = self.configure_user(user)
+        else:
+            try:
+                user = User.objects.get(user)
+            except User.DoesNotExist:
+                pass
+        return user
+
+    def clean_username(self, username):
+        """
+        Performs any cleaning on the "username" prior to using it to get or
+        create the user object.  Returns the cleaned username.
+
+        By default, returns the username unchanged.
+        """
+        return username.replace("QATRACKDOMAIN\\","")
+
+    def configure_user(self, user):
+        """
+        Configures a user after creation and returns the updated user.
+
+        By default, returns the user unmodified.
+        """
+        try:
+            ldap.set_option(ldap.OPT_REFERRALS,0) # DO NOT TURN THIS OFF OR SEARCH WON'T WORK!
+
+            # initialize
+            l = ldap.initialize(settings.AD_LDAP_URL)
+
+            # bind
+            binddn = "%s@%s" % ("therapist",settings.AD_NT4_DOMAIN)
+            l.bind_s(binddn,"Linac122")
+
+            # search
+            result = l.search_ext_s(settings.AD_SEARCH_DN,ldap.SCOPE_SUBTREE,"sAMAccountName=%s" % user,settings.AD_SEARCH_FIELDS)[0][1]
+            l.unbind_s()
+
+            # get personal info
+            user.email = result.get("mail",[None])[0]
+            user.last_name = result.get("sn",[None])[0]
+            user.first_name = result.get("givenName",[None])[0]
+
+        except Exception:
+            return None
+
+        user.is_staff = False
+        user.is_superuser = False
+        user.set_password(None)
+
+        user.save()
+        return user
 
