@@ -11,8 +11,7 @@ urlpatterns = patterns('',
 
     url(r'^accounts/', include('qatrack.accounts.urls')),
     url(r'^qa/', include('qatrack.qa.urls')),
-
-    # Uncomment the next line to enable the admin:
+    url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
     url(r'^admin/', include(admin.site.urls)),
 
     url(r'^', include('genericdropdown.urls')),
