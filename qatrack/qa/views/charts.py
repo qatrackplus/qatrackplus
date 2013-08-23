@@ -27,9 +27,7 @@ local_tz = timezone.get_current_timezone()
 
 #============================================================================
 class ChartView(PermissionRequiredMixin, TemplateView):
-    """View responsible for rendering the charts page.  The data used
-    for rendering charts is provided by the subclasses of BaseChartData below
-    """
+    """View responsible for rendering the main charts user interface."""
 
     permission_required = "qa.can_view_charts"
 
@@ -37,6 +35,11 @@ class ChartView(PermissionRequiredMixin, TemplateView):
 
     #----------------------------------------------------------------------
     def create_test_data(self):
+        """
+        Find all tests that have been performed at least once and organize them
+        into the test lists/units/frequencies they are performed as part of.
+        """
+
         # note: leaving off the distinct queryhere results in a factor of 3 speedup
         # (250ms vs 750ms for 150k total test instances)  for a sqlite query.  The
         # distinctness/uniqueness is guarannteed by using sets below.
@@ -64,7 +67,12 @@ class ChartView(PermissionRequiredMixin, TemplateView):
 
     #----------------------------------------------------------------------
     def get_context_data(self, **kwargs):
-        """add default dates to context"""
+        """
+        Add all relevent filters to context. test_data contains all the
+        tests grouped by test list/unit/frequency and is dumped as a json
+        object for use on client side.
+        """
+
         context = super(ChartView, self).get_context_data(**kwargs)
 
         self.set_test_lists()
@@ -115,7 +123,10 @@ class ChartView(PermissionRequiredMixin, TemplateView):
 
 #============================================================================
 class BaseChartView(View):
-    ISO_FORMAT = False
+    """
+    Base AJAX view responsible for retrieving & tabulating data to be
+    plotted for charts.
+    """
 
     #----------------------------------------------------------------------
     def get(self, request):
@@ -128,6 +139,10 @@ class BaseChartView(View):
 
     #----------------------------------------------------------------------
     def create_data_table(self):
+        """
+        Take all the :model:`qa.TestInstance`s and tabulate them (grouped by
+        unit/test) along with the reference value at the time they were performed.
+        """
 
         headers = []
         max_len = 0
@@ -135,12 +150,14 @@ class BaseChartView(View):
 
         r = lambda ref: ref if ref is not None else ""
 
+        # collect all data in 'date/value/ref triplets
         for name, points in self.plot_data.iteritems():
             headers.append(name)
             col = [(p["display_date"], p["display"], r(p["reference"])) for p in points]
             cols.append(col)
             max_len = max(len(col), max_len)
 
+        #generate table from triplets
         rows = []
         for idx in range(max_len):
             row = []
@@ -148,7 +165,7 @@ class BaseChartView(View):
                 try:
                     row.append(col[idx])
                 except IndexError:
-                    row.append(["", ""])
+                    row.append(["", "", ""])
             rows.append(row)
 
         context = Context({
@@ -162,6 +179,8 @@ class BaseChartView(View):
 
     #----------------------------------------------------------------------
     def get_date(self, key, default):
+        """take date from GET data and convert it to utc"""
+
         #datetime strings coming in will be in local time, make sure they get
         #converted to utc
 
@@ -177,10 +196,12 @@ class BaseChartView(View):
 
     #---------------------------------------------------------------
     def convert_date(self, date):
+        """by default we assume date is being used by javascript, so convert to ISO"""
         return date.isoformat()
 
     #---------------------------------------------------------------
     def test_instance_to_point(self, ti):
+        """Grab relevent plot data from a :model:`qa.TestInstance`"""
 
         point = {
             "act_high": None, "act_low": None, "tol_low": None, "tol_high": None,
@@ -190,6 +211,7 @@ class BaseChartView(View):
             "display": ti.value_display(),
             "reference": ti.reference.value if ti.reference else None,
         }
+
         if ti.tolerance is not None and ti.reference is not None:
             point.update(ti.tolerance.tolerances_for_value(ti.reference.value))
 
@@ -197,6 +219,7 @@ class BaseChartView(View):
 
     #----------------------------------------------------------------------
     def get_plot_data(self):
+        """Retrieve all :model:`qa.TestInstance` data requested."""
 
         self.plot_data = {}
 
@@ -217,6 +240,8 @@ class BaseChartView(View):
         units = Unit.objects.filter(pk__in=units)
         statuses = models.TestInstanceStatus.objects.filter(pk__in=statuses)
 
+        # retrieve test instances for every possible permutation of the
+        # requested test list, test & units
         for tl, t, u in itertools.product(test_lists, tests, units):
             tis = models.TestInstance.objects.filter(
                 test_list_instance__test_list=tl,
@@ -241,6 +266,7 @@ class BaseChartView(View):
 
 #============================================================================
 class BasicChartData(PermissionRequiredMixin, JSONResponseMixin, BaseChartView):
+    """JSON view used for basic chart type"""
 
     permission_required = "qa.can_view_charts"
 
@@ -253,10 +279,12 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
 
     #---------------------------------------------------------------------------
     def convert_date(self, dt):
+        """date is being used by Python code, so no need to convert to ISO"""
         return dt
 
     #----------------------------------------------------------------------
     def get_number_from_request(self, param, default, dtype=float):
+        """look for a number in GET and convert it to the given datatype"""
         try:
             v = dtype(self.request.GET.get(param, default))
         except:
@@ -265,13 +293,20 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
 
     #---------------------------------------------------------------
     def get_plot_data(self):
-        """only use one data series"""
+        """
+        The control chart software can only handle one test at a time
+        so if user requested more than one test, just grab
+        one of them.
+        """
+
         super(ControlChartImage, self).get_plot_data()
+
         if self.plot_data:
             self.plot_data = dict([self.plot_data.popitem()])
 
     #----------------------------------------------------------------------
     def render_to_response(self, context):
+        """Create a png image and write the control chart image to it"""
 
         fig = Figure(dpi=72, facecolor="white")
         dpi = fig.get_dpi()
