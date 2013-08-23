@@ -9,6 +9,8 @@ from django.conf import settings
 
 from .. import models
 
+from qatrack.qa import utils
+
 BOOL_CHOICES = [(0, "No"), (1, "Yes")]
 
 
@@ -157,7 +159,7 @@ class CreateTestInstanceFormSet(UserFormsetMixin, BaseTestInstanceFormSet):
             init = {"value": None}
 
             if uti.test.type == models.CONSTANT:
-                init["value"] = uti.test.constant_value
+                init["value"] = utils.to_precision(uti.test.constant_value,4)
 
             initial.append(init)
 
