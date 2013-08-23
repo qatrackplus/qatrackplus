@@ -15,6 +15,7 @@ from qatrack.qa import utils
 
 import re
 
+#All available test types
 BOOLEAN = "boolean"
 NUMERICAL = "numerical"
 SIMPLE = "simple"
@@ -82,6 +83,7 @@ NEWLIST = NOT_DONE
 
 EPSILON = 1E-10
 
+#  A collection of the permissions most relevant to QATrack+
 PERMISSIONS = (
     (
         "Performing",
@@ -109,6 +111,8 @@ PERMISSIONS = (
 
 #============================================================================
 class FrequencyManager(models.Manager):
+    """Provides a convenience method for grabbing available convenience slug/names"""
+
     #----------------------------------------------------------------------
     def frequency_choices(self):
         return self.get_query_set().values_list("slug", "name")
@@ -249,6 +253,8 @@ class Reference(models.Model):
 
     #----------------------------------------------------------------------
     def value_display(self):
+        """return user friendly display value for this reference"""
+
         if self.value is None:
             return ""
         if self.type == BOOLEAN:
@@ -258,23 +264,16 @@ class Reference(models.Model):
     #---------------------------------------------------------------------------
     def __unicode__(self):
         """more helpful display name"""
-        if self.type == BOOLEAN:
-            if self.value == 0:
-                return "No"
-            elif self.value == 1:
-                return "Yes"
-            else:
-                return "%s (Invalid Boolean)" % (self.name,)
-
-        return "%g" % (self.value)
+        return self.value_display()
 
 
 #============================================================================
 class Tolerance(models.Model):
     """
-    Model/methods for checking whether a value lies within tolerance
-    and action levels
+    Model for storing tolerance/action levels and tolerance/action choices
+    for multiple choice type tests
     """
+
     type = models.CharField(max_length=20, help_text=_("Select whether this will be an absolute or relative tolerance criteria"), choices=TOL_TYPE_CHOICES)
     act_low = models.FloatField(verbose_name=_("Action Low"), help_text=_("Value of lower action level"), null=True, blank=True)
     tol_low = models.FloatField(verbose_name=_("Tolerance Low"), help_text=_("Value of lower tolerance level"), null=True, blank=True)
@@ -288,6 +287,7 @@ class Tolerance(models.Model):
         null=True,
         blank=True,
     )
+
     mc_tol_choices = models.CharField(
         verbose_name=_("Multiple Choice Tolerance Values"),
         max_length=2048,
@@ -983,7 +983,11 @@ class TestInstanceManager(models.Manager):
 
 #============================================================================
 class TestInstance(models.Model):
-    """Measured instance of a :model:`Test`"""
+    """
+    Model for storing actual value of a measured test as well as whether
+    or not the test passed or failed along with the reference and tolerance
+    that pass/fail was based on.
+    """
 
     # review status
     status = models.ForeignKey(TestInstanceStatus)
@@ -1323,11 +1327,9 @@ class TestListInstance(models.Model):
 
 #============================================================================
 class TestListCycle(TestCollectionInterface):
-    """A basic model for creating a collection of test lists that cycle
-    based on the list that was last completed
-
-    NOTE: Currently only supports daily rotation. Support for rotation
-    at different frequencies may be added sometime in the future.
+    """
+    A basic model for creating a collection of test lists that cycle
+    based on the list that was last completed.
     """
 
     test_lists = models.ManyToManyField(TestList, through="TestListCycleMembership")
