@@ -61,8 +61,8 @@ function init_test_list_instance_tables(units, frequencies){
 $(document).ready(function(){
 
     $.when(
-        $.getJSON(QAURLs.API_URL+"unit/?format=json"),
-        $.getJSON(QAURLs.API_URL+"frequency/?format=json")
+        $.getJSON(QAURLs.API_URL+"unit/?format=json&limit=0"),
+        $.getJSON(QAURLs.API_URL+"frequency/?format=json&limit=0")
     ).then(init_test_list_instance_tables);
 
 });
