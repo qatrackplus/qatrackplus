@@ -33,6 +33,10 @@ class UserFormsetMixin(object):
 
 #============================================================================
 class TestInstanceWidgetsMixin(object):
+    """
+    Mixin to override default TestInstance field widgets and validation
+    based on the Test type.
+    """
 
     #----------------------------------------------------------------------
     def clean(self):
@@ -99,6 +103,7 @@ class TestInstanceWidgetsMixin(object):
 
 #============================================================================
 class CreateTestInstanceForm(TestInstanceWidgetsMixin, forms.Form):
+
     value = forms.FloatField(required=False, widget=forms.widgets.TextInput(attrs={"class": "qa-input"}))
     string_value = forms.CharField(required=False)
 
@@ -132,18 +137,32 @@ BaseTestInstanceFormSet = forms.formsets.formset_factory(CreateTestInstanceForm,
 
 
 class CreateTestInstanceFormSet(UserFormsetMixin, BaseTestInstanceFormSet):
+    """
+    Formset for entering all the test values for the TestList that a
+    user is performing.
+    """
 
     #----------------------------------------------------------------------
     def __init__(self, *args, **kwargs):
+        """
+        Set the UnitTestInfo object for each form in the formset and
+        set initial values for any CONSTANT Test type.
+        """
+
         unit_test_infos = kwargs.pop("unit_test_infos")
 
         initial = []
         for uti in unit_test_infos:
+
             init = {"value": None}
+
             if uti.test.type == models.CONSTANT:
                 init["value"] = uti.test.constant_value
+
             initial.append(init)
+
         kwargs.update(initial=initial)
+
         super(CreateTestInstanceFormSet, self).__init__(*args, **kwargs)
 
         for form, uti in zip(self.forms, unit_test_infos):
@@ -205,6 +224,7 @@ class ReviewTestInstanceFormSet(UserFormsetMixin, BaseReviewTestInstanceFormSet)
 #============================================================================
 class BaseTestListInstanceForm(forms.ModelForm):
     """parent form for performing or updating a qa test list"""
+
     status = forms.ModelChoiceField(
         queryset=models.TestInstanceStatus.objects,
         initial=models.TestInstanceStatus.objects.default,
@@ -244,7 +264,8 @@ class BaseTestListInstanceForm(forms.ModelForm):
 
     #---------------------------------------------------------------------------
     def clean(self):
-        """"""
+        """validate the work_completed & work_started values"""
+
         cleaned_data = super(BaseTestListInstanceForm, self).clean()
 
         for field in ("work_completed", "work_started",):
@@ -260,7 +281,6 @@ class BaseTestListInstanceForm(forms.ModelForm):
             cleaned_data["work_completed"] = work_completed
 
         if work_started and work_completed:
-
             if work_completed <= work_started:
                 self._errors["work_started"] = self.error_class(["Work started date/time can not be after work completed date/time"])
                 del cleaned_data["work_started"]
