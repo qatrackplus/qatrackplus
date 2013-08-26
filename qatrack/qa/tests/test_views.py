@@ -205,6 +205,11 @@ class TestControlImage(TestCase):
         self.view = views.charts.ControlChartImage.as_view()
         self.url = reverse("control_chart")
 
+    #---------------------------------------------------------------
+    def tearDown(self):
+        models.Test.objects.all().delete()
+        models.TestList.objects.all().delete()
+        models.Unit.objects.all().delete()
     #----------------------------------------------------------------------
     def test_not_enough_data(self):
         request = self.factory.get(self.url)
@@ -226,7 +231,7 @@ class TestControlImage(TestCase):
         tomorrow = yesterday + timezone.timedelta(days=2)
 
         for n in [-1, 0, 1, 2, "nonnumber"]:
-            url = self.make_url(test.pk, tl.pk, unit.number, yesterday, tomorrow, n_base=n)
+            url = self.make_url(test.pk, tl.pk, unit.pk, yesterday, tomorrow, n_base=n)
             request = self.factory.get(url)
             request.user = superuser
             response = self.view(request)
@@ -244,7 +249,7 @@ class TestControlImage(TestCase):
         tomorrow = yesterday + timezone.timedelta(days=2)
 
         for n in [-1, 0, 101, "nonnumber"]:
-            url = self.make_url(test.pk, tl.pk, unit.number, yesterday, tomorrow, sg_size=n)
+            url = self.make_url(test.pk, tl.pk, unit.pk, yesterday, tomorrow, sg_size=n)
             request = self.factory.get(url)
             request.user = superuser
             response = self.view(request)
@@ -259,12 +264,12 @@ class TestControlImage(TestCase):
             self.assertTrue(response.get("content-type"), "image/png")
 
     #----------------------------------------------------------------------
-    def make_url(self, pk, tl_pk, unumber, from_date, to_date, sg_size=2, n_base=2, fit="true"):
+    def make_url(self, pk, tl_pk, upk, from_date, to_date, sg_size=2, n_base=2, fit="true"):
         url = self.url + "?subgroup_size=%s&n_baseline_subgroups=%s&fit_data=%s" % (sg_size, n_base, fit)
         url += "&tests[]=%s" % pk
         url += "&test_lists[]=%s" % tl_pk
-        url += "&units[]=%s" % unumber
-        url += "&statuses[]=1"
+        url += "&units[]=%s" % upk
+        url += "&statuses[]=%s" % models.TestInstanceStatus.objects.all()[0].pk
         url += "&from_date=%s" % from_date.strftime(settings.SIMPLE_DATE_FORMAT)
         url += "&to_date=%s" % to_date.strftime(settings.SIMPLE_DATE_FORMAT)
         return url
@@ -282,7 +287,7 @@ class TestControlImage(TestCase):
 
         yesterday = timezone.now().date() - timezone.timedelta(days=1)
         tomorrow = yesterday + timezone.timedelta(days=2)
-        url = self.make_url(test.pk, tl.pk, unit.number, yesterday, tomorrow)
+        url = self.make_url(test.pk, tl.pk, unit.pk, yesterday, tomorrow)
 
         for n in (1, 1, 8, 90):
             for x in range(n):
@@ -311,13 +316,13 @@ class TestControlImage(TestCase):
         yesterday = timezone.now().date() - timezone.timedelta(days=1)
         tomorrow = yesterday + timezone.timedelta(days=2)
 
-        url = self.make_url(test.pk, tl.pk, unit.number, yesterday, yesterday)
+        url = self.make_url(test.pk, tl.pk, unit.pk, yesterday, yesterday)
         request = self.factory.get(url)
         request.user = superuser
         response = self.view(request)
         self.assertTrue(response.get("content-type"), "image/png")
 
-        url = self.make_url(test.pk, tl.pk, unit.number, yesterday, tomorrow, fit="true")
+        url = self.make_url(test.pk, tl.pk, unit.pk, yesterday, tomorrow, fit="true")
 
         # generate some data that the control chart fit function won't be able to fit
         for x in range(10):
@@ -344,13 +349,13 @@ class TestControlImage(TestCase):
         yesterday = timezone.now().date() - timezone.timedelta(days=1)
         tomorrow = yesterday + timezone.timedelta(days=2)
 
-        url = self.make_url(test.pk, tl.pk, unit.number, yesterday, yesterday)
+        url = self.make_url(test.pk, tl.pk, unit.pk, yesterday, yesterday)
         request = self.factory.get(url)
         request.user = superuser
         response = self.view(request)
         self.assertTrue(response.get("content-type"), "image/png")
 
-        url = self.make_url(test.pk, tl.pk, unit.number, yesterday, tomorrow, fit="true")
+        url = self.make_url(test.pk, tl.pk, unit.pk, yesterday, tomorrow, fit="true")
         import qatrack.qa.control_chart
         old_display = qatrack.qa.control_chart.control_chart.display
 
@@ -769,7 +774,7 @@ class TestPerformQA(TestCase):
         response = self.client.get(self.url)
 
         self.assertEqual(
-            response.context["formset"].forms[self.tests.index(self.t_const)].initial["value"],
+            float(response.context["formset"].forms[self.tests.index(self.t_const)].initial["value"]),
             self.t_const.constant_value
         )
     #----------------------------------------------------------------------
@@ -1533,7 +1538,7 @@ class TestDueDateOverView(TestCase):
     #----------------------------------------------------------------------
     def test_due_next_month(self):
 
-        self.utc.due_date = self.next_month_start + timezone.timedelta(days=3)
+        self.utc.due_date = self.next_month_start + timezone.timedelta(days=8)
         self.utc.save()
         response = self.client.get(self.url)
         self.assertListEqual(response.context_data["due"][4][1], [self.utc])

@@ -41,17 +41,16 @@ class TestUtils(TestCase):
     def test_float_format(self):
         numbers = (
             (0.999, 3, "0.999"),
+            (-0.999, 3, "-0.999"),
             (0.999, 1, "1"),
             (0.999, 2, "1.0"),
-            (0.0, 4, "0.000"),
-            (-0.0, 4, "0.000"),
+            (0.0, 4, "0"),
+            (-0.0, 4, "0"),
             (1234.567, 1, "1e+3"),
             (1234.567, 2, "1.2e+3"),
             (1234.567, 5, "1234.6"),
         )
 
         for number, prec, expected in numbers:
-            #print utils.to_precision(number, prec), expected,utils.to_precision(number, prec)== expected
-            #print expected,utils.to_precision(number, prec)== expected
             self.assertEqual(utils.to_precision(number, prec), expected)
 

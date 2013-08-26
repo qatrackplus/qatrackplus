@@ -27,7 +27,7 @@ def to_precision(x,p):
     x = float(x)
 
     if x == 0.:
-        return "0."+"0"*(p-1)
+        return "0"
 
     out = []
 

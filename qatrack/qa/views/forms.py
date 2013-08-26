@@ -22,8 +22,8 @@ class UserFormsetMixin(object):
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
         super(UserFormsetMixin, self).__init__(*args, **kwargs)
-    #---------------------------------------------------------------------------
 
+    #---------------------------------------------------------------------------
     def _construct_forms(self):
         """add user to all children"""
         self.forms = []
