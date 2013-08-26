@@ -9,13 +9,13 @@
     <h1>Account Details</h1>
     <em><a href="{% url auth_login %}">Log in</a> to see your account details</em>
 {% else %}
-<h1>{% trans "Account Details for " %}{{user.get_full_name}}</h1>
+<h1>{% trans "Account Details for " %}{% if user.get_full_name %}{{user.get_full_name}}{% else %} {{user.username}}{% endif %}</h1>
 
     <dl class="dl-horizontal">
         <dt>Username:</dt>
         <dd>{{user.username}}</dt>
         <dt>Email:</dt>
-        <dd>{{user.email}}</dt>
+        <dd>{% if user.email %}{{user.email}}{% else %}<em>N/A</em>{% endif %}</dt>
         <dt>Registered:</dt>
         <dd>{{user.date_joined}}</dt>
         <dt>Last Login:</dt>
