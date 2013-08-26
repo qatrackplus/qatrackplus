@@ -101,9 +101,9 @@ PERMISSIONS = (
     (
         "Reviewing",
         (
-            ("can_view_completed", "Can view previously completed instances", "Allow a user to view previous test list results"),
-            ("can_review", "Can review tests", "Allows a user to perform review & approval functions"),
-            ("can_view_charts", "Can chart test history", "Gives user the ability to view and create charts of historical test results"),
+            ("qa.can_view_completed", "Can view previously completed instances", "Allow a user to view previous test list results"),
+            ("qa.can_review", "Can review tests", "Allows a user to perform review & approval functions"),
+            ("qa.can_view_charts", "Can chart test history", "Gives user the ability to view and create charts of historical test results"),
         ),
     ),
 )
@@ -465,7 +465,7 @@ class Test(models.Model):
 
     #---------------------------------------------------------------
     def is_string_type(self):
-        return not self.is_numerical_type()
+        return self.type in (STRING, STRING_COMPOSITE)
 
     #----------------------------------------------------------------------
     def is_string(self):
@@ -1034,7 +1034,7 @@ class TestInstance(models.Model):
         get_latest_by = "work_completed"
         permissions = (
             ("can_view_history", "Can see test history when performing QA"),
-            ("can_view_charts", "Can chart test history"),
+            ("can_view_charts", "Can view charts of test history"),
             ("can_review", "Can review & approve tests"),
             ("can_skip_without_comment", "Can skip tests without comment"),
         )
