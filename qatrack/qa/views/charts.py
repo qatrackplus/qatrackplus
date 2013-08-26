@@ -250,6 +250,7 @@ class BaseChartView(View):
                 status__pk__in=statuses,
                 work_completed__gte=from_date,
                 work_completed__lte=to_date,
+                skipped=False,
             ).select_related(
                 "reference", "tolerance", "unit_test_info__test", "unit_test_info__unit", "status",
             ).order_by(
