@@ -95,7 +95,7 @@ PERMISSIONS = (
             ("qa.can_skip_without_comment", "Can skip without comment", "Allow a user to skip tests with adding a comment"),
             ("qa.can_override_date", "Can override date", "Allow a user to override the work_completed data"),
             ("qa.can_perform_subset", "Can perform subset of tests", "Allow a user to filter tests to perform  based on a tests category"),
-            ("qa.edit_testinstance", "Can edit prior test results", "Allow a user to edit already completed test results"),
+            ("qa.change_testlistinstance", "Can edit prior test results", "Allow a user to edit already completed test results"),
         ),
     ),
     (
