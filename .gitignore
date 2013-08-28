@@ -17,8 +17,6 @@ lib64
 *.pot
 *.pyc
 local_settings.py
-*.wpr
-*.wpu
 fixtures/dev
 questions_*
 qatrack/static
