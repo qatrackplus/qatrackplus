@@ -36,6 +36,7 @@ TEST_TYPE_CHOICES = (
     (STRING_COMPOSITE, "String Composite"),
     (UPLOAD, "File Upload"),
 )
+MAX_STRING_VAL_LEN = 1024
 
 # tolerance types
 ABSOLUTE = "absolute"
@@ -999,7 +1000,7 @@ class TestInstance(models.Model):
 
     # values set by user
     value = models.FloatField(help_text=_("For boolean Tests a value of 0 equals False and any non zero equals True"), null=True)
-    string_value = models.CharField(max_length=1024, null=True, blank=True)
+    string_value = models.CharField(max_length=MAX_STRING_VAL_LEN, null=True, blank=True)
 
     skipped = models.BooleanField(help_text=_("Was this test skipped for some reason (add comment)"))
     comment = models.TextField(help_text=_("Add a comment to this test"), null=True, blank=True)

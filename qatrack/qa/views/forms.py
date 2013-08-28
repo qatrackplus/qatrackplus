@@ -1,5 +1,5 @@
 from django import forms
-
+from django.core.validators import MaxLengthValidator
 from django.forms.models import inlineformset_factory
 from django.forms.widgets import RadioSelect, Select, HiddenInput
 from django.utils import timezone
@@ -107,7 +107,7 @@ class TestInstanceWidgetsMixin(object):
 class CreateTestInstanceForm(TestInstanceWidgetsMixin, forms.Form):
 
     value = forms.FloatField(required=False, widget=forms.widgets.TextInput(attrs={"class": "qa-input"}))
-    string_value = forms.CharField(required=False)
+    string_value = forms.CharField(required=False, validators=[MaxLengthValidator(1024)])
 
     skipped = forms.BooleanField(required=False, help_text=_("Was this test skipped for some reason (add comment)"))
     comment = forms.CharField(widget=forms.Textarea, required=False, help_text=_("Show or hide comment field"))
