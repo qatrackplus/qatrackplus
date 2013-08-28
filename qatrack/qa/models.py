@@ -427,7 +427,7 @@ class Test(models.Model):
     """Test to be completed as part of a QA :model:`TestList`"""
 
     VARIABLE_RE = re.compile("^[a-zA-Z_]+[0-9a-zA-Z_]*$")
-    RESULT_RE = re.compile("^\s*result\s*=\s*[(\-+_0-9.a-zA-Z]+.*$", re.MULTILINE)
+    RESULT_RE = re.compile("^\s*result\s*=.*$", re.MULTILINE)
 
     name = models.CharField(max_length=255, help_text=_("Name for this test"), unique=True, db_index=True)
     slug = models.SlugField(
@@ -449,7 +449,7 @@ class Test(models.Model):
     constant_value = models.FloatField(help_text=_("Only required for constant value types"), null=True, blank=True)
 
     calculation_procedure = models.TextField(null=True, blank=True, help_text=_(
-        "For Composite Tests Only: Enter a Python snippet for evaluation of this test. The snippet must define a variable called 'result'."
+        "For Composite Tests Only: Enter a Python snippet for evaluation of this test."
     ))
 
     # for keeping a very basic history
@@ -514,7 +514,7 @@ class Test(models.Model):
         errors = self.check_test_type(self.calculation_procedure, [UPLOAD, COMPOSITE, STRING_COMPOSITE], "Calculation Procedure")
         self.calculation_procedure = str(self.calculation_procedure).replace("\r\n", "\n")
 
-        macro_var_set = re.findall("^\s*%s\s*=\s*[{\[(\-+_0-9.a-zA-Z]+.*$" % (self.slug), self.calculation_procedure, re.MULTILINE)
+        macro_var_set = re.findall("^\s*%s\s*=.*$" % (self.slug), self.calculation_procedure, re.MULTILINE)
         result_line = self.RESULT_RE.findall(self.calculation_procedure)
         if not (result_line or macro_var_set):
             errors.append(_('Snippet must set macro name to a value or contain a result line (e.g. %s = my_var/another_var*2 or result = my_var/another_var*2)' % self.slug))
