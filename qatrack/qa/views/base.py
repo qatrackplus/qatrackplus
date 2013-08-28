@@ -243,7 +243,7 @@ class TestListInstances(BaseDataTablesDataSource):
             "testinstance__status",
             "unit_test_collection__unit__name",
             "unit_test_collection__frequency__due_interval",
-            "created_by", "modified_by",
+            "created_by", "modified_by", "reviewed_by",
         ).prefetch_related("testinstance_set", "testinstance_set__status")
 
     #----------------------------------------------------------------------
