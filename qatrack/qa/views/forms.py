@@ -107,7 +107,7 @@ class TestInstanceWidgetsMixin(object):
 class CreateTestInstanceForm(TestInstanceWidgetsMixin, forms.Form):
 
     value = forms.FloatField(required=False, widget=forms.widgets.TextInput(attrs={"class": "qa-input"}))
-    string_value = forms.CharField(required=False, validators=[MaxLengthValidator(1024)])
+    string_value = forms.CharField(required=False, validators=[MaxLengthValidator(models.MAX_STRING_VAL_LEN)])
 
     skipped = forms.BooleanField(required=False, help_text=_("Was this test skipped for some reason (add comment)"))
     comment = forms.CharField(widget=forms.Textarea, required=False, help_text=_("Show or hide comment field"))
