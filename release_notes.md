@@ -11,6 +11,27 @@
 * page load time reduced by using more efficient unreviewed count query
 * charts page now allows plotting of data for tests which are no longer active
 * jQuery updated to 1.10.2
+
+### Upgrade from v0.2.6 ###
+
+From the git bash command shell (with your QATrack+ virtual env activated!):
+
+1. git pull origin master
+1. python manage.py syncdb
+1. python manage.py migrate
+1. In the Admin --> Auth --> Groups section of the website grant the new permissions
+    * **qa | test instance | Can chart test history**
+    * **qa | test list instance | Can view previously completed instances**
+
+    to any groups that require this functionality.  See the
+    [Managing Users & Groups page](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/admin/auth.md)
+    for more information on permissions.
+1. Configure your server to serve all requests for http(s)://YOURSERVER/media/\* to files in `qatrack/uploads/` directory.
+More information about this is available on the
+[deployment wiki page](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/deployment/about.md).
+If you need help with this please post in the
+[QATrack+ Google group](https://groups.google.com/forum/?fromgroups#!forum/qatrack).
+
 ## v0.2.6 ##
 
 **Note: this release introduces some database schema changes.  BACK UP
