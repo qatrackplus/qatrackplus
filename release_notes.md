@@ -7,12 +7,44 @@
 * assign composite values with macro name instead of result
 * upload test type
 * string test type
-* qa/views.py refactored into qa/views/\*.py
-* page load time reduced by using more efficient unreviewed count query
-* charts page now allows plotting of data for tests which are no longer active
-* jQuery updated to 1.10.2
 
-### Upgrade from v0.2.6 ###
+Special thanks for this release go to Eric Reynard of Prince Edward Island.  Eric
+has contributed a
+[new authentication backend and tutorial](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/deployment/windows/iisFastCGI)
+on running QATrack+ with IIS, FastCGI and Windows Integrated Authentication.
+Thanks Eric!
+
+* New tool for creating basic paper backup QA forms to be used
+    in the event of a server outage. See the
+    [paper backup wiki page](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/users/paper_backup_forms.md)
+    for more information.  This feature is currently fairly primitive and
+    suggestions on how to improve it are welcome!
+* TestListCycle's can now contain the same TestList multiple times
+* Unit's that have no active TestList's will no longer appear on the Unit selection page
+* Changes to Reference & Tolerances:
+    * Tolerances no longer require all 4 of the tolerance/action levels
+    (Act Low, Tol Low, Act High, Tol High) to be set making it possible
+    to create pass/fail only, pass/tolerance only and one-sided tolerances. See the
+    [Tolerances wiki page](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/admin/tolerances.md)
+    for more information.
+    * Duplicate tolerances can no longer be created (there is no use for duplicate tolerances)
+    * Tolerances can no longer be named by the user and are now automatically given a descriptive
+    name based on there tolerance and action levels. This is to help emphasize the fact that Tolerance
+    values are not test specific.
+    * As part of the 0.2.7 database update, all duplicate tolerance & reference objects in the database
+    are going to be deleted and any test value currently pointing at these tolerance & reference
+    values will be updated to point at the correct non-duplicated tolerance/reference.  At TOHCC this
+    resulted in reducing the size of references database table by about 90% (from ~2700 rows to ~200 rows).
+* A new authentication backend using Windows Integrated Authentication has been added.  Thanks to Eric Reynard
+    for contributing this!
+* New user account pages for viewing permissions and updating/resetting passwords.
+* Page load time reduced by using more efficient unreviewed count query
+* Charts page now allows plotting of data for tests which are no longer active
+* Test data is now grouped by TestList when generating charts (i.e. multiple lines are
+    produced if the same Test exists in multiple TestList's)
+* [Many other little bugs fixed :)](https://bitbucket.org/tohccmedphys/qatrackplus/issues/2?milestone=0.2.7)
+
+### Upgrading from v0.2.6 ###
 
 From the git bash command shell (with your QATrack+ virtual env activated!):
 
