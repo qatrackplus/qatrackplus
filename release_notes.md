@@ -7,8 +7,12 @@ YOUR DATABASE BEFORE ATTEMPTING THIS UPGRADE**
 
 Version 0.2.7 has a quite a few improvements to the code base behind the
 scenes, some new features and a number of bug fixes. Please see the guide to
-upgrading to version 0.2.7 below.
+upgrading to version 0.2.7 from 0.2.6 below.
 
+Special thanks for this release go to Eric Reynard of Prince Edward Island.  Eric
+has contributed a
+[new authentication backend and tutorial](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/deployment/windows/iisFastCGI)
+on running QATrack+ with IIS, FastCGI and Windows Integrated Authentication.  Thanks Eric!
 
 ### New Features ###
 
@@ -48,10 +52,6 @@ the result to the composite test macro name.
     produced if the same Test exists in multiple TestList's)
 * [Many other little bugs fixed :)](https://bitbucket.org/tohccmedphys/qatrackplus/issues/2?milestone=0.2.7)
 
-Special thanks for this release go to Eric Reynard of Prince Edward Island.  Eric
-has contributed a
-[new authentication backend and tutorial](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/deployment/windows/iisFastCGI)
-on running QATrack+ with IIS, FastCGI and Windows Integrated Authentication.  Thanks Eric!
 
 ### Upgrading from v0.2.6 ###
 
