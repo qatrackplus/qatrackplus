@@ -25,7 +25,7 @@ the result to the composite test macro name.
 * New tool for creating basic paper backup QA forms to be used
     in the event of a server outage. See the
     [paper backup wiki page](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/users/paper_backup_forms.md)
-    for more information.  This feature is currently fairly primitive and
+    for more information.  This feature is currently quite primitive and
     suggestions on how to improve it are welcome!
 * TestListCycle's can now contain the same TestList multiple times
 * Unit's that have no active TestList's will no longer appear on the Unit selection page
