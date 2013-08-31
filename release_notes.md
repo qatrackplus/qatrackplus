@@ -2,18 +2,22 @@
 
 ## v0.2.7 ##
 
-* upgrade django-regisration
-* AD logging
-* assign composite values with macro name instead of result
-* upload test type
-* string test type
+**Note: this release introduces some database schema changes.  BACK UP
+YOUR DATABASE BEFORE ATTEMPTING THIS UPGRADE**
 
-Special thanks for this release go to Eric Reynard of Prince Edward Island.  Eric
-has contributed a
-[new authentication backend and tutorial](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/deployment/windows/iisFastCGI)
-on running QATrack+ with IIS, FastCGI and Windows Integrated Authentication.
-Thanks Eric!
+Version 0.2.7 has a quite a few improvements to the code base behind the
+scenes, some new features and a number of bug fixes. Please see the guide to
+upgrading to version 0.2.7 below.
 
+
+### New Features ###
+
+* Three new [test types](admin/test.md) have been added:
+    * File upload: Allows you to upload and process arbitrary files as part of a test list
+    * String: Allows you to save short text snippets as test results 
+    * String Composite: A composite test for text rather than numerical values
+* [Composite tests](admin/test.md) no longer need to assign to a `result` variable. Instead you can just assign 
+the result to the composite test macro name.
 * New tool for creating basic paper backup QA forms to be used
     in the event of a server outage. See the
     [paper backup wiki page](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/users/paper_backup_forms.md)
@@ -43,6 +47,11 @@ Thanks Eric!
 * Test data is now grouped by TestList when generating charts (i.e. multiple lines are
     produced if the same Test exists in multiple TestList's)
 * [Many other little bugs fixed :)](https://bitbucket.org/tohccmedphys/qatrackplus/issues/2?milestone=0.2.7)
+
+Special thanks for this release go to Eric Reynard of Prince Edward Island.  Eric
+has contributed a
+[new authentication backend and tutorial](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/deployment/windows/iisFastCGI)
+on running QATrack+ with IIS, FastCGI and Windows Integrated Authentication.  Thanks Eric!
 
 ### Upgrading from v0.2.6 ###
 
