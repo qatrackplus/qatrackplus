@@ -61,8 +61,10 @@ the result to the composite test macro name.
 From the git bash command shell (with your QATrack+ virtual env activated!):
 
 1. git pull origin master
+1. pip install -r requirements/base.txt
 1. python manage.py syncdb
 1. python manage.py migrate
+1. python manage.py collectstatic
 1. In the Admin --> Auth --> Groups section of the website grant the new permissions
     * **qa | test instance | Can chart test history**
     * **qa | test list instance | Can view previously completed instances**
