@@ -159,10 +159,11 @@ class ChooseFrequencyForReview(ListView):
 
 
 #============================================================================
-class Unreviewed(TestListInstances):
+class Unreviewed(PermissionRequiredMixin, TestListInstances):
     """Display all :model:`qa.TestListInstance`s with all_reviewed=False"""
 
     queryset = models.TestListInstance.objects.unreviewed
+    permission_required = "qa.can_review"
 
     #----------------------------------------------------------------------
     def get_page_title(self):
