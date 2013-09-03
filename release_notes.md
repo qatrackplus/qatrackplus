@@ -18,9 +18,9 @@ on running QATrack+ with IIS, FastCGI and Windows Integrated Authentication.  Th
 
 * Three new [test types](admin/test.md) have been added:
     * File upload: Allows you to upload and process arbitrary files as part of a test list
-    * String: Allows you to save short text snippets as test results 
+    * String: Allows you to save short text snippets as test results
     * String Composite: A composite test for text rather than numerical values
-* [Composite tests](admin/test.md) no longer need to assign to a `result` variable. Instead you can just assign 
+* [Composite tests](admin/test.md) no longer need to assign to a `result` variable. Instead you can just assign
 the result to the composite test macro name.
 * New tool for creating basic paper backup QA forms to be used
     in the event of a server outage. See the
@@ -46,6 +46,9 @@ the result to the composite test macro name.
 * A new authentication backend using Windows Integrated Authentication has been added.  Thanks to Eric Reynard
     for contributing this!
 * New user account pages for viewing permissions and updating/resetting passwords.
+* Page permissions have been improved slightly and two new permisions have been added:
+    * **qa | test instance | Can chart test history** (Allows users to access charts page)
+    * **qa | test list instance | Can view previously completed instances** (Allows users to view but not edit or review (change the status) of historical results.
 * Page load time reduced by using more efficient unreviewed count query
 * Charts page now allows plotting of data for tests which are no longer active
 * Test data is now grouped by TestList when generating charts (i.e. multiple lines are
