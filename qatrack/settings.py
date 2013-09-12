@@ -225,9 +225,10 @@ SESSION_COOKIE_AGE = 14 * 24 * 60 * 60
 EMAIL_NOTIFICATION_USER = None
 EMAIL_NOTIFICATION_PWD = None
 EMAIL_NOTIFICATION_TEMPLATE = "notification_email.txt"
-EMAIL_NOTIFICATION_SUBJECT_TEMPLATE = "notification_email_subject.txt"
 EMAIL_NOTIFICATION_SENDER = "qatrack"
-EMAIL_NOTIFICATION_SUBJECT = "QATrack+ Test Status Notification"
+# use either a static subject or a customizable template
+#EMAIL_NOTIFICATION_SUBJECT = "QATrack+ Test Status Notification"
+EMAIL_NOTIFICATION_SUBJECT_TEMPLATE = "notification_email_subject.txt"
 
 EMAIL_HOST = ""  # e.g. 'smtp.gmail.com'
 EMAIL_HOST_USER = ''  # e.g. "randle.taylor@gmail.com"
