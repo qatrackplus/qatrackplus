@@ -2,23 +2,31 @@
 
 ## v0.2.7 ##
 
-* upgrade django-regisration
-* AD logging
-* assign composite values with macro name instead of result
-* upload test type
-* string test type
+**Note: this release introduces some database schema changes.  BACK UP
+YOUR DATABASE BEFORE ATTEMPTING THIS UPGRADE**
+
+Version 0.2.7 has a quite a few improvements to the code base behind the
+scenes, some new features and a number of bug fixes. Please see the guide to
+upgrading to version 0.2.7 from 0.2.6 below.
 
 Special thanks for this release go to Eric Reynard of Prince Edward Island.  Eric
 has contributed a
 [new authentication backend and tutorial](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/deployment/windows/iisFastCGI)
-on running QATrack+ with IIS, FastCGI and Windows Integrated Authentication.
-Thanks Eric!
+on running QATrack+ with IIS, FastCGI and Windows Integrated Authentication.  Thanks Eric!
 
+### New Features ###
+
+* Three new [test types](admin/test.md) have been added:
+    * File upload: Allows you to upload and process arbitrary files as part of a test list
+    * String: Allows you to save short text snippets as test results
+    * String Composite: A composite test for text rather than numerical values
+* [Composite tests](admin/test.md) no longer need to assign to a `result` variable. Instead you can just assign
+the result to the composite test macro name.
 * Easy export of historical test results to CSV files
 * New tool for creating basic paper backup QA forms to be used
     in the event of a server outage. See the
     [paper backup wiki page](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/users/paper_backup_forms.md)
-    for more information.  This feature is currently fairly primitive and
+    for more information.  This feature is currently quite primitive and
     suggestions on how to improve it are welcome!
 * TestListCycle's can now contain the same TestList multiple times
 * Unit's that have no active TestList's will no longer appear on the Unit selection page
@@ -39,19 +47,25 @@ Thanks Eric!
 * A new authentication backend using Windows Integrated Authentication has been added.  Thanks to Eric Reynard
     for contributing this!
 * New user account pages for viewing permissions and updating/resetting passwords.
+* Page permissions have been improved slightly and two new permisions have been added:
+    * **qa | test instance | Can chart test history** (Allows users to access charts page)
+    * **qa | test list instance | Can view previously completed instances** (Allows users to view but not edit or review (change the status) of historical results.
 * Page load time reduced by using more efficient unreviewed count query
 * Charts page now allows plotting of data for tests which are no longer active
 * Test data is now grouped by TestList when generating charts (i.e. multiple lines are
     produced if the same Test exists in multiple TestList's)
 * [Many other little bugs fixed :)](https://bitbucket.org/tohccmedphys/qatrackplus/issues/2?milestone=0.2.7)
 
+
 ### Upgrading from v0.2.6 ###
 
 From the git bash command shell (with your QATrack+ virtual env activated!):
 
 1. git pull origin master
+1. pip install -r requirements/base.txt
 1. python manage.py syncdb
 1. python manage.py migrate
+1. python manage.py collectstatic
 1. In the Admin --> Auth --> Groups section of the website grant the new permissions
     * **qa | test instance | Can chart test history**
     * **qa | test list instance | Can view previously completed instances**

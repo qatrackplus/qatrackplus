@@ -23,6 +23,5 @@ Tests at Tolerance
     Value : {{test_instance.value_display}}
     Ref.  : {{test_instance.reference}}
     Tol.  : {{test_instance.tolerance}}
-
 {% endfor %}
 {% endif %}
