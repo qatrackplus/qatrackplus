@@ -14,6 +14,7 @@ has contributed a
 on running QATrack+ with IIS, FastCGI and Windows Integrated Authentication.
 Thanks Eric!
 
+* Easy export of historical test results to CSV files
 * New tool for creating basic paper backup QA forms to be used
     in the event of a server outage. See the
     [paper backup wiki page](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/users/paper_backup_forms.md)

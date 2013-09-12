@@ -34,19 +34,22 @@ def email_on_testlist_save(*args, **kwargs):
 
     from_address = getattr(settings, "EMAIL_NOTIFICATION_SENDER", "QATrack+")
     subject = getattr(settings, "EMAIL_NOTIFICATION_SUBJECT", "QATrack+ Notification")
+    subject_template = getattr(settings, "EMAIL_NOTIFICATION_SUBJECT_TEMPLATE", None)
     template = getattr(settings, "EMAIL_NOTIFICATION_TEMPLATE", "notification_email.txt")
     user = getattr(settings, "EMAIL_NOTIFICATION_USER", None)
     pwd = getattr(settings, "EMAIL_NOTIFICATION_PWD", None)
     fail_silently = getattr(settings, "EMAIL_FAIL_SILENTLY", True)
 
-    body = get_template(template).render(
-        Context({
+    context =  Context({
             "subject": subject,
             "failing_tests": failing,
             "tolerance_tests": tolerance,
             "test_list_instance": test_list_instance,
-        })
-    )
+    })
+    body = get_template(template).render(context)
+
+    if subject_template is not None:
+        subject = get_template(subject_template).render(context).strip()
 
     send_mail(
         subject, body, from_address, recipient_emails,
