@@ -73,8 +73,8 @@ class Upload(JSONResponseMixin, View):
             results["success"] = True
         except models.Test.DoesNotExist:
             results["errors"].append("Test with that ID does not exist")
-        except Exception:
-            results["errors"].append("Invalid Test")
+        except Exception, e:
+            results["errors"].append("Invalid Test Procedure: %s" %e)
 
         return self.render_json_response(results)
 

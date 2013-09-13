@@ -366,14 +366,14 @@ function TestInstance(test_info, row){
                 ]
             },
             done: function (e, data) {
-                self.status.removeClass("btn-primary btn-danger btn-success");
+                self.status.removeClass("btn-info btn-primary btn-danger btn-success");
                 if (data.result.errors.length > 0){
-                    self.status.addClass("btn-danger").text("Failed");
-                    self.status.attr("title","");
                     self.set_value(null);
+                    self.status.addClass("btn-danger").text("Failed");
+                    self.status.attr("title",data.result.errors[0]);
                 }else{
-                    self.status.addClass("btn-success").text("Success");
                     self.set_value(data.result);
+                    self.status.addClass("btn-success").text("Success");
                     self.status.attr("title",data.result['temp_file_name']);
                     $.Topic("valueChanged").publish();
                 }
