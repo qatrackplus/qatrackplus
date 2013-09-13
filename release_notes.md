@@ -22,6 +22,7 @@ on running QATrack+ with IIS, FastCGI and Windows Integrated Authentication.  Th
     * String Composite: A composite test for text rather than numerical values
 * [Composite tests](admin/test.md) no longer need to assign to a `result` variable. Instead you can just assign
 the result to the composite test macro name.
+* Easy export of historical test results to CSV files
 * New tool for creating basic paper backup QA forms to be used
     in the event of a server outage. See the
     [paper backup wiki page](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/users/paper_backup_forms.md)

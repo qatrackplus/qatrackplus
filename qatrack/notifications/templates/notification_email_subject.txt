@@ -1,0 +1,1 @@
+{{test_list_instance.work_completed|date:"DATE_FORMAT"}} - {{test_list_instance.unit_test_collection.unit.name }}, {{test_list_instance.test_list.name}} - {% if failing_tests %} Tests at Action: {{failing_tests.count}} {% endif %} {% if tolerance_tests %} Tests at Tolerance: {{tolerance_tests.count}} {% endif %}
