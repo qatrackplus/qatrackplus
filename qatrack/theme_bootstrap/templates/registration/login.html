@@ -16,10 +16,6 @@
                     <strong>{% trans "Note" %}</strong>:
                     {% blocktrans %}you are already logged in as {{ user }}.{% endblocktrans %}
                 </div>
-            {% else %}
-                <p>
-                    <a href="{% url auth_password_reset %}">{% trans "Forgot password?" %}</a>
-                </p>
             {% endif %}
 
             <form method="POST" action="{% url auth_login %}" autocapitalize="off" class="form-horizontal">
