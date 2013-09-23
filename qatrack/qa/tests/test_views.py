@@ -507,7 +507,7 @@ class TestComposite(TestCase):
                 u'{"testc": "", "test1": 1, "test2": 2}'
             ],
             u'composite_ids': [u'[%d]' % self.tc.pk],
-            u'upload_data': ['null'],
+            u'meta': '{}',
         }
 
         request = self.factory.post(self.url, data=data)
@@ -529,7 +529,10 @@ class TestComposite(TestCase):
 
     def test_invalid_values(self):
 
-        data = {u'composite_ids': [u'[%d]' % self.tc.pk]}
+        data = {
+            u'composite_ids': [u'[%d]' % self.tc.pk],
+            u'meta': '{}',
+        }
 
         request = self.factory.post(self.url, data=data)
         response = self.view(request)
@@ -549,6 +552,7 @@ class TestComposite(TestCase):
                 u'{"testc": {"name": "testc", "current_value": ""}, "test1": {"name": "test1", "current_value": 1}, "test2": {"name": "test2", "current_value": "abc"}}'
             ],
             u'composite_ids': [u'[%d]' % self.tc.pk],
+            u'meta': '{}',
         }
 
         request = self.factory.post(self.url, data=data)
@@ -575,7 +579,8 @@ class TestComposite(TestCase):
                 u'{"testc": "", "test1": 1, "test2": "abc"}'
             ],
 
-            u'composite_ids': [u' ']
+            u'composite_ids': [u' '],
+            u'meta': '{}',
         }
 
         request = self.factory.post(self.url, data=data)
@@ -595,6 +600,7 @@ class TestComposite(TestCase):
             u'qavalues': [
                 u'{"testc": "", "test1": 1, "test2": 2}'
             ],
+            u'meta': '{}',
         }
 
         request = self.factory.post(self.url, data=data)
@@ -612,6 +618,7 @@ class TestComposite(TestCase):
 
         data = {
             u'qavalues': ['{"testc"'],
+            u'meta': '{}',
         }
 
         request = self.factory.post(self.url, data=data)
@@ -631,6 +638,8 @@ class TestComposite(TestCase):
                 u'{"testc": "", "test1": 1, "test2": 2}'
             ],
             u'composite_ids': [u'[%d]' % self.tc.pk],
+
+            u'meta': '{}',
         }
 
         request = self.factory.post(self.url, data=data)
@@ -663,7 +672,9 @@ class TestComposite(TestCase):
             u'qavalues': [
                 u'{"testc": "", "cyclic1": "", "cyclic2": "", "test1": 1, "test2": 2}'
             ],
-            u'composite_ids': [u'[%d, %d, %d]' % (self.tc.pk, self.cyclic1.pk, self.cyclic2.pk)]
+            u'composite_ids': [u'[%d, %d, %d]' % (self.tc.pk, self.cyclic1.pk, self.cyclic2.pk)],
+
+            u'meta': '{}',
         }
 
         request = self.factory.post(self.url, data=data)
@@ -1109,7 +1120,7 @@ class TestAJAXUpload(TestCase):
         self.test.type = models.UPLOAD
         self.test.calculation_procedure = """
 import json
-result = json.load(file_object)
+result = json.load(FILE)
 """
         self.test.save()
 
@@ -1135,13 +1146,13 @@ result = json.load(file_object)
 
     #---------------------------------------------------------------
     def test_upload_fname_exists(self):
-        response = self.client.post(self.url, {"test_id": self.test.pk, "upload": self.test_file})
+        response = self.client.post(self.url, {"test_id": self.test.pk, "upload": self.test_file, "meta":"{}"})
         data = json.loads(response.content)
         self.assertTrue(os.path.exists(os.path.join(settings.TMP_UPLOAD_ROOT)), data["temp_file_name"])
 
     #---------------------------------------------------------------
     def test_invalid_test_id(self):
-        response = self.client.post(self.url, {"test_id": 200, "upload": self.test_file})
+        response = self.client.post(self.url, {"test_id": 200, "upload": self.test_file,"meta":"{}"})
         data = json.loads(response.content)
         self.assertEqual(data["errors"][0], "Test with that ID does not exist")
 
@@ -1149,13 +1160,13 @@ result = json.load(file_object)
     def test_invalid_test(self):
         self.test.calculation_procedure = "result = 1/0"
         self.test.save()
-        response = self.client.post(self.url, {"test_id": self.test.pk, "upload": self.test_file})
+        response = self.client.post(self.url, {"test_id": self.test.pk, "upload": self.test_file, "meta":"{}"})
         data = json.loads(response.content)
-        self.assertEqual(data["errors"][0], "Invalid Test")
+        self.assertIn("Invalid Test", data["errors"][0])
 
     #---------------------------------------------------------------
     def test_upload_results(self):
-        response = self.client.post(self.url, {"test_id": self.test.pk, "upload": self.test_file})
+        response = self.client.post(self.url, {"test_id": self.test.pk, "upload": self.test_file, "meta":"{}"})
         data = json.loads(response.content)
         self.assertEqual(data["result"]["baz"]["baz1"], "test")
 

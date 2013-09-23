@@ -8,8 +8,6 @@ var context;
 
 var pass_fail_only;
 
-var upload_data = {};
-
 /***************************************************************/
 //minimal Pub/Sub functionality
 var topics = {};
@@ -362,7 +360,8 @@ function TestInstance(test_info, row){
             replaceFileInput:false,
             formData: function(){
                 return [
-                    { name:"test_id", value: self.test_info.test.id}
+                    { name:"test_id", value: self.test_info.test.id},
+                    { name:"meta", value:JSON.stringify(get_meta_data())}
                 ]
             },
             done: function (e, data) {
@@ -396,6 +395,20 @@ function TestInstance(test_info, row){
 
 }
 
+function get_meta_data(){
+
+    var meta = {
+        test_list_name: $("#test-list-name").val(),
+        unit_number: parseInt($("#unit-number").val()),
+        cycle_day: parseInt($("#cycle-day").val()),
+        work_completed: QAUtils.parse_date($("#id_work_completed").val()),
+        work_started: QAUtils.parse_date($("#id_work_started").val()),
+        username: $("#username").text()
+    }
+
+    return meta;
+
+}
 
 function TestListInstance(){
     var self = this;
@@ -432,11 +445,12 @@ function TestListInstance(){
 
         var cur_values = _.map(self.test_instances,function(ti){return ti.value;});
         var qa_values = _.object(_.zip(self.slugs,cur_values));
+        var meta = get_meta_data();
 
         var data = {
             qavalues:JSON.stringify(qa_values),
             composite_ids:JSON.stringify(self.composite_ids),
-            upload_data:JSON.stringify(upload_data)
+            meta: JSON.stringify(meta)
         };
 
         var on_success = function(data){
