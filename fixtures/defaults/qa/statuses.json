@@ -1,40 +1,37 @@
 [
     {
-        "pk": 1, 
-        "model": "qa.testinstancestatus", 
+        "pk": 1,
+        "model": "qa.testinstancestatus",
         "fields": {
-            "name": "Unreviewed", 
-            "requires_comment": false, 
-            "is_default": true, 
-            "valid": true, 
-            "export_by_default": true, 
-            "requires_review": true, 
+            "name": "Unreviewed",
+            "is_default": true,
+            "valid": true,
+            "export_by_default": true,
+            "requires_review": true,
             "slug": "unreviewed"
         }
-    }, 
+    },
     {
-        "pk": 2, 
-        "model": "qa.testinstancestatus", 
+        "pk": 2,
+        "model": "qa.testinstancestatus",
         "fields": {
-            "name": "Approved", 
-            "requires_comment": false, 
-            "is_default": false, 
-            "valid": true, 
-            "export_by_default": true, 
-            "requires_review": false, 
+            "name": "Approved",
+            "is_default": false,
+            "valid": true,
+            "export_by_default": true,
+            "requires_review": false,
             "slug": "Approved"
         }
-    }, 
+    },
     {
-        "pk": 3, 
-        "model": "qa.testinstancestatus", 
+        "pk": 3,
+        "model": "qa.testinstancestatus",
         "fields": {
-            "name": "Rejected", 
-            "requires_comment": false, 
-            "is_default": false, 
-            "valid": false, 
-            "export_by_default": false, 
-            "requires_review": false, 
+            "name": "Rejected",
+            "is_default": false,
+            "valid": false,
+            "export_by_default": false,
+            "requires_review": false,
             "slug": "rejected"
         }
     }
