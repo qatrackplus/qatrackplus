@@ -330,7 +330,3 @@ except ImportError:
 # login required middleware settings
 LOGIN_EXEMPT_URLS = [r"^accounts/", ]
 ACCOUNT_ACTIVATION_DAYS = 7
-
-#FORCE_SCRIPT_NAME = FORCE_SCRIPT_NAME or ""
-#LOGIN_URL = "%s/accounts/login/" % FORCE_SCRIPT_NAME
-#LOGIN_REDIRECT_URL = '%s/qa/unit/' % FORCE_SCRIPT_NAME
