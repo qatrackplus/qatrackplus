@@ -234,7 +234,7 @@ class TestTest(TestCase):
 
     #----------------------------------------------------------------------
     def test_is_string_type(self):
-        for t in (models.STRING_COMPOSITE, models.STRING, models.UPLOAD):
+        for t in (models.STRING_COMPOSITE, models.STRING, ):
             test = utils.create_test(name="num", test_type=t)
             self.assertTrue(test.is_string_type())
 

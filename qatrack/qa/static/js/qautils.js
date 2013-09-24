@@ -177,6 +177,24 @@ var QAUtils = new function() {
     //*********************************************************************
     //Date/Time Functions
 
+   //parse a date in dd-mm-yyy hh:mm format (24 hour clock)
+    this.parse_date= function(s){
+        try {
+            var dt = s.split(" ");
+            var date = dt[0].split('-');
+            var time = dt[1].split(':');
+            var dd = date[0];
+            var mm = date[1];
+            var yy = date[2];
+            var hh = time[0];
+            var nn = time[1];
+            return new Date(yy, mm, dd, hh, nn);
+        }catch(err){
+            return null;
+        }
+
+    }
+
     //taken from http://n8v.enteuxis.org/2010/12/parsing-iso-8601-dates-in-javascript/
     this.parse_iso8601_date = function(s){
 

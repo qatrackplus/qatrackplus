@@ -148,11 +148,6 @@ MIDDLEWARE_CLASSES = (
 INTERNAL_IPS = ('127.0.0.1',)
 
 
-# login required middleware settings
-LOGIN_EXEMPT_URLS = [r"^accounts/", ]
-LOGIN_REDIRECT_URL = '/qa/unit/'
-LOGIN_URL = "/accounts/login/"
-ACCOUNT_ACTIVATION_DAYS = 7
 
 
 #------------------------------------------------------------------------------
@@ -309,6 +304,7 @@ LOGGING = {
     }
 }
 
+FORCE_SCRIPT_NAME = None
 
 #------------------------------------------------------------------------------
 # QA Settings
@@ -327,3 +323,12 @@ try:
     from local_settings import *
 except ImportError:
     pass
+
+
+# login required middleware settings
+LOGIN_EXEMPT_URLS = [r"^accounts/", ]
+ACCOUNT_ACTIVATION_DAYS = 7
+
+FORCE_SCRIPT_NAME = FORCE_SCRIPT_NAME or ""
+LOGIN_URL = "%s/accounts/login/" % FORCE_SCRIPT_NAME
+LOGIN_REDIRECT_URL = '%s/qa/unit/' % FORCE_SCRIPT_NAME

@@ -5,6 +5,7 @@ import os
 import shutil
 
 
+import dateutil
 import numpy
 import scipy
 from django.conf import settings
@@ -73,8 +74,8 @@ class Upload(JSONResponseMixin, View):
             results["success"] = True
         except models.Test.DoesNotExist:
             results["errors"].append("Test with that ID does not exist")
-        except Exception:
-            results["errors"].append("Invalid Test")
+        except Exception, e:
+            results["errors"].append("Invalid Test Procedure: %s" %e)
 
         return self.render_json_response(results)
 
@@ -118,11 +119,32 @@ class Upload(JSONResponseMixin, View):
     def set_calculation_context(self):
         """set up the environment that the composite test will be calculated in"""
 
+        meta_data = self.get_json_data("meta")
+
+        for d in ("work_completed", "work_started",):
+            try:
+                meta_data[d] = dateutil.parser.parse(meta_data[d])
+            except (KeyError, AttributeError):
+                pass
+
         self.calculation_context = {
-            "file_object": self.upload,
+            "FILE": self.upload,
+            "META": meta_data,
         }
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
 
+    #----------------------------------------------------------------------
+    def get_json_data(self, name):
+        """return python data from GET json data"""
+
+        json_string = self.request.POST.get(name)
+        if not json_string:
+            return
+
+        try:
+            return json.loads(json_string)
+        except (KeyError, ValueError):
+            return
 
 #============================================================================
 class CompositeCalculation(JSONResponseMixin, View):
@@ -201,13 +223,21 @@ class CompositeCalculation(JSONResponseMixin, View):
         """set up the environment that the composite test will be calculated in"""
 
         values = self.get_json_data("qavalues")
-        upload_data = self.get_json_data("upload_data")
+        meta_data = self.get_json_data("meta")
 
-        if values is None and upload_data is None:
+        for d in ("work_completed", "work_started",):
+            try:
+                meta_data[d] = dateutil.parser.parse(meta_data[d])
+            except (KeyError, AttributeError):
+                pass
+
+        if values is None :
             self.calculation_context = {}
             return
 
-        self.calculation_context = {"uploads": upload_data, }
+        self.calculation_context = {
+            "META":meta_data
+        }
 
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
 

@@ -91,7 +91,10 @@
 
             {% csrf_token %}
             <input type="hidden" id="test-list-id" value="{{test_list.pk}}"/>
+            <input type="hidden" id="test-list-name" value="{{test_list.name}}"/>
             <input type="hidden" id="unit-id" value="{{unit_test_collection.unit.pk}}"/>
+            <input type="hidden" id="unit-number" value="{{unit_test_collection.unit.number}}"/>
+            <input type="hidden" id="cycle-day" value="{{current_day}}"/>
 
             <input type="hidden" id="pass-fail-only" value="{% if perms.qa.can_view_ref_tol %}no{% else %}yes{% endif %}"/>
 
