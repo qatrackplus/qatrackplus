@@ -1449,7 +1449,7 @@ class TestTestInstance(TestCase):
         fname = "test.tmp"
         ti.string_value = fname
 
-        url = "%s%d/%s" % (settings.MEDIA_URL, tli.pk, fname)
+        url = "%s%d/%s" % (settings.UPLOADS_URL, tli.pk, fname)
         display = '<a href="%s" title="%s">%s</a>' % (url, fname, fname)
 
         self.assertEqual(display, ti.value_display())

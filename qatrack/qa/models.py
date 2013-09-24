@@ -1162,7 +1162,7 @@ class TestInstance(models.Model):
     def upload_url(self):
         if not self.unit_test_info.test.is_upload():
             return None
-        url = "%s%d/%s" % (settings.MEDIA_URL, self.test_list_instance.pk, self.string_value)
+        url = "%s%d/%s" % (settings.UPLOADS_URL, self.test_list_instance.pk, self.string_value)
         return '<a href="%s" title="%s">%s</a>' % (url, self.string_value, self.string_value)
 
     #----------------------------------------------------------------------

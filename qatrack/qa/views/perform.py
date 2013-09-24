@@ -496,10 +496,10 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             if ti_form.unit_test_info.test.is_upload() and not ti_form.cleaned_data["skipped"]:
                 fname = ti_form.cleaned_data["string_value"]
                 src = os.path.join(settings.TMP_UPLOAD_ROOT, fname)
-                d = os.path.join(settings.MEDIA_ROOT, "%s" % self.object.pk)
+                d = os.path.join(settings.UPLOAD_ROOT, "%s" % self.object.pk)
                 if not os.path.exists(d):
                     os.mkdir(d)
-                dest = os.path.join(settings.MEDIA_ROOT, d, fname)
+                dest = os.path.join(settings.UPLOAD_ROOT, d, fname)
                 shutil.move(src, dest)
 
             now = timezone.now()
