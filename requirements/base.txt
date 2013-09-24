@@ -1,4 +1,4 @@
-Django==1.4
+Django>=1.4.5,<1.5
 -e git+https://github.com/peppelorum/Django-genericdropdown.git#egg=django-genericdropdown
 django-tastypie>=0.9.15,<0.10
 django-registration>=1.0
