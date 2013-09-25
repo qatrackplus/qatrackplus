@@ -2,33 +2,41 @@
 
 ## v0.2.7 ##
 
-**Note: this release introduces some database schema changes.  BACK UP
+**Note: this release introduces some database schema changes.  It is a good idea to BACK UP
 YOUR DATABASE BEFORE ATTEMPTING THIS UPGRADE**
 
 Version 0.2.7 has a quite a few improvements to the code base behind the
 scenes, some new features and a number of bug fixes. Please see the guide to
-upgrading to version 0.2.7 from 0.2.6 below.
+upgrading to version 0.2.7 below.
+
+A roadmap for future QATrack+ development has been
+[posted to the QATrack+ Google group](https://groups.google.com/forum/?fromgroups#!forum/qatrack).
+
+A note on QATrack+ and security is now
+[available on the wiki](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/deployment/security.md).
 
 Special thanks for this release go to Eric Reynard of Prince Edward Island.  Eric
 has contributed a
 [new authentication backend and tutorial](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/deployment/windows/iisFastCGI)
 on running QATrack+ with IIS, FastCGI and Windows Integrated Authentication.  Thanks Eric!
 
-### New Features ###
+### New Features & Bugs Fixed ###
 
-* Three new [test types](admin/test.md) have been added:
+* Three new [test types](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/admin/test.md) have been added:
     * File upload: Allows you to upload and process arbitrary files as part of a test list
     * String: Allows you to save short text snippets as test results
     * String Composite: A composite test for text rather than numerical values
-* [Composite tests](admin/test.md) no longer need to assign to a `result` variable. Instead you can just assign
-the result to the composite test macro name.
+* [Composite tests](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/admin/test.md) no longer need to assign to a `result` variable. Instead you can just assign
+the result to the composite test macro name (e.g. `my_test = 42` is now a valid calculation procedure). This is now the recommended way to write calculation macros.
+* Tests with calculated values now have [a `META` variable ](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/admin/calculated.md)
+available in the calculation context that includes some useful information about the test list being performed.
 * Easy export of historical test results to CSV files
 * New tool for creating basic paper backup QA forms to be used
     in the event of a server outage. See the
     [paper backup wiki page](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/users/paper_backup_forms.md)
     for more information.  This feature is currently quite primitive and
     suggestions on how to improve it are welcome!
-* TestListCycle's can now contain the same TestList multiple times
+* TestListCycle's can now contain the same TestList multiple times. Thanks to Darcy Mason for reporting this bug.
 * Unit's that have no active TestList's will no longer appear on the Unit selection page
 * Changes to Reference & Tolerances:
     * Tolerances no longer require all 4 of the tolerance/action levels
@@ -50,6 +58,7 @@ the result to the composite test macro name.
 * Page permissions have been improved slightly and two new permisions have been added:
     * **qa | test instance | Can chart test history** (Allows users to access charts page)
     * **qa | test list instance | Can view previously completed instances** (Allows users to view but not edit or review (change the status) of historical results.
+Please see the [wiki](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/admin/auth.md) for more information.
 * Page load time reduced by using more efficient unreviewed count query
 * Charts page now allows plotting of data for tests which are no longer active
 * Test data is now grouped by TestList when generating charts (i.e. multiple lines are
@@ -57,7 +66,7 @@ the result to the composite test macro name.
 * [Many other little bugs fixed :)](https://bitbucket.org/tohccmedphys/qatrackplus/issues/2?milestone=0.2.7)
 
 
-### Upgrading from v0.2.6 ###
+### Upgrading to v0.2.7 ###
 
 From the git bash command shell (with your QATrack+ virtual env activated!):
 
@@ -67,18 +76,19 @@ From the git bash command shell (with your QATrack+ virtual env activated!):
 1. python manage.py migrate
 1. python manage.py collectstatic
 1. restart the QATrack+ app (i.e. the CherryPy service or Apache or gunicorn ...)
-1. In the Admin --> Auth --> Groups section of the website grant the new permissions
+1. In the `Admin --> Auth --> Groups` section of the website grant the new permissions
     * **qa | test instance | Can chart test history**
     * **qa | test list instance | Can view previously completed instances**
 
     to any groups that require this functionality.  See the
     [Managing Users & Groups page](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/admin/auth.md)
     for more information on permissions.
-1. Configure your server to serve all requests for http(s)://YOURSERVER/media/\* to files in `qatrack/uploads/` directory.
+1. In order to use the new file upload test type, you must configure your server to serve all requests for http(s)://YOURSERVER/media/\* to files in `qatrack/uploads/` directory.
 More information about this is available on the
-[deployment wiki page](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/deployment/about.md).
-If you need help with this please post in the
-[QATrack+ Google group](https://groups.google.com/forum/?fromgroups#!forum/qatrack).
+[deployment wiki pages](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/deployment/about.md).
+If you need help with this part please post in the
+[QATrack+ Google group](https://groups.google.com/forum/?fromgroups#!forum/qatrack). If you don't
+    plan on using the file upload test type, this step is not required.
 
 ## v0.2.6 ##
 
