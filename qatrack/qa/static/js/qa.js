@@ -7,6 +7,7 @@
 var context;
 
 var pass_fail_only;
+var comment_on_skip;
 
 /***************************************************************/
 //minimal Pub/Sub functionality
@@ -207,7 +208,9 @@ function TestInstance(test_info, row){
         self.skipped = self.skip.is(":checked");
         if (self.skipped){
             self.set_value(null);
-            self.comment.show(600);
+            if (comment_on_skip){
+                self.comment.show(600);
+            }
             $.Topic("valueChanged").publish();
         }else{
             self.comment.hide(600);
@@ -567,6 +570,7 @@ $(document).ready(function(){
     context = $("#perform-qa-table")[0];
 
     pass_fail_only = $("#pass-fail-only").val() === "yes" ? true : false;
+    comment_on_skip = $("#require-comment-on-skip").val() === "yes" ? true : false;
 
     $("#test-list-info-toggle").click(function(){ $("#test-list-info").toggle(600); });
 

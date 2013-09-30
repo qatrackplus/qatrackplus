@@ -97,7 +97,7 @@
             <input type="hidden" id="cycle-day" value="{{current_day}}"/>
 
             <input type="hidden" id="pass-fail-only" value="{% if perms.qa.can_view_ref_tol %}no{% else %}yes{% endif %}"/>
-
+            <input type="hidden" id="require-comment-on-skip" value="{% if perms.qa.can_skip_without_comment %}no{% else %}yes{% endif %}"/>
 
             <div id="admin_controls" class="well">
 
