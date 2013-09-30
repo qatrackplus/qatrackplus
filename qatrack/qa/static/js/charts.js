@@ -583,7 +583,7 @@ function get_filtered_option_values(opt_type,options){
 function export_csv(){
     var header = [];
     _.each($("#data-table-wrapper table thead tr:first-child th"),function(e){
-        header.push(["Date",e.innerText,"Value","Ref"].join(","));
+        header.push(["Date",'"'+e.innerText.replace('"','""')+'"',"Value","Ref"].join(","));
     });
     header = header.join(",");
     var lines = [header];
@@ -591,7 +591,6 @@ function export_csv(){
     _.each($("#data-table-wrapper table tbody tr"),function(row){
         lines.push(_.map($(row).find("td"),function(e){return e.innerText;}).join(","));
     });
-    console.log(lines.join("\n"));
 
     var blob = new Blob([lines.join("\n")], {type: "text/plain;charset=utf-8"});
     saveAs(blob, "qatrack_export.csv");
