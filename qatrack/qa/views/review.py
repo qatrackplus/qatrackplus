@@ -241,7 +241,7 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
             elif due_date <= next_friday:
                 due["next_week"].append(utc)
             elif due_date <= month_end:
-                due["this_month"].append(utc)  #pragma: nocover
+                due["this_month"].append(utc)  # pragma: nocover
             elif due_date <= next_month_end:
                 due["next_month"].append(utc)
 
