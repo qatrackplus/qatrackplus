@@ -46,7 +46,7 @@ available in the calculation context that includes some useful information about
     for more information.
     * Duplicate tolerances can no longer be created (there is no use for duplicate tolerances)
     * Tolerances can no longer be named by the user and are now automatically given a descriptive
-    name based on there tolerance and action levels. This is to help emphasize the fact that Tolerance
+    name based on their tolerance and action levels. This is to help emphasize the fact that Tolerance
     values are not test specific.
     * As part of the 0.2.7 database update, all duplicate tolerance & reference objects in the database
     are going to be deleted and any test value currently pointing at these tolerance & reference
