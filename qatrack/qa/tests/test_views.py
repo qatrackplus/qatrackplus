@@ -1549,8 +1549,9 @@ class TestDueDateOverView(TestCase):
     #----------------------------------------------------------------------
     def test_due_next_month(self):
 
-        self.utc.due_date = self.next_month_start + timezone.timedelta(days=8)
+        self.utc.due_date = self.next_month_start + timezone.timedelta(days=15)
         self.utc.save()
+
         response = self.client.get(self.url)
         self.assertListEqual(response.context_data["due"][4][1], [self.utc])
 
