@@ -583,7 +583,7 @@ function get_filtered_option_values(opt_type,options){
 function export_csv(){
     var header = [];
     _.each($("#data-table-wrapper table thead tr:first-child th"),function(e){
-        header.push(["Date",'"'+e.innerText.replace('"','""')+'"',"Value","Ref"].join(","));
+        header.push(["Date",'"'+e.innerText.replace('"','""')+'"',"Ref"].join(","));
     });
     header = header.join(",");
     var lines = [header];
