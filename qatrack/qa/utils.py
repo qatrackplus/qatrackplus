@@ -11,18 +11,17 @@ class SetEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, set):
             return list(obj)
-        return json.JSONEncoder.default(self, obj)  #pragma: nocover
+        return json.JSONEncoder.default(self, obj)  # pragma: nocover
 
 
 #----------------------------------------------------------------------
-def to_precision(x,p):
+def to_precision(x, p):
     """
     returns a string representation of x formatted with a precision of p
 
     Based on the webkit javascript implementation taken from here:
     https://code.google.com/p/webkit-mirror/source/browse/JavaScriptCore/kjs/number_object.cpp?spec=svna8bbabb5022b4be3aca68b6807660f51a6a4c7fd&r=a8bbabb5022b4be3aca68b6807660f51a6a4c7fd#338
     """
-
 
     x = float(x)
 
@@ -37,19 +36,18 @@ def to_precision(x,p):
 
     e = int(math.log10(x))
     tens = math.pow(10, e - p + 1)
-    n = math.floor(x/tens)
-    if n < math.pow(10,p-1):
-        e = e -1
-        tens = math.pow(10,e-p+1)
+    n = math.floor(x / tens)
+    if n < math.pow(10, p - 1):
+        e = e - 1
+        tens = math.pow(10, e - p + 1)
         n = math.floor(x / tens)
 
-    if abs((n + 1.) * tens - x) <= abs(n * tens -x):
+    if abs((n + 1.) * tens - x) <= abs(n * tens - x):
         n = n + 1
 
-    if n >= math.pow(10,p):
+    if n >= math.pow(10, p):
         n = n / 10.
         e = e + 1
-
 
     m = "%.*g" % (p, n)
 
@@ -62,16 +60,16 @@ def to_precision(x,p):
         if e > 0:
             out.append("+")
         out.append(str(e))
-    elif e == (p -1):
+    elif e == (p - 1):
         out.append(m)
     elif e >= 0:
-        out.append(m[:e+1])
-        if e+1 < len(m):
+        out.append(m[:e + 1])
+        if e + 1 < len(m):
             out.append(".")
-            out.extend(m[e+1:])
+            out.extend(m[e + 1:])
     else:
         out.append("0.")
-        out.extend(["0"]*-(e+1))
+        out.extend(["0"]*-(e + 1))
         out.append(m)
 
     return "".join(out)

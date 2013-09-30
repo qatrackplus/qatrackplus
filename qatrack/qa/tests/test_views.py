@@ -210,6 +210,7 @@ class TestControlImage(TestCase):
         models.Test.objects.all().delete()
         models.TestList.objects.all().delete()
         models.Unit.objects.all().delete()
+
     #----------------------------------------------------------------------
     def test_not_enough_data(self):
         request = self.factory.get(self.url)
@@ -1146,13 +1147,13 @@ result = json.load(FILE)
 
     #---------------------------------------------------------------
     def test_upload_fname_exists(self):
-        response = self.client.post(self.url, {"test_id": self.test.pk, "upload": self.test_file, "meta":"{}"})
+        response = self.client.post(self.url, {"test_id": self.test.pk, "upload": self.test_file, "meta": "{}"})
         data = json.loads(response.content)
         self.assertTrue(os.path.exists(os.path.join(settings.TMP_UPLOAD_ROOT)), data["temp_file_name"])
 
     #---------------------------------------------------------------
     def test_invalid_test_id(self):
-        response = self.client.post(self.url, {"test_id": 200, "upload": self.test_file,"meta":"{}"})
+        response = self.client.post(self.url, {"test_id": 200, "upload": self.test_file, "meta": "{}"})
         data = json.loads(response.content)
         self.assertEqual(data["errors"][0], "Test with that ID does not exist")
 
@@ -1160,13 +1161,13 @@ result = json.load(FILE)
     def test_invalid_test(self):
         self.test.calculation_procedure = "result = 1/0"
         self.test.save()
-        response = self.client.post(self.url, {"test_id": self.test.pk, "upload": self.test_file, "meta":"{}"})
+        response = self.client.post(self.url, {"test_id": self.test.pk, "upload": self.test_file, "meta": "{}"})
         data = json.loads(response.content)
         self.assertIn("Invalid Test", data["errors"][0])
 
     #---------------------------------------------------------------
     def test_upload_results(self):
-        response = self.client.post(self.url, {"test_id": self.test.pk, "upload": self.test_file, "meta":"{}"})
+        response = self.client.post(self.url, {"test_id": self.test.pk, "upload": self.test_file, "meta": "{}"})
         data = json.loads(response.content)
         self.assertEqual(data["result"]["baz"]["baz1"], "test")
 

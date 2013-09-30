@@ -40,12 +40,11 @@ def email_on_testlist_save(*args, **kwargs):
     pwd = getattr(settings, "EMAIL_NOTIFICATION_PWD", None)
     fail_silently = getattr(settings, "EMAIL_FAIL_SILENTLY", True)
 
-    context =  Context({
-            "failing_tests": failing,
-            "tolerance_tests": tolerance,
-            "test_list_instance": test_list_instance,
+    context = Context({
+        "failing_tests": failing,
+        "tolerance_tests": tolerance,
+        "test_list_instance": test_list_instance,
     })
-
 
     if subject_template is not None:
         subject = get_template(subject_template).render(context).strip()

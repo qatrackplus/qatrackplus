@@ -53,4 +53,3 @@ class TestUtils(TestCase):
 
         for number, prec, expected in numbers:
             self.assertEqual(utils.to_precision(number, prec), expected)
-

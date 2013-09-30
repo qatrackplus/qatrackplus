@@ -104,7 +104,7 @@ for d in (MEDIA_ROOT, UPLOAD_ROOT, TMP_UPLOAD_ROOT):
 # trailing slash.
 # Examples: "http://media.lawrence.com/media/", "http://example.com/media/"
 MEDIA_URL = '/media/'
-UPLOADS_URL = MEDIA_URL+'uploads/'
+UPLOADS_URL = MEDIA_URL + 'uploads/'
 
 # Absolute path to the directory static files should be collected to.
 # Don't put anything in this directory yourself; store your static files
@@ -330,5 +330,3 @@ try:
     from local_settings import *
 except ImportError:
     pass
-
-

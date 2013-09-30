@@ -27,7 +27,6 @@ class TestListInstanceMixin(SelectRelatedMixin, PrefetchRelatedMixin):
     :model:`qa.TestListInstance` views
     """
 
-
     model = models.TestListInstance
     context_object_name = "test_list_instance"
 
