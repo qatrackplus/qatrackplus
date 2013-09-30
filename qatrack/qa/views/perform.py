@@ -75,7 +75,7 @@ class Upload(JSONResponseMixin, View):
         except models.Test.DoesNotExist:
             results["errors"].append("Test with that ID does not exist")
         except Exception, e:
-            results["errors"].append("Invalid Test Procedure: %s" %e)
+            results["errors"].append("Invalid Test Procedure: %s" % e)
 
         return self.render_json_response(results)
 
@@ -145,6 +145,7 @@ class Upload(JSONResponseMixin, View):
             return json.loads(json_string)
         except (KeyError, ValueError):
             return
+
 
 #============================================================================
 class CompositeCalculation(JSONResponseMixin, View):
@@ -231,12 +232,12 @@ class CompositeCalculation(JSONResponseMixin, View):
             except (KeyError, AttributeError):
                 pass
 
-        if values is None :
+        if values is None:
             self.calculation_context = {}
             return
 
         self.calculation_context = {
-            "META":meta_data
+            "META": meta_data
         }
 
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
@@ -405,7 +406,6 @@ class PerformQA(PermissionRequiredMixin, CreateView):
     def set_unit_test_infos(self):
         """Find and order all :model:`qa.UniTestInfo` objects for tests to be performed"""
 
-
         utis = models.UnitTestInfo.objects.filter(
             unit=self.unit_test_col.unit,
             test__in=self.all_tests,
@@ -551,7 +551,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         self.request.session.set_expiry(settings.SESSION_COOKIE_AGE)
 
         if models.TestInstanceStatus.objects.default() is None:
-            messages.error( self.request, "There must be at least one Test Status defined before performing a TestList")
+            messages.error(self.request, "There must be at least one Test Status defined before performing a TestList")
             return context
 
         #setup our test list, tests, current day etc
