@@ -583,13 +583,13 @@ function get_filtered_option_values(opt_type,options){
 function export_csv(){
     var header = [];
     _.each($("#data-table-wrapper table thead tr:first-child th"),function(e){
-        header.push(["Date",'"'+e.innerText.replace('"','""')+'"',"Ref"].join(","));
+        header.push(["Date",'"'+e.innerHTML.replace('"','""')+'"',"Ref"].join(","));
     });
     header = header.join(",");
     var lines = [header];
 
     _.each($("#data-table-wrapper table tbody tr"),function(row){
-        lines.push(_.map($(row).find("td"),function(e){return e.innerText;}).join(","));
+        lines.push(_.map($(row).find("td"),function(e){return e.innerHTML;}).join(","));
     });
 
     var blob = new Blob([lines.join("\n")], {type: "text/plain;charset=utf-8"});
