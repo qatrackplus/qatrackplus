@@ -269,6 +269,8 @@ AD_SEARCH_FIELDS = ['mail', 'givenName', 'sn', 'sAMAccountName', 'memberOf']
 AD_MEMBERSHIP_REQ = []  # eg ["*TOHCC - All Staff | Tout le personnel  - CCLHO"]
 # AD_CERT_FILE='/path/to/your/cert.txt'
 
+AD_DEBUG_FILE = None
+AD_DEBUG = False
 
 #------------------------------------------------------------------------------
 # Logging Settings
