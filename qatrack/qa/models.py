@@ -392,10 +392,10 @@ class Tolerance(models.Model):
         """more helpful interactive display name"""
         vals = (self.act_low, self.tol_low, self.tol_high, self.act_high)
         if self.type == ABSOLUTE:
-            vals = ["%.3f" % v if v else '--' for v in vals]
+            vals = ["%.3f" % v if v is not None else '--' for v in vals]
             return "Absolute(%s, %s, %s, %s)" % tuple(vals)
         elif self.type == PERCENT:
-            vals = ["%.2f%%" % v if v else '--' for v in vals]
+            vals = ["%.2f%%" % v if v is not None else '--' for v in vals]
             return "Percent(%s, %s, %s, %s)" % tuple(vals)
         elif self.type == MULTIPLE_CHOICE:
             return "M.C.(%d pass choices, %d tol choices)" % (len(self.pass_choices()), len(self.tol_choices()))
