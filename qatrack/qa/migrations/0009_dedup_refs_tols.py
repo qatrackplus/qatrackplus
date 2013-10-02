@@ -11,11 +11,11 @@ class Migration(DataMigration):
         Reference = orm['qa.Reference']
         UnitTestInfo = orm['qa.UnitTestInfo']
         TestInstance = orm['qa.TestInstance']
-        distinct_refs = Reference.objects.values_list("value", "type").distinct()
+        distinct_refs = list(Reference.objects.values_list("value", "type").distinct())
 
         for v, t in distinct_refs:
-            q = Reference.objects.filter(value=v, type=t)
-            if q.count() <= 1:
+            q = list(Reference.objects.filter(value=v, type=t))
+            if len(q) <= 1:
                 continue
 
             head, tail = q[0], q[1:]
