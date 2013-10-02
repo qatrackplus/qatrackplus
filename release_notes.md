@@ -68,6 +68,9 @@ Please see the [wiki](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/admin/
 
 ### Upgrading to v0.2.7 ###
 
+_Note: If any of these steps results in an error, stop and figure out why before
+carrying on to the next step!_
+
 From the git bash command shell (with your QATrack+ virtual env activated!):
 
 1. git pull origin master
