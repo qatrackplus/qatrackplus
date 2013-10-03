@@ -8,6 +8,9 @@ most operating system/server/database platform combinations. It was developed in
 Python programming language using the Django web framework so that QC data may be
 entered, reviewed, and analyzed using a web browser.
 
+Take a look at the [screenshots](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/screenshots) to get
+an idea of the interface.
+
 The main features include:
 
 * ability to define QC tests via an user-friendly interface. Configuration settings are
@@ -35,7 +38,7 @@ local institution policies.
 
 ## Documentation & Release Notes
 
-The latest version is 0.2.6 Please review the [release_notes](https://bitbucket.org/tohccmedphys/qatrackplus/src/master/release_notes.md) before
+The latest version is 0.2.7 Please review the [release_notes](https://bitbucket.org/tohccmedphys/qatrackplus/src/master/release_notes.md) before
 installing or upgrading.
 
 The [documentation can be found
