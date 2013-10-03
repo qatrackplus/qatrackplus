@@ -9,8 +9,10 @@ class Migration(DataMigration):
         # Note: Remember to use orm['appname.ModelName'] rather than "from appname.models..."
 
         Reference = orm['qa.Reference']
+        Tolerance = orm['qa.Tolerance']
         UnitTestInfo = orm['qa.UnitTestInfo']
         TestInstance = orm['qa.TestInstance']
+
         distinct_refs = list(Reference.objects.values_list("value", "type").distinct())
 
         for v, t in distinct_refs:
@@ -25,9 +27,6 @@ class Migration(DataMigration):
                 UnitTestInfo.objects.filter(reference=r).update(reference=head)
                 r.delete()
 
-        Tolerance = orm['qa.Tolerance']
-        UnitTestInfo = orm['qa.UnitTestInfo']
-        TestInstance = orm['qa.TestInstance']
         distinct_tols = Tolerance.objects.values_list(
             "act_low",
             "tol_low",
