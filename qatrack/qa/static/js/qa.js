@@ -574,6 +574,11 @@ $(document).ready(function(){
 
     $("#test-list-info-toggle").click(function(){ $("#test-list-info").toggle(600); });
 
+    //toggle general comment
+    $("#toggle-gen-comment").click(function(){
+        $("#id_comment").toggle();
+    });
+
     //toggle contacts
     $("#toggle-contacts").click(function(){
         $("#contacts").toggle();
