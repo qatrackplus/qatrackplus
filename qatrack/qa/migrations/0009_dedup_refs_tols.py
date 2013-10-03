@@ -28,10 +28,22 @@ class Migration(DataMigration):
         Tolerance = orm['qa.Tolerance']
         UnitTestInfo = orm['qa.UnitTestInfo']
         TestInstance = orm['qa.TestInstance']
-        distinct_refs = Tolerance.objects.values_list("act_low", "tol_low", "tol_high", "act_high", "type").distinct()
+        distinct_tols = Tolerance.objects.values_list(
+            "act_low",
+            "tol_low",
+            "tol_high",
+            "act_high",
+            "mc_tol_choices",
+            "mc_pass_choices",
+            "type",
+        ).distinct()
 
-        for al, tl, th, ah, t in distinct_refs:
-            q = Tolerance.objects.filter(act_low=al, tol_low=tl, tol_high=th, act_high=ah, type=t)
+        for al, tl, th, ah, mc_t, mc_p, t in distinct_tols:
+            q = Tolerance.objects.filter(
+                    act_low=al, tol_low=tl, tol_high=th, act_high=ah,
+                    mc_tol_choices=mc_t, mc_pass_choices=mc_p,
+                    type=t
+            )
             if q.count() <= 1:
                 continue
 
