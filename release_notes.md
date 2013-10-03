@@ -9,9 +9,6 @@ Version 0.2.7 has a quite a few improvements to the code base behind the
 scenes, some new features and a number of bug fixes. Please see the guide to
 upgrading to version 0.2.7 below.
 
-A roadmap for future QATrack+ development has been
-[posted to the QATrack+ Google group](https://groups.google.com/forum/?fromgroups#!forum/qatrack).
-
 A note on QATrack+ and security is now
 [available on the wiki](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/deployment/security.md).
 
