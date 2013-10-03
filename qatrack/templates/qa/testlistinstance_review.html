@@ -31,7 +31,7 @@
                             {% if tli.test_list.description%}
                             <a class="show-hide" id="test-list-info-toggle" title="Click to view description and general instructions for this test list">{{tli.test_list.name}} <i class="icon-info-sign" ></i></a></dd>
                             {% else %}
-                               {{tli.test_list.name}} 
+                               {{tli.test_list.name}}
                             {% endif %}
                         </dd>
 
@@ -41,14 +41,16 @@
                         <dt>Actions:</dt>
                         <dd>
 
+                            {% if perms.qa.delete_testlistinstance %}
                             <a class="btn btn-danger btn-mini" title="This will redirect you to the admin site where you can permanently delete this qa session" href="{% url admin:qa_testlistinstance_delete test_list_instance.pk%}">Delete</a>
+                            {% endif %}
                             {% if instance.in_progress %}
-                                <a class="btn btn-primary btn-mini" title="Continue this list" href="{%url edit_tli pk=test_list_instance.pk%}?next={{request.get_full_path}}" >Continue</a>
-                            {% else %}
+                                <a class="btn btn-primary btn-mini" title="Continue this list" href="{%url continue_tli pk=test_list_instance.pk%}?next={{request.get_full_path}}" >Continue</a>
+                            {% elif perms.qa.change_testlistinstance %}
                                 <a class="btn btn-primary btn-mini" title="Edit this list" href="{%url edit_tli pk=test_list_instance.pk%}?next={{request.get_full_path}}" >Edit</a>
                             {% endif %}
                         </dd>
-                        
+
                    </dl>
                 </div>
                 <div class="span4">
@@ -82,6 +84,9 @@
                         <dt>Last Modification :</dt>
                         <dd>{{tli.modified_by}} @ {{tli.modified}}</dd>
 
+                        <dt>Last Review:</dt>
+                        <dd>{% if tli.reviewed_by %}{{tli.reviewed_by}} @ {{tli.reviewed}}{% endif %}</dd>
+
                    </dl>
                 </div>
                 <div class="span4 actions review-buttons">
@@ -99,14 +104,14 @@
         </div>
         {% if test_list_instance.test_list.description %}
         <div id="test-list-info" class="row-fluid" style="display:none;">
-            <div class="span12">        
+            <div class="span12">
                 <pre >
                     {{test_list_instance.test_list.description|safe}}
                 </pre>
             </div>
         </div>
         {% endif %}
-        
+
         <div class="row-fluid">
             <div class="span12">
 
@@ -125,6 +130,8 @@
                             </th>
                             <th class="review-status">
                                 Status<br/>
+
+                                {% if perms.qa.can_review %}
                                 <div class="input-append">
                                 <select name="bulk-status" id="bulk-status" class="input-medium">
                                     <option value="" selected="selected">---</option>
@@ -134,8 +141,11 @@
                                     {% endfor %}
                                 </select>
                                 </div>
+                                {% endif %}
                             </th>
+                            {% if perms.qa.can_review %}
                             <th class="review-selected">Selected<br/><input class="test-selected-toggle" type="checkbox" checked="checked"/></th>
+                            {% endif %}
                         </tr>
                     </thead>
                     <tbody>
@@ -147,7 +157,13 @@
                             <tr>
                                 <input type="hidden" name="testinstance_set-{{forloop.counter0}}-id" value="{{ti.pk}}" id="id_testinstance_set-{{forloop.counter0}}-id">
                                 <td><strong>{{ti.unit_test_info.test.name}}</strong></td>
-                                <td class="review-value"><span class="label pass-fail {{ti.pass_fail}}" title="{{ti.diff_display}}">{{ti.value_display}}</span></td>
+                                <td class="review-value">
+                                    {% if ti.string_value %}
+                                    <span class="" title="{{ti.value_display}}">{{ti.value_display|safe}}</span>
+                                    {% else %}
+                                    <span class="label pass-fail {{ti.pass_fail}}" title="{{ti.diff_display}}">{{ti.value_display}}</span>
+                                    {% endif %}
+                                </td>
                                 <td class="review-ref">
                                     {% reference_tolerance_span ti.unit_test_info.test ti.reference ti.tolerance%}
                                 </td>
@@ -159,9 +175,9 @@
                                     {% endif %}
                                 </td>
                                 <td class="qa-history">
-                                    {{ti_form.history|history_display:test}}
-                                    <a title="View chart of this data" target="_blank" href="{% url charts %}#units={{test_list_instance.unit_test_collection.unit.pk}}&tests={{ti.unit_test_info.test.pk}}"><i class="icon-picture"></i></a>
+                                    {{ti_form.history|history_display}}
                                 </td>
+                                {% if perms.qa.can_review %}
                                 {# note we render this manually to prevent the Django ORM from running a query for every form #}
                                 <td class="review-status">
                                     <select name="testinstance_set-{{forloop.counter0}}-status" id="id_testinstance_set-{{forloop.counter0}}-status" class="input-medium">
@@ -170,7 +186,14 @@
                                         {% endfor %}
                                     </select>
                                 </td>
+                                {% else %}
+                                <td class="review-status">
+                                    {{ti.status.name}}
+                                </td>
+                                {% endif %}
+                                {% if perms.qa.can_review %}
                                 <td class="review-selected"><input class="test-selected" type="checkbox" checked="checked"/></td>
+                                {% endif %}
                             </tr>
                             {%endwith%}
                         {% endfor %}
@@ -180,12 +203,14 @@
             </div>
 
         </div>
+        {% if perms.qa.can_review %}
         <div class="row-fluid">
             <div class="span12 actions review-buttons">
                     <button type="submit" class="btn btn-primary pull-right">Update Test Statuses</button>
             </div>
 
         </div>
+        {% endif %}
     </form>
 {% endblock %}
 

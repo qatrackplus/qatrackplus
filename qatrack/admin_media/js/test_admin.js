@@ -9,14 +9,14 @@ function toggle_test_type(){
     if (val == "constant"){
         $(".field-constant_value").show();
         $(".field-calculation_procedure, .field-choices").hide();
-        
-    }else if (val == "composite"){
+
+    }else if (val == "composite" || val === "upload" || val === "scomposite" ){
         $(".field-calculation_procedure").show();
         $(".field-constant_value, .field-choices").hide();
     }else if (val == "multchoice"){
         $(".field-choices").show();
         $(".field-constant_value, .field-calculation_procedure").hide();
-        
+
     }else{
         $(".field-calculation_procedure").hide();
         $(".field-constant_value, .field-choices").hide();

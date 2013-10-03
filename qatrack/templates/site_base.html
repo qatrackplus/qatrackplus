@@ -18,7 +18,39 @@
 {% block script_base %}
     <script type="text/javascript">
         var QAURLs = {
-            base:"{{QATRACK_ROOT}}"
+            API_URL:"{% url api_v1_top_level 'v1'%}",
+            COMPOSITE_URL:"{% url composite %}",
+            UPLOAD_URL:"{% url upload %}",
+            CHART_DATA_URL:"{% url chart_data%}",
+            CONTROL_CHART_URL:"{% url control_chart %}",
+            OPTION_DELIM: "=",
+            OPTION_SEP: "&",
+
+            options_from_url_hash : function(hash){
+                var options = [];
+                if (hash.slice(0,1) === "#"){
+                    hash = hash.slice(1);
+                }
+                var that = this;
+                $.each(hash.split(this.OPTION_SEP),function(i,elem){
+                    var k_v = elem.split(that.OPTION_DELIM);
+                    options.push([k_v[0],k_v[1]]);
+                });
+                return options;
+            },
+
+            unit_test_chart_url : function(unit,test){
+                var unit_option = 'unit'+this.OPTION_DELIM+unit.number;
+                var test_option = 'slug'+this.OPTION_DELIM+test.slug;
+                return this.CHARTS_URL+'#'+[unit_option,test_option].join(this.OPTION_SEP);
+            },
+            unit_test_chart_link : function(unit,test,text,title){
+                var url = this.unit_test_chart_url(unit,test);
+                if (title === undefined){
+                    title = ["View Data for", unit.name, test.name, "data"].join(" ");
+                }
+                return '<a href="'+url+'" title="'+title+'">'+text+'</a>';
+            }
         }
     </script>
 
@@ -46,7 +78,7 @@
                 </ul>
             </li>
 
-            {% if perms.qa.can_review or perms.qa.can_view_history or perms.qa.change_testinstance %}
+            {% if perms.qa.can_review or perms.qa.can_view_completed or perms.qa.can_view_charts or perms.qa.change_testlistinstance %}
 
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle" >
@@ -60,7 +92,7 @@
                 </a>
 
                 <ul class="dropdown-menu">
-                    {% if perms.qa.can_review or perms.qa.can_view_history %}
+                    {% if perms.qa.can_review %}
                     <li class="nav-header">QA Program Status</li>
                     <li>
                         <a href="{% url overview %}" title="View a summary of the status of the QA program">
@@ -95,13 +127,24 @@
                     <li><a href="{% url choose_review_unit %}" title="Choose a unit to review qa lists for."><i class="icon-list"></i> Test Lists By Unit</a></li>
                     <li><a href="{% url choose_review_frequency %}" title="Choose a frequency to review qa lists for."><i class="icon-list"></i> Test Lists By Frequency</a></li>
 
-                    {% if perms.qa.can_view_history %}
+                    {% if perms.qa.can_view_charts %}
                         <li class="divider"></li>
                         <li class="nav-header">Trends and Analysis</li>
                         <li><a href="{% url charts %}"><i class="icon-picture"></i> Charts</a></li>
                     {% endif %}
                 </ul>
 
+            </li>
+            {% endif %}
+            {% if user.is_staff %}
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" >
+                    Tools
+                    <b class="caret"></b>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a href="{% url qa_paper_forms_request%}" title="Create a set of paper backup forms"><i class="icon-file"></i> Paper Backup Forms</a></li>
+                </ul>
             </li>
             {% endif %}
         </ul>
@@ -120,7 +163,7 @@
         <script src="{% static "data_tables/js/jquery.dataTables.searchPlugins.js" %}?v={{VERSION}}"></script>
         <script src="{% static "data_tables/js/DT_bootstrap.js" %}?v={{VERSION}}"></script>
         <script src="{% static "data_tables/js/DT_sort.js" %}?v={{VERSION}}"></script>
-        <script src="{% static "js/underscore-min.js" %}?v={{VERSION}}"></script>
+        <script src="{% static "js/lodash.compat.min.js" %}?v={{VERSION}}"></script>
         <script src="{% static "js/qautils.js" %}?v={{VERSION}}"></script>
         <script src="{% static "js/base.js" %}?v={{VERSION}}"></script>
         {% block end_body_extra_script %}{%endblock%}

@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.mlab as mlab
 from scipy.optimize import curve_fit
 
-np.seterr("log")
+np.seterr("ignore")
 
 
 def gauss_fit(data, freq, bins, binwidth):

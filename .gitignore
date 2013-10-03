@@ -17,9 +17,10 @@ lib64
 *.pot
 *.pyc
 local_settings.py
-*.wpr
-*.wpu
 fixtures/dev
 questions_*
 qatrack/static
+qatrack/media/uploads
 ldap.debug
+*.pyproj
+*.suo

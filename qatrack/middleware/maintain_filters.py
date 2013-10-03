@@ -28,10 +28,10 @@ class FilterPersistMiddleware(object):
 
         referrer = request.META['HTTP_REFERER'].split('?')[0]
         referrer = referrer[referrer.find('/admin'):len(referrer)]
-        key = 'key'+path.replace('/', '_')
+        key = 'key' + path.replace('/', '_')
 
         if popup:
-            key = 'popup'+path.replace('/', '_')
+            key = 'popup' + path.replace('/', '_')
 
         if path == referrer:  # We are in same page as before
 
@@ -45,7 +45,7 @@ class FilterPersistMiddleware(object):
             if session.get(key, False):
                 query_string = request.session.get(key)
                 root = getattr(settings, "FORCE_SCRIPT_NAME", "") or ""
-                redirect_to = root+path+'?'+query_string
+                redirect_to = root + path + '?' + query_string
                 request.session['redirected'] = True
 
                 return http.HttpResponseRedirect(redirect_to)

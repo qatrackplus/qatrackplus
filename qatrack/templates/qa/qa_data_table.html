@@ -1,4 +1,7 @@
-<table class="data-table table table-striped table-bordered table-condensed">
+            <span class="">
+                <button id="csv-export" class="btn btn-primary btn-mini "><i class="icon-download icon-large"></i> Save as csv</button>
+            </span>
+<table class="table table-striped table-bordered table-condensed data-table">
     <thead>
         <tr>
             {% for header in headers %}
@@ -18,22 +21,13 @@
         {% for row in rows %}
             <tr>
                 {% for da,val,ref in row %}
-                    <td>{{da}}</td>
+                    <td class="date">{{da}}</td>
                     <td class="number">{{val}}</td>
                     <td class="number">{{ref}}</td>
                 {% endfor  %}
             </tr>
         {% endfor %}
     </tbody>
-    <tfoot>
-        <tr>
-
-            {% for header in headers %}
-            <th>Date</th>
-            <th>{{header}}</th>
-            <th>Ref</th>
-            {% endfor %}
-        </tr>
-    </tfoot>
 
 </table>
+

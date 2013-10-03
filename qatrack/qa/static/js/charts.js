@@ -48,6 +48,9 @@ $(document).ready(function(){
 
     $("#gen-chart").click(update_chart);
 
+    $("#data-table-wrapper").on('click',"#csv-export",export_csv);
+
+
     set_chart_options();
     set_options_from_url();
 
@@ -200,7 +203,9 @@ function get_data_filters(){
         statuses:QAUtils.get_checked("#status-container"),
         from_date:get_date("#from-date"),
         to_date:get_date("#to-date"),
-        tests:QAUtils.get_checked("#test-container")    ,
+        tests:QAUtils.get_checked("#test-container"),
+        test_lists:QAUtils.get_checked("#test-list-container"),
+        frequencies:QAUtils.get_checked("#frequency-container"),
         n_baseline_subgroups:$("#n-baseline-subgroups").val(),
         subgroup_size:$("#subgroup-size").val(),
         fit_data:$("#include-fit").is(":checked")
@@ -232,7 +237,7 @@ function retrieve_data(callback,error){
 
     $.ajax({
         type:"get",
-        url:QACharts.data_url,
+        url:QAURLs.CHART_DATA_URL,
         data:data_filters,
         contentType:"application/json",
         dataType:"json",
@@ -254,45 +259,53 @@ function plot_data(data){
     create_stockchart(data_to_plot);
     update_data_table(data);
 }
-/****************************************************/
 function convert_data_to_highchart_series(data){
     var hc_series = [];
 
-    $.each(data,function(idx,series){
+    var show_tol = $("#show-tolerances").is(":checked");
+    var show_ref = $("#show-references").is(":checked");
+
+    var data_max=-1E10, data_min=1E10;
+    var notNull = function(x){return !_.isNull(x);};
+
+    _.each(_.keys(data), function(name){
         var series_data = [];
         var ref_data = [];
         var tolerance_high = [],tolerance_low=[],ok=[];
         var series_color = next_color();
 
-        var name =series.unit.name+" " +series.test.name;
+        var al, tl, th, ah;
 
-        $.each(series.dates,function(idx,date){
-                date = QAUtils.parse_iso8601_date(date).getTime();
-                var display = '<span style="color:'+series_color+'"><strong>'+name+'</strong></span>: <b>'+ QAUtils.format_float(series.values[idx]) + '</b>';
-                
-                if (!_.isNull(series.references[idx])){
-                    display += "<br/><em>Ref:" + QAUtils.format_float(series.references[idx])+"</em>";
-                }
+        _.each(data[name], function(point){
+            var date = QAUtils.parse_iso8601_date(point.date).getTime();
+            var display = '<span style="color:'+series_color+'"><strong>'+name+'</strong></span>: <b>'+ QAUtils.format_float(point.value) + '</b>';
 
-                if (!_.isNull(series.act_low[idx])){
-                    if (_.isNull(series.references[idx])){
-                        display += "<br/>";
-                    }
-                    display += " <em>Act Low: " + QAUtils.format_float(series.act_low[idx]);
-                    display +=         " Tol Low: " + QAUtils.format_float(series.tol_low[idx]);
-                    display +=         " Tol High: " + QAUtils.format_float(series.tol_high[idx]);
-                    display +=         " Act High: " + QAUtils.format_float(series.act_high[idx])+"</em>";
-                }
-                series_data.push({name:display,x:date,y:series.values[idx]});
-                ref_data.push({name:"",x:date,y:series.references[idx]});
-                ok.push({name:"",x:date,low:series.tol_low[idx],high:series.tol_high[idx]});
-                tolerance_low.push({name:"",x:date,low:series.tol_low[idx],high:series.act_low[idx]});
-                tolerance_high.push({name:"",x:date,low:series.tol_high[idx],high:series.act_high[idx]});
+            if (!_.isNull(point.reference)){
+                display += "<br/><em>Ref:" + QAUtils.format_float(point.reference)+"</em><br/>";
+            }
+
+            display += " <em>Act Low: " + (!_.isNull(point.act_low) ? QAUtils.format_float(point.act_low) : "--");
+            display += " Tol Low: " + (!_.isNull(point.tol_low) ? QAUtils.format_float(point.tol_low) : "--");
+            display += " Tol High: " + (!_.isNull(point.tol_high) ? QAUtils.format_float(point.tol_high) : "--");
+            display += " Act High: " + (!_.isNull(point.act_high) ? QAUtils.format_float(point.act_high) : "--");
+
+            data_max = _.max(_.filter([data_max, point.act_high, point.tol_high, point.reference, point.value],notNull));
+            data_min = _.min(_.filter([data_min, point.act_low, point.tol_low, point.reference, point.value],notNull));
+
+            al = !_.isNull(point.act_low) ? point.act_low : -1.e10;
+            tl = !_.isNull(point.tol_low) ? point.tol_low : -1.e10;
+            th = !_.isNull(point.tol_high) ? point.tol_high : 1.e10;
+            ah = !_.isNull(point.act_high) ? point.act_high : 1.e10;
+
+            series_data.push({name:display,x:date,y:point.value});
+            ref_data.push({name:"",x:date,y:point.reference});
+            ok.push({name:"",x:date,low:tl,high:th});
+            tolerance_low.push({name:"",x:date,low:tl,high:al});
+            tolerance_high.push({name:"",x:date,low:th,high:ah});
         });
 
         hc_series.push({
             name:name,
-            number:idx,
             data:series_data,
             showInLegend:true,
             lineWidth : get_line_width(),
@@ -310,47 +323,70 @@ function convert_data_to_highchart_series(data){
             lineWidth : 2,
             dashStyle:"ShortDash",
             color:series_color,
-            fillOpacity:1,
+            fillOpacity: 1,
             marker : {
                 enabled : false
             },
             showInLegend:true,
-            enableMouseTracking:false
+            enableMouseTracking:false,
+            visible: show_ref
         });
- 
+
         var tol_color = 'rgba(255, 255, 17, 0.2)';
         var act_color = 'rgba(46, 217, 49, 0.2)';
 
+        if (!show_tol){
+            tol_color = 'rgba(255, 255, 255, 0)';
+            act_color = 'rgba(255, 255, 255, 0)';
+        }
+
         hc_series.push({
-            data:tolerance_high,
+            data:_.map(tolerance_high,function(th){
+                th.low= _.min([th.low,data_max]);
+                th.high=_.min([th.high,data_max]);
+                return th;
+            }),
             type:'arearange',
             lineWidth:0,
             fillColor: tol_color,
             name:name+" Tol High",
             showInLegend:false,
-            enableMouseTracking:false
+            enableMouseTracking:false,
+            visible:show_tol
         });
 
         hc_series.push({
-            data:ok,
+            data:_.map(ok,function(v){
+                v.low= _.max([v.low,data_min]);
+                v.high=_.min([v.high,data_max]);
+                return v;
+            }),
             type:'arearange',
             lineWidth:0,
             fillColor: act_color,
             name:name + " OK",
             showInLegend:false,
-            enableMouseTracking:false
+            enableMouseTracking:false,
+
+            visible:show_tol
         });
         hc_series.push({
-            data:tolerance_low,
+            data:_.map(tolerance_low,function(tl){
+                tl.low =_.max([tl.low,data_min]);
+                tl.high=_.max([tl.high,data_min]);
+                return tl;
+            }),
             type:'arearange',
             fillColor: tol_color,
             lineWidth:0,
             name:name+ " Tol Low",
             showInLegend:false,
-            enableMouseTracking:false
+            enableMouseTracking:false,
+
+            visible:show_tol
         });
 
-    
+
 
     });
     return hc_series;
@@ -362,8 +398,6 @@ function create_stockchart(data){
 
     var prev_range = window.chart.rangeSelector ? window.chart.rangeSelector.selected:"";
 
-    var show_tol = $("#show-tolerances").is(":checked");
-    var show_ref = $("#show-references").is(":checked");
 
     var ntests = QAUtils.get_checked("#test-container").length;
 
@@ -386,7 +420,7 @@ function create_stockchart(data){
             ordinal: false
         },
         tooltip:{
- 
+
             formatter: function() {
                 var tip = _.pluck(this.points,"key").join("<br/>");
                 return tip;
@@ -460,6 +494,7 @@ function control_chart_error(){
 }
 function control_chart_finished(){
     $("#control-chart-container div.please-wait").remove();
+    $("#data-table-wrapper").html("");
     clearInterval(waiting_timeout);
     retrieve_data(update_data_table);
 }
@@ -483,7 +518,7 @@ function get_control_chart_url(){
         }
     });
 
-    return QACharts.control_chart_url+"?"+props.join("&");
+    return QAURLs.CONTROL_CHART_URL+"?"+props.join("&");
 }
 
 
@@ -509,7 +544,7 @@ function get_test_lists_from_tests(tests){
 function set_options_from_url(){
     var unit_ids,test_ids,freq_ids,test_list_ids;
 
-    var options = QAUtils.options_from_url_hash(document.location.hash);
+    var options = QAURLs.options_from_url_hash(document.location.hash);
 
     var units = get_filtered_option_values("units",options);
     var tests = get_filtered_option_values("tests",options);
@@ -543,4 +578,21 @@ function get_filtered_option_values(opt_type,options){
     var opt_value = function(opt){return opt[1];};
     var f = function(opt){return opt[0] == opt_type;};
     return _.map(_.filter(options,f),opt_value);
+}
+
+function export_csv(){
+    var header = [];
+    _.each($("#data-table-wrapper table thead tr:first-child th"),function(e){
+        header.push(["Date",'"'+e.innerHTML.replace('"','""')+'"',"Ref"].join(","));
+    });
+    header = header.join(",");
+    var lines = [header];
+
+    _.each($("#data-table-wrapper table tbody tr"),function(row){
+        lines.push(_.map($(row).find("td"),function(e){return e.innerHTML;}).join(","));
+    });
+
+    var blob = new Blob([lines.join("\n")], {type: "text/plain;charset=utf-8"});
+    saveAs(blob, "qatrack_export.csv");
+
 }

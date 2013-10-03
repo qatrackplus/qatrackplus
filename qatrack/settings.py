@@ -20,7 +20,7 @@ SEND_BROKEN_LINK_EMAILS = True
 # misc settings
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
-VERSION = "0.2.6.1"
+VERSION = "0.2.7"
 BUG_REPORT_URL = "https://bitbucket.org/tohccmedphys/qatrackplus/issues/new"
 FEATURE_REQUEST_URL = BUG_REPORT_URL
 
@@ -42,7 +42,7 @@ SITE_NAME = "QATrack+"
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',  # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'db/default.db',                      # Or path to database file if using sqlite3.
+        'NAME': os.path.join(PROJECT_ROOT, '..', 'db/default.db'),                      # Or path to database file if using sqlite3.
         'USER': '',                      # Not used with sqlite3.
         'PASSWORD': '',                  # Not used with sqlite3.S
         'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
@@ -92,12 +92,18 @@ USE_I18N = True
 
 #  Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
-MEDIA_ROOT = os.path.join(PROJECT_ROOT, "uploads")
+MEDIA_ROOT = os.path.join(PROJECT_ROOT, "media")
+UPLOAD_ROOT = os.path.join(MEDIA_ROOT, "uploads")
+TMP_UPLOAD_ROOT = os.path.join(UPLOAD_ROOT, "tmp")
+for d in (MEDIA_ROOT, UPLOAD_ROOT, TMP_UPLOAD_ROOT):
+    if not os.path.isdir(d):
+        os.mkdir(d)
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
 # Examples: "http://media.lawrence.com/media/", "http://example.com/media/"
 MEDIA_URL = '/media/'
+UPLOADS_URL = MEDIA_URL + 'uploads/'
 
 # Absolute path to the directory static files should be collected to.
 # Don't put anything in this directory yourself; store your static files
@@ -146,9 +152,9 @@ INTERNAL_IPS = ('127.0.0.1',)
 
 # login required middleware settings
 LOGIN_EXEMPT_URLS = [r"^accounts/", ]
+ACCOUNT_ACTIVATION_DAYS = 7
 LOGIN_REDIRECT_URL = '/qa/unit/'
 LOGIN_URL = "/accounts/login/"
-ACCOUNT_ACTIVATION_DAYS = 7
 
 
 #------------------------------------------------------------------------------
@@ -167,6 +173,7 @@ TEMPLATE_DIRS = (
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
     os.path.join(PROJECT_ROOT, "templates"),
+    os.path.join(PROJECT_ROOT, "theme_bootstrap", "templates"),
     "genericdropdown/templates",
 )
 
@@ -213,7 +220,7 @@ INSTALLED_APPS = [
 ]
 #-----------------------------------------------------------------------------
 # Session Settings
-SESSION_COOKIE_AGE = 14*24*60*60
+SESSION_COOKIE_AGE = 14 * 24 * 60 * 60
 
 #-----------------------------------------------------------------------------
 # Email and notification settings
@@ -221,7 +228,9 @@ EMAIL_NOTIFICATION_USER = None
 EMAIL_NOTIFICATION_PWD = None
 EMAIL_NOTIFICATION_TEMPLATE = "notification_email.txt"
 EMAIL_NOTIFICATION_SENDER = "qatrack"
-EMAIL_NOTIFICATION_SUBJECT = "QATrack+ Test Status Notification"
+# use either a static subject or a customizable template
+#EMAIL_NOTIFICATION_SUBJECT = "QATrack+ Test Status Notification"
+EMAIL_NOTIFICATION_SUBJECT_TEMPLATE = "notification_email_subject.txt"
 
 EMAIL_FAIL_SILENTLY = True
 EMAIL_HOST = ""  # e.g. 'smtp.gmail.com'
@@ -263,6 +272,9 @@ AD_NT4_DOMAIN = ""  # Network domain that AD server is part of
 AD_SEARCH_FIELDS = ['mail', 'givenName', 'sn', 'sAMAccountName', 'memberOf']
 AD_MEMBERSHIP_REQ = []  # eg ["*TOHCC - All Staff | Tout le personnel  - CCLHO"]
 # AD_CERT_FILE='/path/to/your/cert.txt'
+
+AD_DEBUG_FILE = None
+AD_DEBUG = False
 
 CLEAN_USERNAME_STRING = ''
 
@@ -307,6 +319,7 @@ LOGGING = {
     }
 }
 
+FORCE_SCRIPT_NAME = None
 
 #------------------------------------------------------------------------------
 # QA Settings

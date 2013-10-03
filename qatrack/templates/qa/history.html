@@ -1,11 +1,24 @@
 {% load qa_tags %}
-{% for hist in history %}
-    {% if hist.work_completed and hist.pass_fail != "not_done" %}
+{% if history %}
+{% with test=history.0.unit_test_info.test unit=unit_test_collection.unit %}
+        {% for hist in history %}
+            {% if test.is_upload or test.is_string or test.is_string_composite %}
+            <span class="history-value">
+                    {{hist.value_display|safe}}
+            </span>
+            {% elif hist.work_completed and hist.pass_fail != "not_done" %}
 
-        <span class="label {{hist.pass_fail}} history-value" title="Diff from ref={% if hist.diff %}{{hist.diff}}{%else%}N/A{%endif%};  {{hist.created_by}} on {{hist.work_completed}}; {{hist.status}}">
-                {{hist.value}}
-        </span>
-    {% else %}
-        <span class="label history-value" title="N/A">N/A</span>
-    {% endif %}
-{% endfor %}
+                <span class="label {{hist.pass_fail}} history-value" title="Diff from ref={% if hist.diff_display %}{{hist.diff_display}}{%else%}N/A{%endif%};  {{hist.created_by}} on {{hist.work_completed}}; {{hist.status}}">
+                        {{hist.value_display|safe}}
+                </span>
+            {% else %}
+                <span class="label history-value" title="N/A">N/A</span>
+            {% endif %}
+        {% endfor %}
+        {% if test.is_upload or test.is_string_type %}
+        <i class="icon-picture"></i>
+        {% else %}
+        <a title="View chart of this data" target="_blank" href="{% url charts %}#units={{unit.pk}}&tests={{test.pk}}"><i class="icon-picture"></i></a>
+        {% endif %}
+    {% endwith %}
+{% endif %}

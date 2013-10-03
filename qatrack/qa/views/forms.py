@@ -1,15 +1,18 @@
 from django import forms
-
+from django.core.validators import MaxLengthValidator
 from django.forms.models import inlineformset_factory
-from django.forms.widgets import RadioSelect, Select
+from django.forms.widgets import RadioSelect, Select, HiddenInput
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 
 from django.conf import settings
 
-import models
+from .. import models
+
+from qatrack.qa import utils
 
 BOOL_CHOICES = [(0, "No"), (1, "Yes")]
+
 
 #====================================================================================
 class UserFormsetMixin(object):
@@ -19,8 +22,8 @@ class UserFormsetMixin(object):
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
         super(UserFormsetMixin, self).__init__(*args, **kwargs)
-    #---------------------------------------------------------------------------
 
+    #---------------------------------------------------------------------------
     def _construct_forms(self):
         """add user to all children"""
         self.forms = []
@@ -29,8 +32,14 @@ class UserFormsetMixin(object):
             f.user = self.user
             self.forms.append(f)
 
+
 #============================================================================
 class TestInstanceWidgetsMixin(object):
+    """
+    Mixin to override default TestInstance field widgets and validation
+    based on the Test type.
+    """
+
     #----------------------------------------------------------------------
     def clean(self):
         """do some custom form validation"""
@@ -41,12 +50,13 @@ class TestInstanceWidgetsMixin(object):
 
         skipped = cleaned_data.get("skipped")
         comment = cleaned_data.get("comment")
-        value = cleaned_data.get("value")
+        value = cleaned_data.get("value", None)
+        string_value = cleaned_data.get("string_value", None)
 
         # force user to enter value unless skipping test
-        if value is None and not skipped:
+        if value is None and not string_value and not skipped:
             self._errors["value"] = self.error_class(["Value required if not skipping"])
-        elif value is not None and skipped:
+        elif (value is not None or string_value) and skipped:
             self._errors["value"] = self.error_class(["Clear value if skipping"])
 
         if not self.user.has_perm("qa.can_skip_without_comment") and skipped and not comment:
@@ -60,33 +70,45 @@ class TestInstanceWidgetsMixin(object):
 
     #---------------------------------------------------------------------------
     def set_value_widget(self):
-        """add custom widget for boolean values (after form has been """
+        """add custom widget for boolean values (after form has been initialized)"""
 
         # temp store attributes so they can be restored to reset widget
+        self.fields["string_value"].widget.attrs["class"] = "qa-input"
         self.fields["value"].widget.attrs["class"] = "qa-input"
         attrs = self.fields["value"].widget.attrs
+        str_attrs = self.fields["string_value"].widget.attrs
+
         test_type = self.unit_test_info.test.type
+
         if test_type == models.BOOLEAN:
             self.fields["value"].widget = RadioSelect(choices=BOOL_CHOICES)
         elif test_type == models.MULTIPLE_CHOICE:
-            self.fields["value"].widget = Select(choices=[("", "")]+self.unit_test_info.test.get_choices())
+            self.fields["value"].widget = Select(choices=[("", "")] + self.unit_test_info.test.get_choices())
+        elif test_type == models.UPLOAD:
+            self.fields["string_value"].widget = HiddenInput()
 
         if test_type in (models.BOOLEAN, models.MULTIPLE_CHOICE):
             if hasattr(self, "instance") and self.instance.value is not None:
                 self.initial["value"] = int(self.instance.value)
 
         self.fields["value"].widget.attrs.update(attrs)
-    #----------------------------------------------------------------------
+        self.fields["string_value"].widget.attrs.update(str_attrs)
 
+    #----------------------------------------------------------------------
     def disable_read_only_fields(self):
         """disable some fields for constant and composite tests"""
-        if self.unit_test_info.test.type in (models.CONSTANT, models.COMPOSITE,):
+        if self.unit_test_info.test.type in (models.CONSTANT, models.COMPOSITE, ):
             self.fields["value"].widget.attrs["readonly"] = "readonly"
+        elif self.unit_test_info.test.type in (models.STRING_COMPOSITE,):
+            self.fields["string_value"].widget.attrs["readonly"] = "readonly"
 
 
 #============================================================================
 class CreateTestInstanceForm(TestInstanceWidgetsMixin, forms.Form):
+
     value = forms.FloatField(required=False, widget=forms.widgets.TextInput(attrs={"class": "qa-input"}))
+    string_value = forms.CharField(required=False, validators=[MaxLengthValidator(models.MAX_STRING_VAL_LEN)])
+
     skipped = forms.BooleanField(required=False, help_text=_("Was this test skipped for some reason (add comment)"))
     comment = forms.CharField(widget=forms.Textarea, required=False, help_text=_("Show or hide comment field"))
 
@@ -117,33 +139,47 @@ BaseTestInstanceFormSet = forms.formsets.formset_factory(CreateTestInstanceForm,
 
 
 class CreateTestInstanceFormSet(UserFormsetMixin, BaseTestInstanceFormSet):
+    """
+    Formset for entering all the test values for the TestList that a
+    user is performing.
+    """
+
     #----------------------------------------------------------------------
     def __init__(self, *args, **kwargs):
+        """
+        Set the UnitTestInfo object for each form in the formset and
+        set initial values for any CONSTANT Test type.
+        """
+
         unit_test_infos = kwargs.pop("unit_test_infos")
 
         initial = []
         for uti in unit_test_infos:
+
             init = {"value": None}
+
             if uti.test.type == models.CONSTANT:
-                init["value"] = uti.test.constant_value
+                init["value"] = utils.to_precision(uti.test.constant_value, 4)
+
             initial.append(init)
+
         kwargs.update(initial=initial)
+
         super(CreateTestInstanceFormSet, self).__init__(*args, **kwargs)
 
         for form, uti in zip(self.forms, unit_test_infos):
             form.set_unit_test_info(uti)
 
+
 #============================================================================
-
-
 class UpdateTestInstanceForm(TestInstanceWidgetsMixin, forms.ModelForm):
 
     #============================================================================
     class Meta:
         model = models.TestInstance
-        fields = ("value", "skipped", "comment",)
-    #----------------------------------------------------------------------
+        fields = ("value", "string_value", "skipped", "comment",)
 
+    #----------------------------------------------------------------------
     def __init__(self, *args, **kwargs):
 
         super(UpdateTestInstanceForm, self).__init__(*args, **kwargs)
@@ -161,25 +197,16 @@ class UpdateTestInstanceForm(TestInstanceWidgetsMixin, forms.ModelForm):
             "test": self.instance.unit_test_info.test,
         }
 
+
 #============================================================================
 BaseUpdateTestInstanceFormSet = inlineformset_factory(models.TestListInstance, models.TestInstance, form=UpdateTestInstanceForm, extra=0, can_delete=False)
 
 
 class UpdateTestInstanceFormSet(UserFormsetMixin, BaseUpdateTestInstanceFormSet):
+    pass
 
-    #----------------------------------------------------------------------
-    def __init__(self, *args, **kwargs):
-
-        kwargs["queryset"] = kwargs["queryset"].prefetch_related(
-            "reference",
-            "unit_test_info__test__category"
-        )
-
-        super(UpdateTestInstanceFormSet, self).__init__(*args, **kwargs)
 
 #============================================================================
-
-
 class ReviewTestInstanceForm(forms.ModelForm):
 
     #============================================================================
@@ -187,17 +214,19 @@ class ReviewTestInstanceForm(forms.ModelForm):
         model = models.TestInstance
         fields = ("status", )
 
+
+#============================================================================
 BaseReviewTestInstanceFormSet = inlineformset_factory(models.TestListInstance, models.TestInstance, form=ReviewTestInstanceForm, extra=0, can_delete=False)
 
 
 class ReviewTestInstanceFormSet(UserFormsetMixin, BaseReviewTestInstanceFormSet):
     pass
 
+
 #============================================================================
-
-
 class BaseTestListInstanceForm(forms.ModelForm):
     """parent form for performing or updating a qa test list"""
+
     status = forms.ModelChoiceField(
         queryset=models.TestInstanceStatus.objects,
         initial=models.TestInstanceStatus.objects.default,
@@ -206,13 +235,17 @@ class BaseTestListInstanceForm(forms.ModelForm):
 
     work_completed = forms.DateTimeField(required=False)
 
+    modified = forms.DateTimeField(required=False)
+
     #----------------------------------------------------------------------
     class Meta:
         model = models.TestListInstance
+        exclude = ("day",)
 
     #----------------------------------------------------------------------
     def __init__(self, *args, **kwargs):
         super(BaseTestListInstanceForm, self).__init__(*args, **kwargs)
+
         for field in ("work_completed", "work_started"):
             self.fields[field].widget = forms.widgets.DateTimeInput()
             self.fields[field].widget.format = settings.INPUT_DATE_FORMATS[0]
@@ -233,7 +266,8 @@ class BaseTestListInstanceForm(forms.ModelForm):
 
     #---------------------------------------------------------------------------
     def clean(self):
-        """"""
+        """validate the work_completed & work_started values"""
+
         cleaned_data = super(BaseTestListInstanceForm, self).clean()
 
         for field in ("work_completed", "work_started",):
@@ -241,28 +275,27 @@ class BaseTestListInstanceForm(forms.ModelForm):
                 self.errors[field][0] += " %s" % settings.DATETIME_HELP
 
         work_started = cleaned_data.get("work_started")
-        work_completed = cleaned_data.get("work_completed") 
+        work_completed = cleaned_data.get("work_completed")
 
         # keep previous work completed date if present
         if not work_completed and self.instance:
             work_completed = self.instance.work_completed
-            cleaned_data["work_completed"] = work_completed 
+            cleaned_data["work_completed"] = work_completed
 
         if work_started and work_completed:
-
             if work_completed <= work_started:
                 self._errors["work_started"] = self.error_class(["Work started date/time can not be after work completed date/time"])
                 del cleaned_data["work_started"]
 
-        elif work_started:
-            if work_started >= timezone.make_aware(timezone.datetime.now(), timezone.get_current_timezone()):
+        if work_started:
+            if work_started >= timezone.now().astimezone(timezone.get_current_timezone()):
                 self._errors["work_started"] = self.error_class(["Work started date/time can not be in the future"])
-                del cleaned_data["work_started"]
+                if "work_started" in cleaned_data:
+                    del cleaned_data["work_started"]
         return cleaned_data
 
+
 #============================================================================
-
-
 class CreateTestListInstanceForm(BaseTestListInstanceForm):
     """form for doing qa test list"""
 
@@ -271,9 +304,8 @@ class CreateTestListInstanceForm(BaseTestListInstanceForm):
         super(CreateTestListInstanceForm, self).__init__(*args, **kwargs)
         self.fields["work_started"].initial = timezone.now()
 
+
 #============================================================================
-
-
 class UpdateTestListInstanceForm(BaseTestListInstanceForm):
 
     #----------------------------------------------------------------------

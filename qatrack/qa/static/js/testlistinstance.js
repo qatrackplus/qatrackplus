@@ -33,10 +33,11 @@ function init_test_list_instance_tables(units, frequencies){
     $("#testlistinstance-table").dataTable({
         bProcessing:true,
         bServerSide:true,
-        sAjaxSource:"./data/",
+        sAjaxSource:"./",
         sAjaxDataProp:"data",
         bAutoWidth:false,
         fnAdjustColumnSizing:false,
+        fnPreDrawCallback:function(){$("#pagination-placeholder").remove()},
         bFilter:true,
         bPaginate:true,
         bStateSave:true, /*remember filter/sort state on page load*/
@@ -60,8 +61,8 @@ function init_test_list_instance_tables(units, frequencies){
 $(document).ready(function(){
 
     $.when(
-        $.getJSON(QAUtils.API_URL+"unit/?format=json"),
-        $.getJSON(QAUtils.API_URL+"frequency/?format=json")
+        $.getJSON(QAURLs.API_URL+"unit/?format=json&limit=0"),
+        $.getJSON(QAURLs.API_URL+"frequency/?format=json&limit=0")
     ).then(init_test_list_instance_tables);
 
 });

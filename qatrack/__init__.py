@@ -1,7 +1,8 @@
 from south.signals import post_migrate
 
 import os
-os.environ["DJANGO_SETTINGS_MODULE"] ="qatrack.settings"
+os.environ["DJANGO_SETTINGS_MODULE"] = "qatrack.settings"
+
 
 def update_permissions_after_migration(app, **kwargs):
     """

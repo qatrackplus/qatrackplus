@@ -1,33 +1,31 @@
 [
     {
-        "pk": 1, 
-        "model": "qa.tolerance", 
+        "pk": 1,
+        "model": "qa.tolerance",
         "fields": {
-            "modified_date": "2012-07-18T14:36:40.114Z", 
-            "modified_by": 1, 
-            "name": "+- 2%/3%", 
-            "tol_high": 2.0, 
-            "act_high": 3.0, 
-            "created_by": 1, 
-            "act_low": -3.0, 
-            "tol_low": -2.0, 
-            "created_date": "2012-04-03T13:17:54.165Z", 
+            "modified_date": "2012-07-18T14:36:40.114Z",
+            "modified_by": 1,
+            "tol_high": 2.0,
+            "act_high": 3.0,
+            "created_by": 1,
+            "act_low": -3.0,
+            "tol_low": -2.0,
+            "created_date": "2012-04-03T13:17:54.165Z",
             "type": "percent"
         }
-    }, 
+    },
     {
-        "pk": 2, 
-        "model": "qa.tolerance", 
+        "pk": 2,
+        "model": "qa.tolerance",
         "fields": {
-            "modified_date": "2012-07-18T14:37:37.645Z", 
-            "modified_by": 1, 
-            "name": "+-1%/2% ", 
-            "tol_high": 1.0, 
-            "act_high": 2.0, 
-            "created_by": 1, 
-            "act_low": -2.0, 
-            "tol_low": -1.0, 
-            "created_date": "2012-07-18T14:37:03.817Z", 
+            "modified_date": "2012-07-18T14:37:37.645Z",
+            "modified_by": 1,
+            "tol_high": 1.0,
+            "act_high": 2.0,
+            "created_by": 1,
+            "act_low": -2.0,
+            "tol_low": -1.0,
+            "created_date": "2012-07-18T14:37:03.817Z",
             "type": "percent"
         }
     }

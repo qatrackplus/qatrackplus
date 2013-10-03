@@ -16,6 +16,14 @@
 
 {% load qa_tags %}
 
+{% block script_base %}
+    {{block.super}}
+
+    <script type="text/javascript">
+        var unit_test_infos = {{unit_test_infos|safe}};
+    </script>
+{% endblock script_base %}
+
 {% block body %}
 
 <div class="row-fluid">
@@ -82,10 +90,15 @@
         <form class="nosubmit form-inline" id="qa-form" method="POST" action="" autocomplete="off">
 
             {% csrf_token %}
-            <input type="hidden" id="contains-composites" value="no"/>
-            
+            <input type="hidden" id="test-list-id" value="{{test_list.pk}}"/>
+            <input type="hidden" id="test-list-name" value="{{test_list.name}}"/>
+            <input type="hidden" id="unit-id" value="{{unit_test_collection.unit.pk}}"/>
+            <input type="hidden" id="unit-number" value="{{unit_test_collection.unit.number}}"/>
+            <input type="hidden" id="cycle-day" value="{{current_day}}"/>
+
             <input type="hidden" id="pass-fail-only" value="{% if perms.qa.can_view_ref_tol %}no{% else %}yes{% endif %}"/>
-            
+            <input type="hidden" id="require-comment-on-skip" value="{% if perms.qa.can_skip_without_comment %}no{% else %}yes{% endif %}"/>
+
             <div id="admin_controls" class="well">
 
                 {# display any form errors up top #}
@@ -107,9 +120,9 @@
                             Categories:
                         </label>
                         <select id="category_filter" multiple="multiple" class="input-medium">
-                            <option value="all">Show All</option>
+                            <option value="all" selected="selected">Show All</option>
                             {% for category in categories %}
-                                <option value="{{category.name|lower}}">
+                                <option value="{{category.pk}}">
                                     {{category.name}}
                                 </option>
                             {% endfor %}
@@ -240,6 +253,7 @@
             </div>
         </form>
 
+                <div id="progress"> <div class="bar" style="width: 0%; height:30px; background-color:red;"></div> </div>
 
     </div>
 </div>
@@ -250,4 +264,7 @@
 {% block end_body_extra_script %}
     <script src="{% static "js/qa.js" %}?v={{VERSION}}"></script>
     <script src="{% static "datepicker/js/bootstrap-datepicker.js" %}?v={{VERSION}}"></script>
+    <script src="{% static "js/jquery.ui.widget.js" %}"></script>
+    <script src="{% static "js/jquery.iframe-transport.js" %}"></script>
+    <script src="{% static "js/jquery.fileupload.js" %}"></script>
 {% endblock %}
