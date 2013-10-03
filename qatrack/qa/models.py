@@ -398,7 +398,7 @@ class Tolerance(models.Model):
             vals = ["%.2f%%" % v if v is not None else '--' for v in vals]
             return "Percent(%s, %s, %s, %s)" % tuple(vals)
         elif self.type == MULTIPLE_CHOICE:
-            return "M.C.(%d pass choices, %d tol choices)" % (len(self.pass_choices()), len(self.tol_choices()))
+            return "M.C.(Pass=%s, Tol=%s)" % (":".join(self.pass_choices()), ":".join(self.tol_choices()))
 
 
 #============================================================================
