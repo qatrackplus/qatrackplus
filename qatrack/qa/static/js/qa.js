@@ -403,7 +403,7 @@ function get_meta_data(){
     var meta = {
         test_list_name: $("#test-list-name").val(),
         unit_number: parseInt($("#unit-number").val()),
-        cycle_day: parseInt($("#cycle-day").val()),
+        cycle_day: parseInt($("#cycle-day-number").val()),
         work_completed: QAUtils.parse_date($("#id_work_completed").val()),
         work_started: QAUtils.parse_date($("#id_work_started").val()),
         username: $("#username").text()
@@ -467,10 +467,12 @@ function TestListInstance(){
                     }
                 });
             }
+            $.Topic("qaUpdated").publish();
         }
 
         var on_error = function(){
             self.submit.attr("disabled", false);
+            $.Topic("qaUpdated").publish();
         }
 
         $.ajax({
