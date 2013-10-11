@@ -1299,6 +1299,7 @@ class TestListInstance(models.Model):
             "testinstance_set__reference",
             "testinstance_set__tolerance",
             "testinstance_set__unit_test_info__test",
+            "testinstance_set__unit_test_info__unit",
             "testinstance_set__created_by",
             "testinstance_set__test_list_instance"
         )[:settings.NHIST]
