@@ -183,11 +183,11 @@ var QAUtils = new function() {
             var dt = s.split(" ");
             var date = dt[0].split('-');
             var time = dt[1].split(':');
-            var dd = date[0];
-            var mm = date[1];
-            var yy = date[2];
-            var hh = time[0];
-            var nn = time[1];
+            var dd = parseIint(date[0]);
+            var mm = parseInt(date[1])-1;
+            var yy = parseInt(date[2]);
+            var hh = parseInt(time[0]);
+            var nn = parseInt(time[1]);
             return new Date(yy, mm, dd, hh, nn);
         }catch(err){
             return null;
