@@ -94,7 +94,7 @@
             <input type="hidden" id="test-list-name" value="{{test_list.name}}"/>
             <input type="hidden" id="unit-id" value="{{unit_test_collection.unit.pk}}"/>
             <input type="hidden" id="unit-number" value="{{unit_test_collection.unit.number}}"/>
-            <input type="hidden" id="cycle-day" value="{{current_day}}"/>
+            <input type="hidden" id="cycle-day-number" value="{{current_day}}"/>
 
             <input type="hidden" id="pass-fail-only" value="{% if perms.qa.can_view_ref_tol %}no{% else %}yes{% endif %}"/>
             <input type="hidden" id="require-comment-on-skip" value="{% if perms.qa.can_skip_without_comment %}no{% else %}yes{% endif %}"/>
