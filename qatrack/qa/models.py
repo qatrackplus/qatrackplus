@@ -1132,7 +1132,7 @@ class TestInstance(models.Model):
     def value_display(self):
         if self.skipped:
             return "Skipped"
-        elif self.value is None and self.string_value is None:
+        elif self.value is None and self.string_value in (None, ""):
             return "Not Done"
 
         test = self.unit_test_info.test
