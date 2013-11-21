@@ -50,6 +50,9 @@ def process_procedure(procedure):
 class Upload(JSONResponseMixin, View):
     """View for handling AJAX upload requests when performing QA"""
 
+    #use html for IE8's sake :(
+    content_type = "text/html"
+
     #----------------------------------------------------------------------
     def post(self, *args, **kwargs):
         """process file, apply calculation procedure and return results"""
@@ -78,6 +81,7 @@ class Upload(JSONResponseMixin, View):
             results["errors"].append("Invalid Test Procedure: %s" % e)
 
         return self.render_json_response(results)
+
 
     #---------------------------------------------------------------
     @staticmethod

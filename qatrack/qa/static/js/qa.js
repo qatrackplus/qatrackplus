@@ -350,6 +350,7 @@ function TestInstance(test_info, row){
         self.comment_box.val(self.NOT_PERFORMED);
     }
 
+    var csrf_token = $("input[name=csrfmiddlewaretoken]").val();
 
     this.inputs.filter(".file-upload").each(function(){
 
@@ -364,7 +365,8 @@ function TestInstance(test_info, row){
             formData: function(){
                 return [
                     { name:"test_id", value: self.test_info.test.id},
-                    { name:"meta", value:JSON.stringify(get_meta_data())}
+                    { name:"meta", value:JSON.stringify(get_meta_data())},
+                    { name:"csrfmiddlewaretoken", value:csrf_token}
                 ]
             },
             done: function (e, data) {
