@@ -154,7 +154,7 @@ class BaseDataTablesDataSource(ListView):
                     #handle case where we are filtering on a Generic Foreign Key field
                     f = Q()
                     for s, ct in search:
-                        f != Q(**{s: search_term, "content_type": ct})
+                        f |= Q(**{s: search_term, "content_type": ct})
                 else:
                     f = Q(**{search: search_term})
                 self.filters.append(f)
