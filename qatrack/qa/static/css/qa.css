@@ -123,6 +123,12 @@ select.qa-input{
     padding:1px 4px;
     margin-bottom:0px;
 }
+
+input.qa-input::-ms-clear {
+    /* see bitbucket issue#106 */
+    display: none;
+}
+
 select.qa-input{
     height:20px;
 }
