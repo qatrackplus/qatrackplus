@@ -30,6 +30,7 @@ class ChartView(PermissionRequiredMixin, TemplateView):
     """View responsible for rendering the main charts user interface."""
 
     permission_required = "qa.can_view_charts"
+    raise_exception = True
 
     template_name = "qa/charts.html"
 
@@ -270,6 +271,7 @@ class BasicChartData(PermissionRequiredMixin, JSONResponseMixin, BaseChartView):
     """JSON view used for basic chart type"""
 
     permission_required = "qa.can_view_charts"
+    raise_exception = True
 
 
 #============================================================================
@@ -277,6 +279,7 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
     """Return a control chart image from given qa data"""
 
     permission_required = "qa.can_view_charts"
+    raise_exception = True
 
     #---------------------------------------------------------------------------
     def convert_date(self, dt):

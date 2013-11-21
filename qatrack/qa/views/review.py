@@ -31,6 +31,8 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
     """
 
     permission_required = "qa.can_review"
+    raise_exception = True
+
     form_class = forms.ReviewTestListInstanceForm
     formset_class = forms.ReviewTestInstanceFormSet
     template_name_suffix = "_review"
@@ -92,6 +94,8 @@ class UTCReview(PermissionRequiredMixin, UTCList):
     """A simple :view:`qa.base.UTCList` wrapper to check required review permissions"""
 
     permission_required = "qa.can_view_completed"
+    raise_exception = True
+
     action = "review"
     action_display = "Review"
     active_only = False
@@ -164,6 +168,7 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
 
     queryset = models.TestListInstance.objects.unreviewed
     permission_required = "qa.can_review"
+    raise_exception = True
 
     #----------------------------------------------------------------------
     def get_page_title(self):
@@ -176,6 +181,7 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
 
     template_name = "qa/overview_by_due_date.html"
     permission_required = "qa.can_review"
+    raise_exception = True
 
     DUE_DISPLAY_ORDER = (
         ("overdue", "Due & Overdue"),
@@ -258,6 +264,7 @@ class Overview(PermissionRequiredMixin, TemplateView):
 
     template_name = "qa/overview.html"
     permission_required = "qa.can_review"
+    raise_exception = True
 
     #----------------------------------------------------------------------
     def get_queryset(self):

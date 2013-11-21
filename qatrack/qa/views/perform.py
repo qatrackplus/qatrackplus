@@ -336,6 +336,8 @@ class PerformQA(PermissionRequiredMixin, CreateView):
     """
 
     permission_required = "qa.add_testlistinstance"
+    raise_exception = True
+
     form_class = forms.CreateTestListInstanceForm
     model = models.TestListInstance
 
@@ -623,6 +625,8 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
     """
 
     permission_required = "qa.change_testlistinstance"
+    raise_exception = True
+
     form_class = forms.UpdateTestListInstanceForm
     formset_class = forms.UpdateTestInstanceFormSet
 
@@ -750,6 +754,7 @@ class ContinueTestListInstance(EditTestListInstance):
     """
 
     permission_required = "qa.add_testlistinstance"
+    raise_exception = True
 
 
 #============================================================================
