@@ -498,7 +498,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
         to_save = []
 
-        for ti_form in formset:
+        for delta, ti_form in enumerate(formset):
             if ti_form.unit_test_info.test.is_upload() and not ti_form.cleaned_data["skipped"]:
                 fname = ti_form.cleaned_data["string_value"]
                 src = os.path.join(settings.TMP_UPLOAD_ROOT, fname)
@@ -508,7 +508,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
                 dest = os.path.join(settings.UPLOAD_ROOT, d, fname)
                 shutil.move(src, dest)
 
-            now = timezone.now()
+            now = self.object.created + timezone.timedelta(milliseconds=delta)
 
             ti = models.TestInstance(
                 value=ti_form.cleaned_data.get("value", None),

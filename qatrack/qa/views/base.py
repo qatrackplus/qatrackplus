@@ -56,8 +56,10 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
 
         history, history_dates = self.object.history()
         self.history_dates = history_dates
-        for (instance, test_history), f in zip(history, forms):
-            f.history = test_history
+        for f in forms:
+            for instance, test_history in history:
+                if f.instance == instance:
+                    f.history = test_history
 
     #----------------------------------------------------------------------
     def get_context_data(self, **kwargs):
