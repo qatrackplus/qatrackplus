@@ -11,7 +11,7 @@ class Migration(SchemaMigration):
         # Adding field 'Test.chart_visibility'
         db.add_column('qa_test', 'chart_visibility',
                       self.gf('django.db.models.fields.BooleanField')(default=True),
-                      keep_default=False)
+                      keep_default=True)
 
 
     def backwards(self, orm):
