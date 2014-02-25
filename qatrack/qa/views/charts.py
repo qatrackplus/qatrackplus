@@ -45,7 +45,7 @@ class ChartView(PermissionRequiredMixin, TemplateView):
         # (250ms vs 750ms for 150k total test instances)  for a sqlite query.  The
         # distinctness/uniqueness is guarannteed by using sets below.
 
-        q = models.TestInstance.objects.values_list(
+        q = models.TestInstance.objects.filter(unit_test_info__test__chart_visibility=True).values_list(
             "unit_test_info__unit",
             "unit_test_info__test",
             "unit_test_info__test__type",

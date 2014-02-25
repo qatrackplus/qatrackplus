@@ -442,6 +442,7 @@ class Test(models.Model):
     procedure = models.CharField(max_length=512, help_text=_("Link to document describing how to perform this test"), blank=True, null=True)
 
     category = models.ForeignKey(Category, help_text=_("Choose a category for this test"))
+    chart_visibility = models.BooleanField("Test item visible in charts?", default=True)
 
     type = models.CharField(
         max_length=10, choices=TEST_TYPE_CHOICES, default=SIMPLE,
