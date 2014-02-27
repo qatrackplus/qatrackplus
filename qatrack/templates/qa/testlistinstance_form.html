@@ -148,7 +148,9 @@
                             {{form.work_completed.label}}:
                         </label>{{form.work_completed}}<span class="add-on"><i class="icon-calendar"></i></span>
                     </div>
+                {% endif %}
 
+                {% if perms.qa.can_review %}
                     <div class="input-prepend input-append" id="status">
                         <label for="id_status" class="add-on">
                             Set Status:
