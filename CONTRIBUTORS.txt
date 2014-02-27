@@ -1,0 +1,24 @@
+Contributors
+============
+
+The main author of QATrack+ is Randle Taylor (randle.taylor@gmail.com,
+@randletaylor) of the Ottawa Hospital Cancer Centre.
+
+There have been lots of other contributors of code, bug reports and valuable
+discussions and they are listed in alphabetical order below. I've almost
+certainly missed some people so I've missed you or forgotten to add your name,
+email me and I will happily add it...even better: fork this repo, add
+your name and institution and make a pull request!
+
+In first-name alphabetical order:
+
+Crystal Angers - The Ottawa Hospital Cancer Centre, Canada
+Dan La Russa - The Ottawa Hospital Cancer Centre, Canada
+Darcy Mason - Durham Regional Cancer Centre, Canada
+Eric Reynard - Prince Edward Island Cancer Treatment Centre, Canada
+Jason Yan - Odette Cancer Centre @ Sunnybrook, Canada
+Randle Taylor - The Ottawa Hospital Cancer Centre, Canada
+Ryan Studinski - The Ottawa Hospital Cancer Centre, Canada
+Wenze van Klink - VUmc, Netherlands
+
+
