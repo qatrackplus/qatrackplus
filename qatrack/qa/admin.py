@@ -452,7 +452,14 @@ class ToleranceForm(forms.ModelForm):
 class ToleranceAdmin(BasicSaveUserAdmin):
     form = ToleranceForm
 
+
+#====================================================================================
+class AutoReviewAdmin(admin.ModelAdmin):
+    list_display = ("id", "pass_fail", "status")
+
+
 admin.site.register([models.Tolerance], ToleranceAdmin)
+admin.site.register([models.AutoReviewChoice], AutoReviewAdmin)
 admin.site.register([models.Category], CategoryAdmin)
 admin.site.register([models.TestList], TestListAdmin)
 admin.site.register([models.Test], TestAdmin)

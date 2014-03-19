@@ -229,7 +229,6 @@ class BaseTestListInstanceForm(forms.ModelForm):
 
     status = forms.ModelChoiceField(
         queryset=models.TestInstanceStatus.objects,
-        initial=models.TestInstanceStatus.objects.default,
         required=False
     )
 
