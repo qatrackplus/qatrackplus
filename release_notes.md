@@ -1,5 +1,10 @@
 # QATrack+ Release Notes #
 
+## v0.3.0 ##
+
+
+## v0.2.8 ##
+
 ## v0.2.7 ##
 
 **Note: this release introduces some database schema changes.  It is a good idea to BACK UP
