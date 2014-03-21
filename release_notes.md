@@ -2,6 +2,11 @@
 
 ## v0.3.0 ##
 
+### New Features & Bugs Fixed ###
+
+* Added the [Ace code editor](http://ace.c9.io/) for editting Test calculation\_procedure Python snippets.
+
+
 
 ## v0.2.8 ##
 
