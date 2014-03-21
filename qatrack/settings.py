@@ -143,7 +143,6 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'qatrack.middleware.login_required.LoginRequiredMiddleware',
     'qatrack.middleware.maintain_filters.FilterPersistMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
 )
 
 # for django-debug-toolbar
@@ -205,8 +204,6 @@ INSTALLED_APPS = [
     'tastypie',
 
     'genericdropdown',
-    'django_coverage',
-    'debug_toolbar',
 
     'qatrack.accounts',
     'qatrack.units',
