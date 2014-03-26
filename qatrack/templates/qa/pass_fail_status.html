@@ -8,6 +8,8 @@
                 <i class="icon-warning-sign"></i>
             {% elif status == 'action' %}
                 <i class="icon-minus-sign"></i>
+            {% elif status == 'not_done' %}
+                <i class="icon-circle-blank"></i>
             {% endif %}
             {{tests|length}}{%if show_label%} {{display}}{%endif%}
         </span>
