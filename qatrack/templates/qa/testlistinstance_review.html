@@ -161,7 +161,18 @@
                                     {% if ti.string_value %}
                                     <span class="" title="{{ti.value_display}}">{{ti.value_display|safe}}</span>
                                     {% else %}
-                                    <span class="label pass-fail {{ti.pass_fail}}" title="{{ti.diff_display}}">{{ti.value_display}}</span>
+                                    <span class="label pass-fail {{ti.pass_fail}}" title="{{ti.diff_display}}">
+                                        {% with ti.pass_fail as status %}
+                                            {% if status == 'ok' %}
+                                                <i class="pull-left icon-ok-sign"></i>
+                                            {% elif status == 'tolerance' %}
+                                                <i class="pull-left icon-warning-sign"></i>
+                                            {% elif status == 'action' %}
+                                                <i class="pull-left icon-minus-sign"></i>
+                                            {% endif %}
+                                        {% endwith %}
+                                        {{ti.value_display}}
+                                    </span>
                                     {% endif %}
                                 </td>
                                 <td class="review-ref">

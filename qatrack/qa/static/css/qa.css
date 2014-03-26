@@ -109,6 +109,12 @@ tr.qa-comment td textarea{
     width:70px;
     overflow-x:hidden;
 }
+
+.qa-status > i {
+    margin-top:3px;
+    margin-left:1px;
+}
+
 .qa-skip {
     width:40px;
 }
@@ -214,6 +220,9 @@ th.qa-history div{
     white-space: nowrap;
     overflow:hidden;
     padding: 1px 1px 2px;
+}
+.history-value > i, .pass-fail > i {
+    margin-top:2px;
 }
 
 .history-label {

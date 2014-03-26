@@ -317,7 +317,7 @@ function TestInstance(test_info, row){
     };
     this.set_status = function(status){
 
-        self.status.text(status.message);
+        self.status.html(status.message);
         self.status.removeClass("btn-success btn-warning btn-danger btn-info");
         self.test_status = status.status;
         if (status.status === QAUtils.WITHIN_TOL){
