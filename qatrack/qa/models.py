@@ -1356,8 +1356,8 @@ class TestListCycle(TestCollectionInterface):
     def first(self):
         """return first in order membership obect for this cycle"""
         try:
-            return self.testlistcyclemembership_set.get(order=0).test_list
-        except TestListCycleMembership.DoesNotExist:
+            return self.testlistcyclemembership_set.all()[0].test_list
+        except IndexError:
             return None
 
     #----------------------------------------------------------------------
