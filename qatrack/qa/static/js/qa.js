@@ -202,14 +202,10 @@ function TestInstance(test_info, row){
     this.set_skip = function(skipped){
         self.skipped = skipped;
         self.skip.prop("checked",self.skipped);
-        if (skipped){
-            self.set_value(null);
-        }
     }
     this.skip.change(function(){
         self.skipped = self.skip.is(":checked");
         if (self.skipped){
-            self.set_value(null);
             if (comment_on_skip){
                 self.comment.show(600);
             }
@@ -351,7 +347,7 @@ function TestInstance(test_info, row){
         self.visible = false;
 
         // skipping sets value to null but we want to presever value in case it
-        // is unfiltered later. Filtered values will be nulled on submit
+        // is unfiltered later. Filtered values will be nulled on submitt
         var tmp_val = self.value;
         self.set_skip(true);
         self.set_value(tmp_val);
