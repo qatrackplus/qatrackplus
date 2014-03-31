@@ -720,11 +720,12 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         ti.work_started = self.object.work_started
         ti.work_completed = self.object.work_completed
 
-        ti.calculate_pass_fail()
-        if not self.user_set_status:
-            ti.auto_review()
 
         try:
+            ti.calculate_pass_fail()
+            if not self.user_set_status:
+                ti.auto_review()
+
             ti.save()
         except ZeroDivisionError:
 
