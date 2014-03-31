@@ -1567,8 +1567,8 @@ class TestTestListInstance(TestCase):
         self.unit_test_collection = utils.create_unit_test_collection(test_collection=self.test_list)
 
         self.test_list_instance = self.create_test_list_instance()
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def create_test_list_instance(self):
         utc = self.unit_test_collection
 
