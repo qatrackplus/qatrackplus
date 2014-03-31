@@ -1664,6 +1664,49 @@ class TestTestListInstance(TestCase):
         self.assertEqual(utc.last_instance, self.test_list_instance)
 
 
+#============================================================================
+class TestAutoReview(TestCase):
+
+    #----------------------------------------------------------------------
+    def setUp(self):
+        self.tests = []
+
+        self.ref = models.Reference(type=models.NUMERICAL, value=100.)
+        self.tol = models.Tolerance(type=models.PERCENT, act_low=-3, tol_low=-2, tol_high=2, act_high=3)
+        self.values = [None, None, 96, 97, 100, 100]
+
+        self.statuses = [utils.create_status(name="status%d" % x, slug="status%d" % x) for x in range(len(self.values))]
+
+        self.test_list = utils.create_test_list()
+        for i in range(6):
+            test = utils.create_test(name="name%d" % i)
+            if i < 3:
+                test.auto_review = True
+                test.save()
+
+            self.tests.append(test)
+            utils.create_test_list_membership(self.test_list, test)
+
+        self.unit_test_collection = utils.create_unit_test_collection(test_collection=self.test_list)
+
+        self.test_list_instance = self.create_test_list_instance()
+
+    #----------------------------------------------------------------------
+    def test_review_status(self):
+        import ipdb; ipdb.set_trace()
+
+        for stat, tests in self.test_list_instance.status():
+            self.assertEqual(len(tests), 1)
+
+    #----------------------------------------------------------------------
+    def test_unreviewed_instances(self):
+        import ipdb; ipdb.set_trace()
+
+        self.assertSetEqual(
+            set(self.test_list_instance.unreviewed_instances()),
+            set(models.TestInstance.objects.all())
+        )
+
 if __name__ == "__main__":
     setup_test_environment()
     unittest.main()
