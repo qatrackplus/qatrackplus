@@ -1143,6 +1143,7 @@ class TestInstance(models.Model):
         if self.unit_test_info.test.auto_review:
             try:
                 self.status = AutoReviewChoice.objects.get(pass_fail=self.pass_fail).status
+                self.review_date = timezone.now()
             except AutoReviewChoice.DoesNotExist:
                 pass
 
