@@ -455,7 +455,8 @@ class ToleranceAdmin(BasicSaveUserAdmin):
 
 #====================================================================================
 class AutoReviewAdmin(admin.ModelAdmin):
-    list_display = ("id", "pass_fail", "status")
+    list_display = (str, "pass_fail", "status")
+    list_editable = ["pass_fail", "status"]
 
 
 admin.site.register([models.Tolerance], ToleranceAdmin)

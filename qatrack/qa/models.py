@@ -75,6 +75,7 @@ PASS_FAIL_CHOICES = (
     (ACTION, "Action"),
     (NO_TOL, "No Tol Set"),
 )
+PASS_FAIL_CHOICES_DISPLAY = dict(PASS_FAIL_CHOICES)
 
 AUTO_REVIEW_DEFAULT = getattr(settings, "AUTO_REVIEW_DEFAULT", False)
 
@@ -238,6 +239,9 @@ class TestInstanceStatus(models.Model):
 class AutoReviewChoice(models.Model):
     pass_fail = models.CharField(max_length=15, choices=PASS_FAIL_CHOICES, unique=True)
     status = models.ForeignKey(TestInstanceStatus)
+
+    def __unicode__(self):
+        return "%s => %s" % (PASS_FAIL_CHOICES_DISPLAY[self.pass_fail], self.status)
 
 
 #============================================================================
