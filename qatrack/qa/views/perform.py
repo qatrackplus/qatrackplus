@@ -704,8 +704,10 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
         try:
             self.status = models.TestInstanceStatus.objects.get(pk=status_pk)
+            self.user_set_status = True
         except (models.TestInstanceStatus.DoesNotExist, ValueError):
             self.status = models.TestInstanceStatus.objects.default()
+            self.user_set_status = False
 
     #----------------------------------------------------------------------
     def update_test_instance(self, test_instance):
@@ -717,6 +719,10 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         ti.in_progress = self.object.in_progress
         ti.work_started = self.object.work_started
         ti.work_completed = self.object.work_completed
+
+        ti.calculate_pass_fail()
+        if not self.user_set_status:
+            ti.auto_review()
 
         try:
             ti.save()
