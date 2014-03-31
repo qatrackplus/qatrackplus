@@ -75,6 +75,9 @@ PASS_FAIL_CHOICES = (
     (ACTION, "Action"),
     (NO_TOL, "No Tol Set"),
 )
+PASS_FAIL_CHOICES_DISPLAY = dict(PASS_FAIL_CHOICES)
+
+AUTO_REVIEW_DEFAULT = getattr(settings, "AUTO_REVIEW_DEFAULT", False)
 
 
 # due date choices
@@ -230,6 +233,15 @@ class TestInstanceStatus(models.Model):
     #---------------------------------------------------------------------------
     def __unicode__(self):
         return self.name
+
+
+#============================================================================
+class AutoReviewRule(models.Model):
+    pass_fail = models.CharField(max_length=15, choices=PASS_FAIL_CHOICES, unique=True)
+    status = models.ForeignKey(TestInstanceStatus)
+
+    def __unicode__(self):
+        return "%s => %s" % (PASS_FAIL_CHOICES_DISPLAY[self.pass_fail], self.status)
 
 
 #============================================================================
@@ -443,6 +455,7 @@ class Test(models.Model):
 
     category = models.ForeignKey(Category, help_text=_("Choose a category for this test"))
     chart_visibility = models.BooleanField("Test item visible in charts?", default=True)
+    auto_review = models.BooleanField(_("Allow auto review of this test?"), default=AUTO_REVIEW_DEFAULT)
 
     type = models.CharField(
         max_length=10, choices=TEST_TYPE_CHOICES, default=SIMPLE,
@@ -1045,7 +1058,6 @@ class TestInstance(models.Model):
 
     #----------------------------------------------------------------------
     def save(self, *args, **kwargs):
-        """set pass fail status on save"""
         self.calculate_pass_fail()
         super(TestInstance, self).save(*args, **kwargs)
 
@@ -1128,6 +1140,16 @@ class TestInstance(models.Model):
         else:
             # no tolerance and/or reference set
             self.pass_fail = NO_TOL
+
+    #----------------------------------------------------------------------
+    def auto_review(self):
+        """set review status of the current value if allowed"""
+        if self.unit_test_info.test.auto_review:
+            try:
+                self.status = AutoReviewRule.objects.get(pass_fail=self.pass_fail).status
+                self.review_date = timezone.now()
+            except AutoReviewRule.DoesNotExist:
+                pass
 
     #----------------------------------------------------------------------
     def value_display(self):
@@ -1262,6 +1284,14 @@ class TestListInstance(models.Model):
     #----------------------------------------------------------------------
     def unreviewed_instances(self):
         return self.testinstance_set.filter(status__requires_review=True)
+
+    #----------------------------------------------------------------------
+    def update_all_reviewed(self):
+
+        self.all_reviewed = len(self.unreviewed_instances()) == 0
+
+        # use update instead of save so we don't trigger save signal
+        TestListInstance.objects.filter(pk=self.pk).update(all_reviewed=self.all_reviewed)
 
     #----------------------------------------------------------------------
     def tolerance_tests(self):

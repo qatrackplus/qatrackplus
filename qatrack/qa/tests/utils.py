@@ -28,8 +28,8 @@ def create_category(name="cat"):
 
 
 #----------------------------------------------------------------------
-def create_status(name="status", slug="status", is_default=True):
-    status = models.TestInstanceStatus(name=name, slug=slug, is_default=is_default, requires_review=True)
+def create_status(name="status", slug="status", is_default=True, requires_review=True):
+    status = models.TestInstanceStatus(name=name, slug=slug, is_default=is_default, requires_review=requires_review)
     status.save()
     return status
 

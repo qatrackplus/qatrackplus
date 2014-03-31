@@ -453,8 +453,11 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         """return default or user requested :model:`qa.TestInstanceStatus`"""
 
         try:
-            return models.TestInstanceStatus.objects.get(pk=form["status"].value())
-        except (KeyError, models.TestInstanceStatus.DoesNotExist):
+            status = models.TestInstanceStatus.objects.get(pk=form["status"].value())
+            self.user_set_status = True
+            return status
+        except (KeyError, ValueError, models.TestInstanceStatus.DoesNotExist):
+            self.user_set_status = False
             return models.TestInstanceStatus.objects.default()
 
     #----------------------------------------------------------------------
@@ -488,7 +491,6 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
         self.object.reviewed = None if status.requires_review else self.object.modified
         self.object.reviewed_by = None if status.requires_review else self.request.user
-        self.object.all_reviewed = not status.requires_review
 
         self.object.day = self.actual_day
 
@@ -529,12 +531,17 @@ class PerformQA(PermissionRequiredMixin, CreateView):
                 work_completed=self.object.work_completed,
             )
             ti.calculate_pass_fail()
+            if not self.user_set_status:
+                ti.auto_review()
+
             to_save.append(ti)
 
         models.TestInstance.objects.bulk_create(to_save)
 
         #set due date to account for any non default statuses
         self.object.unit_test_collection.set_due_date()
+
+        self.object.update_all_reviewed()
 
         if not self.object.in_progress:
             # TestListInstance & TestInstances have been successfully create, fire signal
@@ -697,8 +704,10 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
         try:
             self.status = models.TestInstanceStatus.objects.get(pk=status_pk)
+            self.user_set_status = True
         except (models.TestInstanceStatus.DoesNotExist, ValueError):
             self.status = models.TestInstanceStatus.objects.default()
+            self.user_set_status = False
 
     #----------------------------------------------------------------------
     def update_test_instance(self, test_instance):
@@ -711,7 +720,12 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         ti.work_started = self.object.work_started
         ti.work_completed = self.object.work_completed
 
+
         try:
+            ti.calculate_pass_fail()
+            if not self.user_set_status:
+                ti.auto_review()
+
             ti.save()
         except ZeroDivisionError:
 

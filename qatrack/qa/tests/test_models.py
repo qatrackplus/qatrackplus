@@ -1567,8 +1567,8 @@ class TestTestListInstance(TestCase):
         self.unit_test_collection = utils.create_unit_test_collection(test_collection=self.test_list)
 
         self.test_list_instance = self.create_test_list_instance()
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def create_test_list_instance(self):
         utc = self.unit_test_collection
 
@@ -1613,16 +1613,16 @@ class TestTestListInstance(TestCase):
             set(self.test_list_instance.unreviewed_instances()),
             set(models.TestInstance.objects.all())
         )
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def test_tolerance_tests(self):
         self.assertEqual(1, self.test_list_instance.tolerance_tests().count())
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def test_failing_tests(self):
         self.assertEqual(1, self.test_list_instance.tolerance_tests().count())
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def test_in_progress(self):
         self.test_list_instance.in_progress = True
         self.test_list_instance.save()
@@ -1662,6 +1662,70 @@ class TestTestListInstance(TestCase):
 
         utc = models.UnitTestCollection.objects.get(pk=self.unit_test_collection.pk)
         self.assertEqual(utc.last_instance, self.test_list_instance)
+
+
+#============================================================================
+class TestAutoReview(TestCase):
+
+    #----------------------------------------------------------------------
+    def setUp(self):
+        self.tests = []
+
+        self.ref = models.Reference(type=models.NUMERICAL, value=100.)
+        self.tol = models.Tolerance(type=models.PERCENT, act_low=-3, tol_low=-2, tol_high=2, act_high=3)
+        self.values = [96, 97, 100]
+
+        self.statuses = [
+            utils.create_status(name="default", slug="default", requires_review=True, is_default=True),
+            utils.create_status(name="pass", slug="pass", requires_review=False, is_default=False),
+            utils.create_status(name="tol", slug="tol", requires_review=False, is_default=False),
+            utils.create_status(name="fail", slug="fail", requires_review=False, is_default=False),
+        ]
+
+        models.AutoReviewRule.objects.bulk_create([
+            models.AutoReviewRule(pass_fail=models.OK, status=self.statuses[1]),
+            models.AutoReviewRule(pass_fail=models.TOLERANCE, status=self.statuses[2]),
+        ])
+
+
+        self.test_list = utils.create_test_list()
+        for i in range(3):
+            test = utils.create_test(name="name%d" % i)
+            test.auto_review = True
+            test.save()
+
+            self.tests.append(test)
+            utils.create_test_list_membership(self.test_list, test)
+
+        self.unit_test_collection = utils.create_unit_test_collection(test_collection=self.test_list)
+
+        self.test_list_instance = self.create_test_list_instance()
+
+    #----------------------------------------------------------------------
+    def create_test_list_instance(self):
+        utc = self.unit_test_collection
+
+        tli = utils.create_test_list_instance(unit_test_collection=utc)
+
+        for i, (v, test) in enumerate(zip(self.values, self.tests)):
+            uti = models.UnitTestInfo.objects.get(test=test, unit=utc.unit)
+            ti = utils.create_test_instance(unit_test_info=uti, value=v, status=self.statuses[0])
+            ti.reference = self.ref
+            ti.tolerance = self.tol
+            ti.test_list_instance = tli
+            ti.calculate_pass_fail()
+            ti.auto_review()
+            ti.save()
+
+        tli.save()
+        return tli
+
+    #----------------------------------------------------------------------
+    def test_review_status(self):
+        """Each of the three tests should have a different status"""
+
+        for stat, tests in self.test_list_instance.status():
+            self.assertEqual(len(tests), 1)
 
 
 if __name__ == "__main__":
