@@ -7,7 +7,7 @@ function set_order(grouping){
     var order = 0;
     $(grouping).find('tr').each(function(i) {
 
-        if ($(this).find("td[class^=field-] input").val()){
+        if ($(this).find("td[class^=field-] input").val() && !$(this).find("input[id$=DELETE]").is(":checked")){
             $(this).find('input[id$=order]').val(order);
             order +=1;
         }else{
