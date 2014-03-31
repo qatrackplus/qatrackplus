@@ -236,7 +236,7 @@ class TestInstanceStatus(models.Model):
 
 
 #============================================================================
-class AutoReviewChoice(models.Model):
+class AutoReviewRule(models.Model):
     pass_fail = models.CharField(max_length=15, choices=PASS_FAIL_CHOICES, unique=True)
     status = models.ForeignKey(TestInstanceStatus)
 
@@ -1146,9 +1146,9 @@ class TestInstance(models.Model):
         """set review status of the current value if allowed"""
         if self.unit_test_info.test.auto_review:
             try:
-                self.status = AutoReviewChoice.objects.get(pass_fail=self.pass_fail).status
+                self.status = AutoReviewRule.objects.get(pass_fail=self.pass_fail).status
                 self.review_date = timezone.now()
-            except AutoReviewChoice.DoesNotExist:
+            except AutoReviewRule.DoesNotExist:
                 pass
 
     #----------------------------------------------------------------------

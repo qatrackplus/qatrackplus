@@ -8,13 +8,13 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding model 'AutoReviewChoice'
-        db.create_table('qa_autoreviewchoice', (
+        # Adding model 'AutoReviewRule'
+        db.create_table('qa_autoreviewrule', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('pass_fail', self.gf('django.db.models.fields.CharField')(unique=True, max_length=15)),
             ('status', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['qa.TestInstanceStatus'])),
         ))
-        db.send_create_signal('qa', ['AutoReviewChoice'])
+        db.send_create_signal('qa', ['AutoReviewRule'])
 
         # Adding field 'Test.auto_review'
         db.add_column('qa_test', 'auto_review',
@@ -23,8 +23,8 @@ class Migration(SchemaMigration):
 
 
     def backwards(self, orm):
-        # Deleting model 'AutoReviewChoice'
-        db.delete_table('qa_autoreviewchoice')
+        # Deleting model 'AutoReviewRule'
+        db.delete_table('qa_autoreviewrule')
 
         # Deleting field 'Test.auto_review'
         db.delete_column('qa_test', 'auto_review')
@@ -67,8 +67,8 @@ class Migration(SchemaMigration):
             'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
         },
-        'qa.autoreviewchoice': {
-            'Meta': {'object_name': 'AutoReviewChoice'},
+        'qa.autoreviewrule': {
+            'Meta': {'object_name': 'AutoReviewRule'},
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'pass_fail': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '15'}),
             'status': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['qa.TestInstanceStatus']"})

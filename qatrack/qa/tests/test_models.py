@@ -1682,9 +1682,9 @@ class TestAutoReview(TestCase):
             utils.create_status(name="fail", slug="fail", requires_review=False, is_default=False),
         ]
 
-        models.AutoReviewChoice.objects.bulk_create([
-            models.AutoReviewChoice(pass_fail=models.OK, status=self.statuses[1]),
-            models.AutoReviewChoice(pass_fail=models.TOLERANCE, status=self.statuses[2]),
+        models.AutoReviewRule.objects.bulk_create([
+            models.AutoReviewRule(pass_fail=models.OK, status=self.statuses[1]),
+            models.AutoReviewRule(pass_fail=models.TOLERANCE, status=self.statuses[2]),
         ])
 
 

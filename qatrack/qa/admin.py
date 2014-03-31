@@ -460,7 +460,7 @@ class AutoReviewAdmin(admin.ModelAdmin):
 
 
 admin.site.register([models.Tolerance], ToleranceAdmin)
-admin.site.register([models.AutoReviewChoice], AutoReviewAdmin)
+admin.site.register([models.AutoReviewRule], AutoReviewAdmin)
 admin.site.register([models.Category], CategoryAdmin)
 admin.site.register([models.TestList], TestListAdmin)
 admin.site.register([models.Test], TestAdmin)
