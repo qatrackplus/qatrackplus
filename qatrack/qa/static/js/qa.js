@@ -192,6 +192,8 @@ function TestInstance(test_info, row){
     this.row = $(row);
     this.inputs = this.row.find("td.qa-value").find("input, textarea, select");
 
+    this.visible = true;
+
     this.status = this.row.find("td.qa-status");
     this.test_status = null;
 
@@ -338,6 +340,7 @@ function TestInstance(test_info, row){
         self.comment.hide();
         self.procedure.hide();
         self.set_skip(false);
+        self.visible = true;
         self.comment_box.val(self.comment_box.val().replace(self.NOT_PERFORMED,""));
     }
 
@@ -345,8 +348,14 @@ function TestInstance(test_info, row){
         self.row.hide();
         self.comment.hide();
         self.procedure.hide();
-        self.set_value(null);
+        self.visible = false;
+
+        // skipping sets value to null but we want to presever value in case it
+        // is unfiltered later. Filtered values will be nulled on submit
+        var tmp_val = self.value;
         self.set_skip(true);
+        self.set_value(tmp_val);
+
         self.comment_box.val(self.NOT_PERFORMED);
     }
 
@@ -487,11 +496,17 @@ function TestListInstance(){
             traditional:true,
             error:on_error
         });
-    }
+    };
+
+    this.clear_filtered_values = function(){
+        _.each(self.test_instances, function(ti){
+            if (!ti.visible){ti.set_value(null);}
+        });
+    };
 
     this.has_failing = function(){
         return _.filter(self.test_instances,function(ti){return ti.test_status === QAUtils.ACTION}).length > 0;
-    }
+    };
 
     $.Topic("categoryFilter").subscribe(function(categories){
         _.each(self.test_instances,function(ti){
@@ -622,7 +637,8 @@ $(document).ready(function(){
     });
 
     $("#qa-form").preventDoubleSubmit().submit(function(){
-        $(window).unbind("beforeunload")
+        $(window).unbind("beforeunload");
+        self.tli.clear_filtered_values();
     });
 
     $("#work-completed, #work-started").datepicker({
