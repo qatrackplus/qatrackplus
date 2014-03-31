@@ -1613,16 +1613,16 @@ class TestTestListInstance(TestCase):
             set(self.test_list_instance.unreviewed_instances()),
             set(models.TestInstance.objects.all())
         )
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def test_tolerance_tests(self):
         self.assertEqual(1, self.test_list_instance.tolerance_tests().count())
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def test_failing_tests(self):
         self.assertEqual(1, self.test_list_instance.tolerance_tests().count())
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def test_in_progress(self):
         self.test_list_instance.in_progress = True
         self.test_list_instance.save()
