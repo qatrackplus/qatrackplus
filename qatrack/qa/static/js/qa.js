@@ -498,12 +498,6 @@ function TestListInstance(){
         });
     };
 
-    this.clear_filtered_values = function(){
-        _.each(self.test_instances, function(ti){
-            if (!ti.visible){ti.set_value(null);}
-        });
-    };
-
     this.has_failing = function(){
         return _.filter(self.test_instances,function(ti){return ti.test_status === QAUtils.ACTION}).length > 0;
     };
@@ -638,7 +632,6 @@ $(document).ready(function(){
 
     $("#qa-form").preventDoubleSubmit().submit(function(){
         $(window).unbind("beforeunload");
-        self.tli.clear_filtered_values();
     });
 
     $("#work-completed, #work-started").datepicker({
