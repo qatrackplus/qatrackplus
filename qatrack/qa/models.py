@@ -868,8 +868,8 @@ class UnitTestCollection(models.Model):
         if not self.due_date:
             return NOT_DUE
 
-        today = timezone.now().date()
-        due = self.due_date.date()
+        today = timezone.localtime(timezone.now()).date()
+        due = timezone.localtime(self.due_date).date()
 
         if self.frequency is not None:
             overdue = due + timezone.timedelta(days=self.frequency.overdue_interval - self.frequency.due_interval)
