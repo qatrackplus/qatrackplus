@@ -282,7 +282,9 @@ class BaseTestListInstanceForm(forms.ModelForm):
             cleaned_data["work_completed"] = work_completed
 
         if work_started and work_completed:
-            if work_completed <= work_started:
+            if work_completed == work_started:
+                cleaned_data["work_started"] -= timezone.timedelta(minutes=1)
+            elif work_completed < work_started:
                 self._errors["work_started"] = self.error_class(["Work started date/time can not be after work completed date/time"])
                 del cleaned_data["work_started"]
 
@@ -291,6 +293,7 @@ class BaseTestListInstanceForm(forms.ModelForm):
                 self._errors["work_started"] = self.error_class(["Work started date/time can not be in the future"])
                 if "work_started" in cleaned_data:
                     del cleaned_data["work_started"]
+
         return cleaned_data
 
 
