@@ -7,7 +7,11 @@ from django.utils import unittest, timezone
 
 from qatrack.qa import models
 
+import mock
 import utils
+
+def utc_2am():
+    return timezone.make_aware(timezone.datetime(2014, 4, 2, 2), timezone.utc)
 
 
 #============================================================================
@@ -863,6 +867,29 @@ class TestUnitTestCollection(TestCase):
             utils.create_test_list_instance(unit_test_collection=utc, work_completed=wc)
             utc = models.UnitTestCollection.objects.get(pk=utc.pk)
             self.assertEqual(utc.due_status(), due_status)
+
+    #----------------------------------------------------------------------
+    @mock.patch('django.utils.timezone.now', mock.Mock(side_effect=utc_2am))
+    def test_date_straddle_due_status(self):
+        """
+        Ensure that due_status is correct when test list is due tomorrow
+        and current local time + UTC offset crosses midnight.
+        e.g. the situation where:
+            utc.due_date ==  2 April 2014 14:00 (UTC)
+            timezone.localtime(timezone.now()).date() == 1 April 2014
+            but
+            timezone.now().date() == 2 April 2014
+        """
+
+        with timezone.override("America/Toronto"):
+            today = timezone.localtime(utc_2am()).date()
+            utc_tomorrow = utc_2am().date()
+
+            weekly = utils.create_frequency(nom=7, due=7, overdue=9)
+            utc = utils.create_unit_test_collection(frequency=weekly)
+            utc.set_due_date(utc_2am()+timezone.timedelta(hours=12))
+            utc = models.UnitTestCollection.objects.get(pk=utc.pk)
+            self.assertEqual(utc.due_status(), models.NOT_DUE)
 
     #---------------------------------------------------------------------------
     def test_set_due_date(self):
