@@ -46,6 +46,29 @@ def process_procedure(procedure):
     return "\n".join(["from __future__ import division", procedure, "\n"]).replace('\r', '\n')
 
 
+#---------------------------------------------------------------------------
+def process_file_upload_form(ti_form, test_list_instance):
+    """
+    Check if test instance form is file upload and move the file out of
+    tmp directory if it is
+    """
+
+    upload_to_process = (
+        ti_form.unit_test_info.test.is_upload()
+        and not ti_form.cleaned_data["skipped"]
+        and ti_form.cleaned_data["string_value"].strip()
+    )
+
+    if upload_to_process:
+        fname = ti_form.cleaned_data["string_value"]
+        src = os.path.join(settings.TMP_UPLOAD_ROOT, fname)
+        d = os.path.join(settings.UPLOAD_ROOT, "%s" % test_list_instance.pk)
+        if not os.path.exists(d):
+            os.mkdir(d)
+        dest = os.path.join(settings.UPLOAD_ROOT, d, fname)
+        shutil.move(src, dest)
+
+
 #============================================================================
 class Upload(JSONResponseMixin, View):
     """View for handling AJAX upload requests when performing QA"""
@@ -501,14 +524,8 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         to_save = []
 
         for delta, ti_form in enumerate(formset):
-            if ti_form.unit_test_info.test.is_upload() and not ti_form.cleaned_data["skipped"]:
-                fname = ti_form.cleaned_data["string_value"]
-                src = os.path.join(settings.TMP_UPLOAD_ROOT, fname)
-                d = os.path.join(settings.UPLOAD_ROOT, "%s" % self.object.pk)
-                if not os.path.exists(d):
-                    os.mkdir(d)
-                dest = os.path.join(settings.UPLOAD_ROOT, d, fname)
-                shutil.move(src, dest)
+
+            process_file_upload_form(ti_form, self.object)
 
             now = self.object.created + timezone.timedelta(milliseconds=delta)
 
@@ -524,7 +541,6 @@ class PerformQA(PermissionRequiredMixin, CreateView):
                 created=now,
                 created_by=self.request.user,
                 modified_by=self.request.user,
-
                 in_progress=self.object.in_progress,
                 test_list_instance=self.object,
                 work_started=self.object.work_started,
@@ -660,6 +676,9 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
             self.update_test_list_instance()
 
             for ti_form in formset:
+
+                process_file_upload_form(ti_form, self.object)
+
                 ti = ti_form.save(commit=False)
                 self.update_test_instance(ti)
 
