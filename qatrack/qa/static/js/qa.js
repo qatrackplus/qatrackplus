@@ -311,6 +311,13 @@ function TestInstance(test_info, row){
     }
     this.update_status = function(){
         var status = _.isNull(self.value)? NOT_DONE : self.test_info.check_value(self.value);
+        if (self.test_info.test.type === QAUtils.UPLOAD){
+            if (status === DONE){
+                self.status.attr("title", self.value);
+            }else{
+                self.status.attr("title","");
+            }
+        }
         self.set_status(status);
     };
     this.set_status = function(status){
