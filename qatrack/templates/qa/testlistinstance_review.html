@@ -212,6 +212,26 @@
         </div>
         {% endif %}
     </form>
+
+    {# Code for displaying images under the test list #}
+    <div id="qa-images">
+        {% for ti_form in formset %}
+            {% with test=ti_form.instance.unit_test_info.test ti=ti_form.instance %}
+                {% if test.display_image %}
+                    {% if test_list_instance %}
+                        <div id="{{ test }}" class="qa-image-box">
+                            <strong><p>Test name: {{ test }}</p></strong>
+                            <img src="{{ ti.image_url }}" class="qa-image">
+                        </div>
+                    {% else %}
+                        <div id="{{ test }}"></div>
+                    {% endif %}
+                {% endif %}
+            {% endwith %}
+        {% endfor %}
+    </div>
+
+
 {% endblock %}
 
 {% block end_body_extra_script %}
