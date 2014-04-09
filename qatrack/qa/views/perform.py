@@ -3,6 +3,7 @@ import json
 import math
 import os
 import shutil
+import imghdr
 
 
 import dateutil
@@ -86,6 +87,7 @@ class Upload(JSONResponseMixin, View):
 
         results = {
             'temp_file_name': self.file_name,
+            'is_image': self.is_image(),
             'success': False,
             'errors': [],
             "result": None,
@@ -172,6 +174,15 @@ class Upload(JSONResponseMixin, View):
             return json.loads(json_string)
         except (KeyError, ValueError):
             return
+
+    #----------------------------------------------------------------------
+    def is_image(self):
+        """check if the uploaded file is an image"""
+
+        if imghdr.what(self.upload.name):
+            return True
+        else:
+            return False
 
 
 #============================================================================
