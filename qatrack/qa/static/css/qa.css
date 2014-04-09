@@ -549,4 +549,5 @@ a.text-success:focus {
     width: auto;
     height: auto;
     display: inline-block;
+    vertical-align: top;
 }
