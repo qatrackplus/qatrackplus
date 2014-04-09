@@ -391,6 +391,13 @@ function TestInstance(test_info, row){
                     self.set_value(data.result);
                     self.status.addClass("btn-success").text("Success");
                     self.status.attr("title",data.result['temp_file_name']);
+
+                    // Display Image if required
+                    if (data.result.is_image){
+                        var image_url = QAURLs.MEDIA_URL + "/uploads/tmp/" + data.result.temp_file_name;
+                        self.display_image(image_url);
+                     }
+
                     $.Topic("valueChanged").publish();
                 }
             },
@@ -409,7 +416,17 @@ function TestInstance(test_info, row){
     });
     //Set initial value
     this.update_value_from_input();
-
+    // Display images
+    self.display_image = function(url){
+        var id = self.test_info.test.name;
+        var test_name = '<strong><p>Test name: '+ id + '</p></strong>';
+        var img_tag =  '<img src="'+ url+ '" class="qa-image">';
+        var html = test_name + img_tag;
+        if (self.test_info.test.display_image){
+          $("#qa-images").css({"display": "block"});
+          $("#" + id).addClass("qa-image-box").html(html);
+        }
+    };
 }
 
 function get_meta_data(){
