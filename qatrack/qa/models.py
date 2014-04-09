@@ -1192,6 +1192,13 @@ class TestInstance(models.Model):
         return '<a href="%s" title="%s">%s</a>' % (url, self.string_value, self.string_value)
 
     #----------------------------------------------------------------------
+    def image_url(self):
+        if not self.unit_test_info.test.is_upload() or not self.unit_test_info.test.display_image:
+            return None
+        url = "%s%d/%s" % (settings.UPLOADS_URL, self.test_list_instance.pk, self.string_value)
+        return url
+
+    #----------------------------------------------------------------------
     def __unicode__(self):
         """return display representation of object"""
         return "TestInstance(pk=%s)" % self.pk
