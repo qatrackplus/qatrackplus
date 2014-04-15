@@ -1,5 +1,15 @@
 # QATrack+ Release Notes #
 
+## v0.2.8 ##
+
+**Note: this release introduces some database schema changes.  It is a good idea to BACK UP
+YOUR DATABASE BEFORE ATTEMPTING THIS UPGRADE**
+
+* New permission *can review own tests*  (enabled by default for anyone with review permissions)
+* ability to embed uploaded images
+* new icons for tolerance & action levels
+
+
 ## v0.2.7 ##
 
 **Note: this release introduces some database schema changes.  It is a good idea to BACK UP
