@@ -462,6 +462,7 @@ class Test(models.Model):
         help_text=_("Indicate if this test is a %s" % (','.join(x[1].title() for x in TEST_TYPE_CHOICES)))
     )
 
+    display_image = models.BooleanField("Display image", help_text=_("Image uploads only: Show uploaded images under the testlist"))
     choices = models.CharField(max_length=2048, help_text=_("Comma seperated list of choices for multiple choice test types"), null=True, blank=True)
     constant_value = models.FloatField(help_text=_("Only required for constant value types"), null=True, blank=True)
 
@@ -1189,6 +1190,13 @@ class TestInstance(models.Model):
             return None
         url = "%s%d/%s" % (settings.UPLOADS_URL, self.test_list_instance.pk, self.string_value)
         return '<a href="%s" title="%s">%s</a>' % (url, self.string_value, self.string_value)
+
+    #----------------------------------------------------------------------
+    def image_url(self):
+        if not self.unit_test_info.test.is_upload() or not self.unit_test_info.test.display_image:
+            return None
+        url = "%s%d/%s" % (settings.UPLOADS_URL, self.test_list_instance.pk, self.string_value)
+        return url
 
     #----------------------------------------------------------------------
     def __unicode__(self):

@@ -1465,6 +1465,12 @@ class TestTestInstance(TestCase):
         self.assertEqual(ti.upload_url(), None)
 
     #----------------------------------------------------------------------
+    def test_image_url_none(self):
+        ti = utils.create_test_instance()
+
+        self.assertEqual(ti.image_url(), None)
+
+    #----------------------------------------------------------------------
     def test_upload_value_display(self):
         utc = utils.create_unit_test_collection()
         t = utils.create_test(test_type=models.UPLOAD)

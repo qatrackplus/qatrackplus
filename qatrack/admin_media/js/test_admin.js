@@ -8,18 +8,23 @@ function toggle_test_type(){
 
     if (val == "constant"){
         $(".field-constant_value").show();
-        $(".field-calculation_procedure, .field-choices").hide();
+        $(".field-calculation_procedure, .field-choices, .field-display_image").hide();
 
-    }else if (val == "composite" || val === "upload" || val === "scomposite" ){
+    }else if (val == "composite" || val === "scomposite" ){
         $(".field-calculation_procedure").show();
         $(".field-constant_value, .field-choices").hide();
+
+    }else if (val === "upload"){
+        $(".field-calculation_procedure, .field-display_image").show();
+        $(".field-constant_value, .field-choices").hide();
+
     }else if (val == "multchoice"){
         $(".field-choices").show();
-        $(".field-constant_value, .field-calculation_procedure").hide();
+        $(".field-constant_value, .field-calculation_procedure, .field-display_image").hide();
 
     }else{
         $(".field-calculation_procedure").hide();
-        $(".field-constant_value, .field-choices").hide();
+        $(".field-constant_value, .field-choices, .field-display_image").hide();
     }
 }
 
