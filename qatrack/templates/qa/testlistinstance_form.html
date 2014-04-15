@@ -150,7 +150,7 @@
                     </div>
                 {% endif %}
 
-                {% if perms.qa.can_review %}
+                {% if perms.qa.can_review and perms.qa.can_review_own_tests %}
                     <div class="input-prepend input-append" id="status">
                         <label for="id_status" class="add-on">
                             Set Status:
