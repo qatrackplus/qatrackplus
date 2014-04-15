@@ -3,8 +3,8 @@
 
     {% if status.requires_review %}
         <i class="icon-question-sign"></i>
-    {% else %}
-        <i class="icon-ok-sign "></i>
+    {% elif not status.valid %}
+        <i class="icon-minus-sign"></i>
     {% endif %}
     {{status.count}} {{display}}
 </span>
