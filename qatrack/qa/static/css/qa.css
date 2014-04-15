@@ -73,6 +73,7 @@ ul.nav li.dropdown:hover ul.dropdown-menu{
     margin: 1px;
 }
 
+
 tr.qa-comment {
     height:50px;
     display:none;
@@ -102,15 +103,21 @@ tr.qa-comment td textarea{
 }
 
 .qa-showcmt{
-    width: 80px;
+    width: 70px;
     overflow:hidden;
 }
 .qa-status{
     width:70px;
     overflow-x:hidden;
 }
+
+.qa-status > i {
+    margin-top:3px;
+    margin-left:1px;
+}
+
 .qa-skip {
-    width:40px;
+    width:34px;
 }
 .qa-reference {
     width:70px;
@@ -171,9 +178,16 @@ input[type=radio].qa-input{
     width:100px;
     text-align:center;
 }
+
+.qa-table td.qa-status{
+    width:100px;
+}
 .qa-category{
     width:180px;
     min-width: 180px;
+}
+th.tli-actions {
+    width:95px;
 }
 th.qa-category div{
 /* hack to fix IE7 min-width*/
@@ -214,6 +228,9 @@ th.qa-history div{
     white-space: nowrap;
     overflow:hidden;
     padding: 1px 1px 2px;
+}
+.history-value > i, .pass-fail > i {
+    margin-top:2px;
 }
 
 .history-label {
