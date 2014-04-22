@@ -41,22 +41,22 @@ class Migration(SchemaMigration):
     def backwards(self, orm):
 
         # Changing field 'Category.slug'
-        db.alter_column('qa_category', 'slug', self.gf('django.db.models.fields.SlugField')(max_length=256, unique=True))
+        db.alter_column('qa_category', 'slug', self.gf('django.db.models.fields.SlugField')(max_length=255, unique=True))
 
         # Changing field 'Category.name'
-        db.alter_column('qa_category', 'name', self.gf('django.db.models.fields.CharField')(max_length=256, unique=True))
+        db.alter_column('qa_category', 'name', self.gf('django.db.models.fields.CharField')(max_length=255, unique=True))
 
         # Changing field 'Reference.name'
-        db.alter_column('qa_reference', 'name', self.gf('django.db.models.fields.CharField')(max_length=256))
+        db.alter_column('qa_reference', 'name', self.gf('django.db.models.fields.CharField')(max_length=255))
 
         # Changing field 'Test.name'
-        db.alter_column('qa_test', 'name', self.gf('django.db.models.fields.CharField')(max_length=256, unique=True))
+        db.alter_column('qa_test', 'name', self.gf('django.db.models.fields.CharField')(max_length=255, unique=True))
 
         # Changing field 'TestList.name'
-        db.alter_column('qa_testlist', 'name', self.gf('django.db.models.fields.CharField')(max_length=256))
+        db.alter_column('qa_testlist', 'name', self.gf('django.db.models.fields.CharField')(max_length=255))
 
         # Changing field 'TestListCycle.name'
-        db.alter_column('qa_testlistcycle', 'name', self.gf('django.db.models.fields.CharField')(max_length=256))
+        db.alter_column('qa_testlistcycle', 'name', self.gf('django.db.models.fields.CharField')(max_length=255))
 
     models = {
         'auth.group': {
@@ -275,11 +275,11 @@ class Migration(SchemaMigration):
             'Meta': {'ordering': "['number']", 'object_name': 'Unit'},
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'install_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
-            'location': ('django.db.models.fields.CharField', [], {'max_length': '256', 'null': 'True', 'blank': 'True'}),
+            'location': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
             'modalities': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['units.Modality']", 'symmetrical': 'False'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '256'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
             'number': ('django.db.models.fields.PositiveIntegerField', [], {'unique': 'True'}),
-            'serial_number': ('django.db.models.fields.CharField', [], {'max_length': '256', 'null': 'True', 'blank': 'True'}),
+            'serial_number': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
             'type': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['units.UnitType']"})
         },
         'units.unittype': {
