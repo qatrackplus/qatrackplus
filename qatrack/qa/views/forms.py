@@ -4,10 +4,13 @@ from django.forms.models import inlineformset_factory
 from django.forms.widgets import RadioSelect, Select, HiddenInput
 from django.utils import timezone
 from django.utils.translation import ugettext as _
+from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
 
 from django.conf import settings
 
 from .. import models
+
 
 from qatrack.qa import utils
 
@@ -334,3 +337,40 @@ class ReviewTestListInstanceForm(forms.ModelForm):
     class Meta:
         model = models.TestListInstance
         fields = ()
+
+
+#============================================================================
+class SetReferencesAndTolerancesForm(forms.Form):
+    """Form for copying references and tolerances from TestList Unit 'x' to TestList Unit 'y' """
+    source_unit = forms.ModelChoiceField(queryset=models.Unit.objects.all())
+    content_type = forms.ChoiceField((('0', '---------'), ('testlist', 'testlist'), ('testlistcycle', 'testlistcycle')))
+
+    # Populate the testlist field
+    testlistquery = models.TestList.objects.all().values_list('name', flat=True)
+    testlistcyclequery = models.TestListCycle.objects.all().values_list('name', flat=True)
+    testlistchoices = [(name, name) for name in testlistquery]
+    testlistcyclechoices = [(name, name) for name in testlistcyclequery]
+    choices = testlistchoices + testlistcyclechoices
+    testlist = forms.ChoiceField(choices, label='Testlist(cycle)')
+
+    # Populate the dest_unit field
+    unitquery = models.Unit.objects.all().values_list('name', flat=True)
+    unit_choices = [(name, name) for name in unitquery]
+    dest_unit = forms.ChoiceField(unit_choices, label='Destination unit')
+
+    def save(self):
+        source_unit = self.cleaned_data.get("source_unit")
+        dest_unit = models.Unit.objects.get(name=self.cleaned_data.get("dest_unit"))
+        testlist = self.cleaned_data.get("testlist")
+        ctype = ContentType.objects.get(model=self.cleaned_data.get("content_type"))
+
+        if self.cleaned_data.get("content_type") == 'testlist':
+            tl = models.TestList.objects.get(name=testlist)
+        elif self.cleaned_data.get("content_type") == 'testlistcycle':
+            tl = models.TestListCycle.objects.get(name=testlist)
+        else:
+            raise ValidationError(_('Invalid value'), code='invalid')
+
+        utc = models.UnitTestCollection.objects.get(unit=dest_unit, object_id=tl.pk,
+                                                    content_type=ctype)
+        utc.copy_references(source_unit)
