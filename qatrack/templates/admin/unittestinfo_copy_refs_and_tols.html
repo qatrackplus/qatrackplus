@@ -1,0 +1,22 @@
+{% extends "admin/base_site.html" %}
+{% load staticfiles %}
+
+{% block content %}
+<form action="." method="post">{% csrf_token %}
+    {{ form.as_p }}
+<input type="submit" value="Copy refences and tolerances" />
+</form>
+
+<script type="text/javascript">
+{#    TODO: Change urls to named urls #}
+    var ADMINURLs = {
+        GETTESTLIST:"/qa/admin/copy_refs_and_tols/gettestlists/",
+        GETDESTUNIT:"/qa/admin/copy_refs_and_tols/getdestunit/"
+    }
+</script>
+
+{# TODO: Use same jquery as for the rest of the project #}
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script language="JavaScript" type="text/javascript" src="{% static "js/unittestinfo_admin.js" %}?v={{VERSION}}"></script>
+{% endblock %}
+
