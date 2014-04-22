@@ -215,7 +215,7 @@ INSTALLED_APPS = [
     'qatrack.contacts',
 
     'south',
-
+    'admin_views',
 ]
 #-----------------------------------------------------------------------------
 # Session Settings
