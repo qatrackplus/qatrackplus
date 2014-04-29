@@ -338,6 +338,19 @@ class ReviewTestListInstanceForm(forms.ModelForm):
         model = models.TestListInstance
         fields = ()
 
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop("user")
+        super(ReviewTestListInstanceForm, self).__init__(*args, **kwargs)
+
+    def clean(self):
+
+        cleaned_data = super(ReviewTestListInstanceForm, self).clean()
+
+        if self.instance.created_by == self.user and not self.user.has_perm('qa.can_review_own_tests'):
+            raise ValidationError("You do not have the required permission to review your own tests.")
+        return cleaned_data
+
+
 
 #============================================================================
 class SetReferencesAndTolerancesForm(forms.Form):
