@@ -24,9 +24,9 @@ $(document).ready(function() {
                 function(data) {
                     var dropdown = $("select[name='testlist']");
                     $("select[name='testlist'] > option").remove();
-                    dropdown.append("<option selected='selected'>---------</option>");
-                    $.each(data, function() {
-                        dropdown.append($("<option />").text(this));
+                    dropdown.append("<option value selected='selected'>---------</option>");
+                    $.each(data, function(idx, option) {
+                        dropdown.append($('<option value="'+option[0]+'"/>').text(option[1]));
                     });
             });
         }
@@ -48,8 +48,8 @@ $(document).ready(function() {
                 function(data) {
                     var dropdown = $("select[name='dest_unit']");
                     $("select[name='dest_unit'] > option").remove();
-                    $.each(data, function() {
-                        dropdown.append($("<option />").text(this));
+                    $.each(data, function(idx, option) {
+                        dropdown.append($('<option value="'+option[0]+'"/>').text(option[1]));
                     });
             });
         }
@@ -57,7 +57,7 @@ $(document).ready(function() {
 
     $("select[name='source_unit']").change(function() {
         $( "select[name='source_unit'] option:selected" ).each(function() {
-            source_unit = $( this ).text();
+            source_unit = $( this ).val();
             getTestLists();
         });
 
@@ -65,14 +65,14 @@ $(document).ready(function() {
 
     $("select[name='content_type']").change(function() {
         $( "select[name='content_type'] option:selected" ).each(function() {
-            content_type = $( this ).text();
+            content_type = $( this ).val();
             getTestLists();
         });
     });
 
     $("select[name='testlist']").change(function() {
         $( "select[name='testlist'] option:selected" ).each(function() {
-            testlist = $( this ).text();
+            testlist = $( this ).val();
             getDestUnit();
         });
     });

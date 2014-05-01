@@ -355,25 +355,23 @@ class ReviewTestListInstanceForm(forms.ModelForm):
 #============================================================================
 class SetReferencesAndTolerancesForm(forms.Form):
     """Form for copying references and tolerances from TestList Unit 'x' to TestList Unit 'y' """
+
     source_unit = forms.ModelChoiceField(queryset=models.Unit.objects.all())
-    content_type = forms.ChoiceField((('0', '---------'), ('testlist', 'testlist'), ('testlistcycle', 'testlistcycle')))
+    content_type = forms.ChoiceField((('', '---------'), ('testlist', 'TestList'), ('testlistcycle', 'TestListCycle')))
 
     # Populate the testlist field
-    testlistquery = models.TestList.objects.all().values_list('name', flat=True)
-    testlistcyclequery = models.TestListCycle.objects.all().values_list('name', flat=True)
-    testlistchoices = [(name, name) for name in testlistquery]
-    testlistcyclechoices = [(name, name) for name in testlistcyclequery]
-    choices = testlistchoices + testlistcyclechoices
+    testlistchoices = models.TestList.objects.all().order_by("name").values_list("pk", 'name')
+    testlistcyclechoices = models.TestListCycle.objects.all().order_by("name").values_list("pk", 'name')
+    choices = list(testlistchoices) + list(testlistcyclechoices)
     testlist = forms.ChoiceField(choices, label='Testlist(cycle)')
 
     # Populate the dest_unit field
-    unitquery = models.Unit.objects.all().values_list('name', flat=True)
-    unit_choices = [(name, name) for name in unitquery]
+    unit_choices = models.Unit.objects.all().values_list('pk', 'name')
     dest_unit = forms.ChoiceField(unit_choices, label='Destination unit')
 
     def save(self):
         source_unit = self.cleaned_data.get("source_unit")
-        dest_unit = models.Unit.objects.get(name=self.cleaned_data.get("dest_unit"))
+        dest_unit = models.Unit.objects.get(pk=self.cleaned_data.get("dest_unit"))
         testlist = self.cleaned_data.get("testlist")
         ctype = ContentType.objects.get(model=self.cleaned_data.get("content_type"))
 
