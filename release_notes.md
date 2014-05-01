@@ -8,6 +8,10 @@ YOUR DATABASE BEFORE ATTEMPTING THIS UPGRADE**
 * New permission *can review own tests*  (enabled by default for anyone with review permissions)
 * ability to embed uploaded images
 * new icons for tolerance & action levels
+* A new site specific css file has been added (qatrack/qa/static/css/site.css) to
+  allow you to override any default stylings you like.  You can either create the file manually
+  or it will be created the first time qatrack/settings.py is imported (e.g. when doing a manage.py
+    syncdb, migrate or runserver).
 
 
 ## v0.2.7 ##
