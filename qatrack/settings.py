@@ -131,6 +131,12 @@ STATICFILES_FINDERS = (
     #    'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
+# add a site specific css file if one doesn't already exist
+SITE_SPECIFIC_CSS_PATH = os.path.join(PROJECT_ROOT, "qa", "static", "css", "site.css")
+if not os.path.isfile(SITE_SPECIFIC_CSS_PATH):
+    with open(SITE_SPECIFIC_CSS_PATH, 'w') as f:
+        f.write("/* You can place any site specific css in this file*/\n")
+
 
 #------------------------------------------------------------------------------
 # Middleware

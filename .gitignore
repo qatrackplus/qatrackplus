@@ -21,6 +21,7 @@ fixtures/dev
 questions_*
 qatrack/static
 qatrack/media/uploads
+qatrack/qa/static/css/site.css
 ldap.debug
 *.pyproj
 *.suo
