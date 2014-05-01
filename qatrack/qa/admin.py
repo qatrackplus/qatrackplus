@@ -42,7 +42,6 @@ class CategoryAdmin(admin.ModelAdmin):
 
 
 #============================================================================
-
 class TestInfoForm(forms.ModelForm):
 
     reference_value = forms.FloatField(label=_("New reference value"), required=False,)
@@ -113,9 +112,9 @@ def test_type(obj):
         if obj.test.type == tt:
             return display
 test_type.admin_order_field = "test__type"
+
+
 #============================================================================
-
-
 class UnitTestInfoAdmin(admin.ModelAdmin):
 
     form = TestInfoForm
@@ -306,7 +305,7 @@ class TestListMembershipInline(admin.TabularInline):
 class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
 
     prepopulated_fields = {'slug': ('name',)}
-    list_display = ("name", "modified", "modified_by",)
+    list_display = ("name", "slug", "modified", "modified_by",)
     search_fields = ("name", "description", "slug",)
     filter_horizontal = ("tests", "sublists", )
 
@@ -318,7 +317,6 @@ class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
         js = (
             settings.STATIC_URL + "js/jquery-1.7.1.min.js",
             settings.STATIC_URL + "js/jquery-ui.min.js",
-            # settings.STATIC_URL+"js/collapsed_stacked_inlines.js",
             settings.STATIC_URL + "js/m2m_drag_admin.js",
         )
 
