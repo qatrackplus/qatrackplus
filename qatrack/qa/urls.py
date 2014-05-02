@@ -32,7 +32,7 @@ urlpatterns = patterns('',
     # CUSTOM ADMIN PAGES
     # Copy references and tolerances between
     url(r'^admin/copy_refs_and_tols/$',
-        admin.ConfirmCopyRefTols(forms.SetReferencesAndTolerancesForm), name="qa_copy_refs_and_tols"),
+        admin.SetReferencesAndTolerances(forms.SetReferencesAndTolerancesForm), name="qa_copy_refs_and_tols"),
     url(r'^admin/copy_refs_and_tols/gettestlists/(?P<source_unit>[:|\w]+)/(?P<content_type>[:|\w]+)/$',
         'qatrack.qa.views.admin.testlist_json', name='qa_copy_refs_and_tols_testlist_json'),
     url(r'^admin/copy_refs_and_tols/getdestunit/(?P<source_unit>[:|\w]+)/(?P<content_type>[:|\w]+)/(?P<testlist>[:|\w]+)$',

@@ -14,19 +14,7 @@ from qatrack.units.models import Unit
 from qatrack.qa.models import UnitTestCollection, TestList, TestListCycle, UnitTestInfo
 
 
-class SetReferencesAndTolerances(FormView):
-    template_name = 'admin/unittestinfo_copy_refs_and_tols.html'
-    form_class = forms.SetReferencesAndTolerancesForm
-
-    def get_success_url(self):
-        return reverse_lazy('qa_copy_refs_and_tols')
-
-    def form_valid(self, form):
-        form.save()
-        return super(SetReferencesAndTolerances, self).form_valid(form)
-
-
-class ConfirmCopyRefTols(FormPreview):
+class SetReferencesAndTolerances(FormPreview):
 
     form_template = 'admin/unittestinfo_copy_refs_and_tols.html'
     preview_template = 'admin/unittestinfo_copy_refs_and_tols_preview.html'
