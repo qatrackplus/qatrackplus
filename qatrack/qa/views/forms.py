@@ -374,6 +374,8 @@ class SetReferencesAndTolerancesForm(forms.Form):
         dest_unit = models.Unit.objects.get(pk=self.cleaned_data.get("dest_unit"))
         testlist = self.cleaned_data.get("testlist")
         ctype = ContentType.objects.get(model=self.cleaned_data.get("content_type"))
+        import ipdb; ipdb.set_trace()
+
 
         if self.cleaned_data.get("content_type") == 'testlist':
             tl = models.TestList.objects.get(name=testlist)
