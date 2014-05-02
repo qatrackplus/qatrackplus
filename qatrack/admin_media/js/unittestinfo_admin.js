@@ -1,80 +1,70 @@
 "use strict";
 
+var content_type = $("select[name='content_type']");
+var source_unit = $("select[name='source_unit']");
+var dest_unit = $("select[name='dest_unit']");
+var testlist = $("select[name='testlist']");
+
+
+function getTestLists() {
+
+    dest_unit.find("option").remove();
+    testlist.find("option").remove();
+
+    if (content_type.val() && source_unit.val()) {
+
+        var testListUrl= ADMINURLs.GETTESTLIST.replace(
+            ":source_unit:", source_unit.val()
+        ).replace(
+            ":content_type:", content_type.val()
+        );
+
+        $.getJSON(testListUrl,
+            function(data) {
+                testlist.find("option").remove();
+                testlist.append("<option value selected='selected'>---------</option>");
+                $.each(data, function(idx, option) {
+                    testlist.append($('<option value="'+option[0]+'"/>').text(option[1]));
+                });
+        });
+    }
+}
+
+function getDestUnit() {
+
+    if (content_type.val() && source_unit.val() && testlist.val()) {
+
+        var getDestUnitUrl = ADMINURLs.GETDESTUNIT.replace(
+            ":source_unit:", source_unit.val()
+        ).replace(
+            ":content_type:", content_type.val()
+        ).replace(
+            ":testlist:", testlist.val()
+        );
+
+        $.getJSON(getDestUnitUrl,
+            function(data) {
+                dest_unit.find("option").remove();
+                $.each(data, function(idx, option) {
+                    dest_unit.append($('<option value="'+option[0]+'"/>').text(option[1]));
+                });
+        });
+    }
+}
+
 $(document).ready(function() {
 
-    $("select[name='dest_unit'] > option").remove();
-    $("select[name='testlist'] > option").remove();
+    // prevent clearning users selection if they hit back button or
+    // form is invalid when submitted
+    if (!dest_unit.val()){
+        dest_unit.find("option").remove();
+    }
+    if (!testlist.val()){
+        testlist.find("option").remove();
+    }
 
-    var content_type, source_unit, testlist;
-
-    var getTestLists = function() {
-
-        $("select[name='dest_unit'] > option").remove();
-        $("select[name='testlist'] > option").remove();
-
-        if (content_type && source_unit) {
-
-            var testListUrl= ADMINURLs.GETTESTLIST.replace(
-                ":source_unit:", source_unit
-            ).replace(
-                ":content_type:", content_type
-            );
-
-            $.getJSON(testListUrl,
-                function(data) {
-                    var dropdown = $("select[name='testlist']");
-                    $("select[name='testlist'] > option").remove();
-                    dropdown.append("<option value selected='selected'>---------</option>");
-                    $.each(data, function(idx, option) {
-                        dropdown.append($('<option value="'+option[0]+'"/>').text(option[1]));
-                    });
-            });
-        }
-    };
-
-    var getDestUnit = function() {
-
-        if (content_type && source_unit) {
-
-            var getDestUnitUrl = ADMINURLs.GETDESTUNIT.replace(
-                ":source_unit:", source_unit
-            ).replace(
-                ":content_type:", content_type
-            ).replace(
-                ":testlist:", testlist
-            );
-
-            $.getJSON(getDestUnitUrl,
-                function(data) {
-                    var dropdown = $("select[name='dest_unit']");
-                    $("select[name='dest_unit'] > option").remove();
-                    $.each(data, function(idx, option) {
-                        dropdown.append($('<option value="'+option[0]+'"/>').text(option[1]));
-                    });
-            });
-        }
-    };
-
-    $("select[name='source_unit']").change(function() {
-        $( "select[name='source_unit'] option:selected" ).each(function() {
-            source_unit = $( this ).val();
-            getTestLists();
-        });
-
-    });
-
-    $("select[name='content_type']").change(function() {
-        $( "select[name='content_type'] option:selected" ).each(function() {
-            content_type = $( this ).val();
-            getTestLists();
-        });
-    });
-
-    $("select[name='testlist']").change(function() {
-        $( "select[name='testlist'] option:selected" ).each(function() {
-            testlist = $( this ).val();
-            getDestUnit();
-        });
-    });
+    source_unit.change(getTestLists);
+    content_type.change(getTestLists);
+    testlist.change(getDestUnit);
 
 });

@@ -362,11 +362,11 @@ class SetReferencesAndTolerancesForm(forms.Form):
     # Populate the testlist field
     testlistchoices = models.TestList.objects.all().order_by("name").values_list("pk", 'name')
     testlistcyclechoices = models.TestListCycle.objects.all().order_by("name").values_list("pk", 'name')
-    choices = list(testlistchoices) + list(testlistcyclechoices)
+    choices = [('', '---------')] +list(testlistchoices) + list(testlistcyclechoices)
     testlist = forms.ChoiceField(choices, label='Testlist(cycle)')
 
     # Populate the dest_unit field
-    unit_choices = models.Unit.objects.all().values_list('pk', 'name')
+    unit_choices = [('', '---------')] + list(models.Unit.objects.all().values_list('pk', 'name'))
     dest_unit = forms.ChoiceField(unit_choices, label='Destination unit')
 
     def save(self):
