@@ -224,6 +224,19 @@ INSTALLED_APPS = [
 
 ]
 #-----------------------------------------------------------------------------
+# Cache settings
+
+CACHE_UNREVIEWED_COUNT = 'unreviewed-count'
+CACHE_QA_FREQUENCIES = 'qa-frequencies'
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'qatrack-cache'
+    }
+}
+
+#-----------------------------------------------------------------------------
 # Session Settings
 SESSION_COOKIE_AGE = 14 * 24 * 60 * 60
 
