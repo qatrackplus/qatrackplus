@@ -1,7 +1,15 @@
 from django.core.cache import cache
 from django.conf import settings
 from django.contrib.sites.models import Site
+from django.dispatch import receiver
 from qatrack.qa.models import Frequency, TestListInstance
+from qatrack.qa.signals import testlist_complete
+
+@receiver(testlist_complete)
+def update_qa_cache(*args, **kwargs):
+    """When a test list is completed invalidate the unreviewed count"""
+    cache.delete(settings.CACHE_UNREVIEWED_COUNT)
+    print "elted"
 
 
 def site(request):
