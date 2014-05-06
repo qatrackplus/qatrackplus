@@ -2,6 +2,9 @@
 {% load staticfiles %}
 
 {% block content %}
+<h1>Copy Reference &amp; Tolerances </h1>
+<p>Select the source unit and test list (or test list cycle) and destination units.</p>
+
 <form action="." method="post">{% csrf_token %}
     {{ form.as_p }}
     <input type="submit" value="Copy references and tolerances" />
