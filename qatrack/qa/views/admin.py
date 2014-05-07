@@ -21,7 +21,7 @@ class SetReferencesAndTolerances(FormPreview):
 
     def get_context(self, request, form):
 
-        context = super(ConfirmCopyRefTols, self).get_context(request, form)
+        context = super(SetReferencesAndTolerances, self).get_context(request, form)
         if not request.POST:
             return context
 
