@@ -212,6 +212,7 @@ INSTALLED_APPS = [
     'genericdropdown',
     'django_coverage',
 
+    'qatrack.cache',
     'qatrack.accounts',
     'qatrack.units',
     'qatrack.qa',
@@ -228,11 +229,16 @@ INSTALLED_APPS = [
 
 CACHE_UNREVIEWED_COUNT = 'unreviewed-count'
 CACHE_QA_FREQUENCIES = 'qa-frequencies'
+MAX_CACHE_TIMEOUT =  24*60*60*365
+
+CACHE_LOCATION = os.path.join(PROJECT_ROOT, "cache", "cache_data")
+if not os.path.isdir(CACHE_LOCATION):
+    os.mkdir(CACHE_LOCATION)
 
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'qatrack-cache'
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': CACHE_LOCATION,
     }
 }
 

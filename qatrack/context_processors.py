@@ -30,6 +30,7 @@ def site(request):
         'VERSION': settings.VERSION,
         'BUG_REPORT_URL': settings.BUG_REPORT_URL,
         'FEATURE_REQUEST_URL': settings.FEATURE_REQUEST_URL,
+        'MAX_CACHE_TIMEOUT': settings.MAX_CACHE_TIMEOUT,
 
         # forcing list cuts down number of queries on some pages
         'QA_FREQUENCIES': qa_frequencies,

@@ -1,19 +1,23 @@
 {% extends "site_base.html" %}
 {% load staticfiles %}
+{% load cache %}
 
 {% block head_title %}Choose Unit{% endblock %}
 
 {% block body %}
-<div class="row-fluid">
-    <div class="span12">
-        <h2>Choose a Unit to Perform QA On</h3>
+
+    {% cache 500 choose_unit perms.qa.can_choose_frequency %}
+
+    <div class="row-fluid">
+        <div class="span12">
+            <h2>Choose a Unit to Perform QA On</h3>
+        </div>
     </div>
-</div>
-<div class="row-fluid">
-    <div class="span12">
-        Click a button to perform QA for one of the units below.
+    <div class="row-fluid">
+        <div class="span12">
+            Click a button to perform QA for one of the units below.
+        </div>
     </div>
-</div>
 
     {% for unit_type, units in unit_types%}
 
@@ -55,6 +59,8 @@
             window.location = $(this).find("a").first().attr("href");
         });
     </script>
+
+    {% endcache %}
 
 {% endblock %}
 

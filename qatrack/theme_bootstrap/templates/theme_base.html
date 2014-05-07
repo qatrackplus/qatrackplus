@@ -1,4 +1,5 @@
 {% load staticfiles %}
+{% load cache %}
 <!DOCTYPE html>
 <html lang="{{ LANGUAGE_CODE }}">
     <head>
@@ -77,6 +78,7 @@
             </div>
         {% endblock %}
 
+        {% cache MAX_CACHE_TIMEOUT footer_bse %}
         {% block footer_base %}
             <div id="footer">
                 <div class="inner">
@@ -86,6 +88,7 @@
                 </div>
             </div>
         {% endblock %}
+        {% endcache %}
 
         {% block extra_body_base %}
             {% block extra_body %}{% endblock %}
