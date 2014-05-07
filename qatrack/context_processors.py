@@ -9,7 +9,6 @@ from qatrack.qa.signals import testlist_complete
 def update_qa_cache(*args, **kwargs):
     """When a test list is completed invalidate the unreviewed count"""
     cache.delete(settings.CACHE_UNREVIEWED_COUNT)
-    print "elted"
 
 
 def site(request):
