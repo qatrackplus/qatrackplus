@@ -68,12 +68,12 @@ class ActiveDirectoryGroupMembershipSSLBackend:
                 # search
                 if debug:
                     print >>debug, "\tsearch..."
-                result = l.search_ext_s(settings.AD_SEARCH_DN, ldap.SCOPE_SUBTREE, "sAMAccountName=%s" % username, settings.AD_SEARCH_FIELDS)[0][1]
+                result = l.search_ext_s(settings.AD_SEARCH_DN, ldap.SCOPE_SUBTREE, "%s=%s" % (settings.AD_LU_ACCOUNT_NAME, username), settings.AD_SEARCH_FIELDS)[0][1]
 
                 # get personal info
-                mail = result.get("mail", ["mail@example.com"])[0]
-                last_name = result.get("sn", [username])[0]
-                first_name = result.get("givenName", [username])[0]
+                mail = result.get(settings.AD_LU_MAIL, ["mail@example.com"])[0]
+                last_name = result.get(settings.AD_SURNAME, [username])[0]
+                first_name = result.get(settings.AD_LU_GIVEN_NAME, [username])[0]
 
                 l.unbind_s()
 
@@ -99,7 +99,7 @@ class ActiveDirectoryGroupMembershipSSLBackend:
             return User.objects.get(pk=user_id)
         except User.DoesNotExist:
             return None
-        
+
 
 class WindowsIntegratedAuthenticationBackend(ModelBackend):
 
@@ -159,13 +159,13 @@ class WindowsIntegratedAuthenticationBackend(ModelBackend):
             l.bind_s(binddn,settings.AD_LDAP_PW)
 
             # search
-            result = l.search_ext_s(settings.AD_SEARCH_DN,ldap.SCOPE_SUBTREE,"sAMAccountName=%s" % user,settings.AD_SEARCH_FIELDS)[0][1]
+            result = l.search_ext_s(settings.AD_SEARCH_DN,ldap.SCOPE_SUBTREE,"%s=%s" % (settings.AD_LU_ACCOUNT_NAME, user),settings.AD_SEARCH_FIELDS)[0][1]
             l.unbind_s()
 
             # get personal info
-            user.email = result.get("mail",[None])[0]
-            user.last_name = result.get("sn",[None])[0]
-            user.first_name = result.get("givenName",[None])[0]
+            user.email = result.get(settings.AD_LU_MAIL, [None])[0]
+            user.last_name = result.get(settings.AD_LU_SURNAME, [None])[0]
+            user.first_name = result.get(settings.AD_LU_GIVEN_NAME,[None])[0]
 
         except Exception:
             return None

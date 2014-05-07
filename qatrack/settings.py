@@ -254,7 +254,7 @@ DEFAULT_GROUP_NAMES = []  # eg ["Therapists"]
 # Authentication backend settings
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
-    #'qatrack.accounts.backends.ActiveDirectoryGroupMembershipSSLBackend',
+    'qatrack.accounts.backends.ActiveDirectoryGroupMembershipSSLBackend',
     #'qatrack.accounts.backends.WindowsIntegratedAuthenticationBackend',
 )
 
@@ -266,6 +266,11 @@ AD_LDAP_PORT = 389
 AD_LDAP_URL = 'ldap://%s:%s' % (AD_DNS_NAME, AD_LDAP_PORT)
 AD_LDAP_USER = ''
 AD_LDAP_PW = ''
+
+AD_LU_ACCOUNT_NAME = "sAMAccountName"
+AD_LU_MAIL = "mail"
+AD_LU_SURNAME = "sn"
+AD_LU_GIVEN_NAME = "givenName"
 
 # If using SSL use these:
 # AD_LDAP_PORT=636
