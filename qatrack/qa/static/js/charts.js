@@ -44,7 +44,7 @@ $(document).ready(function(){
 
     $("#toggle-instructions").click(toggle_instructions);
 
-    $(".test-filter input").change(update_tests);
+    $("#unit-container input, #frequency-container input, #test-list-container input").change(update_tests);
 
     $("#gen-chart").click(update_chart);
 
@@ -105,7 +105,7 @@ function set_frequencies(){
     var units = QAUtils.get_checked("#unit-container");
     var frequencies = [];
     _.each(units,function(unit){
-        frequencies = _.union(frequencies,_.keys(QACharts.test_info.unit_frequency_lists[unit]))
+        frequencies = _.union(frequencies, QACharts.unit_frequencies[unit]);
     });
 
     filter_container("#frequency-container",frequencies);
@@ -116,26 +116,56 @@ function set_test_lists(){
     var units = QAUtils.get_checked("#unit-container");
     var frequencies = QAUtils.get_checked("#frequency-container");
 
-    var test_lists = [];
+    var data_filters = {units:units, frequencies:frequencies};
 
-    _.each(units,function(unit){
-        _.each(frequencies,function(freq){
-            test_lists = _.union(test_lists,QACharts.test_info.unit_frequency_lists[unit][freq]);
+    if (units.length > 0 && frequencies.length > 0){
+
+        $.ajax({
+            type:"get",
+            url:QAURLs.CHART_DATA_URL+"testlists/",
+            data:data_filters,
+            contentType:"application/json",
+            dataType:"json",
+            success: function(result,status,jqXHR){
+                filter_container("#test-list-container", result.test_lists);
+            },
+            error: function(error){
+
+                finished_chart_update();
+                if (typeof console != "undefined") {console.log(error)};
+            }
         });
-    });
-
-    filter_container("#test-list-container",test_lists);
+    }else{
+        filter_container("#test-list-container", []);
+    }
 }
 /***************************************************/
 function set_tests(){
 
     var test_lists = QAUtils.get_checked("#test-list-container");
-    var tests = []
-    _.each(test_lists,function(test_list){
-        tests = _.union(tests,QACharts.test_info.test_lists[test_list]);
-    });
+    var data_filters = {"test_lists":test_lists};
 
-    filter_container("#test-container",tests);
+    if (test_lists.length > 0){
+
+        $.ajax({
+            type:"get",
+            url:QAURLs.CHART_DATA_URL+"tests/",
+            data:data_filters,
+            contentType:"application/json",
+            dataType:"json",
+            success: function(result,status,jqXHR){
+                filter_container("#test-container", result.tests);
+            },
+            error: function(error){
+
+                finished_chart_update();
+                if (typeof console != "undefined") {console.log(error)};
+            }
+        });
+
+    }else{
+        filter_container("#test-container", []);
+    }
 }
 /***************************************************/
 function filter_container(container,visible){

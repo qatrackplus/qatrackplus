@@ -42,6 +42,9 @@ urlpatterns = patterns('',
     url(r"^charts/$", charts.ChartView.as_view(), name="charts"),
     url(r"^charts/data/$", charts.BasicChartData.as_view(), name="chart_data"),
     url(r"^charts/control_chart.png$", charts.ControlChartImage.as_view(), name="control_chart"),
+    url(r"^charts/data/testlists/$", charts.get_test_lists_for_unit_frequencies, name="charts-testlists"),
+    url(r"^charts/data/tests/$", charts.get_tests_for_test_lists, name="charts-tests"),
+
 
     # overall program status
     url(r"^review/$", review.Overview.as_view(), name="overview"),
