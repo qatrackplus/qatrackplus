@@ -413,25 +413,6 @@ class TestChartView(TestCase):
 
         self.utc2 = utils.create_unit_test_collection(test_collection=self.tlc, unit=self.utc.unit, null_frequency=True)
 
-    #---------------------------------------------------------------------------
-    def test_create_test_data(self):
-        data = self.view.create_test_data()
-        expected = {
-            "test_lists": {
-                self.tl.pk: set([self.test1.pk, self.test2.pk]),
-            },
-            'unit_frequency_lists': {
-                self.utc.unit.pk: {
-                    self.utc.frequency.pk: set([self.tl.pk]),
-                }
-            }
-        }
-
-        data["test_lists"] = dict(data["test_lists"])
-        for k, v in data["unit_frequency_lists"].items():
-            data["unit_frequency_lists"][k] = dict(v)
-        self.assertDictEqual(data, expected)
-
 
 #============================================================================
 class TestChartData(TestCase):
