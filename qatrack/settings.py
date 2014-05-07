@@ -210,7 +210,6 @@ INSTALLED_APPS = [
     'tastypie',
 
     'genericdropdown',
-    'django_coverage',
 
     'qatrack.cache',
     'qatrack.accounts',
@@ -273,7 +272,7 @@ DEFAULT_GROUP_NAMES = []  # eg ["Therapists"]
 # Authentication backend settings
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
-    #'qatrack.accounts.backends.ActiveDirectoryGroupMembershipSSLBackend',
+    'qatrack.accounts.backends.ActiveDirectoryGroupMembershipSSLBackend',
     #'qatrack.accounts.backends.WindowsIntegratedAuthenticationBackend',
 )
 
@@ -286,6 +285,12 @@ AD_LDAP_URL = 'ldap://%s:%s' % (AD_DNS_NAME, AD_LDAP_PORT)
 AD_LDAP_USER = ''
 AD_LDAP_PW = ''
 
+AD_LU_ACCOUNT_NAME = "sAMAccountName"
+AD_LU_MAIL = "mail"
+AD_LU_SURNAME = "sn"
+AD_LU_GIVEN_NAME = "givenName"
+AD_LU_MEMBER_OF= "memberOf"
+
 # If using SSL use these:
 # AD_LDAP_PORT=636
 # AD_LDAP_URL='ldaps://%s:%s' % (AD_DNS_NAME,AD_LDAP_PORT)
@@ -293,7 +298,7 @@ AD_LDAP_PW = ''
 AD_SEARCH_DN = ""  # eg "dc=ottawahospital,dc=on,dc=ca"
 AD_NT4_DOMAIN = ""  # Network domain that AD server is part of
 
-AD_SEARCH_FIELDS = ['mail', 'givenName', 'sn', 'sAMAccountName', 'memberOf']
+AD_SEARCH_FIELDS = [AD_LU_MAIL, AD_LU_SURNAME, AD_LU_GIVEN_NAME, AD_LU_ACCOUNT_NAME, AD_LU_MEMBER_OF]
 AD_MEMBERSHIP_REQ = []  # eg ["*TOHCC - All Staff | Tout le personnel  - CCLHO"]
 # AD_CERT_FILE='/path/to/your/cert.txt'
 
