@@ -227,6 +227,7 @@ class BaseChartView(View):
         now = timezone.now()
         from_date = self.get_date("from_date", now - timezone.timedelta(days=365))
         to_date = self.get_date("to_date", now)
+        combine_data = self.request.GET.get("combine_data") == "true"
 
         tests = self.request.GET.getlist("tests[]", [])
         test_lists = self.request.GET.getlist("test_lists[]", [])
@@ -241,25 +242,45 @@ class BaseChartView(View):
         units = Unit.objects.filter(pk__in=units)
         statuses = models.TestInstanceStatus.objects.filter(pk__in=statuses)
 
-        # retrieve test instances for every possible permutation of the
-        # requested test list, test & units
-        for tl, t, u in itertools.product(test_lists, tests, units):
-            tis = models.TestInstance.objects.filter(
-                test_list_instance__test_list=tl,
-                unit_test_info__test=t,
-                unit_test_info__unit=u,
-                status__pk__in=statuses,
-                work_completed__gte=from_date,
-                work_completed__lte=to_date,
-                skipped=False,
-            ).select_related(
-                "reference", "tolerance", "unit_test_info__test", "unit_test_info__unit", "status",
-            ).order_by(
-                "work_completed"
-            )
-            if tis:
-                name = "%s - %s :: %s" % (u.name, tl.name, t.name)
-                self.plot_data[name] = [self.test_instance_to_point(ti) for ti in tis]
+        if not combine_data:
+            # retrieve test instances for every possible permutation of the
+            # requested test list, test & units
+            for tl, t, u in itertools.product(test_lists, tests, units):
+                tis = models.TestInstance.objects.filter(
+                    test_list_instance__test_list=tl,
+                    unit_test_info__test=t,
+                    unit_test_info__unit=u,
+                    status__pk__in=statuses,
+                    work_completed__gte=from_date,
+                    work_completed__lte=to_date,
+                    skipped=False,
+                ).select_related(
+                    "reference", "tolerance", "unit_test_info__test", "unit_test_info__unit", "status",
+                ).order_by(
+                    "work_completed"
+                )
+                if tis:
+                    name = "%s - %s :: %s" % (u.name, tl.name, t.name)
+                    self.plot_data[name] = [self.test_instance_to_point(ti) for ti in tis]
+        else:
+            # retrieve test instances for every possible permutation of the
+            # requested test & units
+            for t, u in itertools.product(tests, units):
+                tis = models.TestInstance.objects.filter(
+                    unit_test_info__test=t,
+                    unit_test_info__unit=u,
+                    status__pk__in=statuses,
+                    work_completed__gte=from_date,
+                    work_completed__lte=to_date,
+                    skipped=False,
+                ).select_related(
+                    "reference", "tolerance", "unit_test_info__test", "unit_test_info__unit", "status",
+                ).order_by(
+                    "work_completed"
+                )
+                if tis:
+                    name = "%s :: %s" % (u.name, t.name)
+                    self.plot_data[name] = [self.test_instance_to_point(ti) for ti in tis]
 
     #---------------------------------------------------------------------------
     def render_to_response(self, context):
