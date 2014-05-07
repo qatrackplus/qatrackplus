@@ -210,7 +210,6 @@ INSTALLED_APPS = [
     'tastypie',
 
     'genericdropdown',
-    'django_coverage',
 
     'qatrack.accounts',
     'qatrack.units',

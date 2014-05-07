@@ -12,7 +12,7 @@ YOUR DATABASE BEFORE ATTEMPTING THIS UPGRADE**
   allow you to override any default stylings you like.  You can either create the file manually
   or it will be created the first time qatrack/settings.py is imported (e.g. when doing a manage.py
     syncdb, migrate or runserver).
-
+* Added the [Ace code editor](http://ace.c9.io/) for editting Test calculation\_procedure Python snippets.
 
 ## v0.2.7 ##
 
