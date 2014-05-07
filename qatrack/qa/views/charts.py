@@ -201,20 +201,41 @@ class BaseChartView(View):
         return date.isoformat()
 
     #---------------------------------------------------------------
-    def test_instance_to_point(self, ti):
+    def test_instance_to_point(self, ti, relative=False):
         """Grab relevent plot data from a :model:`qa.TestInstance`"""
+
+        if relative and ti.reference is not None:
+            try:
+                value = ti.value / ti.reference.value
+                ref_value = 1.
+            except ZeroDivisionError:
+                value = ti.value
+                ref_value = 0
+        else:
+            value = ti.value
+            ref_value = ti.reference.value if ti.reference is not None else None
+
 
         point = {
             "act_high": None, "act_low": None, "tol_low": None, "tol_high": None,
             "date": self.convert_date(timezone.make_naive(ti.work_completed, local_tz)),
             "display_date": ti.work_completed,
-            "value": ti.value,
+            "value": value,
             "display": ti.value_display(),
-            "reference": ti.reference.value if ti.reference else None,
+            "reference": ref_value
         }
 
         if ti.tolerance is not None and ti.reference is not None:
-            point.update(ti.tolerance.tolerances_for_value(ti.reference.value))
+
+            if relative and ti.tolerance.type == models.ABSOLUTE and ti.reference.value != 0.:
+                # convert to % based tolerances if tolerance is currently absolute
+                tols = ti.tolerance.tolerances_for_value(ti.reference.value)
+                for k in tols:
+                    tols[k] /= ti.reference.value
+            else:
+                tols = ti.tolerance.tolerances_for_value(ref_value)
+
+            point.update(tols)
 
         return point
 
@@ -228,6 +249,7 @@ class BaseChartView(View):
         from_date = self.get_date("from_date", now - timezone.timedelta(days=365))
         to_date = self.get_date("to_date", now)
         combine_data = self.request.GET.get("combine_data") == "true"
+        relative = self.request.GET.get("relative") == "true"
 
         tests = self.request.GET.getlist("tests[]", [])
         test_lists = self.request.GET.getlist("test_lists[]", [])
@@ -261,7 +283,9 @@ class BaseChartView(View):
                 )
                 if tis:
                     name = "%s - %s :: %s" % (u.name, tl.name, t.name)
-                    self.plot_data[name] = [self.test_instance_to_point(ti) for ti in tis]
+                    if relative:
+                        name += " (relative to ref)"
+                    self.plot_data[name] = [self.test_instance_to_point(ti, relative=relative) for ti in tis]
         else:
             # retrieve test instances for every possible permutation of the
             # requested test & units
@@ -280,7 +304,10 @@ class BaseChartView(View):
                 )
                 if tis:
                     name = "%s :: %s" % (u.name, t.name)
-                    self.plot_data[name] = [self.test_instance_to_point(ti) for ti in tis]
+                    if relative:
+                        name += " (relative to ref)"
+
+                    self.plot_data[name] = [self.test_instance_to_point(ti, relative=relative) for ti in tis]
 
     #---------------------------------------------------------------------------
     def render_to_response(self, context):
