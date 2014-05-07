@@ -338,6 +338,7 @@ class TestAdmin(SaveUserMixin, admin.ModelAdmin):
         js = (
             settings.STATIC_URL + "js/jquery-1.7.1.min.js",
             settings.STATIC_URL + "js/test_admin.js",
+            settings.STATIC_URL + "ace/ace.js",
         )
 
 
