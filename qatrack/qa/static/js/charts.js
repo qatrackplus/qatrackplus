@@ -92,6 +92,7 @@ function set_chart_options(){
     }else{
         $("#basic-chart-options").hide();
         $("#cc-chart-options").show();
+        $("#relative-diff").attr("checked",false)
     }
 }
 /***************************************************/
@@ -209,7 +210,8 @@ function get_data_filters(){
         n_baseline_subgroups:$("#n-baseline-subgroups").val(),
         subgroup_size:$("#subgroup-size").val(),
         fit_data:$("#include-fit").is(":checked"),
-        combine_data:$("#combine-data").is(":checked")
+        combine_data:$("#combine-data").is(":checked"),
+        relative:$("#relative-diff").is(":checked")
     };
 
     return filters;
