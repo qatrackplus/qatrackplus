@@ -318,6 +318,8 @@ class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
             settings.STATIC_URL + "js/jquery-1.7.1.min.js",
             settings.STATIC_URL + "js/jquery-ui.min.js",
             settings.STATIC_URL + "js/m2m_drag_admin.js",
+            settings.STATIC_URL + "js/admin_description_editor.js",
+            settings.STATIC_URL + "ace/ace.js",
         )
 
     #----------------------------------------------------------------------
@@ -338,6 +340,7 @@ class TestAdmin(SaveUserMixin, admin.ModelAdmin):
         js = (
             settings.STATIC_URL + "js/jquery-1.7.1.min.js",
             settings.STATIC_URL + "js/test_admin.js",
+            settings.STATIC_URL + "js/admin_description_editor.js",
             settings.STATIC_URL + "ace/ace.js",
         )
 
@@ -405,6 +408,8 @@ class TestListCycleAdmin(SaveUserMixin, admin.ModelAdmin):
             settings.STATIC_URL + "js/jquery-ui.min.js",
             settings.STATIC_URL + "js/collapsed_stacked_inlines.js",
             settings.STATIC_URL + "js/m2m_drag_admin.js",
+            settings.STATIC_URL + "js/admin_description_editor.js",
+            settings.STATIC_URL + "ace/ace.js",
         )
 
 

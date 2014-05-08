@@ -31,18 +31,20 @@ function toggle_test_type(){
 $(document).ready(function() {
     $("#id_type").change(toggle_test_type);
     toggle_test_type();
+
     var calcProcedure = $("#id_calculation_procedure").hide();
     calcProcedure.after('<div style="height:200px; " id="calc-procedure-editor" class="colM aligned vLargeTextField"></div>');
 
-    var editor = ace.edit("calc-procedure-editor");
-    var session = editor.getSession();
+    var calcProcedureEditor = ace.edit("calc-procedure-editor");
+    var session = calcProcedureEditor.getSession();
 
-    editor.setValue(calcProcedure.val());
+    calcProcedureEditor.setValue(calcProcedure.val());
     session.setMode( "ace/mode/python");
     session.setTabSize(4)
     session.setUseSoftTabs(true)
-    editor.on('blur', function(){
-        calcProcedure.val(editor.getValue());
+    calcProcedureEditor.on('blur', function(){
+        calcProcedure.val(calcProcedureEditor.getValue());
     });
-    editor.resize();
+    calcProcedureEditor.resize();
+
 });
