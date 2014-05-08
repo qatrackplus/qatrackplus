@@ -57,6 +57,7 @@ def process_file_upload_form(ti_form, test_list_instance):
     upload_to_process = (
         ti_form.unit_test_info.test.is_upload()
         and not ti_form.cleaned_data["skipped"]
+        and not ti_form.in_progress
         and ti_form.cleaned_data["string_value"].strip()
     )
 
