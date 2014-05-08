@@ -254,7 +254,7 @@ DEFAULT_GROUP_NAMES = []  # eg ["Therapists"]
 # Authentication backend settings
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
-    'qatrack.accounts.backends.ActiveDirectoryGroupMembershipSSLBackend',
+    #'qatrack.accounts.backends.ActiveDirectoryGroupMembershipSSLBackend',
     #'qatrack.accounts.backends.WindowsIntegratedAuthenticationBackend',
 )
 
