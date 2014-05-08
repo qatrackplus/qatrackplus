@@ -92,6 +92,7 @@ function set_chart_options(){
     }else{
         $("#basic-chart-options").hide();
         $("#cc-chart-options").show();
+        $("#relative-diff").attr("checked",false)
     }
 }
 /***************************************************/

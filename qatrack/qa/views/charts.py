@@ -154,7 +154,7 @@ class BaseChartView(View):
         # collect all data in 'date/value/ref triplets
         for name, points in self.plot_data.iteritems():
             headers.append(name)
-            col = [(p["display_date"], p["display"], r(p["reference"])) for p in points]
+            col = [(p["display_date"], p["display"], r(p["orig_reference"])) for p in points]
             cols.append(col)
             max_len = max(len(col), max_len)
 
@@ -204,13 +204,16 @@ class BaseChartView(View):
     def test_instance_to_point(self, ti, relative=False):
         """Grab relevent plot data from a :model:`qa.TestInstance`"""
 
-        if relative and ti.reference is not None:
-            try:
-                value = ti.value / ti.reference.value
-                ref_value = 1.
-            except ZeroDivisionError:
-                value = ti.value
+        if relative:
+            if ti.reference and ti.tolerance and ti.tolerance.type == models.ABSOLUTE:
+                value = ti.value - ti.reference.value
                 ref_value = 0
+            elif ti.reference and ti.reference.value != 0.:
+                value = 100*(ti.value - ti.reference.value)/ ti.reference.value
+                ref_value = 0.
+            else:
+                value = ti.value
+                ref_value = None
         else:
             value = ti.value
             ref_value = ti.reference.value if ti.reference is not None else None
@@ -222,18 +225,18 @@ class BaseChartView(View):
             "display_date": ti.work_completed,
             "value": value,
             "display": ti.value_display(),
-            "reference": ref_value
+            "reference": ref_value,
+            "orig_reference": ti.reference.value if ti.reference else None,
+
         }
 
-        if ti.tolerance is not None and ti.reference is not None:
-
-            if relative and ti.tolerance.type == models.ABSOLUTE and ti.reference.value != 0.:
-                # convert to % based tolerances if tolerance is currently absolute
-                tols = ti.tolerance.tolerances_for_value(ti.reference.value)
+        if ti.tolerance is not None and ref_value is not None:
+            if relative and ti.reference and ti.reference.value != 0. and not ti.tolerance.type==models.ABSOLUTE:
+                tols = ti.tolerance.tolerances_for_value(100)
                 for k in tols:
-                    tols[k] /= ti.reference.value
+                    tols[k] -= 100.
             else:
-                tols = ti.tolerance.tolerances_for_value(ref_value)
+               tols = ti.tolerance.tolerances_for_value(ref_value)
 
             point.update(tols)
 
