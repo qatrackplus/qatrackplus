@@ -451,7 +451,7 @@ class Test(models.Model):
         help_text=_("A short variable name consisting of alphanumeric characters and underscores for this test (to be used in composite calculations). "),
         db_index=True,
     )
-    description = models.TextField(help_text=_("A concise description of what this test is for (optional)"), blank=True, null=True)
+    description = models.TextField(help_text=_("A concise description of what this test is for (optional. You may use HTML markup)"), blank=True, null=True)
     procedure = models.CharField(max_length=512, help_text=_("Link to document describing how to perform this test"), blank=True, null=True)
 
     category = models.ForeignKey(Category, help_text=_("Choose a category for this test"))
@@ -700,7 +700,7 @@ class TestCollectionInterface(models.Model):
 
     name = models.CharField(max_length=255, db_index=True)
     slug = models.SlugField(unique=True, help_text=_("A short unique name for use in the URL of this list"), db_index=True)
-    description = models.TextField(help_text=_("A concise description of this test checklist"), null=True, blank=True)
+    description = models.TextField(help_text=_("A concise description of this test checklist. (You may use HTML markup)"), null=True, blank=True)
 
     assigned_to = generic.GenericRelation(
         "UnitTestCollection",
