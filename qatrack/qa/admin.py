@@ -3,8 +3,9 @@ import django.db
 
 from django.utils.translation import ugettext as _
 from django.conf import settings
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.admin import widgets, options
+from django.shortcuts import render, HttpResponseRedirect
 from django.utils import timezone
 from django.utils.text import Truncator
 from django.utils.html import escape
@@ -116,7 +117,12 @@ test_type.admin_order_field = "test__type"
 
 #============================================================================
 class UnitTestInfoAdmin(admin.ModelAdmin):
+    class SetMultipleReferencesAndTolerancesForm(forms.Form):
+        _selected_action = forms.CharField(widget=forms.MultipleHiddenInput)
+        tolerance = forms.ModelChoiceField(queryset=models.Tolerance.objects.all())
+        reference = forms.CharField(max_length=255)
 
+    actions = ['set_multiple_references_and_tolerances']
     form = TestInfoForm
     fields = (
         "unit", "test", "test_type",
@@ -144,7 +150,78 @@ class UnitTestInfoAdmin(admin.ModelAdmin):
         """unittestinfo's are created automatically"""
         return False
 
-    #----------------------------------------------------------------------
+    #---------------------------------------------------------------------------
+    def set_multiple_references_and_tolerances(self, request, queryset):
+        form = None
+
+        if 'apply' in request.POST:
+            form = self.SetMultipleReferencesAndTolerancesForm(request.POST)
+            if form.is_valid():
+                reference = form.cleaned_data['reference']
+                tolerance = models.Tolerance.objects.get(pk=form.cleaned_data['tolerance'].id)
+
+                # Save the uti with the new references and tolerance
+                # TODO: Combine with save method: save_model ?
+                for uti in queryset:
+                    if uti.test.type != models.MULTIPLE_CHOICE:
+                        if uti.test.type == models.BOOLEAN:
+                            ref_type = models.BOOLEAN
+                        else:
+                            ref_type = models.NUMERICAL
+                        if reference not in ("", None):
+                            if not(uti.reference and uti.reference.value == float(reference)):
+                                try:
+                                    ref = models.Reference.objects.filter(value=reference, type=ref_type)[0]
+                                except IndexError:
+                                    ref = models.Reference(
+                                        value=reference,
+                                        type=ref_type,
+                                        created_by=request.user,
+                                        modified_by=request.user,
+                                        name="%s %s" % (uti.unit.name, uti.test.name)[:255]
+                                    )
+                                    ref.save()
+                                uti.reference = ref
+                        else:
+                            uti.reference = None
+                    uti.tolerance = tolerance
+                    uti.save()
+
+                self.message_user(request, "%s tolerances and references have been saved successfully." % queryset.count())
+                return HttpResponseRedirect(request.get_full_path())
+
+        if not form:
+            form = self.SetMultipleReferencesAndTolerancesForm()
+            testtypes = set(queryset.values_list('test__type', flat=True).distinct())
+
+            # check if tests have the same type of tolerance, else return with error message
+            if len(testtypes) > 1 and 'multchoice' in testtypes:
+                # TODO: when update to Django > 1.5 add level=messages.ERROR
+                self.message_user(request, "Multiple choice references and tolerances can't be set"
+                                           " together with other test types")
+                return HttpResponseRedirect(request.get_full_path())
+            # if selected tests are NOT multiple choice select all the tolerances which are NOT multiple choice
+            elif len(testtypes) > 1 or len(testtypes) is 1 and 'multchoice' not in testtypes:
+                tolerances = models.Tolerance.objects.all().exclude(type="multchoice")
+                form.fields["tolerance"].queryset = tolerances
+            else:
+            # if selected tests are multiple choice select all the tolerances which are multiple choice
+                tolerances = models.Tolerance.objects.filter(type="multchoice")
+                form.fields["tolerance"].queryset = tolerances
+                form.fields["reference"].required = False
+                form.fields["reference"].widget = forms.HiddenInput()
+
+        context = {
+            'queryset': queryset,
+            'form': form,
+            'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
+            }
+
+        return render(request, 'admin/qa/unittestinfo/set_multiple_refs_and_tols.html', context)
+
+    set_multiple_references_and_tolerances.short_description = "Set multiple references and tolerances"
+
+    #--------------------------------------------------------len(testtypes)--------------
     def save_model(self, request, test_info, form, change):
         """create new reference when user updates value"""
 
