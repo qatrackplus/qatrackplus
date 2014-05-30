@@ -97,8 +97,9 @@ function set_chart_options(){
 /***************************************************/
 function update_tests(){
     set_frequencies();
-    set_test_lists();
-    set_tests();
+    set_test_lists(function(){
+        set_tests();
+    });
 }
 /***************************************************/
 function set_frequencies(){
@@ -112,7 +113,7 @@ function set_frequencies(){
 }
 
 /***************************************************/
-function set_test_lists(){
+function set_test_lists(callback){
     var units = QAUtils.get_checked("#unit-container");
     var frequencies = QAUtils.get_checked("#frequency-container");
 
@@ -128,6 +129,9 @@ function set_test_lists(){
             dataType:"json",
             success: function(result,status,jqXHR){
                 filter_container("#test-list-container", result.test_lists);
+                if (callback){
+                    callback();
+                }
             },
             error: function(error){
 
@@ -140,7 +144,7 @@ function set_test_lists(){
     }
 }
 /***************************************************/
-function set_tests(){
+function set_tests(callback){
 
     var test_lists = QAUtils.get_checked("#test-list-container");
     var data_filters = {"test_lists":test_lists};
@@ -155,6 +159,9 @@ function set_tests(){
             dataType:"json",
             success: function(result,status,jqXHR){
                 filter_container("#test-container", result.tests);
+                if (callback){
+                    callback();
+                }
             },
             error: function(error){
 
@@ -578,7 +585,7 @@ function set_options_from_url(){
 
     var units = get_filtered_option_values("units",options);
     var tests = get_filtered_option_values("tests",options);
-    var    test_lists = get_test_lists_from_tests(tests);
+    var test_lists = get_filtered_option_values("test_lists", options);
 
     if ((units.length === 0) || (tests.length === 0)){
         return;
@@ -593,13 +600,17 @@ function set_options_from_url(){
 
     _.map(filters,show_all_inputs);
 
-    //    $(".test-list").attr("checked",true);
-    QAUtils.set_checked_state(test_list_ids,true);
     QAUtils.set_checked_state(unit_ids,true);
-    update_tests();
-    QAUtils.set_checked_state(test_ids,true);
 
-    update_chart();
+    set_frequencies();
+    set_test_lists(function(){
+        QAUtils.set_checked_state(test_list_ids,true);
+        set_tests(function(){
+            QAUtils.set_checked_state(test_ids,true);
+            update_chart();
+        });
+    });
+
 
 }
 

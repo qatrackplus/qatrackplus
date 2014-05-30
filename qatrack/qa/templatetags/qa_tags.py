@@ -10,10 +10,11 @@ register = template.Library()
 
 
 @register.simple_tag
-def qa_value_form(form, include_history=False, include_ref_tols=False, test_info=None):
+def qa_value_form(form, test_list, include_history=False, include_ref_tols=False, test_info=None):
     template = get_template("qa/qavalue_form.html")
     c = Context({
         "form": form,
+        "test_list":test_list,
         "test_info": test_info,
         "include_history": include_history,
         "include_ref_tols": include_ref_tols,
@@ -69,11 +70,18 @@ def tolerance_for_reference(tol, ref):
 
 
 #----------------------------------------------------------------------
-@register.filter
-def history_display(history):
+#@register.filter
+#def history_display(history):
+#    template = get_template("qa/history.html")
+#    c = Context({"history": history})
+#    return template.render(c)
+
+@register.simple_tag
+def history_display(history, unit, test_list, test):
     template = get_template("qa/history.html")
-    c = Context({"history": history})
+    c = Context({"history": history, "unit":unit, "test_list":test_list, "test":test })
     return template.render(c)
+
 
 
 #----------------------------------------------------------------------
