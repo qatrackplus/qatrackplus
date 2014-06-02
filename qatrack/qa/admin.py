@@ -119,6 +119,7 @@ test_type.admin_order_field = "test__type"
 class UnitTestInfoAdmin(admin.ModelAdmin):
     class SetMultipleReferencesAndTolerancesForm(forms.Form):
         _selected_action = forms.CharField(widget=forms.MultipleHiddenInput)
+        contenttype = forms.CharField(widget=forms.HiddenInput, required=False)
         tolerance = forms.ModelChoiceField(queryset=models.Tolerance.objects.all())
         reference = forms.CharField(max_length=255)
 
@@ -156,6 +157,7 @@ class UnitTestInfoAdmin(admin.ModelAdmin):
 
         if 'apply' in request.POST:
             form = self.SetMultipleReferencesAndTolerancesForm(request.POST)
+
             if form.is_valid():
                 reference = form.cleaned_data['reference']
                 tolerance = models.Tolerance.objects.get(pk=form.cleaned_data['tolerance'].id)
@@ -191,25 +193,36 @@ class UnitTestInfoAdmin(admin.ModelAdmin):
                 return HttpResponseRedirect(request.get_full_path())
 
         if not form:
-            form = self.SetMultipleReferencesAndTolerancesForm()
+            form = self.SetMultipleReferencesAndTolerancesForm(initial={'contenttype': None})
             testtypes = set(queryset.values_list('test__type', flat=True).distinct())
 
             # check if tests have the same type of tolerance, else return with error message
-            if len(testtypes) > 1 and 'multchoice' in testtypes:
+            if (len(testtypes) > 1 and 'multchoice' in testtypes or
+                    len(testtypes) > 1 and 'boolean' in testtypes):
+
                 # TODO: when update to Django > 1.5 add level=messages.ERROR
-                self.message_user(request, "Multiple choice references and tolerances can't be set"
+                self.message_user(request, "Multiple choice and/or boolean references and tolerances can't be set"
                                            " together with other test types")
                 return HttpResponseRedirect(request.get_full_path())
-            # if selected tests are NOT multiple choice select all the tolerances which are NOT multiple choice
-            elif len(testtypes) > 1 or len(testtypes) is 1 and 'multchoice' not in testtypes:
-                tolerances = models.Tolerance.objects.all().exclude(type="multchoice")
+
+            # if selected tests are NOT multiple choice or boolean, select all the tolerances which are NOT multiple choice or boolean
+            elif not 'boolean' in testtypes and not 'multchoice' in testtypes:
+                tolerances = models.Tolerance.objects.all().exclude(type="multchoice").exclude(type="boolean")
                 form.fields["tolerance"].queryset = tolerances
-            else:
+
             # if selected tests are multiple choice select all the tolerances which are multiple choice
+            elif 'multchoice' in testtypes:
                 tolerances = models.Tolerance.objects.filter(type="multchoice")
+                form.fields["contenttype"].initial = 'multchoice'
                 form.fields["tolerance"].queryset = tolerances
                 form.fields["reference"].required = False
                 form.fields["reference"].widget = forms.HiddenInput()
+
+            # if selected tests are boolean select all the tolerances which are boolean
+            elif 'boolean' in testtypes:
+                form.fields["contenttype"].initial = 'boolean'
+                form.fields["tolerance"].required = False
+                form.fields["tolerance"].widget = forms.HiddenInput()
 
         context = {
             'queryset': queryset,
