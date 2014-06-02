@@ -152,87 +152,94 @@ class UnitTestInfoAdmin(admin.ModelAdmin):
         return False
 
     #---------------------------------------------------------------------------
+    def form_valid(self, request, queryset, form):
+
+        if form.is_valid():
+            reference = form.cleaned_data['reference']
+            tolerance = form.cleaned_data['tolerance']
+
+            # Save the uti with the new references and tolerance
+            # TODO: Combine with save method: save_model ?
+            for uti in queryset:
+                if uti.test.type != models.MULTIPLE_CHOICE:
+                    if uti.test.type == models.BOOLEAN:
+                        ref_type = models.BOOLEAN
+                    else:
+                        ref_type = models.NUMERICAL
+                    if reference not in ("", None):
+                        if not(uti.reference and uti.reference.value == float(reference)):
+                            try:
+                                ref = models.Reference.objects.get(value=reference, type=ref_type)
+                            except models.Reference.DoesNotExist:
+                                ref = models.Reference(
+                                    value=reference,
+                                    type=ref_type,
+                                    created_by=request.user,
+                                    modified_by=request.user,
+                                    name="%s %s" % (uti.unit.name, uti.test.name)[:255]
+                                )
+                                ref.save()
+                            uti.reference = ref
+                    else:
+                        uti.reference = None
+                uti.tolerance = tolerance
+                uti.save()
+
+            messages.success(request, "%s tolerances and references have been saved successfully." % queryset.count())
+            return HttpResponseRedirect(request.get_full_path())
+
+    #---------------------------------------------------------------------------
     def set_multiple_references_and_tolerances(self, request, queryset):
-        form = None
+
+        testtypes = set(queryset.values_list('test__type', flat=True).distinct())
+
+        # check if tests have the same type of tolerance, else return with error message
+        if (len(testtypes) > 1 and 'multchoice' in testtypes or
+                len(testtypes) > 1 and 'boolean' in testtypes):
+
+            messages.error(request, "Multiple choice and/or boolean references and tolerances can't be set"
+                                    " together with other test types")
+            return HttpResponseRedirect(request.get_full_path())
+
 
         if 'apply' in request.POST:
             form = self.SetMultipleReferencesAndTolerancesForm(request.POST)
-
-            if form.is_valid():
-                reference = form.cleaned_data['reference']
-                tolerance = models.Tolerance.objects.get(pk=form.cleaned_data['tolerance'].id)
-
-                # Save the uti with the new references and tolerance
-                # TODO: Combine with save method: save_model ?
-                for uti in queryset:
-                    if uti.test.type != models.MULTIPLE_CHOICE:
-                        if uti.test.type == models.BOOLEAN:
-                            ref_type = models.BOOLEAN
-                        else:
-                            ref_type = models.NUMERICAL
-                        if reference not in ("", None):
-                            if not(uti.reference and uti.reference.value == float(reference)):
-                                try:
-                                    ref = models.Reference.objects.filter(value=reference, type=ref_type)[0]
-                                except IndexError:
-                                    ref = models.Reference(
-                                        value=reference,
-                                        type=ref_type,
-                                        created_by=request.user,
-                                        modified_by=request.user,
-                                        name="%s %s" % (uti.unit.name, uti.test.name)[:255]
-                                    )
-                                    ref.save()
-                                uti.reference = ref
-                        else:
-                            uti.reference = None
-                    uti.tolerance = tolerance
-                    uti.save()
-
-                self.message_user(request, "%s tolerances and references have been saved successfully." % queryset.count())
-                return HttpResponseRedirect(request.get_full_path())
-
-        if not form:
+        else:
             form = self.SetMultipleReferencesAndTolerancesForm(initial={'contenttype': None})
-            testtypes = set(queryset.values_list('test__type', flat=True).distinct())
 
-            # check if tests have the same type of tolerance, else return with error message
-            if (len(testtypes) > 1 and 'multchoice' in testtypes or
-                    len(testtypes) > 1 and 'boolean' in testtypes):
 
-                # TODO: when update to Django > 1.5 add level=messages.ERROR
-                self.message_user(request, "Multiple choice and/or boolean references and tolerances can't be set"
-                                           " together with other test types")
-                return HttpResponseRedirect(request.get_full_path())
+        # if selected tests are NOT multiple choice or boolean, select all the tolerances which are NOT multiple choice or boolean
+        if not 'boolean' in testtypes and not 'multchoice' in testtypes:
+            tolerances = models.Tolerance.objects.exclude(type="multchoice").exclude(type="boolean")
+            form.fields["tolerance"].queryset = tolerances
 
-            # if selected tests are NOT multiple choice or boolean, select all the tolerances which are NOT multiple choice or boolean
-            elif not 'boolean' in testtypes and not 'multchoice' in testtypes:
-                tolerances = models.Tolerance.objects.all().exclude(type="multchoice").exclude(type="boolean")
-                form.fields["tolerance"].queryset = tolerances
+        # if selected tests are multiple choice select all the tolerances which are multiple choice
+        elif 'multchoice' in testtypes:
+            tolerances = models.Tolerance.objects.filter(type="multchoice")
+            form.fields["contenttype"].initial = 'multchoice'
+            form.fields["tolerance"].queryset = tolerances
+            form.fields["reference"].required = False
+            form.fields["reference"].widget = forms.HiddenInput()
 
-            # if selected tests are multiple choice select all the tolerances which are multiple choice
-            elif 'multchoice' in testtypes:
-                tolerances = models.Tolerance.objects.filter(type="multchoice")
-                form.fields["contenttype"].initial = 'multchoice'
-                form.fields["tolerance"].queryset = tolerances
-                form.fields["reference"].required = False
-                form.fields["reference"].widget = forms.HiddenInput()
+        # if selected tests are boolean select all the tolerances which are boolean
+        elif 'boolean' in testtypes:
+            form.fields["contenttype"].initial = 'boolean'
+            form.fields["tolerance"].required = False
+            form.fields["tolerance"].widget = forms.HiddenInput()
 
-            # if selected tests are boolean select all the tolerances which are boolean
-            elif 'boolean' in testtypes:
-                form.fields["contenttype"].initial = 'boolean'
-                form.fields["tolerance"].required = False
-                form.fields["tolerance"].widget = forms.HiddenInput()
 
-        context = {
-            'queryset': queryset,
-            'form': form,
-            'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
-            }
-
-        return render(request, 'admin/qa/unittestinfo/set_multiple_refs_and_tols.html', context)
+        if 'apply' in request.POST and form.is_valid():
+            return self.form_valid(request, queryset, form)
+        else:
+            context = {
+                'queryset': queryset,
+                'form': form,
+                'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
+                }
+            return render(request, 'admin/qa/unittestinfo/set_multiple_refs_and_tols.html', context)
 
     set_multiple_references_and_tolerances.short_description = "Set multiple references and tolerances"
+
 
     #--------------------------------------------------------len(testtypes)--------------
     def save_model(self, request, test_info, form, change):
