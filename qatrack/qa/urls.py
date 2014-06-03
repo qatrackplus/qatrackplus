@@ -40,6 +40,7 @@ urlpatterns = patterns('',
     url(r"^api/", include(v1_api.urls)),
 
     url(r"^charts/$", charts.ChartView.as_view(), name="charts"),
+    url(r"^charts/export/csv/$", charts.ExportCSVView.as_view(), name="charts_export_csv"),
     url(r"^charts/data/$", charts.BasicChartData.as_view(), name="chart_data"),
     url(r"^charts/control_chart.png$", charts.ControlChartImage.as_view(), name="control_chart"),
     url(r"^charts/data/testlists/$", charts.get_test_lists_for_unit_frequencies, name="charts-testlists"),

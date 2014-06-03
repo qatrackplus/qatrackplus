@@ -9,6 +9,11 @@ var context;
 var pass_fail_only;
 var comment_on_skip;
 
+
+// keeps track of current composite call so we can
+// abort it if a new one is made before the current one completes.
+var current_composite_call;
+
 /***************************************************************/
 //minimal Pub/Sub functionality
 var topics = {};
@@ -471,6 +476,7 @@ function TestListInstance(){
 
     this.calculate_composites = function(){
 
+
         if (self.composites.length === 0){
             return;
         }
@@ -488,6 +494,7 @@ function TestListInstance(){
         };
 
         var on_success = function(data){
+            current_composite_call = null;
             self.submit.attr("disabled", false);
 
             if (data.success){
@@ -502,11 +509,16 @@ function TestListInstance(){
         }
 
         var on_error = function(){
+            current_composite_call = null;
             self.submit.attr("disabled", false);
             $.Topic("qaUpdated").publish();
         }
 
-        $.ajax({
+        if (current_composite_call){
+            current_composite_call.abort();
+        }
+
+        current_composite_call = $.ajax({
             type:"POST",
             url:QAURLs.COMPOSITE_URL,
             data:data,

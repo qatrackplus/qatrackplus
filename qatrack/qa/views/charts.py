@@ -173,9 +173,8 @@ class BaseChartView(View):
     def get(self, request):
 
         self.get_plot_data()
-        table = self.create_data_table()
-        resp = self.render_to_response({"data": self.plot_data, "table": table})
-
+        headers, rows = self.create_data_table()
+        resp = self.render_to_response({"data": self.plot_data, "headers":headers, "rows":rows})
         return resp
 
     #----------------------------------------------------------------------
@@ -194,7 +193,7 @@ class BaseChartView(View):
         # collect all data in 'date/value/ref triplets
         for name, points in self.plot_data.iteritems():
             headers.append(name)
-            col = [(p["display_date"], p["display"], r(p["reference"])) for p in points]
+            col = [(p["display_date"], p["display"], r(p["orig_reference"])) for p in points]
             cols.append(col)
             max_len = max(len(col), max_len)
 
@@ -208,6 +207,11 @@ class BaseChartView(View):
                 except IndexError:
                     row.append(["", "", ""])
             rows.append(row)
+
+        return headers, rows
+
+    #----------------------------------------------------------------------
+    def render_table(self, headers, rows):
 
         context = Context({
             "ncols": 3 * len(rows[0]) if rows else 0,
@@ -241,20 +245,44 @@ class BaseChartView(View):
         return date.isoformat()
 
     #---------------------------------------------------------------
-    def test_instance_to_point(self, ti):
+    def test_instance_to_point(self, ti, relative=False):
         """Grab relevent plot data from a :model:`qa.TestInstance`"""
+
+        if relative:
+            if ti.reference and ti.tolerance and ti.tolerance.type == models.ABSOLUTE:
+                value = ti.value - ti.reference.value
+                ref_value = 0
+            elif ti.reference and ti.reference.value != 0.:
+                value = 100*(ti.value - ti.reference.value)/ ti.reference.value
+                ref_value = 0.
+            else:
+                value = ti.value
+                ref_value = None
+        else:
+            value = ti.value
+            ref_value = ti.reference.value if ti.reference is not None else None
+
 
         point = {
             "act_high": None, "act_low": None, "tol_low": None, "tol_high": None,
             "date": self.convert_date(timezone.make_naive(ti.work_completed, local_tz)),
             "display_date": ti.work_completed,
-            "value": ti.value,
+            "value": value,
             "display": ti.value_display(),
-            "reference": ti.reference.value if ti.reference else None,
+            "reference": ref_value,
+            "orig_reference": ti.reference.value if ti.reference else None,
+
         }
 
-        if ti.tolerance is not None and ti.reference is not None:
-            point.update(ti.tolerance.tolerances_for_value(ti.reference.value))
+        if ti.tolerance is not None and ref_value is not None:
+            if relative and ti.reference and ti.reference.value != 0. and not ti.tolerance.type==models.ABSOLUTE:
+                tols = ti.tolerance.tolerances_for_value(100)
+                for k in tols:
+                    tols[k] -= 100.
+            else:
+               tols = ti.tolerance.tolerances_for_value(ref_value)
+
+            point.update(tols)
 
         return point
 
@@ -267,6 +295,8 @@ class BaseChartView(View):
         now = timezone.now()
         from_date = self.get_date("from_date", now - timezone.timedelta(days=365))
         to_date = self.get_date("to_date", now)
+        combine_data = self.request.GET.get("combine_data") == "true"
+        relative = self.request.GET.get("relative") == "true"
 
         tests = self.request.GET.getlist("tests[]", [])
         test_lists = self.request.GET.getlist("test_lists[]", [])
@@ -281,28 +311,54 @@ class BaseChartView(View):
         units = Unit.objects.filter(pk__in=units)
         statuses = models.TestInstanceStatus.objects.filter(pk__in=statuses)
 
-        # retrieve test instances for every possible permutation of the
-        # requested test list, test & units
-        for tl, t, u in itertools.product(test_lists, tests, units):
-            tis = models.TestInstance.objects.filter(
-                test_list_instance__test_list=tl,
-                unit_test_info__test=t,
-                unit_test_info__unit=u,
-                status__pk__in=statuses,
-                work_completed__gte=from_date,
-                work_completed__lte=to_date,
-                skipped=False,
-            ).select_related(
-                "reference", "tolerance", "unit_test_info__test", "unit_test_info__unit", "status",
-            ).order_by(
-                "work_completed"
-            )
-            if tis:
-                name = "%s - %s :: %s" % (u.name, tl.name, t.name)
-                self.plot_data[name] = [self.test_instance_to_point(ti) for ti in tis]
+        if not combine_data:
+            # retrieve test instances for every possible permutation of the
+            # requested test list, test & units
+            for tl, t, u in itertools.product(test_lists, tests, units):
+                tis = models.TestInstance.objects.filter(
+                    test_list_instance__test_list=tl,
+                    unit_test_info__test=t,
+                    unit_test_info__unit=u,
+                    status__pk__in=statuses,
+                    work_completed__gte=from_date,
+                    work_completed__lte=to_date,
+                    skipped=False,
+                ).select_related(
+                    "reference", "tolerance", "unit_test_info__test", "unit_test_info__unit", "status",
+                ).order_by(
+                    "work_completed"
+                )
+                if tis:
+                    name = "%s - %s :: %s" % (u.name, tl.name, t.name)
+                    if relative:
+                        name += " (relative to ref)"
+                    self.plot_data[name] = [self.test_instance_to_point(ti, relative=relative) for ti in tis]
+        else:
+            # retrieve test instances for every possible permutation of the
+            # requested test & units
+            for t, u in itertools.product(tests, units):
+                tis = models.TestInstance.objects.filter(
+                    unit_test_info__test=t,
+                    unit_test_info__unit=u,
+                    status__pk__in=statuses,
+                    work_completed__gte=from_date,
+                    work_completed__lte=to_date,
+                    skipped=False,
+                ).select_related(
+                    "reference", "tolerance", "unit_test_info__test", "unit_test_info__unit", "status",
+                ).order_by(
+                    "work_completed"
+                )
+                if tis:
+                    name = "%s :: %s" % (u.name, t.name)
+                    if relative:
+                        name += " (relative to ref)"
+
+                    self.plot_data[name] = [self.test_instance_to_point(ti, relative=relative) for ti in tis]
 
     #---------------------------------------------------------------------------
     def render_to_response(self, context):
+        context['table'] = self.render_table(context['headers'], context['rows'])
         return self.render_json_response(context)
 
 
@@ -390,3 +446,36 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
                 canvas.print_png(response)
 
         return response
+
+
+class ExportCSVView(PermissionRequiredMixin, JSONResponseMixin, BaseChartView):
+    """JSON view used for basic chart type"""
+
+    permission_required = "qa.can_view_charts"
+    raise_exception = True
+
+    def render_to_response(self, context):
+        import csv
+        from django.utils import formats
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="qatrackexport.csv"'
+
+        writer = csv.writer(response)
+        header1 = []
+        header2 = []
+        for h in context['headers']:
+            header1.extend([h.encode('utf-8'),'',''])
+            header2.extend(["Date","Value","Ref"])
+
+        writer.writerow(header1)
+        writer.writerow(header2)
+
+        for row_set in context['rows']:
+            row = []
+            for date, val, ref in row_set:
+                date = formats.date_format(date, "DATETIME_FORMAT")  if date is not "" else ""
+                row.extend([date, val, ref])
+            writer.writerow(row)
+
+        return response
+

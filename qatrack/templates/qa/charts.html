@@ -17,10 +17,6 @@
     <script src="{% static "js/highstock/highcharts-more.js" %}?v={{VERSION}}"></script>
     <script src="{% static "datepicker/js/bootstrap-datepicker.js" %}?v={{VERSION}}"></script>
 
-    <script src="{% static "js/filesaver/Blob.js" %}?v={{VERSION}}"></script>
-    <script src="{% static "js/filesaver/canvas-toBlob.js" %}?v={{VERSION}}"></script>
-    <script src="{% static "js/filesaver/FileSaver.min.js" %}?v={{VERSION}}"></script>
-
     <script>
         var QACharts = {
             unit_frequencies:{{unit_frequencies|safe}}
@@ -116,21 +112,29 @@
                     </div>
                     <div id="basic-chart-options" class="row-fluid">
                         <div class="span12">
-                            <label class="control-label  basic-option" for="show-lines">
-                                Lines:
+                            <label class="checkbox basic-option" for="show-lines">
                                 <input type="checkbox" id="show-lines" checked="checked" />
+                                Lines
                             </label>
-                            <label class="control-label  basic-option" for="show-references">
-                                Refs:
+                            <label class="checkbox basic-option" for="show-references">
                                 <input type="checkbox" id="show-references" checked="checked" />
+                                Refs
                             </label>
-                            <label class="control-label  basic-option" for="show-tolerances">
-                                Tols:
+                            <label class="checkbox basic-option" for="show-tolerances">
                                 <input type="checkbox" id="show-tolerances" checked="checked" />
+                                Tols
                             </label>
-                            <label class="control-label  basic-option" for="show-legend">
-                                Legend:
+                            <label class="checkbox basic-option" for="show-legend">
                                 <input type="checkbox" id="show-legend" />
+                                Legend
+                            </label><br/>
+                            <label class="checkbox basic-option" for="combine-data" title="Combine data for the same Test on a given Unit (e.g. from a TestListCycle)">
+                                <input type="checkbox" id="combine-data" />
+                                Combine Test Data For Units
+                            </label><br/>
+                            <label class="checkbox basic-option" for="relative-diff" title="The absolute difference is plotted for tests with absolute tolerances set, otherwise the percent difference is plotted">
+                                <input type="checkbox" id="relative-diff" />
+                                Plot relative to reference values
                             </label>
                         </div>
                     </div>
