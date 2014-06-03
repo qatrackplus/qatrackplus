@@ -583,19 +583,18 @@ function get_filtered_option_values(opt_type,options){
     return _.map(_.filter(options,f),opt_value);
 }
 
+var downloadURL = function downloadURL(url) {
+    var hiddenIFrameID = 'hiddenDownloader',
+        iframe = document.getElementById(hiddenIFrameID);
+    if (iframe === null) {
+        iframe = document.createElement('iframe');
+        iframe.id = hiddenIFrameID;
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
+    }
+    iframe.src = url;
+};
+
 function export_csv(){
-    var header = [];
-    _.each($("#data-table-wrapper table thead tr:first-child th"),function(e){
-        header.push(["Date",'"'+e.innerHTML.replace('"','""')+'"',"Ref"].join(","));
-    });
-    header = header.join(",");
-    var lines = [header];
-
-    _.each($("#data-table-wrapper table tbody tr"),function(row){
-        lines.push(_.map($(row).find("td"),function(e){return e.innerHTML;}).join(","));
-    });
-
-    var blob = new Blob([lines.join("\n")], {type: "text/plain;charset=utf-8"});
-    saveAs(blob, "qatrack_export.csv");
-
+    downloadURL("./export/csv/?"+$.param(get_data_filters()));
 }
