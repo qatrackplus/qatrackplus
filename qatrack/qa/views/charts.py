@@ -133,9 +133,8 @@ class BaseChartView(View):
     def get(self, request):
 
         self.get_plot_data()
-        table = self.create_data_table()
-        resp = self.render_to_response({"data": self.plot_data, "table": table})
-
+        headers, rows = self.create_data_table()
+        resp = self.render_to_response({"data": self.plot_data, "headers":headers, "rows":rows})
         return resp
 
     #----------------------------------------------------------------------
@@ -168,6 +167,11 @@ class BaseChartView(View):
                 except IndexError:
                     row.append(["", "", ""])
             rows.append(row)
+
+        return headers, rows
+
+    #----------------------------------------------------------------------
+    def render_table(self, headers, rows):
 
         context = Context({
             "ncols": 3 * len(rows[0]) if rows else 0,
@@ -314,6 +318,7 @@ class BaseChartView(View):
 
     #---------------------------------------------------------------------------
     def render_to_response(self, context):
+        context['table'] = self.render_table(context['headers'], context['rows'])
         return self.render_json_response(context)
 
 
@@ -401,3 +406,36 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
                 canvas.print_png(response)
 
         return response
+
+
+class ExportCSVView(PermissionRequiredMixin, JSONResponseMixin, BaseChartView):
+    """JSON view used for basic chart type"""
+
+    permission_required = "qa.can_view_charts"
+    raise_exception = True
+
+    def render_to_response(self, context):
+        import csv
+        from django.utils import formats
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="qatrackexport.csv"'
+
+        writer = csv.writer(response)
+        header1 = []
+        header2 = []
+        for h in context['headers']:
+            header1.extend([h.encode('utf-8'),'',''])
+            header2.extend(["Date","Value","Ref"])
+
+        writer.writerow(header1)
+        writer.writerow(header2)
+
+        for row_set in context['rows']:
+            row = []
+            for date, val, ref in row_set:
+                date = formats.date_format(date, "DATETIME_FORMAT")  if date is not "" else ""
+                row.extend([date, val, ref])
+            writer.writerow(row)
+
+        return response
+
