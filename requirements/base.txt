@@ -13,3 +13,4 @@ South>=0.8,<0.9
 numpy>=1.6.2
 scipy>=0.10.0
 matplotlib>=1.0
+django-admin-views==0.1.4
