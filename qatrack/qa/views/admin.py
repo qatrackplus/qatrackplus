@@ -29,20 +29,20 @@ class SetReferencesAndTolerances(FormPreview):
         cleaned_data = form.cleaned_data
 
         source_unit = cleaned_data.get("source_unit")
-        dest_unit = Unit.objects.get(pk=cleaned_data.get("dest_unit"))
-        testlist_pk = cleaned_data.get("testlist")
+        dest_unit = cleaned_data.get("dest_unit")
+        source_testlist_pk = cleaned_data.get("source_testlist")
         ctype = ContentType.objects.get(model=cleaned_data.get("content_type"))
 
         ModelClass = ctype.model_class() # either TestList or TestListCycle
 
-        testlist = ModelClass.objects.get(pk=testlist_pk)
-        all_tests = testlist.all_tests()
+        source_testlist = ModelClass.objects.get(pk=source_testlist_pk)
+        all_tests = source_testlist.all_tests()
 
         dest_utis = UnitTestInfo.objects.filter(test__in=all_tests, unit=dest_unit).order_by("test")
         source_utis = UnitTestInfo.objects.filter(test__in=all_tests, unit=source_unit).order_by("test")
 
         context["dest_source_utis"] = zip(dest_utis, source_utis)
-        context["test_list"] = testlist
+        context["source_test_list"] = source_testlist
         context["source_unit"] = source_unit
         context["dest_unit"] = dest_unit
 
@@ -61,8 +61,8 @@ class SetReferencesAndTolerances(FormPreview):
 
         return HttpResponseRedirect(reverse_lazy('qa_copy_refs_and_tols'))
 
-def testlist_json(request, source_unit, content_type):
 
+def testlist_json(request, source_unit, content_type):
     ctype = ContentType.objects.get(model=content_type)
 
     if ctype.name == 'test list':
@@ -75,19 +75,6 @@ def testlist_json(request, source_unit, content_type):
         return HttpResponse(json.dumps(testlistcycles), content_type='application/json')
     else:
         raise ValidationError(_('Invalid value'))
-
-
-def destunit_json(request, source_unit, content_type, testlist):
-
-    ctype = ContentType.objects.get(model=content_type)
-
-    if ctype.name not in ('test list', 'test list cycle'):
-        raise ValidationError(_('Invalid value'), code='invalid')
-
-    utcs = list(UnitTestCollection.objects.filter(object_id=testlist, content_type=ctype)
-                    .exclude(unit__pk=source_unit).values_list('unit__pk', 'unit__name'))
-    return HttpResponse(json.dumps(utcs), content_type='application/json')
-
 
 
 
