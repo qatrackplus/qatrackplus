@@ -986,17 +986,19 @@ class UnitTestCollection(models.Model):
 
 
         all_tests = self.tests_object.all_tests()
-        source_unit_test_infos = UnitTestInfo.objects.filter(test__in=all_tests, unit=self.unit)
+        source_unit_test_infos = UnitTestInfo.objects.filter(
+            test__in=all_tests, unit=self.unit
+        ).select_related(
+            "reference", "tolerance"
+        )
 
         for source_uti in source_unit_test_infos:
-            try:
-                dest_uti = UnitTestInfo.objects.get(test=source_uti.test, unit=dest_unit)
-                dest_uti.reference = source_uti.reference
-                dest_uti.tolerance = source_uti.tolerance
-                dest_uti.save()
-            except:
-                # pass silently for UnitTestInfo's which are not available for the destination unit
-                pass
+            UnitTestInfo.objects.filter(
+                test=source_uti.test, unit=dest_unit
+            ).update(
+                reference=source_uti.reference,
+                tolerance=source_uti.tolerance
+            )
 
     #----------------------------------------------------------------------
     def __unicode__(self):
