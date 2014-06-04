@@ -30,13 +30,12 @@ for resource in resources:
 
 urlpatterns = patterns('',
     # CUSTOM ADMIN PAGES
-    # Copy references and tolerances between
+    # Copy references and tolerances between testlists
     url(r'^admin/copy_refs_and_tols/$',
         admin.SetReferencesAndTolerances(forms.SetReferencesAndTolerancesForm), name="qa_copy_refs_and_tols"),
     url(r'^admin/copy_refs_and_tols/gettestlists/(?P<source_unit>[:|\w]+)/(?P<content_type>[:|\w]+)/$',
         'qatrack.qa.views.admin.testlist_json', name='qa_copy_refs_and_tols_testlist_json'),
-    url(r'^admin/copy_refs_and_tols/getdestunit/(?P<source_unit>[:|\w]+)/(?P<content_type>[:|\w]+)/(?P<testlist>[:|\w]+)$',
-        'qatrack.qa.views.admin.destunit_json', name='qa_copy_refs_and_tols_tounit_json'),
+
 
     url(r"^$", base.UTCList.as_view(), name="all_lists"),
 
