@@ -351,7 +351,6 @@ class ReviewTestListInstanceForm(forms.ModelForm):
         return cleaned_data
 
 
-
 #============================================================================
 class SetReferencesAndTolerancesForm(forms.Form):
     """Form for copying references and tolerances from TestList Unit 'x' to TestList Unit 'y' """
@@ -359,25 +358,24 @@ class SetReferencesAndTolerancesForm(forms.Form):
     source_unit = forms.ModelChoiceField(queryset=models.Unit.objects.all())
     content_type = forms.ChoiceField((('', '---------'), ('testlist', 'TestList'), ('testlistcycle', 'TestListCycle')))
 
-    # Populate the testlist field
+    # Populate the source testlist field
     testlistchoices = models.TestList.objects.all().order_by("name").values_list("pk", 'name')
     testlistcyclechoices = models.TestListCycle.objects.all().order_by("name").values_list("pk", 'name')
     choices = [('', '---------')] +list(testlistchoices) + list(testlistcyclechoices)
-    testlist = forms.ChoiceField(choices, label='Testlist(cycle)')
+    source_testlist = forms.ChoiceField(choices, label='Source testlist(cycle)')
 
     # Populate the dest_unit field
-    unit_choices = [('', '---------')] + list(models.Unit.objects.all().values_list('pk', 'name'))
-    dest_unit = forms.ChoiceField(unit_choices, label='Destination unit')
+    dest_unit = forms.ModelChoiceField(queryset=models.Unit.objects.all())
 
     def save(self):
         source_unit = self.cleaned_data.get("source_unit")
-        dest_unit = models.Unit.objects.get(pk=self.cleaned_data.get("dest_unit"))
-        testlist = self.cleaned_data.get("testlist")
+        source_testlist = self.cleaned_data.get("source_testlist")
+        dest_unit = self.cleaned_data.get("dest_unit")
         ctype = ContentType.objects.get(model=self.cleaned_data.get("content_type"))
 
         try:
-            utc = models.UnitTestCollection.objects.get(unit=dest_unit, object_id=testlist,
+            source_utc = models.UnitTestCollection.objects.get(unit=source_unit, object_id=source_testlist,
                                                     content_type=ctype)
         except models.UnitTestCollection.DoesNotExist:
             raise ValidationError(_('Invalid value'), code='invalid')
-        utc.copy_references(source_unit)
+        source_utc.copy_references(dest_unit)
