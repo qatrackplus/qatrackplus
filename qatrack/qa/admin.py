@@ -164,6 +164,10 @@ class UnitTestInfoAdmin(admin.ModelAdmin):
                 if uti.test.type != models.MULTIPLE_CHOICE:
                     if uti.test.type == models.BOOLEAN:
                         ref_type = models.BOOLEAN
+                        if reference == 'True' or reference == 1:
+                            reference = 1
+                        else:
+                            reference = 0
                     else:
                         ref_type = models.NUMERICAL
                     if reference not in ("", None):
@@ -224,9 +228,9 @@ class UnitTestInfoAdmin(admin.ModelAdmin):
         # if selected tests are boolean select all the tolerances which are boolean
         elif 'boolean' in testtypes:
             form.fields["contenttype"].initial = 'boolean'
+            form.fields["reference"].widget = forms.NullBooleanSelect()
             form.fields["tolerance"].required = False
             form.fields["tolerance"].widget = forms.HiddenInput()
-
 
         if 'apply' in request.POST and form.is_valid():
             return self.form_valid(request, queryset, form)
