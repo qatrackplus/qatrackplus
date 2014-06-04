@@ -38,8 +38,17 @@ class SetReferencesAndTolerances(FormPreview):
         source_testlist = ModelClass.objects.get(pk=source_testlist_pk)
         all_tests = source_testlist.all_tests()
 
-        dest_utis = UnitTestInfo.objects.filter(test__in=all_tests, unit=dest_unit).order_by("test")
-        source_utis = UnitTestInfo.objects.filter(test__in=all_tests, unit=source_unit).order_by("test")
+        dest_utis = UnitTestInfo.objects.filter(
+            test__in=all_tests, unit=dest_unit
+        ).select_related(
+            "reference", "tolerance","test"
+        ).order_by("test")
+
+        source_utis = UnitTestInfo.objects.filter(
+            test__in=all_tests, unit=source_unit
+        ).select_related(
+            "reference", "tolerance"
+        ).order_by("test")
 
         context["dest_source_utis"] = zip(dest_utis, source_utis)
         context["source_test_list"] = source_testlist
