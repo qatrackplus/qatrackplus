@@ -984,6 +984,17 @@ class UnitTestCollection(models.Model):
         return urlresolvers.reverse("perform_qa", kwargs={"pk": self.pk})
 
     #----------------------------------------------------------------------
+    def copy_references(self, source_unit):
+        all_tests = self.tests_object.all_tests()
+        source_unit_test_infos = UnitTestInfo.objects.filter(test__in=all_tests, unit=source_unit)
+
+        for source_uti in source_unit_test_infos:
+            dest_uti = UnitTestInfo.objects.get(test=source_uti.test, unit=self.unit)
+            dest_uti.reference = source_uti.reference
+            dest_uti.tolerance = source_uti.tolerance
+            dest_uti.save()
+
+    #----------------------------------------------------------------------
     def __unicode__(self):
         return "UnitTestCollection(%s)" % self.pk
 

@@ -8,6 +8,10 @@ from django.contrib.admin import widgets, options
 from django.utils import timezone
 from django.utils.text import Truncator
 from django.utils.html import escape
+from django.core.urlresolvers import reverse_lazy
+from django.shortcuts import redirect
+
+from admin_views.admin import AdminViews
 
 import qatrack.qa.models as models
 
@@ -114,8 +118,13 @@ def test_type(obj):
 test_type.admin_order_field = "test__type"
 
 
-#============================================================================
-class UnitTestInfoAdmin(admin.ModelAdmin):
+class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
+    admin_views = (
+            ('Copy References & Tolerances', 'redirect_to'),
+    )
+
+    def redirect_to(self, *args, **kwargs):
+        return redirect(reverse_lazy("qa_copy_refs_and_tols"))
 
     form = TestInfoForm
     fields = (

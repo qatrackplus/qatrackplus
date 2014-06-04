@@ -1,0 +1,23 @@
+{% extends "admin/base_site.html" %}
+{% load staticfiles %}
+
+{% block content %}
+<h1>Copy Reference &amp; Tolerances </h1>
+<p>Select the source unit and test list (or test list cycle) and destination units.</p>
+
+<form action="." method="post">{% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" value="Copy references and tolerances" />
+</form>
+
+<script type="text/javascript">
+    var ADMINURLs = {
+        GETTESTLIST: "{% url qa_copy_refs_and_tols_testlist_json source_unit=":source_unit:" content_type=":content_type:" %}",
+        GETDESTUNIT: "{% url qa_copy_refs_and_tols_tounit_json source_unit=":source_unit:" content_type=":content_type:" testlist=":testlist:" %}"
+    }
+</script>
+
+<script src="{% static "pinax/js/jquery-1.10.2.min.js" %}"></script>
+<script language="javascript" type="text/javascript" src="{% static "js/unittestinfo_admin.js" %}?v={{VERSION}}"></script>
+{% endblock %}
+

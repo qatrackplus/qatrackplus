@@ -5,10 +5,13 @@ from django.forms.models import inlineformset_factory
 from django.forms.widgets import RadioSelect, Select, HiddenInput
 from django.utils import timezone
 from django.utils.translation import ugettext as _
+from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
 
 from django.conf import settings
 
 from .. import models
+
 
 from qatrack.qa import utils
 
@@ -347,3 +350,35 @@ class ReviewTestListInstanceForm(forms.ModelForm):
         if self.instance.created_by == self.user and not self.user.has_perm('qa.can_review_own_tests'):
             raise ValidationError("You do not have the required permission to review your own tests.")
         return cleaned_data
+
+
+
+#============================================================================
+class SetReferencesAndTolerancesForm(forms.Form):
+    """Form for copying references and tolerances from TestList Unit 'x' to TestList Unit 'y' """
+
+    source_unit = forms.ModelChoiceField(queryset=models.Unit.objects.all())
+    content_type = forms.ChoiceField((('', '---------'), ('testlist', 'TestList'), ('testlistcycle', 'TestListCycle')))
+
+    # Populate the testlist field
+    testlistchoices = models.TestList.objects.all().order_by("name").values_list("pk", 'name')
+    testlistcyclechoices = models.TestListCycle.objects.all().order_by("name").values_list("pk", 'name')
+    choices = [('', '---------')] +list(testlistchoices) + list(testlistcyclechoices)
+    testlist = forms.ChoiceField(choices, label='Testlist(cycle)')
+
+    # Populate the dest_unit field
+    unit_choices = [('', '---------')] + list(models.Unit.objects.all().values_list('pk', 'name'))
+    dest_unit = forms.ChoiceField(unit_choices, label='Destination unit')
+
+    def save(self):
+        source_unit = self.cleaned_data.get("source_unit")
+        dest_unit = models.Unit.objects.get(pk=self.cleaned_data.get("dest_unit"))
+        testlist = self.cleaned_data.get("testlist")
+        ctype = ContentType.objects.get(model=self.cleaned_data.get("content_type"))
+
+        try:
+            utc = models.UnitTestCollection.objects.get(unit=dest_unit, object_id=testlist,
+                                                    content_type=ctype)
+        except models.UnitTestCollection.DoesNotExist:
+            raise ValidationError(_('Invalid value'), code='invalid')
+        utc.copy_references(source_unit)

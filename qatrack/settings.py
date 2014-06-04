@@ -201,6 +201,7 @@ INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
+    'django.contrib.formtools',
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.messages',
@@ -220,7 +221,7 @@ INSTALLED_APPS = [
     'qatrack.contacts',
 
     'south',
-
+    'admin_views',
 ]
 #-----------------------------------------------------------------------------
 # Session Settings
