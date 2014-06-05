@@ -57,18 +57,24 @@ class TestInstanceWidgetsMixin(object):
         value = cleaned_data.get("value", None)
         string_value = cleaned_data.get("string_value", None)
 
-        # force user to enter value unless skipping test
-        if value is None and not string_value and not skipped:
-            self._errors["value"] = self.error_class(["Value required if not skipping"])
-        elif (value is not None or string_value) and skipped:
-            self._errors["value"] = self.error_class(["Clear value if skipping"])
 
-        if not self.user.has_perm("qa.can_skip_without_comment") and skipped and not comment:
-            self._errors["skipped"] = self.error_class(["Please add comment when skipping"])
-            del cleaned_data["skipped"]
+        if self.unit_test_info.test.skip_required():
+            # force user to enter value unless skipping test
+            if value is None and not string_value and not skipped:
+                self._errors["value"] = self.error_class(["Value required if not skipping"])
+            elif (value is not None or string_value) and skipped:
+                self._errors["value"] = self.error_class(["Clear value if skipping"])
 
-        if value is None and skipped and "value" in self.errors:
-            del self.errors["value"]
+            if not self.user.has_perm("qa.can_skip_without_comment") and skipped and not comment:
+                self._errors["skipped"] = self.error_class(["Please add comment when skipping"])
+                del cleaned_data["skipped"]
+
+            if value is None and skipped and "value" in self.errors:
+                del self.errors["value"]
+        else:
+            cleaned_data['skipped'] = value is None and not string_value
+            if "value" in self.errors:
+                del self.errors["value"]
 
         return cleaned_data
 
