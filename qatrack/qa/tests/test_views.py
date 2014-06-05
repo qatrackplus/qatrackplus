@@ -979,9 +979,10 @@ class TestPerformQA(TestCase):
         self.assertEqual(response.status_code, 200)
 
         for f in response.context["formset"].forms:
-            self.assertTrue(len(f.errors) > 0)
-    #---------------------------------------------------------------------------
+            if f.unit_test_info.test.skip_required():
+                self.assertTrue(len(f.errors) > 0)
 
+    #---------------------------------------------------------------------------
     def test_skipped(self):
         data = {
             "work_completed": "11-07-2012 00:10",
@@ -1002,9 +1003,10 @@ class TestPerformQA(TestCase):
         self.assertEqual(response.status_code, 200)
 
         for f in response.context["formset"].forms:
-            self.assertTrue(len(f.errors) > 0)
-    #---------------------------------------------------------------------------
+            if f.unit_test_info.test.skip_required():
+                self.assertTrue(len(f.errors) > 0)
 
+    #---------------------------------------------------------------------------
     def test_skipped_with_val(self):
         data = {
             "work_completed": "11-07-2012 00:10",
@@ -1051,6 +1053,36 @@ class TestPerformQA(TestCase):
 
         for f in response.context["formset"].forms:
             self.assertTrue(len(f.errors) > 0)
+
+    #---------------------------------------------------------------------------
+    def test_skipped_not_required(self):
+
+        not_required = [self.t_const, self.t_comp, self.t_string_comp]
+
+        data = {
+            "work_completed": "11-07-2012 00:10",
+            "status": self.status.pk,
+            "form-TOTAL_FORMS": len(self.tests),
+            "form-INITIAL_FORMS": "0",
+            "form-MAX_NUM_FORMS": "",
+        }
+
+        for test_idx, test in enumerate(self.tests):
+            data["form-%d-skipped" % test_idx] = "false"
+            data["form-%d-test" % test_idx] = test.pk
+            data["form-%d-comment" % test_idx] = ""
+            if test in not_required:
+                data["form-%d-value" % test_idx] = None
+            else:
+                data["form-%d-value" % test_idx] = 1
+
+        response = self.client.post(self.url, data=data)
+
+        for f in response.context["formset"].forms:
+            print f.unit_test_info.test, f.errors
+
+        # not skipped but composite, or constant so there should be no form errors and a 302 status
+        self.assertEqual(response.status_code, 302)
 
     #----------------------------------------------------------------------
     def test_cycle(self):
