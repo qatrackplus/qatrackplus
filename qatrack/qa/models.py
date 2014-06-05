@@ -509,6 +509,10 @@ class Test(models.Model):
         """return True if this is a multiple choice test else, false"""
         return self.type == MULTIPLE_CHOICE
 
+    #----------------------------------------------------------------------
+    def skip_required(self):
+        return self.type not in (COMPOSITE, CONSTANT, STRING_COMPOSITE, )
+
     #---------------------------------------------------------------------------
     def check_test_type(self, field, test_types, display):
         #"""check that correct test type is set"""
