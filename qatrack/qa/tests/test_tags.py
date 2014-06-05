@@ -22,7 +22,7 @@ class TestTags(TestCase):
     #----------------------------------------------------------------------
     def test_qa_value_form(self):
         form = forms.CreateTestInstanceForm()
-        rendered = qa_tags.qa_value_form(form)
+        rendered = qa_tags.qa_value_form(form, self.unit_test_list.tests_object)
         self.assertIsInstance(rendered, basestring)
 
     #----------------------------------------------------------------------

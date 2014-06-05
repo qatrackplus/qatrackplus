@@ -212,6 +212,7 @@ INSTALLED_APPS = [
 
     'genericdropdown',
 
+    'qatrack.cache',
     'qatrack.accounts',
     'qatrack.units',
     'qatrack.qa',
@@ -223,6 +224,25 @@ INSTALLED_APPS = [
     'south',
     'admin_views',
 ]
+#-----------------------------------------------------------------------------
+# Cache settings
+
+CACHE_UNREVIEWED_COUNT = 'unreviewed-count'
+CACHE_QA_FREQUENCIES = 'qa-frequencies'
+MAX_CACHE_TIMEOUT =  24*60*60 # 24hours
+
+CACHE_LOCATION = os.path.join(PROJECT_ROOT, "cache", "cache_data")
+if not os.path.isdir(CACHE_LOCATION):
+    os.mkdir(CACHE_LOCATION)
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': CACHE_LOCATION,
+        'TIMEOUT': MAX_CACHE_TIMEOUT,
+    }
+}
+
 #-----------------------------------------------------------------------------
 # Session Settings
 SESSION_COOKIE_AGE = 14 * 24 * 60 * 60

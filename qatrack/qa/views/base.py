@@ -73,6 +73,7 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
             "reference",
             "tolerance",
             "unit_test_info__test__category",
+            "unit_test_info__unit",
         )
 
         if self.request.method == "POST":

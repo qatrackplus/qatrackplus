@@ -19,7 +19,7 @@
 
     <script>
         var QACharts = {
-            test_info:{{test_data|safe}}
+            unit_frequencies:{{unit_frequencies|safe}}
         };
     </script>
 
@@ -40,7 +40,7 @@
             <h5>1. Units</h5>
             <div class="checkbox-container test-filter">
                 {% for unit in units %}
-                    <label class="checkbox" title="{{test_list.name}}" >
+                    <label class="checkbox" title="{{unit.name}}" >
                         <input type="checkbox" id="unit-{{unit.pk}}" name="unit[]" value="{{unit.pk}}" title="{{unit.name}}" class="unit unit-type-{{unit.type.pk}}"></input>
                         {{unit.name}}
                     </label>
