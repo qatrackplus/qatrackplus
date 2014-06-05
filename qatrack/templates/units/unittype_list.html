@@ -1,12 +1,9 @@
 {% extends "site_base.html" %}
 {% load staticfiles %}
-{% load cache %}
 
 {% block head_title %}Choose Unit{% endblock %}
 
 {% block body %}
-
-    {% cache 500 choose_unit perms.qa.can_choose_frequency %}
 
     <div class="row-fluid">
         <div class="span12">
@@ -59,8 +56,6 @@
             window.location = $(this).find("a").first().attr("href");
         });
     </script>
-
-    {% endcache %}
 
 {% endblock %}
 

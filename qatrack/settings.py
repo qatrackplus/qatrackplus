@@ -229,7 +229,7 @@ INSTALLED_APPS = [
 
 CACHE_UNREVIEWED_COUNT = 'unreviewed-count'
 CACHE_QA_FREQUENCIES = 'qa-frequencies'
-MAX_CACHE_TIMEOUT =  24*60*60
+MAX_CACHE_TIMEOUT =  24*60*60 # 24hours
 
 CACHE_LOCATION = os.path.join(PROJECT_ROOT, "cache", "cache_data")
 if not os.path.isdir(CACHE_LOCATION):
@@ -239,6 +239,7 @@ CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
         'LOCATION': CACHE_LOCATION,
+        'TIMEOUT': MAX_CACHE_TIMEOUT,
     }
 }
 
