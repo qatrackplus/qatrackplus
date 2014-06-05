@@ -481,7 +481,6 @@ function TestListInstance(){
             return;
         }
 
-        self.submit.attr("disabled", true);
 
         var cur_values = _.map(self.test_instances,function(ti){return ti.value;});
         var qa_values = _.object(_.zip(self.slugs,cur_values));
@@ -517,6 +516,8 @@ function TestListInstance(){
         if (current_composite_call){
             current_composite_call.abort();
         }
+
+        self.submit.attr("disabled", true);
 
         current_composite_call = $.ajax({
             type:"POST",
