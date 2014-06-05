@@ -59,8 +59,6 @@ class TestInstanceWidgetsMixin(object):
 
 
         if self.unit_test_info.test.skip_required():
-            print "here"
-
             # force user to enter value unless skipping test
             if value is None and not string_value and not skipped:
                 self._errors["value"] = self.error_class(["Value required if not skipping"])
@@ -74,9 +72,9 @@ class TestInstanceWidgetsMixin(object):
             if value is None and skipped and "value" in self.errors:
                 del self.errors["value"]
         else:
-            print "there"
-            import ipdb; ipdb.set_trace()
             cleaned_data['skipped'] = value is None and not string_value
+            if "value" in self.errors:
+                del self.errors["value"]
 
         return cleaned_data
 

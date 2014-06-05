@@ -1028,7 +1028,8 @@ class TestPerformQA(TestCase):
         self.assertEqual(response.status_code, 200)
 
         for f in response.context["formset"].forms:
-            self.assertTrue(len(f.errors) > 0)
+            if f.unit_test_info.test.skip_required():
+                self.assertTrue(len(f.errors) > 0)
 
     #---------------------------------------------------------------------------
     def test_skipped_with_invalid_val(self):
@@ -1052,7 +1053,8 @@ class TestPerformQA(TestCase):
         self.assertEqual(response.status_code, 200)
 
         for f in response.context["formset"].forms:
-            self.assertTrue(len(f.errors) > 0)
+            if f.unit_test_info.test.skip_required():
+                self.assertTrue(len(f.errors) > 0)
 
     #---------------------------------------------------------------------------
     def test_skipped_not_required(self):
@@ -1060,7 +1062,7 @@ class TestPerformQA(TestCase):
         not_required = [self.t_const, self.t_comp, self.t_string_comp]
 
         data = {
-            "work_completed": "11-07-2012 00:10",
+            "work_started": "11-07-2012 00:09",
             "status": self.status.pk,
             "form-TOTAL_FORMS": len(self.tests),
             "form-INITIAL_FORMS": "0",
@@ -1071,15 +1073,12 @@ class TestPerformQA(TestCase):
             data["form-%d-skipped" % test_idx] = "false"
             data["form-%d-test" % test_idx] = test.pk
             data["form-%d-comment" % test_idx] = ""
-            if test in not_required:
-                data["form-%d-value" % test_idx] = None
-            else:
+            if test.type == models.CONSTANT or test not in not_required:
                 data["form-%d-value" % test_idx] = 1
+            else:
+                data["form-%d-value" % test_idx] = None
 
         response = self.client.post(self.url, data=data)
-
-        for f in response.context["formset"].forms:
-            print f.unit_test_info.test, f.errors
 
         # not skipped but composite, or constant so there should be no form errors and a 302 status
         self.assertEqual(response.status_code, 302)
