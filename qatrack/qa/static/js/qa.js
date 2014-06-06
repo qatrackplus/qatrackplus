@@ -671,11 +671,31 @@ $(document).ready(function(){
         autoclose:true,
         keyboardNavigation:false
     }).on('changeDate',function (ev){
+        // Set times to default values after a date is chosen
+        // If the current date is selected, the time defaults to  the current time
+        // otherwise 19:30 for work started and 20:30 for work completed
+
         var input = $(this).find("input");
-        if (input.attr("name") === "work_completed"){
-            input.val(input.val()+" 20:30");
+        var cur_val = input.val();
+
+        var now = new Date();
+
+        var zero_pad = function(inp){return inp < 10 ? '0'+inp : inp;};
+
+        var date = zero_pad(now.getDate());
+        var month = zero_pad(now.getMonth()+1);
+        var year = now.getFullYear();
+        var hours = zero_pad(now.getHours());
+        var mins = zero_pad(now.getMinutes());
+
+        var now_str = date +'-'+ month + '-'+year;
+
+        if (now_str === cur_val){
+            input.val(cur_val+" "+hours+":"+mins);
+        }else if (input.attr("name") === "work_completed"){
+            input.val(cur_val+" 20:30");
         }else{
-            input.val(input.val()+" 19:30");
+            input.val(cur_val+" 19:30");
         }
     });
 
