@@ -119,6 +119,17 @@ class UTCList(BaseDataTablesDataSource):
 
     initial_orderings = ["unit__number", "frequency__due_interval", "testlist__name", "testlistcycle__name"]
 
+    def __init__(self, *args, **kwargs):
+        super(UTCList, self).__init__(*args, **kwargs)
+
+        # Store templates on view initialization so we don't have to reload them for every row!
+        self.templates = {
+            'actions': get_template("qa/unittestcollection_actions.html"),
+            'work_completed': get_template("qa/testlistinstance_work_completed.html"),
+            'review_status': get_template("qa/testlistinstance_review_status.html"),
+            'pass_fail':  get_template("qa/pass_fail_status.html"),
+        }
+
     #---------------------------------------------------------------------------
     def set_columns(self):
         """
@@ -147,25 +158,27 @@ class UTCList(BaseDataTablesDataSource):
 
     #----------------------------------------------------------------------
     def get_actions(self, utc):
-        template = get_template("qa/unittestcollection_actions.html")
+        template = self.templates['actions']
         c = Context({"utc": utc, "request": self.request, "action": self.action})
         return template.render(c)
 
     #---------------------------------------------------------------------------
     def get_last_instance_work_completed(self, utc):
-        template = get_template("qa/testlistinstance_work_completed.html")
+        template = self.templates['work_completed']
         c = Context({"instance": utc.last_instance})
         return template.render(c)
 
     #----------------------------------------------------------------------
     def get_last_instance_review_status(self, utc):
-        template = get_template("qa/testlistinstance_review_status.html")
+        template = self.templates['review_status']
         c = Context({"instance": utc.last_instance, "perms": PermWrapper(self.request.user), "request": self.request})
         return template.render(c)
 
     #----------------------------------------------------------------------
     def get_last_instance_pass_fail(self, utc):
-        return qa_tags.as_pass_fail_status(utc.last_instance)
+        template = self.templates['review_status']
+        c = Context({"instance": utc.last_instance, "exclude": [models.NO_TOL], "show_label": True})
+        return template.render(c)
 
     #----------------------------------------------------------------------
     def get_queryset(self):
@@ -218,6 +231,16 @@ class TestListInstances(BaseDataTablesDataSource):
     queryset = models.TestListInstance.objects.all
     initial_orderings = ["unit_test_collection__unit__number", "-work_completed"]
 
+    def __init__(self, *args, **kwargs):
+        super(TestListInstances, self).__init__(*args, **kwargs)
+
+        self.templates = {
+            'actions': get_template("qa/testlistinstance_actions.html"),
+            'work_completed': get_template("qa/testlistinstance_work_completed.html"),
+            'review_status': get_template("qa/testlistinstance_review_status.html"),
+        }
+
+
     #---------------------------------------------------------------------------
     def set_columns(self):
         """
@@ -250,18 +273,18 @@ class TestListInstances(BaseDataTablesDataSource):
 
     #----------------------------------------------------------------------
     def get_actions(self, tli):
-        template = get_template("qa/testlistinstance_actions.html")
+        template = self.templates['actions']
         c = Context({"instance": tli, "perms": PermWrapper(self.request.user), "request": self.request})
         return template.render(c)
 
     #---------------------------------------------------------------------------
     def get_work_completed(self, tli):
-        template = get_template("qa/testlistinstance_work_completed.html")
+        template = self.templates['work_completed']
         c = Context({"instance": tli})
         return template.render(c)
 
     #----------------------------------------------------------------------
     def get_review_status(self, tli):
-        template = get_template("qa/testlistinstance_review_status.html")
+        template = self.templates['review_status']
         c = Context({"instance": tli, "perms": PermWrapper(self.request.user), "request": self.request})
         return template.render(c)
