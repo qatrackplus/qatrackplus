@@ -231,7 +231,9 @@ class TestListInstances(BaseDataTablesDataSource):
     queryset = models.TestListInstance.objects.all
     initial_orderings = ["unit_test_collection__unit__number", "-work_completed"]
 
-    def set_templates(self):
+    def __init__(self, *args, **kwargs):
+        super(TestListInstances, self).__init__(*args, **kwargs)
+
         self.templates = {
             'actions': get_template("qa/testlistinstance_actions.html"),
             'work_completed': get_template("qa/testlistinstance_work_completed.html"),
