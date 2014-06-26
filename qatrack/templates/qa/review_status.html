@@ -1,10 +1,11 @@
 {% for display,status in statuses.items %}
 <span {% if not status.requires_review %} title="Reviewed {{status.reviewed}} by {{status.reviewed_by}}."{% endif %} class="label {% if not status.valid %} label-important {% elif status.requires_review %} label-warning {% else %} label-success{% endif %}">
-
-    {% if status.requires_review %}
-        <i class="icon-question-sign"></i>
-    {% elif not status.valid %}
-        <i class="icon-minus-sign"></i>
+    {% if show_icons %}
+        {% if status.requires_review %}
+            <i class="icon-question-sign"></i>
+        {% elif not status.valid %}
+            <i class="icon-minus-sign"></i>
+        {% endif %}
     {% endif %}
     {{status.count}} {{display}}
 </span>
