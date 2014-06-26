@@ -1,5 +1,6 @@
 import collections
 
+from django.conf import settings
 from django.template import Context
 from django.template.loader import get_template
 from django import template
@@ -79,7 +80,7 @@ def tolerance_for_reference(tol, ref):
 @register.simple_tag
 def history_display(history, unit, test_list, test):
     template = get_template("qa/history.html")
-    c = Context({"history": history, "unit":unit, "test_list":test_list, "test":test })
+    c = Context({"history": history, "unit":unit, "test_list":test_list, "test":test, "show_icons":settings.ICON_SETTINGS['SHOW_STATUS_ICONS_HISTORY'] })
     return template.render(c)
 
 
@@ -109,7 +110,7 @@ def as_review_status(test_list_instance):
     if test_list_instance.comment:
         comment_count += 1
     template = get_template("qa/review_status.html")
-    c = Context({"statuses": dict(statuses), "comments": comment_count})
+    c = Context({"statuses": dict(statuses), "comments": comment_count, "show_icons":settings.ICON_SETTINGS['SHOW_REVIEW_ICONS']})
     return template.render(c)
 
 
@@ -117,7 +118,7 @@ def as_review_status(test_list_instance):
 @register.filter(expects_local_time=True)
 def as_due_date(unit_test_collection):
     template = get_template("qa/due_date.html")
-    c = Context({"unit_test_collection": unit_test_collection})
+    c = Context({"unit_test_collection": unit_test_collection, "show_icons": settings.ICON_SETTINGS["SHOW_DUE_ICONS"]})
     return template.render(c)
 
 

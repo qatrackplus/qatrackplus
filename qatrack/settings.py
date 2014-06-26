@@ -357,6 +357,16 @@ FORCE_SCRIPT_NAME = None
 PAGINATE_DEFAULT = 50  # remember to change iDisplayLength in unittestcollection.js and testlistinstance.js if you change this
 
 NHIST = 5  # number of historical test results to show when reviewing/performing qa
+
+ICON_SETTINGS = {
+    'SHOW_STATUS_ICONS_PERFORM':  True,
+    'SHOW_STATUS_ICONS_LISTING':  True,
+    'SHOW_STATUS_ICONS_REVIEW':  True,
+    'SHOW_STATUS_ICONS_HISTORY':  False,
+    'SHOW_REVIEW_ICONS':  True,
+    'SHOW_DUE_ICONS':  True,
+}
+
 #------------------------------------------------------------------------------
 # Testing settings
 TEST_RUNNER = 'django_coverage.coverage_runner.CoverageRunner'

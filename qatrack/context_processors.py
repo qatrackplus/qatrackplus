@@ -1,3 +1,4 @@
+import json
 from django.core.cache import cache
 from django.conf import settings
 from django.contrib.sites.models import Site
@@ -31,6 +32,7 @@ def site(request):
     if qa_frequencies is None:
         qa_frequencies = list(Frequency.objects.frequency_choices())
 
+
     return {
         'SITE_NAME': site.name,
         'SITE_URL': site.domain,
@@ -39,4 +41,6 @@ def site(request):
         'FEATURE_REQUEST_URL': settings.FEATURE_REQUEST_URL,
         'QA_FREQUENCIES': qa_frequencies,
         'UNREVIEWED': unreviewed,
+        'ICON_SETTINGS': settings.ICON_SETTINGS,
+        'ICON_SETTINGS_JSON': json.dumps(settings.ICON_SETTINGS),
     }
