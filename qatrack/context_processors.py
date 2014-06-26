@@ -31,6 +31,7 @@ def site(request):
     qa_frequencies = cache.get(settings.CACHE_QA_FREQUENCIES)
     if qa_frequencies is None:
         qa_frequencies = list(Frequency.objects.frequency_choices())
+        cache.set(settings.CACHE_QA_FREQUENCIES, qa_frequencies)
 
 
     return {
