@@ -354,13 +354,14 @@ class ChooseUnit(TemplateView):
         if self.active_only:
             q = q.filter(active=True)
 
-        q = q.values("unit", "unit__type__name", "unit__name", "unit__number").order_by("unit__number").distinct()
+        units_ordering = "unit__%s" % (settings.ORDER_UNITS_BY,)
+        q = q.values("unit", "unit__type__name", "unit__name", "unit__number").order_by(units_ordering).distinct()
 
         unit_types = collections.defaultdict(list)
         for unit in q:
             unit_types[unit["unit__type__name"]].append(unit)
 
-        ordered = sorted(unit_types.items(), key=lambda x: min([u["unit__number"] for u in x[1]]))
+        ordered = sorted(unit_types.items(), key=lambda x: min([u[units_ordering] for u in x[1]]))
 
         context["unit_types"] = ordered
 
