@@ -1,9 +1,10 @@
 $(document).ready(function() {
 
     var isNotIE78 = jQuery.support.leadingWhitespace;
-    if (isNotIE78){
+    var element = $("#id_description");
+    if (isNotIE78 && element.length > 0){
         // IE7-8 explode with Ace editor <sigh>
-        var description = $("#id_description").hide();
+        var description = element.hide();
         description.after(
             '<div style="height:100px; " id="description-editor" class="colM aligned vLargeTextField"></div>'
         );
