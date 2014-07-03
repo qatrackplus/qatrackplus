@@ -19,7 +19,7 @@
 
     <script>
         var QACharts = {
-            test_info:{{test_data|safe}}
+            unit_frequencies:{{unit_frequencies|safe}}
         };
     </script>
 
@@ -40,7 +40,7 @@
             <h5>1. Units</h5>
             <div class="checkbox-container test-filter">
                 {% for unit in units %}
-                    <label class="checkbox" title="{{test_list.name}}" >
+                    <label class="checkbox" title="{{unit.name}}" >
                         <input type="checkbox" id="unit-{{unit.pk}}" name="unit[]" value="{{unit.pk}}" title="{{unit.name}}" class="unit unit-type-{{unit.type.pk}}"></input>
                         {{unit.name}}
                     </label>
@@ -132,9 +132,9 @@
                                 <input type="checkbox" id="combine-data" />
                                 Combine Test Data For Units
                             </label><br/>
-                            <label class="checkbox basic-option" for="relative-diff" title="The absolute difference is plotted for tests with absolute tolerances set, otherwise the percent difference is plotted">
+                            <label class="checkbox basic-option" for="relative-diff" >
                                 <input type="checkbox" id="relative-diff" />
-                                Plot relative to reference values
+                                <abbr title="The absolute difference is plotted for tests with absolute tolerances set, otherwise the percent difference is plotted">Plot relative to reference values</abbr>
                             </label>
                         </div>
                     </div>

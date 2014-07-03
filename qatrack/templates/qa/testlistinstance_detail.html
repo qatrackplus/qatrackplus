@@ -150,7 +150,7 @@
                                     {% endif %}
                                 </td>
                                 <td class="qa-history">
-                                    {{history|history_display}}
+                                    {% history_display history test_list_instance.unit_test_collection.unit test_list_instance.test_list test %}
                                 </td>
                                 <td class="review-status">
                                     {{ti.status.name}}

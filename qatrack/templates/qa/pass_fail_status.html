@@ -2,10 +2,12 @@
     {% for status,display,tests in instance.pass_fail_status %}
         {% if tests and status not in exclude%}
         <span class="{%if show_label%}label{%else%}badge{%endif%} {{status}}" title="{{tests|length}} {{display}}">
-            {% if status == 'tolerance' %}
-                <i class="icon-warning-sign"></i>
-            {% elif status == 'action' %}
-                <i class="icon-minus-sign"></i>
+            {% if show_icons %}
+                {% if status == 'tolerance' %}
+                    <i class="icon-warning-sign"></i>
+                {% elif status == 'action' %}
+                    <i class="icon-minus-sign"></i>
+                {% endif %}
             {% endif %}
             {{tests|length}}{%if show_label%} {{display}}{%endif%}
         </span>

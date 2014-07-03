@@ -212,6 +212,7 @@ INSTALLED_APPS = [
 
     'genericdropdown',
 
+    'qatrack.cache',
     'qatrack.accounts',
     'qatrack.units',
     'qatrack.qa',
@@ -223,6 +224,25 @@ INSTALLED_APPS = [
     'south',
     'admin_views',
 ]
+#-----------------------------------------------------------------------------
+# Cache settings
+
+CACHE_UNREVIEWED_COUNT = 'unreviewed-count'
+CACHE_QA_FREQUENCIES = 'qa-frequencies'
+MAX_CACHE_TIMEOUT =  24*60*60 # 24hours
+
+CACHE_LOCATION = os.path.join(PROJECT_ROOT, "cache", "cache_data")
+if not os.path.isdir(CACHE_LOCATION):
+    os.mkdir(CACHE_LOCATION)
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': CACHE_LOCATION,
+        'TIMEOUT': MAX_CACHE_TIMEOUT,
+    }
+}
+
 #-----------------------------------------------------------------------------
 # Session Settings
 SESSION_COOKIE_AGE = 14 * 24 * 60 * 60
@@ -337,6 +357,20 @@ FORCE_SCRIPT_NAME = None
 PAGINATE_DEFAULT = 50  # remember to change iDisplayLength in unittestcollection.js and testlistinstance.js if you change this
 
 NHIST = 5  # number of historical test results to show when reviewing/performing qa
+
+ICON_SETTINGS = {
+    'SHOW_STATUS_ICONS_PERFORM':  True,
+    'SHOW_STATUS_ICONS_LISTING':  True,
+    'SHOW_STATUS_ICONS_REVIEW':  True,
+    'SHOW_STATUS_ICONS_HISTORY':  False,
+    'SHOW_REVIEW_ICONS':  True,
+    'SHOW_DUE_ICONS':  True,
+}
+
+
+# Display ordering on the "Choose Unit" page. (Use "name" or "number")
+ORDER_UNITS_BY = "number"
+
 #------------------------------------------------------------------------------
 # Testing settings
 TEST_RUNNER = 'django_coverage.coverage_runner.CoverageRunner'

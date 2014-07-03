@@ -54,6 +54,9 @@
                 return '<a href="'+url+'" title="'+title+'">'+text+'</a>';
             }
         }
+
+        var ICON_SETTINGS = {{ICON_SETTINGS_JSON|safe}};
+
     </script>
 
     {{block.super}}
@@ -61,6 +64,7 @@
 
 {% block nav %}
     {% if user.is_authenticated %}
+
         <ul class="nav nav-pills">
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle" >

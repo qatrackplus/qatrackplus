@@ -509,6 +509,10 @@ class Test(models.Model):
         """return True if this is a multiple choice test else, false"""
         return self.type == MULTIPLE_CHOICE
 
+    #----------------------------------------------------------------------
+    def skip_required(self):
+        return self.type not in (COMPOSITE, CONSTANT, STRING_COMPOSITE, )
+
     #---------------------------------------------------------------------------
     def check_test_type(self, field, test_types, display):
         #"""check that correct test type is set"""
@@ -536,7 +540,11 @@ class Test(models.Model):
         macro_var_set = re.findall("^\s*%s\s*=.*$" % (self.slug), self.calculation_procedure, re.MULTILINE)
         result_line = self.RESULT_RE.findall(self.calculation_procedure)
         if not (result_line or macro_var_set):
-            errors.append(_('Snippet must set macro name to a value or contain a result line (e.g. %s = my_var/another_var*2 or result = my_var/another_var*2)' % self.slug))
+            if not self.calculation_procedure and self.is_upload():
+                # don't require a user defined calc procedure for uploads
+                self.calculation_procedure = "%s = None" % (self.slug, )
+            else:
+                errors.append(_('Snippet must set macro name to a value or contain a result line (e.g. %s = my_var/another_var*2 or result = my_var/another_var*2)' % self.slug))
 
         try:
             utils.tokenize_composite_calc(self.calculation_procedure)
@@ -988,17 +996,19 @@ class UnitTestCollection(models.Model):
 
 
         all_tests = self.tests_object.all_tests()
-        source_unit_test_infos = UnitTestInfo.objects.filter(test__in=all_tests, unit=self.unit)
+        source_unit_test_infos = UnitTestInfo.objects.filter(
+            test__in=all_tests, unit=self.unit
+        ).select_related(
+            "reference", "tolerance"
+        )
 
         for source_uti in source_unit_test_infos:
-            try:
-                dest_uti = UnitTestInfo.objects.get(test=source_uti.test, unit=dest_unit)
-                dest_uti.reference = source_uti.reference
-                dest_uti.tolerance = source_uti.tolerance
-                dest_uti.save()
-            except:
-                # pass silently for UnitTestInfo's which are not available for the destination unit
-                pass
+            UnitTestInfo.objects.filter(
+                test=source_uti.test, unit=dest_unit
+            ).update(
+                reference=source_uti.reference,
+                tolerance=source_uti.tolerance
+            )
 
     #----------------------------------------------------------------------
     def __unicode__(self):

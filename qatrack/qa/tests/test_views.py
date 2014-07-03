@@ -413,25 +413,6 @@ class TestChartView(TestCase):
 
         self.utc2 = utils.create_unit_test_collection(test_collection=self.tlc, unit=self.utc.unit, null_frequency=True)
 
-    #---------------------------------------------------------------------------
-    def test_create_test_data(self):
-        data = self.view.create_test_data()
-        expected = {
-            "test_lists": {
-                self.tl.pk: set([self.test1.pk, self.test2.pk]),
-            },
-            'unit_frequency_lists': {
-                self.utc.unit.pk: {
-                    self.utc.frequency.pk: set([self.tl.pk]),
-                }
-            }
-        }
-
-        data["test_lists"] = dict(data["test_lists"])
-        for k, v in data["unit_frequency_lists"].items():
-            data["unit_frequency_lists"][k] = dict(v)
-        self.assertDictEqual(data, expected)
-
 
 #============================================================================
 class TestChartData(TestCase):
@@ -979,9 +960,10 @@ class TestPerformQA(TestCase):
         self.assertEqual(response.status_code, 200)
 
         for f in response.context["formset"].forms:
-            self.assertTrue(len(f.errors) > 0)
-    #---------------------------------------------------------------------------
+            if f.unit_test_info.test.skip_required():
+                self.assertTrue(len(f.errors) > 0)
 
+    #---------------------------------------------------------------------------
     def test_skipped(self):
         data = {
             "work_completed": "11-07-2012 00:10",
@@ -1002,9 +984,10 @@ class TestPerformQA(TestCase):
         self.assertEqual(response.status_code, 200)
 
         for f in response.context["formset"].forms:
-            self.assertTrue(len(f.errors) > 0)
-    #---------------------------------------------------------------------------
+            if f.unit_test_info.test.skip_required():
+                self.assertTrue(len(f.errors) > 0)
 
+    #---------------------------------------------------------------------------
     def test_skipped_with_val(self):
         data = {
             "work_completed": "11-07-2012 00:10",
@@ -1026,7 +1009,8 @@ class TestPerformQA(TestCase):
         self.assertEqual(response.status_code, 200)
 
         for f in response.context["formset"].forms:
-            self.assertTrue(len(f.errors) > 0)
+            if f.unit_test_info.test.skip_required():
+                self.assertTrue(len(f.errors) > 0)
 
     #---------------------------------------------------------------------------
     def test_skipped_with_invalid_val(self):
@@ -1050,7 +1034,35 @@ class TestPerformQA(TestCase):
         self.assertEqual(response.status_code, 200)
 
         for f in response.context["formset"].forms:
-            self.assertTrue(len(f.errors) > 0)
+            if f.unit_test_info.test.skip_required():
+                self.assertTrue(len(f.errors) > 0)
+
+    #---------------------------------------------------------------------------
+    def test_skipped_not_required(self):
+
+        not_required = [self.t_const, self.t_comp, self.t_string_comp]
+
+        data = {
+            "work_started": "11-07-2012 00:09",
+            "status": self.status.pk,
+            "form-TOTAL_FORMS": len(self.tests),
+            "form-INITIAL_FORMS": "0",
+            "form-MAX_NUM_FORMS": "",
+        }
+
+        for test_idx, test in enumerate(self.tests):
+            data["form-%d-skipped" % test_idx] = "false"
+            data["form-%d-test" % test_idx] = test.pk
+            data["form-%d-comment" % test_idx] = ""
+            if test.type == models.CONSTANT or test not in not_required:
+                data["form-%d-value" % test_idx] = 1
+            else:
+                data["form-%d-value" % test_idx] = None
+
+        response = self.client.post(self.url, data=data)
+
+        # not skipped but composite, or constant so there should be no form errors and a 302 status
+        self.assertEqual(response.status_code, 302)
 
     #----------------------------------------------------------------------
     def test_cycle(self):

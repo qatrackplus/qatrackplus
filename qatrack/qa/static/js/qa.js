@@ -404,7 +404,7 @@ function TestInstance(test_info, row){
 
                     // Display Image if required
                     if (data.result.is_image){
-                        var image_url = QAURLs.MEDIA_URL + "/uploads/tmp/" + data.result.temp_file_name;
+                        var image_url = QAURLs.MEDIA_URL + "uploads/tmp/" + data.result.temp_file_name;
                         self.display_image(image_url);
                      }
 
@@ -428,8 +428,9 @@ function TestInstance(test_info, row){
     this.update_value_from_input();
     // Display images
     self.display_image = function(url){
-        var id = self.test_info.test.name;
-        var test_name = '<strong><p>Test name: '+ id + '</p></strong>';
+        var id = self.test_info.test.slug;
+        var name = self.test_info.test.name;
+        var test_name = '<strong><p>Test name: '+ name + '</p></strong>';
         var img_tag =  '<img src="'+ url+ '" class="qa-image">';
         var html = test_name + img_tag;
         if (self.test_info.test.display_image){
@@ -486,7 +487,6 @@ function TestListInstance(){
             return;
         }
 
-        self.submit.attr("disabled", true);
 
         var cur_values = _.map(self.test_instances,function(ti){return ti.value;});
         var qa_values = _.object(_.zip(self.slugs,cur_values));
@@ -522,6 +522,8 @@ function TestListInstance(){
         if (current_composite_call){
             current_composite_call.abort();
         }
+
+        self.submit.attr("disabled", true);
 
         current_composite_call = $.ajax({
             type:"POST",
@@ -675,11 +677,31 @@ $(document).ready(function(){
         autoclose:true,
         keyboardNavigation:false
     }).on('changeDate',function (ev){
+        // Set times to default values after a date is chosen
+        // If the current date is selected, the time defaults to  the current time
+        // otherwise 19:30 for work started and 20:30 for work completed
+
         var input = $(this).find("input");
-        if (input.attr("name") === "work_completed"){
-            input.val(input.val()+" 20:30");
+        var cur_val = input.val();
+
+        var now = new Date();
+
+        var zero_pad = function(inp){return inp < 10 ? '0'+inp : inp;};
+
+        var date = zero_pad(now.getDate());
+        var month = zero_pad(now.getMonth()+1);
+        var year = now.getFullYear();
+        var hours = zero_pad(now.getHours());
+        var mins = zero_pad(now.getMinutes());
+
+        var now_str = date +'-'+ month + '-'+year;
+
+        if (now_str === cur_val){
+            input.val(cur_val+" "+hours+":"+mins);
+        }else if (input.attr("name") === "work_completed"){
+            input.val(cur_val+" 20:30");
         }else{
-            input.val(input.val()+" 19:30");
+            input.val(cur_val+" 19:30");
         }
     });
 

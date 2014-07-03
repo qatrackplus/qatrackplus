@@ -1,5 +1,6 @@
 import collections
 
+from django.conf import settings
 from django.template import Context
 from django.template.loader import get_template
 from django import template
@@ -10,10 +11,11 @@ register = template.Library()
 
 
 @register.simple_tag
-def qa_value_form(form, include_history=False, include_ref_tols=False, test_info=None):
+def qa_value_form(form, test_list, include_history=False, include_ref_tols=False, test_info=None):
     template = get_template("qa/qavalue_form.html")
     c = Context({
         "form": form,
+        "test_list":test_list,
         "test_info": test_info,
         "include_history": include_history,
         "include_ref_tols": include_ref_tols,
@@ -69,11 +71,18 @@ def tolerance_for_reference(tol, ref):
 
 
 #----------------------------------------------------------------------
-@register.filter
-def history_display(history):
+#@register.filter
+#def history_display(history):
+#    template = get_template("qa/history.html")
+#    c = Context({"history": history})
+#    return template.render(c)
+
+@register.simple_tag
+def history_display(history, unit, test_list, test):
     template = get_template("qa/history.html")
-    c = Context({"history": history})
+    c = Context({"history": history, "unit":unit, "test_list":test_list, "test":test, "show_icons":settings.ICON_SETTINGS['SHOW_STATUS_ICONS_HISTORY'] })
     return template.render(c)
+
 
 
 #----------------------------------------------------------------------
@@ -101,7 +110,7 @@ def as_review_status(test_list_instance):
     if test_list_instance.comment:
         comment_count += 1
     template = get_template("qa/review_status.html")
-    c = Context({"statuses": dict(statuses), "comments": comment_count})
+    c = Context({"statuses": dict(statuses), "comments": comment_count, "show_icons":settings.ICON_SETTINGS['SHOW_REVIEW_ICONS']})
     return template.render(c)
 
 
@@ -109,7 +118,7 @@ def as_review_status(test_list_instance):
 @register.filter(expects_local_time=True)
 def as_due_date(unit_test_collection):
     template = get_template("qa/due_date.html")
-    c = Context({"unit_test_collection": unit_test_collection})
+    c = Context({"unit_test_collection": unit_test_collection, "show_icons": settings.ICON_SETTINGS["SHOW_DUE_ICONS"]})
     return template.render(c)
 
 

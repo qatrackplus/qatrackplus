@@ -20,9 +20,66 @@ from qatrack.qa.control_chart import control_chart
 from qatrack.units.models import Unit
 from qatrack.qa.utils import SetEncoder
 from braces.views import JSONResponseMixin, PermissionRequiredMixin
+JSON_CONTENT_TYPE = "application/json"
 
 
 local_tz = timezone.get_current_timezone()
+
+from django.db import connection
+import time
+
+def check_query_count():
+    def decorator(func):
+        if settings.DEBUG:
+            def inner(self, *args, **kwargs):
+                initial_queries = len(connection.queries)
+                t1 = time.time()
+                ret = func(self, *args, **kwargs)
+                t2 = time.time()
+                final_queries = len(connection.queries)
+                print "****QUERIES****", final_queries - initial_queries, "in %.3f ms" %(t2-t1)
+                return ret
+            return inner
+        return func
+    return decorator
+
+@check_query_count()
+def get_test_lists_for_unit_frequencies(request):
+
+    units = request.GET.getlist("units[]") or Unit.objects.values_list("pk", flat=True)
+    frequencies = request.GET.getlist("frequencies[]") or models.Frequency.objects.values_list("pk", flat=True)
+
+    test_lists = models.UnitTestCollection.objects.filter(
+        unit__in=units, frequency__in=frequencies,
+        content_type__name="test list"
+    ).values_list("testlist__pk", flat=True)
+
+    test_list_cycle_lists = models.UnitTestCollection.objects.filter(
+        unit__in=units, frequency__in=frequencies,
+        content_type__name="test list cycle"
+    ).values_list("testlistcycle__test_lists__pk", flat=True)
+
+    test_lists = set(test_lists) | set(test_list_cycle_lists)
+
+    json_context = json.dumps({"test_lists":list(test_lists)})
+
+    return HttpResponse(json_context, content_type=JSON_CONTENT_TYPE)
+
+
+@check_query_count()
+def get_tests_for_test_lists(request):
+
+    test_lists = request.GET.getlist("test_lists[]") or models.TestList.objects.values_list("pk", flat=True)
+
+    members = models.TestListMembership.objects.filter(
+        test_list__in=test_lists,
+        test__chart_visibility=True,
+    ).values_list(
+        "test__pk", flat=True
+    )
+
+    json_context = json.dumps({"tests":list(members)})
+    return HttpResponse(json_context, content_type=JSON_CONTENT_TYPE)
 
 
 #============================================================================
@@ -33,38 +90,6 @@ class ChartView(PermissionRequiredMixin, TemplateView):
     raise_exception = True
 
     template_name = "qa/charts.html"
-
-    #----------------------------------------------------------------------
-    def create_test_data(self):
-        """
-        Find all tests that have been performed at least once and organize them
-        into the test lists/units/frequencies they are performed as part of.
-        """
-
-        # note: leaving off the distinct queryhere results in a factor of 3 speedup
-        # (250ms vs 750ms for 150k total test instances)  for a sqlite query.  The
-        # distinctness/uniqueness is guarannteed by using sets below.
-
-        q = models.TestInstance.objects.filter(unit_test_info__test__chart_visibility=True).values_list(
-            "unit_test_info__unit",
-            "unit_test_info__test",
-            "unit_test_info__test__type",
-            "test_list_instance__test_list",
-            "test_list_instance__unit_test_collection__frequency",
-        )
-
-        data = {
-            'test_lists': collections.defaultdict(set),
-            'unit_frequency_lists': collections.defaultdict(lambda: collections.defaultdict(set)),
-        }
-
-        for unit, test, test_type, test_list, frequency in q:
-            if test_type not in (models.UPLOAD, ):
-                data["test_lists"][test_list].add(test)
-                frequency = frequency or 0
-                data["unit_frequency_lists"][unit][frequency].add(test_list)
-
-        return data
 
     #----------------------------------------------------------------------
     def get_context_data(self, **kwargs):
@@ -78,8 +103,8 @@ class ChartView(PermissionRequiredMixin, TemplateView):
 
         self.set_test_lists()
         self.set_tests()
+        self.set_unit_frequencies()
 
-        test_data = self.create_test_data()
         now = timezone.now().astimezone(timezone.get_current_timezone()).date()
 
         c = {
@@ -91,10 +116,23 @@ class ChartView(PermissionRequiredMixin, TemplateView):
             "categories": models.Category.objects.all(),
             "statuses": models.TestInstanceStatus.objects.all(),
             "units": Unit.objects.values("pk", "name"),
-            "test_data": json.dumps(test_data, cls=SetEncoder)
+            "unit_frequencies": json.dumps(self.unit_frequencies, cls=SetEncoder)
         }
         context.update(c)
         return context
+
+    #----------------------------------------------------------------------
+    def set_unit_frequencies(self):
+
+        unit_frequencies = models.UnitTestCollection.objects.exclude(
+            last_instance=None
+        ).values_list(
+            "unit", "frequency"
+        ).order_by("unit").distinct()
+
+        self.unit_frequencies = collections.defaultdict(set)
+        for u, f in unit_frequencies:
+            self.unit_frequencies[u].add(f)
 
     #----------------------------------------------------------------------
     def set_test_lists(self):
@@ -113,10 +151,12 @@ class ChartView(PermissionRequiredMixin, TemplateView):
 
     #----------------------------------------------------------------------
     def set_tests(self):
-        """self.tests is set to all tests that have been completed
-        one or more times"""
+        """self.tests is set to all tests that are chartable"""
+
         self.tests = models.Test.objects.order_by(
             "name"
+        ).filter(
+            chart_visibility=True
         ).values(
             "pk", "category", "name", "description",
         )

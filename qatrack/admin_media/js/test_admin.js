@@ -32,19 +32,26 @@ $(document).ready(function() {
     $("#id_type").change(toggle_test_type);
     toggle_test_type();
 
-    var calcProcedure = $("#id_calculation_procedure").hide();
-    calcProcedure.after('<div style="height:200px; " id="calc-procedure-editor" class="colM aligned vLargeTextField"></div>');
+    var isNotIE78 = jQuery.support.leadingWhitespace;
+    var element = $("#id_calculation_procedure");
 
-    var calcProcedureEditor = ace.edit("calc-procedure-editor");
-    var session = calcProcedureEditor.getSession();
+    if (isNotIE78 && element.length > 0){
+        // IE7-8 explode with Ace editor sigh
 
-    calcProcedureEditor.setValue(calcProcedure.val());
-    session.setMode( "ace/mode/python");
-    session.setTabSize(4)
-    session.setUseSoftTabs(true)
-    calcProcedureEditor.on('blur', function(){
-        calcProcedure.val(calcProcedureEditor.getValue());
-    });
-    calcProcedureEditor.resize();
+        var calcProcedure = element.hide();
+        calcProcedure.after('<div style="height:200px; " id="calc-procedure-editor" class="colM aligned vLargeTextField"></div>');
+
+        var calcProcedureEditor = ace.edit("calc-procedure-editor");
+        var session = calcProcedureEditor.getSession();
+
+        calcProcedureEditor.setValue(calcProcedure.val());
+        session.setMode( "ace/mode/python");
+        session.setTabSize(4)
+        session.setUseSoftTabs(true)
+        calcProcedureEditor.on('blur', function(){
+            calcProcedure.val(calcProcedureEditor.getValue());
+        });
+        calcProcedureEditor.resize();
+    }
 
 });

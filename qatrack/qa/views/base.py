@@ -1,7 +1,9 @@
 from .. import signals  # signals import needs to be here so signals get registered
 
 import logging
+import collections
 
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.template import Context
@@ -19,6 +21,28 @@ from braces.views import PrefetchRelatedMixin, SelectRelatedMixin
 
 logger = logging.getLogger('qatrack.console')
 
+
+def generate_review_status_context(test_list_instance):
+
+    if not test_list_instance:
+        return {}
+
+    statuses = collections.defaultdict(lambda: {"count": 0})
+    comment_count = 0
+    for ti in test_list_instance.testinstance_set.all():
+        statuses[ti.status.name]["count"] += 1
+        statuses[ti.status.name]["valid"] = ti.status.valid
+        statuses[ti.status.name]["requires_review"] = ti.status.requires_review
+        statuses[ti.status.name]["reviewed_by"] = test_list_instance.reviewed_by
+        statuses[ti.status.name]["reviewed"] = test_list_instance.reviewed
+        if ti.comment:
+            comment_count += 1
+    if test_list_instance.comment:
+        comment_count += 1
+
+    c = {"statuses": dict(statuses), "comments": comment_count, "show_icons": settings.ICON_SETTINGS['SHOW_REVIEW_ICONS']}
+
+    return c
 
 #============================================================================
 class TestListInstanceMixin(SelectRelatedMixin, PrefetchRelatedMixin):
@@ -73,6 +97,7 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
             "reference",
             "tolerance",
             "unit_test_info__test__category",
+            "unit_test_info__unit",
         )
 
         if self.request.method == "POST":
@@ -118,6 +143,18 @@ class UTCList(BaseDataTablesDataSource):
 
     initial_orderings = ["unit__number", "frequency__due_interval", "testlist__name", "testlistcycle__name"]
 
+    def __init__(self, *args, **kwargs):
+        super(UTCList, self).__init__(*args, **kwargs)
+
+        # Store templates on view initialization so we don't have to reload them for every row!
+        self.templates = {
+            'actions': get_template("qa/unittestcollection_actions.html"),
+            'work_completed': get_template("qa/testlistinstance_work_completed.html"),
+            'review_status': get_template("qa/testlistinstance_review_status.html"),
+            'pass_fail':  get_template("qa/pass_fail_status.html"),
+            'due_date':  get_template("qa/due_date.html"),
+        }
+
     #---------------------------------------------------------------------------
     def set_columns(self):
         """
@@ -134,7 +171,7 @@ class UTCList(BaseDataTablesDataSource):
                 ),
                 ("testlist__name", "testlistcycle__name",)
             ),
-            (qa_tags.as_due_date, None, None),
+            (self.get_due_date, None, None),
             (lambda x: x.unit.name, "unit__name__exact", "unit__number"),
             (lambda x: x.frequency.name if x.frequency else "Ad Hoc", "frequency", "frequency__due_interval"),
 
@@ -145,26 +182,35 @@ class UTCList(BaseDataTablesDataSource):
         )
 
     #----------------------------------------------------------------------
+    def get_due_date(self, utc):
+        template = self.templates['due_date']
+        c = Context({"unit_test_collection": utc, "show_icons": settings.ICON_SETTINGS["SHOW_DUE_ICONS"]})
+        return template.render(c)
+
+    #----------------------------------------------------------------------
     def get_actions(self, utc):
-        template = get_template("qa/unittestcollection_actions.html")
+        template = self.templates['actions']
         c = Context({"utc": utc, "request": self.request, "action": self.action})
         return template.render(c)
 
     #---------------------------------------------------------------------------
     def get_last_instance_work_completed(self, utc):
-        template = get_template("qa/testlistinstance_work_completed.html")
+        template = self.templates['work_completed']
         c = Context({"instance": utc.last_instance})
         return template.render(c)
 
     #----------------------------------------------------------------------
     def get_last_instance_review_status(self, utc):
-        template = get_template("qa/testlistinstance_review_status.html")
+        template = self.templates['review_status']
         c = Context({"instance": utc.last_instance, "perms": PermWrapper(self.request.user), "request": self.request})
+        c.update(generate_review_status_context(utc.last_instance))
         return template.render(c)
 
     #----------------------------------------------------------------------
     def get_last_instance_pass_fail(self, utc):
-        return qa_tags.as_pass_fail_status(utc.last_instance)
+        template = self.templates['pass_fail']
+        c = Context({"instance": utc.last_instance, "exclude": [models.NO_TOL], "show_label": True, "show_icons":settings.ICON_SETTINGS['SHOW_STATUS_ICONS_LISTING']})
+        return template.render(c)
 
     #----------------------------------------------------------------------
     def get_queryset(self):
@@ -217,6 +263,17 @@ class TestListInstances(BaseDataTablesDataSource):
     queryset = models.TestListInstance.objects.all
     initial_orderings = ["unit_test_collection__unit__number", "-work_completed"]
 
+    def __init__(self, *args, **kwargs):
+        super(TestListInstances, self).__init__(*args, **kwargs)
+
+        self.templates = {
+            'actions': get_template("qa/testlistinstance_actions.html"),
+            'work_completed': get_template("qa/testlistinstance_work_completed.html"),
+            'review_status': get_template("qa/testlistinstance_review_status.html"),
+            'pass_fail':  get_template("qa/pass_fail_status.html"),
+        }
+
+
     #---------------------------------------------------------------------------
     def set_columns(self):
         """
@@ -232,7 +289,7 @@ class TestListInstances(BaseDataTablesDataSource):
             (self.get_work_completed, None, "work_completed"),
             (lambda x: x.created_by.username, "created_by__username__icontains", "created_by__username"),
             (self.get_review_status, None, None),
-            (qa_tags.as_pass_fail_status, None, None),
+            (self.get_pass_fail, None, None),
         )
 
     #----------------------------------------------------------------------
@@ -249,18 +306,25 @@ class TestListInstances(BaseDataTablesDataSource):
 
     #----------------------------------------------------------------------
     def get_actions(self, tli):
-        template = get_template("qa/testlistinstance_actions.html")
+        template = self.templates['actions']
         c = Context({"instance": tli, "perms": PermWrapper(self.request.user), "request": self.request})
         return template.render(c)
 
     #---------------------------------------------------------------------------
     def get_work_completed(self, tli):
-        template = get_template("qa/testlistinstance_work_completed.html")
+        template = self.templates['work_completed']
         c = Context({"instance": tli})
         return template.render(c)
 
     #----------------------------------------------------------------------
     def get_review_status(self, tli):
-        template = get_template("qa/testlistinstance_review_status.html")
+        template = self.templates['review_status']
         c = Context({"instance": tli, "perms": PermWrapper(self.request.user), "request": self.request})
+        c.update(generate_review_status_context(tli))
+        return template.render(c)
+
+    #----------------------------------------------------------------------
+    def get_pass_fail(self, tli):
+        template = self.templates['pass_fail']
+        c = Context({"instance": tli, "exclude": [models.NO_TOL], "show_label": True, "show_icons":settings.ICON_SETTINGS['SHOW_STATUS_ICONS_LISTING']})
         return template.render(c)

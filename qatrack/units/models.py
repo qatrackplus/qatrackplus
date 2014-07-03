@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from django.utils.translation import ugettext as _
 
@@ -82,7 +83,7 @@ class Unit(models.Model):
     # objects = UnitManager()
 
     class Meta:
-        ordering = ["number"]
+        ordering = [settings.ORDER_UNITS_BY]
 
     #----------------------------------------------------------------------
     def __unicode__(self):
