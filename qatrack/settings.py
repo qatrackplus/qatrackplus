@@ -367,6 +367,10 @@ ICON_SETTINGS = {
     'SHOW_DUE_ICONS':  True,
 }
 
+
+# Display ordering on the "Choose Unit" page. (Use "name" or "number")
+ORDER_UNITS_BY = "number"
+
 #------------------------------------------------------------------------------
 # Testing settings
 TEST_RUNNER = 'django_coverage.coverage_runner.CoverageRunner'
