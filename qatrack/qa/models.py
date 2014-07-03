@@ -540,7 +540,11 @@ class Test(models.Model):
         macro_var_set = re.findall("^\s*%s\s*=.*$" % (self.slug), self.calculation_procedure, re.MULTILINE)
         result_line = self.RESULT_RE.findall(self.calculation_procedure)
         if not (result_line or macro_var_set):
-            errors.append(_('Snippet must set macro name to a value or contain a result line (e.g. %s = my_var/another_var*2 or result = my_var/another_var*2)' % self.slug))
+            if not self.calculation_procedure and self.is_upload():
+                # don't require a user defined calc procedure for uploads
+                self.calculation_procedure = "%s = None" % (self.slug, )
+            else:
+                errors.append(_('Snippet must set macro name to a value or contain a result line (e.g. %s = my_var/another_var*2 or result = my_var/another_var*2)' % self.slug))
 
         try:
             utils.tokenize_composite_calc(self.calculation_procedure)
