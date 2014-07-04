@@ -308,7 +308,12 @@ function TestInstance(test_info, row){
             self.value = self.inputs.val();
         }else {
             self.inputs.val(QAUtils.clean_numerical_value(self.inputs.val()));
-            var value = parseFloat(self.inputs.val());
+            var dots = self.inputs.val().match(/\./g);
+            if (dots===null || dots.length <= 1) {
+                var value = parseFloat(self.inputs.val());
+            }else {
+                var value = NaN
+            }
             self.value = _.isNaN(value) ? null : value;
         }
 

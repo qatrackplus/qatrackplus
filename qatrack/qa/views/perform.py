@@ -114,7 +114,7 @@ class Upload(JSONResponseMixin, View):
     def get_upload_name(session_id, unit_test_info, name):
         """construct a unique file name for uploaded file"""
 
-        name = name.rsplit(".")
+        name = name.rsplit(".", 1)
         if len(name) == 1:
             name.append("")
         name, ext = name
