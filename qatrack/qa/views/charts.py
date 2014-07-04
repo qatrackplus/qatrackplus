@@ -231,16 +231,20 @@ class BaseChartView(View):
     def test_instance_to_point(self, ti, relative=False):
         """Grab relevent plot data from a :model:`qa.TestInstance`"""
 
-        if relative:
-            if ti.reference and ti.tolerance and ti.tolerance.type == models.ABSOLUTE:
-                value = ti.value - ti.reference.value
-                ref_value = 0
-            elif ti.reference and ti.reference.value != 0.:
+        if relative and ti.reference:
+
+            ref_is_not_zero = ti.reference.value != 0.
+            has_percent_tol = (ti.tolerance and ti.tolerance.type == models.PERCENT)
+            has_no_tol = ti.tolerance is None
+
+            use_percent = has_percent_tol or (has_no_tol and ref_is_not_zero)
+
+            if use_percent:
                 value = 100*(ti.value - ti.reference.value)/ ti.reference.value
                 ref_value = 0.
             else:
-                value = ti.value
-                ref_value = None
+                value = ti.value - ti.reference.value
+                ref_value = 0
         else:
             value = ti.value
             ref_value = ti.reference.value if ti.reference is not None else None
@@ -312,9 +316,7 @@ class BaseChartView(View):
                     "work_completed"
                 )
                 if tis:
-                    name = "%s - %s :: %s" % (u.name, tl.name, t.name)
-                    if relative:
-                        name += " (relative to ref)"
+                    name = "%s - %s :: %s%s" % (u.name, tl.name, t.name,  " (relative to ref)" if relative else "")
                     self.plot_data[name] = [self.test_instance_to_point(ti, relative=relative) for ti in tis]
         else:
             # retrieve test instances for every possible permutation of the
@@ -333,10 +335,7 @@ class BaseChartView(View):
                     "work_completed"
                 )
                 if tis:
-                    name = "%s :: %s" % (u.name, t.name)
-                    if relative:
-                        name += " (relative to ref)"
-
+                    name = "%s :: %s%s" % (u.name, t.name, " (relative to ref)" if relative else "" )
                     self.plot_data[name] = [self.test_instance_to_point(ti, relative=relative) for ti in tis]
 
     #---------------------------------------------------------------------------
