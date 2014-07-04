@@ -131,7 +131,7 @@ def almost_equal(a, b, significant=7):
 
 
 #----------------------------------------------------------------------
-def check_query_count():
+def check_query_count(): # pragma: nocover
     """ A useful debugging decorator for checking the number of queries
     a function is making"""
 

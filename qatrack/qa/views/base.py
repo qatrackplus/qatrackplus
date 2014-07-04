@@ -1,4 +1,4 @@
-from .. import signals  # signals import needs to be here so signals get registered
+from .. import signals  # NOQA :signals import needs to be here so signals get registered
 
 import logging
 import collections
@@ -13,7 +13,6 @@ from django.template.loader import get_template
 from django.views.generic import UpdateView
 
 from qatrack.qa import models
-from qatrack.qa.templatetags import qa_tags
 
 from qatrack.data_tables.views import BaseDataTablesDataSource
 
@@ -43,6 +42,7 @@ def generate_review_status_context(test_list_instance):
     c = {"statuses": dict(statuses), "comments": comment_count, "show_icons": settings.ICON_SETTINGS['SHOW_REVIEW_ICONS']}
 
     return c
+
 
 #============================================================================
 class TestListInstanceMixin(SelectRelatedMixin, PrefetchRelatedMixin):
@@ -209,7 +209,7 @@ class UTCList(BaseDataTablesDataSource):
     #----------------------------------------------------------------------
     def get_last_instance_pass_fail(self, utc):
         template = self.templates['pass_fail']
-        c = Context({"instance": utc.last_instance, "exclude": [models.NO_TOL], "show_label": True, "show_icons":settings.ICON_SETTINGS['SHOW_STATUS_ICONS_LISTING']})
+        c = Context({"instance": utc.last_instance, "exclude": [models.NO_TOL], "show_label": True, "show_icons": settings.ICON_SETTINGS['SHOW_STATUS_ICONS_LISTING']})
         return template.render(c)
 
     #----------------------------------------------------------------------
@@ -273,7 +273,6 @@ class TestListInstances(BaseDataTablesDataSource):
             'pass_fail':  get_template("qa/pass_fail_status.html"),
         }
 
-
     #---------------------------------------------------------------------------
     def set_columns(self):
         """
@@ -326,5 +325,5 @@ class TestListInstances(BaseDataTablesDataSource):
     #----------------------------------------------------------------------
     def get_pass_fail(self, tli):
         template = self.templates['pass_fail']
-        c = Context({"instance": tli, "exclude": [models.NO_TOL], "show_label": True, "show_icons":settings.ICON_SETTINGS['SHOW_STATUS_ICONS_LISTING']})
+        c = Context({"instance": tli, "exclude": [models.NO_TOL], "show_label": True, "show_icons": settings.ICON_SETTINGS['SHOW_STATUS_ICONS_LISTING']})
         return template.render(c)

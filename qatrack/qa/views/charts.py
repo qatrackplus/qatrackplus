@@ -45,7 +45,7 @@ def get_test_lists_for_unit_frequencies(request):
 
     test_lists = set(test_lists) | set(test_list_cycle_lists)
 
-    json_context = json.dumps({"test_lists":list(test_lists)})
+    json_context = json.dumps({"test_lists": list(test_lists)})
 
     return HttpResponse(json_context, content_type=JSON_CONTENT_TYPE)
 
@@ -61,7 +61,7 @@ def get_tests_for_test_lists(request):
         "test__pk", flat=True
     )
 
-    json_context = json.dumps({"tests":list(members)})
+    json_context = json.dumps({"tests": list(members)})
     return HttpResponse(json_context, content_type=JSON_CONTENT_TYPE)
 
 
@@ -157,7 +157,7 @@ class BaseChartView(View):
 
         self.get_plot_data()
         headers, rows = self.create_data_table()
-        resp = self.render_to_response({"data": self.plot_data, "headers":headers, "rows":rows})
+        resp = self.render_to_response({"data": self.plot_data, "headers": headers, "rows": rows})
         return resp
 
     #----------------------------------------------------------------------
@@ -240,7 +240,7 @@ class BaseChartView(View):
             use_percent = has_percent_tol or (has_no_tol and ref_is_not_zero)
 
             if use_percent:
-                value = 100*(ti.value - ti.reference.value)/ ti.reference.value
+                value = 100 * (ti.value - ti.reference.value) / ti.reference.value
                 ref_value = 0.
             else:
                 value = ti.value - ti.reference.value
@@ -248,7 +248,6 @@ class BaseChartView(View):
         else:
             value = ti.value
             ref_value = ti.reference.value if ti.reference is not None else None
-
 
         point = {
             "act_high": None, "act_low": None, "tol_low": None, "tol_high": None,
@@ -262,12 +261,12 @@ class BaseChartView(View):
         }
 
         if ti.tolerance is not None and ref_value is not None:
-            if relative and ti.reference and ti.reference.value != 0. and not ti.tolerance.type==models.ABSOLUTE:
+            if relative and ti.reference and ti.reference.value != 0. and not ti.tolerance.type == models.ABSOLUTE:
                 tols = ti.tolerance.tolerances_for_value(100)
                 for k in tols:
                     tols[k] -= 100.
             else:
-               tols = ti.tolerance.tolerances_for_value(ref_value)
+                tols = ti.tolerance.tolerances_for_value(ref_value)
 
             point.update(tols)
 
@@ -335,7 +334,7 @@ class BaseChartView(View):
                     "work_completed"
                 )
                 if tis:
-                    name = "%s :: %s%s" % (u.name, t.name, " (relative to ref)" if relative else "" )
+                    name = "%s :: %s%s" % (u.name, t.name, " (relative to ref)" if relative else "")
                     self.plot_data[name] = [self.test_instance_to_point(ti, relative=relative) for ti in tis]
 
     #---------------------------------------------------------------------------
@@ -446,8 +445,8 @@ class ExportCSVView(PermissionRequiredMixin, JSONResponseMixin, BaseChartView):
         header1 = []
         header2 = []
         for h in context['headers']:
-            header1.extend([h.encode('utf-8'),'',''])
-            header2.extend(["Date","Value","Ref"])
+            header1.extend([h.encode('utf-8'), '', ''])
+            header2.extend(["Date", "Value", "Ref"])
 
         writer.writerow(header1)
         writer.writerow(header2)
@@ -455,9 +454,8 @@ class ExportCSVView(PermissionRequiredMixin, JSONResponseMixin, BaseChartView):
         for row_set in context['rows']:
             row = []
             for date, val, ref in row_set:
-                date = formats.date_format(date, "DATETIME_FORMAT")  if date is not "" else ""
+                date = formats.date_format(date, "DATETIME_FORMAT") if date is not "" else ""
                 row.extend([date, val, ref])
             writer.writerow(row)
 
         return response
-
