@@ -20,30 +20,14 @@ from qatrack.qa.control_chart import control_chart
 from qatrack.units.models import Unit
 from qatrack.qa.utils import SetEncoder
 from braces.views import JSONResponseMixin, PermissionRequiredMixin
+
+
 JSON_CONTENT_TYPE = "application/json"
 
 
 local_tz = timezone.get_current_timezone()
 
-from django.db import connection
-import time
 
-def check_query_count():
-    def decorator(func):
-        if settings.DEBUG:
-            def inner(self, *args, **kwargs):
-                initial_queries = len(connection.queries)
-                t1 = time.time()
-                ret = func(self, *args, **kwargs)
-                t2 = time.time()
-                final_queries = len(connection.queries)
-                print "****QUERIES****", final_queries - initial_queries, "in %.3f ms" %(t2-t1)
-                return ret
-            return inner
-        return func
-    return decorator
-
-@check_query_count()
 def get_test_lists_for_unit_frequencies(request):
 
     units = request.GET.getlist("units[]") or Unit.objects.values_list("pk", flat=True)
@@ -66,7 +50,6 @@ def get_test_lists_for_unit_frequencies(request):
     return HttpResponse(json_context, content_type=JSON_CONTENT_TYPE)
 
 
-@check_query_count()
 def get_tests_for_test_lists(request):
 
     test_lists = request.GET.getlist("test_lists[]") or models.TestList.objects.values_list("pk", flat=True)
@@ -248,16 +231,20 @@ class BaseChartView(View):
     def test_instance_to_point(self, ti, relative=False):
         """Grab relevent plot data from a :model:`qa.TestInstance`"""
 
-        if relative:
-            if ti.reference and ti.tolerance and ti.tolerance.type == models.ABSOLUTE:
-                value = ti.value - ti.reference.value
-                ref_value = 0
-            elif ti.reference and ti.reference.value != 0.:
+        if relative and ti.reference:
+
+            ref_is_not_zero = ti.reference.value != 0.
+            has_percent_tol = (ti.tolerance and ti.tolerance.type == models.PERCENT)
+            has_no_tol = ti.tolerance is None
+
+            use_percent = has_percent_tol or (has_no_tol and ref_is_not_zero)
+
+            if use_percent:
                 value = 100*(ti.value - ti.reference.value)/ ti.reference.value
                 ref_value = 0.
             else:
-                value = ti.value
-                ref_value = None
+                value = ti.value - ti.reference.value
+                ref_value = 0
         else:
             value = ti.value
             ref_value = ti.reference.value if ti.reference is not None else None
@@ -329,9 +316,7 @@ class BaseChartView(View):
                     "work_completed"
                 )
                 if tis:
-                    name = "%s - %s :: %s" % (u.name, tl.name, t.name)
-                    if relative:
-                        name += " (relative to ref)"
+                    name = "%s - %s :: %s%s" % (u.name, tl.name, t.name,  " (relative to ref)" if relative else "")
                     self.plot_data[name] = [self.test_instance_to_point(ti, relative=relative) for ti in tis]
         else:
             # retrieve test instances for every possible permutation of the
@@ -350,10 +335,7 @@ class BaseChartView(View):
                     "work_completed"
                 )
                 if tis:
-                    name = "%s :: %s" % (u.name, t.name)
-                    if relative:
-                        name += " (relative to ref)"
-
+                    name = "%s :: %s%s" % (u.name, t.name, " (relative to ref)" if relative else "" )
                     self.plot_data[name] = [self.test_instance_to_point(ti, relative=relative) for ti in tis]
 
     #---------------------------------------------------------------------------

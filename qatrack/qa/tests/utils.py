@@ -192,7 +192,7 @@ def create_tolerance(tol_type=models.ABSOLUTE, act_low=-2, tol_low=-1, tol_high=
     if created_by is None:
         created_by = create_user()
     tol = models.Tolerance(
-        type=models.ABSOLUTE,
+        type=tol_type,
         act_low=act_low,
         tol_low=tol_low,
         tol_high=tol_high,

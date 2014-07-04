@@ -52,8 +52,8 @@ urlpatterns = patterns('',
     url(r"^charts/export/csv/$", charts.ExportCSVView.as_view(), name="charts_export_csv"),
     url(r"^charts/data/$", charts.BasicChartData.as_view(), name="chart_data"),
     url(r"^charts/control_chart.png$", charts.ControlChartImage.as_view(), name="control_chart"),
-    url(r"^charts/data/testlists/$", charts.get_test_lists_for_unit_frequencies, name="charts-testlists"),
-    url(r"^charts/data/tests/$", charts.get_tests_for_test_lists, name="charts-tests"),
+    url(r"^charts/data/testlists/$", charts.get_test_lists_for_unit_frequencies, name="charts_testlists"),
+    url(r"^charts/data/tests/$", charts.get_tests_for_test_lists, name="charts_tests"),
 
 
     # overall program status
