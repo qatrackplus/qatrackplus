@@ -135,6 +135,9 @@ def check_query_count():
     """ A useful debugging decorator for checking the number of queries
     a function is making"""
 
+    from django.db import connection
+    import time
+
     def decorator(func):
         if settings.DEBUG:
             def inner(self, *args, **kwargs):

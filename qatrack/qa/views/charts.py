@@ -20,13 +20,13 @@ from qatrack.qa.control_chart import control_chart
 from qatrack.units.models import Unit
 from qatrack.qa.utils import SetEncoder
 from braces.views import JSONResponseMixin, PermissionRequiredMixin
+
+
 JSON_CONTENT_TYPE = "application/json"
 
 
 local_tz = timezone.get_current_timezone()
 
-from django.db import connection
-import time
 
 def get_test_lists_for_unit_frequencies(request):
 
