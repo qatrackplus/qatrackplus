@@ -142,6 +142,7 @@ function set_test_lists(callback){
         });
     }else{
         filter_container("#test-list-container", []);
+        filter_container("#test-container", []);
     }
 }
 /***************************************************/
