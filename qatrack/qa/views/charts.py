@@ -28,22 +28,6 @@ local_tz = timezone.get_current_timezone()
 from django.db import connection
 import time
 
-def check_query_count():
-    def decorator(func):
-        if settings.DEBUG:
-            def inner(self, *args, **kwargs):
-                initial_queries = len(connection.queries)
-                t1 = time.time()
-                ret = func(self, *args, **kwargs)
-                t2 = time.time()
-                final_queries = len(connection.queries)
-                print "****QUERIES****", final_queries - initial_queries, "in %.3f ms" %(t2-t1)
-                return ret
-            return inner
-        return func
-    return decorator
-
-@check_query_count()
 def get_test_lists_for_unit_frequencies(request):
 
     units = request.GET.getlist("units[]") or Unit.objects.values_list("pk", flat=True)
@@ -66,7 +50,6 @@ def get_test_lists_for_unit_frequencies(request):
     return HttpResponse(json_context, content_type=JSON_CONTENT_TYPE)
 
 
-@check_query_count()
 def get_tests_for_test_lists(request):
 
     test_lists = request.GET.getlist("test_lists[]") or models.TestList.objects.values_list("pk", flat=True)
