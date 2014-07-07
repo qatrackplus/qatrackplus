@@ -10,6 +10,7 @@ from qatrack.qa import models
 import mock
 import utils
 
+
 def utc_2am():
     return timezone.make_aware(timezone.datetime(2014, 4, 2, 2), timezone.utc)
 
@@ -882,9 +883,6 @@ class TestUnitTestCollection(TestCase):
         """
 
         with timezone.override("America/Toronto"):
-            today = timezone.localtime(utc_2am()).date()
-            utc_tomorrow = utc_2am().date()
-
             weekly = utils.create_frequency(nom=7, due=7, overdue=9)
             utc = utils.create_unit_test_collection(frequency=weekly)
             utc.set_due_date(utc_2am()+timezone.timedelta(hours=12))
@@ -1719,7 +1717,6 @@ class TestAutoReview(TestCase):
             models.AutoReviewRule(pass_fail=models.OK, status=self.statuses[1]),
             models.AutoReviewRule(pass_fail=models.TOLERANCE, status=self.statuses[2]),
         ])
-
 
         self.test_list = utils.create_test_list()
         for i in range(3):

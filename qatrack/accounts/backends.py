@@ -140,7 +140,7 @@ class WindowsIntegratedAuthenticationBackend(ModelBackend):
 
         By default, returns the username unchanged.
         """
-        return username.replace(settings.CLEAN_USERNAME_STRING,"")
+        return username.replace(settings.CLEAN_USERNAME_STRING, "")
 
     def configure_user(self, user):
         """
@@ -149,23 +149,23 @@ class WindowsIntegratedAuthenticationBackend(ModelBackend):
         By default, returns the user unmodified.
         """
         try:
-            ldap.set_option(ldap.OPT_REFERRALS,0) # DO NOT TURN THIS OFF OR SEARCH WON'T WORK!
+            ldap.set_option(ldap.OPT_REFERRALS, 0)  # DO NOT TURN THIS OFF OR SEARCH WON'T WORK!
 
             # initialize
             l = ldap.initialize(settings.AD_LDAP_URL)
 
             # bind
-            binddn = "%s@%s" % (settings.AD_LDAP_USER,settings.AD_NT4_DOMAIN)
-            l.bind_s(binddn,settings.AD_LDAP_PW)
+            binddn = "%s@%s" % (settings.AD_LDAP_USER, settings.AD_NT4_DOMAIN)
+            l.bind_s(binddn, settings.AD_LDAP_PW)
 
             # search
-            result = l.search_ext_s(settings.AD_SEARCH_DN,ldap.SCOPE_SUBTREE,"%s=%s" % (settings.AD_LU_ACCOUNT_NAME, user),settings.AD_SEARCH_FIELDS)[0][1]
+            result = l.search_ext_s(settings.AD_SEARCH_DN, ldap.SCOPE_SUBTREE, "%s=%s" % (settings.AD_LU_ACCOUNT_NAME, user), settings.AD_SEARCH_FIELDS)[0][1]
             l.unbind_s()
 
             # get personal info
             user.email = result.get(settings.AD_LU_MAIL, [None])[0]
             user.last_name = result.get(settings.AD_LU_SURNAME, [None])[0]
-            user.first_name = result.get(settings.AD_LU_GIVEN_NAME,[None])[0]
+            user.first_name = result.get(settings.AD_LU_GIVEN_NAME, [None])[0]
 
         except Exception:
             return None
@@ -176,4 +176,3 @@ class WindowsIntegratedAuthenticationBackend(ModelBackend):
 
         user.save()
         return user
-

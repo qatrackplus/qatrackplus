@@ -2,16 +2,17 @@ import json
 from django.core.cache import cache
 from django.conf import settings
 from django.contrib.sites.models import Site
-from django.db.models.signals import pre_save, post_save, post_delete
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from qatrack.qa.models import Frequency, TestListInstance
-from qatrack.qa.signals import testlist_complete
+
 
 @receiver(post_save, sender=TestListInstance)
 @receiver(post_delete, sender=TestListInstance)
 def update_unreviewed_cache(*args, **kwargs):
     """When a test list is completed invalidate the unreviewed count"""
     cache.delete(settings.CACHE_UNREVIEWED_COUNT)
+
 
 @receiver(post_save, sender=Frequency)
 @receiver(post_delete, sender=Frequency)
@@ -32,7 +33,6 @@ def site(request):
     if qa_frequencies is None:
         qa_frequencies = list(Frequency.objects.frequency_choices())
         cache.set(settings.CACHE_QA_FREQUENCIES, qa_frequencies)
-
 
     return {
         'SITE_NAME': site.name,

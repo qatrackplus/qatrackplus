@@ -126,7 +126,6 @@ class SetMultipleReferencesAndTolerancesForm(forms.Form):
     reference = forms.CharField(max_length=255)
 
 
-
 class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
 
     admin_views = (
@@ -218,12 +217,10 @@ class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
                                     " together with other test types")
             return HttpResponseRedirect(request.get_full_path())
 
-
         if 'apply' in request.POST:
             form = SetMultipleReferencesAndTolerancesForm(request.POST)
         else:
             form = SetMultipleReferencesAndTolerancesForm(initial={'contenttype': None})
-
 
         # if selected tests are NOT multiple choice or boolean, select all the tolerances which are NOT multiple choice or boolean
         if not 'boolean' in testtypes and not 'multchoice' in testtypes:
@@ -252,7 +249,7 @@ class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
                 'queryset': queryset,
                 'form': form,
                 'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
-                }
+            }
             return render(request, 'admin/qa/unittestinfo/set_multiple_refs_and_tols.html', context)
 
     set_multiple_references_and_tolerances.short_description = "Set multiple references and tolerances"
