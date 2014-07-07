@@ -15,7 +15,7 @@ def qa_value_form(form, test_list, include_history=False, include_ref_tols=False
     template = get_template("qa/qavalue_form.html")
     c = Context({
         "form": form,
-        "test_list":test_list,
+        "test_list": test_list,
         "test_info": test_info,
         "include_history": include_history,
         "include_ref_tols": include_ref_tols,
@@ -71,18 +71,17 @@ def tolerance_for_reference(tol, ref):
 
 
 #----------------------------------------------------------------------
-#@register.filter
-#def history_display(history):
-#    template = get_template("qa/history.html")
-#    c = Context({"history": history})
-#    return template.render(c)
-
 @register.simple_tag
 def history_display(history, unit, test_list, test):
     template = get_template("qa/history.html")
-    c = Context({"history": history, "unit":unit, "test_list":test_list, "test":test, "show_icons":settings.ICON_SETTINGS['SHOW_STATUS_ICONS_HISTORY'] })
+    c = Context({
+        "history": history,
+        "unit": unit,
+        "test_list": test_list,
+        "test": test,
+        "show_icons": settings.ICON_SETTINGS['SHOW_STATUS_ICONS_HISTORY'],
+    })
     return template.render(c)
-
 
 
 #----------------------------------------------------------------------
@@ -90,7 +89,11 @@ def history_display(history, unit, test_list, test):
 def as_pass_fail_status(test_list_instance, show_label=True):
     template = get_template("qa/pass_fail_status.html")
     statuses_to_exclude = [models.NO_TOL]
-    c = Context({"instance": test_list_instance, "exclude": statuses_to_exclude, "show_label": show_label})
+    c = Context({
+        "instance": test_list_instance,
+        "exclude": statuses_to_exclude,
+        "show_label": show_label,
+    })
     return template.render(c)
 
 
@@ -110,7 +113,7 @@ def as_review_status(test_list_instance):
     if test_list_instance.comment:
         comment_count += 1
     template = get_template("qa/review_status.html")
-    c = Context({"statuses": dict(statuses), "comments": comment_count, "show_icons":settings.ICON_SETTINGS['SHOW_REVIEW_ICONS']})
+    c = Context({"statuses": dict(statuses), "comments": comment_count, "show_icons": settings.ICON_SETTINGS['SHOW_REVIEW_ICONS']})
     return template.render(c)
 
 

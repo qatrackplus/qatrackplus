@@ -1,6 +1,5 @@
 import json
 
-from django.views.generic import FormView
 from django.contrib.formtools.preview import FormPreview
 from django.contrib import messages
 from django.core.urlresolvers import reverse_lazy
@@ -10,7 +9,6 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext as _
 
 from qatrack.qa.views import forms
-from qatrack.units.models import Unit
 from qatrack.qa.models import UnitTestCollection, TestList, TestListCycle, UnitTestInfo
 
 
@@ -33,7 +31,7 @@ class SetReferencesAndTolerances(FormPreview):
         source_testlist_pk = cleaned_data.get("source_testlist")
         ctype = ContentType.objects.get(model=cleaned_data.get("content_type"))
 
-        ModelClass = ctype.model_class() # either TestList or TestListCycle
+        ModelClass = ctype.model_class()  # either TestList or TestListCycle
 
         source_testlist = ModelClass.objects.get(pk=source_testlist_pk)
         all_tests = source_testlist.all_tests()
@@ -41,7 +39,7 @@ class SetReferencesAndTolerances(FormPreview):
         dest_utis = UnitTestInfo.objects.filter(
             test__in=all_tests, unit=dest_unit
         ).select_related(
-            "reference", "tolerance","test"
+            "reference", "tolerance", "test"
         ).order_by("test")
 
         source_utis = UnitTestInfo.objects.filter(
@@ -80,10 +78,7 @@ def testlist_json(request, source_unit, content_type):
         return HttpResponse(json.dumps(testlists), content_type='application/json')
     elif ctype.name == 'test list cycle':
         utcs = UnitTestCollection.objects.filter(unit__pk=source_unit, content_type=ctype).values_list('object_id', flat=True)
-        testlistcycles = list(TestListCycle.objects.filter(pk__in=utcs).values_list('pk','name'))
+        testlistcycles = list(TestListCycle.objects.filter(pk__in=utcs).values_list('pk', 'name'))
         return HttpResponse(json.dumps(testlistcycles), content_type='application/json')
     else:
         raise ValidationError(_('Invalid value'))
-
-
-

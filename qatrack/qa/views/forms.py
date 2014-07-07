@@ -6,7 +6,6 @@ from django.forms.widgets import RadioSelect, Select, HiddenInput
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ValidationError
 
 from django.conf import settings
 
@@ -56,7 +55,6 @@ class TestInstanceWidgetsMixin(object):
         comment = cleaned_data.get("comment")
         value = cleaned_data.get("value", None)
         string_value = cleaned_data.get("string_value", None)
-
 
         if self.unit_test_info.test.skip_required():
             # force user to enter value unless skipping test
@@ -368,7 +366,7 @@ class SetReferencesAndTolerancesForm(forms.Form):
     # Populate the source testlist field
     testlistchoices = models.TestList.objects.all().order_by("name").values_list("pk", 'name')
     testlistcyclechoices = models.TestListCycle.objects.all().order_by("name").values_list("pk", 'name')
-    choices = [('', '---------')] +list(testlistchoices) + list(testlistcyclechoices)
+    choices = [('', '---------')] + list(testlistchoices) + list(testlistcyclechoices)
     source_testlist = forms.ChoiceField(choices, label='Source testlist(cycle)')
 
     # Populate the dest_unit field
@@ -381,8 +379,9 @@ class SetReferencesAndTolerancesForm(forms.Form):
         ctype = ContentType.objects.get(model=self.cleaned_data.get("content_type"))
 
         try:
-            source_utc = models.UnitTestCollection.objects.get(unit=source_unit, object_id=source_testlist,
-                                                    content_type=ctype)
+            source_utc = models.UnitTestCollection.objects.get(
+                unit=source_unit, object_id=source_testlist, content_type=ctype
+            )
         except models.UnitTestCollection.DoesNotExist:
             raise ValidationError(_('Invalid value'), code='invalid')
         source_utc.copy_references(dest_unit)

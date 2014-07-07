@@ -229,7 +229,7 @@ INSTALLED_APPS = [
 
 CACHE_UNREVIEWED_COUNT = 'unreviewed-count'
 CACHE_QA_FREQUENCIES = 'qa-frequencies'
-MAX_CACHE_TIMEOUT =  24*60*60 # 24hours
+MAX_CACHE_TIMEOUT = 24 * 60 * 60  # 24hours
 
 CACHE_LOCATION = os.path.join(PROJECT_ROOT, "cache", "cache_data")
 if not os.path.isdir(CACHE_LOCATION):
@@ -291,7 +291,7 @@ AD_LU_ACCOUNT_NAME = "sAMAccountName"
 AD_LU_MAIL = "mail"
 AD_LU_SURNAME = "sn"
 AD_LU_GIVEN_NAME = "givenName"
-AD_LU_MEMBER_OF= "memberOf"
+AD_LU_MEMBER_OF = "memberOf"
 
 # If using SSL use these:
 # AD_LDAP_PORT=636
@@ -380,6 +380,6 @@ COVERAGE_ADDITIONAL_MODULES = ["qatrack.tests"]
 # local_settings contains anything that should be overridden
 # based on site specific requirements (e.g. deployment, development etc)
 try:
-    from local_settings import *
+    from local_settings import *  # NOQA
 except ImportError:
     pass

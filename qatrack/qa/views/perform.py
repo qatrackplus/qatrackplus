@@ -108,7 +108,6 @@ class Upload(JSONResponseMixin, View):
 
         return self.render_json_response(results)
 
-
     #---------------------------------------------------------------
     @staticmethod
     def get_upload_name(session_id, unit_test_info, name):
@@ -751,7 +750,6 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         ti.in_progress = self.object.in_progress
         ti.work_started = self.object.work_started
         ti.work_completed = self.object.work_completed
-
 
         try:
             ti.calculate_pass_fail()

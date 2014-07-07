@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.core import mail
 from qatrack.qa import models, signals
-from qatrack.qa.tests import utils
+import qatrack.qa.tests.utils as utils
 from .models import NotificationSubscription, TOLERANCE
 
 
@@ -16,6 +16,7 @@ class TestEmailSent(TestCase):
         self.ref = models.Reference(type=models.NUMERICAL, value=100.)
         self.tol = models.Tolerance(type=models.PERCENT, act_low=-3, tol_low=-2, tol_high=2, act_high=3)
         self.values = [None, None, 96, 97, 100, 100]
+
         self.statuses = [utils.create_status(name="status%d" % x, slug="status%d" % x) for x in range(len(self.values))]
 
         self.test_list = utils.create_test_list()

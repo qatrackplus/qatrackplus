@@ -1,7 +1,6 @@
 from django.conf import settings
 from django.db import models
 from django.db.models import Q
-from django.dispatch import Signal
 from django.contrib.auth.models import User, Group
 from django.utils.translation import ugettext as _
 from django.core import urlresolvers
@@ -993,7 +992,6 @@ class UnitTestCollection(models.Model):
 
     #----------------------------------------------------------------------
     def copy_references(self, dest_unit):
-
 
         all_tests = self.tests_object.all_tests()
         source_unit_test_infos = UnitTestInfo.objects.filter(

@@ -4,6 +4,8 @@ import StringIO
 import tokenize
 import token
 
+from django.conf import settings
+
 
 #----------------------------------------------------------------------
 class SetEncoder(json.JSONEncoder):
@@ -131,7 +133,7 @@ def almost_equal(a, b, significant=7):
 
 
 #----------------------------------------------------------------------
-def check_query_count():
+def check_query_count():  # pragma: nocover
     """ A useful debugging decorator for checking the number of queries
     a function is making"""
 
@@ -146,9 +148,8 @@ def check_query_count():
                 ret = func(self, *args, **kwargs)
                 t2 = time.time()
                 final_queries = len(connection.queries)
-                print "****QUERIES****", final_queries - initial_queries, "in %.3f ms" %(t2-t1)
+                print "****QUERIES****", final_queries - initial_queries, "in %.3f ms" % (t2 - t1)
                 return ret
             return inner
         return func
     return decorator
-

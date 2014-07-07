@@ -385,16 +385,14 @@ class TestChartView(TestCase):
     #----------------------------------------------------------------------
     def setUp(self):
         self.factory = RequestFactory()
-        freq =  utils.create_frequency()
+        freq = utils.create_frequency()
 
-        for i in range(1,3):
+        for i in range(1, 3):
             unit = utils.create_unit(number=i)
             tl = utils.create_test_list(name="tl%s" % i)
             test = utils.create_test(name="test%s" % i)
             utils.create_test_list_membership(tl, test)
             utils.create_unit_test_collection(unit=unit, test_collection=tl, frequency=freq)
-
-
 
     #----------------------------------------------------------------------
     def test_get_test_lists_for_unit_frequencies_all(self):
@@ -471,7 +469,7 @@ class TestChartData(TestCase):
         self.uti2.tolerance = per_tol
         self.uti2.save()
 
-        self.NPOINTS =  10
+        self.NPOINTS = 10
         for x in range(self.NPOINTS):
             tli = utils.create_test_list_instance(unit_test_collection=self.utc1)
             ti = utils.create_test_instance(value=1., status=self.status, unit_test_info=self.uti1, test_list_instance=tli)
@@ -480,7 +478,7 @@ class TestChartData(TestCase):
             ti.save()
 
             tli2 = utils.create_test_list_instance(unit_test_collection=self.utc2)
-            ti2 =  utils.create_test_instance(value=1., status=self.status, unit_test_info=self.uti1, test_list_instance=tli2)
+            ti2 = utils.create_test_instance(value=1., status=self.status, unit_test_info=self.uti1, test_list_instance=tli2)
             ti2.reference = ref
             ti2.tolerance = per_tol
             ti2.save()
@@ -489,7 +487,7 @@ class TestChartData(TestCase):
                 # create less points for one tests to ensure tabulation routines
                 # can handle data sets of different lengths
                 tli2 = utils.create_test_list_instance(unit_test_collection=self.utc2)
-                ti2 =  utils.create_test_instance(value=1.5, status=self.status, unit_test_info=self.uti2, test_list_instance=tli2)
+                ti2 = utils.create_test_instance(value=1.5, status=self.status, unit_test_info=self.uti2, test_list_instance=tli2)
                 ti2.reference = ref
                 ti2.tolerance = per_tol
                 ti2.save()
@@ -517,7 +515,7 @@ class TestChartData(TestCase):
             "test_lists[]": [self.tl1.pk, self.tl2.pk],
             "units[]": [self.utc1.unit.pk],
             "statuses[]": [self.status.pk],
-            "relative":"true",
+            "relative": "true",
         }
         resp = self.client.get(self.url, data=data)
         data = json.loads(resp.content)
@@ -532,7 +530,7 @@ class TestChartData(TestCase):
             "test_lists[]": [self.tl1.pk, self.tl2.pk],
             "units[]": [self.utc1.unit.pk],
             "statuses[]": [self.status.pk],
-            "combine_data":"true"
+            "combine_data": "true"
         }
         resp = self.client.get(self.url, data=data)
         data = json.loads(resp.content)
@@ -548,15 +546,13 @@ class TestChartData(TestCase):
             "test_lists[]": [self.tl1.pk, self.tl2.pk],
             "units[]": [self.utc1.unit.pk],
             "statuses[]": [self.status.pk],
-            "relative":"true",
+            "relative": "true",
         }
         resp = self.client.get(url, data=data)
-        expected_nlines = 2 + 10 + 1# 2 header  + 10 rows data + 1 blank
+        expected_nlines = 2 + 10 + 1  # 2 header  + 10 rows data + 1 blank
         self.assertTrue(len(resp.content.split('\n')), expected_nlines)
 
         self.assertEqual(resp.get('Content-Disposition'), 'attachment; filename="qatrackexport.csv"')
-
-
 
 
 #============================================================================
