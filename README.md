@@ -50,13 +50,45 @@ are interested in installing or helping develop QATrack+.
 
 ## Important notes regarding 3rd party code in QATrack+
 
+QATrack+ relies on a number of open source projects, a few of which are
+distributed along with QATrack+; licenses covering their usage and
+modification are either included along with the source code files or embeded
+directly in the source (or a url where you can find it).
+
+### Highcharts ###
+
 QATrack+ is distributed with the excellent
 [HighStock](http://www.highcharts.com/products/highstock) charting library.
 Highstock is free for personal & non-profit sites but is NOT free for
 commercial use. Please see the [HighStock license
 page](http://shop.highsoft.com/highstock.html#redist) for details.
 
-A number of other 3rd party libraries are distributed with QATrack+ and
-licenses covering their usage and modification have been included along with
-the source code.
+
+### Bootstrap & Glyphicons ###
+
+For look and feel QATrack+ uses the [Bootstrap](http://getbootstrap.com) html/js/css framework which
+comes with [Glyphicons](http://glyphicons.com/license/).
+
+### FontAwesome ###
+
+Most of the icons in QATrack+ are provided by [Font Awesome]( http://fortawesome.github.io/Font-Awesome/icons/).
+
+### jQuery ###
+
+The ubiquitous javscript library: [jQuery](http://jquery.com)
+
+### Lo-Dash ###
+
+A javascript utility library [Lo Dash](http://lodash.com/)
+
+### Data Tables ###
+
+[Data Tables](http://www.datatables.net/) is an excellent table plugin for jQuery.
+
+### jQuery File Upload Plugin ###
+
+[A plugin](https://github.com/blueimp/jQuery-File-Upload) for doing ajax uplods with jQuery.
+
+
+
 
