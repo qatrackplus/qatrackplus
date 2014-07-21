@@ -72,8 +72,11 @@ class TestInfoForm(forms.ModelForm):
                 self.fields["reference_value"].widget = forms.Select(choices=[("", "---"), (0, "No"), (1, "Yes")])
                 self.fields["tolerance"].widget = forms.HiddenInput()
 
-            elif tt == models.MULTIPLE_CHOICE:
+            elif tt == models.MULTIPLE_CHOICE or self.instance.test.is_string_type():
                 self.fields["reference_value"].widget = forms.HiddenInput()
+                self.fields['tolerance'].queryset = self.fields['tolerance'].queryset.filter(type=models.MULTIPLE_CHOICE)
+            else:
+                self.fields['tolerance'].queryset = self.fields['tolerance'].queryset.exclude(type=models.MULTIPLE_CHOICE)
 
             if tt != models.MULTIPLE_CHOICE and self.instance.reference:
                 if tt == models.BOOLEAN:
@@ -91,9 +94,9 @@ class TestInfoForm(forms.ModelForm):
     def clean(self):
         """make sure valid numbers are entered for boolean data"""
 
-        if self.instance.test.type == models.MULTIPLE_CHOICE and self.cleaned_data["tolerance"]:
+        if (self.instance.test.type == models.MULTIPLE_CHOICE or self.instance.test.is_string_type()) and self.cleaned_data["tolerance"]:
             if self.cleaned_data["tolerance"].type != models.MULTIPLE_CHOICE:
-                raise forms.ValidationError(_("You can't use a non-multiple choice tolerance with a multiple choice test"))
+                raise forms.ValidationError(_("You can't use a non-multiple choice tolerance with a multiple choice or string test"))
         else:
             if "reference_value" not in self.cleaned_data:
                 return self.cleaned_data

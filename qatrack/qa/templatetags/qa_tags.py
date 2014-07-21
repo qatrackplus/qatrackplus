@@ -27,7 +27,7 @@ def qa_value_form(form, test_list, include_history=False, include_ref_tols=False
 @register.simple_tag
 def reference_tolerance_span(test, ref, tol):
 
-    if ref is None and not test.is_mult_choice():
+    if ref is None and not (test.is_mult_choice() or test.is_string_type()):
         return mark_safe("<span>No Ref</span>")
 
     if test.is_boolean():

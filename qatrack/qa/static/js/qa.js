@@ -96,10 +96,15 @@ function TestInfo(data){
 
     this.check_multi = function(value){
 
+        var status, message;
+
+        if (value === ""){
+            return NOT_DONE;
+        }
+
         if (_.isEmpty(self.tolerance) || self.tolerance.mc_pass_choices.length === 0){
             return NO_TOL;
         }
-        var status, message;
         if (_.indexOf(self.tolerance.mc_pass_choices,value) >= 0){
             status = QAUtils.WITHIN_TOL;
             message = QAUtils.WITHIN_TOL_DISP;
@@ -115,10 +120,6 @@ function TestInfo(data){
     };
 
     this.check_upload = function(value){
-        return value ? DONE : NOT_DONE;
-    };
-
-    this.check_string = function(value){
         return value ? DONE : NOT_DONE;
     };
 
@@ -170,8 +171,8 @@ function TestInfo(data){
     this.check_dispatch[QAUtils.CONSTANT]=this.check_numerical;
     this.check_dispatch[QAUtils.SIMPLE]=this.check_numerical;
     this.check_dispatch[QAUtils.COMPOSITE]=this.check_numerical;
-    this.check_dispatch[QAUtils.STRING_COMPOSITE]=this.check_string;
-    this.check_dispatch[QAUtils.STRING]=this.check_string;
+    this.check_dispatch[QAUtils.STRING_COMPOSITE]=this.check_multi;
+    this.check_dispatch[QAUtils.STRING]=this.check_multi;
     this.check_dispatch[QAUtils.UPLOAD]=this.check_upload;
 
     this.calculate_diff = function(value){
