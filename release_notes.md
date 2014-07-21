@@ -25,7 +25,7 @@ Here's a list of some of the changes in this release:
 * The documentation has been split into different versions (corresponding to QATrack+ releases) to accomodate users who are not running
 the latest version of QATrack+.
 * You can now [embed uploaded images right on the test list page](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/v/0.2.8/admin/tests)
-* You can now [choose to hide tests from the list of tests to plot](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/v/0.2.8/admin/tests). Handy to keep limit the list to only those tests you are interested in.
+* You can now [choose to hide tests from the list of tests to plot](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/v/0.2.8/admin/tests). Handy to limit the chart test selection lists to only those tests you are interested in plotting.
 * There is now an ["Auto Review" feature](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/v/0.2.8/admin/auto_review) that can be configured so that only test which are at tolerance or action levels will be placed in the review queue.
 * Page load speeds for the charting page have been greatly improved for large databases
 * You can now [configure your site to use icons](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/v/0.2.8/deployment/settings) in addition to colors to indicate pass/fail & due/overdue. This should help
@@ -40,7 +40,7 @@ with usability for color blind users.  Thanks to Eric Reynard for the great sugg
 * Easily set references & tolerances for [multiple tests at the same time](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/v/0.2.8/admin/setting_refs_and_tols)
 * You can now tweak the look of your QATrack+ site with css using a [site specific css file](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/v/0.2.8/deployment/site_css.md)
 * You can now configure your site to [order the Units on the "Choose Unit" page](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/v/0.2.8/deployment/settings) by number or name.
-* QATrack+ now is using a file based cache to increase page load times. By default
+* QATrack+ now is using a file based cache to decrease page load times. By default
 the cache data is located at qatrack/cache/cache\_data/ but this [can be changed if required](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/v/0.2.8/deployment/settings).
 * a number of other bug fixes and performance enhancements
 
