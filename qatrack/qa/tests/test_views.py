@@ -387,10 +387,16 @@ class TestChartView(TestCase):
         self.factory = RequestFactory()
         freq = utils.create_frequency()
 
+        self.tls = []
+        self.units = []
+        self.tests = []
         for i in range(1, 3):
             unit = utils.create_unit(number=i)
+            self.units.append(unit)
             tl = utils.create_test_list(name="tl%s" % i)
+            self.tls.append(tl)
             test = utils.create_test(name="test%s" % i)
+            self.tests.append(test)
             utils.create_test_list_membership(tl, test)
             utils.create_unit_test_collection(unit=unit, test_collection=tl, frequency=freq)
 
@@ -401,17 +407,17 @@ class TestChartView(TestCase):
         request = self.factory.get(url)
         response = qatrack.qa.views.charts.get_test_lists_for_unit_frequencies(request)
         values = json.loads(response.content)
-        expected = {"test_lists": [1, 2]}
+        expected = {"test_lists": [tl.pk for tl in self.tls]}
         self.assertDictEqual(values, expected)
 
     #----------------------------------------------------------------------
     def test_get_test_lists_for_unit_frequencies_filtered(self):
 
-        url = reverse("charts_testlists")+"?units[]=1"
+        url = reverse("charts_testlists")+"?units[]=%d" % (self.units[0].pk)
         request = self.factory.get(url)
         response = qatrack.qa.views.charts.get_test_lists_for_unit_frequencies(request)
         values = json.loads(response.content)
-        expected = {"test_lists": [1]}
+        expected = {"test_lists": [self.tls[0].pk]}
         self.assertDictEqual(values, expected)
 
     #----------------------------------------------------------------------
@@ -421,17 +427,17 @@ class TestChartView(TestCase):
         request = self.factory.get(url)
         response = qatrack.qa.views.charts.get_tests_for_test_lists(request)
         values = json.loads(response.content)
-        expected = {"tests": [1, 2]}
+        expected = {"tests": [t.pk for t in self.tests]}
         self.assertDictEqual(values, expected)
 
     #----------------------------------------------------------------------
     def test_get_tests_for_test_lists_filtered(self):
 
-        url = reverse("charts_tests")+"?test_lists[]=1"
+        url = reverse("charts_tests")+"?test_lists[]=%d" % (self.units[0].pk)
         request = self.factory.get(url)
         response = qatrack.qa.views.charts.get_tests_for_test_lists(request)
         values = json.loads(response.content)
-        expected = {"tests": [1]}
+        expected = {"tests": [self.tests[0].pk]}
         self.assertDictEqual(values, expected)
 
 
