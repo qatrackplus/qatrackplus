@@ -133,11 +133,18 @@
                             <tr>
                                 <td><strong>{{test.name}}</strong></td>
                                 <td class="review-value">
-                                    {% if ti.string_value %}
-                                    <span class="" title="{{ti.value_display}}">{{ti.value_display|safe}}</span>
-                                    {% else %}
-                                    <span class="label pass-fail {{ti.pass_fail}}" title="{{ti.diff_display}}">{{ti.value_display}}</span>
-                                    {% endif %}
+                                    <span class="label pass-fail {{ti.pass_fail}}" title="{% if ti.string_value %}{{ti.value_display}}{% else %}{{ti.diff_display}}{% endif %}">
+                                        {% with ti.pass_fail as status %}
+                                            {% if ICON_SETTINGS.SHOW_STATUS_ICONS_REVIEW %}
+                                                {% if status == 'tolerance' %}
+                                                    <i class="pull-left icon-warning-sign"></i>
+                                                {% elif status == 'action' %}
+                                                    <i class="pull-left icon-minus-sign"></i>
+                                                {% endif %}
+                                            {% endif %}
+                                        {% endwith %}
+                                        {{ti.value_display|safe}}
+                                    </span>
                                 </td>
                                 <td class="review-ref">
                                     {% reference_tolerance_span test ti.reference ti.tolerance%}

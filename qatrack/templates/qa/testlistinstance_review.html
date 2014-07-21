@@ -158,10 +158,7 @@
                                 <input type="hidden" name="testinstance_set-{{forloop.counter0}}-id" value="{{ti.pk}}" id="id_testinstance_set-{{forloop.counter0}}-id">
                                 <td><strong>{{ti.unit_test_info.test.name}}</strong></td>
                                 <td class="review-value">
-                                    {% if ti.string_value %}
-                                    <span class="" title="{{ti.value_display}}">{{ti.value_display|safe}}</span>
-                                    {% else %}
-                                    <span class="label pass-fail {{ti.pass_fail}}" title="{{ti.diff_display}}">
+                                    <span class="label pass-fail {{ti.pass_fail}}" title="{% if ti.string_value %}{{ti.value_display}}{% else %}{{ti.diff_display}}{% endif %}">
                                         {% with ti.pass_fail as status %}
                                             {% if ICON_SETTINGS.SHOW_STATUS_ICONS_REVIEW %}
                                                 {% if status == 'tolerance' %}
@@ -171,9 +168,8 @@
                                                 {% endif %}
                                             {% endif %}
                                         {% endwith %}
-                                        {{ti.value_display}}
+                                        {{ti.value_display|safe}}
                                     </span>
-                                    {% endif %}
                                 </td>
                                 <td class="review-ref">
                                     {% reference_tolerance_span ti.unit_test_info.test ti.reference ti.tolerance%}

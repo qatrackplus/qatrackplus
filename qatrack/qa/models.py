@@ -1111,7 +1111,12 @@ class TestInstance(models.Model):
 
     #---------------------------------------------------------------------------
     def mult_choice_pass_fail(self):
-        choice = self.unit_test_info.test.get_choice_value(int(self.value)).lower()
+
+        if self.unit_test_info.test.is_mult_choice():
+            choice = self.unit_test_info.test.get_choice_value(int(self.value)).lower()
+        else:
+            choice = self.string_value.lower()
+
         if choice in [x.lower() for x in self.tolerance.pass_choices()]:
             self.pass_fail = OK
         elif choice in [x.lower() for x in self.tolerance.tol_choices()]:
@@ -1159,9 +1164,9 @@ class TestInstance(models.Model):
 
         if self.skipped or (self.value is None and self.in_progress):
             self.pass_fail = NOT_DONE
-        elif (self.unit_test_info.test.type == BOOLEAN) and self.reference:
+        elif self.unit_test_info.test.is_boolean() and self.reference:
             self.bool_pass_fail()
-        elif self.unit_test_info.test.type == MULTIPLE_CHOICE and self.tolerance:
+        elif (self.unit_test_info.test.is_mult_choice() or self.unit_test_info.test.is_string_type()) and self.tolerance:
             self.mult_choice_pass_fail()
         elif self.reference and self.tolerance:
             self.float_pass_fail()
