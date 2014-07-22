@@ -433,7 +433,7 @@ class TestChartView(TestCase):
     #----------------------------------------------------------------------
     def test_get_tests_for_test_lists_filtered(self):
 
-        url = reverse("charts_tests")+"?test_lists[]=%d" % (self.units[0].pk)
+        url = reverse("charts_tests")+"?test_lists[]=%d" % (self.tls[0].pk)
         request = self.factory.get(url)
         response = qatrack.qa.views.charts.get_tests_for_test_lists(request)
         values = json.loads(response.content)
