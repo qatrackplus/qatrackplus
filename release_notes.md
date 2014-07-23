@@ -20,6 +20,10 @@ Wenze contributed a couple of great features to QATrack+ for this release includ
 
 Great work Wenze...your contributions are greatly appreciated!
 
+Also of note, Gaspar Sánchez Merino has produced a Spanish translation of the
+QATrack+ documentation.  Thanks a lot Gaspar!  You can find the translation on
+[Gaspar's BitBucket page](https://bitbucket.org/gasparsanchez/qatrackplus/wiki/users/guide.md).
+
 Here's a list of some of the changes in this release:
 
 * The documentation has been split into different versions (corresponding to QATrack+ releases) to accomodate users who are not running
