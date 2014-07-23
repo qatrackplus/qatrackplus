@@ -364,13 +364,20 @@ class SetReferencesAndTolerancesForm(forms.Form):
     content_type = forms.ChoiceField((('', '---------'), ('testlist', 'TestList'), ('testlistcycle', 'TestListCycle')))
 
     # Populate the source testlist field
-    testlistchoices = models.TestList.objects.all().order_by("name").values_list("pk", 'name')
-    testlistcyclechoices = models.TestListCycle.objects.all().order_by("name").values_list("pk", 'name')
-    choices = [('', '---------')] + list(testlistchoices) + list(testlistcyclechoices)
-    source_testlist = forms.ChoiceField(choices, label='Source testlist(cycle)')
+    source_testlist = forms.ChoiceField([], label='Source testlist(cycle)')
 
     # Populate the dest_unit field
     dest_unit = forms.ModelChoiceField(queryset=models.Unit.objects.all())
+
+    def __init__(self, *args, **kwargs):
+
+        super(SetReferencesAndTolerancesForm, self).__init__(*args,**kwargs)
+
+        testlistchoices = models.TestList.objects.all().order_by("name").values_list("pk", 'name')
+        testlistcyclechoices = models.TestListCycle.objects.all().order_by("name").values_list("pk", 'name')
+        choices = [('', '---------')] + list(testlistchoices) + list(testlistcyclechoices)
+
+        self.fields['source_testlist'].choices = choices
 
     def save(self):
         source_unit = self.cleaned_data.get("source_unit")

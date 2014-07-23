@@ -314,6 +314,7 @@ This release has a number of small features and bug fixes included.
     * configure new test list
     * assign test list to unit with & without assigned frequencies
     * mark some data as invalid and confirm the due date is reset correctly
+    * syncdb/migrate a newly created database
 * Release notes
     * include upgrade commands
     * don't forget changes to requirements
