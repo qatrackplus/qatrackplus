@@ -760,6 +760,30 @@ class TestUTCDueDates(TestCase):
         # due date should now be based on tli2 since it is valid
         self.assertEqual(self.utc_hist.due_date.date(), (tli2.work_completed + self.utc_hist.frequency.due_delta()).date())
 
+    def test_due_date_not_updated_for_in_progress(self):
+        # test case where utc with history was created with valid status and
+        # later changed to have invlaid status
+
+        # first create valid history
+        now = timezone.now()
+        tli1 = utils.create_test_list_instance(unit_test_collection=self.utc_hist, work_completed=now)
+        ti1 = utils.create_test_instance(unit_test_info=self.uti_hist, status=self.valid_status)
+        ti1.test_list_instance = tli1
+        ti1.save()
+        tli1.save()
+
+        #now create 2nd in progress history
+        now = timezone.now()
+        tli2 = utils.create_test_list_instance(unit_test_collection=self.utc_hist, work_completed=now + self.utc_hist.frequency.due_delta())
+        ti2 = utils.create_test_instance(unit_test_info=self.uti_hist, status=self.valid_status)
+        ti2.test_list_instance = tli2
+        ti2.save()
+        tli2.in_progress=True
+        tli2.save()
+
+        self.utc_hist = models.UnitTestCollection.objects.get(pk=self.utc_hist.pk)
+        self.assertEqual(self.utc_hist.due_date.date(), (tli1.work_completed + self.utc_hist.frequency.due_delta()).date())
+
     #---------------------------------------------------------------------------
     def test_cycle_due_date(self):
         test_lists = [utils.create_test_list(name="test list %d" % i) for i in range(2)]
