@@ -896,7 +896,7 @@ class UnitTestCollection(models.Model):
         """ return last test_list_instance with all valid tests """
 
         try:
-            return self.testlistinstance_set.exclude(testinstance__status__valid=False).latest("work_completed")
+            return self.testlistinstance_set.filter(in_progress=False).exclude(testinstance__status__valid=False).latest("work_completed")
         except TestListInstance.DoesNotExist:
             pass
 
