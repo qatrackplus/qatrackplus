@@ -315,6 +315,7 @@ This release has a number of small features and bug fixes included.
     * assign test list to unit with & without assigned frequencies
     * mark some data as invalid and confirm the due date is reset correctly
     * syncdb/migrate a newly created database
+    * create fresh virtualenv and test 'pip install -r requirements/base.txt; pip install -r requirements/optional.txt' then run test suite.
 * Release notes
     * include upgrade commands
     * don't forget changes to requirements
