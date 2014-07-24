@@ -21,8 +21,8 @@
             <span class="label history-value" title="N/A">N/A</span>
         {% endif %}
     {% endfor %}
-    {% if test.is_upload or test.is_string_type %}
-        <i class="icon-picture"></i>
+    {% if test.is_upload or test.is_string_type or not test.chart_visibility %}
+        <i class="icon-picture" title="This test is not plottable"></i>
     {% else %}
         <a title="View chart of this data" target="_blank" href="{% url charts %}#units={{unit.pk}}&tests={{test.pk}}&test_lists={{test_list.pk}}"><i class="icon-picture"></i></a>
     {% endif %}
