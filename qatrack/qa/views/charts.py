@@ -4,7 +4,7 @@ import json
 import textwrap
 
 from django.conf import settings
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.http import HttpResponse
 from django.template import Context
 from django.template.loader import get_template
@@ -33,13 +33,19 @@ def get_test_lists_for_unit_frequencies(request):
     units = request.GET.getlist("units[]") or Unit.objects.values_list("pk", flat=True)
     frequencies = request.GET.getlist("frequencies[]") or models.Frequency.objects.values_list("pk", flat=True)
 
+    fq = Q(frequency__in=frequencies)
+    if '0' in frequencies:
+        fq |= Q(frequency=None)
+
     test_lists = models.UnitTestCollection.objects.filter(
-        unit__in=units, frequency__in=frequencies,
+        fq,
+        unit__in=units,
         content_type__name="test list"
     ).values_list("testlist__pk", flat=True)
 
     test_list_cycle_lists = models.UnitTestCollection.objects.filter(
-        unit__in=units, frequency__in=frequencies,
+        fq,
+        unit__in=units,
         content_type__name="test list cycle"
     ).values_list("testlistcycle__test_lists__pk", flat=True)
 
@@ -115,6 +121,7 @@ class ChartView(PermissionRequiredMixin, TemplateView):
 
         self.unit_frequencies = collections.defaultdict(set)
         for u, f in unit_frequencies:
+            f = f or 0 # use 0 id for ad hoc frequencies
             self.unit_frequencies[u].add(f)
 
     #----------------------------------------------------------------------
