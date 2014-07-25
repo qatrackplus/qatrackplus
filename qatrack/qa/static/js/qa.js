@@ -13,7 +13,6 @@ var comment_on_skip;
 // keeps track of latest composite call so we can
 // ignore older ones f they comlete after the latest one
 var latest_composite_call;
-var calls_to_ignore;
 
 /***************************************************************/
 //minimal Pub/Sub functionality
