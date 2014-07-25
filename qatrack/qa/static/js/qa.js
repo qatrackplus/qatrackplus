@@ -10,9 +10,9 @@ var pass_fail_only;
 var comment_on_skip;
 
 
-// keeps track of current composite call so we can
-// abort it if a new one is made before the current one completes.
-var current_composite_call;
+// keeps track of latest composite call so we can
+// ignore older ones f they comlete after the latest one
+var latest_composite_call;
 
 /***************************************************************/
 //minimal Pub/Sub functionality
@@ -499,8 +499,11 @@ function TestListInstance(){
             meta: JSON.stringify(meta)
         };
 
-        var on_success = function(data){
-            current_composite_call = null;
+        var on_success = function(data, status, XHR){
+            if (latest_composite_call !== XHR){
+                return;
+            }
+
             self.submit.attr("disabled", false);
 
             if (data.success){
@@ -515,18 +518,13 @@ function TestListInstance(){
         }
 
         var on_error = function(){
-            current_composite_call = null;
             self.submit.attr("disabled", false);
             $.Topic("qaUpdated").publish();
         }
 
-        if (current_composite_call){
-            current_composite_call.abort();
-        }
-
         self.submit.attr("disabled", true);
 
-        current_composite_call = $.ajax({
+        latest_composite_call = $.ajax({
             type:"POST",
             url:QAURLs.COMPOSITE_URL,
             data:data,
