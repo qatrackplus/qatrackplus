@@ -156,9 +156,15 @@ class Upload(JSONResponseMixin, View):
             except (KeyError, AttributeError):
                 pass
 
+
+        refs = self.get_json_data("refs")
+        tols = self.get_json_data("tols")
+
         self.calculation_context = {
             "FILE": self.upload,
             "META": meta_data,
+            "REFS": refs,
+            "TOLS": tols,
         }
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
 
@@ -274,8 +280,13 @@ class CompositeCalculation(JSONResponseMixin, View):
             self.calculation_context = {}
             return
 
+        refs = self.get_json_data("refs")
+        tols = self.get_json_data("tols")
+
         self.calculation_context = {
-            "META": meta_data
+            "META": meta_data,
+            "REFS": refs,
+            "TOLS": tols,
         }
 
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
