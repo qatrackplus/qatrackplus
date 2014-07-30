@@ -60,14 +60,12 @@ def get_tests_for_test_lists(request):
 
     test_lists = request.GET.getlist("test_lists[]") or models.TestList.objects.values_list("pk", flat=True)
 
-    members = models.TestListMembership.objects.filter(
-        test_list__in=test_lists,
-        test__chart_visibility=True,
-    ).values_list(
-        "test__pk", flat=True
-    )
+    tests = []
+    for pk in test_lists:
+        tl = models.TestList.objects.get(pk=pk)
+        tests.extend([t.pk for t in tl.ordered_tests() if t.chart_visibility])
 
-    json_context = json.dumps({"tests": list(members)})
+    json_context = json.dumps({"tests": tests})
     return HttpResponse(json_context, content_type=JSON_CONTENT_TYPE)
 
 
