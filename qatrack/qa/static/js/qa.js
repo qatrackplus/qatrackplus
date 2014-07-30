@@ -389,6 +389,8 @@ function TestInstance(test_info, row){
                 return [
                     { name:"test_id", value: self.test_info.test.id},
                     { name:"meta", value:JSON.stringify(get_meta_data())},
+                    { name:"refs", value:JSON.stringify(get_ref_data())},
+                    { name:"tols", value:JSON.stringify(get_tol_data())},
                     { name:"csrfmiddlewaretoken", value:csrf_token}
                 ]
             },
@@ -450,10 +452,29 @@ function get_meta_data(){
         work_completed: QAUtils.parse_date($("#id_work_completed").val()),
         work_started: QAUtils.parse_date($("#id_work_started").val()),
         username: $("#username").text()
-    }
+    };
 
     return meta;
 
+}
+
+function get_ref_data(){
+    var ref_values = _.map(tli.test_instances, function(ti){
+        return ti.test_info.reference.value ? ti.test_info.reference.value : null;
+    });
+
+    return _.object(_.zip(tli.slugs, ref_values));
+}
+
+function get_tol_data(){
+
+    var tol_properties = ["act_high", "act_low", "tol_high", "tol_low", "mc_pass_choices", "mc_tol_choices", "type"];
+
+    var tol_values = _.map(tli.test_instances, function(ti){
+        var tol = ti.test_info.tolerance;
+        return !tol.id ? null : _.pick(tol, tol_properties);
+    });
+    return _.object(_.zip(tli.slugs, tol_values));
 }
 
 function TestListInstance(){
@@ -492,11 +513,15 @@ function TestListInstance(){
         var cur_values = _.map(self.test_instances,function(ti){return ti.value;});
         var qa_values = _.object(_.zip(self.slugs,cur_values));
         var meta = get_meta_data();
+        var refs = get_ref_data();
+        var tols = get_tol_data();
 
         var data = {
             qavalues:JSON.stringify(qa_values),
             composite_ids:JSON.stringify(self.composite_ids),
-            meta: JSON.stringify(meta)
+            meta: JSON.stringify(meta),
+            refs: JSON.stringify(refs),
+            tols: JSON.stringify(tols)
         };
 
         var on_success = function(data, status, XHR){
