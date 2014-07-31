@@ -47,7 +47,7 @@ with usability for color blind users.  Thanks to Eric Reynard for the great sugg
 * QATrack+ now is using a file based cache to decrease page load times. By default
 the cache data is located at qatrack/cache/cache\_data/ but this [can be changed if required](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/v/0.2.8/deployment/settings).
 * You can now assign multiple choice tolerances to string/string composite test types (thanks to Elizabeth McKenzie for the suggestion).
-* You can now access reference and tolerance values for tests in your calculated tests (thanks to Andrew Alexander from Saskatoon for the suggestion)
+* You can now access reference and tolerance values for [tests in your calculated tests](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/admin/calculated.md) (thanks to Andrew Alexander from Saskatoon for the suggestion)
 * a number of other bug fixes and performance enhancements
 
 
