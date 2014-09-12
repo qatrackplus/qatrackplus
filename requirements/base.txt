@@ -1,7 +1,7 @@
 Django>=1.6,<1.7
--e https://github.com/randlet/django-genericdropdown.git@616a32a32ef6102a59163cadbc3d9380667549b6#egg=django_genericdropdown-master
+-e git+https://github.com/randlet/django-genericdropdown.git@616a32a32ef6102a59163cadbc3d9380667549b6#egg=django_genericdropdown-master
 django-tastypie>=0.9.15,<0.10
-django-registration>=1.0
+-e git+https://github.com/macropin/django-registration.git@19c4cb643a95040ba22ba945cd2e3b9136a2addb#egg=django_registration-master
 django-braces>=1.0
 logilab-astng>=0.23.1
 logilab-common>=0.57.1
@@ -13,4 +13,4 @@ South>=0.8,<0.9
 numpy>=1.6.2
 scipy>=0.10.0
 matplotlib>=1.0
--e https://github.com/frankwiles/django-admin-views.git@aff9bdfd073bdc4ee4242057e779c4e1d336c508#egg=django_admin_views-master
+-e git+https://github.com/frankwiles/django-admin-views.git@aff9bdfd073bdc4ee4242057e779c4e1d336c508#egg=django_admin_views-master
