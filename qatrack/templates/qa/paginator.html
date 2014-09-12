@@ -12,7 +12,6 @@
                     {% for page_num in paginator.page_range %}
                         <li class="{%if page_num = page_obj.number%}active{%endif%}">
                             <a href="?page={{ page_num }}&{{sorting_keys}}">{{page_num}}</a></li>
-                        </li>
                     {% endfor %}
 
                     {% if page_obj.has_next %}

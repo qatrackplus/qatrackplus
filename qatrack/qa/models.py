@@ -1,7 +1,6 @@
 from django.conf import settings
 from django.db import models
 from django.db.models import Q
-from django.dispatch import Signal
 from django.contrib.auth.models import User, Group
 from django.utils.translation import ugettext as _
 from django.core import urlresolvers
@@ -75,6 +74,9 @@ PASS_FAIL_CHOICES = (
     (ACTION, "Action"),
     (NO_TOL, "No Tol Set"),
 )
+PASS_FAIL_CHOICES_DISPLAY = dict(PASS_FAIL_CHOICES)
+
+AUTO_REVIEW_DEFAULT = getattr(settings, "AUTO_REVIEW_DEFAULT", False)
 
 
 # due date choices
@@ -106,6 +108,7 @@ PERMISSIONS = (
             ("qa.can_view_completed", "Can view previously completed instances", "Allow a user to view previous test list results"),
             ("qa.can_review", "Can review tests", "Allows a user to perform review & approval functions"),
             ("qa.can_view_charts", "Can chart test history", "Gives user the ability to view and create charts of historical test results"),
+            ("qa.can_review_own_tests", "Can review self-performed tests", "Allows a user to perform review & approval functions on self-performed tests"),
         ),
     ),
 )
@@ -230,6 +233,15 @@ class TestInstanceStatus(models.Model):
     #---------------------------------------------------------------------------
     def __unicode__(self):
         return self.name
+
+
+#============================================================================
+class AutoReviewRule(models.Model):
+    pass_fail = models.CharField(max_length=15, choices=PASS_FAIL_CHOICES, unique=True)
+    status = models.ForeignKey(TestInstanceStatus)
+
+    def __unicode__(self):
+        return "%s => %s" % (PASS_FAIL_CHOICES_DISPLAY[self.pass_fail], self.status)
 
 
 #============================================================================
@@ -438,17 +450,19 @@ class Test(models.Model):
         help_text=_("A short variable name consisting of alphanumeric characters and underscores for this test (to be used in composite calculations). "),
         db_index=True,
     )
-    description = models.TextField(help_text=_("A concise description of what this test is for (optional)"), blank=True, null=True)
+    description = models.TextField(help_text=_("A concise description of what this test is for (optional. You may use HTML markup)"), blank=True, null=True)
     procedure = models.CharField(max_length=512, help_text=_("Link to document describing how to perform this test"), blank=True, null=True)
 
     category = models.ForeignKey(Category, help_text=_("Choose a category for this test"))
     chart_visibility = models.BooleanField("Test item visible in charts?", default=True)
+    auto_review = models.BooleanField(_("Allow auto review of this test?"), default=AUTO_REVIEW_DEFAULT)
 
     type = models.CharField(
         max_length=10, choices=TEST_TYPE_CHOICES, default=SIMPLE,
         help_text=_("Indicate if this test is a %s" % (','.join(x[1].title() for x in TEST_TYPE_CHOICES)))
     )
 
+    display_image = models.BooleanField("Display image", help_text=_("Image uploads only: Show uploaded images under the testlist"))
     choices = models.CharField(max_length=2048, help_text=_("Comma seperated list of choices for multiple choice test types"), null=True, blank=True)
     constant_value = models.FloatField(help_text=_("Only required for constant value types"), null=True, blank=True)
 
@@ -494,6 +508,10 @@ class Test(models.Model):
         """return True if this is a multiple choice test else, false"""
         return self.type == MULTIPLE_CHOICE
 
+    #----------------------------------------------------------------------
+    def skip_required(self):
+        return self.type not in (COMPOSITE, CONSTANT, STRING_COMPOSITE, )
+
     #---------------------------------------------------------------------------
     def check_test_type(self, field, test_types, display):
         #"""check that correct test type is set"""
@@ -521,7 +539,11 @@ class Test(models.Model):
         macro_var_set = re.findall("^\s*%s\s*=.*$" % (self.slug), self.calculation_procedure, re.MULTILINE)
         result_line = self.RESULT_RE.findall(self.calculation_procedure)
         if not (result_line or macro_var_set):
-            errors.append(_('Snippet must set macro name to a value or contain a result line (e.g. %s = my_var/another_var*2 or result = my_var/another_var*2)' % self.slug))
+            if not self.calculation_procedure and self.is_upload():
+                # don't require a user defined calc procedure for uploads
+                self.calculation_procedure = "%s = None" % (self.slug, )
+            else:
+                errors.append(_('Snippet must set macro name to a value or contain a result line (e.g. %s = my_var/another_var*2 or result = my_var/another_var*2)' % self.slug))
 
         try:
             utils.tokenize_composite_calc(self.calculation_procedure)
@@ -685,7 +707,7 @@ class TestCollectionInterface(models.Model):
 
     name = models.CharField(max_length=255, db_index=True)
     slug = models.SlugField(unique=True, help_text=_("A short unique name for use in the URL of this list"), db_index=True)
-    description = models.TextField(help_text=_("A concise description of this test checklist"), null=True, blank=True)
+    description = models.TextField(help_text=_("A concise description of this test checklist. (You may use HTML markup)"), null=True, blank=True)
 
     assigned_to = generic.GenericRelation(
         "UnitTestCollection",
@@ -855,8 +877,8 @@ class UnitTestCollection(models.Model):
         if not self.due_date:
             return NOT_DUE
 
-        today = timezone.now().date()
-        due = self.due_date.date()
+        today = timezone.localtime(timezone.now()).date()
+        due = timezone.localtime(self.due_date).date()
 
         if self.frequency is not None:
             overdue = due + timezone.timedelta(days=self.frequency.overdue_interval - self.frequency.due_interval)
@@ -874,7 +896,7 @@ class UnitTestCollection(models.Model):
         """ return last test_list_instance with all valid tests """
 
         try:
-            return self.testlistinstance_set.exclude(testinstance__status__valid=False).latest("work_completed")
+            return self.testlistinstance_set.filter(in_progress=False).exclude(testinstance__status__valid=False).latest("work_completed")
         except TestListInstance.DoesNotExist:
             pass
 
@@ -969,6 +991,24 @@ class UnitTestCollection(models.Model):
         return urlresolvers.reverse("perform_qa", kwargs={"pk": self.pk})
 
     #----------------------------------------------------------------------
+    def copy_references(self, dest_unit):
+
+        all_tests = self.tests_object.all_tests()
+        source_unit_test_infos = UnitTestInfo.objects.filter(
+            test__in=all_tests, unit=self.unit
+        ).select_related(
+            "reference", "tolerance"
+        )
+
+        for source_uti in source_unit_test_infos:
+            UnitTestInfo.objects.filter(
+                test=source_uti.test, unit=dest_unit
+            ).update(
+                reference=source_uti.reference,
+                tolerance=source_uti.tolerance
+            )
+
+    #----------------------------------------------------------------------
     def __unicode__(self):
         return "UnitTestCollection(%s)" % self.pk
 
@@ -1041,11 +1081,11 @@ class TestInstance(models.Model):
             ("can_view_charts", "Can view charts of test history"),
             ("can_review", "Can review & approve tests"),
             ("can_skip_without_comment", "Can skip tests without comment"),
+            ("can_review_own_tests", "Can review & approve  self-performed tests"),
         )
 
     #----------------------------------------------------------------------
     def save(self, *args, **kwargs):
-        """set pass fail status on save"""
         self.calculate_pass_fail()
         super(TestInstance, self).save(*args, **kwargs)
 
@@ -1071,7 +1111,12 @@ class TestInstance(models.Model):
 
     #---------------------------------------------------------------------------
     def mult_choice_pass_fail(self):
-        choice = self.unit_test_info.test.get_choice_value(int(self.value)).lower()
+
+        if self.unit_test_info.test.is_mult_choice():
+            choice = self.unit_test_info.test.get_choice_value(int(self.value)).lower()
+        else:
+            choice = self.string_value.lower()
+
         if choice in [x.lower() for x in self.tolerance.pass_choices()]:
             self.pass_fail = OK
         elif choice in [x.lower() for x in self.tolerance.tol_choices()]:
@@ -1119,15 +1164,25 @@ class TestInstance(models.Model):
 
         if self.skipped or (self.value is None and self.in_progress):
             self.pass_fail = NOT_DONE
-        elif (self.unit_test_info.test.type == BOOLEAN) and self.reference:
+        elif self.unit_test_info.test.is_boolean() and self.reference:
             self.bool_pass_fail()
-        elif self.unit_test_info.test.type == MULTIPLE_CHOICE and self.tolerance:
+        elif (self.unit_test_info.test.is_mult_choice() or self.unit_test_info.test.is_string_type()) and self.tolerance:
             self.mult_choice_pass_fail()
         elif self.reference and self.tolerance:
             self.float_pass_fail()
         else:
             # no tolerance and/or reference set
             self.pass_fail = NO_TOL
+
+    #----------------------------------------------------------------------
+    def auto_review(self):
+        """set review status of the current value if allowed"""
+        if self.unit_test_info.test.auto_review:
+            try:
+                self.status = AutoReviewRule.objects.get(pass_fail=self.pass_fail).status
+                self.review_date = timezone.now()
+            except AutoReviewRule.DoesNotExist:
+                pass
 
     #----------------------------------------------------------------------
     def value_display(self):
@@ -1167,6 +1222,13 @@ class TestInstance(models.Model):
             return None
         url = "%s%d/%s" % (settings.UPLOADS_URL, self.test_list_instance.pk, self.string_value)
         return '<a href="%s" title="%s">%s</a>' % (url, self.string_value, self.string_value)
+
+    #----------------------------------------------------------------------
+    def image_url(self):
+        if not self.unit_test_info.test.is_upload() or not self.unit_test_info.test.display_image:
+            return None
+        url = "%s%d/%s" % (settings.UPLOADS_URL, self.test_list_instance.pk, self.string_value)
+        return url
 
     #----------------------------------------------------------------------
     def __unicode__(self):
@@ -1264,6 +1326,14 @@ class TestListInstance(models.Model):
         return self.testinstance_set.filter(status__requires_review=True)
 
     #----------------------------------------------------------------------
+    def update_all_reviewed(self):
+
+        self.all_reviewed = len(self.unreviewed_instances()) == 0
+
+        # use update instead of save so we don't trigger save signal
+        TestListInstance.objects.filter(pk=self.pk).update(all_reviewed=self.all_reviewed)
+
+    #----------------------------------------------------------------------
     def tolerance_tests(self):
         return self.testinstance_set.filter(pass_fail=TOLERANCE)
 
@@ -1356,8 +1426,8 @@ class TestListCycle(TestCollectionInterface):
     def first(self):
         """return first in order membership obect for this cycle"""
         try:
-            return self.testlistcyclemembership_set.get(order=0).test_list
-        except TestListCycleMembership.DoesNotExist:
+            return self.testlistcyclemembership_set.all()[0].test_list
+        except IndexError:
             return None
 
     #----------------------------------------------------------------------

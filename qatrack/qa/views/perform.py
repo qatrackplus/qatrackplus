@@ -3,6 +3,7 @@ import json
 import math
 import os
 import shutil
+import imghdr
 
 
 import dateutil
@@ -46,6 +47,30 @@ def process_procedure(procedure):
     return "\n".join(["from __future__ import division", procedure, "\n"]).replace('\r', '\n')
 
 
+#---------------------------------------------------------------------------
+def process_file_upload_form(ti_form, test_list_instance):
+    """
+    Check if test instance form is file upload and move the file out of
+    tmp directory if it is
+    """
+
+    upload_to_process = (
+        ti_form.unit_test_info.test.is_upload()
+        and not ti_form.cleaned_data["skipped"]
+        and not ti_form.in_progress
+        and ti_form.cleaned_data["string_value"].strip()
+    )
+
+    if upload_to_process:
+        fname = ti_form.cleaned_data["string_value"]
+        src = os.path.join(settings.TMP_UPLOAD_ROOT, fname)
+        d = os.path.join(settings.UPLOAD_ROOT, "%s" % test_list_instance.pk)
+        if not os.path.exists(d):
+            os.mkdir(d)
+        dest = os.path.join(settings.UPLOAD_ROOT, d, fname)
+        shutil.move(src, dest)
+
+
 #============================================================================
 class Upload(JSONResponseMixin, View):
     """View for handling AJAX upload requests when performing QA"""
@@ -63,6 +88,7 @@ class Upload(JSONResponseMixin, View):
 
         results = {
             'temp_file_name': self.file_name,
+            'is_image': self.is_image(),
             'success': False,
             'errors': [],
             "result": None,
@@ -82,13 +108,12 @@ class Upload(JSONResponseMixin, View):
 
         return self.render_json_response(results)
 
-
     #---------------------------------------------------------------
     @staticmethod
     def get_upload_name(session_id, unit_test_info, name):
         """construct a unique file name for uploaded file"""
 
-        name = name.rsplit(".")
+        name = name.rsplit(".", 1)
         if len(name) == 1:
             name.append("")
         name, ext = name
@@ -131,9 +156,15 @@ class Upload(JSONResponseMixin, View):
             except (KeyError, AttributeError):
                 pass
 
+
+        refs = self.get_json_data("refs")
+        tols = self.get_json_data("tols")
+
         self.calculation_context = {
             "FILE": self.upload,
             "META": meta_data,
+            "REFS": refs,
+            "TOLS": tols,
         }
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
 
@@ -149,6 +180,15 @@ class Upload(JSONResponseMixin, View):
             return json.loads(json_string)
         except (KeyError, ValueError):
             return
+
+    #----------------------------------------------------------------------
+    def is_image(self):
+        """check if the uploaded file is an image"""
+
+        if imghdr.what(self.upload.name):
+            return True
+        else:
+            return False
 
 
 #============================================================================
@@ -240,8 +280,13 @@ class CompositeCalculation(JSONResponseMixin, View):
             self.calculation_context = {}
             return
 
+        refs = self.get_json_data("refs")
+        tols = self.get_json_data("tols")
+
         self.calculation_context = {
-            "META": meta_data
+            "META": meta_data,
+            "REFS": refs,
+            "TOLS": tols,
         }
 
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
@@ -319,13 +364,14 @@ class ChooseUnit(TemplateView):
         if self.active_only:
             q = q.filter(active=True)
 
-        q = q.values("unit", "unit__type__name", "unit__name", "unit__number").order_by("unit__number").distinct()
+        units_ordering = "unit__%s" % (settings.ORDER_UNITS_BY,)
+        q = q.values("unit", "unit__type__name", "unit__name", "unit__number").order_by(units_ordering).distinct()
 
         unit_types = collections.defaultdict(list)
         for unit in q:
             unit_types[unit["unit__type__name"]].append(unit)
 
-        ordered = sorted(unit_types.items(), key=lambda x: min([u["unit__number"] for u in x[1]]))
+        ordered = sorted(unit_types.items(), key=lambda x: min([u[units_ordering] for u in x[1]]))
 
         context["unit_types"] = ordered
 
@@ -453,8 +499,11 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         """return default or user requested :model:`qa.TestInstanceStatus`"""
 
         try:
-            return models.TestInstanceStatus.objects.get(pk=form["status"].value())
-        except (KeyError, models.TestInstanceStatus.DoesNotExist):
+            status = models.TestInstanceStatus.objects.get(pk=form["status"].value())
+            self.user_set_status = True
+            return status
+        except (KeyError, ValueError, models.TestInstanceStatus.DoesNotExist):
+            self.user_set_status = False
             return models.TestInstanceStatus.objects.default()
 
     #----------------------------------------------------------------------
@@ -488,7 +537,6 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
         self.object.reviewed = None if status.requires_review else self.object.modified
         self.object.reviewed_by = None if status.requires_review else self.request.user
-        self.object.all_reviewed = not status.requires_review
 
         self.object.day = self.actual_day
 
@@ -499,14 +547,8 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         to_save = []
 
         for delta, ti_form in enumerate(formset):
-            if ti_form.unit_test_info.test.is_upload() and not ti_form.cleaned_data["skipped"]:
-                fname = ti_form.cleaned_data["string_value"]
-                src = os.path.join(settings.TMP_UPLOAD_ROOT, fname)
-                d = os.path.join(settings.UPLOAD_ROOT, "%s" % self.object.pk)
-                if not os.path.exists(d):
-                    os.mkdir(d)
-                dest = os.path.join(settings.UPLOAD_ROOT, d, fname)
-                shutil.move(src, dest)
+
+            process_file_upload_form(ti_form, self.object)
 
             now = self.object.created + timezone.timedelta(milliseconds=delta)
 
@@ -522,19 +564,23 @@ class PerformQA(PermissionRequiredMixin, CreateView):
                 created=now,
                 created_by=self.request.user,
                 modified_by=self.request.user,
-
                 in_progress=self.object.in_progress,
                 test_list_instance=self.object,
                 work_started=self.object.work_started,
                 work_completed=self.object.work_completed,
             )
             ti.calculate_pass_fail()
+            if not self.user_set_status:
+                ti.auto_review()
+
             to_save.append(ti)
 
         models.TestInstance.objects.bulk_create(to_save)
 
         #set due date to account for any non default statuses
         self.object.unit_test_collection.set_due_date()
+
+        self.object.update_all_reviewed()
 
         if not self.object.in_progress:
             # TestListInstance & TestInstances have been successfully create, fire signal
@@ -653,6 +699,9 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
             self.update_test_list_instance()
 
             for ti_form in formset:
+
+                process_file_upload_form(ti_form, self.object)
+
                 ti = ti_form.save(commit=False)
                 self.update_test_instance(ti)
 
@@ -697,8 +746,10 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
         try:
             self.status = models.TestInstanceStatus.objects.get(pk=status_pk)
+            self.user_set_status = True
         except (models.TestInstanceStatus.DoesNotExist, ValueError):
             self.status = models.TestInstanceStatus.objects.default()
+            self.user_set_status = False
 
     #----------------------------------------------------------------------
     def update_test_instance(self, test_instance):
@@ -712,6 +763,10 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         ti.work_completed = self.object.work_completed
 
         try:
+            ti.calculate_pass_fail()
+            if not self.user_set_status:
+                ti.auto_review()
+
             ti.save()
         except ZeroDivisionError:
 

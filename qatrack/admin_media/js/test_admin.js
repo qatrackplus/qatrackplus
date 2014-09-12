@@ -8,36 +8,50 @@ function toggle_test_type(){
 
     if (val == "constant"){
         $(".field-constant_value").show();
-        $(".field-calculation_procedure, .field-choices").hide();
+        $(".field-calculation_procedure, .field-choices, .field-display_image").hide();
 
-    }else if (val == "composite" || val === "upload" || val === "scomposite" ){
+    }else if (val == "composite" || val === "scomposite" ){
         $(".field-calculation_procedure").show();
         $(".field-constant_value, .field-choices").hide();
+
+    }else if (val === "upload"){
+        $(".field-calculation_procedure, .field-display_image").show();
+        $(".field-constant_value, .field-choices").hide();
+
     }else if (val == "multchoice"){
         $(".field-choices").show();
-        $(".field-constant_value, .field-calculation_procedure").hide();
+        $(".field-constant_value, .field-calculation_procedure, .field-display_image").hide();
 
     }else{
         $(".field-calculation_procedure").hide();
-        $(".field-constant_value, .field-choices").hide();
+        $(".field-constant_value, .field-choices, .field-display_image").hide();
     }
 }
 
 $(document).ready(function() {
     $("#id_type").change(toggle_test_type);
     toggle_test_type();
-    var calcProcedure = $("#id_calculation_procedure").hide();
-    calcProcedure.after('<div style="height:200px; " id="calc-procedure-editor" class="colM aligned vLargeTextField"></div>');
 
-    var editor = ace.edit("calc-procedure-editor");
-    var session = editor.getSession();
+    var isNotIE78 = jQuery.support.leadingWhitespace;
+    var element = $("#id_calculation_procedure");
 
-    editor.setValue(calcProcedure.val());
-    session.setMode( "ace/mode/python");
-    session.setTabSize(4)
-    session.setUseSoftTabs(true)
-    editor.on('blur', function(){
-        calcProcedure.val(editor.getValue());
-    });
-    editor.resize();
+    if (isNotIE78 && element.length > 0){
+        // IE7-8 explode with Ace editor sigh
+
+        var calcProcedure = element.hide();
+        calcProcedure.after('<div style="height:200px; " id="calc-procedure-editor" class="colM aligned vLargeTextField"></div>');
+
+        var calcProcedureEditor = ace.edit("calc-procedure-editor");
+        var session = calcProcedureEditor.getSession();
+
+        calcProcedureEditor.setValue(calcProcedure.val());
+        session.setMode( "ace/mode/python");
+        session.setTabSize(4)
+        session.setUseSoftTabs(true)
+        calcProcedureEditor.on('blur', function(){
+            calcProcedure.val(calcProcedureEditor.getValue());
+        });
+        calcProcedureEditor.resize();
+    }
+
 });

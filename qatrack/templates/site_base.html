@@ -12,6 +12,7 @@
 {% block extra_style %}
     <link href="{% static "css/qa.css" %}?v={{VERSION}}" rel="stylesheet">
     <link href="{% static "data_tables/css/DT_bootstrap.css" %}?v={{VERSION}}" rel="stylesheet">
+    <link href="{% static "css/site.css" %}?v={{VERSION}}" rel="stylesheet">
     {% block page_style %}{% endblock %}
 {% endblock %}
 
@@ -23,6 +24,7 @@
             UPLOAD_URL:"{% url upload %}",
             CHART_DATA_URL:"{% url chart_data%}",
             CONTROL_CHART_URL:"{% url control_chart %}",
+            MEDIA_URL: "{{MEDIA_URL}}",
             OPTION_DELIM: "=",
             OPTION_SEP: "&",
 
@@ -52,6 +54,9 @@
                 return '<a href="'+url+'" title="'+title+'">'+text+'</a>';
             }
         }
+
+        var ICON_SETTINGS = {{ICON_SETTINGS_JSON|safe}};
+
     </script>
 
     {{block.super}}
@@ -59,6 +64,7 @@
 
 {% block nav %}
     {% if user.is_authenticated %}
+
         <ul class="nav nav-pills">
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle" >

@@ -20,7 +20,7 @@ SEND_BROKEN_LINK_EMAILS = True
 # misc settings
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
-VERSION = "0.2.7"
+VERSION = "0.2.8"
 BUG_REPORT_URL = "https://bitbucket.org/tohccmedphys/qatrackplus/issues/new"
 FEATURE_REQUEST_URL = BUG_REPORT_URL
 
@@ -131,6 +131,12 @@ STATICFILES_FINDERS = (
     #    'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
+# add a site specific css file if one doesn't already exist
+SITE_SPECIFIC_CSS_PATH = os.path.join(PROJECT_ROOT, "qa", "static", "css", "site.css")
+if not os.path.isfile(SITE_SPECIFIC_CSS_PATH):
+    with open(SITE_SPECIFIC_CSS_PATH, 'w') as f:
+        f.write("/* You can place any site specific css in this file*/\n")
+
 
 #------------------------------------------------------------------------------
 # Middleware
@@ -195,6 +201,7 @@ INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
+    'django.contrib.formtools',
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.messages',
@@ -205,6 +212,7 @@ INSTALLED_APPS = [
 
     'genericdropdown',
 
+    'qatrack.cache',
     'qatrack.accounts',
     'qatrack.units',
     'qatrack.qa',
@@ -214,8 +222,27 @@ INSTALLED_APPS = [
     'qatrack.contacts',
 
     'south',
-
+    'admin_views',
 ]
+#-----------------------------------------------------------------------------
+# Cache settings
+
+CACHE_UNREVIEWED_COUNT = 'unreviewed-count'
+CACHE_QA_FREQUENCIES = 'qa-frequencies'
+MAX_CACHE_TIMEOUT = 24 * 60 * 60  # 24hours
+
+CACHE_LOCATION = os.path.join(PROJECT_ROOT, "cache", "cache_data")
+if not os.path.isdir(CACHE_LOCATION):
+    os.mkdir(CACHE_LOCATION)
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': CACHE_LOCATION,
+        'TIMEOUT': MAX_CACHE_TIMEOUT,
+    }
+}
+
 #-----------------------------------------------------------------------------
 # Session Settings
 SESSION_COOKIE_AGE = 14 * 24 * 60 * 60
@@ -260,6 +287,12 @@ AD_LDAP_URL = 'ldap://%s:%s' % (AD_DNS_NAME, AD_LDAP_PORT)
 AD_LDAP_USER = ''
 AD_LDAP_PW = ''
 
+AD_LU_ACCOUNT_NAME = "sAMAccountName"
+AD_LU_MAIL = "mail"
+AD_LU_SURNAME = "sn"
+AD_LU_GIVEN_NAME = "givenName"
+AD_LU_MEMBER_OF = "memberOf"
+
 # If using SSL use these:
 # AD_LDAP_PORT=636
 # AD_LDAP_URL='ldaps://%s:%s' % (AD_DNS_NAME,AD_LDAP_PORT)
@@ -267,7 +300,7 @@ AD_LDAP_PW = ''
 AD_SEARCH_DN = ""  # eg "dc=ottawahospital,dc=on,dc=ca"
 AD_NT4_DOMAIN = ""  # Network domain that AD server is part of
 
-AD_SEARCH_FIELDS = ['mail', 'givenName', 'sn', 'sAMAccountName', 'memberOf']
+AD_SEARCH_FIELDS = [AD_LU_MAIL, AD_LU_SURNAME, AD_LU_GIVEN_NAME, AD_LU_ACCOUNT_NAME, AD_LU_MEMBER_OF]
 AD_MEMBERSHIP_REQ = []  # eg ["*TOHCC - All Staff | Tout le personnel  - CCLHO"]
 # AD_CERT_FILE='/path/to/your/cert.txt'
 
@@ -324,6 +357,20 @@ FORCE_SCRIPT_NAME = None
 PAGINATE_DEFAULT = 50  # remember to change iDisplayLength in unittestcollection.js and testlistinstance.js if you change this
 
 NHIST = 5  # number of historical test results to show when reviewing/performing qa
+
+ICON_SETTINGS = {
+    'SHOW_STATUS_ICONS_PERFORM':  True,
+    'SHOW_STATUS_ICONS_LISTING':  True,
+    'SHOW_STATUS_ICONS_REVIEW':  True,
+    'SHOW_STATUS_ICONS_HISTORY':  False,
+    'SHOW_REVIEW_ICONS':  True,
+    'SHOW_DUE_ICONS':  True,
+}
+
+
+# Display ordering on the "Choose Unit" page. (Use "name" or "number")
+ORDER_UNITS_BY = "number"
+
 #------------------------------------------------------------------------------
 # Testing settings
 TEST_RUNNER = 'django_coverage.coverage_runner.CoverageRunner'
@@ -333,6 +380,6 @@ COVERAGE_ADDITIONAL_MODULES = ["qatrack.tests"]
 # local_settings contains anything that should be overridden
 # based on site specific requirements (e.g. deployment, development etc)
 try:
-    from local_settings import *
+    from local_settings import *  # NOQA
 except ImportError:
     pass

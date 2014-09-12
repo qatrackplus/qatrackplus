@@ -17,13 +17,9 @@
     <script src="{% static "js/highstock/highcharts-more.js" %}?v={{VERSION}}"></script>
     <script src="{% static "datepicker/js/bootstrap-datepicker.js" %}?v={{VERSION}}"></script>
 
-    <script src="{% static "js/filesaver/Blob.js" %}?v={{VERSION}}"></script>
-    <script src="{% static "js/filesaver/canvas-toBlob.js" %}?v={{VERSION}}"></script>
-    <script src="{% static "js/filesaver/FileSaver.min.js" %}?v={{VERSION}}"></script>
-
     <script>
         var QACharts = {
-            test_info:{{test_data|safe}}
+            unit_frequencies:{{unit_frequencies|safe}}
         };
     </script>
 
@@ -44,7 +40,7 @@
             <h5>1. Units</h5>
             <div class="checkbox-container test-filter">
                 {% for unit in units %}
-                    <label class="checkbox" title="{{test_list.name}}" >
+                    <label class="checkbox" title="{{unit.name}}" >
                         <input type="checkbox" id="unit-{{unit.pk}}" name="unit[]" value="{{unit.pk}}" title="{{unit.name}}" class="unit unit-type-{{unit.type.pk}}"></input>
                         {{unit.name}}
                     </label>
@@ -116,21 +112,29 @@
                     </div>
                     <div id="basic-chart-options" class="row-fluid">
                         <div class="span12">
-                            <label class="control-label  basic-option" for="show-lines">
-                                Lines:
+                            <label class="checkbox basic-option" for="show-lines">
                                 <input type="checkbox" id="show-lines" checked="checked" />
+                                Lines
                             </label>
-                            <label class="control-label  basic-option" for="show-references">
-                                Refs:
+                            <label class="checkbox basic-option" for="show-references">
                                 <input type="checkbox" id="show-references" checked="checked" />
+                                Refs
                             </label>
-                            <label class="control-label  basic-option" for="show-tolerances">
-                                Tols:
+                            <label class="checkbox basic-option" for="show-tolerances">
                                 <input type="checkbox" id="show-tolerances" checked="checked" />
+                                Tols
                             </label>
-                            <label class="control-label  basic-option" for="show-legend">
-                                Legend:
+                            <label class="checkbox basic-option" for="show-legend">
                                 <input type="checkbox" id="show-legend" />
+                                Legend
+                            </label><br/>
+                            <label class="checkbox basic-option" for="combine-data" title="Combine Test data from multiple TestLists on a given Unit (e.g. from a TestListCycle)">
+                                <input type="checkbox" id="combine-data" />
+                                Combine test data for unit
+                            </label><br/>
+                            <label class="checkbox basic-option" for="relative-diff" >
+                                <input type="checkbox" id="relative-diff" />
+                                <abbr title="The absolute difference is plotted for tests with absolute tolerances set or with reference values of zero, otherwise the percent difference is plotted">Plot relative to reference values</abbr>
                             </label>
                         </div>
                     </div>

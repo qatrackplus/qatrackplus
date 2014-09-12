@@ -38,6 +38,11 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
     template_name_suffix = "_review"
 
     #----------------------------------------------------------------------
+    def get_form_kwargs(self):
+        kwargs = super(ReviewTestListInstance, self).get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
     def form_valid(self, form):
         """
         Update users, times & statuses for the :model:`qa.TestListInstance`

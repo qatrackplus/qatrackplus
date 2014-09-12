@@ -4,4 +4,5 @@ coverage>=3.5.1
 django-coverage>=1.2.2
 django-debug-toolbar>=0.9.4
 nose>=1.1.2
+mock>=1.0
 

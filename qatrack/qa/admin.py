@@ -3,11 +3,16 @@ import django.db
 
 from django.utils.translation import ugettext as _
 from django.conf import settings
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.admin import widgets, options
+from django.shortcuts import render, HttpResponseRedirect
 from django.utils import timezone
 from django.utils.text import Truncator
 from django.utils.html import escape
+from django.core.urlresolvers import reverse_lazy
+from django.shortcuts import redirect
+
+from admin_views.admin import AdminViews
 
 import qatrack.qa.models as models
 
@@ -42,7 +47,6 @@ class CategoryAdmin(admin.ModelAdmin):
 
 
 #============================================================================
-
 class TestInfoForm(forms.ModelForm):
 
     reference_value = forms.FloatField(label=_("New reference value"), required=False,)
@@ -68,8 +72,11 @@ class TestInfoForm(forms.ModelForm):
                 self.fields["reference_value"].widget = forms.Select(choices=[("", "---"), (0, "No"), (1, "Yes")])
                 self.fields["tolerance"].widget = forms.HiddenInput()
 
-            elif tt == models.MULTIPLE_CHOICE:
+            elif tt == models.MULTIPLE_CHOICE or self.instance.test.is_string_type():
                 self.fields["reference_value"].widget = forms.HiddenInput()
+                self.fields['tolerance'].queryset = self.fields['tolerance'].queryset.filter(type=models.MULTIPLE_CHOICE)
+            else:
+                self.fields['tolerance'].queryset = self.fields['tolerance'].queryset.exclude(type=models.MULTIPLE_CHOICE)
 
             if tt != models.MULTIPLE_CHOICE and self.instance.reference:
                 if tt == models.BOOLEAN:
@@ -87,9 +94,9 @@ class TestInfoForm(forms.ModelForm):
     def clean(self):
         """make sure valid numbers are entered for boolean data"""
 
-        if self.instance.test.type == models.MULTIPLE_CHOICE and self.cleaned_data["tolerance"]:
+        if (self.instance.test.type == models.MULTIPLE_CHOICE or self.instance.test.is_string_type()) and self.cleaned_data["tolerance"]:
             if self.cleaned_data["tolerance"].type != models.MULTIPLE_CHOICE:
-                raise forms.ValidationError(_("You can't use a non-multiple choice tolerance with a multiple choice test"))
+                raise forms.ValidationError(_("You can't use a non-multiple choice tolerance with a multiple choice or string test"))
         else:
             if "reference_value" not in self.cleaned_data:
                 return self.cleaned_data
@@ -113,11 +120,25 @@ def test_type(obj):
         if obj.test.type == tt:
             return display
 test_type.admin_order_field = "test__type"
-#============================================================================
 
 
-class UnitTestInfoAdmin(admin.ModelAdmin):
+class SetMultipleReferencesAndTolerancesForm(forms.Form):
+    _selected_action = forms.CharField(widget=forms.MultipleHiddenInput)
+    contenttype = forms.CharField(widget=forms.HiddenInput, required=False)
+    tolerance = forms.ModelChoiceField(queryset=models.Tolerance.objects.all())
+    reference = forms.CharField(max_length=255)
 
+
+class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
+
+    admin_views = (
+        ('Copy References & Tolerances', 'redirect_to'),
+    )
+
+    def redirect_to(self, *args, **kwargs):
+        return redirect(reverse_lazy("qa_copy_refs_and_tols"))
+
+    actions = ['set_multiple_references_and_tolerances']
     form = TestInfoForm
     fields = (
         "unit", "test", "test_type",
@@ -145,7 +166,98 @@ class UnitTestInfoAdmin(admin.ModelAdmin):
         """unittestinfo's are created automatically"""
         return False
 
-    #----------------------------------------------------------------------
+    #---------------------------------------------------------------------------
+    def form_valid(self, request, queryset, form):
+
+        if form.is_valid():
+            reference = form.cleaned_data['reference']
+            tolerance = form.cleaned_data['tolerance']
+
+            # Save the uti with the new references and tolerance
+            # TODO: Combine with save method: save_model ?
+            for uti in queryset:
+                if uti.test.type != models.MULTIPLE_CHOICE:
+                    if uti.test.type == models.BOOLEAN:
+                        ref_type = models.BOOLEAN
+                        if reference == 'True' or reference == 1:
+                            reference = 1
+                        else:
+                            reference = 0
+                    else:
+                        ref_type = models.NUMERICAL
+                    if reference not in ("", None):
+                        if not(uti.reference and uti.reference.value == float(reference)):
+                            try:
+                                ref = models.Reference.objects.get(value=reference, type=ref_type)
+                            except models.Reference.DoesNotExist:
+                                ref = models.Reference(
+                                    value=reference,
+                                    type=ref_type,
+                                    created_by=request.user,
+                                    modified_by=request.user,
+                                    name="%s %s" % (uti.unit.name, uti.test.name)[:255]
+                                )
+                                ref.save()
+                            uti.reference = ref
+                    else:
+                        uti.reference = None
+                uti.tolerance = tolerance
+                uti.save()
+
+            messages.success(request, "%s tolerances and references have been saved successfully." % queryset.count())
+            return HttpResponseRedirect(request.get_full_path())
+
+    #---------------------------------------------------------------------------
+    def set_multiple_references_and_tolerances(self, request, queryset):
+
+        testtypes = set(queryset.values_list('test__type', flat=True).distinct())
+
+        # check if tests have the same type of tolerance, else return with error message
+        if (len(testtypes) > 1 and 'multchoice' in testtypes or
+                len(testtypes) > 1 and 'boolean' in testtypes):
+
+            messages.error(request, "Multiple choice and/or boolean references and tolerances can't be set"
+                                    " together with other test types")
+            return HttpResponseRedirect(request.get_full_path())
+
+        if 'apply' in request.POST:
+            form = SetMultipleReferencesAndTolerancesForm(request.POST)
+        else:
+            form = SetMultipleReferencesAndTolerancesForm(initial={'contenttype': None})
+
+        # if selected tests are NOT multiple choice or boolean, select all the tolerances which are NOT multiple choice or boolean
+        if not 'boolean' in testtypes and not 'multchoice' in testtypes:
+            tolerances = models.Tolerance.objects.exclude(type="multchoice").exclude(type="boolean")
+            form.fields["tolerance"].queryset = tolerances
+
+        # if selected tests are multiple choice select all the tolerances which are multiple choice
+        elif 'multchoice' in testtypes:
+            tolerances = models.Tolerance.objects.filter(type="multchoice")
+            form.fields["contenttype"].initial = 'multchoice'
+            form.fields["tolerance"].queryset = tolerances
+            form.fields["reference"].required = False
+            form.fields["reference"].widget = forms.HiddenInput()
+
+        # if selected tests are boolean select all the tolerances which are boolean
+        elif 'boolean' in testtypes:
+            form.fields["contenttype"].initial = 'boolean'
+            form.fields["reference"].widget = forms.NullBooleanSelect()
+            form.fields["tolerance"].required = False
+            form.fields["tolerance"].widget = forms.HiddenInput()
+
+        if 'apply' in request.POST and form.is_valid():
+            return self.form_valid(request, queryset, form)
+        else:
+            context = {
+                'queryset': queryset,
+                'form': form,
+                'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
+            }
+            return render(request, 'admin/qa/unittestinfo/set_multiple_refs_and_tols.html', context)
+
+    set_multiple_references_and_tolerances.short_description = "Set multiple references and tolerances"
+
+    #--------------------------------------------------------len(testtypes)--------------
     def save_model(self, request, test_info, form, change):
         """create new reference when user updates value"""
 
@@ -306,7 +418,7 @@ class TestListMembershipInline(admin.TabularInline):
 class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
 
     prepopulated_fields = {'slug': ('name',)}
-    list_display = ("name", "modified", "modified_by",)
+    list_display = ("name", "slug", "modified", "modified_by",)
     search_fields = ("name", "description", "slug",)
     filter_horizontal = ("tests", "sublists", )
 
@@ -318,8 +430,9 @@ class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
         js = (
             settings.STATIC_URL + "js/jquery-1.7.1.min.js",
             settings.STATIC_URL + "js/jquery-ui.min.js",
-            # settings.STATIC_URL+"js/collapsed_stacked_inlines.js",
             settings.STATIC_URL + "js/m2m_drag_admin.js",
+            settings.STATIC_URL + "js/admin_description_editor.js",
+            settings.STATIC_URL + "ace/ace.js",
         )
 
     #----------------------------------------------------------------------
@@ -340,6 +453,7 @@ class TestAdmin(SaveUserMixin, admin.ModelAdmin):
         js = (
             settings.STATIC_URL + "js/jquery-1.7.1.min.js",
             settings.STATIC_URL + "js/test_admin.js",
+            settings.STATIC_URL + "js/admin_description_editor.js",
             settings.STATIC_URL + "ace/ace.js",
         )
 
@@ -407,6 +521,8 @@ class TestListCycleAdmin(SaveUserMixin, admin.ModelAdmin):
             settings.STATIC_URL + "js/jquery-ui.min.js",
             settings.STATIC_URL + "js/collapsed_stacked_inlines.js",
             settings.STATIC_URL + "js/m2m_drag_admin.js",
+            settings.STATIC_URL + "js/admin_description_editor.js",
+            settings.STATIC_URL + "ace/ace.js",
         )
 
 
@@ -453,7 +569,15 @@ class ToleranceForm(forms.ModelForm):
 class ToleranceAdmin(BasicSaveUserAdmin):
     form = ToleranceForm
 
+
+#====================================================================================
+class AutoReviewAdmin(admin.ModelAdmin):
+    list_display = (str, "pass_fail", "status")
+    list_editable = ["pass_fail", "status"]
+
+
 admin.site.register([models.Tolerance], ToleranceAdmin)
+admin.site.register([models.AutoReviewRule], AutoReviewAdmin)
 admin.site.register([models.Category], CategoryAdmin)
 admin.site.register([models.TestList], TestListAdmin)
 admin.site.register([models.Test], TestAdmin)
