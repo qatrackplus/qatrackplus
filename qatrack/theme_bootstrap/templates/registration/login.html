@@ -18,7 +18,7 @@
                 </div>
             {% endif %}
 
-            <form method="POST" action="{% url auth_login %}" autocapitalize="off" class="form-horizontal">
+            <form method="POST" action="{% url "auth_login" %}" autocapitalize="off" class="form-horizontal">
                 <fieldset>
                     {% csrf_token %}
                     {{ form|as_bootstrap }}

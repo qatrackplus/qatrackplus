@@ -7,7 +7,7 @@
 {% block body %}
 {% if user.is_anonymous %}
     <h1>Account Details</h1>
-    <em><a href="{% url auth_login %}">Log in</a> to see your account details</em>
+    <em><a href="{% url "auth_login" %}">Log in</a> to see your account details</em>
 {% else %}
 <h1>{% trans "Account Details for " %}{% if user.get_full_name %}{{user.get_full_name}}{% else %} {{user.username}}{% endif %}</h1>
 

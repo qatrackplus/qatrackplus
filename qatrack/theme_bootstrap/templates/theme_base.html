@@ -58,7 +58,7 @@
                 <div class="navbar-inner">
                     <div class="container-fluid">
                         {% block topbar %}
-                            {% block site_brand %}<a class="brand" href="{% url home %}">{{ SITE_NAME }}</a>{% endblock %}
+                            {% block site_brand %}<a class="brand" href="{% url "home" %}">{{ SITE_NAME }}</a>{% endblock %}
                             <div>
                                 {% block nav %}{% endblock %}
                                 {% block account_bar %}{% include "_account_bar.html" %}{% endblock %}
