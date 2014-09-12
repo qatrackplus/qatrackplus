@@ -7,7 +7,12 @@ from django.utils import unittest, timezone
 
 from qatrack.qa import models
 
+import mock
 import utils
+
+
+def utc_2am():
+    return timezone.make_aware(timezone.datetime(2014, 4, 2, 2), timezone.utc)
 
 
 #============================================================================
@@ -755,6 +760,30 @@ class TestUTCDueDates(TestCase):
         # due date should now be based on tli2 since it is valid
         self.assertEqual(self.utc_hist.due_date.date(), (tli2.work_completed + self.utc_hist.frequency.due_delta()).date())
 
+    def test_due_date_not_updated_for_in_progress(self):
+        # test case where utc with history was created with valid status and
+        # later changed to have invlaid status
+
+        # first create valid history
+        now = timezone.now()
+        tli1 = utils.create_test_list_instance(unit_test_collection=self.utc_hist, work_completed=now)
+        ti1 = utils.create_test_instance(unit_test_info=self.uti_hist, status=self.valid_status)
+        ti1.test_list_instance = tli1
+        ti1.save()
+        tli1.save()
+
+        #now create 2nd in progress history
+        now = timezone.now()
+        tli2 = utils.create_test_list_instance(unit_test_collection=self.utc_hist, work_completed=now + self.utc_hist.frequency.due_delta())
+        ti2 = utils.create_test_instance(unit_test_info=self.uti_hist, status=self.valid_status)
+        ti2.test_list_instance = tli2
+        ti2.save()
+        tli2.in_progress=True
+        tli2.save()
+
+        self.utc_hist = models.UnitTestCollection.objects.get(pk=self.utc_hist.pk)
+        self.assertEqual(self.utc_hist.due_date.date(), (tli1.work_completed + self.utc_hist.frequency.due_delta()).date())
+
     #---------------------------------------------------------------------------
     def test_cycle_due_date(self):
         test_lists = [utils.create_test_list(name="test list %d" % i) for i in range(2)]
@@ -863,6 +892,26 @@ class TestUnitTestCollection(TestCase):
             utils.create_test_list_instance(unit_test_collection=utc, work_completed=wc)
             utc = models.UnitTestCollection.objects.get(pk=utc.pk)
             self.assertEqual(utc.due_status(), due_status)
+
+    #----------------------------------------------------------------------
+    @mock.patch('django.utils.timezone.now', mock.Mock(side_effect=utc_2am))
+    def test_date_straddle_due_status(self):
+        """
+        Ensure that due_status is correct when test list is due tomorrow
+        and current local time + UTC offset crosses midnight.
+        e.g. the situation where:
+            utc.due_date ==  2 April 2014 14:00 (UTC)
+            timezone.localtime(timezone.now()).date() == 1 April 2014
+            but
+            timezone.now().date() == 2 April 2014
+        """
+
+        with timezone.override("America/Toronto"):
+            weekly = utils.create_frequency(nom=7, due=7, overdue=9)
+            utc = utils.create_unit_test_collection(frequency=weekly)
+            utc.set_due_date(utc_2am()+timezone.timedelta(hours=12))
+            utc = models.UnitTestCollection.objects.get(pk=utc.pk)
+            self.assertEqual(utc.due_status(), models.NOT_DUE)
 
     #---------------------------------------------------------------------------
     def test_set_due_date(self):
@@ -1438,6 +1487,12 @@ class TestTestInstance(TestCase):
         self.assertEqual(ti.upload_url(), None)
 
     #----------------------------------------------------------------------
+    def test_image_url_none(self):
+        ti = utils.create_test_instance()
+
+        self.assertEqual(ti.image_url(), None)
+
+    #----------------------------------------------------------------------
     def test_upload_value_display(self):
         utc = utils.create_unit_test_collection()
         t = utils.create_test(test_type=models.UPLOAD)
@@ -1567,8 +1622,8 @@ class TestTestListInstance(TestCase):
         self.unit_test_collection = utils.create_unit_test_collection(test_collection=self.test_list)
 
         self.test_list_instance = self.create_test_list_instance()
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def create_test_list_instance(self):
         utc = self.unit_test_collection
 
@@ -1613,16 +1668,16 @@ class TestTestListInstance(TestCase):
             set(self.test_list_instance.unreviewed_instances()),
             set(models.TestInstance.objects.all())
         )
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def test_tolerance_tests(self):
         self.assertEqual(1, self.test_list_instance.tolerance_tests().count())
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def test_failing_tests(self):
         self.assertEqual(1, self.test_list_instance.tolerance_tests().count())
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     def test_in_progress(self):
         self.test_list_instance.in_progress = True
         self.test_list_instance.save()
@@ -1662,6 +1717,69 @@ class TestTestListInstance(TestCase):
 
         utc = models.UnitTestCollection.objects.get(pk=self.unit_test_collection.pk)
         self.assertEqual(utc.last_instance, self.test_list_instance)
+
+
+#============================================================================
+class TestAutoReview(TestCase):
+
+    #----------------------------------------------------------------------
+    def setUp(self):
+        self.tests = []
+
+        self.ref = models.Reference(type=models.NUMERICAL, value=100.)
+        self.tol = models.Tolerance(type=models.PERCENT, act_low=-3, tol_low=-2, tol_high=2, act_high=3)
+        self.values = [96, 97, 100]
+
+        self.statuses = [
+            utils.create_status(name="default", slug="default", requires_review=True, is_default=True),
+            utils.create_status(name="pass", slug="pass", requires_review=False, is_default=False),
+            utils.create_status(name="tol", slug="tol", requires_review=False, is_default=False),
+            utils.create_status(name="fail", slug="fail", requires_review=False, is_default=False),
+        ]
+
+        models.AutoReviewRule.objects.bulk_create([
+            models.AutoReviewRule(pass_fail=models.OK, status=self.statuses[1]),
+            models.AutoReviewRule(pass_fail=models.TOLERANCE, status=self.statuses[2]),
+        ])
+
+        self.test_list = utils.create_test_list()
+        for i in range(3):
+            test = utils.create_test(name="name%d" % i)
+            test.auto_review = True
+            test.save()
+
+            self.tests.append(test)
+            utils.create_test_list_membership(self.test_list, test)
+
+        self.unit_test_collection = utils.create_unit_test_collection(test_collection=self.test_list)
+
+        self.test_list_instance = self.create_test_list_instance()
+
+    #----------------------------------------------------------------------
+    def create_test_list_instance(self):
+        utc = self.unit_test_collection
+
+        tli = utils.create_test_list_instance(unit_test_collection=utc)
+
+        for i, (v, test) in enumerate(zip(self.values, self.tests)):
+            uti = models.UnitTestInfo.objects.get(test=test, unit=utc.unit)
+            ti = utils.create_test_instance(unit_test_info=uti, value=v, status=self.statuses[0])
+            ti.reference = self.ref
+            ti.tolerance = self.tol
+            ti.test_list_instance = tli
+            ti.calculate_pass_fail()
+            ti.auto_review()
+            ti.save()
+
+        tli.save()
+        return tli
+
+    #----------------------------------------------------------------------
+    def test_review_status(self):
+        """Each of the three tests should have a different status"""
+
+        for stat, tests in self.test_list_instance.status():
+            self.assertEqual(len(tests), 1)
 
 
 if __name__ == "__main__":

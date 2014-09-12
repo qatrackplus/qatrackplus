@@ -1,6 +1,5 @@
 from django.conf.urls.defaults import patterns, include, url
-
-from views import base, perform, review, charts, backup
+from views import base, perform, review, charts, backup, admin, forms
 
 from qatrack.qa import api
 from tastypie.api import Api
@@ -28,6 +27,14 @@ for resource in resources:
 
 urlpatterns = patterns('',
 
+    # CUSTOM ADMIN PAGES
+    # Copy references and tolerances between testlists
+    url(r'^admin/copy_refs_and_tols/$',
+        admin.SetReferencesAndTolerances(forms.SetReferencesAndTolerancesForm), name="qa_copy_refs_and_tols"),
+    url(r'^admin/copy_refs_and_tols/gettestlists/(?P<source_unit>[:|\w]+)/(?P<content_type>[:|\w]+)/$',
+        'qatrack.qa.views.admin.testlist_json', name='qa_copy_refs_and_tols_testlist_json'),
+
+
     url(r"^$", base.UTCList.as_view(), name="all_lists"),
 
     # view for composite calculations via ajax
@@ -40,8 +47,12 @@ urlpatterns = patterns('',
     url(r"^api/", include(v1_api.urls)),
 
     url(r"^charts/$", charts.ChartView.as_view(), name="charts"),
+    url(r"^charts/export/csv/$", charts.ExportCSVView.as_view(), name="charts_export_csv"),
     url(r"^charts/data/$", charts.BasicChartData.as_view(), name="chart_data"),
     url(r"^charts/control_chart.png$", charts.ControlChartImage.as_view(), name="control_chart"),
+    url(r"^charts/data/testlists/$", charts.get_test_lists_for_unit_frequencies, name="charts_testlists"),
+    url(r"^charts/data/tests/$", charts.get_tests_for_test_lists, name="charts_tests"),
+
 
     # overall program status
     url(r"^review/$", review.Overview.as_view(), name="overview"),

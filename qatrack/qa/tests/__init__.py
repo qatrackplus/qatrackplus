@@ -1,7 +1,7 @@
-from qatrack.qa.tests.test_views import *
-from qatrack.qa.tests.test_models import *
-from qatrack.qa.tests.test_tags import *
-from qatrack.qa.tests.test_utils import *
+from qatrack.qa.tests.test_views import *  # NOQA
+from qatrack.qa.tests.test_models import *  # NOQA
+from qatrack.qa.tests.test_tags import *  # NOQA
+from qatrack.qa.tests.test_utils import *  # NOQA
 
 __test__ = {
     "views": ["test_views"],

@@ -44,7 +44,7 @@ $(document).ready(function(){
 
     $("#toggle-instructions").click(toggle_instructions);
 
-    $(".test-filter input").change(update_tests);
+    $("#unit-container input, #frequency-container input, #test-list-container input").change(update_tests);
 
     $("#gen-chart").click(update_chart);
 
@@ -92,50 +92,89 @@ function set_chart_options(){
     }else{
         $("#basic-chart-options").hide();
         $("#cc-chart-options").show();
+        $("#relative-diff").attr("checked",false)
     }
 }
 /***************************************************/
 function update_tests(){
     set_frequencies();
-    set_test_lists();
-    set_tests();
+    set_test_lists(function(){
+        set_tests();
+    });
 }
 /***************************************************/
 function set_frequencies(){
     var units = QAUtils.get_checked("#unit-container");
     var frequencies = [];
     _.each(units,function(unit){
-        frequencies = _.union(frequencies,_.keys(QACharts.test_info.unit_frequency_lists[unit]))
+        frequencies = _.union(frequencies, QACharts.unit_frequencies[unit]);
     });
 
     filter_container("#frequency-container",frequencies);
 }
 
 /***************************************************/
-function set_test_lists(){
+function set_test_lists(callback){
     var units = QAUtils.get_checked("#unit-container");
     var frequencies = QAUtils.get_checked("#frequency-container");
 
-    var test_lists = [];
+    var data_filters = {units:units, frequencies:frequencies};
 
-    _.each(units,function(unit){
-        _.each(frequencies,function(freq){
-            test_lists = _.union(test_lists,QACharts.test_info.unit_frequency_lists[unit][freq]);
+    if (units.length > 0 && frequencies.length > 0){
+
+        $.ajax({
+            type:"get",
+            url:QAURLs.CHART_DATA_URL+"testlists/",
+            data:data_filters,
+            contentType:"application/json",
+            dataType:"json",
+            success: function(result,status,jqXHR){
+                filter_container("#test-list-container", result.test_lists);
+                if (callback){
+                    callback();
+                }
+            },
+            error: function(error){
+
+                finished_chart_update();
+                if (typeof console != "undefined") {console.log(error)};
+            }
         });
-    });
-
-    filter_container("#test-list-container",test_lists);
+    }else{
+        filter_container("#test-list-container", []);
+        filter_container("#test-container", []);
+    }
 }
 /***************************************************/
-function set_tests(){
+function set_tests(callback){
 
     var test_lists = QAUtils.get_checked("#test-list-container");
-    var tests = []
-    _.each(test_lists,function(test_list){
-        tests = _.union(tests,QACharts.test_info.test_lists[test_list]);
-    });
+    var data_filters = {"test_lists":test_lists};
 
-    filter_container("#test-container",tests);
+    if (test_lists.length > 0){
+
+        $.ajax({
+            type:"get",
+            url:QAURLs.CHART_DATA_URL+"tests/",
+            data:data_filters,
+            contentType:"application/json",
+            dataType:"json",
+            success: function(result,status,jqXHR){
+                filter_container("#test-container", result.tests);
+                if (callback){
+                    callback();
+                }
+            },
+            error: function(error){
+
+                finished_chart_update();
+                if (typeof console != "undefined") {console.log(error)};
+            }
+        });
+
+    }else{
+        filter_container("#test-container", []);
+    }
 }
 /***************************************************/
 function filter_container(container,visible){
@@ -208,7 +247,9 @@ function get_data_filters(){
         frequencies:QAUtils.get_checked("#frequency-container"),
         n_baseline_subgroups:$("#n-baseline-subgroups").val(),
         subgroup_size:$("#subgroup-size").val(),
-        fit_data:$("#include-fit").is(":checked")
+        fit_data:$("#include-fit").is(":checked"),
+        combine_data:$("#combine-data").is(":checked"),
+        relative:$("#relative-diff").is(":checked")
     };
 
     return filters;
@@ -548,7 +589,7 @@ function set_options_from_url(){
 
     var units = get_filtered_option_values("units",options);
     var tests = get_filtered_option_values("tests",options);
-    var    test_lists = get_test_lists_from_tests(tests);
+    var test_lists = get_filtered_option_values("test_lists", options);
 
     if ((units.length === 0) || (tests.length === 0)){
         return;
@@ -563,13 +604,17 @@ function set_options_from_url(){
 
     _.map(filters,show_all_inputs);
 
-    //    $(".test-list").attr("checked",true);
-    QAUtils.set_checked_state(test_list_ids,true);
     QAUtils.set_checked_state(unit_ids,true);
-    update_tests();
-    QAUtils.set_checked_state(test_ids,true);
 
-    update_chart();
+    set_frequencies();
+    set_test_lists(function(){
+        QAUtils.set_checked_state(test_list_ids,true);
+        set_tests(function(){
+            QAUtils.set_checked_state(test_ids,true);
+            update_chart();
+        });
+    });
+
 
 }
 
@@ -580,19 +625,18 @@ function get_filtered_option_values(opt_type,options){
     return _.map(_.filter(options,f),opt_value);
 }
 
+var downloadURL = function downloadURL(url) {
+    var hiddenIFrameID = 'hiddenDownloader',
+        iframe = document.getElementById(hiddenIFrameID);
+    if (iframe === null) {
+        iframe = document.createElement('iframe');
+        iframe.id = hiddenIFrameID;
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
+    }
+    iframe.src = url;
+};
+
 function export_csv(){
-    var header = [];
-    _.each($("#data-table-wrapper table thead tr:first-child th"),function(e){
-        header.push(["Date",'"'+e.innerHTML.replace('"','""')+'"',"Ref"].join(","));
-    });
-    header = header.join(",");
-    var lines = [header];
-
-    _.each($("#data-table-wrapper table tbody tr"),function(row){
-        lines.push(_.map($(row).find("td"),function(e){return e.innerHTML;}).join(","));
-    });
-
-    var blob = new Blob([lines.join("\n")], {type: "text/plain;charset=utf-8"});
-    saveAs(blob, "qatrack_export.csv");
-
+    downloadURL("./export/csv/?"+$.param(get_data_filters()));
 }

@@ -158,11 +158,18 @@
                                 <input type="hidden" name="testinstance_set-{{forloop.counter0}}-id" value="{{ti.pk}}" id="id_testinstance_set-{{forloop.counter0}}-id">
                                 <td><strong>{{ti.unit_test_info.test.name}}</strong></td>
                                 <td class="review-value">
-                                    {% if ti.string_value %}
-                                    <span class="" title="{{ti.value_display}}">{{ti.value_display|safe}}</span>
-                                    {% else %}
-                                    <span class="label pass-fail {{ti.pass_fail}}" title="{{ti.diff_display}}">{{ti.value_display}}</span>
-                                    {% endif %}
+                                    <span class="label pass-fail {{ti.pass_fail}}" title="{% if ti.string_value %}{{ti.value_display}}{% else %}{{ti.diff_display}}{% endif %}">
+                                        {% with ti.pass_fail as status %}
+                                            {% if ICON_SETTINGS.SHOW_STATUS_ICONS_REVIEW %}
+                                                {% if status == 'tolerance' %}
+                                                    <i class="pull-left icon-warning-sign"></i>
+                                                {% elif status == 'action' %}
+                                                    <i class="pull-left icon-minus-sign"></i>
+                                                {% endif %}
+                                            {% endif %}
+                                        {% endwith %}
+                                        {{ti.value_display|safe}}
+                                    </span>
                                 </td>
                                 <td class="review-ref">
                                     {% reference_tolerance_span ti.unit_test_info.test ti.reference ti.tolerance%}
@@ -175,7 +182,7 @@
                                     {% endif %}
                                 </td>
                                 <td class="qa-history">
-                                    {{ti_form.history|history_display}}
+                                    {% history_display ti_form.history test_list_instance.unit_test_collection.unit test_list_instance.test_list ti.unit_test_info.test %}
                                 </td>
                                 {% if perms.qa.can_review %}
                                 {# note we render this manually to prevent the Django ORM from running a query for every form #}
@@ -212,6 +219,26 @@
         </div>
         {% endif %}
     </form>
+
+    {# Code for displaying images under the test list #}
+    <div id="qa-images">
+        {% for ti_form in formset %}
+            {% with test=ti_form.instance.unit_test_info.test ti=ti_form.instance %}
+                {% if test.display_image %}
+                    {% if test_list_instance %}
+                        <div id="{{ test }}" class="qa-image-box">
+                            <strong><p>Test name: {{ test }}</p></strong>
+                            <img src="{{ ti.image_url }}" class="qa-image">
+                        </div>
+                    {% else %}
+                        <div id="{{ test }}"></div>
+                    {% endif %}
+                {% endif %}
+            {% endwith %}
+        {% endfor %}
+    </div>
+
+
 {% endblock %}
 
 {% block end_body_extra_script %}

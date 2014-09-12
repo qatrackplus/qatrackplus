@@ -9,6 +9,11 @@ var context;
 var pass_fail_only;
 var comment_on_skip;
 
+
+// keeps track of latest composite call so we can
+// ignore older ones f they comlete after the latest one
+var latest_composite_call;
+
 /***************************************************************/
 //minimal Pub/Sub functionality
 var topics = {};
@@ -91,10 +96,15 @@ function TestInfo(data){
 
     this.check_multi = function(value){
 
+        var status, message;
+
+        if (value === ""){
+            return NOT_DONE;
+        }
+
         if (_.isEmpty(self.tolerance) || self.tolerance.mc_pass_choices.length === 0){
             return NO_TOL;
         }
-        var status, message;
         if (_.indexOf(self.tolerance.mc_pass_choices,value) >= 0){
             status = QAUtils.WITHIN_TOL;
             message = QAUtils.WITHIN_TOL_DISP;
@@ -110,10 +120,6 @@ function TestInfo(data){
     };
 
     this.check_upload = function(value){
-        return value ? DONE : NOT_DONE;
-    };
-
-    this.check_string = function(value){
         return value ? DONE : NOT_DONE;
     };
 
@@ -165,8 +171,8 @@ function TestInfo(data){
     this.check_dispatch[QAUtils.CONSTANT]=this.check_numerical;
     this.check_dispatch[QAUtils.SIMPLE]=this.check_numerical;
     this.check_dispatch[QAUtils.COMPOSITE]=this.check_numerical;
-    this.check_dispatch[QAUtils.STRING_COMPOSITE]=this.check_string;
-    this.check_dispatch[QAUtils.STRING]=this.check_string;
+    this.check_dispatch[QAUtils.STRING_COMPOSITE]=this.check_multi;
+    this.check_dispatch[QAUtils.STRING]=this.check_multi;
     this.check_dispatch[QAUtils.UPLOAD]=this.check_upload;
 
     this.calculate_diff = function(value){
@@ -192,6 +198,8 @@ function TestInstance(test_info, row){
     this.row = $(row);
     this.inputs = this.row.find("td.qa-value").find("input, textarea, select");
 
+    this.visible = true;
+
     this.status = this.row.find("td.qa-status");
     this.test_status = null;
 
@@ -200,14 +208,10 @@ function TestInstance(test_info, row){
     this.set_skip = function(skipped){
         self.skipped = skipped;
         self.skip.prop("checked",self.skipped);
-        if (skipped){
-            self.set_value(null);
-        }
     }
     this.skip.change(function(){
         self.skipped = self.skip.is(":checked");
         if (self.skipped){
-            self.set_value(null);
             if (comment_on_skip){
                 self.comment.show(600);
             }
@@ -305,7 +309,12 @@ function TestInstance(test_info, row){
             self.value = self.inputs.val();
         }else {
             self.inputs.val(QAUtils.clean_numerical_value(self.inputs.val()));
-            var value = parseFloat(self.inputs.val());
+            var dots = self.inputs.val().match(/\./g);
+            if (dots===null || dots.length <= 1) {
+                var value = parseFloat(self.inputs.val());
+            }else {
+                var value = NaN
+            }
             self.value = _.isNaN(value) ? null : value;
         }
 
@@ -313,11 +322,18 @@ function TestInstance(test_info, row){
     }
     this.update_status = function(){
         var status = _.isNull(self.value)? NOT_DONE : self.test_info.check_value(self.value);
+        if (self.test_info.test.type === QAUtils.UPLOAD){
+            if (status === DONE){
+                self.status.attr("title", self.value);
+            }else{
+                self.status.attr("title","");
+            }
+        }
         self.set_status(status);
     };
     this.set_status = function(status){
 
-        self.status.text(status.message);
+        self.status.html(status.message);
         self.status.removeClass("btn-success btn-warning btn-danger btn-info");
         self.test_status = status.status;
         if (status.status === QAUtils.WITHIN_TOL){
@@ -338,6 +354,7 @@ function TestInstance(test_info, row){
         self.comment.hide();
         self.procedure.hide();
         self.set_skip(false);
+        self.visible = true;
         self.comment_box.val(self.comment_box.val().replace(self.NOT_PERFORMED,""));
     }
 
@@ -345,8 +362,14 @@ function TestInstance(test_info, row){
         self.row.hide();
         self.comment.hide();
         self.procedure.hide();
-        self.set_value(null);
+        self.visible = false;
+
+        // skipping sets value to null but we want to presever value in case it
+        // is unfiltered later. Filtered values will be nulled on submitt
+        var tmp_val = self.value;
         self.set_skip(true);
+        self.set_value(tmp_val);
+
         self.comment_box.val(self.NOT_PERFORMED);
     }
 
@@ -366,6 +389,8 @@ function TestInstance(test_info, row){
                 return [
                     { name:"test_id", value: self.test_info.test.id},
                     { name:"meta", value:JSON.stringify(get_meta_data())},
+                    { name:"refs", value:JSON.stringify(get_ref_data())},
+                    { name:"tols", value:JSON.stringify(get_tol_data())},
                     { name:"csrfmiddlewaretoken", value:csrf_token}
                 ]
             },
@@ -379,6 +404,13 @@ function TestInstance(test_info, row){
                     self.set_value(data.result);
                     self.status.addClass("btn-success").text("Success");
                     self.status.attr("title",data.result['temp_file_name']);
+
+                    // Display Image if required
+                    if (data.result.is_image){
+                        var image_url = QAURLs.MEDIA_URL + "uploads/tmp/" + data.result.temp_file_name;
+                        self.display_image(image_url);
+                     }
+
                     $.Topic("valueChanged").publish();
                 }
             },
@@ -397,7 +429,18 @@ function TestInstance(test_info, row){
     });
     //Set initial value
     this.update_value_from_input();
-
+    // Display images
+    self.display_image = function(url){
+        var id = self.test_info.test.slug;
+        var name = self.test_info.test.name;
+        var test_name = '<strong><p>Test name: '+ name + '</p></strong>';
+        var img_tag =  '<img src="'+ url+ '" class="qa-image">';
+        var html = test_name + img_tag;
+        if (self.test_info.test.display_image){
+          $("#qa-images").css({"display": "block"});
+          $("#" + id).addClass("qa-image-box").html(html);
+        }
+    };
 }
 
 function get_meta_data(){
@@ -409,10 +452,29 @@ function get_meta_data(){
         work_completed: QAUtils.parse_date($("#id_work_completed").val()),
         work_started: QAUtils.parse_date($("#id_work_started").val()),
         username: $("#username").text()
-    }
+    };
 
     return meta;
 
+}
+
+function get_ref_data(){
+    var ref_values = _.map(tli.test_instances, function(ti){
+        return ti.test_info.reference.value ? ti.test_info.reference.value : null;
+    });
+
+    return _.object(_.zip(tli.slugs, ref_values));
+}
+
+function get_tol_data(){
+
+    var tol_properties = ["act_high", "act_low", "tol_high", "tol_low", "mc_pass_choices", "mc_tol_choices", "type"];
+
+    var tol_values = _.map(tli.test_instances, function(ti){
+        var tol = ti.test_info.tolerance;
+        return !tol.id ? null : _.pick(tol, tol_properties);
+    });
+    return _.object(_.zip(tli.slugs, tol_values));
 }
 
 function TestListInstance(){
@@ -442,23 +504,31 @@ function TestListInstance(){
 
     this.calculate_composites = function(){
 
+
         if (self.composites.length === 0){
             return;
         }
 
-        self.submit.attr("disabled", true);
 
         var cur_values = _.map(self.test_instances,function(ti){return ti.value;});
         var qa_values = _.object(_.zip(self.slugs,cur_values));
         var meta = get_meta_data();
+        var refs = get_ref_data();
+        var tols = get_tol_data();
 
         var data = {
             qavalues:JSON.stringify(qa_values),
             composite_ids:JSON.stringify(self.composite_ids),
-            meta: JSON.stringify(meta)
+            meta: JSON.stringify(meta),
+            refs: JSON.stringify(refs),
+            tols: JSON.stringify(tols)
         };
 
-        var on_success = function(data){
+        var on_success = function(data, status, XHR){
+            if (latest_composite_call !== XHR){
+                return;
+            }
+
             self.submit.attr("disabled", false);
 
             if (data.success){
@@ -477,7 +547,9 @@ function TestListInstance(){
             $.Topic("qaUpdated").publish();
         }
 
-        $.ajax({
+        self.submit.attr("disabled", true);
+
+        latest_composite_call = $.ajax({
             type:"POST",
             url:QAURLs.COMPOSITE_URL,
             data:data,
@@ -487,11 +559,11 @@ function TestListInstance(){
             traditional:true,
             error:on_error
         });
-    }
+    };
 
     this.has_failing = function(){
         return _.filter(self.test_instances,function(ti){return ti.test_status === QAUtils.ACTION}).length > 0;
-    }
+    };
 
     $.Topic("categoryFilter").subscribe(function(categories){
         _.each(self.test_instances,function(ti){
@@ -622,18 +694,38 @@ $(document).ready(function(){
     });
 
     $("#qa-form").preventDoubleSubmit().submit(function(){
-        $(window).unbind("beforeunload")
+        $(window).unbind("beforeunload");
     });
 
     $("#work-completed, #work-started").datepicker({
         autoclose:true,
         keyboardNavigation:false
     }).on('changeDate',function (ev){
+        // Set times to default values after a date is chosen
+        // If the current date is selected, the time defaults to  the current time
+        // otherwise 19:30 for work started and 20:30 for work completed
+
         var input = $(this).find("input");
-        if (input.attr("name") === "work_completed"){
-            input.val(input.val()+" 20:30");
+        var cur_val = input.val();
+
+        var now = new Date();
+
+        var zero_pad = function(inp){return inp < 10 ? '0'+inp : inp;};
+
+        var date = zero_pad(now.getDate());
+        var month = zero_pad(now.getMonth()+1);
+        var year = now.getFullYear();
+        var hours = zero_pad(now.getHours());
+        var mins = zero_pad(now.getMinutes());
+
+        var now_str = date +'-'+ month + '-'+year;
+
+        if (now_str === cur_val){
+            input.val(cur_val+" "+hours+":"+mins);
+        }else if (input.attr("name") === "work_completed"){
+            input.val(cur_val+" 20:30");
         }else{
-            input.val(input.val()+" 19:30");
+            input.val(cur_val+" 19:30");
         }
     });
 

@@ -16,13 +16,14 @@ var QAUtils = new function() {
     this.DONE = "done";
     this.NO_TOL = "no_tol";
 
-    this.WITHIN_TOL_DISP =  "OK";
-    this.TOLERANCE_DISP = "TOL";
-    this.ACTION_DISP = "ACT";
-    this.FAIL_DISP = "FAIL";
+    this.WITHIN_TOL_DISP =  'OK';
+    var icons = ICON_SETTINGS.SHOW_STATUS_ICONS_PERFORM;
+    this.TOLERANCE_DISP = icons ? '<i class="pull-left icon-warning-sign"></i> TOL' : 'TOL';
+    this.ACTION_DISP = icons ? '<i class="pull-left icon-minus-sign"></i> ACT' : 'ACT';
+    this.FAIL_DISP = icons ? '<i class="pull-left icon-minus-sign"></i> FAIL' : 'FAIL';
     this.NOT_DONE_DISP = "Not Done";
-    this.DONE_DISP = "Done";
-    this.NO_TOL_DISP = "No Tol Set";
+    this.DONE_DISP = 'Done';
+    this.NO_TOL_DISP = 'No Tol Set';
 
     this.PERCENT = "percent";
     this.ABSOLUTE = "absolute";

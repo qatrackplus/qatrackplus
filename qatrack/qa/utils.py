@@ -4,6 +4,8 @@ import StringIO
 import tokenize
 import token
 
+from django.conf import settings
+
 
 #----------------------------------------------------------------------
 class SetEncoder(json.JSONEncoder):
@@ -128,3 +130,26 @@ def almost_equal(a, b, significant=7):
         sc_a = 0.0
 
     return abs(sc_b - sc_a) <= math.pow(10., -(significant - 1))
+
+
+#----------------------------------------------------------------------
+def check_query_count():  # pragma: nocover
+    """ A useful debugging decorator for checking the number of queries
+    a function is making"""
+
+    from django.db import connection
+    import time
+
+    def decorator(func):
+        if settings.DEBUG:
+            def inner(self, *args, **kwargs):
+                initial_queries = len(connection.queries)
+                t1 = time.time()
+                ret = func(self, *args, **kwargs)
+                t2 = time.time()
+                final_queries = len(connection.queries)
+                print "****QUERIES****", final_queries - initial_queries, "in %.3f ms" % (t2 - t1)
+                return ret
+            return inner
+        return func
+    return decorator

@@ -1,13 +1,16 @@
 from django import forms
 from django.core.validators import MaxLengthValidator
+from django.core.exceptions import ValidationError
 from django.forms.models import inlineformset_factory
 from django.forms.widgets import RadioSelect, Select, HiddenInput
 from django.utils import timezone
 from django.utils.translation import ugettext as _
+from django.contrib.contenttypes.models import ContentType
 
 from django.conf import settings
 
 from .. import models
+
 
 from qatrack.qa import utils
 
@@ -53,18 +56,23 @@ class TestInstanceWidgetsMixin(object):
         value = cleaned_data.get("value", None)
         string_value = cleaned_data.get("string_value", None)
 
-        # force user to enter value unless skipping test
-        if value is None and not string_value and not skipped:
-            self._errors["value"] = self.error_class(["Value required if not skipping"])
-        elif (value is not None or string_value) and skipped:
-            self._errors["value"] = self.error_class(["Clear value if skipping"])
+        if self.unit_test_info.test.skip_required():
+            # force user to enter value unless skipping test
+            if value is None and not string_value and not skipped:
+                self._errors["value"] = self.error_class(["Value required if not skipping"])
+            elif (value is not None or string_value) and skipped:
+                self._errors["value"] = self.error_class(["Clear value if skipping"])
 
-        if not self.user.has_perm("qa.can_skip_without_comment") and skipped and not comment:
-            self._errors["skipped"] = self.error_class(["Please add comment when skipping"])
-            del cleaned_data["skipped"]
+            if not self.user.has_perm("qa.can_skip_without_comment") and skipped and not comment:
+                self._errors["skipped"] = self.error_class(["Please add comment when skipping"])
+                del cleaned_data["skipped"]
 
-        if value is None and skipped and "value" in self.errors:
-            del self.errors["value"]
+            if value is None and skipped and "value" in self.errors:
+                del self.errors["value"]
+        else:
+            cleaned_data['skipped'] = value is None and not string_value
+            if "value" in self.errors:
+                del self.errors["value"]
 
         return cleaned_data
 
@@ -229,7 +237,6 @@ class BaseTestListInstanceForm(forms.ModelForm):
 
     status = forms.ModelChoiceField(
         queryset=models.TestInstanceStatus.objects,
-        initial=models.TestInstanceStatus.objects.default,
         required=False
     )
 
@@ -283,7 +290,9 @@ class BaseTestListInstanceForm(forms.ModelForm):
             cleaned_data["work_completed"] = work_completed
 
         if work_started and work_completed:
-            if work_completed <= work_started:
+            if work_completed == work_started:
+                cleaned_data["work_started"] -= timezone.timedelta(minutes=1)
+            elif work_completed < work_started:
                 self._errors["work_started"] = self.error_class(["Work started date/time can not be after work completed date/time"])
                 del cleaned_data["work_started"]
 
@@ -292,6 +301,7 @@ class BaseTestListInstanceForm(forms.ModelForm):
                 self._errors["work_started"] = self.error_class(["Work started date/time can not be in the future"])
                 if "work_started" in cleaned_data:
                     del cleaned_data["work_started"]
+
         return cleaned_data
 
 
@@ -332,3 +342,53 @@ class ReviewTestListInstanceForm(forms.ModelForm):
     class Meta:
         model = models.TestListInstance
         fields = ()
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop("user")
+        super(ReviewTestListInstanceForm, self).__init__(*args, **kwargs)
+
+    def clean(self):
+
+        cleaned_data = super(ReviewTestListInstanceForm, self).clean()
+
+        if self.instance.created_by == self.user and not self.user.has_perm('qa.can_review_own_tests'):
+            raise ValidationError("You do not have the required permission to review your own tests.")
+        return cleaned_data
+
+
+#============================================================================
+class SetReferencesAndTolerancesForm(forms.Form):
+    """Form for copying references and tolerances from TestList Unit 'x' to TestList Unit 'y' """
+
+    source_unit = forms.ModelChoiceField(queryset=models.Unit.objects.all())
+    content_type = forms.ChoiceField((('', '---------'), ('testlist', 'TestList'), ('testlistcycle', 'TestListCycle')))
+
+    # Populate the source testlist field
+    source_testlist = forms.ChoiceField([], label='Source testlist(cycle)')
+
+    # Populate the dest_unit field
+    dest_unit = forms.ModelChoiceField(queryset=models.Unit.objects.all())
+
+    def __init__(self, *args, **kwargs):
+
+        super(SetReferencesAndTolerancesForm, self).__init__(*args,**kwargs)
+
+        testlistchoices = models.TestList.objects.all().order_by("name").values_list("pk", 'name')
+        testlistcyclechoices = models.TestListCycle.objects.all().order_by("name").values_list("pk", 'name')
+        choices = [('', '---------')] + list(testlistchoices) + list(testlistcyclechoices)
+
+        self.fields['source_testlist'].choices = choices
+
+    def save(self):
+        source_unit = self.cleaned_data.get("source_unit")
+        source_testlist = self.cleaned_data.get("source_testlist")
+        dest_unit = self.cleaned_data.get("dest_unit")
+        ctype = ContentType.objects.get(model=self.cleaned_data.get("content_type"))
+
+        try:
+            source_utc = models.UnitTestCollection.objects.get(
+                unit=source_unit, object_id=source_testlist, content_type=ctype
+            )
+        except models.UnitTestCollection.DoesNotExist:
+            raise ValidationError(_('Invalid value'), code='invalid')
+        source_utc.copy_references(dest_unit)

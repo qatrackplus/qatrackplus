@@ -28,8 +28,8 @@ def create_category(name="cat"):
 
 
 #----------------------------------------------------------------------
-def create_status(name="status", slug="status", is_default=True):
-    status = models.TestInstanceStatus(name=name, slug=slug, is_default=is_default, requires_review=True)
+def create_status(name="status", slug="status", is_default=True, requires_review=True):
+    status = models.TestInstanceStatus(name=name, slug=slug, is_default=is_default, requires_review=requires_review)
     status.save()
     return status
 
@@ -192,7 +192,7 @@ def create_tolerance(tol_type=models.ABSOLUTE, act_low=-2, tol_low=-1, tol_high=
     if created_by is None:
         created_by = create_user()
     tol = models.Tolerance(
-        type=models.ABSOLUTE,
+        type=tol_type,
         act_low=act_low,
         tol_low=tol_low,
         tol_high=tol_high,

@@ -150,7 +150,7 @@
                     </div>
                 {% endif %}
 
-                {% if perms.qa.can_review %}
+                {% if perms.qa.can_review and perms.qa.can_review_own_tests %}
                     <div class="input-prepend input-append" id="status">
                         <label for="id_status" class="add-on">
                             Set Status:
@@ -216,7 +216,7 @@
                 </thead>
                 <tbody>
                     {% for test_form in formset %}
-                        {% qa_value_form test_form include_history=perms.qa.can_view_history include_ref_tols=perms.qa.can_view_ref_tol test_info=test_form.get_test_info  %}
+                        {% qa_value_form test_form test_list include_history=perms.qa.can_view_history include_ref_tols=perms.qa.can_view_ref_tol test_info=test_form.get_test_info  %}
                     {% endfor %}
                 </tbody>
             </table>
@@ -254,6 +254,25 @@
                 </div>
             </div>
         </form>
+
+        {# Code for displaying images under the test list #}
+        <div id="qa-images">
+            {% for test_form in formset %}
+                {% with test=test_form.get_test_info.test ti=test_form.instance %}
+                    {% if test.display_image %}
+                        {% if test_list_instance %}
+                            <div id="{{ test.slug }}" class="qa-image-box">
+                                <strong><p>Test name: {{ test }}</p></strong>
+                                <img src="{{ ti.image_url }}" class="qa-image">
+                            </div>
+                        {% else %}
+                            <div id="{{ test.slug }}"></div>
+                        {% endif %}
+                    {% endif %}
+                {% endwith %}
+            {% endfor %}
+        </div>
+
 
                 <div id="progress"> <div class="bar" style="width: 0%; height:30px; background-color:red;"></div> </div>
 

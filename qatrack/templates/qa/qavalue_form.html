@@ -50,9 +50,9 @@
                  <span class="">{{form.value}}</span>
             {% endif %}
         </td>
-
-
-        <td class="qa-skip"title="{{form.skipped.help_text|safe}}">{{form.skipped}}</td>
+        <td class="qa-skip"title="{{form.skipped.help_text|safe}}">
+            {% if test.skip_required %}{{form.skipped}}{% endif %}
+        </td>
         <td class="qa-status">Not Done</td>
         <td class="qa-showcmt"><a href="#" class="revealcomment" title="Add comment for this test"><i class="icon-edit"></i></a></td>
 
@@ -64,7 +64,7 @@
             {% endif %}
             {% if include_history %}
                 <td class="qa-history">
-                    {{form.history|history_display}}
+                    {% history_display form.history uti.unit test_list test %}
                 </td>
             {% endif %}
         {% else %}

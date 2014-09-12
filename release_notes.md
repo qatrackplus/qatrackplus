@@ -1,14 +1,70 @@
 # QATrack+ Release Notes #
 
-## v0.3.0 ##
-
-### New Features & Bugs Fixed ###
-
-* Added the [Ace code editor](http://ace.c9.io/) for editting Test calculation\_procedure Python snippets.
-
-
-
 ## v0.2.8 ##
+
+    Note: this release introduces some database schema changes. The database migrations have
+    been tested on SQLServer, PostgreSQL, MySQL & SQLite but it is important that you:
+
+    BACK UP YOUR DATABASE BEFORE ATTEMPTING THIS UPGRADE
+
+There are lots of minor enhancements & a number of new features in this release of QATrack+.
+
+Special thanks for this release go to Wenze van Klink from VU Medisch Centrum Amsterdam.
+Wenze contributed a couple of great features to QATrack+ for this release including:
+
+* The ability to easily copy references & tolerance from one Unit to another.  A nice time saver!
+* The ability to set references and tolerances for multiple tests at the same time.
+    Want to set 20 tests to have a reference value of 100? Now you can do it with just a few clicks.
+* Display uploaded images (jpg, png, gif) on the test list page.
+* a number of other bug fixes & minor features.
+
+Great work Wenze...your contributions are greatly appreciated!
+
+Also of note, Gaspar Sánchez Merino has produced a Spanish translation of the
+QATrack+ documentation.  Thanks a lot Gaspar!  You can find the translation on
+[Gaspar's BitBucket page](https://bitbucket.org/gasparsanchez/qatrackplus/wiki/users/guide.md).
+
+Here's a list of some of the changes in this release:
+
+* The documentation has been split into different versions (corresponding to QATrack+ releases) to accomodate users who are not running
+the latest version of QATrack+.
+* You can now [embed uploaded images right on the test list page](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/v/0.2.8/admin/tests)
+* You can now [choose to hide tests from the list of tests to plot](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/v/0.2.8/admin/tests). Handy to limit the chart test selection lists to only those tests you are interested in plotting.
+* There is now an ["Auto Review" feature](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/v/0.2.8/admin/auto_review) that can be configured so that only test which are at tolerance or action levels will be placed in the review queue.
+* Page load speeds for the charting page have been greatly improved for large databases
+* You can now [configure your site to use icons](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/v/0.2.8/deployment/settings) in addition to colors to indicate pass/fail & due/overdue. This should help
+with usability for color blind users.  Thanks to Eric Reynard for the great suggestion! Examples of the icons can be seen on [BitBucket](https://bitbucket.org/tohccmedphys/qatrackplus/pull-request/11/add-icons-to-reduce-dependence-on-red/diff)
+* Python code snippets and html test/test list descriptions are [now syntax highlighted on modern browsers](https://bitbucket.org/tohccmedphys/qatrackplus/issue/78/integrate-ace-or-code-mirror-for)
+* Composite & constant tests no [longer need to be skipped manually](https://bitbucket.org/tohccmedphys/qatrackplus/issue/98/skip-box-for-composite-test)
+* When charting you can now [combine data for the same test from different test lists](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/v/0.2.8/users/charts) (thanks to Eric Reynard for the suggestion)
+* Data can now be [plotted relative to its reference value](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/v/0.2.8/users/charts) (thanks to Balazs Nyiri for the suggestion)
+* CSV export files should now work on IE8 & 9
+* A new permission has been added to control [who can review their own test results](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/v/0.2.8/admin/auth)
+* It's now possible to easily [copy references and tolerances between units](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/v/0.2.8/admin/setting_refs_and_tols)
+* Easily set references & tolerances for [multiple tests at the same time](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/v/0.2.8/admin/setting_refs_and_tols)
+* You can now tweak the look of your QATrack+ site with css using a [site specific css file](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/v/0.2.8/deployment/site_css.md)
+* You can now configure your site to [order the Units on the "Choose Unit" page](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/v/0.2.8/deployment/settings) by number or name.
+* QATrack+ now is using a file based cache to decrease page load times. By default
+the cache data is located at qatrack/cache/cache\_data/ but this [can be changed if required](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/v/0.2.8/deployment/settings).
+* You can now assign multiple choice tolerances to string/string composite test types (thanks to Elizabeth McKenzie for the suggestion).
+* You can now access reference and tolerance values for [tests in your calculated tests](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/admin/calculated.md) (thanks to Andrew Alexander from Saskatoon for the suggestion)
+* a number of other bug fixes and performance enhancements
+
+
+### Upgrading to v0.2.8 ###
+
+_Note: If any of these steps results in an error, *stop* and figure out why before
+carrying on to the next step!_
+
+From the git bash command shell (with your QATrack+ virtual env activated!):
+
+1. git pull origin master
+1. pip install -r requirements/base.txt
+1. python manage.py syncdb
+1. python manage.py migrate
+1. python manage.py collectstatic
+1. restart the QATrack+ app (i.e. the CherryPy service or Apache or gunicorn or...)
+
 
 ## v0.2.7 ##
 
@@ -259,6 +315,8 @@ This release has a number of small features and bug fixes included.
     * configure new test list
     * assign test list to unit with & without assigned frequencies
     * mark some data as invalid and confirm the due date is reset correctly
+    * syncdb/migrate a newly created database
+    * create fresh virtualenv and test 'pip install -r requirements/base.txt; pip install -r requirements/optional.txt' then run test suite.
 * Release notes
     * include upgrade commands
     * don't forget changes to requirements
