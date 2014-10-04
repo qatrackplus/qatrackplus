@@ -72,7 +72,7 @@ class ActiveDirectoryGroupMembershipSSLBackend:
 
                 # get personal info
                 mail = result.get(settings.AD_LU_MAIL, ["mail@example.com"])[0]
-                last_name = result.get(settings.AD_SURNAME, [username])[0]
+                last_name = result.get(settings.AD_LU_SURNAME, [username])[0]
                 first_name = result.get(settings.AD_LU_GIVEN_NAME, [username])[0]
 
                 l.unbind_s()
