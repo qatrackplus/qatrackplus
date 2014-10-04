@@ -67,7 +67,7 @@ def create_test_list(name="test_list"):
 
 
 #----------------------------------------------------------------------
-def create_test_list_instance(unit_test_collection=None, work_completed=None, created_by=None, test_list=None, day=0):
+def create_test_list_instance(unit_test_collection=None, work_completed=None, created_by=None, test_list=None, day=0, in_progress=False):
     if unit_test_collection is None:
         unit_test_collection = create_unit_test_collection()
     if test_list is None:
@@ -86,7 +86,8 @@ def create_test_list_instance(unit_test_collection=None, work_completed=None, cr
         work_completed=work_completed,
         work_started=work_started,
         test_list=test_list,
-        day=day
+        day=day,
+        in_progress=in_progress
     )
     tli.save()
     return tli
