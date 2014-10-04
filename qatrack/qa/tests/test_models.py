@@ -761,8 +761,8 @@ class TestUTCDueDates(TestCase):
         self.assertEqual(self.utc_hist.due_date.date(), (tli2.work_completed + self.utc_hist.frequency.due_delta()).date())
 
     def test_due_date_not_updated_for_in_progress(self):
-        # test case where utc with history was created with valid status and
-        # later changed to have invlaid status
+        # test case where utc with history was performed and then performed 2nd time but
+        # set as in_progress
 
         # first create valid history
         now = timezone.now()
@@ -783,6 +783,41 @@ class TestUTCDueDates(TestCase):
 
         self.utc_hist = models.UnitTestCollection.objects.get(pk=self.utc_hist.pk)
         self.assertEqual(self.utc_hist.due_date.date(), (tli1.work_completed + self.utc_hist.frequency.due_delta()).date())
+
+    #---------------------------------------------------------------------------
+    def test_due_date_not_updated_for_in_progress_no_history_due_date_set(self):
+        # test case where utc without history and a due date set was performed and
+        # set as in_progress
+
+        # first set due date
+        due_date = timezone.now() - timezone.timedelta(days=1)
+        self.utc_hist.due_date = due_date
+        self.utc_hist.save()
+
+
+        #now create in progress history
+        now = timezone.now()
+        tli = utils.create_test_list_instance(unit_test_collection=self.utc_hist, work_completed=now, in_progress=True)
+        #ti = utils.create_test_instance(unit_test_info=self.uti_hist, status=self.valid_status)
+        # ti.test_list_instance = tli
+        # ti.save()
+        # tli.in_progress=True
+        # tli.save()
+
+        self.utc_hist = models.UnitTestCollection.objects.get(pk=self.utc_hist.pk)
+        self.assertEqual(self.utc_hist.due_date, due_date)
+
+    #---------------------------------------------------------------------------
+    def test_due_date_not_updated_for_in_progress_no_history(self):
+        # test case where utc without history without a due date set was performed and
+        # set as in_progress
+
+        #create in progress history
+        now = timezone.now()
+        tli = utils.create_test_list_instance(unit_test_collection=self.utc_hist, work_completed=now, in_progress=True)
+
+        self.utc_hist = models.UnitTestCollection.objects.get(pk=self.utc_hist.pk)
+        self.assertEqual(self.utc_hist.due_date, None)
 
     #---------------------------------------------------------------------------
     def test_cycle_due_date(self):
