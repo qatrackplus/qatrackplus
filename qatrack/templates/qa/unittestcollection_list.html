@@ -1,6 +1,12 @@
 {% extends "site_base.html" %}
 {% load staticfiles %}
 {% load qa_tags %}
+{% load listable %}
+
+{% block page_style %}
+    {% listable_css %}
+{% endblock page_style %}
+
 
 {% block head_title %}{{page_title}}{% endblock %}
 
@@ -24,7 +30,7 @@
             <input type="hidden" id="total_records" value="{{iTotalRecords}}"/>
             <input type="hidden" id="filtered_records" value="{{iTotalDisplayRecords}}"/>
 
-            <!-- datatables pagination placeholder. Gets deleted just before datatables renders--> 
+            <!-- datatables pagination placeholder. Gets deleted just before datatables renders-->
             <div class="row-fluid" id="pagination-placeholder">
                 <div class="span6">
                     <div class="dataTables_info" id="DataTables_Table_0_info">

@@ -17,6 +17,7 @@ from qatrack.qa import models
 from qatrack.data_tables.views import BaseDataTablesDataSource
 
 from braces.views import PrefetchRelatedMixin, SelectRelatedMixin
+from listable.views import BaseListableView
 
 logger = logging.getLogger('qatrack.console')
 
@@ -127,7 +128,7 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
 
         return reverse("unreviewed")
 
-
+class UTCList
 #============================================================================
 class UTCList(BaseDataTablesDataSource):
     """
