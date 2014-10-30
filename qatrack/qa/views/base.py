@@ -9,6 +9,7 @@ from django.core.urlresolvers import reverse
 from django.template import Context
 from django.contrib.auth.context_processors import PermWrapper
 from django.template.loader import get_template
+from django.utils.translation import ugettext as _
 
 from django.views.generic import UpdateView
 
@@ -17,7 +18,7 @@ from qatrack.qa import models
 from qatrack.data_tables.views import BaseDataTablesDataSource
 
 from braces.views import PrefetchRelatedMixin, SelectRelatedMixin
-from listable.views import BaseListableView
+from listable.views import BaseListableView, SELECT
 
 logger = logging.getLogger('qatrack.console')
 
@@ -128,21 +129,76 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
 
         return reverse("unreviewed")
 
-class UTCList
-#============================================================================
-class UTCList(BaseDataTablesDataSource):
-    """
-    This view provides a base for any sort of listing of
-    :model:`UnitTestCollection`'s.
-    """
+class UTCList(BaseListableView):
 
     model = models.UnitTestCollection
+
     action = "perform"
     action_display = "Perform"
-
     active_only = True
+    paginate_by = 50
 
-    initial_orderings = ["unit__number", "frequency__due_interval", "testlist__name", "testlistcycle__name"]
+    fields = (
+        "actions",
+        "utc_name",
+        "due_date",
+        "unit__name",
+        "frequency__name",
+        "assigned_to__name",
+        "last_instance_work_completed",
+        "last_instance_pass_fail",
+        "last_instance_review_status",
+    )
+
+    search_fields = {
+        "actions": False,
+        "utc_name": "utc_name__icontains",
+        "assigned_to__name": "assigned_to__name__exact",
+        "last_instance_pass_fail": False,
+        "last_instance_review_status": False,
+    }
+
+    order_fields = {
+        "actions": False,
+        "frequency__name": "frequency__due_interval",
+        "unit__name": "unit__number",
+        "last_instance_pass_fail": False,
+        "last_instance_review_status": False,
+    }
+
+    widgets = {
+        "unit__name": SELECT,
+        "frequency__name": SELECT,
+        "assigned_to__name": SELECT,
+    }
+
+
+    select_related = (
+        "last_instance__work_completed",
+        "last_instance__created_by",
+        "frequency",
+        "unit__name",
+        "assigned_to__name",
+    )
+
+    headers = {
+        "utc_name": _("Test List/Cycle"),
+        "unit__name": _("Unit"),
+        "frequency__name": _("Frequency"),
+        "assigned_to__name": _("Assigned To"),
+        "last_instance_work_completed": _("Completed"),
+        "last_instance_pass_fail": _("Pass/Fail Status"),
+        "last_instance_review_status": _("Review Status"),
+    }
+
+    prefetch_related  = (
+        "last_instance__testinstance_set",
+        "last_instance__testinstance_set__status",
+        "last_instance__reviewed_by",
+        "last_instance__modified_by",
+    )
+
+    order_by = ["unit__name", "frequency__name", "utc_name"]
 
     def __init__(self, *args, **kwargs):
         super(UTCList, self).__init__(*args, **kwargs)
@@ -156,104 +212,73 @@ class UTCList(BaseDataTablesDataSource):
             'due_date':  get_template("qa/due_date.html"),
         }
 
-    #---------------------------------------------------------------------------
-    def set_columns(self):
-        """
-        Setup the columns we want to be displayed for :model:`qa.UnitTestCollection`'s
-        See :view:`data_tables.BaseDataTablesDataSource`.set_columns for more information
-        """
+    def get_context_data(self, *args, **kwargs):
+        context = super(UTCList, self).get_context_data(*args, **kwargs)
+        from django.core.urlresolvers import resolve
+        current_url = resolve(self.request.path_info).url_name
+        context['view_name'] = current_url
+        import ipdb; ipdb.set_trace()
 
-        self.columns = (
-            (self.get_actions, None, None),
-            (
-                lambda x: x.tests_object.name, (
-                    ("testlist__name__icontains", ContentType.objects.get_for_model(models.TestList)),
-                    ("testlistcycle__name__icontains", ContentType.objects.get_for_model(models.TestListCycle))
-                ),
-                ("testlist__name", "testlistcycle__name",)
-            ),
-            (self.get_due_date, None, None),
-            (lambda x: x.unit.name, "unit__name__exact", "unit__number"),
-            (lambda x: x.frequency.name if x.frequency else "Ad Hoc", "frequency", "frequency__due_interval"),
+        return context
 
-            (lambda x: x.assigned_to.name, "assigned_to__name__icontains", "assigned_to__name"),
-            (self.get_last_instance_work_completed, None, "last_instance__work_completed"),
-            (self.get_last_instance_pass_fail, None, None),
-            (self.get_last_instance_review_status, None, None),
-        )
-
-    #----------------------------------------------------------------------
-    def get_due_date(self, utc):
-        template = self.templates['due_date']
-        c = Context({"unit_test_collection": utc, "show_icons": settings.ICON_SETTINGS["SHOW_DUE_ICONS"]})
-        return template.render(c)
-
-    #----------------------------------------------------------------------
-    def get_actions(self, utc):
-        template = self.templates['actions']
-        c = Context({"utc": utc, "request": self.request, "action": self.action})
-        return template.render(c)
-
-    #---------------------------------------------------------------------------
-    def get_last_instance_work_completed(self, utc):
-        template = self.templates['work_completed']
-        c = Context({"instance": utc.last_instance})
-        return template.render(c)
-
-    #----------------------------------------------------------------------
-    def get_last_instance_review_status(self, utc):
-        template = self.templates['review_status']
-        c = Context({"instance": utc.last_instance, "perms": PermWrapper(self.request.user), "request": self.request})
-        c.update(generate_review_status_context(utc.last_instance))
-        return template.render(c)
-
-    #----------------------------------------------------------------------
-    def get_last_instance_pass_fail(self, utc):
-        template = self.templates['pass_fail']
-        c = Context({"instance": utc.last_instance, "exclude": [models.NO_TOL], "show_label": True, "show_icons": settings.ICON_SETTINGS['SHOW_STATUS_ICONS_LISTING']})
-        return template.render(c)
-
-    #----------------------------------------------------------------------
     def get_queryset(self):
         """filter queryset for visibility and fetch relevent related objects"""
 
         qs = super(UTCList, self).get_queryset().filter(
             visible_to__in=self.request.user.groups.all(),
-        )
+        ).distinct()
 
         if self.active_only:
             qs = qs.filter(active=True)
 
-        qs = qs.select_related(
-            "last_instance__work_completed",
-            "last_instance__created_by",
-            "frequency",
-            "unit__name",
-            "assigned_to__name",
-        ).prefetch_related(
-            "last_instance__testinstance_set",
-            "last_instance__testinstance_set__status",
-            "last_instance__reviewed_by",
-            "last_instance__modified_by",
-            "tests_object",
-        )
+        return qs
 
-        return qs.distinct()
+    def get_extra(self):
 
-    #----------------------------------------------------------------------
-    def get_page_title(self):
-        return "All Test Collections"
+        ct_tl = ContentType.objects.get_for_model(models.TestList)
+        ct_tlc = ContentType.objects.get_for_model(models.TestListCycle)
 
-    #----------------------------------------------------------------------
-    def get_template_context_data(self, context):
+        extraq = """
+         CASE
+            WHEN content_type_id = {0}
+                THEN (SELECT name from qa_testlist WHERE object_id = qa_testlist.id)
+            WHEN content_type_id = {1}
+                THEN (SELECT name from qa_testlistcycle WHERE object_id = qa_testlistcycle.id)
+         END
+         """.format(ct_tl.pk, ct_tlc.pk)
 
-        context["page_title"] = self.get_page_title()
-        context["action"] = self.action
-        context["action_display"] = self.action_display
-        return context
+        return {"select": {'utc_name': extraq}}
+
+    def frequency__name(self, utc ):
+        return utc.frequency.name if utc.frequency else "Ad Hoc"
+
+    def actions(self, utc):
+        template = self.templates['actions']
+        c = Context({"utc": utc, "request": self.request, "action": self.action})
+        return template.render(c)
+
+    def due_date(self, utc):
+        template = self.templates['due_date']
+        c = Context({"unit_test_collection": utc, "show_icons": settings.ICON_SETTINGS["SHOW_DUE_ICONS"]})
+        return template.render(c)
+
+    def last_instance_work_completed(self, utc):
+        template = self.templates['work_completed']
+        c = Context({"instance": utc.last_instance})
+        return template.render(c)
+
+    def last_instance_review_status(self, utc):
+        template = self.templates['review_status']
+        c = Context({"instance": utc.last_instance, "perms": PermWrapper(self.request.user), "request": self.request})
+        c.update(generate_review_status_context(utc.last_instance))
+        return template.render(c)
+
+    def last_instance_pass_fail(self, utc):
+        template = self.templates['pass_fail']
+        c = Context({"instance": utc.last_instance, "exclude": [models.NO_TOL], "show_label": True, "show_icons": settings.ICON_SETTINGS['SHOW_STATUS_ICONS_LISTING']})
+        return template.render(c)
 
 
-#============================================================================
 class TestListInstances(BaseDataTablesDataSource):
     """
     This view provides a base for any sort of listing of
