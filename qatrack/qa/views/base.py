@@ -13,9 +13,7 @@ from django.utils.translation import ugettext as _
 
 from django.views.generic import UpdateView
 
-from qatrack.qa import models
-
-from qatrack.data_tables.views import BaseDataTablesDataSource
+from qatrack.qa import models, utils
 
 from braces.views import PrefetchRelatedMixin, SelectRelatedMixin
 from listable.views import BaseListableView, SELECT
@@ -46,7 +44,6 @@ def generate_review_status_context(test_list_instance):
     return c
 
 
-#============================================================================
 class TestListInstanceMixin(SelectRelatedMixin, PrefetchRelatedMixin):
     """
     A mixin for commonly required prefetch_related/select_related  for
@@ -72,11 +69,9 @@ class TestListInstanceMixin(SelectRelatedMixin, PrefetchRelatedMixin):
     ]
 
 
-#============================================================================
 class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
     """A common base for editing existing :model:`qa.TestListInstance`'s"""
 
-    #----------------------------------------------------------------------
     def add_histories(self, forms):
         """paste historical values onto forms"""
 
@@ -87,7 +82,6 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
                 if f.instance == instance:
                     f.history = test_history
 
-    #----------------------------------------------------------------------
     def get_context_data(self, **kwargs):
 
         context = super(BaseEditTestListInstance, self).get_context_data(**kwargs)
@@ -116,18 +110,17 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
         context["unit_test_collection"] = self.object.unit_test_collection
         return context
 
-    #----------------------------------------------------------------------
     def form_valid(self, form):
         """This view should always be subclassed"""
         raise NotImplementedError
 
-    #----------------------------------------------------------------------
     def get_success_url(self):
         next_ = self.request.GET.get("next", None)
         if next_ is not None:
             return next_
 
         return reverse("unreviewed")
+
 
 class UTCList(BaseListableView):
 
@@ -232,20 +225,7 @@ class UTCList(BaseListableView):
         return qs
 
     def get_extra(self):
-
-        ct_tl = ContentType.objects.get_for_model(models.TestList)
-        ct_tlc = ContentType.objects.get_for_model(models.TestListCycle)
-
-        extraq = """
-         CASE
-            WHEN content_type_id = {0}
-                THEN (SELECT name from qa_testlist WHERE object_id = qa_testlist.id)
-            WHEN content_type_id = {1}
-                THEN (SELECT name from qa_testlistcycle WHERE object_id = qa_testlistcycle.id)
-         END
-         """.format(ct_tl.pk, ct_tlc.pk)
-
-        return {"select": {'utc_name': extraq}}
+        return utils.qs_extra_for_utc_name()
 
     def frequency__name(self, utc ):
         return utc.frequency.name if utc.frequency else "Ad Hoc"
@@ -277,15 +257,65 @@ class UTCList(BaseListableView):
         return template.render(c)
 
 
-class TestListInstances(BaseDataTablesDataSource):
+class TestListInstances(BaseListableView):
     """
     This view provides a base for any sort of listing of
     :model:`qa.TestListInstance`'s.
     """
 
     model = models.TestListInstance
-    queryset = models.TestListInstance.objects.all
-    initial_orderings = ["unit_test_collection__unit__number", "-work_completed"]
+    paginate_by = 50
+
+    order_by = ["unit_test_collection__unit__name", "-work_completed"]
+
+    fields = (
+        "actions",
+        "unit_test_collection__unit__name",
+        "unit_test_collection__frequency__name",
+        "test_list__name",
+        "work_completed",
+        "created_by__username",
+        "review_status",
+        "pass_fail",
+    )
+
+    headers = {
+        "unit_test_collection__unit__name": _("Unit"),
+        "unit_test_collection__frequency__name": _("Frequency"),
+        "created_by__username": _("Created By"),
+    }
+
+    widgets = {
+        "actions"
+        "unit_test_collection__frequency__name": SELECT,
+        "unit_test_collection__unit__name": SELECT,
+    }
+
+    search_fields = {
+        "actions": False,
+        "pass_fail": False,
+        "review_status": False,
+    }
+
+
+    order_fields = {
+        "actions": False,
+        "unit_test_collection__unit__name": "unit_test_collection__unit__number",
+        "unit_test_collection__frequency__name": "unit_test_collection__frequency__due_interval",
+        "review_status": False,
+        "pass_fail": False,
+    }
+
+    select_related = (
+        "test_list__name",
+        "testinstance__status",
+        "unit_test_collection__unit__name",
+        "unit_test_collection__frequency__due_interval",
+        "created_by", "modified_by", "reviewed_by",
+    )
+
+    prefetch_related = ("testinstance_set", "testinstance_set__status")
+
 
     def __init__(self, *args, **kwargs):
         super(TestListInstances, self).__init__(*args, **kwargs)
@@ -297,57 +327,33 @@ class TestListInstances(BaseDataTablesDataSource):
             'pass_fail':  get_template("qa/pass_fail_status.html"),
         }
 
-    #---------------------------------------------------------------------------
-    def set_columns(self):
-        """
-        Setup the columns we want to be displayed for :model:`qa.TestListInstance`'s
-        See :view:`data_tables.BaseDataTablesDataSource`.set_columns for more information
-        """
+    def get_context_data(self, *args, **kwargs):
+        context = super(TestListInstances, self).get_context_data(*args, **kwargs)
+        current_url = resolve(self.request.path_info).url_name
+        context['view_name'] = current_url
+        return context
 
-        self.columns = (
-            (self.get_actions, None, None),
-            (lambda x: x.unit_test_collection.unit.name, "unit_test_collection__unit__name__exact", "unit_test_collection__unit__number"),
-            (lambda x: x.unit_test_collection.frequency.name if x.unit_test_collection.frequency else "Ad-Hoc", "unit_test_collection__frequency", "unit_test_collection__frequency"),
-            (lambda x: x.test_list.name, "test_list__name__icontains", "test_list__name"),
-            (self.get_work_completed, None, "work_completed"),
-            (lambda x: x.created_by.username, "created_by__username__icontains", "created_by__username"),
-            (self.get_review_status, None, None),
-            (self.get_pass_fail, None, None),
-        )
+    def unit_test_collection__frequency__name(self, tli):
+        freq = tli.unit_test_collection.frequency
+        return freq.name if freq else "Ad Hoc"
 
-    #----------------------------------------------------------------------
-    def get_queryset(self):
-        """fetch commonly used related objects"""
-
-        return self.queryset().select_related(
-            "test_list__name",
-            "testinstance__status",
-            "unit_test_collection__unit__name",
-            "unit_test_collection__frequency__due_interval",
-            "created_by", "modified_by", "reviewed_by",
-        ).prefetch_related("testinstance_set", "testinstance_set__status")
-
-    #----------------------------------------------------------------------
-    def get_actions(self, tli):
+    def actions(self, tli):
         template = self.templates['actions']
         c = Context({"instance": tli, "perms": PermWrapper(self.request.user), "request": self.request})
         return template.render(c)
 
-    #---------------------------------------------------------------------------
-    def get_work_completed(self, tli):
+    def work_completed(self, tli):
         template = self.templates['work_completed']
         c = Context({"instance": tli})
         return template.render(c)
 
-    #----------------------------------------------------------------------
-    def get_review_status(self, tli):
+    def review_status(self, tli):
         template = self.templates['review_status']
         c = Context({"instance": tli, "perms": PermWrapper(self.request.user), "request": self.request})
         c.update(generate_review_status_context(tli))
         return template.render(c)
 
-    #----------------------------------------------------------------------
-    def get_pass_fail(self, tli):
+    def pass_fail(self, tli):
         template = self.templates['pass_fail']
         c = Context({"instance": tli, "exclude": [models.NO_TOL], "show_label": True, "show_icons": settings.ICON_SETTINGS['SHOW_STATUS_ICONS_LISTING']})
         return template.render(c)

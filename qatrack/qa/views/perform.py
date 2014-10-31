@@ -839,7 +839,6 @@ class FrequencyList(UTCList):
         """filter queryset by frequency"""
 
         qs = super(FrequencyList, self).get_queryset()
-        return qs
 
         freqs = self.kwargs["frequency"].split("/")
         self.frequencies = models.Frequency.objects.filter(slug__in=freqs)
