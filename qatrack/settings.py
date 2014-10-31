@@ -373,8 +373,6 @@ ORDER_UNITS_BY = "number"
 
 #------------------------------------------------------------------------------
 # Testing settings
-TEST_RUNNER = 'django_coverage.coverage_runner.CoverageRunner'
-COVERAGE_ADDITIONAL_MODULES = ["qatrack.tests"]
 
 #------------------------------------------------------------------------------
 # local_settings contains anything that should be overridden
