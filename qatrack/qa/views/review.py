@@ -215,11 +215,12 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
             "tests_object",
         ).exclude(
             due_date=None
+        ).extra(
+            **utils.qs_extra_for_utc_name()
         ).order_by(
             "frequency__nominal_interval",
             "unit__number",
-            "testlist__name",
-            "testlistcycle__name",
+            "utc_name",
         )
 
         return qs.distinct()

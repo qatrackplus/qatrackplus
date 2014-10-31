@@ -462,7 +462,7 @@ class Test(models.Model):
         help_text=_("Indicate if this test is a %s" % (','.join(x[1].title() for x in TEST_TYPE_CHOICES)))
     )
 
-    display_image = models.BooleanField("Display image", help_text=_("Image uploads only: Show uploaded images under the testlist"))
+    display_image = models.BooleanField("Display image", help_text=_("Image uploads only: Show uploaded images under the testlist"), default=False)
     choices = models.CharField(max_length=2048, help_text=_("Comma seperated list of choices for multiple choice test types"), null=True, blank=True)
     constant_value = models.FloatField(help_text=_("Only required for constant value types"), null=True, blank=True)
 
@@ -1045,7 +1045,7 @@ class TestInstance(models.Model):
     value = models.FloatField(help_text=_("For boolean Tests a value of 0 equals False and any non zero equals True"), null=True)
     string_value = models.CharField(max_length=MAX_STRING_VAL_LEN, null=True, blank=True)
 
-    skipped = models.BooleanField(help_text=_("Was this test skipped for some reason (add comment)"))
+    skipped = models.BooleanField(help_text=_("Was this test skipped for some reason (add comment)"), default=False)
     comment = models.TextField(help_text=_("Add a comment to this test"), null=True, blank=True)
 
     # reference used
@@ -1433,7 +1433,7 @@ class TestListCycle(TestCollectionInterface):
     #----------------------------------------------------------------------
     def all_lists(self):
         """return queryset for all children lists of this cycle"""
-        query = TestList.objects.get_empty_query_set()
+        query = TestList.objects.none()
         for test_list in self.test_lists.all():
             query |= test_list.all_lists()
 
@@ -1442,7 +1442,7 @@ class TestListCycle(TestCollectionInterface):
     #----------------------------------------------------------------------
     def all_tests(self):
         """return all test members of cycle members"""
-        query = Test.objects.get_empty_query_set()
+        query = Test.objects.none()
         for test_list in self.test_lists.all():
             query |= test_list.all_tests()
         return query.distinct()

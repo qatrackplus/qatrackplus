@@ -502,7 +502,7 @@ class TestUnitTestInfo(TestCase):
         self.assertEqual(len(utis), 3)
 
     #----------------------------------------------------------------------
-    def test_readd_test(self):
+    def test_read_test(self):
         tl1 = utils.create_test_list("tl1")
         t1 = utils.create_test("t1")
         utils.create_test_list_membership(tl1, t1)

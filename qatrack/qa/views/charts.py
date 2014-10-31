@@ -41,13 +41,13 @@ def get_test_lists_for_unit_frequencies(request):
         fq,
         unit__in=units,
         content_type__name="test list"
-    ).values_list("testlist__pk", flat=True)
+    ).values_list("object_id", flat=True)
 
     test_list_cycle_lists = models.UnitTestCollection.objects.filter(
         fq,
         unit__in=units,
         content_type__name="test list cycle"
-    ).values_list("testlistcycle__test_lists__pk", flat=True)
+    ).values_list("object_id", flat=True)
 
     test_lists = set(test_lists) | set(test_list_cycle_lists)
 
@@ -416,7 +416,7 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
 
         include_fit = self.request.GET.get("fit_data", "") == "true"
 
-        response = HttpResponse(mimetype="image/png")
+        response = HttpResponse(content_type="image/png")
         if n_baseline_subgroups < 1 or n_baseline_subgroups > len(data) / subgroup_size:
             fig.text(0.1, 0.9, "Not enough data for control chart", fontsize=20)
             canvas.print_png(response)
