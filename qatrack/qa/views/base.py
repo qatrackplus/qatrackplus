@@ -5,7 +5,7 @@ import collections
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
-from django.core.urlresolvers import reverse
+from django.core.urlresolvers import reverse, resolve
 from django.template import Context
 from django.contrib.auth.context_processors import PermWrapper
 from django.template.loader import get_template
@@ -214,10 +214,8 @@ class UTCList(BaseListableView):
 
     def get_context_data(self, *args, **kwargs):
         context = super(UTCList, self).get_context_data(*args, **kwargs)
-        from django.core.urlresolvers import resolve
         current_url = resolve(self.request.path_info).url_name
         context['view_name'] = current_url
-        import ipdb; ipdb.set_trace()
 
         return context
 

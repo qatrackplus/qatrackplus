@@ -22,11 +22,11 @@
             <h4 class="header-spacer">{{unit_type}}</h4>
             <div class="btn-group" style="float:left">
                 {% if units|length > 1 %}
-                    <button class="btn top-level"><a href="{% url choose_review_unit %}{% for unit in units %}{{unit.unit__number}}/{%endfor%}">All</a></button>
+                    <button class="btn top-level"><a href="{% url 'choose_review_unit' %}{% for unit in units %}{{unit.unit__number}}/{%endfor%}">All</a></button>
                 {% endif %}
 
                 {% for unit in units %}
-                    <button class="btn top-level"><a href="{% url review_by_unit unit_number=unit.unit__number %}">{{unit.unit__name}}</a></button>
+                    <button class="btn top-level"><a href="{% url 'review_by_unit' unit_number=unit.unit__number %}">{{unit.unit__name}}</a></button>
                 {% endfor %}
             </div>
         </div>
