@@ -327,6 +327,9 @@ class TestListInstances(BaseListableView):
             'pass_fail':  get_template("qa/pass_fail_status.html"),
         }
 
+    def get_page_title(self):
+        return "All Test Collections"
+
     def get_context_data(self, *args, **kwargs):
         context = super(TestListInstances, self).get_context_data(*args, **kwargs)
         current_url = resolve(self.request.path_info).url_name

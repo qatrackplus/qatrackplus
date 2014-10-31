@@ -16,7 +16,6 @@ import qatrack.qa.views.charts
 import qatrack.qa.views.review
 import qatrack.qa.views.base
 import qatrack.qa.views.backup
-from qatrack.data_tables.views import BaseDataTablesDataSource
 import django.forms
 import json
 import os
@@ -129,71 +128,6 @@ class TestURLS(TestCase):
         utils.create_status()
         url = reverse("review_utc", kwargs={"pk": 9999})
         self.assertEqual(self.client.get(url).status_code, 404)
-
-
-#============================================================================
-class TestDataTables(TestCase):
-
-    #---------------------------------------------------------------------------
-    def setUp(self):
-        self.user = utils.create_user()
-        self.client.login(username="user", password="password")
-        g = utils.create_group()
-        self.user.groups.add(g)
-        self.user.save()
-
-        self.factory = RequestFactory()
-        self.view = views.base.UTCList.as_view()
-
-        self.url = reverse("all_lists")
-
-        utils.create_status()
-        u1 = utils.create_unit(number=1, name="u1")
-        utils.create_unit(number=2, name="u2", )
-        self.utc = utils.create_unit_test_collection(unit=u1)
-        self.utc.assigned_to = self.user.groups.all()[0]
-        self.utc.save()
-        utils.create_test_list_instance(unit_test_collection=self.utc)
-    #----------------------------------------------------------------------
-
-    def test_base_set_columns_fails(self):
-        bdt = BaseDataTablesDataSource()
-        self.assertRaises(NotImplementedError, bdt.set_columns)
-    #----------------------------------------------------------------------
-
-    def test_utc_display(self):
-
-        data = {
-            "iDisplayLength": 100,
-            "iDisplayStart": 0,
-
-            "iSortingCols": 2,
-            "iSortCol_0": 4,
-            "iSortCol_1": 1,
-
-            "sSearch_1": "test"
-        }
-
-        self.client.get(self.url, data=data, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-
-    #----------------------------------------------------------------------
-    def test_gen_tli_display(self):
-        url = reverse("complete_instances")
-
-        data = {
-            "iDisplayLength": 100,
-            "iDisplayStart": 0,
-
-            "iSortingCols": 2,
-            "iSortCol_0": 4,
-            "iSortCol_1": 1,
-
-            "sSearch_1": "u1",
-            #            "sSearch_3": "test",
-
-        }
-
-        self.client.get(url, data=data, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
 
 
 #============================================================================
