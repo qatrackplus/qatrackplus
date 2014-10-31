@@ -128,7 +128,6 @@ class TestURLS(TestCase):
     def test_utc_fail(self):
         utils.create_status()
         url = reverse("review_utc", kwargs={"pk": 9999})
-        import ipdb; ipdb.set_trace()
         self.assertEqual(self.client.get(url).status_code, 404)
 
 

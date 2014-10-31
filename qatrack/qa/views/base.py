@@ -331,6 +331,8 @@ class TestListInstances(BaseListableView):
         context = super(TestListInstances, self).get_context_data(*args, **kwargs)
         current_url = resolve(self.request.path_info).url_name
         context['view_name'] = current_url
+
+        context["page_title"] = self.get_page_title()
         return context
 
     def unit_test_collection__frequency__name(self, tli):
