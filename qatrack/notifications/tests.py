@@ -29,8 +29,8 @@ class TestEmailSent(TestCase):
 
         self.test_list_instance = self.create_test_list_instance()
 
-        self.group = models.Group.objects.get(pk=1)
-        user = models.User.objects.get(pk=1)
+        self.group = models.Group.objects.latest('pk')
+        user = models.User.objects.latest('pk')
         user.groups.add(self.group)
         user.email = "example@example.com"
         user.save()
