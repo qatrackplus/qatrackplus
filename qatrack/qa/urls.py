@@ -1,4 +1,4 @@
-from django.conf.urls.defaults import patterns, include, url
+from django.conf.urls import patterns, include, url
 from views import base, perform, review, charts, backup, admin, forms
 
 from qatrack.qa import api

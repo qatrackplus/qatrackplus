@@ -11,15 +11,15 @@
                 <b class="caret"></b>
             </a>
             <ul class="dropdown-menu">
-                <li><a href="{% url account-details %}"><i class="icon-user"></i> Account</a></li>
+                <li><a href="{% url "account-details" %}"><i class="icon-user"></i> Account</a></li>
                 {% if user.is_staff %}
-                    <li><a href="{% url admin:index %}"><i class="icon-cog"></i> Admin</a></li>
+                    <li><a href="{% url "admin:index" %}"><i class="icon-cog"></i> Admin</a></li>
                 {% endif %}
                 <li class="divider"></li>
-                <li><a href="{% url auth_logout %}"><i class="icon-off"></i> Log out</a></li>
+                <li><a href="{% url "auth_logout" %}"><i class="icon-off"></i> Log out</a></li>
             </ul>
         </li>
     {% else %}
-        <li><a href="{% url auth_login %}">Log in</a></li>
+        <li><a href="{% url "auth_login" %}">Log in</a></li>
     {% endif %}
 </ul>

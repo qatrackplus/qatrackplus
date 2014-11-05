@@ -502,7 +502,7 @@ class TestUnitTestInfo(TestCase):
         self.assertEqual(len(utis), 3)
 
     #----------------------------------------------------------------------
-    def test_readd_test(self):
+    def test_read_test(self):
         tl1 = utils.create_test_list("tl1")
         t1 = utils.create_test("t1")
         utils.create_test_list_membership(tl1, t1)
@@ -1070,14 +1070,15 @@ class TestUnitTestCollection(TestCase):
         utc = utils.create_unit_test_collection(test_collection=cycle)
 
         self.assertEqual(utc.next_list(), (0, test_lists[0]))
-        utils.create_test_list_instance(unit_test_collection=utc, test_list=test_lists[0])
+        tli = utils.create_test_list_instance(unit_test_collection=utc, test_list=test_lists[0])
 
         # need to regrab from db since since last_instance was updated in the db
         # by signal handler
         utc = models.UnitTestCollection.objects.get(pk=utc.pk)
         self.assertEqual(utc.next_list(), (1, test_lists[1]))
 
-        utils.create_test_list_instance(unit_test_collection=utc, test_list=test_lists[1], day=1)
+        work_completed =  tli.work_completed + timezone.timedelta(hours=1)
+        utils.create_test_list_instance(unit_test_collection=utc, test_list=test_lists[1], day=1, work_completed=work_completed)
         utc = models.UnitTestCollection.objects.get(pk=utc.pk)
 
         self.assertEqual(utc.next_list(), (0, test_lists[0]))
@@ -1096,14 +1097,15 @@ class TestUnitTestCollection(TestCase):
         utc = utils.create_unit_test_collection(test_collection=cycle)
 
         self.assertEqual(utc.next_list(), (0, test_lists[0]))
-        utils.create_test_list_instance(unit_test_collection=utc, test_list=test_lists[0], day=2)
+        tli = utils.create_test_list_instance(unit_test_collection=utc, test_list=test_lists[0], day=2)
 
         # need to regrab from db since since last_instance was updated in the db
         # by signal handler
         utc = models.UnitTestCollection.objects.get(pk=utc.pk)
         self.assertEqual(utc.next_list(), (3, test_lists[3]))
+        work_completed =  tli.work_completed + timezone.timedelta(hours=1)
 
-        utils.create_test_list_instance(unit_test_collection=utc, test_list=test_lists[3], day=3)
+        utils.create_test_list_instance(unit_test_collection=utc, test_list=test_lists[3], day=3, work_completed=work_completed)
         utc = models.UnitTestCollection.objects.get(pk=utc.pk)
         self.assertEqual(utc.next_list(), (0, test_lists[0]))
 

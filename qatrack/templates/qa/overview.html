@@ -59,7 +59,7 @@
                                 {% for utc in utcs %}
                                     <div class="overview-utc-container">
                                         <div class="overview-test-list-name pull-left">
-                                            <a href="{%url review_utc utc.pk %}" title="View history of {{utc.tests_object.name}} for {{unit.name}}">{{utc.tests_object.name|truncatechars:25}}</a>
+                                            <a href="{%url 'review_utc' utc.pk %}" title="View history of {{utc.utc_name}} for {{unit.name}}">{{utc.utc_name|truncatechars:25}}</a>
                                         </div>
                                         <div class="overview-test-list-pass-fail pull-right">
                                             {% if utc.last_instance%}

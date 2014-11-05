@@ -19,11 +19,11 @@
 {% block script_base %}
     <script type="text/javascript">
         var QAURLs = {
-            API_URL:"{% url api_v1_top_level 'v1'%}",
-            COMPOSITE_URL:"{% url composite %}",
-            UPLOAD_URL:"{% url upload %}",
-            CHART_DATA_URL:"{% url chart_data%}",
-            CONTROL_CHART_URL:"{% url control_chart %}",
+            API_URL:"{% url "api_v1_top_level" 'v1'%}",
+            COMPOSITE_URL:"{% url "composite" %}",
+            UPLOAD_URL:"{% url "upload" %}",
+            CHART_DATA_URL:"{% url "chart_data" %}",
+            CONTROL_CHART_URL:"{% url "control_chart" %}",
             MEDIA_URL: "{{MEDIA_URL}}",
             OPTION_DELIM: "=",
             OPTION_SEP: "&",
@@ -72,11 +72,11 @@
                     <b class="caret"></b>
                 </a>
                 <ul class="dropdown-menu">
-                    <li><a href="{% url choose_unit %}" title="Choose a Unit To Perform QA On"><i class="icon-list"></i> Choose Unit</a></li>
-                    <li><a href="{% url all_lists %}" title="View all available QA Lists"><i class="icon-list"></i> All QA</a></li>
+                    <li><a href="{% url "choose_unit" %}" title="Choose a Unit To Perform QA On"><i class="icon-list"></i> Choose Unit</a></li>
+                    <li><a href="{% url "all_lists" %}" title="View all available QA Lists"><i class="icon-list"></i> All QA</a></li>
                     <li class="divider"></li>
                     <li>
-                        <a title="Resume a QA session currently in progress" href="{% url in_progress %}">
+                        <a title="Resume a QA session currently in progress" href="{% url "in_progress" %}">
                             <i class="icon-play"></i>
                             In Progress
                         </a>
@@ -101,13 +101,13 @@
                     {% if perms.qa.can_review %}
                     <li class="nav-header">QA Program Status</li>
                     <li>
-                        <a href="{% url overview %}" title="View a summary of the status of the QA program">
+                        <a href="{% url "overview" %}" title="View a summary of the status of the QA program">
                             <i class="icon-globe"></i>
                             Overview
                         </a>
                     </li>
                     <li>
-                        <a href="{% url overview_due_dates %}" title="View a summary of the status of the QA program">
+                        <a href="{% url "overview_due_dates" %}" title="View a summary of the status of the QA program">
                             <i class="icon-globe"></i>
                             By Due Status
                         </a>
@@ -118,7 +118,7 @@
                     <li class="nav-header">QA Sessions</li>
 
                         <li>
-                            <a href="{% url  unreviewed %}" title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed">
+                            <a href="{% url  "unreviewed" %}" title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed">
                                 <i class="icon-question-sign"></i>
                                 Unreviewed
                                 <span title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
@@ -129,14 +129,14 @@
                         <li class="divider"></li>
                     {% endif %}
                     <li class="nav-header">Test Lists</li>
-                    <li><a href="{% url review_all %}" title="View all test lists"><i class="icon-list"></i> All Test Lists</a></li>
-                    <li><a href="{% url choose_review_unit %}" title="Choose a unit to review qa lists for."><i class="icon-list"></i> Test Lists By Unit</a></li>
-                    <li><a href="{% url choose_review_frequency %}" title="Choose a frequency to review qa lists for."><i class="icon-list"></i> Test Lists By Frequency</a></li>
+                    <li><a href="{% url "review_all" %}" title="View all test lists"><i class="icon-list"></i> All Test Lists</a></li>
+                    <li><a href="{% url "choose_review_unit" %}" title="Choose a unit to review qa lists for."><i class="icon-list"></i> Test Lists By Unit</a></li>
+                    <li><a href="{% url "choose_review_frequency" %}" title="Choose a frequency to review qa lists for."><i class="icon-list"></i> Test Lists By Frequency</a></li>
 
                     {% if perms.qa.can_view_charts %}
                         <li class="divider"></li>
                         <li class="nav-header">Trends and Analysis</li>
-                        <li><a href="{% url charts %}"><i class="icon-picture"></i> Charts</a></li>
+                        <li><a href="{% url "charts" %}"><i class="icon-picture"></i> Charts</a></li>
                     {% endif %}
                 </ul>
 
@@ -149,7 +149,7 @@
                     <b class="caret"></b>
                 </a>
                 <ul class="dropdown-menu">
-                    <li><a href="{% url qa_paper_forms_request%}" title="Create a set of paper backup forms"><i class="icon-file"></i> Paper Backup Forms</a></li>
+                    <li><a href="{% url "qa_paper_forms_request" %}" title="Create a set of paper backup forms"><i class="icon-file"></i> Paper Backup Forms</a></li>
                 </ul>
             </li>
             {% endif %}
@@ -164,11 +164,6 @@
 
 {% block extra_body %}
     {% block end_body_script_base %}
-        <script src="{% static "data_tables/js/jquery.dataTables.js" %}?v={{VERSION}}"></script>
-        <script src="{% static "data_tables/js/jquery.dataTables.columnFilter.js" %}?v={{VERSION}}"></script>
-        <script src="{% static "data_tables/js/jquery.dataTables.searchPlugins.js" %}?v={{VERSION}}"></script>
-        <script src="{% static "data_tables/js/DT_bootstrap.js" %}?v={{VERSION}}"></script>
-        <script src="{% static "data_tables/js/DT_sort.js" %}?v={{VERSION}}"></script>
         <script src="{% static "js/lodash.compat.min.js" %}?v={{VERSION}}"></script>
         <script src="{% static "js/qautils.js" %}?v={{VERSION}}"></script>
         <script src="{% static "js/base.js" %}?v={{VERSION}}"></script>

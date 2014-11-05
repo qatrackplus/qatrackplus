@@ -20,7 +20,7 @@ SEND_BROKEN_LINK_EMAILS = True
 # misc settings
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
-VERSION = "0.2.8"
+VERSION = "0.3.0"
 BUG_REPORT_URL = "https://bitbucket.org/tohccmedphys/qatrackplus/issues/new"
 FEATURE_REQUEST_URL = BUG_REPORT_URL
 
@@ -373,8 +373,6 @@ ORDER_UNITS_BY = "number"
 
 #------------------------------------------------------------------------------
 # Testing settings
-TEST_RUNNER = 'django_coverage.coverage_runner.CoverageRunner'
-COVERAGE_ADDITIONAL_MODULES = ["qatrack.tests"]
 
 #------------------------------------------------------------------------------
 # local_settings contains anything that should be overridden
