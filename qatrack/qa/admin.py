@@ -15,6 +15,7 @@ from django.shortcuts import redirect
 from admin_views.admin import AdminViews
 
 import qatrack.qa.models as models
+from qatrack.qa.utils import qs_extra_for_utc_name
 
 
 #============================================================================
@@ -466,7 +467,7 @@ unit_name.short_description = "Unit"
 
 
 def freq_name(obj):
-    return obj.frequency.name
+    return obj.frequency.name if obj.frequency else "Ad Hoc"
 freq_name.admin_order_field = "frequency__name"
 freq_name.short_description = "Frequency"
 
@@ -481,15 +482,38 @@ assigned_to_name.short_description = "Assigned To"
 class UnitTestCollectionAdmin(admin.ModelAdmin):
     # readonly_fields = ("unit","frequency",)
     filter_horizontal = ("visible_to",)
-    list_display = ["test_objects_name", unit_name, freq_name, assigned_to_name, "active"]
+    list_display = ["utc_name", unit_name, freq_name, assigned_to_name, "active"]
     list_filter = ["unit__name", "frequency__name", "assigned_to__name"]
-    search_fields = ["unit__name", "frequency__name", "testlist__name", "testlistcycle__name"]
+    search_fields = ["unit__name", "frequency__name"]
     change_form_template = "admin/treenav/menuitem/change_form.html"
     list_editable = ["active"]
     save_as = True
 
-    #----------------------------------------------------------------------
-    def queryset(self, *args, **kwargs):
+    def utc_name(self, utc):
+        return utc.utc_name
+
+    def get_search_results(self, request, queryset, search_term):
+        """
+        Returns a tuple containing a queryset to implement the search,
+        and a boolean indicating if the results may contain duplicates.
+        """
+        qs, use_distinct = super(UnitTestCollectionAdmin, self).get_search_results(request, queryset, search_term)
+
+        qs |= self.get_queryset(request).extra(**qs_extra_for_utc_name()).extra(where=["utc_name LIKE %s"], params=["%{0}%".format(search_term)])
+
+        def count():
+            from django.db import connection
+            cursor = connection.cursor()
+            sql, params = qs.query.sql_with_params()
+            count_sql =  "SELECT COUNT(*) FROM ({0})".format(sql)
+            cursor.execute(count_sql, params)
+            return cursor.fetchone()[0]
+        qs.count = count
+
+        return qs, use_distinct
+
+    def get_queryset(self, *args, **kwargs):
+        print "in get queryset"
         qs = super(UnitTestCollectionAdmin, self).queryset(*args, **kwargs)
         return qs.select_related(
             "unit__name",
