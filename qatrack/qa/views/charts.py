@@ -319,9 +319,8 @@ class BaseChartView(View):
                 ).order_by(
                     "work_completed"
                 )
-                if tis:
-                    name = "%s - %s :: %s%s" % (u.name, tl.name, t.name,  " (relative to ref)" if relative else "")
-                    self.plot_data[name] = [self.test_instance_to_point(ti, relative=relative) for ti in tis]
+                name = "%s - %s :: %s%s" % (u.name, tl.name, t.name,  " (relative to ref)" if relative else "")
+                self.plot_data[name] = [self.test_instance_to_point(ti, relative=relative) for ti in tis]
         else:
             # retrieve test instances for every possible permutation of the
             # requested test & units
@@ -405,7 +404,9 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
 
         if context["data"] and context["data"].values():
             name, points = context["data"].items()[0]
-            dates, data = zip(*[(ti["date"], ti["value"]) for ti in points])
+            if points:
+                dates, data = zip(*[(ti["date"], ti["value"]) for ti in points])
+
 
         n_baseline_subgroups = self.get_number_from_request("n_baseline_subgroups", 2, dtype=int)
         n_baseline_subgroups = max(2, n_baseline_subgroups)
