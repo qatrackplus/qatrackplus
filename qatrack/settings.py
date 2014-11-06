@@ -381,3 +381,10 @@ try:
     from local_settings import *  # NOQA
 except ImportError:
     pass
+
+try:
+    #Fix URL for Admin Views if FORCE_SCRIPT_NAME_SET in local_settings
+    ADMIN_VIEWS_URL_PREFIX = FORCE_SCRIPT_NAME+"/admin"
+except NameError:
+    pass
+
