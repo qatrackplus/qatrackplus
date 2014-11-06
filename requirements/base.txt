@@ -13,5 +13,5 @@ South>=1.0.1,<1.1
 numpy>=1.6.2
 scipy>=0.10.0
 matplotlib>=1.0
--e git+https://github.com/frankwiles/django-admin-views.git@aff9bdfd073bdc4ee4242057e779c4e1d336c508#egg=django_admin_views-master
+-e git+https://github.com/ruimashita/django-admin-views.git@7d4616818de5c7d3743d1160e031b5bc0db06dc1#egg=django_admin_views-master
 django-listable>=0.2.8,<0.3
