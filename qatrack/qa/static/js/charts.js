@@ -439,8 +439,12 @@ function create_stockchart(data){
 
     var prev_range = window.chart.rangeSelector ? window.chart.rangeSelector.selected:"";
 
-
     var ntests = QAUtils.get_checked("#test-container").length;
+
+    var allEmpty = _.all(_.map(data, function(o){return o.data.length===0}));
+    if (allEmpty){
+        return;
+    }
 
     window.chart = new Highcharts.StockChart({
         chart : {
@@ -543,7 +547,7 @@ function control_chart_finished(){
 function get_control_chart_url(){
     var filters = get_data_filters();
 
-    var    props = [
+    var props = [
         "width="+$("#chart-container").width(),
         "height="+$("#chart").height(),
         "timestamp="+ new Date().getTime()
