@@ -823,7 +823,9 @@ class InProgress(TestListInstances):
     which are marked as being in progress.
     """
 
-    queryset = models.TestListInstance.objects.in_progress
+    def get_queryset(self):
+        return models.TestListInstance.objects.in_progress()
+
 
     #----------------------------------------------------------------------
     def get_page_title(self):
