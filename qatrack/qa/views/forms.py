@@ -86,7 +86,7 @@ class TestInstanceWidgetsMixin(object):
         if test_type == models.BOOLEAN:
             self.fields["value"].widget = RadioSelect(choices=BOOL_CHOICES)
         elif test_type == models.MULTIPLE_CHOICE:
-            self.fields["value"].widget = Select(choices=[("", "")] + self.unit_test_info.test.get_choices())
+            self.fields["string_value"].widget = Select(choices=[("", "")] + self.unit_test_info.test.get_choices())
         elif test_type == models.UPLOAD:
             self.fields["string_value"].widget = HiddenInput()
 
@@ -308,7 +308,7 @@ class CreateTestListInstanceForm(BaseTestListInstanceForm):
     #----------------------------------------------------------------------
     def __init__(self, *args, **kwargs):
         super(CreateTestListInstanceForm, self).__init__(*args, **kwargs)
-        self.fields["work_started"].initial = timezone.now()
+        self.fields["work_started"].initial = timezone.localtime(timezone.now()).strftime(settings.INPUT_DATE_FORMATS[0])
 
 
 #============================================================================

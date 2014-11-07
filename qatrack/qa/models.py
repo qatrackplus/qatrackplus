@@ -27,7 +27,7 @@ UPLOAD = "upload"
 STRING_COMPOSITE = "scomposite"
 
 NUMERICAL_TYPES = (COMPOSITE, CONSTANT, SIMPLE, )
-STRING_TYPES = (STRING, STRING_COMPOSITE,)
+STRING_TYPES = (STRING, STRING_COMPOSITE, MULTIPLE_CHOICE, )
 CALCULATED_TYPES = (UPLOAD, COMPOSITE, STRING_COMPOSITE, )
 NO_SKIP_REQUIRED_TYPES = (COMPOSITE, CONSTANT, STRING_COMPOSITE, )
 
@@ -610,13 +610,7 @@ class Test(models.Model):
         """return choices for multiple choice tests"""
         if self.type == MULTIPLE_CHOICE:
             cs = self.choices.split(",")
-            return zip(range(len(cs)), cs)
-
-    #---------------------------------------------------------------------------
-    def get_choice_value(self, choice):
-        """return string representing integer choice value"""
-        if self.type == MULTIPLE_CHOICE:
-            return self.choices.split(",")[int(choice)]
+            return zip(cs, cs)
 
     #----------------------------------------------------------------------
     def __unicode__(self):
@@ -1115,12 +1109,9 @@ class TestInstance(models.Model):
             self.pass_fail = OK
 
     #---------------------------------------------------------------------------
-    def mult_choice_pass_fail(self):
+    def string_pass_fail(self):
 
-        if self.unit_test_info.test.is_mult_choice():
-            choice = self.unit_test_info.test.get_choice_value(int(self.value)).lower()
-        else:
-            choice = self.string_value.lower()
+        choice = self.string_value.lower()
 
         if choice in [x.lower() for x in self.tolerance.pass_choices()]:
             self.pass_fail = OK
@@ -1171,8 +1162,8 @@ class TestInstance(models.Model):
             self.pass_fail = NOT_DONE
         elif self.unit_test_info.test.is_boolean() and self.reference:
             self.bool_pass_fail()
-        elif (self.unit_test_info.test.is_mult_choice() or self.unit_test_info.test.is_string_type()) and self.tolerance:
-            self.mult_choice_pass_fail()
+        elif self.unit_test_info.test.is_string_type() and self.tolerance:
+            self.string_pass_fail()
         elif self.reference and self.tolerance:
             self.float_pass_fail()
         else:
@@ -1199,8 +1190,6 @@ class TestInstance(models.Model):
         test = self.unit_test_info.test
         if test.is_boolean():
             return "Yes" if int(self.value) == 1 else "No"
-        elif test.is_mult_choice():
-            return test.get_choice_value(self.value)
         elif test.is_upload():
             return self.upload_url()
         elif test.is_string_type():
