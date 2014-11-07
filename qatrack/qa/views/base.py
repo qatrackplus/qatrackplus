@@ -217,7 +217,6 @@ class UTCList(BaseListableView):
         from django.core.urlresolvers import resolve
         current_url = resolve(self.request.path_info).url_name
         context['view_name'] = current_url
-        import ipdb; ipdb.set_trace()
 
         return context
 
