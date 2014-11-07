@@ -382,9 +382,7 @@ try:
 except ImportError:
     pass
 
-try:
+if FORCE_SCRIPT_NAME:
     #Fix URL for Admin Views if FORCE_SCRIPT_NAME_SET in local_settings
-    ADMIN_VIEWS_URL_PREFIX = FORCE_SCRIPT_NAME+"/admin"
-except NameError:
-    pass
+    ADMIN_VIEWS_URL_PREFIX = FORCE_SCRIPT_NAME + "/admin"
 
