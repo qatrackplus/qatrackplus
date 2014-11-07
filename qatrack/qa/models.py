@@ -26,6 +26,11 @@ STRING = "string"
 UPLOAD = "upload"
 STRING_COMPOSITE = "scomposite"
 
+NUMERICAL_TYPES = (COMPOSITE, CONSTANT, SIMPLE, )
+STRING_TYPES = (STRING, STRING_COMPOSITE,)
+CALCULATED_TYPES = (UPLOAD, COMPOSITE, STRING_COMPOSITE, )
+NO_SKIP_REQUIRED_TYPES = (COMPOSITE, CONSTANT, STRING_COMPOSITE, )
+
 TEST_TYPE_CHOICES = (
     (BOOLEAN, "Boolean"),
     (SIMPLE, "Simple Numerical"),
@@ -479,11 +484,11 @@ class Test(models.Model):
     #----------------------------------------------------------------------
     def is_numerical_type(self):
         """return whether or not this is a numerical test"""
-        return self.type in (COMPOSITE, CONSTANT, SIMPLE)
+        return self.type in NUMERICAL_TYPES
 
     #---------------------------------------------------------------
     def is_string_type(self):
-        return self.type in (STRING, STRING_COMPOSITE)
+        return self.type in STRING_TYPES
 
     #----------------------------------------------------------------------
     def is_string(self):
@@ -510,7 +515,7 @@ class Test(models.Model):
 
     #----------------------------------------------------------------------
     def skip_required(self):
-        return self.type not in (COMPOSITE, CONSTANT, STRING_COMPOSITE, )
+        return self.type not in NO_SKIP_REQUIRED_TYPES
 
     #---------------------------------------------------------------------------
     def check_test_type(self, field, test_types, display):
@@ -530,10 +535,10 @@ class Test(models.Model):
     def clean_calculation_procedure(self):
         """make sure a valid calculation procedure"""
 
-        if not self.calculation_procedure and self.type not in (UPLOAD, COMPOSITE, STRING_COMPOSITE):
+        if not self.calculation_procedure and self.type not in CALCULATED_TYPES:
             return
 
-        errors = self.check_test_type(self.calculation_procedure, [UPLOAD, COMPOSITE, STRING_COMPOSITE], "Calculation Procedure")
+        errors = self.check_test_type(self.calculation_procedure, CALCULATED_TYPES, "Calculation Procedure")
         self.calculation_procedure = str(self.calculation_procedure).replace("\r\n", "\n")
 
         macro_var_set = re.findall("^\s*%s\s*=.*$" % (self.slug), self.calculation_procedure, re.MULTILINE)
