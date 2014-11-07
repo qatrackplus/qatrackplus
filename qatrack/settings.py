@@ -246,6 +246,7 @@ CACHES = {
 #-----------------------------------------------------------------------------
 # Session Settings
 SESSION_COOKIE_AGE = 14 * 24 * 60 * 60
+SESSION_SAVE_EVERY_REQUEST = True
 
 #-----------------------------------------------------------------------------
 # Email and notification settings
