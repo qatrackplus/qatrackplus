@@ -34,7 +34,7 @@ class Migration(DataMigration):
         mc_tests = Test.objects.filter(type=MULTIPLE_CHOICE)
 
         for test in mc_tests:
-            for ti in list(TestInstance.objects.filter(unit_test_info__test=test).exclude(string_value__in=(None, ''))):
+            for ti in list(TestInstance.objects.filter(unit_test_info__test=test).exclude(string_value=None).exclude(string_value='')):
                 try:
 
                     val = test.choices.split(',').index(ti.string_value)
