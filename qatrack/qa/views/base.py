@@ -128,6 +128,7 @@ class UTCList(BaseListableView):
 
     action = "perform"
     action_display = "Perform"
+    page_title = "All QA"
     active_only = True
     paginate_by = 50
 
@@ -209,8 +210,13 @@ class UTCList(BaseListableView):
         context = super(UTCList, self).get_context_data(*args, **kwargs)
         current_url = resolve(self.request.path_info).url_name
         context['view_name'] = current_url
+        context['action'] = self.action
+        context['page_title'] = self.get_page_title()
 
         return context
+
+    def get_page_title(self):
+        return self.page_title
 
     def get_queryset(self):
         """filter queryset for visibility and fetch relevent related objects"""
