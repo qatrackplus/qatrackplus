@@ -11,7 +11,7 @@ TEMPLATE_DEBUG = True
 
 # Who to email when server errors occur
 ADMINS = (
-    ('Admin Name', 'admin.email@localhost'),
+    ('Admin Name', 'YOUR_EMAIL_ADDRESS_GOES_HERE'),
 )
 MANAGERS = ADMINS
 SEND_BROKEN_LINK_EMAILS = True
