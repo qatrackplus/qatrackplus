@@ -405,7 +405,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         if self.test_list is None:
             raise Http404
 
-        self.all_lists = [self.test_list] + list(self.test_list.sublists.all())
+        self.all_lists = [self.test_list] + list(self.test_list.sublists.order_by("name"))
 
     #----------------------------------------------------------------------
     def set_all_tests(self):
