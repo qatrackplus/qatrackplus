@@ -520,11 +520,11 @@ function TestListInstance(){
         var tols = get_tol_data();
 
         var data = {
-            qavalues:JSON.stringify(qa_values),
-            composite_ids:JSON.stringify(self.composite_ids),
-            meta: JSON.stringify(meta),
-            refs: JSON.stringify(refs),
-            tols: JSON.stringify(tols)
+            qavalues:qa_values,
+            composite_ids:self.composite_ids,
+            meta: meta,
+            refs: refs,
+            tols: tols
         };
 
         var on_success = function(data, status, XHR){
@@ -555,7 +555,7 @@ function TestListInstance(){
         latest_composite_call = $.ajax({
             type:"POST",
             url:QAURLs.COMPOSITE_URL,
-            data:data,
+            data:JSON.stringify(data),
             contentType:"application/json",
             dataType:"json",
             success: on_success,

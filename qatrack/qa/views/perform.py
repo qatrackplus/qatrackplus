@@ -199,12 +199,12 @@ class CompositeCalculation(JSONResponseMixin, View):
     def get_json_data(self, name):
         """return python data from GET json data"""
 
-        json_string = self.request.POST.get(name)
+        json_string = self.request.body
         if not json_string:
             return
 
         try:
-            return json.loads(json_string)
+            return json.loads(json_string)[name]
         except (KeyError, ValueError):
             return
 
