@@ -773,13 +773,13 @@ class TestList(TestCollectionInterface):
     #----------------------------------------------------------------------
     def all_lists(self):
         """return query for self and all sublists"""
-        return TestList.objects.filter(pk=self.pk) | self.sublists.all()
+        return TestList.objects.filter(pk=self.pk) | self.sublists.order_by("name")
 
     #----------------------------------------------------------------------
     def ordered_tests(self):
         """return list of all tests/sublist tests in order"""
         tests = list(self.tests.all().order_by("testlistmembership__order").select_related("category"))
-        for sublist in self.sublists.all():
+        for sublist in self.sublists.order_by("name"):
             tests.extend(sublist.ordered_tests())
         return tests
 
