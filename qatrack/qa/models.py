@@ -26,6 +26,11 @@ STRING = "string"
 UPLOAD = "upload"
 STRING_COMPOSITE = "scomposite"
 
+NUMERICAL_TYPES = (COMPOSITE, CONSTANT, SIMPLE, )
+STRING_TYPES = (STRING, STRING_COMPOSITE, MULTIPLE_CHOICE, )
+CALCULATED_TYPES = (UPLOAD, COMPOSITE, STRING_COMPOSITE, )
+NO_SKIP_REQUIRED_TYPES = (COMPOSITE, CONSTANT, STRING_COMPOSITE, )
+
 TEST_TYPE_CHOICES = (
     (BOOLEAN, "Boolean"),
     (SIMPLE, "Simple Numerical"),
@@ -479,11 +484,11 @@ class Test(models.Model):
     #----------------------------------------------------------------------
     def is_numerical_type(self):
         """return whether or not this is a numerical test"""
-        return self.type in (COMPOSITE, CONSTANT, SIMPLE)
+        return self.type in NUMERICAL_TYPES
 
     #---------------------------------------------------------------
     def is_string_type(self):
-        return self.type in (STRING, STRING_COMPOSITE)
+        return self.type in STRING_TYPES
 
     #----------------------------------------------------------------------
     def is_string(self):
@@ -510,7 +515,7 @@ class Test(models.Model):
 
     #----------------------------------------------------------------------
     def skip_required(self):
-        return self.type not in (COMPOSITE, CONSTANT, STRING_COMPOSITE, )
+        return self.type not in NO_SKIP_REQUIRED_TYPES
 
     #---------------------------------------------------------------------------
     def check_test_type(self, field, test_types, display):
@@ -530,10 +535,10 @@ class Test(models.Model):
     def clean_calculation_procedure(self):
         """make sure a valid calculation procedure"""
 
-        if not self.calculation_procedure and self.type not in (UPLOAD, COMPOSITE, STRING_COMPOSITE):
+        if not self.calculation_procedure and self.type not in CALCULATED_TYPES:
             return
 
-        errors = self.check_test_type(self.calculation_procedure, [UPLOAD, COMPOSITE, STRING_COMPOSITE], "Calculation Procedure")
+        errors = self.check_test_type(self.calculation_procedure, CALCULATED_TYPES, "Calculation Procedure")
         self.calculation_procedure = str(self.calculation_procedure).replace("\r\n", "\n")
 
         macro_var_set = re.findall("^\s*%s\s*=.*$" % (self.slug), self.calculation_procedure, re.MULTILINE)
@@ -605,13 +610,7 @@ class Test(models.Model):
         """return choices for multiple choice tests"""
         if self.type == MULTIPLE_CHOICE:
             cs = self.choices.split(",")
-            return zip(range(len(cs)), cs)
-
-    #---------------------------------------------------------------------------
-    def get_choice_value(self, choice):
-        """return string representing integer choice value"""
-        if self.type == MULTIPLE_CHOICE:
-            return self.choices.split(",")[int(choice)]
+            return zip(cs, cs)
 
     #----------------------------------------------------------------------
     def __unicode__(self):
@@ -1110,12 +1109,9 @@ class TestInstance(models.Model):
             self.pass_fail = OK
 
     #---------------------------------------------------------------------------
-    def mult_choice_pass_fail(self):
+    def string_pass_fail(self):
 
-        if self.unit_test_info.test.is_mult_choice():
-            choice = self.unit_test_info.test.get_choice_value(int(self.value)).lower()
-        else:
-            choice = self.string_value.lower()
+        choice = self.string_value.lower()
 
         if choice in [x.lower() for x in self.tolerance.pass_choices()]:
             self.pass_fail = OK
@@ -1166,8 +1162,8 @@ class TestInstance(models.Model):
             self.pass_fail = NOT_DONE
         elif self.unit_test_info.test.is_boolean() and self.reference:
             self.bool_pass_fail()
-        elif (self.unit_test_info.test.is_mult_choice() or self.unit_test_info.test.is_string_type()) and self.tolerance:
-            self.mult_choice_pass_fail()
+        elif self.unit_test_info.test.is_string_type() and self.tolerance:
+            self.string_pass_fail()
         elif self.reference and self.tolerance:
             self.float_pass_fail()
         else:
@@ -1194,8 +1190,6 @@ class TestInstance(models.Model):
         test = self.unit_test_info.test
         if test.is_boolean():
             return "Yes" if int(self.value) == 1 else "No"
-        elif test.is_mult_choice():
-            return test.get_choice_value(self.value)
         elif test.is_upload():
             return self.upload_url()
         elif test.is_string_type():
