@@ -14,4 +14,4 @@ numpy>=1.6.2
 scipy>=0.10.0
 matplotlib>=1.0
 -e git+https://github.com/ruimashita/django-admin-views.git@7d4616818de5c7d3743d1160e031b5bc0db06dc1#egg=django_admin_views-master
-django-listable>=0.2.8,<0.3
+django-listable>=0.3,<0.4
