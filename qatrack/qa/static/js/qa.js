@@ -215,6 +215,9 @@ function TestInstance(test_info, row){
             if (comment_on_skip){
                 self.comment.show(600);
             }
+            if (self.test_info.test.type === QAUtils.BOOLEAN || self.test_info.test.type === QAUtils.UPLOAD){
+                self.set_value(null);
+            }
             $.Topic("valueChanged").publish();
         }else{
             self.comment.hide(600);
