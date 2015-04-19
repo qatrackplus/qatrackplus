@@ -1781,6 +1781,23 @@ class TestAutoReview(TestCase):
             self.assertEqual(len(tests), 1)
 
 
+    #----------------------------------------------------------------------
+    def test_review_status_with_coment(self):
+        """Each of the three tests should have a different status"""
+
+
+        uti = models.UnitTestInfo.objects.get(test=self.tests[0], unit=self.unit_test_collection.unit)
+        ti = utils.create_test_instance(unit_test_info=uti, value=self.ref.value, status=self.statuses[0])
+        ti.reference = self.ref
+        ti.tolerance = self.tol
+        ti.test_list_instance = self.test_list_instance
+        ti.comment = "comment"
+        ti.calculate_pass_fail()
+        ti.auto_review()
+        ti.save()
+        self.assertTrue(ti.status.requires_review)
+
+
 if __name__ == "__main__":
     setup_test_environment()
     unittest.main()
