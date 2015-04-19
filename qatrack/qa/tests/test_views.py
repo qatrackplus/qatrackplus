@@ -513,14 +513,15 @@ class TestComposite(TestCase):
     def test_composite(self):
 
         data = {
-            u'qavalues': [
-                u'{"testc": "", "test1": 1, "test2": 2}'
-            ],
-            u'composite_ids': [u'[%d]' % self.tc.pk],
-            u'meta': '{}',
+            u'qavalues': {"testc": "", "test1": 1, "test2": 2} ,
+            u'composite_ids': [u'%d' % self.tc.pk],
+            u'meta': {},
         }
-
-        request = self.factory.post(self.url, data=data)
+        request = self.factory.post(
+            self.url,
+            content_type='application/json',
+            data=json.dumps(data)
+        )
         response = self.view(request)
         values = json.loads(response.content)
 
@@ -540,11 +541,11 @@ class TestComposite(TestCase):
     def test_invalid_values(self):
 
         data = {
-            u'composite_ids': [u'[%d]' % self.tc.pk],
-            u'meta': '{}',
+            u'composite_ids': [u'%d' % self.tc.pk],
+            u'meta': {},
         }
 
-        request = self.factory.post(self.url, data=data)
+        request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
         response = self.view(request)
         values = json.loads(response.content)
 
@@ -558,14 +559,14 @@ class TestComposite(TestCase):
     def test_invalid_number(self):
 
         data = {
-            u'qavalues': [
-                u'{"testc": {"name": "testc", "current_value": ""}, "test1": {"name": "test1", "current_value": 1}, "test2": {"name": "test2", "current_value": "abc"}}'
-            ],
-            u'composite_ids': [u'[%d]' % self.tc.pk],
-            u'meta': '{}',
+            u'qavalues':
+                {"testc": {"name": "testc", "current_value": ""}, "test1": {"name": "test1", "current_value": 1}, "test2": {"name": "test2", "current_value": "abc"}}
+            ,
+            u'composite_ids': [u'%d' % self.tc.pk],
+            u'meta': {},
         }
 
-        request = self.factory.post(self.url, data=data)
+        request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
         response = self.view(request)
 
         values = json.loads(response.content)
@@ -585,15 +586,12 @@ class TestComposite(TestCase):
     def test_invalid_composite(self):
 
         data = {
-            u'qavalues': [
-                u'{"testc": "", "test1": 1, "test2": "abc"}'
-            ],
-
-            u'composite_ids': [u' '],
+            u'qavalues': {"testc": "", "test1": 1, "test2": "abc"},
+            u'composite_ids': [],
             u'meta': '{}',
         }
 
-        request = self.factory.post(self.url, data=data)
+        request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
         response = self.view(request)
         values = json.loads(response.content)
 
@@ -607,13 +605,11 @@ class TestComposite(TestCase):
     def test_no_composite(self):
 
         data = {
-            u'qavalues': [
-                u'{"testc": "", "test1": 1, "test2": 2}'
-            ],
+            u'qavalues': {"testc": "", "test1": 1, "test2": 2} ,
             u'meta': '{}',
         }
 
-        request = self.factory.post(self.url, data=data)
+        request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
         response = self.view(request)
         values = json.loads(response.content)
 
@@ -626,12 +622,9 @@ class TestComposite(TestCase):
     #----------------------------------------------------------------------
     def test_invalid_json(self):
 
-        data = {
-            u'qavalues': ['{"testc"'],
-            u'meta': '{}',
-        }
+        data = '{"qavalues": {"testc"}, u"meta": {}, }'
 
-        request = self.factory.post(self.url, data=data)
+        request = self.factory.post(self.url, content_type="application/json", data=data)
         response = self.view(request)
         values = json.loads(response.content)
 
@@ -644,15 +637,12 @@ class TestComposite(TestCase):
         self.tc.save()
 
         data = {
-            u'qavalues': [
-                u'{"testc": "", "test1": 1, "test2": 2}'
-            ],
-            u'composite_ids': [u'[%d]' % self.tc.pk],
-
-            u'meta': '{}',
+            u'qavalues': {"testc": "", "test1": 1, "test2": 2},
+            u'composite_ids': [u'%d' % self.tc.pk],
+            u'meta': {},
         }
 
-        request = self.factory.post(self.url, data=data)
+        request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
         response = self.view(request)
         values = json.loads(response.content)
         expected = {
@@ -679,15 +669,12 @@ class TestComposite(TestCase):
         self.cyclic2.save()
 
         data = {
-            u'qavalues': [
-                u'{"testc": "", "cyclic1": "", "cyclic2": "", "test1": 1, "test2": 2}'
-            ],
-            u'composite_ids': [u'[%d, %d, %d]' % (self.tc.pk, self.cyclic1.pk, self.cyclic2.pk)],
-
-            u'meta': '{}',
+            u'qavalues': {"testc": "", "cyclic1": "", "cyclic2": "", "test1": 1, "test2": 2},
+            u'composite_ids': [u'%d' % t for t in (self.tc.pk, self.cyclic1.pk, self.cyclic2.pk)],
+            u'meta': {},
         }
 
-        request = self.factory.post(self.url, data=data)
+        request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
         response = self.view(request)
         values = json.loads(response.content)
 
