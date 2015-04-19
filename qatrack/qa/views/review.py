@@ -171,7 +171,7 @@ class ChooseFrequencyForReview(ListView):
 class Unreviewed(PermissionRequiredMixin, TestListInstances):
     """Display all :model:`qa.TestListInstance`s with all_reviewed=False"""
 
-    queryset = models.TestListInstance.objects.unreviewed
+    queryset = models.TestListInstance.objects.unreviewed()
     permission_required = "qa.can_review"
     raise_exception = True
 
