@@ -1173,7 +1173,8 @@ class TestInstance(models.Model):
     #----------------------------------------------------------------------
     def auto_review(self):
         """set review status of the current value if allowed"""
-        if self.comment and not self.skipped:
+        has_comment = self.comment or self.test_list_instance.comment
+        if has_comment and not self.skipped:
             return
 
         if self.unit_test_info.test.auto_review:
