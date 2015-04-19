@@ -28,7 +28,7 @@
             $("#generic_object_id").css("width","5px");
 
            if ($(this).val()) {
-               $.get("{% url updatecombo %}"+ $(this).val(), { },
+               $.get("{% url 'updatecombo' %}"+ $(this).val(), { },
               function(data){
                   $('select#generic_object_id').append(data);
             $("#generic_object_id").css("width","205px");
@@ -39,7 +39,7 @@
        })
 
     if ($('select#id_content_type').val()) {
-        $.get("{% url updatecombo %}"+ $('select#id_content_type').val(), { },
+        $.get("{% url 'updatecombo' %}"+ $('select#id_content_type').val(), { },
         function(data){
             $('select#generic_object_id option').remove()
             $('select#generic_object_id').append(data)

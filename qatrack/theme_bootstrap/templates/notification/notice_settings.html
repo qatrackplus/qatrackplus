@@ -7,9 +7,9 @@
 
 {% block body %}
     <h2>{% trans "Settings" %}</h2>
-    
+
     <div class="notice_settings">
-        {% url acct_email as email_url %}
+        {% url 'acct_email' as email_url %}
         {% if user.email %}
             <p>
                 {% trans "Primary email" %}:<br />
@@ -24,7 +24,7 @@
                 {% endblocktrans %}
             </div>
         {% endif %}
-        
+
         <form method="POST" action="">
             {% csrf_token %}
             <table class="notice_settings table table-striped">

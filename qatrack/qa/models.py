@@ -26,6 +26,11 @@ STRING = "string"
 UPLOAD = "upload"
 STRING_COMPOSITE = "scomposite"
 
+NUMERICAL_TYPES = (COMPOSITE, CONSTANT, SIMPLE, )
+STRING_TYPES = (STRING, STRING_COMPOSITE, MULTIPLE_CHOICE, )
+CALCULATED_TYPES = (UPLOAD, COMPOSITE, STRING_COMPOSITE, )
+NO_SKIP_REQUIRED_TYPES = (COMPOSITE, CONSTANT, STRING_COMPOSITE, )
+
 TEST_TYPE_CHOICES = (
     (BOOLEAN, "Boolean"),
     (SIMPLE, "Simple Numerical"),
@@ -462,7 +467,7 @@ class Test(models.Model):
         help_text=_("Indicate if this test is a %s" % (','.join(x[1].title() for x in TEST_TYPE_CHOICES)))
     )
 
-    display_image = models.BooleanField("Display image", help_text=_("Image uploads only: Show uploaded images under the testlist"))
+    display_image = models.BooleanField("Display image", help_text=_("Image uploads only: Show uploaded images under the testlist"), default=False)
     choices = models.CharField(max_length=2048, help_text=_("Comma seperated list of choices for multiple choice test types"), null=True, blank=True)
     constant_value = models.FloatField(help_text=_("Only required for constant value types"), null=True, blank=True)
 
@@ -479,11 +484,11 @@ class Test(models.Model):
     #----------------------------------------------------------------------
     def is_numerical_type(self):
         """return whether or not this is a numerical test"""
-        return self.type in (COMPOSITE, CONSTANT, SIMPLE)
+        return self.type in NUMERICAL_TYPES
 
     #---------------------------------------------------------------
     def is_string_type(self):
-        return self.type in (STRING, STRING_COMPOSITE)
+        return self.type in STRING_TYPES
 
     #----------------------------------------------------------------------
     def is_string(self):
@@ -510,7 +515,7 @@ class Test(models.Model):
 
     #----------------------------------------------------------------------
     def skip_required(self):
-        return self.type not in (COMPOSITE, CONSTANT, STRING_COMPOSITE, )
+        return self.type not in NO_SKIP_REQUIRED_TYPES
 
     #---------------------------------------------------------------------------
     def check_test_type(self, field, test_types, display):
@@ -530,10 +535,10 @@ class Test(models.Model):
     def clean_calculation_procedure(self):
         """make sure a valid calculation procedure"""
 
-        if not self.calculation_procedure and self.type not in (UPLOAD, COMPOSITE, STRING_COMPOSITE):
+        if not self.calculation_procedure and self.type not in CALCULATED_TYPES:
             return
 
-        errors = self.check_test_type(self.calculation_procedure, [UPLOAD, COMPOSITE, STRING_COMPOSITE], "Calculation Procedure")
+        errors = self.check_test_type(self.calculation_procedure, CALCULATED_TYPES, "Calculation Procedure")
         self.calculation_procedure = str(self.calculation_procedure).replace("\r\n", "\n")
 
         macro_var_set = re.findall("^\s*%s\s*=.*$" % (self.slug), self.calculation_procedure, re.MULTILINE)
@@ -605,13 +610,7 @@ class Test(models.Model):
         """return choices for multiple choice tests"""
         if self.type == MULTIPLE_CHOICE:
             cs = self.choices.split(",")
-            return zip(range(len(cs)), cs)
-
-    #---------------------------------------------------------------------------
-    def get_choice_value(self, choice):
-        """return string representing integer choice value"""
-        if self.type == MULTIPLE_CHOICE:
-            return self.choices.split(",")[int(choice)]
+            return zip(cs, cs)
 
     #----------------------------------------------------------------------
     def __unicode__(self):
@@ -774,13 +773,13 @@ class TestList(TestCollectionInterface):
     #----------------------------------------------------------------------
     def all_lists(self):
         """return query for self and all sublists"""
-        return TestList.objects.filter(pk=self.pk) | self.sublists.all()
+        return TestList.objects.filter(pk=self.pk) | self.sublists.order_by("name")
 
     #----------------------------------------------------------------------
     def ordered_tests(self):
         """return list of all tests/sublist tests in order"""
         tests = list(self.tests.all().order_by("testlistmembership__order").select_related("category"))
-        for sublist in self.sublists.all():
+        for sublist in self.sublists.order_by("name"):
             tests.extend(sublist.ordered_tests())
         return tests
 
@@ -1045,7 +1044,7 @@ class TestInstance(models.Model):
     value = models.FloatField(help_text=_("For boolean Tests a value of 0 equals False and any non zero equals True"), null=True)
     string_value = models.CharField(max_length=MAX_STRING_VAL_LEN, null=True, blank=True)
 
-    skipped = models.BooleanField(help_text=_("Was this test skipped for some reason (add comment)"))
+    skipped = models.BooleanField(help_text=_("Was this test skipped for some reason (add comment)"), default=False)
     comment = models.TextField(help_text=_("Add a comment to this test"), null=True, blank=True)
 
     # reference used
@@ -1110,12 +1109,9 @@ class TestInstance(models.Model):
             self.pass_fail = OK
 
     #---------------------------------------------------------------------------
-    def mult_choice_pass_fail(self):
+    def string_pass_fail(self):
 
-        if self.unit_test_info.test.is_mult_choice():
-            choice = self.unit_test_info.test.get_choice_value(int(self.value)).lower()
-        else:
-            choice = self.string_value.lower()
+        choice = self.string_value.lower()
 
         if choice in [x.lower() for x in self.tolerance.pass_choices()]:
             self.pass_fail = OK
@@ -1166,8 +1162,8 @@ class TestInstance(models.Model):
             self.pass_fail = NOT_DONE
         elif self.unit_test_info.test.is_boolean() and self.reference:
             self.bool_pass_fail()
-        elif (self.unit_test_info.test.is_mult_choice() or self.unit_test_info.test.is_string_type()) and self.tolerance:
-            self.mult_choice_pass_fail()
+        elif self.unit_test_info.test.is_string_type() and self.tolerance:
+            self.string_pass_fail()
         elif self.reference and self.tolerance:
             self.float_pass_fail()
         else:
@@ -1194,8 +1190,6 @@ class TestInstance(models.Model):
         test = self.unit_test_info.test
         if test.is_boolean():
             return "Yes" if int(self.value) == 1 else "No"
-        elif test.is_mult_choice():
-            return test.get_choice_value(self.value)
         elif test.is_upload():
             return self.upload_url()
         elif test.is_string_type():
@@ -1433,7 +1427,7 @@ class TestListCycle(TestCollectionInterface):
     #----------------------------------------------------------------------
     def all_lists(self):
         """return queryset for all children lists of this cycle"""
-        query = TestList.objects.get_empty_query_set()
+        query = TestList.objects.none()
         for test_list in self.test_lists.all():
             query |= test_list.all_lists()
 
@@ -1442,7 +1436,7 @@ class TestListCycle(TestCollectionInterface):
     #----------------------------------------------------------------------
     def all_tests(self):
         """return all test members of cycle members"""
-        query = Test.objects.get_empty_query_set()
+        query = Test.objects.none()
         for test_list in self.test_lists.all():
             query |= test_list.all_tests()
         return query.distinct()

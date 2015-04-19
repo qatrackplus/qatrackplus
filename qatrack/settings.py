@@ -20,7 +20,7 @@ SEND_BROKEN_LINK_EMAILS = True
 # misc settings
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
-VERSION = "0.2.8"
+VERSION = "0.3.0"
 BUG_REPORT_URL = "https://bitbucket.org/tohccmedphys/qatrackplus/issues/new"
 FEATURE_REQUEST_URL = BUG_REPORT_URL
 
@@ -246,6 +246,7 @@ CACHES = {
 #-----------------------------------------------------------------------------
 # Session Settings
 SESSION_COOKIE_AGE = 14 * 24 * 60 * 60
+SESSION_SAVE_EVERY_REQUEST = True
 
 #-----------------------------------------------------------------------------
 # Email and notification settings
@@ -373,8 +374,6 @@ ORDER_UNITS_BY = "number"
 
 #------------------------------------------------------------------------------
 # Testing settings
-TEST_RUNNER = 'django_coverage.coverage_runner.CoverageRunner'
-COVERAGE_ADDITIONAL_MODULES = ["qatrack.tests"]
 
 #------------------------------------------------------------------------------
 # local_settings contains anything that should be overridden
@@ -383,3 +382,8 @@ try:
     from local_settings import *  # NOQA
 except ImportError:
     pass
+
+if FORCE_SCRIPT_NAME:
+    #Fix URL for Admin Views if FORCE_SCRIPT_NAME_SET in local_settings
+    ADMIN_VIEWS_URL_PREFIX = FORCE_SCRIPT_NAME + "/admin"
+

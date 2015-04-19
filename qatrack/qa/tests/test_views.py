@@ -16,7 +16,6 @@ import qatrack.qa.views.charts
 import qatrack.qa.views.review
 import qatrack.qa.views.base
 import qatrack.qa.views.backup
-from qatrack.data_tables.views import BaseDataTablesDataSource
 import django.forms
 import json
 import os
@@ -127,73 +126,8 @@ class TestURLS(TestCase):
     #----------------------------------------------------------------------
     def test_utc_fail(self):
         utils.create_status()
-        url = reverse("review_utc", kwargs={"pk": 101})
+        url = reverse("review_utc", kwargs={"pk": 9999})
         self.assertEqual(self.client.get(url).status_code, 404)
-
-
-#============================================================================
-class TestDataTables(TestCase):
-
-    #---------------------------------------------------------------------------
-    def setUp(self):
-        self.user = utils.create_user()
-        self.client.login(username="user", password="password")
-        g = utils.create_group()
-        self.user.groups.add(g)
-        self.user.save()
-
-        self.factory = RequestFactory()
-        self.view = views.base.UTCList.as_view()
-
-        self.url = reverse("all_lists")
-
-        utils.create_status()
-        u1 = utils.create_unit(number=1, name="u1")
-        utils.create_unit(number=2, name="u2", )
-        self.utc = utils.create_unit_test_collection(unit=u1)
-        self.utc.assigned_to = self.user.groups.all()[0]
-        self.utc.save()
-        utils.create_test_list_instance(unit_test_collection=self.utc)
-    #----------------------------------------------------------------------
-
-    def test_base_set_columns_fails(self):
-        bdt = BaseDataTablesDataSource()
-        self.assertRaises(NotImplementedError, bdt.set_columns)
-    #----------------------------------------------------------------------
-
-    def test_utc_display(self):
-
-        data = {
-            "iDisplayLength": 100,
-            "iDisplayStart": 0,
-
-            "iSortingCols": 2,
-            "iSortCol_0": 4,
-            "iSortCol_1": 1,
-
-            "sSearch_1": "test"
-        }
-
-        self.client.get(self.url, data=data, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-
-    #----------------------------------------------------------------------
-    def test_gen_tli_display(self):
-        url = reverse("complete_instances")
-
-        data = {
-            "iDisplayLength": 100,
-            "iDisplayStart": 0,
-
-            "iSortingCols": 2,
-            "iSortCol_0": 4,
-            "iSortCol_1": 1,
-
-            "sSearch_1": "u1",
-            #            "sSearch_3": "test",
-
-        }
-
-        self.client.get(url, data=data, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
 
 
 #============================================================================
@@ -579,14 +513,15 @@ class TestComposite(TestCase):
     def test_composite(self):
 
         data = {
-            u'qavalues': [
-                u'{"testc": "", "test1": 1, "test2": 2}'
-            ],
-            u'composite_ids': [u'[%d]' % self.tc.pk],
-            u'meta': '{}',
+            u'qavalues': {"testc": "", "test1": 1, "test2": 2} ,
+            u'composite_ids': [u'%d' % self.tc.pk],
+            u'meta': {},
         }
-
-        request = self.factory.post(self.url, data=data)
+        request = self.factory.post(
+            self.url,
+            content_type='application/json',
+            data=json.dumps(data)
+        )
         response = self.view(request)
         values = json.loads(response.content)
 
@@ -606,11 +541,11 @@ class TestComposite(TestCase):
     def test_invalid_values(self):
 
         data = {
-            u'composite_ids': [u'[%d]' % self.tc.pk],
-            u'meta': '{}',
+            u'composite_ids': [u'%d' % self.tc.pk],
+            u'meta': {},
         }
 
-        request = self.factory.post(self.url, data=data)
+        request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
         response = self.view(request)
         values = json.loads(response.content)
 
@@ -624,14 +559,14 @@ class TestComposite(TestCase):
     def test_invalid_number(self):
 
         data = {
-            u'qavalues': [
-                u'{"testc": {"name": "testc", "current_value": ""}, "test1": {"name": "test1", "current_value": 1}, "test2": {"name": "test2", "current_value": "abc"}}'
-            ],
-            u'composite_ids': [u'[%d]' % self.tc.pk],
-            u'meta': '{}',
+            u'qavalues':
+                {"testc": {"name": "testc", "current_value": ""}, "test1": {"name": "test1", "current_value": 1}, "test2": {"name": "test2", "current_value": "abc"}}
+            ,
+            u'composite_ids': [u'%d' % self.tc.pk],
+            u'meta': {},
         }
 
-        request = self.factory.post(self.url, data=data)
+        request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
         response = self.view(request)
 
         values = json.loads(response.content)
@@ -651,15 +586,12 @@ class TestComposite(TestCase):
     def test_invalid_composite(self):
 
         data = {
-            u'qavalues': [
-                u'{"testc": "", "test1": 1, "test2": "abc"}'
-            ],
-
-            u'composite_ids': [u' '],
+            u'qavalues': {"testc": "", "test1": 1, "test2": "abc"},
+            u'composite_ids': [],
             u'meta': '{}',
         }
 
-        request = self.factory.post(self.url, data=data)
+        request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
         response = self.view(request)
         values = json.loads(response.content)
 
@@ -673,13 +605,11 @@ class TestComposite(TestCase):
     def test_no_composite(self):
 
         data = {
-            u'qavalues': [
-                u'{"testc": "", "test1": 1, "test2": 2}'
-            ],
+            u'qavalues': {"testc": "", "test1": 1, "test2": 2} ,
             u'meta': '{}',
         }
 
-        request = self.factory.post(self.url, data=data)
+        request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
         response = self.view(request)
         values = json.loads(response.content)
 
@@ -692,12 +622,9 @@ class TestComposite(TestCase):
     #----------------------------------------------------------------------
     def test_invalid_json(self):
 
-        data = {
-            u'qavalues': ['{"testc"'],
-            u'meta': '{}',
-        }
+        data = '{"qavalues": {"testc"}, u"meta": {}, }'
 
-        request = self.factory.post(self.url, data=data)
+        request = self.factory.post(self.url, content_type="application/json", data=data)
         response = self.view(request)
         values = json.loads(response.content)
 
@@ -710,15 +637,12 @@ class TestComposite(TestCase):
         self.tc.save()
 
         data = {
-            u'qavalues': [
-                u'{"testc": "", "test1": 1, "test2": 2}'
-            ],
-            u'composite_ids': [u'[%d]' % self.tc.pk],
-
-            u'meta': '{}',
+            u'qavalues': {"testc": "", "test1": 1, "test2": 2},
+            u'composite_ids': [u'%d' % self.tc.pk],
+            u'meta': {},
         }
 
-        request = self.factory.post(self.url, data=data)
+        request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
         response = self.view(request)
         values = json.loads(response.content)
         expected = {
@@ -745,15 +669,12 @@ class TestComposite(TestCase):
         self.cyclic2.save()
 
         data = {
-            u'qavalues': [
-                u'{"testc": "", "cyclic1": "", "cyclic2": "", "test1": 1, "test2": 2}'
-            ],
-            u'composite_ids': [u'[%d, %d, %d]' % (self.tc.pk, self.cyclic1.pk, self.cyclic2.pk)],
-
-            u'meta': '{}',
+            u'qavalues': {"testc": "", "cyclic1": "", "cyclic2": "", "test1": 1, "test2": 2},
+            u'composite_ids': [u'%d' % t for t in (self.tc.pk, self.cyclic1.pk, self.cyclic2.pk)],
+            u'meta': {},
         }
 
-        request = self.factory.post(self.url, data=data)
+        request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
         response = self.view(request)
         values = json.loads(response.content)
 
@@ -896,10 +817,10 @@ class TestPerformQA(TestCase):
     def test_mult_choice_widget(self):
         response = self.client.get(self.url)
         idx = self.tests.index(self.t_mult)
-        widget = response.context["formset"].forms[idx].fields["value"].widget
+        widget = response.context["formset"].forms[idx].fields["string_value"].widget
 
         self.assertTrue(isinstance(widget, django.forms.Select))
-        self.assertEqual(widget.choices, [('', ''), (0, 'c1'), (1, 'c2'), (2, 'c3')])
+        self.assertEqual(widget.choices, [('', ''), ('c1', 'c1'), ('c2', 'c2'), ('c3', 'c3')])
 
     #---------------------------------------------------------------------------
     def test_perform_in_progress(self):

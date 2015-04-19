@@ -215,6 +215,9 @@ function TestInstance(test_info, row){
             if (comment_on_skip){
                 self.comment.show(600);
             }
+            if (self.test_info.test.type === QAUtils.BOOLEAN || self.test_info.test.type === QAUtils.UPLOAD){
+                self.set_value(null);
+            }
             $.Topic("valueChanged").publish();
         }else{
             self.comment.hide(600);
@@ -517,11 +520,11 @@ function TestListInstance(){
         var tols = get_tol_data();
 
         var data = {
-            qavalues:JSON.stringify(qa_values),
-            composite_ids:JSON.stringify(self.composite_ids),
-            meta: JSON.stringify(meta),
-            refs: JSON.stringify(refs),
-            tols: JSON.stringify(tols)
+            qavalues:qa_values,
+            composite_ids:self.composite_ids,
+            meta: meta,
+            refs: refs,
+            tols: tols
         };
 
         var on_success = function(data, status, XHR){
@@ -552,7 +555,7 @@ function TestListInstance(){
         latest_composite_call = $.ajax({
             type:"POST",
             url:QAURLs.COMPOSITE_URL,
-            data:data,
+            data:JSON.stringify(data),
             contentType:"application/json",
             dataType:"json",
             success: on_success,

@@ -8,7 +8,7 @@ from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django.views.generic import ListView, TemplateView, DetailView
 
-from .. import models
+from .. import models, utils
 from . import forms
 from .base import TestListInstanceMixin, BaseEditTestListInstance, TestListInstances, UTCList
 from .perform import ChooseUnit
@@ -215,11 +215,12 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
             "tests_object",
         ).exclude(
             due_date=None
+        ).extra(
+            **utils.qs_extra_for_utc_name()
         ).order_by(
             "frequency__nominal_interval",
             "unit__number",
-            "testlist__name",
-            "testlistcycle__name",
+            "utc_name",
         )
 
         return qs.distinct()
@@ -287,8 +288,9 @@ class Overview(PermissionRequiredMixin, TemplateView):
             "last_instance__testinstance_set",
             "last_instance__testinstance_set__status",
             "last_instance__modified_by",
-            "tests_object",
-        ).order_by("frequency__nominal_interval", "unit__number", "testlist__name", "testlistcycle__name",)
+        ).extra(
+            **utils.qs_extra_for_utc_name()
+        ).order_by("frequency__nominal_interval", "unit__number", "utc_name",)
 
         return qs.distinct()
 

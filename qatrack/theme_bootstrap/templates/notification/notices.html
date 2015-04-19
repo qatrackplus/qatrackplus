@@ -8,18 +8,18 @@
 {% block head_title %}{% trans "Notices" %}{% endblock %}
 
 {% block body %}
-    
+
     {% autopaginate notices %}
-    
+
     {% if notices %}
-        <a href="{% url notification_mark_all_seen %}">{% trans "Mark all unseen notices seen" %}</a>
-        
+        <a href="{% url 'notification_mark_all_seen' %}">{% trans "Mark all unseen notices seen" %}</a>
+
         {# TODO: get timezone support working with regroup #}
         {% regroup notices by added.date as notices_by_date %}
-        
+
         {% for date in notices_by_date %}
             <h2 class="notice_date">{{ date.grouper|naturalday:_("MONTH_DAY_FORMAT")|capfirst }}</h2>
-            
+
             {% for notice in date.list %}
                 {% if notice.is_unseen %}
                     <div class="unseen_notice">
@@ -32,11 +32,11 @@
                 </div>
             {% endfor %}
         {% endfor %}
-        
+
         {% paginate %}
-        
+
     {% else %}
         <p>{% trans "No notices." %}</p>
     {% endif %}
-    
+
 {% endblock %}

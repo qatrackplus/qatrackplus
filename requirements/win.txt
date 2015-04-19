@@ -1,1 +1,3 @@
 pywin32>=217
+django-mssql>=1.5.1,<1.6
+

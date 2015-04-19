@@ -349,7 +349,7 @@ result = foo + bar
 
         test.choices = valid[0]
         test.clean_choices()
-        self.assertListEqual([(0, "foo"), (1, "bar"), (2, "baz")], test.get_choices())
+        self.assertListEqual([("foo", "foo"), ("bar", "bar"), ("baz", "baz")], test.get_choices())
 
     #---------------------------------------------------------------------------
     def test_invalid_mult_choice(self):
@@ -398,10 +398,11 @@ result = foo + bar
         test.clean_fields()
 
     #----------------------------------------------------------------------
-    def test_get_choice(self):
+    def test_get_choices(self):
         test = utils.create_test(test_type=models.MULTIPLE_CHOICE)
-        test.choices = "a,b,c"
-        self.assertEqual(test.get_choice_value(1), "b")
+        test.choices = "a,b"
+
+        self.assertEqual(test.get_choices(), [("a","a"), ("b","b")])
 
 
 #============================================================================
@@ -502,7 +503,7 @@ class TestUnitTestInfo(TestCase):
         self.assertEqual(len(utis), 3)
 
     #----------------------------------------------------------------------
-    def test_readd_test(self):
+    def test_read_test(self):
         tl1 = utils.create_test_list("tl1")
         t1 = utils.create_test("t1")
         utils.create_test_list_membership(tl1, t1)
@@ -1070,14 +1071,15 @@ class TestUnitTestCollection(TestCase):
         utc = utils.create_unit_test_collection(test_collection=cycle)
 
         self.assertEqual(utc.next_list(), (0, test_lists[0]))
-        utils.create_test_list_instance(unit_test_collection=utc, test_list=test_lists[0])
+        tli = utils.create_test_list_instance(unit_test_collection=utc, test_list=test_lists[0])
 
         # need to regrab from db since since last_instance was updated in the db
         # by signal handler
         utc = models.UnitTestCollection.objects.get(pk=utc.pk)
         self.assertEqual(utc.next_list(), (1, test_lists[1]))
 
-        utils.create_test_list_instance(unit_test_collection=utc, test_list=test_lists[1], day=1)
+        work_completed =  tli.work_completed + timezone.timedelta(hours=1)
+        utils.create_test_list_instance(unit_test_collection=utc, test_list=test_lists[1], day=1, work_completed=work_completed)
         utc = models.UnitTestCollection.objects.get(pk=utc.pk)
 
         self.assertEqual(utc.next_list(), (0, test_lists[0]))
@@ -1096,14 +1098,15 @@ class TestUnitTestCollection(TestCase):
         utc = utils.create_unit_test_collection(test_collection=cycle)
 
         self.assertEqual(utc.next_list(), (0, test_lists[0]))
-        utils.create_test_list_instance(unit_test_collection=utc, test_list=test_lists[0], day=2)
+        tli = utils.create_test_list_instance(unit_test_collection=utc, test_list=test_lists[0], day=2)
 
         # need to regrab from db since since last_instance was updated in the db
         # by signal handler
         utc = models.UnitTestCollection.objects.get(pk=utc.pk)
         self.assertEqual(utc.next_list(), (3, test_lists[3]))
+        work_completed =  tli.work_completed + timezone.timedelta(hours=1)
 
-        utils.create_test_list_instance(unit_test_collection=utc, test_list=test_lists[3], day=3)
+        utils.create_test_list_instance(unit_test_collection=utc, test_list=test_lists[3], day=3, work_completed=work_completed)
         utc = models.UnitTestCollection.objects.get(pk=utc.pk)
         self.assertEqual(utc.next_list(), (0, test_lists[0]))
 
@@ -1318,18 +1321,18 @@ class TestTestInstance(TestCase):
 
         instance = models.TestInstance(unit_test_info=uti, tolerance=t)
 
-        for c in (0, 1):
-            instance.value = c
+        for c in ("a", "b"):
+            instance.string_value = c
             instance.calculate_pass_fail()
             self.assertEqual(instance.pass_fail, models.OK)
 
-        for c in (2, 3):
-            instance.value = c
+        for c in ("c", "d"):
+            instance.string_value = c
             instance.calculate_pass_fail()
             self.assertEqual(instance.pass_fail, models.TOLERANCE)
 
-        for c in (4, ):
-            instance.value = c
+        for c in ("e", ):
+            instance.string_value = c
             instance.calculate_pass_fail()
             self.assertEqual(instance.pass_fail, models.ACTION)
 
@@ -1535,11 +1538,7 @@ class TestTestInstance(TestCase):
         t = models.Test(type=models.MULTIPLE_CHOICE, choices="a,b,c")
         uti = models.UnitTestInfo(test=t)
 
-        ti = models.TestInstance(unit_test_info=uti, value=0)
-        self.assertEqual("a", ti.value_display())
-        ti = models.TestInstance(unit_test_info=uti, value=1)
-        self.assertEqual("b", ti.value_display())
-        ti = models.TestInstance(unit_test_info=uti, value=2)
+        ti = models.TestInstance(unit_test_info=uti, string_value="c")
         self.assertEqual("c", ti.value_display())
 
     #----------------------------------------------------------------------

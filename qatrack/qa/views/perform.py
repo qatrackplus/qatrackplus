@@ -199,12 +199,12 @@ class CompositeCalculation(JSONResponseMixin, View):
     def get_json_data(self, name):
         """return python data from GET json data"""
 
-        json_string = self.request.POST.get(name)
+        json_string = self.request.body
         if not json_string:
             return
 
         try:
-            return json.loads(json_string)
+            return json.loads(json_string)[name]
         except (KeyError, ValueError):
             return
 
@@ -405,7 +405,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         if self.test_list is None:
             raise Http404
 
-        self.all_lists = [self.test_list] + list(self.test_list.sublists.all())
+        self.all_lists = [self.test_list] + list(self.test_list.sublists.order_by("name"))
 
     #----------------------------------------------------------------------
     def set_all_tests(self):
@@ -823,7 +823,9 @@ class InProgress(TestListInstances):
     which are marked as being in progress.
     """
 
-    queryset = models.TestListInstance.objects.in_progress
+    def get_queryset(self):
+        return models.TestListInstance.objects.in_progress()
+
 
     #----------------------------------------------------------------------
     def get_page_title(self):
@@ -839,7 +841,6 @@ class FrequencyList(UTCList):
         """filter queryset by frequency"""
 
         qs = super(FrequencyList, self).get_queryset()
-        return qs
 
         freqs = self.kwargs["frequency"].split("/")
         self.frequencies = models.Frequency.objects.filter(slug__in=freqs)

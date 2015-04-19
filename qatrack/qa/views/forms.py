@@ -17,23 +17,18 @@ from qatrack.qa import utils
 BOOL_CHOICES = [(0, "No"), (1, "Yes")]
 
 
-#====================================================================================
 class UserFormsetMixin(object):
     """A mixin to add a user object to every form in a formset (and the formset itself)"""
 
-    #----------------------------------------------------------------------
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
         super(UserFormsetMixin, self).__init__(*args, **kwargs)
 
-    #---------------------------------------------------------------------------
-    def _construct_forms(self):
+    def _construct_form(self, *args, **kwargs):
         """add user to all children"""
-        self.forms = []
-        for i in xrange(self.total_form_count()):
-            f = self._construct_form(i)
-            f.user = self.user
-            self.forms.append(f)
+        form = super(UserFormsetMixin, self)._construct_form(*args, **kwargs)
+        form.user = self.user
+        return form
 
 
 #============================================================================
@@ -91,7 +86,7 @@ class TestInstanceWidgetsMixin(object):
         if test_type == models.BOOLEAN:
             self.fields["value"].widget = RadioSelect(choices=BOOL_CHOICES)
         elif test_type == models.MULTIPLE_CHOICE:
-            self.fields["value"].widget = Select(choices=[("", "")] + self.unit_test_info.test.get_choices())
+            self.fields["string_value"].widget = Select(choices=[("", "")] + self.unit_test_info.test.get_choices())
         elif test_type == models.UPLOAD:
             self.fields["string_value"].widget = HiddenInput()
 
@@ -191,6 +186,7 @@ class UpdateTestInstanceForm(TestInstanceWidgetsMixin, forms.ModelForm):
     def __init__(self, *args, **kwargs):
 
         super(UpdateTestInstanceForm, self).__init__(*args, **kwargs)
+        self.in_progress = self.instance.in_progress
         self.fields["value"].required = False
         self.unit_test_info = self.instance.unit_test_info
         self.set_value_widget()
@@ -312,7 +308,7 @@ class CreateTestListInstanceForm(BaseTestListInstanceForm):
     #----------------------------------------------------------------------
     def __init__(self, *args, **kwargs):
         super(CreateTestListInstanceForm, self).__init__(*args, **kwargs)
-        self.fields["work_started"].initial = timezone.now()
+        self.fields["work_started"].initial = timezone.localtime(timezone.now()).strftime(settings.INPUT_DATE_FORMATS[0])
 
 
 #============================================================================
