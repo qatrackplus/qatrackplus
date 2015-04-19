@@ -830,10 +830,10 @@ class TestPerformQA(TestCase):
     def test_mult_choice_widget(self):
         response = self.client.get(self.url)
         idx = self.tests.index(self.t_mult)
-        widget = response.context["formset"].forms[idx].fields["value"].widget
+        widget = response.context["formset"].forms[idx].fields["string_value"].widget
 
         self.assertTrue(isinstance(widget, django.forms.Select))
-        self.assertEqual(widget.choices, [('', ''), (0, 'c1'), (1, 'c2'), (2, 'c3')])
+        self.assertEqual(widget.choices, [('', ''), ('c1', 'c1'), ('c2', 'c2'), ('c3', 'c3')])
 
     #---------------------------------------------------------------------------
     def test_perform_in_progress(self):

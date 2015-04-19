@@ -349,7 +349,7 @@ result = foo + bar
 
         test.choices = valid[0]
         test.clean_choices()
-        self.assertListEqual([(0, "foo"), (1, "bar"), (2, "baz")], test.get_choices())
+        self.assertListEqual([("foo", "foo"), ("bar", "bar"), ("baz", "baz")], test.get_choices())
 
     #---------------------------------------------------------------------------
     def test_invalid_mult_choice(self):
@@ -398,10 +398,11 @@ result = foo + bar
         test.clean_fields()
 
     #----------------------------------------------------------------------
-    def test_get_choice(self):
+    def test_get_choices(self):
         test = utils.create_test(test_type=models.MULTIPLE_CHOICE)
-        test.choices = "a,b,c"
-        self.assertEqual(test.get_choice_value(1), "b")
+        test.choices = "a,b"
+
+        self.assertEqual(test.get_choices(), [("a","a"), ("b","b")])
 
 
 #============================================================================
@@ -1320,18 +1321,18 @@ class TestTestInstance(TestCase):
 
         instance = models.TestInstance(unit_test_info=uti, tolerance=t)
 
-        for c in (0, 1):
-            instance.value = c
+        for c in ("a", "b"):
+            instance.string_value = c
             instance.calculate_pass_fail()
             self.assertEqual(instance.pass_fail, models.OK)
 
-        for c in (2, 3):
-            instance.value = c
+        for c in ("c", "d"):
+            instance.string_value = c
             instance.calculate_pass_fail()
             self.assertEqual(instance.pass_fail, models.TOLERANCE)
 
-        for c in (4, ):
-            instance.value = c
+        for c in ("e", ):
+            instance.string_value = c
             instance.calculate_pass_fail()
             self.assertEqual(instance.pass_fail, models.ACTION)
 
@@ -1537,11 +1538,7 @@ class TestTestInstance(TestCase):
         t = models.Test(type=models.MULTIPLE_CHOICE, choices="a,b,c")
         uti = models.UnitTestInfo(test=t)
 
-        ti = models.TestInstance(unit_test_info=uti, value=0)
-        self.assertEqual("a", ti.value_display())
-        ti = models.TestInstance(unit_test_info=uti, value=1)
-        self.assertEqual("b", ti.value_display())
-        ti = models.TestInstance(unit_test_info=uti, value=2)
+        ti = models.TestInstance(unit_test_info=uti, string_value="c")
         self.assertEqual("c", ti.value_display())
 
     #----------------------------------------------------------------------
