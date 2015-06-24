@@ -17,6 +17,7 @@ from admin_views.admin import AdminViews
 import qatrack.qa.models as models
 from qatrack.qa.utils import qs_extra_for_utc_name
 
+admin.site.disable_action("delete_selected")
 
 #============================================================================
 class SaveUserMixin(object):
