@@ -859,6 +859,9 @@ class UnitTestCollection(models.Model):
             elif last_valid is not None and last_valid.work_completed:
                 return last_valid.work_completed + self.frequency.due_delta()
 
+        #return existing due date (could be None)
+        return self.due_date
+
     #----------------------------------------------------------------------
     def set_due_date(self, due_date=None):
         """Set due date field for this UTC. Note model is not saved to db.
