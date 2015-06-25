@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.contrib.auth.models import User, Group
 from django.utils.translation import ugettext as _
 from django.core import urlresolvers
@@ -8,7 +8,6 @@ from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 from django.utils import timezone
-
 
 from qatrack.units.models import Unit
 from qatrack.qa import utils
@@ -625,6 +624,43 @@ class UnitTestInfoManager(models.Manager):
     def get_query_set(self):
         return super(UnitTestInfoManager, self).get_query_set()
 
+    def active(self, queryset=None):
+        """Only return UTI's who's tests belong to at least 1 test list that
+        is assigned to an active UnitTestCollection"""
+
+        qs = queryset or self.get_query_set()
+
+        tlct = ContentType.objects.get_for_model(TestList)
+        tlcct = ContentType.objects.get_for_model(TestListCycle)
+
+        active_tls = UnitTestCollection.objects.filter(
+            content_type=tlct, active=True
+        ).values(
+            'object_id'
+        ).annotate(
+            Count('object_id')
+        ).filter(
+            object_id__count__gt=0
+        ).values_list("object_id", flat=True)
+
+        active_tlcs = UnitTestCollection.objects.filter(
+            content_type=tlcct, active=True
+        ).values(
+            'object_id'
+        ).annotate(
+            Count('object_id')
+        ).filter(
+            object_id__count__gt=0
+        ).values_list("object_id", flat=True)
+
+        active_tls_from_tlcs =TestListCycleMembership.objects.filter(
+            cycle_id__in=active_tlcs
+        ).values( "test_list_id")
+
+        return qs.filter(
+            Q(test__testlistmembership__test_list__in=active_tls) |
+            Q(test__testlistmembership__test_list__in=active_tls_from_tlcs)
+        ).distinct()
 
 #============================================================================
 class UnitTestInfo(models.Model):
