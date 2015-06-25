@@ -515,7 +515,96 @@ class TestUnitTestInfo(TestCase):
         tl1.save()
         self.assertEqual(models.UnitTestInfo.objects.count(), 1)
 
+    def test_active_only_simple(self):
 
+        tl1 = utils.create_test_list("tl1")
+        t1 = utils.create_test("t1")
+        utils.create_test_list_membership(tl1, t1)
+        utc1 = utils.create_unit_test_collection(test_collection=tl1)
+
+        utis = models.UnitTestInfo.objects.active()
+        self.assertEqual(utis.count(), 1)
+        self.assertEqual(utis.count(), 1)
+        utc1.active=False
+        utc1.save()
+        self.assertEqual(models.UnitTestInfo.objects.active().count(), 0)
+
+
+    def test_active_only_with_multiple_lists(self):
+
+        tl1 = utils.create_test_list("tl1")
+        t1 = utils.create_test("t1")
+        utils.create_test_list_membership(tl1, t1)
+        utc1 = utils.create_unit_test_collection(test_collection=tl1)
+
+        tl2 = utils.create_test_list("tl2")
+        t2 = utils.create_test("t2")
+        utils.create_test_list_membership(tl2, t1)
+        utils.create_test_list_membership(tl2, t2)
+        utc2 = utils.create_unit_test_collection(test_collection=tl2, unit=utc1.unit, frequency=utc1.frequency)
+
+        utis = models.UnitTestInfo.objects.active()
+        #only 2 active because t1 and t2 shared between tl1 and tl2
+        self.assertEqual(utis.count(), 2)
+
+        # uti for t1 should stay active because it's present in utc2
+        utc1.active = False
+        utc1.save()
+
+        self.assertEqual(models.UnitTestInfo.objects.active().count(), 2)
+
+        utc2.active = False
+        utc2.save()
+        utc1.active = True
+        utc1.save()
+        self.assertEqual(models.UnitTestInfo.objects.active().count(), 1)
+
+    def test_active_only_with_cycle(self):
+
+        tl1 = utils.create_test_list("tl1")
+        t1 = utils.create_test("t1")
+        utils.create_test_list_membership(tl1, t1)
+        utc1 = utils.create_unit_test_collection(test_collection=tl1)
+
+        tl2 = utils.create_test_list("tl2")
+        t2 = utils.create_test("t2")
+        utils.create_test_list_membership(tl2, t1)
+        utils.create_test_list_membership(tl2, t2)
+        utc2 = utils.create_unit_test_collection(test_collection=tl2, unit=utc1.unit, frequency=utc1.frequency)
+
+        tl3 = utils.create_test_list("tl3")
+        t3 = utils.create_test("t3")
+        utils.create_test_list_membership(tl3, t1)
+        utils.create_test_list_membership(tl2, t3)
+        tlc = utils.create_cycle([tl2, tl3])
+
+        utc3 = utils.create_unit_test_collection(test_collection=tlc, unit=utc1.unit, frequency=utc1.frequency)
+
+        utis = models.UnitTestInfo.objects.active()
+
+        self.assertEqual(utis.count(), 3)
+
+        # uti for t1 should stay active because it's present in utc2
+        utc1.active = False
+        utc1.save()
+
+        # all still should be active since t1 is present in tl2
+        self.assertEqual(models.UnitTestInfo.objects.active().count(), 3)
+
+        utc2.active = False
+        utc2.save()
+
+        # all still should be active since tl2 is present in tlc
+        self.assertEqual(models.UnitTestInfo.objects.active().count(), 3)
+
+
+        utc1.active = True
+        utc1.save()
+        utc3.active = False
+        utc3.save()
+
+        # only utc1 is active now
+        self.assertEqual(models.UnitTestInfo.objects.active().count(), 1)
 #====================================================================================
 class TestTestListMembership(TestCase):
     pass
