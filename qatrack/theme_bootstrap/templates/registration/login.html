@@ -17,7 +17,6 @@
                     {% blocktrans %}you are already logged in as {{ user }}.{% endblocktrans %}
                 </div>
             {% endif %}
-            {{next}}
 
             <form method="POST" action="{% url "auth_login" %}" autocapitalize="off" class="form-horizontal">
                 <fieldset>
