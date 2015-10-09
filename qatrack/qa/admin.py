@@ -419,11 +419,32 @@ class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
         return qs.select_related("modified_by")
 
 
+class TestForm(forms.ModelForm):
+
+    class Meta:
+        model = models.Test
+
+    def clean(self):
+        """if test already has some history don't allow for the test type to be changed"""
+
+        user_changing_type = self.instance.type != self.cleaned_data.get("type")
+        has_history = models.TestInstance.objects.filter(unit_test_info__test=self.instance).exists()
+        if user_changing_type and has_history:
+            msg =  "You can't change the test type of a test that has already been performed. Revert to '%s' before saving."
+            ttype_index = [ttype for ttype, label in models.TEST_TYPE_CHOICES].index(self.instance.type)
+            ttype_label = models.TEST_TYPE_CHOICES[ttype_index][1]
+            raise forms.ValidationError(msg % ttype_label)
+
+        return self.cleaned_data
+
+
 class TestAdmin(SaveUserMixin, admin.ModelAdmin):
     list_display = ["name", "slug", "category", "type"]
     list_filter = ["category", "type"]
     search_fields = ["name", "slug", "category__name"]
     save_as = True
+
+    form = TestForm
 
     class Media:
         js = (
