@@ -142,7 +142,7 @@ class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
         "reference_value",
     )
     list_display = ["test", test_type, "unit", "reference", "tolerance"]
-    list_filter = ["unit", "test__category"]
+    list_filter = ["unit", "test__category", "test__testlistmembership__test_list"]
     readonly_fields = ("reference", "test", "unit",)
     search_fields = ("test__name", "test__slug", "unit__name",)
 
@@ -440,7 +440,7 @@ class TestForm(forms.ModelForm):
 
 class TestAdmin(SaveUserMixin, admin.ModelAdmin):
     list_display = ["name", "slug", "category", "type"]
-    list_filter = ["category", "type"]
+    list_filter = ["category", "type", "testlistmembership__test_list"]
     search_fields = ["name", "slug", "category__name"]
     save_as = True
 
@@ -559,6 +559,7 @@ utc_unit_name.short_description = "Unit"
 
 class TestListInstanceAdmin(admin.ModelAdmin):
     list_display = ["__unicode__", utc_unit_name, "test_list", "work_completed", "created_by"]
+    list_filter = ["unit_test_collection__unit", "test_list", ]
 
 
 class ToleranceForm(forms.ModelForm):
