@@ -162,7 +162,7 @@ class CreateTestInstanceFormSet(UserFormsetMixin, BaseTestInstanceFormSet):
             init = {"value": None}
 
             if uti.test.type == models.CONSTANT:
-                init["value"] = utils.to_precision(uti.test.constant_value, 4)
+                init["value"] = utils.to_precision(uti.test.constant_value, settings.CONSTANT_PRECISION)
 
             initial.append(init)
 
@@ -251,12 +251,12 @@ class BaseTestListInstanceForm(forms.ModelForm):
 
         for field in ("work_completed", "work_started"):
             self.fields[field].widget = forms.widgets.DateTimeInput()
+
             self.fields[field].widget.format = settings.INPUT_DATE_FORMATS[0]
             self.fields[field].input_formats = settings.INPUT_DATE_FORMATS
             self.fields[field].widget.attrs["title"] = settings.DATETIME_HELP
             self.fields[field].widget.attrs["class"] = "input-medium"
             self.fields[field].help_text = settings.DATETIME_HELP
-            self.fields[field].localize = True
 
         self.fields["status"].widget.attrs["class"] = "input-medium"
 
