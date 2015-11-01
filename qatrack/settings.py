@@ -86,6 +86,8 @@ LANGUAGE_CODE = 'en-us'
 # to load the internationalization machinery.
 USE_I18N = True
 
+CONSTANT_PRECISION = 8
+
 
 #----------------------------------------------------------------------------
 # static media settings
