@@ -11,7 +11,7 @@ TEMPLATE_DEBUG = True
 
 # Who to email when server errors occur
 ADMINS = (
-    ('Admin Name', 'admin.email@yourplace.com'),
+    ('Admin Name', 'YOUR_EMAIL_ADDRESS_GOES_HERE'),
 )
 MANAGERS = ADMINS
 SEND_BROKEN_LINK_EMAILS = True
@@ -85,6 +85,8 @@ LANGUAGE_CODE = 'en-us'
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
 USE_I18N = True
+
+CONSTANT_PRECISION = 8
 
 
 #----------------------------------------------------------------------------
