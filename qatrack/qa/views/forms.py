@@ -167,7 +167,7 @@ class CreateTestInstanceFormSet(UserFormsetMixin, BaseTestInstanceFormSet):
             init = {"value": None}
 
             if uti.test.type == models.CONSTANT:
-                init["value"] = utils.to_precision(uti.test.constant_value, 4)
+                init["value"] = utils.to_precision(uti.test.constant_value, settings.CONSTANT_PRECISION)
 
             initial.append(init)
 
