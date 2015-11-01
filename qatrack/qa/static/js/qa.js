@@ -272,12 +272,9 @@ function TestInstance(test_info, row){
         if (tt === QAUtils.BOOLEAN){
             if (_.isNull(value)){
                 self.inputs.prop("checked",false);
-            }else if (value !== 0.){
-                self.inputs[0].checked = true;
-                self.inputs[1].checked = false;
-            }else {
-                self.inputs[0].checked = false;
-                self.inputs[1].checked = true;
+            }else{
+                self.inputs[0].checked = value === 0;
+                self.inputs[1].checked = !self.inputs[0].checked;
             }
         }else if (tt=== QAUtils.STRING || tt === QAUtils.MULTIPLE_CHOICE || tt === QAUtils.STRING_COMPOSITE){
             self.inputs.val(value);
@@ -359,6 +356,10 @@ function TestInstance(test_info, row){
         self.set_skip(false);
         self.visible = true;
         self.comment_box.val(self.comment_box.val().replace(self.NOT_PERFORMED,""));
+        if (self.test_info.test.type == QAUtils.BOOLEAN){
+            self.set_value(self.value);
+        }
+
     }
 
     this.hide = function(){
@@ -372,6 +373,9 @@ function TestInstance(test_info, row){
         var tmp_val = self.value;
         self.set_skip(true);
         self.set_value(tmp_val);
+        if (self.test_info.test.type == QAUtils.BOOLEAN){
+            self.inputs.prop("checked", false);
+        }
 
         self.comment_box.val(self.NOT_PERFORMED);
     }
