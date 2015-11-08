@@ -8,21 +8,22 @@ function toggle_test_type(){
 
     if (val == "constant"){
         $(".field-constant_value, .field-hidden").show();
-        $(".field-calculation_procedure, .field-choices, .field-display_image").hide();
+        $(".field-calculation_procedure, .field-choices, .field-display_image, .field-skip_without_comment").hide();
 
     }else if (val == "composite" || val === "scomposite" ){
         $(".field-calculation_procedure, .field-hidden").show();
-        $(".field-constant_value, .field-choices").hide();
+        $(".field-constant_value, .field-choices, .field-skip_without_comment").hide();
 
     }else if (val === "upload"){
-        $(".field-calculation_procedure, .field-display_image").show();
+        $(".field-calculation_procedure, .field-display_image, .field-skip_without_comment").show();
         $(".field-constant_value, .field-choices, .field-hidden").hide();
 
     }else if (val == "multchoice"){
-        $(".field-choices").show();
+        $(".field-choices, .field-skip_without_comment").show();
         $(".field-constant_value, .field-calculation_procedure, .field-display_image, .field-hidden").hide();
 
     }else{
+        $(".field-skip_without_comment").show();
         $(".field-calculation_procedure").hide();
         $(".field-constant_value, .field-choices, .field-display_image, .field-hidden").hide();
     }

@@ -467,6 +467,7 @@ class Test(models.Model):
     )
 
     hidden = models.BooleanField(_("Hidden"), help_text=_("Don't display this test when performing QA"), default=False)
+    skip_without_comment = models.BooleanField(_("Skip without comment"), help_text=_("Allow users to skip this test without a comment"), default=False)
     display_image = models.BooleanField("Display image", help_text=_("Image uploads only: Show uploaded images under the testlist"), default=False)
     choices = models.CharField(max_length=2048, help_text=_("Comma seperated list of choices for multiple choice test types"), null=True, blank=True)
     constant_value = models.FloatField(help_text=_("Only required for constant value types"), null=True, blank=True)
