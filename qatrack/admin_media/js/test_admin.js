@@ -7,24 +7,24 @@ function toggle_test_type(){
     var val = $("#id_type").find("option:selected").val();
 
     if (val == "constant"){
-        $(".field-constant_value").show();
+        $(".field-constant_value, .field-hidden").show();
         $(".field-calculation_procedure, .field-choices, .field-display_image").hide();
 
     }else if (val == "composite" || val === "scomposite" ){
-        $(".field-calculation_procedure").show();
+        $(".field-calculation_procedure, .field-hidden").show();
         $(".field-constant_value, .field-choices").hide();
 
     }else if (val === "upload"){
         $(".field-calculation_procedure, .field-display_image").show();
-        $(".field-constant_value, .field-choices").hide();
+        $(".field-constant_value, .field-choices, .field-hidden").hide();
 
     }else if (val == "multchoice"){
         $(".field-choices").show();
-        $(".field-constant_value, .field-calculation_procedure, .field-display_image").hide();
+        $(".field-constant_value, .field-calculation_procedure, .field-display_image, .field-hidden").hide();
 
     }else{
         $(".field-calculation_procedure").hide();
-        $(".field-constant_value, .field-choices, .field-display_image").hide();
+        $(".field-constant_value, .field-choices, .field-display_image, .field-hidden").hide();
     }
 }
 
