@@ -122,7 +122,7 @@ def create_test_list_membership(test_list, test, order=0):
 
 
 #----------------------------------------------------------------------
-def create_test_instance(unit_test_info=None, value=1., created_by=None, work_completed=None, status=None, test_list_instance=None):
+def create_test_instance(test_list_instance, unit_test_info=None, value=1., created_by=None, work_completed=None, status=None):
     if unit_test_info is None:
         unit_test_info = create_unit_test_info()
 

@@ -1056,11 +1056,11 @@ class TestInstanceManager(models.Manager):
 
     #----------------------------------------------------------------------
     def in_progress(self):
-        return super(TestInstanceManager, self).filter(in_progress=True)
+        return super(TestInstanceManager, self).filter(test_list_instance__in_progress=True)
 
     #----------------------------------------------------------------------
     def complete(self):
-        return models.Manager.get_query_set(self).filter(in_progress=False)
+        return models.Manager.get_query_set(self).filter(test_list_instance__in_progress=False)
 
 
 #============================================================================
@@ -1093,7 +1093,7 @@ class TestInstance(models.Model):
     unit_test_info = models.ForeignKey(UnitTestInfo, editable=False)
 
     # keep track if this test was performed as part of a test list
-    test_list_instance = models.ForeignKey("TestListInstance", editable=False, null=True, blank=True)
+    test_list_instance = models.ForeignKey("TestListInstance", editable=False)
 
     work_started = models.DateTimeField(editable=False, db_index=True)
 
@@ -1101,7 +1101,6 @@ class TestInstance(models.Model):
     work_completed = models.DateTimeField(default=timezone.now,
                                           help_text=settings.DATETIME_HELP, db_index=True,
                                           )
-    in_progress = models.BooleanField(default=False, editable=False, db_index=True)
 
     # for keeping a very basic history
     created = models.DateTimeField(default=timezone.now)
@@ -1197,7 +1196,7 @@ class TestInstance(models.Model):
     def calculate_pass_fail(self):
         """set pass/fail status of the current value"""
 
-        if self.skipped or (self.value is None and self.in_progress):
+        if self.skipped or (self.value is None and self.test_list_instance.in_progress):
             self.pass_fail = NOT_DONE
         elif self.unit_test_info.test.is_boolean() and self.reference:
             self.bool_pass_fail()

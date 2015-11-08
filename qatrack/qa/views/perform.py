@@ -564,7 +564,6 @@ class PerformQA(PermissionRequiredMixin, CreateView):
                 created=now,
                 created_by=self.request.user,
                 modified_by=self.request.user,
-                in_progress=self.object.in_progress,
                 test_list_instance=self.object,
                 work_started=self.object.work_started,
                 work_completed=self.object.work_completed,
@@ -686,7 +685,7 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         formset = context["formset"]
 
         for ti_form in formset:
-            ti_form.in_progress = form.instance.in_progress
+            ti_form.in_progress = self.object.in_progress
 
         if formset.is_valid():
             self.object = form.save(commit=False)
@@ -758,7 +757,6 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         ti = test_instance
         ti.status = self.status
         ti.modified_by = self.request.user
-        ti.in_progress = self.object.in_progress
         ti.work_started = self.object.work_started
         ti.work_completed = self.object.work_completed
 

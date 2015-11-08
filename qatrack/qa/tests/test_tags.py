@@ -48,7 +48,7 @@ class TestTags(TestCase):
     def test_as_review_status(self):
         tli = utils.create_test_list_instance(unit_test_collection=self.unit_test_list)
         uti = utils.create_unit_test_info(unit=self.unit_test_list.unit, assigned_to=self.unit_test_list.assigned_to)
-        ti = utils.create_test_instance(unit_test_info=uti)
+        ti = utils.create_test_instance(tli, unit_test_info=uti)
         ti.comment = "test"
         ti.test_list_instance = tli
         tli.comment = "comment"

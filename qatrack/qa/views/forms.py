@@ -190,7 +190,7 @@ class UpdateTestInstanceForm(TestInstanceWidgetsMixin, forms.ModelForm):
     def __init__(self, *args, **kwargs):
 
         super(UpdateTestInstanceForm, self).__init__(*args, **kwargs)
-        self.in_progress = self.instance.in_progress
+        self.in_progress = self.instance.test_list_instance.in_progress
         self.fields["value"].required = False
         self.unit_test_info = self.instance.unit_test_info
         self.set_value_widget()
