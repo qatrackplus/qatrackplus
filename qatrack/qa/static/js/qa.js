@@ -212,7 +212,7 @@ function TestInstance(test_info, row){
     this.skip.change(function(){
         self.skipped = self.skip.is(":checked");
         if (self.skipped){
-            if (comment_on_skip){
+            if (comment_on_skip && !self.test_info.test.skip_without_comment){
                 self.comment.show(600);
             }
             if (self.test_info.test.type === QAUtils.BOOLEAN || self.test_info.test.type === QAUtils.UPLOAD){

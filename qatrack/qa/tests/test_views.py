@@ -956,7 +956,6 @@ class TestPerformQA(TestCase):
     #---------------------------------------------------------------------------
     def test_perform_invalid(self):
         data = {
-
             "work_completed": "11-07-2012 00:10",
             "work_started": "11-07-2012 00:09",
             "status": self.status.pk,
@@ -981,6 +980,7 @@ class TestPerformQA(TestCase):
     #---------------------------------------------------------------------------
     def test_skipped(self):
         data = {
+            "work_started": "11-07-2012 00:00",
             "work_completed": "11-07-2012 00:10",
             "status": self.status.pk,
             "form-TOTAL_FORMS": len(self.tests),
@@ -1002,9 +1002,33 @@ class TestPerformQA(TestCase):
             if f.unit_test_info.test.skip_required():
                 self.assertTrue(len(f.errors) > 0)
 
+    def test_skipped_no_comment_ok(self):
+        data = {
+            "work_started": "11-07-2012 00:00",
+            "work_completed": "11-07-2012 00:10",
+            "status": self.status.pk,
+            "form-TOTAL_FORMS": len(self.tests),
+            "form-INITIAL_FORMS": "0",
+            "form-MAX_NUM_FORMS": "",
+        }
+
+        for test_idx, test in enumerate(self.tests):
+            test.skip_without_comment = True
+            test.save()
+
+            data["form-%d-test" % test_idx] = test.pk
+            data["form-%d-skipped" % test_idx] = "true"
+            data["form-%d-comment" % test_idx] = ""
+
+        response = self.client.post(self.url, data=data)
+
+        # skipped, no comment, but comment not required so should be 302
+        self.assertEqual(response.status_code, 302)
+
     #---------------------------------------------------------------------------
     def test_skipped_with_val(self):
         data = {
+            "work_started": "11-07-2012 00:09",
             "work_completed": "11-07-2012 00:10",
             "status": self.status.pk,
             "form-TOTAL_FORMS": len(self.tests),
@@ -1030,6 +1054,7 @@ class TestPerformQA(TestCase):
     #---------------------------------------------------------------------------
     def test_skipped_with_invalid_val(self):
         data = {
+            "work_started": "11-07-2012 00:09",
             "work_completed": "11-07-2012 00:10",
             "status": self.status.pk,
             "form-TOTAL_FORMS": len(self.tests),
