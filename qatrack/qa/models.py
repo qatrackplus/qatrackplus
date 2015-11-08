@@ -466,6 +466,7 @@ class Test(models.Model):
         help_text=_("Indicate if this test is a %s" % (','.join(x[1].title() for x in TEST_TYPE_CHOICES)))
     )
 
+    hidden = models.BooleanField(_("Hidden"), help_text=_("Don't display this test when performing QA"), default=False)
     display_image = models.BooleanField("Display image", help_text=_("Image uploads only: Show uploaded images under the testlist"), default=False)
     choices = models.CharField(max_length=2048, help_text=_("Comma seperated list of choices for multiple choice test types"), null=True, blank=True)
     constant_value = models.FloatField(help_text=_("Only required for constant value types"), null=True, blank=True)
@@ -473,6 +474,7 @@ class Test(models.Model):
     calculation_procedure = models.TextField(null=True, blank=True, help_text=_(
         "For Composite Tests Only: Enter a Python snippet for evaluation of this test."
     ))
+
 
     # for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)
