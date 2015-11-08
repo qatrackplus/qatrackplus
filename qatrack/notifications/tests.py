@@ -43,10 +43,9 @@ class TestEmailSent(TestCase):
 
         for i, (v, test, status) in enumerate(zip(self.values, self.tests, self.statuses)):
             uti = models.UnitTestInfo.objects.get(test=test, unit=utc.unit)
-            ti = utils.create_test_instance(unit_test_info=uti, value=v, status=status)
+            ti = utils.create_test_instance(tli, unit_test_info=uti, value=v, status=status)
             ti.reference = self.ref
             ti.tolerance = self.tol
-            ti.test_list_instance = tli
             if i == 0:
                 ti.skipped = True
             elif i == 1:

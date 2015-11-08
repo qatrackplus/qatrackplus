@@ -228,10 +228,10 @@ class TestControlImage(TestCase):
             for x in range(n):
                 tli = utils.create_test_list_instance(unit_test_collection=utc)
                 utils.create_test_instance(
+                    tli,
                     unit_test_info=uti,
                     value=random.gauss(1, 0.5),
                     status=status,
-                    test_list_instance=tli,
                 )
 
             request = self.factory.get(url)
@@ -245,6 +245,8 @@ class TestControlImage(TestCase):
         test = utils.create_test()
         unit = utils.create_unit()
         uti = utils.create_unit_test_info(test=test, unit=unit)
+        utc = utils.create_unit_test_collection(test_collection=tl, unit=unit)
+        tli = utils.create_test_list_instance(unit_test_collection=utc)
 
         status = utils.create_status()
 
@@ -262,6 +264,7 @@ class TestControlImage(TestCase):
         # generate some data that the control chart fit function won't be able to fit
         for x in range(10):
             utils.create_test_instance(
+                tli,
                 value=x,
                 status=status,
                 unit_test_info=uti
@@ -278,6 +281,8 @@ class TestControlImage(TestCase):
         test = utils.create_test()
         unit = utils.create_unit()
         uti = utils.create_unit_test_info(test=test, unit=unit)
+        utc = utils.create_unit_test_collection(test_collection=tl, unit=unit)
+        tli = utils.create_test_list_instance(unit_test_collection=utc)
 
         status = utils.create_status()
 
@@ -301,6 +306,7 @@ class TestControlImage(TestCase):
         # generate some data that the control chart fit function won't be able to fit
         for x in range(10):
             utils.create_test_instance(
+                tli,
                 value=x,
                 status=status,
                 unit_test_info=uti
@@ -1259,14 +1265,10 @@ class TestEditTestListInstance(TestCase):
 
         uti = models.UnitTestInfo.objects.get(test=self.test)
 
-        self.ti = utils.create_test_instance(unit_test_info=uti, value=1, status=self.status)
-        self.ti.test_list_instance = self.tli
-        self.ti.save()
+        self.ti = utils.create_test_instance(self.tli, unit_test_info=uti, value=1, status=self.status)
 
         utib = models.UnitTestInfo.objects.get(test=self.test_bool)
-        self.tib = utils.create_test_instance(unit_test_info=utib, value=1, status=self.status)
-        self.tib.test_list_instance = self.tli
-        self.tib.save()
+        self.tib = utils.create_test_instance(self.tli, unit_test_info=utib, value=1, status=self.status)
 
         self.url = reverse("edit_tli", kwargs={"pk": self.tli.pk})
         self.client.login(username="user", password="password")
@@ -1460,9 +1462,7 @@ class TestReviewTestListInstance(TestCase):
 
         uti = models.UnitTestInfo.objects.get(unit=self.utc.unit, test=self.test)
 
-        self.ti = utils.create_test_instance(unit_test_info=uti, value=1, status=self.status)
-        self.ti.test_list_instance = self.tli
-        self.ti.save()
+        self.ti = utils.create_test_instance(self.tli, unit_test_info=uti, value=1, status=self.status)
 
         self.url = reverse("review_test_list_instance", kwargs={"pk": self.tli.pk})
         self.client.login(username="user", password="password")
