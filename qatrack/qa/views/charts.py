@@ -32,20 +32,21 @@ def get_test_lists_for_unit_frequencies(request):
 
     units = request.GET.getlist("units[]") or Unit.objects.values_list("pk", flat=True)
     frequencies = request.GET.getlist("frequencies[]") or models.Frequency.objects.values_list("pk", flat=True)
+    include_inactive = request.GET.get("inactive") == "true"
 
     fq = Q(frequency__in=frequencies)
     if '0' in frequencies:
         fq |= Q(frequency=None)
 
-    test_lists = models.UnitTestCollection.objects.filter(
-        fq,
-        unit__in=units,
+    utcs = models.UnitTestCollection.objects.filter(fq, unit__in=units)
+    if not include_inactive:
+        utcs =  utcs.exclude(active=False)
+
+    test_lists = utcs.filter(
         content_type__name="test list"
     ).values_list("object_id", flat=True)
 
-    test_list_cycle_lists = models.UnitTestCollection.objects.filter(
-        fq,
-        unit__in=units,
+    test_list_cycle_lists = utcs.filter(
         content_type__name="test list cycle"
     ).values_list("object_id", flat=True)
 
