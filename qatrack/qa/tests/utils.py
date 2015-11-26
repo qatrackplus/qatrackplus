@@ -152,8 +152,12 @@ def create_test_instance(test_list_instance, unit_test_info=None, value=1., crea
 
 #----------------------------------------------------------------------
 def create_modality(energy=6, particle=PHOTON):
-    m, _ = Modality.objects.get_or_create(type=particle, energy=energy)
-    m.save()
+    if particle == "photon":
+        unit, particle = "MV", "Photon"
+    else:
+        unit, particle = "MeV", "Electron"
+    name = "%g%s %s" % (energy, unit, particle)
+    m, _ = Modality.objects.get_or_create(name=name)
     return m
 
 

@@ -40,21 +40,19 @@ class Modality(models.Model):
 
     """
 
-    type_choices = ((PHOTON, "Photon"), (ELECTRON, "Electron"),)
-    type = models.CharField(_("Treatement modality type"), choices=type_choices, max_length=20)
-    energy = models.FloatField(help_text=_("Nominal energy (in MV for photons and MeV for electrons"))
+    name = models.CharField(
+        _("Name"),
+        max_length=255,
+        help_text=_("Descriptive name for this modality"),
+        unique=True
+    )
 
     class Meta:
-        verbose_name_plural = "Modalities"
-        unique_together = [("type", "energy")]
+        verbose_name_plural = _("Modalities")
 
     #---------------------------------------------------------------------------
     def __unicode__(self):
-        if self.type == "photon":
-            unit, particle = "MV", "Photon"
-        else:
-            unit, particle = "MeV", "Electron"
-        return "<Modality(%.2f%s,%s)>" % (self.energy, unit, particle)
+        return self.name
 
 # class UnitManager(models.Manager):
     #---------------------------------------------------------------------------
