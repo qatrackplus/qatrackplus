@@ -885,6 +885,9 @@ class UnitTestCollection(models.Model):
         unique_together = ("unit", "frequency", "content_type", "object_id",)
         verbose_name_plural = _("Assign Test Lists to Units")
         # ordering = ("testlist__name","testlistcycle__name",)
+        permissions = (
+            ("can_view_overview", "Can view program overview"),
+        )
 
     #----------------------------------------------------------------------
     def calc_due_date(self):
@@ -1117,7 +1120,6 @@ class TestInstance(models.Model):
         permissions = (
             ("can_view_history", "Can see test history when performing QA"),
             ("can_view_charts", "Can view charts of test history"),
-            ("can_view_overview", "Can view program overview"),
             ("can_review", "Can review & approve tests"),
             ("can_skip_without_comment", "Can skip tests without comment"),
             ("can_review_own_tests", "Can review & approve  self-performed tests"),

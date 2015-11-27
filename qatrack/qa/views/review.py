@@ -185,7 +185,7 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
     """View which :model:`qa.UnitTestCollection` are overdue & coming due"""
 
     template_name = "qa/overview_by_due_date.html"
-    permission_required = "qa.can_review"
+    permission_required = ["qa.can_review", "qa.can_view_overview"]
     raise_exception = True
 
     DUE_DISPLAY_ORDER = (
@@ -195,6 +195,13 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
         ("this_month", "Due This Month"),
         ("next_month", "Due Next Month"),
     )
+
+    def check_permissions(self, request):
+        for perm in self.get_permission_required(request):
+            if request.user.has_perm(perm):
+                return True
+        return False
+
 
     #----------------------------------------------------------------------
     def get_queryset(self):
@@ -269,8 +276,14 @@ class Overview(PermissionRequiredMixin, TemplateView):
     """Overall status of the QA Program"""
 
     template_name = "qa/overview.html"
-    permission_required = "qa.can_review"
+    permission_required = ["qa.can_review", "qa.can_view_overview"]
     raise_exception = True
+
+    def check_permissions(self, request):
+        for perm in self.get_permission_required(request):
+            if request.user.has_perm(perm):
+                return True
+        return False
 
     #----------------------------------------------------------------------
     def get_queryset(self):
