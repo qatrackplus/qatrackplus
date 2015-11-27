@@ -110,6 +110,7 @@ PERMISSIONS = (
         "Reviewing",
         (
             ("qa.can_view_completed", "Can view previously completed instances", "Allow a user to view previous test list results"),
+            ("qa.can_view_overview", "Can view program overview", "Allows a user to view the overall program status"),
             ("qa.can_review", "Can review tests", "Allows a user to perform review & approval functions"),
             ("qa.can_view_charts", "Can chart test history", "Gives user the ability to view and create charts of historical test results"),
             ("qa.can_review_own_tests", "Can review self-performed tests", "Allows a user to perform review & approval functions on self-performed tests"),
@@ -1116,6 +1117,7 @@ class TestInstance(models.Model):
         permissions = (
             ("can_view_history", "Can see test history when performing QA"),
             ("can_view_charts", "Can view charts of test history"),
+            ("can_view_overview", "Can view program overview"),
             ("can_review", "Can review & approve tests"),
             ("can_skip_without_comment", "Can skip tests without comment"),
             ("can_review_own_tests", "Can review & approve  self-performed tests"),
