@@ -110,6 +110,7 @@ PERMISSIONS = (
         "Reviewing",
         (
             ("qa.can_view_completed", "Can view previously completed instances", "Allow a user to view previous test list results"),
+            ("qa.can_view_overview", "Can view program overview", "Allows a user to view the overall program status"),
             ("qa.can_review", "Can review tests", "Allows a user to perform review & approval functions"),
             ("qa.can_view_charts", "Can chart test history", "Gives user the ability to view and create charts of historical test results"),
             ("qa.can_review_own_tests", "Can review self-performed tests", "Allows a user to perform review & approval functions on self-performed tests"),
@@ -884,6 +885,9 @@ class UnitTestCollection(models.Model):
         unique_together = ("unit", "frequency", "content_type", "object_id",)
         verbose_name_plural = _("Assign Test Lists to Units")
         # ordering = ("testlist__name","testlistcycle__name",)
+        permissions = (
+            ("can_view_overview", "Can view program overview"),
+        )
 
     #----------------------------------------------------------------------
     def calc_due_date(self):
