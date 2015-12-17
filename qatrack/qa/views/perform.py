@@ -81,9 +81,23 @@ class Upload(JSONResponseMixin, View):
     #----------------------------------------------------------------------
     def post(self, *args, **kwargs):
         """process file, apply calculation procedure and return results"""
+        if self.request.POST.get('filename'):
+            self.reprocess()
+        else:
+            self.handle_upload()
 
-        self.handle_upload()
 
+        return self.run_calc()
+
+    def reprocess(self):
+        tli = self.request.POST.get("test_list_instance")
+        self.file_name = self.request.POST.get("filename")
+        try:
+            self.upload = open(os.path.join(settings.UPLOAD_ROOT, "%s" % tli, self.file_name), "r+b")
+        except IOError:
+            self.upload = None
+
+    def run_calc(self):
         self.set_calculation_context()
 
         results = {
@@ -93,6 +107,10 @@ class Upload(JSONResponseMixin, View):
             'errors': [],
             "result": None,
         }
+
+        if self.upload is None:
+            results["errors"] = ["Original file not found. Please re-upload."]
+            return self.render_json_response(results)
 
         try:
             test = models.Test.objects.get(pk=self.request.POST.get("test_id"))
@@ -171,8 +189,9 @@ class Upload(JSONResponseMixin, View):
     #----------------------------------------------------------------------
     def get_json_data(self, name):
         """return python data from GET json data"""
+        data = self.request.POST
 
-        json_string = self.request.POST.get(name)
+        json_string = data.get(name)
         if not json_string:
             return
 
