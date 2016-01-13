@@ -57,16 +57,22 @@ def process_file_upload_form(ti_form, test_list_instance):
     upload_to_process = (
         ti_form.unit_test_info.test.is_upload()
         and not ti_form.cleaned_data["skipped"]
-        and not ti_form.in_progress
         and ti_form.cleaned_data["string_value"].strip()
     )
 
     if upload_to_process:
         fname = ti_form.cleaned_data["string_value"]
         src = os.path.join(settings.TMP_UPLOAD_ROOT, fname)
+
+        if not os.path.exists(src):
+            # has already been moved (i.e. we are completing an
+            # in progress list or editing an already complete list
+            return
+
         d = os.path.join(settings.UPLOAD_ROOT, "%s" % test_list_instance.pk)
         if not os.path.exists(d):
             os.mkdir(d)
+
         dest = os.path.join(settings.UPLOAD_ROOT, d, fname)
         shutil.move(src, dest)
 
@@ -203,11 +209,7 @@ class Upload(JSONResponseMixin, View):
     #----------------------------------------------------------------------
     def is_image(self):
         """check if the uploaded file is an image"""
-
-        if imghdr.what(self.upload.name):
-            return True
-        else:
-            return False
+        return self.upload and imghdr.what(self.upload.name)
 
 
 #============================================================================
