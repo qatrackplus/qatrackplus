@@ -270,7 +270,8 @@ class BaseChartView(View):
             if relative and ti.reference and ti.reference.value != 0. and not ti.tolerance.type == models.ABSOLUTE:
                 tols = ti.tolerance.tolerances_for_value(100)
                 for k in tols:
-                    tols[k] -= 100.
+                    if tols[k] is not None:
+                        tols[k] -= 100.
             else:
                 tols = ti.tolerance.tolerances_for_value(ref_value)
 

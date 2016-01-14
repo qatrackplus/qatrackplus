@@ -380,6 +380,24 @@ class TestChartView(TestCase):
         expected = {"tests": [self.tests[0].pk]}
         self.assertDictEqual(values, expected)
 
+    def test_instance_to_point_relative_with_none_tol(self):
+
+        ref = qatrack.qa.models.Reference(value=100)
+        tol = utils.create_tolerance(
+            tol_type=models.PERCENT,
+            tol_low=None,
+            tol_high=None
+        )
+        ti = qatrack.qa.models.TestInstance(
+            reference=ref,
+            tolerance=tol,
+            value=100
+        )
+        ti.value_display = lambda: str(ti.value)
+        view = views.charts.BaseChartView()
+        point = view.test_instance_to_point(ti, relative=True)
+        self.assertIsNone(point['tol_low'])
+
 
 #============================================================================
 class TestChartData(TestCase):
