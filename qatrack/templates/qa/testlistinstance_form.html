@@ -60,9 +60,15 @@
     </div>
 </div>
 
-{% if test_list.description %}
+{% if test_list.description or unit_test_collection.tests_object.description %}
 <div id="test-list-info" class="row-fluid" style="display:none;">
     <div class="span12">
+        {% if days %}
+            <pre >
+                {{unit_test_collection.tests_object.description|safe}}
+            </pre>
+            <h5>Day {{current_day}}</h5>
+        {% endif %}
         <pre >
             {{test_list.description|safe}}
         </pre>
