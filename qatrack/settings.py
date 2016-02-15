@@ -377,6 +377,31 @@ ORDER_UNITS_BY = "number"
 # Enable or disable the "Difference" column when reviewing test lists
 REVIEW_DIFF_COL = False
 
+# default display settings for test statuses
+TEST_STATUS_DISPLAY = {
+    'fail': "Fail",
+    'not_done': "Not Done",
+    'done': "Done",
+    'ok': "OK",
+    'tolerance': "Tolerance",
+    'action': "Action",
+    'no_tol': "No Tol Set",
+}
+
+# default short display settings for test statuses
+TEST_STATUS_DISPLAY_SHORT = {
+    'fail': "Fail",
+    'not_done': "Not Done",
+    'done': "Done",
+    'ok': "OK",
+    'tolerance': "TOL",
+    'action': "ACT",
+    'no_tol': "NO TOL",
+}
+
+
+
+
 #------------------------------------------------------------------------------
 # Testing settings
 
