@@ -335,6 +335,8 @@ td.review-value span {
     white-space: nowrap;
     overflow:hidden;
 }
+td.review-diff,
+th.review-diff,
 td.review-ref,
 th.review-ref {
     width:60px;
