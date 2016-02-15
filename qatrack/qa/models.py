@@ -71,12 +71,19 @@ ACT_LOW = "act_low"
 TOL_HIGH = "tol_high"
 TOL_LOW = "tol_low"
 
+status_displays = settings.TEST_STATUS_DISPLAY
+NOT_DONE_DISP = status_displays.get("not_done", "Not Done")
+OK_DISP = status_displays.get("ok", "OK")
+TOL_DISP = status_displays.get("tolerance", "Tolerance")
+ACT_DISP = status_displays.get("action", "Action")
+NO_TOL_DISP = status_displays.get("no_tol", "No Tol Set")
+
 PASS_FAIL_CHOICES = (
-    (NOT_DONE, "Not Done"),
-    (OK, "OK"),
-    (TOLERANCE, "Tolerance"),
-    (ACTION, "Action"),
-    (NO_TOL, "No Tol Set"),
+    (NOT_DONE, NOT_DONE_DISP),
+    (OK, OK_DISP),
+    (TOLERANCE, TOL_DISP),
+    (ACTION, ACT_DISP),
+    (NO_TOL, NO_TOL_DISP),
 )
 PASS_FAIL_CHOICES_DISPLAY = dict(PASS_FAIL_CHOICES)
 
@@ -294,13 +301,13 @@ class Tolerance(models.Model):
     """
 
     type = models.CharField(max_length=20, help_text=_("Select whether this will be an absolute or relative tolerance criteria"), choices=TOL_TYPE_CHOICES)
-    act_low = models.FloatField(verbose_name=_("Action Low"), help_text=_("Value of lower action level"), null=True, blank=True)
-    tol_low = models.FloatField(verbose_name=_("Tolerance Low"), help_text=_("Value of lower tolerance level"), null=True, blank=True)
-    tol_high = models.FloatField(verbose_name=_("Tolerance High"), help_text=_("Value of upper tolerance level"), null=True, blank=True)
-    act_high = models.FloatField(verbose_name=_("Action High"), help_text=_("Value of upper action level"), null=True, blank=True)
+    act_low = models.FloatField(verbose_name=_("%s Low" % ACT_DISP ), help_text=_("Value of lower %s level" % ACT_DISP), null=True, blank=True)
+    tol_low = models.FloatField(verbose_name=_("%s Low" % TOL_DISP), help_text=_("Value of lower %s level" % TOL_DISP), null=True, blank=True)
+    tol_high = models.FloatField(verbose_name=_("%s High" % TOL_DISP), help_text=_("Value of upper %s level" % TOL_DISP), null=True, blank=True)
+    act_high = models.FloatField(verbose_name=_("%s High" % ACT_DISP), help_text=_("Value of upper %s level" % ACT_DISP), null=True, blank=True)
 
     mc_pass_choices = models.CharField(
-        verbose_name=_("Multiple Choice Pass Values"),
+        verbose_name=_("Multiple Choice %s Values" % OK_DISP),
         max_length=2048,
         help_text=_("Comma seperated list of choices that are considered passing"),
         null=True,
@@ -308,7 +315,7 @@ class Tolerance(models.Model):
     )
 
     mc_tol_choices = models.CharField(
-        verbose_name=_("Multiple Choice Tolerance Values"),
+        verbose_name=_("Multiple Choice %s Values" % TOL_DISP),
         max_length=2048,
         help_text=_("Comma seperated list of choices that are considered at tolerance"),
         null=True,
@@ -372,7 +379,7 @@ class Tolerance(models.Model):
     def clean_tols(self):
         if self.type in (ABSOLUTE, PERCENT):
             if all([getattr(self, c) is None for c in (ACT_HIGH, ACT_LOW, TOL_HIGH, TOL_LOW,)]):
-                raise ValidationError({ACT_LOW: ["You must set at least one tolerance or action level for this tolerance type"]})
+                raise ValidationError({ACT_LOW: ["You must set at least one %s or %s level for this tolerance type" %(TOL_DISP, ACT_DISP)]})
 
     #----------------------------------------------------------------------
     def clean_fields(self, exclude=None):
@@ -416,7 +423,7 @@ class Tolerance(models.Model):
             vals = ["%.2f%%" % v if v is not None else '--' for v in vals]
             return "Percent(%s, %s, %s, %s)" % tuple(vals)
         elif self.type == MULTIPLE_CHOICE:
-            return "M.C.(Pass=%s, Tol=%s)" % (":".join(self.pass_choices()), ":".join(self.tol_choices()))
+            return "M.C.(%s=%s, %s=%s)" % (OK_DISP, ":".join(self.pass_choices()), TOL_DISP, ":".join(self.tol_choices()))
 
 
 #============================================================================
@@ -1231,7 +1238,7 @@ class TestInstance(models.Model):
         if self.skipped:
             return "Skipped"
         elif self.value is None and self.string_value in (None, ""):
-            return "Not Done"
+            return NOT_DONE_DISP
 
         test = self.unit_test_info.test
         if test.is_boolean():

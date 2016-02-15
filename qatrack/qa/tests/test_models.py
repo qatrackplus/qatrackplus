@@ -192,7 +192,7 @@ class TestTolerance(TestCase):
     #----------------------------------------------------------------------
     def test_mc_string_rep(self):
         t = models.Tolerance(mc_pass_choices="a,b,c", mc_tol_choices="d,e", type=models.MULTIPLE_CHOICE)
-        self.assertEqual(t.name, "M.C.(Pass=a:b:c, Tol=d:e)")
+        self.assertEqual(t.name, "M.C.(%s=a:b:c, %s=d:e)" %(settings.TEST_STATUS_DISPLAY['ok'], settings.TEST_STATUS_DISPLAY['tolerance']))
 
 
 #====================================================================================

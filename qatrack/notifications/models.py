@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import Group
 
@@ -8,9 +9,12 @@ import handlers  # NOQA
 TOLERANCE = 10
 ACTION = 20
 
+tol = settings.TEST_STATUS_DISPLAY.get("tolerance", "Tolerance")
+act = settings.TEST_STATUS_DISPLAY.get("action", "Action")
+
 WARNING_LEVELS = (
-    (TOLERANCE, "Notify on Tolerance or Action"),
-    (ACTION, "Notify on Test at Action level only"),
+    (TOLERANCE, "Notify on %s or %s" % (tol, act)),
+    (ACTION, "Notify on Test at %s level only" % (act)),
 )
 
 #============================================================================
