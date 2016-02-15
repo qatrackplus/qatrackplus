@@ -374,6 +374,9 @@ ICON_SETTINGS = {
 # Display ordering on the "Choose Unit" page. (Use "name" or "number")
 ORDER_UNITS_BY = "number"
 
+# Enable or disable the "Difference" column when reviewing test lists
+REVIEW_DIFF_COL = False
+
 #------------------------------------------------------------------------------
 # Testing settings
 
