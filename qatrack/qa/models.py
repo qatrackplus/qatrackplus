@@ -1454,7 +1454,16 @@ class TestListCycle(TestCollectionInterface):
     based on the list that was last completed.
     """
 
+    DAY = "day"
+    TEST_LIST_NAME = "tlname"
+    DAY_OPTIONS_TEXT_CHOICES = (
+        (DAY, "Day"),
+        (TEST_LIST_NAME, "Test List Name"),
+    )
+
     test_lists = models.ManyToManyField(TestList, through="TestListCycleMembership")
+    drop_down_label = models.CharField(max_length=128, default="Choose Day")
+    day_option_text = models.CharField(max_length=8, choices=DAY_OPTIONS_TEXT_CHOICES, default=DAY)
 
     #----------------------------------------------------------------------
     def __len__(self):
@@ -1516,6 +1525,14 @@ class TestListCycle(TestCollectionInterface):
             if not first:
                 return None, None
             return 0, self.first()
+
+    def days_display(self):
+        names = self.testlistcyclemembership_set.values_list("test_list__name", flat=True)
+        days = range(1, len(names)+1)
+        if self.day_option_text == self.TEST_LIST_NAME:
+            return zip(days, names)
+
+        return [(d, "Day %d" % d) for d in days]
 
     #----------------------------------------------------------------------
     def __unicode__(self):

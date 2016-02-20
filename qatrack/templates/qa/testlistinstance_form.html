@@ -167,19 +167,21 @@
                 {% endif %}
 
                 {% if days %}
-                <div class="input-prepend" id="cycle-day-wrapper">
-                    <label for="cycle-day" class="add-on">
-                        Choose Day:
-                    </label>
-                    <select id="cycle-day" class="input-small" {% if not days %}disabled="disabled"{%endif%}>
-                        <option value="next">Next scheduled</option>
-                        {% for day in days %}
-                            <option value="{{day}}" {% if day == current_day %}selected="selected"{% endif %}>
-                                Day {{day}}
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
+                    {% with unit_test_collection.tests_object as tlc %}
+                        <div class="input-prepend" id="cycle-day-wrapper">
+                            <label for="cycle-day" class="add-on">
+                                {{ tlc.drop_down_label }}:
+                            </label>
+                            <select id="cycle-day" class="input-small" {% if not days %}disabled="disabled"{%endif%}>
+                                <option value="next">Next scheduled</option>
+                                {% for day, display in days %}
+                                    <option value="{{day}}" {% if day == current_day %}selected="selected"{% endif %}>
+                                    {{ display }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    {% endwith %}
                 {% endif %}
 
             </div>

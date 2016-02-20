@@ -649,7 +649,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
         ndays = len(self.unit_test_col.tests_object)
         if ndays > 1:
-            context['days'] = range(1, ndays + 1)
+            context['days'] = self.unit_test_col.tests_object.days_display()
 
         context["test_list"] = self.test_list
         context["unit_test_infos"] = json.dumps(self.template_unit_test_infos())
