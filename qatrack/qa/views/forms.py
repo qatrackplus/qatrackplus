@@ -2,7 +2,7 @@ from django import forms
 from django.core.validators import MaxLengthValidator
 from django.core.exceptions import ValidationError
 from django.forms.models import inlineformset_factory
-from django.forms.widgets import RadioSelect, Select, HiddenInput
+from django.forms.widgets import RadioSelect, Select, HiddenInput, NumberInput
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django.contrib.contenttypes.models import ContentType
@@ -93,6 +93,8 @@ class TestInstanceWidgetsMixin(object):
             self.fields["string_value"].widget = Select(choices=[("", "")] + self.unit_test_info.test.get_choices())
         elif test_type == models.UPLOAD:
             self.fields["string_value"].widget = HiddenInput()
+        else:
+            self.fields["value"].widget = NumberInput(attrs={"step": "any"})
 
         if test_type in (models.BOOLEAN, models.MULTIPLE_CHOICE):
             if hasattr(self, "instance") and self.instance.value is not None:
