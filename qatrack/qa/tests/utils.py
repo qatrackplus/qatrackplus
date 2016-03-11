@@ -122,7 +122,7 @@ def create_test_list_membership(test_list, test, order=0):
 
 
 #----------------------------------------------------------------------
-def create_test_instance(unit_test_info=None, value=1., created_by=None, work_completed=None, status=None, test_list_instance=None):
+def create_test_instance(test_list_instance, unit_test_info=None, value=1., created_by=None, work_completed=None, status=None):
     if unit_test_info is None:
         unit_test_info = create_unit_test_info()
 
@@ -152,8 +152,12 @@ def create_test_instance(unit_test_info=None, value=1., created_by=None, work_co
 
 #----------------------------------------------------------------------
 def create_modality(energy=6, particle=PHOTON):
-    m, _ = Modality.objects.get_or_create(type=particle, energy=energy)
-    m.save()
+    if particle == "photon":
+        unit, particle = "MV", "Photon"
+    else:
+        unit, particle = "MeV", "Electron"
+    name = "%g%s %s" % (energy, unit, particle)
+    m, _ = Modality.objects.get_or_create(name=name)
     return m
 
 

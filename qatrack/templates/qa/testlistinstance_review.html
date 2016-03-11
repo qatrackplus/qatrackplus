@@ -121,10 +121,13 @@
                             <th>Test<div></div></th>
                             <th class="review-value">Value</th>
                             <th class="review-ref">Reference</th>
+                            {% if REVIEW_DIFF_COL %}
+                                <th class="review-diff">Difference</th>
+                            {% endif %}
                             <th>Comment</th>
                             <th class="qa-history">History<br/>
                                 {% for d in history_dates %}
-                                    <span class="label history-label" title="{{d}}">{{d|date:"dMy"}}</span>
+                                    <span class="history-label" title="{{d}}">{{d|date:"dMy"}}</span>
                                 {% endfor %}
                                 <div></div>
                             </th>
@@ -174,6 +177,11 @@
                                 <td class="review-ref">
                                     {% reference_tolerance_span ti.unit_test_info.test ti.reference ti.tolerance%}
                                 </td>
+                                {% if REVIEW_DIFF_COL %}
+                                    <td class="review-diff">
+                                        {% if not ti.string_value %}{{ti.diff_display}}{% endif %}
+                                    </td>
+                                {% endif %}
                                 <td>
                                     {% if ti.comment %}
                                         <a title="{{ti.comment}}">Hover for Comment</a>

@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.test import TestCase
 from qatrack.qa import models
 from qatrack.qa.views import forms
@@ -48,7 +49,7 @@ class TestTags(TestCase):
     def test_as_review_status(self):
         tli = utils.create_test_list_instance(unit_test_collection=self.unit_test_list)
         uti = utils.create_unit_test_info(unit=self.unit_test_list.unit, assigned_to=self.unit_test_list.assigned_to)
-        ti = utils.create_test_instance(unit_test_info=uti)
+        ti = utils.create_test_instance(tli, unit_test_info=uti)
         ti.comment = "test"
         ti.test_list_instance = tli
         tli.comment = "comment"
@@ -98,7 +99,7 @@ class TestRefTolSpan(TestCase):
             act_low=-2, tol_low=-1, tol_high=1, act_high=2,
         )
         result = qa_tags.reference_tolerance_span(t, r, tol)
-        self.assertIn("ACT L", result)
+        self.assertIn("%s L" %(settings.TEST_STATUS_DISPLAY_SHORT['action']), result)
 
     #----------------------------------------------------------------------
     def test_percent(self):
@@ -123,7 +124,7 @@ class TestToleranceForReference(TestCase):
 
     def test_bool(self):
         r = models.Reference(value=1, type=models.BOOLEAN)
-        self.assertIn("Pass: Yes", qa_tags.tolerance_for_reference(None, r))
+        self.assertIn("%s: Yes" % (settings.TEST_STATUS_DISPLAY['ok']), qa_tags.tolerance_for_reference(None, r))
 
     #----------------------------------------------------------------------
     def test_no_tol(self):
@@ -133,7 +134,7 @@ class TestToleranceForReference(TestCase):
     #----------------------------------------------------------------------
     def test_multiple_choice(self):
         tol = models.Tolerance(type=models.MULTIPLE_CHOICE, mc_tol_choices="foo", mc_pass_choices="")
-        self.assertIn("Tol: foo", qa_tags.tolerance_for_reference(tol, None))
+        self.assertIn("%s: foo" % (settings.TEST_STATUS_DISPLAY['tolerance']), qa_tags.tolerance_for_reference(tol, None))
 
     #----------------------------------------------------------------------
     def test_absolute(self):

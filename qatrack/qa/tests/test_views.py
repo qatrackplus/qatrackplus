@@ -228,10 +228,10 @@ class TestControlImage(TestCase):
             for x in range(n):
                 tli = utils.create_test_list_instance(unit_test_collection=utc)
                 utils.create_test_instance(
+                    tli,
                     unit_test_info=uti,
                     value=random.gauss(1, 0.5),
                     status=status,
-                    test_list_instance=tli,
                 )
 
             request = self.factory.get(url)
@@ -245,6 +245,8 @@ class TestControlImage(TestCase):
         test = utils.create_test()
         unit = utils.create_unit()
         uti = utils.create_unit_test_info(test=test, unit=unit)
+        utc = utils.create_unit_test_collection(test_collection=tl, unit=unit)
+        tli = utils.create_test_list_instance(unit_test_collection=utc)
 
         status = utils.create_status()
 
@@ -262,6 +264,7 @@ class TestControlImage(TestCase):
         # generate some data that the control chart fit function won't be able to fit
         for x in range(10):
             utils.create_test_instance(
+                tli,
                 value=x,
                 status=status,
                 unit_test_info=uti
@@ -278,6 +281,8 @@ class TestControlImage(TestCase):
         test = utils.create_test()
         unit = utils.create_unit()
         uti = utils.create_unit_test_info(test=test, unit=unit)
+        utc = utils.create_unit_test_collection(test_collection=tl, unit=unit)
+        tli = utils.create_test_list_instance(unit_test_collection=utc)
 
         status = utils.create_status()
 
@@ -301,6 +306,7 @@ class TestControlImage(TestCase):
         # generate some data that the control chart fit function won't be able to fit
         for x in range(10):
             utils.create_test_instance(
+                tli,
                 value=x,
                 status=status,
                 unit_test_info=uti
@@ -373,6 +379,24 @@ class TestChartView(TestCase):
         values = json.loads(response.content)
         expected = {"tests": [self.tests[0].pk]}
         self.assertDictEqual(values, expected)
+
+    def test_instance_to_point_relative_with_none_tol(self):
+
+        ref = qatrack.qa.models.Reference(value=100)
+        tol = utils.create_tolerance(
+            tol_type=models.PERCENT,
+            tol_low=None,
+            tol_high=None
+        )
+        ti = qatrack.qa.models.TestInstance(
+            reference=ref,
+            tolerance=tol,
+            value=100
+        )
+        ti.value_display = lambda: str(ti.value)
+        view = views.charts.BaseChartView()
+        point = view.test_instance_to_point(ti, relative=True)
+        self.assertIsNone(point['tol_low'])
 
 
 #============================================================================
@@ -956,7 +980,6 @@ class TestPerformQA(TestCase):
     #---------------------------------------------------------------------------
     def test_perform_invalid(self):
         data = {
-
             "work_completed": "11-07-2012 00:10",
             "work_started": "11-07-2012 00:09",
             "status": self.status.pk,
@@ -981,6 +1004,7 @@ class TestPerformQA(TestCase):
     #---------------------------------------------------------------------------
     def test_skipped(self):
         data = {
+            "work_started": "11-07-2012 00:00",
             "work_completed": "11-07-2012 00:10",
             "status": self.status.pk,
             "form-TOTAL_FORMS": len(self.tests),
@@ -1002,9 +1026,33 @@ class TestPerformQA(TestCase):
             if f.unit_test_info.test.skip_required():
                 self.assertTrue(len(f.errors) > 0)
 
+    def test_skipped_no_comment_ok(self):
+        data = {
+            "work_started": "11-07-2012 00:00",
+            "work_completed": "11-07-2012 00:10",
+            "status": self.status.pk,
+            "form-TOTAL_FORMS": len(self.tests),
+            "form-INITIAL_FORMS": "0",
+            "form-MAX_NUM_FORMS": "",
+        }
+
+        for test_idx, test in enumerate(self.tests):
+            test.skip_without_comment = True
+            test.save()
+
+            data["form-%d-test" % test_idx] = test.pk
+            data["form-%d-skipped" % test_idx] = "true"
+            data["form-%d-comment" % test_idx] = ""
+
+        response = self.client.post(self.url, data=data)
+
+        # skipped, no comment, but comment not required so should be 302
+        self.assertEqual(response.status_code, 302)
+
     #---------------------------------------------------------------------------
     def test_skipped_with_val(self):
         data = {
+            "work_started": "11-07-2012 00:09",
             "work_completed": "11-07-2012 00:10",
             "status": self.status.pk,
             "form-TOTAL_FORMS": len(self.tests),
@@ -1030,6 +1078,7 @@ class TestPerformQA(TestCase):
     #---------------------------------------------------------------------------
     def test_skipped_with_invalid_val(self):
         data = {
+            "work_started": "11-07-2012 00:09",
             "work_completed": "11-07-2012 00:10",
             "status": self.status.pk,
             "form-TOTAL_FORMS": len(self.tests),
@@ -1234,14 +1283,10 @@ class TestEditTestListInstance(TestCase):
 
         uti = models.UnitTestInfo.objects.get(test=self.test)
 
-        self.ti = utils.create_test_instance(unit_test_info=uti, value=1, status=self.status)
-        self.ti.test_list_instance = self.tli
-        self.ti.save()
+        self.ti = utils.create_test_instance(self.tli, unit_test_info=uti, value=1, status=self.status)
 
         utib = models.UnitTestInfo.objects.get(test=self.test_bool)
-        self.tib = utils.create_test_instance(unit_test_info=utib, value=1, status=self.status)
-        self.tib.test_list_instance = self.tli
-        self.tib.save()
+        self.tib = utils.create_test_instance(self.tli, unit_test_info=utib, value=1, status=self.status)
 
         self.url = reverse("edit_tli", kwargs={"pk": self.tli.pk})
         self.client.login(username="user", password="password")
@@ -1435,9 +1480,7 @@ class TestReviewTestListInstance(TestCase):
 
         uti = models.UnitTestInfo.objects.get(unit=self.utc.unit, test=self.test)
 
-        self.ti = utils.create_test_instance(unit_test_info=uti, value=1, status=self.status)
-        self.ti.test_list_instance = self.tli
-        self.ti.save()
+        self.ti = utils.create_test_instance(self.tli, unit_test_info=uti, value=1, status=self.status)
 
         self.url = reverse("review_test_list_instance", kwargs={"pk": self.tli.pk})
         self.client.login(username="user", password="password")

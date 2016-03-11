@@ -44,4 +44,6 @@ def site(request):
         'UNREVIEWED': unreviewed,
         'ICON_SETTINGS': settings.ICON_SETTINGS,
         'ICON_SETTINGS_JSON': json.dumps(settings.ICON_SETTINGS),
+        'TEST_STATUS_SHORT_JSON': json.dumps(settings.TEST_STATUS_DISPLAY_SHORT),
+        'REVIEW_DIFF_COL': settings.REVIEW_DIFF_COL,
     }

@@ -1,6 +1,14 @@
 {% extends "admin/base.html" %}
 {% load i18n %}
 
+{% block extrastyle %}
+<style type="text/css">
+#changelist-filter ul {
+    max-height: 300px;
+    overflow-y: scroll;
+}
+</style>
+{% endblock %}
 {% block title %}{{ title }} | {% trans 'QATrack+ Admin Site' %}{% endblock %}
 
 {% block branding %}

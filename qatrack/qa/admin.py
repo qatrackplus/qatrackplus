@@ -1,16 +1,16 @@
-import django.forms as forms
-import django.db
 
-from django.utils.translation import ugettext as _
 from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin import widgets, options
-from django.shortcuts import render, HttpResponseRedirect
-from django.utils import timezone
-from django.utils.text import Truncator
-from django.utils.html import escape
 from django.core.urlresolvers import reverse_lazy
-from django.shortcuts import redirect
+import django.db
+from django.db.models import Count
+import django.forms as forms
+from django.shortcuts import redirect, render, HttpResponseRedirect
+from django.utils import timezone
+from django.utils.html import escape
+from django.utils.text import Truncator
+from django.utils.translation import ugettext as _
 
 from admin_views.admin import AdminViews
 
@@ -142,7 +142,7 @@ class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
         "reference_value",
     )
     list_display = ["test", test_type, "unit", "reference", "tolerance"]
-    list_filter = ["unit", "test__category"]
+    list_filter = ["unit", "test__category", "test__testlistmembership__test_list"]
     readonly_fields = ("reference", "test", "unit",)
     search_fields = ("test__name", "test__slug", "unit__name",)
 
@@ -419,11 +419,56 @@ class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
         return qs.select_related("modified_by")
 
 
+class TestForm(forms.ModelForm):
+
+    class Meta:
+        model = models.Test
+
+    def clean(self):
+        """if test already has some history don't allow for the test type to be changed"""
+
+        user_changing_type = self.instance.type != self.cleaned_data.get("type")
+        has_history = models.TestInstance.objects.filter(unit_test_info__test=self.instance).exists()
+        if user_changing_type and has_history:
+            msg =  "You can't change the test type of a test that has already been performed. Revert to '%s' before saving."
+            ttype_index = [ttype for ttype, label in models.TEST_TYPE_CHOICES].index(self.instance.type)
+            ttype_label = models.TEST_TYPE_CHOICES[ttype_index][1]
+            raise forms.ValidationError(msg % ttype_label)
+
+        return self.cleaned_data
+
+
+class TestListMembershipFilter(admin.SimpleListFilter):
+    NOMEMBERSHIPS = 'nomemberships'
+    HASMEMBERSHIPS = 'hasmemberships'
+
+    title = _('Test List Membership')
+
+    # Parameter for the filter that will be used in the URL query.
+    parameter_name = 'tlmembership'
+
+    def lookups(self, request, model_admin):
+        return (
+            (self.NOMEMBERSHIPS, _('No TestList Membership')),
+            (self.HASMEMBERSHIPS, _('At Least One TestList Membership')),
+        )
+
+    def queryset(self, request, queryset):
+        qs = queryset.annotate( tlcount=Count("testlistmembership"))
+        if self.value() == self.NOMEMBERSHIPS:
+            return qs.filter(tlcount=0)
+        elif self.value() == self.HASMEMBERSHIPS:
+            return qs.filter(tlcount__gt=0)
+        return qs
+
+
 class TestAdmin(SaveUserMixin, admin.ModelAdmin):
     list_display = ["name", "slug", "category", "type"]
-    list_filter = ["category", "type"]
+    list_filter = ["category", "type", TestListMembershipFilter, "testlistmembership__test_list"]
     search_fields = ["name", "slug", "category__name"]
     save_as = True
+
+    form = TestForm
 
     class Media:
         js = (
@@ -538,6 +583,7 @@ utc_unit_name.short_description = "Unit"
 
 class TestListInstanceAdmin(admin.ModelAdmin):
     list_display = ["__unicode__", utc_unit_name, "test_list", "work_completed", "created_by"]
+    list_filter = ["unit_test_collection__unit", "test_list", ]
 
 
 class ToleranceForm(forms.ModelForm):

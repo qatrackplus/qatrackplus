@@ -71,12 +71,19 @@ ACT_LOW = "act_low"
 TOL_HIGH = "tol_high"
 TOL_LOW = "tol_low"
 
+status_displays = settings.TEST_STATUS_DISPLAY
+NOT_DONE_DISP = status_displays.get("not_done", "Not Done")
+OK_DISP = status_displays.get("ok", "OK")
+TOL_DISP = status_displays.get("tolerance", "Tolerance")
+ACT_DISP = status_displays.get("action", "Action")
+NO_TOL_DISP = status_displays.get("no_tol", "No Tol Set")
+
 PASS_FAIL_CHOICES = (
-    (NOT_DONE, "Not Done"),
-    (OK, "OK"),
-    (TOLERANCE, "Tolerance"),
-    (ACTION, "Action"),
-    (NO_TOL, "No Tol Set"),
+    (NOT_DONE, NOT_DONE_DISP),
+    (OK, OK_DISP),
+    (TOLERANCE, TOL_DISP),
+    (ACTION, ACT_DISP),
+    (NO_TOL, NO_TOL_DISP),
 )
 PASS_FAIL_CHOICES_DISPLAY = dict(PASS_FAIL_CHOICES)
 
@@ -110,6 +117,7 @@ PERMISSIONS = (
         "Reviewing",
         (
             ("qa.can_view_completed", "Can view previously completed instances", "Allow a user to view previous test list results"),
+            ("qa.can_view_overview", "Can view program overview", "Allows a user to view the overall program status"),
             ("qa.can_review", "Can review tests", "Allows a user to perform review & approval functions"),
             ("qa.can_view_charts", "Can chart test history", "Gives user the ability to view and create charts of historical test results"),
             ("qa.can_review_own_tests", "Can review self-performed tests", "Allows a user to perform review & approval functions on self-performed tests"),
@@ -293,13 +301,13 @@ class Tolerance(models.Model):
     """
 
     type = models.CharField(max_length=20, help_text=_("Select whether this will be an absolute or relative tolerance criteria"), choices=TOL_TYPE_CHOICES)
-    act_low = models.FloatField(verbose_name=_("Action Low"), help_text=_("Value of lower action level"), null=True, blank=True)
-    tol_low = models.FloatField(verbose_name=_("Tolerance Low"), help_text=_("Value of lower tolerance level"), null=True, blank=True)
-    tol_high = models.FloatField(verbose_name=_("Tolerance High"), help_text=_("Value of upper tolerance level"), null=True, blank=True)
-    act_high = models.FloatField(verbose_name=_("Action High"), help_text=_("Value of upper action level"), null=True, blank=True)
+    act_low = models.FloatField(verbose_name=_("%s Low" % ACT_DISP ), help_text=_("Value of lower %s level" % ACT_DISP), null=True, blank=True)
+    tol_low = models.FloatField(verbose_name=_("%s Low" % TOL_DISP), help_text=_("Value of lower %s level" % TOL_DISP), null=True, blank=True)
+    tol_high = models.FloatField(verbose_name=_("%s High" % TOL_DISP), help_text=_("Value of upper %s level" % TOL_DISP), null=True, blank=True)
+    act_high = models.FloatField(verbose_name=_("%s High" % ACT_DISP), help_text=_("Value of upper %s level" % ACT_DISP), null=True, blank=True)
 
     mc_pass_choices = models.CharField(
-        verbose_name=_("Multiple Choice Pass Values"),
+        verbose_name=_("Multiple Choice %s Values" % OK_DISP),
         max_length=2048,
         help_text=_("Comma seperated list of choices that are considered passing"),
         null=True,
@@ -307,7 +315,7 @@ class Tolerance(models.Model):
     )
 
     mc_tol_choices = models.CharField(
-        verbose_name=_("Multiple Choice Tolerance Values"),
+        verbose_name=_("Multiple Choice %s Values" % TOL_DISP),
         max_length=2048,
         help_text=_("Comma seperated list of choices that are considered at tolerance"),
         null=True,
@@ -371,7 +379,7 @@ class Tolerance(models.Model):
     def clean_tols(self):
         if self.type in (ABSOLUTE, PERCENT):
             if all([getattr(self, c) is None for c in (ACT_HIGH, ACT_LOW, TOL_HIGH, TOL_LOW,)]):
-                raise ValidationError({ACT_LOW: ["You must set at least one tolerance or action level for this tolerance type"]})
+                raise ValidationError({ACT_LOW: ["You must set at least one %s or %s level for this tolerance type" %(TOL_DISP, ACT_DISP)]})
 
     #----------------------------------------------------------------------
     def clean_fields(self, exclude=None):
@@ -415,7 +423,7 @@ class Tolerance(models.Model):
             vals = ["%.2f%%" % v if v is not None else '--' for v in vals]
             return "Percent(%s, %s, %s, %s)" % tuple(vals)
         elif self.type == MULTIPLE_CHOICE:
-            return "M.C.(Pass=%s, Tol=%s)" % (":".join(self.pass_choices()), ":".join(self.tol_choices()))
+            return "M.C.(%s=%s, %s=%s)" % (OK_DISP, ":".join(self.pass_choices()), TOL_DISP, ":".join(self.tol_choices()))
 
 
 #============================================================================
@@ -466,6 +474,8 @@ class Test(models.Model):
         help_text=_("Indicate if this test is a %s" % (','.join(x[1].title() for x in TEST_TYPE_CHOICES)))
     )
 
+    hidden = models.BooleanField(_("Hidden"), help_text=_("Don't display this test when performing QA"), default=False)
+    skip_without_comment = models.BooleanField(_("Skip without comment"), help_text=_("Allow users to skip this test without a comment"), default=False)
     display_image = models.BooleanField("Display image", help_text=_("Image uploads only: Show uploaded images under the testlist"), default=False)
     choices = models.CharField(max_length=2048, help_text=_("Comma seperated list of choices for multiple choice test types"), null=True, blank=True)
     constant_value = models.FloatField(help_text=_("Only required for constant value types"), null=True, blank=True)
@@ -473,6 +483,7 @@ class Test(models.Model):
     calculation_procedure = models.TextField(null=True, blank=True, help_text=_(
         "For Composite Tests Only: Enter a Python snippet for evaluation of this test."
     ))
+
 
     # for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)
@@ -881,6 +892,9 @@ class UnitTestCollection(models.Model):
         unique_together = ("unit", "frequency", "content_type", "object_id",)
         verbose_name_plural = _("Assign Test Lists to Units")
         # ordering = ("testlist__name","testlistcycle__name",)
+        permissions = (
+            ("can_view_overview", "Can view program overview"),
+        )
 
     #----------------------------------------------------------------------
     def calc_due_date(self):
@@ -1053,11 +1067,11 @@ class TestInstanceManager(models.Manager):
 
     #----------------------------------------------------------------------
     def in_progress(self):
-        return super(TestInstanceManager, self).filter(in_progress=True)
+        return super(TestInstanceManager, self).filter(test_list_instance__in_progress=True)
 
     #----------------------------------------------------------------------
     def complete(self):
-        return models.Manager.get_query_set(self).filter(in_progress=False)
+        return models.Manager.get_query_set(self).filter(test_list_instance__in_progress=False)
 
 
 #============================================================================
@@ -1090,7 +1104,7 @@ class TestInstance(models.Model):
     unit_test_info = models.ForeignKey(UnitTestInfo, editable=False)
 
     # keep track if this test was performed as part of a test list
-    test_list_instance = models.ForeignKey("TestListInstance", editable=False, null=True, blank=True)
+    test_list_instance = models.ForeignKey("TestListInstance", editable=False)
 
     work_started = models.DateTimeField(editable=False, db_index=True)
 
@@ -1098,7 +1112,6 @@ class TestInstance(models.Model):
     work_completed = models.DateTimeField(default=timezone.now,
                                           help_text=settings.DATETIME_HELP, db_index=True,
                                           )
-    in_progress = models.BooleanField(default=False, editable=False, db_index=True)
 
     # for keeping a very basic history
     created = models.DateTimeField(default=timezone.now)
@@ -1194,7 +1207,7 @@ class TestInstance(models.Model):
     def calculate_pass_fail(self):
         """set pass/fail status of the current value"""
 
-        if self.skipped or (self.value is None and self.in_progress):
+        if self.skipped or (self.value is None and self.test_list_instance.in_progress):
             self.pass_fail = NOT_DONE
         elif self.unit_test_info.test.is_boolean() and self.reference:
             self.bool_pass_fail()
@@ -1225,7 +1238,7 @@ class TestInstance(models.Model):
         if self.skipped:
             return "Skipped"
         elif self.value is None and self.string_value in (None, ""):
-            return "Not Done"
+            return NOT_DONE_DISP
 
         test = self.unit_test_info.test
         if test.is_boolean():
@@ -1441,7 +1454,16 @@ class TestListCycle(TestCollectionInterface):
     based on the list that was last completed.
     """
 
+    DAY = "day"
+    TEST_LIST_NAME = "tlname"
+    DAY_OPTIONS_TEXT_CHOICES = (
+        (DAY, "Day"),
+        (TEST_LIST_NAME, "Test List Name"),
+    )
+
     test_lists = models.ManyToManyField(TestList, through="TestListCycleMembership")
+    drop_down_label = models.CharField(max_length=128, default="Choose Day")
+    day_option_text = models.CharField(max_length=8, choices=DAY_OPTIONS_TEXT_CHOICES, default=DAY)
 
     #----------------------------------------------------------------------
     def __len__(self):
@@ -1503,6 +1525,14 @@ class TestListCycle(TestCollectionInterface):
             if not first:
                 return None, None
             return 0, self.first()
+
+    def days_display(self):
+        names = self.testlistcyclemembership_set.values_list("test_list__name", flat=True)
+        days = range(1, len(names)+1)
+        if self.day_option_text == self.TEST_LIST_NAME:
+            return zip(days, names)
+
+        return [(d, "Day %d" % d) for d in days]
 
     #----------------------------------------------------------------------
     def __unicode__(self):

@@ -2,7 +2,7 @@ from django import forms
 from django.core.validators import MaxLengthValidator
 from django.core.exceptions import ValidationError
 from django.forms.models import inlineformset_factory
-from django.forms.widgets import RadioSelect, Select, HiddenInput
+from django.forms.widgets import RadioSelect, Select, HiddenInput, NumberInput
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django.contrib.contenttypes.models import ContentType
@@ -58,7 +58,11 @@ class TestInstanceWidgetsMixin(object):
             elif (value is not None or string_value) and skipped:
                 self._errors["value"] = self.error_class(["Clear value if skipping"])
 
-            if not self.user.has_perm("qa.can_skip_without_comment") and skipped and not comment:
+            no_comment_required = (
+                self.user.has_perm("qa.can_skip_without_comment") or
+                self.unit_test_info.test.skip_without_comment
+            )
+            if not no_comment_required and skipped and not comment:
                 self._errors["skipped"] = self.error_class(["Please add comment when skipping"])
                 del cleaned_data["skipped"]
 
@@ -89,6 +93,8 @@ class TestInstanceWidgetsMixin(object):
             self.fields["string_value"].widget = Select(choices=[("", "")] + self.unit_test_info.test.get_choices())
         elif test_type == models.UPLOAD:
             self.fields["string_value"].widget = HiddenInput()
+        else:
+            self.fields["value"].widget = NumberInput(attrs={"step": "any"})
 
         if test_type in (models.BOOLEAN, models.MULTIPLE_CHOICE):
             if hasattr(self, "instance") and self.instance.value is not None:
@@ -162,7 +168,7 @@ class CreateTestInstanceFormSet(UserFormsetMixin, BaseTestInstanceFormSet):
             init = {"value": None}
 
             if uti.test.type == models.CONSTANT:
-                init["value"] = utils.to_precision(uti.test.constant_value, 4)
+                init["value"] = utils.to_precision(uti.test.constant_value, settings.CONSTANT_PRECISION)
 
             initial.append(init)
 
@@ -186,7 +192,7 @@ class UpdateTestInstanceForm(TestInstanceWidgetsMixin, forms.ModelForm):
     def __init__(self, *args, **kwargs):
 
         super(UpdateTestInstanceForm, self).__init__(*args, **kwargs)
-        self.in_progress = self.instance.in_progress
+        self.in_progress = self.instance.test_list_instance.in_progress
         self.fields["value"].required = False
         self.unit_test_info = self.instance.unit_test_info
         self.set_value_widget()
@@ -251,12 +257,12 @@ class BaseTestListInstanceForm(forms.ModelForm):
 
         for field in ("work_completed", "work_started"):
             self.fields[field].widget = forms.widgets.DateTimeInput()
+
             self.fields[field].widget.format = settings.INPUT_DATE_FORMATS[0]
             self.fields[field].input_formats = settings.INPUT_DATE_FORMATS
             self.fields[field].widget.attrs["title"] = settings.DATETIME_HELP
             self.fields[field].widget.attrs["class"] = "input-medium"
             self.fields[field].help_text = settings.DATETIME_HELP
-            self.fields[field].localize = True
 
         self.fields["status"].widget.attrs["class"] = "input-medium"
 

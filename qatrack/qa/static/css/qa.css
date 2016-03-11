@@ -234,11 +234,7 @@ th.qa-history div{
 }
 
 .history-label {
-    font-size:0.8em;
-    font-weight:400;
-    background-color:white;
-    color:black;
-
+    font-size:0.9em;
 }
 
 #admin_controls div {
@@ -339,6 +335,8 @@ td.review-value span {
     white-space: nowrap;
     overflow:hidden;
 }
+td.review-diff,
+th.review-diff,
 td.review-ref,
 th.review-ref {
     width:60px;

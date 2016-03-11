@@ -57,16 +57,22 @@ def process_file_upload_form(ti_form, test_list_instance):
     upload_to_process = (
         ti_form.unit_test_info.test.is_upload()
         and not ti_form.cleaned_data["skipped"]
-        and not ti_form.in_progress
         and ti_form.cleaned_data["string_value"].strip()
     )
 
     if upload_to_process:
         fname = ti_form.cleaned_data["string_value"]
         src = os.path.join(settings.TMP_UPLOAD_ROOT, fname)
+
+        if not os.path.exists(src):
+            # has already been moved (i.e. we are completing an
+            # in progress list or editing an already complete list
+            return
+
         d = os.path.join(settings.UPLOAD_ROOT, "%s" % test_list_instance.pk)
         if not os.path.exists(d):
             os.mkdir(d)
+
         dest = os.path.join(settings.UPLOAD_ROOT, d, fname)
         shutil.move(src, dest)
 
@@ -81,9 +87,23 @@ class Upload(JSONResponseMixin, View):
     #----------------------------------------------------------------------
     def post(self, *args, **kwargs):
         """process file, apply calculation procedure and return results"""
+        if self.request.POST.get('filename'):
+            self.reprocess()
+        else:
+            self.handle_upload()
 
-        self.handle_upload()
 
+        return self.run_calc()
+
+    def reprocess(self):
+        tli = self.request.POST.get("test_list_instance")
+        self.file_name = self.request.POST.get("filename")
+        try:
+            self.upload = open(os.path.join(settings.UPLOAD_ROOT, "%s" % tli, self.file_name), "r+b")
+        except IOError:
+            self.upload = None
+
+    def run_calc(self):
         self.set_calculation_context()
 
         results = {
@@ -93,6 +113,10 @@ class Upload(JSONResponseMixin, View):
             'errors': [],
             "result": None,
         }
+
+        if self.upload is None:
+            results["errors"] = ["Original file not found. Please re-upload."]
+            return self.render_json_response(results)
 
         try:
             test = models.Test.objects.get(pk=self.request.POST.get("test_id"))
@@ -171,8 +195,9 @@ class Upload(JSONResponseMixin, View):
     #----------------------------------------------------------------------
     def get_json_data(self, name):
         """return python data from GET json data"""
+        data = self.request.POST
 
-        json_string = self.request.POST.get(name)
+        json_string = data.get(name)
         if not json_string:
             return
 
@@ -184,11 +209,7 @@ class Upload(JSONResponseMixin, View):
     #----------------------------------------------------------------------
     def is_image(self):
         """check if the uploaded file is an image"""
-
-        if imghdr.what(self.upload.name):
-            return True
-        else:
-            return False
+        return self.upload and imghdr.what(self.upload.name)
 
 
 #============================================================================
@@ -564,7 +585,6 @@ class PerformQA(PermissionRequiredMixin, CreateView):
                 created=now,
                 created_by=self.request.user,
                 modified_by=self.request.user,
-                in_progress=self.object.in_progress,
                 test_list_instance=self.object,
                 work_started=self.object.work_started,
                 work_completed=self.object.work_completed,
@@ -629,7 +649,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
         ndays = len(self.unit_test_col.tests_object)
         if ndays > 1:
-            context['days'] = range(1, ndays + 1)
+            context['days'] = self.unit_test_col.tests_object.days_display()
 
         context["test_list"] = self.test_list
         context["unit_test_infos"] = json.dumps(self.template_unit_test_infos())
@@ -686,7 +706,7 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         formset = context["formset"]
 
         for ti_form in formset:
-            ti_form.in_progress = form.instance.in_progress
+            ti_form.in_progress = self.object.in_progress
 
         if formset.is_valid():
             self.object = form.save(commit=False)
@@ -758,7 +778,6 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         ti = test_instance
         ti.status = self.status
         ti.modified_by = self.request.user
-        ti.in_progress = self.object.in_progress
         ti.work_started = self.object.work_started
         ti.work_completed = self.object.work_completed
 

@@ -194,6 +194,7 @@ function TestInfo(data){
 
 function TestInstance(test_info, row){
     var self = this;
+    this.initialized = false;
     this.test_info = test_info;
     this.row = $(row);
     this.inputs = this.row.find("td.qa-value").find("input, textarea, select");
@@ -212,7 +213,7 @@ function TestInstance(test_info, row){
     this.skip.change(function(){
         self.skipped = self.skip.is(":checked");
         if (self.skipped){
-            if (comment_on_skip){
+            if (comment_on_skip && !self.test_info.test.skip_without_comment){
                 self.comment.show(600);
             }
             if (self.test_info.test.type === QAUtils.BOOLEAN || self.test_info.test.type === QAUtils.UPLOAD){
@@ -272,12 +273,9 @@ function TestInstance(test_info, row){
         if (tt === QAUtils.BOOLEAN){
             if (_.isNull(value)){
                 self.inputs.prop("checked",false);
-            }else if (value !== 0.){
-                self.inputs[0].checked = true;
-                self.inputs[1].checked = false;
-            }else {
-                self.inputs[0].checked = false;
-                self.inputs[1].checked = true;
+            }else{
+                self.inputs[0].checked = value === 0;
+                self.inputs[1].checked = !self.inputs[0].checked;
             }
         }else if (tt=== QAUtils.STRING || tt === QAUtils.MULTIPLE_CHOICE || tt === QAUtils.STRING_COMPOSITE){
             self.inputs.val(value);
@@ -308,7 +306,45 @@ function TestInstance(test_info, row){
         }else if (tt === QAUtils.MULTIPLE_CHOICE){
             var value = $.trim(self.inputs.find(":selected").text());
             self.value = value !== "" ? value : null;
-        } else if (tt=== QAUtils.UPLOAD || tt=== QAUtils.STRING){
+        }else if (tt=== QAUtils.UPLOAD){
+            if (editing_tli && !this.initialized){
+                var data = {
+                    filename: self.inputs.val(),
+                    test_id: self.test_info.test.id,
+                    test_list_instance: editing_tli,
+                    meta: JSON.stringify(get_meta_data()),
+                    refs: JSON.stringify(get_ref_data()),
+                    tols: JSON.stringify(get_tol_data())
+                };
+
+                $.ajax({
+                    type:"POST",
+                    url: QAURLs.UPLOAD_URL,
+                    data: $.param(data),
+                    dataType:"json",
+                    success: function (result) {
+                        self.status.removeClass("btn-info btn-primary btn-danger btn-success");
+                        if (result.errors.length > 0){
+                            self.set_value(null);
+                            self.status.addClass("btn-danger").text("Failed");
+                            self.status.attr("title",result.errors[0]);
+                        }else{
+                            self.set_value(result);
+                            self.status.addClass("btn-success").text("Success");
+                            self.status.attr("title",result['temp_file_name']);
+                            $.Topic("valueChanged").publish();
+                        }
+                    },
+                    traditional:true,
+                    error: function(e,data){
+                        self.set_value(null);
+                        self.status.removeClass("btn-primary, btn-danger, btn-success");
+                        self.status.addClass("btn-danger").text("Server Error");
+                    }
+                });
+            }
+
+        }else if (tt=== QAUtils.STRING){
             self.value = self.inputs.val();
         }else {
             self.inputs.val(QAUtils.clean_numerical_value(self.inputs.val()));
@@ -322,6 +358,7 @@ function TestInstance(test_info, row){
         }
 
         this.update_status();
+        this.initialized = true;
     }
     this.update_status = function(){
         var status = _.isNull(self.value)? NOT_DONE : self.test_info.check_value(self.value);
@@ -359,6 +396,10 @@ function TestInstance(test_info, row){
         self.set_skip(false);
         self.visible = true;
         self.comment_box.val(self.comment_box.val().replace(self.NOT_PERFORMED,""));
+        if (self.test_info.test.type == QAUtils.BOOLEAN){
+            self.set_value(self.value);
+        }
+
     }
 
     this.hide = function(){
@@ -372,6 +413,9 @@ function TestInstance(test_info, row){
         var tmp_val = self.value;
         self.set_skip(true);
         self.set_value(tmp_val);
+        if (self.test_info.test.type == QAUtils.BOOLEAN){
+            self.inputs.prop("checked", false);
+        }
 
         self.comment_box.val(self.NOT_PERFORMED);
     }

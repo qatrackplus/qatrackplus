@@ -66,8 +66,11 @@
     </div>
     <div class="span2">
         <div id="test-list-container" class="control-container">
-            <h5>3. Test Lists</h5>
-
+            <h5 style="">3. Test Lists </h5>
+            <label style="" class="checkbox">
+                <input id="include_inactive" type="checkbox"/>
+                <em>Include Inactive Test Lists</em>
+            </label>
             <div id="test" class="checkbox-container test-filter">
                 {% for test_list in test_lists %}
                     <label class="checkbox" title="{{test_list.name}}" >
