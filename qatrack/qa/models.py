@@ -627,6 +627,43 @@ class Test(models.Model):
         """return display representation of object"""
         return "%s" % (self.name)
 
+def get_active_tlc_ids():
+
+    tlcct = ContentType.objects.get_for_model(TestListCycle)
+
+    active_tlcs = UnitTestCollection.objects.filter(
+        content_type=tlcct, active=True
+    ).values(
+        'object_id'
+    ).annotate(
+        Count('object_id')
+    ).filter(
+        object_id__count__gt=0
+    ).values_list("object_id", flat=True)
+
+    return active_tlcs
+
+
+def get_active_tl_ids():
+
+    tlct = ContentType.objects.get_for_model(TestList)
+
+    active_tls = UnitTestCollection.objects.filter(
+        content_type=tlct, active=True
+    ).values(
+        'object_id'
+    ).annotate(
+        Count('object_id')
+    ).filter(
+        object_id__count__gt=0
+    ).values_list("object_id", flat=True)
+
+    active_tlcs = get_active_tlc_ids()
+    active_tls_from_tlcs =TestListCycleMembership.objects.filter(
+        cycle_id__in=active_tlcs
+    ).values_list("test_list_id", flat=True)
+
+    return list(active_tls) + list(active_tls_from_tlcs)
 
 #============================================================================
 class UnitTestInfoManager(models.Manager):
@@ -641,36 +678,10 @@ class UnitTestInfoManager(models.Manager):
 
         qs = queryset or self.get_query_set()
 
-        tlct = ContentType.objects.get_for_model(TestList)
-        tlcct = ContentType.objects.get_for_model(TestListCycle)
-
-        active_tls = UnitTestCollection.objects.filter(
-            content_type=tlct, active=True
-        ).values(
-            'object_id'
-        ).annotate(
-            Count('object_id')
-        ).filter(
-            object_id__count__gt=0
-        ).values_list("object_id", flat=True)
-
-        active_tlcs = UnitTestCollection.objects.filter(
-            content_type=tlcct, active=True
-        ).values(
-            'object_id'
-        ).annotate(
-            Count('object_id')
-        ).filter(
-            object_id__count__gt=0
-        ).values_list("object_id", flat=True)
-
-        active_tls_from_tlcs =TestListCycleMembership.objects.filter(
-            cycle_id__in=active_tlcs
-        ).values( "test_list_id")
+        active_tls = get_active_test_list_ids()
 
         return qs.filter(
-            Q(test__testlistmembership__test_list__in=active_tls) |
-            Q(test__testlistmembership__test_list__in=active_tls_from_tlcs)
+            test__testlistmembership__test_list__in=get_active_test_list_ids()
         ).distinct()
 
 #============================================================================

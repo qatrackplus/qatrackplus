@@ -394,12 +394,39 @@ class TestListMembershipInline(admin.TabularInline):
         return super(TestListMembershipInline, self).get_formset(request, obj, **kwargs)
 
 
+class ActiveTestListFilter(admin.SimpleListFilter):
+    NOACTIVEUTCS = 'noactiveutcs'
+    HASACTIVEUTCS = 'hasactiveutcs'
+
+    title = _('Active Unit Assignments')
+
+    # Parameter for the filter that will be used in the URL query.
+    parameter_name = 'activeutcs'
+
+    def lookups(self, request, model_admin):
+        return (
+            (self.NOACTIVEUTCS, _('No Active Unit Assignments')),
+            (self.HASACTIVEUTCS, _('At Least One Active Unit Assignment')),
+        )
+
+    def queryset(self, request, qs):
+        active_tl_ids = models.get_active_tl_ids()
+
+        if self.value() == self.NOACTIVEUTCS:
+            return qs.exclude(id__in=active_tl_ids)
+        elif self.value() == self.HASACTIVEUTCS:
+            return qs.filter(id__in=active_tl_ids)
+        return qs
+
+
 class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
 
     prepopulated_fields = {'slug': ('name',)}
-    list_display = ("name", "slug", "modified", "modified_by",)
     search_fields = ("name", "description", "slug",)
     filter_horizontal = ("tests", "sublists", )
+
+    list_display = ("name", "slug", "modified", "modified_by",)
+    list_filter = [ActiveTestListFilter]
 
     form = TestListAdminForm
     inlines = [TestListMembershipInline]
