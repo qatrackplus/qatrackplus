@@ -435,10 +435,31 @@ class UnitTestListFilter(admin.SimpleListFilter):
 
         if self.value():
             unit = Unit.objects.get(pk=self.value())
-            active_tl_ids = models.get_utc_tl_ids(units=[unit])
-            return qs.filter(id__in=active_tl_ids)
+            unit_tl_ids = models.get_utc_tl_ids(units=[unit])
+            return qs.filter(id__in=unit_tl_ids)
 
         return qs
+
+
+class FrequencyTestListFilter(admin.SimpleListFilter):
+
+    title = _('Assigned To Units by Frequency')
+
+    # Parameter for the filter that will be used in the URL query.
+    parameter_name = 'assignedbyfreq'
+
+    def lookups(self, request, model_admin):
+        return models.Frequency.objects.values_list("pk", "name")
+
+    def queryset(self, request, qs):
+
+        if self.value():
+            freq = models.Frequency.objects.get(pk=self.value())
+            freq_tl_ids = models.get_utc_tl_ids(frequencies=[freq])
+            return qs.filter(id__in=freq_tl_ids)
+
+        return qs
+
 
 
 class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
@@ -448,7 +469,7 @@ class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
     filter_horizontal = ("tests", "sublists", )
 
     list_display = ("name", "slug", "modified", "modified_by",)
-    list_filter = [ActiveTestListFilter, UnitTestListFilter]
+    list_filter = [ActiveTestListFilter, UnitTestListFilter, FrequencyTestListFilter]
 
     form = TestListAdminForm
     inlines = [TestListMembershipInline]
