@@ -628,6 +628,62 @@ class Test(models.Model):
         return "%s" % (self.name)
 
 
+def get_utc_tlc_ids(active=None, units=None, frequencies=None):
+
+    tlcct = ContentType.objects.get_for_model(TestListCycle)
+
+    tlcs = UnitTestCollection.objects.filter(content_type=tlcct)
+
+    if active is not None:
+        tlcs = tlcs.filter(active=active)
+
+    if units is not None:
+        tlcs = tlcs.filter(unit__in=units)
+
+    if frequencies is not None:
+        tlcs = tlcs.filter(frequency__in=frequencies)
+
+    tlcs = tlcs.values(
+        'object_id'
+    ).annotate(
+        Count('object_id')
+    ).filter(
+        object_id__count__gt=0
+    ).values_list("object_id", flat=True)
+
+    return tlcs
+
+
+def get_utc_tl_ids(active=None, units=None, frequencies=None):
+
+    tlct = ContentType.objects.get_for_model(TestList)
+
+    tls = UnitTestCollection.objects.filter(content_type=tlct)
+
+    if active is not None:
+        tls = tls.filter(active=active)
+
+    if units is not None:
+        tls = tls.filter(unit__in=units)
+
+    if frequencies is not None:
+        tls = tls.filter(frequency__in=frequencies)
+
+    tls = tls.values(
+        'object_id'
+    ).annotate(
+        Count('object_id')
+    ).filter(
+        object_id__count__gt=0
+    ).values_list("object_id", flat=True)
+
+    tlcs = get_utc_tlc_ids(active=active, units=units, frequencies=frequencies)
+    tls_from_tlcs =TestListCycleMembership.objects.filter(
+        cycle_id__in=tlcs
+    ).values_list("test_list_id", flat=True)
+
+    return list(tls) + list(tls_from_tlcs)
+
 #============================================================================
 class UnitTestInfoManager(models.Manager):
 
@@ -641,36 +697,8 @@ class UnitTestInfoManager(models.Manager):
 
         qs = queryset or self.get_query_set()
 
-        tlct = ContentType.objects.get_for_model(TestList)
-        tlcct = ContentType.objects.get_for_model(TestListCycle)
-
-        active_tls = UnitTestCollection.objects.filter(
-            content_type=tlct, active=True
-        ).values(
-            'object_id'
-        ).annotate(
-            Count('object_id')
-        ).filter(
-            object_id__count__gt=0
-        ).values_list("object_id", flat=True)
-
-        active_tlcs = UnitTestCollection.objects.filter(
-            content_type=tlcct, active=True
-        ).values(
-            'object_id'
-        ).annotate(
-            Count('object_id')
-        ).filter(
-            object_id__count__gt=0
-        ).values_list("object_id", flat=True)
-
-        active_tls_from_tlcs =TestListCycleMembership.objects.filter(
-            cycle_id__in=active_tlcs
-        ).values( "test_list_id")
-
         return qs.filter(
-            Q(test__testlistmembership__test_list__in=active_tls) |
-            Q(test__testlistmembership__test_list__in=active_tls_from_tlcs)
+            test__testlistmembership__test_list__in=get_utc_tl_ids(active=True)
         ).distinct()
 
 #============================================================================

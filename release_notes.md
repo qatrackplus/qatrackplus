@@ -1,5 +1,9 @@
 # QATrack+ Release Notes #
 
+## v0.3.0 ##
+
+- note about filtering and multiple choice tests (value -> string_value)
+
 ## v0.2.8 ##
 
     Note: this release introduces some database schema changes. The database migrations have
