@@ -627,13 +627,20 @@ class Test(models.Model):
         """return display representation of object"""
         return "%s" % (self.name)
 
-def get_active_tlc_ids():
+
+def get_utc_tlc_ids(active=None, units=None):
 
     tlcct = ContentType.objects.get_for_model(TestListCycle)
 
-    active_tlcs = UnitTestCollection.objects.filter(
-        content_type=tlcct, active=True
-    ).values(
+    active_tlcs = UnitTestCollection.objects.filter(content_type=tlcct)
+
+    if active is not None:
+        active_tlcs = active_tlcs.filter(active=active)
+
+    if units is not None:
+        active_tlcs = active_tlcs.filter(unit__in=units)
+
+    active_tlcs = active_tlcs.values(
         'object_id'
     ).annotate(
         Count('object_id')
@@ -644,13 +651,19 @@ def get_active_tlc_ids():
     return active_tlcs
 
 
-def get_active_tl_ids():
+def get_utc_tl_ids(active=None, units=None):
 
     tlct = ContentType.objects.get_for_model(TestList)
 
-    active_tls = UnitTestCollection.objects.filter(
-        content_type=tlct, active=True
-    ).values(
+    active_tls = UnitTestCollection.objects.filter(content_type=tlct)
+
+    if active is not None:
+        active_tls = active_tls.filter(active=active)
+
+    if units is not None:
+        active_tls = active_tls.filter(unit__in=units)
+
+    active_tls = active_tls.values(
         'object_id'
     ).annotate(
         Count('object_id')
@@ -658,7 +671,7 @@ def get_active_tl_ids():
         object_id__count__gt=0
     ).values_list("object_id", flat=True)
 
-    active_tlcs = get_active_tlc_ids()
+    active_tlcs = get_utc_tlc_ids(active=True, units=units)
     active_tls_from_tlcs =TestListCycleMembership.objects.filter(
         cycle_id__in=active_tlcs
     ).values_list("test_list_id", flat=True)
@@ -678,10 +691,8 @@ class UnitTestInfoManager(models.Manager):
 
         qs = queryset or self.get_query_set()
 
-        active_tls = get_active_test_list_ids()
-
         return qs.filter(
-            test__testlistmembership__test_list__in=get_active_test_list_ids()
+            test__testlistmembership__test_list__in=get_utc_tl_ids(active=True)
         ).distinct()
 
 #============================================================================

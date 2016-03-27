@@ -16,6 +16,7 @@ from admin_views.admin import AdminViews
 
 import qatrack.qa.models as models
 from qatrack.qa.utils import qs_extra_for_utc_name
+from qatrack.units.models import Unit
 
 admin.site.disable_action("delete_selected")
 
@@ -395,6 +396,7 @@ class TestListMembershipInline(admin.TabularInline):
 
 
 class ActiveTestListFilter(admin.SimpleListFilter):
+
     NOACTIVEUTCS = 'noactiveutcs'
     HASACTIVEUTCS = 'hasactiveutcs'
 
@@ -410,12 +412,32 @@ class ActiveTestListFilter(admin.SimpleListFilter):
         )
 
     def queryset(self, request, qs):
-        active_tl_ids = models.get_active_tl_ids()
+        active_tl_ids = models.get_utc_tl_ids(active=True)
 
         if self.value() == self.NOACTIVEUTCS:
             return qs.exclude(id__in=active_tl_ids)
         elif self.value() == self.HASACTIVEUTCS:
             return qs.filter(id__in=active_tl_ids)
+        return qs
+
+
+class UnitTestListFilter(admin.SimpleListFilter):
+
+    title = _('Assigned to Unit')
+
+    # Parameter for the filter that will be used in the URL query.
+    parameter_name = 'assignedtounit'
+
+    def lookups(self, request, model_admin):
+        return Unit.objects.values_list("pk", "name")
+
+    def queryset(self, request, qs):
+
+        if self.value():
+            unit = Unit.objects.get(pk=self.value())
+            active_tl_ids = models.get_utc_tl_ids(units=[unit])
+            return qs.filter(id__in=active_tl_ids)
+
         return qs
 
 
@@ -426,7 +448,7 @@ class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
     filter_horizontal = ("tests", "sublists", )
 
     list_display = ("name", "slug", "modified", "modified_by",)
-    list_filter = [ActiveTestListFilter]
+    list_filter = [ActiveTestListFilter, UnitTestListFilter]
 
     form = TestListAdminForm
     inlines = [TestListMembershipInline]
