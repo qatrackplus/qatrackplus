@@ -292,7 +292,6 @@ class TestListInstances(BaseListableView):
     }
 
     widgets = {
-        "actions"
         "unit_test_collection__frequency__name": SELECT,
         "unit_test_collection__unit__name": SELECT,
     }
