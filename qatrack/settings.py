@@ -88,6 +88,9 @@ USE_I18N = True
 
 CONSTANT_PRECISION = 8
 
+# This is the warning message given to the user when a test result is out of tolerance
+# Change the default setting to a locally relevant warning message
+DEFAULT_WARNING_MESSAGE = "Do not treat"
 
 #----------------------------------------------------------------------------
 # static media settings
