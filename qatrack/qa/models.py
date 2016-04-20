@@ -788,6 +788,7 @@ class TestCollectionInterface(models.Model):
         default=settings.DEFAULT_WARNING_MESSAGE
     )
 
+
     assigned_to = generic.GenericRelation(
         "UnitTestCollection",
         content_type_field="content_type",
