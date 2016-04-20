@@ -112,20 +112,10 @@ class PaperForms(ListView):
 
         return qs.select_related("unit", "testlist").prefetch_related("tests_object")
 
-    #---------------------------------------------------------------
-    def get_context_data(self, *args, **kwargs):
-        """
-        Patch each :model:`qa.UnitTestCollection` object with all
-        its relevant TestList's, Test's & UnitTestInfo's.
-        """
-
-        context = super(PaperForms, self).get_context_data(*args, **kwargs)
-
-        context["include_refs"] = self.request.GET.get("include_refs", "True") != "False"
-
+    def set_utc_all_lists(self, utcs):
         test_lists = {}
 
-        for utc in context["object_list"]:
+        for utc in utcs:
             key = (utc.content_type_id, utc.object_id)
 
             try:
@@ -144,7 +134,7 @@ class PaperForms(ListView):
                 utis = models.UnitTestInfo.objects.filter(
                     test__in=li.all_tests,
                     test__type__in=[models.BOOLEAN, models.SIMPLE, models.MULTIPLE_CHOICE, models.STRING],
-                    test__category__pk__in=self.request.GET.getlist("category"),
+                    test__category__pk__in=self.categories,
                     unit=utc.unit,
                 ).select_related(
                     "test", "reference", "tolerance"
@@ -154,4 +144,15 @@ class PaperForms(ListView):
 
             utc.all_lists = all_lists
 
+    #---------------------------------------------------------------
+    def get_context_data(self, *args, **kwargs):
+        """
+        Patch each :model:`qa.UnitTestCollection` object with all
+        its relevant TestList's, Test's & UnitTestInfo's.
+        """
+
+        context = super(PaperForms, self).get_context_data(*args, **kwargs)
+        context["include_refs"] = self.request.GET.get("include_refs", "True") != "False"
+        self.categories = self.request.GET.getlist("category")
+        self.set_utc_all_lists(context['object_list'])
         return context
