@@ -1741,6 +1741,33 @@ class TestPaperForms(TestCase):
         response = self.client.get(self.url + "?" + q)
         self.assertEqual(response.status_code, 200)
 
+    #----------------------------------------------------------------------
+    def test_multiple_units_same_list(self):
+
+        ref1 = utils.create_reference(value=1)
+        tol1 = utils.create_tolerance()
+        uti1 = models.UnitTestInfo.objects.get(test=self.test, unit=self.utc.unit)
+        uti1.reference = ref1
+        uti1.tolerance = tol1
+        uti1.save()
+
+        unit = utils.create_unit(number=2)
+        utc2 = utils.create_unit_test_collection(unit=unit, test_collection=self.test_list, frequency=self.frequencies['daily'])
+        ref2 = utils.create_reference(value=2)
+        tol2 = utils.create_tolerance()
+        uti2 = models.UnitTestInfo.objects.get(test=self.test, unit=unit)
+        uti2.reference = ref2
+        uti2.tolerance = tol2
+        uti2.save()
+
+        utcs = [self.utc, utc2]
+        pf = qatrack.qa.views.backup.PaperForms()
+        pf.categories = models.Category.objects.values_list("pk", flat=True)
+        pf.set_utc_all_lists(utcs)
+        self.assertEqual(utcs[0].all_lists[0].utis[0].reference, ref1)
+        self.assertEqual(utcs[1].all_lists[0].utis[0].reference, ref2)
+
+
 
 if __name__ == "__main__":
     setup_test_environment()
