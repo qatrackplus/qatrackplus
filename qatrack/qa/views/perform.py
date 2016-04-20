@@ -7,6 +7,7 @@ import imghdr
 
 
 import dateutil
+import dicom
 import numpy
 import scipy
 from django.conf import settings
@@ -32,6 +33,7 @@ DEFAULT_CALCULATION_CONTEXT = {
     "math": math,
     "scipy": scipy,
     "numpy": numpy,
+    "dicom": dicom,
 }
 
 
