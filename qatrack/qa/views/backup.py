@@ -113,22 +113,12 @@ class PaperForms(ListView):
         return qs.select_related("unit", "testlist").prefetch_related("tests_object")
 
     def set_utc_all_lists(self, utcs):
-        test_lists = {}
 
         for utc in utcs:
-            key = (utc.content_type_id, utc.object_id)
 
-            try:
-                # if we've already seen this test list or test list cycle we don't need to
-                # fetch all the test list members & tests again
-                all_lists = test_lists[key]
-            except KeyError:
-                # first time we've seen this test list or test list cycle
-                # find  all member test lists and tests
-                all_lists = utc.tests_object.test_list_members().prefetch_related("testlistmembership_set__test")
-                for li in all_lists:
-                    li.all_tests = li.ordered_tests()
-                test_lists[key] = all_lists
+            all_lists = utc.tests_object.test_list_members().prefetch_related("testlistmembership_set__test")
+            for li in all_lists:
+                li.all_tests = li.ordered_tests()
 
             for li in all_lists:
                 utis = models.UnitTestInfo.objects.filter(
