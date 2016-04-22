@@ -13,19 +13,9 @@ class Migration(SchemaMigration):
                       self.gf('django.db.models.fields.CharField')(default='Do not treat', max_length=255),
                       keep_default=False)
 
-        # Adding field 'TestListCycle.warning_message'
-        db.add_column('qa_testlistcycle', 'warning_message',
-                      self.gf('django.db.models.fields.CharField')(default='Do not treat', max_length=255),
-                      keep_default=False)
-
-
     def backwards(self, orm):
         # Deleting field 'TestList.warning_message'
         db.delete_column('qa_testlist', 'warning_message')
-
-        # Deleting field 'TestListCycle.warning_message'
-        db.delete_column('qa_testlistcycle', 'warning_message')
-
 
     models = {
         'auth.group': {
@@ -179,7 +169,6 @@ class Migration(SchemaMigration):
             'name': ('django.db.models.fields.CharField', [], {'max_length': '255', 'db_index': 'True'}),
             'slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '50'}),
             'test_lists': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['qa.TestList']", 'through': "orm['qa.TestListCycleMembership']", 'symmetrical': 'False'}),
-            'warning_message': ('django.db.models.fields.CharField', [], {'default': "'Do not treat'", 'max_length': '255'})
         },
         'qa.testlistcyclemembership': {
             'Meta': {'ordering': "('order',)", 'object_name': 'TestListCycleMembership'},

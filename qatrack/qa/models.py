@@ -782,12 +782,6 @@ class TestCollectionInterface(models.Model):
     name = models.CharField(max_length=255, db_index=True)
     slug = models.SlugField(unique=True, help_text=_("A short unique name for use in the URL of this list"), db_index=True)
     description = models.TextField(help_text=_("A concise description of this test checklist. (You may use HTML markup)"), null=True, blank=True)
-    warning_message = models.CharField(
-        max_length=255,
-        help_text=_("Message given when a test value is out of tolerance"),
-        default=settings.DEFAULT_WARNING_MESSAGE
-    )
-
 
     assigned_to = generic.GenericRelation(
         "UnitTestCollection",
@@ -845,6 +839,12 @@ class TestList(TestCollectionInterface):
                                       symmetrical=False, null=True, blank=True,
                                       help_text=_("Choose any sublists that should be performed as part of this list.")
                                       )
+
+    warning_message = models.CharField(
+        max_length=255,
+        help_text=_("Message given when a test value is out of tolerance"),
+        default=settings.DEFAULT_WARNING_MESSAGE
+    )
 
     #---------------------------------------------------------------
     def test_list_members(self):
