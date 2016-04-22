@@ -125,6 +125,41 @@ class SetMultipleReferencesAndTolerancesForm(forms.Form):
     tolerance = forms.ModelChoiceField(queryset=models.Tolerance.objects.all())
     reference = forms.CharField(max_length=255)
 
+# see http://stackoverflow.com/questions/851636/default-filter-in-django-admin
+class ActiveUnitTestInfoFilter(admin.SimpleListFilter):
+
+    NOTACTIVE = 'notactive'
+    ACTIVE= 'active'
+
+    title = _('Active Unit Assignments')
+
+    # Parameter for the filter that will be used in the URL query.
+    parameter_name = 'activeassignment'
+
+    def lookups(self, request, model_admin):
+        return (
+            (None, _('At Least One Active Unit Assignment')),
+            (self.NOTACTIVE, _('No Active Unit Assignments')),
+            ('all', _('All')),
+        )
+
+    def choices(self, cl):
+        for lookup, title in self.lookup_choices:
+            yield {
+                'selected': self.value() == lookup,
+                'query_string': cl.get_query_string({
+                    self.parameter_name: lookup,
+                }, []),
+                'display': title,
+            }
+
+    def queryset(self, request, qs):
+        if self.value() in (self.NOTACTIVE,):
+            return models.UnitTestInfo.objects.inactive(qs)
+        elif self.value() == None:
+            return models.UnitTestInfo.objects.active(qs)
+        return qs
+
 
 class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
 
@@ -143,13 +178,13 @@ class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
         "reference_value",
     )
     list_display = ["test", test_type, "unit", "reference", "tolerance"]
-    list_filter = ["unit", "test__category", "test__testlistmembership__test_list"]
+    list_filter = [ActiveUnitTestInfoFilter, "unit", "test__category", "test__testlistmembership__test_list"]
     readonly_fields = ("reference", "test", "unit",)
     search_fields = ("test__name", "test__slug", "unit__name",)
 
     def queryset(self, *args, **kwargs):
         """just display active ref/tols"""
-        qs = models.UnitTestInfo.objects.active().select_related(
+        qs = models.UnitTestInfo.objects.select_related(
             "reference",
             "tolerance",
             "unit",

@@ -701,6 +701,16 @@ class UnitTestInfoManager(models.Manager):
             test__testlistmembership__test_list__in=get_utc_tl_ids(active=True)
         ).distinct()
 
+    def inactive(self, queryset=None):
+        """Only return UTI's who's tests don't belong to at least 1 test list that
+        is assigned to an active UnitTestCollection"""
+
+        qs = queryset or self.get_query_set()
+
+        return qs.exclude(
+            test__testlistmembership__test_list__in=get_utc_tl_ids(active=True)
+        ).distinct()
+
 #============================================================================
 class UnitTestInfo(models.Model):
     unit = models.ForeignKey(Unit)
