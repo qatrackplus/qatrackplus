@@ -222,7 +222,8 @@ INSTALLED_APPS = [
     'qatrack.units',
     'qatrack.qa',
     'qatrack.theme_bootstrap',
-    'qatrack.data_tables',
+    # 'qatrack.data_tables',
+    'listable',
     'qatrack.notifications',
     'qatrack.contacts',
 
