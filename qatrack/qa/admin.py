@@ -624,14 +624,17 @@ class UnitTestCollectionAdmin(admin.ModelAdmin):
 
         qs |= self.get_queryset(request).extra(**qs_extra_for_utc_name()).extra(where=["utc_name LIKE %s"], params=["%{0}%".format(search_term)])
 
-        def count():
-            from django.db import connection
-            cursor = connection.cursor()
-            sql, params = qs.query.sql_with_params()
-            count_sql =  "SELECT COUNT(*) FROM ({0})".format(sql)
-            cursor.execute(count_sql, params)
-            return cursor.fetchone()[0]
-        qs.count = count
+        #  The following casuses DatabaseError in MSSQL. 'The ORDER BY clause is invalid in views, inline
+        #  functions, derivedtables, subqueries, and common table expressions, unless TOP or FOR XML is also specified'
+
+        # def count():
+        #     from django.db import connection
+        #     cursor = connection.cursor()
+        #     sql, params = qs.query.sql_with_params()
+        #     count_sql =  "SELECT COUNT(*) FROM ({0})".format(sql)
+        #     cursor.execute(count_sql, params)
+        #     return cursor.fetchone()[0]
+        # qs.count = count
 
         return qs, use_distinct
 
