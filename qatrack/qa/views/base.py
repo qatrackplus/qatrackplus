@@ -139,7 +139,7 @@ class UTCList(BaseListableView):
         "unit__name",
         "frequency__name",
         "assigned_to__name",
-        "last_instance_work_completed",
+        "last_instance__work_completed",
         "last_instance_pass_fail",
         "last_instance_review_status",
     )
@@ -180,7 +180,7 @@ class UTCList(BaseListableView):
         "unit__name": _("Unit"),
         "frequency__name": _("Frequency"),
         "assigned_to__name": _("Assigned To"),
-        "last_instance_work_completed": _("Completed"),
+        "last_instance__work_completed": _("Completed"),
         "last_instance_pass_fail": _("Pass/Fail Status"),
         "last_instance_review_status": _("Review Status"),
     }
@@ -246,7 +246,7 @@ class UTCList(BaseListableView):
         c = Context({"unit_test_collection": utc, "show_icons": settings.ICON_SETTINGS["SHOW_DUE_ICONS"]})
         return template.render(c)
 
-    def last_instance_work_completed(self, utc):
+    def last_instance__work_completed(self, utc):
         template = self.templates['work_completed']
         c = Context({"instance": utc.last_instance})
         return template.render(c)
