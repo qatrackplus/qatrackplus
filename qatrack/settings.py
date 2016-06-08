@@ -214,7 +214,7 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
 
     'tastypie',
-
+    'listable',
     'genericdropdown',
 
     'qatrack.cache',
@@ -222,7 +222,6 @@ INSTALLED_APPS = [
     'qatrack.units',
     'qatrack.qa',
     'qatrack.theme_bootstrap',
-    'qatrack.data_tables',
     'qatrack.notifications',
     'qatrack.contacts',
 
