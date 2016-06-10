@@ -32,7 +32,10 @@ def qs_extra_for_utc_name():
          END
          """.format(ct_tl.pk, ct_tlc.pk)
 
-        return {"select": {'utc_name': extraq}}
+        return {
+            "select": {'utc_name': extraq}
+        }
+
 
 #----------------------------------------------------------------------
 def to_precision(x, p):

@@ -1,10 +1,20 @@
+import sys
+
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import get_model
 from django.utils import timezone
 
 from django.contrib.auth.models import User, Group, Permission
 from qatrack.qa import models
 from qatrack.units.models import Unit, UnitType, Modality, PHOTON
 
+
+def exists(app, model, field, value):
+    a_model = get_model(app, model)
+    results = a_model.objects.filter(**{field: value})
+    if len(results) > 0:
+        return True
+    return False
 
 #----------------------------------------------------------------------
 def create_user(is_staff=True, is_superuser=True, uname="user", pwd="password"):
@@ -21,8 +31,8 @@ def create_user(is_staff=True, is_superuser=True, uname="user", pwd="password"):
 
 
 #----------------------------------------------------------------------
-def create_category(name="cat"):
-    c, _ = models.Category.objects.get_or_create(name=name, slug="cat", description="cat")
+def create_category(name="cat", slug="cat", description="cat"):
+    c, _ = models.Category.objects.get_or_create(name=name, slug=slug, description=description)
     c.save()
     return c
 
@@ -35,7 +45,7 @@ def create_status(name="status", slug="status", is_default=True, requires_review
 
 
 #----------------------------------------------------------------------
-def create_test(name=None, test_type=models.SIMPLE):
+def create_test(name=None, test_type=models.SIMPLE, choices=None, procedure=None, constant_value=None):
     user = create_user()
     if name is None or models.Test.objects.filter(name=name).count() > 0:
         name = "test%d" % models.Test.objects.count()
@@ -47,6 +57,9 @@ def create_test(name=None, test_type=models.SIMPLE):
         category=create_category(),
         created_by=user,
         modified_by=user,
+        choices=choices,
+        procedure=procedure,
+        constant_value=constant_value
     )
     test.save()
     return test
@@ -151,13 +164,17 @@ def create_test_instance(test_list_instance, unit_test_info=None, value=1., crea
 
 
 #----------------------------------------------------------------------
-def create_modality(energy=6, particle=PHOTON):
-    if particle == "photon":
-        unit, particle = "MV", "Photon"
+def create_modality(energy=6, particle=PHOTON, name=None):
+
+    if name is None:
+        if particle == "photon":
+            unit, particle = "MV", "Photon"
+        else:
+            unit, particle = "MeV", "Electron"
+        a_name = "%g%s %s" % (energy, unit, particle)
     else:
-        unit, particle = "MeV", "Electron"
-    name = "%g%s %s" % (energy, unit, particle)
-    m, _ = Modality.objects.get_or_create(name=name)
+        a_name = name
+    m, _ = Modality.objects.get_or_create(name=a_name)
     return m
 
 

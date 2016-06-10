@@ -28,3 +28,5 @@ ldap.debug
 *.suo
 .idea/
 deployLocal.py
+*.db
+coverage.xml
