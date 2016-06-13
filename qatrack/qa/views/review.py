@@ -103,9 +103,8 @@ class UTCReview(PermissionRequiredMixin, UTCList):
 
     action = "review"
     action_display = "Review"
-    active_only = False
+    active_only = True
 
-    #---------------------------------------------------------------------------
     def get_page_title(self):
         return "Review Test List Data"
 
@@ -114,7 +113,6 @@ class UTCReview(PermissionRequiredMixin, UTCList):
 class UTCFrequencyReview(UTCReview):
     """A simple :view:`qa.review.UTCReview` wrapper to filter by :model:`qa.Frequency`"""
 
-    #----------------------------------------------------------------------
     def get_queryset(self):
         """filter queryset by frequency"""
 
@@ -129,28 +127,23 @@ class UTCFrequencyReview(UTCReview):
 
         return qs.filter(q).distinct()
 
-    #---------------------------------------------------------------------------
     def get_page_title(self):
         return " Review " + ", ".join([x.name for x in self.frequencies]) + " Test Lists"
 
 
-#====================================================================================
 class UTCUnitReview(UTCReview):
     """A simple :view:`qa.review.UTCReview` wrapper to filter by :model:`units.Unit`"""
 
-    #----------------------------------------------------------------------
     def get_queryset(self):
         """filter queryset by frequency"""
         qs = super(UTCUnitReview, self).get_queryset()
         self.units = Unit.objects.filter(number__in=self.kwargs["unit_number"].split("/"))
         return qs.filter(unit__in=self.units).order_by("unit__number")
 
-    #---------------------------------------------------------------------------
     def get_page_title(self):
         return "Review " + ", ".join([x.name for x in self.units]) + " Test Lists"
 
 
-#====================================================================================
 class ChooseUnitForReview(ChooseUnit):
     """Allow user to choose a :model:`units.Unit` to review :model:`qa.TestListInstance`s for"""
 
@@ -158,13 +151,24 @@ class ChooseUnitForReview(ChooseUnit):
     template_name = "units/unittype_choose_for_review.html"
 
 
-#====================================================================================
 class ChooseFrequencyForReview(ListView):
     """Allow user to choose a :model:`qa.Frequency` to review :model:`qa.TestListInstance`s for"""
 
     model = models.Frequency
     context_object_name = "frequencies"
     template_name_suffix = "_choose_for_review"
+
+
+class InactiveReview(UTCReview):
+
+    active_only = False
+
+    def get_queryset(self):
+        qs = super(InactiveReview, self).get_queryset()
+        return qs.filter(active=False)
+
+    def get_page_title(self):
+        return "Review Inactive Test Lists"
 
 
 class Unreviewed(PermissionRequiredMixin, TestListInstances):
@@ -193,7 +197,7 @@ class UnreviewedVisibleTo(Unreviewed):
 
 class ChooseGroupVisibleTo(ListView):
 
-    active_only = True
+    active_only = False
     template_name = "qa/group_choose_visible_to.html"
     model = models.Group
     context_object_name = "groups"

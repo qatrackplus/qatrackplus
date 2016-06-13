@@ -17,16 +17,13 @@
 <div class="row-fluid row-spacer">
     <div class="row-fluid row-spacer">
         <div class="span12">
-            <h4>My Groups</h4>
+            <h4>Your Groups</h4>
             <div class="btn-group">
                 {% for g in groups %}
                     {% if g in user.groups.all %}
                         <button class="btn"><a href="{% url 'unreviewed_by_group' group=g.id %}">{{g}}</a></button>
                     {% endif %}
                 {% endfor %}
-    {#            {% for g in user.groups %}#}
-    {#                {{ g }}#}
-    {#            {% endfor %}#}
             </div>
         </div>
     </div>

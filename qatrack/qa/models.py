@@ -1330,19 +1330,21 @@ class TestInstance(models.Model):
 #============================================================================
 class TestListInstanceManager(models.Manager):
 
-    #----------------------------------------------------------------------
     def unreviewed(self):
-        return self.complete().filter(all_reviewed=False)
+        return self.complete().filter(all_reviewed=False, unit_test_collection__active=True)
 
-    #----------------------------------------------------------------------
     def unreviewed_count(self):
         return self.unreviewed().count()
 
-    #----------------------------------------------------------------------
+    def inactive_unreviewed(self):
+        return self.complete().filter(all_reviewed=False, unit_test_collection__active=False)
+
+    def inactive_unreviewed_count(self):
+        return self.inactive_unreviewed().count()
+
     def in_progress(self):
         return self.get_query_set().filter(in_progress=True)
 
-    #----------------------------------------------------------------------
     def complete(self):
         return self.get_query_set().filter(in_progress=False)
 

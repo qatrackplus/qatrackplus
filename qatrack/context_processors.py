@@ -10,14 +10,14 @@ from qatrack.qa.models import Frequency, TestListInstance
 @receiver(post_save, sender=TestListInstance)
 @receiver(post_delete, sender=TestListInstance)
 def update_unreviewed_cache(*args, **kwargs):
-    """When a test list is completed invalidate the unreviewed count"""
+    """When a test list is completed invalidate the unreviewed counts"""
     cache.delete(settings.CACHE_UNREVIEWED_COUNT)
 
 
 @receiver(post_save, sender=Frequency)
 @receiver(post_delete, sender=Frequency)
 def update_qa_freq_cache(*args, **kwargs):
-    """When a test list is completed invalidate the unreviewed count"""
+    """When a frequency is changed invalidate the frequencies"""
     cache.delete(settings.CACHE_QA_FREQUENCIES)
 
 

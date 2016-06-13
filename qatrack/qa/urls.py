@@ -65,13 +65,14 @@ urlpatterns = patterns('',
     url(r"^review/frequency/(?P<frequency>[/\w-]+?)/$", review.UTCFrequencyReview.as_view(), name="review_by_frequency"),
     url(r"^review/unit/$", review.ChooseUnitForReview.as_view(), name="choose_review_unit"),
     url(r"^review/unit/(?P<unit_number>[/\d]+)/$", review.UTCUnitReview.as_view(), name="review_by_unit"),
+    url(r"^review/inactive/$", review.InactiveReview.as_view(), name="review_inactive"),
 
     # test list instances
     url(r"^session/details/$", base.TestListInstances.as_view(), name="complete_instances"),
     url(r"^session/details/(?P<pk>\d+)/$", review.TestListInstanceDetails.as_view(), name="view_test_list_instance"),
     url(r"^session/review/(?P<pk>\d+)/$", review.ReviewTestListInstance.as_view(), name="review_test_list_instance"),
     url(r"^session/unreviewed/$", review.Unreviewed.as_view(), name="unreviewed"),
-    url(r"^session/unveviewdvisible/$", review.UnreviewedVisibleTo.as_view(), name="unreviewed_visible_to"),
+    url(r"^session/unveviewedvisible/$", review.UnreviewedVisibleTo.as_view(), name="unreviewed_visible_to"),
 
     url(r"^session/group/$", review.ChooseGroupVisibleTo.as_view(), name="choose_group_visible"),
     url(r"^session/unreviewedbygroup/(?P<group>[/\d]+)/$", review.UnreviewedByVisibleToGroup.as_view(), name="unreviewed_by_group"),

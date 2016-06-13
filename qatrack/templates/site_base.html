@@ -139,7 +139,7 @@
                         <li>
                             <a href="{% url  "choose_group_visible" %}" {% comment %}title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed"{% endcomment %}>
                                 <i class="icon-question-sign"></i>
-                                Unreviewed by visible to group
+                                Unreviewed By Visible To Group
 {#                                <span title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">#}
 {#                                    <span class="total-unreviewed-count">{{UNREVIEWED}}</span>#}
 {#                                </span>#}
@@ -152,6 +152,7 @@
                         <li><a href="{% url "review_all" %}" title="View all test lists"><i class="icon-list"></i> All Test Lists</a></li>
                         <li><a href="{% url "choose_review_unit" %}" title="Choose a unit to review qa lists for."><i class="icon-list"></i> Test Lists By Unit</a></li>
                         <li><a href="{% url "choose_review_frequency" %}" title="Choose a frequency to review qa lists for."><i class="icon-list"></i> Test Lists By Frequency</a></li>
+                        <li><a href="{% url "review_inactive" %}" title="View all inactive test lists."><i class="icon-list"></i> Inactive Test Lists</a></li>
                     {% endif %}
 
                     {% if perms.qa.can_view_charts %}
