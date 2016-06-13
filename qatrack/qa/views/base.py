@@ -321,7 +321,6 @@ class TestListInstances(BaseListableView):
 
     prefetch_related = ("testinstance_set", "testinstance_set__status")
 
-
     def __init__(self, *args, **kwargs):
         super(TestListInstances, self).__init__(*args, **kwargs)
 
@@ -367,3 +366,5 @@ class TestListInstances(BaseListableView):
         template = self.templates['pass_fail']
         c = Context({"instance": tli, "exclude": [models.NO_TOL], "show_label": True, "show_icons": settings.ICON_SETTINGS['SHOW_STATUS_ICONS_LISTING']})
         return template.render(c)
+
+

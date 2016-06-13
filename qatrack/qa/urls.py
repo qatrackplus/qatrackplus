@@ -71,10 +71,14 @@ urlpatterns = patterns('',
     url(r"^session/details/(?P<pk>\d+)/$", review.TestListInstanceDetails.as_view(), name="view_test_list_instance"),
     url(r"^session/review/(?P<pk>\d+)/$", review.ReviewTestListInstance.as_view(), name="review_test_list_instance"),
     url(r"^session/unreviewed/$", review.Unreviewed.as_view(), name="unreviewed"),
+    url(r"^session/unveviewdvisible/$", review.UnreviewedVisibleTo.as_view(), name="unreviewed_visible_to"),
+
+    url(r"^session/group/$", review.ChooseGroupVisibleTo.as_view(), name="choose_group_visible"),
+    url(r"^session/unreviewedbygroup/(?P<group>[/\d]+)/$", review.UnreviewedByVisibleToGroup.as_view(), name="unreviewed_by_group"),
+
     url(r"^session/in-progress/$", perform.InProgress.as_view(), name="in_progress"),
     url(r"^session/continue/(?P<pk>\d+)/$", perform.ContinueTestListInstance.as_view(), name="continue_tli"),
     url(r"^session/edit/(?P<pk>\d+)/$", perform.EditTestListInstance.as_view(), name="edit_tli"),
-
 
     url(r"^unit/$", perform.ChooseUnit.as_view(), name="choose_unit"),
     url(r"^utc/perform/(?P<pk>\d+)/$", perform.PerformQA.as_view(), name="perform_qa"),

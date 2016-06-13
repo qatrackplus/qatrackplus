@@ -496,7 +496,6 @@ class FrequencyTestListFilter(admin.SimpleListFilter):
         return qs
 
 
-
 class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
 
     prepopulated_fields = {'slug': ('name',)}
@@ -671,6 +670,7 @@ class ActiveFilter(admin.SimpleListFilter):
 
 testlist_ct_id = models.ContentType.objects.get_for_model(models.TestList).pk
 testlistcycle_ct_id = models.ContentType.objects.get_for_model(models.TestListCycle).pk
+
 
 def utc_name(utc):
     if utc.content_type.pk == testlist_ct_id:

@@ -121,10 +121,28 @@
                         <li>
                             <a href="{% url  "unreviewed" %}" title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed">
                                 <i class="icon-question-sign"></i>
-                                Unreviewed
+                                All Unreviewed
                                 <span title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
                                     <span class="total-unreviewed-count">{{UNREVIEWED}}</span>
                                 </span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url  "unreviewed_visible_to" %}" {% comment %}title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed"{% endcomment %}>
+                                <i class="icon-question-sign"></i>
+                                Your Unreviewed
+{#                                <span title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">#}
+{#                                    <span class="total-unreviewed-count">{{UNREVIEWED}}</span>#}
+{#                                </span>#}
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url  "choose_group_visible" %}" {% comment %}title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed"{% endcomment %}>
+                                <i class="icon-question-sign"></i>
+                                Unreviewed by visible to group
+{#                                <span title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">#}
+{#                                    <span class="total-unreviewed-count">{{UNREVIEWED}}</span>#}
+{#                                </span>#}
                             </a>
                         </li>
                     {% endif %}

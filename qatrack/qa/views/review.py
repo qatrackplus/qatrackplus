@@ -167,20 +167,48 @@ class ChooseFrequencyForReview(ListView):
     template_name_suffix = "_choose_for_review"
 
 
-#============================================================================
 class Unreviewed(PermissionRequiredMixin, TestListInstances):
     """Display all :model:`qa.TestListInstance`s with all_reviewed=False"""
 
-    queryset = models.TestListInstance.objects.unreviewed()
+    # queryset = models.TestListInstance.objects.unreviewed()
     permission_required = "qa.can_review"
     raise_exception = True
 
-    #----------------------------------------------------------------------
+    def get_queryset(self):
+        return models.TestListInstance.objects.unreviewed()
+
     def get_page_title(self):
         return "Unreviewed Test Lists"
 
 
-#============================================================================
+class UnreviewedVisibleTo(Unreviewed):
+
+    def get_queryset(self):
+        qs = super(UnreviewedVisibleTo, self).get_queryset()
+        return qs.filter(unit_test_collection__visible_to__in=self.request.user.groups.all())
+
+    def get_page_title(self):
+        return "Unreviewed Test Lists Visible To Your Groups"
+
+
+class ChooseGroupVisibleTo(ListView):
+
+    active_only = True
+    template_name = "qa/group_choose_visible_to.html"
+    model = models.Group
+    context_object_name = "groups"
+
+
+class UnreviewedByVisibleToGroup(Unreviewed):
+
+    def get_queryset(self):
+        qs = super(UnreviewedByVisibleToGroup, self).get_queryset()
+        return qs.filter(unit_test_collection__visible_to=self.kwargs['group'])
+
+    def get_page_title(self):
+        return "Unreviewed Test Lists Visible To " + models.Group.objects.get(pk=self.kwargs['group']).name
+
+
 class DueDateOverview(PermissionRequiredMixin, TemplateView):
     """View which :model:`qa.UnitTestCollection` are overdue & coming due"""
 
