@@ -130,6 +130,7 @@ class UTCList(BaseListableView):
     action_display = "Perform"
     page_title = "All QA"
     active_only = True
+    visible_only = True
     paginate_by = 50
 
     fields = (
@@ -221,9 +222,12 @@ class UTCList(BaseListableView):
     def get_queryset(self):
         """filter queryset for visibility and fetch relevent related objects"""
 
-        qs = super(UTCList, self).get_queryset().filter(
-            visible_to__in=self.request.user.groups.all(),
-        ).distinct()
+        qs = super(UTCList, self).get_queryset()
+
+        if self.visible_only:
+            qs = qs.filter(
+                visible_to__in=self.request.user.groups.all(),
+            ).distinct()
 
         if self.active_only:
             qs = qs.filter(active=True)

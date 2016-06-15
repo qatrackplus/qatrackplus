@@ -103,14 +103,27 @@ class UTCReview(PermissionRequiredMixin, UTCList):
 
     action = "review"
     action_display = "Review"
-    active_only = True
+    visible_only = False
 
     def get_page_title(self):
         return "Review Test List Data"
 
 
+class UTCYourReview(PermissionRequiredMixin, UTCList):
+    """A simple :view:`qa.base.UTCList` wrapper to check required review permissions"""
+
+    permission_required = "qa.can_view_completed"
+    raise_exception = True
+
+    action = "review"
+    action_display = "Review"
+
+    def get_page_title(self):
+        return "Review Your Test List Data"
+
+
 #====================================================================================
-class UTCFrequencyReview(UTCReview):
+class UTCFrequencyReview(UTCYourReview):
     """A simple :view:`qa.review.UTCReview` wrapper to filter by :model:`qa.Frequency`"""
 
     def get_queryset(self):
@@ -131,7 +144,7 @@ class UTCFrequencyReview(UTCReview):
         return " Review " + ", ".join([x.name for x in self.frequencies]) + " Test Lists"
 
 
-class UTCUnitReview(UTCReview):
+class UTCUnitReview(UTCYourReview):
     """A simple :view:`qa.review.UTCReview` wrapper to filter by :model:`units.Unit`"""
 
     def get_queryset(self):
@@ -163,12 +176,17 @@ class InactiveReview(UTCReview):
 
     active_only = False
 
-    def get_queryset(self):
-        qs = super(InactiveReview, self).get_queryset()
-        return qs.filter(active=False)
+    def get_page_title(self):
+        return "Review All Inactive Test Lists"
+
+
+class YourInactiveReview(UTCYourReview):
+
+    visible_only = True
+    active_only = False
 
     def get_page_title(self):
-        return "Review Inactive Test Lists"
+        return "Review Your Inactive Test Lists"
 
 
 class Unreviewed(PermissionRequiredMixin, TestListInstances):
@@ -186,10 +204,11 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
 
 
 class UnreviewedVisibleTo(Unreviewed):
+    """Display all :model:`qa.TestListInstance`s with all_reviewed=False and unit_test_collection that is visible to
+        the user"""
 
     def get_queryset(self):
-        qs = super(UnreviewedVisibleTo, self).get_queryset()
-        return qs.filter(unit_test_collection__visible_to__in=self.request.user.groups.all())
+        return models.TestListInstance.objects.your_unreviewed(self.request.user)
 
     def get_page_title(self):
         return "Unreviewed Test Lists Visible To Your Groups"
@@ -204,6 +223,9 @@ class ChooseGroupVisibleTo(ListView):
 
 
 class UnreviewedByVisibleToGroup(Unreviewed):
+    """Display all :model:`qa.TestListInstance`s with all_reviewed=False and unit_test_collection that is visible to
+        a select :model:`auth.Group`
+    """
 
     def get_queryset(self):
         qs = super(UnreviewedByVisibleToGroup, self).get_queryset()

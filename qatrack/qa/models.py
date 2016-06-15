@@ -121,6 +121,7 @@ PERMISSIONS = (
             ("qa.can_review", "Can review tests", "Allows a user to perform review & approval functions"),
             ("qa.can_view_charts", "Can chart test history", "Gives user the ability to view and create charts of historical test results"),
             ("qa.can_review_own_tests", "Can review self-performed tests", "Allows a user to perform review & approval functions on self-performed tests"),
+            ("qa.can_review_non_visible_tli", "Can review test list instances not visible to a user", "Allows a user to review test list instances that are not visible to any of their groups")
         ),
     ),
 )
@@ -1331,16 +1332,16 @@ class TestInstance(models.Model):
 class TestListInstanceManager(models.Manager):
 
     def unreviewed(self):
-        return self.complete().filter(all_reviewed=False, unit_test_collection__active=True)
+        return self.complete().filter(all_reviewed=False)
 
     def unreviewed_count(self):
         return self.unreviewed().count()
 
-    def inactive_unreviewed(self):
-        return self.complete().filter(all_reviewed=False, unit_test_collection__active=False)
+    def your_unreviewed(self, user):
+        return self.complete().filter(all_reviewed=False, unit_test_collection__visible_to__in=user.groups.all()).distinct()
 
-    def inactive_unreviewed_count(self):
-        return self.inactive_unreviewed().count()
+    def your_unreviewed_count(self, user):
+        return self.your_unreviewed(user).count()
 
     def in_progress(self):
         return self.get_query_set().filter(in_progress=True)

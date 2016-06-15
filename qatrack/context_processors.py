@@ -29,6 +29,8 @@ def site(request):
         unreviewed = TestListInstance.objects.unreviewed_count()
         cache.set(settings.CACHE_UNREVIEWED_COUNT, unreviewed)
 
+    your_unreviewed = TestListInstance.objects.your_unreviewed_count(request.user)
+
     qa_frequencies = cache.get(settings.CACHE_QA_FREQUENCIES)
     if qa_frequencies is None:
         qa_frequencies = list(Frequency.objects.frequency_choices())
@@ -42,6 +44,7 @@ def site(request):
         'FEATURE_REQUEST_URL': settings.FEATURE_REQUEST_URL,
         'QA_FREQUENCIES': qa_frequencies,
         'UNREVIEWED': unreviewed,
+        'YOUR_UNREVIEWED': your_unreviewed,
         'ICON_SETTINGS': settings.ICON_SETTINGS,
         'ICON_SETTINGS_JSON': json.dumps(settings.ICON_SETTINGS),
         'TEST_STATUS_SHORT_JSON': json.dumps(settings.TEST_STATUS_DISPLAY_SHORT),
