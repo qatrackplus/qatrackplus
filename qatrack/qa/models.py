@@ -939,6 +939,7 @@ class UnitTestCollection(models.Model):
         # ordering = ("testlist__name","testlistcycle__name",)
         permissions = (
             ("can_view_overview", "Can view program overview"),
+            ("can_review_non_visible_tli", "Can view tli and utc not visible to user's groups")
         )
 
     #----------------------------------------------------------------------
