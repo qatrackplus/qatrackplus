@@ -714,7 +714,7 @@ $(document).ready(function(){
     $("#cycle-day").change(function(){
         var day = $("#cycle-day option:selected").val();
         var cur = document.location.href;
-        var next = cur.replace(/day=(next|[1-9])/,"day="+day);
+        var next = cur.replace(/day=(next|[0-9]+)/,"day="+day);
         document.location.href = next;
     });
 

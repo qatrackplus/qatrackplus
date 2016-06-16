@@ -18,12 +18,10 @@ from qatrack.units.models import Unit
 from braces.views import PermissionRequiredMixin
 
 
-#============================================================================
 class TestListInstanceDetails(TestListInstanceMixin, DetailView):
     pass
 
 
-#============================================================================
 class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
     """
     This views main purpose is for reviewing a completed :model:`qa.TestListInstance`
@@ -94,7 +92,6 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         return HttpResponseRedirect(self.get_success_url())
 
 
-#====================================================================================
 class UTCReview(PermissionRequiredMixin, UTCList):
     """A simple :view:`qa.base.UTCList` wrapper to check required review permissions"""
 
@@ -122,7 +119,6 @@ class UTCYourReview(PermissionRequiredMixin, UTCList):
         return "Review Your Test List Data"
 
 
-#====================================================================================
 class UTCFrequencyReview(UTCYourReview):
     """A simple :view:`qa.review.UTCReview` wrapper to filter by :model:`qa.Frequency`"""
 
@@ -325,7 +321,6 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
         return context
 
 
-#============================================================================
 class Overview(PermissionRequiredMixin, TemplateView):
     """Overall status of the QA Program"""
 
@@ -382,7 +377,6 @@ class Overview(PermissionRequiredMixin, TemplateView):
         return context
 
 
-#====================================================================================
 class UTCInstances(TestListInstances):
     """Show all :model:`qa.TestListInstance`s for a given :model:`qa.UnitTestCollection`"""
 

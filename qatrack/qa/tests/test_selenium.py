@@ -500,7 +500,7 @@ class SeleniumTests(TestCase, LiveServerTestCase):
 
         self.wait.until(e_c.presence_of_element_located((By.XPATH, '//div[contains(text(), "Showing 1 to 1")]')))
         self.driver.find_element_by_partial_link_text('Review Data').click()
-        self.driver.find_element_by_partial_link_text('Unreviewed').click()
+        self.driver.find_element_by_partial_link_text('Unreviewed Visible To Your Groups').click()
         self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Review')))
         self.driver.find_element_by_link_text('Review').click()
 
