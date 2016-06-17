@@ -729,6 +729,8 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
             self.object.unit_test_collection.set_due_date()
 
+            self.object.update_all_reviewed()
+
             if not self.object.in_progress:
                 signals.testlist_complete.send(sender=self, instance=self.object, created=False)
 
