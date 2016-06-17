@@ -322,7 +322,7 @@ function convert_data_to_highchart_series(data){
         var al, tl, th, ah;
 
         _.each(data[name], function(point){
-            if (!_.isNull(point.value)){
+            if (_.isNull(point.value)){
                 return;
             }
             var date = QAUtils.parse_iso8601_date(point.date).getTime();
