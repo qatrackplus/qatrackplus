@@ -1,4 +1,4 @@
-Django==1.6.8
+Django==1.6.11
 -e git+https://github.com/randlet/django-genericdropdown.git@616a32a32ef6102a59163cadbc3d9380667549b6#egg=django_genericdropdown-master
 django-tastypie==0.9.16
 -e git+https://github.com/macropin/django-registration.git@19c4cb643a95040ba22ba945cd2e3b9136a2addb#egg=django_registration-master
