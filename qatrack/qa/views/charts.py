@@ -260,7 +260,7 @@ class BaseChartView(View):
             "date": self.convert_date(timezone.make_naive(ti.work_completed, local_tz)),
             "display_date": ti.work_completed,
             "value": value,
-            "display": ti.value_display(),
+            "display": ti.value_display() if not ti.skipped else "",
             "reference": ref_value,
             "orig_reference": ti.reference.value if ti.reference else None,
 
@@ -315,14 +315,14 @@ class BaseChartView(View):
                     status__pk__in=statuses,
                     work_completed__gte=from_date,
                     work_completed__lte=to_date,
-                    skipped=False,
                 ).select_related(
                     "reference", "tolerance", "unit_test_info__test", "unit_test_info__unit", "status",
                 ).order_by(
                     "work_completed"
                 )
-                name = "%s - %s :: %s%s" % (u.name, tl.name, t.name,  " (relative to ref)" if relative else "")
-                self.plot_data[name] = [self.test_instance_to_point(ti, relative=relative) for ti in tis]
+                if tis:
+                    name = "%s - %s :: %s%s" % (u.name, tl.name, t.name,  " (relative to ref)" if relative else "")
+                    self.plot_data[name] = [self.test_instance_to_point(ti, relative=relative) for ti in tis]
         else:
             # retrieve test instances for every possible permutation of the
             # requested test & units
@@ -333,7 +333,6 @@ class BaseChartView(View):
                     status__pk__in=statuses,
                     work_completed__gte=from_date,
                     work_completed__lte=to_date,
-                    skipped=False,
                 ).select_related(
                     "reference", "tolerance", "unit_test_info__test", "unit_test_info__unit", "status",
                 ).order_by(
