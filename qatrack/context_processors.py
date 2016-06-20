@@ -6,6 +6,9 @@ from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from qatrack.qa.models import Frequency, TestListInstance
 
+cache.delete(settings.CACHE_UNREVIEWED_COUNT)
+cache.delete(settings.CACHE_QA_FREQUENCIES)
+
 
 @receiver(post_save, sender=TestListInstance)
 @receiver(post_delete, sender=TestListInstance)

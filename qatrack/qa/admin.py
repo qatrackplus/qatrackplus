@@ -691,6 +691,13 @@ class UnitTestCollectionAdmin(admin.ModelAdmin):
     list_editable = ["active"]
     save_as = True
 
+    class Media:
+        js = (
+            settings.STATIC_URL + "js/jquery-1.7.1.min.js",
+            settings.STATIC_URL + "js/jquery-ui.min.js",
+            settings.STATIC_URL + "js/select2.min.js",
+        )
+
     def get_search_results(self, request, queryset, search_term):
         """
         Returns a tuple containing a queryset to implement the search,
