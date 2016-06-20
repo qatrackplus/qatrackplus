@@ -179,171 +179,174 @@ class SeleniumTests(TestCase, LiveServerTestCase):
     def tearDown(self):
         self.driver.quit()
 
-    # def test_admin_category(self):
-    #
-    #     self.load_admin()
-    #     self.driver.find_element_by_link_text('Categories').click()
-    #     self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Add category')))
-    #     self.driver.find_element_by_link_text('Add category').click()
-    #     self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
-    #     self.driver.find_element_by_id('id_name').send_keys(objects['Category']['name'])
-    #     self.driver.find_element_by_id('id_slug').send_keys(objects['Category']['slug'])
-    #     self.driver.find_element_by_id('id_description').send_keys(objects['Category']['description'])
-    #     self.driver.find_element_by_name('_save').click()
-    #     self.wait_for_success()
-    #
-    # def test_admin_tests(self):
-    #
-    #     self.load_admin()
-    #
-    #     if not utils.exists('qa', 'Category', 'name', objects['Category']['name']):
-    #         utils.create_category(name=objects['Category']['name'], slug=objects['Category']['slug'], description=objects['Category']['description'])
-    #
-    #     self.driver.find_element_by_link_text('Tests').click()
-    #     self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Add test')))
-    #     self.driver.find_element_by_link_text('Add test').click()
-    #     self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
-    #
-    #     for i in range(len(objects['Tests'])):
-    #         the_test = objects['Tests'][i]
-    #         self.driver.find_element_by_id('id_name').send_keys(the_test['name'])
-    #         self.driver.find_element_by_id('id_slug').send_keys(the_test['name'])
-    #         self.driver.find_element_by_id('id_category').click()
-    #         self.driver.find_element_by_id('id_category').send_keys(Keys.ARROW_DOWN, Keys.ENTER)
-    #         self.driver.find_element_by_id('id_type').click()
-    #         self.driver.find_element_by_xpath('//*[@id="id_type"]/option[@value = "' + the_test['name'] + '"]').click()
-    #         if the_test['choices']:
-    #             self.driver.find_element_by_id('id_choices').send_keys('1,2,3,4,5')
-    #         if the_test['constant_value']:
-    #             self.driver.find_element_by_id('id_constant_value').send_keys('23.23')
-    #         if the_test['procedure']:
-    #             self.wait.until(e_c.element_to_be_clickable((By.XPATH, '//*[@id="calc-procedure-editor"]/div[2]/div')))
-    #             self.driver.find_element_by_xpath('//*[@id="calc-procedure-editor"]/div[2]/div').click()
-    #             actions = ActionChains(self.driver)
-    #             actions.send_keys(the_test['procedure'])
-    #             actions.perform()
-    #         if i + 1 == len(objects['Tests']):
-    #             self.driver.find_element_by_name('_save').click()
-    #         else:
-    #             self.driver.find_element_by_name('_addanother').click()
-    #
-    #         self.wait_for_success()
-    #
-    # def test_admin_testlist(self):
-    #
-    #     self.load_admin()
-    #
-    #     for i in range(len(objects['Tests'])):
-    #         the_test = objects['Tests'][i]
-    #         if not utils.exists('qa', 'Test', 'name', the_test['name']):
-    #             utils.create_test(name=the_test['name'], test_type=the_test['test_type'], choices=the_test['choices'], procedure=the_test['procedure'], constant_value=the_test['constant_value'])
-    #
-    #     self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Test lists')))
-    #     self.driver.find_element_by_link_text('Test lists').click()
-    #     self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Add test list')))
-    #     self.driver.find_element_by_link_text('Add test list').click()
-    #     self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
-    #     self.driver.find_element_by_id('id_name').send_keys(objects['TestList']['name'])
-    #     self.driver.find_element_by_link_text('Add another Test List Membership').click()
-    #     self.driver.find_element_by_link_text('Add another Test List Membership').click()
-    #     self.driver.find_element_by_link_text('Add another Test List Membership').click()
-    #     for i in range(0, 8):
-    #         self.driver.find_element_by_id('id_testlistmembership_set-' + str(i) + '-test').send_keys(str(i + 1))
-    #     self.driver.find_element_by_name('_save').click()
-    #     self.wait_for_success()
-    #
-    # def test_admin_modality(self):
-    #
-    #     self.load_admin()
-    #     self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Modalities')))
-    #     self.driver.find_element_by_link_text('Modalities').click()
-    #     self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Add modality')))
-    #     self.driver.find_element_by_link_text('Add modality').click()
-    #     self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
-    #     self.driver.find_element_by_id('id_name').send_keys(objects['Modality']['name'])
-    #     self.driver.find_element_by_name('_save').click()
-    #     self.wait_for_success()
-    #
-    # def test_admin_unittype(self):
-    #
-    #     self.load_admin()
-    #     self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Unit types')))
-    #     self.driver.find_element_by_link_text('Unit types').click()
-    #     self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Add unit type')))
-    #     self.driver.find_element_by_link_text('Add unit type').click()
-    #     self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
-    #     self.driver.find_element_by_id('id_name').send_keys(objects['UnitType']['name'])
-    #     self.driver.find_element_by_id('id_vendor').send_keys(objects['UnitType']['vendor'])
-    #     self.driver.find_element_by_name('_save').click()
-    #     self.wait_for_success()
-    #
-    # def test_admin_unit(self):
-    #
-    #     if not utils.exists('units', 'UnitType', 'name', objects['UnitType']['name']):
-    #         utils.create_unit_type(name=objects['UnitType']['name'], vendor=objects['UnitType']['vendor'])
-    #
-    #     if not utils.exists('units', 'Modality', 'name', objects['Modality']['name']):
-    #         utils.create_modality(name=objects['Modality']['name'])
-    #
-    #     self.load_admin()
-    #     self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Units')))
-    #     self.driver.find_elements_by_link_text('Units')[1].click()
-    #     self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Add unit')))
-    #     self.driver.find_element_by_link_text('Add unit').click()
-    #     self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
-    #     self.driver.find_element_by_id('id_name').send_keys(objects['Unit']['name'])
-    #     self.driver.find_element_by_id('id_number').send_keys(objects['Unit']['number'])
-    #     self.driver.find_element_by_id('id_type').click()
-    #     self.driver.find_element_by_id('id_type').send_keys(Keys.ARROW_DOWN, Keys.ENTER)
-    #     self.driver.find_element_by_id('id_modalities_add_all_link').click()
-    #     self.driver.find_element_by_name('_save').click()
-    #     self.wait_for_success()
-    #
-    # def test_admin_frequency(self):
-    #
-    #     self.load_admin()
-    #     self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Frequencies')))
-    #     self.driver.find_element_by_link_text('Frequencies').click()
-    #     self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Add frequency')))
-    #     self.driver.find_element_by_link_text('Add frequency').click()
-    #     self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
-    #     self.driver.find_element_by_id('id_name').send_keys(objects['Frequency']['name'])
-    #     self.driver.find_element_by_id('id_nominal_interval').send_keys(objects['Frequency']['nominal_interval'])
-    #     self.driver.find_element_by_id('id_due_interval').send_keys(objects['Frequency']['due_interval'])
-    #     self.driver.find_element_by_id('id_overdue_interval').send_keys(objects['Frequency']['overdue_interval'])
-    #     self.driver.find_element_by_name('_save').click()
-    #     self.wait_for_success()
-    #
-    # def test_admin_unittestcollection(self):
-    #
-    #     if not utils.exists('units', 'Unit', 'name', objects['Modality']['name']):
-    #         utils.create_unit(name=objects['Modality']['name'], number=objects['Unit']['number'])
-    #
-    #     if not utils.exists('qa', 'Frequency', 'name', objects['Frequency']['name']):
-    #         utils.create_frequency(name=objects['Modality']['name'])
-    #
-    #     if not utils.exists('qa', 'TestList', 'name', objects['TestList']['name']):
-    #         utils.create_test_list(name=objects['TestList']['name'])
-    #
-    #     self.load_admin()
-    #     self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Assign Test Lists to Units')))
-    #     self.driver.find_element_by_link_text('Assign Test Lists to Units').click()
-    #     self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Add unit test collection')))
-    #     self.driver.find_element_by_link_text('Add unit test collection').click()
-    #     self.wait.until(e_c.presence_of_element_located((By.ID, 'id_unit')))
-    #     self.driver.find_element_by_id('id_unit').click()
-    #     self.driver.find_element_by_id('id_unit').send_keys(Keys.ARROW_DOWN, Keys.ENTER)
-    #     self.driver.find_element_by_id('id_frequency').click()
-    #     self.driver.find_element_by_id('id_frequency').send_keys(Keys.ARROW_DOWN, Keys.ENTER)
-    #     self.driver.find_element_by_id('id_assigned_to').click()
-    #     self.driver.find_element_by_id('id_assigned_to').send_keys(Keys.ARROW_DOWN, Keys.ENTER)
-    #     self.driver.find_element_by_id('id_content_type').click()
-    #     self.driver.find_element_by_id('id_content_type').send_keys(Keys.ARROW_DOWN, Keys.ENTER)
-    #     self.wait.until(e_c.presence_of_element_located((By.XPATH, '//*[@id="generic_object_id"]/option[contains(text(), "TestList(' + objects['TestList']['name'] + ')")]')))
-    #     self.driver.find_element_by_id('generic_object_id').click()
-    #     self.driver.find_element_by_id('generic_object_id').send_keys(Keys.ARROW_DOWN, Keys.ENTER)
-    #     self.driver.find_element_by_name('_save').click()
-    #     self.wait_for_success()
+    def test_admin_category(self):
+
+        self.load_admin()
+        self.driver.find_element_by_link_text('Categories').click()
+        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Add category')))
+        self.driver.find_element_by_link_text('Add category').click()
+        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
+        self.driver.find_element_by_id('id_name').send_keys(objects['Category']['name'])
+        self.driver.find_element_by_id('id_slug').send_keys(objects['Category']['slug'])
+        self.driver.find_element_by_id('id_description').send_keys(objects['Category']['description'])
+        self.driver.find_element_by_name('_save').click()
+        self.wait_for_success()
+
+    def test_admin_tests(self):
+
+        self.load_admin()
+
+        if not utils.exists('qa', 'Category', 'name', objects['Category']['name']):
+            utils.create_category(name=objects['Category']['name'], slug=objects['Category']['slug'], description=objects['Category']['description'])
+
+        self.driver.find_element_by_link_text('Tests').click()
+        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Add test')))
+        self.driver.find_element_by_link_text('Add test').click()
+        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
+
+        for i in range(len(objects['Tests'])):
+            the_test = objects['Tests'][i]
+            self.driver.find_element_by_id('id_name').send_keys(the_test['name'])
+            self.driver.find_element_by_id('id_slug').send_keys(the_test['name'])
+            self.driver.find_element_by_id('id_category').click()
+            self.driver.find_element_by_id('id_category').send_keys(Keys.ARROW_DOWN, Keys.ENTER)
+            self.driver.find_element_by_id('id_type').click()
+            self.driver.find_element_by_xpath('//*[@id="id_type"]/option[@value = "' + the_test['name'] + '"]').click()
+            if the_test['choices']:
+                self.driver.find_element_by_id('id_choices').send_keys('1,2,3,4,5')
+            if the_test['constant_value']:
+                self.driver.find_element_by_id('id_constant_value').send_keys('23.23')
+            if the_test['procedure']:
+                self.wait.until(e_c.element_to_be_clickable((By.XPATH, '//*[@id="calc-procedure-editor"]/div[2]/div')))
+                self.driver.find_element_by_xpath('//*[@id="calc-procedure-editor"]/div[2]/div').click()
+                actions = ActionChains(self.driver)
+                actions.send_keys(the_test['procedure'])
+                actions.perform()
+            if i + 1 == len(objects['Tests']):
+                self.driver.find_element_by_name('_save').click()
+            else:
+                self.driver.find_element_by_name('_addanother').click()
+
+            self.wait_for_success()
+
+    def test_admin_testlist(self):
+
+        self.load_admin()
+
+        for i in range(len(objects['Tests'])):
+            the_test = objects['Tests'][i]
+            if not utils.exists('qa', 'Test', 'name', the_test['name']):
+                utils.create_test(name=the_test['name'], test_type=the_test['test_type'], choices=the_test['choices'], procedure=the_test['procedure'], constant_value=the_test['constant_value'])
+
+        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Test lists')))
+        self.driver.find_element_by_link_text('Test lists').click()
+        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Add test list')))
+        self.driver.find_element_by_link_text('Add test list').click()
+        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
+        self.driver.find_element_by_id('id_name').send_keys(objects['TestList']['name'])
+        self.driver.find_element_by_link_text('Add another Test List Membership').click()
+        self.driver.find_element_by_link_text('Add another Test List Membership').click()
+        self.driver.find_element_by_link_text('Add another Test List Membership').click()
+        for i in range(0, 8):
+            self.driver.find_element_by_id('id_testlistmembership_set-' + str(i) + '-test').send_keys(str(i + 1))
+        self.driver.find_element_by_name('_save').click()
+        self.wait_for_success()
+
+    def test_admin_modality(self):
+
+        self.load_admin()
+        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Modalities')))
+        self.driver.find_element_by_link_text('Modalities').click()
+        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Add modality')))
+        self.driver.find_element_by_link_text('Add modality').click()
+        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
+        self.driver.find_element_by_id('id_name').send_keys(objects['Modality']['name'])
+        self.driver.find_element_by_name('_save').click()
+        self.wait_for_success()
+
+    def test_admin_unittype(self):
+
+        self.load_admin()
+        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Unit types')))
+        self.driver.find_element_by_link_text('Unit types').click()
+        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Add unit type')))
+        self.driver.find_element_by_link_text('Add unit type').click()
+        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
+        self.driver.find_element_by_id('id_name').send_keys(objects['UnitType']['name'])
+        self.driver.find_element_by_id('id_vendor').send_keys(objects['UnitType']['vendor'])
+        self.driver.find_element_by_name('_save').click()
+        self.wait_for_success()
+
+    def test_admin_unit(self):
+
+        if not utils.exists('units', 'UnitType', 'name', objects['UnitType']['name']):
+            utils.create_unit_type(name=objects['UnitType']['name'], vendor=objects['UnitType']['vendor'])
+
+        if not utils.exists('units', 'Modality', 'name', objects['Modality']['name']):
+            utils.create_modality(name=objects['Modality']['name'])
+
+        self.load_admin()
+        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Units')))
+        self.driver.find_elements_by_link_text('Units')[1].click()
+        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Add unit')))
+        self.driver.find_element_by_link_text('Add unit').click()
+        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
+        self.driver.find_element_by_id('id_name').send_keys(objects['Unit']['name'])
+        self.driver.find_element_by_id('id_number').send_keys(objects['Unit']['number'])
+        self.driver.find_element_by_id('id_type').click()
+        self.driver.find_element_by_id('id_type').send_keys(Keys.ARROW_DOWN, Keys.ENTER)
+        self.driver.find_element_by_id('id_modalities_add_all_link').click()
+        self.driver.find_element_by_name('_save').click()
+        self.wait_for_success()
+
+    def test_admin_frequency(self):
+
+        self.load_admin()
+        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Frequencies')))
+        self.driver.find_element_by_link_text('Frequencies').click()
+        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Add frequency')))
+        self.driver.find_element_by_link_text('Add frequency').click()
+        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
+        self.driver.find_element_by_id('id_name').send_keys(objects['Frequency']['name'])
+        self.driver.find_element_by_id('id_nominal_interval').send_keys(objects['Frequency']['nominal_interval'])
+        self.driver.find_element_by_id('id_due_interval').send_keys(objects['Frequency']['due_interval'])
+        self.driver.find_element_by_id('id_overdue_interval').send_keys(objects['Frequency']['overdue_interval'])
+        self.driver.find_element_by_name('_save').click()
+        self.wait_for_success()
+
+    def test_admin_unittestcollection(self):
+
+        if not utils.exists('units', 'Unit', 'name', objects['Modality']['name']):
+            utils.create_unit(name=objects['Modality']['name'], number=objects['Unit']['number'])
+
+        if not utils.exists('qa', 'Frequency', 'name', objects['Frequency']['name']):
+            utils.create_frequency(name=objects['Modality']['name'])
+
+        if not utils.exists('qa', 'TestList', 'name', objects['TestList']['name']):
+            utils.create_test_list(name=objects['TestList']['name'])
+
+        self.load_admin()
+        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Assign Test Lists to Units')))
+        self.driver.find_element_by_link_text('Assign Test Lists to Units').click()
+        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Add unit test collection')))
+        self.driver.find_element_by_link_text('Add unit test collection').click()
+        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_unit')))
+        self.driver.find_element_by_id('id_unit').click()
+        self.driver.find_element_by_id('id_unit').send_keys(Keys.ARROW_DOWN, Keys.ENTER)
+        self.driver.find_element_by_id('id_frequency').click()
+        self.driver.find_element_by_id('id_frequency').send_keys(Keys.ARROW_DOWN, Keys.ENTER)
+        self.driver.find_element_by_id('id_assigned_to').click()
+        self.driver.find_element_by_id('id_assigned_to').send_keys(Keys.ARROW_DOWN, Keys.ENTER)
+        self.driver.find_element_by_id('id_content_type').click()
+        self.driver.find_element_by_id('id_content_type').send_keys(Keys.ARROW_DOWN, Keys.ENTER)
+        self.wait.until(e_c.presence_of_element_located((By.XPATH, '//*[@id="generic_object_id"]/option[contains(text(), "TestList(' + objects['TestList']['name'] + ')")]')))
+        self.driver.find_element_by_id('select2-generic_object_id-container').click()
+        self.driver.find_element_by_id('select2-generic_object_id-container').click()
+        # actions = ActionChains(self.driver)
+        # actions.send_keys(Keys.ARROW_DOWN)
+        # actions.perform()
+        self.driver.find_element_by_name('_save').click()
+        self.wait_for_success()
 
     def test_admin_tolerances(self):
 
@@ -385,21 +388,31 @@ class SeleniumTests(TestCase, LiveServerTestCase):
 
     def test_admin_set_ref_tols(self):
 
-        for i in objects['Tests']:
-            the_test = objects['Tests'][i]
+        for the_test in objects['Tests']:
 
             if the_test['test_type'] == models.MULTIPLE_CHOICE:
-                mult_test = the_test
+                if not utils.exists('qa', 'Test', 'name', the_test['name']):
+                    mult_test = utils.create_test(test_type=models.MULTIPLE_CHOICE, choices=the_test['choices'], name=the_test['name'])
             elif the_test['test_type'] == models.SIMPLE:
-                simple_test = the_test
+                if not utils.exists('qa', 'Test', 'name', the_test['name']):
+                    simp_test = utils.create_test(test_type=models.SIMPLE, name=the_test['name'])
             elif the_test['test_type'] == models.COMPOSITE:
-                comp_test = the_test
+                if not utils.exists('qa', 'Test', 'name', the_test['name']):
+                    comp_test = utils.create_test(test_type=models.COMPOSITE, name=the_test['name'])
+
+        if not utils.exists('qa', 'TestList', 'name', objects['TestList']['name']):
+            test_list = utils.create_test_list(objects['TestList']['name'])
+            utils.create_test_list_membership(test_list=test_list, test=mult_test)
+            utils.create_test_list_membership(test_list=test_list, test=simp_test)
+            utils.create_test_list_membership(test_list=test_list, test=comp_test)
+
+        utils.create_unit_test_collection(test_collection=test_list)
 
         self.load_admin()
         self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Set References & Tolerances')))
         self.driver.find_element_by_link_text('Set References & Tolerances').click()
-        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, mult_test['name'])))
-        self.driver.find_element_by_link_text(mult_test['name']).click()
+        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, mult_test.name)))
+        self.driver.find_element_by_link_text(mult_test.name).click()
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_tolerance')))
         self.driver.find_element_by_id('id_tolerance').click()
         self.driver.find_element_by_id('id_tolerance').send_keys(Keys.ARROW_DOWN, Keys.ENTER)
@@ -428,13 +441,13 @@ class SeleniumTests(TestCase, LiveServerTestCase):
         self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Add test instance status')))
         self.driver.find_element_by_link_text('Add test instance status').click()
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
-        self.driver.find_element_by_id('id_name').send_keys(objects['statuses']['TestStatus']['name'])
+        self.driver.find_element_by_id('id_name').send_keys('testStatus')
         self.driver.find_element_by_id('id_is_default').click()
         self.driver.find_element_by_name('_addanother').click()
         self.wait_for_success()
 
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
-        self.driver.find_element_by_id('id_name').send_keys(objects['statuses']['TestApprovalStatus']['name'])
+        self.driver.find_element_by_id('id_name').send_keys('testApprovalStatus')
         self.driver.find_element_by_id('id_requires_review').click()
         self.driver.find_element_by_name('_save').click()
         self.wait_for_success()
