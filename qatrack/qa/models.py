@@ -882,7 +882,7 @@ class TestList(TestCollectionInterface):
     #----------------------------------------------------------------------
     def __unicode__(self):
         """return display representation of object"""
-        return "TestList(%s)" % self.name
+        return "(%s) %s" % (self.pk, self.name)
 
 
 #============================================================================

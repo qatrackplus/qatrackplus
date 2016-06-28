@@ -16,7 +16,7 @@ from django.views.generic import UpdateView
 from qatrack.qa import models, utils
 
 from braces.views import PrefetchRelatedMixin, SelectRelatedMixin
-from listable.views import BaseListableView, SELECT
+from listable.views import BaseListableView, SELECT, SELECT_MULTI, DATE, NONEORNULL, TEXT
 
 logger = logging.getLogger('qatrack.console')
 
@@ -148,7 +148,7 @@ class UTCList(BaseListableView):
     search_fields = {
         "actions": False,
         "utc_name": "utc_name__icontains",
-        "assigned_to__name": "assigned_to__name__exact",
+        "assigned_to__name": "assigned_to__name",
         "last_instance_pass_fail": False,
         "last_instance_review_status": False,
     }
@@ -162,11 +162,12 @@ class UTCList(BaseListableView):
     }
 
     widgets = {
-        "unit__name": SELECT,
-        "frequency__name": SELECT,
-        "assigned_to__name": SELECT,
+        "unit__name": SELECT_MULTI,
+        "frequency__name": SELECT_MULTI,
+        "assigned_to__name": SELECT_MULTI,
+        "last_instance__work_completed": DATE,
+        "due_date": DATE
     }
-
 
     select_related = (
         "last_instance__work_completed",
@@ -186,7 +187,7 @@ class UTCList(BaseListableView):
         "last_instance_review_status": _("Review Status"),
     }
 
-    prefetch_related  = (
+    prefetch_related = (
         "last_instance__testinstance_set",
         "last_instance__testinstance_set__status",
         "last_instance__reviewed_by",
@@ -233,6 +234,15 @@ class UTCList(BaseListableView):
             qs = qs.filter(active=True)
 
         return qs
+
+    def get_filters(self, field, queryset=None):
+
+        filters = super(UTCList, self).get_filters(field, queryset=queryset)
+
+        if field == 'frequency__name':
+            filters = [(NONEORNULL, 'Ad Hoc') if f == (NONEORNULL, 'None') else f for f in filters]
+
+        return filters
 
     def get_extra(self):
         return utils.qs_extra_for_utc_name()
@@ -296,8 +306,10 @@ class TestListInstances(BaseListableView):
     }
 
     widgets = {
-        "unit_test_collection__frequency__name": SELECT,
-        "unit_test_collection__unit__name": SELECT,
+        "unit_test_collection__frequency__name": SELECT_MULTI,
+        "unit_test_collection__unit__name": SELECT_MULTI,
+        "created_by__username": SELECT_MULTI,
+        "work_completed": DATE
     }
 
     search_fields = {
@@ -345,6 +357,15 @@ class TestListInstances(BaseListableView):
 
         context["page_title"] = self.get_page_title()
         return context
+
+    def get_filters(self, field, queryset=None):
+
+        filters = super(TestListInstances, self).get_filters(field, queryset=queryset)
+
+        if field == 'unit_test_collection__frequency__name':
+            filters = [(NONEORNULL, 'Ad Hoc') if f == (NONEORNULL, 'None') else f for f in filters]
+
+        return filters
 
     def unit_test_collection__frequency__name(self, tli):
         freq = tli.unit_test_collection.frequency
