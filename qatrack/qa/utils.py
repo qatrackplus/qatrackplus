@@ -26,13 +26,16 @@ def qs_extra_for_utc_name():
         extraq = """
          CASE
             WHEN content_type_id = {0}
-                THEN (SELECT name from qa_testlist WHERE object_id = qa_testlist.id)
+                THEN (SELECT name AS utc_name from qa_testlist WHERE object_id = qa_testlist.id )
             WHEN content_type_id = {1}
-                THEN (SELECT name from qa_testlistcycle WHERE object_id = qa_testlistcycle.id)
+                THEN (SELECT name AS utc_name from qa_testlistcycle WHERE object_id = qa_testlistcycle.id)
          END
          """.format(ct_tl.pk, ct_tlc.pk)
 
-        return {"select": {'utc_name': extraq}}
+        return {
+            "select": {'utc_name': extraq}
+        }
+
 
 #----------------------------------------------------------------------
 def to_precision(x, p):

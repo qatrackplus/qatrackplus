@@ -16,7 +16,7 @@ from django.views.generic import UpdateView
 from qatrack.qa import models, utils
 
 from braces.views import PrefetchRelatedMixin, SelectRelatedMixin
-from listable.views import BaseListableView, SELECT
+from listable.views import BaseListableView, SELECT, SELECT_MULTI, DATE, NONEORNULL, TEXT
 
 logger = logging.getLogger('qatrack.console')
 
@@ -130,6 +130,7 @@ class UTCList(BaseListableView):
     action_display = "Perform"
     page_title = "All QA"
     active_only = True
+    visible_only = True
     paginate_by = 50
 
     fields = (
@@ -139,7 +140,7 @@ class UTCList(BaseListableView):
         "unit__name",
         "frequency__name",
         "assigned_to__name",
-        "last_instance_work_completed",
+        "last_instance__work_completed",
         "last_instance_pass_fail",
         "last_instance_review_status",
     )
@@ -147,7 +148,7 @@ class UTCList(BaseListableView):
     search_fields = {
         "actions": False,
         "utc_name": "utc_name__icontains",
-        "assigned_to__name": "assigned_to__name__exact",
+        "assigned_to__name": "assigned_to__name",
         "last_instance_pass_fail": False,
         "last_instance_review_status": False,
     }
@@ -161,11 +162,12 @@ class UTCList(BaseListableView):
     }
 
     widgets = {
-        "unit__name": SELECT,
-        "frequency__name": SELECT,
-        "assigned_to__name": SELECT,
+        "unit__name": SELECT_MULTI,
+        "frequency__name": SELECT_MULTI,
+        "assigned_to__name": SELECT_MULTI,
+        "last_instance__work_completed": DATE,
+        "due_date": DATE
     }
-
 
     select_related = (
         "last_instance__work_completed",
@@ -180,12 +182,12 @@ class UTCList(BaseListableView):
         "unit__name": _("Unit"),
         "frequency__name": _("Frequency"),
         "assigned_to__name": _("Assigned To"),
-        "last_instance_work_completed": _("Completed"),
+        "last_instance__work_completed": _("Completed"),
         "last_instance_pass_fail": _("Pass/Fail Status"),
         "last_instance_review_status": _("Review Status"),
     }
 
-    prefetch_related  = (
+    prefetch_related = (
         "last_instance__testinstance_set",
         "last_instance__testinstance_set__status",
         "last_instance__reviewed_by",
@@ -221,14 +223,26 @@ class UTCList(BaseListableView):
     def get_queryset(self):
         """filter queryset for visibility and fetch relevent related objects"""
 
-        qs = super(UTCList, self).get_queryset().filter(
-            visible_to__in=self.request.user.groups.all(),
-        ).distinct()
+        qs = super(UTCList, self).get_queryset()
+
+        if self.visible_only:
+            qs = qs.filter(
+                visible_to__in=self.request.user.groups.all(),
+            ).distinct()
 
         if self.active_only:
             qs = qs.filter(active=True)
 
         return qs
+
+    def get_filters(self, field, queryset=None):
+
+        filters = super(UTCList, self).get_filters(field, queryset=queryset)
+
+        if field == 'frequency__name':
+            filters = [(NONEORNULL, 'Ad Hoc') if f == (NONEORNULL, 'None') else f for f in filters]
+
+        return filters
 
     def get_extra(self):
         return utils.qs_extra_for_utc_name()
@@ -246,7 +260,7 @@ class UTCList(BaseListableView):
         c = Context({"unit_test_collection": utc, "show_icons": settings.ICON_SETTINGS["SHOW_DUE_ICONS"]})
         return template.render(c)
 
-    def last_instance_work_completed(self, utc):
+    def last_instance__work_completed(self, utc):
         template = self.templates['work_completed']
         c = Context({"instance": utc.last_instance})
         return template.render(c)
@@ -292,8 +306,10 @@ class TestListInstances(BaseListableView):
     }
 
     widgets = {
-        "unit_test_collection__frequency__name": SELECT,
-        "unit_test_collection__unit__name": SELECT,
+        "unit_test_collection__frequency__name": SELECT_MULTI,
+        "unit_test_collection__unit__name": SELECT_MULTI,
+        "created_by__username": SELECT_MULTI,
+        "work_completed": DATE
     }
 
     search_fields = {
@@ -321,7 +337,6 @@ class TestListInstances(BaseListableView):
 
     prefetch_related = ("testinstance_set", "testinstance_set__status")
 
-
     def __init__(self, *args, **kwargs):
         super(TestListInstances, self).__init__(*args, **kwargs)
 
@@ -342,6 +357,15 @@ class TestListInstances(BaseListableView):
 
         context["page_title"] = self.get_page_title()
         return context
+
+    def get_filters(self, field, queryset=None):
+
+        filters = super(TestListInstances, self).get_filters(field, queryset=queryset)
+
+        if field == 'unit_test_collection__frequency__name':
+            filters = [(NONEORNULL, 'Ad Hoc') if f == (NONEORNULL, 'None') else f for f in filters]
+
+        return filters
 
     def unit_test_collection__frequency__name(self, tli):
         freq = tli.unit_test_collection.frequency
@@ -367,3 +391,5 @@ class TestListInstances(BaseListableView):
         template = self.templates['pass_fail']
         c = Context({"instance": tli, "exclude": [models.NO_TOL], "show_label": True, "show_icons": settings.ICON_SETTINGS['SHOW_STATUS_ICONS_LISTING']})
         return template.render(c)
+
+

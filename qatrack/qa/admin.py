@@ -496,7 +496,6 @@ class FrequencyTestListFilter(admin.SimpleListFilter):
         return qs
 
 
-
 class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
 
     prepopulated_fields = {'slug': ('name',)}
@@ -602,41 +601,127 @@ assigned_to_name.admin_order_field = "assigned_to__name"
 assigned_to_name.short_description = "Assigned To"
 
 
+class UnitFilter(admin.SimpleListFilter):
+
+    title = _('Unit')
+    parameter_name = "unitfilter"
+
+    def lookups(self, request, model_admin):
+        return models.Unit.objects.values_list('pk', 'name')
+
+    def queryset(self, request, queryset):
+
+        if self.value():
+            return queryset.filter(unit=self.value())
+
+        return queryset
+
+
+class FrequencyFilter(admin.SimpleListFilter):
+
+    title = _('Frequency')
+    parameter_name = "freqfilter"
+
+    def lookups(self, request, model_admin):
+        return models.Frequency.objects.values_list('pk', 'name')
+
+    def queryset(self, request, queryset):
+
+        if self.value():
+            return queryset.filter(frequency=self.value())
+
+        return queryset
+
+
+class AssignedToFilter(admin.SimpleListFilter):
+
+    title = _('Assigned To')
+    parameter_name = "assignedtoname"
+
+    def lookups(self, request, model_admin):
+        return models.Group.objects.values_list('pk', 'name')
+
+    def queryset(self, request, queryset):
+
+        if self.value():
+            return queryset.filter(assigned_to=self.value())
+
+        return queryset
+
+
+class ActiveFilter(admin.SimpleListFilter):
+
+    title = _('Active')
+    parameter_name = "activefilter"
+
+    def lookups(self, request, model_admin):
+        return (
+            (1, _('Active')),
+            (0, _('Not active'))
+        )
+
+    def queryset(self, request, queryset):
+        if self.value():
+            print self.value()
+            return queryset.filter(active=self.value())
+
+        return queryset
+
+
+testlist_ct_id = models.ContentType.objects.get_for_model(models.TestList).pk
+testlistcycle_ct_id = models.ContentType.objects.get_for_model(models.TestListCycle).pk
+
+
+def utc_name(utc):
+    if utc.content_type.pk == testlist_ct_id:
+        return models.TestList.objects.get(pk=utc.object_id).name
+    elif utc.content_type.pk == testlistcycle_ct_id:
+        return models.TestListCycle.objects.get(pk=utc.object_id).name
+utc_name.admin_order_field = None
+utc_name.short_description = 'Utc name'
+
+
 class UnitTestCollectionAdmin(admin.ModelAdmin):
     # readonly_fields = ("unit","frequency",)
     filter_horizontal = ("visible_to",)
-    list_display = ["utc_name", unit_name, freq_name, assigned_to_name, "active"]
-    list_filter = ["unit__name", "frequency__name", "assigned_to__name"]
+    list_display = [utc_name, unit_name, freq_name, assigned_to_name, "active"]
+    list_filter = [UnitFilter, FrequencyFilter, AssignedToFilter, ActiveFilter]
     search_fields = ["unit__name", "frequency__name"]
     change_form_template = "admin/treenav/menuitem/change_form.html"
     list_editable = ["active"]
     save_as = True
 
-    def utc_name(self, utc):
-        return utc.utc_name
+    class Media:
+        js = (
+            settings.STATIC_URL + "js/jquery-1.7.1.min.js",
+            settings.STATIC_URL + "js/jquery-ui.min.js",
+            settings.STATIC_URL + "js/select2.min.js",
+        )
 
     def get_search_results(self, request, queryset, search_term):
         """
         Returns a tuple containing a queryset to implement the search,
         and a boolean indicating if the results may contain duplicates.
         """
-        qs, use_distinct = super(UnitTestCollectionAdmin, self).get_search_results(request, queryset, search_term)
+        # qs, use_distinct = super(UnitTestCollectionAdmin, self).get_search_results(request, queryset, search_term)
 
-        qs |= self.get_queryset(request).extra(**qs_extra_for_utc_name()).extra(where=["utc_name LIKE %s"], params=["%{0}%".format(search_term)])
+        queryset &= self.get_queryset(request).extra(**qs_extra_for_utc_name()).extra(where=["(" + qs_extra_for_utc_name()['select']['utc_name'] + ") LIKE %s"], params=["%{0}%".format(search_term)])
 
-        def count():
-            from django.db import connection
-            cursor = connection.cursor()
-            sql, params = qs.query.sql_with_params()
-            count_sql =  "SELECT COUNT(*) FROM ({0})".format(sql)
-            cursor.execute(count_sql, params)
-            return cursor.fetchone()[0]
-        qs.count = count
+        #  The following casuses DatabaseError in MSSQL. 'The ORDER BY clause is invalid in views, inline
+        #  functions, derivedtables, subqueries, and common table expressions, unless TOP or FOR XML is also specified'
 
-        return qs, use_distinct
+        # def count():
+        #     from django.db import connection
+        #     cursor = connection.cursor()
+        #     sql, params = qs.query.sql_with_params()
+        #     count_sql =  "SELECT COUNT(*) FROM ({0})".format(sql)
+        #     cursor.execute(count_sql, params)
+        #     return cursor.fetchone()[0]
+
+        # qs.count = count
+        return queryset, True
 
     def get_queryset(self, *args, **kwargs):
-        print "in get queryset"
         qs = super(UnitTestCollectionAdmin, self).queryset(*args, **kwargs)
         return qs.select_related(
             "unit__name",

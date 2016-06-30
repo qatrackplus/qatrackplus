@@ -566,3 +566,6 @@ a.text-success:focus {
     display: inline-block;
     vertical-align: top;
 }
+.unreviewed-count-wrapper {
+    margin-right: 8px;
+}

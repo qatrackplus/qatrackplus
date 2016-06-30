@@ -26,3 +26,7 @@ qatrack/qa/static/css/site.css
 ldap.debug
 *.pyproj
 *.suo
+.idea/
+deployLocal.py
+*.db
+coverage.xml

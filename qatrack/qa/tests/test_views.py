@@ -1141,6 +1141,7 @@ class TestPerformQA(TestCase):
         url = reverse("perform_qa", kwargs={"pk": utc.pk})
 
         response = self.client.get(url)
+
         self.assertListEqual(response.context["days"], [(1, "Day 1"), (2, "Day 2")])
         self.assertEqual(response.context["current_day"], 1)
         self.assertEqual(response.context["last_day"], None)

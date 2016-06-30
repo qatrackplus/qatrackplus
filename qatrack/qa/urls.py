@@ -60,21 +60,28 @@ urlpatterns = patterns('',
 
     # review utc's
     url(r"^review/all/$", review.UTCReview.as_view(), name="review_all"),
+    url(r"^review/yourall/$", review.UTCYourReview.as_view(), name="review_your_all"),
     url(r"^review/utc/(?P<pk>\d+)/$", review.UTCInstances.as_view(), name="review_utc"),
     url(r"^review/frequency/$", review.ChooseFrequencyForReview.as_view(), name="choose_review_frequency"),
     url(r"^review/frequency/(?P<frequency>[/\w-]+?)/$", review.UTCFrequencyReview.as_view(), name="review_by_frequency"),
     url(r"^review/unit/$", review.ChooseUnitForReview.as_view(), name="choose_review_unit"),
     url(r"^review/unit/(?P<unit_number>[/\d]+)/$", review.UTCUnitReview.as_view(), name="review_by_unit"),
+    url(r"^review/inactive/$", review.InactiveReview.as_view(), name="review_inactive"),
+    url(r"^review/yourinactive/$", review.YourInactiveReview.as_view(), name="review_your_inactive"),
 
     # test list instances
     url(r"^session/details/$", base.TestListInstances.as_view(), name="complete_instances"),
     url(r"^session/details/(?P<pk>\d+)/$", review.TestListInstanceDetails.as_view(), name="view_test_list_instance"),
     url(r"^session/review/(?P<pk>\d+)/$", review.ReviewTestListInstance.as_view(), name="review_test_list_instance"),
     url(r"^session/unreviewed/$", review.Unreviewed.as_view(), name="unreviewed"),
+    url(r"^session/unreviewedvisible/$", review.UnreviewedVisibleTo.as_view(), name="unreviewed_visible_to"),
+
+    url(r"^session/group/$", review.ChooseGroupVisibleTo.as_view(), name="choose_group_visible"),
+    url(r"^session/unreviewedbygroup/(?P<group>[/\d]+)/$", review.UnreviewedByVisibleToGroup.as_view(), name="unreviewed_by_group"),
+
     url(r"^session/in-progress/$", perform.InProgress.as_view(), name="in_progress"),
     url(r"^session/continue/(?P<pk>\d+)/$", perform.ContinueTestListInstance.as_view(), name="continue_tli"),
     url(r"^session/edit/(?P<pk>\d+)/$", perform.EditTestListInstance.as_view(), name="edit_tli"),
-
 
     url(r"^unit/$", perform.ChooseUnit.as_view(), name="choose_unit"),
     url(r"^utc/perform/(?P<pk>\d+)/$", perform.PerformQA.as_view(), name="perform_qa"),

@@ -121,6 +121,7 @@ PERMISSIONS = (
             ("qa.can_review", "Can review tests", "Allows a user to perform review & approval functions"),
             ("qa.can_view_charts", "Can chart test history", "Gives user the ability to view and create charts of historical test results"),
             ("qa.can_review_own_tests", "Can review self-performed tests", "Allows a user to perform review & approval functions on self-performed tests"),
+            ("qa.can_review_non_visible_tli", "Can review test list instances not visible to a user", "Allows a user to review test list instances that are not visible to any of their groups")
         ),
     ),
 )
@@ -881,7 +882,7 @@ class TestList(TestCollectionInterface):
     #----------------------------------------------------------------------
     def __unicode__(self):
         """return display representation of object"""
-        return "TestList(%s)" % self.name
+        return "(%s) %s" % (self.pk, self.name)
 
 
 #============================================================================
@@ -938,6 +939,7 @@ class UnitTestCollection(models.Model):
         # ordering = ("testlist__name","testlistcycle__name",)
         permissions = (
             ("can_view_overview", "Can view program overview"),
+            ("can_review_non_visible_tli", "Can view tli and utc not visible to user's groups")
         )
 
     #----------------------------------------------------------------------
@@ -1330,19 +1332,21 @@ class TestInstance(models.Model):
 #============================================================================
 class TestListInstanceManager(models.Manager):
 
-    #----------------------------------------------------------------------
     def unreviewed(self):
         return self.complete().filter(all_reviewed=False)
 
-    #----------------------------------------------------------------------
     def unreviewed_count(self):
         return self.unreviewed().count()
 
-    #----------------------------------------------------------------------
+    def your_unreviewed(self, user):
+        return self.complete().filter(all_reviewed=False, unit_test_collection__visible_to__in=user.groups.all()).distinct()
+
+    def your_unreviewed_count(self, user):
+        return self.your_unreviewed(user).count()
+
     def in_progress(self):
         return self.get_query_set().filter(in_progress=True)
 
-    #----------------------------------------------------------------------
     def complete(self):
         return self.get_query_set().filter(in_progress=False)
 
