@@ -20,6 +20,7 @@ local_settings.py
 fixtures/dev
 questions_*
 qatrack/static
+qatrack/assets
 qatrack/cache/cache_data
 qatrack/media/uploads
 qatrack/qa/static/css/site.css
