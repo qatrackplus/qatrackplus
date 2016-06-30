@@ -318,7 +318,6 @@ class TestListInstances(BaseListableView):
         "review_status": False,
     }
 
-
     order_fields = {
         "actions": False,
         "unit_test_collection__unit__name": "unit_test_collection__unit__number",

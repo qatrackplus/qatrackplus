@@ -39,6 +39,8 @@ def site(request):
         qa_frequencies = list(Frequency.objects.frequency_choices())
         cache.set(settings.CACHE_QA_FREQUENCIES, qa_frequencies)
 
+    print settings.STATIC_URL
+
     return {
         'SITE_NAME': site.name,
         'SITE_URL': site.domain,
@@ -52,4 +54,6 @@ def site(request):
         'ICON_SETTINGS_JSON': json.dumps(settings.ICON_SETTINGS),
         'TEST_STATUS_SHORT_JSON': json.dumps(settings.TEST_STATUS_DISPLAY_SHORT),
         'REVIEW_DIFF_COL': settings.REVIEW_DIFF_COL,
+        'DEBUG': settings.DEBUG
     }
+
