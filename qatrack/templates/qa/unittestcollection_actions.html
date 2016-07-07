@@ -1,6 +1,6 @@
 {% load qa_tags %}
-{% if action =  "perform" %}
-    <a class="btn btn-primary btn-mini" href="{%url 'perform_qa' utc.pk%}?day=next&next={{request.path|cut:"data/"}}">Perform</a>
-{% elif action = "review" %}
-    <a class="btn btn-primary btn-mini" href="{%url 'review_utc' utc.pk%}?next={{request.path|cut:"data/"}}">History</a>
+{% if action == "perform" %}
+    <a class="btn btn-primary btn-xs btn-flat" href="{%url 'perform_qa' utc.pk%}?day=next&next={{request.path|cut:"data/"}}">Perform</a>
+{% elif action == "review" %}
+    <a class="btn btn-primary btn-xs btn-flat" href="{%url 'review_utc' utc.pk%}?next={{request.path|cut:"data/"}}">History</a>
 {% endif %}

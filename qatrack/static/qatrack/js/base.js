@@ -48,3 +48,4 @@ $.fn.preventDoubleSubmit = function() {
   });
   return jQuery(this);
 };
+

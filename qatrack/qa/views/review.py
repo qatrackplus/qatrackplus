@@ -156,7 +156,7 @@ class UTCUnitReview(UTCYourReview):
 class ChooseUnitForReview(ChooseUnit):
     """Allow user to choose a :model:`units.Unit` to review :model:`qa.TestListInstance`s for"""
 
-    active_only = False
+    active_only = True
     template_name = "units/unittype_choose_for_review.html"
 
 

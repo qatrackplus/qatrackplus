@@ -2,7 +2,7 @@
 //Initialize sortable/filterable test list table data types
 function init_test_list_instance_tables(units, frequencies){
 
-    var unit_names = _.pluck(units[0].objects,"name");
+    var unit_names = _.map(units[0].objects,"name");
     var freq_names = _.map(frequencies[0].objects,function(e){return {value:e.id,label:e.name};});
     freq_names.push({value:null,label:"Ad hoc"});
 
@@ -64,6 +64,10 @@ $(document).ready(function(){
         $.getJSON(QAURLs.API_URL+"unit/?format=json&limit=0"),
         $.getJSON(QAURLs.API_URL+"frequency/?format=json&limit=0")
     ).then(init_test_list_instance_tables);
+
+    $(function () {
+        $('[data-toggle="popover"]').popover()
+    });
 
 });
 

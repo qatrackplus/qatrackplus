@@ -1,18 +1,24 @@
 {% if instance %}
-    {% for status,display,tests in instance.pass_fail_status %}
-        {% if tests and status not in exclude%}
-        <span class="{%if show_label%}label{%else%}badge{%endif%} {{status}}" title="{{tests|length}} {{display}}">
-            {% if show_icons %}
-                {% if status == 'tolerance' %}
-                    <i class="icon-warning-sign"></i>
-                {% elif status == 'action' %}
-                    <i class="icon-minus-sign"></i>
-                {% endif %}
+    <span class="label-group">
+        {% for status,display,tests in instance.pass_fail_status %}
+            {% if tests and status not in exclude%}
+                <span class="{%if show_label%}label{%else%}badge{%endif%} {{status}}" title="{{tests|length}} {{display}}">
+                    {% if show_icons %}
+                        {% if status == 'tolerance' %}
+                            <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+                        {% elif status == 'action' %}
+                            <i class="fa fa-ban" aria-hidden="true"></i>
+                        {% elif status == 'ok' %}
+                            <i class="fa fa-check-circle-o" aria-hidden="true"></i>
+                        {% elif status == 'not_done' %}
+                            <i class="fa fa-circle-o" aria-hidden="true"></i>
+                        {% endif %}
+                    {% endif %}
+                    {{tests|length}}{%if show_label%} {{display}}{%endif%}
+                </span>
             {% endif %}
-            {{tests|length}}{%if show_label%} {{display}}{%endif%}
-        </span>
-        {% endif %}
-    {% endfor %}
+        {% endfor %}
+    </span>
 {% else %}
     <em>New List</em>
 {% endif %}

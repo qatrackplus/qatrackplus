@@ -138,7 +138,7 @@ STATICFILES_FINDERS = (
 )
 
 # add a site specific css file if one doesn't already exist
-SITE_SPECIFIC_CSS_PATH = os.path.join(PROJECT_ROOT, "qa", "static", "css", "site.css")
+SITE_SPECIFIC_CSS_PATH = os.path.join(PROJECT_ROOT, "static", "qatrack", "css", "site-new.css")
 if not os.path.isfile(SITE_SPECIFIC_CSS_PATH):
     with open(SITE_SPECIFIC_CSS_PATH, 'w') as f:
         f.write("/* You can place any site specific css in this file*/\n")

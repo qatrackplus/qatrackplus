@@ -510,7 +510,7 @@ function get_ref_data(){
         return ti.test_info.reference.value ? ti.test_info.reference.value : null;
     });
 
-    return _.object(_.zip(tli.slugs, ref_values));
+    return _.zipObject(_.zip(tli.slugs, ref_values));
 }
 
 function get_tol_data(){
@@ -521,7 +521,7 @@ function get_tol_data(){
         var tol = ti.test_info.tolerance;
         return !tol.id ? null : _.pick(tol, tol_properties);
     });
-    return _.object(_.zip(tli.slugs, tol_values));
+    return _.zipObject(_.zip(tli.slugs, tol_values));
 }
 
 function TestListInstance(){
@@ -542,7 +542,7 @@ function TestListInstance(){
 
         self.test_instances = _.map(_.zip(test_infos, $("#perform-qa-table tr.qa-valuerow")), function(uti_row){return new TestInstance(uti_row[0], uti_row[1])});
         self.slugs = _.map(self.test_instances, function(ti){return ti.test_info.test.slug});
-        self.tests_by_slug = _.object(_.zip(self.slugs,self.test_instances));
+        self.tests_by_slug = _.zipObject(_.zip(self.slugs,self.test_instances));
         self.composites = _.filter(self.test_instances,function(ti){return ti.test_info.test.type === QAUtils.COMPOSITE || ti.test_info.test.type === QAUtils.STRING_COMPOSITE;});
         self.composite_ids = _.map(self.composites,function(ti){return ti.test_info.test.id;});
         self.calculate_composites();
@@ -558,7 +558,7 @@ function TestListInstance(){
 
 
         var cur_values = _.map(self.test_instances,function(ti){return ti.value;});
-        var qa_values = _.object(_.zip(self.slugs,cur_values));
+        var qa_values = _.zipObject(_.zip(self.slugs,cur_values));
         var meta = get_meta_data();
         var refs = get_ref_data();
         var tols = get_tol_data();
@@ -695,7 +695,10 @@ $(document).ready(function(){
     pass_fail_only = $("#pass-fail-only").val() === "yes" ? true : false;
     comment_on_skip = $("#require-comment-on-skip").val() === "yes" ? true : false;
 
-    $("#test-list-info-toggle").click(function(){ $("#test-list-info").toggle(600); });
+    $("#test-list-info-toggle").click(function(){
+        console.log('toggle it');
+        $("#test-list-info").toggle(600);
+    });
 
     //toggle general comment
     $("#toggle-gen-comment").click(function(){
