@@ -9,9 +9,8 @@
 {#    {% autoescape off %}{% listable_css %}{% endautoescape %}#}
     <link href="{{ STATIC_URL }}datepicker/css/bootstrap-datepicker.min.css?v={{VERSION}}" rel="stylesheet">
     <link href="{{ STATIC_URL }}multiselect/css/bootstrap.multiselect.css?v={{VERSION}}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}qatrack/css/tables.css?v={{VERSION}}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}qatrack_core/css/tables.css?v={{VERSION}}" rel="stylesheet">
     <link href="{{ STATIC_URL }}qa/css/qa.css?v={{VERSION}}" rel="stylesheet">
-
 {% endblock extra_css %}
 
 {% block extra_js %}
@@ -30,7 +29,7 @@
         <div class="col-md-12">
             <div class="box box-primary">
                 <div class="box-header">
-                    <i class="fa fa-file-o" aria-hidden="true"></i>
+                    <i class="fa fa-pencil-square-o fa-fw" aria-hidden="true"></i>
                     <h3 class="box-title">All Test Collections</h3>
                     {% if action == "perform" %}
                         <a class="pull-right" href="{% url "choose_unit" %}" title="return to unit selection">&larr; Back to Unit Selection Page</a>

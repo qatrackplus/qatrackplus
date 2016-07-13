@@ -19,6 +19,26 @@ urlpatterns = patterns('',
 
 )
 
+for pattern in urlpatterns:
+    print '---------------------'
+    if hasattr(pattern, 'name'):
+        print pattern.name
+        # print pattern.callback.func_name
+        # print dir(pattern.callback)
+    else:
+        # for pat in pattern:
+        #     print '    ------------'
+        #     print '\t' + str(pat)
+        # print dir(pattern)
+        for u in pattern.url_patterns:
+            if hasattr(u, 'name'):
+                print u.name
+            else:
+                for another in u.url_patterns:
+                    if hasattr(another, 'name'):
+                        print another.name
+        # print pattern.url_patterns
+
 # if settings.DEBUG:
 #     urlpatterns += patterns(
 #         '',

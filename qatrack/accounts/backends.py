@@ -7,7 +7,6 @@ from django.contrib.auth.backends import ModelBackend
 #stripped down version of http://djangosnippets.org/snippets/901/
 class ActiveDirectoryGroupMembershipSSLBackend:
 
-    #----------------------------------------------------------------------
     def authenticate(self, username=None, password=None):
         debug = None
         if settings.AD_DEBUG_FILE and settings.AD_DEBUG:
@@ -38,7 +37,6 @@ class ActiveDirectoryGroupMembershipSSLBackend:
                 print >>debug, "\tException occured "
                 print >>debug, e
 
-    #----------------------------------------------------------------------
     def get_or_create_user(self, username, password):
         try:
             user = User.objects.get(username=username)
@@ -93,7 +91,6 @@ class ActiveDirectoryGroupMembershipSSLBackend:
                 print >>debug, "User created: %s" % username
         return user
 
-    #----------------------------------------------------------------------
     def get_user(self, user_id):
         try:
             return User.objects.get(pk=user_id)

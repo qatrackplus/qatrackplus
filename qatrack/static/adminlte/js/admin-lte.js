@@ -144,6 +144,7 @@ $(function () {
   $("body").removeClass("hold-transition");
 
   //Extend options if external options exist
+  console.log(AdminLTEOptions);
   if (typeof AdminLTEOptions !== "undefined") {
     $.extend(true,
         $.AdminLTE.options,
@@ -342,10 +343,13 @@ function _init() {
         }
       });
 
-      //Enable expand on hover for sidebar mini
-      if ($.AdminLTE.options.sidebarExpandOnHover
-          || ($('body').hasClass('fixed')
-          && $('body').hasClass('sidebar-mini'))) {
+      // Enable expand on hover for sidebar mini
+      // if ($.AdminLTE.options.sidebarExpandOnHover
+      //     || ($('body').hasClass('fixed')
+      //     && $('body').hasClass('sidebar-mini'))) {
+      //   this.expandOnHover();
+      // }
+      if ($.AdminLTE.options.sidebarExpandOnHover) {
         this.expandOnHover();
       }
     },

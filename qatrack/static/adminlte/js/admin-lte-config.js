@@ -97,4 +97,8 @@ var available_options = {
 };
 
 
-var AdminLTEOptions = {};
+var AdminLTEOptions = {
+    sidebarExpandOnHover: false,
+    navbarMenuSlimscroll: false,
+    sidebarSlimScroll: false
+};

@@ -69,5 +69,13 @@ $(document).ready(function(){
         $('[data-toggle="popover"]').popover()
     });
 
+    $('#category-showall').change(function() {
+        var categories = $('#category-list > li > a > .check-category');
+        if (this.checked) {
+            
+        }
+    });
+
+
 });
 

@@ -114,7 +114,7 @@ UPLOADS_URL = MEDIA_URL + 'uploads/'
 # Don't put anything in this directory yourself; store your static files
 # in apps' "static/" subdirectories and in STATICFILES_DIRS.
 # Example: "/home/media/media.lawrence.com/static/"
-STATIC_ROOT = os.path.join(PROJECT_ROOT, "assests")
+STATIC_ROOT = os.path.join(PROJECT_ROOT, "assets")
 
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
@@ -138,7 +138,7 @@ STATICFILES_FINDERS = (
 )
 
 # add a site specific css file if one doesn't already exist
-SITE_SPECIFIC_CSS_PATH = os.path.join(PROJECT_ROOT, "static", "qatrack", "css", "site-new.css")
+SITE_SPECIFIC_CSS_PATH = os.path.join(PROJECT_ROOT, "qatrack_core", "static", "qatrack_core", "css", "site.css")
 if not os.path.isfile(SITE_SPECIFIC_CSS_PATH):
     with open(SITE_SPECIFIC_CSS_PATH, 'w') as f:
         f.write("/* You can place any site specific css in this file*/\n")
@@ -223,6 +223,7 @@ INSTALLED_APPS = [
     'qatrack.accounts',
     'qatrack.units',
     'qatrack.qa',
+    'qatrack.qatrack_core',
     # 'qatrack.theme_bootstrap',
     'qatrack.notifications',
     'qatrack.contacts',

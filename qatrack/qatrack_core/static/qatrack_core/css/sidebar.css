@@ -1,0 +1,30 @@
+
+.main-header .sidebar-toggle:before {
+  content: none;
+}
+
+.sidebar-menu > li.info:hover > a,
+.sidebar-menu > li.active.info > a,
+.nav-stacked > li.active.info > a {
+    border-left-color: #00c0ef;
+}
+.sidebar-menu > li.danger:hover > a,
+.sidebar-menu > li.active.danger > a,
+.nav-stacked > li.active.danger > a {
+    border-left-color: #dd4b39;
+}
+.sidebar-menu > li.warning:hover > a,
+.sidebar-menu > li.active.warning > a,
+.nav-stacked > li.active.warning > a {
+    border-left-color: #f39c12;
+}
+.sidebar-menu > li.success:hover > a,
+.sidebar-menu > li.active.success > a,
+.nav-stacked > li.active.success > a {
+    border-left-color: #00a65a;
+}
+.sidebar-menu > li.default:hover > a,
+.sidebar-menu > li.active.default > a,
+.nav-stacked > li.active.default > a {
+    border-left-color: #d2d6de;
+}

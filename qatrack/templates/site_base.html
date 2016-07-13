@@ -9,6 +9,7 @@
 
         {% load i18n %}
         {% load l10n %}
+        {% load qatrack_tags %}
         {#{% load staticfiles %}#}
 
         {#{% block favicon %}#}
@@ -29,7 +30,7 @@
             <link href="{{ STATIC_URL }}adminlte/css/admin-lte.css?v={{ VERSION }}" rel="stylesheet">
             <link href="{{ STATIC_URL }}adminlte/css/skins/skin-blue.min.css?v={{ VERSION }}" rel="stylesheet">
 {#            <link href="{{ STATIC_URL }}adminlte/css/skins/skin-black-dark.css?v={{ VERSION }}" rel="stylesheet">#}
-            <link href="{{ STATIC_URL }}qatrack/css/base.css?v={{VERSION}}" rel="stylesheet">
+            <link href="{{ STATIC_URL }}qatrack_core/css/base.css?v={{VERSION}}" rel="stylesheet">
             {% block extra_css %}{% endblock extra_css %}
         {% endblock style_base %}
 
@@ -98,21 +99,26 @@
     </head>
 
 {#    <body class="{% block body_class %}{% endblock %}" id="{% block body_id %}{% endblock %}">#}
-    <body class="skin-blue layout-top-nav fixed">
+    <body class="skin-blue fixed {% block body_class %}layout-top-nav{% endblock body_class %}">
         <div class="wrapper">
 
             <header class="main-header">
-                <nav class="navbar navbar-static-top">
-                    <div class="container-fluid">
-                        <div class="navbar-header">
-                            <a href="{% url "home" %}" class="navbar-brand"><b>QA</b>Track<b>+</b></a>
-                            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
-                                    data-target="#navbar-collapse">
-                                <i class="fa fa-bars"></i>
-                            </button>
-                        </div>
 
-                        <div class="collapse navbar-collapse" id="navbar-collapse">
+                <a href="{% url "home" %}" class="logo">
+                    <!-- mini logo for sidebar mini 50x50 pixels -->
+                    <span class="logo-mini"><b>QAT+</b></span>
+                    <!-- logo for regular state and mobile devices -->
+                    <span class="logo-lg"><b>Qa</b>Track<b>+</b></span>
+                </a>
+
+                <nav class="navbar navbar-static-top">
+
+                    {% block sidebar_toggle %}
+                    {% endblock sidebar_toggle %}
+
+                    <div class="navbar-menu">
+                        {% if user.is_authenticated %}
+
                             <ul class="nav navbar-nav">
 
                                 <li class="dropdown">
@@ -123,20 +129,24 @@
                                     <ul class="dropdown-menu" role="menu">
                                         <li>
                                             <a href="{% url "choose_unit" %}" title="Choose a Unit To Perform QA On">
-                                                <span class="menu-icon"><i class="fa fa-cubes" aria-hidden="true"></i></span>
+                                                <i class="fa fa-cubes fa-fw" aria-hidden="true"></i>
                                                 Choose Unit
                                             </a>
                                         </li>
                                         <li>
                                             <a href="{% url "all_lists" %}" title="View all available QA Lists">
-                                                <span class="menu-icon"><i class="fa fa-files-o" aria-hidden="true"></i></span>
+{#                                                    <span class="fa fa-stack fa-fw" aria-hidden="true">#}
+{#                                                        <i class="fa fa-cube fa-stack-custom-main"></i>#}
+{#                                                        <i class="fa fa-check fa-stack-custom-sub success"></i>#}
+{#                                                    </span>#}
+                                                <i class="fa fa-pencil-square-o fa-fw" aria-hidden="true"></i>
                                                 All QA
                                             </a>
                                         </li>
                                         <li class="divider"></li>
                                         <li>
                                             <a href="{% url "in_progress" %}" title="Resume a QA session currently in progress">
-                                                <span class="menu-icon"><i class="fa fa-play" aria-hidden="true"></i></span>
+                                                <i class="fa fa-play fa-fw" aria-hidden="true"></i>
                                                 In Progress
                                             </a>
                                         </li>
@@ -161,13 +171,13 @@
                                         <li class="nav-header">QA Program Status</li>
                                         <li>
                                             <a href="{% url "overview" %}" title="View a summary of the status of the QA program">
-                                                <span class="menu-icon"><i class="fa fa-globe" aria-hidden="true"></i></span>
+                                                <i class="fa fa-globe fa-fw" aria-hidden="true"></i>
                                                 Overview
                                             </a>
                                         </li>
                                         <li>
                                             <a href="{% url "overview_due_dates" %}" title="View a summary of the status of the QA program">
-                                                <span class="menu-icon"><i class="fa fa-calendar-check-o" aria-hidden="true"></i></span>
+                                                <i class="fa fa-calendar-check-o fa-fw" aria-hidden="true"></i>
                                                 By Due Status
                                             </a>
                                         </li>
@@ -179,7 +189,7 @@
                                             {% if perms.qa.can_review_non_visible_tli %}
                                                 <li>
                                                     <a href="{% url  "unreviewed" %}" title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed">
-                                                        <span class="menu-icon"><i class="fa fa-question-circle" aria-hidden="true"></i></span>
+                                                        <i class="fa fa-question-circle fa-fw" aria-hidden="true"></i>
                                                         <span title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
                                                             <span class="total-unreviewed-count">{{UNREVIEWED}}</span>
                                                         </span>
@@ -189,7 +199,7 @@
                                             {% else %}
                                                 <li>
                                                     <div title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed" style="padding: 3px 15px;">
-                                                        <span class="menu-icon"><i class="fa fa-question-circle" aria-hidden="true"></i></span>
+                                                        <i class="fa fa-question-circle fa-fw" aria-hidden="true"></i>
                                                         <span title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
                                                             <span class="total-unreviewed-count">{{UNREVIEWED}}</span>
                                                         </span>
@@ -199,7 +209,7 @@
                                             {% endif %}
                                             <li>
                                                 <a href="{% url  "unreviewed_visible_to" %}" title="There are currently {{YOUR_UNREVIEWED}} QA Sessions visible to your groups waiting to be reviewed">
-                                                    <span class="menu-icon"><i class="fa fa-question-circle" aria-hidden="true"></i></span>
+                                                    <i class="fa fa-question-circle fa-fw" aria-hidden="true"></i>
                                                     <span title="There are currently {{YOUR_UNREVIEWED}} QA Sessions visible to your groups waiting to be reviewed" class="label {% if YOUR_UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
                                                         <span class="total-unreviewed-count">{{YOUR_UNREVIEWED}}</span>
                                                     </span>
@@ -208,7 +218,7 @@
                                             </li>
                                             <li>
                                                 <a href="{% url  "choose_group_visible" %}" {% comment %}title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed"{% endcomment %}>
-                                                    <span class="menu-icon"><i class="fa fa-question-circle" aria-hidden="true"></i></span>
+                                                    <i class="fa fa-question-circle fa-fw" aria-hidden="true"></i>
                                                     Unreviewed By Visible To Group
                                                 </a>
                                             </li>
@@ -218,30 +228,30 @@
                                             <li class="nav-header">Test Lists</li>
                                             {% if perms.qa.can_review_non_visible_tli %}
                                                 <li><a href="{% url "review_all" %}" title="View all test lists">
-                                                    <span class="menu-icon"><i class="fa fa-users" aria-hidden="true"></i></span>
+                                                    <i class="fa fa-users fa-fw" aria-hidden="true"></i>
                                                     All Groups Test Lists
                                                 </a></li>
                                             {% endif %}
                                             <li><a href="{% url "review_your_all" %}" title="View all test lists">
-                                                <span class="menu-icon"><i class="fa fa-users" aria-hidden="true"></i></span>
+                                                <i class="fa fa-users fa-fw" aria-hidden="true"></i>
                                                 Your Groups Test Lists
                                             </a></li>
                                             <li><a href="{% url "choose_review_unit" %}" title="Choose a unit to review qa lists for.">
-                                                <span class="menu-icon"><i class="fa fa-cubes" aria-hidden="true"></i></span>
+                                                <i class="fa fa-cubes fa-fw" aria-hidden="true"></i>
                                                 Your Test Lists By Unit
                                             </a></li>
                                             <li><a href="{% url "choose_review_frequency" %}" title="Choose a frequency to review qa lists for.">
-                                                <span class="menu-icon"><i class="fa fa-clock-o" aria-hidden="true"></i></span>
+                                                <i class="fa fa-clock-o fa-fw" aria-hidden="true"></i>
                                                 Your Test Lists By Frequency
                                             </a></li>
                                             {% if perms.qa.can_review_non_visible_tli %}
                                                 <li><a href="{% url "review_inactive" %}" title="View all inactive test lists.">
-                                                    <span class="menu-icon"><i class="fa fa-file" aria-hidden="true"></i></span>
+                                                    <i class="fa fa-file fa-fw" aria-hidden="true"></i>
                                                     All Groups Inactive Test Lists
                                                 </a></li>
                                             {% else %}
                                                 <li><a href="{% url "review_your_inactive" %}" title="View all inactive test lists.">
-                                                    <span class="menu-icon"><i class="fa fa-file" aria-hidden="true"></i></span>
+                                                    <i class="fa fa-file fa-fw" aria-hidden="true"></i>
                                                     Your Groups Inactive Test Lists
                                                 </a></li>
 
@@ -252,7 +262,7 @@
                                             <li class="divider"></li>
                                             <li class="nav-header">Trends and Analysis</li>
                                             <li><a href="{% url "charts" %}">
-                                                <span class="menu-icon"><i class="fa fa-line-chart" aria-hidden="true"></i></span>
+                                                <i class="fa fa-line-chart fa-fw" aria-hidden="true"></i>
                                                 Charts
                                             </a></li>
                                         {% endif %}
@@ -269,7 +279,7 @@
                                         </a>
                                         <ul class="dropdown-menu" role="menu">
                                             <li><a href="{% url "qa_paper_forms_request" %}" title="Create a set of paper backup forms">
-                                                <span class="menu-icon"><i class="fa fa-paper-plane-o" aria-hidden="true"></i></span>
+                                                <i class="fa fa-paper-plane-o fa-fw" aria-hidden="true"></i>
                                                 Paper Backup Forms
                                             </a></li>
                                         </ul>
@@ -280,45 +290,54 @@
 
                             <ul class="nav navbar-nav navbar-right">
 
-                                {% if user.is_authenticated %}
-                                    <li class="dropdown">
-                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                            {% if user.is_superuser %}
-                                                Administrators ::
-                                            {% elif user.groups.count > 0 %}
-                                                {{user.groups.all.0.name}} ::
-                                            {% endif %}
-                                            <span id="username">{{ user }}</span>
-                                            <b class="caret"></b>
-                                        </a>
-                                        <ul class="dropdown-menu" role="menu">
-                                            <li><a href="{% url "account-details" %}">
-                                                <span class="menu-icon"><i class="fa fa-user" aria-hidden="true"></i></span>
-                                                Account
-                                            </a></li>
-                                            {% if user.is_staff %}
-                                                <li><a href="{% url "admin:index" %}">
-                                                    <span class="menu-icon"><i class="fa fa-cogs" aria-hidden="true"></i></span>
-                                                    Admin
-                                                </a></li>
-                                            {% endif %}
-                                            <li class="divider"></li>
-                                            <li><a href="{% url "auth_logout" %}">
-                                                <span class="menu-icon"><i class="fa fa-power-off" aria-hidden="true"></i></span>
-                                                 Log out
-                                            </a></li>
-                                        </ul>
-                                    </li>
-                                {% else %}
-                                    <li><a href="{% url "auth_login" %}">Log in</a></li>
-                                {% endif %}
+                                <li class="dropdown">
 
+                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                        {% if user.is_superuser %}
+                                            Administrators ::
+                                        {% elif user.groups.count > 0 %}
+                                            {{user.groups.all.0.name}} ::
+                                        {% endif %}
+                                        <span id="username">{{ user }}</span>
+                                        <b class="caret"></b>
+                                    </a>
+
+                                    <ul class="dropdown-menu" role="menu">
+                                        <li><a href="{% url "account-details" %}">
+                                            <i class="fa fa-user fa-fw" aria-hidden="true"></i>
+                                            Account
+                                        </a></li>
+                                        {% if user.is_staff %}
+                                            <li><a href="{% url "admin:index" %}">
+                                                <i class="fa fa-cogs fa-fw" aria-hidden="true"></i>
+                                                Admin
+                                            </a></li>
+                                        {% endif %}
+                                        <li class="divider"></li>
+                                        <li><a href="{% url "auth_logout" %}">
+                                            <i class="fa fa-power-off fa-fw danger" aria-hidden="true"></i>
+                                             Log out
+                                        </a></li>
+                                    </ul>
+
+                                </li>
                             </ul>
 
-                        </div><!-- /.navbar-collapse -->
-                    </div><!-- /.container-fluid -->
+                        {% else %}
+                            <ul class="nav navbar-nav navbar-right">
+                                <li><a href="{% url "auth_login" %}">
+                                    <i class="fa fa-sign-in fa-fw" aria-hidden="true"></i>
+                                    Log in
+                                </a></li>
+                            </ul>
+                        {% endif %}
+
+                    </div>
                 </nav>
             </header>
+
+            {% block main_sidebar %}
+            {% endblock main_sidebar %}
 
             <div class="content-wrapper">
                 <div class="content-header">

@@ -1,0 +1,82 @@
+{% extends "registration/base.html" %}
+
+{% load i18n %}
+{% load qatrack_tags %}
+
+{% block head_title %}{% trans "Log In" %}{% endblock %}
+
+{% block login_active %} class="active"{% endblock %}
+
+{% block account_box %}
+    <div class="box box-primary">
+
+        <div class="box-header">
+            <h3 class="box-title"><i class="fa fa-sign-in fa-fw" aria-hidden="true"></i>Sign in to start your session</h3>
+        </div>
+
+
+        <div class="box-body">
+            {% if user.is_authenticated %}
+                <div class="alert alert-info">
+                    <strong>{% trans "Note" %}</strong>:
+                    {% blocktrans %}you are already logged in as {{ user }}.{% endblocktrans %}
+                </div>
+            {% endif %}
+
+            <form method="POST" action="{% url "auth_login" %}" autocapitalize="off">
+        {#                        <fieldset>#}
+                {% csrf_token %}
+                {% if form.non_field_errors %}
+                    <div class="alert alert-error">
+                        {% if form_error_title %}
+                            <strong>{{ form_error_title }}</strong>
+                        {% endif %}
+                        {% for error in form.non_field_errors %}
+                            {{ error }}<br />
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                {% for field in form %}
+                    {% if field.is_hidden %}
+                        {{ field }}
+                    {% else %}
+                        <div class="form-group {% if field.errors %}has-error{% endif %}">
+                            {{ field|custominput:"form-control" }}
+                            {% for error in field.errors %}
+                                <span class="help-block">{{ error }}</span>
+                            {% endfor %}
+                            {% if field.help_text %}
+                                <p class="help-block">{{ field.help_text|safe }}</p>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+
+                {% if next %}
+                    <input type="hidden" name="next" value="{{ next }}" />
+                {% endif %}
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-flat">{% trans "Log in" %}</button>
+                </div>
+        {#                        </fieldset>#}
+            </form>
+
+
+            {% if not user.is_authenticated %}
+                <div class="text-muted description-block">{% blocktrans %}If you have any trouble logging in to your account, contact the site administrator.{% endblocktrans %}</div>
+            {% endif %}
+        </div>
+    </div>
+
+{% endblock account_box %}
+
+
+{#{% block extra_body %}#}
+{#<script>#}
+{#    $(document).ready(function(){#}
+{#       $("#id_username").focus();#}
+{#     });#}
+{#</script>#}
+{#{% endblock %}#}
