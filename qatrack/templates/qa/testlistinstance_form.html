@@ -1,6 +1,7 @@
 {% extends "site_base.html" %}
 {#{% load staticfiles %}#}
 {% load qa_tags %}
+{% load qatrack_tags %}
 
 {% block head_title %}{% spaceless %}
     {% if test_list_instance %}
@@ -12,14 +13,14 @@
 
 {% block extra_css %}
 
-    <link href="{{ STATIC_URL }}datepicker/css/bootstrap-datepicker.min.css?v={{ VERSION }}" rel="stylesheet"
-          xmlns="http://www.w3.org/1999/html">
+{#    <link href="{{ STATIC_URL }}datepicker/css/bootstrap-datepicker.min.css?v={{ VERSION }}" rel="stylesheet">#}
+    <link href="{{ STATIC_URL }}daterangepicker/css/daterangepicker.css?v={{ VERSION }}" rel="stylesheet">
 {#    <link href="{{ STATIC_URL }}multiselect/css/bootstrap.multiselect.css?v={{VERSION}}" rel="stylesheet">#}
     <link href="{{ STATIC_URL }}qatrack_core/css/tables.css?v={{VERSION}}" rel="stylesheet">
 {#    <link href="{{ STATIC_URL }}qa/css/qa.css?v={{VERSION}}" rel="stylesheet">#}
-    <link href="{{ STATIC_URL }}icheck/css/polaris.css?v={{VERSION}}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}icheck/css/blue.css?v={{VERSION}}" rel="stylesheet">
     <link href="{{ STATIC_URL }}qatrack_core/css/sidebar.css?v={{VERSION}}" rel="stylesheet">
-{#    <link href="{{ STATIC_URL }}qa/css/qa-old.css?v={{VERSION}}" rel="stylesheet">#}
+{#    <link href="{{ STATIC_URL }}qa/css/qa-old.css?v={{VERSION}}" rel="stylesheet">  #}
 
 {% endblock extra_css %}
 
@@ -65,7 +66,7 @@
         {% csrf_token %}
 
         <div id="box-contacts" class="row" style="display: none;">
-            <div class="col-md-12">
+            <div class="col-lg-12">
                 <div class="box box-info">
                     <div class="box-header">
                         <h3 class="box-title">
@@ -99,7 +100,7 @@
         </div>
 
         <div id="box-description" class="row" style="display: none;">
-            <div class="col-md-12">
+            <div class="col-lg-12">
                 <div class="box box-info">
                     <div class="box-header">
                         <h3 class="box-title">
@@ -112,7 +113,7 @@
                     </div>
                     <div class="box-body">
                         {% if test_list.description or unit_test_collection.tests_object.description %}
-                            <div class="col-md-12">
+                            <div class="col-lg-12">
                                 {% if days %}
                                     <pre>
                                         {{unit_test_collection.tests_object.description|safe}}
@@ -131,43 +132,16 @@
             </div>
         </div>
 
-        <div id="box-perform" class="row">
-            {% comment %}<div id="admin-controls" class="col-md-3"><!-- TODO move to sidebar -->
-                <div class="box box-solid">
-
+        <div id="box-options" class="row">
+            <div class="col-lg-12">
+                <div class="box box-primary">
                     <div class="box-header">
-
+                        <h3 class="box-title">
+                            <i class="fa fa-wrench" aria-hidden="true"></i>
+                            Options
+                        </h3>
                     </div>
-
                     <div class="box-body">
-
-                        {% if form.errors %}
-                            <div class="alert-message error">
-                                {% for field in form%}
-                                    {% for error in field.errors %}
-                                        <span class="alert-error help-block-inline ">{{field.label}} ::{{ error }}</span>
-                                    {% endfor %}
-                                {% endfor %}
-                            </div>
-                            <hr/>
-                        {% endif %}
-
-                        {% if perms.qa.can_perform_subset %}
-
-                            <div class="input-prepend input-append" id="category">
-                                <label for="category_filter" class="add-on">
-                                    Categories:
-                                </label>
-                                <select id="category_filter" multiple="multiple" class="input-medium">
-                                    <option value="all" selected="selected">Show All</option>
-                                    {% for category in categories %}
-                                        <option value="{{category.pk}}">
-                                            {{category.name}}
-                                        </option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        {% endif %}
 
                         <div class="date input-prepend input-append" id="work-started" data-date="{% now 'd-m-Y'%}" data-date-format="dd-mm-yyyy">
                             {% spaceless %}
@@ -215,11 +189,14 @@
                                 </div>
                             {% endwith %}
                         {% endif %}
+
                     </div>
                 </div>
-            </div>{% endcomment %}
+            </div>
+        </div>
 
-            <div class="col-md-12">
+        <div id="box-perform" class="row">
+            <div class="col-lg-12">
                 <div class="box box-primary">
 
                     <div class="box-header">
@@ -246,16 +223,7 @@
     {#                            </div>#}
     {#                        </div>#}
                         <div class="row">
-                            <div class="col-me-12">
-
-                                <select id="category_filter" multiple="multiple" class="input-medium" style="display: none;">
-                                    <option value="all" selected="selected">Show All</option>
-                                    {% for category in categories %}
-                                        <option value="{{category.pk}}">
-                                            {{category.name}}
-                                        </option>
-                                    {% endfor %}
-                                </select>
+                            <div class="col-lg-12">
 
                                 <input type="hidden" id="test-list-id" value="{{test_list.pk}}"/>
                                 <input type="hidden" id="test-list-name" value="{{test_list.name}}"/>
@@ -676,15 +644,20 @@
 
                 <li class="header">Test List Menu</li>
 
-                <li class="info toggle-element" data-toggle="description"><a id="link-description" href="#">
+                <li class="info toggle-element" data-toggle="description"><a id="toggle-description" href="#">
                     <i class="fa fa-stack fa-fw" aria-hidden="true">
                         <i class="fa fa-file-text-o fa-stack-custom-main"></i>
                         <i class="fa fa-info fa-stack-custom-sub info"></i>
                     </i>
                     <span>Description</span>
                 </a></li>
-                <li class="divider"></li>
 
+                <li class="primary toggle-element active" data-toggle="options"><a id="toggle-options" href="#">
+                    <i class="fa fa-wrench fa-fw" aria-hidden="true"></i>
+                    <span>Options</span>
+                </a></li>
+
+                {# Category selection #}
                 {% if perms.qa.can_perform_subset %}
                     <li class="treeview">
                         <a id="menu-categories" href="#">
@@ -693,40 +666,27 @@
                             <i class="fa fa-angle-left pull-right"></i>
                         </a>
                         <ul id="category-list" class="treeview-menu" style="display: none;">
-                            <li><a {% comment %}id="category-showall"{% endcomment %} class="has-icheck" href="#">
+                            <li><a {% comment %}id="category-showall"{% endcomment %} class="has-icheck row" href="#">
 {#                                <i class="fa fa-circle-o success"></i>#}
-                                <input id="category-showall" class="iCheck" type="checkbox">
+                                <input id="category-showall" class="iCheck" type="checkbox" checked="checked">
                                 <label for="category-showall">Show All</label>
                             </a></li>
 
                             {% for category in categories %}
-                                <li><a {% comment %}id="category-{{ category.pk }}"{% endcomment %} class="has-icheck" href="#">
+                                <li><a {% comment %}id="category-{{ category.pk }}"{% endcomment %} class="has-icheck row" href="#">
 {#                                    <i class="fa fa-circle-o success"></i>#}
 {#                                    {{category.name}}#}
-                                    <input id="category-{{ category.pk }}" class="iCheck check-category" type="checkbox">
+                                    <input id="category-{{ category.pk }}" class="iCheck check-category" type="checkbox" checked="checked">
                                     <label for="category-{{ category.pk }}">{{category.name}}</label>
                                 </a></li>
                             {% endfor %}
 
                         </ul>
-{#                        <select id="category_filter" multiple="multiple" class="input-medium">#}
-{#                            <option value="all" selected="selected">Show All</option>#}
-{#                            {% for category in categories %}#}
-{#                                <option value="{{category.pk}}">#}
-{#                                    {{category.name}}#}
-{#                                </option>#}
-{#                            {% endfor %}#}
-{#                        </select>#}
                     </li>
                 {% endif %}
 
-
-
-
-
-
                 <li class="divider"></li>
-                <li class="info toggle-element" data-toggle="contacts"><a id="link-contacts" href="#">
+                <li class="info toggle-element" data-toggle="contacts"><a id="toggle-contacts" href="#">
                     <i class="fa fa-phone fa-fw" aria-hidden="true"></i>
                     <span>Contacts</span>
                 </a></li>

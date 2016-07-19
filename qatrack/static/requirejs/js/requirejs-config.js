@@ -66,6 +66,7 @@ require.config({
             deps: ['jquery', 'bootstrap']
         },
         daterangepicker: {
+            exports: 'DateRangePicker',
             deps: ['jquery', 'moment']
         },
         icheck: {
@@ -92,7 +93,7 @@ require.config({
 
         // Site wide:
         sidebar: {
-            deps: ['jquery', 'admin_lte', 'bootstrap']
+            deps: ['jquery', 'admin_lte', 'bootstrap', 'daterangepicker']
         },
         site_base: {
             deps: ['jquery']
@@ -103,7 +104,7 @@ require.config({
             deps: ['jquery', 'qautils', 'site_base', 'lodash', 'datepicker']
         },
         testlistinstance: {
-            deps: ['jquery', 'site_base', 'qa', 'lodash', 'datatables', 'datatables.columnFilter', 'datepicker', 'sidebar', 'icheck']
+            deps: ['jquery', 'site_base', 'qa', 'lodash', 'datatables', 'datatables.columnFilter', 'daterangepicker', 'sidebar', 'icheck']
         }
 
         // unit module:

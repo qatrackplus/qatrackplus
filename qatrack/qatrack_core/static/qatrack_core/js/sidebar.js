@@ -52,10 +52,13 @@ $.fn.animateRotate = function(start, stop, duration, easing, complete) {
     }
 })();
 
+/* Prevent sidebar daterange picker from moving */
+window.daterangepicker.prototype.move = function () {};
+
 $(document).ready(function() {
 
     $('.iCheck').iCheck({
-        checkboxClass: 'icheckbox_polaris'
+        checkboxClass: 'icheckbox_minimal-blue'
     });
 
     var icon = $('#toggle-icon');
@@ -72,7 +75,6 @@ $(document).ready(function() {
     $('.toggle-element').each(function () {
         var self = this;
         var target = $(this).attr('data-toggle');
-        console.log(target);
         $(self).click(function () {
             $(self).toggleClass('active');
             $('#box-' + target).slideToggle();
@@ -80,8 +82,12 @@ $(document).ready(function() {
     });
 
     $('.sidebar-menu > li a.has-icheck').click(function(e) {
-        e.stopPropagation();
         $(this).find('ins').click();
+    });
+    $('.sidebar-menu > li a.has-icheck').hover(function(e) {
+        $(this).find('div').addClass('hover');
+    }, function (e) {
+        $(this).find('div').removeClass('hover');
     });
 
 

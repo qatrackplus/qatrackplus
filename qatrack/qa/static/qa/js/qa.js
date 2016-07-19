@@ -747,7 +747,7 @@ $(document).ready(function(){
         $(window).unbind("beforeunload");
     });
 
-    $("#work-completed, #work-started").datepicker({
+    /*$("#work-completed, #work-started").datepicker({
         autoclose:true,
         keyboardNavigation:false
     }).on('changeDate',function (ev){
@@ -777,7 +777,7 @@ $(document).ready(function(){
         }else{
             input.val(cur_val+" 19:30");
         }
-    });
+    });*/
 
     var fail_warnings = $("#do-not-treat-bottom, #do-not-treat-top");
     $.Topic("qaUpdated").subscribe(function(){

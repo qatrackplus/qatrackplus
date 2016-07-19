@@ -28,8 +28,8 @@
             <link href="{{ STATIC_URL }}fontawsome/css/font-awesome.min.css?v={{ VERSION }}" rel="stylesheet">
             <link href="{{ STATIC_URL }}bootstrap/css/bootstrap.css?v={{ VERSION }}" rel="stylesheet">
             <link href="{{ STATIC_URL }}adminlte/css/admin-lte.css?v={{ VERSION }}" rel="stylesheet">
-            <link href="{{ STATIC_URL }}adminlte/css/skins/skin-blue.min.css?v={{ VERSION }}" rel="stylesheet">
-{#            <link href="{{ STATIC_URL }}adminlte/css/skins/skin-black-dark.css?v={{ VERSION }}" rel="stylesheet">#}
+{#            <link href="{{ STATIC_URL }}adminlte/css/skins/skin-blue.min.css?v={{ VERSION }}" rel="stylesheet">#}
+            <link href="{{ STATIC_URL }}adminlte/css/skins/skin-black-dark.css?v={{ VERSION }}" rel="stylesheet">
             <link href="{{ STATIC_URL }}qatrack_core/css/base.css?v={{VERSION}}" rel="stylesheet">
             {% block extra_css %}{% endblock extra_css %}
         {% endblock style_base %}
@@ -99,7 +99,7 @@
     </head>
 
 {#    <body class="{% block body_class %}{% endblock %}" id="{% block body_id %}{% endblock %}">#}
-    <body class="skin-blue fixed {% block body_class %}layout-top-nav{% endblock body_class %}">
+    <body class="skin-black-dark fixed {% block body_class %}layout-top-nav{% endblock body_class %}">
         <div class="wrapper">
 
             <header class="main-header">
@@ -354,15 +354,15 @@
                 </div>
             </div>
 
-            {% block footer_base %}
-                <div id="footer">
-                    <div class="inner">
-                        <div class="container-fluid">
-                            {% block footer %}{% endblock %}
-                        </div>
-                    </div>
-                </div>
-            {% endblock %}
+{#            {% block footer_base %}#}
+{#                <div id="footer">#}
+{#                    <div class="inner">#}
+{#                        <div class="container-fluid">#}
+{#                            {% block footer %}{% endblock %}#}
+{#                        </div>#}
+{#                    </div>#}
+{#                </div>#}
+{#            {% endblock %}#}
 
             {% block extra_body_base %}
                 {% block extra_body %}{% endblock %}

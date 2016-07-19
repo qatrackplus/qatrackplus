@@ -520,6 +520,7 @@
         },
 
         updateView: function() {
+            console.log('daterange updateview');
             if (this.timePicker) {
                 this.renderTimePicker('left');
                 this.renderTimePicker('right');
@@ -1027,6 +1028,7 @@
         },
 
         move: function() {
+            console.log('daterange move');
             var parentOffset = { top: 0, left: 0 },
                 containerTop;
             var parentRightEdge = $(window).width();
