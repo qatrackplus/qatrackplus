@@ -1,6 +1,7 @@
 # Django settings for qatrack project.
 import django.conf.global_settings as DEFAULT_SETTINGS
 import os
+import sys
 
 
 #-----------------------------------------------------------------------------
@@ -401,12 +402,6 @@ TEST_STATUS_DISPLAY_SHORT = {
     'no_tol': "NO TOL",
 }
 
-
-
-
-#------------------------------------------------------------------------------
-# Testing settings
-
 #------------------------------------------------------------------------------
 # local_settings contains anything that should be overridden
 # based on site specific requirements (e.g. deployment, development etc)
@@ -419,3 +414,9 @@ if FORCE_SCRIPT_NAME:
     #Fix URL for Admin Views if FORCE_SCRIPT_NAME_SET in local_settings
     ADMIN_VIEWS_URL_PREFIX = FORCE_SCRIPT_NAME + "/admin"
 
+
+#------------------------------------------------------------------------------
+# Testing settings
+if 'test' in sys.argv:
+
+    from test_settings import *
