@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 from south.utils import datetime_utils as datetime
 from south.db import db
-from south.v2 import SchemaMigration
+from south.v2 import DataMigration
 from django.db import models
 
 
-class Migration(SchemaMigration):
+class Migration(DataMigration):
 
     def forwards(self, orm):
         # if user of group has permission 'can_review' give them 'can_review_non_visible_tli'
@@ -296,4 +296,5 @@ class Migration(SchemaMigration):
         }
     }
 
-    complete_apps = ['qa']
+    complete_apps = ['contenttypes', 'auth', 'qa']
+    symmetrical = True
