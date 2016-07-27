@@ -569,3 +569,8 @@ a.text-success:focus {
 .unreviewed-count-wrapper {
     margin-right: 8px;
 }
+.daterangepicker.dropdown-menu table.table-condensed td,
+.daterangepicker.dropdown-menu table.table-condensed th,
+.daterangepicker.dropdown-menu div.daterangepicker_input > input{
+    box-sizing: border-box;
+}

@@ -16,7 +16,8 @@ from django.views.generic import UpdateView
 from qatrack.qa import models, utils
 
 from braces.views import PrefetchRelatedMixin, SelectRelatedMixin
-from listable.views import BaseListableView, SELECT, SELECT_MULTI, DATE, NONEORNULL, TEXT
+from listable.views import BaseListableView, DATE, DATE_RANGE, SELECT, SELECT_MULTI, NONEORNULL, TEXT, TODAY, \
+    YESTERDAY, TOMORROW, LAST_WEEK, THIS_WEEK, NEXT_WEEK, LAST_14_DAYS, THIS_MONTH, THIS_YEAR
 
 logger = logging.getLogger('qatrack.console')
 
@@ -165,8 +166,13 @@ class UTCList(BaseListableView):
         "unit__name": SELECT_MULTI,
         "frequency__name": SELECT_MULTI,
         "assigned_to__name": SELECT_MULTI,
-        "last_instance__work_completed": DATE,
-        "due_date": DATE
+        "last_instance__work_completed": DATE_RANGE,
+        "due_date": DATE_RANGE
+    }
+
+    date_ranges = {
+        "last_instance__work_completed": [TODAY, YESTERDAY, THIS_WEEK, LAST_14_DAYS, THIS_MONTH, THIS_YEAR],
+        "due_date": [YESTERDAY, TODAY, TOMORROW, LAST_WEEK, THIS_WEEK, NEXT_WEEK]
     }
 
     select_related = (
@@ -309,7 +315,11 @@ class TestListInstances(BaseListableView):
         "unit_test_collection__frequency__name": SELECT_MULTI,
         "unit_test_collection__unit__name": SELECT_MULTI,
         "created_by__username": SELECT_MULTI,
-        "work_completed": DATE
+        "work_completed": DATE_RANGE
+    }
+
+    date_ranges = {
+        "work_completed": [TODAY, YESTERDAY, THIS_WEEK, LAST_14_DAYS, THIS_MONTH, THIS_YEAR]
     }
 
     search_fields = {
