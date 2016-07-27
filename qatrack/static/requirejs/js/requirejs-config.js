@@ -23,7 +23,7 @@ require.config({
         json2: siteConfig.STATIC_URL + 'json2/js/json2',
         listable: siteConfig.STATIC_URL + 'listable/js/listable',
         lodash: siteConfig.STATIC_URL + 'lodash/js/lodash',
-        moment: siteConfig.STATIC_URL + 'moment/js/moment-with-locales',
+        moment: siteConfig.STATIC_URL + 'moment/js/moment',
         multiselect: siteConfig.STATIC_URL + 'multiselect/js/bootstrap.multiselect',
         slimscroll: siteConfig.STATIC_URL + 'slimscroll/js/jquery.slimscroll',
 
@@ -76,14 +76,14 @@ require.config({
             exports: '$'
         },
         listable: {
-            deps: ['jquery', 'datatables', 'datatables.columnFilter', 'datatables.searchPlugins', 'datatables.sort', 'datatables.bootstrap', 'multiselect', 'datepicker']
+            deps: [/*'moment', */'jquery', 'datatables', 'datatables.columnFilter', 'datatables.searchPlugins', 'datatables.sort', 'datatables.bootstrap', 'multiselect', 'datepicker', 'daterangepicker']
         },
         lodash: {
             exports: '_'
         },
-        moment: {
-            deps: ['jquery']
-        },
+        // moment: {
+        //     exports: 'moment'
+        // },
         multiselect: {
             deps: ['jquery', 'bootstrap']
         },
@@ -93,7 +93,7 @@ require.config({
 
         // Site wide:
         sidebar: {
-            deps: ['jquery', 'admin_lte', 'bootstrap', 'daterangepicker']
+            deps: ['jquery', 'admin_lte', 'bootstrap', /*'daterangepicker'*/]
         },
         site_base: {
             deps: ['jquery']
@@ -104,7 +104,7 @@ require.config({
             deps: ['jquery', 'qautils', 'site_base', 'lodash', 'datepicker']
         },
         testlistinstance: {
-            deps: ['jquery', 'site_base', 'qa', 'lodash', 'datatables', 'datatables.columnFilter', 'daterangepicker', 'sidebar', 'icheck']
+            deps: ['jquery', 'site_base', 'qa', 'lodash', 'datatables', 'datatables.columnFilter', /*'daterangepicker'*/, 'sidebar', 'icheck']
         }
 
         // unit module:

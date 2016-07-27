@@ -52,8 +52,8 @@ $.fn.animateRotate = function(start, stop, duration, easing, complete) {
     }
 })();
 
-/* Prevent sidebar daterange picker from moving */
-window.daterangepicker.prototype.move = function () {};
+// /* Prevent sidebar daterange picker from moving */
+// window.daterangepicker.prototype.move = function () {};
 
 $(document).ready(function() {
 

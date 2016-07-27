@@ -89,7 +89,7 @@
         {#{% load js %}#}
         <script src="{{ STATIC_URL }}requirejs/js/require.min.js?v={{ VERSION }}"></script>
         <script type="text/javascript">
-            require(['{{ STATIC_URL }}requirejs/js/requirejs-config.js?v={{ VERSION }}'], function (require_config) {
+            require(['{{ STATIC_URL }}requirejs/js/requirejs-config.js?v={{ VERSION }}'], function () {
                 {% block require_javascript %}
                 {% endblock require_javascript %}
             });
