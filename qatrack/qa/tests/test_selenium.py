@@ -13,7 +13,9 @@ from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as e_c
+from selenium.webdriver.support.select import Select
 from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 
 from qatrack.qa import models
 from qatrack.accounts.backends import ActiveDirectoryGroupMembershipSSLBackend
@@ -143,14 +145,17 @@ objects = {
 
 }
 
+
 class SeleniumTests(TestCase, LiveServerTestCase):
 
-    # fixtures = []
+    # Firefox driver is ~5x slower than Chrome driver but it standard in selenium install.
+    # Consider moving back to Chrome, or to PhantomJS
 
     def __init__(self, *args, **kwargs):
         super(SeleniumTests, self).__init__(*args, **kwargs)
-        self.driver = settings.SELENIUM_DRIVER(settings.SELENIUM_DRIVER_PATH, service_args=['--proxy-type=none'])
-        self.driver.set_window_size(1270, 1100)
+        ff_profile = FirefoxProfile()
+        self.driver = settings.SELENIUM_DRIVER(ff_profile)
+        # self.driver.set_window_size(1270, 1100)
         self.wait = WebDriverWait(self.driver, 5)
 
     def load_main(self):
@@ -203,29 +208,31 @@ class SeleniumTests(TestCase, LiveServerTestCase):
         self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Add test')))
         self.driver.find_element_by_link_text('Add test').click()
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
+        # for i in range(len(objects['Tests'])):
 
         for i in range(len(objects['Tests'])):
+            # the_test = objects['Tests'][i]
             the_test = objects['Tests'][i]
             self.driver.find_element_by_id('id_name').send_keys(the_test['name'])
             self.driver.find_element_by_id('id_slug').send_keys(the_test['name'])
             self.driver.find_element_by_id('id_category').click()
             self.driver.find_element_by_id('id_category').send_keys(Keys.ARROW_DOWN, Keys.ENTER)
-            self.driver.find_element_by_id('id_type').click()
-            self.driver.find_element_by_xpath('//*[@id="id_type"]/option[@value = "' + the_test['name'] + '"]').click()
+            Select(self.driver.find_element_by_id('id_type')).select_by_value(the_test['name'])
+
             if the_test['choices']:
                 self.driver.find_element_by_id('id_choices').send_keys('1,2,3,4,5')
             if the_test['constant_value']:
                 self.driver.find_element_by_id('id_constant_value').send_keys('23.23')
             if the_test['procedure']:
-                self.wait.until(e_c.element_to_be_clickable((By.XPATH, '//*[@id="calc-procedure-editor"]/div[2]/div')))
-                self.driver.find_element_by_xpath('//*[@id="calc-procedure-editor"]/div[2]/div').click()
-                actions = ActionChains(self.driver)
-                actions.send_keys(the_test['procedure'])
-                actions.perform()
+                time.sleep(1)
+                self.driver.find_element_by_css_selector('#calc-procedure-editor > textarea').send_keys(the_test['procedure'])
+                self.driver.find_element_by_css_selector('.submit-row').click()
+
+            # Firefox webdriver being weird with clicks. Had to use javascript here:
             if i + 1 == len(objects['Tests']):
-                self.driver.find_element_by_name('_save').click()
+                self.driver.execute_script("$('input[name=_save]').click();")
             else:
-                self.driver.find_element_by_name('_addanother').click()
+                self.driver.execute_script("$('input[name=_addanother]').click();")
 
             self.wait_for_success()
 
@@ -339,7 +346,8 @@ class SeleniumTests(TestCase, LiveServerTestCase):
         self.driver.find_element_by_id('id_assigned_to').send_keys(Keys.ARROW_DOWN, Keys.ENTER)
         self.driver.find_element_by_id('id_content_type').click()
         self.driver.find_element_by_id('id_content_type').send_keys(Keys.ARROW_DOWN, Keys.ENTER)
-        self.wait.until(e_c.presence_of_element_located((By.XPATH, '//*[@id="generic_object_id"]/option[contains(text(), "TestList(' + objects['TestList']['name'] + ')")]')))
+        time.sleep(2)
+        # self.wait.until(e_c.presence_of_element_located((By.XPATH, '//*[@id="generic_object_id"]/option[contains(text(), "TestList(' + objects['TestList']['name'] + ')")]')))
         self.driver.find_element_by_id('select2-generic_object_id-container').click()
         self.driver.find_element_by_id('select2-generic_object_id-container').click()
         # actions = ActionChains(self.driver)

@@ -135,10 +135,6 @@
                                         </li>
                                         <li>
                                             <a href="{% url "all_lists" %}" title="View all available QA Lists">
-{#                                                    <span class="fa fa-stack fa-fw" aria-hidden="true">#}
-{#                                                        <i class="fa fa-cube fa-stack-custom-main"></i>#}
-{#                                                        <i class="fa fa-check fa-stack-custom-sub success"></i>#}
-{#                                                    </span>#}
                                                 <i class="fa fa-pencil-square-o fa-fw" aria-hidden="true"></i>
                                                 All QA
                                             </a>
@@ -155,120 +151,120 @@
 
                                 {% if perms.qa.can_review or perms.qa.can_view_completed or perms.qa.can_view_charts or perms.qa.change_testlistinstance or perms.qa.can_view_overview %}
 
-                                <li class="dropdown">
-                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                        Review Data
-                                        {% if perms.qa.can_review %}
-                                            <span title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
-                                                <span class="total-unreviewed-count">{{UNREVIEWED}}</span>
-                                            </span>
-                                        {% endif %}
-                                        <b class="caret"></b>
-                                    </a>
+                                    <li class="dropdown">
+                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                            Review Data
+                                            {% if perms.qa.can_review %}
+                                                <span title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                                                    <span class="total-unreviewed-count">{{UNREVIEWED}}</span>
+                                                </span>
+                                            {% endif %}
+                                            <b class="caret"></b>
+                                        </a>
 
-                                    <ul class="dropdown-menu" role="menu">
-                                        {% if perms.qa.can_review or perms.qa.can_view_overview %}
-                                        <li class="nav-header">QA Program Status</li>
-                                        <li>
-                                            <a href="{% url "overview" %}" title="View a summary of the status of the QA program">
-                                                <i class="fa fa-globe fa-fw" aria-hidden="true"></i>
-                                                Overview
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a href="{% url "overview_due_dates" %}" title="View a summary of the status of the QA program">
-                                                <i class="fa fa-calendar-check-o fa-fw" aria-hidden="true"></i>
-                                                By Due Status
-                                            </a>
-                                        </li>
-                                        {% endif %}
-                                        {% if perms.qa.can_review %}
-                                            <li class="divider"></li>
-                                            <li class="nav-header">QA Sessions</li>
+                                        <ul class="dropdown-menu" role="menu">
+                                            {% if perms.qa.can_review or perms.qa.can_view_overview %}
+                                            <li class="nav-header">QA Program Status</li>
+                                            <li>
+                                                <a href="{% url "overview" %}" title="View a summary of the status of the QA program">
+                                                    <i class="fa fa-globe fa-fw" aria-hidden="true"></i>
+                                                    Overview
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a href="{% url "overview_due_dates" %}" title="View a summary of the status of the QA program">
+                                                    <i class="fa fa-calendar-check-o fa-fw" aria-hidden="true"></i>
+                                                    By Due Status
+                                                </a>
+                                            </li>
+                                            {% endif %}
+                                            {% if perms.qa.can_review %}
+                                                <li class="divider"></li>
+                                                <li class="nav-header">QA Sessions</li>
 
-                                            {% if perms.qa.can_review_non_visible_tli %}
+                                                {% if perms.qa.can_review_non_visible_tli %}
+                                                    <li>
+                                                        <a href="{% url  "unreviewed" %}" title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed">
+                                                            <i class="fa fa-question-circle fa-fw" aria-hidden="true"></i>
+                                                            <span title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                                                                <span class="total-unreviewed-count">{{UNREVIEWED}}</span>
+                                                            </span>
+                                                            Unreviewed - All Groups
+                                                        </a>
+                                                    </li>
+                                                {% else %}
+                                                    <li>
+                                                        <div title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed" style="padding: 3px 15px;">
+                                                            <i class="fa fa-question-circle fa-fw" aria-hidden="true"></i>
+                                                            <span title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                                                                <span class="total-unreviewed-count">{{UNREVIEWED}}</span>
+                                                            </span>
+                                                            Unreviewed - All Groups
+                                                        </div>
+                                                    </li>
+                                                {% endif %}
                                                 <li>
-                                                    <a href="{% url  "unreviewed" %}" title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed">
+                                                    <a href="{% url  "unreviewed_visible_to" %}" title="There are currently {{YOUR_UNREVIEWED}} QA Sessions visible to your groups waiting to be reviewed">
                                                         <i class="fa fa-question-circle fa-fw" aria-hidden="true"></i>
-                                                        <span title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
-                                                            <span class="total-unreviewed-count">{{UNREVIEWED}}</span>
+                                                        <span title="There are currently {{YOUR_UNREVIEWED}} QA Sessions visible to your groups waiting to be reviewed" class="label {% if YOUR_UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                                                            <span class="total-unreviewed-count">{{YOUR_UNREVIEWED}}</span>
                                                         </span>
-                                                        Unreviewed - All Groups
+                                                        Unreviewed Visible To Your Groups
                                                     </a>
                                                 </li>
-                                            {% else %}
                                                 <li>
-                                                    <div title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed" style="padding: 3px 15px;">
+                                                    <a href="{% url  "choose_group_visible" %}" {% comment %}title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed"{% endcomment %}>
                                                         <i class="fa fa-question-circle fa-fw" aria-hidden="true"></i>
-                                                        <span title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
-                                                            <span class="total-unreviewed-count">{{UNREVIEWED}}</span>
-                                                        </span>
-                                                        Unreviewed - All Groups
-                                                    </div>
+                                                        Unreviewed By Visible To Group
+                                                    </a>
                                                 </li>
                                             {% endif %}
-                                            <li>
-                                                <a href="{% url  "unreviewed_visible_to" %}" title="There are currently {{YOUR_UNREVIEWED}} QA Sessions visible to your groups waiting to be reviewed">
-                                                    <i class="fa fa-question-circle fa-fw" aria-hidden="true"></i>
-                                                    <span title="There are currently {{YOUR_UNREVIEWED}} QA Sessions visible to your groups waiting to be reviewed" class="label {% if YOUR_UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
-                                                        <span class="total-unreviewed-count">{{YOUR_UNREVIEWED}}</span>
-                                                    </span>
-                                                    Unreviewed Visible To Your Groups
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a href="{% url  "choose_group_visible" %}" {% comment %}title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed"{% endcomment %}>
-                                                    <i class="fa fa-question-circle fa-fw" aria-hidden="true"></i>
-                                                    Unreviewed By Visible To Group
-                                                </a>
-                                            </li>
-                                        {% endif %}
-                                        {% if perms.qa.can_view_completed or perms.qa.can_review %}
-                                            <li class="divider"></li>
-                                            <li class="nav-header">Test Lists</li>
-                                            {% if perms.qa.can_review_non_visible_tli %}
-                                                <li><a href="{% url "review_all" %}" title="View all test lists">
+                                            {% if perms.qa.can_view_completed or perms.qa.can_review %}
+                                                <li class="divider"></li>
+                                                <li class="nav-header">Test Lists</li>
+                                                {% if perms.qa.can_review_non_visible_tli %}
+                                                    <li><a href="{% url "review_all" %}" title="View all test lists.">
+                                                        <i class="fa fa-users fa-fw" aria-hidden="true"></i>
+                                                        All Groups Test Lists
+                                                    </a></li>
+                                                {% endif %}
+                                                <li><a href="{% url "review_your_all" %}" title="View all your groups test lists.">
                                                     <i class="fa fa-users fa-fw" aria-hidden="true"></i>
-                                                    All Groups Test Lists
+                                                    Your Groups Test Lists
+                                                </a></li>
+                                                <li><a href="{% url "choose_review_unit" %}" title="Choose a unit to review qa lists for.">
+                                                    <i class="fa fa-cubes fa-fw" aria-hidden="true"></i>
+                                                    Your Test Lists By Unit
+                                                </a></li>
+                                                <li><a href="{% url "choose_review_frequency" %}" title="Choose a frequency to review qa lists for.">
+                                                    <i class="fa fa-clock-o fa-fw" aria-hidden="true"></i>
+                                                    Your Test Lists By Frequency
+                                                </a></li>
+                                                {% if perms.qa.can_review_non_visible_tli %}
+                                                    <li><a href="{% url "review_inactive" %}" title="View all inactive test lists.">
+                                                        <i class="fa fa-file fa-fw" aria-hidden="true"></i>
+                                                        All Groups Inactive Test Lists
+                                                    </a></li>
+                                                {% else %}
+                                                    <li><a href="{% url "review_your_inactive" %}" title="View all your inactive test lists.">
+                                                        <i class="fa fa-file fa-fw" aria-hidden="true"></i>
+                                                        Your Groups Inactive Test Lists
+                                                    </a></li>
+
+                                                {% endif %}
+                                            {% endif %}
+
+                                            {% if perms.qa.can_view_charts %}
+                                                <li class="divider"></li>
+                                                <li class="nav-header">Trends and Analysis</li>
+                                                <li><a href="{% url "charts" %}">
+                                                    <i class="fa fa-line-chart fa-fw" aria-hidden="true"></i>
+                                                    Charts
                                                 </a></li>
                                             {% endif %}
-                                            <li><a href="{% url "review_your_all" %}" title="View all test lists">
-                                                <i class="fa fa-users fa-fw" aria-hidden="true"></i>
-                                                Your Groups Test Lists
-                                            </a></li>
-                                            <li><a href="{% url "choose_review_unit" %}" title="Choose a unit to review qa lists for.">
-                                                <i class="fa fa-cubes fa-fw" aria-hidden="true"></i>
-                                                Your Test Lists By Unit
-                                            </a></li>
-                                            <li><a href="{% url "choose_review_frequency" %}" title="Choose a frequency to review qa lists for.">
-                                                <i class="fa fa-clock-o fa-fw" aria-hidden="true"></i>
-                                                Your Test Lists By Frequency
-                                            </a></li>
-                                            {% if perms.qa.can_review_non_visible_tli %}
-                                                <li><a href="{% url "review_inactive" %}" title="View all inactive test lists.">
-                                                    <i class="fa fa-file fa-fw" aria-hidden="true"></i>
-                                                    All Groups Inactive Test Lists
-                                                </a></li>
-                                            {% else %}
-                                                <li><a href="{% url "review_your_inactive" %}" title="View all inactive test lists.">
-                                                    <i class="fa fa-file fa-fw" aria-hidden="true"></i>
-                                                    Your Groups Inactive Test Lists
-                                                </a></li>
+                                        </ul>
 
-                                            {% endif %}
-                                        {% endif %}
-
-                                        {% if perms.qa.can_view_charts %}
-                                            <li class="divider"></li>
-                                            <li class="nav-header">Trends and Analysis</li>
-                                            <li><a href="{% url "charts" %}">
-                                                <i class="fa fa-line-chart fa-fw" aria-hidden="true"></i>
-                                                Charts
-                                            </a></li>
-                                        {% endif %}
-                                    </ul>
-
-                                </li>
+                                    </li>
                                 {% endif %}
 
                                 {% if user.is_staff %}

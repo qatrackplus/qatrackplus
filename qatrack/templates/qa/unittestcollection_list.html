@@ -9,13 +9,14 @@
 {#    {% autoescape off %}{% listable_css %}{% endautoescape %}#}
     <link href="{{ STATIC_URL }}datepicker/css/bootstrap-datepicker.min.css?v={{VERSION}}" rel="stylesheet">
     <link href="{{ STATIC_URL }}multiselect/css/bootstrap.multiselect.css?v={{VERSION}}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}daterangepicker/css/daterangepicker.css?v={{VERSION}}" rel="stylesheet">
     <link href="{{ STATIC_URL }}qatrack_core/css/tables.css?v={{VERSION}}" rel="stylesheet">
     <link href="{{ STATIC_URL }}qa/css/qa.css?v={{VERSION}}" rel="stylesheet">
 {% endblock extra_css %}
 
 {% block extra_js %}
     {% autoescape off %}
-        {% listable view_name dom="<'row'<'col-sm-5'i><'col-sm-7'p>><'row'<'col-sm-12'tr>><'row'<'col-sm-5'><'col-sm-7'p>>" requirejs=True pagination_type='bootstrap3' css_table_class='table-hover table-condensed table-striped' css_input_class='btn-flat btn-sm input-sm full-width' auto_width=False %}
+        {% listable view_name dom="<'row'<'col-sm-5'i><'col-sm-7'p>><'row'<'col-sm-12'tr>><'row'<'col-sm-5'><'col-sm-7'p>>" requirejs=True pagination_type='bootstrap3' css_table_class='table-hover table-condensed table-striped' css_input_class='btn-flat btn-sm input-sm full-width' css_daterange_input_class='btn btn-flat' auto_width=False %}
     {% endautoescape %}
 {% endblock %}
 
@@ -50,6 +51,3 @@
 
 {% endblock body %}
 
-{#{% block end_body_extra_script %}#}
-{#    {% listable view_name dom='<"row-fluid"<"span6"ir><"span6"p>>t<"row-fluid"<"span12"lp>>' pagination_type='bootstrap2' css_input_class="input-small" %}#}
-{#{% endblock end_body_extra_script %}#}

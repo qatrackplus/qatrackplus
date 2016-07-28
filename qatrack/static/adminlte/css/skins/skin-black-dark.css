@@ -39,7 +39,7 @@
     color: #fff;
   }
   .skin-black-dark .main-header .navbar .dropdown-menu li a:hover {
-    background: #2a2a2a;
+    background: #222d32;
   }
 }
 .skin-black-dark .main-header .logo {
@@ -133,10 +133,10 @@
   border-bottom-left-radius: 0;
 }
 .skin-black-dark.layout-top-nav .main-header > .logo {
-  background-color: #2c2c2c;
+  background-color: #222d32;
   color: #ffffff;
   border-bottom: 0 solid transparent;
 }
 .skin-black-dark.layout-top-nav .main-header > .logo:hover {
-  background-color: #2b2b2b;
+  background-color: #202830;
 }
