@@ -96,25 +96,20 @@ body.sidebar-collapse > div.wrapper > aside.main-sidebar > section.sidebar > ul 
 }
 
 /* datepicker stuff */
-.daterangepicker.dropdown-menu.show-calendar {
-    position: fixed;
-    /*left: 35px !important;*/
-    /*top: 275px !important;*/
-}
-.sidebar-mini.sidebar-collapse .daterangepicker.dropdown-menu.show-calendar {
-    /*left: 50px !important;*/
-    /*top: 245px !important;*/
-}
-.daterangepicker  > .calendar > .calendar-table > table > tbody > tr >td.start-date {
-    border-top-left-radius: 16px;
-    border-bottom-left-radius: 16px;
-}
-.daterangepicker > .calendar > .calendar-table > table > tbody > tr > td.end-date {
-    border-top-right-radius: 16px;
-    border-bottom-right-radius: 16px;
-}
-
-/* Test List instance stuff */
-.work-time-date, .work-time-time {
-    display: block;
-}
+/*.daterangepicker.dropdown-menu.show-calendar {*/
+    /*position: fixed;*/
+    /*!*left: 35px !important;*!*/
+    /*!*top: 275px !important;*!*/
+/*}*/
+/*.sidebar-mini.sidebar-collapse .daterangepicker.dropdown-menu.show-calendar {*/
+    /*!*left: 50px !important;*!*/
+    /*!*top: 245px !important;*!*/
+/*}*/
+/*.daterangepicker  > .calendar > .calendar-table > table > tbody > tr >td.start-date {*/
+    /*border-top-left-radius: 16px;*/
+    /*border-bottom-left-radius: 16px;*/
+/*}*/
+/*.daterangepicker > .calendar > .calendar-table > table > tbody > tr > td.end-date {*/
+    /*border-top-right-radius: 16px;*/
+    /*border-bottom-right-radius: 16px;*/
+/*}*/

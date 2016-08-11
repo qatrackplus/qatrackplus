@@ -58,7 +58,8 @@ $.fn.animateRotate = function(start, stop, duration, easing, complete) {
 $(document).ready(function() {
 
     $('.iCheck').iCheck({
-        checkboxClass: 'icheckbox_minimal-blue'
+        checkboxClass: 'icheckbox_minimal-blue',
+        radioClass: 'iradio_minimal-blue'
     });
 
     var icon = $('#toggle-icon');
@@ -77,7 +78,7 @@ $(document).ready(function() {
         var target = $(this).attr('data-toggle');
         $(self).click(function () {
             $(self).toggleClass('active');
-            $('#box-' + target).slideToggle();
+            $('#box-' + target).slideToggle('fast');
         });
     });
 

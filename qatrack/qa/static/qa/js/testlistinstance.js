@@ -1,6 +1,6 @@
-/**************************************************************************/
+
 //Initialize sortable/filterable test list table data types
-function init_test_list_instance_tables(units, frequencies){
+/*function init_test_list_instance_tables(units, frequencies){
 
     var unit_names = _.map(units[0].objects,"name");
     var freq_names = _.map(frequencies[0].objects,function(e){return {value:e.id,label:e.name};});
@@ -40,7 +40,7 @@ function init_test_list_instance_tables(units, frequencies){
         fnPreDrawCallback:function(){$("#pagination-placeholder").remove()},
         bFilter:true,
         bPaginate:true,
-        bStateSave:true, /*remember filter/sort state on page load*/
+        bStateSave:true, /!*remember filter/sort state on page load*!/
         iDisplayLength:50,
         iDeferLoading:pagination,
         aaSorting:[[1,"asc"],[4,"desc"]],
@@ -55,12 +55,12 @@ function init_test_list_instance_tables(units, frequencies){
     });
 
     $("#testlistinstance-table").find("select, input").addClass("input-small");
-}
+}*/
 
-/**************************************************************************/
+
 $(document).ready(function(){
-
-    $.when(
+    
+/*    $.when(
         $.getJSON(QAURLs.API_URL+"unit/?format=json&limit=0"),
         $.getJSON(QAURLs.API_URL+"frequency/?format=json&limit=0")
     ).then(init_test_list_instance_tables);
@@ -149,6 +149,8 @@ $(document).ready(function(){
         var to = $(this).val().split(' - ')[1];
         console.log(from, to);
         // $("#alternate").html($("#datepicker").val());
-    });
+    });*/
+    
+    
 });
 

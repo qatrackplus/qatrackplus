@@ -1,12 +1,13 @@
 {% extends "site_base.html" %}
-{% load staticfiles %}
+
 {% load qa_tags %}
 
 {% block head_title %}{{test_list_instance.work_completed|date}} {{test_list_instance.test_list.name}} Details{% endblock %}
 
 {% block body %}
-    <div class="row-fluid">
-        <div class="span12">
+
+    <div class="row">
+        <div class="col-md-12">
             <h3>{{test_list_instance.work_completed|date}} {{test_list_instance.test_list.name}} Details</h3>
         </div>
     </div>

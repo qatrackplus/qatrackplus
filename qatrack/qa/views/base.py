@@ -214,16 +214,21 @@ class UTCList(BaseListableView):
             'due_date':  get_template("qa/due_date.html"),
         }
 
+    def get_icon(self):
+        return 'fa-pencil-square-o'
+
     def get_context_data(self, *args, **kwargs):
         context = super(UTCList, self).get_context_data(*args, **kwargs)
         current_url = resolve(self.request.path_info).url_name
         context['view_name'] = current_url
         context['action'] = self.action
         context['page_title'] = self.get_page_title()
+        context['icon'] = self.get_icon()
 
         return context
 
     def get_page_title(self):
+        print self.page_title
         return self.page_title
 
     def get_queryset(self):
@@ -356,6 +361,9 @@ class TestListInstances(BaseListableView):
             'pass_fail':  get_template("qa/pass_fail_status.html"),
         }
 
+    def get_icon(self):
+        return 'fa-question-circle'
+
     def get_page_title(self):
         return "All Test Collections"
 
@@ -363,7 +371,7 @@ class TestListInstances(BaseListableView):
         context = super(TestListInstances, self).get_context_data(*args, **kwargs)
         current_url = resolve(self.request.path_info).url_name
         context['view_name'] = current_url
-
+        context['icon'] = self.get_icon()
         context["page_title"] = self.get_page_title()
         return context
 

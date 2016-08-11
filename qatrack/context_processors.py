@@ -39,8 +39,6 @@ def site(request):
         qa_frequencies = list(Frequency.objects.frequency_choices())
         cache.set(settings.CACHE_QA_FREQUENCIES, qa_frequencies)
 
-    print settings.STATIC_URL
-
     return {
         'SITE_NAME': site.name,
         'SITE_URL': site.domain,

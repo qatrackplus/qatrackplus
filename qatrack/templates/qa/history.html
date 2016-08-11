@@ -1,10 +1,14 @@
 {% load qa_tags %}
 {% if history %}
     {% for hist in history %}
-        {% if test.is_upload or test.is_string or test.is_string_composite %}
-        <span class="history-value">
+        {% if test.is_string or test.is_string_composite %}
+            <span class="history-value label bg-gray" title="{{hist.value_display|safe}}">
                 {{hist.value_display|safe}}
-        </span>
+            </span>
+        {% elif test.is_upload %}
+            <span class="history-value">
+                {{hist.value_display|safe}}
+            </span>
         {% elif hist.work_completed and hist.pass_fail != "not_done" %}
 
             <span class="label {{hist.pass_fail}} history-value" title="Diff from ref={% if hist.diff_display %}{{hist.diff_display}}{%else%}N/A{%endif%};  {{hist.created_by}} on {{hist.work_completed}}; {{hist.status}}">
@@ -18,7 +22,7 @@
                     {{hist.value_display|safe}}
             </span>
         {% else %}
-            <span class="label history-value" title="N/A">N/A</span>
+            <span class="label bg-gray history-value white" title="N/A">N/A</span>
         {% endif %}
     {% endfor %}
     {% if test.is_upload or test.is_string_type or not test.chart_visibility %}

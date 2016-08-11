@@ -1,3 +1,39 @@
+/* page loading */
+.loading-modal {
+    display:    none;
+    position:   fixed;
+    z-index:    1000;
+    top:        0;
+    left:       0;
+    height:     100%;
+    width:      100%;
+    background: rgba( 255, 255, 255, .8 )
+    /*url('http://i.stack.imgur.com/FhHRx.gif')*/
+    /*50% 50%*/
+    /*no-repeat;*/
+}
+.loading-modal > .center {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+.loading-modal > .center > div {
+    text-align: center;
+}
+body.loading {
+    overflow: hidden;
+}
+body.loading .loading-modal {
+    display: block;
+}
+.loading-logo {
+    font-size: 24px;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-weight: bold;
+
+}
+
 /*QA Status Spans                                 */
 .no_tol, .not_done {
     background-color:#00c0ef;
@@ -34,4 +70,193 @@
 #contacts dd{
     margin-left:0;
     /*width:150px;*/
+}
+
+/* perform table */
+tr.qa-valuerow,
+tr.qa-valuerow td {
+    min-height: 27px !important;
+}
+
+/* Test columns */
+.qa-name {
+    min-width:300px;
+    text-align:left;
+}
+th.qa-name div{
+/* hack to fix IE7 min-width*/
+    width:400px;
+    height:1px;
+}
+input.qa-input:not([type="radio"]),
+select.qa-input{
+    width: 100%;
+    text-align:right;
+    min-width: 115px;
+    height: 22px;
+    padding: 0 4px;
+    margin-bottom:0;
+    box-shadow: none;
+    border: 1px solid #d2d6de;
+}
+input.qa-input::-ms-clear {
+    /* see bitbucket issue#106 */
+    display: none;
+}
+.qa-value.upload-button {
+    height: 100%;
+}
+a.qa-input {
+    padding: 3px 10px;
+    width: 100%;
+}
+input[disabled].qa-input, input[readonly].qa-input {
+    background-color: #eee;
+    font-weight: 500;
+}
+.qa-table td.qa-value,
+.qa-table th.qa-value{
+    width:100px;
+    text-align:center;
+    padding: 0;
+}
+.qa-skip {
+    width:34px;
+    text-align: center;
+}
+.qa-status{
+    /*width: 90px;*/
+    overflow-x:hidden;
+    border: none !important;
+    min-width: 70px;
+    text-align: center;
+    vertical-align: middle !important;
+}
+td.qa-status {
+    font-size: smaller;
+}
+.qa-status > i {
+    margin-top:3px;
+    margin-left:1px;
+}
+.qa-showcmt{
+    width: 70px;
+    overflow:hidden;
+    text-align:center;
+}
+.qa-reference {
+    width:80px;
+    text-align: right;
+}
+.qa-history{
+    min-width: 320px;
+}
+th.qa-history .label {
+    color: black;
+}
+th.qa-history div{
+/* hack to fix IE7 min-width*/
+    width:310px;
+    height:1px;
+}
+.history-value,.history-label {
+    /*color: #fff;*/
+    display:inline-block;
+    width: 56px;
+    text-align:right;
+    margin-right: 1px; /*fix ie inline block bug*/
+    text-overflow:ellipsis;
+    white-space: nowrap;
+    overflow:hidden;
+    padding: 3px 4px;
+    vertical-align: middle;
+}
+.history-value > i, .pass-fail > i {
+    margin-top:2px;
+}
+
+.history-label {
+    font-size:0.9em;
+}
+
+/* qa table extra rows */
+tr .callout {
+    margin: 10px 0;
+}
+tr.qa-comment .comment-div {
+    /*height:50px;*/
+    display:none;
+    padding: 0;
+    /*height: auto;*/
+}
+tr.qa-comment .comment-div textarea {
+    width:100%;
+    resize: none;
+    border: none;
+    vertical-align: top;
+    overflow: hidden !important;
+}
+tr.qa-procedure div.qa-procedure-text {
+    display:none;
+    width: 100%;
+}
+tr.qa-procedure,
+tr.qa-comment {
+    display: none;
+}
+tr.qa-procedure,
+tr.qa-procedure td,
+tr.qa-comment,
+tr.qa-comment td{
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden;
+    border-width: 0 !important;
+}
+
+
+/* admin options */
+.left-border {
+    border-left-width: 1px;
+    border-left-style: solid;
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+}
+#box-admin .box-body > .row {
+    display: table;
+    width: 100%;
+}
+#box-admin div.left-border {
+    display: table-cell;
+    float: none;
+}
+#box-admin .box-body > .row .row {
+    margin-top: 4px;
+}
+#box-admin .box-body > .row {
+    padding: 0 10px;
+}
+#box-admin .box-body input,
+#box-admin .box-body select {
+    width: 100%;
+}
+#qa-tli-comment {
+    padding: 0 !important;
+    display: none;
+}
+#qa-tli-comment textarea {
+    width:100%;
+    resize: none;
+    border: none;
+    vertical-align: top;
+    overflow: hidden !important;
+}
+#box-perform .box-footer {
+    min-height: 40px;
+}
+body .box-header h3.do-not-treat,
+body .box-footer h3.do-not-treat {
+    display: none;
+    margin: 0;
+    color: #fff;
 }

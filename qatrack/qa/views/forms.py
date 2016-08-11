@@ -269,9 +269,8 @@ class BaseTestListInstanceForm(forms.ModelForm):
         self.fields["work_completed"].widget.attrs["placeholder"] = "optional"
 
         self.fields["comment"].widget.attrs["rows"] = "4"
-        self.fields["comment"].widget.attrs["class"] = "pull-right"
         self.fields["comment"].widget.attrs["placeholder"] = "Add comment about this set of tests"
-        self.fields["comment"].widget.attrs.pop("cols")
+        # self.fields["comment"].widget.attrs.pop("cols")
 
     #---------------------------------------------------------------------------
     def clean(self):

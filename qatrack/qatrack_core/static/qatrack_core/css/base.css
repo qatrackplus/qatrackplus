@@ -1,3 +1,7 @@
+body {
+    -ms-overflow-style: scrollbar;
+}
+
 /*style nav headers in dropdowns*/
 .nav-header {
     display: block;
@@ -85,4 +89,109 @@ ul.nav li.dropdown:hover ul.dropdown-menu{
 li.indent {
     text-indent: -1em;
     padding-left: 2em;
+}
+.border-default {
+    border-color: #d2d6de;
+}
+.border-primary {
+    border-color: #3c8dbc;
+}
+.border-info {
+    border-color: #00c0ef;
+}
+.border-warning {
+    border-color: #f39c12;
+}
+.border-success {
+    border-color: #00a65a;
+}
+.border-danger {
+    border-color: #dd4b39;
+}
+.callout-custom {
+    border-right: 1px solid #d2d6de;
+    border-top: 1px solid #d2d6de;
+    border-bottom: 1px solid #d2d6de;
+}
+.pre {
+    font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+    white-space: pre-wrap;
+    word-break: break-all;
+    word-wrap: break-word;
+    font-size: 12.025px;
+    line-height: 18px;
+}
+.callout-custom a {
+    color: #3c8dbc;
+    text-decoration: none;
+}
+.callout-custom a:hover {
+    color: #72afd2;
+}
+.fa-in-input {
+    float: right;
+    margin-right: 6px;
+    margin-top: -20px;
+    position: relative;
+    z-index: 2;
+}
+div.daterangepicker.dropdown-menu button {
+    border-radius: 0;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+    border-width: 1px;
+}
+div.daterangepicker.dropdown-menu li {
+    background-color: #f4f4f4;
+    color: #444;
+    border-color: #ddd;
+    border-radius: 0;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+    border-width: 1px;
+}
+div.daterangepicker.dropdown-menu li.active {
+    background-color: #3c8dbc;
+    border-color: #367fa9;
+    color: #fff;
+}
+div.daterangepicker.dropdown-menu li.active:hover {
+    background-color: #367fa9;
+    border-color: #204d74;
+}
+div.daterangepicker.dropdown-menu li:hover {
+    background-color: #e7e7e7;
+    border-color: #adadad;
+}
+.btn-fill {
+    width: 100%;
+    height: 100%
+}
+.alert > a.close {
+    text-decoration: none;
+}
+.white {
+    color: white !important;
+}
+.red-bg {
+    background-color: #dd4b39;
+    color: #fff;
+}
+.box-pho-borders {
+    border-bottom: 1px solid transparent;
+    border-right: 1px solid transparent;
+    border-left: 1px solid transparent;
+}
+.box-red-borders {
+    border-bottom: 1px solid #dd4b39;
+    border-right: 1px solid #dd4b39;
+    border-left: 1px solid #dd4b39;
+}
+.box-footer .box-title {
+    display: inline-block;
+    font-size: 18px;
+    margin: 0;
+    line-height: 1;
 }

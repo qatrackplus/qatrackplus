@@ -87,6 +87,9 @@ table.table > thead > tr > th > span > div > ul > li.active > a:hover,
     margin: 0;
     float: right;
 }
+table.table-hover tr.no-hover:hover {
+    background-color: inherit;
+}
 
 /*.dropdown-menu {*/
     /*background-color: #0d6aad;*/

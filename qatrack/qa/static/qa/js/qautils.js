@@ -17,15 +17,16 @@ var QAUtils = new function() {
     this.NO_TOL = "no_tol";
 
     var sh = TEST_STATUS_SHORT;
-    this.WITHIN_TOL_DISP =  sh.ok;
+    // this.WITHIN_TOL_DISP =  sh.ok;
     var icons = ICON_SETTINGS.SHOW_STATUS_ICONS_PERFORM;
 
-    this.TOLERANCE_DISP = icons ? '<i class="pull-left icon-warning-sign"></i> ' + sh.tolerance : sh.tolerance;
-    this.ACTION_DISP = icons ? '<i class="pull-left icon-minus-sign"></i> ' + sh.action : sh.action;
-    this.FAIL_DISP = icons ? '<i class="pull-left icon-minus-sign"></i> ' + sh.fail : sh.fail;
+    this.TOLERANCE_DISP = icons ? '<i class="pull-left fa fa-exclamation-circle"></i> ' + sh.tolerance : sh.tolerance;
+    this.ACTION_DISP = icons ? '<i class="pull-left fa fa-ban"></i> ' + sh.action : sh.action;
+    this.FAIL_DISP = icons ? '<i class="pull-left fa fa-ban"></i> ' + sh.fail : sh.fail;
     this.NOT_DONE_DISP = sh.not_done;
+    this.WITHIN_TOL_DISP = icons ? '<i class="pull-left fa fa-check-circle-o"></i> ' + sh.ok : sh.ok;
     this.DONE_DISP = sh.done;
-    this.NO_TOL_DISP = sh.no_tol;
+    this.NO_TOL_DISP = icons ? '<i class="pull-left fa fa-circle-o"></i> ' + sh.no_tol : sh.no_tol;
 
     this.PERCENT = "percent";
     this.ABSOLUTE = "absolute";

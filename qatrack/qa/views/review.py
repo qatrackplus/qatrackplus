@@ -102,6 +102,9 @@ class UTCReview(PermissionRequiredMixin, UTCList):
     action_display = "Review"
     visible_only = False
 
+    def get_icon(self):
+        return 'fa-users'
+
     def get_page_title(self):
         return "Review Test List Data"
 
@@ -114,6 +117,9 @@ class UTCYourReview(PermissionRequiredMixin, UTCList):
 
     action = "review"
     action_display = "Review"
+
+    def get_icon(self):
+        return 'fa-users'
 
     def get_page_title(self):
         return "Review Your Test List Data"
@@ -136,6 +142,9 @@ class UTCFrequencyReview(UTCYourReview):
 
         return qs.filter(q).distinct()
 
+    def get_icon(self):
+        return 'fa-clock-o'
+
     def get_page_title(self):
         return " Review " + ", ".join([x.name for x in self.frequencies]) + " Test Lists"
 
@@ -148,6 +157,9 @@ class UTCUnitReview(UTCYourReview):
         qs = super(UTCUnitReview, self).get_queryset()
         self.units = Unit.objects.filter(number__in=self.kwargs["unit_number"].split("/"))
         return qs.filter(unit__in=self.units).order_by("unit__number")
+
+    def get_icon(self):
+        return 'fa-cube'
 
     def get_page_title(self):
         return "Review " + ", ".join([x.name for x in self.units]) + " Test Lists"
@@ -173,7 +185,11 @@ class InactiveReview(UTCReview):
     active_only = False
 
     def get_page_title(self):
+        print self.page_title
         return "Review All Inactive Test Lists"
+
+    def get_icon(self):
+        return 'fa-file'
 
 
 class YourInactiveReview(UTCYourReview):
@@ -183,6 +199,9 @@ class YourInactiveReview(UTCYourReview):
 
     def get_page_title(self):
         return "Review Your Inactive Test Lists"
+
+    def get_icon(self):
+        return 'fa-file'
 
 
 class Unreviewed(PermissionRequiredMixin, TestListInstances):
@@ -226,6 +245,9 @@ class UnreviewedByVisibleToGroup(Unreviewed):
     def get_queryset(self):
         qs = super(UnreviewedByVisibleToGroup, self).get_queryset()
         return qs.filter(unit_test_collection__visible_to=self.kwargs['group'])
+
+    def get_icon(self):
+        return 'fa-users'
 
     def get_page_title(self):
         return "Unreviewed Test Lists Visible To " + models.Group.objects.get(pk=self.kwargs['group']).name

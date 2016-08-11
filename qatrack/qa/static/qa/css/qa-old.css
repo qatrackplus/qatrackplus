@@ -104,7 +104,7 @@ tr.qa-comment td textarea{
 
 .qa-showcmt{
     width: 70px;
-    overflow:hidden;
+    overflow: hidden;
 }
 .qa-status{
     width:70px;
@@ -274,7 +274,7 @@ th.qa-history div{
 .upload-button {
     display: block;
     width: 105px;
-    text-align: centre;
+    text-align: center;
     position:relative;
     overflow:hidden;
     direction:ltr;

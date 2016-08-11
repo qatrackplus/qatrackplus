@@ -1,5 +1,34 @@
 "use strict";
 
+var csrf_token = $("input[name=csrfmiddlewaretoken]").val();
+
+function csrfSafeMethod(method) {
+    // these HTTP methods do not require CSRF protection
+    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+}
+function sameOrigin(url) {
+    // test that a given url is a same-origin URL
+    // url could be relative or scheme relative or absolute
+    var host = document.location.host; // host + port
+    var protocol = document.location.protocol;
+    var sr_origin = '//' + host;
+    var origin = protocol + sr_origin;
+    // Allow absolute or scheme relative URLs to same origin
+    return (url == origin || url.slice(0, origin.length + 1) == origin + '/') ||
+        (url == sr_origin || url.slice(0, sr_origin.length + 1) == sr_origin + '/') ||
+        // or any other URL that isn't scheme relative or absolute i.e relative.
+        !(/^(\/\/|http:|https:).*/.test(url));
+}
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        if (!csrfSafeMethod(settings.type) && sameOrigin(settings.url)) {
+            // Send the token to same-origin, relative URLs only.
+            // Send the token only if the method warrants CSRF protection
+            // Using the CSRFToken value acquired earlier
+            xhr.setRequestHeader("X-CSRFToken", csrf_token);
+        }
+    }
+});
 
 /***************************************************************/
 //Test statuse and Table context used to narrow down jQuery selectors.
@@ -52,14 +81,14 @@ function Tolerance(data){
     }
 }
 
-function Status(status,diff,message){
+function Status(status, diff, message){
     this.status = status;
     this.diff = diff;
     this.message = message;
 }
-var NO_TOL = new Status(QAUtils.NO_TOL,"",QAUtils.NO_TOL_DISP);
-var NOT_DONE = new Status(QAUtils.NOT_DONE,"",QAUtils.NOT_DONE_DISP);
-var DONE = new Status(QAUtils.DONE,"",QAUtils.DONE_DISP);
+var NO_TOL = new Status(QAUtils.NO_TOL, "", QAUtils.NO_TOL_DISP);
+var NOT_DONE = new Status(QAUtils.NOT_DONE, "", QAUtils.NOT_DONE_DISP);
+var DONE = new Status(QAUtils.DONE, "", QAUtils.DONE_DISP);
 
 function TestInfo(data){
     var self = this;
@@ -199,6 +228,8 @@ function TestInstance(test_info, row){
     this.row = $(row);
     this.inputs = this.row.find("td.qa-value").find("input, textarea, select");
 
+    this.comment = this.row.next();
+
     this.visible = true;
 
     this.status = this.row.find("td.qa-status");
@@ -209,7 +240,7 @@ function TestInstance(test_info, row){
     this.set_skip = function(skipped){
         self.skipped = skipped;
         self.skip.prop("checked",self.skipped);
-    }
+    };
     this.skip.change(function(){
         self.skipped = self.skip.is(":checked");
         if (self.skipped){
@@ -226,32 +257,35 @@ function TestInstance(test_info, row){
     });
 
     this.show_comment = this.row.find("td.qa-showcmt a");
-    this.comment = this.row.next();
     this.comment_box = this.comment.find("textarea");
     this.comment_icon = this.row.find(".qa-showcmt i");
 
     this.show_comment.click(function(){
-        self.comment.toggle(600);
+        self.comment.toggle('fast');
+        self.comment.find('.comment-div').slideToggle('fast');
         return false;
     });
     this.set_comment_icon = function(){
         self.comment_icon.removeClass();
         if ( $.trim(self.comment_box.val()) != ''){
-            self.comment_icon.addClass("icon-comment");
+            self.comment_icon.addClass("fa fa-commenting");
         }else{
-            self.comment_icon.addClass("icon-edit");
+            self.comment_icon.addClass("fa fa-commenting-o");
         }
-    }
+    };
+    require(['autosize'], function(autosize) {
+        autosize(self.comment.find('textarea'));
+    });
     this.set_comment_icon(); //may already contain comment on initialization
     this.comment_box.blur(this.set_comment_icon);
 
     this.show_procedure = this.row.find("td.qa-showproc a");
     this.procedure = this.comment.next();
     this.show_procedure.click(function(){
-        self.procedure.toggle(600);
+        self.procedure.toggle('fast');
+        self.procedure.find('.qa-procedure-text').slideToggle('fast');
         return false;
     });
-
 
     this.value = null;
 
@@ -295,7 +329,7 @@ function TestInstance(test_info, row){
         }
 
         this.update_status();
-    }
+    };
 
     this.update_value_from_input = function(){
 
@@ -338,7 +372,7 @@ function TestInstance(test_info, row){
                     traditional:true,
                     error: function(e,data){
                         self.set_value(null);
-                        self.status.removeClass("btn-primary, btn-danger, btn-success");
+                        self.status.removeClass("btn-primary btn-danger btn-success");
                         self.status.addClass("btn-danger").text("Server Error");
                     }
                 });
@@ -359,7 +393,7 @@ function TestInstance(test_info, row){
 
         this.update_status();
         this.initialized = true;
-    }
+    };
     this.update_status = function(){
         var status = _.isNull(self.value)? NOT_DONE : self.test_info.check_value(self.value);
         if (self.test_info.test.type === QAUtils.UPLOAD){
@@ -372,18 +406,19 @@ function TestInstance(test_info, row){
         self.set_status(status);
     };
     this.set_status = function(status){
-
-        self.status.html(status.message);
-        self.status.removeClass("btn-success btn-warning btn-danger btn-info");
-        self.test_status = status.status;
-        if (status.status === QAUtils.WITHIN_TOL){
-            self.status.addClass("btn-success");
-        }else if(status.status === QAUtils.TOLERANCE){
-            self.status.addClass("btn-warning");
-        }else if(status.status === QAUtils.ACTION){
-            self.status.addClass("btn-danger");
-        }else if(status.status !== QAUtils.NOT_DONE){
-            self.status.addClass("btn-info");
+        if (test_info.test.type != 'upload') {
+            self.status.html(status.message);
+            self.status.removeClass("btn-success btn-warning btn-danger btn-info");
+            self.test_status = status.status;
+            if (status.status === QAUtils.WITHIN_TOL) {
+                self.status.addClass("btn-success");
+            } else if (status.status === QAUtils.TOLERANCE) {
+                self.status.addClass("btn-warning");
+            } else if (status.status === QAUtils.ACTION) {
+                self.status.addClass("btn-danger");
+            } else if (status.status !== QAUtils.NOT_DONE) {
+                self.status.addClass("btn-info");
+            }
         }
     };
 
@@ -392,20 +427,23 @@ function TestInstance(test_info, row){
     this.show = function(){
         self.row.show();
         self.comment.hide();
-        self.procedure.hide();
+        self.comment.find('.comment-div').hide();
+        self.procedure.hide('fast');
+        self.procedure.find('.qa-procedure-text').hide();
         self.set_skip(false);
         self.visible = true;
         self.comment_box.val(self.comment_box.val().replace(self.NOT_PERFORMED,""));
         if (self.test_info.test.type == QAUtils.BOOLEAN){
             self.set_value(self.value);
         }
-
-    }
+    };
 
     this.hide = function(){
         self.row.hide();
         self.comment.hide();
-        self.procedure.hide();
+        self.comment.find('.comment-div').hide();
+        self.procedure.hide('fast');
+        self.procedure.find('.qa-procedure-text').hide();
         self.visible = false;
 
         // skipping sets value to null but we want to presever value in case it
@@ -418,62 +456,69 @@ function TestInstance(test_info, row){
         }
 
         self.comment_box.val(self.NOT_PERFORMED);
-    }
+    };
 
-    var csrf_token = $("input[name=csrfmiddlewaretoken]").val();
+    if (test_info.test.type == 'upload') {
 
-    this.inputs.filter(".file-upload").each(function(){
+        require(['jquery', 'dropzone'], function ($, Dropzone) {
 
-        $(this).fileupload({
+            self.dropzone = new Dropzone('#upload-button-' + test_info.test.id, {
 
-            dataType: 'json',
-            url: QAURLs.UPLOAD_URL,
-            dropZone:self.row.children(),
-            singleFileUploads: true,
-            paramName:"upload",
-            replaceFileInput:false,
-            formData: function(){
-                return [
-                    { name:"test_id", value: self.test_info.test.id},
-                    { name:"meta", value:JSON.stringify(get_meta_data())},
-                    { name:"refs", value:JSON.stringify(get_ref_data())},
-                    { name:"tols", value:JSON.stringify(get_tol_data())},
-                    { name:"csrfmiddlewaretoken", value:csrf_token}
-                ]
-            },
-            done: function (e, data) {
-                self.status.removeClass("btn-info btn-primary btn-danger btn-success");
-                if (data.result.errors.length > 0){
+                url: QAURLs.UPLOAD_URL,
+                previewsContainer: false,
+                // previewTemplate: $('#preview-template')[0].innerHTML,
+                // dropZone: self.row.children(),
+                // singleFileUploads: true,
+                uploadMultiple: false,
+                paramName: "upload",
+                replaceFileInput: false,
+                params: {
+                    'csrfmiddlewaretoken': csrf_token,
+                    "test_id": self.test_info.test.id,
+                    "meta": JSON.stringify(get_meta_data()),
+                    "refs": JSON.stringify(get_ref_data()),
+                    "tols": JSON.stringify(get_tol_data())
+                }
+
+            });
+
+            self.dropzone.on('totaluploadprogress', function(progress) {
+                self.status.removeClass("btn-primary btn-danger btn-success btn-info");
+                self.status.addClass("btn-warning").text(progress + "%");
+            });
+
+            self.dropzone.on('error', function(file, data) {
+                self.set_value(null);
+                self.status.removeClass("btn-primary btn-danger btn-success");
+                self.status.addClass("btn-danger").text("Server Error");
+            });
+
+            self.dropzone.on('success', function(file, data) {
+
+                var response_data = JSON.parse(data);
+                self.status.removeClass("btn-primary btn-info btn-warning btn-danger btn-success");
+                if (response_data.errors.length > 0) {
                     self.set_value(null);
                     self.status.addClass("btn-danger").text("Failed");
-                    self.status.attr("title",data.result.errors[0]);
-                }else{
-                    self.set_value(data.result);
+                    self.status.attr("title", response_data.errors[0]);
+                } else {
+                    self.set_value(response_data);
                     self.status.addClass("btn-success").text("Success");
-                    self.status.attr("title",data.result['temp_file_name']);
+                    self.status.attr("title", response_data['temp_file_name']);
 
                     // Display Image if required
-                    if (data.result.is_image){
-                        var image_url = QAURLs.MEDIA_URL + "uploads/tmp/" + data.result.temp_file_name;
+                    if (response_data.is_image) {
+                        var image_url = QAURLs.MEDIA_URL + "uploads/tmp/" + response_data['temp_file_name'];
                         self.display_image(image_url);
-                     }
+                    }
 
                     $.Topic("valueChanged").publish();
                 }
-            },
-            fail: function(e,data){
-                self.set_value(null);
-                self.status.removeClass("btn-primary, btn-danger, btn-success");
-                self.status.addClass("btn-danger").text("Server Error");
-            },
-            progressall: function (e, data) {
-                var progress = parseInt(data.loaded / data.total * 100, 10);
-                self.status.removeClass("btn-primary, btn-danger, btn-success");
-                self.status.addClass("btn-warning").text(progress+"%");
-            }
+            });
 
-        })
-    });
+        });
+
+    }
     //Set initial value
     this.update_value_from_input();
     // Display images
@@ -510,7 +555,7 @@ function get_ref_data(){
         return ti.test_info.reference.value ? ti.test_info.reference.value : null;
     });
 
-    return _.zipObject(_.zip(tli.slugs, ref_values));
+    return _.zipObject(tli.slugs, ref_values);
 }
 
 function get_tol_data(){
@@ -521,7 +566,7 @@ function get_tol_data(){
         var tol = ti.test_info.tolerance;
         return !tol.id ? null : _.pick(tol, tol_properties);
     });
-    return _.zipObject(_.zip(tli.slugs, tol_values));
+    return _.zipObject(tli.slugs, tol_values);
 }
 
 function TestListInstance(){
@@ -542,11 +587,11 @@ function TestListInstance(){
 
         self.test_instances = _.map(_.zip(test_infos, $("#perform-qa-table tr.qa-valuerow")), function(uti_row){return new TestInstance(uti_row[0], uti_row[1])});
         self.slugs = _.map(self.test_instances, function(ti){return ti.test_info.test.slug});
-        self.tests_by_slug = _.zipObject(_.zip(self.slugs,self.test_instances));
+        self.tests_by_slug = _.zipObject(self.slugs,self.test_instances);
         self.composites = _.filter(self.test_instances,function(ti){return ti.test_info.test.type === QAUtils.COMPOSITE || ti.test_info.test.type === QAUtils.STRING_COMPOSITE;});
         self.composite_ids = _.map(self.composites,function(ti){return ti.test_info.test.id;});
         self.calculate_composites();
-    }
+    };
 
 
     this.calculate_composites = function(){
@@ -558,7 +603,7 @@ function TestListInstance(){
 
 
         var cur_values = _.map(self.test_instances,function(ti){return ti.value;});
-        var qa_values = _.zipObject(_.zip(self.slugs,cur_values));
+        var qa_values = _.zipObject(self.slugs,cur_values);
         var meta = get_meta_data();
         var refs = get_ref_data();
         var tols = get_tol_data();
@@ -572,6 +617,7 @@ function TestListInstance(){
         };
 
         var on_success = function(data, status, XHR){
+
             if (latest_composite_call !== XHR){
                 return;
             }
@@ -587,12 +633,12 @@ function TestListInstance(){
                 });
             }
             $.Topic("qaUpdated").publish();
-        }
+        };
 
         var on_error = function(){
             self.submit.attr("disabled", false);
             $.Topic("qaUpdated").publish();
-        }
+        };
 
         self.submit.attr("disabled", true);
 
@@ -609,12 +655,14 @@ function TestListInstance(){
     };
 
     this.has_failing = function(){
-        return _.filter(self.test_instances,function(ti){return ti.test_status === QAUtils.ACTION}).length > 0;
+        return _.filter(self.test_instances, function(ti){
+                return ti.test_status === QAUtils.ACTION
+            }).length > 0;
     };
 
     $.Topic("categoryFilter").subscribe(function(categories){
         _.each(self.test_instances,function(ti){
-            if (categories === "all" || _.contains(categories,ti.test_info.test.category.toString())){
+            if (categories === "all" || _.includes(categories,ti.test_info.test.category.toString())){
                 ti.show();
             }else{
                 ti.hide();
@@ -626,9 +674,6 @@ function TestListInstance(){
     $.Topic("valueChanged").subscribe(self.calculate_composites);
 }
 
-
-
-/***************************************************************/
 function set_tab_stops(){
 
     var user_inputs=  $('.qa-input',context).not("[readonly=readonly]").not("[type=hidden]");
@@ -681,10 +726,8 @@ function set_tab_stops(){
 
 }
 
-
 var tli;
 
-/****************************************************************/
 $(document).ready(function(){
 
     tli = new TestListInstance();
@@ -696,100 +739,198 @@ $(document).ready(function(){
     comment_on_skip = $("#require-comment-on-skip").val() === "yes" ? true : false;
 
     $("#test-list-info-toggle").click(function(){
-        console.log('toggle it');
         $("#test-list-info").toggle(600);
     });
 
-    //toggle general comment
-    $("#toggle-gen-comment").click(function(){
-        $("#id_comment").toggle();
+    // general comment
+    require(['autosize'], function(autosize) {
+        autosize($('#id_comment'));
     });
-
-    //toggle contacts
-    $("#toggle-contacts").click(function(){
-        $("#contacts").toggle();
-
-        var icon = $("#contacts").is(":visible") ? "icon-minus-sign" : "icon-plus-sign";
-        $("#toggle-contacts i").removeClass("icon-plus-sign icon-minus-sign").addClass(icon);
+    $("#toggle-gen-comment").click(function(){
+        $('#qa-tli-comment').slideToggle('fast');
     });
 
     //set link for cycle when user changes cycle day dropdown
-    $("#cycle-day").change(function(){
-        var day = $("#cycle-day option:selected").val();
+    $(".radio-days").on('ifChecked', function(){
+        var day = $(this).attr('id').replace('day-', '');
         var cur = document.location.href;
-        var next = cur.replace(/day=(next|[0-9]+)/,"day="+day);
-        document.location.href = next;
+        document.location.href = cur.replace(/day=(next|[0-9]+)/,"day="+day);
     });
 
-    //run filter routine anytime user alters the categories
-    $("#category_filter").change(function(){
-        var categories = $(this).val();
-        if (categories === null  || _.contains(categories,"all")){
-            $.Topic("categoryFilter").publish("all");
-        }else{
-            $.Topic("categoryFilter").publish(categories);
-        }
-        $.Topic("categoryFilterComplete");
-    });
-
-
+    ////////// Submit button
     //make sure user actually want's to go back
     //this is here to help mitigate the risk that a user hits back or backspace key
     //by accident and completely hoses all the information they've entered during
     //a qa session
-    $(window).bind("beforeunload",function(){
-        if (_.any(_.pluck(tli.test_instances,"value"))){
+    $(window).on("beforeunload", function(){
+        if (_.some(_.map(tli.test_instances, "value"))){
             return  "If you leave this page now you will lose all entered values.";
         }
     });
-
     $("#qa-form").preventDoubleSubmit().submit(function(){
-        $(window).unbind("beforeunload");
+        $(window).off("beforeunload");
     });
 
-    /*$("#work-completed, #work-started").datepicker({
-        autoclose:true,
-        keyboardNavigation:false
-    }).on('changeDate',function (ev){
-        // Set times to default values after a date is chosen
-        // If the current date is selected, the time defaults to  the current time
-        // otherwise 19:30 for work started and 20:30 for work completed
-
-        var input = $(this).find("input");
-        var cur_val = input.val();
-
-        var now = new Date();
-
-        var zero_pad = function(inp){return inp < 10 ? '0'+inp : inp;};
-
-        var date = zero_pad(now.getDate());
-        var month = zero_pad(now.getMonth()+1);
-        var year = now.getFullYear();
-        var hours = zero_pad(now.getHours());
-        var mins = zero_pad(now.getMinutes());
-
-        var now_str = date +'-'+ month + '-'+year;
-
-        if (now_str === cur_val){
-            input.val(cur_val+" "+hours+":"+mins);
-        }else if (input.attr("name") === "work_completed"){
-            input.val(cur_val+" 20:30");
-        }else{
-            input.val(cur_val+" 19:30");
+    ///////// Category checkboxes:
+    var categories = $('.check-category');
+    var showall = $('#category-showall');
+    showall.on('ifChecked ifUnchecked', function(e) {
+        if (e.type == 'ifChecked') {
+            categories.iCheck('check');
+        } else {
+            categories.iCheck('uncheck');
         }
-    });*/
+    });
+    categories.on('ifChanged', function(e){
+        var cats = [];
+        $.each(categories.filter(':checked'), function () {
+            cats.push($(this).attr('id').replace('category-', ''));
+        });
+        if (categories.filter(':checked').length == categories.length) {
+            showall.prop('checked', true);
+        }
+        else {
+            showall.prop('checked', false);
+        }
+        $.Topic("categoryFilter").publish(cats);
+        $.Topic("categoryFilterComplete");
+        showall.iCheck('update');
+    });
 
-    var fail_warnings = $("#do-not-treat-bottom, #do-not-treat-top");
+    ///////// Work time
+    if (override_date) {
+        require(['jquery', 'moment', 'jquery.inputmask'], function ($, moment) {
+
+            var base_range_settings = {
+                singleDatePicker: true,
+                autoclose: true,
+                keyboardNavigation: false,
+                timePicker: true,
+                timePicker24Hour: true,
+                // timePickerIncrement: 5,
+                locale: {
+                    "format": "DD-MM-YYYY HH:mm"
+                }
+            };
+
+            var start_picker = $('#id_work_started'),
+                completed_picker = $('#id_work_completed'),
+                duration_picker = $('#id_work_duration');
+
+            var duration_change = true,
+                end_date_change = true;
+
+            function apply_completed() {
+                if (duration_change) {
+                    var start = $(start_picker).data('daterangepicker').startDate.clone(),
+                        end = $(completed_picker).data('daterangepicker').startDate.clone(),
+                        duration = moment.duration(end.diff(start)),
+                        hours = Math.min(Math.floor(duration.asHours()), 99);
+                    hours = hours > 9 ? hours.toString() : '0' + hours;
+                    var mins = duration.minutes() > 9 ? duration.minutes().toString() : '0' + duration.minutes();
+                    $(duration_picker).val(hours + mins);
+                    duration_change = false;
+                }
+            }
+
+            $(start_picker).daterangepicker(
+                base_range_settings
+            ).on('apply.daterangepicker', function (ev, picker) {
+                var min_date = picker.startDate.clone();
+                $(completed_picker).daterangepicker(
+                    $.extend({},
+                        base_range_settings,
+                        {
+                            minDate: min_date,
+                            maxDate: min_date.clone().add(99, 'hours').add(59, 'minutes')
+                        }
+                    )
+                ).on('apply.daterangepicker', apply_completed);
+                duration_change = false;
+                $(duration_picker).val('');
+                $(completed_picker).data('daterangepicker').setStartDate(min_date);
+                $(completed_picker).data('daterangepicker').setEndDate(min_date);
+                $(completed_picker).trigger('apply.daterangepicker');
+            });
+
+            var min_date = $(start_picker).data('daterangepicker').startDate.clone();
+            $(completed_picker).daterangepicker(
+                $.extend({},
+                    base_range_settings,
+                    {
+                        minDate: min_date,
+                        maxDate: min_date.clone().add(99, 'hours').add(59, 'minutes')
+                    }
+                )
+            ).on('apply.daterangepicker', apply_completed).focus(function () {
+                duration_change = true;
+            });
+
+            $(duration_picker).inputmask({
+                mask: "99hr : 'min",
+                definitions: {
+                    "'": {
+                        validator: "[0-5][0-9]",
+                        cardinality: 2,
+                        prevalidator: [{
+                            validator: "[0-5]",
+                            cardinality: 1
+                        }]
+                    }
+                },
+                "oncomplete": function () {
+                    if (end_date_change) {
+                        var duration = this.inputmask.unmaskedvalue();
+                        var start_time = $($(start_picker)).data('daterangepicker').startDate,
+                            hours = duration[0] + duration[1],
+                            mins = duration[2] + duration[3];
+                        var end_time = start_time.clone().add(hours, 'hours').add(mins, 'minutes')/*.format('DD-MM-YYYY HH:mm')*/;
+                        $(completed_picker).data('daterangepicker').setStartDate(end_time);
+                        $(completed_picker).data('daterangepicker').setEndDate(end_time);
+                        end_date_change = false;
+                    }
+                }
+            }).on('keypress', function () {
+                end_date_change = true;
+            });
+        });
+    }
+
+    //////// Warning message
+    var box_perform = $('#box-perform .box'),
+        box_perform_header = $(box_perform).find('.box-header, .box-footer'),
+        // box_perform_footer = $(box_perform).find('.box-footer'),
+        sub_button = $('#submit-qa'),
+        do_not_treat = $('.do-not-treat');
+
+    function display_fail(fail) {
+        require(['jquery-ui'], function() {
+            fail ? function() {
+                do_not_treat.show();
+                box_perform.switchClass('box-primary box-pho-borders', 'box-danger box-red-borders', 1000);
+                sub_button.switchClass('btn-primary', 'btn-danger', 1000);
+                box_perform_header.addClass('red-bg', 1000);
+
+
+            }() : function() {
+                box_perform.switchClass('box-danger box-red-borders', 'box-primary box-pho-borders', 1000);
+                sub_button.switchClass('btn-danger', 'btn-primary', 1000);
+                box_perform_header.removeClass('red-bg', 1000, function() {
+                    do_not_treat.hide();
+                });
+
+            }();
+        });
+    }
+
     $.Topic("qaUpdated").subscribe(function(){
         if (self.tli.has_failing()){
-            fail_warnings.show();
+            display_fail(true);
         }else{
-            fail_warnings.hide();
+            display_fail(false);
         }
     });
 
-
     set_tab_stops();
-
 
 });

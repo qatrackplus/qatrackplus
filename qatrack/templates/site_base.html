@@ -78,7 +78,7 @@
                     }
                     return '<a href="'+url+'" title="'+title+'">'+text+'</a>';
                 }
-            }
+            };
 
             var ICON_SETTINGS = {{ICON_SETTINGS_JSON|safe}};
 
@@ -364,6 +364,7 @@
                 {% block extra_body %}{% endblock %}
             {% endblock %}
         </div>
+        {% block loading_modal %}{% endblock loading_modal %}
     </body>
 
 {#    {% block footer %}#}

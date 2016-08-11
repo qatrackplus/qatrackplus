@@ -42,10 +42,9 @@ $.fn.preventDoubleSubmit = function() {
     if (this.beenSubmitted)
       return false;
     else{
-	  $(this).find("button[type=submit]").enable(false).addClass(".disabled").text("Submitting...");
+	  $(this).find("button[type=submit]").prop('disabled', true).addClass(".disabled").text("Submitting...");
       this.beenSubmitted = true;
 	}
   });
   return jQuery(this);
 };
-

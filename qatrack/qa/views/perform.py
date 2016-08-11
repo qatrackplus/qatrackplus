@@ -839,7 +839,6 @@ class ContinueTestListInstance(EditTestListInstance):
     raise_exception = True
 
 
-#============================================================================
 class InProgress(TestListInstances):
     """
     View for choosing an existing from the :model:`qa.TestListInstance`s
@@ -849,17 +848,16 @@ class InProgress(TestListInstances):
     def get_queryset(self):
         return models.TestListInstance.objects.in_progress()
 
+    def get_icon(self):
+        return 'fa-play'
 
-    #----------------------------------------------------------------------
     def get_page_title(self):
         return "In Progress Test Lists"
 
 
-#============================================================================
 class FrequencyList(UTCList):
     """List :model:`qa.UnitTestCollection`s for requested :model:`qa.Frequency`s"""
 
-    #----------------------------------------------------------------------
     def get_queryset(self):
         """filter queryset by frequency"""
 
@@ -874,12 +872,10 @@ class FrequencyList(UTCList):
 
         return qs.filter(q).distinct()
 
-    #----------------------------------------------------------------------
     def get_page_title(self):
         return ",".join([x.name if x else "ad-hoc" for x in self.frequencies]) + " Test Lists"
 
 
-#============================================================================
 class UnitFrequencyList(FrequencyList):
     """
     List :model:`qa.UnitTestCollection`s for requested :model:`unit.Unit`s
@@ -901,11 +897,9 @@ class UnitFrequencyList(FrequencyList):
         return title
 
 
-#====================================================================================
 class UnitList(UTCList):
     """ List :model:`qa.UnitTestCollection`s for requested :model:`unit.Unit`s """
 
-    #----------------------------------------------------------------------
     def get_queryset(self):
         """filter queryset by frequency"""
         qs = super(UnitList, self).get_queryset()
@@ -914,7 +908,6 @@ class UnitList(UTCList):
         )
         return qs.filter(unit__in=self.units)
 
-    #----------------------------------------------------------------------
     def get_page_title(self):
         title = ", ".join([x.name for x in self.units]) + " Test Lists"
         return title
