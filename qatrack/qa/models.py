@@ -685,7 +685,7 @@ def get_utc_tl_ids(active=None, units=None, frequencies=None):
 
     return list(tls) + list(tls_from_tlcs)
 
-#============================================================================
+
 class UnitTestInfoManager(models.Manager):
 
     #----------------------------------------------------------------------
@@ -712,7 +712,7 @@ class UnitTestInfoManager(models.Manager):
             test__testlistmembership__test_list__in=get_utc_tl_ids(active=True)
         ).distinct()
 
-#============================================================================
+
 class UnitTestInfo(models.Model):
     unit = models.ForeignKey(Unit)
     test = models.ForeignKey(Test)
@@ -770,7 +770,6 @@ class UnitTestInfo(models.Model):
         return "UnitTestInfo(%s)" % self.pk
 
 
-#============================================================================
 class TestListMembership(models.Model):
     """Keep track of ordering for tests within a test list"""
     test_list = models.ForeignKey("TestList")
@@ -786,7 +785,6 @@ class TestListMembership(models.Model):
         return "TestListMembership(pk=%s)" % self.pk
 
 
-#============================================================================
 class TestCollectionInterface(models.Model):
     """abstract base class for Tests collection (i.e. TestList's and TestListCycles"""
 
@@ -840,7 +838,6 @@ class TestCollectionInterface(models.Model):
         return ContentType.objects.get_for_model(self)
 
 
-#============================================================================
 class TestList(TestCollectionInterface):
     """Container for a collection of QA :model:`Test`s"""
 
@@ -885,7 +882,6 @@ class TestList(TestCollectionInterface):
         return "(%s) %s" % (self.pk, self.name)
 
 
-#============================================================================
 class UnitTestListManager(models.Manager):
     #----------------------------------------------------------------------
     def by_unit(self, unit):
@@ -910,7 +906,6 @@ class UnitTestListManager(models.Manager):
         return self.get_query_set().filter(visible_to__in=groups)
 
 
-#============================================================================
 class UnitTestCollection(models.Model):
     """keeps track of which units should perform which test lists at a given frequency"""
 

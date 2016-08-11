@@ -310,11 +310,11 @@
 {#                                    <div class="col-md-6"></div>#}
                                     <div class="col-md-12">
 
-                                        <button id="submit-qa" type="submit" class="btn btn-primary btn-flat margin pull-right">Submit QA Results</button>
+                                        <button id="submit-qa" type="submit" class="btn btn-primary btn-flat margin-r-5 pull-right">Submit QA Results</button>
 
-                                        <a id="toggle-gen-comment" class="btn btn-primary btn-flat pull-right margin" href="#!" title="Click here to add a general comment about this set of tests"><i class="icon-edit"></i> Add Comment</a>
+                                        <a id="toggle-gen-comment" class="btn btn-primary btn-flat pull-right margin-r-5" href="#!" title="Click here to add a general comment about this set of tests"><i class="icon-edit"></i> Add Comment</a>
 
-                                        <div class="pull-right margin">
+                                        <div class="pull-right margin-r-5">
                                             <label title="{{form.in_progress.help_text}}" for="id_in_progress" class="add-on">
                                                 Mark this list as still in progress:
                                             </label>
@@ -331,7 +331,7 @@
                                             {% if test.display_image %}
                                                 {% if test_list_instance %}
                                                     <div id="{{ test.slug }}" class="qa-image-box">
-                                                        <strong><p>Test name: {{ test }}</p></strong>
+                                                        <strong><p>Image for {{ test }}: </p></strong>
                                                         <img src="{{ ti.image_url }}" class="qa-image">
                                                     </div>
                                                 {% else %}

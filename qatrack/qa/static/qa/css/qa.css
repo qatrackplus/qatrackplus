@@ -89,7 +89,8 @@ th.qa-name div{
     height:1px;
 }
 input.qa-input:not([type="radio"]),
-select.qa-input{
+select.qa-input,
+.review-status select {
     width: 100%;
     text-align:right;
     min-width: 115px;
@@ -216,12 +217,7 @@ tr.qa-comment td{
 
 
 /* admin options */
-.left-border {
-    border-left-width: 1px;
-    border-left-style: solid;
-    border-top-left-radius: 4px;
-    border-bottom-left-radius: 4px;
-}
+
 #box-admin .box-body > .row {
     display: table;
     width: 100%;
@@ -259,4 +255,34 @@ body .box-footer h3.do-not-treat {
     display: none;
     margin: 0;
     color: #fff;
+}
+
+/* review testlist */
+td.review-value,
+th.review-value {
+    width:60px;
+    text-align:center;
+}
+td.review-value span {
+    display: inline-block;
+    width: 60px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+td.review-status,
+th.review-status{
+    width: 185px;
+}
+td.review-selected,
+th.review-selected{
+    width: 40px;
+    text-align: center;
+}
+td.review-diff,
+th.review-diff,
+td.review-ref,
+th.review-ref {
+    width: 60px;
+    text-align: right;
 }

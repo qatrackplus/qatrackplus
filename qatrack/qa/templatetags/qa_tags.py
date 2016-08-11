@@ -129,7 +129,6 @@ def as_review_status(test_list_instance):
     return template.render(c)
 
 
-#----------------------------------------------------------------------
 @register.filter(expects_local_time=True)
 def as_due_date(unit_test_collection):
     template = get_template("qa/due_date.html")
@@ -137,7 +136,6 @@ def as_due_date(unit_test_collection):
     return template.render(c)
 
 
-#----------------------------------------------------------------------
 @register.filter(is_safe=True, expects_local_time=True)
 def as_time_delta(time_delta):
     hours, remainder = divmod(time_delta.seconds, 60 * 60)
@@ -146,7 +144,6 @@ def as_time_delta(time_delta):
 as_time_delta.safe = True
 
 
-#----------------------------------------------------------------------
 @register.filter
 def as_data_attributes(unit_test_collection):
     utc = unit_test_collection

@@ -41,6 +41,8 @@ require.config({
         // qa module:
         qa: siteConfig.STATIC_URL + 'qa/js/qa',
         qautils: siteConfig.STATIC_URL + 'qa/js/qautils',
+        qareview: siteConfig.STATIC_URL + 'qa/js/qareview',
+        qaoverview: siteConfig.STATIC_URL + 'qa/js/qaoverview'
         // testlistinstance: siteConfig.STATIC_URL + 'qa/js/testlistinstance'
 
         // unit module:
@@ -106,6 +108,12 @@ require.config({
         // qa module:
         qa: {
             deps: ['jquery', 'qautils', 'site_base', 'lodash', 'daterangepicker', 'sidebar', 'datatables', 'datatables.columnFilter', 'inputmask']
+        },
+        qareview: {
+            deps: ['jquery', 'site_base', 'bootstrap', 'admin_lte']
+        },
+        qaoverview: {
+            deps: ['jquery', 'site_base', 'bootstrap', 'admin_lte']
         }
 
         // unit module:

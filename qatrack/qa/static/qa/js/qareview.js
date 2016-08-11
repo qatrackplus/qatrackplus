@@ -16,5 +16,12 @@ $(document).ready(function(){
 		}
 		return false;
 	});
+	
+	$('.qa-showcmt > a.revealcomment').click(function() {
+		var comment_row = $(this).parent().parent().next();
+		comment_row.toggle('fast');
+        comment_row.find('.comment-div').slideToggle('fast');
+        return false;
+	});
 
 });
