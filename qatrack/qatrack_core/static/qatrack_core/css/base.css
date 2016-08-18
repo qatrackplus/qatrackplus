@@ -198,9 +198,83 @@ div.daterangepicker.dropdown-menu li:hover {
     border-right: 1px solid #dd4b39;
     border-left: 1px solid #dd4b39;
 }
+.box-default-borders {
+    border-bottom: 1px solid #d2d6de;
+    border-right: 1px solid #d2d6de;
+    border-left: 1px solid #d2d6de;
+}
 .box-footer .box-title {
     display: inline-block;
     font-size: 18px;
     margin: 0;
     line-height: 1;
+}
+
+/* page loading */
+.loading-modal {
+    display:    none;
+    position:   fixed;
+    z-index:    1000;
+    top:        0;
+    left:       0;
+    height:     100%;
+    width:      100%;
+    background: rgba( 255, 255, 255, .6 )
+}
+.loading-modal > .center {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+.loading-modal > .center > div {
+    text-align: center;
+}
+body.loading {
+    overflow: hidden;
+}
+body.loading .loading-modal {
+    display: block;
+}
+.loading-logo {
+    font-size: 24px;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-weight: bold;
+
+}
+.box-small {
+    margin: 4px;
+}
+.box-small .box-header {
+    padding: 5px;
+}
+.box-small .box-header .box-title {
+    font-size: 15px;
+}
+.bg-light-gray {
+    background-color: #eeeeee;
+}
+
+/* label and badge groups */
+.label-group > .label,
+.label-group > .badge {
+	border-radius: 0;
+    margin: 0;
+}
+.label-group > .label:first-child {
+	border-top-left-radius: 0.25em;
+    border-bottom-left-radius: 0.25em;
+}
+.label-group > .label:last-child {
+	border-top-right-radius: 0.25em;
+    border-bottom-right-radius: 0.25em;
+}
+
+.label-group > .badge:first-child {
+    border-top-left-radius: 0.4em;
+    border-bottom-left-radius: 0.4em;
+}
+.label-group > .badge:last-child {
+    border-top-right-radius: 0.4em;
+    border-bottom-right-radius: 0.4em;
 }

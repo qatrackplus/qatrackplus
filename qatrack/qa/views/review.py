@@ -1,12 +1,14 @@
 import calendar
 import collections
+import json
 
 from django.contrib import messages
+from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.http import HttpResponseRedirect, Http404
 from django.utils import timezone
 from django.utils.translation import ugettext as _
-from django.views.generic import ListView, TemplateView, DetailView
+from django.views.generic import ListView, TemplateView, DetailView, View
 
 from .. import models, utils
 from . import forms
@@ -15,7 +17,7 @@ from .perform import ChooseUnit
 
 from qatrack.units.models import Unit
 
-from braces.views import PermissionRequiredMixin
+from braces.views import PermissionRequiredMixin, JSONResponseMixin
 
 
 class TestListInstanceDetails(TestListInstanceMixin, DetailView):
@@ -274,8 +276,6 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
                 return True
         return False
 
-
-    #----------------------------------------------------------------------
     def get_queryset(self):
 
         qs = models.UnitTestCollection.objects.filter(
@@ -304,7 +304,6 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
 
         return qs.distinct()
 
-    #----------------------------------------------------------------------
     def get_context_data(self):
         """Group all active :model:`qa.UnitTestCollection` by due date category"""
 
@@ -356,12 +355,14 @@ class Overview(PermissionRequiredMixin, TemplateView):
                 return True
         return False
 
-    #----------------------------------------------------------------------
+
+class OverviewObjects(JSONResponseMixin, View):
+
     def get_queryset(self):
 
         qs = models.UnitTestCollection.objects.filter(
             active=True,
-            visible_to__in=self.request.user.groups.all(),
+            # visible_to__in=self.request.user.groups.all(),
         ).select_related(
             "last_instance__work_completed",
             "last_instance__created_by",
@@ -374,35 +375,55 @@ class Overview(PermissionRequiredMixin, TemplateView):
             "last_instance__modified_by",
         ).extra(
             **utils.qs_extra_for_utc_name()
-        ).order_by("frequency__nominal_interval", "unit__number", "utc_name",)
+        ).order_by("frequency__nominal_interval", "unit__number", "utc_name", )
 
         return qs.distinct()
 
-    #----------------------------------------------------------------------
-    def get_context_data(self):
-        """Group all active :model:`qa.UnitTestCollection` by unit"""
+    def get(self, request):
 
-        context = super(Overview, self).get_context_data()
         qs = self.get_queryset()
 
         units = Unit.objects.order_by("number")
         frequencies = list(models.Frequency.objects.order_by("nominal_interval")) + [None]
 
-        unit_lists = []
+        unit_lists = collections.OrderedDict()
+        due_counts = {'ok': 0, 'tolerance': 0, 'action': 0, 'no_tol': 0}
 
         for unit in units:
-            unit_lists.append((unit, []))
+            unit_freqs = collections.OrderedDict()
             for freq in frequencies:
-                unit_lists[-1][-1].append((freq, [utc for utc in qs if utc.frequency == freq and utc.unit == unit]))
+                freq_name = freq.name if freq else 'Ad Hoc'
+                if freq_name not in unit_freqs:
+                    unit_freqs[freq_name] = collections.OrderedDict()
+                for utc in qs:
+                    if utc.frequency == freq and utc.unit == unit:
 
-        context["unit_lists"] = unit_lists
-        return context
+                        if utc.last_instance:
+                            last_instance_pfs = {}
+                            for lipfs in utc.last_instance.pass_fail_status():
+                                last_instance_pfs[lipfs[0]] = len(lipfs[2])
+                        else:
+                            last_instance_pfs = 'New List'
+
+                        ds = utc.due_status()
+                        unit_freqs[freq_name][utc.utc_name] = {
+                            'id': utc.pk,
+                            'url': reverse('review_utc', args=(utc.pk,)),
+                            'last_instance_status': last_instance_pfs,
+                            'last_instance_work_completed': utc.last_instance.work_completed if utc.last_instance else None,
+                            'due_date': utc.due_date,
+                            'due_status': ds
+                        }
+                        due_counts[ds] += 1
+            # print unit_freqs
+            unit_lists[unit.name] = unit_freqs
+
+        return self.render_json_response({'unit_lists': unit_lists, 'due_counts': due_counts, 'success': True})
 
 
 class UTCInstances(TestListInstances):
     """Show all :model:`qa.TestListInstance`s for a given :model:`qa.UnitTestCollection`"""
 
-    #----------------------------------------------------------------------
     def get_page_title(self):
         try:
             utc = models.UnitTestCollection.objects.get(pk=self.kwargs["pk"])
@@ -410,7 +431,6 @@ class UTCInstances(TestListInstances):
         except:
             raise Http404
 
-    #---------------------------------------------------------------------------
     def get_queryset(self):
         qs = super(UTCInstances, self).get_queryset()
         return qs.filter(unit_test_collection__pk=self.kwargs["pk"])

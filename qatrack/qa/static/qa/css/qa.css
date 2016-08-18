@@ -1,41 +1,6 @@
-/* page loading */
-.loading-modal {
-    display:    none;
-    position:   fixed;
-    z-index:    1000;
-    top:        0;
-    left:       0;
-    height:     100%;
-    width:      100%;
-    background: rgba( 255, 255, 255, .8 )
-    /*url('http://i.stack.imgur.com/FhHRx.gif')*/
-    /*50% 50%*/
-    /*no-repeat;*/
-}
-.loading-modal > .center {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-}
-.loading-modal > .center > div {
-    text-align: center;
-}
-body.loading {
-    overflow: hidden;
-}
-body.loading .loading-modal {
-    display: block;
-}
-.loading-logo {
-    font-size: 24px;
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    font-weight: bold;
-
-}
 
 /*QA Status Spans                                 */
-.no_tol, .not_done {
+.no_tol {
     background-color:#00c0ef;
 }
 .ok {
@@ -47,22 +12,10 @@ body.loading .loading-modal {
 .tolerance {
     background-color: #f39c12;
 }
+.not_done {
+    background-color: #b5bbc8;
+}
 
-.label-group > .label,
-.label-group > .badge {
-	border-radius: 0;
-    margin: 0;
-}
-.label-group > .label:first-child,
-.label-group > .badge:first-child {
-	border-top-left-radius: 0.25em;
-    border-bottom-left-radius: 0.25em;
-}
-.label-group > .label:last-child,
-.label-group > .badge:last-child{
-	border-top-right-radius: 0.25em;
-    border-bottom-right-radius: 0.25em;
-}
 #contacts dt{
     width:inherit;
     *width:250px;
@@ -117,7 +70,7 @@ input[disabled].qa-input, input[readonly].qa-input {
 }
 .qa-table td.qa-value,
 .qa-table th.qa-value{
-    width:100px;
+    width:110px;
     text-align:center;
     padding: 0;
 }
@@ -285,4 +238,40 @@ td.review-ref,
 th.review-ref {
     width: 60px;
     text-align: right;
+}
+
+
+/* QA Overview */
+.count-box {
+    min-height: 128px;
+}
+.testlist-link {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 0;
+    width: 60%;
+}
+.testlist-last-status {
+    text-align: right;
+    min-width: 90px;
+}
+.testlist-last-status,
+.testlist-link,
+.testlist-due-date {
+    padding: 0;
+}
+.overview-table {
+    width: 100%;
+}
+.overview-table.units th:last-child {
+    text-align: right;
+}
+.due-status-lists {
+    overflow-y:auto;
+    max-height:300px;
+    padding: 5px;
+}
+.pad-r-10 {
+    padding-right: 10px;
 }

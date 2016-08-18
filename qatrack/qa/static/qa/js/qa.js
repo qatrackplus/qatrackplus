@@ -261,8 +261,10 @@ function TestInstance(test_info, row){
     this.comment_icon = this.row.find(".qa-showcmt i");
 
     this.show_comment.click(function(){
+
         self.comment.toggle('fast');
         self.comment.find('.comment-div').slideToggle('fast');
+
         return false;
     });
     this.set_comment_icon = function(){

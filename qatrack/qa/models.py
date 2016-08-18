@@ -91,6 +91,7 @@ AUTO_REVIEW_DEFAULT = getattr(settings, "AUTO_REVIEW_DEFAULT", False)
 
 
 # due date choices
+NO_DUE_DATE = NO_TOL
 NOT_DUE = OK
 DUE = TOLERANCE
 OVERDUE = ACTION
@@ -965,7 +966,7 @@ class UnitTestCollection(models.Model):
     #----------------------------------------------------------------------
     def due_status(self):
         if not self.due_date:
-            return NOT_DUE
+            return NO_DUE_DATE
 
         today = timezone.localtime(timezone.now()).date()
         due = timezone.localtime(self.due_date).date()

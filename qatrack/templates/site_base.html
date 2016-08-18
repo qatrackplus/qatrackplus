@@ -51,7 +51,7 @@
                 MEDIA_URL: "{{MEDIA_URL}}",
                 OPTION_DELIM: "=",
                 OPTION_SEP: "&",
-
+                OVERVIEW_OBJECTS: "{% url "overview_objects" %}",
 
                 options_from_url_hash : function(hash){
                     var options = [];
@@ -86,7 +86,6 @@
 
         </script>
 
-        {#{% load js %}#}
         <script src="{{ STATIC_URL }}requirejs/js/require.min.js?v={{ VERSION }}"></script>
         <script type="text/javascript">
             require(['{{ STATIC_URL }}requirejs/js/requirejs-config.js?v={{ VERSION }}'], function () {

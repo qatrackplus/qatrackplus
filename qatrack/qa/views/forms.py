@@ -180,15 +180,12 @@ class CreateTestInstanceFormSet(UserFormsetMixin, BaseTestInstanceFormSet):
             form.set_unit_test_info(uti)
 
 
-#============================================================================
 class UpdateTestInstanceForm(TestInstanceWidgetsMixin, forms.ModelForm):
 
-    #============================================================================
     class Meta:
         model = models.TestInstance
         fields = ("value", "string_value", "skipped", "comment",)
 
-    #----------------------------------------------------------------------
     def __init__(self, *args, **kwargs):
 
         super(UpdateTestInstanceForm, self).__init__(*args, **kwargs)
@@ -197,8 +194,8 @@ class UpdateTestInstanceForm(TestInstanceWidgetsMixin, forms.ModelForm):
         self.unit_test_info = self.instance.unit_test_info
         self.set_value_widget()
         self.disable_read_only_fields()
+        self.fields["comment"].widget.attrs["rows"] = 2
 
-    #----------------------------------------------------------------------
     def get_test_info(self):
         return {
             "reference": self.instance.reference,
