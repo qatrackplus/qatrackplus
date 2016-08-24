@@ -43,7 +43,6 @@ require.config({
         qautils: siteConfig.STATIC_URL + 'qa/js/qautils',
         qareview: siteConfig.STATIC_URL + 'qa/js/qareview',
         qaoverview: siteConfig.STATIC_URL + 'qa/js/qaoverview'
-        // testlistinstance: siteConfig.STATIC_URL + 'qa/js/testlistinstance'
 
         // unit module:
     },

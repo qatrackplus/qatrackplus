@@ -900,7 +900,7 @@ class TestUnitTestCollection(TestCase):
 
         utc = utils.create_unit_test_collection(frequency=None, null_frequency=True)
 
-        self.assertEqual(models.NOT_DUE, utc.due_status())
+        self.assertEqual(models.NO_DUE_DATE, utc.due_status())
         utc.set_due_date(now - timezone.timedelta(days=1))
 
         utc = models.UnitTestCollection.objects.get(pk=utc.pk)
@@ -914,7 +914,7 @@ class TestUnitTestCollection(TestCase):
 
         utc = utils.create_unit_test_collection(frequency=daily)
 
-        self.assertEqual(models.NOT_DUE, utc.due_status())
+        self.assertEqual(models.NO_DUE_DATE, utc.due_status())
 
         daily_statuses = (
             (-2, models.OVERDUE),
@@ -936,7 +936,7 @@ class TestUnitTestCollection(TestCase):
         weekly = utils.create_frequency(nom=7, due=7, overdue=9)
         utc = utils.create_unit_test_collection(frequency=weekly)
 
-        self.assertEqual(models.NOT_DUE, utc.due_status())
+        self.assertEqual(models.NO_DUE_DATE, utc.due_status())
 
         weekly_statuses = (
             (-10, models.OVERDUE),
