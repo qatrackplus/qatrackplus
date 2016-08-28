@@ -9,6 +9,7 @@ from django.core.urlresolvers import reverse
 from django.test import TestCase
 from django.test.testcases import LiveServerTestCase
 from selenium.common.exceptions import NoSuchElementException
+from selenium import webdriver
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -148,15 +149,41 @@ objects = {
 
 class SeleniumTests(TestCase, LiveServerTestCase):
 
-    # Firefox driver is ~5x slower than Chrome driver but it standard in selenium install.
-    # Consider moving back to Chrome, or to PhantomJS
 
-    def __init__(self, *args, **kwargs):
-        super(SeleniumTests, self).__init__(*args, **kwargs)
-        ff_profile = FirefoxProfile()
-        self.driver = settings.SELENIUM_DRIVER(ff_profile)
-        # self.driver.set_window_size(1270, 1100)
-        self.wait = WebDriverWait(self.driver, 5)
+    @classmethod
+    def setUpClass(cls):
+        use_virtual_display = getattr(settings, 'SELENIUM_VIRTUAL_DISPLAY', False)
+        use_chrome = getattr(settings, 'SELENIUM_USE_CHROME', False)
+
+        if use_virtual_display:
+            # Make sure xvfb is installed
+            from pyvirtualdisplay import Display
+            cls.display = Display(visible=0, size=(1920, 1080))
+            cls.display.start()
+        else:
+            cls.display = None
+
+        if use_chrome:
+            chrome_driver_path = getattr(settings, 'SELENIUM_CHROME_PATH', '')
+            cls.driver = webdriver.Chrome(executable_path=chrome_driver_path)
+        else:
+            ff_profile = FirefoxProfile()
+            cls.driver = webdriver.Firefox(ff_profile)
+
+        cls.driver.maximize_window()
+        cls.driver.implicitly_wait(5)
+
+        super(SeleniumTests, cls).setUpClass()
+
+        cls.wait = WebDriverWait(cls.driver, 5)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.driver.quit()
+        if cls.display:
+            cls.display.stop()
+        super(SeleniumTests, cls).tearDownClass()
+
 
     def load_main(self):
         self.driver.get(self.live_server_url)
@@ -180,9 +207,6 @@ class SeleniumTests(TestCase, LiveServerTestCase):
 
     def wait_for_success(self):
         self.wait.until(e_c.presence_of_element_located((By.XPATH, '//ul[@class = "messagelist"]/li[@class = "success"]')))
-
-    def tearDown(self):
-        self.driver.quit()
 
     def test_admin_category(self):
 
