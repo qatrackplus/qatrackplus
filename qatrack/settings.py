@@ -21,7 +21,7 @@ SEND_BROKEN_LINK_EMAILS = True
 # misc settings
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
-VERSION = "0.3.0"
+VERSION = "0.2.9"
 BUG_REPORT_URL = "https://bitbucket.org/tohccmedphys/qatrackplus/issues/new"
 FEATURE_REQUEST_URL = BUG_REPORT_URL
 
