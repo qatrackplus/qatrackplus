@@ -22,6 +22,9 @@ from qatrack.qa import models
 from qatrack.accounts.backends import ActiveDirectoryGroupMembershipSSLBackend
 
 objects = {
+    'Group': {
+        'name': 'testGroup',
+    },
     'Category': {
         'name': 'testCategory',
         'slug': 'testCategory',
@@ -347,11 +350,14 @@ class SeleniumTests(TestCase, LiveServerTestCase):
 
     def test_admin_unittestcollection(self):
 
+        if not utils.exists('auth', 'Group', 'name', objects['Group']['name']):
+            utils.create_group(name=objects['Group']['name'])
+
         if not utils.exists('units', 'Unit', 'name', objects['Modality']['name']):
             utils.create_unit(name=objects['Modality']['name'], number=objects['Unit']['number'])
 
         if not utils.exists('qa', 'Frequency', 'name', objects['Frequency']['name']):
-            utils.create_frequency(name=objects['Modality']['name'])
+            utils.create_frequency(name=objects['Frequency']['name'])
 
         if not utils.exists('qa', 'TestList', 'name', objects['TestList']['name']):
             utils.create_test_list(name=objects['TestList']['name'])
@@ -371,12 +377,9 @@ class SeleniumTests(TestCase, LiveServerTestCase):
         self.driver.find_element_by_id('id_content_type').click()
         self.driver.find_element_by_id('id_content_type').send_keys(Keys.ARROW_DOWN, Keys.ENTER)
         time.sleep(2)
-        # self.wait.until(e_c.presence_of_element_located((By.XPATH, '//*[@id="generic_object_id"]/option[contains(text(), "TestList(' + objects['TestList']['name'] + ')")]')))
+
         self.driver.find_element_by_id('select2-generic_object_id-container').click()
         self.driver.find_element_by_id('select2-generic_object_id-container').click()
-        # actions = ActionChains(self.driver)
-        # actions.send_keys(Keys.ARROW_DOWN)
-        # actions.perform()
         self.driver.find_element_by_name('_save').click()
         self.wait_for_success()
 
