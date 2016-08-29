@@ -4,7 +4,6 @@ import logging
 import collections
 
 from django.conf import settings
-from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse, resolve
 from django.template import Context
 from django.contrib.auth.context_processors import PermWrapper
@@ -16,8 +15,10 @@ from django.views.generic import UpdateView
 from qatrack.qa import models, utils
 
 from braces.views import PrefetchRelatedMixin, SelectRelatedMixin
-from listable.views import BaseListableView, DATE, DATE_RANGE, SELECT, SELECT_MULTI, NONEORNULL, TEXT, TODAY, \
-    YESTERDAY, TOMORROW, LAST_WEEK, THIS_WEEK, NEXT_WEEK, LAST_14_DAYS, THIS_MONTH, THIS_YEAR
+from listable.views import (
+    BaseListableView, DATE_RANGE, SELECT_MULTI, NONEORNULL,
+    TODAY, YESTERDAY, TOMORROW, LAST_WEEK, THIS_WEEK, NEXT_WEEK, LAST_14_DAYS, THIS_MONTH, THIS_YEAR
+)
 
 logger = logging.getLogger('qatrack.console')
 
@@ -210,8 +211,8 @@ class UTCList(BaseListableView):
             'actions': get_template("qa/unittestcollection_actions.html"),
             'work_completed': get_template("qa/testlistinstance_work_completed.html"),
             'review_status': get_template("qa/testlistinstance_review_status.html"),
-            'pass_fail':  get_template("qa/pass_fail_status.html"),
-            'due_date':  get_template("qa/due_date.html"),
+            'pass_fail': get_template("qa/pass_fail_status.html"),
+            'due_date': get_template("qa/due_date.html"),
         }
 
     def get_context_data(self, *args, **kwargs):
@@ -253,7 +254,7 @@ class UTCList(BaseListableView):
     def get_extra(self):
         return utils.qs_extra_for_utc_name()
 
-    def frequency__name(self, utc ):
+    def frequency__name(self, utc):
         return utc.frequency.name if utc.frequency else "Ad Hoc"
 
     def actions(self, utc):
@@ -328,7 +329,6 @@ class TestListInstances(BaseListableView):
         "review_status": False,
     }
 
-
     order_fields = {
         "actions": False,
         "unit_test_collection__unit__name": "unit_test_collection__unit__number",
@@ -354,7 +354,7 @@ class TestListInstances(BaseListableView):
             'actions': get_template("qa/testlistinstance_actions.html"),
             'work_completed': get_template("qa/testlistinstance_work_completed.html"),
             'review_status': get_template("qa/testlistinstance_review_status.html"),
-            'pass_fail':  get_template("qa/pass_fail_status.html"),
+            'pass_fail': get_template("qa/pass_fail_status.html"),
         }
 
     def get_page_title(self):
@@ -401,5 +401,3 @@ class TestListInstances(BaseListableView):
         template = self.templates['pass_fail']
         c = Context({"instance": tli, "exclude": [models.NO_TOL], "show_label": True, "show_icons": settings.ICON_SETTINGS['SHOW_STATUS_ICONS_LISTING']})
         return template.render(c)
-
-

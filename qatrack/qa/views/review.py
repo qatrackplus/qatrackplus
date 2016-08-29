@@ -35,7 +35,6 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
     formset_class = forms.ReviewTestInstanceFormSet
     template_name_suffix = "_review"
 
-    #----------------------------------------------------------------------
     def get_form_kwargs(self):
         kwargs = super(ReviewTestListInstance, self).get_form_kwargs()
         kwargs['user'] = self.request.user
@@ -252,8 +251,6 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
                 return True
         return False
 
-
-    #----------------------------------------------------------------------
     def get_queryset(self):
 
         qs = models.UnitTestCollection.objects.filter(
@@ -282,7 +279,6 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
 
         return qs.distinct()
 
-    #----------------------------------------------------------------------
     def get_context_data(self):
         """Group all active :model:`qa.UnitTestCollection` by due date category"""
 
@@ -334,7 +330,6 @@ class Overview(PermissionRequiredMixin, TemplateView):
                 return True
         return False
 
-    #----------------------------------------------------------------------
     def get_queryset(self):
 
         qs = models.UnitTestCollection.objects.filter(
@@ -356,7 +351,6 @@ class Overview(PermissionRequiredMixin, TemplateView):
 
         return qs.distinct()
 
-    #----------------------------------------------------------------------
     def get_context_data(self):
         """Group all active :model:`qa.UnitTestCollection` by unit"""
 
@@ -380,7 +374,6 @@ class Overview(PermissionRequiredMixin, TemplateView):
 class UTCInstances(TestListInstances):
     """Show all :model:`qa.TestListInstance`s for a given :model:`qa.UnitTestCollection`"""
 
-    #----------------------------------------------------------------------
     def get_page_title(self):
         try:
             utc = models.UnitTestCollection.objects.get(pk=self.kwargs["pk"])
@@ -388,7 +381,6 @@ class UTCInstances(TestListInstances):
         except:
             raise Http404
 
-    #---------------------------------------------------------------------------
     def get_queryset(self):
         qs = super(UTCInstances, self).get_queryset()
         return qs.filter(unit_test_collection__pk=self.kwargs["pk"])

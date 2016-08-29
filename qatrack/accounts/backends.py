@@ -8,10 +8,9 @@ from django.contrib.auth.models import User
 from django.contrib.auth.backends import ModelBackend
 
 
-#stripped down version of http://djangosnippets.org/snippets/901/
+# stripped down version of http://djangosnippets.org/snippets/901/
 class ActiveDirectoryGroupMembershipSSLBackend:
 
-    #----------------------------------------------------------------------
     def authenticate(self, username=None, password=None):
         debug = None
         if settings.AD_DEBUG_FILE and settings.AD_DEBUG:
@@ -22,7 +21,7 @@ class ActiveDirectoryGroupMembershipSSLBackend:
             if len(password) == 0:
                 return None
 
-            #ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, settings.AD_CERT_FILE)
+            # ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, settings.AD_CERT_FILE)
             if debug:
                 print >>debug, "\tinitialize..."
             l = ldap.initialize(settings.AD_LDAP_URL)
@@ -42,7 +41,6 @@ class ActiveDirectoryGroupMembershipSSLBackend:
                 print >>debug, "\tException occured "
                 print >>debug, e
 
-    #----------------------------------------------------------------------
     def get_or_create_user(self, username, password):
         try:
             user = User.objects.get(username=username)
@@ -54,7 +52,7 @@ class ActiveDirectoryGroupMembershipSSLBackend:
                     debug = open(settings.AD_DEBUG_FILE, 'a')
                     print >>debug, "create user %s" % username
 
-                #ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, settings.AD_CERT_FILE)
+                # ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, settings.AD_CERT_FILE)
                 ldap.set_option(ldap.OPT_REFERRALS, 0)  # DO NOT TURN THIS OFF OR SEARCH WON'T WORK!
 
                 # initialize
@@ -97,7 +95,6 @@ class ActiveDirectoryGroupMembershipSSLBackend:
                 print >>debug, "User created: %s" % username
         return user
 
-    #----------------------------------------------------------------------
     def get_user(self, user_id):
         try:
             return User.objects.get(pk=user_id)

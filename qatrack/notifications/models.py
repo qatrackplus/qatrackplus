@@ -17,8 +17,6 @@ WARNING_LEVELS = (
     (ACTION, "Notify on Test at %s level only" % (act)),
 )
 
-#============================================================================
-
 
 class NotificationSubscription(models.Model):
 
@@ -26,6 +24,5 @@ class NotificationSubscription(models.Model):
 
     warning_level = models.IntegerField(choices=WARNING_LEVELS)
 
-    #----------------------------------------------------------------------
     def __unicode__(self):
         return "<NotificationSubscription(%s)>" % self.group.name

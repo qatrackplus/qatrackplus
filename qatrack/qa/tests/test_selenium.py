@@ -1,16 +1,11 @@
-
-import os
 import time
 import utils
 
 from django.conf import settings
-from django.contrib.auth.models import User, Group
-from django.core.urlresolvers import reverse
 from django.test import TestCase
 from django.test.testcases import LiveServerTestCase
 from selenium.common.exceptions import NoSuchElementException
 from selenium import webdriver
-from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as e_c
@@ -19,7 +14,6 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 
 from qatrack.qa import models
-from qatrack.accounts.backends import ActiveDirectoryGroupMembershipSSLBackend
 
 objects = {
     'Group': {
@@ -152,7 +146,6 @@ objects = {
 
 class SeleniumTests(TestCase, LiveServerTestCase):
 
-
     @classmethod
     def setUpClass(cls):
         use_virtual_display = getattr(settings, 'SELENIUM_VIRTUAL_DISPLAY', False)
@@ -186,7 +179,6 @@ class SeleniumTests(TestCase, LiveServerTestCase):
         if cls.display:
             cls.display.stop()
         super(SeleniumTests, cls).tearDownClass()
-
 
     def load_main(self):
         self.driver.get(self.live_server_url)
@@ -559,4 +551,3 @@ class SeleniumTests(TestCase, LiveServerTestCase):
         self.driver.find_element_by_xpath('//button[@type = "submit"]').click()
 
         self.wait.until(e_c.presence_of_element_located((By.XPATH, '//td[contains(text(), "No data available in table")]')))
-
