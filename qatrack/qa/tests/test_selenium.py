@@ -3,6 +3,7 @@ import time
 import utils
 
 from django.conf import settings
+from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.test import TestCase
 from django.test.testcases import LiveServerTestCase
 from selenium.common.exceptions import NoSuchElementException
@@ -145,7 +146,7 @@ objects = {
 }
 
 
-class SeleniumTests(TestCase, LiveServerTestCase):
+class SeleniumTests(TestCase, StaticLiveServerTestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -369,6 +370,9 @@ class SeleniumTests(TestCase, LiveServerTestCase):
         self.driver.find_element_by_id('id_assigned_to').send_keys(Keys.ARROW_DOWN, Keys.ENTER)
         self.driver.find_element_by_id('id_content_type').click()
         self.driver.find_element_by_id('id_content_type').send_keys(Keys.ARROW_DOWN, Keys.ENTER)
+        self.driver.find_element_by_css_selector('#id_visible_to_from > option:nth-child(1)').click()
+        self.driver.find_element_by_css_selector('#id_visible_to_add_link').click()
+
         time.sleep(2)
 
         self.driver.find_element_by_id('select2-generic_object_id-container').click()

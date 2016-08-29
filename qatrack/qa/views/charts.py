@@ -43,11 +43,11 @@ def get_test_lists_for_unit_frequencies(request):
         utcs = utcs.exclude(active=False)
 
     test_lists = utcs.filter(
-        content_type__name="test list"
+        content_type__model="testlist"
     ).values_list("object_id", flat=True)
 
     test_list_cycle_lists = utcs.filter(
-        content_type__name="test list cycle"
+        content_type__model="testlistcycle"
     ).values_list("object_id", flat=True)
 
     test_lists = set(test_lists) | set(test_list_cycle_lists)
