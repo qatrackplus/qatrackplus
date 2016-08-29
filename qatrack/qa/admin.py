@@ -55,6 +55,7 @@ class TestInfoForm(forms.ModelForm):
 
     class Meta:
         model = models.UnitTestInfo
+        fields = '__all__'
 
     def __init__(self, *args, **kwargs):
         super(TestInfoForm, self).__init__(*args, **kwargs)
@@ -125,11 +126,12 @@ class SetMultipleReferencesAndTolerancesForm(forms.Form):
     tolerance = forms.ModelChoiceField(queryset=models.Tolerance.objects.all())
     reference = forms.CharField(max_length=255)
 
+
 # see http://stackoverflow.com/questions/851636/default-filter-in-django-admin
 class ActiveUnitTestInfoFilter(admin.SimpleListFilter):
 
     NOTACTIVE = 'notactive'
-    ACTIVE= 'active'
+    ACTIVE = 'active'
 
     title = _('Active Unit Assignments')
 
@@ -156,7 +158,7 @@ class ActiveUnitTestInfoFilter(admin.SimpleListFilter):
     def queryset(self, request, qs):
         if self.value() in (self.NOTACTIVE,):
             return models.UnitTestInfo.objects.inactive(qs)
-        elif self.value() == None:
+        elif self.value() is None:
             return models.UnitTestInfo.objects.active(qs)
         return qs
 
@@ -527,6 +529,7 @@ class TestForm(forms.ModelForm):
 
     class Meta:
         model = models.Test
+        fields = '__all__'
 
     def clean(self):
         """if test already has some history don't allow for the test type to be changed"""
@@ -534,7 +537,7 @@ class TestForm(forms.ModelForm):
         user_changing_type = self.instance.type != self.cleaned_data.get("type")
         has_history = models.TestInstance.objects.filter(unit_test_info__test=self.instance).exists()
         if user_changing_type and has_history:
-            msg =  "You can't change the test type of a test that has already been performed. Revert to '%s' before saving."
+            msg = "You can't change the test type of a test that has already been performed. Revert to '%s' before saving."
             ttype_index = [ttype for ttype, label in models.TEST_TYPE_CHOICES].index(self.instance.type)
             ttype_label = models.TEST_TYPE_CHOICES[ttype_index][1]
             raise forms.ValidationError(msg % ttype_label)
@@ -558,7 +561,7 @@ class TestListMembershipFilter(admin.SimpleListFilter):
         )
 
     def queryset(self, request, queryset):
-        qs = queryset.annotate( tlcount=Count("testlistmembership"))
+        qs = queryset.annotate(tlcount=Count("testlistmembership"))
         if self.value() == self.NOMEMBERSHIPS:
             return qs.filter(tlcount=0)
         elif self.value() == self.HASMEMBERSHIPS:
@@ -668,11 +671,9 @@ class ActiveFilter(admin.SimpleListFilter):
         return queryset
 
 
-testlist_ct_id = models.ContentType.objects.get_for_model(models.TestList).pk
-testlistcycle_ct_id = models.ContentType.objects.get_for_model(models.TestListCycle).pk
-
-
 def utc_name(utc):
+    testlist_ct_id = models.ContentType.objects.get_for_model(models.TestList).pk
+    testlistcycle_ct_id = models.ContentType.objects.get_for_model(models.TestListCycle).pk
     if utc.content_type.pk == testlist_ct_id:
         return models.TestList.objects.get(pk=utc.object_id).name
     elif utc.content_type.pk == testlistcycle_ct_id:
@@ -722,7 +723,7 @@ class UnitTestCollectionAdmin(admin.ModelAdmin):
         return queryset, True
 
     def get_queryset(self, *args, **kwargs):
-        qs = super(UnitTestCollectionAdmin, self).queryset(*args, **kwargs)
+        qs = super(UnitTestCollectionAdmin, self).get_queryset(*args, **kwargs)
         return qs.select_related(
             "unit__name",
             "frequency__name",

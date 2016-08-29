@@ -5,16 +5,18 @@ import qatrack.qa.tests.utils as utils
 from .models import NotificationSubscription, TOLERANCE
 
 
-#============================================================================
 class TestEmailSent(TestCase):
 
-    #----------------------------------------------------------------------
     def setUp(self):
 
         self.tests = []
 
         self.ref = models.Reference(type=models.NUMERICAL, value=100.)
         self.tol = models.Tolerance(type=models.PERCENT, act_low=-3, tol_low=-2, tol_high=2, act_high=3)
+        self.ref.created_by = utils.create_user()
+        self.tol.created_by = utils.create_user()
+        self.ref.modified_by = utils.create_user()
+        self.tol.modified_by = utils.create_user()
         self.values = [None, None, 96, 97, 100, 100]
 
         self.statuses = [utils.create_status(name="status%d" % x, slug="status%d" % x) for x in range(len(self.values))]
@@ -34,7 +36,6 @@ class TestEmailSent(TestCase):
         user.groups.add(self.group)
         user.email = "example@example.com"
         user.save()
-    #----------------------------------------------------------------------
 
     def create_test_list_instance(self):
         utc = self.unit_test_collection
@@ -48,15 +49,17 @@ class TestEmailSent(TestCase):
             ti.tolerance = self.tol
             if i == 0:
                 ti.skipped = True
-            elif i == 1:
+            if i == 1:
                 ti.tolerance = None
                 ti.reference = None
+            else:
+                ti.reference.save()
+                ti.tolerance.save()
 
             ti.save()
         tli.save()
         return tli
 
-    #----------------------------------------------------------------------
     def test_email_sent(self):
 
         notification = NotificationSubscription(group=self.group, warning_level=TOLERANCE)
@@ -64,9 +67,8 @@ class TestEmailSent(TestCase):
         signals.testlist_complete.send(sender=self, instance=self.test_list_instance, created=True)
         self.assertEqual(len(mail.outbox), 1)
 
-    #----------------------------------------------------------------------
     def test_email_not_sent(self):
-        #no failing tests so
+        # no failing tests so
 
         notification = NotificationSubscription(group=self.group, warning_level=TOLERANCE)
         notification.save()

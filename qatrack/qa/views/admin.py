@@ -1,6 +1,6 @@
 import json
 
-from django.contrib.formtools.preview import FormPreview
+from formtools.preview import FormPreview
 from django.contrib import messages
 from django.core.urlresolvers import reverse_lazy
 from django.shortcuts import HttpResponse, HttpResponseRedirect

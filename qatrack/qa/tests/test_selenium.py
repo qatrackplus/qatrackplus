@@ -1,24 +1,26 @@
 
-import os
 import time
 import utils
 
 from django.conf import settings
-from django.contrib.auth.models import User, Group
-from django.core.urlresolvers import reverse
+from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.test import TestCase
 from django.test.testcases import LiveServerTestCase
 from selenium.common.exceptions import NoSuchElementException
-from selenium.webdriver import ActionChains
+from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as e_c
+from selenium.webdriver.support.select import Select
 from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 
 from qatrack.qa import models
-from qatrack.accounts.backends import ActiveDirectoryGroupMembershipSSLBackend
 
 objects = {
+    'Group': {
+        'name': 'testGroup',
+    },
     'Category': {
         'name': 'testCategory',
         'slug': 'testCategory',
@@ -143,15 +145,42 @@ objects = {
 
 }
 
-class SeleniumTests(TestCase, LiveServerTestCase):
 
-    # fixtures = []
+class SeleniumTests(TestCase, StaticLiveServerTestCase):
 
-    def __init__(self, *args, **kwargs):
-        super(SeleniumTests, self).__init__(*args, **kwargs)
-        self.driver = settings.SELENIUM_DRIVER(settings.SELENIUM_DRIVER_PATH, service_args=['--proxy-type=none'])
-        self.driver.set_window_size(1270, 1100)
-        self.wait = WebDriverWait(self.driver, 5)
+    @classmethod
+    def setUpClass(cls):
+        use_virtual_display = getattr(settings, 'SELENIUM_VIRTUAL_DISPLAY', False)
+        use_chrome = getattr(settings, 'SELENIUM_USE_CHROME', False)
+
+        if use_virtual_display:
+            # Make sure xvfb is installed
+            from pyvirtualdisplay import Display
+            cls.display = Display(visible=0, size=(1920, 1080))
+            cls.display.start()
+        else:
+            cls.display = None
+
+        if use_chrome:
+            chrome_driver_path = getattr(settings, 'SELENIUM_CHROME_PATH', '')
+            cls.driver = webdriver.Chrome(executable_path=chrome_driver_path)
+        else:
+            ff_profile = FirefoxProfile()
+            cls.driver = webdriver.Firefox(ff_profile)
+
+        cls.driver.maximize_window()
+        cls.driver.implicitly_wait(5)
+
+        super(SeleniumTests, cls).setUpClass()
+
+        cls.wait = WebDriverWait(cls.driver, 5)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.driver.quit()
+        if cls.display:
+            cls.display.stop()
+        super(SeleniumTests, cls).tearDownClass()
 
     def load_main(self):
         self.driver.get(self.live_server_url)
@@ -175,9 +204,6 @@ class SeleniumTests(TestCase, LiveServerTestCase):
 
     def wait_for_success(self):
         self.wait.until(e_c.presence_of_element_located((By.XPATH, '//ul[@class = "messagelist"]/li[@class = "success"]')))
-
-    def tearDown(self):
-        self.driver.quit()
 
     def test_admin_category(self):
 
@@ -203,29 +229,31 @@ class SeleniumTests(TestCase, LiveServerTestCase):
         self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Add test')))
         self.driver.find_element_by_link_text('Add test').click()
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
+        # for i in range(len(objects['Tests'])):
 
         for i in range(len(objects['Tests'])):
+            # the_test = objects['Tests'][i]
             the_test = objects['Tests'][i]
             self.driver.find_element_by_id('id_name').send_keys(the_test['name'])
             self.driver.find_element_by_id('id_slug').send_keys(the_test['name'])
             self.driver.find_element_by_id('id_category').click()
             self.driver.find_element_by_id('id_category').send_keys(Keys.ARROW_DOWN, Keys.ENTER)
-            self.driver.find_element_by_id('id_type').click()
-            self.driver.find_element_by_xpath('//*[@id="id_type"]/option[@value = "' + the_test['name'] + '"]').click()
+            Select(self.driver.find_element_by_id('id_type')).select_by_value(the_test['name'])
+
             if the_test['choices']:
                 self.driver.find_element_by_id('id_choices').send_keys('1,2,3,4,5')
             if the_test['constant_value']:
                 self.driver.find_element_by_id('id_constant_value').send_keys('23.23')
             if the_test['procedure']:
-                self.wait.until(e_c.element_to_be_clickable((By.XPATH, '//*[@id="calc-procedure-editor"]/div[2]/div')))
-                self.driver.find_element_by_xpath('//*[@id="calc-procedure-editor"]/div[2]/div').click()
-                actions = ActionChains(self.driver)
-                actions.send_keys(the_test['procedure'])
-                actions.perform()
+                time.sleep(1)
+                self.driver.find_element_by_css_selector('#calc-procedure-editor > textarea').send_keys(the_test['procedure'])
+                self.driver.find_element_by_css_selector('.submit-row').click()
+
+            # Firefox webdriver being weird with clicks. Had to use javascript here:
             if i + 1 == len(objects['Tests']):
-                self.driver.find_element_by_name('_save').click()
+                self.driver.execute_script("$('input[name=_save]').click();")
             else:
-                self.driver.find_element_by_name('_addanother').click()
+                self.driver.execute_script("$('input[name=_addanother]').click();")
 
             self.wait_for_success()
 
@@ -316,11 +344,14 @@ class SeleniumTests(TestCase, LiveServerTestCase):
 
     def test_admin_unittestcollection(self):
 
+        if not utils.exists('auth', 'Group', 'name', objects['Group']['name']):
+            utils.create_group(name=objects['Group']['name'])
+
         if not utils.exists('units', 'Unit', 'name', objects['Modality']['name']):
             utils.create_unit(name=objects['Modality']['name'], number=objects['Unit']['number'])
 
         if not utils.exists('qa', 'Frequency', 'name', objects['Frequency']['name']):
-            utils.create_frequency(name=objects['Modality']['name'])
+            utils.create_frequency(name=objects['Frequency']['name'])
 
         if not utils.exists('qa', 'TestList', 'name', objects['TestList']['name']):
             utils.create_test_list(name=objects['TestList']['name'])
@@ -339,12 +370,13 @@ class SeleniumTests(TestCase, LiveServerTestCase):
         self.driver.find_element_by_id('id_assigned_to').send_keys(Keys.ARROW_DOWN, Keys.ENTER)
         self.driver.find_element_by_id('id_content_type').click()
         self.driver.find_element_by_id('id_content_type').send_keys(Keys.ARROW_DOWN, Keys.ENTER)
-        self.wait.until(e_c.presence_of_element_located((By.XPATH, '//*[@id="generic_object_id"]/option[contains(text(), "TestList(' + objects['TestList']['name'] + ')")]')))
+        self.driver.find_element_by_css_selector('#id_visible_to_from > option:nth-child(1)').click()
+        self.driver.find_element_by_css_selector('#id_visible_to_add_link').click()
+
+        time.sleep(2)
+
         self.driver.find_element_by_id('select2-generic_object_id-container').click()
         self.driver.find_element_by_id('select2-generic_object_id-container').click()
-        # actions = ActionChains(self.driver)
-        # actions.send_keys(Keys.ARROW_DOWN)
-        # actions.perform()
         self.driver.find_element_by_name('_save').click()
         self.wait_for_success()
 
@@ -524,4 +556,3 @@ class SeleniumTests(TestCase, LiveServerTestCase):
         self.driver.find_element_by_xpath('//button[@type = "submit"]').click()
 
         self.wait.until(e_c.presence_of_element_located((By.XPATH, '//td[contains(text(), "No data available in table")]')))
-

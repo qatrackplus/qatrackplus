@@ -5,8 +5,6 @@ from django.utils.translation import ugettext as _
 PHOTON = "photon"
 ELECTRON = "electron"
 
-#==========================================================================
-
 
 class UnitType(models.Model):
     """Radiation Device Type
@@ -25,12 +23,9 @@ class UnitType(models.Model):
     class Meta:
         unique_together = [("name", "model")]
 
-    #---------------------------------------------------------------------------
     def __unicode__(self):
         """Display more descriptive name"""
         return "<UnitType(%s)>" % self.name
-
-#============================================================================
 
 
 class Modality(models.Model):
@@ -50,16 +45,8 @@ class Modality(models.Model):
     class Meta:
         verbose_name_plural = _("Modalities")
 
-    #---------------------------------------------------------------------------
     def __unicode__(self):
         return self.name
-
-# class UnitManager(models.Manager):
-    #---------------------------------------------------------------------------
-#    def get_query_set(self):
-#        return super(UnitManager,self).get_query_set().select_related("type")
-
-#============================================================================
 
 
 class Unit(models.Model):
@@ -83,6 +70,5 @@ class Unit(models.Model):
     class Meta:
         ordering = [settings.ORDER_UNITS_BY]
 
-    #----------------------------------------------------------------------
     def __unicode__(self):
         return self.name

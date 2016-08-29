@@ -40,7 +40,6 @@ class ValueResourceCSVSerializer(Serializer):
         ("Username", "user", "username"),
     ]
 
-    #----------------------------------------------------------------------
     def instances_to_csv(self, instances):
         rows = [[x[0] for x in self.columns]]
         for i in instances:
@@ -58,7 +57,6 @@ class ValueResourceCSVSerializer(Serializer):
 
         return rows
 
-    #----------------------------------------------------------------------
     def to_csv(self, data, options=None):
         options = options or {}
 
@@ -73,19 +71,16 @@ class ValueResourceCSVSerializer(Serializer):
         return csv_data.getvalue()
 
 
-#============================================================================
 class ModalityResource(ModelResource):
     class Meta:
         queryset = Modality.objects.order_by("type").all()
 
 
-#============================================================================
 class UnitTypeResource(ModelResource):
     class Meta:
         queryset = UnitType.objects.order_by("name").all()
 
 
-#============================================================================
 class UnitResource(ModelResource):
     # modalities = tastypie.fields.ToManyField("qatrack.qa.api.ModalityResource","modalities",full=True)
     # type = tastypie.fields.ToOneField("qatrack.qa.api.UnitTypeResource","type",full=True)
@@ -98,25 +93,21 @@ class UnitResource(ModelResource):
         }
 
 
-#============================================================================
 class ReferenceResource(ModelResource):
     class Meta:
         queryset = models.Reference.objects.all()
 
 
-#============================================================================
 class ToleranceResource(ModelResource):
     class Meta:
         queryset = models.Tolerance.objects.all()
 
 
-#============================================================================
 class CategoryResource(ModelResource):
     class Meta:
         queryset = models.Category.objects.all()
 
 
-#============================================================================
 class TestListResource(ModelResource):
     tests = tastypie.fields.ToManyField("qatrack.qa.api.TestResource", "tests", full=True)
     frequencies = tastypie.fields.ListField()
@@ -129,12 +120,10 @@ class TestListResource(ModelResource):
             "name": ALL,
         }
 
-    #----------------------------------------------------------------------
     def dehydrate_frequencies(self, bundle):
         return list(bundle.obj.assigned_to.values_list("frequency__slug", flat=True).distinct())
 
 
-#============================================================================
 class TestInstanceResource(ModelResource):
     # test = tastypie.fields.ForeignKey("qatrack.qa.api.TestResource","test", full=True)
     reference = tastypie.fields.ForeignKey("qatrack.qa.api.ReferenceResource", "reference", full=True, null=True)
@@ -159,12 +148,10 @@ class TestInstanceResource(ModelResource):
         authentication = BasicAuthentication()
         authorization = DjangoAuthorization()
 
-    #----------------------------------------------------------------------
     def dehydrate_reviewed_by(self, bundle):
         if bundle.obj.reviewed_by:
             return bundle.obj.reviewed_by.username
 
-    #----------------------------------------------------------------------
     def build_filters(self, filters=None):
         """allow filtering by unit"""
         if filters is None:
@@ -203,13 +190,11 @@ class TestInstanceResource(ModelResource):
 
         return orm_filters
 
-    #----------------------------------------------------------------------
     def is_authorized(self, request, obj=None):
         auth = super(TestInstanceResource, self).is_authorized(request, obj)
         return auth
 
 
-#----------------------------------------------------------------------
 def serialize_testinstance(test_instance):
     """return a dictionary of test_instance properties"""
     ti = test_instance
@@ -223,7 +208,6 @@ def serialize_testinstance(test_instance):
         'tolerance': {'type': None, 'act_low': None, 'tol_low': None, 'tol_high': None, 'act_high': None, },
         'user': None,
         'unit': None,
-        #'test':None,
         'reviewed_by': None
     }
     if ti.reference:
@@ -256,52 +240,43 @@ def serialize_testinstance(test_instance):
     return info
 
 
-#============================================================================
 class FrequencyResource(ModelResource):
     class Meta:
         queryset = models.Frequency.objects.all()
 
 
-#============================================================================
 class GroupResource(ModelResource):
     class Meta:
         queryset = Group.objects.all()
 
 
-#============================================================================
 class StatusResource(ModelResource):
     """avaialable test statuses"""
     class Meta:
         queryset = models.TestInstanceStatus.objects.all()
 
 
-#============================================================================
 class ValueResource(Resource):
     unit = tastypie.fields.IntegerField()
     name = tastypie.fields.CharField()
     slug = tastypie.fields.CharField()
     data = tastypie.fields.DictField()
 
-    #============================================================================
     class Meta:
         serializer = ValueResourceCSVSerializer()
         resource_name = "grouped_values"
         allowed_methods = ["get"]
         object_class = object
 
-    #----------------------------------------------------------------------
     def dehydrate_slug(self, bundle):
         return bundle.obj["slug"]
 
-    #----------------------------------------------------------------------
     def dehydrate_name(self, bundle):
         return bundle.obj["name"]
 
-    #----------------------------------------------------------------------
     def dehydrate_unit(self, bundle):
         return bundle.obj["unit"]
 
-    #----------------------------------------------------------------------
     def dehydrate_data(self, bundle):
         """"""
         data = {
@@ -321,7 +296,6 @@ class ValueResource(Resource):
 
         return data
 
-    #----------------------------------------------------------------------
     def get_object_list(self, request):
         """return organized values"""
         objects = TestInstanceResource().obj_get_list(request)
@@ -344,12 +318,10 @@ class ValueResource(Resource):
                 })
         return organized
 
-    #----------------------------------------------------------------------
     def obj_get_list(self, request=None, **kwargs):
         return self.get_object_list(request)
 
 
-#============================================================================
 class TestResource(ModelResource):
 
     category = tastypie.fields.ToOneField(CategoryResource, "category", full=True)
@@ -362,7 +334,6 @@ class TestResource(ModelResource):
         }
     #    excludes = ["values"]
 
-    #----------------------------------------------------------------------
     def build_filters(self, filters=None):
         """allow filtering by unit"""
         if filters is None:
@@ -375,7 +346,6 @@ class TestResource(ModelResource):
         return orm_filters
 
 
-#============================================================================
 class TestListInstanceResource(ModelResource):
     # unit = tastypie.fields.ForeignKey(UnitResource,"unit",full=True)
     # unit_test_collection = tastypie.fields.ForeignKey(UnitTestCollectionResource,"unit_test_collection",full=True)
@@ -393,7 +363,6 @@ class TestListInstanceResource(ModelResource):
 
         ordering = ["work_completed", "id"]
 
-    #----------------------------------------------------------------------
     def dehydrate_review_status(self, bundle):
         reviewed = bundle.obj.testinstance_set.exclude(status__requires_review=True).count()
         total = bundle.obj.testinstance_set.count()

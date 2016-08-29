@@ -1,21 +1,28 @@
+{% load qatrack_tags %}
 {% load qa_tags %}
 {% for field in form %}
     {% if field.errors %}
-        <tr>
-            <td colspan="2">&nbsp;</td>
-            <td>
-            {% for error in field.errors %}
-                <span class="alert-error">{{field.label}}:{{ error }}</span>
-            {% endfor %}
+        <tr class="no-hover">
+            <td colspan="8">
+                {% for error in field.errors %}
+                    <div class="qa-procedure-text callout callout-custom border-danger">
+                        {{test_info.test.name}}:&nbsp;{{ error }}
+                    </div>
+                {% endfor %}
+
             </td>
-            {% if include_history and include_ref_tols %}
-                <td colspan="5">&nbsp;</td>
-            {% elif include_history or include_ref_tols %}
-                <td colspan="4">&nbsp;</td>
-            {% else %}
-                <td colspan="3">&nbsp;</td>
-            {% endif %}
         </tr>
+{#            <td>#}
+{#            #}
+{#            </td>#}
+{#            {% if include_history and include_ref_tols %}#}
+{#                <td colspan="5">&nbsp;</td>#}
+{#            {% elif include_history or include_ref_tols %}#}
+{#                <td colspan="4">&nbsp;</td>#}
+{#            {% else %}#}
+{#                <td colspan="3">&nbsp;</td>#}
+{#            {% endif %}#}
+{#        </tr>#}
     {% endif %}
 {% endfor %}
 <tr class="control-group qa-valuerow {%if test_info.test.hidden %}hidden{% endif %}" >
@@ -36,13 +43,17 @@
         </td>
         <td class="qa-value" title="{{form.value.help_text|safe}}" >
             {% if test.is_boolean %}
-                <span class="pull-left">{{form.value.0}}</span>
-                <span class="pull-right">{{form.value.1}}</span>
+                <div class="row">
+                    <div class="col-xs-6">{{form.value.0}}</div>
+                    <div class="col-xs-6">{{form.value.1}}</div>
+                </div>
+{#                <span class="pull-left">{{form.value.0}}</span>#}
+{#                <span class="pull-right">{{form.value.1}}</span>#}
             {% elif test.is_upload %}
                 <span class="upload-button">
                     {{form.string_value}}
-                    <a type="button" class="btn btn-primary btn-mini ">Upload</a>
-                    <input class="file-upload" type="file" />
+                    <a id="upload-button-{{ test.id }}" type="button" class="qa-input btn btn-primary btn-sm btn-flat">Upload</a>
+{#                    <input class="file-upload" type="file" />#}
                 </span>
             {% elif test.is_string_type %}
                  <span class="">{{form.string_value}}</span>
@@ -54,7 +65,7 @@
             {% if test.skip_required %}{{form.skipped}}{% endif %}
         </td>
         <td class="qa-status">Not Done</td>
-        <td class="qa-showcmt"><a href="#" class="revealcomment" title="Add comment for this test"><i class="icon-edit"></i></a></td>
+        <td class="qa-showcmt"><a href="#" class="revealcomment" title="Add comment for this test"><i class="fa fa-commenting-o"></i></a></td>
 
         {% if include_ref_tols or include_history%}
             {% if include_ref_tols %}
@@ -71,42 +82,35 @@
             <td></td>
         {% endif %}
 
-
-
     {% endwith %}
 </tr>
-<tr class="qa-comment">
-    <td colspan="8"  class="" title="{{form.comment.help_text|safe}}">
-        <label class="label">Add Comment For Reviewer:</label>
-        {{form.comment}}
+<tr class="qa-comment no-hover">
+    <td colspan="8"  class="">
+        <div class="comment-div callout callout-custom border-primary">
+            {{ form.comment|addplaceholder:"Add Comment For Reviewer" }}
+        </div>
     </td>
 </tr>
-<tr class="qa-procedure">
+
+<tr class="qa-procedure no-hover">
     <td colspan="8"  class="" >
-        <table>
-            {% if form.unit_test_info.test.procedure %}
-            <tr>
-                <td>
-                    <label class="label">Detailed procedure link:</label>                    <a href="{{form.unit_test_info.test.procedure}}" class="revealprocedure" title="Show detailed procedure for this test" target="_blank">{{form.unit_test_info.test.name}}</a>
-                </td>
-            </tr>
-            {% endif %}
-            <tr>
-                <td>
-                    <div class="qa-procedure-text">
-                        {% spaceless %}
-                        {% if not form.unit_test_info.test.description %}
-                            <pre>
-                                <em>No procedure available</em>
-                            </pre>
-                        {%else %}
-                            <pre>{{form.unit_test_info.test.description.strip|safe}}</pre>
-                        {% endif %}
-                        {% endspaceless%}
-                    </div>
-                </td>
-            </tr>
-        </table>
+        {% if form.unit_test_info.test.procedure or form.unit_test_info.test.description %}
+            <div class="qa-procedure-text callout callout-custom border-info">
+                {% if form.unit_test_info.test.procedure %}
+                    <h6>
+                        Detailed procedure link:
+                        <a href="{{form.unit_test_info.test.procedure}}" class="revealprocedure" title="Show detailed procedure for this test" target="_blank">
+                            {{form.unit_test_info.test.name}}
+                        </a>
+                    </h6>
+                {% endif %}
+{#                {% spaceless %}#}
+                    {% if form.unit_test_info.test.description %}
+                        <div class="pre">{{form.unit_test_info.test.description.strip|safe}}</div>
+                    {% endif %}
+{#                {% endspaceless%}#}
+            </div>
+        {% endif %}
     </td>
 </tr>
 

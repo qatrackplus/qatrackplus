@@ -1,0 +1,58 @@
+@media print {
+    .no-print {
+        visibility: hidden;
+        display: none;
+    }
+}
+body {
+    padding-top: 10px;
+}
+table {
+    page-break-inside: auto
+}
+tr {
+    page-break-inside: avoid;
+    page-break-after: auto
+}
+thead {
+    display: table-header-group
+}
+tfoot {
+    display: table-footer-group
+}
+.test-list-form-container {
+    width: 670px !important;
+    page-break-after: always;
+    font-size: 0.9em;
+}
+th.test-name {
+    width: 230px;
+}
+th.test-value {
+    width: 85px;
+}
+.table-condensed td {
+    padding-top: 1px;
+    padding-bottom: 1px;
+}
+th.test-ref {
+    width: 85px;
+}
+th.test-tol {
+    width: 245px;
+}
+div.comment {
+    height: 50px;
+}
+h3 {
+    padding-bottom: 10px;
+}
+hr {
+    margin-bottom: 5px;
+}
+.margin-l-20 {
+    margin-left: 20px;
+}
+td span {
+    height: 100%;
+}

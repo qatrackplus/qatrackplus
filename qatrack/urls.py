@@ -18,10 +18,19 @@ urlpatterns = patterns('',
     url(r'^', include('genericdropdown.urls')),
 
 )
-
 if settings.DEBUG:
+    # static files (images, css, javascript, etc.)
     urlpatterns += patterns('',
-        (r'^%s(?P<path>.*)$' % settings.MEDIA_URL[1:],
-         'django.views.static.serve',
-         {'document_root': settings.MEDIA_ROOT, 'show_indexes': True}),
-    )
+        (r'^media/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT}))
+# if settings.DEBUG:
+#     urlpatterns += patterns(
+#         '',
+#         (
+#             r'^%s(?P<path>.*)$' % settings.MEDIA_URL[1:],
+#             'django.views.static.serve',
+#             {
+#                 'document_root': settings.MEDIA_ROOT,
+#                 'show_indexes': True
+#             }
+#         )
+#     )

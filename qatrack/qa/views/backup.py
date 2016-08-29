@@ -48,14 +48,12 @@ class PaperBackupRequestForm(forms.Form):
     )
 
 
-#============================================================================
 class PaperFormRequest(FormView):
     """View for displaying paper backup options form"""
 
     form_class = PaperBackupRequestForm
     template_name = "qa/backup_form.html"
 
-    #---------------------------------------------------------------
     def get_initial(self):
         """setup some hopefully sensible default options"""
 
@@ -70,7 +68,6 @@ class PaperFormRequest(FormView):
             }
         return super(PaperFormRequest, self).get_initial()
 
-    #---------------------------------------------------------------
     def form_valid(self, form):
         """
         url encode all requested options and redirect to the actual
@@ -89,7 +86,6 @@ class PaperFormRequest(FormView):
         return HttpResponseRedirect("%s?%s" % (reverse("qa_paper_forms"), q))
 
 
-#============================================================================
 class PaperForms(ListView):
     """ View that handles the actual creation of the forms"""
 
@@ -97,7 +93,6 @@ class PaperForms(ListView):
 
     template_name_suffix = "_backup"
 
-    #---------------------------------------------------------------
     def get_queryset(self):
         """filter queryset based on requested options"""
 
@@ -110,7 +105,7 @@ class PaperForms(ListView):
         if self.request.GET.get("include_inactive", "False") != "True":
             qs = qs.filter(active=True)
 
-        return qs.select_related("unit", "testlist").prefetch_related("tests_object")
+        return qs.select_related("unit").prefetch_related("tests_object")
 
     def set_utc_all_lists(self, utcs):
 
@@ -134,7 +129,6 @@ class PaperForms(ListView):
 
             utc.all_lists = all_lists
 
-    #---------------------------------------------------------------
     def get_context_data(self, *args, **kwargs):
         """
         Patch each :model:`qa.UnitTestCollection` object with all

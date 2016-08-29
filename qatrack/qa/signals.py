@@ -7,7 +7,6 @@ from django.contrib.contenttypes.models import ContentType
 import models
 
 
-#============================================================================
 def loaded_from_fixture(kwargs):
     return kwargs.get("raw", False)
 
@@ -15,7 +14,6 @@ def loaded_from_fixture(kwargs):
 testlist_complete = Signal(providing_args=["instance", "created"])
 
 
-#----------------------------------------------------------------------
 def update_last_instances(test_list_instance):
     try:
         last_instance = models.TestListInstance.objects.complete().filter(
@@ -60,7 +58,6 @@ def update_last_instances(test_list_instance):
             )
 
 
-#----------------------------------------------------------------------
 def get_or_create_unit_test_info(unit, test, assigned_to=None, active=True):
 
     uti, created = models.UnitTestInfo.objects.get_or_create(
@@ -75,7 +72,6 @@ def get_or_create_unit_test_info(unit, test, assigned_to=None, active=True):
     return uti
 
 
-#----------------------------------------------------------------------
 def find_assigned_unit_test_collections(collection):
     """take a test collection (eg test list, sub list or test list cycle) and return
     the units that it is a part of
@@ -85,7 +81,7 @@ def find_assigned_unit_test_collections(collection):
         ContentType.objects.get_for_model(collection): [collection],
     }
 
-    parent_types = [x._meta.module_name + "_set" for x in models.TestCollectionInterface.__subclasses__()]
+    parent_types = [x._meta.model_name + "_set" for x in models.TestCollectionInterface.__subclasses__()]
 
     for parent_type in parent_types:
 
@@ -108,7 +104,6 @@ def find_assigned_unit_test_collections(collection):
     return list(set(assigned_utcs))
 
 
-#----------------------------------------------------------------------
 def update_unit_test_infos(collection):
     """find out which units this test_list is assigned to and make
     sure there are UnitTestInfo's for each Unit, Test pair"""
@@ -150,7 +145,6 @@ def on_test_save(*args, **kwargs):
                 raise ValidationError("Can't change test type to %s while this test is still assigned to %s with a non-boolean reference" % (test.type, ua.unit.name))
 
 
-#----------------------------------------------------------------------
 @receiver(post_save, sender=models.TestListInstance)
 def on_test_list_instance_saved(*args, **kwargs):
     """set last instance for UnitTestInfo"""
@@ -159,14 +153,12 @@ def on_test_list_instance_saved(*args, **kwargs):
         update_last_instances(kwargs["instance"])
 
 
-#----------------------------------------------------------------------
 @receiver(post_delete, sender=models.TestListInstance)
 def on_test_list_instance_deleted(*args, **kwargs):
     """update last_instance if available"""
     update_last_instances(kwargs["instance"])
 
 
-#----------------------------------------------------------------------
 @receiver(post_save, sender=models.UnitTestCollection)
 def list_assigned_to_unit(*args, **kwargs):
     """UnitTestCollection was saved.  Create UnitTestInfo's for all Tests."""
@@ -176,7 +168,6 @@ def list_assigned_to_unit(*args, **kwargs):
         update_unit_test_infos(tests_object)
 
 
-#----------------------------------------------------------------------
 @receiver(post_save, sender=models.TestListMembership)
 def test_added_to_list(*args, **kwargs):
     """
@@ -187,7 +178,6 @@ def test_added_to_list(*args, **kwargs):
         update_unit_test_infos(kwargs["instance"].test_list)
 
 
-#----------------------------------------------------------------------
 @receiver(post_save, sender=models.TestList)
 def test_list_saved(*args, **kwargs):
     """TestList was saved. Recreate any UTI's that may have been deleted in past"""
@@ -195,7 +185,6 @@ def test_list_saved(*args, **kwargs):
         update_unit_test_infos(kwargs["instance"])
 
 
-#----------------------------------------------------------------------
 @receiver(post_save, sender=models.TestListCycleMembership)
 def test_list_added_to_cycle(*args, **kwargs):
     """

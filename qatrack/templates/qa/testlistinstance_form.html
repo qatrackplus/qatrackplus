@@ -1,5 +1,7 @@
 {% extends "site_base.html" %}
-{% load staticfiles %}
+{#{% load staticfiles %}#}
+{% load qa_tags %}
+{% load qatrack_tags %}
 
 {% block head_title %}{% spaceless %}
     {% if test_list_instance %}
@@ -9,292 +11,469 @@
     {% endif %}
 {%endspaceless%}{% endblock %}
 
-{% block page_style %}
-    <link href="{% static "datepicker/css/datepicker.css" %}?v={{VERSION}}" rel="stylesheet">
-{% endblock %}
+{% block extra_css %}
 
+{#    <link href="{{ STATIC_URL }}datepicker/css/bootstrap-datepicker.min.css?v={{ VERSION }}" rel="stylesheet">#}
+    <link href="{{ STATIC_URL }}daterangepicker/css/daterangepicker.css?v={{ VERSION }}" rel="stylesheet">
+{#    <link href="{{ STATIC_URL }}multiselect/css/bootstrap.multiselect.css?v={{VERSION}}" rel="stylesheet">#}
+    <link href="{{ STATIC_URL }}qatrack_core/css/tables.css?v={{VERSION}}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}qa/css/qa.css?v={{VERSION}}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}icheck/css/blue.css?v={{VERSION}}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}qatrack_core/css/sidebar.css?v={{VERSION}}" rel="stylesheet">
+{#    <link href="{{ STATIC_URL }}qa/css/qa-old.css?v={{VERSION}}" rel="stylesheet">#}
 
-{% load qa_tags %}
+{% endblock extra_css %}
 
-{% block script_base %}
-    {{block.super}}
-
+{% block extra_js %}
     <script type="text/javascript">
         var unit_test_infos = {{unit_test_infos|safe}};
         var editing_tli = {{ test_list_instance.pk|default:"0"}};
+        var override_date = false;
+        {% if perms.qa.can_override_date %}
+            override_date = true;
+        {% endif %}
     </script>
-{% endblock script_base %}
+{% endblock %}
+
+{% block require_javascript %}
+    require(['qa'], function() {
+        $('body').removeClass("loading");
+    });
+{% endblock require_javascript %}
+
+{#{% block script_base %}#}
+{#    {{block.super}}#}
+{##}
+{#    <script type="text/javascript">#}
+{#        var unit_test_infos = {{unit_test_infos|safe}};#}
+{#        var editing_tli = {{ test_list_instance.pk|default:"0"}};#}
+{#    </script>#}
+{##}
+{#    <script src="{% static "js/qa.js" %}?v={{VERSION}}"></script>#}
+{#    <script src="{% static "datepicker/js/bootstrap-datepicker.js" %}?v={{VERSION}}"></script>#}
+{#    <script src="{% static "js/jquery.ui.widget.js" %}"></script>#}
+{#    <script src="{% static "js/jquery.iframe-transport.js" %}"></script>#}
+{#    <script src="{% static "js/jquery.fileupload.js" %}"></script>#}
+{##}
+{#{% endblock script_base %}#}
+
+{% block body_class %}sidebar-mini sidebar-collapse loading{% endblock body_class %}
+
+{% block sidebar_toggle %}
+    <a href="#" class="sidebar-toggle" data-toggle="offcanvas" role="button">
+{#        <span class="sr-only">Toggle navigation</span>#}
+        <i id="toggle-icon" class="fa fa-chevron-left fa-lg" aria-hidden="true"></i>
+    </a>
+{% endblock sidebar_toggle %}
 
 {% block body %}
 
-<div class="row-fluid">
-    <div class="span12">
-        <h3 class="pull-left">
-            {% if test_list_instance %}
-                Edit {{test_list_instance.unit_test_collection.unit.name}} : {{test_list_instance.test_list.name}}
-            {% else %}
-                Perform {{unit_test_collection.unit.name}} : {{test_list.name}}
-            {% endif %}
-            {% if test_list.description %}
-            <a id="test-list-info-toggle" class="show-hide" title="Click to view description and general instructions for this test list"><i class="icon-info-sign" ></i></a>
-            {% endif %}
-        </h3>
-        <div id="float-right-container">
-            <div id="contact-container" class="alert alert-info">
-
-                <span id="toggle-contacts" class="pull-right hand-cursor">
-                    Contact Numbers <i class="icon-plus-sign"></i>
-                </span>
-                <div class="clearfix"></div>
-                <div id="contacts" class="clearfix">
-                    <hr/>
-                    <dl class="dl-horizontal">
-                        {% for contact in contacts %}
-                            <dt><abbr title="{{contact.description}}">{{contact.name}}</abbr></dt>
-                            <dd>{{contact.number}}</dd>
-                        {% endfor %}
-                    </dl>
+    <form class="nosubmit form-inline" id="qa-form" method="POST" action="" autocomplete="off">
+        {% csrf_token %}
+        {{ form.errors }}
+        <div id="box-contacts" class="row" style="display: none;">
+            <div class="col-lg-12">
+                <div class="box box-info">
+                    <div class="box-header">
+                        <h3 class="box-title">
+                            <i class="fa fa-phone fa-fw" aria-hidden="true"></i>
+                            Contacts
+                        </h3>
+                    </div>
+                    <div class="box-body">
+                        <table class="table table-hover table-condensed">
+                            <thead>
+                                <tr>
+                                    <th>Contact</th>
+                                    <th>Number or Email</th>
+                                    <th>Contact Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for contact in contacts %}
+                                    <tr>
+                                        <td>{{contact.name}}</td>
+                                        <td>{{contact.number}}</td>
+                                        <td>{{contact.description}}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot></tfoot>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
 
-{% if test_list.description or unit_test_collection.tests_object.description %}
-<div id="test-list-info" class="row-fluid" style="display:none;">
-    <div class="span12">
-        {% if days %}
-            <pre >
-                {{unit_test_collection.tests_object.description|safe}}
-            </pre>
-            <h5>Day {{current_day}}</h5>
-        {% endif %}
-        <pre >
-            {{test_list.description|safe}}
-        </pre>
-    </div>
-</div>
-{% endif %}
-
-{% if days and last_instance %}
-    <div class="row-fluid">
-        <div class="span12">
-            <h5 class="pull-left">
-                <em>Last done: {% if last_day %}Day {{last_day}} ({{last_instance.test_list.name}}){% else %}New list{%endif%}</em>
-            </h5>
-        </div>
-    </div>
-{% endif %}
-<div class="row-fluid">
-    <div class="span12" id="overall-qa-status">
-        <div id="do-not-treat-top" class="alert alert-error do-not-treat">
-            <strong>{{test_list.warning_message}}</strong>
-        </div>
-    </div>
-</div>
-<div class="row-fluid">
-    <div class="span12">
-        <form class="nosubmit form-inline" id="qa-form" method="POST" action="" autocomplete="off">
-
-            {% csrf_token %}
-            <input type="hidden" id="test-list-id" value="{{test_list.pk}}"/>
-            <input type="hidden" id="test-list-name" value="{{test_list.name}}"/>
-            <input type="hidden" id="unit-id" value="{{unit_test_collection.unit.pk}}"/>
-            <input type="hidden" id="unit-number" value="{{unit_test_collection.unit.number}}"/>
-            <input type="hidden" id="cycle-day-number" value="{{current_day}}"/>
-
-            <input type="hidden" id="pass-fail-only" value="{% if perms.qa.can_view_ref_tol %}no{% else %}yes{% endif %}"/>
-            <input type="hidden" id="require-comment-on-skip" value="{% if perms.qa.can_skip_without_comment %}no{% else %}yes{% endif %}"/>
-
-            <div id="admin_controls" class="well">
-
-                {# display any form errors up top #}
-                {% if form.errors %}
-                    <div class="alert-message error">
-                        {% for field in form%}
-                                {% for error in field.errors %}
-                                    <span class="alert-error help-block-inline ">{{field.label}} ::{{ error }}</span>
-                                {% endfor %}
-                        {% endfor %}
+        {% if test_list.description or unit_test_collection.tests_object.description %}
+            <div id="box-description" class="row" style="display: none;">
+                <div class="col-lg-12">
+                    <div class="box box-info">
+                        <div class="box-header">
+                            <h3 class="box-title">
+                                <span class="fa fa-stack fa-fw" aria-hidden="true">
+                                    <i class="fa fa-file-text-o fa-stack-custom-main"></i>
+                                    <i class="fa fa-info fa-stack-custom-sub info"></i>
+                                </span>
+                                Description
+                            </h3>
+                        </div>
+                        <div class="box-body">
+                            {% spaceless %}
+                                <div class="col-lg-12 pre left-border border-default">
+                                    {% if days and unit_test_collection.tests_object.description %}
+                                        {% for day, display in days %}
+                                            {% if day == current_day %}
+                                                    <h5><b>Cycle Description: </b></h5>
+                                                    <div>{{unit_test_collection.tests_object.description|safe}}</div>
+                                                </div>
+                                                <div class="col-lg-12 pre left-border border-default">
+                                                    <h5><b>Test List Description - {{ display }}: </b></h5>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                    <div>{{test_list.description.strip|safe}}</div>
+                                </div>
+                            {% endspaceless %}
+                        </div>
                     </div>
-                    <hr/>
-                {% endif %}
-
-                {% if perms.qa.can_perform_subset %}
-
-                    <div class="input-prepend input-append" id="category">
-                        <label for="category_filter" class="add-on">
-                            Categories:
-                        </label>
-                        <select id="category_filter" multiple="multiple" class="input-medium">
-                            <option value="all" selected="selected">Show All</option>
-                            {% for category in categories %}
-                                <option value="{{category.pk}}">
-                                    {{category.name}}
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                {% endif %}
-
-                <div class="date input-prepend input-append" id="work-started" data-date="{% now 'd-m-Y'%}" data-date-format="dd-mm-yyyy">
-                    {% spaceless %}
-                        <label for="id_work_started" class="add-on">
-                            {{form.work_started.label}}:
-                        </label>
-                        {{form.work_started}}
-                        {% if perms.qa.can_override_date %}
-                            <span class="add-on"><i class="icon-calendar"></i></span>
-                        {% endif %}
-                    {% endspaceless %}
                 </div>
+            </div>
+        {% endif %}
 
-                {% if perms.qa.can_override_date %}
-                    <div class="date input-prepend input-append" id="work-completed" data-date="{% now 'd-m-Y'%}" data-date-format="dd-mm-yyyy">
-                        <label for="id_work_completed" class="add-on">
-                            {{form.work_completed.label}}:
-                        </label>{{form.work_completed}}<span class="add-on"><i class="icon-calendar"></i></span>
+        <div id="box-admin" class="row" style="display: {% if perms.qa.can_review and perms.qa.can_review_own_tests or perms.qa.can_override_date %}block{% else %}none{% endif %};">
+            <div class="col-lg-12">
+                <div class="box box-primary">
+                    <div class="box-header">
+                        <h3 class="box-title">
+                            <i class="fa fa-wrench" aria-hidden="true"></i>
+                            Admin Options
+                        </h3>
                     </div>
+                    <div class="box-body">
+                        <div class="row">
+                            <div class="col-md-4 left-border border-default">
+                                <div class="date input-prepend input-append row" id="work-started" data-date="{% now 'd-m-Y'%}" data-date-format="dd-mm-yyyy">
+                                    {% spaceless %}
+                                        <label for="id_work_started" class="col-lg-6">
+                                            {{form.work_started.label}}:
+                                        </label>
+                                        <div class="col-lg-6">
+                                            {{form.work_started}}
+                                            <i class="fa fa-calendar fa-in-input"></i>
+                                        </div>
+                                    {% endspaceless %}
+                                </div>
+
+                                {% if perms.qa.can_override_date %}
+                                    <div class="date input-prepend input-append row" id="work-time">
+                                        <label for="id_work_duration" class="col-lg-6">
+                                            Work duration:
+                                        </label>
+                                        <div class="col-lg-6">
+                                            <input id="id_work_duration" name="work_duration" class="input-medium">
+                                            <i class="fa fa-clock-o fa-in-input"></i>
+                                        </div>
+                                    </div>
+
+                                    <div class="date input-prepend input-append row" id="work-completed" data-date="{% now 'd-m-Y'%}" data-date-format="dd-mm-yyyy">
+                                        <label for="id_work_completed" class="col-lg-6">
+                                            {{form.work_completed.label}}:
+                                        </label>
+                                        <div class="col-lg-6">
+                                            {{form.work_completed}}
+                                            <i class="fa fa-calendar fa-in-input"></i>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-4 left-border border-default">
+                                {% if perms.qa.can_review and perms.qa.can_review_own_tests %}
+                                    <div class="input-prepend input-append row" id="status">
+                                        <label for="id_status" class="col-lg-6">
+                                            Set Status:
+                                        </label>
+                                        <div class="col-lg-6">
+                                            {{form.status}}
+                                        </div>
+                                    </div>
+                                {% endif %}
+
+                            </div>
+                            <div class="col-md-4 left-border border-default"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="box-perform" class="row">
+            <div class="col-lg-12">
+                <div class="box box-primary box-pho-borders">
+
+                    <div class="box-header">
+                        <div class="row">
+                            <div class="col-md-6">
+                                {% if test_list_instance %}
+                                    <i class="fa fa-pencil-square-o box-title" aria-hidden="true"></i>
+                                    <h3 class="box-title">Edit {{test_list_instance.unit_test_collection.unit.name}} : {{test_list_instance.test_list.name}}</h3>
+                                {% else %}
+                                    <i class="fa fa-pencil-square-o box-title" aria-hidden="true"></i>
+                                    <h3 class="box-title">Perform {{unit_test_collection.unit.name}} : {{test_list.name}}</h3>
+                                {% endif %}
+                                {% if days and last_instance %}
+                                    <div><em>Last done: {% if last_day %}Day {{last_day}} ({{last_instance.test_list.name}}){% else %}New list{%endif%}</em></div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                {% if test_list.warning_message %}
+                                    <h3 class="do-not-treat box-title pull-right">
+                                        <i class="fa fa-exclamation"></i>
+                                        <strong>{{test_list.warning_message}}</strong>
+                                    </h3>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="box-body">
+
+                        <div class="row">
+                            <div class="col-lg-12">
+
+                                <input type="hidden" id="test-list-id" value="{{test_list.pk}}"/>
+                                <input type="hidden" id="test-list-name" value="{{test_list.name}}"/>
+                                <input type="hidden" id="unit-id" value="{{unit_test_collection.unit.pk}}"/>
+                                <input type="hidden" id="unit-number" value="{{unit_test_collection.unit.number}}"/>
+                                <input type="hidden" id="cycle-day-number" value="{{current_day}}"/>
+
+                                <input type="hidden" id="pass-fail-only" value="{% if perms.qa.can_view_ref_tol %}no{% else %}yes{% endif %}"/>
+                                <input type="hidden" id="require-comment-on-skip" value="{% if perms.qa.can_skip_without_comment %}no{% else %}yes{% endif %}"/>
+
+                                {% if formset.non_form_errors %}
+                                    <div class="alert-message error">
+                                        {% for error in formset.non_form_errors %}
+                                            <span class="alert-error help-block-inline">{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+
+                                {{formset.management_form}}
+
+                                <table id="perform-qa-table" class="qa-table table table-bordered table-responsive table-hover table-condensed">
+                                    <thead>
+                                        <tr>
+                                            <th class="qa-category">Category</th>
+                                            <th class="qa-showproc qa-name">Name</th>
+                                            <th class="qa-value" width=100>Value</th>
+                                            <th class="qa-skip">Skip</th>
+                                            <th class="qa-status">Status</th>
+                                            <th class="qa-showcmt">Comment</th>
+                                            {% if perms.qa.can_view_ref_tol or perms.qa.can_view_history %}
+                                                {% if perms.qa.can_view_ref_tol %}
+                                                    <th class="qa-reference">Reference</th>
+                                                {% endif %}
+                                                {% if perms.qa.can_view_history %}
+                                                    <th class="qa-history">History<br/>
+                                                        {% for d in history_dates %}
+                                                            <span class="label history-label" title="{{d}}">{{d|date:"dMy"}}</span>
+                                                        {% endfor %}
+                                                    <div></div></th>
+                                                {% endif %}
+                                            {% else %}
+                                                <th>&nbsp;<div></div></th>
+                                            {% endif %}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for test_form in formset %}
+                                            {% qa_value_form test_form test_list include_history=perms.qa.can_view_history include_ref_tols=perms.qa.can_view_ref_tol test_info=test_form.get_test_info  %}
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+
+                                <div class="row pad">
+                                    <div id="qa-tli-comment" class="col-md-12 callout callout-custom border-primary">
+                                        {{form.comment}}
+                                    </div>
+                                </div>
+
+                                <div class="row">
+{#                                    <div class="col-md-6"></div>#}
+                                    <div class="col-md-12">
+
+                                        <button id="submit-qa" type="submit" class="btn btn-primary btn-flat margin-r-5 pull-right">Submit QA Results</button>
+
+                                        <a id="toggle-gen-comment" class="btn btn-primary btn-flat pull-right margin-r-5" href="#!" title="Click here to add a general comment about this set of tests"><i class="icon-edit"></i> Add Comment</a>
+
+                                        <div class="pull-right margin-r-5">
+                                            <label title="{{form.in_progress.help_text}}" for="id_in_progress" class="add-on">
+                                                Mark this list as still in progress:
+                                            </label>
+                                            {{form.in_progress}}
+                                        </div>
+
+                                    </div>
+                                </div>
+
+{#                                 Code for displaying images under the test list#}
+                                <div id="qa-images">
+                                    {% for test_form in formset %}
+                                        {% with test=test_form.get_test_info.test ti=test_form.instance %}
+                                            {% if test.display_image %}
+                                                {% if test_list_instance %}
+                                                    <div id="{{ test.slug }}" class="qa-image-box">
+                                                        <strong><p>Image for {{ test }}: </p></strong>
+                                                        <img src="{{ ti.image_url }}" class="qa-image">
+                                                    </div>
+                                                {% else %}
+                                                    <div id="{{ test.slug }}"></div>
+                                                {% endif %}
+                                            {% endif %}
+                                        {% endwith %}
+                                    {% endfor %}
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if test_list.warning_message %}
+                        <div class="box-footer">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <h3 class="do-not-treat box-title pull-right">
+                                        <i class="fa fa-exclamation"></i>
+                                        <strong>{{test_list.warning_message}}</strong>
+                                    </h3>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+    </form>
+
+
+{% endblock %}
+
+{% block main_sidebar %}
+    <aside class="main-sidebar">
+
+        <section class="sidebar">
+
+            <ul class="sidebar-menu">
+
+                <li class="header">Test List Menu</li>
+
+                {% if test_list.description or unit_test_collection.tests_object.description %}
+                    <li class="info toggle-element" data-toggle="description"><a id="toggle-description" href="#!">
+                        <i class="fa fa-stack fa-fw" aria-hidden="true">
+                            <i class="fa fa-file-text-o fa-stack-custom-main"></i>
+                            <i class="fa fa-info fa-stack-custom-sub info"></i>
+                        </i>
+                        <span>Description</span>
+                    </a></li>
                 {% endif %}
 
-                {% if perms.qa.can_review and perms.qa.can_review_own_tests %}
-                    <div class="input-prepend input-append" id="status">
-                        <label for="id_status" class="add-on">
-                            Set Status:
-                        </label>{{form.status}}
-                    </div>
-
+                {% if perms.qa.can_review and perms.qa.can_review_own_tests or perms.qa.can_override_date %}
+                    <li class="primary toggle-element active" data-toggle="admin"><a id="toggle-options" href="#!">
+                        <i class="fa fa-wrench fa-fw" aria-hidden="true"></i>
+                        <span>Admin Options</span>
+                    </a></li>
                 {% endif %}
 
+                {# Category selection #}
+                {% if perms.qa.can_perform_subset and categories|length > 1 %}
+                    <li class="treeview">
+                        <a id="menu-categories" href="#!">
+                            <i class="fa fa-tags fa-fw" aria-hidden="true"></i>
+                            <span>Categories</span>
+                            <i class="fa fa-angle-left pull-right"></i>
+                        </a>
+                        <ul id="category-list" class="treeview-menu" style="display: none;">
+                            <li><a {% comment %}id="category-showall"{% endcomment %} class="has-icheck row" href="#!">
+{#                                <i class="fa fa-circle-o success"></i>#}
+                                <input id="category-showall" class="iCheck" type="checkbox" checked="checked">
+                                <label for="category-showall">Show All</label>
+                            </a></li>
+
+                            {% for category in categories %}
+                                <li><a class="has-icheck row" href="#!">
+                                    <input id="category-{{ category.pk }}" class="iCheck check-category" type="checkbox" checked="checked">
+                                    <label for="category-{{ category.pk }}">{{category.name}}</label>
+                                </a></li>
+                            {% endfor %}
+
+                        </ul>
+                    </li>
+                {% endif %}
+
+                {# days selection #}
                 {% if days %}
                     {% with unit_test_collection.tests_object as tlc %}
-                        <div class="input-prepend" id="cycle-day-wrapper">
-                            <label for="cycle-day" class="add-on">
-                                {{ tlc.drop_down_label }}:
-                            </label>
-                            <select id="cycle-day" class="input-small" {% if not days %}disabled="disabled"{%endif%}>
-                                <option value="next">Next scheduled</option>
+                        <li class="treeview">
+                            <a id="menu-days" href="#!">
+                                <i class="fa fa-calendar fa-fw" aria-hidden="true"></i>
+                                <span>{{ tlc.drop_down_label }}</span>
+                                <i class="fa fa-angle-left pull-right"></i>
+                            </a>
+                            <ul id="days-list" class="treeview-menu" style="display: none;">
+
+                                <li><a class="has-icheck row" href="#">
+                                    <input id="day-next" class="iCheck radio-days" type="radio" name="iCheck">
+                                    <label for="day-next">Next scheduled</label>
+                                </a></li>
                                 {% for day, display in days %}
-                                    <option value="{{day}}" {% if day == current_day %}selected="selected"{% endif %}>
-                                    {{ display }}
-                                    </option>
+                                    <li><a class="has-icheck row" href="#">
+                                        <input id="day-{{ day }}" class="iCheck radio-days" type="radio" name="iCheck" {% if day == current_day %}checked="checked"{% endif %}>
+                                        <label for="day-{{ day }}">{{ display }}</label>
+                                    </a></li>
                                 {% endfor %}
-                            </select>
-                        </div>
+                            </ul>
+                        </li>
                     {% endwith %}
                 {% endif %}
 
-            </div>
+                <li class="divider"></li>
+                <li class="info toggle-element" data-toggle="contacts"><a id="toggle-contacts" href="#!">
+                    <i class="fa fa-phone fa-fw" aria-hidden="true"></i>
+                    <span>Contacts</span>
+                </a></li>
 
+            </ul>
 
-            {% if formset.non_form_errors %}
-                <div class="alert-message error">
-                    {% for error in formset.non_form_errors %}
-                        <span class="alert-error help-block-inline">{{ error }}</span>
-                    {% endfor %}
-                </div>
-            {% endif %}
+        </section>
 
-
-            {{formset.management_form}}
-
-            <table id="perform-qa-table" class="qa-table table table-bordered table-striped table-condensed" >
-                <thead>
-                    <tr>
-                        <th class="qa-category">Category</th>
-                        <th class="qa-showproc qa-name">Name</th>
-                        <th class="qa-value" width=100>Value</th>
-                        <th class="qa-skip">Skip</th>
-                        <th class="qa-status">Status</th>
-                        <th class="qa-showcmt">Comment</th>
-                        {% if perms.qa.can_view_ref_tol or perms.qa.can_view_history %}
-                            {% if perms.qa.can_view_ref_tol %}
-                                <th class="qa-reference">Reference</th>
-                            {% endif %}
-                            {% if perms.qa.can_view_history %}
-                                <th class="qa-history">History<br/>
-                                    {% for d in history_dates %}
-                                        <span class="label history-label" title="{{d}}">{{d|date:"dMy"}}</span>
-                                    {% endfor %}
-                                <div></div></th>
-                            {% endif %}
-                        {% else %}
-                            <th>&nbsp;<div></div></th>
-                        {% endif %}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for test_form in formset %}
-                        {% qa_value_form test_form test_list include_history=perms.qa.can_view_history include_ref_tols=perms.qa.can_view_ref_tol test_info=test_form.get_test_info  %}
-                    {% endfor %}
-                </tbody>
-            </table>
-
-            <div class="row-fluid">
-                <div class="span12">
-                    <a id="toggle-gen-comment" class="btn pull-right" href="#" title="Click here to add a general comment about this set of tests"><i class="icon-edit"></i> Add Comment</a>
-                </div>
-            </div>
-            <div class="row-fluid">
-                <div class="span12 qa-tli-comment">
-                    {{form.comment}}
-                </div>
-            </div>
-
-            <div class="row-fluid">
-                <div class="span12" id="overall-qa-status">
-                    <div id="do-not-treat-bottom" class="alert alert-error do-not-treat">
-                        <strong> {{test_list.warning_message}} </strong>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row-fluid">
-                <div class="span12">
-                    <div class="pull-right">
-                        <label title="{{form.in_progress.help_text}}" for="id_in_progress" class="add-on">
-                            Mark this list as still in progress:
-                        </label>
-
-                        {{form.in_progress}}
-
-                        <button id="submit-qa" type="submit" class="btn btn-primary">Submit QA Results</button>
-                    </div>
-                </div>
-            </div>
-        </form>
-
-        {# Code for displaying images under the test list #}
-        <div id="qa-images">
-            {% for test_form in formset %}
-                {% with test=test_form.get_test_info.test ti=test_form.instance %}
-                    {% if test.display_image %}
-                        {% if test_list_instance %}
-                            <div id="{{ test.slug }}" class="qa-image-box">
-                                <strong><p>Test name: {{ test }}</p></strong>
-                                <img src="{{ ti.image_url }}" class="qa-image">
-                            </div>
-                        {% else %}
-                            <div id="{{ test.slug }}"></div>
-                        {% endif %}
-                    {% endif %}
-                {% endwith %}
-            {% endfor %}
-        </div>
-
-
-                <div id="progress"> <div class="bar" style="width: 0%; height:30px; background-color:red;"></div> </div>
-
-    </div>
-</div>
-
-
-{% endblock %}
+    </aside>
+{% endblock main_sidebar %}
 
 {% block end_body_extra_script %}
-    <script src="{% static "js/qa.js" %}?v={{VERSION}}"></script>
-    <script src="{% static "datepicker/js/bootstrap-datepicker.js" %}?v={{VERSION}}"></script>
-    <script src="{% static "js/jquery.ui.widget.js" %}"></script>
-    <script src="{% static "js/jquery.iframe-transport.js" %}"></script>
-    <script src="{% static "js/jquery.fileupload.js" %}"></script>
+
 {% endblock %}
+
+{% block loading_modal %}
+    <div class="loading-modal ">
+        <div class="center">
+            <div>
+                <span class="loading-logo">QAT</span>
+                <i class="fa fa-fw fa-plus fa-spin fa-2x info"></i>
+            </div>
+            <div>
+                <b>
+                {% if test_list_instance %}
+                    Loading {{test_list_instance.unit_test_collection.unit.name}} : {{test_list_instance.test_list.name}}
+                {% else %}
+                    Loading {{unit_test_collection.unit.name}} : {{test_list.name}}
+                {% endif %}
+                </b>
+            </div>
+
+        </div>
+    </div>
+{% endblock loading_modal %}
+

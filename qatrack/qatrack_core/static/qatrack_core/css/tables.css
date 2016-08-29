@@ -1,0 +1,104 @@
+table.table {
+    width: 100%;
+}
+
+/*table.table > thead > tr > th,*/
+/*table.table > tbody > tr > td,*/
+/*table.table > tfoot > tr > th {*/
+    /*box-sizing: content-box;*/
+    /*clear: none;*/
+/*}*/
+
+table.dataTable tr.odd td.sorting_1 {
+    background-color: rgba(60, 141, 188, 0.16);
+    border-color: transparent;
+}
+table.dataTable tr.odd td.sorting_2 {
+    background-color: rgba(60, 141, 188, 0.12);
+    border-color: transparent;
+}
+table.dataTable tr.odd td.sorting_3 {
+    background-color: rgba(60, 141, 188, 0.08);
+    border-color: transparent;
+}
+table.dataTable tr.even td.sorting_1 {
+    background-color: rgba(60, 141, 188, 0.14);
+    border-color: transparent;
+}
+table.dataTable tr.even td.sorting_2 {
+    background-color: rgba(60, 141, 188, 0.10);
+    border-color: transparent;
+}
+table.dataTable tr.even td.sorting_3 {
+    background-color: rgba(60, 141, 188, 0.06);
+    border-color: transparent;
+}
+
+.table-condensed > thead > tr > th,
+.table-condensed > tbody > tr > th,
+.table-condensed > tfoot > tr > th,
+.table-condensed > thead > tr > td,
+.table-condensed > tbody > tr > td,
+.table-condensed > tfoot > tr > td {
+    padding: 2px;
+}
+
+table.table thead .sorting,
+table.table thead .sorting_asc,
+table.table thead .sorting_desc {
+    cursor: pointer;
+	*cursor: hand;
+}
+
+table.table thead .sorting:before {
+    content: '\f07d';
+    font-family: FontAwesome;
+    padding-right: 8px;
+}
+table.table thead .sorting_asc:before {
+    content: '\f160';
+    font-family: FontAwesome;
+    padding-right: 8px;
+}
+table.table thead .sorting_desc:before {
+    content: '\f161';
+    font-family: FontAwesome;
+    padding-right: 8px;
+}
+
+table.table > thead > tr > th > span > div > ul > li.active > a,
+.dataTables_wrapper > div > div > div > ul > li.active > a {
+    background-color: #3c8dbc;
+}
+table.table > thead > tr > th > span > div > ul > li.active > a:hover,
+.dataTables_wrapper > div > div > div > ul > li.active > a:hover {
+    background-color: #357ca5;
+}
+
+.full-width, .filter_column, .filter_column > div.btn-group {
+    width: 100% !important;
+    min-width: 100px;
+    box-sizing: border-box;
+    -webkit-box-sizing:border-box;
+    -moz-box-sizing: border-box;
+}
+
+.pagination {
+    margin: 0;
+    float: right;
+}
+table.table-hover tr.no-hover:hover {
+    background-color: inherit;
+}
+
+/*.dropdown-menu {*/
+    /*background-color: #0d6aad;*/
+/*}*/
+
+
+/*.table-block {*/
+    /*display: block;*/
+/*}*/
+/*.table-block thead, .table-block tbody, .table-block tfoot {*/
+    /*width: 100%;*/
+/*}*/

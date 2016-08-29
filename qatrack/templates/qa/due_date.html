@@ -2,9 +2,9 @@
     {% with unit_test_collection.due_status as status %}
         {% if show_icons %}
             {% if status == 'tolerance' %}
-                <i class="icon-warning-sign"></i>
+                <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
             {% elif status == 'action' %}
-                <i class="icon-minus-sign"></i>
+                <i class="fa fa-minus-square" aria-hidden="true"></i>
             {% endif %}
         {% endif %}
     {% endwith %}

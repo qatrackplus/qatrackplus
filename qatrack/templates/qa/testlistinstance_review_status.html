@@ -4,25 +4,28 @@
         <abbr title="Started {{instance.work_started}} by {{instance.created_by}}"><em>In Progress</em></abbr>
     {% else %}
         {% if perms.qa.can_review %}
-            <a class="pull-right" title="Review this session" href="{% url 'review_test_list_instance' instance.pk %}?next={{request.path|cut:"data/"}}"><i class="icon-zoom-in"></i></a>
+            <a class="pull-right" title="Review this session" href="{% url 'review_test_list_instance' instance.pk %}?next={{request.path|cut:"data/"}}"><i class="fa fa-search-plus"></i></a>
         {% endif %}
 
-        {% for display,status in statuses.items %}
-        <span {% if not status.requires_review %} title="Reviewed {{status.reviewed}} by {{status.reviewed_by}}."{% endif %} class="label {% if not status.valid %} label-important {% elif status.requires_review %} label-warning {% else %} label-success{% endif %}">
-            {% if show_icons %}
-                {% if status.requires_review %}
-                    <i class="icon-question-sign"></i>
-                {% elif not status.valid %}
-                    <i class="icon-minus-sign"></i>
-                {% endif %}
+        <span class="label-group">
+            {% for display,status in statuses.items %}
+                <span {% if not status.requires_review %} title="Reviewed {{status.reviewed}} by {{status.reviewed_by}}."{% endif %} class="label {% if not status.valid %} label-danger {% elif status.requires_review %} label-warning {% else %} label-success{% endif %}">
+                    {% if show_icons %}
+                        {% if status.requires_review %}
+                            <i class="fa fa-question-circle" aria-hidden="true"></i>
+                        {% elif not status.valid %}
+                            <i class="fa fa-minus-circle" aria-hidden="true"></i>
+                        {% endif %}
+                    {% endif %}
+                    {{status.count}} {{display}}
+                </span>
+            {% endfor %}
+
+
+            {% if comments %}
+                <span class="label label-info">{{comments}} <i class="fa fa-comment" aria-hidden="true"></i></span>
             {% endif %}
-            {{status.count}} {{display}}
         </span>
-        {% endfor %}
-
-        {% if comments %}
-        <span class="label label-info">{{comments}} <i class="icon-comment"></i></span>
-        {% endif %}
 
     {% endif %}
 {% else %}

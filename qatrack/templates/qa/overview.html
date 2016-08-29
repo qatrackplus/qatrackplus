@@ -1,104 +1,159 @@
 {% extends "site_base.html" %}
-{% load staticfiles %}
+
 {% load qa_tags %}
 
 {% block head_title %}QA Program Overview{% endblock %}
 
+{% block extra_css %}
+    <link href="{{ STATIC_URL }}qa/css/qa.css?v={{ VERSION }}" rel="stylesheet">
+{% endblock extra_css %}
+
+{% block require_javascript %}
+
+    require(['qaoverview']);
+{% endblock require_javascript %}
+
+{% block body_class %}layout-top-nav loading{% endblock body_class %}
+
 {% block body %}
-    <div class="row-fluid">
-        <div class="span12">
-            <h1>QA Program Overview</h1>
-            <p>
-                <em>Overview of current QA status on all units</em>
-            </p>
-        </div>
-    </div>
-    <div class="row-fluid">
-        <div class="span12">
-            <label class="pull-left" for="unit-filter"><strong>Visible Units:&nbsp;</strong></label>
-            <select class="pull-left" id="unit-filter" multiple="multiple">
-                <option id="all-option" value="all" selected="selected">All</option>
-                {% for unit, _ in unit_lists %}
-                <option class="unit-option" value="{{unit.number}}" selected="selected">{{unit.name}}</option>
-                {% endfor %}
-            </select>
-        </div>
-    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box box-primary">
 
-    {% for unit, freq_utcs in unit_lists %}
-        <div class="row-fluid" id="unit-container-{{unit.number}}" class="unit-container">
-
-            <div class="span12 overview-unit-container">
-                <a style="visibility:hidden" id="U{{unit.number}}">&nbsp;</a>
-                <div class="" style="width:100%">
-                    <hr/>
-                    <h4 class="">{{unit.name}}</h4>
+                <div class="box-header">
+                    <h3 class="box-title">
+                        <i class="fa fa-globe" aria-hidden="true"></i>
+                        QA Program Overview
+                    </h3>
+                    <p>Overview of current QA status on all units</p>
                 </div>
-                <div class="unit-container">
-                {% for freq, utcs in freq_utcs %}
-                    {% if forloop.counter0|divisibleby:"3" or forloop.counter0 = 0 %}
-                    <div class="row-fluid unit-overview">
-                    {% endif %}
 
-                        <div class="span4">
-                            <div class="well overview-freq-container">
-
-                                <h4>{% if freq %}{{freq.name}}{% else %}<em>Ad-hoc</em>{% endif %}</h4>
-                                <div class="overview-utc-container">
-                                    <div class="overview-test-list-name pull-left">
-                                        <h5>Test List</h5>
+                <div class="box-body">
+                    <div class="row">
+                        <div class="col-xs-3">
+                            <label class="pull-left" for="unit-filter"><strong><i class="fa fa-cubes fa-fw"></i>Visible Units:&nbsp;</strong></label>
+                            <select class="pull-left form-control" id="unit-filter" multiple="multiple">
+                                <option id="all-option" value="all" selected="selected">All</option>
+                                {% comment %}{% for unit, _ in unit_lists %}
+                                    <option class="unit-option" value="{{unit.number}}" selected="selected">{{unit.name}}</option>
+                                {% endfor %}{% endcomment %}
+                            </select>
+                        </div>
+                        <div class="col-xs-9">
+                            <div class="col-md-3">
+                                <div id="due-count-ndd" class="count-box small-box bg-aqua-gradient">
+                                    <div class="inner">
+                                        <h3></h3>
+                                        <p>No Due Date</p>
                                     </div>
-                                    <div class="overview-test-list-pass-fail pull-right">
-                                        <h5>Last QA Status</h5>
+                                    <div class="icon">
+                                        <i class="fa fa-calendar-o" aria-hidden="true"></i>
                                     </div>
-
-                                    <div class="overview-test-list-date pull-right" >
-                                        <h5>Due Date</h5>
-                                    </div>
+                                    <a href="#" class="small-box-footer">More info <i class="fa fa-arrow-circle-right"></i></a>
                                 </div>
-                                {% for utc in utcs %}
-                                    <div class="overview-utc-container">
-                                        <div class="overview-test-list-name pull-left">
-                                            <a href="{%url 'review_utc' utc.pk %}" title="View history of {{utc.utc_name}} for {{unit.name}}">{{utc.utc_name|truncatechars:25}}</a>
-                                        </div>
-                                        <div class="overview-test-list-pass-fail pull-right">
-                                            {% if utc.last_instance%}
-                                                {{utc.last_instance|as_pass_fail_status:0}}
-                                            {% else %}
-                                                &nbsp;
-                                            {% endif %}
-                                        </div>
-                                        <div class="overview-test-list-date pull-right" {% if utc.last_instance %}title="Last completed on {{utc.last_instance.work_completed}} by {{utc.last_instance.created_by}}"{%endif%}>
-                                            {{utc|as_due_date}}
-                                        </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div id="due-count-nd" class="count-box small-box bg-green-gradient">
+                                    <div class="inner">
+                                        <h3></h3>
+                                        <p>Not Due</p>
                                     </div>
-                                {% empty %}
-                                    <div class="overview-test-list-name pull-left">
-                                        <em>No Test Lists</em>
+                                    <div class="icon">
+                                        <i class="fa fa-calendar-check-o" aria-hidden="true"></i>
                                     </div>
-                                    <div class="overview-test-list-pass-fail pull-right">
-
+                                    <a href="#" class="small-box-footer">More info <i class="fa fa-arrow-circle-right"></i></a>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div id="due-count-d" class="count-box small-box bg-yellow-gradient">
+                                    <div class="inner">
+                                        <h3></h3>
+                                        <p>Due</p>
                                     </div>
-
-                                    <div class="overview-test-list-date pull-right" >
-
+                                    <div class="icon">
+                                        <i class="fa fa-calendar-minus-o" aria-hidden="true"></i>
                                     </div>
-                                {% endfor %}
+                                    <a href="#" class="small-box-footer">More info <i class="fa fa-arrow-circle-right"></i></a>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div id="due-count-od" class="count-box small-box bg-red-gradient">
+                                    <div class="inner">
+                                        <h3></h3>
+                                        <p>Overdue</p>
+                                    </div>
+                                    <div class="icon">
+                                        <i class="fa fa-calendar-times-o" aria-hidden="true"></i>
+                                    </div>
+                                    <a href="#" class="small-box-footer">More info <i class="fa fa-arrow-circle-right"></i></a>
+                                </div>
                             </div>
                         </div>
-                    {% if forloop.counter|divisibleby:"3" or forloop.last %}
                     </div>
-                    {% endif %}
-                {% endfor %}
                 </div>
 
             </div>
         </div>
+    </div>
 
-    {% endfor %}
+    <div class="row">
 
-{% endblock %}
+        <section id="section-0" class="unit-box-section col-md-4">
 
-{% block end_body_extra_script %}
-    <script src="{% static "js/overview.js" %}?v={{VERSION}}"></script>
+        </section>
+
+        <section id="section-1" class="unit-box-section col-md-4">
+
+        </section>
+
+        <section id="section-2" class="unit-box-section col-md-4">
+
+        </section>
+    </div>
+
+
+    <div id="unit-template" style="display: none;">
+        <div id="box-__UNITNAME__" class="box box-primary">
+            <div class="box-header">
+                <i class="fa fa-cube fa-fw box-title" aria-hidden="true"></i>
+                <h3 class="box-title">__UNITDISPLAYNAME__</h3>
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+                    <button id="__UNITNAME__-close-button" type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+                </div>
+            </div>
+            <div class="box-body freq-container">
+                <table class="table-responsive table-hover {% comment %}table-condensed {% endcomment %}overview-table units">
+                    <thead>
+                        <tr>
+                            <th><b>Test List</b></th>
+                            <th><b>Due Date</b></th>
+                            <th><b>Last QA Status</b></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {% block loading_modal %}
+        <div class="loading-modal ">
+            <div class="center">
+                <div>
+                    <span class="loading-logo">QAT</span>
+                    <i class="fa fa-fw fa-plus fa-spin fa-2x info"></i>
+                </div>
+                <div>
+                    <b>
+                        Loading Overview
+                    </b>
+                </div>
+
+            </div>
+        </div>
+    {% endblock loading_modal %}
+
 {% endblock %}

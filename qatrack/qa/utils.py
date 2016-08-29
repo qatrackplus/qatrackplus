@@ -9,7 +9,7 @@ from django.contrib.contenttypes.models import ContentType
 
 import models
 
-#----------------------------------------------------------------------
+
 class SetEncoder(json.JSONEncoder):
     """Allow handling of sets as lists"""
     def default(self, obj):
@@ -37,7 +37,6 @@ def qs_extra_for_utc_name():
         }
 
 
-#----------------------------------------------------------------------
 def to_precision(x, p):
     """
     returns a string representation of x formatted with a precision of p
@@ -98,14 +97,12 @@ def to_precision(x, p):
     return "".join(out)
 
 
-#----------------------------------------------------------------------
 def tokenize_composite_calc(calc_procedure):
     """tokenize a calculation procedure"""
     tokens = tokenize.generate_tokens(StringIO.StringIO(calc_procedure).readline)
     return [t[token.NAME] for t in tokens if t[token.NAME]]
 
 
-#----------------------------------------------------------------------
 def unique(seq, idfun=None):
     """f5 from http://www.peterbe.com/plog/uniqifiers-benchmark"""
     # order preserving
@@ -123,7 +120,6 @@ def unique(seq, idfun=None):
     return result
 
 
-#----------------------------------------------------------------------
 def almost_equal(a, b, significant=7):
     """determine if two numbers are nearly equal to significant figures
     copied from numpy.testing.assert_approx_equal
@@ -153,7 +149,6 @@ def almost_equal(a, b, significant=7):
     return abs(sc_b - sc_a) <= math.pow(10., -(significant - 1))
 
 
-#----------------------------------------------------------------------
 def check_query_count():  # pragma: nocover
     """ A useful debugging decorator for checking the number of queries
     a function is making"""

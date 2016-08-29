@@ -56,6 +56,7 @@ urlpatterns = patterns('',
 
     # overall program status
     url(r"^review/$", review.Overview.as_view(), name="overview"),
+    url(r"^review/overview-objects/$", review.OverviewObjects.as_view(), name="overview_objects"),
     url(r"^review/due-dates/$", review.DueDateOverview.as_view(), name="overview_due_dates"),
 
     # review utc's
