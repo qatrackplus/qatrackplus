@@ -1,10 +1,14 @@
-import ldap
+try:
+    import ldap
+except ImportError:
+    pass
+
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.auth.backends import ModelBackend
 
 
-#stripped down version of http://djangosnippets.org/snippets/901/
+# stripped down version of http://djangosnippets.org/snippets/901/
 class ActiveDirectoryGroupMembershipSSLBackend:
 
     def authenticate(self, username=None, password=None):
@@ -17,7 +21,7 @@ class ActiveDirectoryGroupMembershipSSLBackend:
             if len(password) == 0:
                 return None
 
-            #ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, settings.AD_CERT_FILE)
+            # ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, settings.AD_CERT_FILE)
             if debug:
                 print >>debug, "\tinitialize..."
             l = ldap.initialize(settings.AD_LDAP_URL)
@@ -48,7 +52,7 @@ class ActiveDirectoryGroupMembershipSSLBackend:
                     debug = open(settings.AD_DEBUG_FILE, 'a')
                     print >>debug, "create user %s" % username
 
-                #ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, settings.AD_CERT_FILE)
+                # ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, settings.AD_CERT_FILE)
                 ldap.set_option(ldap.OPT_REFERRALS, 0)  # DO NOT TURN THIS OFF OR SEARCH WON'T WORK!
 
                 # initialize

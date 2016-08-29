@@ -23,7 +23,6 @@ def qa_value_form(form, test_list, include_history=False, include_ref_tols=False
     return template.render(c)
 
 
-#----------------------------------------------------------------------
 @register.simple_tag
 def reference_tolerance_span(test, ref, tol):
 
@@ -55,7 +54,6 @@ def reference_tolerance_span(test, ref, tol):
         )
 
 
-#----------------------------------------------------------------------
 @register.simple_tag
 def tolerance_for_reference(tol, ref):
 
@@ -82,7 +80,6 @@ def tolerance_for_reference(tol, ref):
     return mark_safe('<span>%(ok_disp)s: Between %(tol_low)s &amp; %(tol_high)s</br> %(tol_disp)s Between %(act_low)s &amp; %(act_high)s</br> %(act_disp)s: < %(act_low)s or > %(act_high)s</span>' % tols)
 
 
-#----------------------------------------------------------------------
 @register.simple_tag
 def history_display(history, unit, test_list, test):
     template = get_template("qa/history.html")
@@ -96,7 +93,6 @@ def history_display(history, unit, test_list, test):
     return template.render(c)
 
 
-#----------------------------------------------------------------------
 @register.filter
 def as_pass_fail_status(test_list_instance, show_label=True):
     template = get_template("qa/pass_fail_status.html")
@@ -109,7 +105,6 @@ def as_pass_fail_status(test_list_instance, show_label=True):
     return template.render(c)
 
 
-#----------------------------------------------------------------------
 @register.filter
 def as_review_status(test_list_instance):
     statuses = collections.defaultdict(lambda: {"count": 0})

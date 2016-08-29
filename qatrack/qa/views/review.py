@@ -37,7 +37,6 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
     formset_class = forms.ReviewTestInstanceFormSet
     template_name_suffix = "_review"
 
-    #----------------------------------------------------------------------
     def get_form_kwargs(self):
         kwargs = super(ReviewTestListInstance, self).get_form_kwargs()
         kwargs['user'] = self.request.user

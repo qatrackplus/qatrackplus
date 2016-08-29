@@ -9,7 +9,7 @@ INSTALLED_APPS += (
 )
 
 COVERAGE_MODULE_EXCLUDES = [
-    'tests$', 'settings$',  'locale$',
+    'tests$', 'settings$', 'locale$',
     'common.views.test', '__init__', 'django', 'migrations'
 ]
 
@@ -29,7 +29,7 @@ NOSE_ARGS = [
     '--nocapture',
     '--nologcapture',
 ]
-########## IN-MEMORY TEST DATABASE
+# IN-MEMORY TEST DATABASE
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",

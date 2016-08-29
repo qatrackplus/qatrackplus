@@ -6,3 +6,4 @@ nose>=1.1.2
 mock>=1.0
 django-nose>=1.4,<1.4.4
 selenium>=2.53.6
+PyVirtualDisplay>=0.2

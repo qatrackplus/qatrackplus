@@ -5,7 +5,6 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 
-#----------------------------------------------------------------------
 @receiver(post_save, sender=User)
 def add_to_default_groups(sender, instance, created, **kwargs):
     """

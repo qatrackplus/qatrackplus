@@ -37,7 +37,6 @@ DEFAULT_CALCULATION_CONTEXT = {
 }
 
 
-#---------------------------------------------------------------------------
 def process_procedure(procedure):
     """
     Cleans and sets new style division for calculations procedures. Used by
@@ -49,7 +48,6 @@ def process_procedure(procedure):
     return "\n".join(["from __future__ import division", procedure, "\n"]).replace('\r', '\n')
 
 
-#---------------------------------------------------------------------------
 def process_file_upload_form(ti_form, test_list_instance):
     """
     Check if test instance form is file upload and move the file out of
@@ -79,21 +77,18 @@ def process_file_upload_form(ti_form, test_list_instance):
         shutil.move(src, dest)
 
 
-#============================================================================
 class Upload(JSONResponseMixin, View):
     """View for handling AJAX upload requests when performing QA"""
 
-    #use html for IE8's sake :(
+    # use html for IE8's sake :(
     content_type = "text/html"
 
-    #----------------------------------------------------------------------
     def post(self, *args, **kwargs):
         """process file, apply calculation procedure and return results"""
         if self.request.POST.get('filename'):
             self.reprocess()
         else:
             self.handle_upload()
-
 
         return self.run_calc()
 
@@ -134,7 +129,6 @@ class Upload(JSONResponseMixin, View):
 
         return self.render_json_response(results)
 
-    #---------------------------------------------------------------
     @staticmethod
     def get_upload_name(session_id, unit_test_info, name):
         """construct a unique file name for uploaded file"""
@@ -152,7 +146,6 @@ class Upload(JSONResponseMixin, View):
         )
         return "_".join(name_parts) + "." + ext
 
-    #----------------------------------------------------------------------
     def handle_upload(self):
         """read incoming file and save tmp file to disk ready for processing"""
 
@@ -170,7 +163,6 @@ class Upload(JSONResponseMixin, View):
         # rewind to beginning of file so it  can be read correctly by calc procedure
         self.upload.seek(0)
 
-    #----------------------------------------------------------------------
     def set_calculation_context(self):
         """set up the environment that the composite test will be calculated in"""
 
@@ -181,7 +173,6 @@ class Upload(JSONResponseMixin, View):
                 meta_data[d] = dateutil.parser.parse(meta_data[d])
             except (KeyError, AttributeError):
                 pass
-
 
         refs = self.get_json_data("refs")
         tols = self.get_json_data("tols")
@@ -194,7 +185,6 @@ class Upload(JSONResponseMixin, View):
         }
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
 
-    #----------------------------------------------------------------------
     def get_json_data(self, name):
         """return python data from GET json data"""
         data = self.request.POST
@@ -208,17 +198,14 @@ class Upload(JSONResponseMixin, View):
         except (KeyError, ValueError):
             return
 
-    #----------------------------------------------------------------------
     def is_image(self):
         """check if the uploaded file is an image"""
         return self.upload and imghdr.what(self.upload.name)
 
 
-#============================================================================
 class CompositeCalculation(JSONResponseMixin, View):
     """validate all qa tests in the request for the :model:`TestList` with id test_list_id"""
 
-    #----------------------------------------------------------------------
     def get_json_data(self, name):
         """return python data from GET json data"""
 
@@ -231,7 +218,6 @@ class CompositeCalculation(JSONResponseMixin, View):
         except (KeyError, ValueError):
             return
 
-    #----------------------------------------------------------------------
     def post(self, *args, **kwargs):
         """calculate and return all composite values"""
 
@@ -270,7 +256,6 @@ class CompositeCalculation(JSONResponseMixin, View):
 
         return self.render_json_response({"success": True, "errors": [], "results": results})
 
-    #----------------------------------------------------------------------
     def set_composite_test_data(self):
         """retrieve calculation procs for all composite tests"""
 
@@ -286,7 +271,6 @@ class CompositeCalculation(JSONResponseMixin, View):
 
         self.composite_tests = dict(composite_tests)
 
-    #----------------------------------------------------------------------
     def set_calculation_context(self):
         """set up the environment that the composite test will be calculated in"""
 
@@ -318,7 +302,6 @@ class CompositeCalculation(JSONResponseMixin, View):
             if slug not in self.composite_tests:
                 self.calculation_context[slug] = val
 
-    #----------------------------------------------------------------------
     def set_dependencies(self):
         """figure out composite dependencies of composite tests"""
 
@@ -329,7 +312,6 @@ class CompositeCalculation(JSONResponseMixin, View):
             dependencies = [s for s in slugs if s in tokens and s != slug]
             self.dependencies[slug] = set(dependencies)
 
-    #----------------------------------------------------------------------
     def resolve_dependency_order(self):
         """
         Resolve calculation order dependencies using topological sort.
@@ -361,14 +343,12 @@ class CompositeCalculation(JSONResponseMixin, View):
         self.cyclic_tests = data.keys()
 
 
-#====================================================================================
 class ChooseUnit(TemplateView):
     """View for selecting a unit to perform QA on"""
 
     template_name = "units/unittype_list.html"
     active_only = True
 
-    #----------------------------------------------------------------------
     def get_context_data(self, *args, **kwargs):
         """
         This is a view to present a list of :model:`units.Unit`'s grouped
@@ -589,7 +569,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
         models.TestInstance.objects.bulk_create(to_save)
 
-        #set due date to account for any non default statuses
+        # set due date to account for any non default statuses
         self.object.unit_test_collection.set_due_date()
 
         self.object.update_all_reviewed()
@@ -604,7 +584,6 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
         return HttpResponseRedirect(self.get_success_url())
 
-    #----------------------------------------------------------------------
     def get_context_data(self, **kwargs):
 
         context = super(PerformQA, self).get_context_data(**kwargs)
@@ -618,7 +597,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             messages.error(self.request, "There must be at least one Test Status defined before performing a TestList")
             return context
 
-        #setup our test list, tests, current day etc
+        # setup our test list, tests, current day etc
         self.set_unit_test_collection()
         self.set_test_lists()
         self.set_last_day()
@@ -650,7 +629,6 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
         return context
 
-    #----------------------------------------------------------------------
     def get_requested_day_to_perform(self):
         """check GET to see if specific day requested by user"""
         try:
@@ -660,7 +638,6 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             day = None
         return day
 
-    #----------------------------------------------------------------------
     def get_success_url(self):
         """Redirect user to previous page they were on if possible"""
 
@@ -676,7 +653,6 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         return reverse("qa_by_frequency_unit", kwargs=kwargs)
 
 
-#============================================================================
 class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
     """
     View for users to edit an existing :model:`qa.TestListInstance` and
@@ -692,7 +668,6 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
     form_class = forms.UpdateTestListInstanceForm
     formset_class = forms.UpdateTestInstanceFormSet
 
-    #----------------------------------------------------------------------
     def form_valid(self, form):
         context = self.get_context_data()
         formset = context["formset"]
@@ -732,7 +707,6 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
             context["form"] = form
             return self.render_to_response(context)
 
-    #----------------------------------------------------------------------
     def update_test_list_instance(self):
         """do bookkeeping for :model:`qa.TestListInstance`"""
 
@@ -755,7 +729,6 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
         self.object.save()
 
-    #----------------------------------------------------------------------
     def set_status_object(self, status_pk):
 
         try:
@@ -765,7 +738,6 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
             self.status = models.TestInstanceStatus.objects.default()
             self.user_set_status = False
 
-    #----------------------------------------------------------------------
     def update_test_instance(self, test_instance):
         """do bookkeeping for :model:`qa.TestInstance`"""
 
@@ -795,7 +767,6 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
             msg += msga
             messages.error(self.request, _(msg))
 
-    #---------------------------------------------------------------
     def template_unit_test_infos(self):
         """prepare the unit test infos for rendering in template"""
 
@@ -809,7 +780,6 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
             })
         return template_utis
 
-    #---------------------------------------------------------------
     def get_context_data(self, **kwargs):
 
         context = super(EditTestListInstance, self).get_context_data(**kwargs)
@@ -818,7 +788,6 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         return context
 
 
-#============================================================================
 class ContinueTestListInstance(EditTestListInstance):
     """
     View for continuing a :model:`qa.TestListInstance` that has previously
@@ -872,7 +841,6 @@ class UnitFrequencyList(FrequencyList):
     and :model:`qa.Frequency`s.
     """
 
-    #----------------------------------------------------------------------
     def get_queryset(self):
         """filter queryset by Unit"""
 
@@ -880,7 +848,6 @@ class UnitFrequencyList(FrequencyList):
         self.units = Unit.objects.filter(number__in=self.kwargs["unit_number"].split("/"))
         return qs.filter(unit__in=self.units)
 
-    #----------------------------------------------------------------------
     def get_page_title(self):
         title = ", ".join([x.name for x in self.units])
         title += " " + ", ".join([x.name if x else "ad-hoc" for x in self.frequencies]) + " Test Lists"

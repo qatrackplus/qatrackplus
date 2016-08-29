@@ -5,10 +5,8 @@ import qatrack.qa.tests.utils as utils
 from .models import NotificationSubscription, TOLERANCE
 
 
-#============================================================================
 class TestEmailSent(TestCase):
 
-    #----------------------------------------------------------------------
     def setUp(self):
 
         self.tests = []
@@ -38,7 +36,6 @@ class TestEmailSent(TestCase):
         user.groups.add(self.group)
         user.email = "example@example.com"
         user.save()
-    #----------------------------------------------------------------------
 
     def create_test_list_instance(self):
         utc = self.unit_test_collection
@@ -63,7 +60,6 @@ class TestEmailSent(TestCase):
         tli.save()
         return tli
 
-    #----------------------------------------------------------------------
     def test_email_sent(self):
 
         notification = NotificationSubscription(group=self.group, warning_level=TOLERANCE)
@@ -71,9 +67,8 @@ class TestEmailSent(TestCase):
         signals.testlist_complete.send(sender=self, instance=self.test_list_instance, created=True)
         self.assertEqual(len(mail.outbox), 1)
 
-    #----------------------------------------------------------------------
     def test_email_not_sent(self):
-        #no failing tests so
+        # no failing tests so
 
         notification = NotificationSubscription(group=self.group, warning_level=TOLERANCE)
         notification.save()
