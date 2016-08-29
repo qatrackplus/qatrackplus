@@ -134,7 +134,7 @@ class FrequencyManager(models.Manager):
 
     #----------------------------------------------------------------------
     def frequency_choices(self):
-        return self.get_query_set().values_list("slug", "name")
+        return self.get_queryset().values_list("slug", "name")
 
 
 #============================================================================
@@ -186,7 +186,7 @@ class StatusManager(models.Manager):
     def default(self):
         """return the default TestInstanceStatus"""
         try:
-            return self.get_query_set().get(is_default=True)
+            return self.get_queryset().get(is_default=True)
         except TestInstanceStatus.DoesNotExist:
             return
 
@@ -689,15 +689,14 @@ def get_utc_tl_ids(active=None, units=None, frequencies=None):
 
 class UnitTestInfoManager(models.Manager):
 
-    #----------------------------------------------------------------------
-    def get_query_set(self):
-        return super(UnitTestInfoManager, self).get_query_set()
+    def get_queryset(self):
+        return super(UnitTestInfoManager, self).get_queryset()
 
     def active(self, queryset=None):
         """Only return UTI's who's tests belong to at least 1 test list that
         is assigned to an active UnitTestCollection"""
 
-        qs = queryset or self.get_query_set()
+        qs = queryset or self.get_queryset()
 
         return qs.filter(
             test__testlistmembership__test_list__in=get_utc_tl_ids(active=True)
@@ -707,7 +706,7 @@ class UnitTestInfoManager(models.Manager):
         """Only return UTI's who's tests don't belong to at least 1 test list that
         is assigned to an active UnitTestCollection"""
 
-        qs = queryset or self.get_query_set()
+        qs = queryset or self.get_queryset()
 
         return qs.exclude(
             test__testlistmembership__test_list__in=get_utc_tl_ids(active=True)
@@ -845,7 +844,7 @@ class TestList(TestCollectionInterface):
     tests = models.ManyToManyField("Test", help_text=_("Which tests does this list contain"), through=TestListMembership)
 
     sublists = models.ManyToManyField("self",
-                                      symmetrical=False, null=True, blank=True,
+                                      symmetrical=False, blank=True,
                                       help_text=_("Choose any sublists that should be performed as part of this list.")
                                       )
 
@@ -886,11 +885,11 @@ class TestList(TestCollectionInterface):
 class UnitTestListManager(models.Manager):
     #----------------------------------------------------------------------
     def by_unit(self, unit):
-        return self.get_query_set().filter(unit=unit)
+        return self.get_queryset().filter(unit=unit)
 
     #----------------------------------------------------------------------
     def by_frequency(self, frequency):
-        return self.get_query_set().filter(frequency=frequency)
+        return self.get_queryset().filter(frequency=frequency)
 
     #----------------------------------------------------------------------
     def by_unit_frequency(self, unit, frequency):
@@ -898,13 +897,13 @@ class UnitTestListManager(models.Manager):
 
     #----------------------------------------------------------------------
     def test_lists(self):
-        return self.get_query_set().filter(
+        return self.get_queryset().filter(
             content_type=ContentType.objects.get(app_label="qa", model="testlist")
         )
 
     #----------------------------------------------------------------------
     def by_visibility(self, groups):
-        return self.get_query_set().filter(visible_to__in=groups)
+        return self.get_queryset().filter(visible_to__in=groups)
 
 
 class UnitTestCollection(models.Model):
@@ -917,7 +916,7 @@ class UnitTestCollection(models.Model):
     auto_schedule = models.BooleanField(help_text=_("If this is checked, due_date will be auto set based on the assigned frequency"), default=True)
 
     assigned_to = models.ForeignKey(Group, help_text=_("QA group that this test list should nominally be performed by"), null=True)
-    visible_to = models.ManyToManyField(Group, help_text=_("Select groups who will be able to see this test collection on this unit"), related_name="test_collection_visibility", default=Group.objects.all)
+    visible_to = models.ManyToManyField(Group, help_text=_("Select groups who will be able to see this test collection on this unit"), related_name="test_collection_visibility")
 
     active = models.BooleanField(help_text=_("Uncheck to disable this test on this unit"), default=True, db_index=True)
 
@@ -938,7 +937,6 @@ class UnitTestCollection(models.Model):
             ("can_review_non_visible_tli", "Can view tli and utc not visible to user's groups")
         )
 
-    #----------------------------------------------------------------------
     def calc_due_date(self):
         """return the next due date of this Unit/TestList pair """
 
@@ -1113,7 +1111,7 @@ class TestInstanceManager(models.Manager):
 
     #----------------------------------------------------------------------
     def complete(self):
-        return models.Manager.get_query_set(self).filter(test_list_instance__in_progress=False)
+        return models.Manager.get_queryset(self).filter(test_list_instance__in_progress=False)
 
 
 #============================================================================
@@ -1341,10 +1339,10 @@ class TestListInstanceManager(models.Manager):
         return self.your_unreviewed(user).count()
 
     def in_progress(self):
-        return self.get_query_set().filter(in_progress=True)
+        return self.get_queryset().filter(in_progress=True)
 
     def complete(self):
-        return self.get_query_set().filter(in_progress=False)
+        return self.get_queryset().filter(in_progress=False)
 
 
 #============================================================================

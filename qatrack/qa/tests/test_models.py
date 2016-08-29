@@ -629,7 +629,7 @@ class TestTestList(TestCase):
     #---------------------------------------------------------------------------
     def test_content_type(self):
         tl = utils.create_test_list()
-        self.assertEqual(tl.content_type(), ContentType.objects.get(name="test list"))
+        self.assertEqual(tl.content_type(), ContentType.objects.get(model="testlist"))
 
     #---------------------------------------------------------------------------
     def test_all_lists(self):
@@ -713,7 +713,7 @@ class TestTestListCycle(TestCase):
     #---------------------------------------------------------------------------
     def test_content_type(self):
         tl = utils.create_test_list()
-        self.assertEqual(tl.content_type(), ContentType.objects.get(name="test list"))
+        self.assertEqual(tl.content_type(), ContentType.objects.get(model="testlist"))
 
     #---------------------------------------------------------------------------
     def test_all_lists(self):
@@ -1664,6 +1664,10 @@ class TestTestListInstance(TestCase):
 
         self.ref = models.Reference(type=models.NUMERICAL, value=100.)
         self.tol = models.Tolerance(type=models.PERCENT, act_low=-3, tol_low=-2, tol_high=2, act_high=3)
+        self.ref.created_by = utils.create_user()
+        self.tol.created_by = utils.create_user()
+        self.ref.modified_by = utils.create_user()
+        self.tol.modified_by = utils.create_user()
         self.values = [None, None, 96, 97, 100, 100]
 
         self.statuses = [utils.create_status(name="status%d" % x, slug="status%d" % x) for x in range(len(self.values))]
@@ -1692,10 +1696,12 @@ class TestTestListInstance(TestCase):
             ti.test_list_instance = tli
             if i == 0:
                 ti.skipped = True
-            elif i == 1:
+            if i == 1:
                 ti.tolerance = None
                 ti.reference = None
-
+            else:
+                ti.reference.save()
+                ti.tolerance.save()
             ti.save()
         tli.save()
         return tli
@@ -1783,6 +1789,10 @@ class TestAutoReview(TestCase):
 
         self.ref = models.Reference(type=models.NUMERICAL, value=100.)
         self.tol = models.Tolerance(type=models.PERCENT, act_low=-3, tol_low=-2, tol_high=2, act_high=3)
+        self.ref.created_by = utils.create_user()
+        self.tol.created_by = utils.create_user()
+        self.ref.modified_by = utils.create_user()
+        self.tol.modified_by = utils.create_user()
         self.values = [96, 97, 100]
 
         self.statuses = [
@@ -1816,6 +1826,9 @@ class TestAutoReview(TestCase):
 
         tli = utils.create_test_list_instance(unit_test_collection=utc)
 
+        self.ref.save()
+        self.tol.save()
+
         for i, (v, test) in enumerate(zip(self.values, self.tests)):
             uti = models.UnitTestInfo.objects.get(test=test, unit=utc.unit)
             ti = utils.create_test_instance(tli, unit_test_info=uti, value=v, status=self.statuses[0])
@@ -1836,11 +1849,9 @@ class TestAutoReview(TestCase):
         for stat, tests in self.test_list_instance.status():
             self.assertEqual(len(tests), 1)
 
-
     #----------------------------------------------------------------------
     def test_review_status_with_coment(self):
         """Each of the three tests should have a different status"""
-
 
         uti = models.UnitTestInfo.objects.get(test=self.tests[0], unit=self.unit_test_collection.unit)
         ti = utils.create_test_instance(self.test_list_instance, unit_test_info=uti, value=self.ref.value, status=self.statuses[0])
@@ -1855,7 +1866,6 @@ class TestAutoReview(TestCase):
     #----------------------------------------------------------------------
     def test_review_status_with_tli_coment(self):
         """Each of the three tests should have a different status"""
-
 
         uti = models.UnitTestInfo.objects.get(test=self.tests[0], unit=self.unit_test_collection.unit)
         ti = utils.create_test_instance(self.test_list_instance, unit_test_info=uti, value=self.ref.value, status=self.statuses[0])

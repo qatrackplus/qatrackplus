@@ -401,7 +401,6 @@ class ChooseUnit(TemplateView):
         return context
 
 
-#============================================================================
 class PerformQA(PermissionRequiredMixin, CreateView):
     """
     This is the main view for users to complete a qa test list. i.e.
@@ -414,7 +413,6 @@ class PerformQA(PermissionRequiredMixin, CreateView):
     form_class = forms.CreateTestListInstanceForm
     model = models.TestListInstance
 
-    #----------------------------------------------------------------------
     def set_test_lists(self):
         """
         Set the :model:`qa.TestList` and the day that are to be performed.
@@ -430,7 +428,6 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
         self.all_lists = [self.test_list] + list(self.test_list.sublists.order_by("name"))
 
-    #----------------------------------------------------------------------
     def set_all_tests(self):
         """Find all tests to be performed, including tests from sublists"""
 
@@ -439,7 +436,6 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             tests = test_list.tests.all().order_by("testlistmembership__order")
             self.all_tests.extend(tests)
 
-    #----------------------------------------------------------------------
     def set_unit_test_collection(self):
         """Set the requested :model:`qa.UnitTestCollection` to be performed."""
 
@@ -453,7 +449,6 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             pk=self.kwargs["pk"]
         )
 
-    #----------------------------------------------------------------------
     def set_last_day(self):
         """Set the last day performed for the current :model:`UnitTestCollection`"""
 
@@ -462,7 +457,6 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         if self.unit_test_col.last_instance:
             self.last_day = self.unit_test_col.last_instance.day + 1
 
-    #---------------------------------------------------------------
     def template_unit_test_infos(self):
         """Convert :model:`qa.UnitTestInfo` into dicts for rendering in template"""
 
@@ -477,7 +471,6 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
         return template_utis
 
-    #----------------------------------------------------------------------
     def set_unit_test_infos(self):
         """Find and order all :model:`qa.UniTestInfo` objects for tests to be performed"""
 
@@ -488,7 +481,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         ).select_related(
             "reference",
             "test__category",
-            "test__pk",
+            # "test__pk",
             "tolerance",
             "unit",
         )
@@ -505,7 +498,6 @@ class PerformQA(PermissionRequiredMixin, CreateView):
                 logger.error(msg + " Test=%d" % test.pk)
                 messages.error(self.request, _(msg))
 
-    #----------------------------------------------------------------------
     def add_histories(self, forms):
         """paste historical values onto unit test infos (ugly)"""
 
@@ -517,7 +509,6 @@ class PerformQA(PermissionRequiredMixin, CreateView):
                     form.history = hist
                     break
 
-    #---------------------------------------------------------------------------
     def get_test_status(self, form):
         """return default or user requested :model:`qa.TestInstanceStatus`"""
 
@@ -529,7 +520,6 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             self.user_set_status = False
             return models.TestInstanceStatus.objects.default()
 
-    #----------------------------------------------------------------------
     def form_valid(self, form):
         """
         TestListInstance form has validated, now check for validity of

@@ -208,13 +208,13 @@ INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
-    'django.contrib.formtools',
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
 
+    'formtools',
     'tastypie',
     'listable',
     'genericdropdown',
@@ -229,7 +229,7 @@ INSTALLED_APPS = [
     'qatrack.notifications',
     'qatrack.contacts',
 
-    'south',
+    # 'south',
     'admin_views',
 ]
 #-----------------------------------------------------------------------------

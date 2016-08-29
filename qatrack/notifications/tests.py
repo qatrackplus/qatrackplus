@@ -15,6 +15,10 @@ class TestEmailSent(TestCase):
 
         self.ref = models.Reference(type=models.NUMERICAL, value=100.)
         self.tol = models.Tolerance(type=models.PERCENT, act_low=-3, tol_low=-2, tol_high=2, act_high=3)
+        self.ref.created_by = utils.create_user()
+        self.tol.created_by = utils.create_user()
+        self.ref.modified_by = utils.create_user()
+        self.tol.modified_by = utils.create_user()
         self.values = [None, None, 96, 97, 100, 100]
 
         self.statuses = [utils.create_status(name="status%d" % x, slug="status%d" % x) for x in range(len(self.values))]
@@ -48,9 +52,12 @@ class TestEmailSent(TestCase):
             ti.tolerance = self.tol
             if i == 0:
                 ti.skipped = True
-            elif i == 1:
+            if i == 1:
                 ti.tolerance = None
                 ti.reference = None
+            else:
+                ti.reference.save()
+                ti.tolerance.save()
 
             ti.save()
         tli.save()

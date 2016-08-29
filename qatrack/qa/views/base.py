@@ -62,8 +62,8 @@ class TestListInstanceMixin(SelectRelatedMixin, PrefetchRelatedMixin):
         "testinstance_set__status",
     ]
     select_related = [
-        "unittestcollection",
-        "unittestcollection__unit",
+        "unit_test_collection",
+        "unit_test_collection__unit",
         "created_by",
         "modified_by",
         "test_list",
@@ -343,7 +343,7 @@ class TestListInstances(BaseListableView):
 
     select_related = (
         "test_list__name",
-        "testinstance__status",
+        # "testinstance_set__status",
         "unit_test_collection__unit__name",
         "unit_test_collection__frequency__due_interval",
         "created_by", "modified_by", "reviewed_by",

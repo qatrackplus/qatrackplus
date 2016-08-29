@@ -70,7 +70,7 @@
 
     <form class="nosubmit form-inline" id="qa-form" method="POST" action="" autocomplete="off">
         {% csrf_token %}
-
+        {{ form.errors }}
         <div id="box-contacts" class="row" style="display: none;">
             <div class="col-lg-12">
                 <div class="box box-info">
@@ -141,78 +141,72 @@
             </div>
         {% endif %}
 
-        {% if perms.qa.can_review and perms.qa.can_review_own_tests or perms.qa.can_override_date %}
-            <div id="box-admin" class="row">
-                <div class="col-lg-12">
-                    <div class="box box-primary">
-                        <div class="box-header">
-                            <h3 class="box-title">
-                                <i class="fa fa-wrench" aria-hidden="true"></i>
-                                Admin Options
-                            </h3>
-                        </div>
-                        <div class="box-body">
-                            <div class="row">
-                                <div class="col-md-4 left-border border-default">
-                                    <div class="date input-prepend input-append row" id="work-started" data-date="{% now 'd-m-Y'%}" data-date-format="dd-mm-yyyy">
-                                        {% spaceless %}
-                                            <label for="id_work_started" class="col-lg-6">
-                                                {{form.work_started.label}}:
-                                            </label>
-                                            <div class="col-lg-6">
-                                                {% if perms.qa.can_override_date %}
-                                                    {{form.work_started}}
-                                                    <i class="fa fa-calendar fa-in-input"></i>
-                                                {% else %}
-                                                    {{form.work_started|disableinput}}
-                                                {% endif %}
-                                            </div>
-                                        {% endspaceless %}
+        <div id="box-admin" class="row" style="display: {% if perms.qa.can_review and perms.qa.can_review_own_tests or perms.qa.can_override_date %}block{% else %}none{% endif %};">
+            <div class="col-lg-12">
+                <div class="box box-primary">
+                    <div class="box-header">
+                        <h3 class="box-title">
+                            <i class="fa fa-wrench" aria-hidden="true"></i>
+                            Admin Options
+                        </h3>
+                    </div>
+                    <div class="box-body">
+                        <div class="row">
+                            <div class="col-md-4 left-border border-default">
+                                <div class="date input-prepend input-append row" id="work-started" data-date="{% now 'd-m-Y'%}" data-date-format="dd-mm-yyyy">
+                                    {% spaceless %}
+                                        <label for="id_work_started" class="col-lg-6">
+                                            {{form.work_started.label}}:
+                                        </label>
+                                        <div class="col-lg-6">
+                                            {{form.work_started}}
+                                            <i class="fa fa-calendar fa-in-input"></i>
+                                        </div>
+                                    {% endspaceless %}
+                                </div>
+
+                                {% if perms.qa.can_override_date %}
+                                    <div class="date input-prepend input-append row" id="work-time">
+                                        <label for="id_work_duration" class="col-lg-6">
+                                            Work duration:
+                                        </label>
+                                        <div class="col-lg-6">
+                                            <input id="id_work_duration" name="work_duration" class="input-medium">
+                                            <i class="fa fa-clock-o fa-in-input"></i>
+                                        </div>
                                     </div>
 
-                                    {% if perms.qa.can_override_date %}
-                                        <div class="date input-prepend input-append row" id="work-time">
-                                            <label for="id_work_duration" class="col-lg-6">
-                                                Work duration:
-                                            </label>
-                                            <div class="col-lg-6">
-                                                <input id="id_work_duration" class="input-medium">
-                                                <i class="fa fa-clock-o fa-in-input"></i>
-                                            </div>
+                                    <div class="date input-prepend input-append row" id="work-completed" data-date="{% now 'd-m-Y'%}" data-date-format="dd-mm-yyyy">
+                                        <label for="id_work_completed" class="col-lg-6">
+                                            {{form.work_completed.label}}:
+                                        </label>
+                                        <div class="col-lg-6">
+                                            {{form.work_completed}}
+                                            <i class="fa fa-calendar fa-in-input"></i>
                                         </div>
-
-                                        <div class="date input-prepend input-append row" id="work-completed" data-date="{% now 'd-m-Y'%}" data-date-format="dd-mm-yyyy">
-                                            <label for="id_work_completed" class="col-lg-6">
-                                                {{form.work_completed.label}}:
-                                            </label>
-                                            <div class="col-lg-6">
-                                                {{form.work_completed}}
-                                                <i class="fa fa-calendar fa-in-input"></i>
-                                            </div>
-                                        </div>
-                                    {% endif %}
-                                </div>
-
-                                <div class="col-md-4 left-border border-default">
-                                    {% if perms.qa.can_review and perms.qa.can_review_own_tests %}
-                                        <div class="input-prepend input-append row" id="status">
-                                            <label for="id_status" class="col-lg-6">
-                                                Set Status:
-                                            </label>
-                                            <div class="col-lg-6">
-                                                {{form.status}}
-                                            </div>
-                                        </div>
-                                    {% endif %}
-
-                                </div>
-                                <div class="col-md-4 left-border border-default"></div>
+                                    </div>
+                                {% endif %}
                             </div>
+
+                            <div class="col-md-4 left-border border-default">
+                                {% if perms.qa.can_review and perms.qa.can_review_own_tests %}
+                                    <div class="input-prepend input-append row" id="status">
+                                        <label for="id_status" class="col-lg-6">
+                                            Set Status:
+                                        </label>
+                                        <div class="col-lg-6">
+                                            {{form.status}}
+                                        </div>
+                                    </div>
+                                {% endif %}
+
+                            </div>
+                            <div class="col-md-4 left-border border-default"></div>
                         </div>
                     </div>
                 </div>
             </div>
-        {% endif %}
+        </div>
 
         <div id="box-perform" class="row">
             <div class="col-lg-12">
@@ -386,10 +380,12 @@
                     </a></li>
                 {% endif %}
 
-                <li class="primary toggle-element active" data-toggle="admin"><a id="toggle-options" href="#!">
-                    <i class="fa fa-wrench fa-fw" aria-hidden="true"></i>
-                    <span>Admin Options</span>
-                </a></li>
+                {% if perms.qa.can_review and perms.qa.can_review_own_tests or perms.qa.can_override_date %}
+                    <li class="primary toggle-element active" data-toggle="admin"><a id="toggle-options" href="#!">
+                        <i class="fa fa-wrench fa-fw" aria-hidden="true"></i>
+                        <span>Admin Options</span>
+                    </a></li>
+                {% endif %}
 
                 {# Category selection #}
                 {% if perms.qa.can_perform_subset and categories|length > 1 %}

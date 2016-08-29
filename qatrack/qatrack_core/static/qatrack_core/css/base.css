@@ -39,6 +39,7 @@ ul.nav li.dropdown:hover ul.dropdown-menu{
 
 .dropdown-menu  {
     box-shadow: 2px 6px 4px rgba(53, 124, 165, .25);
+    border: 1px solid #bbb;
 }
 .popover {
     box-shadow: 2px 6px 4px rgba(53, 124, 165, .25);

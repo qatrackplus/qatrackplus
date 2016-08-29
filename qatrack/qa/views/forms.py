@@ -230,7 +230,6 @@ class ReviewTestInstanceFormSet(UserFormsetMixin, BaseReviewTestInstanceFormSet)
     pass
 
 
-#============================================================================
 class BaseTestListInstanceForm(forms.ModelForm):
     """parent form for performing or updating a qa test list"""
 
@@ -240,15 +239,14 @@ class BaseTestListInstanceForm(forms.ModelForm):
     )
 
     work_completed = forms.DateTimeField(required=False)
+    # work_duration = forms.DurationField(required=False)
 
     modified = forms.DateTimeField(required=False)
 
-    #----------------------------------------------------------------------
     class Meta:
         model = models.TestListInstance
         exclude = ("day",)
 
-    #----------------------------------------------------------------------
     def __init__(self, *args, **kwargs):
         super(BaseTestListInstanceForm, self).__init__(*args, **kwargs)
 
@@ -269,7 +267,6 @@ class BaseTestListInstanceForm(forms.ModelForm):
         self.fields["comment"].widget.attrs["placeholder"] = "Add comment about this set of tests"
         # self.fields["comment"].widget.attrs.pop("cols")
 
-    #---------------------------------------------------------------------------
     def clean(self):
         """validate the work_completed & work_started values"""
 
@@ -289,7 +286,7 @@ class BaseTestListInstanceForm(forms.ModelForm):
 
         if work_started and work_completed:
             if work_completed == work_started:
-                cleaned_data["work_started"] -= timezone.timedelta(minutes=1)
+                cleaned_data["work_completed"] = timezone.now().astimezone(timezone.get_current_timezone())
             elif work_completed < work_started:
                 self._errors["work_started"] = self.error_class(["Work started date/time can not be after work completed date/time"])
                 del cleaned_data["work_started"]
@@ -303,11 +300,9 @@ class BaseTestListInstanceForm(forms.ModelForm):
         return cleaned_data
 
 
-#============================================================================
 class CreateTestListInstanceForm(BaseTestListInstanceForm):
     """form for doing qa test list"""
 
-    #----------------------------------------------------------------------
     def __init__(self, *args, **kwargs):
         super(CreateTestListInstanceForm, self).__init__(*args, **kwargs)
         self.fields["work_started"].initial = timezone.localtime(timezone.now()).strftime(settings.INPUT_DATE_FORMATS[0])

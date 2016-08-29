@@ -55,6 +55,7 @@ class TestInfoForm(forms.ModelForm):
 
     class Meta:
         model = models.UnitTestInfo
+        fields = '__all__'
 
     def __init__(self, *args, **kwargs):
         super(TestInfoForm, self).__init__(*args, **kwargs)
@@ -527,6 +528,7 @@ class TestForm(forms.ModelForm):
 
     class Meta:
         model = models.Test
+        fields = '__all__'
 
     def clean(self):
         """if test already has some history don't allow for the test type to be changed"""
@@ -668,11 +670,9 @@ class ActiveFilter(admin.SimpleListFilter):
         return queryset
 
 
-testlist_ct_id = models.ContentType.objects.get_for_model(models.TestList).pk
-testlistcycle_ct_id = models.ContentType.objects.get_for_model(models.TestListCycle).pk
-
-
 def utc_name(utc):
+    testlist_ct_id = models.ContentType.objects.get_for_model(models.TestList).pk
+    testlistcycle_ct_id = models.ContentType.objects.get_for_model(models.TestListCycle).pk
     if utc.content_type.pk == testlist_ct_id:
         return models.TestList.objects.get(pk=utc.object_id).name
     elif utc.content_type.pk == testlistcycle_ct_id:
@@ -722,7 +722,7 @@ class UnitTestCollectionAdmin(admin.ModelAdmin):
         return queryset, True
 
     def get_queryset(self, *args, **kwargs):
-        qs = super(UnitTestCollectionAdmin, self).queryset(*args, **kwargs)
+        qs = super(UnitTestCollectionAdmin, self).get_queryset(*args, **kwargs)
         return qs.select_related(
             "unit__name",
             "frequency__name",

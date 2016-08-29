@@ -85,7 +85,7 @@ def find_assigned_unit_test_collections(collection):
         ContentType.objects.get_for_model(collection): [collection],
     }
 
-    parent_types = [x._meta.module_name + "_set" for x in models.TestCollectionInterface.__subclasses__()]
+    parent_types = [x._meta.model_name + "_set" for x in models.TestCollectionInterface.__subclasses__()]
 
     for parent_type in parent_types:
 

@@ -131,392 +131,392 @@ class TestURLS(TestCase):
 
 
 #============================================================================
-class TestControlImage(TestCase):
-
-    #----------------------------------------------------------------------
-    def setUp(self):
-        self.factory = RequestFactory()
-        self.view = views.charts.ControlChartImage.as_view()
-        self.url = reverse("control_chart")
-
-    #---------------------------------------------------------------
-    def tearDown(self):
-        models.Test.objects.all().delete()
-        models.TestList.objects.all().delete()
-        models.Unit.objects.all().delete()
-
-    #----------------------------------------------------------------------
-    def test_not_enough_data(self):
-        request = self.factory.get(self.url)
-        request.user = superuser
-        response = self.view(request)
-
-        self.assertTrue(response.get("content-type"), "image/png")
-
-    #----------------------------------------------------------------------
-    def test_baseline_subgroups(self):
-
-        tl = utils.create_test_list()
-        test = utils.create_test()
-        unit = utils.create_unit()
-        utils.create_unit_test_info(test=test, unit=unit)
-
-        utils.create_status()
-        yesterday = timezone.now().date() - timezone.timedelta(days=1)
-        tomorrow = yesterday + timezone.timedelta(days=2)
-
-        for n in [-1, 0, 1, 2, "nonnumber"]:
-            url = self.make_url(test.pk, tl.pk, unit.pk, yesterday, tomorrow, n_base=n)
-            request = self.factory.get(url)
-            request.user = superuser
-            response = self.view(request)
-            self.assertTrue(response.get("content-type"), "image/png")
-
-    #----------------------------------------------------------------------
-    def test_invalid_subgroup_size(self):
-        tl = utils.create_test_list()
-        test = utils.create_test()
-        unit = utils.create_unit()
-        utils.create_unit_test_info(test=test, unit=unit)
-
-        utils.create_status()
-        yesterday = timezone.now().date() - timezone.timedelta(days=1)
-        tomorrow = yesterday + timezone.timedelta(days=2)
-
-        for n in [-1, 0, 101, "nonnumber"]:
-            url = self.make_url(test.pk, tl.pk, unit.pk, yesterday, tomorrow, sg_size=n)
-            request = self.factory.get(url)
-            request.user = superuser
-            response = self.view(request)
-            self.assertTrue(response.get("content-type"), "image/png")
-
-    #----------------------------------------------------------------------
-    def test_include_fit(self):
-        for f in ["true", "false"]:
-            request = self.factory.get(self.url + "?fit_data=%s" % f)
-            request.user = superuser
-            response = self.view(request)
-            self.assertTrue(response.get("content-type"), "image/png")
-
-    #----------------------------------------------------------------------
-    def make_url(self, pk, tl_pk, upk, from_date, to_date, sg_size=2, n_base=2, fit="true"):
-        url = self.url + "?subgroup_size=%s&n_baseline_subgroups=%s&fit_data=%s" % (sg_size, n_base, fit)
-        url += "&tests[]=%s" % pk
-        url += "&test_lists[]=%s" % tl_pk
-        url += "&units[]=%s" % upk
-        url += "&statuses[]=%s" % models.TestInstanceStatus.objects.all()[0].pk
-        url += "&from_date=%s" % from_date.strftime(settings.SIMPLE_DATE_FORMAT)
-        url += "&to_date=%s" % to_date.strftime(settings.SIMPLE_DATE_FORMAT)
-        return url
-
-    #----------------------------------------------------------------------
-    def test_valid(self):
-        tl = utils.create_test_list()
-        test = utils.create_test()
-        utils.create_test_list_membership(tl, test)
-        unit = utils.create_unit()
-        utc = utils.create_unit_test_collection(test_collection=tl, unit=unit)
-        uti = models.UnitTestInfo.objects.get(test=test, unit=unit)
-
-        status = utils.create_status()
-
-        yesterday = timezone.now().date() - timezone.timedelta(days=1)
-        tomorrow = yesterday + timezone.timedelta(days=2)
-        url = self.make_url(test.pk, tl.pk, unit.pk, yesterday, tomorrow)
-
-        for n in (1, 1, 8, 90):
-            for x in range(n):
-                tli = utils.create_test_list_instance(unit_test_collection=utc)
-                utils.create_test_instance(
-                    tli,
-                    unit_test_info=uti,
-                    value=random.gauss(1, 0.5),
-                    status=status,
-                )
-
-            request = self.factory.get(url)
-            request.user = superuser
-            response = self.view(request)
-            self.assertTrue(response.get("content-type"), "image/png")
-
-    #----------------------------------------------------------------------
-    def test_invalid(self):
-        tl = utils.create_test_list()
-        test = utils.create_test()
-        unit = utils.create_unit()
-        uti = utils.create_unit_test_info(test=test, unit=unit)
-        utc = utils.create_unit_test_collection(test_collection=tl, unit=unit)
-        tli = utils.create_test_list_instance(unit_test_collection=utc)
-
-        status = utils.create_status()
-
-        yesterday = timezone.now().date() - timezone.timedelta(days=1)
-        tomorrow = yesterday + timezone.timedelta(days=2)
-
-        url = self.make_url(test.pk, tl.pk, unit.pk, yesterday, yesterday)
-        request = self.factory.get(url)
-        request.user = superuser
-        response = self.view(request)
-        self.assertTrue(response.get("content-type"), "image/png")
-
-        url = self.make_url(test.pk, tl.pk, unit.pk, yesterday, tomorrow, fit="true")
-
-        # generate some data that the control chart fit function won't be able to fit
-        for x in range(10):
-            utils.create_test_instance(
-                tli,
-                value=x,
-                status=status,
-                unit_test_info=uti
-            )
-
-        request = self.factory.get(url)
-        request.user = superuser
-        response = self.view(request)
-        self.assertTrue(response.get("content-type"), "image/png")
-
-    #----------------------------------------------------------------------
-    def test_fails(self):
-        tl = utils.create_test_list()
-        test = utils.create_test()
-        unit = utils.create_unit()
-        uti = utils.create_unit_test_info(test=test, unit=unit)
-        utc = utils.create_unit_test_collection(test_collection=tl, unit=unit)
-        tli = utils.create_test_list_instance(unit_test_collection=utc)
-
-        status = utils.create_status()
-
-        yesterday = timezone.now().date() - timezone.timedelta(days=1)
-        tomorrow = yesterday + timezone.timedelta(days=2)
-
-        url = self.make_url(test.pk, tl.pk, unit.pk, yesterday, yesterday)
-        request = self.factory.get(url)
-        request.user = superuser
-        response = self.view(request)
-        self.assertTrue(response.get("content-type"), "image/png")
-
-        url = self.make_url(test.pk, tl.pk, unit.pk, yesterday, tomorrow, fit="true")
-        import qatrack.qa.control_chart
-        old_display = qatrack.qa.control_chart.control_chart.display
-
-        def mock_display(*args, **kwargs):
-            raise RuntimeError("test")
-
-        qatrack.qa.control_chart.control_chart.display = mock_display
-        # generate some data that the control chart fit function won't be able to fit
-        for x in range(10):
-            utils.create_test_instance(
-                tli,
-                value=x,
-                status=status,
-                unit_test_info=uti
-            )
-
-        request = self.factory.get(url)
-        request.user = superuser
-        response = self.view(request)
-        self.assertTrue(response.get("content-type"), "image/png")
-        qatrack.qa.control_chart.control_chart.display = old_display
+# class TestControlImage(TestCase):
+#
+#     #----------------------------------------------------------------------
+#     def setUp(self):
+#         self.factory = RequestFactory()
+#         self.view = views.charts.ControlChartImage.as_view()
+#         self.url = reverse("control_chart")
+#
+#     #---------------------------------------------------------------
+#     def tearDown(self):
+#         models.Test.objects.all().delete()
+#         models.TestList.objects.all().delete()
+#         models.Unit.objects.all().delete()
+#
+#     #----------------------------------------------------------------------
+#     def test_not_enough_data(self):
+#         request = self.factory.get(self.url)
+#         request.user = superuser
+#         response = self.view(request)
+#
+#         self.assertTrue(response.get("content-type"), "image/png")
+#
+#     #----------------------------------------------------------------------
+#     def test_baseline_subgroups(self):
+#
+#         tl = utils.create_test_list()
+#         test = utils.create_test()
+#         unit = utils.create_unit()
+#         utils.create_unit_test_info(test=test, unit=unit)
+#
+#         utils.create_status()
+#         yesterday = timezone.now().date() - timezone.timedelta(days=1)
+#         tomorrow = yesterday + timezone.timedelta(days=2)
+#
+#         for n in [-1, 0, 1, 2, "nonnumber"]:
+#             url = self.make_url(test.pk, tl.pk, unit.pk, yesterday, tomorrow, n_base=n)
+#             request = self.factory.get(url)
+#             request.user = superuser
+#             response = self.view(request)
+#             self.assertTrue(response.get("content-type"), "image/png")
+#
+#     #----------------------------------------------------------------------
+#     def test_invalid_subgroup_size(self):
+#         tl = utils.create_test_list()
+#         test = utils.create_test()
+#         unit = utils.create_unit()
+#         utils.create_unit_test_info(test=test, unit=unit)
+#
+#         utils.create_status()
+#         yesterday = timezone.now().date() - timezone.timedelta(days=1)
+#         tomorrow = yesterday + timezone.timedelta(days=2)
+#
+#         for n in [-1, 0, 101, "nonnumber"]:
+#             url = self.make_url(test.pk, tl.pk, unit.pk, yesterday, tomorrow, sg_size=n)
+#             request = self.factory.get(url)
+#             request.user = superuser
+#             response = self.view(request)
+#             self.assertTrue(response.get("content-type"), "image/png")
+#
+#     #----------------------------------------------------------------------
+#     def test_include_fit(self):
+#         for f in ["true", "false"]:
+#             request = self.factory.get(self.url + "?fit_data=%s" % f)
+#             request.user = superuser
+#             response = self.view(request)
+#             self.assertTrue(response.get("content-type"), "image/png")
+#
+#     #----------------------------------------------------------------------
+#     def make_url(self, pk, tl_pk, upk, from_date, to_date, sg_size=2, n_base=2, fit="true"):
+#         url = self.url + "?subgroup_size=%s&n_baseline_subgroups=%s&fit_data=%s" % (sg_size, n_base, fit)
+#         url += "&tests[]=%s" % pk
+#         url += "&test_lists[]=%s" % tl_pk
+#         url += "&units[]=%s" % upk
+#         url += "&statuses[]=%s" % models.TestInstanceStatus.objects.all()[0].pk
+#         url += "&from_date=%s" % from_date.strftime(settings.SIMPLE_DATE_FORMAT)
+#         url += "&to_date=%s" % to_date.strftime(settings.SIMPLE_DATE_FORMAT)
+#         return url
+#
+#     #----------------------------------------------------------------------
+#     def test_valid(self):
+#         tl = utils.create_test_list()
+#         test = utils.create_test()
+#         utils.create_test_list_membership(tl, test)
+#         unit = utils.create_unit()
+#         utc = utils.create_unit_test_collection(test_collection=tl, unit=unit)
+#         uti = models.UnitTestInfo.objects.get(test=test, unit=unit)
+#
+#         status = utils.create_status()
+#
+#         yesterday = timezone.now().date() - timezone.timedelta(days=1)
+#         tomorrow = yesterday + timezone.timedelta(days=2)
+#         url = self.make_url(test.pk, tl.pk, unit.pk, yesterday, tomorrow)
+#
+#         for n in (1, 1, 8, 90):
+#             for x in range(n):
+#                 tli = utils.create_test_list_instance(unit_test_collection=utc)
+#                 utils.create_test_instance(
+#                     tli,
+#                     unit_test_info=uti,
+#                     value=random.gauss(1, 0.5),
+#                     status=status,
+#                 )
+#
+#             request = self.factory.get(url)
+#             request.user = superuser
+#             response = self.view(request)
+#             self.assertTrue(response.get("content-type"), "image/png")
+#
+#     #----------------------------------------------------------------------
+#     def test_invalid(self):
+#         tl = utils.create_test_list()
+#         test = utils.create_test()
+#         unit = utils.create_unit()
+#         uti = utils.create_unit_test_info(test=test, unit=unit)
+#         utc = utils.create_unit_test_collection(test_collection=tl, unit=unit)
+#         tli = utils.create_test_list_instance(unit_test_collection=utc)
+#
+#         status = utils.create_status()
+#
+#         yesterday = timezone.now().date() - timezone.timedelta(days=1)
+#         tomorrow = yesterday + timezone.timedelta(days=2)
+#
+#         url = self.make_url(test.pk, tl.pk, unit.pk, yesterday, yesterday)
+#         request = self.factory.get(url)
+#         request.user = superuser
+#         response = self.view(request)
+#         self.assertTrue(response.get("content-type"), "image/png")
+#
+#         url = self.make_url(test.pk, tl.pk, unit.pk, yesterday, tomorrow, fit="true")
+#
+#         # generate some data that the control chart fit function won't be able to fit
+#         for x in range(10):
+#             utils.create_test_instance(
+#                 tli,
+#                 value=x,
+#                 status=status,
+#                 unit_test_info=uti
+#             )
+#
+#         request = self.factory.get(url)
+#         request.user = superuser
+#         response = self.view(request)
+#         self.assertTrue(response.get("content-type"), "image/png")
+#
+#     #----------------------------------------------------------------------
+#     def test_fails(self):
+#         tl = utils.create_test_list()
+#         test = utils.create_test()
+#         unit = utils.create_unit()
+#         uti = utils.create_unit_test_info(test=test, unit=unit)
+#         utc = utils.create_unit_test_collection(test_collection=tl, unit=unit)
+#         tli = utils.create_test_list_instance(unit_test_collection=utc)
+#
+#         status = utils.create_status()
+#
+#         yesterday = timezone.now().date() - timezone.timedelta(days=1)
+#         tomorrow = yesterday + timezone.timedelta(days=2)
+#
+#         url = self.make_url(test.pk, tl.pk, unit.pk, yesterday, yesterday)
+#         request = self.factory.get(url)
+#         request.user = superuser
+#         response = self.view(request)
+#         self.assertTrue(response.get("content-type"), "image/png")
+#
+#         url = self.make_url(test.pk, tl.pk, unit.pk, yesterday, tomorrow, fit="true")
+#         import qatrack.qa.control_chart
+#         old_display = qatrack.qa.control_chart.control_chart.display
+#
+#         def mock_display(*args, **kwargs):
+#             raise RuntimeError("test")
+#
+#         qatrack.qa.control_chart.control_chart.display = mock_display
+#         # generate some data that the control chart fit function won't be able to fit
+#         for x in range(10):
+#             utils.create_test_instance(
+#                 tli,
+#                 value=x,
+#                 status=status,
+#                 unit_test_info=uti
+#             )
+#
+#         request = self.factory.get(url)
+#         request.user = superuser
+#         response = self.view(request)
+#         self.assertTrue(response.get("content-type"), "image/png")
+#         qatrack.qa.control_chart.control_chart.display = old_display
 
 
 #====================================================================================
-class TestChartView(TestCase):
-
-    #----------------------------------------------------------------------
-    def setUp(self):
-        self.factory = RequestFactory()
-        freq = utils.create_frequency()
-
-        self.tls = []
-        self.units = []
-        self.tests = []
-        for i in range(1, 3):
-            unit = utils.create_unit(number=i)
-            self.units.append(unit)
-            tl = utils.create_test_list(name="tl%s" % i)
-            self.tls.append(tl)
-            test = utils.create_test(name="test%s" % i)
-            self.tests.append(test)
-            utils.create_test_list_membership(tl, test)
-            utils.create_unit_test_collection(unit=unit, test_collection=tl, frequency=freq)
-
-    #----------------------------------------------------------------------
-    def test_get_test_lists_for_unit_frequencies_all(self):
-
-        url = reverse("charts_testlists")
-        request = self.factory.get(url)
-        response = qatrack.qa.views.charts.get_test_lists_for_unit_frequencies(request)
-        values = json.loads(response.content)
-        expected = {"test_lists": [tl.pk for tl in self.tls]}
-        self.assertDictEqual(values, expected)
-
-    #----------------------------------------------------------------------
-    def test_get_test_lists_for_unit_frequencies_filtered(self):
-
-        url = reverse("charts_testlists")+"?units[]=%d" % (self.units[0].pk)
-        request = self.factory.get(url)
-        response = qatrack.qa.views.charts.get_test_lists_for_unit_frequencies(request)
-        values = json.loads(response.content)
-        expected = {"test_lists": [self.tls[0].pk]}
-        self.assertDictEqual(values, expected)
-
-    #----------------------------------------------------------------------
-    def test_get_tests_for_test_lists_all(self):
-
-        url = reverse("charts_tests")
-        request = self.factory.get(url)
-        response = qatrack.qa.views.charts.get_tests_for_test_lists(request)
-        values = json.loads(response.content)
-        expected = {"tests": [t.pk for t in self.tests]}
-        self.assertDictEqual(values, expected)
-
-    #----------------------------------------------------------------------
-    def test_get_tests_for_test_lists_filtered(self):
-
-        url = reverse("charts_tests")+"?test_lists[]=%d" % (self.tls[0].pk)
-        request = self.factory.get(url)
-        response = qatrack.qa.views.charts.get_tests_for_test_lists(request)
-        values = json.loads(response.content)
-        expected = {"tests": [self.tests[0].pk]}
-        self.assertDictEqual(values, expected)
-
-    def test_instance_to_point_relative_with_none_tol(self):
-
-        ref = qatrack.qa.models.Reference(value=100)
-        tol = utils.create_tolerance(
-            tol_type=models.PERCENT,
-            tol_low=None,
-            tol_high=None
-        )
-        ti = qatrack.qa.models.TestInstance(
-            reference=ref,
-            tolerance=tol,
-            value=100
-        )
-        ti.value_display = lambda: str(ti.value)
-        view = views.charts.BaseChartView()
-        point = view.test_instance_to_point(ti, relative=True)
-        self.assertIsNone(point['tol_low'])
+# class TestChartView(TestCase):
+#
+#     #----------------------------------------------------------------------
+#     def setUp(self):
+#         self.factory = RequestFactory()
+#         freq = utils.create_frequency()
+#
+#         self.tls = []
+#         self.units = []
+#         self.tests = []
+#         for i in range(1, 3):
+#             unit = utils.create_unit(number=i)
+#             self.units.append(unit)
+#             tl = utils.create_test_list(name="tl%s" % i)
+#             self.tls.append(tl)
+#             test = utils.create_test(name="test%s" % i)
+#             self.tests.append(test)
+#             utils.create_test_list_membership(tl, test)
+#             utils.create_unit_test_collection(unit=unit, test_collection=tl, frequency=freq)
+#
+#     #----------------------------------------------------------------------
+#     def test_get_test_lists_for_unit_frequencies_all(self):
+#
+#         url = reverse("charts_testlists")
+#         request = self.factory.get(url)
+#         response = qatrack.qa.views.charts.get_test_lists_for_unit_frequencies(request)
+#         values = json.loads(response.content)
+#         expected = {"test_lists": [tl.pk for tl in self.tls]}
+#         self.assertDictEqual(values, expected)
+#
+#     #----------------------------------------------------------------------
+#     def test_get_test_lists_for_unit_frequencies_filtered(self):
+#
+#         url = reverse("charts_testlists")+"?units[]=%d" % (self.units[0].pk)
+#         request = self.factory.get(url)
+#         response = qatrack.qa.views.charts.get_test_lists_for_unit_frequencies(request)
+#         values = json.loads(response.content)
+#         expected = {"test_lists": [self.tls[0].pk]}
+#         self.assertDictEqual(values, expected)
+#
+#     #----------------------------------------------------------------------
+#     def test_get_tests_for_test_lists_all(self):
+#
+#         url = reverse("charts_tests")
+#         request = self.factory.get(url)
+#         response = qatrack.qa.views.charts.get_tests_for_test_lists(request)
+#         values = json.loads(response.content)
+#         expected = {"tests": [t.pk for t in self.tests]}
+#         self.assertDictEqual(values, expected)
+#
+#     #----------------------------------------------------------------------
+#     def test_get_tests_for_test_lists_filtered(self):
+#
+#         url = reverse("charts_tests")+"?test_lists[]=%d" % (self.tls[0].pk)
+#         request = self.factory.get(url)
+#         response = qatrack.qa.views.charts.get_tests_for_test_lists(request)
+#         values = json.loads(response.content)
+#         expected = {"tests": [self.tests[0].pk]}
+#         self.assertDictEqual(values, expected)
+#
+#     def test_instance_to_point_relative_with_none_tol(self):
+#
+#         ref = qatrack.qa.models.Reference(value=100)
+#         tol = utils.create_tolerance(
+#             tol_type=models.PERCENT,
+#             tol_low=None,
+#             tol_high=None
+#         )
+#         ti = qatrack.qa.models.TestInstance(
+#             reference=ref,
+#             tolerance=tol,
+#             value=100
+#         )
+#         ti.value_display = lambda: str(ti.value)
+#         view = views.charts.BaseChartView()
+#         point = view.test_instance_to_point(ti, relative=True)
+#         self.assertIsNone(point['tol_low'])
 
 
 #============================================================================
-class TestChartData(TestCase):
-
-    #----------------------------------------------------------------------
-    def setUp(self):
-        self.url = reverse("chart_data")
-        self.view = views.charts.BasicChartData.as_view()
-
-        self.status = utils.create_status()
-        ref = utils.create_reference(value=1.)
-        tol = utils.create_tolerance(tol_type=models.ABSOLUTE)
-        per_tol = utils.create_tolerance(tol_type=models.PERCENT)
-        self.test1 = utils.create_test(name="test1")
-        self.test2 = utils.create_test(name="test2")
-        self.tl1 = utils.create_test_list(name="tl1")
-        self.tl2 = utils.create_test_list(name="tl2")
-
-        utils.create_test_list_membership(self.tl1, self.test1)
-        utils.create_test_list_membership(self.tl2, self.test2)
-        utils.create_test_list_membership(self.tl2, self.test1)
-
-        self.utc1 = utils.create_unit_test_collection(test_collection=self.tl1)
-        self.utc2 = utils.create_unit_test_collection(unit=self.utc1.unit, test_collection=self.tl2, frequency=self.utc1.frequency)
-
-        self.uti1 = models.UnitTestInfo.objects.get(test=self.test1)
-        self.uti1.reference = ref
-        self.uti1.tolerance = tol
-        self.uti1.save()
-
-        self.uti2 = models.UnitTestInfo.objects.get(test=self.test2)
-        self.uti2.references = ref
-        self.uti2.tolerance = per_tol
-        self.uti2.save()
-
-        self.NPOINTS = 10
-        for x in range(self.NPOINTS):
-            tli = utils.create_test_list_instance(unit_test_collection=self.utc1)
-            ti = utils.create_test_instance(value=1., status=self.status, unit_test_info=self.uti1, test_list_instance=tli)
-            ti.reference = ref
-            ti.tolerance = tol
-            ti.save()
-
-            tli2 = utils.create_test_list_instance(unit_test_collection=self.utc2)
-            ti2 = utils.create_test_instance(value=1., status=self.status, unit_test_info=self.uti1, test_list_instance=tli2)
-            ti2.reference = ref
-            ti2.tolerance = per_tol
-            ti2.save()
-
-            if x < self.NPOINTS/2:
-                # create less points for one tests to ensure tabulation routines
-                # can handle data sets of different lengths
-                tli2 = utils.create_test_list_instance(unit_test_collection=self.utc2)
-                ti2 = utils.create_test_instance(value=1.5, status=self.status, unit_test_info=self.uti2, test_list_instance=tli2)
-                ti2.reference = ref
-                ti2.tolerance = per_tol
-                ti2.save()
-
-        self.client.login(username="user", password="password")
-
-    #----------------------------------------------------------------------
-    def test_basic_data(self):
-        data = {
-            "tests[]": [self.test1.pk, self.test2.pk],
-            "test_lists[]": [self.tl1.pk, self.tl2.pk],
-            "units[]": [self.utc1.unit.pk],
-            "statuses[]": [self.status.pk],
-        }
-        resp = self.client.get(self.url, data=data)
-        data = json.loads(resp.content)
-        expected = [1.]*self.NPOINTS
-        actual = [x['value'] for x in data['data']['unit - tl1 :: test1']]
-        self.assertListEqual(actual, expected)
-
-    #----------------------------------------------------------------------
-    def test_basic_data_relative(self):
-        data = {
-            "tests[]": [self.test1.pk, self.test2.pk],
-            "test_lists[]": [self.tl1.pk, self.tl2.pk],
-            "units[]": [self.utc1.unit.pk],
-            "statuses[]": [self.status.pk],
-            "relative": "true",
-        }
-        resp = self.client.get(self.url, data=data)
-        data = json.loads(resp.content)
-        expected = [50.]*(self.NPOINTS/2)
-        actual = [x['value'] for x in data['data']['unit - tl2 :: test2 (relative to ref)']]
-        self.assertListEqual(actual, expected)
-
-    #----------------------------------------------------------------------
-    def test_basic_data_combined(self):
-        data = {
-            "tests[]": [self.test1.pk, self.test2.pk],
-            "test_lists[]": [self.tl1.pk, self.tl2.pk],
-            "units[]": [self.utc1.unit.pk],
-            "statuses[]": [self.status.pk],
-            "combine_data": "true"
-        }
-        resp = self.client.get(self.url, data=data)
-        data = json.loads(resp.content)
-        expected = [1.]*(2*self.NPOINTS)
-        actual = [x['value'] for x in data['data']['unit :: test1']]
-        self.assertListEqual(actual, expected)
-
-    #----------------------------------------------------------------------
-    def test_export_csv_view(self):
-        url = reverse("charts_export_csv")
-        data = {
-            "tests[]": [self.test1.pk, self.test2.pk],
-            "test_lists[]": [self.tl1.pk, self.tl2.pk],
-            "units[]": [self.utc1.unit.pk],
-            "statuses[]": [self.status.pk],
-            "relative": "true",
-        }
-        resp = self.client.get(url, data=data)
-        expected_nlines = 2 + 10 + 1  # 2 header  + 10 rows data + 1 blank
-        self.assertTrue(len(resp.content.split('\n')), expected_nlines)
-
-        self.assertEqual(resp.get('Content-Disposition'), 'attachment; filename="qatrackexport.csv"')
+# class TestChartData(TestCase):
+#
+#     #----------------------------------------------------------------------
+#     def setUp(self):
+#         self.url = reverse("chart_data")
+#         self.view = views.charts.BasicChartData.as_view()
+#
+#         self.status = utils.create_status()
+#         ref = utils.create_reference(value=1.)
+#         tol = utils.create_tolerance(tol_type=models.ABSOLUTE)
+#         per_tol = utils.create_tolerance(tol_type=models.PERCENT)
+#         self.test1 = utils.create_test(name="test1")
+#         self.test2 = utils.create_test(name="test2")
+#         self.tl1 = utils.create_test_list(name="tl1")
+#         self.tl2 = utils.create_test_list(name="tl2")
+#
+#         utils.create_test_list_membership(self.tl1, self.test1)
+#         utils.create_test_list_membership(self.tl2, self.test2)
+#         utils.create_test_list_membership(self.tl2, self.test1)
+#
+#         self.utc1 = utils.create_unit_test_collection(test_collection=self.tl1)
+#         self.utc2 = utils.create_unit_test_collection(unit=self.utc1.unit, test_collection=self.tl2, frequency=self.utc1.frequency)
+#
+#         self.uti1 = models.UnitTestInfo.objects.get(test=self.test1)
+#         self.uti1.reference = ref
+#         self.uti1.tolerance = tol
+#         self.uti1.save()
+#
+#         self.uti2 = models.UnitTestInfo.objects.get(test=self.test2)
+#         self.uti2.references = ref
+#         self.uti2.tolerance = per_tol
+#         self.uti2.save()
+#
+#         self.NPOINTS = 10
+#         for x in range(self.NPOINTS):
+#             tli = utils.create_test_list_instance(unit_test_collection=self.utc1)
+#             ti = utils.create_test_instance(value=1., status=self.status, unit_test_info=self.uti1, test_list_instance=tli)
+#             ti.reference = ref
+#             ti.tolerance = tol
+#             ti.save()
+#
+#             tli2 = utils.create_test_list_instance(unit_test_collection=self.utc2)
+#             ti2 = utils.create_test_instance(value=1., status=self.status, unit_test_info=self.uti1, test_list_instance=tli2)
+#             ti2.reference = ref
+#             ti2.tolerance = per_tol
+#             ti2.save()
+#
+#             if x < self.NPOINTS/2:
+#                 # create less points for one tests to ensure tabulation routines
+#                 # can handle data sets of different lengths
+#                 tli2 = utils.create_test_list_instance(unit_test_collection=self.utc2)
+#                 ti2 = utils.create_test_instance(value=1.5, status=self.status, unit_test_info=self.uti2, test_list_instance=tli2)
+#                 ti2.reference = ref
+#                 ti2.tolerance = per_tol
+#                 ti2.save()
+#
+#         self.client.login(username="user", password="password")
+#
+#     #----------------------------------------------------------------------
+#     def test_basic_data(self):
+#         data = {
+#             "tests[]": [self.test1.pk, self.test2.pk],
+#             "test_lists[]": [self.tl1.pk, self.tl2.pk],
+#             "units[]": [self.utc1.unit.pk],
+#             "statuses[]": [self.status.pk],
+#         }
+#         resp = self.client.get(self.url, data=data)
+#         data = json.loads(resp.content)
+#         expected = [1.]*self.NPOINTS
+#         actual = [x['value'] for x in data['data']['unit - tl1 :: test1']]
+#         self.assertListEqual(actual, expected)
+#
+#     #----------------------------------------------------------------------
+#     def test_basic_data_relative(self):
+#         data = {
+#             "tests[]": [self.test1.pk, self.test2.pk],
+#             "test_lists[]": [self.tl1.pk, self.tl2.pk],
+#             "units[]": [self.utc1.unit.pk],
+#             "statuses[]": [self.status.pk],
+#             "relative": "true",
+#         }
+#         resp = self.client.get(self.url, data=data)
+#         data = json.loads(resp.content)
+#         expected = [50.]*(self.NPOINTS/2)
+#         actual = [x['value'] for x in data['data']['unit - tl2 :: test2 (relative to ref)']]
+#         self.assertListEqual(actual, expected)
+#
+#     #----------------------------------------------------------------------
+#     def test_basic_data_combined(self):
+#         data = {
+#             "tests[]": [self.test1.pk, self.test2.pk],
+#             "test_lists[]": [self.tl1.pk, self.tl2.pk],
+#             "units[]": [self.utc1.unit.pk],
+#             "statuses[]": [self.status.pk],
+#             "combine_data": "true"
+#         }
+#         resp = self.client.get(self.url, data=data)
+#         data = json.loads(resp.content)
+#         expected = [1.]*(2*self.NPOINTS)
+#         actual = [x['value'] for x in data['data']['unit :: test1']]
+#         self.assertListEqual(actual, expected)
+#
+#     #----------------------------------------------------------------------
+#     def test_export_csv_view(self):
+#         url = reverse("charts_export_csv")
+#         data = {
+#             "tests[]": [self.test1.pk, self.test2.pk],
+#             "test_lists[]": [self.tl1.pk, self.tl2.pk],
+#             "units[]": [self.utc1.unit.pk],
+#             "statuses[]": [self.status.pk],
+#             "relative": "true",
+#         }
+#         resp = self.client.get(url, data=data)
+#         expected_nlines = 2 + 10 + 1  # 2 header  + 10 rows data + 1 blank
+#         self.assertTrue(len(resp.content.split('\n')), expected_nlines)
+#
+#         self.assertEqual(resp.get('Content-Disposition'), 'attachment; filename="qatrackexport.csv"')
 
 
 #============================================================================

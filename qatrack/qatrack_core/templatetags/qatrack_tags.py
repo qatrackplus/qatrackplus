@@ -22,8 +22,8 @@ def addplaceholder(field, placeholder=None):
         return field.as_widget(attrs={'placeholder': placeholder})
 
 
-@register.filter(name='custominput')
-def custominput(field, css):
+@register.filter(name='addcss_addplaceholder')
+def addcss_addplaceholder(field, css):
     if hasattr(field, 'verbose_name'):
         return field.as_widget(attrs={'placeholder': field.verbose_name, 'class': css})
     v_name = re.sub(r'\d', '', field.name.replace('_', ' ').title())
