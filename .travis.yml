@@ -34,8 +34,9 @@ install:
   - if [[ $DB == postgres ]]; then pip install -q psycopg2; fi
   - if [[ $DB == postgres ]]; then cp deploy/travis_postgres.py qatrack/local_settings.py; fi
   - if [[ $DB == sqlite ]]; then cp deploy/travis_sqlite.py qatrack/local_settings.py; fi
-  -  pip install -r requirements/base.txt
-  -  pip install -r requirements/optional.txt
+  - pip install -r requirements/base.txt
+  - if [[ $TRAVIS_PYTHON_VERSION == 2.6 ]]; then pip install -U numpy; fi
+  - pip install -r requirements/optional.txt
 
 script:
   - python manage.py test
