@@ -192,8 +192,8 @@
                                                         </a>
                                                     </li>
                                                 {% else %}
-                                                    <li>
-                                                        <div title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed" style="padding: 3px 15px;">
+                                                    <li class="disabled">
+                                                        <div title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed">
                                                             <i class="fa fa-question-circle fa-fw" aria-hidden="true"></i>
                                                             <span title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
                                                                 <span class="total-unreviewed-count">{{UNREVIEWED}}</span>

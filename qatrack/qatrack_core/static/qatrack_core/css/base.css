@@ -41,6 +41,15 @@ ul.nav li.dropdown:hover ul.dropdown-menu{
     box-shadow: 2px 6px 4px rgba(53, 124, 165, .25);
     border: 1px solid #bbb;
 }
+li.disabled {
+    opacity: 0.6;
+}
+ul.dropdown-menu li > div {
+    padding: 3px 20px;
+}
+ul.dropdown-menu li > div > i {
+    margin-right: 10px;
+}
 .popover {
     box-shadow: 2px 6px 4px rgba(53, 124, 165, .25);
     max-width: 100%;
