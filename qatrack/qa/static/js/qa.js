@@ -474,6 +474,10 @@ function TestInstance(test_info, row){
 
         })
     });
+
+    // set initial skip state
+    this.skip.trigger("change");
+
     //Set initial value
     this.update_value_from_input();
     // Display images
