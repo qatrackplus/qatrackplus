@@ -739,7 +739,12 @@ $(document).ready(function(){
     //by accident and completely hoses all the information they've entered during
     //a qa session
     $(window).bind("beforeunload",function(){
-        if (_.any(_.pluck(tli.test_instances,"value"))){
+        var non_read_only_tis = _.filter(tli.test_instances, function(ti){
+            var tt = ti.test_info.test.type;
+            return QAUtils.READ_ONLY_TEST_TYPES.indexOf(tt) < 0;
+        });
+
+        if (_.any(_.pluck(non_read_only_tis,"value"))){
             return  "If you leave this page now you will lose all entered values.";
         }
     });
