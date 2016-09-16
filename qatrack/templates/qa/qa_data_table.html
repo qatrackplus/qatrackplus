@@ -1,19 +1,19 @@
 <span class="">
-    <button id="csv-export" class="btn btn-primary btn-mini "><i class="icon-download icon-large"></i> Save as csv</button>
+    <button id="csv-export" class="btn btn-flat btn-primary btn-mini "><i class="icon-download icon-large"></i> Save as csv</button>
 </span>
 
-<table class="table table-striped table-bordered table-condensed data-table">
+<table class="table table-hover table-bordered table-condensed data-table">
     <thead>
         <tr>
             {% for header in headers %}
-                <th class="header" colspan="3">{{header}}</th>
+                <th class="header border-left-primary border-right-primary" colspan="3">{{header}}</th>
             {% endfor %}
         </tr>
         <tr>
             {% for header in headers %}
-                <th>Date</th>
+                <th class="border-left-primary">Date</th>
                 <th>Value</th>
-                <th>Ref</th>
+                <th class="border-right-primary">Ref</th>
             {% endfor %}
         </tr>
 
@@ -22,9 +22,9 @@
         {% for row in rows %}
             <tr>
                 {% for da,val,ref in row %}
-                    <td class="date">{{da}}</td>
+                    <td class="date border-left-primary">{{da}}</td>
                     <td class="number">{{val}}</td>
-                    <td class="number">{{ref}}</td>
+                    <td class="number border-right-primary">{{ref}}</td>
                 {% endfor  %}
             </tr>
         {% empty %}

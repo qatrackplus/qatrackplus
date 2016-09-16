@@ -13,6 +13,7 @@ require.config({
         admin_lte_config: siteConfig.STATIC_URL + 'adminlte/js/admin-lte-config',
         autosize: siteConfig.STATIC_URL + 'autosize/js/autosize.min',
         bootstrap: siteConfig.STATIC_URL + 'bootstrap/js/bootstrap.min',
+        d3: siteConfig.STATIC_URL + 'd3/js/d3',
         datatables: siteConfig.STATIC_URL + 'listable/js/jquery.dataTables.min',
         'datatables.bootstrap': siteConfig.STATIC_URL + 'listable/js/jquery.dataTables.bootstrap',
         'datatables.columnFilter': siteConfig.STATIC_URL + 'listable/js/jquery.dataTables.columnFilter',
@@ -40,6 +41,7 @@ require.config({
 
         // qa module:
         qa: siteConfig.STATIC_URL + 'qa/js/qa',
+        qacharts: siteConfig.STATIC_URL + 'qa/js/qacharts',
         qautils: siteConfig.STATIC_URL + 'qa/js/qautils',
         qareview: siteConfig.STATIC_URL + 'qa/js/qareview',
         qaoverview: siteConfig.STATIC_URL + 'qa/js/qaoverview'
@@ -55,36 +57,36 @@ require.config({
             deps: ['jquery']
         },
         datatables: {
-            deps: ['jquery'],
+            // deps: ['jquery'],
             exports: 'dataTable'
         },
         'datatables.bootstrap': {
-            deps: ['jquery', 'datatables', 'bootstrap']
+            deps: [/*'jquery', */'datatables'/*, 'bootstrap'*/]
         },
         'datatables.columnFilter': {
-            deps: ['jquery', 'datatables']
+            deps: [/*'jquery', */'datatables']
         },
         'datatables.searchPlugins': {
-            deps: ['jquery', 'datatables']
+            deps: [/*'jquery', */'datatables']
         },
         'datatables.sort': {
-            deps: ['jquery', 'datatables']
+            deps: [/*'jquery', */'datatables']
         },
-        datepicker: {
-            deps: ['jquery', 'bootstrap']
-        },
+        // datepicker: {
+        //     deps: ['jquery', 'bootstrap']
+        // },
         daterangepicker: {
             exports: 'DateRangePicker',
-            deps: ['jquery', 'moment']
+            deps: [/*'jquery', */'moment']
         },
-        icheck: {
-            deps: ['jquery']
-        },
+        // icheck: {
+        //     deps: ['jquery']
+        // },
         jquery: {
             exports: '$'
         },
         listable: {
-            deps: [/*'moment', */'jquery', 'datatables', 'datatables.columnFilter', 'datatables.searchPlugins', 'datatables.sort', 'datatables.bootstrap', 'multiselect', 'datepicker', 'daterangepicker']
+            deps: ['jquery', 'datatables', 'datatables.columnFilter', 'datatables.searchPlugins', 'datatables.sort', 'datatables.bootstrap', 'multiselect', 'datepicker', 'daterangepicker']
         },
         lodash: {
             exports: '_'
@@ -98,7 +100,7 @@ require.config({
 
         // Site wide:
         sidebar: {
-            deps: ['jquery', 'admin_lte', 'bootstrap', /*'daterangepicker'*/, 'icheck']
+            deps: [/*'jquery', 'admin_lte', 'bootstrap', */'icheck']
         },
         site_base: {
             deps: ['jquery']
@@ -108,12 +110,15 @@ require.config({
         qa: {
             deps: ['jquery', 'qautils', 'site_base', 'lodash', 'daterangepicker', 'sidebar', 'datatables', 'datatables.columnFilter', 'inputmask']
         },
-        qareview: {
-            deps: ['jquery', 'site_base', 'bootstrap', 'admin_lte']
-        },
-        qaoverview: {
-            deps: ['jquery', 'site_base', 'bootstrap', 'admin_lte']
-        }
+        // qacharts: {
+        //     deps: ['jquery', 'site_base', 'bootstrap', 'amdin_lte', 'json2']
+        // },
+        // qareview: {
+        //     deps: ['jquery', 'site_base', 'bootstrap', 'admin_lte']
+        // },
+        // qaoverview: {
+        //     deps: ['jquery', 'site_base', 'bootstrap', 'admin_lte']
+        // }
 
         // unit module:
     }

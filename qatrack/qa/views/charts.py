@@ -202,21 +202,30 @@ class BaseChartView(View):
 
         return template.render(context)
 
-    def get_date(self, key, default):
+    def get_date(self, default_to, default_from):
         """take date from GET data and convert it to utc"""
 
         # datetime strings coming in will be in local time, make sure they get
         # converted to utc
 
         try:
-            d = timezone.datetime.strptime(self.request.GET.get(key), settings.SIMPLE_DATE_FORMAT)
+            d_from = timezone.datetime.strptime(self.request.GET.get('date_range').split(' - ')[0], settings.SIMPLE_DATE_FORMAT)
+        except Exception as e:
+            print '+++++++++++++++++'
+            print self.request.GET
+            print e
+            d_from = default_from
+
+        try:
+            d_to = timezone.datetime.strptime(self.request.GET.get('date_range').split(' - ')[1], settings.SIMPLE_DATE_FORMAT)
         except:
-            d = default
+            d_to = default_to
 
-        if timezone.is_naive(d):
-            d = timezone.make_aware(d, timezone.get_current_timezone())
+        if timezone.is_naive(d_to):
+            d_to = timezone.make_aware(d_to, timezone.get_current_timezone())
+            d_from = timezone.make_aware(d_from, timezone.get_current_timezone())
 
-        return d.astimezone(timezone.utc)
+        return [d_from.astimezone(timezone.utc), d_to.astimezone(timezone.utc)]
 
     def convert_date(self, date):
         """by default we assume date is being used by javascript, so convert to ISO"""
@@ -234,6 +243,7 @@ class BaseChartView(View):
             use_percent = has_percent_tol or (has_no_tol and ref_is_not_zero)
 
             if use_percent:
+
                 value = 100 * (ti.value - ti.reference.value) / ti.reference.value
                 ref_value = 0.
             else:
@@ -273,8 +283,11 @@ class BaseChartView(View):
         self.plot_data = {}
 
         now = timezone.now()
-        from_date = self.get_date("from_date", now - timezone.timedelta(days=365))
-        to_date = self.get_date("to_date", now)
+        dates = self.get_date(now, now - timezone.timedelta(days=365))
+
+        from_date = dates[0]
+        to_date = dates[1]
+
         combine_data = self.request.GET.get("combine_data") == "true"
         relative = self.request.GET.get("relative") == "true"
 

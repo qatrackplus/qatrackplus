@@ -288,3 +288,11 @@ body.loading .loading-modal {
     border-top-right-radius: 0.4em;
     border-bottom-right-radius: 0.4em;
 }
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] {
+    -moz-appearance: textfield;
+}
