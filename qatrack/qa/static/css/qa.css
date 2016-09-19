@@ -574,3 +574,13 @@ a.text-success:focus {
 .daterangepicker.dropdown-menu div.daterangepicker_input > input{
     box-sizing: border-box;
 }
+
+/* Remove spinners on number inputs */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] {
+    -moz-appearance: textfield;
+}
