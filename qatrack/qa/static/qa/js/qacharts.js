@@ -445,7 +445,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
 
         var line2 = d3.line()
             .curve(d3.curveLinear)
-            .x(function(d) { return xScale(d.x); })
+            .x(function(d) { return xScale2(d.x); })
             .y(function(d) { return yScale2(d.y); })
             .defined(function(d) { return d.y; });
 
@@ -972,7 +972,12 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
 
         function redrawContextXAxis() {
 
-            var context_width = width + legend_width - legend_collapse_width;
+            var east_bound_date = xScale.invert(width),
+                west_bound_date = xScale.invert(0),
+                east_selection_bound = xScale2(east_bound_date),
+                west_selection_bound = xScale2(west_bound_date),
+                context_width = width + legend_width - legend_collapse_width;
+
             xScale2.range([0, context_width]);
 
             x_axis2_elem.transition().call(xAxis2);
@@ -980,7 +985,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
             brush.extent([[0, 0], [context_width, height2]]);
             brush_elem.call(brush);
 
-            d3.select('rect.selection')
+            // TODO resize/move selection and move handles
 
         }
         
@@ -1045,8 +1050,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
             // Context path update
             context_path
                 .transition()
-                .style('opacity', function(d) {
-                    return d.visible ? 1 : 0.2; })
+                .style('opacity', function(d) { return d.visible ? 1 : 0.2; })
         }
 
         function mousemove() {
