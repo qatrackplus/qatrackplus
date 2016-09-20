@@ -521,6 +521,10 @@ function TestInstance(test_info, row){
         });
 
     }
+
+    // set initial skip state
+    this.skip.trigger("change");
+
     //Set initial value
     this.update_value_from_input();
     // Display images
@@ -764,8 +768,14 @@ $(document).ready(function(){
     //this is here to help mitigate the risk that a user hits back or backspace key
     //by accident and completely hoses all the information they've entered during
     //a qa session
-    $(window).on("beforeunload", function(){
-        if (_.some(_.map(tli.test_instances, "value"))){
+
+    $(window).bind("beforeunload",function(){
+        var non_read_only_tis = _.filter(tli.test_instances, function(ti){
+            var tt = ti.test_info.test.type;
+            return QAUtils.READ_ONLY_TEST_TYPES.indexOf(tt) < 0;
+        });
+
+        if (_.some(_.map(non_read_only_tis,"value"))){
             return  "If you leave this page now you will lose all entered values.";
         }
     });

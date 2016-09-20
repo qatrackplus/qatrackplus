@@ -2,9 +2,11 @@
 from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin import widgets, options
+from django.contrib.admin.models import LogEntry, CHANGE
+from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse_lazy
 import django.db
-from django.db.models import Count
+from django.db.models import Count, Q
 import django.forms as forms
 from django.shortcuts import redirect, render, HttpResponseRedirect
 from django.utils import timezone
@@ -87,8 +89,15 @@ class TestInfoForm(forms.ModelForm):
 
             if self.instance.reference:
                 r = self.instance.reference
-                self.initial["reference_set_by"] = "%s" % (r.modified_by)
-                self.initial["reference_set"] = "%s" % (r.modified)
+                les = LogEntry.objects.filter(
+                    Q(change_message__contains="reference_value") | Q(change_message__contains="tolerance"),
+                    content_type_id=ContentType.objects.get_for_model(self.instance).pk,
+                    object_id=self.instance.pk,
+                    action_flag=CHANGE,
+                ).order_by("-action_time")
+                if les:
+                    self.initial["reference_set_by"] = "%s" % (les[0].user)
+                    self.initial["reference_set"] = "%s" % (timezone.localtime(les[0].action_time))
 
     def clean(self):
         """make sure valid numbers are entered for boolean data"""

@@ -1,5 +1,6 @@
 "use strict";
 
+
 var QAUtils = new function() {
 
     this.ACT_LOW = "act_low";
@@ -41,6 +42,7 @@ var QAUtils = new function() {
     this.UPLOAD = "upload";
     this.STRING = "string";
     this.NUMBER_TEST_TYPES = [this.SIMPLE, this.CONSTANT, this.COMPOSITE];
+    this.READ_ONLY_TEST_TYPES = [this.COMPOSITE, this.STRING_COMPOSITE, this.CONSTANT];
 
     this.NUMERIC_WHITELIST_REGEX = /[^0-9\.eE\-]/g;
     this.NUMERIC_REGEX = /^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$/;
