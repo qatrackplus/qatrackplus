@@ -228,6 +228,7 @@ INSTALLED_APPS = [
     # 'qatrack.theme_bootstrap',
     'qatrack.notifications',
     'qatrack.contacts',
+    'qatrack.service_log'
 
     # 'south',
     'admin_views',
