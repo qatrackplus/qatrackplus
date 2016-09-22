@@ -19,6 +19,7 @@ lib64
 local_settings.py
 fixtures/dev
 questions_*
+qatrack/wsgi.py
 qatrack/static
 qatrack/assets/
 qatrack/cache/cache_data
