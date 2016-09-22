@@ -1,3 +1,4 @@
 pywin32>=217
 django-mssql>=1.5.1,<1.6
+CherryPy==8.1.0
 

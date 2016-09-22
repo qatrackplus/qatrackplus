@@ -10,8 +10,8 @@ python-dateutil==2.2
 python-ntlm==1.1.0
 pytz==2014.7
 South==1.0.1
-numpy>=1.6.2,<1.8
-scipy>=0.10.0,<0.12
+numpy
+scipy
 matplotlib>=1.0
 django-admin-views==0.5.0
 django-listable==0.3.7
