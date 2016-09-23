@@ -1,5 +1,6 @@
 "use strict";
 
+
 var QAUtils = new function() {
 
     this.ACT_LOW = "act_low";
@@ -16,14 +17,16 @@ var QAUtils = new function() {
     this.DONE = "done";
     this.NO_TOL = "no_tol";
 
-    this.WITHIN_TOL_DISP =  'OK';
+    var sh = TEST_STATUS_SHORT;
+    this.WITHIN_TOL_DISP =  sh.ok;
     var icons = ICON_SETTINGS.SHOW_STATUS_ICONS_PERFORM;
-    this.TOLERANCE_DISP = icons ? '<i class="pull-left icon-warning-sign"></i> TOL' : 'TOL';
-    this.ACTION_DISP = icons ? '<i class="pull-left icon-minus-sign"></i> ACT' : 'ACT';
-    this.FAIL_DISP = icons ? '<i class="pull-left icon-minus-sign"></i> FAIL' : 'FAIL';
-    this.NOT_DONE_DISP = "Not Done";
-    this.DONE_DISP = 'Done';
-    this.NO_TOL_DISP = 'No Tol Set';
+
+    this.TOLERANCE_DISP = icons ? '<i class="pull-left icon-warning-sign"></i> ' + sh.tolerance : sh.tolerance;
+    this.ACTION_DISP = icons ? '<i class="pull-left icon-minus-sign"></i> ' + sh.action : sh.action;
+    this.FAIL_DISP = icons ? '<i class="pull-left icon-minus-sign"></i> ' + sh.fail : sh.fail;
+    this.NOT_DONE_DISP = sh.not_done;
+    this.DONE_DISP = sh.done;
+    this.NO_TOL_DISP = sh.no_tol;
 
     this.PERCENT = "percent";
     this.ABSOLUTE = "absolute";
@@ -38,6 +41,7 @@ var QAUtils = new function() {
     this.UPLOAD = "upload";
     this.STRING = "string";
     this.NUMBER_TEST_TYPES = [this.SIMPLE, this.CONSTANT, this.COMPOSITE];
+    this.READ_ONLY_TEST_TYPES = [this.COMPOSITE, this.STRING_COMPOSITE, this.CONSTANT];
 
     this.NUMERIC_WHITELIST_REGEX = /[^0-9\.eE\-]/g;
     this.NUMERIC_REGEX = /^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$/;

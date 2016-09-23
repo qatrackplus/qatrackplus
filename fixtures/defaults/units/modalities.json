@@ -1,122 +1,128 @@
 [
-    {
-        "pk": 1, 
-        "model": "units.modality", 
-        "fields": {
-            "energy": 6.0, 
-            "type": "photon"
-        }
-    }, 
-    {
-        "pk": 2, 
-        "model": "units.modality", 
-        "fields": {
-            "energy": 10.0, 
-            "type": "photon"
-        }
-    }, 
-    {
-        "pk": 3, 
-        "model": "units.modality", 
-        "fields": {
-            "energy": 15.0, 
-            "type": "photon"
-        }
-    }, 
-    {
-        "pk": 4, 
-        "model": "units.modality", 
-        "fields": {
-            "energy": 18.0, 
-            "type": "photon"
-        }
-    }, 
-    {
-        "pk": 5, 
-        "model": "units.modality", 
-        "fields": {
-            "energy": 6.0, 
-            "type": "electron"
-        }
-    }, 
-    {
-        "pk": 6, 
-        "model": "units.modality", 
-        "fields": {
-            "energy": 9.0, 
-            "type": "electron"
-        }
-    }, 
-    {
-        "pk": 7, 
-        "model": "units.modality", 
-        "fields": {
-            "energy": 11.0, 
-            "type": "electron"
-        }
-    }, 
-    {
-        "pk": 8, 
-        "model": "units.modality", 
-        "fields": {
-            "energy": 12.0, 
-            "type": "electron"
-        }
-    }, 
-    {
-        "pk": 9, 
-        "model": "units.modality", 
-        "fields": {
-            "energy": 13.0, 
-            "type": "electron"
-        }
-    }, 
-    {
-        "pk": 10, 
-        "model": "units.modality", 
-        "fields": {
-            "energy": 15.0, 
-            "type": "electron"
-        }
-    }, 
-    {
-        "pk": 11, 
-        "model": "units.modality", 
-        "fields": {
-            "energy": 17.0, 
-            "type": "electron"
-        }
-    }, 
-    {
-        "pk": 12, 
-        "model": "units.modality", 
-        "fields": {
-            "energy": 0.1, 
-            "type": "photon"
-        }
-    }, 
-    {
-        "pk": 13, 
-        "model": "units.modality", 
-        "fields": {
-            "energy": 0.15, 
-            "type": "photon"
-        }
-    }, 
-    {
-        "pk": 14, 
-        "model": "units.modality", 
-        "fields": {
-            "energy": 0.2, 
-            "type": "photon"
-        }
-    }, 
-    {
-        "pk": 15, 
-        "model": "units.modality", 
-        "fields": {
-            "energy": 0.3, 
-            "type": "photon"
-        }
+{
+    "pk": 1,
+    "model": "units.modality",
+    "fields": {
+        "name": "6.0MV Photon"
     }
+},
+{
+    "pk": 2,
+    "model": "units.modality",
+    "fields": {
+        "name": "10.0MV Photon"
+    }
+},
+{
+    "pk": 3,
+    "model": "units.modality",
+    "fields": {
+        "name": "15.0MV Photon"
+    }
+},
+{
+    "pk": 4,
+    "model": "units.modality",
+    "fields": {
+        "name": "18.0MV Photon"
+    }
+},
+{
+    "pk": 5,
+    "model": "units.modality",
+    "fields": {
+        "name": "6.0MeV Electron"
+    }
+},
+{
+    "pk": 6,
+    "model": "units.modality",
+    "fields": {
+        "name": "9.0MeV Electron"
+    }
+},
+{
+    "pk": 7,
+    "model": "units.modality",
+    "fields": {
+        "name": "11.0MeV Electron"
+    }
+},
+{
+    "pk": 8,
+    "model": "units.modality",
+    "fields": {
+        "name": "12.0MeV Electron"
+    }
+},
+{
+    "pk": 9,
+    "model": "units.modality",
+    "fields": {
+        "name": "13.0MeV Electron"
+    }
+},
+{
+    "pk": 10,
+    "model": "units.modality",
+    "fields": {
+        "name": "15.0MeV Electron"
+    }
+},
+{
+    "pk": 11,
+    "model": "units.modality",
+    "fields": {
+        "name": "17.0MeV Electron"
+    }
+},
+{
+    "pk": 12,
+    "model": "units.modality",
+    "fields": {
+        "name": "0.100MV Photon"
+    }
+},
+{
+    "pk": 13,
+    "model": "units.modality",
+    "fields": {
+        "name": "0.150MV Photon"
+    }
+},
+{
+    "pk": 14,
+    "model": "units.modality",
+    "fields": {
+        "name": "0.200MV Photon"
+    }
+},
+{
+    "pk": 15,
+    "model": "units.modality",
+    "fields": {
+        "name": "0.300MV Photon"
+    }
+},
+{
+    "pk": 16,
+    "model": "units.modality",
+    "fields": {
+        "name": "0.120MV Photon"
+    }
+},
+{
+    "pk": 17,
+    "model": "units.modality",
+    "fields": {
+        "name": "0.0MV Photon"
+    }
+},
+{
+    "pk": 18,
+    "model": "units.modality",
+    "fields": {
+        "name": "0.380MV Photon"
+    }
+}
 ]

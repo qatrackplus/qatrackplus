@@ -18,7 +18,7 @@
         </tr>
     {% endif %}
 {% endfor %}
-<tr class="control-group qa-valuerow" >
+<tr class="control-group qa-valuerow {%if test_info.test.hidden %}hidden{% endif %}" >
 
     {% for hidden in form.hidden_fields %}
         {{ hidden }}

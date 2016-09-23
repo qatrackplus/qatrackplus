@@ -18,9 +18,9 @@
     <div class="span12">
         <div class="btn-group">
             {% for freq in frequencies %}
-                <button class="btn"><a href="{% url review_by_frequency frequency=freq.slug %}">{{freq.name}}</a></button>
+                <button class="btn"><a href="{% url 'review_by_frequency' frequency=freq.slug %}">{{freq.name}}</a></button>
             {% endfor %}
-            <button class="btn"><a href="{% url review_by_frequency frequency="ad-hoc" %}">Ad hoc</a></button>
+            <button class="btn"><a href="{% url 'review_by_frequency' frequency="ad-hoc" %}">Ad hoc</a></button>
         </div>
         <script type="text/javascript">
             $(".btn").click(function(){

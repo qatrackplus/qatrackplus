@@ -48,14 +48,12 @@ class PaperBackupRequestForm(forms.Form):
     )
 
 
-#============================================================================
 class PaperFormRequest(FormView):
     """View for displaying paper backup options form"""
 
     form_class = PaperBackupRequestForm
     template_name = "qa/backup_form.html"
 
-    #---------------------------------------------------------------
     def get_initial(self):
         """setup some hopefully sensible default options"""
 
@@ -70,7 +68,6 @@ class PaperFormRequest(FormView):
             }
         return super(PaperFormRequest, self).get_initial()
 
-    #---------------------------------------------------------------
     def form_valid(self, form):
         """
         url encode all requested options and redirect to the actual
@@ -89,7 +86,6 @@ class PaperFormRequest(FormView):
         return HttpResponseRedirect("%s?%s" % (reverse("qa_paper_forms"), q))
 
 
-#============================================================================
 class PaperForms(ListView):
     """ View that handles the actual creation of the forms"""
 
@@ -97,7 +93,6 @@ class PaperForms(ListView):
 
     template_name_suffix = "_backup"
 
-    #---------------------------------------------------------------
     def get_queryset(self):
         """filter queryset based on requested options"""
 
@@ -112,39 +107,19 @@ class PaperForms(ListView):
 
         return qs.select_related("unit", "testlist").prefetch_related("tests_object")
 
-    #---------------------------------------------------------------
-    def get_context_data(self, *args, **kwargs):
-        """
-        Patch each :model:`qa.UnitTestCollection` object with all
-        its relevant TestList's, Test's & UnitTestInfo's.
-        """
+    def set_utc_all_lists(self, utcs):
 
-        context = super(PaperForms, self).get_context_data(*args, **kwargs)
+        for utc in utcs:
 
-        context["include_refs"] = self.request.GET.get("include_refs", "True") != "False"
-
-        test_lists = {}
-
-        for utc in context["object_list"]:
-            key = (utc.content_type_id, utc.object_id)
-
-            try:
-                # if we've already seen this test list or test list cycle we don't need to
-                # fetch all the test list members & tests again
-                all_lists = test_lists[key]
-            except KeyError:
-                # first time we've seen this test list or test list cycle
-                # find  all member test lists and tests
-                all_lists = utc.tests_object.test_list_members().prefetch_related("testlistmembership_set__test")
-                for li in all_lists:
-                    li.all_tests = li.ordered_tests()
-                test_lists[key] = all_lists
+            all_lists = utc.tests_object.test_list_members().prefetch_related("testlistmembership_set__test")
+            for li in all_lists:
+                li.all_tests = li.ordered_tests()
 
             for li in all_lists:
                 utis = models.UnitTestInfo.objects.filter(
                     test__in=li.all_tests,
                     test__type__in=[models.BOOLEAN, models.SIMPLE, models.MULTIPLE_CHOICE, models.STRING],
-                    test__category__pk__in=self.request.GET.getlist("category"),
+                    test__category__pk__in=self.categories,
                     unit=utc.unit,
                 ).select_related(
                     "test", "reference", "tolerance"
@@ -154,4 +129,14 @@ class PaperForms(ListView):
 
             utc.all_lists = all_lists
 
+    def get_context_data(self, *args, **kwargs):
+        """
+        Patch each :model:`qa.UnitTestCollection` object with all
+        its relevant TestList's, Test's & UnitTestInfo's.
+        """
+
+        context = super(PaperForms, self).get_context_data(*args, **kwargs)
+        context["include_refs"] = self.request.GET.get("include_refs", "True") != "False"
+        self.categories = self.request.GET.getlist("category")
+        self.set_utc_all_lists(context['object_list'])
         return context

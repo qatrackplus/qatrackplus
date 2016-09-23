@@ -32,22 +32,23 @@ def get_test_lists_for_unit_frequencies(request):
 
     units = request.GET.getlist("units[]") or Unit.objects.values_list("pk", flat=True)
     frequencies = request.GET.getlist("frequencies[]") or models.Frequency.objects.values_list("pk", flat=True)
+    include_inactive = request.GET.get("inactive") == "true"
 
     fq = Q(frequency__in=frequencies)
     if '0' in frequencies:
         fq |= Q(frequency=None)
 
-    test_lists = models.UnitTestCollection.objects.filter(
-        fq,
-        unit__in=units,
-        content_type__name="test list"
-    ).values_list("testlist__pk", flat=True)
+    utcs = models.UnitTestCollection.objects.filter(fq, unit__in=units)
+    if not include_inactive:
+        utcs = utcs.exclude(active=False)
 
-    test_list_cycle_lists = models.UnitTestCollection.objects.filter(
-        fq,
-        unit__in=units,
+    test_lists = utcs.filter(
+        content_type__name="test list"
+    ).values_list("object_id", flat=True)
+
+    test_list_cycle_lists = utcs.filter(
         content_type__name="test list cycle"
-    ).values_list("testlistcycle__test_lists__pk", flat=True)
+    ).values_list("object_id", flat=True)
 
     test_lists = set(test_lists) | set(test_list_cycle_lists)
 
@@ -69,7 +70,6 @@ def get_tests_for_test_lists(request):
     return HttpResponse(json_context, content_type=JSON_CONTENT_TYPE)
 
 
-#============================================================================
 class ChartView(PermissionRequiredMixin, TemplateView):
     """View responsible for rendering the main charts user interface."""
 
@@ -78,7 +78,6 @@ class ChartView(PermissionRequiredMixin, TemplateView):
 
     template_name = "qa/charts.html"
 
-    #----------------------------------------------------------------------
     def get_context_data(self, **kwargs):
         """
         Add all relevent filters to context. test_data contains all the
@@ -108,7 +107,6 @@ class ChartView(PermissionRequiredMixin, TemplateView):
         context.update(c)
         return context
 
-    #----------------------------------------------------------------------
     def set_unit_frequencies(self):
 
         unit_frequencies = models.UnitTestCollection.objects.exclude(
@@ -122,7 +120,6 @@ class ChartView(PermissionRequiredMixin, TemplateView):
             f = f or 0 # use 0 id for ad hoc frequencies
             self.unit_frequencies[u].add(f)
 
-    #----------------------------------------------------------------------
     def set_test_lists(self):
         """self.test_lists is set to all test lists that have been completed
         one or more times"""
@@ -137,7 +134,6 @@ class ChartView(PermissionRequiredMixin, TemplateView):
             "pk", "description", "name",
         )
 
-    #----------------------------------------------------------------------
     def set_tests(self):
         """self.tests is set to all tests that are chartable"""
 
@@ -150,14 +146,12 @@ class ChartView(PermissionRequiredMixin, TemplateView):
         )
 
 
-#============================================================================
 class BaseChartView(View):
     """
     Base AJAX view responsible for retrieving & tabulating data to be
     plotted for charts.
     """
 
-    #----------------------------------------------------------------------
     def get(self, request):
 
         self.get_plot_data()
@@ -165,7 +159,6 @@ class BaseChartView(View):
         resp = self.render_to_response({"data": self.plot_data, "headers": headers, "rows": rows})
         return resp
 
-    #----------------------------------------------------------------------
     def create_data_table(self):
         """
         Take all the :model:`qa.TestInstance`s and tabulate them (grouped by
@@ -185,7 +178,7 @@ class BaseChartView(View):
             cols.append(col)
             max_len = max(len(col), max_len)
 
-        #generate table from triplets
+        # generate table from triplets
         rows = []
         for idx in range(max_len):
             row = []
@@ -198,7 +191,6 @@ class BaseChartView(View):
 
         return headers, rows
 
-    #----------------------------------------------------------------------
     def render_table(self, headers, rows):
 
         context = Context({
@@ -210,12 +202,11 @@ class BaseChartView(View):
 
         return template.render(context)
 
-    #----------------------------------------------------------------------
     def get_date(self, key, default):
         """take date from GET data and convert it to utc"""
 
-        #datetime strings coming in will be in local time, make sure they get
-        #converted to utc
+        # datetime strings coming in will be in local time, make sure they get
+        # converted to utc
 
         try:
             d = timezone.datetime.strptime(self.request.GET.get(key), settings.SIMPLE_DATE_FORMAT)
@@ -227,12 +218,10 @@ class BaseChartView(View):
 
         return d.astimezone(timezone.utc)
 
-    #---------------------------------------------------------------
     def convert_date(self, date):
         """by default we assume date is being used by javascript, so convert to ISO"""
         return date.isoformat()
 
-    #---------------------------------------------------------------
     def test_instance_to_point(self, ti, relative=False):
         """Grab relevent plot data from a :model:`qa.TestInstance`"""
 
@@ -259,7 +248,7 @@ class BaseChartView(View):
             "date": self.convert_date(timezone.make_naive(ti.work_completed, local_tz)),
             "display_date": ti.work_completed,
             "value": value,
-            "display": ti.value_display(),
+            "display": ti.value_display() if not ti.skipped else "",
             "reference": ref_value,
             "orig_reference": ti.reference.value if ti.reference else None,
 
@@ -269,7 +258,8 @@ class BaseChartView(View):
             if relative and ti.reference and ti.reference.value != 0. and not ti.tolerance.type == models.ABSOLUTE:
                 tols = ti.tolerance.tolerances_for_value(100)
                 for k in tols:
-                    tols[k] -= 100.
+                    if tols[k] is not None:
+                        tols[k] -= 100.
             else:
                 tols = ti.tolerance.tolerances_for_value(ref_value)
 
@@ -277,7 +267,6 @@ class BaseChartView(View):
 
         return point
 
-    #----------------------------------------------------------------------
     def get_plot_data(self):
         """Retrieve all :model:`qa.TestInstance` data requested."""
 
@@ -313,14 +302,13 @@ class BaseChartView(View):
                     status__pk__in=statuses,
                     work_completed__gte=from_date,
                     work_completed__lte=to_date,
-                    skipped=False,
                 ).select_related(
                     "reference", "tolerance", "unit_test_info__test", "unit_test_info__unit", "status",
                 ).order_by(
                     "work_completed"
                 )
                 if tis:
-                    name = "%s - %s :: %s%s" % (u.name, tl.name, t.name,  " (relative to ref)" if relative else "")
+                    name = "%s - %s :: %s%s" % (u.name, tl.name, t.name, " (relative to ref)" if relative else "")
                     self.plot_data[name] = [self.test_instance_to_point(ti, relative=relative) for ti in tis]
         else:
             # retrieve test instances for every possible permutation of the
@@ -332,7 +320,6 @@ class BaseChartView(View):
                     status__pk__in=statuses,
                     work_completed__gte=from_date,
                     work_completed__lte=to_date,
-                    skipped=False,
                 ).select_related(
                     "reference", "tolerance", "unit_test_info__test", "unit_test_info__unit", "status",
                 ).order_by(
@@ -342,13 +329,11 @@ class BaseChartView(View):
                     name = "%s :: %s%s" % (u.name, t.name, " (relative to ref)" if relative else "")
                     self.plot_data[name] = [self.test_instance_to_point(ti, relative=relative) for ti in tis]
 
-    #---------------------------------------------------------------------------
     def render_to_response(self, context):
         context['table'] = self.render_table(context['headers'], context['rows'])
         return self.render_json_response(context)
 
 
-#============================================================================
 class BasicChartData(PermissionRequiredMixin, JSONResponseMixin, BaseChartView):
     """JSON view used for basic chart type"""
 
@@ -356,19 +341,16 @@ class BasicChartData(PermissionRequiredMixin, JSONResponseMixin, BaseChartView):
     raise_exception = True
 
 
-#============================================================================
 class ControlChartImage(PermissionRequiredMixin, BaseChartView):
     """Return a control chart image from given qa data"""
 
     permission_required = "qa.can_view_charts"
     raise_exception = True
 
-    #---------------------------------------------------------------------------
     def convert_date(self, dt):
         """date is being used by Python code, so no need to convert to ISO"""
         return dt
 
-    #----------------------------------------------------------------------
     def get_number_from_request(self, param, default, dtype=float):
         """look for a number in GET and convert it to the given datatype"""
         try:
@@ -377,7 +359,6 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
             v = default
         return v
 
-    #---------------------------------------------------------------
     def get_plot_data(self):
         """
         The control chart software can only handle one test at a time
@@ -390,7 +371,6 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
         if self.plot_data:
             self.plot_data = dict([self.plot_data.popitem()])
 
-    #----------------------------------------------------------------------
     def render_to_response(self, context):
         """Create a png image and write the control chart image to it"""
 
@@ -405,7 +385,8 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
 
         if context["data"] and context["data"].values():
             name, points = context["data"].items()[0]
-            dates, data = zip(*[(ti["date"], ti["value"]) for ti in points])
+            if points:
+                dates, data = zip(*[(ti["date"], ti["value"]) for ti in points])
 
         n_baseline_subgroups = self.get_number_from_request("n_baseline_subgroups", 2, dtype=int)
         n_baseline_subgroups = max(2, n_baseline_subgroups)
@@ -416,7 +397,7 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
 
         include_fit = self.request.GET.get("fit_data", "") == "true"
 
-        response = HttpResponse(mimetype="image/png")
+        response = HttpResponse(content_type="image/png")
         if n_baseline_subgroups < 1 or n_baseline_subgroups > len(data) / subgroup_size:
             fig.text(0.1, 0.9, "Not enough data for control chart", fontsize=20)
             canvas.print_png(response)

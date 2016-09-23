@@ -18,12 +18,12 @@
                 </div>
             {% endif %}
 
-            <form method="POST" action="{% url auth_login %}" autocapitalize="off" class="form-horizontal">
+            <form method="POST" action="{% url "auth_login" %}" autocapitalize="off" class="form-horizontal">
                 <fieldset>
                     {% csrf_token %}
                     {{ form|as_bootstrap }}
-                    {% if redirect_field_value %}
-                        <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+                    {% if next %}
+                        <input type="hidden" name="next" value="{{ next }}" />
                     {% endif %}
                     <div class="form-actions">
                         <button type="submit" class="btn btn-primary">{% trans "Log in" %}</button>

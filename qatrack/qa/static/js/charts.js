@@ -31,7 +31,7 @@ var next_color = (function(){
 $(document).ready(function(){
    initialize_charts();
 
-    var test_filters = ["#test-list-container","#test-container","#frequency-container"];
+    var test_filters = ["#test-list-container .checkbox-container","#test-container","#frequency-container"];
     _.each(test_filters,function(container){
         hide_all_inputs(container);
     });
@@ -118,7 +118,8 @@ function set_test_lists(callback){
     var units = QAUtils.get_checked("#unit-container");
     var frequencies = QAUtils.get_checked("#frequency-container");
 
-    var data_filters = {units:units, frequencies:frequencies};
+    var inactive = $("#include_inactive").is(":checked");
+    var data_filters = {units:units, frequencies:frequencies, inactive:inactive};
 
     if (units.length > 0 && frequencies.length > 0){
 
@@ -129,7 +130,7 @@ function set_test_lists(callback){
             contentType:"application/json",
             dataType:"json",
             success: function(result,status,jqXHR){
-                filter_container("#test-list-container", result.test_lists);
+                filter_container("#test-list-container .checkbox-container", result.test_lists);
                 if (callback){
                     callback();
                 }
@@ -141,15 +142,17 @@ function set_test_lists(callback){
             }
         });
     }else{
-        filter_container("#test-list-container", []);
+        filter_container("#test-list-container .checkbox-container", []);
         filter_container("#test-container", []);
     }
 }
 /***************************************************/
 function set_tests(callback){
 
-    var test_lists = QAUtils.get_checked("#test-list-container");
-    var data_filters = {"test_lists":test_lists};
+    var test_lists = QAUtils.get_checked("#test-list-container .checkbox-container");
+
+    var inactive = $("#include_inactive").is(":checked");
+    var data_filters = {"test_lists":test_lists, inactive:inactive};
 
     if (test_lists.length > 0){
 
@@ -243,7 +246,8 @@ function get_data_filters(){
         from_date:get_date("#from-date"),
         to_date:get_date("#to-date"),
         tests:QAUtils.get_checked("#test-container"),
-        test_lists:QAUtils.get_checked("#test-list-container"),
+        test_lists:QAUtils.get_checked("#test-list-container .checkbox-container"),
+        inactive:$("#include_inactive").is(":checked"),
         frequencies:QAUtils.get_checked("#frequency-container"),
         n_baseline_subgroups:$("#n-baseline-subgroups").val(),
         subgroup_size:$("#subgroup-size").val(),
@@ -318,6 +322,9 @@ function convert_data_to_highchart_series(data){
         var al, tl, th, ah;
 
         _.each(data[name], function(point){
+            if (_.isNull(point.value)){
+                return;
+            }
             var date = QAUtils.parse_iso8601_date(point.date).getTime();
             var display = '<span style="color:'+series_color+'"><strong>'+name+'</strong></span>: <b>'+ QAUtils.format_float(point.value) + '</b>';
 
@@ -439,8 +446,12 @@ function create_stockchart(data){
 
     var prev_range = window.chart.rangeSelector ? window.chart.rangeSelector.selected:"";
 
-
     var ntests = QAUtils.get_checked("#test-container").length;
+
+    var allEmpty = _.all(_.map(data, function(o){return o.data.length===0}));
+    if (allEmpty){
+        return;
+    }
 
     window.chart = new Highcharts.StockChart({
         chart : {
@@ -543,7 +554,7 @@ function control_chart_finished(){
 function get_control_chart_url(){
     var filters = get_data_filters();
 
-    var    props = [
+    var props = [
         "width="+$("#chart-container").width(),
         "height="+$("#chart").height(),
         "timestamp="+ new Date().getTime()
@@ -600,7 +611,7 @@ function set_options_from_url(){
     test_list_ids = _.map(test_lists,function(pk){return "#test-list-"+pk;});
 
 
-    var filters = ["#unit-container","#frequency-container","#test-list-container"];
+    var filters = ["#unit-container","#frequency-container","#test-list-container .checkbox-container"];
 
     _.map(filters,show_all_inputs);
 

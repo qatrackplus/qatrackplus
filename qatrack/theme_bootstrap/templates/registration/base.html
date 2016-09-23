@@ -8,15 +8,15 @@
     <ul class="nav nav-list">
         <li class="nav-header">{% trans "Account" %}</li>
         {% comment%}
-        <li><a href="{% url acct_email %}">{% trans "Email Addresses" %}</a></li>
-        <li><a href="{% url auth_password_reset %}">{% trans "Set Password" %}</a></li>
+        <li><a href="{% url "acct_email' %}">{% trans "Email Addresses" %}</a></li>
+        <li><a href="{% url "auth_password_reset" %}">{% trans "Set Password" %}</a></li>
         {% endcomment %}
-        <li><a href="{% url account-details%}">{% trans "Account Details" %}</a></li>
-        <li><a href="{% url auth_password_change %}">{% trans "Change Password" %}</a></li>
-        <li><a href="{% url auth_password_reset %}">{% trans "Reset Password" %}</a></li>
+        <li><a href="{% url "account-details" %}">{% trans "Account Details" %}</a></li>
+        <li><a href="{% url "auth_password_change" %}">{% trans "Change Password" %}</a></li>
+        <li><a href="{% url "auth_password_reset" %}">{% trans "Reset Password" %}</a></li>
         {% comment %}
-            <li><a href="{% url acct_language_change %}">{% trans "Language" %}</a></li>
-            <li><a href="{% url acct_timezone_change %}">{% trans "Timezone" %}</a></li>
+            <li><a href="{% url "acct_language_change" %}">{% trans "Language" %}</a></li>
+            <li><a href="{% url "acct_timezone_change" %}">{% trans "Timezone" %}</a></li>
         {% endcomment %}
     </ul>
 {% endblock %}

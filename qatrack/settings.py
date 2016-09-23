@@ -1,9 +1,10 @@
 # Django settings for qatrack project.
 import django.conf.global_settings as DEFAULT_SETTINGS
 import os
+import sys
 
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Debug settings - remember to set both DEBUG & TEMPLATE_DEBUG to false when
 # deploying (either here or in local_settings.py)
 DEBUG = True
@@ -16,11 +17,11 @@ ADMINS = (
 MANAGERS = ADMINS
 SEND_BROKEN_LINK_EMAILS = True
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # misc settings
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
-VERSION = "0.2.8.1"
+VERSION = "0.2.9"
 BUG_REPORT_URL = "https://bitbucket.org/tohccmedphys/qatrackplus/issues/new"
 FEATURE_REQUEST_URL = BUG_REPORT_URL
 
@@ -34,7 +35,7 @@ ROOT_URLCONF = 'qatrack.urls'
 SITE_ID = 1
 SITE_NAME = "QATrack+"
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Database settings
 
 # if you wish to override the database settings below (e.g. for deployment),
@@ -50,7 +51,7 @@ DATABASES = {
     }
 }
 
-#----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Default local settings
 
 # Local time zone for this installation. Choices can be found here:
@@ -88,8 +89,11 @@ USE_I18N = True
 
 CONSTANT_PRECISION = 8
 
+# This is the warning message given to the user when a test result is out of tolerance
+# Override this setting in local_settings.py to a locally relevant warning message
+DEFAULT_WARNING_MESSAGE = "Do not treat"
 
-#----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # static media settings
 
 #  Absolute filesystem path to the directory that will hold user-uploaded files.
@@ -140,14 +144,14 @@ if not os.path.isfile(SITE_SPECIFIC_CSS_PATH):
         f.write("/* You can place any site specific css in this file*/\n")
 
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Middleware
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    #'django.contrib.auth.middleware.RemoteUserMiddleware',
+    # 'django.contrib.auth.middleware.RemoteUserMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'qatrack.middleware.login_required.LoginRequiredMiddleware',
     'qatrack.middleware.maintain_filters.FilterPersistMiddleware',
@@ -164,14 +168,14 @@ LOGIN_REDIRECT_URL = '/qa/unit/'
 LOGIN_URL = "/accounts/login/"
 
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Template settings
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
-    #('django.template.loaders.cached.Loader', (
+    # ('django.template.loaders.cached.Loader', (
     'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
-    #)),
+    # )),
     #     'django.template.loaders.eggs.Loader',
 )
 
@@ -190,7 +194,7 @@ TEMPLATE_CONTEXT_PROCESSORS += [
     "qatrack.context_processors.site",
 ]
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Fixtures
 # you can add more default fixture locations here
 FIXTURE_DIRS = (
@@ -198,7 +202,7 @@ FIXTURE_DIRS = (
     'fixtures/defaults/units',
 )
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -211,7 +215,7 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
 
     'tastypie',
-
+    'listable',
     'genericdropdown',
 
     'qatrack.cache',
@@ -219,14 +223,13 @@ INSTALLED_APPS = [
     'qatrack.units',
     'qatrack.qa',
     'qatrack.theme_bootstrap',
-    'qatrack.data_tables',
     'qatrack.notifications',
     'qatrack.contacts',
 
     'south',
     'admin_views',
 ]
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Cache settings
 
 CACHE_UNREVIEWED_COUNT = 'unreviewed-count'
@@ -245,18 +248,19 @@ CACHES = {
     }
 }
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Session Settings
 SESSION_COOKIE_AGE = 14 * 24 * 60 * 60
+SESSION_SAVE_EVERY_REQUEST = True
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Email and notification settings
 EMAIL_NOTIFICATION_USER = None
 EMAIL_NOTIFICATION_PWD = None
 EMAIL_NOTIFICATION_TEMPLATE = "notification_email.txt"
 EMAIL_NOTIFICATION_SENDER = "qatrack"
 # use either a static subject or a customizable template
-#EMAIL_NOTIFICATION_SUBJECT = "QATrack+ Test Status Notification"
+# EMAIL_NOTIFICATION_SUBJECT = "QATrack+ Test Status Notification"
 EMAIL_NOTIFICATION_SUBJECT_TEMPLATE = "notification_email_subject.txt"
 
 EMAIL_FAIL_SILENTLY = True
@@ -267,17 +271,17 @@ EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Account settings
 # a list of group names to automatically add users to when they sign up
 DEFAULT_GROUP_NAMES = []  # eg ["Therapists"]
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Authentication backend settings
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
-    #'qatrack.accounts.backends.ActiveDirectoryGroupMembershipSSLBackend',
-    #'qatrack.accounts.backends.WindowsIntegratedAuthenticationBackend',
+    # 'qatrack.accounts.backends.ActiveDirectoryGroupMembershipSSLBackend',
+    # 'qatrack.accounts.backends.WindowsIntegratedAuthenticationBackend',
 )
 
 # active directory settings (not required if only using ModelBackend
@@ -311,7 +315,7 @@ AD_DEBUG = False
 
 CLEAN_USERNAME_STRING = ''
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Logging Settings
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
@@ -354,34 +358,71 @@ LOGGING = {
 
 FORCE_SCRIPT_NAME = None
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # QA Settings
 PAGINATE_DEFAULT = 50  # remember to change iDisplayLength in unittestcollection.js and testlistinstance.js if you change this
 
 NHIST = 5  # number of historical test results to show when reviewing/performing qa
 
 ICON_SETTINGS = {
-    'SHOW_STATUS_ICONS_PERFORM':  True,
-    'SHOW_STATUS_ICONS_LISTING':  True,
-    'SHOW_STATUS_ICONS_REVIEW':  True,
-    'SHOW_STATUS_ICONS_HISTORY':  False,
-    'SHOW_REVIEW_ICONS':  True,
-    'SHOW_DUE_ICONS':  True,
+    'SHOW_STATUS_ICONS_PERFORM': True,
+    'SHOW_STATUS_ICONS_LISTING': True,
+    'SHOW_STATUS_ICONS_REVIEW': True,
+    'SHOW_STATUS_ICONS_HISTORY': False,
+    'SHOW_REVIEW_ICONS': True,
+    'SHOW_DUE_ICONS': True,
 }
 
 
 # Display ordering on the "Choose Unit" page. (Use "name" or "number")
 ORDER_UNITS_BY = "number"
 
-#------------------------------------------------------------------------------
-# Testing settings
-TEST_RUNNER = 'django_coverage.coverage_runner.CoverageRunner'
-COVERAGE_ADDITIONAL_MODULES = ["qatrack.tests"]
+# Enable or disable the "Difference" column when reviewing test lists
+REVIEW_DIFF_COL = False
 
-#------------------------------------------------------------------------------
+# default display settings for test statuses
+TEST_STATUS_DISPLAY = {
+    'fail': "Fail",
+    'not_done': "Not Done",
+    'done': "Done",
+    'ok': "OK",
+    'tolerance': "Tolerance",
+    'action': "Action",
+    'no_tol': "No Tol Set",
+}
+
+# default short display settings for test statuses
+TEST_STATUS_DISPLAY_SHORT = {
+    'fail': "Fail",
+    'not_done': "Not Done",
+    'done': "Done",
+    'ok': "OK",
+    'tolerance': "TOL",
+    'action': "ACT",
+    'no_tol': "NO TOL",
+}
+
+# ------------------------------------------------------------------------------
 # local_settings contains anything that should be overridden
 # based on site specific requirements (e.g. deployment, development etc)
 try:
     from local_settings import *  # NOQA
 except ImportError:
     pass
+
+if FORCE_SCRIPT_NAME:
+    # Fix URL for Admin Views if FORCE_SCRIPT_NAME_SET in local_settings
+    ADMIN_VIEWS_URL_PREFIX = FORCE_SCRIPT_NAME + "/admin"
+
+
+# ------------------------------------------------------------------------------
+# Testing settings
+
+SELENIUM_VIRTUAL_DISPLAY = False # Set to True to use headless browser for testing (requires xvfb)
+SELENIUM_USE_CHROME = False # Set to True to use Chrome instead of FF (requires ChromeDriver)
+SELENIUM_CHROME_PATH = '' # Set full path of Chromedriver binary if SELENIUM_USE_CHROME == True
+
+
+if 'test' in sys.argv:
+
+    from test_settings import * # noqa

@@ -11,7 +11,6 @@ from qatrack.qa.signals import testlist_complete
 import models
 
 
-#----------------------------------------------------------------------
 @receiver(testlist_complete)
 def email_on_testlist_save(*args, **kwargs):
     """TestListInstance was completed.  Send email notification if applicable"""
@@ -58,19 +57,16 @@ def email_on_testlist_save(*args, **kwargs):
     )
 
 
-#----------------------------------------------------------------------
 def failing_tests_to_report(test_list_instance):
     """return failing tests to be reported for this test_list_instance"""
     return test_list_instance.failing_tests()
 
 
-#----------------------------------------------------------------------
 def tolerance_tests_to_report(test_list_instance):
     """return tolerance tests to be reported for this test_list_instance"""
     return test_list_instance.tolerance_tests()
 
 
-#----------------------------------------------------------------------
 def get_notification_recipients():
     tolerance_users = User.objects.filter(groups__notificationsubscription__warning_level__lte=models.TOLERANCE).distinct()
     action_users = User.objects.filter(groups__notificationsubscription__warning_level__lte=models.ACTION).distinct()
