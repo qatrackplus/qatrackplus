@@ -194,10 +194,12 @@ def create_reference(name="ref", ref_type=models.NUMERICAL, value=1, created_by=
     return r
 
 
-def create_tolerance(tol_type=models.ABSOLUTE, act_low=-2, tol_low=-1, tol_high=1, act_high=2, created_by=None):
+def create_tolerance(tol_type=models.ABSOLUTE, act_low=-2, tol_low=-1, tol_high=1, act_high=2,
+        created_by=None, mc_pass_choices=None, mc_tol_choices=None):
     if created_by is None:
         created_by = create_user()
-    tol = models.Tolerance(
+
+    kwargs = dict(
         type=tol_type,
         act_low=act_low,
         tol_low=tol_low,
@@ -205,6 +207,16 @@ def create_tolerance(tol_type=models.ABSOLUTE, act_low=-2, tol_low=-1, tol_high=
         act_high=act_high,
         created_by=created_by, modified_by=created_by
     )
+
+    if tol_type == models.MULTIPLE_CHOICE:
+        kwargs = dict(
+            type=tol_type,
+            mc_tol_choices=mc_tol_choices,
+            mc_pass_choices=mc_pass_choices,
+            created_by=created_by, modified_by=created_by
+        )
+
+    tol = models.Tolerance(**kwargs)
     tol.save()
     return tol
 

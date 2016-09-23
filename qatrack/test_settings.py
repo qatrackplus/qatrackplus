@@ -26,6 +26,7 @@ NOSE_ARGS = [
     '--cover-xml',  # produle XML coverage info
     '--cover-xml-file=coverage.xml',  # the coverage info file
     '--cover-package=qatrack.qa,qatrack.units,qatrack.contacts,qatrack.accounts',
+    '--with-id',
     '--nocapture',
     '--nologcapture',
 ]
