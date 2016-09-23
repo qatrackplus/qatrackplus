@@ -16,9 +16,6 @@ crucial in finally getting it out the door.
 As always Crystal Angers has been a big help in testing and critical analysis
 of new features.
 
-For instructions on how to upgrade from v0.2.8 
-[please see the wiki](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/v/0.2.9/release-notes.md)
-
 
 Details of 0.2.9 below:
 
@@ -55,6 +52,12 @@ The next major release of QATrack+ will no longer officially support the followi
 
 - Python 2.6 (Python 2.7 & 3.4+ only): In order to provide support for Python 3 we will be dropping support for Python 2.6
 - IE7-IE10 (IE 11+ Only): IE7-IE10 are no longer supported by Microsoft and we will no longer be testing these platforms.
+
+### Upgrade Instructions
+
+For instructions on how to upgrade from v0.2.8 
+[please see the wiki](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/v/0.2.9/release-notes.md)
+
 
 
 ## v0.2.8 ##
