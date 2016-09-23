@@ -2,7 +2,7 @@
 ###### Copyright 2012 The Ottawa Hospital Cancer Center
 ---
 
-https://travis-ci.org/randlet/qatrackplus-ci.svg?branch=master
+![build badge](https://travis-ci.org/randlet/qatrackplus-ci.svg?branch=master)
 
 
 QATrack+ is a fully configurable, free, and open source (MIT License) web
@@ -96,7 +96,3 @@ A javascript utility library [Lo Dash](http://lodash.com/)
 ### jQuery File Upload Plugin ###
 
 [A plugin](https://github.com/blueimp/jQuery-File-Upload) for doing ajax uplods with jQuery.
-
-
-
-
