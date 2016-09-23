@@ -46,3 +46,8 @@ DEBUG = True
 
 SELENIUM_DRIVER = webdriver.Firefox
 os.environ['DJANGO_LIVE_TEST_SERVER_ADDRESS'] = 'localhost:8000'
+
+try:
+    from local_test_settings import *
+except ImportError:
+    pass
