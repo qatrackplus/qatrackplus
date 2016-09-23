@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.contrib.auth.models import User, Group
 from django.utils.translation import ugettext as _
 from django.core import urlresolvers
@@ -9,13 +9,12 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 from django.utils import timezone
 
-
 from qatrack.units.models import Unit
 from qatrack.qa import utils
 
 import re
 
-#All available test types
+# All available test types
 BOOLEAN = "boolean"
 NUMERICAL = "numerical"
 SIMPLE = "simple"
@@ -25,6 +24,11 @@ MULTIPLE_CHOICE = "multchoice"
 STRING = "string"
 UPLOAD = "upload"
 STRING_COMPOSITE = "scomposite"
+
+NUMERICAL_TYPES = (COMPOSITE, CONSTANT, SIMPLE, )
+STRING_TYPES = (STRING, STRING_COMPOSITE, MULTIPLE_CHOICE, )
+CALCULATED_TYPES = (UPLOAD, COMPOSITE, STRING_COMPOSITE, )
+NO_SKIP_REQUIRED_TYPES = (COMPOSITE, CONSTANT, STRING_COMPOSITE, )
 
 TEST_TYPE_CHOICES = (
     (BOOLEAN, "Boolean"),
@@ -67,12 +71,19 @@ ACT_LOW = "act_low"
 TOL_HIGH = "tol_high"
 TOL_LOW = "tol_low"
 
+status_displays = settings.TEST_STATUS_DISPLAY
+NOT_DONE_DISP = status_displays.get("not_done", "Not Done")
+OK_DISP = status_displays.get("ok", "OK")
+TOL_DISP = status_displays.get("tolerance", "Tolerance")
+ACT_DISP = status_displays.get("action", "Action")
+NO_TOL_DISP = status_displays.get("no_tol", "No Tol Set")
+
 PASS_FAIL_CHOICES = (
-    (NOT_DONE, "Not Done"),
-    (OK, "OK"),
-    (TOLERANCE, "Tolerance"),
-    (ACTION, "Action"),
-    (NO_TOL, "No Tol Set"),
+    (NOT_DONE, NOT_DONE_DISP),
+    (OK, OK_DISP),
+    (TOLERANCE, TOL_DISP),
+    (ACTION, ACT_DISP),
+    (NO_TOL, NO_TOL_DISP),
 )
 PASS_FAIL_CHOICES_DISPLAY = dict(PASS_FAIL_CHOICES)
 
@@ -106,24 +117,23 @@ PERMISSIONS = (
         "Reviewing",
         (
             ("qa.can_view_completed", "Can view previously completed instances", "Allow a user to view previous test list results"),
+            ("qa.can_view_overview", "Can view program overview", "Allows a user to view the overall program status"),
             ("qa.can_review", "Can review tests", "Allows a user to perform review & approval functions"),
             ("qa.can_view_charts", "Can chart test history", "Gives user the ability to view and create charts of historical test results"),
             ("qa.can_review_own_tests", "Can review self-performed tests", "Allows a user to perform review & approval functions on self-performed tests"),
+            ("qa.can_review_non_visible_tli", "Can review test list instances not visible to a user", "Allows a user to review test list instances that are not visible to any of their groups")
         ),
     ),
 )
 
 
-#============================================================================
 class FrequencyManager(models.Manager):
     """Provides a convenience method for grabbing available convenience slug/names"""
 
-    #----------------------------------------------------------------------
     def frequency_choices(self):
         return self.get_query_set().values_list("slug", "name")
 
 
-#============================================================================
 class Frequency(models.Model):
     """Frequencies for performing QA tasks with configurable due dates"""
 
@@ -147,28 +157,23 @@ class Frequency(models.Model):
             ("can_choose_frequency", "Choose QA by Frequency"),
         )
 
-    #----------------------------------------------------------------------
     def nominal_delta(self):
         """return datetime delta for nominal interval"""
         if self.nominal_interval is not None:
             return timezone.timedelta(days=self.nominal_interval)
 
-    #---------------------------------------------------------------------------
     def due_delta(self):
         """return datetime delta for nominal interval"""
         if self.due_interval is not None:
             return timezone.timedelta(days=self.due_interval)
 
-    #----------------------------------------------------------------------
     def __unicode__(self):
         return self.name
 
 
-#============================================================================
 class StatusManager(models.Manager):
     """manager for TestInstanceStatus"""
 
-    #----------------------------------------------------------------------
     def default(self):
         """return the default TestInstanceStatus"""
         try:
@@ -177,7 +182,6 @@ class StatusManager(models.Manager):
             return
 
 
-#============================================================================
 class TestInstanceStatus(models.Model):
     """Configurable statuses for QA Tests"""
 
@@ -217,7 +221,6 @@ class TestInstanceStatus(models.Model):
     class Meta:
         verbose_name_plural = "statuses"
 
-    #----------------------------------------------------------------------
     def save(self, *args, **kwargs):
         """set status to unreviewed if not previously set"""
 
@@ -230,12 +233,10 @@ class TestInstanceStatus(models.Model):
 
         super(TestInstanceStatus, self).save(*args, **kwargs)
 
-    #---------------------------------------------------------------------------
     def __unicode__(self):
         return self.name
 
 
-#============================================================================
 class AutoReviewRule(models.Model):
     pass_fail = models.CharField(max_length=15, choices=PASS_FAIL_CHOICES, unique=True)
     status = models.ForeignKey(TestInstanceStatus)
@@ -244,7 +245,6 @@ class AutoReviewRule(models.Model):
         return "%s => %s" % (PASS_FAIL_CHOICES_DISPLAY[self.pass_fail], self.status)
 
 
-#============================================================================
 class Reference(models.Model):
     """Reference values for various QA :model:`Test`s"""
 
@@ -260,12 +260,10 @@ class Reference(models.Model):
     modified = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(User, editable=False, related_name="reference_modifiers")
 
-    #----------------------------------------------------------------------
     def clean_fields(self):
         if self.type == BOOLEAN and self.value not in (0, 1):
             raise ValidationError({"value": ["Boolean values must be 0 or 1"]})
 
-    #----------------------------------------------------------------------
     def value_display(self):
         """return user friendly display value for this reference"""
 
@@ -275,13 +273,11 @@ class Reference(models.Model):
             return "Yes" if int(self.value) == 1 else "No"
         return "%.6G" % (self.value)
 
-    #---------------------------------------------------------------------------
     def __unicode__(self):
         """more helpful display name"""
         return self.value_display()
 
 
-#============================================================================
 class Tolerance(models.Model):
     """
     Model for storing tolerance/action levels and tolerance/action choices
@@ -289,13 +285,13 @@ class Tolerance(models.Model):
     """
 
     type = models.CharField(max_length=20, help_text=_("Select whether this will be an absolute or relative tolerance criteria"), choices=TOL_TYPE_CHOICES)
-    act_low = models.FloatField(verbose_name=_("Action Low"), help_text=_("Value of lower action level"), null=True, blank=True)
-    tol_low = models.FloatField(verbose_name=_("Tolerance Low"), help_text=_("Value of lower tolerance level"), null=True, blank=True)
-    tol_high = models.FloatField(verbose_name=_("Tolerance High"), help_text=_("Value of upper tolerance level"), null=True, blank=True)
-    act_high = models.FloatField(verbose_name=_("Action High"), help_text=_("Value of upper action level"), null=True, blank=True)
+    act_low = models.FloatField(verbose_name=_("%s Low" % ACT_DISP), help_text=_("Value of lower %s level" % ACT_DISP), null=True, blank=True)
+    tol_low = models.FloatField(verbose_name=_("%s Low" % TOL_DISP), help_text=_("Value of lower %s level" % TOL_DISP), null=True, blank=True)
+    tol_high = models.FloatField(verbose_name=_("%s High" % TOL_DISP), help_text=_("Value of upper %s level" % TOL_DISP), null=True, blank=True)
+    act_high = models.FloatField(verbose_name=_("%s High" % ACT_DISP), help_text=_("Value of upper %s level" % ACT_DISP), null=True, blank=True)
 
     mc_pass_choices = models.CharField(
-        verbose_name=_("Multiple Choice Pass Values"),
+        verbose_name=_("Multiple Choice %s Values" % OK_DISP),
         max_length=2048,
         help_text=_("Comma seperated list of choices that are considered passing"),
         null=True,
@@ -303,7 +299,7 @@ class Tolerance(models.Model):
     )
 
     mc_tol_choices = models.CharField(
-        verbose_name=_("Multiple Choice Tolerance Values"),
+        verbose_name=_("Multiple Choice %s Values" % TOL_DISP),
         max_length=2048,
         help_text=_("Comma seperated list of choices that are considered at tolerance"),
         null=True,
@@ -322,15 +318,12 @@ class Tolerance(models.Model):
 
         ordering = ["type", "act_low", "tol_low", "tol_high", "act_high"]
 
-    #---------------------------------------------------------------------------
     def pass_choices(self):
         return self.mc_pass_choices.split(",") if self.mc_pass_choices else []
 
-    #---------------------------------------------------------------------------
     def tol_choices(self):
         return self.mc_tol_choices.split(",") if self.mc_tol_choices else []
 
-    #---------------------------------------------------------------------------
     def clean_choices(self):
         """make sure choices provided if Tolerance Type is MultipleChoice"""
 
@@ -363,20 +356,17 @@ class Tolerance(models.Model):
         if errors:
             raise ValidationError({"mc_pass_choices": errors})
 
-    #----------------------------------------------------------------------
     def clean_tols(self):
         if self.type in (ABSOLUTE, PERCENT):
             if all([getattr(self, c) is None for c in (ACT_HIGH, ACT_LOW, TOL_HIGH, TOL_LOW,)]):
-                raise ValidationError({ACT_LOW: ["You must set at least one tolerance or action level for this tolerance type"]})
+                raise ValidationError({ACT_LOW: ["You must set at least one %s or %s level for this tolerance type" % (TOL_DISP, ACT_DISP)]})
 
-    #----------------------------------------------------------------------
     def clean_fields(self, exclude=None):
         """extra validation for Tests"""
         super(Tolerance, self).clean_fields(exclude)
         self.clean_choices()
         self.clean_tols()
 
-    #---------------------------------------------------------------------------
     def tolerances_for_value(self, value):
         """return dict containing tolerances for input value"""
 
@@ -395,12 +385,10 @@ class Tolerance(models.Model):
                 tols[attr] = value * (1. + tv / 100.) if tv is not None else None
         return tols
 
-    #---------------------------------------------------------------
     @property
     def name(self):
         return self.__unicode__()
 
-    #---------------------------------------------------------------------------
     def __unicode__(self):
         """more helpful interactive display name"""
         vals = (self.act_low, self.tol_low, self.tol_high, self.act_high)
@@ -411,10 +399,9 @@ class Tolerance(models.Model):
             vals = ["%.2f%%" % v if v is not None else '--' for v in vals]
             return "Percent(%s, %s, %s, %s)" % tuple(vals)
         elif self.type == MULTIPLE_CHOICE:
-            return "M.C.(Pass=%s, Tol=%s)" % (":".join(self.pass_choices()), ":".join(self.tol_choices()))
+            return "M.C.(%s=%s, %s=%s)" % (OK_DISP, ":".join(self.pass_choices()), TOL_DISP, ":".join(self.tol_choices()))
 
 
-#============================================================================
 class Category(models.Model):
     """A model used for categorizing :model:`Test`s"""
 
@@ -431,13 +418,11 @@ class Category(models.Model):
         verbose_name_plural = "categories"
         ordering = ("name",)
 
-    #----------------------------------------------------------------------
     def __unicode__(self):
         """return display representation of object"""
         return self.name
 
 
-#============================================================================
 class Test(models.Model):
     """Test to be completed as part of a QA :model:`TestList`"""
 
@@ -462,7 +447,9 @@ class Test(models.Model):
         help_text=_("Indicate if this test is a %s" % (','.join(x[1].title() for x in TEST_TYPE_CHOICES)))
     )
 
-    display_image = models.BooleanField("Display image", help_text=_("Image uploads only: Show uploaded images under the testlist"))
+    hidden = models.BooleanField(_("Hidden"), help_text=_("Don't display this test when performing QA"), default=False)
+    skip_without_comment = models.BooleanField(_("Skip without comment"), help_text=_("Allow users to skip this test without a comment"), default=False)
+    display_image = models.BooleanField("Display image", help_text=_("Image uploads only: Show uploaded images under the testlist"), default=False)
     choices = models.CharField(max_length=2048, help_text=_("Comma seperated list of choices for multiple choice test types"), null=True, blank=True)
     constant_value = models.FloatField(help_text=_("Only required for constant value types"), null=True, blank=True)
 
@@ -476,45 +463,36 @@ class Test(models.Model):
     modified = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(User, editable=False, related_name="test_modifier")
 
-    #----------------------------------------------------------------------
     def is_numerical_type(self):
         """return whether or not this is a numerical test"""
-        return self.type in (COMPOSITE, CONSTANT, SIMPLE)
+        return self.type in NUMERICAL_TYPES
 
-    #---------------------------------------------------------------
     def is_string_type(self):
-        return self.type in (STRING, STRING_COMPOSITE)
+        return self.type in STRING_TYPES
 
-    #----------------------------------------------------------------------
     def is_string(self):
         return self.type == STRING
 
-    #----------------------------------------------------------------------
     def is_string_composite(self):
         return self.type == STRING_COMPOSITE
 
-    #----------------------------------------------------------------------
     def is_upload(self):
         """Return whether or not this is a boolean test"""
         return self.type == UPLOAD
 
-    #----------------------------------------------------------------------
     def is_boolean(self):
         """Return whether or not this is a boolean test"""
         return self.type == BOOLEAN
 
-    #----------------------------------------------------------------------
     def is_mult_choice(self):
         """return True if this is a multiple choice test else, false"""
         return self.type == MULTIPLE_CHOICE
 
-    #----------------------------------------------------------------------
     def skip_required(self):
-        return self.type not in (COMPOSITE, CONSTANT, STRING_COMPOSITE, )
+        return self.type not in NO_SKIP_REQUIRED_TYPES
 
-    #---------------------------------------------------------------------------
     def check_test_type(self, field, test_types, display):
-        #"""check that correct test type is set"""
+        """check that correct test type is set"""
         if isinstance(test_types, basestring):
             test_types = [test_types]
 
@@ -526,14 +504,13 @@ class Test(models.Model):
             errors.append(_("Test Type is %s but no %s value provided" % (display, display)))
         return errors
 
-    #----------------------------------------------------------------------
     def clean_calculation_procedure(self):
         """make sure a valid calculation procedure"""
 
-        if not self.calculation_procedure and self.type not in (UPLOAD, COMPOSITE, STRING_COMPOSITE):
+        if not self.calculation_procedure and self.type not in CALCULATED_TYPES:
             return
 
-        errors = self.check_test_type(self.calculation_procedure, [UPLOAD, COMPOSITE, STRING_COMPOSITE], "Calculation Procedure")
+        errors = self.check_test_type(self.calculation_procedure, CALCULATED_TYPES, "Calculation Procedure")
         self.calculation_procedure = str(self.calculation_procedure).replace("\r\n", "\n")
 
         macro_var_set = re.findall("^\s*%s\s*=.*$" % (self.slug), self.calculation_procedure, re.MULTILINE)
@@ -553,14 +530,12 @@ class Test(models.Model):
         if errors:
             raise ValidationError({"calculation_procedure": errors})
 
-    #----------------------------------------------------------------------
     def clean_constant_value(self):
         """make sure a constant value is provided if TestType is Constant"""
         errors = self.check_test_type(self.constant_value, CONSTANT, "Constant")
         if errors:
             raise ValidationError({"constant_value": errors})
 
-    #---------------------------------------------------------------------------
     def clean_choices(self):
         """make sure choices provided if TestType is MultipleChoice"""
         errors = self.check_test_type(self.choices, MULTIPLE_CHOICE, "Multiple Choice")
@@ -577,7 +552,6 @@ class Test(models.Model):
         if errors:
             raise ValidationError({"choices": errors})
 
-    #----------------------------------------------------------------------
     def clean_slug(self):
         """make sure slug is valid"""
 
@@ -591,7 +565,6 @@ class Test(models.Model):
         if errors:
             raise ValidationError({"slug": errors})
 
-    #----------------------------------------------------------------------
     def clean_fields(self, exclude=None):
         """extra validation for Tests"""
         super(Test, self).clean_fields(exclude)
@@ -600,35 +573,102 @@ class Test(models.Model):
         self.clean_slug()
         self.clean_choices()
 
-    #---------------------------------------------------------------------------
     def get_choices(self):
         """return choices for multiple choice tests"""
         if self.type == MULTIPLE_CHOICE:
             cs = self.choices.split(",")
-            return zip(range(len(cs)), cs)
+            return zip(cs, cs)
 
-    #---------------------------------------------------------------------------
-    def get_choice_value(self, choice):
-        """return string representing integer choice value"""
-        if self.type == MULTIPLE_CHOICE:
-            return self.choices.split(",")[int(choice)]
-
-    #----------------------------------------------------------------------
     def __unicode__(self):
         """return display representation of object"""
         return "%s" % (self.name)
 
 
-#============================================================================
+def get_utc_tlc_ids(active=None, units=None, frequencies=None):
+
+    tlcct = ContentType.objects.get_for_model(TestListCycle)
+
+    tlcs = UnitTestCollection.objects.filter(content_type=tlcct)
+
+    if active is not None:
+        tlcs = tlcs.filter(active=active)
+
+    if units is not None:
+        tlcs = tlcs.filter(unit__in=units)
+
+    if frequencies is not None:
+        tlcs = tlcs.filter(frequency__in=frequencies)
+
+    tlcs = tlcs.values(
+        'object_id'
+    ).annotate(
+        Count('object_id')
+    ).filter(
+        object_id__count__gt=0
+    ).values_list("object_id", flat=True)
+
+    return tlcs
+
+
+def get_utc_tl_ids(active=None, units=None, frequencies=None):
+
+    tlct = ContentType.objects.get_for_model(TestList)
+
+    tls = UnitTestCollection.objects.filter(content_type=tlct)
+
+    if active is not None:
+        tls = tls.filter(active=active)
+
+    if units is not None:
+        tls = tls.filter(unit__in=units)
+
+    if frequencies is not None:
+        tls = tls.filter(frequency__in=frequencies)
+
+    tls = tls.values(
+        'object_id'
+    ).annotate(
+        Count('object_id')
+    ).filter(
+        object_id__count__gt=0
+    ).values_list("object_id", flat=True)
+
+    tlcs = get_utc_tlc_ids(active=active, units=units, frequencies=frequencies)
+    tls_from_tlcs = TestListCycleMembership.objects.filter(
+        cycle_id__in=tlcs
+    ).values_list("test_list_id", flat=True)
+
+    return list(tls) + list(tls_from_tlcs)
+
+
 class UnitTestInfoManager(models.Manager):
 
-    #----------------------------------------------------------------------
     def get_query_set(self):
         return super(UnitTestInfoManager, self).get_query_set()
 
+    def active(self, queryset=None):
+        """Only return UTI's who's tests belong to at least 1 test list that
+        is assigned to an active UnitTestCollection"""
 
-#============================================================================
+        qs = queryset or self.get_query_set()
+
+        return qs.filter(
+            test__testlistmembership__test_list__in=get_utc_tl_ids(active=True)
+        ).distinct()
+
+    def inactive(self, queryset=None):
+        """Only return UTI's who's tests don't belong to at least 1 test list that
+        is assigned to an active UnitTestCollection"""
+
+        qs = queryset or self.get_query_set()
+
+        return qs.exclude(
+            test__testlistmembership__test_list__in=get_utc_tl_ids(active=True)
+        ).distinct()
+
+
 class UnitTestInfo(models.Model):
+
     unit = models.ForeignKey(Unit)
     test = models.ForeignKey(Test)
 
@@ -641,7 +681,6 @@ class UnitTestInfo(models.Model):
     # last_instance = models.ForeignKey("TestInstance",null=True, editable=False,on_delete=models.SET_NULL)
     objects = UnitTestInfoManager()
 
-    #============================================================================
     class Meta:
         verbose_name_plural = "Set References & Tolerances"
         unique_together = ["test", "unit"]
@@ -650,7 +689,6 @@ class UnitTestInfo(models.Model):
             ("can_view_ref_tol", "Can view Refs and Tols"),
         )
 
-    #----------------------------------------------------------------------
     def clean(self):
         """extra validation for Tests"""
 
@@ -670,7 +708,6 @@ class UnitTestInfo(models.Model):
                 msg = _("Please leave tolerance blank for boolean tests")
                 raise ValidationError(msg)
 
-    #----------------------------------------------------------------------
     def get_history(self, number=5):
         """return last 'number' of instances for this test performed on input unit
         list is ordered in ascending dates
@@ -680,12 +717,10 @@ class UnitTestInfo(models.Model):
         # hist = hist.select_related("status")
         return [(x.work_completed, x.value, x.pass_fail, x.status) for x in reversed(hist[:number])]
 
-    #----------------------------------------------------------------------
     def __unicode__(self):
         return "UnitTestInfo(%s)" % self.pk
 
 
-#============================================================================
 class TestListMembership(models.Model):
     """Keep track of ordering for tests within a test list"""
     test_list = models.ForeignKey("TestList")
@@ -696,12 +731,10 @@ class TestListMembership(models.Model):
         ordering = ("order",)
         unique_together = ("test_list", "test",)
 
-    #----------------------------------------------------------------------
     def __unicode__(self):
         return "TestListMembership(pk=%s)" % self.pk
 
 
-#============================================================================
 class TestCollectionInterface(models.Model):
     """abstract base class for Tests collection (i.e. TestList's and TestListCycles"""
 
@@ -724,38 +757,31 @@ class TestCollectionInterface(models.Model):
     class Meta:
         abstract = True
 
-    #----------------------------------------------------------------------
     def get_list(self, day=0):
         return 0, self
 
-    #----------------------------------------------------------------------
     def next_list(self, day):
         """Return the day and list following the input day"""
         return 0, self
 
-    #----------------------------------------------------------------------
     def first(self):
         return self
 
-    #----------------------------------------------------------------------
     def all_tests(self):
         """returns all tests from this list and sublists"""
         return Test.objects.filter(
             testlistmembership__test_list__in=self.all_lists()
         ).distinct().prefetch_related("category")
 
-    #---------------------------------------------------------------
     def test_list_members(self):
         """return all days from this collection"""
         raise NotImplementedError
 
-    #----------------------------------------------------------------------
     def content_type(self):
         """return content type of this object"""
         return ContentType.objects.get_for_model(self)
 
 
-#============================================================================
 class TestList(TestCollectionInterface):
     """Container for a collection of QA :model:`Test`s"""
 
@@ -766,60 +792,54 @@ class TestList(TestCollectionInterface):
                                       help_text=_("Choose any sublists that should be performed as part of this list.")
                                       )
 
-    #---------------------------------------------------------------
+    warning_message = models.CharField(
+        max_length=255,
+        help_text=_("Message given when a test value is out of tolerance"),
+        default=settings.DEFAULT_WARNING_MESSAGE
+    )
+
     def test_list_members(self):
         """return all days from this collection"""
         return TestList.objects.filter(pk=self.pk)
 
-    #----------------------------------------------------------------------
     def all_lists(self):
         """return query for self and all sublists"""
-        return TestList.objects.filter(pk=self.pk) | self.sublists.all()
+        return TestList.objects.filter(pk=self.pk) | self.sublists.order_by("name")
 
-    #----------------------------------------------------------------------
     def ordered_tests(self):
         """return list of all tests/sublist tests in order"""
         tests = list(self.tests.all().order_by("testlistmembership__order").select_related("category"))
-        for sublist in self.sublists.all():
+        for sublist in self.sublists.order_by("name"):
             tests.extend(sublist.ordered_tests())
         return tests
 
-    #----------------------------------------------------------------------
     def __len__(self):
         return 1
 
-    #----------------------------------------------------------------------
     def __unicode__(self):
         """return display representation of object"""
-        return "TestList(%s)" % self.name
+        return "(%s) %s" % (self.pk, self.name)
 
 
-#============================================================================
 class UnitTestListManager(models.Manager):
-    #----------------------------------------------------------------------
     def by_unit(self, unit):
         return self.get_query_set().filter(unit=unit)
 
-    #----------------------------------------------------------------------
     def by_frequency(self, frequency):
         return self.get_query_set().filter(frequency=frequency)
 
-    #----------------------------------------------------------------------
     def by_unit_frequency(self, unit, frequency):
         return self.by_frequency(frequency).filter(unit=unit)
 
-    #----------------------------------------------------------------------
     def test_lists(self):
         return self.get_query_set().filter(
             content_type=ContentType.objects.get(app_label="qa", model="testlist")
         )
 
-    #----------------------------------------------------------------------
     def by_visibility(self, groups):
         return self.get_query_set().filter(visible_to__in=groups)
 
 
-#============================================================================
 class UnitTestCollection(models.Model):
     """keeps track of which units should perform which test lists at a given frequency"""
 
@@ -846,8 +866,11 @@ class UnitTestCollection(models.Model):
         unique_together = ("unit", "frequency", "content_type", "object_id",)
         verbose_name_plural = _("Assign Test Lists to Units")
         # ordering = ("testlist__name","testlistcycle__name",)
+        permissions = (
+            ("can_view_overview", "Can view program overview"),
+            ("can_review_non_visible_tli", "Can view tli and utc not visible to user's groups")
+        )
 
-    #----------------------------------------------------------------------
     def calc_due_date(self):
         """return the next due date of this Unit/TestList pair """
 
@@ -862,7 +885,6 @@ class UnitTestCollection(models.Model):
         #return existing due date (could be None)
         return self.due_date
 
-    #----------------------------------------------------------------------
     def set_due_date(self, due_date=None):
         """Set due date field for this UTC. Note model is not saved to db.
         Saving be done manually"""
@@ -875,7 +897,6 @@ class UnitTestCollection(models.Model):
             self.due_date = due_date
             UnitTestCollection.objects.filter(pk=self.pk).update(due_date=due_date)
 
-    #----------------------------------------------------------------------
     def due_status(self):
         if not self.due_date:
             return NOT_DUE
@@ -894,7 +915,6 @@ class UnitTestCollection(models.Model):
             return DUE
         return OVERDUE
 
-    #----------------------------------------------------------------------
     def last_valid_instance(self):
         """ return last test_list_instance with all valid tests """
 
@@ -903,20 +923,17 @@ class UnitTestCollection(models.Model):
         except TestListInstance.DoesNotExist:
             pass
 
-    #----------------------------------------------------------------------
     def last_done_date(self):
         """return date this test list was last performed"""
 
         if hasattr(self, "last_instance") and self.last_instance is not None:
             return self.last_instance.work_completed
 
-    #----------------------------------------------------------------------
     def unreviewed_instances(self):
         """return a query set of all TestListInstances for this object that have not been fully reviewed"""
 
         return self.testlistinstance_set.filter(testinstance__status__requires_review=True).distinct().select_related("test_list")
 
-    #----------------------------------------------------------------------
     def unreviewed_test_instances(self):
         """return query set of all TestInstances for this object"""
 
@@ -925,7 +942,6 @@ class UnitTestCollection(models.Model):
             unit_test_info__test__in=self.tests_object.all_tests()
         )
 
-    #---------------------------------------------------------------------------
     def history(self, before=None):
 
         before = before or timezone.now()
@@ -960,7 +976,6 @@ class UnitTestCollection(models.Model):
 
         return instances, dates
 
-    #----------------------------------------------------------------------
     def next_list(self):
         """return next list to be completed from tests_object"""
 
@@ -972,7 +987,6 @@ class UnitTestCollection(models.Model):
 
         return self.tests_object.next_list(self.last_instance.day)
 
-    #----------------------------------------------------------------------
     def get_list(self, day=None):
         """return day and next list to be completed from tests_object"""
 
@@ -981,19 +995,15 @@ class UnitTestCollection(models.Model):
 
         return self.tests_object.get_list(day)
 
-    #----------------------------------------------------------------------
     def name(self):
         return self.__unicode__()
 
-    #----------------------------------------------------------------------
     def test_objects_name(self):
         return self.tests_object.name
 
-    #----------------------------------------------------------------------
     def get_absolute_url(self):
         return urlresolvers.reverse("perform_qa", kwargs={"pk": self.pk})
 
-    #----------------------------------------------------------------------
     def copy_references(self, dest_unit):
 
         all_tests = self.tests_object.all_tests()
@@ -1011,24 +1021,19 @@ class UnitTestCollection(models.Model):
                 tolerance=source_uti.tolerance
             )
 
-    #----------------------------------------------------------------------
     def __unicode__(self):
         return "UnitTestCollection(%s)" % self.pk
 
 
-#============================================================================
 class TestInstanceManager(models.Manager):
 
-    #----------------------------------------------------------------------
     def in_progress(self):
-        return super(TestInstanceManager, self).filter(in_progress=True)
+        return super(TestInstanceManager, self).filter(test_list_instance__in_progress=True)
 
-    #----------------------------------------------------------------------
     def complete(self):
-        return models.Manager.get_query_set(self).filter(in_progress=False)
+        return models.Manager.get_query_set(self).filter(test_list_instance__in_progress=False)
 
 
-#============================================================================
 class TestInstance(models.Model):
     """
     Model for storing actual value of a measured test as well as whether
@@ -1048,7 +1053,7 @@ class TestInstance(models.Model):
     value = models.FloatField(help_text=_("For boolean Tests a value of 0 equals False and any non zero equals True"), null=True)
     string_value = models.CharField(max_length=MAX_STRING_VAL_LEN, null=True, blank=True)
 
-    skipped = models.BooleanField(help_text=_("Was this test skipped for some reason (add comment)"))
+    skipped = models.BooleanField(help_text=_("Was this test skipped for some reason (add comment)"), default=False)
     comment = models.TextField(help_text=_("Add a comment to this test"), null=True, blank=True)
 
     # reference used
@@ -1058,7 +1063,7 @@ class TestInstance(models.Model):
     unit_test_info = models.ForeignKey(UnitTestInfo, editable=False)
 
     # keep track if this test was performed as part of a test list
-    test_list_instance = models.ForeignKey("TestListInstance", editable=False, null=True, blank=True)
+    test_list_instance = models.ForeignKey("TestListInstance", editable=False)
 
     work_started = models.DateTimeField(editable=False, db_index=True)
 
@@ -1066,7 +1071,6 @@ class TestInstance(models.Model):
     work_completed = models.DateTimeField(default=timezone.now,
                                           help_text=settings.DATETIME_HELP, db_index=True,
                                           )
-    in_progress = models.BooleanField(default=False, editable=False, db_index=True)
 
     # for keeping a very basic history
     created = models.DateTimeField(default=timezone.now)
@@ -1077,7 +1081,7 @@ class TestInstance(models.Model):
     objects = TestInstanceManager()
 
     class Meta:
-        #ordering = ("work_completed",)
+        # ordering = ("work_completed",)
         get_latest_by = "work_completed"
         permissions = (
             ("can_view_history", "Can see test history when performing QA"),
@@ -1087,24 +1091,20 @@ class TestInstance(models.Model):
             ("can_review_own_tests", "Can review & approve  self-performed tests"),
         )
 
-    #----------------------------------------------------------------------
     def save(self, *args, **kwargs):
         self.calculate_pass_fail()
         super(TestInstance, self).save(*args, **kwargs)
 
-    #----------------------------------------------------------------------
     def difference(self):
         """return difference between instance and reference"""
         return self.value - self.reference.value
 
-    #----------------------------------------------------------------------
     def percent_difference(self):
         """return percent difference between instance and reference"""
         if self.reference.value == 0:
             raise ZeroDivisionError("Tried to calculate percent diff with a zero reference value")
         return 100. * (self.value - self.reference.value) / float(self.reference.value)
 
-    #---------------------------------------------------------------------------
     def bool_pass_fail(self):
         diff = abs(self.reference.value - self.value)
         if diff > EPSILON:
@@ -1112,13 +1112,9 @@ class TestInstance(models.Model):
         else:
             self.pass_fail = OK
 
-    #---------------------------------------------------------------------------
-    def mult_choice_pass_fail(self):
+    def string_pass_fail(self):
 
-        if self.unit_test_info.test.is_mult_choice():
-            choice = self.unit_test_info.test.get_choice_value(int(self.value)).lower()
-        else:
-            choice = self.string_value.lower()
+        choice = self.string_value.lower()
 
         if choice in [x.lower() for x in self.tolerance.pass_choices()]:
             self.pass_fail = OK
@@ -1127,7 +1123,6 @@ class TestInstance(models.Model):
         else:
             self.pass_fail = ACTION
 
-    #---------------------------------------------------------------------------
     def float_pass_fail(self):
         diff = self.calculate_diff()
 
@@ -1150,7 +1145,6 @@ class TestInstance(models.Model):
         else:
             self.pass_fail = OK
 
-    #----------------------------------------------------------------------
     def calculate_diff(self):
         if not (self.tolerance and self.reference and self.unit_test_info.test):
             return
@@ -1161,25 +1155,27 @@ class TestInstance(models.Model):
             diff = self.percent_difference()
         return diff
 
-    #----------------------------------------------------------------------
     def calculate_pass_fail(self):
         """set pass/fail status of the current value"""
 
-        if self.skipped or (self.value is None and self.in_progress):
+        if self.skipped or (self.value is None and self.test_list_instance.in_progress):
             self.pass_fail = NOT_DONE
         elif self.unit_test_info.test.is_boolean() and self.reference:
             self.bool_pass_fail()
-        elif (self.unit_test_info.test.is_mult_choice() or self.unit_test_info.test.is_string_type()) and self.tolerance:
-            self.mult_choice_pass_fail()
+        elif self.unit_test_info.test.is_string_type() and self.tolerance:
+            self.string_pass_fail()
         elif self.reference and self.tolerance:
             self.float_pass_fail()
         else:
             # no tolerance and/or reference set
             self.pass_fail = NO_TOL
 
-    #----------------------------------------------------------------------
     def auto_review(self):
         """set review status of the current value if allowed"""
+        has_comment = self.comment or self.test_list_instance.comment
+        if has_comment and not self.skipped:
+            return
+
         if self.unit_test_info.test.auto_review:
             try:
                 self.status = AutoReviewRule.objects.get(pass_fail=self.pass_fail).status
@@ -1187,25 +1183,21 @@ class TestInstance(models.Model):
             except AutoReviewRule.DoesNotExist:
                 pass
 
-    #----------------------------------------------------------------------
     def value_display(self):
         if self.skipped:
             return "Skipped"
         elif self.value is None and self.string_value in (None, ""):
-            return "Not Done"
+            return NOT_DONE_DISP
 
         test = self.unit_test_info.test
         if test.is_boolean():
             return "Yes" if int(self.value) == 1 else "No"
-        elif test.is_mult_choice():
-            return test.get_choice_value(self.value)
         elif test.is_upload():
             return self.upload_url()
         elif test.is_string_type():
             return self.string_value
         return "%.4g" % self.value
 
-    #----------------------------------------------------------------------
     def diff_display(self):
         display = ""
         if self.unit_test_info.test.is_numerical_type() and self.value is not None:
@@ -1219,47 +1211,44 @@ class TestInstance(models.Model):
                 display = "Zero ref with % diff tol"
         return display
 
-    #---------------------------------------------------------------
     def upload_url(self):
         if not self.unit_test_info.test.is_upload():
             return None
         url = "%s%d/%s" % (settings.UPLOADS_URL, self.test_list_instance.pk, self.string_value)
         return '<a href="%s" title="%s">%s</a>' % (url, self.string_value, self.string_value)
 
-    #----------------------------------------------------------------------
     def image_url(self):
         if not self.unit_test_info.test.is_upload() or not self.unit_test_info.test.display_image:
             return None
         url = "%s%d/%s" % (settings.UPLOADS_URL, self.test_list_instance.pk, self.string_value)
         return url
 
-    #----------------------------------------------------------------------
     def __unicode__(self):
         """return display representation of object"""
         return "TestInstance(pk=%s)" % self.pk
 
 
-#============================================================================
 class TestListInstanceManager(models.Manager):
 
-    #----------------------------------------------------------------------
     def unreviewed(self):
         return self.complete().filter(all_reviewed=False)
 
-    #----------------------------------------------------------------------
     def unreviewed_count(self):
         return self.unreviewed().count()
 
-    #----------------------------------------------------------------------
+    def your_unreviewed(self, user):
+        return self.complete().filter(all_reviewed=False, unit_test_collection__visible_to__in=user.groups.all()).distinct()
+
+    def your_unreviewed_count(self, user):
+        return self.your_unreviewed(user).count()
+
     def in_progress(self):
         return self.get_query_set().filter(in_progress=True)
 
-    #----------------------------------------------------------------------
     def complete(self):
         return self.get_query_set().filter(in_progress=False)
 
 
-#============================================================================
 class TestListInstance(models.Model):
     """Container for a collection of QA :model:`TestInstance`s
 
@@ -1295,7 +1284,7 @@ class TestListInstance(models.Model):
     objects = TestListInstanceManager()
 
     class Meta:
-        #ordering = ("work_completed",)
+        # ordering = ("work_completed",)
         get_latest_by = "work_completed"
         permissions = (
             ("can_override_date", "Can override date"),
@@ -1303,19 +1292,16 @@ class TestListInstance(models.Model):
             ("can_view_completed", "Can view previously completed instances"),
         )
 
-    #----------------------------------------------------------------------
     def pass_fail_status(self):
         """return string with pass fail status of this qa instance"""
         instances = list(self.testinstance_set.all())
         statuses = [(status, display, [x for x in instances if x.pass_fail == status]) for status, display in PASS_FAIL_CHOICES]
         return [x for x in statuses if len(x[2]) > 0]
 
-    #----------------------------------------------------------------------
     def duration(self):
         """return timedelta of time from start to completion"""
         return self.work_completed - self.work_started
 
-    #----------------------------------------------------------------------
     def status(self, queryset=None):
         """return string with review status of this qa instance"""
         if queryset is None:
@@ -1324,11 +1310,9 @@ class TestListInstance(models.Model):
         statuses = [(status, [x for x in queryset if x.status == status]) for status in status_types]
         return [x for x in statuses if len(x[1]) > 0]
 
-    #----------------------------------------------------------------------
     def unreviewed_instances(self):
         return self.testinstance_set.filter(status__requires_review=True)
 
-    #----------------------------------------------------------------------
     def update_all_reviewed(self):
 
         self.all_reviewed = len(self.unreviewed_instances()) == 0
@@ -1336,15 +1320,12 @@ class TestListInstance(models.Model):
         # use update instead of save so we don't trigger save signal
         TestListInstance.objects.filter(pk=self.pk).update(all_reviewed=self.all_reviewed)
 
-    #----------------------------------------------------------------------
     def tolerance_tests(self):
         return self.testinstance_set.filter(pass_fail=TOLERANCE)
 
-    #----------------------------------------------------------------------
     def failing_tests(self):
         return self.testinstance_set.filter(pass_fail=ACTION)
 
-    #----------------------------------------------------------------------
     def history(self):
         # note when using, your view should likely prefetch and select related
         # as follows
@@ -1356,7 +1337,7 @@ class TestListInstance(models.Model):
         # ]
         # select_related = ["unittestcollection__unit"]
 
-        #grab NHIST number of previous results
+        # grab NHIST number of previous results
         tlis = TestListInstance.objects.filter(
             unit_test_collection=self.unit_test_collection,
         )
@@ -1381,9 +1362,9 @@ class TestListInstance(models.Model):
         dates = tlis.values_list("work_completed", flat=True)
 
         instances = []
-        #note sort  here rather than using self.testinstance_set.order_by(("created")
-        #because that causes Django to requery db and negates the advantage of using
-        #prefetch_related above
+        # note sort  here rather than using self.testinstance_set.order_by(("created")
+        # because that causes Django to requery db and negates the advantage of using
+        # prefetch_related above
 
         test_instances = sorted(self.testinstance_set.all(), key=lambda x: x.created)
         for ti in test_instances:
@@ -1398,21 +1379,27 @@ class TestListInstance(models.Model):
 
         return instances, dates
 
-    #---------------------------------------------------------------------------
     def __unicode__(self):
         return "TestListInstance(pk=%s)" % self.pk
 
 
-#============================================================================
 class TestListCycle(TestCollectionInterface):
     """
     A basic model for creating a collection of test lists that cycle
     based on the list that was last completed.
     """
 
-    test_lists = models.ManyToManyField(TestList, through="TestListCycleMembership")
+    DAY = "day"
+    TEST_LIST_NAME = "tlname"
+    DAY_OPTIONS_TEXT_CHOICES = (
+        (DAY, "Day"),
+        (TEST_LIST_NAME, "Test List Name"),
+    )
 
-    #----------------------------------------------------------------------
+    test_lists = models.ManyToManyField(TestList, through="TestListCycleMembership")
+    drop_down_label = models.CharField(max_length=128, default="Choose Day")
+    day_option_text = models.CharField(max_length=8, choices=DAY_OPTIONS_TEXT_CHOICES, default=DAY)
+
     def __len__(self):
         """return the number of test_lists"""
         if self.pk:
@@ -1420,12 +1407,10 @@ class TestListCycle(TestCollectionInterface):
         else:
             return 0
 
-    #---------------------------------------------------------------
     def test_list_members(self):
         """return all days from this collection"""
         return self.test_lists.all()
 
-    #----------------------------------------------------------------------
     def first(self):
         """return first in order membership obect for this cycle"""
         try:
@@ -1433,26 +1418,23 @@ class TestListCycle(TestCollectionInterface):
         except IndexError:
             return None
 
-    #----------------------------------------------------------------------
     def all_lists(self):
         """return queryset for all children lists of this cycle"""
-        query = TestList.objects.get_empty_query_set()
+        query = TestList.objects.none()
         for test_list in self.test_lists.all():
             query |= test_list.all_lists()
 
         return query.distinct()
 
-    #----------------------------------------------------------------------
     def all_tests(self):
         """return all test members of cycle members"""
-        query = Test.objects.get_empty_query_set()
+        query = Test.objects.none()
         for test_list in self.test_lists.all():
             query |= test_list.all_tests()
         return query.distinct()
 
     ordered_tests = all_tests
 
-    #----------------------------------------------------------------------
     def get_list(self, day=0):
         """get actual day and test list for given input day"""
         try:
@@ -1461,7 +1443,6 @@ class TestListCycle(TestCollectionInterface):
         except TestListCycleMembership.DoesNotExist:
             return None, None
 
-    #----------------------------------------------------------------------
     def next_list(self, day):
         """return day and test list following input day in cycle order"""
 
@@ -1473,12 +1454,18 @@ class TestListCycle(TestCollectionInterface):
                 return None, None
             return 0, self.first()
 
-    #----------------------------------------------------------------------
+    def days_display(self):
+        names = self.testlistcyclemembership_set.values_list("test_list__name", flat=True)
+        days = range(1, len(names)+1)
+        if self.day_option_text == self.TEST_LIST_NAME:
+            return zip(days, names)
+
+        return [(d, "Day %d" % d) for d in days]
+
     def __unicode__(self):
         return _(self.name)
 
 
-#============================================================================
 class TestListCycleMembership(models.Model):
     """M2M model for ordering of test lists within cycle"""
 
@@ -1493,6 +1480,5 @@ class TestListCycleMembership(models.Model):
         # memberships they can have the same order temporarily when orders are changed
         # unique_together = (("order", "cycle"),)
 
-    #----------------------------------------------------------------------
     def __unicode__(self):
         return "TestListCycleMembership(pk=%s)" % self.pk

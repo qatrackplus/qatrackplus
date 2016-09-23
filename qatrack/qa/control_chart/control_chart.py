@@ -34,9 +34,9 @@ XPOS_MULT = 0.7  # adjust the relative x-position of histogram strings
 YPOS_MULT = 0.1  # adjust the relative y-position of histogram string (cntrl chrt only)
 
 # Histogram limits:
-NBIN_THRESH = 10    # minimum number of bins.
-                    # Note that not all bins will have events, and so
-                    # there still may be fewer than NBIN_THRESH displayed
+NBIN_THRESH = 10 # minimum number of bins.
+                 # Note that not all bins will have events, and so
+                 # there still may be fewer than NBIN_THRESH displayed
 
 # Formats for raw data:
 BC = '#36648B'  # baseline data color
@@ -85,7 +85,6 @@ nullfmt = NullFormatter()
 font = FontProperties(size=LEGFS)
 
 
-#----------------------------------------------------------------------
 def generate_fit(x, axes, freq, bins, binwidth):
     """
     """
@@ -294,11 +293,6 @@ def format_plots(plots, xbar_thresh, range_thresh,
     cc_ylim = plots[0].get_ylim()
     cc_ylim = (cc_ylim[0], cc_ylim[1] + (cc_ylim[1] - cc_ylim[0]) * DATA_TSPACE)
     plots[0].set_ylim(cc_ylim)
-
-    #range_lim = plots[2].get_ylim()
-    # if np.abs(range_lim[1] - Ru[0])/range_lim[1] < 0.05: # then make space
-    #    range_lim = (range_lim[0], range_ylim[1]*(1. + (range_ylim[1]-range_ylim[0])*DATA_TSPACE))
-    #    plots[2].set_ylim( range_lim )
 
     # redefine x-axis limits for aesthetics
     cc_xlim = plots[0].get_xlim()

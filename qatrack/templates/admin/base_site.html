@@ -1,10 +1,18 @@
 {% extends "admin/base.html" %}
 {% load i18n %}
 
+{% block extrastyle %}
+<style type="text/css">
+#changelist-filter ul {
+    max-height: 300px;
+    overflow-y: scroll;
+}
+</style>
+{% endblock %}
 {% block title %}{{ title }} | {% trans 'QATrack+ Admin Site' %}{% endblock %}
 
 {% block branding %}
-<h1 id="site-name"><a href="{% url home %}" title="QATrack+ Home">{% trans 'QATrack+ administration' %}</a></h1>
+<h1 id="site-name"><a href="{% url 'home' %}" title="QATrack+ Home">{% trans 'QATrack+ administration' %}</a></h1>
 {% endblock %}
 
 {% block nav-global %}{% endblock %}

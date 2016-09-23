@@ -215,7 +215,7 @@ def display_stats(request, stats, queries):
     output = render_stats(stats, sort, format)
     output.reset()
     output = [html.escape(unicode(line)) for line in output.readlines()]
-    response = HttpResponse(mimetype='text/html; charset=utf-8')
+    response = HttpResponse(content_type='text/html; charset=utf-8')
     response.content = (stats_template %
                         {'format_buttons': format_buttons,
                          'sort_first_buttons': sort_first_buttons,
@@ -267,7 +267,7 @@ def display_queries(request, stats, queries):
     output.reset()
     output = [html.escape(unicode(line))
               for line in output.readlines()]
-    response = HttpResponse(mimetype='text/html; charset=utf-8')
+    response = HttpResponse(content_type='text/html; charset=utf-8')
     response.content = (queries_template %
                         {'sort_buttons': sort_buttons,
                          'num_queries': len(queries),

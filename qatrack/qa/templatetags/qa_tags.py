@@ -23,7 +23,6 @@ def qa_value_form(form, test_list, include_history=False, include_ref_tols=False
     return template.render(c)
 
 
-#----------------------------------------------------------------------
 @register.simple_tag
 def reference_tolerance_span(test, ref, tol):
 
@@ -38,39 +37,49 @@ def reference_tolerance_span(test, ref, tol):
             return mark_safe('<span title="No Tolerance Set">%s</span>' % (ref.value_display()))
         return mark_safe('<span title="No Tolerance Set">No Tol</span>')
 
+    tsd = settings.TEST_STATUS_DISPLAY
     if tol.type == models.MULTIPLE_CHOICE:
-        return mark_safe('<span><abbr title="Passing Values: %s;  Tolerance Values: %s; All other choices are failing"><em>Mult. Choice</em></abbr></span>' % (", ".join(tol.pass_choices()), ', '.join(tol.tol_choices())))
+        return mark_safe('<span><abbr title="%s Values: %s;  %s Values: %s; All other choices are failing"><em>Mult. Choice</em></abbr></span>' % (tsd['ok'], ", ".join(tol.pass_choices()), tsd['tolerance'], ', '.join(tol.tol_choices())))
 
+    tsds = settings.TEST_STATUS_DISPLAY_SHORT
     if tol.type == models.ABSOLUTE:
-        return mark_safe('<span> <abbr title="(ACT L, TOL L, TOL H, ACT H) = %s ">%s</abbr></span>' % (str(tol).replace("Absolute", ""), ref.value_display()))
+        return mark_safe('<span> <abbr title="(%s L, %s L, %s H, %s H) = %s ">%s</abbr></span>' % (
+            tsds["action"], tsds["tolerance"], tsds["tolerance"], tsds["action"],
+            str(tol).replace("Absolute", ""), ref.value_display())
+        )
     elif tol.type == models.PERCENT:
-        return mark_safe('<span> <abbr title="(ACT L, TOL L, TOL H, ACT H) = %s ">%s</abbr></span>' % (str(tol).replace("Percent", ""), ref.value_display()))
+        return mark_safe('<span> <abbr title="(%s L, %s L, %s H, %s H) = %s ">%s</abbr></span>' % (
+            tsds["action"], tsds["tolerance"], tsds["tolerance"], tsds["action"],
+            str(tol).replace("Percent", ""), ref.value_display())
+        )
 
 
-#----------------------------------------------------------------------
 @register.simple_tag
 def tolerance_for_reference(tol, ref):
 
     if not ref and tol and tol.type != models.MULTIPLE_CHOICE:
         return ""
 
+    tsd = settings.TEST_STATUS_DISPLAY
     if ref and ref.type == models.BOOLEAN:
         expected = ref.value_display()
-        return mark_safe('<span>Pass: %s; Fail: %s</span>' % (expected, "Yes" if expected == "No" else "No"))
+        return mark_safe('<span>%s: %s; %s: %s</span>' % (tsd['ok'], expected, tsd['action'], "Yes" if expected == "No" else "No"))
 
     if not tol:
         return mark_safe('<span><em>N/A</em></span>')
 
     if tol.type == models.MULTIPLE_CHOICE:
-        return mark_safe('<span>Pass: %s</br>  Tol: %s</br> All others fail</span>' % (", ".join(tol.pass_choices()), ', '.join(tol.tol_choices())))
+        return mark_safe('<span>%s: %s</br>  %s: %s</br> All others fail</span>' % (tsd['ok'], ", ".join(tol.pass_choices()), tsd['tolerance'], ', '.join(tol.tol_choices())))
 
     tols = tol.tolerances_for_value(ref.value)
     for key in tols:
         tols[key] = "-" if tols[key] is None else "%.4g" % tols[key]
-    return mark_safe('<span>Pass: Between %(tol_low)s &amp; %(tol_high)s</br> Tol. Between %(act_low)s &amp; %(act_high)s</br> Fail: < %(act_low)s or > %(act_high)s</span>' % tols)
+    tols["ok_disp"] = tsd['ok']
+    tols["tol_disp"] = tsd['ok']
+    tols["act_disp"] = tsd['action']
+    return mark_safe('<span>%(ok_disp)s: Between %(tol_low)s &amp; %(tol_high)s</br> %(tol_disp)s Between %(act_low)s &amp; %(act_high)s</br> %(act_disp)s: < %(act_low)s or > %(act_high)s</span>' % tols)
 
 
-#----------------------------------------------------------------------
 @register.simple_tag
 def history_display(history, unit, test_list, test):
     template = get_template("qa/history.html")
@@ -84,7 +93,6 @@ def history_display(history, unit, test_list, test):
     return template.render(c)
 
 
-#----------------------------------------------------------------------
 @register.filter
 def as_pass_fail_status(test_list_instance, show_label=True):
     template = get_template("qa/pass_fail_status.html")
@@ -97,7 +105,6 @@ def as_pass_fail_status(test_list_instance, show_label=True):
     return template.render(c)
 
 
-#----------------------------------------------------------------------
 @register.filter
 def as_review_status(test_list_instance):
     statuses = collections.defaultdict(lambda: {"count": 0})
@@ -117,7 +124,6 @@ def as_review_status(test_list_instance):
     return template.render(c)
 
 
-#----------------------------------------------------------------------
 @register.filter(expects_local_time=True)
 def as_due_date(unit_test_collection):
     template = get_template("qa/due_date.html")
@@ -125,7 +131,6 @@ def as_due_date(unit_test_collection):
     return template.render(c)
 
 
-#----------------------------------------------------------------------
 @register.filter(is_safe=True, expects_local_time=True)
 def as_time_delta(time_delta):
     hours, remainder = divmod(time_delta.seconds, 60 * 60)
@@ -134,7 +139,6 @@ def as_time_delta(time_delta):
 as_time_delta.safe = True
 
 
-#----------------------------------------------------------------------
 @register.filter
 def as_data_attributes(unit_test_collection):
     utc = unit_test_collection

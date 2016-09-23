@@ -5,9 +5,11 @@ import tokenize
 import token
 
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
+
+import models
 
 
-#----------------------------------------------------------------------
 class SetEncoder(json.JSONEncoder):
     """Allow handling of sets as lists"""
     def default(self, obj):
@@ -16,7 +18,25 @@ class SetEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)  # pragma: nocover
 
 
-#----------------------------------------------------------------------
+def qs_extra_for_utc_name():
+
+        ct_tl = ContentType.objects.get_for_model(models.TestList)
+        ct_tlc = ContentType.objects.get_for_model(models.TestListCycle)
+
+        extraq = """
+         CASE
+            WHEN content_type_id = {0}
+                THEN (SELECT name AS utc_name from qa_testlist WHERE object_id = qa_testlist.id )
+            WHEN content_type_id = {1}
+                THEN (SELECT name AS utc_name from qa_testlistcycle WHERE object_id = qa_testlistcycle.id)
+         END
+         """.format(ct_tl.pk, ct_tlc.pk)
+
+        return {
+            "select": {'utc_name': extraq}
+        }
+
+
 def to_precision(x, p):
     """
     returns a string representation of x formatted with a precision of p
@@ -77,14 +97,12 @@ def to_precision(x, p):
     return "".join(out)
 
 
-#----------------------------------------------------------------------
 def tokenize_composite_calc(calc_procedure):
     """tokenize a calculation procedure"""
     tokens = tokenize.generate_tokens(StringIO.StringIO(calc_procedure).readline)
     return [t[token.NAME] for t in tokens if t[token.NAME]]
 
 
-#----------------------------------------------------------------------
 def unique(seq, idfun=None):
     """f5 from http://www.peterbe.com/plog/uniqifiers-benchmark"""
     # order preserving
@@ -102,7 +120,6 @@ def unique(seq, idfun=None):
     return result
 
 
-#----------------------------------------------------------------------
 def almost_equal(a, b, significant=7):
     """determine if two numbers are nearly equal to significant figures
     copied from numpy.testing.assert_approx_equal
@@ -132,7 +149,6 @@ def almost_equal(a, b, significant=7):
     return abs(sc_b - sc_a) <= math.pow(10., -(significant - 1))
 
 
-#----------------------------------------------------------------------
 def check_query_count():  # pragma: nocover
     """ A useful debugging decorator for checking the number of queries
     a function is making"""

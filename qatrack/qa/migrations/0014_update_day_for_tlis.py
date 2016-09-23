@@ -1,6 +1,20 @@
 # -*- coding: utf-8 -*-
 from south.v2 import DataMigration
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.management import update_contenttypes
+from django.contrib.auth.management import create_permissions
+from django.db.models import get_app, get_models
+
+from django.utils.encoding import smart_text
+
+
+def get_content_type(orm, app_label, model_name):
+    # sometimes these content types are not yet created when this migration runs,
+    # so create them here.  mimic behavior of ContentType.objects.get_for_model
+    # (which is not available in migrations)
+    opts = orm['%s.%s' % (app_label, model_name)]._meta.concrete_model._meta
+    return orm['contenttypes.ContentType'].objects.get_or_create(app_label=app_label,
+              model=model_name, defaults={'name': smart_text(opts.verbose_name_raw)})
 
 
 class Migration(DataMigration):
@@ -9,8 +23,11 @@ class Migration(DataMigration):
         "Write your forwards methods here."
         # Note: Don't use "from appname.models import ModelName".
         # Use orm.ModelName to refer to models in this application,
-        content_type = ContentType.objects.get_for_model(orm.TestListCycle)
-        utcs = orm.UnitTestCollection.objects.filter(content_type_id=content_type.id)
+
+        update_contenttypes(get_app('qa'), get_models())
+
+        content_type = orm['contenttypes.ContentType'].objects.get(app_label='qa', model='testlistcycle')
+        utcs = list(orm.UnitTestCollection.objects.filter(content_type_id=content_type.id))
 
         for utc in utcs:
             if utc.last_instance:

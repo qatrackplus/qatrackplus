@@ -1,5 +1,65 @@
 # QATrack+ Release Notes #
 
+## v0.2.9 ##
+
+There have been many bug fixes and improvements to QATrack+ made since the
+version 0.2.8. For the complete details you can check out the issue tracker
+for issues tagged 0.2.9.
+
+Special thanks for this release to Zacharias Chalampalakis for contributing a patch
+to make the warning message shown when a test is at action level configurable.  
+
+Also, big thanks to Ryan Bottema in Ottawa who has taken over my previous role
+at the Ottawa Hospital and has made many contributions to this release and been
+crucial in finally getting it out the door.
+
+As always Crystal Angers has been a big help in testing and critical analysis
+of new features.
+
+
+Details of 0.2.9 below:
+
+* Multiple choices tests now store their results [as the test value rather than the index](https://bitbucket.org/tohccmedphys/qatrackplus/issues/162/adding-new-multiple-choice-options-can) of the choice.
+It is important that you update any composite tests that rely on multiple choice test results after this upgrade (see Upgrade Instructions below)
+* Unit modalities [are now free text fields](https://bitbucket.org/tohccmedphys/qatrackplus/issues/110/change-unit-modality-to-free-text-field) instead of forcing you to select particle/energy.
+* If you attempt to access a QATrack+ page but are logged out, [you will be redirected to that page after logging in](https://bitbucket.org/tohccmedphys/qatrackplus/issues/154/redirect-after-login)
+* You can now add `REVIEW_DIFF_COL = True` to your local_settings.py file to [enable an extra column showing the difference from reference](https://bitbucket.org/tohccmedphys/qatrackplus/issues/155/add-deviation-from-reference-to-testlist) when reviewing tests list
+* Users sessions will be [renewed anytime they are active](https://bitbucket.org/tohccmedphys/qatrackplus/issues/165/refresh-session-after-any-activity-rather) on the QATrack+ site rather than just when they perform QA (prevents being logged out automatically)
+* Changing a Test's type is now limited to [only allow changes to similar test types](https://bitbucket.org/tohccmedphys/qatrackplus/issues/168/changes-between-test-types-needs-to-be) (e.g. numerical -> composite is allowed but numerical -> string is not)
+* By default [inactive test lists are no longer shown](https://bitbucket.org/tohccmedphys/qatrackplus/issues/170/add-filter-to-not-display-by-default) in the default review list
+* Bulk deletion of UnitTestInfo objects in the admin [has been disabled](https://bitbucket.org/tohccmedphys/qatrackplus/issues/171/disable-bulk-delete-of-unittestinfo) to prevent possible data loss
+* Only active UnitTestInfo objects will be [shown in the admin](https://bitbucket.org/tohccmedphys/qatrackplus/issues/172/make-unittestinfo-list-in-admin-only-show) by default
+* You can now [view test list comments](https://bitbucket.org/tohccmedphys/qatrackplus/issues/175/view-comments) in a pop over by hovering your mouse over the comment icon
+* You can now filter Test objects in the admin by whether or not [they belong to any active TestList's](https://bitbucket.org/tohccmedphys/qatrackplus/issues/177/test-search) or not
+* If a comment is included when performing a test list than [manual review will be required](https://bitbucket.org/tohccmedphys/qatrackplus/issues/179/auto-review-exception-for-tests-with) regardless of auto-review settings
+* Inactive tests can now be [filtered on the charts page](https://bitbucket.org/tohccmedphys/qatrackplus/issues/183/filter-out-inactive-tests-in-the-chart)
+* There are many new filters available in the admin section
+* Permissions for reviewing and viewing the program overview [have been split](https://bitbucket.org/tohccmedphys/qatrackplus/issues/194/separate-permisssions-for-review-and)
+* Individual tests can now be configured to [always allow skipping without a comment](https://bitbucket.org/tohccmedphys/qatrackplus/issues/195/skipping-without-comment-for-some-but-not) (regardless of the users permissions)
+* You can now [set a custom label](https://bitbucket.org/tohccmedphys/qatrackplus/issues/198/allow-customization-of-testlist-cycle-drop) for the "Choose Day" drop down label when performing a test list from a cycle.
+* You can now sort test lists by due date
+* You can now [customize the test status display](https://bitbucket.org/tohccmedphys/qatrackplus/issues/200/tolerance-action-level-naming) (default remains Act/Tol/OK)
+* Test value input fields should now be more [mobile device friendly](https://bitbucket.org/tohccmedphys/qatrackplus/issues/210/change-text-input-type-to-number-for)
+* pydicom is now available in the [default calculation context](https://bitbucket.org/tohccmedphys/qatrackplus/issues/219/add-pydicom-to-default-calculation-context) (along with numpy & scipy)
+* You can now filter test lists to review [by which groups the test lists are visible to](https://bitbucket.org/tohccmedphys/qatrackplus/issues/227/visible-to)
+
+A more complete list of bugs fixed and features added can be found [in the issues tracker](https://bitbucket.org/tohccmedphys/qatrackplus/issues?milestone=0.2.9)!
+
+### Deprecation Notices
+
+As QATrack+, Python & Django and the web continue to evolve, occassionally we need to deprecate some of the versions of Python & web browsers we support.
+The next major release of QATrack+ will no longer officially support the following items:
+
+- Python 2.6 (Python 2.7 & 3.4+ only): In order to provide support for Python 3 we will be dropping support for Python 2.6
+- IE7-IE10 (IE 11+ Only): IE7-IE10 are no longer supported by Microsoft and we will no longer be testing these platforms.
+
+### Upgrade Instructions
+
+For instructions on how to upgrade from v0.2.8 
+[please see the wiki](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/v/0.2.9/release-notes.md)
+
+
+
 ## v0.2.8 ##
 
     Note: this release introduces some database schema changes. The database migrations have

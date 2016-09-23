@@ -1,0 +1,46 @@
+language: python
+
+addons:
+  firefox: "47.0.1"
+
+python:
+  - "2.6"
+  - "2.7"
+
+env:
+  - DJANGO=1.6 DB=sqlite
+  - DJANGO=1.6 DB=postgres
+  - DJANGO=1.6 DB=mysql
+
+before_script:
+  - if [[ $DB == mysql ]]; then mysql -u root -e "create database qatrackplus;"; fi
+  - if [[ $DB == mysql ]]; then mysql -u root -e "GRANT ALL ON qatrackplus.* TO 'qatrackplus'@'localhost' IDENTIFIED BY 'qatrackplus';"; fi
+  - if [[ $DB == postgres ]]; then psql -c "create database qatrackplus;" -U postgres; fi
+  - if [[ $DB == postgres ]]; then psql -c "CREATE USER qatrackplus with PASSWORD 'qatrackplus';" -U postgres; fi
+  - if [[ $DB == postgres ]]; then psql -c "GRANT ALL PRIVILEGES ON DATABASE qatrackplus to qatrackplus;" -U postgres; fi
+  - "export DISPLAY=:99.0"
+  - "sh -e /etc/init.d/xvfb start"
+  - sleep 3 # give xvfb some time to start
+
+before_install:
+  - sudo apt-get update
+  - sudo apt-get install build-essential gfortran
+  - sudo apt-get install python-dev
+  - sudo apt-get install libatlas-dev libatlas-base-dev liblapack-dev
+  - sudo apt-get install libpng12-dev libfreetype6 libfreetype6-dev
+  - sudo apt-get build-dep python-matplotlib
+  - sudo apt-get install -qq python-numpy python-scipy python-matplotlib
+
+install:
+  - pip install --upgrade pip
+  - if [[ $DB == mysql ]]; then pip install -q mysql-python; fi
+  - if [[ $DB == mysql ]]; then cp deploy/travis_mysql.py qatrack/local_settings.py; fi
+  - if [[ $DB == postgres ]]; then pip install -q psycopg2; fi
+  - if [[ $DB == postgres ]]; then cp deploy/travis_postgres.py qatrack/local_settings.py; fi
+  - if [[ $DB == sqlite ]]; then cp deploy/travis_sqlite.py qatrack/local_settings.py; fi
+  - pip install -r requirements/base.txt
+  - if [[ $TRAVIS_PYTHON_VERSION == 2.6 ]]; then pip install -U numpy; fi
+  - pip install -r requirements/optional.txt
+
+script:
+  - python manage.py test

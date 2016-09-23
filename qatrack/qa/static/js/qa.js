@@ -194,6 +194,7 @@ function TestInfo(data){
 
 function TestInstance(test_info, row){
     var self = this;
+    this.initialized = false;
     this.test_info = test_info;
     this.row = $(row);
     this.inputs = this.row.find("td.qa-value").find("input, textarea, select");
@@ -212,8 +213,11 @@ function TestInstance(test_info, row){
     this.skip.change(function(){
         self.skipped = self.skip.is(":checked");
         if (self.skipped){
-            if (comment_on_skip){
+            if (comment_on_skip && !self.test_info.test.skip_without_comment){
                 self.comment.show(600);
+            }
+            if (self.test_info.test.type === QAUtils.BOOLEAN || self.test_info.test.type === QAUtils.UPLOAD){
+                self.set_value(null);
             }
             $.Topic("valueChanged").publish();
         }else{
@@ -269,7 +273,7 @@ function TestInstance(test_info, row){
         if (tt === QAUtils.BOOLEAN){
             if (_.isNull(value)){
                 self.inputs.prop("checked",false);
-            }else {
+            }else{
                 self.inputs[0].checked = value === 0;
                 self.inputs[1].checked = !self.inputs[0].checked;
             }
@@ -302,7 +306,45 @@ function TestInstance(test_info, row){
         }else if (tt === QAUtils.MULTIPLE_CHOICE){
             var value = $.trim(self.inputs.find(":selected").text());
             self.value = value !== "" ? value : null;
-        } else if (tt=== QAUtils.UPLOAD || tt=== QAUtils.STRING){
+        }else if (tt=== QAUtils.UPLOAD){
+            if (editing_tli && !this.initialized){
+                var data = {
+                    filename: self.inputs.val(),
+                    test_id: self.test_info.test.id,
+                    test_list_instance: editing_tli,
+                    meta: JSON.stringify(get_meta_data()),
+                    refs: JSON.stringify(get_ref_data()),
+                    tols: JSON.stringify(get_tol_data())
+                };
+
+                $.ajax({
+                    type:"POST",
+                    url: QAURLs.UPLOAD_URL,
+                    data: $.param(data),
+                    dataType:"json",
+                    success: function (result) {
+                        self.status.removeClass("btn-info btn-primary btn-danger btn-success");
+                        if (result.errors.length > 0){
+                            self.set_value(null);
+                            self.status.addClass("btn-danger").text("Failed");
+                            self.status.attr("title",result.errors[0]);
+                        }else{
+                            self.set_value(result);
+                            self.status.addClass("btn-success").text("Success");
+                            self.status.attr("title",result['temp_file_name']);
+                            $.Topic("valueChanged").publish();
+                        }
+                    },
+                    traditional:true,
+                    error: function(e,data){
+                        self.set_value(null);
+                        self.status.removeClass("btn-primary, btn-danger, btn-success");
+                        self.status.addClass("btn-danger").text("Server Error");
+                    }
+                });
+            }
+
+        }else if (tt=== QAUtils.STRING){
             self.value = self.inputs.val();
         }else {
             self.inputs.val(QAUtils.clean_numerical_value(self.inputs.val()));
@@ -316,6 +358,7 @@ function TestInstance(test_info, row){
         }
 
         this.update_status();
+        this.initialized = true;
     }
     this.update_status = function(){
         var status = _.isNull(self.value)? NOT_DONE : self.test_info.check_value(self.value);
@@ -356,6 +399,10 @@ function TestInstance(test_info, row){
         if (self.test_info.test.type == QAUtils.BOOLEAN){
             self.set_value(self.value);
         }
+<<<<<<< HEAD
+=======
+
+>>>>>>> 0.2.9
     }
 
     this.hide = function(){
@@ -369,6 +416,9 @@ function TestInstance(test_info, row){
         var tmp_val = self.value;
         self.set_skip(true);
         self.set_value(tmp_val);
+        if (self.test_info.test.type == QAUtils.BOOLEAN){
+            self.inputs.prop("checked", false);
+        }
 
         self.comment_box.val(self.NOT_PERFORMED);
         if (self.test_info.test.type == QAUtils.BOOLEAN){
@@ -430,6 +480,10 @@ function TestInstance(test_info, row){
 
         })
     });
+
+    // set initial skip state
+    this.skip.trigger("change");
+
     //Set initial value
     this.update_value_from_input();
     // Display images
@@ -520,11 +574,11 @@ function TestListInstance(){
         var tols = get_tol_data();
 
         var data = {
-            qavalues:JSON.stringify(qa_values),
-            composite_ids:JSON.stringify(self.composite_ids),
-            meta: JSON.stringify(meta),
-            refs: JSON.stringify(refs),
-            tols: JSON.stringify(tols)
+            qavalues:qa_values,
+            composite_ids:self.composite_ids,
+            meta: meta,
+            refs: refs,
+            tols: tols
         };
 
         var on_success = function(data, status, XHR){
@@ -555,7 +609,7 @@ function TestListInstance(){
         latest_composite_call = $.ajax({
             type:"POST",
             url:QAURLs.COMPOSITE_URL,
-            data:data,
+            data:JSON.stringify(data),
             contentType:"application/json",
             dataType:"json",
             success: on_success,
@@ -670,7 +724,7 @@ $(document).ready(function(){
     $("#cycle-day").change(function(){
         var day = $("#cycle-day option:selected").val();
         var cur = document.location.href;
-        var next = cur.replace(/day=(next|[1-9])/,"day="+day);
+        var next = cur.replace(/day=(next|[0-9]+)/,"day="+day);
         document.location.href = next;
     });
 
@@ -691,7 +745,12 @@ $(document).ready(function(){
     //by accident and completely hoses all the information they've entered during
     //a qa session
     $(window).bind("beforeunload",function(){
-        if (_.any(_.pluck(tli.test_instances,"value"))){
+        var non_read_only_tis = _.filter(tli.test_instances, function(ti){
+            var tt = ti.test_info.test.type;
+            return QAUtils.READ_ONLY_TEST_TYPES.indexOf(tt) < 0;
+        });
+
+        if (_.any(_.pluck(non_read_only_tis,"value"))){
             return  "If you leave this page now you will lose all entered values.";
         }
     });

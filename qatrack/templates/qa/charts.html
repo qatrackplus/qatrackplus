@@ -8,7 +8,6 @@
     <link href="{% static "css/qa.css" %}?v={{VERSION}}" rel="stylesheet">
     <link href="{% static "css/charts.css" %}?v={{VERSION}}" rel="stylesheet">
     <link href="{% static "datepicker/css/datepicker.css" %}?v={{VERSION}}" rel="stylesheet">
-    <link href="{% static "data_tables/css/DT_bootstrap.css" %}?v={{VERSION}}" rel="stylesheet">
 {% endblock %}
 
 {% block extra_script %}
@@ -67,8 +66,11 @@
     </div>
     <div class="span2">
         <div id="test-list-container" class="control-container">
-            <h5>3. Test Lists</h5>
-
+            <h5 style="">3. Test Lists </h5>
+            <label style="" class="checkbox">
+                <input id="include_inactive" type="checkbox"/>
+                <em>Include Inactive Test Lists</em>
+            </label>
             <div id="test" class="checkbox-container test-filter">
                 {% for test_list in test_lists %}
                     <label class="checkbox" title="{{test_list.name}}" >

@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import Group
 
@@ -8,12 +9,13 @@ import handlers  # NOQA
 TOLERANCE = 10
 ACTION = 20
 
-WARNING_LEVELS = (
-    (TOLERANCE, "Notify on Tolerance or Action"),
-    (ACTION, "Notify on Test at Action level only"),
-)
+tol = settings.TEST_STATUS_DISPLAY.get("tolerance", "Tolerance")
+act = settings.TEST_STATUS_DISPLAY.get("action", "Action")
 
-#============================================================================
+WARNING_LEVELS = (
+    (TOLERANCE, "Notify on %s or %s" % (tol, act)),
+    (ACTION, "Notify on Test at %s level only" % (act)),
+)
 
 
 class NotificationSubscription(models.Model):
@@ -22,6 +24,5 @@ class NotificationSubscription(models.Model):
 
     warning_level = models.IntegerField(choices=WARNING_LEVELS)
 
-    #----------------------------------------------------------------------
     def __unicode__(self):
         return "<NotificationSubscription(%s)>" % self.group.name

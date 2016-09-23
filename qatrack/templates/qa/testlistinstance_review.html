@@ -42,12 +42,12 @@
                         <dd>
 
                             {% if perms.qa.delete_testlistinstance %}
-                            <a class="btn btn-danger btn-mini" title="This will redirect you to the admin site where you can permanently delete this qa session" href="{% url admin:qa_testlistinstance_delete test_list_instance.pk%}">Delete</a>
+                            <a class="btn btn-danger btn-mini" title="This will redirect you to the admin site where you can permanently delete this qa session" href="{% url 'admin:qa_testlistinstance_delete' test_list_instance.pk%}">Delete</a>
                             {% endif %}
                             {% if instance.in_progress %}
-                                <a class="btn btn-primary btn-mini" title="Continue this list" href="{%url continue_tli pk=test_list_instance.pk%}?next={{request.get_full_path}}" >Continue</a>
+                                <a class="btn btn-primary btn-mini" title="Continue this list" href="{%url 'continue_tli' pk=test_list_instance.pk%}?next={{request.get_full_path}}" >Continue</a>
                             {% elif perms.qa.change_testlistinstance %}
-                                <a class="btn btn-primary btn-mini" title="Edit this list" href="{%url edit_tli pk=test_list_instance.pk%}?next={{request.get_full_path}}" >Edit</a>
+                                <a class="btn btn-primary btn-mini" title="Edit this list" href="{%url 'edit_tli' pk=test_list_instance.pk%}?next={{request.get_full_path}}" >Edit</a>
                             {% endif %}
                         </dd>
 
@@ -121,10 +121,13 @@
                             <th>Test<div></div></th>
                             <th class="review-value">Value</th>
                             <th class="review-ref">Reference</th>
+                            {% if REVIEW_DIFF_COL %}
+                                <th class="review-diff">Difference</th>
+                            {% endif %}
                             <th>Comment</th>
                             <th class="qa-history">History<br/>
                                 {% for d in history_dates %}
-                                    <span class="label history-label" title="{{d}}">{{d|date:"dMy"}}</span>
+                                    <span class="history-label" title="{{d}}">{{d|date:"dMy"}}</span>
                                 {% endfor %}
                                 <div></div>
                             </th>
@@ -174,6 +177,11 @@
                                 <td class="review-ref">
                                     {% reference_tolerance_span ti.unit_test_info.test ti.reference ti.tolerance%}
                                 </td>
+                                {% if REVIEW_DIFF_COL %}
+                                    <td class="review-diff">
+                                        {% if not ti.string_value %}{{ti.diff_display}}{% endif %}
+                                    </td>
+                                {% endif %}
                                 <td>
                                     {% if ti.comment %}
                                         <a title="{{ti.comment}}">Hover for Comment</a>

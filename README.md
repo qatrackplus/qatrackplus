@@ -1,12 +1,20 @@
 # QATrack+
 ###### Copyright 2012 The Ottawa Hospital Cancer Center
-
 ---
 
-QATrack+ is a fully configurable, free, and open source (MIT License) web application that is deployable on
-most operating system/server/database platform combinations. It was developed in the popular
-Python programming language using the Django web framework so that QC data may be
-entered, reviewed, and analyzed using a web browser.
+https://travis-ci.org/randlet/qatrackplus-ci.svg?branch=master
+
+
+QATrack+ is a fully configurable, free, and open source (MIT License) web
+application for managing QA data for radiation therapy and medical imaging
+equipment.  QATrack+ is now used in many hospitals and clinics [around the world](
+http://qatrackplus.com/#whos-using)! Visit the QATrack+ homepage at 
+http://qatrackplus.com
+
+QATrack+ is deployable on most operating system/server/database platform
+combinations. It was developed in the popular Python programming language using
+the Django web framework so that QC data may be entered, reviewed, and analyzed
+using a web browser.
 
 Take a look at the [screenshots](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/screenshots) to get
 an idea of the interface.
@@ -38,13 +46,13 @@ local institution policies.
 
 ## Documentation & Release Notes
 
-The latest version is 0.2.8 Please review the [release_notes](https://bitbucket.org/tohccmedphys/qatrackplus/src/master/release_notes.md) before
-installing or upgrading.
+The latest version is 0.2.9 Please review the
+[release_notes](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/v/0.2.9/release-notes.md)
+before installing or upgrading.
 
 The [documentation can be found
 online](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/Home) and is where you
-should start if you
-are interested in installing or helping develop QATrack+.
+should start if you are interested in installing or helping develop QATrack+.
 
 ---
 

@@ -13,9 +13,9 @@
             {% if user.is_authenticated %}
                 <p>{% trans "You are already logged in." %}</p>
             {% else %}
-                <p>{% trans "Already have an account?" %} <a href="{% url auth_login %}">{% trans "Log in" %}</a>!</p>
+                <p>{% trans "Already have an account?" %} <a href="{% url 'auth_login' %}">{% trans "Log in" %}</a>!</p>
 
-                <form id="signup_form" method="post" action="{% url registration_register %}" autocapitalize="off" class="form-horizontal">
+                <form id="signup_form" method="post" action="{% url 'registration_register' %}" autocapitalize="off" class="form-horizontal">
                     <fieldset>
                         {% csrf_token %}
                         {{ form|as_bootstrap }}
