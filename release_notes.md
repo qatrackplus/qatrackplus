@@ -22,7 +22,7 @@ For instructions on how to upgrade from v0.2.8
 
 Details of 0.2.9 below:
 
-* Multiple choices tests now store their results [as the test value rather than the index](https://bitbucket.org/tohccmedphys/qatrackplus/issues/162/adding-new-multiple-choice-options-can) of the choice. Note this change requires you to update any composite tests that use multiple choice test results to look up historical results. 
+* Multiple choices tests now store their results [as the test value rather than the index](https://bitbucket.org/tohccmedphys/qatrackplus/issues/162/adding-new-multiple-choice-options-can) of the choice.
 It is important that you update any composite tests that rely on multiple choice test results after this upgrade (see Upgrade Instructions below)
 * Unit modalities [are now free text fields](https://bitbucket.org/tohccmedphys/qatrackplus/issues/110/change-unit-modality-to-free-text-field) instead of forcing you to select particle/energy.
 * If you attempt to access a QATrack+ page but are logged out, [you will be redirected to that page after logging in](https://bitbucket.org/tohccmedphys/qatrackplus/issues/154/redirect-after-login)
