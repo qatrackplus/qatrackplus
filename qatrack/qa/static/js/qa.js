@@ -399,10 +399,6 @@ function TestInstance(test_info, row){
         if (self.test_info.test.type == QAUtils.BOOLEAN){
             self.set_value(self.value);
         }
-<<<<<<< HEAD
-=======
-
->>>>>>> 0.2.9
     }
 
     this.hide = function(){
