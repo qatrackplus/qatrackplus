@@ -8,7 +8,7 @@ import sys
 # Debug settings - remember to set both DEBUG & TEMPLATE_DEBUG to false when
 # deploying (either here or in local_settings.py)
 DEBUG = True
-TEMPLATE_DEBUG = True
+# TEMPLATE_DEBUG = True
 
 # Who to email when server errors occur
 ADMINS = (
@@ -172,27 +172,50 @@ LOGIN_URL = "/accounts/login/"
 # ------------------------------------------------------------------------------
 # Template settings
 # List of callables that know how to import templates from various sources.
-TEMPLATE_LOADERS = (
-    # ('django.template.loaders.cached.Loader', (
-    'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.app_directories.Loader',
-    # )),
-    #     'django.template.loaders.eggs.Loader',
-)
+# TEMPLATE_LOADERS = (
+#     # ('django.template.loaders.cached.Loader', (
+#     'django.template.loaders.filesystem.Loader',
+#     'django.template.loaders.app_directories.Loader',
+#     # )),
+#     #     'django.template.loaders.eggs.Loader',
+# )
+#
+# TEMPLATE_DIRS = (
+#     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
+#     # Always use forward slashes, even on Windows.
+#     # Don't forget to use absolute paths, not relative paths.
+#     os.path.join(PROJECT_ROOT, "templates"),
+#     # os.path.join(PROJECT_ROOT, "theme_bootstrap", "templates"),
+#     "genericdropdown/templates",
+# )
+#
+# TEMPLATE_CONTEXT_PROCESSORS = list(DEFAULT_SETTINGS.TEMPLATE_CONTEXT_PROCESSORS)
+# TEMPLATE_CONTEXT_PROCESSORS += [
+#     'django.core.context_processors.request',
+#     "qatrack.context_processors.site",
+# ]
 
-TEMPLATE_DIRS = (
-    # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
-    os.path.join(PROJECT_ROOT, "templates"),
-    # os.path.join(PROJECT_ROOT, "theme_bootstrap", "templates"),
-    "genericdropdown/templates",
-)
-
-TEMPLATE_CONTEXT_PROCESSORS = list(DEFAULT_SETTINGS.TEMPLATE_CONTEXT_PROCESSORS)
-TEMPLATE_CONTEXT_PROCESSORS += [
-    'django.core.context_processors.request',
-    "qatrack.context_processors.site",
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [
+            os.path.join(PROJECT_ROOT, 'templates'),
+            # "genericdropdown/templates"
+        ],
+        # 'DIRS': ['templates'],
+        'OPTIONS': {
+            'context_processors':
+                list(DEFAULT_SETTINGS.TEMPLATE_CONTEXT_PROCESSORS) +
+                [
+                    'django.core.context_processors.request',
+                    'qatrack.context_processors.site',
+                ],
+            'loaders': [
+                'django.template.loaders.filesystem.Loader',
+                'django.template.loaders.app_directories.Loader',
+            ]
+        },
+    },
 ]
 
 # ------------------------------------------------------------------------------
@@ -219,6 +242,7 @@ INSTALLED_APPS = [
     'listable',
     'genericdropdown',
     'crispy_forms',
+    'widget_tweaks',
 
     'qatrack.cache',
     'qatrack.accounts',
@@ -228,7 +252,7 @@ INSTALLED_APPS = [
     # 'qatrack.theme_bootstrap',
     'qatrack.notifications',
     'qatrack.contacts',
-    'qatrack.service_log'
+    'qatrack.service_log',
 
     # 'south',
     'admin_views',
@@ -405,6 +429,22 @@ TEST_STATUS_DISPLAY_SHORT = {
     'action': "ACT",
     'no_tol': "NO TOL",
 }
+
+DEFAULT_COLOURS = [
+    'rgba(60,141,188,1)',
+    'rgba(0,192,239,1)',
+    'rgba(0,166,90,1)',
+    'rgba(243,156,18,1)',
+    'rgba(245,105,84,1)',
+    'rgba(210,214,222,1)',
+    'rgba(0,31,63,1)',
+    'rgba(240,245,2,1)',
+    'rgba(57,204,204,1)',
+    'rgba(96,92,168,1)',
+    'rgba(216,27,96,1)',
+    'rgba(1,255,112,1)',
+    'rgba(17,17,17,1)',
+]
 
 # ------------------------------------------------------------------------------
 # local_settings contains anything that should be overridden

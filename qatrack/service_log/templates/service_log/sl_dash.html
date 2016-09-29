@@ -1,0 +1,198 @@
+{% extends "site_base.html" %}
+
+{% load qa_tags %}
+
+{% block head_title %}Service Log Dashboard{% endblock %}
+
+{% block extra_css %}
+    <link href="{{ STATIC_URL }}service_log/css/sl.css?v={{ VERSION }}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}qatrack_core/css/sidebar.css?v={{VERSION}}" rel="stylesheet">
+{% endblock extra_css %}
+
+{% block require_javascript %}
+    require(['sl_dash'], function() {
+        $('body').removeClass("loading");
+    });
+{% endblock require_javascript %}
+
+{% block body_class %}sidebar-mini sidebar-collapse loading{% endblock body_class %}
+
+{% block sidebar_toggle %}
+    <a href="#" class="sidebar-toggle" data-toggle="offcanvas" role="button">
+{#        <span class="sr-only">Toggle navigation</span>#}
+        <i id="toggle-icon" class="fa fa-chevron-left fa-lg" aria-hidden="true"></i>
+    </a>
+{% endblock sidebar_toggle %}
+
+{% block main_sidebar %}
+    <aside class="main-sidebar">
+        <section class="sidebar">
+            <ul class="sidebar-menu">
+
+                <li class="header">Service Log Actions</li>
+
+                <li class="primary"><a id="toggle-description" href="{% url "sl_new" %}"> {# TODO: fix link #}
+                    <i class="fa fa-stack fa-fw" aria-hidden="true">
+                        <i class="fa fa-wrench fa-stack-custom-main fa-lg"></i>
+                        <i class="fa fa-plus fa-stack-custom-sub upper-left primary"></i>
+                    </i>
+{#                    <i class="fa fa-wrench fa-fw" aria-hidden="true"></i>#}
+                    <span>Open New Service Event</span>
+                </a></li>
+
+                <li class="primary"><a id="toggle-description" href="#!"> {# TODO: fix link. Possible dropdown with more options? #}
+                    <i class="fa fa-stack fa-fw" aria-hidden="true">
+                        <i class="fa fa-wrench fa-stack-custom-main fa-lg"></i>
+                        <i class="fa fa-wrench fa-stack-custom-sub upper-left"></i>
+                    </i>
+                    <span>View Service Events</span>
+                </a></li>
+                <li class="header">Parts Actions</li>
+                <li class="primary"><a id="toggle-description" href="#!">
+                    <i class="fa fa-stack fa-fw" aria-hidden="true">
+                        <i class="fa fa-cog fa-stack-custom-main fa-lg"></i>
+                        <i class="fa fa-plus fa-stack-custom-sub upper-left primary"></i>
+                    </i>
+                    <span>Add Part</span>
+                </a></li>
+
+                <li class="primary"><a id="toggle-description" href="#!">
+                    <i class="fa fa-cogs fa-fw" aria-hidden="true"></i>
+                    <span>View Parts</span>
+                </a></li>
+
+                <li class="header">Units Actions</li>
+                <li class="danger"><a id="toggle-description" href="#!">
+                    <i class="fa fa-stack fa-fw" aria-hidden="true">
+                        <i class="fa fa-cube fa-stack-custom-main fa-lg"></i>
+                        <i class="fa fa-key fa-stack-custom-sub upper-left danger"></i>
+                    </i>
+                    <span>Restrict Unit</span>
+                </a></li>
+
+            </ul>
+        </section>
+    </aside>
+
+{% endblock main_sidebar %}
+
+{% block body %}
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="box box-primary">
+
+                <div class="box-header">
+                    <h3 class="box-title">
+                        QA Followups
+                    </h3>
+                </div>
+
+                <div class="box-body">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <label class="pull-left">Incomplete Followups</label>
+                            <div class="pull-right btn btn-flat btn-xs btn-primary left-btns">{{ counts.qa_not_complete }}</div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <label class="pull-left">Followups waiting approval</label>
+                            <div class="pull-right btn btn-flat btn-xs btn-primary left-btns">{{ counts.qa_not_approved }}</div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="box box-primary">
+
+                <div class="box-header">
+                    <h3 class="box-title">
+                        Service Event Statuses
+                    </h3>
+                </div>
+                <div class="box-body">
+                    {% for key, val in counts.se_statuses.items %}
+                        <div class="row">
+                            <div class="col-md-12">
+                                <label class="pull-left">Service events {{ key }}</label>
+                                <div class="pull-right btn btn-flat btn-xs btn-primary left-btns">{{ val }}</div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="box box-primary">
+
+                <div class="box-header">
+                    <h3 class="box-title">
+                        Parts and Units
+                    </h3>
+                </div>
+
+                <div class="box-body">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <label class="pull-left">Parts running low</label>
+                            <div class="pull-right btn btn-flat btn-xs btn-primary left-btns">{{ counts.parts_low }}</div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <label class="pull-left">Units restricted</label>
+                            <div class="pull-right btn btn-flat btn-xs btn-primary left-btns">{{ counts.units_restricted }}</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box box-primary">
+
+                <div class="box-header">
+                    <h3 class="box-title">
+                        <i class="fa fa-th fa-fw" aria-hidden="true"></i>
+                        Service Log
+                    </h3>
+                </div>
+
+                <div class="box-body">
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock body %}
+
+
+{% block loading_modal %}
+    <div class="loading-modal ">
+        <div class="center">
+            <div>
+                <span class="loading-logo">QAT</span>
+                <i class="fa fa-fw fa-plus fa-spin fa-2x info"></i>
+            </div>
+            <div>
+                <b>
+                {% if test_list_instance %}
+                    Loading {{test_list_instance.unit_test_collection.unit.name}} : {{test_list_instance.test_list.name}}
+                {% else %}
+                    Loading {{unit_test_collection.unit.name}} : {{test_list.name}}
+                {% endif %}
+                </b>
+            </div>
+
+        </div>
+    </div>
+{% endblock loading_modal %}

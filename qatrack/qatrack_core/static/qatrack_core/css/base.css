@@ -67,6 +67,20 @@ ul.dropdown-menu li > div > i {
     right: 0;
     top: -5px;
 }
+.fa-stack-custom-sub.lower-left {
+    right: auto;
+    top: auto;
+    left: 0;
+    bottom: 0;
+}
+.fa-stack-custom-sub.upper-left {
+    right: auto;
+    left: -5px;
+}
+.fa.larger {
+    width: 150%;
+    height: 150%;
+}
 .fa-stack-custom-main {
     position: absolute;
     left: 0;

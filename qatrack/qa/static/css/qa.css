@@ -25,12 +25,11 @@ ul.nav li.dropdown:hover ul.dropdown-menu{
     display: block;
 }
 .navbar .dropdown-menu {
- margin-top: 0px;
+ margin-top: 0;
 }
 
 .pagination {
-    margin:0;
-    margin-bottom:2px;
+    margin: 0 0 2px 0;
 }
 
 .test-collection-table th,
@@ -41,12 +40,12 @@ ul.nav li.dropdown:hover ul.dropdown-menu{
 /************************************************/
 /* performing qa                                */
 #overall-qa-status{
-    min-height:0px;
+    min-height:0;
 }
 .do-not-treat,
 #contacts{
     display:none;
-    min-height:0px;
+    min-height:0;
 }
 #contacts dt{
     width:inherit;

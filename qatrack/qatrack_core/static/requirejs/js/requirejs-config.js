@@ -33,6 +33,7 @@ require.config({
         lodash: siteConfig.STATIC_URL + 'lodash/js/lodash',
         moment: siteConfig.STATIC_URL + 'moment/js/moment.min',
         multiselect: siteConfig.STATIC_URL + 'multiselect/js/bootstrap.multiselect',
+        select2: siteConfig.STATIC_URL + 'select2/js/select2.min',
         slimscroll: siteConfig.STATIC_URL + 'slimscroll/js/jquery.slimscroll.min',
 
         // Site wide:
@@ -44,9 +45,13 @@ require.config({
         qacharts: siteConfig.STATIC_URL + 'qa/js/qacharts',
         qautils: siteConfig.STATIC_URL + 'qa/js/qautils',
         qareview: siteConfig.STATIC_URL + 'qa/js/qareview',
-        qaoverview: siteConfig.STATIC_URL + 'qa/js/qaoverview'
+        qaoverview: siteConfig.STATIC_URL + 'qa/js/qaoverview',
 
         // unit module:
+
+        // service log module
+        sl_dash: siteConfig.STATIC_URL + 'service_log/js/sl_dash',
+        sl_serviceevent: siteConfig.STATIC_URL + 'service_log/js/sl_serviceevent',
     },
     shim: {
         // Third party:
@@ -105,7 +110,7 @@ require.config({
         site_base: {
             deps: ['jquery']
         },
-
+    
         // qa module:
         qa: {
             deps: ['jquery', 'qautils', 'site_base', 'lodash', 'daterangepicker', 'sidebar', 'datatables', 'datatables.columnFilter', 'inputmask']
@@ -121,6 +126,11 @@ require.config({
         // }
 
         // unit module:
+
+        // service log module:
+        sl_dash: {
+            deps: ['jquery', 'qautils', 'site_base', 'lodash', 'bootstrap']
+        }
     }
 });
 

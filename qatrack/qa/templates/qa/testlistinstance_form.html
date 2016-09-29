@@ -456,24 +456,5 @@
 
 {% endblock %}
 
-{% block loading_modal %}
-    <div class="loading-modal ">
-        <div class="center">
-            <div>
-                <span class="loading-logo">QAT</span>
-                <i class="fa fa-fw fa-plus fa-spin fa-2x info"></i>
-            </div>
-            <div>
-                <b>
-                {% if test_list_instance %}
-                    Loading {{test_list_instance.unit_test_collection.unit.name}} : {{test_list_instance.test_list.name}}
-                {% else %}
-                    Loading {{unit_test_collection.unit.name}} : {{test_list.name}}
-                {% endif %}
-                </b>
-            </div>
 
-        </div>
-    </div>
-{% endblock loading_modal %}
 
