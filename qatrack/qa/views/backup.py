@@ -1,4 +1,4 @@
-from urllib import urlencode
+from urllib.parse import urlencode
 
 from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse

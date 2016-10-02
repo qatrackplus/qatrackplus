@@ -3,12 +3,12 @@ from django.core.exceptions import ValidationError
 from django.conf import settings
 from django.test import TestCase
 from django.test.utils import setup_test_environment
-from django.utils import unittest, timezone
+from django.utils import timezone
 
 from qatrack.qa import models
 
 import mock
-import utils
+from . import utils
 
 
 def utc_2am():

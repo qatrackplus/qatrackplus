@@ -1,13 +1,11 @@
 import json
 import math
-import StringIO
+import io
 import tokenize
 import token
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
-
-import models
 
 
 class SetEncoder(json.JSONEncoder):
@@ -19,6 +17,8 @@ class SetEncoder(json.JSONEncoder):
 
 
 def qs_extra_for_utc_name():
+
+        from qatrack.qa import models
 
         ct_tl = ContentType.objects.get_for_model(models.TestList)
         ct_tlc = ContentType.objects.get_for_model(models.TestListCycle)
@@ -99,7 +99,7 @@ def to_precision(x, p):
 
 def tokenize_composite_calc(calc_procedure):
     """tokenize a calculation procedure"""
-    tokens = tokenize.generate_tokens(StringIO.StringIO(calc_procedure).readline)
+    tokens = tokenize.generate_tokens(io.StringIO(calc_procedure).readline)
     return [t[token.NAME] for t in tokens if t[token.NAME]]
 
 
@@ -164,7 +164,7 @@ def check_query_count():  # pragma: nocover
                 ret = func(self, *args, **kwargs)
                 t2 = time.time()
                 final_queries = len(connection.queries)
-                print "****QUERIES****", final_queries - initial_queries, "in %.3f ms" % (t2 - t1)
+                print("****QUERIES****", final_queries - initial_queries, "in %.3f ms" % (t2 - t1))
                 return ret
             return inner
         return func

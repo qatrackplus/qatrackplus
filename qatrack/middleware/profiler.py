@@ -11,8 +11,8 @@
 # request.
 
 from base64 import b64decode, b64encode
-import cPickle
-from cStringIO import StringIO
+import pickle
+from io import StringIO
 from decimal import Decimal
 import hotshot
 import hotshot.stats
@@ -63,9 +63,9 @@ def render_queries(queries, sort):
     """
     output = StringIO()
     if sort == 'order':
-        print >>output, "     time query"
+        print("     time query", file=output)
         for query in queries:
-            print >>output, " %8s %s" % (query["time"], query["sql"])
+            print(" %8s %s" % (query["time"], query["sql"]), file=output)
         return output
     if sort == 'time':
         def sorter(x, y):
@@ -75,7 +75,7 @@ def render_queries(queries, sort):
             return cmp(x[1][0], y[1][0])
     else:
         raise RuntimeError("Unknown sort: %s" % sort)
-    print >>output, "  queries     time query"
+    print("  queries     time query", file=output)
     results = {}
     for query in queries:
         try:
@@ -84,11 +84,11 @@ def render_queries(queries, sort):
             result[1] += Decimal(query["time"])
         except KeyError:
             results[query["sql"]] = [1, Decimal(query["time"])]
-    results = sorted(results.iteritems(), cmp=sorter, reverse=True)
+    results = sorted(iter(results.items()), cmp=sorter, reverse=True)
     for result in results:
-        print >>output, " %8d %8.3f %s" % (result[1][0],
+        print(" %8d %8.3f %s" % (result[1][0],
                                            result[1][1],
-                                           result[0])
+                                           result[0]), file=output)
     return output
 
 
@@ -96,12 +96,12 @@ def pickle_stats(stats):
     """Pickle a pstats.Stats object"""
     if hasattr(stats, "stream"):
         del stats.stream
-    return cPickle.dumps(stats)
+    return pickle.dumps(stats)
 
 
 def unpickle_stats(stats):
     """Unpickle a pstats.Stats object"""
-    stats = cPickle.loads(stats)
+    stats = pickle.loads(stats)
     stats.stream = True
     return stats
 
@@ -214,13 +214,13 @@ def display_stats(request, stats, queries):
                                    ('print_callees', 'by callees')))
     output = render_stats(stats, sort, format)
     output.reset()
-    output = [html.escape(unicode(line)) for line in output.readlines()]
+    output = [html.escape(str(line)) for line in output.readlines()]
     response = HttpResponse(content_type='text/html; charset=utf-8')
     response.content = (stats_template %
                         {'format_buttons': format_buttons,
                          'sort_first_buttons': sort_first_buttons,
                          'sort_second_buttons': sort_second_buttons,
-                         'rawqueries': b64encode(cPickle.dumps(queries)),
+                         'rawqueries': b64encode(pickle.dumps(queries)),
                          'rawstats': b64encode(pickle_stats(stats)),
                          'stats': "".join(output),
                          'url': request.path})
@@ -265,14 +265,14 @@ def display_queries(request, stats, queries):
                                  ('queries', 'query count')))
     output = render_queries(queries, sort)
     output.reset()
-    output = [html.escape(unicode(line))
+    output = [html.escape(str(line))
               for line in output.readlines()]
     response = HttpResponse(content_type='text/html; charset=utf-8')
     response.content = (queries_template %
                         {'sort_buttons': sort_buttons,
                          'num_queries': len(queries),
                          'queries': "".join(output),
-                         'rawqueries': b64encode(cPickle.dumps(queries)),
+                         'rawqueries': b64encode(pickle.dumps(queries)),
                          'rawstats': b64encode(pickle_stats(stats)),
                          'url': request.path})
     return response
@@ -294,7 +294,7 @@ class ProfileMiddleware(object):
     """
         def unpickle(params):
             stats = unpickle_stats(b64decode(params.get('stats', '')))
-            queries = cPickle.loads(b64decode(params.get('queries', '')))
+            queries = pickle.loads(b64decode(params.get('queries', '')))
             return stats, queries
 
         if request.method != 'GET' and \

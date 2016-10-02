@@ -1,7 +1,8 @@
-from django.conf.urls import patterns, include, url
-from views import base, perform, review, charts, backup, admin, forms
+from django.conf.urls import include, url
+from .views import base, perform, review, charts, backup, admin, forms
 
 from qatrack.qa import api
+import qatrack.qa.views.admin
 from tastypie.api import Api
 
 v1_api = Api(api_name="v1")
@@ -25,14 +26,14 @@ for resource in resources:
     v1_api.register(resource)
 
 
-urlpatterns = patterns('',
+urlpatterns = [
 
     # CUSTOM ADMIN PAGES
     # Copy references and tolerances between testlists
     url(r'^admin/copy_refs_and_tols/$',
         admin.SetReferencesAndTolerances(forms.SetReferencesAndTolerancesForm), name="qa_copy_refs_and_tols"),
     url(r'^admin/copy_refs_and_tols/gettestlists/(?P<source_unit>[:|\w]+)/(?P<content_type>[:|\w]+)/$',
-        'qatrack.qa.views.admin.testlist_json', name='qa_copy_refs_and_tols_testlist_json'),
+        qatrack.qa.views.admin.testlist_json, name='qa_copy_refs_and_tols_testlist_json'),
 
 
     url(r"^$", base.UTCList.as_view(), name="all_lists"),
@@ -97,4 +98,4 @@ urlpatterns = patterns('',
     url(r"^backup/$", backup.PaperFormRequest.as_view(), name="qa_paper_forms_request"),
     url(r"^backup/paper/$", backup.PaperForms.as_view(), name="qa_paper_forms"),
 
-)
+]

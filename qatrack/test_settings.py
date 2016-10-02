@@ -2,7 +2,7 @@
 import os
 
 from selenium import webdriver
-from settings import PROJECT_ROOT, INSTALLED_APPS
+from .settings import PROJECT_ROOT, INSTALLED_APPS
 
 INSTALLED_APPS += (
     'django_nose',

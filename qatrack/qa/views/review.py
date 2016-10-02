@@ -76,7 +76,7 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
             status_groups[status_pk].append(ti_form.instance.pk)
 
         still_requires_review = False
-        for status_pk, test_instance_pks in status_groups.items():
+        for status_pk, test_instance_pks in list(status_groups.items()):
             status = models.TestInstanceStatus.objects.get(pk=status_pk)
             if status.requires_review:
                 still_requires_review = True
@@ -186,7 +186,7 @@ class InactiveReview(UTCReview):
     active_only = False
 
     def get_page_title(self):
-        print self.page_title
+        print(self.page_title)
         return "Review All Inactive Test Lists"
 
     def get_icon(self):

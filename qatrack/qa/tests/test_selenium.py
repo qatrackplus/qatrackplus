@@ -1,6 +1,6 @@
 
 import time
-import utils
+from . import utils
 
 from django.conf import settings
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase

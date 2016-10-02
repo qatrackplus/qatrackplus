@@ -6,7 +6,7 @@ from django.utils.translation import ugettext as _
 from django.core import urlresolvers
 from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.fields import GenericRelation, GenericForeignKey
 from django.utils import timezone
 
 from qatrack.units.models import Unit
@@ -372,7 +372,7 @@ class Tolerance(models.Model):
         """return dict containing tolerances for input value"""
 
         tols = {ACT_HIGH: None, ACT_LOW: None, TOL_LOW: None, TOL_HIGH: None}
-        attrs = tols.keys()
+        attrs = list(tols.keys())
 
         if value is None:
             return tols
@@ -494,7 +494,7 @@ class Test(models.Model):
 
     def check_test_type(self, field, test_types, display):
         """check that correct test type is set"""
-        if isinstance(test_types, basestring):
+        if isinstance(test_types, str):
             test_types = [test_types]
 
         errors = []
@@ -578,7 +578,7 @@ class Test(models.Model):
         """return choices for multiple choice tests"""
         if self.type == MULTIPLE_CHOICE:
             cs = self.choices.split(",")
-            return zip(cs, cs)
+            return list(zip(cs, cs))
 
     def __unicode__(self):
         """return display representation of object"""
@@ -679,7 +679,7 @@ class UnitTestInfo(models.Model):
     active = models.BooleanField(help_text=_("Uncheck to disable this test on this unit"), default=True, db_index=True)
 
     assigned_to = models.ForeignKey(Group, help_text=_("QA group that this test list should nominally be performed by"), null=True, blank=True, on_delete=models.SET_NULL)
-    # last_instance = models.ForeignKey("TestInstance",null=True, editable=False,on_delete=models.SET_NULL)
+
     objects = UnitTestInfoManager()
 
     class Meta:
@@ -743,7 +743,7 @@ class TestCollectionInterface(models.Model):
     slug = models.SlugField(unique=True, help_text=_("A short unique name for use in the URL of this list"), db_index=True)
     description = models.TextField(help_text=_("A concise description of this test checklist. (You may use HTML markup)"), null=True, blank=True)
 
-    assigned_to = generic.GenericRelation(
+    assigned_to = GenericRelation(
         "UnitTestCollection",
         content_type_field="content_type",
         object_id_field="object_id",
@@ -858,7 +858,7 @@ class UnitTestCollection(models.Model):
     limit = Q(app_label='qa', model='testlist') | Q(app_label='qa', model='testlistcycle')
     content_type = models.ForeignKey(ContentType, limit_choices_to=limit)
     object_id = models.PositiveIntegerField()
-    tests_object = generic.GenericForeignKey("content_type", "object_id")
+    tests_object = GenericForeignKey("content_type", "object_id")
     objects = UnitTestListManager()
 
     last_instance = models.ForeignKey("TestListInstance", null=True, editable=False, on_delete=models.SET_NULL)
@@ -1454,9 +1454,9 @@ class TestListCycle(TestCollectionInterface):
 
     def days_display(self):
         names = self.testlistcyclemembership_set.values_list("test_list__name", flat=True)
-        days = range(1, len(names)+1)
+        days = list(range(1, len(names)+1))
         if self.day_option_text == self.TEST_LIST_NAME:
-            return zip(days, names)
+            return list(zip(days, names))
 
         return [(d, "Day %d" % d) for d in days]
 

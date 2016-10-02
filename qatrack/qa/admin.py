@@ -674,7 +674,7 @@ class ActiveFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value():
-            print self.value()
+            print(self.value())
             return queryset.filter(active=self.value())
 
         return queryset

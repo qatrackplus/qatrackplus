@@ -3,7 +3,7 @@ from django.db import models
 from django.contrib.auth.models import Group
 
 # this import has to be here so that the signal handlers get registered
-import handlers  # NOQA
+from . import handlers  # NOQA
 
 
 TOLERANCE = 10

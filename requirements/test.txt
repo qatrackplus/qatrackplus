@@ -1,0 +1,10 @@
+-r base.txt
+pep8
+pylint
+coverage
+django-debug-toolbar
+nose
+mock
+django-nose
+selenium
+PyVirtualDisplay

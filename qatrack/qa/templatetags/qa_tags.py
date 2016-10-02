@@ -153,4 +153,4 @@ def as_data_attributes(unit_test_collection):
         "unit_number": utc.unit.number,
     }
 
-    return " ".join(['data-%s=%s' % (k, v) for k, v in attrs.items() if v])
+    return " ".join(['data-%s=%s' % (k, v) for k, v in list(attrs.items()) if v])

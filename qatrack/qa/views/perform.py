@@ -28,6 +28,7 @@ from qatrack.contacts.models import Contact
 from qatrack.units.models import Unit
 
 from braces.views import JSONResponseMixin, PermissionRequiredMixin
+from functools import reduce
 
 DEFAULT_CALCULATION_CONTEXT = {
     "math": math,
@@ -118,13 +119,13 @@ class Upload(JSONResponseMixin, View):
         try:
             test = models.Test.objects.get(pk=self.request.POST.get("test_id"))
             code = compile(process_procedure(test.calculation_procedure), "<string>", "exec")
-            exec code in self.calculation_context
+            exec(code, self.calculation_context)
             key = "result" if "result" in self.calculation_context else test.slug
             results["result"] = self.calculation_context[key]
             results["success"] = True
         except models.Test.DoesNotExist:
             results["errors"].append("Test with that ID does not exist")
-        except Exception, e:
+        except Exception as e:
             results["errors"].append("Invalid Test Procedure: %s" % e)
 
         return self.render_json_response(results)
@@ -242,7 +243,7 @@ class CompositeCalculation(JSONResponseMixin, View):
             procedure = process_procedure(raw_procedure)
             try:
                 code = compile(procedure, "<string>", "exec")
-                exec code in self.calculation_context
+                exec(code, self.calculation_context)
                 key = "result" if "result" in self.calculation_context else slug
                 result = self.calculation_context[key]
 
@@ -298,7 +299,7 @@ class CompositeCalculation(JSONResponseMixin, View):
 
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
 
-        for slug, val in values.iteritems():
+        for slug, val in values.items():
             if slug not in self.composite_tests:
                 self.calculation_context[slug] = val
 
@@ -306,7 +307,7 @@ class CompositeCalculation(JSONResponseMixin, View):
         """figure out composite dependencies of composite tests"""
 
         self.dependencies = {}
-        slugs = self.composite_tests.keys()
+        slugs = list(self.composite_tests.keys())
         for slug in slugs:
             tokens = utils.tokenize_composite_calc(self.composite_tests[slug])
             dependencies = [s for s in slugs if s in tokens and s != slug]
@@ -327,20 +328,20 @@ class CompositeCalculation(JSONResponseMixin, View):
 
         #
         data = dict(self.dependencies)
-        for k, v in data.items():
+        for k, v in list(data.items()):
             v.discard(k)  # Ignore self dependencies
-        extra_items_in_deps = reduce(set.union, data.values()) - set(data.keys())
+        extra_items_in_deps = reduce(set.union, list(data.values())) - set(data.keys())
         data.update(dict((item, set()) for item in extra_items_in_deps))
         deps = []
         while True:
-            ordered = set(item for item, dep in data.items() if not dep)
+            ordered = set(item for item, dep in list(data.items()) if not dep)
             if not ordered:
                 break
             deps.extend(list(sorted(ordered)))
-            data = dict((item, (dep - ordered)) for item, dep in data.items() if item not in ordered)
+            data = dict((item, (dep - ordered)) for item, dep in list(data.items()) if item not in ordered)
 
         self.calculation_order = deps
-        self.cyclic_tests = data.keys()
+        self.cyclic_tests = list(data.keys())
 
 
 class ChooseUnit(TemplateView):
@@ -374,7 +375,7 @@ class ChooseUnit(TemplateView):
         for unit in q:
             unit_types[unit["unit__type__name"]].append(unit)
 
-        ordered = sorted(unit_types.items(), key=lambda x: min([u[units_ordering] for u in x[1]]))
+        ordered = sorted(list(unit_types.items()), key=lambda x: min([u[units_ordering] for u in x[1]]))
 
         context["unit_types"] = ordered
 

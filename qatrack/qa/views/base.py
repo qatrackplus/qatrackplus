@@ -229,7 +229,7 @@ class UTCList(BaseListableView):
         return context
 
     def get_page_title(self):
-        print self.page_title
+        print(self.page_title)
         return self.page_title
 
     def get_queryset(self):
