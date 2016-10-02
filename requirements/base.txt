@@ -1,4 +1,4 @@
--e git+https://github.com/randlet/django-genericdropdown.git@616a32a32ef6102a59163cadbc3d9380667549b6#egg=django_genericdropdown-master
+-e git+https://github.com/randlet/django-genericdropdown.git@69a25196db1f7ec391d3e184d667d28c68899e63#egg=django_genericdropdown-master
 Django==1.10.2
 django-admin-views
 django-braces
