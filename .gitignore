@@ -17,8 +17,10 @@ lib64
 *.pot
 *.pyc
 local_settings.py
+local_test_settings.py
 fixtures/dev
 questions_*
+qatrack/wsgi.py
 qatrack/static
 qatrack/assets
 qatrack/cache/cache_data

@@ -625,7 +625,14 @@ def get_utc_tl_ids(active=None, units=None, frequencies=None):
         tls = tls.filter(unit__in=units)
 
     if frequencies is not None:
-        tls = tls.filter(frequency__in=frequencies)
+        if None in frequencies:
+            frequencies.remove(None)
+            q = Q(frequency=None)
+            if frequencies:
+                q |= Q(frequency__in=frequencies)
+        else:
+            q = Q(frequency__in=frequencies)
+        tls = tls.filter(q)
 
     tls = tls.values(
         'object_id'
@@ -883,6 +890,9 @@ class UnitTestCollection(models.Model):
                 return timezone.now()
             elif last_valid is not None and last_valid.work_completed:
                 return last_valid.work_completed + self.frequency.due_delta()
+
+        #return existing due date (could be None)
+        return self.due_date
 
     def set_due_date(self, due_date=None):
         """Set due date field for this UTC. Note model is not saved to db.

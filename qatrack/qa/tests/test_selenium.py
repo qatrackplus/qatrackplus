@@ -236,8 +236,7 @@ class SeleniumTests(TestCase, StaticLiveServerTestCase):
             the_test = objects['Tests'][i]
             self.driver.find_element_by_id('id_name').send_keys(the_test['name'])
             self.driver.find_element_by_id('id_slug').send_keys(the_test['name'])
-            self.driver.find_element_by_id('id_category').click()
-            self.driver.find_element_by_id('id_category').send_keys(Keys.ARROW_DOWN, Keys.ENTER)
+            Select(self.driver.find_element_by_id('id_category')).select_by_index(1)
             Select(self.driver.find_element_by_id('id_type')).select_by_value(the_test['name'])
 
             if the_test['choices']:
@@ -321,8 +320,7 @@ class SeleniumTests(TestCase, StaticLiveServerTestCase):
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
         self.driver.find_element_by_id('id_name').send_keys(objects['Unit']['name'])
         self.driver.find_element_by_id('id_number').send_keys(objects['Unit']['number'])
-        self.driver.find_element_by_id('id_type').click()
-        self.driver.find_element_by_id('id_type').send_keys(Keys.ARROW_DOWN, Keys.ENTER)
+        Select(self.driver.find_element_by_id("id_type")).select_by_index(1)
         self.driver.find_element_by_id('id_modalities_add_all_link').click()
         self.driver.find_element_by_name('_save').click()
         self.wait_for_success()
@@ -362,17 +360,10 @@ class SeleniumTests(TestCase, StaticLiveServerTestCase):
         self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'ADD UNIT TEST COLLECTION')))
         self.driver.find_element_by_link_text('ADD UNIT TEST COLLECTION').click()
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_unit')))
-        self.driver.find_element_by_id('id_unit').click()
-        self.driver.find_element_by_id('id_unit').send_keys(Keys.ARROW_DOWN, Keys.ENTER)
-        self.driver.find_element_by_id('id_frequency').click()
-        self.driver.find_element_by_id('id_frequency').send_keys(Keys.ARROW_DOWN, Keys.ENTER)
-        self.driver.find_element_by_id('id_assigned_to').click()
-        self.driver.find_element_by_id('id_assigned_to').send_keys(Keys.ARROW_DOWN, Keys.ENTER)
-        self.driver.find_element_by_id('id_content_type').click()
-        self.driver.find_element_by_id('id_content_type').send_keys(Keys.ARROW_DOWN, Keys.ENTER)
-        self.driver.find_element_by_css_selector('#id_visible_to_from > option:nth-child(1)').click()
-        self.driver.find_element_by_css_selector('#id_visible_to_add_link').click()
-
+        Select(self.driver.find_element_by_id("id_unit")).select_by_index(1)
+        Select(self.driver.find_element_by_id("id_frequency")).select_by_index(1)
+        Select(self.driver.find_element_by_id("id_assigned_to")).select_by_index(1)
+        Select(self.driver.find_element_by_id("id_content_type")).select_by_index(1)
         time.sleep(2)
 
         self.driver.find_element_by_id('select2-generic_object_id-container').click()
@@ -389,8 +380,7 @@ class SeleniumTests(TestCase, StaticLiveServerTestCase):
         self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'ADD TOLERANCE')))
         self.driver.find_element_by_link_text('ADD TOLERANCE').click()
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_type')))
-        self.driver.find_element_by_id('id_type').click()
-        self.driver.find_element_by_id('id_type').send_keys(Keys.ARROW_DOWN, Keys.ENTER)
+        Select(self.driver.find_element_by_id("id_type")).select_by_index(1)
         self.driver.find_element_by_id('id_act_low').send_keys(objects['absoluteTolerance']['act_low'])
         self.driver.find_element_by_id('id_tol_low').send_keys(objects['absoluteTolerance']['tol_low'])
         self.driver.find_element_by_id('id_tol_high').send_keys(objects['absoluteTolerance']['tol_high'])
@@ -400,8 +390,7 @@ class SeleniumTests(TestCase, StaticLiveServerTestCase):
 
         # Add percentage tolerance
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_type')))
-        self.driver.find_element_by_id('id_type').click()
-        self.driver.find_element_by_id('id_type').send_keys(Keys.ARROW_DOWN, Keys.ARROW_DOWN, Keys.ENTER)
+        Select(self.driver.find_element_by_id("id_type")).select_by_index(1)
         self.driver.find_element_by_id('id_act_low').send_keys(objects['percentTolerance']['act_low'])
         self.driver.find_element_by_id('id_tol_low').send_keys(objects['percentTolerance']['tol_low'])
         self.driver.find_element_by_id('id_tol_high').send_keys(objects['percentTolerance']['tol_high'])
@@ -411,14 +400,17 @@ class SeleniumTests(TestCase, StaticLiveServerTestCase):
 
         # Add multi tolerance
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_type')))
-        self.driver.find_element_by_id('id_type').click()
-        self.driver.find_element_by_id('id_type').send_keys(Keys.ARROW_DOWN, Keys.ARROW_DOWN, Keys.ARROW_DOWN, Keys.ENTER)
+        Select(self.driver.find_element_by_id("id_type")).select_by_index(3)
         self.driver.find_element_by_id('id_mc_pass_choices').send_keys(objects['multiChoiceTolerance']['mc_pass_choices'])
         self.driver.find_element_by_id('id_mc_tol_choices').send_keys(objects['multiChoiceTolerance']['mc_tol_choices'])
         self.driver.find_element_by_name('_save').click()
         self.wait_for_success()
 
     def test_admin_set_ref_tols(self):
+
+        utils.create_tolerance(tol_type=models.MULTIPLE_CHOICE, mc_pass_choices="a,b")
+
+        utils.create_tolerance()
 
         for the_test in objects['Tests']:
 
@@ -446,21 +438,18 @@ class SeleniumTests(TestCase, StaticLiveServerTestCase):
         self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, mult_test.name)))
         self.driver.find_element_by_link_text(mult_test.name).click()
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_tolerance')))
-        self.driver.find_element_by_id('id_tolerance').click()
-        self.driver.find_element_by_id('id_tolerance').send_keys(Keys.ARROW_DOWN, Keys.ENTER)
+        Select(self.driver.find_element_by_id("id_tolerance")).select_by_index(1)
         self.driver.find_element_by_name('_save').click()
         self.wait_for_success()
 
         self.driver.find_element_by_link_text('simple').click()
-        self.driver.find_element_by_id('id_tolerance').click()
-        self.driver.find_element_by_id('id_tolerance').send_keys(Keys.ARROW_DOWN, Keys.ENTER)
+        Select(self.driver.find_element_by_id("id_tolerance")).select_by_index(1)
         self.driver.find_element_by_id('id_reference_value').send_keys('0')
         self.driver.find_element_by_name('_save').click()
         self.wait_for_success()
 
         self.driver.find_element_by_link_text('composite').click()
-        self.driver.find_element_by_id('id_tolerance').click()
-        self.driver.find_element_by_id('id_tolerance').send_keys(Keys.ARROW_DOWN, Keys.ARROW_DOWN, Keys.ENTER)
+        Select(self.driver.find_element_by_id("id_tolerance")).select_by_index(1)
         self.driver.find_element_by_id('id_reference_value').send_keys('23.23')
         self.driver.find_element_by_name('_save').click()
         self.wait_for_success()

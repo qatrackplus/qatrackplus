@@ -73,7 +73,7 @@ def create_test_list(name="test_list"):
     return test_list
 
 
-def create_test_list_instance(unit_test_collection=None, work_completed=None, created_by=None, test_list=None, day=0):
+def create_test_list_instance(unit_test_collection=None, work_completed=None, created_by=None, test_list=None, day=0, in_progress=False):
     if unit_test_collection is None:
         unit_test_collection = create_unit_test_collection()
     if test_list is None:
@@ -92,7 +92,8 @@ def create_test_list_instance(unit_test_collection=None, work_completed=None, cr
         work_completed=work_completed,
         work_started=work_started,
         test_list=test_list,
-        day=day
+        day=day,
+        in_progress=in_progress
     )
     tli.save()
     return tli
@@ -194,10 +195,12 @@ def create_reference(name="ref", ref_type=models.NUMERICAL, value=1, created_by=
     return r
 
 
-def create_tolerance(tol_type=models.ABSOLUTE, act_low=-2, tol_low=-1, tol_high=1, act_high=2, created_by=None):
+def create_tolerance(tol_type=models.ABSOLUTE, act_low=-2, tol_low=-1, tol_high=1, act_high=2,
+        created_by=None, mc_pass_choices=None, mc_tol_choices=None):
     if created_by is None:
         created_by = create_user()
-    tol = models.Tolerance(
+
+    kwargs = dict(
         type=tol_type,
         act_low=act_low,
         tol_low=tol_low,
@@ -205,6 +208,16 @@ def create_tolerance(tol_type=models.ABSOLUTE, act_low=-2, tol_low=-1, tol_high=
         act_high=act_high,
         created_by=created_by, modified_by=created_by
     )
+
+    if tol_type == models.MULTIPLE_CHOICE:
+        kwargs = dict(
+            type=tol_type,
+            mc_tol_choices=mc_tol_choices,
+            mc_pass_choices=mc_pass_choices,
+            created_by=created_by, modified_by=created_by
+        )
+
+    tol = models.Tolerance(**kwargs)
     tol.save()
     return tol
 

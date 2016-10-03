@@ -132,6 +132,7 @@ class UTCList(BaseListableView):
     action_display = "Perform"
     page_title = "All QA"
     active_only = True
+    inactive_only = False
     visible_only = True
     paginate_by = 50
 
@@ -202,8 +203,12 @@ class UTCList(BaseListableView):
 
     order_by = ["unit__name", "frequency__name", "utc_name"]
 
+
     def __init__(self, *args, **kwargs):
         super(UTCList, self).__init__(*args, **kwargs)
+
+        if self.active_only and self.inactive_only:
+            raise ValueError("Misconfigured View: %s. active_only and  inactive_only can't both be True" % self.__class__)
 
         # Store templates on view initialization so we don't have to reload them for every row!
         self.templates = {
@@ -243,6 +248,9 @@ class UTCList(BaseListableView):
 
         if self.active_only:
             qs = qs.filter(active=True)
+
+        if self.inactive_only:
+            qs = qs.filter(active=False)
 
         return qs
 

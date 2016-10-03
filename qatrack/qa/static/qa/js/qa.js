@@ -458,6 +458,7 @@ function TestInstance(test_info, row){
         }
 
         self.comment_box.val(self.NOT_PERFORMED);
+// <<<<<<< HEAD:qatrack/qa/static/qa/js/qa.js
     };
 
     if (test_info.test.type == 'upload') {
@@ -496,6 +497,12 @@ function TestInstance(test_info, row){
             });
 
             self.dropzone.on('success', function(file, data) {
+// =======
+//         if (self.test_info.test.type == QAUtils.BOOLEAN){
+//             self.inputs.prop("checked", false);
+//         }
+//     }
+// >>>>>>> 24e10043c7319354a359ff553ac58ae05316ecf1:qatrack/qa/static/js/qa.js
 
                 var response_data = JSON.parse(data);
                 self.status.removeClass("btn-primary btn-info btn-warning btn-danger btn-success");
