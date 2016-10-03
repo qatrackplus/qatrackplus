@@ -22,7 +22,7 @@ validate_color = RegexValidator(color_re, _('Enter a valid color.'), 'invalid')
 class ServiceArea(models.Model):
 
     name = models.CharField(max_length=32, unique=True, help_text=_('Enter a short name for this service area'))
-    units = models.ManyToManyField(Unit, through='UnitServiceArea')
+    units = models.ManyToManyField(Unit, through='UnitServiceArea', related_name='service_areas')
 
     def __unicode__(self):
         return self.name

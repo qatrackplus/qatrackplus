@@ -17,7 +17,9 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker']
             templateSelection: function(tag, container) {
                 $(container).css('background-color', colours_dict[tag.id]);
                 return tag.text;
-            }
+            },
+            minimumResultsForSearch: 10,
+            width: '100%'
         });
         
         $('.daterangepicker-input').daterangepicker({
