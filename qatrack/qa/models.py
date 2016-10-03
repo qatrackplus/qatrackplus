@@ -168,7 +168,7 @@ class Frequency(models.Model):
         if self.due_interval is not None:
             return timezone.timedelta(days=self.due_interval)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -234,7 +234,7 @@ class TestInstanceStatus(models.Model):
 
         super(TestInstanceStatus, self).save(*args, **kwargs)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -242,7 +242,7 @@ class AutoReviewRule(models.Model):
     pass_fail = models.CharField(max_length=15, choices=PASS_FAIL_CHOICES, unique=True)
     status = models.ForeignKey(TestInstanceStatus)
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s => %s" % (PASS_FAIL_CHOICES_DISPLAY[self.pass_fail], self.status)
 
 
@@ -274,7 +274,7 @@ class Reference(models.Model):
             return "Yes" if int(self.value) == 1 else "No"
         return "%.6G" % (self.value)
 
-    def __unicode__(self):
+    def __str__(self):
         """more helpful display name"""
         return self.value_display()
 
@@ -388,9 +388,9 @@ class Tolerance(models.Model):
 
     @property
     def name(self):
-        return self.__unicode__()
+        return self.__str__()
 
-    def __unicode__(self):
+    def __str__(self):
         """more helpful interactive display name"""
         vals = (self.act_low, self.tol_low, self.tol_high, self.act_high)
         if self.type == ABSOLUTE:
@@ -419,7 +419,7 @@ class Category(models.Model):
         verbose_name_plural = "categories"
         ordering = ("name",)
 
-    def __unicode__(self):
+    def __str__(self):
         """return display representation of object"""
         return self.name
 
@@ -580,7 +580,7 @@ class Test(models.Model):
             cs = self.choices.split(",")
             return list(zip(cs, cs))
 
-    def __unicode__(self):
+    def __str__(self):
         """return display representation of object"""
         return "%s" % (self.name)
 
@@ -718,7 +718,7 @@ class UnitTestInfo(models.Model):
         # hist = hist.select_related("status")
         return [(x.work_completed, x.value, x.pass_fail, x.status) for x in reversed(hist[:number])]
 
-    def __unicode__(self):
+    def __str__(self):
         return "UnitTestInfo(%s)" % self.pk
 
 
@@ -732,7 +732,7 @@ class TestListMembership(models.Model):
         ordering = ("order",)
         unique_together = ("test_list", "test",)
 
-    def __unicode__(self):
+    def __str__(self):
         return "TestListMembership(pk=%s)" % self.pk
 
 
@@ -817,7 +817,7 @@ class TestList(TestCollectionInterface):
     def __len__(self):
         return 1
 
-    def __unicode__(self):
+    def __str__(self):
         """return display representation of object"""
         return "(%s) %s" % (self.pk, self.name)
 
@@ -994,7 +994,7 @@ class UnitTestCollection(models.Model):
         return self.tests_object.get_list(day)
 
     def name(self):
-        return self.__unicode__()
+        return self.__str__()
 
     def test_objects_name(self):
         return self.tests_object.name
@@ -1019,7 +1019,7 @@ class UnitTestCollection(models.Model):
                 tolerance=source_uti.tolerance
             )
 
-    def __unicode__(self):
+    def __str__(self):
         return "UnitTestCollection(%s)" % self.pk
 
 
@@ -1221,7 +1221,7 @@ class TestInstance(models.Model):
         url = "%s%d/%s" % (settings.UPLOADS_URL, self.test_list_instance.pk, self.string_value)
         return url
 
-    def __unicode__(self):
+    def __str__(self):
         """return display representation of object"""
         return "TestInstance(pk=%s)" % self.pk
 
@@ -1377,7 +1377,7 @@ class TestListInstance(models.Model):
 
         return instances, dates
 
-    def __unicode__(self):
+    def __str__(self):
         return "TestListInstance(pk=%s)" % self.pk
 
 
@@ -1460,7 +1460,7 @@ class TestListCycle(TestCollectionInterface):
 
         return [(d, "Day %d" % d) for d in days]
 
-    def __unicode__(self):
+    def __str__(self):
         return _(self.name)
 
 
@@ -1478,5 +1478,5 @@ class TestListCycleMembership(models.Model):
         # memberships they can have the same order temporarily when orders are changed
         # unique_together = (("order", "cycle"),)
 
-    def __unicode__(self):
+    def __str__(self):
         return "TestListCycleMembership(pk=%s)" % self.pk

@@ -734,9 +734,9 @@ class UnitTestCollectionAdmin(admin.ModelAdmin):
     def get_queryset(self, *args, **kwargs):
         qs = super(UnitTestCollectionAdmin, self).get_queryset(*args, **kwargs)
         return qs.select_related(
-            "unit__name",
-            "frequency__name",
-            "assigned_to__name"
+            "unit",
+            "frequency",
+            "assigned_to"
         ).prefetch_related(
             "tests_object",
         )
@@ -782,7 +782,7 @@ utc_unit_name.short_description = "Unit"
 
 
 class TestListInstanceAdmin(admin.ModelAdmin):
-    list_display = ["__unicode__", utc_unit_name, "test_list", "work_completed", "created_by"]
+    list_display = ["__str__", utc_unit_name, "test_list", "work_completed", "created_by"]
     list_filter = ["unit_test_collection__unit", "test_list", ]
 
 

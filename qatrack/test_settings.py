@@ -28,6 +28,7 @@ NOSE_ARGS = [
     '--cover-package=qatrack.qa,qatrack.units,qatrack.contacts,qatrack.accounts',
     '--nocapture',
     '--nologcapture',
+    '--with-id',
 ]
 # IN-MEMORY TEST DATABASE
 DATABASES = {

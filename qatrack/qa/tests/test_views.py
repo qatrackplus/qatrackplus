@@ -418,7 +418,7 @@ class TestChartData(TestCase):
             ti2.tolerance = per_tol
             ti2.save()
 
-            if x < self.NPOINTS/2:
+            if x < self.NPOINTS//2:
                 # create less points for one tests to ensure tabulation routines
                 # can handle data sets of different lengths
                 tli2 = utils.create_test_list_instance(unit_test_collection=self.utc2)
@@ -452,7 +452,7 @@ class TestChartData(TestCase):
         }
         resp = self.client.get(self.url, data=data)
         data = json.loads(resp.content.decode("UTF-8"))
-        expected = [50.]*(self.NPOINTS/2)
+        expected = [50.]*(self.NPOINTS//2)
         actual = [x['value'] for x in data['data']['unit - tl2 :: test2 (relative to ref)']]
         self.assertListEqual(actual, expected)
 
@@ -481,7 +481,7 @@ class TestChartData(TestCase):
         }
         resp = self.client.get(url, data=data)
         expected_nlines = 2 + 10 + 1  # 2 header  + 10 rows data + 1 blank
-        self.assertTrue(len(resp.content.split('\n')), expected_nlines)
+        self.assertTrue(len(resp.content.decode("UTF-8").split('\n')), expected_nlines)
 
         self.assertEqual(resp.get('Content-Disposition'), 'attachment; filename="qatrackexport.csv"')
 
@@ -888,7 +888,7 @@ class TestPerformQA(TestCase):
 
         # user is redirected if form submitted successfully
         self.assertEqual(response.status_code, 302)
-        self.assertEqual("http://testserver/", response._headers['location'][1])
+        self.assertEqual("/", response['location'])
 
     def test_perform_valid_redirect_non_statff(self):
         data = {
@@ -1123,7 +1123,7 @@ class TestAJAXUpload(TestCase):
         self.test.type = models.UPLOAD
         self.test.calculation_procedure = """
 import json
-result = json.load(FILE)
+result = json.load(TEXT_FILE)
 """
         self.test.save()
 
@@ -1267,7 +1267,7 @@ class TestEditTestListInstance(TestCase):
             "in_progress": True
         })
 
-        self.client.post(self.url, data=self.base_data)
+        resp = self.client.post(self.url, data=self.base_data)
         ntests = models.Test.objects.count()
         self.assertEqual(models.TestInstance.objects.in_progress().count(), ntests)
         del self.base_data["in_progress"]

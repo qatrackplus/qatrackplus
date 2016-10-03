@@ -179,6 +179,7 @@ class Upload(JSONResponseMixin, View):
         tols = self.get_json_data("tols")
 
         self.calculation_context = {
+            "TEXT_FILE": open(self.upload.name, "r"),
             "FILE": self.upload,
             "META": meta_data,
             "REFS": refs,
@@ -210,7 +211,7 @@ class CompositeCalculation(JSONResponseMixin, View):
     def get_json_data(self, name):
         """return python data from GET json data"""
 
-        json_string = self.request.body
+        json_string = self.request.body.decode("UTF-8")
         if not json_string:
             return
 
@@ -511,9 +512,6 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         context = self.get_context_data()
         formset = context["formset"]
 
-        for ti_form in formset:
-            ti_form.in_progress = form.instance.in_progress
-
         if not formset.is_valid():
             context["form"] = form
             return self.render_to_response(context)
@@ -670,11 +668,11 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
     formset_class = forms.UpdateTestInstanceFormSet
 
     def form_valid(self, form):
-        context = self.get_context_data()
-        formset = context["formset"]
 
-        for ti_form in formset:
-            ti_form.in_progress = self.object.in_progress
+        self.form = form
+
+        context = self.get_context_data(form=form)
+        formset = context["formset"]
 
         if formset.is_valid():
             self.object = form.save(commit=False)

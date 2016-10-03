@@ -113,30 +113,30 @@ class TestTolerance(TestCase):
         t.clean_choices()
 
     def test_ok_mc(self):
-        t = models.Tolerance(name="foo", mc_pass_choices="a", mc_tol_choices="b", type=models.MULTIPLE_CHOICE)
+        t = models.Tolerance(mc_pass_choices="a", mc_tol_choices="b", type=models.MULTIPLE_CHOICE)
         t.clean_fields()
         self.assertListEqual(t.tol_choices(), ["b"])
         self.assertListEqual(t.pass_choices(), ["a"])
 
     def test_without_act(self):
-        t = models.Tolerance(name="foo", type=models.ABSOLUTE)
+        t = models.Tolerance(type=models.ABSOLUTE)
         self.assertRaises(ValidationError, t.clean_tols)
 
     def test_invalid_mc_choices(self):
-        t = models.Tolerance(name="foo", mc_pass_choices="a", type=models.ABSOLUTE)
+        t = models.Tolerance(mc_pass_choices="a", type=models.ABSOLUTE)
         self.assertRaises(ValidationError, t.clean_choices)
 
-        t = models.Tolerance(name="foo", mc_tol_choices="a", type=models.ABSOLUTE)
+        t = models.Tolerance(mc_tol_choices="a", type=models.ABSOLUTE)
         self.assertRaises(ValidationError, t.clean_choices)
 
     def test_no_pass_choices(self):
-        t = models.Tolerance(name="foo", mc_pass_choices="", type=models.MULTIPLE_CHOICE)
+        t = models.Tolerance(mc_pass_choices="", type=models.MULTIPLE_CHOICE)
         self.assertRaises(ValidationError, t.clean_choices)
 
     def test_no_tol_choices(self):
-        t = models.Tolerance(name="foo", mc_pass_choices="a", mc_tol_choices="", type=models.MULTIPLE_CHOICE)
+        t = models.Tolerance(mc_pass_choices="a", mc_tol_choices="", type=models.MULTIPLE_CHOICE)
         t.clean_choices()
-        t = models.Tolerance(name="foo", mc_pass_choices="a", type=models.MULTIPLE_CHOICE)
+        t = models.Tolerance(mc_pass_choices="a", type=models.MULTIPLE_CHOICE)
         t.clean_choices()
 
     def test_tolerances_for_value_none(self):

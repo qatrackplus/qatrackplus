@@ -1,5 +1,5 @@
 -r base.txt
-pywin32>=217
-django-mssql>=1.5.1,<1.6
+pywin32>=220
+django-mssql
 CherryPy==8.1.0
 

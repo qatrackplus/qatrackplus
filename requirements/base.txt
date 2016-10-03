@@ -1,15 +1,15 @@
--e git+https://github.com/randlet/django-genericdropdown.git@69a25196db1f7ec391d3e184d667d28c68899e63#egg=django_genericdropdown-master
+-e git+https://github.com/randlet/django-genericdropdown.git@56dbaf6b4f518a3946e5e253fec85ede175f3727#egg=django_genericdropdown-master
 Django==1.10.2
-django-admin-views
-django-braces
-django-crispy-forms
-django-formtools
-django-listable
-django-registration-redux
-django-tastypie
-matplotlib
-numpy
-pydicom
-python-dateutil
-pytz
-scipy
+django-admin-views==0.8.0
+django-braces==1.9.0
+django-crispy-forms==1.6.0
+django-formtools==1.0
+django-listable==0.4.0
+django-registration-redux==1.4
+django-tastypie==0.13.3
+matplotlib==1.5.3
+numpy>=1.11,<=1.12
+pydicom==0.9.9
+python-dateutil==2.5.3
+pytz==2016.6.1
+scipy==0.18.1

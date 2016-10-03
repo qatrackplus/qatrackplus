@@ -24,5 +24,5 @@ class NotificationSubscription(models.Model):
 
     warning_level = models.IntegerField(choices=WARNING_LEVELS)
 
-    def __unicode__(self):
+    def __str__(self):
         return "<NotificationSubscription(%s)>" % self.group.name
