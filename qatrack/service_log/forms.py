@@ -9,7 +9,7 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext as _
 from form_utils.forms import BetterModelForm
 
-import models
+from qatrack.service_log import models
 
 
 class SelectizeModelChoiceField(ModelChoiceField):
@@ -85,12 +85,12 @@ class ServiceEventForm(BetterModelForm):
             self.fields[f].input_formats = settings.INPUT_DATE_FORMATS
 
     def is_valid(self):
-        print '-----------------------------'
-        print self.data
+        print('-----------------------------')
+        print(self.data)
         valid = super(ServiceEventForm, self).is_valid()
-        print '``````````````````````````````'
-        print self.cleaned_data
-        print '================================'
+        print('``````````````````````````````')
+        print(self.cleaned_data)
+        print('================================')
         return valid
 
     def save(self, *args, **kwargs):

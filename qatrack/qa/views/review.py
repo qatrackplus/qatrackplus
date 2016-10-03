@@ -363,11 +363,10 @@ class OverviewObjects(JSONResponseMixin, View):
             active=True,
             # visible_to__in=self.request.user.groups.all(),
         ).select_related(
-            "last_instance__work_completed",
-            "last_instance__created_by",
+            "last_instance",
             "frequency",
-            "unit__name",
-            "assigned_to__name",
+            "unit",
+            "assigned_to",
         ).prefetch_related(
             "last_instance__testinstance_set",
             "last_instance__testinstance_set__status",

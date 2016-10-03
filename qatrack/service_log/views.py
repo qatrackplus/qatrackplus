@@ -32,7 +32,7 @@ class SLDashboard(TemplateView):
         for s in qs:
             to_return['se_statuses'][s.name] = models.ServiceEvent.objects.filter(service_status=s).count()
 
-        print to_return
+        print(to_return)
 
         return to_return
 

@@ -4,7 +4,7 @@ from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.forms import ModelMultipleChoiceField, ModelForm
 from django.utils.translation import ugettext as _
 
-from models import ServiceEventStatus, ServiceType, ProblemType, UnitServiceArea, ServiceArea, ServiceEvent
+from .models import ServiceEventStatus, ServiceType, ProblemType, UnitServiceArea, ServiceArea, ServiceEvent
 from qatrack.units.models import Unit, Modality
 
 
