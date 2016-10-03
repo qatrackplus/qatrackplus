@@ -26,7 +26,7 @@ class FilterPersistMiddleware(object):
             del session['redirected']
             return None
 
-        referrer = request.META['HTTP_REFERER'].split('?')[0]
+        referrer = request.META.get('HTTP_REFERER', "").split('?')[0]
         referrer = referrer[referrer.find('/admin'):len(referrer)]
         key = 'key' + path.replace('/', '_')
 

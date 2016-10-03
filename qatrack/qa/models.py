@@ -7,7 +7,7 @@ from django.utils.translation import ugettext as _
 from django.core import urlresolvers
 from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.fields import GenericRelation, GenericForeignKey
 from django.utils import timezone
 
 from qatrack.units.models import Unit
@@ -169,7 +169,7 @@ class Frequency(models.Model):
         if self.due_interval is not None:
             return timezone.timedelta(days=self.due_interval)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -235,7 +235,7 @@ class TestInstanceStatus(models.Model):
 
         super(TestInstanceStatus, self).save(*args, **kwargs)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -243,7 +243,7 @@ class AutoReviewRule(models.Model):
     pass_fail = models.CharField(max_length=15, choices=PASS_FAIL_CHOICES, unique=True)
     status = models.ForeignKey(TestInstanceStatus)
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s => %s" % (PASS_FAIL_CHOICES_DISPLAY[self.pass_fail], self.status)
 
 
@@ -275,7 +275,7 @@ class Reference(models.Model):
             return "Yes" if int(self.value) == 1 else "No"
         return "%.6G" % (self.value)
 
-    def __unicode__(self):
+    def __str__(self):
         """more helpful display name"""
         return self.value_display()
 
@@ -373,7 +373,7 @@ class Tolerance(models.Model):
         """return dict containing tolerances for input value"""
 
         tols = {ACT_HIGH: None, ACT_LOW: None, TOL_LOW: None, TOL_HIGH: None}
-        attrs = tols.keys()
+        attrs = list(tols.keys())
 
         if value is None:
             return tols
@@ -389,9 +389,9 @@ class Tolerance(models.Model):
 
     @property
     def name(self):
-        return self.__unicode__()
+        return self.__str__()
 
-    def __unicode__(self):
+    def __str__(self):
         """more helpful interactive display name"""
         vals = (self.act_low, self.tol_low, self.tol_high, self.act_high)
         if self.type == ABSOLUTE:
@@ -420,7 +420,7 @@ class Category(models.Model):
         verbose_name_plural = "categories"
         ordering = ("name",)
 
-    def __unicode__(self):
+    def __str__(self):
         """return display representation of object"""
         return self.name
 
@@ -495,7 +495,7 @@ class Test(models.Model):
 
     def check_test_type(self, field, test_types, display):
         """check that correct test type is set"""
-        if isinstance(test_types, basestring):
+        if isinstance(test_types, str):
             test_types = [test_types]
 
         errors = []
@@ -579,9 +579,9 @@ class Test(models.Model):
         """return choices for multiple choice tests"""
         if self.type == MULTIPLE_CHOICE:
             cs = self.choices.split(",")
-            return zip(cs, cs)
+            return list(zip(cs, cs))
 
-    def __unicode__(self):
+    def __str__(self):
         """return display representation of object"""
         return "%s" % (self.name)
 
@@ -680,7 +680,7 @@ class UnitTestInfo(models.Model):
     active = models.BooleanField(help_text=_("Uncheck to disable this test on this unit"), default=True, db_index=True)
 
     assigned_to = models.ForeignKey(Group, help_text=_("QA group that this test list should nominally be performed by"), null=True, blank=True, on_delete=models.SET_NULL)
-    # last_instance = models.ForeignKey("TestInstance",null=True, editable=False,on_delete=models.SET_NULL)
+
     objects = UnitTestInfoManager()
 
     class Meta:
@@ -719,7 +719,7 @@ class UnitTestInfo(models.Model):
         # hist = hist.select_related("status")
         return [(x.work_completed, x.value, x.pass_fail, x.status) for x in reversed(hist[:number])]
 
-    def __unicode__(self):
+    def __str__(self):
         return "UnitTestInfo(%s)" % self.pk
 
 
@@ -733,7 +733,7 @@ class TestListMembership(models.Model):
         ordering = ("order",)
         unique_together = ("test_list", "test",)
 
-    def __unicode__(self):
+    def __str__(self):
         return "TestListMembership(pk=%s)" % self.pk
 
 
@@ -744,7 +744,7 @@ class TestCollectionInterface(models.Model):
     slug = models.SlugField(unique=True, help_text=_("A short unique name for use in the URL of this list"), db_index=True)
     description = models.TextField(help_text=_("A concise description of this test checklist. (You may use HTML markup)"), null=True, blank=True)
 
-    assigned_to = generic.GenericRelation(
+    assigned_to = GenericRelation(
         "UnitTestCollection",
         content_type_field="content_type",
         object_id_field="object_id",
@@ -818,7 +818,7 @@ class TestList(TestCollectionInterface):
     def __len__(self):
         return 1
 
-    def __unicode__(self):
+    def __str__(self):
         """return display representation of object"""
         return "(%s) %s" % (self.pk, self.name)
 
@@ -859,7 +859,7 @@ class UnitTestCollection(models.Model):
     limit = Q(app_label='qa', model='testlist') | Q(app_label='qa', model='testlistcycle')
     content_type = models.ForeignKey(ContentType, limit_choices_to=limit)
     object_id = models.PositiveIntegerField()
-    tests_object = generic.GenericForeignKey("content_type", "object_id")
+    tests_object = GenericForeignKey("content_type", "object_id")
     objects = UnitTestListManager()
 
     last_instance = models.ForeignKey("TestListInstance", null=True, editable=False, on_delete=models.SET_NULL)
@@ -995,7 +995,7 @@ class UnitTestCollection(models.Model):
         return self.tests_object.get_list(day)
 
     def name(self):
-        return self.__unicode__()
+        return self.__str__()
 
     def test_objects_name(self):
         return self.tests_object.name
@@ -1020,7 +1020,7 @@ class UnitTestCollection(models.Model):
                 tolerance=source_uti.tolerance
             )
 
-    def __unicode__(self):
+    def __str__(self):
         return "UnitTestCollection(%s)" % self.pk
 
 
@@ -1222,7 +1222,7 @@ class TestInstance(models.Model):
         url = "%s%d/%s" % (settings.UPLOADS_URL, self.test_list_instance.pk, self.string_value)
         return url
 
-    def __unicode__(self):
+    def __str__(self):
         """return display representation of object"""
         return "TestInstance(pk=%s)" % self.pk
 
@@ -1378,7 +1378,7 @@ class TestListInstance(models.Model):
 
         return instances, dates
 
-    def __unicode__(self):
+    def __str__(self):
         return "TestListInstance(pk=%s)" % self.pk
 
 
@@ -1455,13 +1455,13 @@ class TestListCycle(TestCollectionInterface):
 
     def days_display(self):
         names = self.testlistcyclemembership_set.values_list("test_list__name", flat=True)
-        days = range(1, len(names)+1)
+        days = list(range(1, len(names)+1))
         if self.day_option_text == self.TEST_LIST_NAME:
-            return zip(days, names)
+            return list(zip(days, names))
 
         return [(d, "Day %d" % d) for d in days]
 
-    def __unicode__(self):
+    def __str__(self):
         return _(self.name)
 
 
@@ -1479,5 +1479,5 @@ class TestListCycleMembership(models.Model):
         # memberships they can have the same order temporarily when orders are changed
         # unique_together = (("order", "cycle"),)
 
-    def __unicode__(self):
+    def __str__(self):
         return "TestListCycleMembership(pk=%s)" % self.pk

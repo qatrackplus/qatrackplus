@@ -17,8 +17,8 @@ class Command(BaseCommand):
             "unschedule-all": self.unschedule_all,
         }
 
-        if not args or args[0] not in handlers.keys():
-            valid = ', '.join(["'%s'" % x for x in handlers.keys()])
+        if not args or args[0] not in list(handlers.keys()):
+            valid = ', '.join(["'%s'" % x for x in list(handlers.keys())])
             raise CommandError("Valid arguments are %s" % (valid))
 
         handlers[args[0]]()

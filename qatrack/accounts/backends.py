@@ -15,7 +15,7 @@ class ActiveDirectoryGroupMembershipSSLBackend:
         debug = None
         if settings.AD_DEBUG_FILE and settings.AD_DEBUG:
             debug = open(settings.AD_DEBUG_FILE, 'w')
-            print >>debug, "authenticate user %s" % username
+            print("authenticate user %s" % username, file=debug)
 
         try:
             if len(password) == 0:
@@ -23,23 +23,23 @@ class ActiveDirectoryGroupMembershipSSLBackend:
 
             # ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, settings.AD_CERT_FILE)
             if debug:
-                print >>debug, "\tinitialize..."
+                print("\tinitialize...", file=debug)
             l = ldap.initialize(settings.AD_LDAP_URL)
             l.set_option(ldap.OPT_PROTOCOL_VERSION, 3)
             binddn = "%s@%s" % (username, settings.AD_NT4_DOMAIN)
             if debug:
-                print >>debug, "\tbind..."
+                print("\tbind...", file=debug)
             l.simple_bind_s(binddn, password)
             l.unbind_s()
 
             if debug:
-                print >>debug, "\tsuccessfully authenticated: %s" % username
+                print("\tsuccessfully authenticated: %s" % username, file=debug)
             return self.get_or_create_user(username, password)
 
-        except Exception, e:
+        except Exception as e:
             if debug:
-                print >>debug, "\tException occured "
-                print >>debug, e
+                print("\tException occured ", file=debug)
+                print(e, file=debug)
 
     def get_or_create_user(self, username, password):
         try:
@@ -50,26 +50,26 @@ class ActiveDirectoryGroupMembershipSSLBackend:
                 debug = None
                 if settings.AD_DEBUG_FILE and settings.AD_DEBUG:
                     debug = open(settings.AD_DEBUG_FILE, 'a')
-                    print >>debug, "create user %s" % username
+                    print("create user %s" % username, file=debug)
 
                 # ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, settings.AD_CERT_FILE)
                 ldap.set_option(ldap.OPT_REFERRALS, 0)  # DO NOT TURN THIS OFF OR SEARCH WON'T WORK!
 
                 # initialize
                 if debug:
-                    print >>debug, "\tinitialize..."
+                    print("\tinitialize...", file=debug)
                 l = ldap.initialize(settings.AD_LDAP_URL)
                 l.set_option(ldap.OPT_PROTOCOL_VERSION, 3)
 
                 # bind
                 if debug:
-                    print >>debug, "\tbind..."
+                    print("\tbind...", file=debug)
                 binddn = "%s@%s" % (username, settings.AD_NT4_DOMAIN)
                 l.bind_s(binddn, password)
 
                 # search
                 if debug:
-                    print >>debug, "\tsearch..."
+                    print("\tsearch...", file=debug)
                 result = l.search_ext_s(settings.AD_SEARCH_DN, ldap.SCOPE_SUBTREE, "%s=%s" % (settings.AD_LU_ACCOUNT_NAME, username), settings.AD_SEARCH_FIELDS)[0][1]
 
                 # get personal info
@@ -81,10 +81,10 @@ class ActiveDirectoryGroupMembershipSSLBackend:
 
                 user = User(username=username, first_name=first_name, last_name=last_name, email=mail)
 
-            except Exception, e:
+            except Exception as e:
                 if debug:
-                    print >>debug, "Exception:"
-                    print >>debug, e
+                    print("Exception:", file=debug)
+                    print(e, file=debug)
                 return None
 
             user.is_staff = False
@@ -92,7 +92,7 @@ class ActiveDirectoryGroupMembershipSSLBackend:
             user.set_password('ldap authenticated')
             user.save()
             if debug:
-                print >>debug, "User created: %s" % username
+                print("User created: %s" % username, file=debug)
         return user
 
     def get_user(self, user_id):

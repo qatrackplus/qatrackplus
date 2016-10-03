@@ -1,4 +1,4 @@
-from urllib import urlencode
+from urllib.parse import urlencode
 
 from django.conf import settings
 from django.contrib.auth.models import User, Group
@@ -6,7 +6,7 @@ from django.core.urlresolvers import reverse
 from django.test import TestCase
 from django.test.client import RequestFactory
 from django.test.utils import setup_test_environment
-from django.utils import unittest, timezone
+from django.utils import timezone
 from qatrack.qa import models, views
 from qatrack.qa.views import forms
 
@@ -21,8 +21,8 @@ import json
 import os
 import glob
 import random
-import StringIO
-import utils
+import io
+from . import utils
 
 
 logger = qatrack.qa.views.base.logger
@@ -322,7 +322,7 @@ class TestChartView(TestCase):
         url = reverse("charts_testlists")
         request = self.factory.get(url)
         response = qatrack.qa.views.charts.get_test_lists_for_unit_frequencies(request)
-        values = json.loads(response.content)
+        values = json.loads(response.content.decode("UTF-8"))
         expected = {"test_lists": [tl.pk for tl in self.tls]}
         self.assertDictEqual(values, expected)
 
@@ -331,7 +331,7 @@ class TestChartView(TestCase):
         url = reverse("charts_testlists")+"?units[]=%d" % (self.units[0].pk)
         request = self.factory.get(url)
         response = qatrack.qa.views.charts.get_test_lists_for_unit_frequencies(request)
-        values = json.loads(response.content)
+        values = json.loads(response.content.decode("UTF-8"))
         expected = {"test_lists": [self.tls[0].pk]}
         self.assertDictEqual(values, expected)
 
@@ -340,7 +340,7 @@ class TestChartView(TestCase):
         url = reverse("charts_tests")
         request = self.factory.get(url)
         response = qatrack.qa.views.charts.get_tests_for_test_lists(request)
-        values = json.loads(response.content)
+        values = json.loads(response.content.decode("UTF-8"))
         expected = {"tests": [t.pk for t in self.tests]}
         self.assertDictEqual(values, expected)
 
@@ -349,7 +349,7 @@ class TestChartView(TestCase):
         url = reverse("charts_tests")+"?test_lists[]=%d" % (self.tls[0].pk)
         request = self.factory.get(url)
         response = qatrack.qa.views.charts.get_tests_for_test_lists(request)
-        values = json.loads(response.content)
+        values = json.loads(response.content.decode("UTF-8"))
         expected = {"tests": [self.tests[0].pk]}
         self.assertDictEqual(values, expected)
 
@@ -418,7 +418,7 @@ class TestChartData(TestCase):
             ti2.tolerance = per_tol
             ti2.save()
 
-            if x < self.NPOINTS/2:
+            if x < self.NPOINTS//2:
                 # create less points for one tests to ensure tabulation routines
                 # can handle data sets of different lengths
                 tli2 = utils.create_test_list_instance(unit_test_collection=self.utc2)
@@ -437,7 +437,7 @@ class TestChartData(TestCase):
             "statuses[]": [self.status.pk],
         }
         resp = self.client.get(self.url, data=data)
-        data = json.loads(resp.content)
+        data = json.loads(resp.content.decode("UTF-8"))
         expected = [1.]*self.NPOINTS
         actual = [x['value'] for x in data['data']['unit - tl1 :: test1']]
         self.assertListEqual(actual, expected)
@@ -451,8 +451,8 @@ class TestChartData(TestCase):
             "relative": "true",
         }
         resp = self.client.get(self.url, data=data)
-        data = json.loads(resp.content)
-        expected = [50.]*(self.NPOINTS/2)
+        data = json.loads(resp.content.decode("UTF-8"))
+        expected = [50.]*(self.NPOINTS//2)
         actual = [x['value'] for x in data['data']['unit - tl2 :: test2 (relative to ref)']]
         self.assertListEqual(actual, expected)
 
@@ -465,7 +465,7 @@ class TestChartData(TestCase):
             "combine_data": "true"
         }
         resp = self.client.get(self.url, data=data)
-        data = json.loads(resp.content)
+        data = json.loads(resp.content.decode("UTF-8"))
         expected = [1.]*(2*self.NPOINTS)
         actual = [x['value'] for x in data['data']['unit :: test1']]
         self.assertListEqual(actual, expected)
@@ -481,7 +481,7 @@ class TestChartData(TestCase):
         }
         resp = self.client.get(url, data=data)
         expected_nlines = 2 + 10 + 1  # 2 header  + 10 rows data + 1 blank
-        self.assertTrue(len(resp.content.split('\n')), expected_nlines)
+        self.assertTrue(len(resp.content.decode("UTF-8").split('\n')), expected_nlines)
 
         self.assertEqual(resp.get('Content-Disposition'), 'attachment; filename="qatrackexport.csv"')
 
@@ -502,9 +502,9 @@ class TestComposite(TestCase):
     def test_composite(self):
 
         data = {
-            u'qavalues': {"testc": "", "test1": 1, "test2": 2},
-            u'composite_ids': [u'%d' % self.tc.pk],
-            u'meta': {},
+            'qavalues': {"testc": "", "test1": 1, "test2": 2},
+            'composite_ids': ['%d' % self.tc.pk],
+            'meta': {},
         }
         request = self.factory.post(
             self.url,
@@ -512,7 +512,7 @@ class TestComposite(TestCase):
             data=json.dumps(data)
         )
         response = self.view(request)
-        values = json.loads(response.content)
+        values = json.loads(response.content.decode("UTF-8"))
 
         expected = {
             "errors": [],
@@ -529,13 +529,13 @@ class TestComposite(TestCase):
     def test_invalid_values(self):
 
         data = {
-            u'composite_ids': [u'%d' % self.tc.pk],
-            u'meta': {},
+            'composite_ids': ['%d' % self.tc.pk],
+            'meta': {},
         }
 
         request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
         response = self.view(request)
-        values = json.loads(response.content)
+        values = json.loads(response.content.decode("UTF-8"))
 
         expected = {
             "errors": ['Invalid QA Values'],
@@ -546,24 +546,24 @@ class TestComposite(TestCase):
     def test_invalid_number(self):
 
         data = {
-            u'qavalues': {
+            'qavalues': {
                 "testc": {"name": "testc", "current_value": ""}, "test1": {"name": "test1", "current_value": 1}, "test2": {"name": "test2", "current_value": "abc"}
             },
-            u'composite_ids': [u'%d' % self.tc.pk],
-            u'meta': {},
+            'composite_ids': ['%d' % self.tc.pk],
+            'meta': {},
         }
 
         request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
         response = self.view(request)
 
-        values = json.loads(response.content)
+        values = json.loads(response.content.decode("UTF-8"))
 
         expected = {
             "errors": [],
             "success": True,
             'results': {
                 'testc': {
-                    'error': u'Invalid Test', u'value': None
+                    'error': 'Invalid Test', 'value': None
                 }
             },
         }
@@ -572,14 +572,14 @@ class TestComposite(TestCase):
     def test_invalid_composite(self):
 
         data = {
-            u'qavalues': {"testc": "", "test1": 1, "test2": "abc"},
-            u'composite_ids': [],
-            u'meta': '{}',
+            'qavalues': {"testc": "", "test1": 1, "test2": "abc"},
+            'composite_ids': [],
+            'meta': '{}',
         }
 
         request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
         response = self.view(request)
-        values = json.loads(response.content)
+        values = json.loads(response.content.decode("UTF-8"))
 
         expected = {
             "errors": ["No Valid Composite ID's"],
@@ -590,13 +590,13 @@ class TestComposite(TestCase):
     def test_no_composite(self):
 
         data = {
-            u'qavalues': {"testc": "", "test1": 1, "test2": 2},
-            u'meta': '{}',
+            'qavalues': {"testc": "", "test1": 1, "test2": 2},
+            'meta': '{}',
         }
 
         request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
         response = self.view(request)
-        values = json.loads(response.content)
+        values = json.loads(response.content.decode("UTF-8"))
 
         expected = {
             "errors": ["No Valid Composite ID's"],
@@ -610,7 +610,7 @@ class TestComposite(TestCase):
 
         request = self.factory.post(self.url, content_type="application/json", data=data)
         response = self.view(request)
-        values = json.loads(response.content)
+        values = json.loads(response.content.decode("UTF-8"))
 
         self.assertEqual(values["success"], False)
 
@@ -620,14 +620,14 @@ class TestComposite(TestCase):
         self.tc.save()
 
         data = {
-            u'qavalues': {"testc": "", "test1": 1, "test2": 2},
-            u'composite_ids': [u'%d' % self.tc.pk],
-            u'meta': {},
+            'qavalues': {"testc": "", "test1": 1, "test2": 2},
+            'composite_ids': ['%d' % self.tc.pk],
+            'meta': {},
         }
 
         request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
         response = self.view(request)
-        values = json.loads(response.content)
+        values = json.loads(response.content.decode("UTF-8"))
         expected = {
             "errors": [],
             "results": {
@@ -651,25 +651,25 @@ class TestComposite(TestCase):
         self.cyclic2.save()
 
         data = {
-            u'qavalues': {"testc": "", "cyclic1": "", "cyclic2": "", "test1": 1, "test2": 2},
-            u'composite_ids': [u'%d' % t for t in (self.tc.pk, self.cyclic1.pk, self.cyclic2.pk)],
-            u'meta': {},
+            'qavalues': {"testc": "", "cyclic1": "", "cyclic2": "", "test1": 1, "test2": 2},
+            'composite_ids': ['%d' % t for t in (self.tc.pk, self.cyclic1.pk, self.cyclic2.pk)],
+            'meta': {},
         }
 
         request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
         response = self.view(request)
-        values = json.loads(response.content)
+        values = json.loads(response.content.decode("UTF-8"))
 
         expected = {
             'errors': [],
-            u'results': {
+            'results': {
                 'cyclic1': {
-                    'error': u'Cyclic test dependency',
+                    'error': 'Cyclic test dependency',
                     'value': None
                 },
                 'cyclic2': {
-                    'error': u'Cyclic test dependency',
-                    u'value': None
+                    'error': 'Cyclic test dependency',
+                    'value': None
                 },
                 'testc': {
                     'error': None,
@@ -888,7 +888,7 @@ class TestPerformQA(TestCase):
 
         # user is redirected if form submitted successfully
         self.assertEqual(response.status_code, 302)
-        self.assertEqual("http://testserver/", response._headers['location'][1])
+        self.assertEqual("/", response['location'])
 
     def test_perform_valid_redirect_non_statff(self):
         data = {
@@ -1123,21 +1123,12 @@ class TestAJAXUpload(TestCase):
         self.test.type = models.UPLOAD
         self.test.calculation_procedure = """
 import json
-result = json.load(FILE)
+result = json.load(TEXT_FILE)
 """
         self.test.save()
 
-        self.test_file = StringIO.StringIO("""
-{
-    "foo": 1.2,
-    "bar": [1, 2, 3, 4],
-    "baz": {
-        "baz1": "test"
-    }
-}
-""")
-
-        self.test_file.name = "TESTRUNNER_test_file"
+        fname = os.path.join(os.path.dirname(__file__), "TESTRUNNER_test_file.json")
+        self.test_file = open(fname, "r")
         self.unit_test_info = utils.create_unit_test_info(test=self.test)
         self.client.login(username="user", password="password")
 
@@ -1148,24 +1139,24 @@ result = json.load(FILE)
 
     def test_upload_fname_exists(self):
         response = self.client.post(self.url, {"test_id": self.test.pk, "upload": self.test_file, "meta": "{}"})
-        data = json.loads(response.content)
+        data = json.loads(response.content.decode("UTF-8"))
         self.assertTrue(os.path.exists(os.path.join(settings.TMP_UPLOAD_ROOT)), data["temp_file_name"])
 
     def test_invalid_test_id(self):
         response = self.client.post(self.url, {"test_id": 200, "upload": self.test_file, "meta": "{}"})
-        data = json.loads(response.content)
+        data = json.loads(response.content.decode("UTF-8"))
         self.assertEqual(data["errors"][0], "Test with that ID does not exist")
 
     def test_invalid_test(self):
         self.test.calculation_procedure = "result = 1/0"
         self.test.save()
         response = self.client.post(self.url, {"test_id": self.test.pk, "upload": self.test_file, "meta": "{}"})
-        data = json.loads(response.content)
+        data = json.loads(response.content.decode("UTF-8"))
         self.assertIn("Invalid Test", data["errors"][0])
 
     def test_upload_results(self):
         response = self.client.post(self.url, {"test_id": self.test.pk, "upload": self.test_file, "meta": "{}"})
-        data = json.loads(response.content)
+        data = json.loads(response.content.decode("UTF-8"))
         self.assertEqual(data["result"]["baz"]["baz1"], "test")
 
 
@@ -1276,7 +1267,7 @@ class TestEditTestListInstance(TestCase):
             "in_progress": True
         })
 
-        self.client.post(self.url, data=self.base_data)
+        resp = self.client.post(self.url, data=self.base_data)
         ntests = models.Test.objects.count()
         self.assertEqual(models.TestInstance.objects.in_progress().count(), ntests)
         del self.base_data["in_progress"]

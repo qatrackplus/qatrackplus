@@ -1,5 +1,5 @@
 import csv
-import StringIO
+import io
 from django.conf import settings
 from django.contrib.auth.models import Group
 from qatrack.formats.en.formats import DATETIME_FORMAT
@@ -60,7 +60,7 @@ class ValueResourceCSVSerializer(Serializer):
     def to_csv(self, data, options=None):
         options = options or {}
 
-        csv_data = StringIO.StringIO()
+        csv_data = io.StringIO()
         writer = csv.writer(csv_data)
 
         for item in data["objects"]:

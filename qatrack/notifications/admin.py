@@ -1,3 +1,3 @@
 from django.contrib import admin
-import models
+from . import models
 admin.site.register([models.NotificationSubscription], admin.ModelAdmin)

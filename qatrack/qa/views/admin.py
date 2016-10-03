@@ -48,7 +48,7 @@ class SetReferencesAndTolerances(FormPreview):
             "reference", "tolerance"
         ).order_by("test")
 
-        context["dest_source_utis"] = zip(dest_utis, source_utis)
+        context["dest_source_utis"] = list(zip(dest_utis, source_utis))
         context["source_test_list"] = source_testlist
         context["source_unit"] = source_unit
         context["dest_unit"] = dest_unit

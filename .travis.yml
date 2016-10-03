@@ -1,13 +1,13 @@
 language: python
 
 python:
-  - "2.6"
-  - "2.7"
+  - "3.4"
+  - "3.5"
 
 env:
-  - DJANGO=1.6 DB=sqlite
-  - DJANGO=1.6 DB=postgres
-  - DJANGO=1.6 DB=mysql
+  - DJANGO=1.10 DB=sqlite
+  - DJANGO=1.10 DB=postgres
+  - DJANGO=1.10 DB=mysql
 
 before_script:
   - if [[ $DB == mysql ]]; then mysql -u root -e "create database qatrackplus;"; fi
@@ -30,14 +30,12 @@ before_install:
 
 install:
   - pip install --upgrade pip
-  - if [[ $DB == mysql ]]; then pip install -q mysql-python; fi
+  - if [[ $DB == mysql ]]; then pip install -q mysqlclient; fi
   - if [[ $DB == mysql ]]; then cp deploy/travis_mysql.py qatrack/local_settings.py; fi
   - if [[ $DB == postgres ]]; then pip install -q psycopg2; fi
   - if [[ $DB == postgres ]]; then cp deploy/travis_postgres.py qatrack/local_settings.py; fi
   - if [[ $DB == sqlite ]]; then cp deploy/travis_sqlite.py qatrack/local_settings.py; fi
-  - pip install -r requirements/base.txt
-  - if [[ $TRAVIS_PYTHON_VERSION == 2.6 ]]; then pip install -U numpy; fi
-  - pip install -r requirements/optional.txt
+  - pip install -r requirements/test.txt
 
 script:
   - python manage.py test

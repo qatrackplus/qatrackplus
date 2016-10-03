@@ -67,7 +67,7 @@ class UnitType(models.Model):
     class Meta:
         unique_together = [("name", "model")]
 
-    def __unicode__(self):
+    def __str__(self):
         """Display more descriptive name"""
         return "<UnitType(%s,%s)>" % (self.name, self.model)
 
@@ -89,7 +89,7 @@ class Modality(models.Model):
     class Meta:
         verbose_name_plural = _("Modalities")
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -119,5 +119,5 @@ class Unit(models.Model):
     class Meta:
         ordering = [settings.ORDER_UNITS_BY]
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name

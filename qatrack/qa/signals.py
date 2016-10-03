@@ -4,7 +4,7 @@ from django.db.models.signals import pre_save, post_save, post_delete
 from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
 
-import models
+from . import models
 
 
 def loaded_from_fixture(kwargs):
@@ -95,7 +95,7 @@ def find_assigned_unit_test_collections(collection):
                     all_parents[ct] = list(parents)
 
     assigned_utcs = []
-    for ct, objects in all_parents.items():
+    for ct, objects in list(all_parents.items()):
         utcs = models.UnitTestCollection.objects.filter(
             object_id__in=[x.pk for x in objects],
             content_type=ct,

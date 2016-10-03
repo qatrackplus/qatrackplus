@@ -31,4 +31,4 @@ ldap.debug
 deployLocal.py
 *.db
 coverage.xml
-working_notes.txt
+.noseids

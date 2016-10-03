@@ -8,9 +8,6 @@ from django.template.loader import get_template
 from qatrack.qa.signals import testlist_complete
 
 
-import models
-
-
 @receiver(testlist_complete)
 def email_on_testlist_save(*args, **kwargs):
     """TestListInstance was completed.  Send email notification if applicable"""
@@ -68,6 +65,9 @@ def tolerance_tests_to_report(test_list_instance):
 
 
 def get_notification_recipients():
+
+    from qatrack.notifications import models
+
     tolerance_users = User.objects.filter(groups__notificationsubscription__warning_level__lte=models.TOLERANCE).distinct()
     action_users = User.objects.filter(groups__notificationsubscription__warning_level__lte=models.ACTION).distinct()
 

@@ -27,7 +27,7 @@ class TestUtils(TestCase):
         self.assertListEqual(proc.split(), qautils.tokenize_composite_calc(proc))
 
     def test_set_encoder_set(self):
-        self.assertIsInstance(json.dumps(set([1, 2]), cls=qautils.SetEncoder), basestring)
+        self.assertIsInstance(json.dumps(set([1, 2]), cls=qautils.SetEncoder), str)
 
     def test_float_format(self):
         numbers = (

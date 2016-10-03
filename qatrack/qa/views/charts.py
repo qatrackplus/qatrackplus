@@ -172,7 +172,7 @@ class BaseChartView(View):
         r = lambda ref: ref if ref is not None else ""
 
         # collect all data in 'date/value/ref triplets
-        for name, points in self.plot_data.iteritems():
+        for name, points in self.plot_data.items():
             headers.append(name)
             col = [(p["display_date"], p["display"], r(p["orig_reference"])) for p in points]
             cols.append(col)
@@ -211,9 +211,9 @@ class BaseChartView(View):
         try:
             d_from = timezone.datetime.strptime(self.request.GET.get('date_range').split(' - ')[0], settings.SIMPLE_DATE_FORMAT)
         except Exception as e:
-            print '+++++++++++++++++'
-            print self.request.GET
-            print e
+            print('+++++++++++++++++')
+            print(self.request.GET)
+            print(e)
             d_from = default_from
 
         try:
@@ -396,10 +396,10 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
         canvas = FigureCanvas(fig)
         dates, data = [], []
 
-        if context["data"] and context["data"].values():
-            name, points = context["data"].items()[0]
+        if context["data"] and list(context["data"].values()):
+            name, points = list(context["data"].items())[0]
             if points:
-                dates, data = zip(*[(ti["date"], ti["value"]) for ti in points])
+                dates, data = list(zip(*[(ti["date"], ti["value"]) for ti in points]))
 
         n_baseline_subgroups = self.get_number_from_request("n_baseline_subgroups", 2, dtype=int)
         n_baseline_subgroups = max(2, n_baseline_subgroups)

@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User, Group, Permission
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import get_model
+from django.apps import apps
 from django.utils import timezone
 
 from qatrack.qa import models
@@ -8,7 +8,7 @@ from qatrack.units.models import Unit, UnitType, Modality, PHOTON
 
 
 def exists(app, model, field, value):
-    a_model = get_model(app, model)
+    a_model = apps.get_model(app, model)
     results = a_model.objects.filter(**{field: value})
     if len(results) > 0:
         return True
