@@ -14,6 +14,7 @@ from django.views.generic import TemplateView, View
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 import numpy
+numpy.seterr(all='raise')
 
 from .. import models
 from qatrack.qa.control_chart import control_chart
@@ -211,9 +212,6 @@ class BaseChartView(View):
         try:
             d_from = timezone.datetime.strptime(self.request.GET.get('date_range').split(' - ')[0], settings.SIMPLE_DATE_FORMAT)
         except Exception as e:
-            print('+++++++++++++++++')
-            print(self.request.GET)
-            print(e)
             d_from = default_from
 
         try:

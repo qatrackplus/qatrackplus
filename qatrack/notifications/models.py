@@ -20,7 +20,7 @@ WARNING_LEVELS = (
 
 class NotificationSubscription(models.Model):
 
-    group = models.ForeignKey(Group, unique=True)
+    group = models.OneToOneField(Group)
 
     warning_level = models.IntegerField(choices=WARNING_LEVELS)
 

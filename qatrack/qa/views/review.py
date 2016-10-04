@@ -186,7 +186,6 @@ class InactiveReview(UTCReview):
     active_only = False
 
     def get_page_title(self):
-        print(self.page_title)
         return "Review All Inactive Test Lists"
 
     def get_icon(self):

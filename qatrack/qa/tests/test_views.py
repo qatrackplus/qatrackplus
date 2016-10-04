@@ -28,6 +28,7 @@ from . import utils
 logger = qatrack.qa.views.base.logger
 
 
+
 class MockUser(object):
     def has_perm(self, *args):
         return True

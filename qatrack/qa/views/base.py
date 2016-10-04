@@ -177,11 +177,11 @@ class UTCList(BaseListableView):
     }
 
     select_related = (
-        "last_instance__work_completed",
+        "last_instance",
         "last_instance__created_by",
         "frequency",
-        "unit__name",
-        "assigned_to__name",
+        "unit",
+        "assigned_to",
     )
 
     headers = {
@@ -229,7 +229,6 @@ class UTCList(BaseListableView):
         return context
 
     def get_page_title(self):
-        print(self.page_title)
         return self.page_title
 
     def get_queryset(self):
@@ -343,9 +342,9 @@ class TestListInstances(BaseListableView):
     }
 
     select_related = (
-        "test_list__name",
+        "test_list",
         # "testinstance_set__status",
-        "unit_test_collection__unit__name",
+        "unit_test_collection__unit",
         "unit_test_collection__frequency__due_interval",
         "created_by", "modified_by", "reviewed_by",
     )

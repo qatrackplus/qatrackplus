@@ -26,7 +26,10 @@ class FilterPersistMiddleware(object):
             del session['redirected']
             return None
 
-        referrer = request.META.get('HTTP_REFERER', "").split('?')[0]
+        try:
+            referrer = request.META.get('HTTP_REFERER', "").split('?')[0]
+        except Exception:
+            import ipdb; ipdb.set_trace()
         referrer = referrer[referrer.find('/admin'):len(referrer)]
         key = 'key' + path.replace('/', '_')
 
