@@ -184,6 +184,7 @@ class ChooseFrequencyForReview(ListView):
 class InactiveReview(UTCReview):
 
     active_only = False
+    inactive_only = True
 
     def get_page_title(self):
         return "Review All Inactive Test Lists"
@@ -196,6 +197,7 @@ class YourInactiveReview(UTCYourReview):
 
     visible_only = True
     active_only = False
+    inactive_only = True
 
     def get_page_title(self):
         return "Review Your Inactive Test Lists"

@@ -2,5 +2,3 @@
 pywin32>=220
 django-mssql
 django-pyodbc-azure
-CherryPy==8.1.0
-

@@ -9,7 +9,7 @@ DEBUG = False
 
 # Who to email when server errors occur
 ADMINS = (
-    ('Admin Name', 'admin.email@yourplace.com'),
+    ('Admin Name', 'YOUR_EMAIL_ADDRESS_GOES_HERE'),
 )
 MANAGERS = ADMINS
 SEND_BROKEN_LINK_EMAILS = True

@@ -4,7 +4,7 @@ import json
 import textwrap
 
 from django.conf import settings
-from django.db.models import Count, Q
+from django.db.models import Count
 from django.http import HttpResponse
 from django.template import Context
 from django.template.loader import get_template
@@ -32,28 +32,22 @@ local_tz = timezone.get_current_timezone()
 def get_test_lists_for_unit_frequencies(request):
 
     units = request.GET.getlist("units[]") or Unit.objects.values_list("pk", flat=True)
-    frequencies = request.GET.getlist("frequencies[]") or models.Frequency.objects.values_list("pk", flat=True)
+    frequencies = request.GET.getlist("frequencies[]")
+
+    if '0' in frequencies:
+        frequencies.remove('0')
+        frequencies.append(None)
+
+    if not frequencies:
+        frequencies = list(models.Frequency.objects.values_list("pk", flat=True)) + [None]
+
     include_inactive = request.GET.get("inactive") == "true"
 
-    fq = Q(frequency__in=frequencies)
-    if '0' in frequencies:
-        fq |= Q(frequency=None)
+    active = None if include_inactive else True
 
-    utcs = models.UnitTestCollection.objects.filter(fq, unit__in=units)
-    if not include_inactive:
-        utcs = utcs.exclude(active=False)
+    test_lists = models.get_utc_tl_ids(active=active, units=units, frequencies=frequencies)
 
-    test_lists = utcs.filter(
-        content_type__model="testlist"
-    ).values_list("object_id", flat=True)
-
-    test_list_cycle_lists = utcs.filter(
-        content_type__model="testlistcycle"
-    ).values_list("object_id", flat=True)
-
-    test_lists = set(test_lists) | set(test_list_cycle_lists)
-
-    json_context = json.dumps({"test_lists": list(test_lists)})
+    json_context = json.dumps({"test_lists": test_lists})
 
     return HttpResponse(json_context, content_type=JSON_CONTENT_TYPE)
 
