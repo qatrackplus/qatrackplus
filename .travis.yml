@@ -10,8 +10,8 @@ env:
   - DJANGO=1.10 DB=mysql
 
 before_script:
-  - if [[ $DB == mysql ]]; then mysql -u root -e "create database qatrackplus;"; fi
-  - if [[ $DB == mysql ]]; then mysql -u root -e "GRANT ALL ON qatrackplus.* TO 'qatrackplus'@'localhost' IDENTIFIED BY 'qatrackplus';"; fi
+  - if [[ $DB == mysql ]]; then mysql -u root < deploy/mysql_create.sql; fi
+  - if [[ $DB == mysql ]]; then mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root mysql; fi
   - if [[ $DB == postgres ]]; then psql -c "create database qatrackplus;" -U postgres; fi
   - if [[ $DB == postgres ]]; then psql -c "CREATE USER qatrackplus with PASSWORD 'qatrackplus';" -U postgres; fi
   - if [[ $DB == postgres ]]; then psql -c "GRANT ALL PRIVILEGES ON DATABASE qatrackplus to qatrackplus;" -U postgres; fi
@@ -38,4 +38,7 @@ install:
   - pip install -r requirements/test.txt
 
 script:
-  - python manage.py test
+  - cat qatrack/local_settings.py
+  - if [[ $DB == mysql ]]; then yes | pytest -m "not selenium"; fi
+  - if [[ $DB -ne mysql ]]; then yes | pytest; fi
+

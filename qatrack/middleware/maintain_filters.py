@@ -11,7 +11,7 @@ class FilterPersistMiddleware(object):
         if '/admin/' not in request.path:
             return None
 
-        if 'HTTP_REFERER' not in request.META:
+        if not request.META.get('HTTP_REFERER', ""):
             return None
 
         popup = 'popup=1' in request.META['QUERY_STRING']
@@ -26,10 +26,7 @@ class FilterPersistMiddleware(object):
             del session['redirected']
             return None
 
-        try:
-            referrer = request.META.get('HTTP_REFERER', "").split('?')[0]
-        except Exception:
-            import ipdb; ipdb.set_trace()
+        referrer = request.META.get('HTTP_REFERER', "").split('?')[0]
         referrer = referrer[referrer.find('/admin'):len(referrer)]
         key = 'key' + path.replace('/', '_')
 

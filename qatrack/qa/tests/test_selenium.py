@@ -4,8 +4,9 @@ from . import utils
 
 from django.conf import settings
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.test.testcases import LiveServerTestCase
+import pytest
 from selenium.common.exceptions import NoSuchElementException
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -145,7 +146,8 @@ objects = {
 
 }
 
-
+@pytest.mark.selenium
+@override_settings(DEBUG=True)
 class SeleniumTests(TestCase, StaticLiveServerTestCase):
 
     @classmethod
