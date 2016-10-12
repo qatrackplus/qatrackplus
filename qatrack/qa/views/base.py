@@ -353,7 +353,7 @@ class TestListInstances(BaseListableView):
         "test_list",
         # "testinstance_set__status",
         "unit_test_collection__unit",
-        "unit_test_collection__frequency__due_interval",
+        "unit_test_collection__frequency",
         "created_by", "modified_by", "reviewed_by",
     )
 

@@ -1,2 +1,6 @@
 [run]
-omit = *migrations*
+omit =
+    *south_migrations*
+    qatrack/wsgi.py
+    qatrack/middleware/profiler.py
+
