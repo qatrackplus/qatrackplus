@@ -1127,7 +1127,7 @@ class TestAJAXUpload(TestCase):
         self.test.type = models.UPLOAD
         self.test.calculation_procedure = """
 import json
-result = json.load(TEXT_FILE)
+result = json.load(FILE)
 """
         self.test.save()
 

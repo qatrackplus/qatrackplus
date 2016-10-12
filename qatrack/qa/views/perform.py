@@ -179,8 +179,8 @@ class Upload(JSONResponseMixin, View):
         tols = self.get_json_data("tols")
 
         self.calculation_context = {
-            "TEXT_FILE": open(self.upload.name, "r"),
-            "FILE": self.upload,
+            "FILE": open(self.upload.name, "r"),
+            "BIN_FILE": self.upload,
             "META": meta_data,
             "REFS": refs,
             "TOLS": tols,
