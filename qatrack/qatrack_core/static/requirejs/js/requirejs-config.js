@@ -52,6 +52,8 @@ require.config({
         // service log module
         sl_dash: siteConfig.STATIC_URL + 'service_log/js/sl_dash',
         sl_serviceevent: siteConfig.STATIC_URL + 'service_log/js/sl_serviceevent',
+        sl_serviceevent_list: siteConfig.STATIC_URL + 'service_log/js/sl_serviceevent_list',
+        sl_utils: siteConfig.STATIC_URL + 'service_log/js/sl_utils',
     },
     shim: {
         // Third party:
@@ -130,6 +132,9 @@ require.config({
         // service log module:
         sl_dash: {
             deps: ['jquery', 'qautils', 'site_base', 'lodash', 'bootstrap']
+        },
+        sl_utils: {
+            deps: ['jquery', 'site_base', 'bootstrap']
         }
     }
 });

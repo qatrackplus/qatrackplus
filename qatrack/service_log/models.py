@@ -24,7 +24,7 @@ class ServiceArea(models.Model):
     name = models.CharField(max_length=32, unique=True, help_text=_('Enter a short name for this service area'))
     units = models.ManyToManyField(Unit, through='UnitServiceArea', related_name='service_areas')
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     @staticmethod
@@ -45,8 +45,8 @@ class UnitServiceArea(models.Model):
         verbose_name_plural = _("Unit Service Area Memberships")
         unique_together = ('unit', 'service_area',)
 
-    def __unicode__(self):
-        return '<USAC(%s::%s)>' % (self.unit.name, self.service_area.name)
+    def __str__(self):
+        return '<usa(%s::%s)>' % (self.unit.name, self.service_area.name)
 
 
 class ServiceType(models.Model):
@@ -55,7 +55,7 @@ class ServiceType(models.Model):
     is_approval_required = models.BooleanField(default=False, help_text=_('Does this service type require approval'))
     is_active = models.BooleanField(default=True, help_text=_('Set to false if service type is no longer used'))
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -78,6 +78,9 @@ class ServiceEventStatus(models.Model):
     )
     colour = models.CharField(default=settings.DEFAULT_COLOURS[0], max_length=22, validators=[validate_color])
 
+    class Meta:
+        verbose_name_plural = _("Service Event Statuses")
+
     def save(self, *args, **kwargs):
         if self.is_default:
             try:
@@ -89,7 +92,7 @@ class ServiceEventStatus(models.Model):
                 pass
         super(ServiceEventStatus, self).save(*args, **kwargs)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     @staticmethod
@@ -105,13 +108,13 @@ class ProblemType(models.Model):
     name = models.CharField(max_length=64, unique=True, help_text=_('Enter a short name for this problem type'))
     description = models.TextField(null=True, blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
 class ServiceEvent(models.Model):
 
-    unit_service_area_collection = models.ForeignKey(UnitServiceArea, on_delete=models.PROTECT)
+    unit_service_area = models.ForeignKey(UnitServiceArea, on_delete=models.PROTECT)
     service_type = models.ForeignKey(ServiceType, on_delete=models.PROTECT)
     service_event_related = models.ManyToManyField(
         'self', symmetrical=True, null=True, blank=True, verbose_name=_('Service events related'),
@@ -125,8 +128,8 @@ class ServiceEvent(models.Model):
     user_created_by = models.ForeignKey(User, related_name='+', on_delete=models.PROTECT)
     user_modified_by = models.ForeignKey(User, null=True, blank=True, related_name='+', on_delete=models.PROTECT)
     problem_type = models.ForeignKey(
-        ProblemType, null=True, blank=True,
-        help_text=_('Select/create a problem type that describes this service event'), on_delete=models.PROTECT
+        ProblemType, null=True, blank=True, on_delete=models.PROTECT,
+        help_text=_('Select/create a problem type that describes this service event')
     )
 
     datetime_status_changed = models.DateTimeField(null=True, blank=True)
@@ -162,7 +165,7 @@ class ServiceEvent(models.Model):
     #         ("can_review_non_visible_tli", "Can view tli and utc not visible to user's groups")
     #     )
 
-    def __unicode__(self):
+    def __str__(self):
         return 'id: %s%s' % (self.id, ', srn: ' + str(self.srn) if self.srn else '')
 
     @staticmethod
@@ -181,7 +184,7 @@ class ThirdParty(models.Model):
         verbose_name_plural = _("Third Parties")
         unique_together = ("name", "vendor")
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name + ' (' + self.vendor.name + ')'
 
 

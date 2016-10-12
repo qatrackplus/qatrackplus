@@ -1,5 +1,22 @@
 require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker'], function ($, _, moment, autosize) {
 
+    function rgbStringToArray(rgba) {
+        rgba = rgba.match(/^rgba\((\d+),\s*(\d+),\s*(\d+),(0(\.[0-9][0-9]?)?|1)\)$/);
+        return [rgba[1], rgba[2], rgba[3], rgba[4]];
+    }
+
+    /**
+     * Calculates the brightness of the rgba value assuming against a white surface. Returns true if white text would
+     * not be appropriate on this colour.
+     *
+     * @param rgba
+     * @returns {boolean}
+     */
+    function isTooBright(rgba) {
+        var o = Math.round(((parseInt(rgba[0]) * 299) + (parseInt(rgba[1]) * 587) + (parseInt(rgba[2]) * 114)) / 1000);
+        return o + (255 - o) * (1 - rgba[3]) > 125;
+    }
+    
     $(document).ready(function() {
 
         var $units = $('#id_unit_field'),
@@ -15,7 +32,12 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker']
 
         $related_se.select2({
             templateSelection: function(tag, container) {
-                $(container).css('background-color', colours_dict[tag.id]);
+                var colour = colours_dict[tag.id];
+                $(container).css('background-color', colour);
+                $(container).css('border-color', colour);
+                if (isTooBright(rgbStringToArray(colour))) {
+                    $(container).css('color', 'black').children().css('color', 'black');
+                }
                 return tag.text;
             },
             minimumResultsForSearch: 10,
@@ -30,9 +52,10 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker']
             timePicker: true,
             timePicker24Hour: true,
             locale: {"format": "DD-MM-YYYY HH:mm"},
-            startDate: moment(),
-            endDate: moment()
+            // startDate: moment(),
+            // endDate: moment()
         });
+        
 
         $units.change(function() {
 
@@ -50,7 +73,22 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker']
                     dataType: "json",
                     success: function (response) {
                         console.log(response);
+
+                        $service_areas.find('option:not(:first)').remove();
+                        var service_areas = response.service_areas;
+
+                        if (service_areas.length > 0) {
+                            for (var sa in service_areas) {
+                                console.log(service_areas[sa]);
+                                $service_areas.append('<option value=' + service_areas[sa].id + '>' + service_areas[sa].name + '</option>');
+                            }
+                        }
+                        else {
+                            $service_areas.append('<option value>No service areas found for unit</option>');
+                        }
+
                         $service_areas.prop('disabled', false); 
+                        
                     },
                     traditional: true,
                     error: function (e, data) {

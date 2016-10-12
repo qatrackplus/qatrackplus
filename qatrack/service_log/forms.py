@@ -1,11 +1,9 @@
 
-from django.core import exceptions, validators, checks
-from django.core.exceptions import ValidationError, ObjectDoesNotExist
+from django.core.exceptions import ValidationError
 from django.conf import settings
 from django.db.models import Field
 from django.forms import ModelForm, ModelChoiceField, Textarea
-from django.utils.html import conditional_escape, format_html, html_safe
-from django.utils.safestring import mark_safe
+from django.utils import timezone
 from django.utils.translation import ugettext as _
 from form_utils.forms import BetterModelForm
 
@@ -64,15 +62,19 @@ class ServiceEventForm(BetterModelForm):
             if 'unit_field' not in self.data:
                 self.fields['service_area_field'].widget.attrs.update({'disabled': True})
 
-            # some data was attempted to be submitted already
+            # some data wasn't attempted to be submitted already
             if not is_bound:
                 self.initial['service_status'] = models.ServiceEventStatus.get_default()
+                self.initial['datetime_service'] = timezone.now()
 
         # if we are editing a saved instance
         else:
-            self.initial['unit_field'] = self.instance.unit_service_area_collection.unit
-            self.initial['service_area_field'] = self.instance.unit_service_area_collection.service_area
+            self.initial['unit_field'] = self.instance.unit_service_area.unit
+            self.initial['service_area_field'] = self.instance.unit_service_area.service_area
             self.fields['service_event_related'].queryset = models.ServiceEvent.objects.exclude(id=self.instance.id)
+            unit = self.instance.unit_service_area.unit
+            print(models.UnitServiceArea.objects.filter(unit=unit))
+            self.fields['service_area_field'].queryset = models.ServiceArea.objects.filter(units=unit)
 
         for f in ['safety_precautions', 'problem_description', 'work_description']:
             self.fields[f].widget.attrs.update({'rows': 3, 'class': 'autosize'})
@@ -98,9 +100,9 @@ class ServiceEventForm(BetterModelForm):
         unit = self.cleaned_data.get('unit_field')
         service_area = self.cleaned_data.get('service_area_field')
 
-        usac = models.UnitServiceArea.objects.get(unit=unit, service_area=service_area)
+        usa = models.UnitServiceArea.objects.get(unit=unit, service_area=service_area)
 
-        self.instance.unit_service_area_collection = usac
+        self.instance.unit_service_area = usa
 
         super(ServiceEventForm, self).save(*args, **kwargs)
 

@@ -1,4 +1,5 @@
 
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.forms import ModelMultipleChoiceField, ModelForm
@@ -8,8 +9,31 @@ from .models import ServiceEventStatus, ServiceType, ProblemType, UnitServiceAre
 from qatrack.units.models import Unit, Modality
 
 
+class ServiceEventStatusFormAdmin(ModelForm):
+
+    class Meta:
+        model = ServiceEventStatus
+        fields = '__all__'
+
+
 class ServiceEventStatusAdmin(admin.ModelAdmin):
     list_display = ["name", "is_review_required", "is_default", "is_active"]
+    form = ServiceEventStatusFormAdmin
+
+    class Media:
+        js = (
+            settings.STATIC_URL + "jquery/js/jquery.min.js",
+            settings.STATIC_URL + "colorpicker/js/bootstrap-colorpicker.min.js",
+            settings.STATIC_URL + "service_log/js/sl_admin_serviceeventstatus.js",
+
+        )
+        css = {
+            'all': (
+                settings.STATIC_URL + "bootstrap/css/bootstrap.min.css",
+                settings.STATIC_URL + "colorpicker/css/bootstrap-colorpicker.min.css",
+
+            ),
+        }
 
 
 class ServiceTypeAdmin(admin.ModelAdmin):
@@ -25,10 +49,6 @@ class ServiceAreaAdmin(admin.ModelAdmin):
     filter_horizontal = ("units",)
 
 
-# class UnitServiceAreaAdmin(admin.ModelAdmin):
-#     list_display = ['unit', 'service_area']
-
-
 class ServiceEventAdmin(admin.ModelAdmin):
     list_display = ['unit_name', 'service_area_name']
 
@@ -39,7 +59,8 @@ class ServiceEventAdmin(admin.ModelAdmin):
         return obj.unit_service_area_collection.service_area
 
 
-# Custom model form all because filter_horizontal doesn't work with reverse m2m
+# Unit admin stuff here to avoid circular dependencies
+# Custom model form because filter_horizontal doesn't work with reverse m2m
 class UnitFormAdmin(ModelForm):
 
     service_areas = ModelMultipleChoiceField(
@@ -73,8 +94,8 @@ class UnitFormAdmin(ModelForm):
             'restricted',
             'type',
             'site',
-            'service_areas',
             'modalities',
+            'service_areas',
         ]
 
     def __init__(self, *args, **kwargs):
@@ -104,14 +125,11 @@ class UnitFormAdmin(ModelForm):
 
 class UnitAdmin(admin.ModelAdmin):
     form = UnitFormAdmin
-    # filter_horizontal = ("modalities",)
-    # service_areas = FilteredSelectMultiple('service_areas', False)
 
 
 admin.site.register(Unit, UnitAdmin)
 
 admin.site.register(ServiceEvent, ServiceEventAdmin)
-# admin.site.register(UnitServiceArea, UnitServiceAreaAdmin)
 admin.site.register(ServiceArea, ServiceAreaAdmin)
 admin.site.register(ProblemType, ProblemTypeAdmin)
 admin.site.register(ServiceType, ServiceTypeAdmin)

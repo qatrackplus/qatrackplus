@@ -282,6 +282,7 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
 
         qs = models.UnitTestCollection.objects.filter(
             active=True,
+            unit__active=True,
             visible_to__in=self.request.user.groups.all(),
         ).select_related(
             "last_instance",
@@ -363,6 +364,7 @@ class OverviewObjects(JSONResponseMixin, View):
 
         qs = models.UnitTestCollection.objects.filter(
             active=True,
+            unit__active=True,
             # visible_to__in=self.request.user.groups.all(),
         ).select_related(
             "last_instance",

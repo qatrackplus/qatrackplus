@@ -20,7 +20,7 @@ class Vendor(models.Model):
 
     name = models.CharField(max_length=64, unique=True, help_text=_('Name of this vendor'))
 
-    def __unicode__(self):
+    def __str__(self):
         """Display more descriptive name"""
         return "<Vendor(%s)>" % self.name
 
@@ -33,7 +33,7 @@ class UnitClass(models.Model):
 
     name = models.CharField(max_length=64, unique=True, help_text=_('Name of this unit class'))
 
-    def __unicode__(self):
+    def __str__(self):
         """Display more descriptive name"""
         return "<UnitClass(%s)>" % self.name
 
@@ -45,7 +45,7 @@ class Site(models.Model):
     """
     name = models.CharField(max_length=64, unique=True, help_text=_('Name of this site'))
 
-    def __unicode__(self):
+    def __str__(self):
         return '<Site(%s)>' % self.name
 
 

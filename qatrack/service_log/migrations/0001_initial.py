@@ -47,7 +47,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('name', models.CharField(help_text='Enter a short name for this service area', unique=True, max_length=32)),
-                ('units', models.ManyToManyField(to='units.Unit', through='service_log.UnitServiceArea'))
+                ('units', models.ManyToManyField(related_name='service_areas', through='service_log.UnitServiceArea', to='units.Unit'))
             ],
         ),
         migrations.CreateModel(
@@ -78,8 +78,9 @@ class Migration(migrations.Migration):
                 ('is_review_required', models.BooleanField(default=True, help_text='Do service events with this status require review?')),
                 ('is_active', models.BooleanField(default=True, help_text='Set to false if service event status is no longer used')),
                 ('description', models.TextField(help_text='Give a brief description of this service event status', max_length=64, null=True, blank=True)),
-                ('colour', models.CharField(default=b'rgba(60,141,188,1)', max_length=22, validators=[RegexValidator(re.compile(b'^rgba\\(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]),([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]),([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]),(0(\\.[0-9][0-9]?)?|1)\\)$'), 'Enter a valid color.', b'invalid')]))
+                ('colour', models.CharField(default='rgba(60,141,188,1)', max_length=22, validators=[django.core.validators.RegexValidator(re.compile('^rgba\\(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]),([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]),([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]),(0(\\.[0-9][0-9]?)?|1)\\)$', 32), 'Enter a valid color.', 'invalid')]))
             ],
+            options={'verbose_name_plural': 'Service Event Statuses'},
         ),
         migrations.CreateModel(
             name='ServiceType',
@@ -120,7 +121,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='serviceevent',
-            name='unit_service_area_collection',
+            name='unit_service_area',
             field=models.ForeignKey(to='service_log.UnitServiceArea', on_delete=django.db.models.deletion.PROTECT),
         ),
         migrations.AddField(

@@ -5,6 +5,7 @@ import collections
 
 from django.conf import settings
 from django.core.urlresolvers import reverse, resolve
+from django.db.models import Q
 from django.template import Context
 from django.contrib.auth.context_processors import PermWrapper
 from django.template.loader import get_template
@@ -203,7 +204,6 @@ class UTCList(BaseListableView):
 
     order_by = ["unit__name", "frequency__name", "utc_name"]
 
-
     def __init__(self, *args, **kwargs):
         super(UTCList, self).__init__(*args, **kwargs)
 
@@ -233,7 +233,6 @@ class UTCList(BaseListableView):
         return context
 
     def get_page_title(self):
-        print(self.page_title)
         return self.page_title
 
     def get_queryset(self):
@@ -247,10 +246,10 @@ class UTCList(BaseListableView):
             ).distinct()
 
         if self.active_only:
-            qs = qs.filter(active=True)
+            qs = qs.filter(active=True, unit__active=True)
 
         if self.inactive_only:
-            qs = qs.filter(active=False)
+            qs = qs.filter(Q(active=False) | Q(unit__active=False))
 
         return qs
 
