@@ -3,7 +3,7 @@ Django==1.10.2
 django-admin-views==0.8.0
 django-braces==1.9.0
 django-crispy-forms==1.6.0
-django-formtools==1.0
+-e git+https://github.com/django/django-formtools.git@bb97a8abd374c50991c0a9ce144f17e7322a0c48#egg=django-formtools
 django-listable==0.4.0
 django-registration-redux==1.4
 django-tastypie==0.13.3
