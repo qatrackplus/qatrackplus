@@ -1,0 +1,75 @@
+{% extends "site_base.html" %}
+
+{% load qa_tags %}
+
+{% block head_title %}{% endblock %}
+
+{% block extra_css %}
+    <link href="{{ STATIC_URL }}service_log/css/sl.css?v={{ VERSION }}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}qatrack_core/css/sidebar.css?v={{VERSION}}" rel="stylesheet">
+{% endblock extra_css %}
+
+{% block require_javascript %}{% endblock require_javascript %}
+
+{% block body_class %}sidebar-mini sidebar-collapse{% endblock body_class %}
+
+{% block sidebar_toggle %}
+    <a href="#" class="sidebar-toggle" data-toggle="offcanvas" role="button">
+{#        <span class="sr-only">Toggle navigation</span>#}
+        <i id="toggle-icon" class="fa fa-chevron-left fa-lg" aria-hidden="true"></i>
+    </a>
+{% endblock sidebar_toggle %}
+
+{% block main_sidebar %}
+    <aside class="main-sidebar">
+        <section class="sidebar">
+            <ul class="sidebar-menu">
+
+                <li class="header">Service Log Actions</li>
+
+                <li class="primary"><a id="toggle-description" href="{% url "sl_new" %}"> {# TODO: fix link #}
+                    <i class="fa fa-stack fa-fw" aria-hidden="true">
+                        <i class="fa fa-wrench fa-stack-custom-main fa-lg"></i>
+                        <i class="fa fa-plus fa-stack-custom-sub upper-left primary"></i>
+                    </i>
+{#                    <i class="fa fa-wrench fa-fw" aria-hidden="true"></i>#}
+                    <span>Open New Service Event</span>
+                </a></li>
+
+                <li class="primary"><a id="toggle-description" href="{% url "sl_list_all" %}"> {# TODO: fix link. Possible dropdown with more options? #}
+                    <i class="fa fa-stack fa-fw" aria-hidden="true">
+                        <i class="fa fa-wrench fa-stack-custom-main fa-lg"></i>
+                        <i class="fa fa-wrench fa-stack-custom-sub upper-left"></i>
+                    </i>
+                    <span>View Service Events</span>
+                </a></li>
+                <li class="header">Parts Actions</li>
+                <li class="primary"><a id="toggle-description" href="#!">
+                    <i class="fa fa-stack fa-fw" aria-hidden="true">
+                        <i class="fa fa-cog fa-stack-custom-main fa-lg"></i>
+                        <i class="fa fa-plus fa-stack-custom-sub upper-left primary"></i>
+                    </i>
+                    <span>Add Part</span>
+                </a></li>
+
+                <li class="primary"><a id="toggle-description" href="#!">
+                    <i class="fa fa-cogs fa-fw" aria-hidden="true"></i>
+                    <span>View Parts</span>
+                </a></li>
+
+                <li class="header">Units Actions</li>
+                <li class="danger"><a id="toggle-description" href="#!">
+                    <i class="fa fa-stack fa-fw" aria-hidden="true">
+                        <i class="fa fa-cube fa-stack-custom-main fa-lg"></i>
+                        <i class="fa fa-key fa-stack-custom-sub upper-left danger"></i>
+                    </i>
+                    <span>Restrict Unit</span>
+                </a></li>
+
+            </ul>
+        </section>
+    </aside>
+
+{% endblock main_sidebar %}
+
+{% block body %}{% endblock body %}

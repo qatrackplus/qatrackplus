@@ -10,6 +10,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.conf import settings
 
 from .. import models
+from qatrack.service_log import models as sl_models
 
 
 from qatrack.qa import utils
@@ -229,11 +230,21 @@ class BaseTestListInstanceForm(forms.ModelForm):
 
     modified = forms.DateTimeField(required=False)
 
+    service_event = forms.ModelChoiceField(queryset=sl_models.ServiceEvent.objects.none(), required=False)
+    followup_id = forms.IntegerField(required=False, widget=HiddenInput())
+
+    # now handle saving of qa or service event and link followup
+
     class Meta:
         model = models.TestListInstance
         exclude = ("day",)
 
     def __init__(self, *args, **kwargs):
+        print('--- BaseTestListInstanceForm.__init__ ---')
+
+        self.unit = kwargs.pop('unit')
+        self.followup_id = kwargs.pop('followup')
+
         super(BaseTestListInstanceForm, self).__init__(*args, **kwargs)
 
         for field in ("work_completed", "work_started"):
@@ -245,13 +256,22 @@ class BaseTestListInstanceForm(forms.ModelForm):
             self.fields[field].widget.attrs["class"] = "input-medium"
             self.fields[field].help_text = settings.DATETIME_HELP
 
-        self.fields["status"].widget.attrs["class"] = "input-medium"
+        self.fields["status"].widget.attrs["class"] = "input-medium select2"
 
         self.fields["work_completed"].widget.attrs["placeholder"] = "optional"
 
         self.fields["comment"].widget.attrs["rows"] = "4"
         self.fields["comment"].widget.attrs["placeholder"] = "Add comment about this set of tests"
         # self.fields["comment"].widget.attrs.pop("cols")
+        self.fields['service_event'].widget.attrs.update({'class': 'select2'})
+
+        if self.followup_id:
+            followup = sl_models.QAFollowup.objects.get(pk=self.followup_id)
+            self.fields['service_event'].queryset = sl_models.ServiceEvent.objects.filter(pk=followup.service_event.id)
+            self.initial['service_event'] = sl_models.ServiceEvent.objects.get(pk=followup.service_event.id)
+            self.initial['followup_id'] = sl_models.QAFollowup.objects.get(pk=self.followup_id).id
+        else:
+            self.fields['service_event'].queryset = sl_models.ServiceEvent.objects.filter(unit_service_area__unit=self.unit)
 
     def clean(self):
         """validate the work_completed & work_started values"""

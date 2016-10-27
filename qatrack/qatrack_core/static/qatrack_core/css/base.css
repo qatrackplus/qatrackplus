@@ -37,7 +37,7 @@ ul.nav li.dropdown:hover ul.dropdown-menu{
     margin-right: 1px;
 }
 
-.dropdown-menu  {
+.dropdown-menu, .select2-dropdown {
     box-shadow: 2px 6px 4px rgba(53, 124, 165, .25);
     border: 1px solid #bbb;
 }
@@ -309,4 +309,16 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 input[type="number"] {
     -moz-appearance: textfield;
+}
+
+.no-margin-top {
+    margin-top: 0 !important;
+}
+
+.form-control {
+    height: 30px;
+}
+.max-width-lg {
+    max-width: 1200px;
+    margin: auto;
 }

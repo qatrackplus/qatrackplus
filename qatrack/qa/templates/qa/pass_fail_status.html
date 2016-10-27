@@ -1,8 +1,10 @@
-{% if instance %}
+{% if not_done %}
+    <em>Not Done</em>
+{% elif instance %}
     <span class="label-group">
         {% for status,display,tests in instance.pass_fail_status %}
             {% if tests and status not in exclude%}
-                <span class="{%if show_label%}label{%else%}badge{%endif%} {{status}}" title="{{tests|length}} {{display}}">
+                <span class="label {{status}}" title="{{tests|length}} {{display}}">
                     {% if show_icons %}
                         {% if status == 'tolerance' %}
                             <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
@@ -14,7 +16,7 @@
                             <i class="fa fa-circle-o" aria-hidden="true"></i>
                         {% endif %}
                     {% endif %}
-                    {{tests|length}}{%if show_label%} {{display}}{%endif%}
+                    {{tests|length}}{% if show_label %} {{display}}{%endif%}
                 </span>
             {% endif %}
         {% endfor %}

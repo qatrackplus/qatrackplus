@@ -7,6 +7,8 @@ from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
 from django.contrib.auth.models import User, Group
+from django.template import Context
+from django.template.loader import get_template
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 
@@ -40,6 +42,8 @@ class UnitServiceArea(models.Model):
 
     unit = models.ForeignKey(Unit, on_delete=models.PROTECT)
     service_area = models.ForeignKey(ServiceArea, on_delete=models.PROTECT)
+
+    notes = models.TextField(null=True, blank=True)
 
     class Meta:
         verbose_name_plural = _("Unit Service Area Memberships")
@@ -99,6 +103,11 @@ class ServiceEventStatus(models.Model):
     def get_default():
         return ServiceEventStatus.objects.get(is_default=True)
 
+    @staticmethod
+    def get_colour_dict():
+        # return json.dumps({se.id: se.service_status.colour for se in ServiceEvent.objects.all()})
+        return {ses.id: ses.colour for ses in ServiceEventStatus.objects.all()}
+
 
 class ProblemType(models.Model):
     """
@@ -117,12 +126,12 @@ class ServiceEvent(models.Model):
     unit_service_area = models.ForeignKey(UnitServiceArea, on_delete=models.PROTECT)
     service_type = models.ForeignKey(ServiceType, on_delete=models.PROTECT)
     service_event_related = models.ManyToManyField(
-        'self', symmetrical=True, null=True, blank=True, verbose_name=_('Service events related'),
+        'self', symmetrical=True, blank=True, verbose_name=_('Service events related'),
         help_text=_('Was there a previous service event that might be related to this event?')
     )
-    service_status = models.ForeignKey(ServiceEventStatus, on_delete=models.PROTECT)
+    service_status = models.ForeignKey(ServiceEventStatus, verbose_name=_('Status'), on_delete=models.PROTECT)
     users_reported_to = models.ManyToManyField(
-        User, null=True, blank=True, help_text=_('Users that have been notified of this service event')
+        User, blank=True, help_text=_('Users that have been notified of this service event')
     )
     user_status_changed_by = models.ForeignKey(User, null=True, blank=True, related_name='+', on_delete=models.PROTECT)
     user_created_by = models.ForeignKey(User, related_name='+', on_delete=models.PROTECT)
@@ -170,7 +179,8 @@ class ServiceEvent(models.Model):
 
     @staticmethod
     def get_colour_dict():
-        return json.dumps({se.id: se.service_status.colour for se in ServiceEvent.objects.all()})
+        # return json.dumps({se.id: se.service_status.colour for se in ServiceEvent.objects.all()})
+        return {se.id: se.service_status.colour for se in ServiceEvent.objects.all()}
 
 
 class ThirdParty(models.Model):
@@ -200,10 +210,13 @@ class Hours(models.Model):
         verbose_name_plural = _("Hours")
         unique_together = ('service_event', 'third_party', 'user',)
 
-    def clean(self):
-        super(Hours, self).clean()
-        if bool(self.third_party) ^ bool(self.user):  # xor thirdparty and user (one and only one must be selected
-            raise ValidationError('One of third party or user must be entered')
+    # def clean(self):
+    #     print('------- clean Hours in models ----------')
+    #     super(Hours, self).clean()
+    #     if bool(self.third_party) ^ bool(self.user):  # xor thirdparty and user (one and only one must be selected
+    #         raise ValidationError('One of third party or user must be entered')
+    def user_or_thirdparty(self):
+        return self.user or self.third_party
 
 
 class QAFollowup(models.Model):
@@ -211,13 +224,45 @@ class QAFollowup(models.Model):
     unit_test_collection = models.ForeignKey(
         UnitTestCollection, help_text=_('Select a TestList to perform'), on_delete=models.PROTECT
     )
-    test_list_instance = models.ForeignKey(TestListInstance, null=True, blank=True, on_delete=models.PROTECT)
+    test_list_instance = models.ForeignKey(TestListInstance, null=True, blank=True, on_delete=models.CASCADE)
     user_assigned_by = models.ForeignKey(User, related_name='+', on_delete=models.PROTECT)
     service_event = models.ForeignKey(ServiceEvent, on_delete=models.PROTECT)
 
     is_complete = models.BooleanField(default=False, help_text=_('Has this QA been completed?'))
     is_approved = models.BooleanField(default=False, help_text=_('Has the QA been approved?'))
+    datetime_assigned = models.DateTimeField()
 
 
+class GroupLinker(models.Model):
 
+    group = models.ForeignKey(Group, help_text=_('Select the group.'))
+
+    name = models.CharField(
+        max_length=64, help_text=_('Enter this group\'s display name (ie: "Physicist reported to")')
+    )
+    description = models.TextField(
+        null=True, blank=True, help_text=_('Describe the relationship between this group and service events.')
+    )
+    help_text = models.CharField(
+        max_length=64, null=True, blank=True,
+        help_text=_('Message to display when selecting user in service event form.')
+    )
+
+    class Meta:
+        unique_together = ('name', 'group')
+
+    def __str__(self):
+        return self.name
+
+
+class GroupLinkerInstance(models.Model):
+
+    group_linker = models.ForeignKey(GroupLinker, on_delete=models.PROTECT)
+    user = models.ForeignKey(User, on_delete=models.PROTECT)
+    service_event = models.ForeignKey(ServiceEvent, on_delete=models.PROTECT)
+
+    datetime_linked = models.DateTimeField()
+
+    class Meta:
+        unique_together = ('service_event', 'group_linker')
 

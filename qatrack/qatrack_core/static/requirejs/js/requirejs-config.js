@@ -51,8 +51,8 @@ require.config({
 
         // service log module
         sl_dash: siteConfig.STATIC_URL + 'service_log/js/sl_dash',
-        sl_serviceevent: siteConfig.STATIC_URL + 'service_log/js/sl_serviceevent',
-        sl_serviceevent_list: siteConfig.STATIC_URL + 'service_log/js/sl_serviceevent_list',
+        sl_se: siteConfig.STATIC_URL + 'service_log/js/sl_serviceevent',
+        sl_se_details:siteConfig.STATIC_URL + 'service_log/js/sl_serviceevent_details',
         sl_utils: siteConfig.STATIC_URL + 'service_log/js/sl_utils',
     },
     shim: {
@@ -115,13 +115,10 @@ require.config({
     
         // qa module:
         qa: {
-            deps: ['jquery', 'qautils', 'site_base', 'lodash', 'daterangepicker', 'sidebar', 'datatables', 'datatables.columnFilter', 'inputmask']
+            deps: ['jquery', 'qautils', 'site_base', 'lodash', 'daterangepicker', 'sidebar', 'datatables', 'datatables.columnFilter', 'inputmask', 'select2', 'sl_utils']
         },
         // qacharts: {
         //     deps: ['jquery', 'site_base', 'bootstrap', 'amdin_lte', 'json2']
-        // },
-        // qareview: {
-        //     deps: ['jquery', 'site_base', 'bootstrap', 'admin_lte']
         // },
         // qaoverview: {
         //     deps: ['jquery', 'site_base', 'bootstrap', 'admin_lte']

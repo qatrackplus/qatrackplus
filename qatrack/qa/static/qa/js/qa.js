@@ -755,6 +755,27 @@ $(document).ready(function(){
         $("#test-list-info").toggle(600);
     });
 
+    $('#id_status').select2({
+        minimumResultsForSearch: 10,
+        width: '100%'
+    });
+    $('#id_service_event').select2({
+        templateSelection: function(tag, container) {
+            if (tag.id == '')
+                return tag.text;
+            var colour = se_colours_dict[tag.id];
+            var $label = $('<span class="label" style="background-color: ' + colour + '">' + tag.text + '</span>');
+            $label.css('background-color', colour);
+            $label.css('border-color', colour);
+            if (isTooBright(rgbaStringToArray(colour))) {
+                $label.css('color', 'black').children().css('color', 'black');
+            }
+            return $label;
+        },
+        minimumResultsForSearch: 10,
+        width: '100%'
+    });
+
     // general comment
     require(['autosize'], function(autosize) {
         autosize($('#id_comment'));
@@ -776,7 +797,7 @@ $(document).ready(function(){
     //by accident and completely hoses all the information they've entered during
     //a qa session
 
-    $(window).bind("beforeunload",function(){
+    $(window).bind("beforeunload", function(){
         var non_read_only_tis = _.filter(tli.test_instances, function(ti){
             var tt = ti.test_info.test.type;
             return QAUtils.READ_ONLY_TEST_TYPES.indexOf(tt) < 0;
@@ -836,8 +857,7 @@ $(document).ready(function(){
                 completed_picker = $('#id_work_completed'),
                 duration_picker = $('#id_work_duration');
 
-            var duration_change = true,
-                end_date_change = true;
+            var duration_change = true;
 
             function apply_completed() {
                 if (duration_change) {
@@ -885,32 +905,18 @@ $(document).ready(function(){
                 duration_change = true;
             });
 
-            $(duration_picker).inputmask({
-                mask: "99hr : 'min",
-                definitions: {
-                    "'": {
-                        validator: "[0-5][0-9]",
-                        cardinality: 2,
-                        prevalidator: [{
-                            validator: "[0-5]",
-                            cardinality: 1
-                        }]
-                    }
-                },
-                "oncomplete": function () {
-                    if (end_date_change) {
-                        var duration = this.inputmask.unmaskedvalue();
-                        var start_time = $($(start_picker)).data('daterangepicker').startDate,
-                            hours = duration[0] + duration[1],
-                            mins = duration[2] + duration[3];
-                        var end_time = start_time.clone().add(hours, 'hours').add(mins, 'minutes')/*.format('DD-MM-YYYY HH:mm')*/;
-                        $(completed_picker).data('daterangepicker').setStartDate(end_time);
-                        $(completed_picker).data('daterangepicker').setEndDate(end_time);
-                        end_date_change = false;
-                    }
-                }
-            }).on('keypress', function () {
-                end_date_change = true;
+            $(duration_picker).inputmask('99:99', {
+                numericInput: true,
+                placeholder: "_",
+                removeMaskOnSubmit: true
+            }).on('keyup', function () {
+                var duration = ('0000' + this.inputmask.unmaskedvalue()).substr(-4, 4);
+                var start_time = $($(start_picker)).data('daterangepicker').startDate,
+                    hours = duration[0] + duration[1],
+                    mins = duration[2] + duration[3];
+                var end_time = start_time.clone().add(hours, 'hours').add(mins, 'minutes')/*.format('DD-MM-YYYY HH:mm')*/;
+                $(completed_picker).data('daterangepicker').setStartDate(end_time);
+                $(completed_picker).data('daterangepicker').setEndDate(end_time);
             });
         });
     }

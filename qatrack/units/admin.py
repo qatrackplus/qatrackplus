@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Modality, UnitType, Site, UnitClass
+from .models import Modality, UnitType, Site, UnitClass, Vendor
 
 
 # class UnitAdmin(admin.ModelAdmin):
@@ -10,4 +10,4 @@ class NoDeleteAdmin(admin.ModelAdmin):
         return False
 
 # admin.site.register([Unit], UnitAdmin) # UnitAdmin registered in service_log\admin
-admin.site.register([Modality, UnitType, Site, UnitClass], NoDeleteAdmin)
+admin.site.register([Modality, UnitType, Site, UnitClass, Vendor], NoDeleteAdmin)

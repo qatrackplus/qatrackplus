@@ -774,6 +774,21 @@ class StatusAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
     model = models.TestInstanceStatus
 
+    class Media:
+        js = (
+            settings.STATIC_URL + "jquery/js/jquery.min.js",
+            settings.STATIC_URL + "colorpicker/js/bootstrap-colorpicker.min.js",
+            settings.STATIC_URL + "qatrack_core/js/admin_colourpicker.js",
+
+        )
+        css = {
+            'all': (
+                settings.STATIC_URL + "bootstrap/css/bootstrap.min.css",
+                settings.STATIC_URL + "colorpicker/css/bootstrap-colorpicker.min.css",
+                settings.STATIC_URL + "qatrack_core/css/admin.css",
+            ),
+        }
+
 
 def utc_unit_name(obj):
     return obj.unit_test_collection.unit.name

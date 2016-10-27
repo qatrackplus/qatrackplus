@@ -5,7 +5,7 @@ import json
 
 from django.contrib import messages
 from django.core.urlresolvers import reverse
-from django.db.models import Q
+from django.db.models import Q, ObjectDoesNotExist
 from django.http import HttpResponseRedirect, Http404
 from django.utils import timezone
 from django.utils.translation import ugettext as _
@@ -17,6 +17,7 @@ from .base import TestListInstanceMixin, BaseEditTestListInstance, TestListInsta
 from .perform import ChooseUnit
 
 from qatrack.units.models import Unit
+from qatrack.service_log.models import ServiceEvent, QAFollowup
 
 from braces.views import PermissionRequiredMixin, JSONResponseMixin
 
@@ -92,6 +93,14 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         # let user know request succeeded and return to unit list
         messages.success(self.request, _("Successfully updated %s " % self.object.test_list.name))
         return HttpResponseRedirect(self.get_success_url())
+
+    def get_context_data(self, **kwargs):
+        context = super(ReviewTestListInstance, self).get_context_data(kwargs=kwargs)
+        try:
+            context['service_event'] = QAFollowup.objects.get(test_list_instance=self.object).service_event
+        except ObjectDoesNotExist:
+            context['service_event'] = False
+        return context
 
 
 class UTCReview(PermissionRequiredMixin, UTCList):

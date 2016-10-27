@@ -26,7 +26,7 @@ $(document).ready(function() {
        '    <span class="pre-set-colour input-group-addon"><i style="background-color: rgba(1,255,112,1);"></i></span>' +
        '    <span class="pre-set-colour input-group-addon"><i style="background-color: rgba(243,247,10,1);"></i></span>' +
        '</div>'
-   )
+   );
 
    $('.pre-set-colour i').click(function() {
       var colour = $(this).css('background-color');

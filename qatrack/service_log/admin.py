@@ -5,7 +5,7 @@ from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.forms import ModelMultipleChoiceField, ModelForm
 from django.utils.translation import ugettext as _
 
-from .models import ServiceEventStatus, ServiceType, ProblemType, UnitServiceArea, ServiceArea, ServiceEvent
+from .models import ServiceEventStatus, ServiceType, ProblemType, UnitServiceArea, ServiceArea, ServiceEvent, ThirdParty, Vendor, GroupLinker
 from qatrack.units.models import Unit, Modality
 
 
@@ -24,14 +24,14 @@ class ServiceEventStatusAdmin(admin.ModelAdmin):
         js = (
             settings.STATIC_URL + "jquery/js/jquery.min.js",
             settings.STATIC_URL + "colorpicker/js/bootstrap-colorpicker.min.js",
-            settings.STATIC_URL + "service_log/js/sl_admin_serviceeventstatus.js",
+            settings.STATIC_URL + "qatrack_core/js/admin_colourpicker.js",
 
         )
         css = {
             'all': (
                 settings.STATIC_URL + "bootstrap/css/bootstrap.min.css",
                 settings.STATIC_URL + "colorpicker/css/bootstrap-colorpicker.min.css",
-
+                settings.STATIC_URL + "qatrack_core/css/admin.css",
             ),
         }
 
@@ -53,10 +53,10 @@ class ServiceEventAdmin(admin.ModelAdmin):
     list_display = ['unit_name', 'service_area_name']
 
     def unit_name(self, obj):
-        return obj.unit_service_area_collection.unit
+        return obj.unit_service_area.unit
 
     def service_area_name(self, obj):
-        return obj.unit_service_area_collection.service_area
+        return obj.unit_service_area.service_area
 
 
 # Unit admin stuff here to avoid circular dependencies
@@ -134,3 +134,5 @@ admin.site.register(ServiceArea, ServiceAreaAdmin)
 admin.site.register(ProblemType, ProblemTypeAdmin)
 admin.site.register(ServiceType, ServiceTypeAdmin)
 admin.site.register(ServiceEventStatus, ServiceEventStatusAdmin)
+
+admin.site.register([ThirdParty, GroupLinker], admin.ModelAdmin)

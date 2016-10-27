@@ -1,5 +1,5 @@
 {% extends "site_base.html" %}
-{#{% load staticfiles %}#}
+
 {% load qa_tags %}
 {% load qatrack_tags %}
 
@@ -20,6 +20,8 @@
     <link href="{{ STATIC_URL }}qa/css/qa.css?v={{VERSION}}" rel="stylesheet">
     <link href="{{ STATIC_URL }}icheck/css/blue.css?v={{VERSION}}" rel="stylesheet">
     <link href="{{ STATIC_URL }}qatrack_core/css/sidebar.css?v={{VERSION}}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}select2/css/select2.min.css?v={{ VERSION }}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}qatrack_core/css/custom-select2.css?v={{ VERSION }}" rel="stylesheet">
 {#    <link href="{{ STATIC_URL }}qa/css/qa-old.css?v={{VERSION}}" rel="stylesheet">#}
 
 {% endblock extra_css %}
@@ -32,6 +34,7 @@
         {% if perms.qa.can_override_date %}
             override_date = true;
         {% endif %}
+        var se_colours_dict = {{ service_event_tag_colours|safe }};
     </script>
 {% endblock %}
 
@@ -201,7 +204,16 @@
                                 {% endif %}
 
                             </div>
-                            <div class="col-md-4 left-border border-default"></div>
+                            <div class="col-md-4 left-border border-default">
+                                <div class="input-prepend input-append row" id="status">
+                                    <label for="id_status" class="col-lg-6">
+                                        Service Event:
+                                    </label>
+                                    <div class="col-lg-6">
+                                        {{form.service_event}}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -451,6 +463,27 @@
 
     </aside>
 {% endblock main_sidebar %}
+
+{% block loading_modal %}
+    <div class="loading-modal ">
+        <div class="center">
+            <div>
+                <span class="loading-logo">QAT</span>
+                <i class="fa fa-fw fa-plus fa-spin fa-2x info"></i>
+            </div>
+            <div>
+                <b>
+                {% if test_list_instance %}
+                    Loading {{test_list_instance.unit_test_collection.unit.name}} : {{test_list_instance.test_list.name}}
+                {% else %}
+                    Loading {{unit_test_collection.unit.name}} : {{test_list.name}}
+                {% endif %}
+                </b>
+            </div>
+
+        </div>
+    </div>
+{% endblock loading_modal %}
 
 {% block end_body_extra_script %}
 

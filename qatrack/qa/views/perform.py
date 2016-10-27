@@ -26,6 +26,7 @@ from .. import models, utils, signals
 from .base import BaseEditTestListInstance, TestListInstances, UTCList, logger
 from qatrack.contacts.models import Contact
 from qatrack.units.models import Unit
+from qatrack.service_log.models import QAFollowup, ServiceEvent
 
 from braces.views import JSONResponseMixin, PermissionRequiredMixin
 from functools import reduce
@@ -395,6 +396,13 @@ class PerformQA(PermissionRequiredMixin, CreateView):
     form_class = forms.CreateTestListInstanceForm
     model = models.TestListInstance
 
+    def get_form_kwargs(self):
+        k = super(PerformQA, self).get_form_kwargs()
+        self.set_unit_test_collection()
+        k['unit'] = self.unit_test_col.unit
+        k['followup'] = self.request.GET.get('f', False)
+        return k
+
     def set_test_lists(self):
         """
         Set the :model:`qa.TestList` and the day that are to be performed.
@@ -573,6 +581,26 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
         self.object.update_all_reviewed()
 
+        service_event = form.cleaned_data.get('service_event', False)
+        followup_id = form.cleaned_data.get('followup_id', False)
+
+        print('-----sevice_event------')
+        followup_id = self.request.GET.get('f', False)
+        if service_event:
+
+            if followup_id:
+                followup = QAFollowup.objects.get(pk=followup_id)
+                followup.test_list_instance = self.object
+            else:
+                followup = QAFollowup(
+                    service_event=service_event,
+                    unit_test_collection=self.object.unit_test_collection,
+                    user_assigned_by=self.request.user,
+                    datetime_assigned=timezone.now(),
+                    test_list_instance=self.object
+                )
+            followup.save()
+
         if not self.object.in_progress:
             # TestListInstance & TestInstances have been successfully create, fire signal
             # to inform any listeners (e.g notifications.handlers.email_no_testlist_save)
@@ -584,8 +612,10 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         return HttpResponseRedirect(self.get_success_url())
 
     def get_context_data(self, **kwargs):
-
         context = super(PerformQA, self).get_context_data(**kwargs)
+
+        print('--- PerformQA.get_context_data ---')
+        # context['service_event'] = self.request.GET.get('se', False)
 
         # explicity refresh session expiry to prevent situation where a session
         # expires in between the time a user requests a page and then submits the page
@@ -597,7 +627,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             return context
 
         # setup our test list, tests, current day etc
-        self.set_unit_test_collection()
+        # self.set_unit_test_collection()
         self.set_test_lists()
         self.set_last_day()
         self.set_all_tests()
@@ -625,6 +655,8 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         context["unit_test_infos"] = json.dumps(self.template_unit_test_infos())
         context["unit_test_collection"] = self.unit_test_col
         context["contacts"] = list(Contact.objects.all().order_by("name"))
+        context['service_event_tag_colours'] = ServiceEvent.get_colour_dict()
+        print(context['service_event_tag_colours'])
 
         return context
 

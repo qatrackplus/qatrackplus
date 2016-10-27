@@ -98,6 +98,10 @@
 
                                         <dt>Comment :</dt>
                                         <dd>{% if tli.comment %}{{tli.comment}}{% else %}<em>No comment</em>{% endif %}</dd>
+                                        {% if service_event %}
+                                            <dt>Service Event:</dt>
+                                            <dd><a id="service-event" href="{% url 'sl_details' pk=service_event.id %}" class="btn btn-xs btn-flat" data-bgcolour="{{ service_event.service_status.colour }}">{{ service_event }}</a></dd>
+                                        {% endif %}
                                     </dl>
                                 </div>
                             </div>

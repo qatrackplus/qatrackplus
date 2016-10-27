@@ -19,20 +19,20 @@ import os
 
 from qatrack import wsgi
 
-DEPLOY_DIRECTORY = "C:/deploy/qatrackplus/"
+DEPLOY_DIRECTORY = "C:/home/code/qatrackplus/"
 ERROR_LOG = os.path.join(DEPLOY_DIRECTORY,"logs","cherry_py_err.log")
 STD_ERR = os.path.join(DEPLOY_DIRECTORY,"logs","std_err.log")
 STD_OUT = os.path.join(DEPLOY_DIRECTORY,"logs","std_out.log")
 sys.stdout = open(STD_OUT,'a')
 sys.stderr = open(STD_ERR,'a')
 
-class QATrackService(win32serviceutil.ServiceFramework):
+class QATrack030Service(win32serviceutil.ServiceFramework):
 
     """NT Service."""
 
-    _svc_name_ = "QATrackCherryPyService"
+    _svc_name_ = "QATrack030CherryPyService"
 
-    _svc_display_name_ = "QATrack CherryPy Service"
+    _svc_display_name_ = "QATrack 030 CherryPy Service"
 
     def SvcDoRun(self):
 
@@ -49,7 +49,8 @@ class QATrackService(win32serviceutil.ServiceFramework):
                 'tools.log_tracebacks.on':True,
                 'engine.autoreload.on': False,
                 'engine.SIGHUP': None,
-                'engine.SIGTERM': None
+                'engine.SIGTERM': None,
+                'server.socket_port': 8030,
                 }
             })
 
@@ -68,4 +69,4 @@ class QATrackService(win32serviceutil.ServiceFramework):
 
 if __name__ == '__main__':
 
-    win32serviceutil.HandleCommandLine(QATrackService)
+    win32serviceutil.HandleCommandLine(QATrack030Service)

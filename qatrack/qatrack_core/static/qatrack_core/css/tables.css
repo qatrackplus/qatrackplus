@@ -90,6 +90,11 @@ table.table > thead > tr > th > span > div > ul > li.active > a:hover,
 table.table-hover tr.no-hover:hover {
     background-color: inherit;
 }
+table.table-valign-middle > tbody > tr > td,
+table.table-valign-middle > thead > tr > td,
+table.table-valign-middle > tfoot > tr > td {
+    vertical-align: middle;
+}
 
 /*.dropdown-menu {*/
     /*background-color: #0d6aad;*/

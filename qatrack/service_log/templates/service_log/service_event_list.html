@@ -1,4 +1,4 @@
-{% extends "site_base.html" %}
+{% extends "service_log/sl_base.html" %}
 
 {% load qa_tags %}
 {% load listable %}
@@ -6,11 +6,11 @@
 {% block head_title %}{{page_title}}{% endblock %}
 
 {% block extra_css %}
+    {{ block.super }}
     <link href="{{ STATIC_URL }}datepicker/css/bootstrap-datepicker.min.css?v={{VERSION}}" rel="stylesheet">
     <link href="{{ STATIC_URL }}multiselect/css/bootstrap.multiselect.css?v={{VERSION}}" rel="stylesheet">
     <link href="{{ STATIC_URL }}daterangepicker/css/daterangepicker.css?v={{VERSION}}" rel="stylesheet">
     <link href="{{ STATIC_URL }}qatrack_core/css/tables.css?v={{VERSION}}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}service_log/css/sl.css?v={{VERSION}}" rel="stylesheet">
 {% endblock extra_css %}
 
 {% block extra_js %}

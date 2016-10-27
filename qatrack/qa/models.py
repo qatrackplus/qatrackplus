@@ -6,6 +6,7 @@ from django.contrib.auth.models import User, Group
 from django.utils.translation import ugettext as _
 from django.core import urlresolvers
 from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation, GenericForeignKey
 from django.utils import timezone
@@ -99,6 +100,10 @@ OVERDUE = ACTION
 NEWLIST = NOT_DONE
 
 EPSILON = 1E-10
+
+re_255 = '([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])'
+color_re = re.compile('^rgba\(' + re_255 + ',' + re_255 + ',' + re_255 + ',(0(\.[0-9][0-9]?)?|1)\)$')
+validate_color = RegexValidator(color_re, _('Enter a valid color.'), 'invalid')
 
 #  A collection of the permissions most relevant to QATrack+
 PERMISSIONS = (
@@ -217,6 +222,8 @@ class TestInstanceStatus(models.Model):
         default=True,
         help_text=_("If unchecked, data with this status will not be exported and the TestInstance will not be considered a valid completed Test")
     )
+
+    colour = models.CharField(default=settings.DEFAULT_COLOURS[0], max_length=22, validators=[validate_color])
 
     objects = StatusManager()
 
@@ -806,6 +813,7 @@ class TestList(TestCollectionInterface):
         help_text=_("Message given when a test value is out of tolerance"),
         default=settings.DEFAULT_WARNING_MESSAGE
     )
+    utcs = GenericRelation('UnitTestCollection', related_query_name='test_list')
 
     def test_list_members(self):
         """return all days from this collection"""
@@ -1408,6 +1416,7 @@ class TestListCycle(TestCollectionInterface):
     test_lists = models.ManyToManyField(TestList, through="TestListCycleMembership")
     drop_down_label = models.CharField(max_length=128, default="Choose Day")
     day_option_text = models.CharField(max_length=8, choices=DAY_OPTIONS_TEXT_CHOICES, default=DAY)
+    utcs = GenericRelation(UnitTestCollection, related_query_name='test_list_cycle')
 
     def __len__(self):
         """return the number of test_lists"""

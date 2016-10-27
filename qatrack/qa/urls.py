@@ -27,7 +27,6 @@ for resource in resources:
 
 
 urlpatterns = [
-
     # CUSTOM ADMIN PAGES
     # Copy references and tolerances between testlists
     url(r'^admin/copy_refs_and_tols/$',
