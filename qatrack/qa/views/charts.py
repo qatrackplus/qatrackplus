@@ -14,6 +14,7 @@ from django.views.generic import TemplateView, View
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 import numpy
+numpy.seterr(all='raise')
 
 from .. import models
 from qatrack.qa.control_chart import control_chart
@@ -37,21 +38,12 @@ def get_test_lists_for_unit_frequencies(request):
         frequencies.remove('0')
         frequencies.append(None)
 
-# <<<<<<< HEAD
-#     test_lists = utcs.filter(
-#         content_type__model="testlist"
-#     ).values_list("object_id", flat=True)
-#
-#     test_list_cycle_lists = utcs.filter(
-#         content_type__model="testlistcycle"
-#     ).values_list("object_id", flat=True)
-# =======
     if not frequencies:
         frequencies = list(models.Frequency.objects.values_list("pk", flat=True)) + [None]
+
     include_inactive = request.GET.get("inactive") == "true"
 
     active = None if include_inactive else True
-# >>>>>>> 24e10043c7319354a359ff553ac58ae05316ecf1
 
     test_lists = models.get_utc_tl_ids(active=active, units=units, frequencies=frequencies)
 
@@ -214,9 +206,6 @@ class BaseChartView(View):
         try:
             d_from = timezone.datetime.strptime(self.request.GET.get('date_range').split(' - ')[0], settings.SIMPLE_DATE_FORMAT)
         except Exception as e:
-            print('+++++++++++++++++')
-            print(self.request.GET)
-            print(e)
             d_from = default_from
 
         try:

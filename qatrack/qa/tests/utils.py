@@ -284,7 +284,7 @@ def create_unit_test_collection(unit=None, frequency=None, test_collection=None,
     )
 
     utc.save()
-    utc.visible_to = Group.objects.all()
+    utc.visible_to.add(*Group.objects.all())
     utc.save()
     return utc
 

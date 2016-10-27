@@ -19,7 +19,7 @@ def binwidth(x, maxBins=None):
     if span == 0:
         return 1.
 
-    numOfBins = np.linspace(minBins, maxBins, maxBins - minBins + 1)
+    numOfBins = np.linspace(minBins, maxBins, maxBins - minBins + 1, dtype=int)
     C = np.zeros(len(numOfBins))
 
     for i in np.arange(0, len(numOfBins)):

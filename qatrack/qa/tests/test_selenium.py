@@ -4,8 +4,9 @@ from . import utils
 
 from django.conf import settings
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.test.testcases import LiveServerTestCase
+import pytest
 from selenium.common.exceptions import NoSuchElementException
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -145,7 +146,8 @@ objects = {
 
 }
 
-
+@pytest.mark.selenium
+@override_settings(DEBUG=True)
 class SeleniumTests(TestCase, StaticLiveServerTestCase):
 
     @classmethod
@@ -360,10 +362,14 @@ class SeleniumTests(TestCase, StaticLiveServerTestCase):
         self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'ADD UNIT TEST COLLECTION')))
         self.driver.find_element_by_link_text('ADD UNIT TEST COLLECTION').click()
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_unit')))
+
         Select(self.driver.find_element_by_id("id_unit")).select_by_index(1)
         Select(self.driver.find_element_by_id("id_frequency")).select_by_index(1)
         Select(self.driver.find_element_by_id("id_assigned_to")).select_by_index(1)
         Select(self.driver.find_element_by_id("id_content_type")).select_by_index(1)
+        self.driver.find_element_by_css_selector('#id_visible_to_from > option:nth-child(1)').click()
+        self.driver.find_element_by_css_selector('#id_visible_to_add_link').click()
+
         time.sleep(2)
 
         self.driver.find_element_by_id('select2-generic_object_id-container').click()
