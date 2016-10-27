@@ -226,7 +226,7 @@ class BaseChartView(View):
     def test_instance_to_point(self, ti, relative=False):
         """Grab relevent plot data from a :model:`qa.TestInstance`"""
 
-        if relative and ti.reference:
+        if relative and ti.reference and ti.value is not None:
 
             ref_is_not_zero = ti.reference.value != 0.
             has_percent_tol = (ti.tolerance and ti.tolerance.type == models.PERCENT)
