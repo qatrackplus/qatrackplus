@@ -34,3 +34,4 @@ deployLocal.py
 *.db
 coverage.xml
 .noseids
+logs/
