@@ -356,7 +356,9 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
                 ref_tol_visible = true;
 
             d3.map(v).each(function (val) {
-
+                if (_.isNull(val.value)) {
+                    return;
+                }
                 var x = moment(val.date).valueOf();
 
                 line_data_test_results.push({x: x, y: val.value});
@@ -441,13 +443,13 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
             .curve(d3.curveLinear)
             .x(function(d) { return xScale(d.x); })
             .y(function(d) { return yScale(d.y); })
-            .defined(function(d) { return d.y; });
+            .defined(function(d) { return d.y != null; });
 
         var line2 = d3.line()
             .curve(d3.curveLinear)
             .x(function(d) { return xScale2(d.x); })
             .y(function(d) { return yScale2(d.y); })
-            .defined(function(d) { return d.y; });
+            .defined(function(d) { return d.y != null; });
 
         var area = d3.area()
             .x(function(d) { return xScale(d.x); })
