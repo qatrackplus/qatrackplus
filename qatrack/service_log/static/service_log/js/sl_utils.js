@@ -1,5 +1,6 @@
 
 function rgbaStringToArray(rgba) {
+	console.log(rgba);
     rgba = rgba.match(/^rgb[a]?\((\d+),\s*(\d+),\s*(\d+)(,\s*(0(\.[0-9][0-9]+?)?|1))?\)$/);
     var a = rgba[5] ? parseFloat(rgba[5]) : 1;
     return [parseInt(rgba[1]), parseInt(rgba[2]), parseInt(rgba[3]), a];
@@ -14,7 +15,7 @@ function rgbaStringToArray(rgba) {
  */
 function isTooBright(rgba) {
     var o = Math.round(((parseInt(rgba[0]) * 299) + (parseInt(rgba[1]) * 587) + (parseInt(rgba[2]) * 114)) / 1000);
-    return o + (255 - o) * (1 - rgba[3]) > 150;
+    return o + (255 - o) * (1 - rgba[3]) > 140;
 }
 
 var lightenDarkenColor = function (col, amt) {

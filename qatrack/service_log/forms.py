@@ -55,6 +55,24 @@ class HoursMinDurationField(DurationField):
         return value
 
 
+class ProblemTypeModelChoiceField(ModelChoiceField):
+
+    def to_python(self, value):
+        try:
+            return super(ProblemTypeModelChoiceField, self).to_python(value)
+        except ValidationError as e:
+            if e.code == 'invalid_choice':
+                models.ProblemType.objects.create(name=value)
+                self.queryset = models.ProblemType.objects.all()
+        return super(ProblemTypeModelChoiceField, self).to_python(value)
+
+
+class UTCModelChoiceField(ModelChoiceField):
+
+    def label_from_instance(self, obj):
+        return obj.test_objects_name()
+
+
 class HoursForm(ModelForm):
 
     user_or_thirdparty = ChoiceField(label='User or third party')
@@ -96,12 +114,6 @@ class HoursForm(ModelForm):
 
 
 HoursFormset = inlineformset_factory(models.ServiceEvent, models.Hours, form=HoursForm, extra=2)
-
-
-class UTCModelChoiceField(ModelChoiceField):
-
-    def label_from_instance(self, obj):
-        return obj.test_objects_name()
 
 
 class FollowupForm(ModelForm):
@@ -162,6 +174,7 @@ class ServiceEventForm(BetterModelForm):
     )
     duration_service_time = HoursMinDurationField(label=_('Service time'), required=False)
     duration_lost_time = HoursMinDurationField(label=_('Lost time'), required=False)
+    problem_type = ProblemTypeModelChoiceField(queryset=models.ProblemType.objects.all(), required=False, to_field_name='name')
 
     _classes = ['form-control']
 
@@ -241,6 +254,7 @@ class ServiceEventForm(BetterModelForm):
             self.initial['service_area_field'] = self.instance.unit_service_area.service_area
             self.fields['service_event_related'].queryset = models.ServiceEvent.objects.exclude(id=self.instance.id)
             self.fields['service_area_field'].queryset = models.ServiceArea.objects.filter(units=unit)
+            self.initial['problem_type'] = self.instance.problem_type
 
         for f in ['safety_precautions', 'problem_description', 'work_description']:
             self.fields[f].widget.attrs.update({'rows': 3, 'class': 'autosize'})
@@ -277,15 +291,11 @@ class ServiceEventForm(BetterModelForm):
         cleaned = super(ServiceEventForm, self).clean()
         print('--- ServiceEventForm.clean ---')
         print(cleaned)
-        print(self.g_link_dict)
-
-
         return cleaned
 
     def clean_service_area_field(self):
 
         print('--- ServiceEventForm.clean_service_area_field ---')
-        unit = self.cleaned_data.get('unit_field')
         service_area = self.cleaned_data.get('service_area_field')
         return service_area
 

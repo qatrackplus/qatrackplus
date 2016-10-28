@@ -29,19 +29,19 @@ class ServiceArea(models.Model):
     def __str__(self):
         return self.name
 
-    @staticmethod
-    def get_for_unit(unit):
-        usacs = UnitServiceArea.objects.filter(
-            unit=unit
-        ).values_list('service_area__pk', flat=True)
-
-        return ServiceArea.objects.filter(pk__in=usacs)
+    # @staticmethod
+    # def get_for_unit(unit):
+    #     usacs = UnitServiceArea.objects.filter(
+    #         unit=unit
+    #     ).values_list('service_area__pk', flat=True)
+    #
+    #     return ServiceArea.objects.filter(pk__in=usacs)
 
 
 class UnitServiceArea(models.Model):
 
-    unit = models.ForeignKey(Unit, on_delete=models.PROTECT)
-    service_area = models.ForeignKey(ServiceArea, on_delete=models.PROTECT)
+    unit = models.ForeignKey(Unit, on_delete=models.CASCADE)
+    service_area = models.ForeignKey(ServiceArea, on_delete=models.CASCADE)
 
     notes = models.TextField(null=True, blank=True)
 
@@ -130,9 +130,7 @@ class ServiceEvent(models.Model):
         help_text=_('Was there a previous service event that might be related to this event?')
     )
     service_status = models.ForeignKey(ServiceEventStatus, verbose_name=_('Status'), on_delete=models.PROTECT)
-    users_reported_to = models.ManyToManyField(
-        User, blank=True, help_text=_('Users that have been notified of this service event')
-    )
+
     user_status_changed_by = models.ForeignKey(User, null=True, blank=True, related_name='+', on_delete=models.PROTECT)
     user_created_by = models.ForeignKey(User, related_name='+', on_delete=models.PROTECT)
     user_modified_by = models.ForeignKey(User, null=True, blank=True, related_name='+', on_delete=models.PROTECT)

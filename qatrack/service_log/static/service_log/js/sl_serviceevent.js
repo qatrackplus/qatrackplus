@@ -5,7 +5,8 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
         var $units = $('#id_unit_field'),
             $service_areas = $('#id_service_area_field'),
             $related_se = $('#id_service_event_related'),
-            $service_status = $('#id_service_status');
+            $service_status = $('#id_service_status'),
+            $problem_type = $('#id_problem_type');
 
         autosize($('textarea.autosize'));
 
@@ -13,22 +14,22 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
             minimumResultsForSearch: 10,
             width: '100%'
         });
-
-        $service_status.select2({
-            templateResult: function(status) {
+        function generate_status_label(status) {
+            if (status.id) {
                 var colour = status_colours_dict[status.id];
-                return $('<span><span class="label" style="background-color: ' + colour + '">&nbsp;</span>&nbsp;' + status.text + '</span>');
-            },
-            templateSelection: function(tag, container) {
-                var colour = status_colours_dict[tag.id];
-                var $label = $('<span class="label" style="background-color: ' + colour + '">' + tag.text + '</span>');
+                var $label = $('<span class="label" style="background-color: ' + colour + '">' + status.text + '</span>');
                 $label.css('background-color', colour);
                 $label.css('border-color', colour);
                 if (isTooBright(rgbaStringToArray(colour))) {
                     $label.css('color', 'black').children().css('color', 'black');
                 }
                 return $label;
-            },
+            }
+            return status.text;
+        }
+        $service_status.select2({
+            templateResult: generate_status_label,
+            templateSelection: generate_status_label,
             minimumResultsForSearch: 10,
             width: '100%'
         });
@@ -36,7 +37,6 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
         $related_se.select2({
             templateSelection: function(tag, container) {
                 var colour = se_colours_dict[tag.id];
-                console.log(colour);
                 $(container).css('background-color', colour);
                 $(container).css('border-color', colour);
                 if (isTooBright(rgbaStringToArray(colour))) {
@@ -45,6 +45,27 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
                 return tag.text;
             },
             minimumResultsForSearch: 10,
+            width: '100%'
+        });
+
+        $problem_type.select2({
+            tags: true,
+            createTag: function (params) {
+                return {
+                    id: params.term,
+                    text: params.term,
+                    newOption: true
+                }
+            },
+            templateResult: function (data) {
+                var $result = $("<span></span>");
+                $result.text(data.text);
+                if (data.newOption) {
+                    $result.append(" <em>(new)</em>");
+                }
+                return $result;
+            },
+            // minimumResultsForSearch: 10,
             width: '100%'
         });
         

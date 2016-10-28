@@ -106,8 +106,8 @@ class Migration(migrations.Migration):
             name='UnitServiceArea',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('service_area', models.ForeignKey(to='service_log.ServiceArea', on_delete=django.db.models.deletion.PROTECT)),
-                ('unit', models.ForeignKey(to='units.Unit', on_delete=django.db.models.deletion.PROTECT)),
+                ('service_area', models.ForeignKey(to='service_log.ServiceArea', on_delete=django.db.models.deletion.CASCADE)),
+                ('unit', models.ForeignKey(to='units.Unit', on_delete=django.db.models.deletion.CASCADE)),
                 ('notes', models.TextField(blank=True, null=True)),
             ],
             options={'verbose_name_plural': 'Unit Service Area Memberships'}
@@ -127,9 +127,9 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('datetime_linked', models.DateTimeField()),
-                ('group_linker', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='service_log.GroupLinker')),
-                ('service_event', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='service_log.ServiceEvent')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                ('group_linker', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='service_log.GroupLinker')),
+                ('service_event', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='service_log.ServiceEvent')),
+                ('user', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to=settings.AUTH_USER_MODEL)),
             ],
         ),
         migrations.AddField(
@@ -163,11 +163,6 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(related_name='+', on_delete=django.db.models.deletion.PROTECT, blank=True, to=settings.AUTH_USER_MODEL, null=True),
         ),
         migrations.AddField(
-            model_name='serviceevent',
-            name='users_reported_to',
-            field=models.ManyToManyField(blank=True, help_text='Users that have been notified of this service event', to=settings.AUTH_USER_MODEL),
-        ),
-        migrations.AddField(
             model_name='qafollowup',
             name='service_event',
             field=models.ForeignKey(to='service_log.ServiceEvent', on_delete=django.db.models.deletion.PROTECT),
@@ -175,7 +170,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='qafollowup',
             name='test_list_instance',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, blank=True, to='qa.TestListInstance', null=True),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, blank=True, to='qa.TestListInstance', null=True),
         ),
         migrations.AddField(
             model_name='qafollowup',

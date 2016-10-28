@@ -43,8 +43,6 @@ class SLDashboard(TemplateView):
         for s in qs:
             to_return['se_statuses'][s.name] = models.ServiceEvent.objects.filter(service_status=s).count()
 
-        print(to_return)
-
         return to_return
 
     def get_context_data(self, **kwargs):
@@ -179,7 +177,6 @@ class ServiceEventUpdateCreate(SingleObjectTemplateResponseMixin, ModelFormMixin
                 h_instance.third_party = third_party
                 h_instance.time = h_form.cleaned_data.get('time', '')
 
-                print(h_instance.service_event)
                 h_instance.save()
 
         for f_form in followup_formset:
