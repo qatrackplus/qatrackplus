@@ -139,7 +139,7 @@
 
             <div class="row">
 
-                <div class="col-md-4">
+                <div class="col-lg-4">
                     <div class="box box-primary">
                         <div class="box-header">
                             <h3 class="box-title">
@@ -222,7 +222,7 @@
                     </div>
                 </div>
 
-                <div class="col-md-8">
+                <div class="col-lg-8">
                     <div class="box box-primary">
                         <div class="box-header">
                             <h3 class="box-title">
@@ -293,7 +293,7 @@
                                                         <td>{{ f_form.instance.datetime_assigned }}</td>
                                                         <td>
                                                             {% if f_form.instance.test_list_instance.pk %}
-                                                                <a href="{% url 'review_test_list_instance' pk=f_form.instance.test_list_instance.pk %}" class="btn btn-xs btn-primary btn-flat">
+                                                                <a href="{% url 'review_test_list_instance' pk=f_form.instance.test_list_instance.pk %}" class="btn btn-xs btn-default btn-flat">
                                                                     Review
                                                                 </a>
                                                             {% else %}

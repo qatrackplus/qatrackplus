@@ -1,26 +1,29 @@
-{% if not_done %}
-    <em>Not Done</em>
-{% elif instance %}
+
+{% if instance %}
     <span class="label-group">
         {% for status,display,tests in instance.pass_fail_status %}
-            {% if tests and status not in exclude%}
-                <span class="label {{status}}" title="{{tests|length}} {{display}}">
-                    {% if show_icons %}
-                        {% if status == 'tolerance' %}
-                            <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
-                        {% elif status == 'action' %}
-                            <i class="fa fa-ban" aria-hidden="true"></i>
-                        {% elif status == 'ok' %}
-                            <i class="fa fa-check-circle-o" aria-hidden="true"></i>
-                        {% elif status == 'not_done' %}
-                            <i class="fa fa-circle-o" aria-hidden="true"></i>
+            {% if tests %}
+                {% if status not in exclude or not exclude %}
+                    <span class="label {{status}}" title="{{tests|length}} {{display}}">
+                        {% if show_icons %}
+                            {% if status == 'tolerance' %}
+                                <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+                            {% elif status == 'action' %}
+                                <i class="fa fa-ban" aria-hidden="true"></i>
+                            {% elif status == 'ok' %}
+                                <i class="fa fa-check-circle-o" aria-hidden="true"></i>
+                            {% elif status == 'not_done' %}
+                                <i class="fa fa-circle-o" aria-hidden="true"></i>
+                            {% endif %}
                         {% endif %}
-                    {% endif %}
-                    {{tests|length}}{% if show_label %} {{display}}{%endif%}
-                </span>
+                        {{tests|length}}{% if show_label %} {{display}}{%endif%}
+                    </span>
+                {% endif %}
             {% endif %}
         {% endfor %}
     </span>
+{% elif show_dash %}
+    ----
 {% else %}
     <em>New List</em>
 {% endif %}

@@ -2,11 +2,12 @@
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin.widgets import FilteredSelectMultiple
-from django.forms import ModelMultipleChoiceField, ModelForm
+from django.forms import ModelMultipleChoiceField, ModelForm, DateTimeField
 from django.utils.translation import ugettext as _
 
 from .models import ServiceEventStatus, ServiceType, ProblemType, UnitServiceArea, ServiceArea, ServiceEvent, ThirdParty, Vendor, GroupLinker
 from qatrack.units.models import Unit, Modality
+from .forms import ServiceEventForm, HoursMinDurationField
 
 
 class ServiceEventStatusFormAdmin(ModelForm):
@@ -16,7 +17,15 @@ class ServiceEventStatusFormAdmin(ModelForm):
         fields = '__all__'
 
 
-class ServiceEventStatusAdmin(admin.ModelAdmin):
+class DeleteOnlyFromOwnFormAdmin(admin.ModelAdmin):
+
+    def has_delete_permission(self, request, obj=None):
+        if obj is None:
+            return False
+        return super(DeleteOnlyFromOwnFormAdmin, self).has_delete_permission(request, obj)
+
+
+class ServiceEventStatusAdmin(DeleteOnlyFromOwnFormAdmin):
     list_display = ["name", "is_review_required", "is_default", "is_active"]
     form = ServiceEventStatusFormAdmin
 
@@ -36,27 +45,82 @@ class ServiceEventStatusAdmin(admin.ModelAdmin):
         }
 
 
-class ServiceTypeAdmin(admin.ModelAdmin):
+class ServiceTypeAdmin(DeleteOnlyFromOwnFormAdmin):
     list_display = ['name', 'is_approval_required', 'is_active']
 
 
-class ProblemTypeAdmin(admin.ModelAdmin):
+class ProblemTypeAdmin(DeleteOnlyFromOwnFormAdmin):
     list_display = ['name']
 
 
-class ServiceAreaAdmin(admin.ModelAdmin):
+class ServiceAreaAdmin(DeleteOnlyFromOwnFormAdmin):
     list_display = ['name']
     filter_horizontal = ("units",)
 
 
-class ServiceEventAdmin(admin.ModelAdmin):
-    list_display = ['unit_name', 'service_area_name']
+class ServiceEventAdminForm(ModelForm):
+
+    service_event_related = ModelMultipleChoiceField(
+        queryset=ServiceEvent.objects.all(),
+        required=False,
+        widget=FilteredSelectMultiple(
+            verbose_name=_('Related Service Events'),
+            is_stacked=False
+        )
+    )
+    duration_service_time = HoursMinDurationField(label=_('Service time'), required=False)
+    duration_lost_time = HoursMinDurationField(label=_('Lost time'), required=False)
+
+    datetime_service = DateTimeField()
+
+    class Meta:
+        model = ServiceEvent
+
+        fields = [
+            'datetime_service', 'unit_service_area', 'service_type', 'service_status',
+            'problem_description', 'problem_type', 'service_event_related', 'srn', 'work_description',
+            'safety_precautions', 'duration_service_time', 'duration_lost_time'
+        ]
+
+    def __init__(self, *args, **kwargs):
+        super(ServiceEventAdminForm, self).__init__(*args, **kwargs)
+
+        datetime_service = self.fields['datetime_service']
+        datetime_service.widget.attrs['class'] = 'daterangepicker-input'
+        datetime_service.widget.format = settings.INPUT_DATE_FORMATS[0]
+        datetime_service.input_formats = settings.INPUT_DATE_FORMATS
+        datetime_service.widget.attrs["title"] = settings.DATETIME_HELP
+        datetime_service.help_text = settings.DATETIME_HELP
+
+
+class ServiceEventAdmin(DeleteOnlyFromOwnFormAdmin):
+
+    list_display = ['pk', 'datetime_service', 'unit_name', 'service_area_name']
+    form = ServiceEventAdminForm
 
     def unit_name(self, obj):
         return obj.unit_service_area.unit
 
     def service_area_name(self, obj):
         return obj.unit_service_area.service_area
+
+    class Media:
+        js = (
+            settings.STATIC_URL + "jquery/js/jquery.min.js",
+            settings.STATIC_URL + 'moment/js/moment.min.js',
+            settings.STATIC_URL + 'daterangepicker/js/daterangepicker.js',
+            settings.STATIC_URL + "inputmask/js/inputmask.js",
+            settings.STATIC_URL + 'inputmask/js/jquery.inputmask.js',
+            settings.STATIC_URL + "inputmask/js/inputmask.dependencyLib.jquery.js",
+            settings.STATIC_URL + 'service_log/js/sl_admin_serviceevent.js'
+        )
+        css = {
+            'all': (
+                settings.STATIC_URL + "bootstrap/css/bootstrap.min.css",
+                settings.STATIC_URL + 'daterangepicker/css/daterangepicker.css',
+                settings.STATIC_URL + "qatrack_core/css/admin.css",
+            ),
+        }
 
 
 # Unit admin stuff here to avoid circular dependencies
@@ -106,7 +170,6 @@ class UnitFormAdmin(ModelForm):
 
     def save(self, commit=True):
         unit = super(UnitFormAdmin, self).save(commit=False)
-        # unit.service_areas = self.cleaned_data['service_areas']
 
         if commit:
             unit.save()

@@ -1,0 +1,13 @@
+{% load qa_tags %}
+<div style="max-width: 190px; min-width: 85px;">
+    <a class="btn btn-primary btn-xs btn-flat" href="{% url 'sl_details' pk=qaf.service_event.id %}">Service Event ({{ qaf.service_event.id }})</a>
+    {% if qaf.test_list_instance.pk %}
+        <a class="btn btn-default btn-xs btn-flat" href="{% url 'review_test_list_instance' pk=qaf.test_list_instance.pk %}{% if next %}?next={{ next }}{% endif %}">
+            Review
+        </a>
+    {% else %}
+        <a class="btn btn-primary btn-xs btn-flat" href="{% url 'perform_qa' pk=qaf.unit_test_collection.pk %}?f={{ qaf.id }}{% if next %}&next={{ next }}{% endif %}">
+            Perform
+        </a>
+    {% endif %}
+</div>

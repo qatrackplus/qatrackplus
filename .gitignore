@@ -35,3 +35,4 @@ deployLocal.py
 coverage.xml
 .noseids
 logs/
+qatrack/accel_migration_tool/db/

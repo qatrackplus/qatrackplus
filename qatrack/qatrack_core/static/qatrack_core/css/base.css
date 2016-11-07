@@ -92,6 +92,14 @@ ul.dropdown-menu li > div > i {
     height: 1em;
     /*line-height: inherit;*/
 }
+ul.timeline > li > i.fa-stack > .fa-stack-custom-main {
+    left: 3px;
+    top: 9px;
+}
+ul.timeline > li > i.fa-stack > .fa-stack-custom-sub.upper-left {
+    left: 3px;
+    top: 5px;
+}
 .fa.primary {
     color: #3c8dbc;
 }
@@ -321,4 +329,15 @@ input[type="number"] {
 .max-width-lg {
     max-width: 1200px;
     margin: auto;
+}
+.bg-dark-gray {
+    background-color: #222d32 !important;
+    color: #b8c7ce !important;
+}
+.drop-shadow {
+    box-shadow: 2px 6px 4px rgba(53, 124, 165, .25) !important;
+    border: 1px solid #ddd;
+}
+.margin-l-20 {
+    margin-left: 20px;
 }

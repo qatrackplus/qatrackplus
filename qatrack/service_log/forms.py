@@ -87,7 +87,7 @@ class HoursForm(ModelForm):
 
         choices = [(None, '---------')]
         for user in User.objects.all():
-            name = user.username if not user.first_name or not user.last_name else user.first_name + ', ' + user.last_name
+            name = user.username if not user.first_name or not user.last_name else user.last_name + ', ' + user.first_name
             choices.append(('user-' + str(user.id), name))
         for tp in models.ThirdParty.objects.all():
             choices.append(('tp-' + str(tp.id), str(tp)))
@@ -129,8 +129,6 @@ class FollowupForm(ModelForm):
         self.unit_field = kwargs.pop('unit_field')
         super(FollowupForm, self).__init__(*args, **kwargs)
 
-        is_new = self.instance.pk is None
-
         if self.unit_field:
             testlist_ct = ContentType.objects.get(app_label="qa", model="testlist")
             self.fields['unit_test_collection'].queryset = qa_models.UnitTestCollection.objects.filter(
@@ -138,6 +136,7 @@ class FollowupForm(ModelForm):
                 active=True,
                 content_type=testlist_ct
             ).order_by('test_list__name')
+
         else:
             self.fields['unit_test_collection'].widget.attrs.update({'disabled': True})
 
@@ -152,13 +151,7 @@ class FollowupForm(ModelForm):
         return valid
 
     def clean_unit_test_collection(self):
-
-        print('--- FollowupForm.clean_unit_test_collection ---')
         utc = self.cleaned_data['unit_test_collection']
-
-        if not isinstance(utc, qa_models.UnitTestCollection):
-            print('NOT A UTC')
-
         return utc
 
 
@@ -195,7 +188,6 @@ class ServiceEventForm(BetterModelForm):
         ]
 
     def __init__(self, *args, **kwargs):
-        print('--- ServiceEventForm.__init__ ---')
         self.group_linkers = kwargs.pop('group_linkers', [])
         super(ServiceEventForm, self).__init__(*args, **kwargs)
 
@@ -276,8 +268,6 @@ class ServiceEventForm(BetterModelForm):
 
     def save(self, *args, **kwargs):
 
-        print('-------- saving main form ------------')
-
         unit = self.cleaned_data.get('unit_field')
         service_area = self.cleaned_data.get('service_area_field')
         usa = models.UnitServiceArea.objects.get(unit=unit, service_area=service_area)
@@ -287,15 +277,7 @@ class ServiceEventForm(BetterModelForm):
         super(ServiceEventForm, self).save(*args, **kwargs)
         return self.instance
 
-    def clean(self):
-        cleaned = super(ServiceEventForm, self).clean()
-        print('--- ServiceEventForm.clean ---')
-        print(cleaned)
-        return cleaned
-
     def clean_service_area_field(self):
-
-        print('--- ServiceEventForm.clean_service_area_field ---')
         service_area = self.cleaned_data.get('service_area_field')
         return service_area
 

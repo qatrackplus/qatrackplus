@@ -185,15 +185,16 @@ class ThirdParty(models.Model):
 
     vendor = models.ForeignKey(Vendor, on_delete=models.PROTECT)
 
-    name = models.CharField(max_length=32, help_text=_('Enter this person\'s name'))
+    first_name = models.CharField(max_length=32, help_text=_('Enter this person\'s first name'))
+    last_name = models.CharField(max_length=32, help_text=_('Enter this person\'s last name'))
 
     class Meta:
-        verbose_name = _("Third Party")
-        verbose_name_plural = _("Third Parties")
-        unique_together = ("name", "vendor")
+        verbose_name = _('Third Party')
+        verbose_name_plural = _('Third Parties')
+        unique_together = ('first_name', 'last_name', 'vendor')
 
     def __str__(self):
-        return self.name + ' (' + self.vendor.name + ')'
+        return self.last_name + ', ' + self.first_name + ' (' + self.vendor.name + ')'
 
 
 class Hours(models.Model):

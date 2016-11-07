@@ -97,7 +97,8 @@ class Migration(migrations.Migration):
             name='ThirdParty',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('name', models.CharField(help_text="Enter this person's name", max_length=32)),
+                ('first_name', models.CharField(default='Some', help_text="Enter this person's first name", max_length=32)),
+                ('last_name', models.CharField(default='Dude', help_text="Enter this person's last name", max_length=32)),
                 ('vendor', models.ForeignKey(to='units.Vendor', on_delete=django.db.models.deletion.PROTECT)),
             ],
             options={'verbose_name': 'Third Party', 'verbose_name_plural': 'Third Parties'},
@@ -203,7 +204,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterUniqueTogether(
             name='thirdparty',
-            unique_together=set([('name', 'vendor')]),
+            unique_together=set([('first_name', 'last_name', 'vendor')]),
         ),
         migrations.AlterUniqueTogether(
             name='unitservicearea',

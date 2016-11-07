@@ -1,4 +1,5 @@
 
+from collections import OrderedDict
 from django.conf import settings
 from django.contrib.auth.context_processors import PermWrapper
 from django.contrib.auth.models import User
@@ -15,12 +16,68 @@ from django.views.generic.detail import SingleObjectTemplateResponseMixin
 from django.views.generic.edit import ModelFormMixin, ProcessFormView
 
 from listable.views import (
-    BaseListableView, DATE_RANGE, SELECT_MULTI, NONEORNULL,
+    BaseListableView, DATE_RANGE, SELECT_MULTI, NONEORNULL, TEXT,
     TODAY, YESTERDAY, TOMORROW, LAST_WEEK, THIS_WEEK, NEXT_WEEK, LAST_14_DAYS, LAST_MONTH, THIS_MONTH, THIS_YEAR
 )
 
 from qatrack.service_log import models, forms
 from qatrack.qa import models as qa_models
+from qatrack.qa.views.base import generate_review_status_context
+
+
+def get_time_display(dt):
+
+    if not isinstance(dt, timezone.datetime):
+        raise ValueError('%s is not a valid datetime' % dt)
+    if timezone.now() - dt < timezone.timedelta(hours=1):
+        ago = timezone.now() - dt
+        # ago = timezone.timedelta(minutes=ago.minute)
+        return str(ago.seconds // 60) + ' minutes ago'
+    else:
+        return dt.strftime('%I:%M %p')
+
+
+def populate_timeline_from_queryset(unsorted_dict, obj, datetime, obj_class, msg=''):
+
+    date = datetime.date()
+    time = get_time_display(datetime)
+
+    if obj_class == 'qaf_complete':
+        statuses_dict = generate_review_status_context(obj.test_list_instance)
+    else:
+        statuses_dict = {}
+
+    if date not in unsorted_dict:
+
+        if date == timezone.now().date():
+            display = _('Today')
+        elif date == (timezone.now() - timezone.timedelta(days=1)).date():
+            display = _('Yesterday')
+        else:
+            display = date
+
+        unsorted_dict.update({date: {
+            'objs': [{
+                'class': obj_class,
+                'instance': obj,
+                'time': time,
+                'datetime': datetime,
+                'msg': msg,
+                'statuses_dict': statuses_dict
+            }],
+            'display': display,
+        }})
+    else:
+        unsorted_dict[date]['objs'].append({
+            'class': obj_class,
+            'instance': obj,
+            'time': time,
+            'datetime': datetime,
+            'msg': msg,
+            'statuses_dict': statuses_dict
+        })
+
+    return unsorted_dict
 
 
 class SLDashboard(TemplateView):
@@ -30,25 +87,83 @@ class SLDashboard(TemplateView):
     def get_counts(self):
 
         # TODO: Parts low
-        qs = models.QAFollowup.objects.filter(is_approved=False)
+        qs = models.QAFollowup.objects.filter()
         to_return = {
-            'qa_not_approved': qs.count(),
-            'qa_not_complete': qs.filter(is_complete=False).count(),
+            'qa_not_approved': qs.filter(test_list_instance__isnull=False, service_event__service_status__is_review_required=True).count(),
+            'qa_not_complete': qs.filter(test_list_instance__isnull=True).count(),
             'units_restricted': models.Unit.objects.filter(restricted=True).count(),
             'parts_low': 0,
             'se_statuses': {}
         }
-
-        qs = models.ServiceEventStatus.objects.filter(is_active=True)
+        qs = models.ServiceEventStatus.objects.filter(is_active=True).order_by('pk')
         for s in qs:
-            to_return['se_statuses'][s.name] = models.ServiceEvent.objects.filter(service_status=s).count()
-
+            to_return['se_statuses'][s.name] = {
+                'num': models.ServiceEvent.objects.filter(service_status=s).count(),
+                'id': s.id
+            }
         return to_return
+
+    def get_timeline(self):
+        print('--- SLDashboard.get_timeline ---')
+
+        last_week_date = timezone.now().date() - timezone.timedelta(days=7)
+        last_week_datetime = timezone.datetime(year=last_week_date.year, month=last_week_date.month, day=last_week_date.day)
+        se_new = models.ServiceEvent.objects\
+            .filter(datetime_created__gt=last_week_datetime)\
+            .order_by('-datetime_created')
+        se_edited = models.ServiceEvent.objects\
+            .filter(datetime_modified__gt=last_week_datetime)\
+            .order_by('-datetime_modified')
+        se_status = models.ServiceEvent.objects\
+            .filter(datetime_status_changed__gt=last_week_datetime)\
+            .select_related('service_status')\
+            .order_by('-datetime_status_changed')
+        qaf_new = models.QAFollowup.objects\
+            .filter(datetime_assigned__gt=last_week_datetime)\
+            .select_related('service_event', 'test_list_instance', 'unit_test_collection')\
+            .order_by('-datetime_assigned')
+        qaf_complete = models.QAFollowup.objects\
+            .filter(test_list_instance__isnull=False, test_list_instance__created__gt=last_week_datetime)\
+            .select_related('service_event', 'test_list_instance', 'unit_test_collection')\
+            .order_by('-test_list_instance__created')
+
+        unsorted_dict = {}
+        for se in se_new:
+            datetime = timezone.localtime(se.datetime_created)
+            msg = str(se.user_created_by) + ' created service event ' + str(se.id)
+            populate_timeline_from_queryset(unsorted_dict, se, datetime, 'se_new', msg=msg)
+
+        for se in se_edited:
+            datetime = timezone.localtime(se.datetime_modified)
+            msg = str(se.user_modified_by) + ' modified service event ' + str(se.id)
+            populate_timeline_from_queryset(unsorted_dict, se, datetime, 'se_edit', msg=msg)
+
+        for se in se_status:
+            datetime = timezone.localtime(se.datetime_status_changed)
+            msg = str(se.user_status_changed_by) + ' changed status of service event ' + str(se.id) + ' to '
+            populate_timeline_from_queryset(unsorted_dict, se, datetime, 'se_status', msg=msg)
+
+        for qaf in qaf_new:
+            datetime = timezone.localtime(qaf.datetime_assigned)
+            msg = str(qaf.user_assigned_by) + ' assigned a new followup (' + qaf.unit_test_collection.tests_object.name + ') for service event ' + str(qaf.service_event.id)
+            populate_timeline_from_queryset(unsorted_dict, qaf, datetime, 'qaf_new', msg=msg)
+
+        for qaf in qaf_complete:
+            datetime = timezone.localtime(qaf.test_list_instance.created)
+            msg = str(qaf.test_list_instance.created_by) + ' performed a followup (' + qaf.unit_test_collection.tests_object.name + ') for service event ' + str(qaf.service_event.id)
+            populate_timeline_from_queryset(unsorted_dict, qaf, datetime, 'qaf_complete', msg=msg)
+
+        for ud in unsorted_dict:
+            unsorted_dict[ud]['objs'] = sorted(unsorted_dict[ud]['objs'], key=lambda obj: obj['datetime'], reverse=True)
+        ordered_dict = OrderedDict(sorted(unsorted_dict.items(), reverse=True))
+
+        return ordered_dict
 
     def get_context_data(self, **kwargs):
 
         context = super(SLDashboard, self).get_context_data()
         context['counts'] = self.get_counts()
+        context['tl_dates'] = self.get_timeline()
 
         return context
 
@@ -192,9 +307,10 @@ class ServiceEventUpdateCreate(SingleObjectTemplateResponseMixin, ModelFormMixin
 
             elif f_form.has_changed():
 
-                f_instance.user_assigned_by = self.request.user
-                f_instance.datetime_assigned = timezone.now()
-                f_instance.service_event = service_event
+                if is_new:
+                    f_instance.user_assigned_by = self.request.user
+                    f_instance.datetime_assigned = timezone.now()
+                    f_instance.service_event = service_event
                 f_instance.save()
 
         return HttpResponseRedirect(self.get_success_url())
@@ -227,12 +343,19 @@ class UpdateServiceEvent(ServiceEventUpdateCreate):
     def form_valid(self, form):
 
         self.instance = form.save(commit=False)
-        form.instance.user_modified_by = self.request.user
-        form.instance.datetime_modified = timezone.now()
 
         if 'service_status' in form.changed_data:
             form.instance.datetime_status_changed = timezone.now()
             form.instance.user_status_changed_by = self.request.user
+
+            # Only change modified fields if service_status was not the only changed field
+            if len(form.changed_data) > 1:
+                form.instance.user_modified_by = self.request.user
+                form.instance.datetime_modified = timezone.now()
+
+        elif len(form.changed_data) > 0:
+            form.instance.user_modified_by = self.request.user
+            form.instance.datetime_modified = timezone.now()
 
         return super(UpdateServiceEvent, self).form_valid(form)
 
@@ -271,82 +394,106 @@ class ServiceEventsBaseList(BaseListableView):
     template_name = 'service_log/service_event_list.html'
     paginate_by = 50
 
-    order_by = ["-datetime_service"]
+    order_by = ['-datetime_service']
+    kwarg_filters = None
 
     fields = (
-        "actions",
-        "pk",
-        "datetime_service",
-        "unit_service_area__unit__name",
-        "unit_service_area__service_area__name",
-        "service_type__name",
-        "problem_type__name",
-        "problem_description",
-        "service_status__name"
+        'actions',
+        'pk',
+        'datetime_service',
+        'unit_service_area__unit__name',
+        'unit_service_area__service_area__name',
+        'service_type__name',
+        'problem_type__name',
+        'problem_description',
+        'service_status__name'
     )
 
     headers = {
-        "pk": _("ID"),
-        "datetime_service": _("Service Date"),
-        "unit_service_area__unit__name": _("Unit"),
-        "unit_service_area__service_area__name": _("Service Area"),
-        "service_type__name": _("Service Type"),
-        "problem_type__name": _("Problem Type"),
-        "service_status__name": _("Service Status"),
+        'pk': _('ID'),
+        'datetime_service': _('Service Date'),
+        'unit_service_area__unit__name': _('Unit'),
+        'unit_service_area__service_area__name': _('Service Area'),
+        'service_type__name': _('Service Type'),
+        'problem_type__name': _('Problem Type'),
+        'service_status__name': _('Service Status'),
     }
 
     widgets = {
-        "datetime_service": DATE_RANGE,
-        "unit_service_area__unit__name": SELECT_MULTI,
-        "unit_service_area__service_area__name": SELECT_MULTI,
-        "service_type__name": SELECT_MULTI,
-        "problem_type__name": SELECT_MULTI,
-        # "problem_description": False,
-        "service_status__name": SELECT_MULTI
+        'datetime_service': DATE_RANGE,
+        'unit_service_area__unit__name': SELECT_MULTI,
+        'unit_service_area__service_area__name': SELECT_MULTI,
+        'service_type__name': SELECT_MULTI,
+        'problem_type__name': SELECT_MULTI,
+        'service_status__name': SELECT_MULTI
     }
 
     date_ranges = {
-        "datetime_service": [TODAY, YESTERDAY, LAST_WEEK, THIS_WEEK, LAST_MONTH, THIS_MONTH, THIS_YEAR]
+        'datetime_service': [TODAY, YESTERDAY, LAST_WEEK, THIS_WEEK, LAST_MONTH, THIS_MONTH, THIS_YEAR]
     }
 
     search_fields = {
-        "actions": False,
+        'actions': False,
     }
 
     order_fields = {
-        "actions": False,
+        'actions': False,
     }
 
-    # select_related = (
-    #     "unit_service_area__unit",
-    #     "unit_service_area__service_area"
-    # )
-
-    # prefetch_related = ("testinstance_set", "testinstance_set__status")
-
     def __init__(self, *args, **kwargs):
-        super(ServiceEventsBaseList, self).__init__(*args, **kwargs)
 
+        super(ServiceEventsBaseList, self).__init__(*args, **kwargs)
         self.templates = {
-            'actions': get_template("service_log/table_context_se_actions.html"),
-            'datetime_service': get_template("service_log/table_context_datetime.html"),
-            'service_status__name': get_template("service_log/table_context_problem_type.html"),
-            'problem_description': get_template("service_log/table_context_problem_description.html"),
+            'actions': get_template('service_log/table_context_se_actions.html'),
+            'datetime_service': get_template('service_log/table_context_datetime.html'),
+            'service_status__name': get_template('service_log/table_context_service_status.html'),
+            'problem_description': get_template('service_log/table_context_problem_description.html'),
         }
 
     def get_icon(self):
         return 'fa-wrench'
 
-    def get_page_title(self):
-        return "All Service Events"
+    def get_page_title(self, f=None):
+        if not f:
+            return 'All Service Events'
+        to_return = 'Service Events'
+        filters = f.split('_')
+        for filt in filters:
+            [key, val] = filt.split('-')
+            if key == 'ss':
+                to_return = to_return + ' - Status: ' + models.ServiceEventStatus.objects.get(pk=val).name
+
+        return to_return
+
+    def get(self, request, *args, **kwargs):
+        if self.kwarg_filters is None:
+            self.kwarg_filters = kwargs.pop('f', None)
+        return super(ServiceEventsBaseList, self).get(request, *args, **kwargs)
 
     def get_context_data(self, *args, **kwargs):
         context = super(ServiceEventsBaseList, self).get_context_data(*args, **kwargs)
         current_url = resolve(self.request.path_info).url_name
         context['view_name'] = current_url
         context['icon'] = self.get_icon()
-        context["page_title"] = self.get_page_title()
+        f = self.request.GET.get('f', False)
+        context['kwargs'] = {'f': f} if f else {}
+        context['page_title'] = self.get_page_title(f)
         return context
+
+    def get_queryset(self):
+        qs = super(ServiceEventsBaseList, self).get_queryset()
+
+        if self.kwarg_filters is None:
+            self.kwarg_filters = self.request.GET.get('f', None)
+
+        if self.kwarg_filters is not None:
+            filters = self.kwarg_filters.split('_')
+            for filt in filters:
+                [key, val] = filt.split('-')
+                if key == 'ss':
+                    qs = qs.filter(service_status=val)
+
+        return qs
 
     def format_col(self, field, obj):
         col = super(ServiceEventsBaseList, self).format_col(field, obj)
@@ -354,12 +501,13 @@ class ServiceEventsBaseList(BaseListableView):
 
     def actions(self, se):
         template = self.templates['actions']
-        c = Context({"se": se, "perms": PermWrapper(self.request.user), "request": self.request})
+        mext = reverse('sl_list_all') + (('?f=' + self.kwarg_filters) if self.kwarg_filters else '')
+        c = Context({'se': se, 'request': self.request, 'next': mext})
         return template.render(c)
 
     def datetime_service(self, se):
         template = self.templates['datetime_service']
-        c = Context({"datetime": se.datetime_service})
+        c = Context({'datetime': se.datetime_service})
         return template.render(c)
 
     def problem_type__name(self, se):
@@ -367,10 +515,174 @@ class ServiceEventsBaseList(BaseListableView):
 
     def service_status__name(self, se):
         template = self.templates['service_status__name']
-        c = Context({"service_status": se.service_status, "request": self.request})
+        c = Context({'service_status': se.service_status, 'request': self.request})
         return template.render(c)
 
     def problem_description(self, se):
         template = self.templates['problem_description']
-        c = Context({"problem_description": se.problem_description, "request": self.request})
+        c = Context({'problem_description': se.problem_description, 'request': self.request})
         return template.render(c)
+
+
+class QAFollowupsBaseList(BaseListableView):
+
+    model = models.QAFollowup
+    template_name = 'service_log/qafollowup_list.html'
+    paginate_by = 50
+
+    order_by = ['-datetime_assigned']
+    kwarg_filters = None
+
+    fields = (
+        'actions',
+        'pk',
+        'datetime_assigned',
+        'service_event__unit_service_area__unit__name',
+        'unit_test_collection__tests_object__name',
+        'test_list_instance_pass_fail',
+        'test_list_instance_review_status',
+        'service_event__service_status__name'
+    )
+
+    headers = {
+        'pk': _('ID'),
+        'datetime_assigned': _('Date Assigned'),
+        'service_event__unit_service_area__unit__name': _('Unit'),
+        'unit_test_collection__tests_object__name': _('Test List'),
+        'test_list_instance_pass_fail': _('Pass/Fail Status'),
+        'test_list_instance_review_status': _('Review Status'),
+        'service_event__service_status__name': _('Service Event Status')
+    }
+
+    widgets = {
+        'datetime_assigned': DATE_RANGE,
+        'service_event__unit_service_area__unit__name': SELECT_MULTI,
+        'service_event__service_status__name': SELECT_MULTI
+    }
+
+    date_ranges = {
+        'datetime_assigned': [TODAY, YESTERDAY, LAST_WEEK, THIS_WEEK, LAST_MONTH, THIS_MONTH, THIS_YEAR]
+    }
+
+    search_fields = {
+        'actions': False,
+        'test_list_instance_pass_fail': False,
+        'test_list_instance_review_status': False,
+        'service_event': 'service_event__id__icontains'
+    }
+
+    order_fields = {
+        'actions': False,
+        'test_list_instance_pass_fail': False,
+        'test_list_instance_review_status': False
+    }
+
+    def __init__(self, *args, **kwargs):
+
+        super(QAFollowupsBaseList, self).__init__(*args, **kwargs)
+        self.templates = {
+            'actions': get_template("service_log/table_context_qaf_actions.html"),
+            'datetime_assigned': get_template("service_log/table_context_datetime.html"),
+            'test_list_instance_pass_fail': get_template("qa/pass_fail_status.html"),
+            'test_list_instance_review_status': get_template("qa/review_status.html"),
+            'service_event__service_status__name': get_template("service_log/table_context_service_status.html"),
+        }
+
+    def get_icon(self):
+        return 'fa-pencil-square-o'
+
+    def get_page_title(self, f=None):
+        if not f:
+            return 'All QA Followups'
+        to_return = 'QA Followups'
+        filters = f.split('_')
+        for filt in filters:
+            [key, val] = filt.split('-')
+            if key == 'tli.in':
+                if bool(int(val)):
+                    to_return += ' - Incomplete'
+                else:
+                    to_return += ' - Complete'
+            elif key == 'ses.irr':
+                to_return += ' - Service Event Status Not: '
+                names = []
+                for s in models.ServiceEventStatus.objects.filter(is_review_required=False):
+                    names.append(s.name)
+                to_return += ','.join(names)
+
+        return to_return
+
+    def get(self, request, *args, **kwargs):
+        if self.kwarg_filters is None:
+            self.kwarg_filters = kwargs.pop('f', None)
+        return super(QAFollowupsBaseList, self).get(request, *args, **kwargs)
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(QAFollowupsBaseList, self).get_context_data(*args, **kwargs)
+        current_url = resolve(self.request.path_info).url_name
+        context['view_name'] = current_url
+        context['icon'] = self.get_icon()
+        f = self.request.GET.get('f', False)
+        context['kwargs'] = {'f': f} if f else {}
+        context['page_title'] = self.get_page_title(f)
+        return context
+
+    def get_queryset(self):
+        qs = super(QAFollowupsBaseList, self).get_queryset()
+        print('--- QAFollowupsBaseList.get_queryset ---')
+
+        if self.kwarg_filters is None:
+            self.kwarg_filters = self.request.GET.get('f', None)
+
+        if self.kwarg_filters is not None:
+            filters = self.kwarg_filters.split('_')
+            query_kwargs = {}
+            for filt in filters:
+                [key, val] = filt.split('-')
+                if key == 'tli.in':
+                    query_kwargs['test_list_instance__isnull'] = bool(int(val))
+                elif key == 'ses.irr':
+                    query_kwargs['service_event__service_status__is_review_required'] = bool(int(val))
+
+            print(query_kwargs)
+            qs = qs.filter(**query_kwargs)
+
+        return qs
+
+    def actions(self, qaf):
+        template = self.templates['actions']
+        mext = reverse('qaf_list_all') + (('?f=' + self.kwarg_filters) if self.kwarg_filters else '')
+        c = Context({'qaf': qaf, 'request': self.request, 'next': mext})
+        return template.render(c)
+
+    def test_list_instance_pass_fail(self, qaf):
+        template = self.templates['test_list_instance_pass_fail']
+        c = Context({
+            'instance': qaf.test_list_instance if qaf.test_list_instance else None,
+            'show_dash': True,
+            'exclude': ['no_tol'],
+            'show_icons': True
+        })
+        return template.render(c)
+
+    def test_list_instance_review_status(self, qaf):
+        template = self.templates['test_list_instance_review_status']
+        c = Context({
+            "instance": qaf.test_list_instance if qaf.test_list_instance else None,
+            "perms": PermWrapper(self.request.user),
+            "request": self.request,
+            'show_dash': True,
+        })
+        c.update(generate_review_status_context(qaf.test_list_instance))
+        return template.render(c)
+
+    def datetime_assigned(self, qaf):
+        template = self.templates['datetime_assigned']
+        c = Context({"datetime": qaf.datetime_assigned})
+        return template.render(c)
+
+    def service_event__service_status__name(self, qaf):
+        template = self.templates['service_event__service_status__name']
+        c = Context({"service_status": qaf.service_event.service_status, "request": self.request})
+        return template.render(c)
+

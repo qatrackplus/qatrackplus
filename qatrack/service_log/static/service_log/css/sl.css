@@ -40,10 +40,12 @@
 }
 
 /* Override width of pk column to something smaller */
-#listable-table-sl_list_all > thead > tr:nth-child(2) > th:nth-child(2) > span > input {
+#listable-table-sl_list_all > thead > tr:nth-child(2) > th:nth-child(2) > span > input,
+#listable-table-qaf_list_all > thead > tr:nth-child(2) > th:nth-child(2) > span > input {
     min-width: 45px;
 }
-#listable-table-sl_list_all > tbody > tr > td:nth-child(2) {
+#listable-table-sl_list_all > tbody > tr > td:nth-child(2),
+#listable-table-qaf_list_all > tbody > tr > td:nth-child(2) {
     width: 50px;
 }
 
@@ -62,4 +64,29 @@
 }
 .not_done {
     background-color: #b5bbc8;
+}
+.timeline-toggle {
+    border-radius: 50%;
+}
+.timeline-toggle > i.fa-stack-custom-main {
+    left: 3px;
+    top: 9px;
+}
+.timeline-toggle > i.fa-stack-custom-sub {
+    left: 3px;
+    top: 5px;
+}
+i.timeline-toggle:hover {
+    background-color: rgb(0, 0, 0) !important;
+    /*background-color: #00ff00 !important;*/
+}
+.timeline-toggle:hover > i.fa-stack-custom-main {
+    color: white;
+    /*background-color: #00ff00 !important;*/
+}
+.timeline-toggle.off {
+    background-color: #b5bbc8 !important;
+}
+.timeline-toggle.off > i.fa {
+    color: white;
 }

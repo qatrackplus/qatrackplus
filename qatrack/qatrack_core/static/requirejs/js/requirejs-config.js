@@ -33,7 +33,7 @@ require.config({
         lodash: siteConfig.STATIC_URL + 'lodash/js/lodash',
         moment: siteConfig.STATIC_URL + 'moment/js/moment.min',
         multiselect: siteConfig.STATIC_URL + 'multiselect/js/bootstrap.multiselect',
-        select2: siteConfig.STATIC_URL + 'select2/js/select2.min',
+            select2: siteConfig.STATIC_URL + 'select2/js/select2.min',
         slimscroll: siteConfig.STATIC_URL + 'slimscroll/js/jquery.slimscroll.min',
 
         // Site wide:
@@ -127,9 +127,9 @@ require.config({
         // unit module:
 
         // service log module:
-        sl_dash: {
-            deps: ['jquery', 'qautils', 'site_base', 'lodash', 'bootstrap']
-        },
+        // sl_dash: {
+        //     deps: ['jquery', 'qautils', 'site_base', 'lodash', 'bootstrap']
+        // },
         sl_utils: {
             deps: ['jquery', 'site_base', 'bootstrap']
         }

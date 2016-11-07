@@ -27,39 +27,46 @@
 
                 <li class="header">Service Log Actions</li>
 
-                <li class="primary"><a id="toggle-description" href="{% url "sl_new" %}"> {# TODO: fix link #}
-                    <i class="fa fa-stack fa-fw" aria-hidden="true">
+                <li class="success"><a id="toggle-description" href="{% url "sl_new" %}">
+                    <i class="fa fa-stack fa-fw">
                         <i class="fa fa-wrench fa-stack-custom-main fa-lg"></i>
-                        <i class="fa fa-plus fa-stack-custom-sub upper-left primary"></i>
+                        <i class="fa fa-plus fa-stack-custom-sub upper-left success"></i>
                     </i>
 {#                    <i class="fa fa-wrench fa-fw" aria-hidden="true"></i>#}
                     <span>Open New Service Event</span>
                 </a></li>
-
-                <li class="primary"><a id="toggle-description" href="{% url "sl_list_all" %}"> {# TODO: fix link. Possible dropdown with more options? #}
-                    <i class="fa fa-stack fa-fw" aria-hidden="true">
+                <li class="info"><a id="toggle-description" href="{% url "sl_list_all" %}">
+                    <i class="fa fa-stack fa-fw">
+                        <i class="fa fa-list fa-stack-custom-sub upper-left info"></i>
                         <i class="fa fa-wrench fa-stack-custom-main fa-lg"></i>
-                        <i class="fa fa-wrench fa-stack-custom-sub upper-left"></i>
                     </i>
                     <span>View Service Events</span>
                 </a></li>
+                <li class="info"><a id="toggle-description" href="{% url "qaf_list_all" %}">
+                    <i class="fa fa-stack fa-fw">
+                        <i class="fa fa-list fa-stack-custom-sub upper-left info"></i>
+                        <i class="fa fa-pencil-square-o fa-stack-custom-main fa-lg"></i>
+                    </i>
+                    <span>View QA Followups</span>
+                </a></li>
                 <li class="header">Parts Actions</li>
-                <li class="primary"><a id="toggle-description" href="#!">
-                    <i class="fa fa-stack fa-fw" aria-hidden="true">
+                <li class="success"><a id="toggle-description" href="#!">
+                    <i class="fa fa-stack fa-fw">
+                        <i class="fa fa-plus fa-stack-custom-sub upper-left success"></i>
                         <i class="fa fa-cog fa-stack-custom-main fa-lg"></i>
-                        <i class="fa fa-plus fa-stack-custom-sub upper-left primary"></i>
                     </i>
                     <span>Add Part</span>
                 </a></li>
-
-                <li class="primary"><a id="toggle-description" href="#!">
-                    <i class="fa fa-cogs fa-fw" aria-hidden="true"></i>
+                <li class="info"><a id="toggle-description" href="#!">
+                    <i class="fa fa-stack fa-fw">
+                        <i class="fa fa-list fa-stack-custom-sub upper-left info"></i>
+                        <i class="fa fa-cog fa-stack-custom-main fa-lg"></i>
+                    </i>
                     <span>View Parts</span>
                 </a></li>
-
                 <li class="header">Units Actions</li>
                 <li class="danger"><a id="toggle-description" href="#!">
-                    <i class="fa fa-stack fa-fw" aria-hidden="true">
+                    <i class="fa fa-stack fa-fw">
                         <i class="fa fa-cube fa-stack-custom-main fa-lg"></i>
                         <i class="fa fa-key fa-stack-custom-sub upper-left danger"></i>
                     </i>

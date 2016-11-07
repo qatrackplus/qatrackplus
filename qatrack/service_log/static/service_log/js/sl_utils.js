@@ -44,3 +44,23 @@ var lightenDarkenColor = function (col, amt) {
     else if (a < 0) a = 0;
 	return 'rgba(' + r + ',' + b + ',' + g + ',' + a + ')';
 };
+
+function apply_data_colour($elem) {
+	var bg_colour = $elem.attr('data-bgcolour');
+	var colour = $elem.attr('data-colour');
+	console.log(bg_colour);
+	console.log(colour);
+	if (bg_colour != null) {
+		$elem.css('background-color', bg_colour);
+		$elem.css('border-color', bg_colour);
+		if (isTooBright(rgbaStringToArray($elem.css('background-color')))) {
+			$elem.css('color', 'black').children().css('color', 'black');
+		}
+		else {
+			$elem.css('color', 'white').children().css('color', 'white');
+		}
+	}
+	if (colour != null) {
+		$elem.css('color', colour);
+	}
+}
