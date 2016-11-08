@@ -138,7 +138,7 @@ class UTCList(BaseListableView):
 
     fields = (
         "actions",
-        "utc_name",
+        "utc_name_lower",
         "due_date",
         "unit__name",
         "frequency__name",
@@ -150,13 +150,14 @@ class UTCList(BaseListableView):
 
     search_fields = {
         "actions": False,
-        "utc_name": "utc_name__icontains",
+        "utc_name_lower": "utc_name_lower__icontains",
         "assigned_to__name": "assigned_to__name",
         "last_instance_pass_fail": False,
         "last_instance_review_status": False,
     }
 
     order_fields = {
+        "utc_name_lower": "utc_name",
         "actions": False,
         "frequency__name": "frequency__due_interval",
         "unit__name": "unit__number",
@@ -186,7 +187,7 @@ class UTCList(BaseListableView):
     )
 
     headers = {
-        "utc_name": _("Test List/Cycle"),
+        "utc_name_lower": _("Test List/Cycle"),
         "unit__name": _("Unit"),
         "frequency__name": _("Frequency"),
         "assigned_to__name": _("Assigned To"),
@@ -202,7 +203,7 @@ class UTCList(BaseListableView):
         "last_instance__modified_by",
     )
 
-    order_by = ["unit__name", "frequency__name", "utc_name"]
+    order_by = ["unit__name", "frequency__name", "utc_name_lower"]
 
 
     def __init__(self, *args, **kwargs):
@@ -256,6 +257,8 @@ class UTCList(BaseListableView):
 
         if field == 'frequency__name':
             filters = [(NONEORNULL, 'Ad Hoc') if f == (NONEORNULL, 'None') else f for f in filters]
+        elif field == 'frequency__name':
+            filters = [(NONEORNULL, 'Ad Hoc') if f == (NONEORNULL, 'None') else f for f in filters]
 
         return filters
 
@@ -264,6 +267,9 @@ class UTCList(BaseListableView):
 
     def frequency__name(self, utc):
         return utc.frequency.name if utc.frequency else "Ad Hoc"
+
+    def utc_name_lower(self, utc):
+        return utc.utc_name
 
     def actions(self, utc):
         template = self.templates['actions']

@@ -32,8 +32,17 @@ def qs_extra_for_utc_name():
          END
          """.format(ct_tl.pk, ct_tlc.pk)
 
+        extraq_lower = """
+         CASE
+            WHEN content_type_id = {0}
+                THEN (SELECT LOWER(name) as utc_name_lower from qa_testlist WHERE object_id = qa_testlist.id )
+            WHEN content_type_id = {1}
+                THEN (SELECT LOWER(name) as utc_name_lower from qa_testlistcycle WHERE object_id = qa_testlistcycle.id)
+         END
+         """.format(ct_tl.pk, ct_tlc.pk)
+
         return {
-            "select": {'utc_name': extraq}
+            "select": {'utc_name': extraq, 'utc_name_lower': extraq_lower },
         }
 
 
