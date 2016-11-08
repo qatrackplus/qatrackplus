@@ -715,7 +715,7 @@ class UnitTestCollectionAdmin(admin.ModelAdmin):
         """
         # qs, use_distinct = super(UnitTestCollectionAdmin, self).get_search_results(request, queryset, search_term)
 
-        queryset &= self.get_queryset(request).extra(**qs_extra_for_utc_name()).extra(where=["(" + qs_extra_for_utc_name()['select']['utc_name'] + ") ILIKE %s"], params=["%{0}%".format(search_term)])
+        queryset &= self.get_queryset(request).extra(**qs_extra_for_utc_name()).extra(where=["(" + qs_extra_for_utc_name()['select']['utc_name_lower'] + ") LIKE %s"], params=["%{0}%".format(search_term.lower())])
 
         #  The following casuses DatabaseError in MSSQL. 'The ORDER BY clause is invalid in views, inline
         #  functions, derivedtables, subqueries, and common table expressions, unless TOP or FOR XML is also specified'
