@@ -1,6 +1,5 @@
 
 function rgbaStringToArray(rgba) {
-	console.log(rgba);
     rgba = rgba.match(/^rgb[a]?\((\d+),\s*(\d+),\s*(\d+)(,\s*(0(\.[0-9][0-9]+?)?|1))?\)$/);
     var a = rgba[5] ? parseFloat(rgba[5]) : 1;
     return [parseInt(rgba[1]), parseInt(rgba[2]), parseInt(rgba[3]), a];
@@ -48,8 +47,6 @@ var lightenDarkenColor = function (col, amt) {
 function apply_data_colour($elem) {
 	var bg_colour = $elem.attr('data-bgcolour');
 	var colour = $elem.attr('data-colour');
-	console.log(bg_colour);
-	console.log(colour);
 	if (bg_colour != null) {
 		$elem.css('background-color', bg_colour);
 		$elem.css('border-color', bg_colour);

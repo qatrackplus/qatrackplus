@@ -752,20 +752,47 @@ $(document).ready(function(){
         minimumResultsForSearch: 10,
         width: '100%'
     });
+    
+    function generate_se_result(res) {
+        if (res.loading || !res.id) { return res.text; }
+        var colour = status_colours_dict[se_statuses[res.id]];
+        var $div = $('<div class="select2-result-repository clearfix" style="min-width: 150px;">' + res.text + '<i class="fa fa-square fa-lg pull-right" style="color: ' + colour + '; margin-top: 7px;"></i></div>');
+        return $div;
+    }
     $('#id_service_event').select2({
-        templateSelection: function(tag, container) {
-            if (tag.id == '')
-                return tag.text;
-            var colour = se_colours_dict[tag.id];
-            var $label = $('<span class="label" style="background-color: ' + colour + '">' + tag.text + '</span>');
-            $label.css('background-color', colour);
-            $label.css('border-color', colour);
-            if (isTooBright(rgbaStringToArray(colour))) {
-                $label.css('color', 'black').children().css('color', 'black');
-            }
-            return $label;
+        ajax: {
+            url: QAURLs.SE_SEARCHER,
+            dataType: 'json',
+            delay: '500',
+            data: function (params) {
+                return {
+                    q: params.term, // search term
+                    page: params.page
+                }
+            },
+            processResults: function (data, params) {
+                var results = [];
+                for (var i in data.colour_ids) {
+                    var se_id = data.colour_ids[i][0],
+                        s_id = data.colour_ids[i][1],
+                        se_srn = data.colour_ids[i][2];
+                    results.push({id: se_id, text: 'id: ' + se_id + ' srn: ' + se_srn});
+                    se_statuses[se_id] = s_id;
+                }
+                params.page = params.page || 1;
+                return {
+                    results: results,
+                    pagination: {
+                        more: (params.page * 30) < data.total_count
+                    }
+                };
+            },
+            cache: true
         },
-        minimumResultsForSearch: 10,
+        escapeMarkup: function (markup) { return markup; },
+        minimumInputLength: 1,
+        templateResult: generate_se_result,
+        templateSelection: generate_se_result,
         width: '100%'
     });
 

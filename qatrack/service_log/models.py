@@ -46,8 +46,9 @@ class UnitServiceArea(models.Model):
     notes = models.TextField(null=True, blank=True)
 
     class Meta:
-        verbose_name_plural = _("Unit Service Area Memberships")
+        verbose_name_plural = _('Unit Service Area Memberships')
         unique_together = ('unit', 'service_area',)
+        ordering = ('unit', 'service_area')
 
     def __str__(self):
         return '<usa(%s::%s)>' % (self.unit.name, self.service_area.name)
@@ -73,8 +74,8 @@ class ServiceEventStatus(models.Model):
             'status will be set to false'
         )
     )
-    is_review_required = models.BooleanField(
-        default=True, help_text=_('Do service events with this status require review?')
+    is_approval_required = models.BooleanField(
+        default=True, help_text=_('Do service events with this status require approval?')
     )
     is_active = models.BooleanField(default=True, help_text=_('Set to false if service event status is no longer used'))
     description = models.TextField(
@@ -83,7 +84,7 @@ class ServiceEventStatus(models.Model):
     colour = models.CharField(default=settings.DEFAULT_COLOURS[0], max_length=22, validators=[validate_color])
 
     class Meta:
-        verbose_name_plural = _("Service Event Statuses")
+        verbose_name_plural = _('Service Event Statuses')
 
     def save(self, *args, **kwargs):
         if self.is_default:
@@ -162,6 +163,9 @@ class ServiceEvent(models.Model):
         verbose_name=_('Lost time'), null=True, blank=True,
         help_text=_('Enter the total clinical time lost for this service event')
     )
+    is_approval_required = models.BooleanField(
+        default=False, help_text=_('Does this service event require approval?'), blank=True
+    )
 
     class Meta:
         get_latest_by = "datetime_service"
@@ -175,10 +179,9 @@ class ServiceEvent(models.Model):
     def __str__(self):
         return 'id: %s%s' % (self.id, ', srn: ' + str(self.srn) if self.srn else '')
 
-    @staticmethod
-    def get_colour_dict():
-        # return json.dumps({se.id: se.service_status.colour for se in ServiceEvent.objects.all()})
-        return {se.id: se.service_status.colour for se in ServiceEvent.objects.all()}
+    # def get_colour_dict():
+    #     # return json.dumps({se.id: se.service_status.colour for se in ServiceEvent.objects.all()})
+    #     return {se.id: se.service_status.colour for se in ServiceEvent.objects.all()}
 
 
 class ThirdParty(models.Model):
@@ -209,11 +212,10 @@ class Hours(models.Model):
         verbose_name_plural = _("Hours")
         unique_together = ('service_event', 'third_party', 'user',)
 
-    # def clean(self):
-    #     print('------- clean Hours in models ----------')
-    #     super(Hours, self).clean()
-    #     if bool(self.third_party) ^ bool(self.user):  # xor thirdparty and user (one and only one must be selected
-    #         raise ValidationError('One of third party or user must be entered')
+        permissions = (
+            ("can_have_hours", "Can have hours"),
+        )
+
     def user_or_thirdparty(self):
         return self.user or self.third_party
 

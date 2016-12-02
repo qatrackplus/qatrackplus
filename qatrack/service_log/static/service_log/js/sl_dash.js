@@ -9,9 +9,13 @@ require(['jquery', 'sl_utils'], function($) {
         $('.timeline-toggle').click(function() {
             $(this).toggleClass('off');
             var t_class = $(this).attr('id').split('_toggle')[0];
-            console.log(t_class);
             $('.' + t_class).slideToggle('fast');
         });
+
+        $('.header-se_new').click(function() {
+            
+        });
+
 
     })
 

@@ -35,6 +35,20 @@
 .max-width-100 {
     max-width: 100px;
 }
+.max-width-75 {
+    max-width: 75px;
+    width: 75px;
+}
+.max-width-50 {
+    max-width: 50px;
+    width: 50px;
+}
+.min-width-200 {
+    min-width: 200px;
+}
+.margin-left-2 {
+    margin-left: 2px;
+}
 .box.box-bordered-default {
     border: 1.5px solid rgb(210, 214, 222);
 }
@@ -47,6 +61,18 @@
 #listable-table-sl_list_all > tbody > tr > td:nth-child(2),
 #listable-table-qaf_list_all > tbody > tr > td:nth-child(2) {
     width: 50px;
+}
+#listable-table-sl_list_all > thead > tr:nth-child(2) > th:nth-child(3) > span > input {
+    min-width: 65px;
+}
+#listable-table-sl_list_all > tbody > tr > td:nth-child(3) {
+    width: 70px;
+}
+#listable-table-sl_list_all > thead > tr:nth-child(2) > th:nth-child(10) > span > input {
+    min-width: 145px;
+}
+#listable-table-sl_list_all > tbody > tr > td:nth-child(10) {
+    width: 150px;
 }
 
 /*QA Status Spans                                 */
@@ -89,4 +115,35 @@ i.timeline-toggle:hover {
 }
 .timeline-toggle.off > i.fa {
     color: white;
+}
+
+.timeline-custom > li {
+    margin-bottom: 0;
+}
+.timeline-custom > li.time-label {
+    margin: 15px 10px 15px 0;
+}
+/*.timeline-custom > li.time-label > span {*/
+    /*border-radius: 0;*/
+/*}*/
+.timeline-custom > li > i.fa {
+    margin-top: 10px;
+}
+.timeline-custom > li > .timeline-item {
+    box-shadow: none;
+    /*background-color: rgba(60,141,188,0.2);*/
+    border-radius: 0;
+    cursor: pointer;
+}
+.timeline-custom > li > .timeline-item:hover {
+    background-color: rgba(60,141,188,0.6);
+}
+.timeline-custom > li > .timeline-item > .time {
+    width: 120px;
+    padding-top: 15px;
+}
+.timeline-custom > li > .timeline-item > h3.timeline-header {
+    padding: 15px;
+    border: 0;
+
 }

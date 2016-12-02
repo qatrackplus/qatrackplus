@@ -1,13 +1,17 @@
 
+import json
+
 from collections import OrderedDict
+from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.conf import settings
 from django.contrib.auth.context_processors import PermWrapper
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse, resolve
+from django.db.models import Q
 from django.forms.utils import timezone
-from django.http import JsonResponse, HttpResponseRedirect
+from django.http import JsonResponse, HttpResponseRedirect, Http404
 from django.template import Context
 from django.template.loader import get_template
 from django.utils.translation import ugettext as _
@@ -23,6 +27,7 @@ from listable.views import (
 from qatrack.service_log import models, forms
 from qatrack.qa import models as qa_models
 from qatrack.qa.views.base import generate_review_status_context
+from qatrack.qa.views.review import UTCInstances
 
 
 def get_time_display(dt):
@@ -80,6 +85,10 @@ def populate_timeline_from_queryset(unsorted_dict, obj, datetime, obj_class, msg
     return unsorted_dict
 
 
+def get_user_name(user):
+    return user.username if not user.first_name or not user.last_name else user.first_name + ' ' + user.last_name
+
+
 class SLDashboard(TemplateView):
 
     template_name = "service_log/sl_dash.html"
@@ -87,20 +96,23 @@ class SLDashboard(TemplateView):
     def get_counts(self):
 
         # TODO: Parts low
-        qs = models.QAFollowup.objects.filter()
+        qaf_qs = models.QAFollowup.objects.filter()
+        default_status = models.ServiceEventStatus.objects.get(is_default=True)
         to_return = {
-            'qa_not_approved': qs.filter(test_list_instance__isnull=False, service_event__service_status__is_review_required=True).count(),
-            'qa_not_complete': qs.filter(test_list_instance__isnull=True).count(),
+            'qa_not_reviewed': qaf_qs.filter(test_list_instance__isnull=False, test_list_instance__all_reviewed=False).count(),
+            'qa_not_complete': qaf_qs.filter(test_list_instance__isnull=True).count(),
             'units_restricted': models.Unit.objects.filter(restricted=True).count(),
             'parts_low': 0,
-            'se_statuses': {}
+            'se_statuses': {},
+            'se_needing_approval': models.ServiceEvent.objects.filter(service_status__in=models.ServiceEventStatus.objects.filter(is_approval_required=True), is_approval_required=True).count(),
+            'se_default': {'status_name': default_status.name, 'id': default_status.id, 'count': models.ServiceEvent.objects.filter(service_status=default_status).count()}
         }
-        qs = models.ServiceEventStatus.objects.filter(is_active=True).order_by('pk')
-        for s in qs:
-            to_return['se_statuses'][s.name] = {
-                'num': models.ServiceEvent.objects.filter(service_status=s).count(),
-                'id': s.id
-            }
+        # qs = models.ServiceEventStatus.objects.filter(is_active=True).order_by('pk')
+        # for s in qs:
+        #     to_return['se_statuses'][s.name] = {
+        #         'num': models.ServiceEvent.objects.filter(service_status=s).count(),
+        #         'id': s.id
+        #     }
         return to_return
 
     def get_timeline(self):
@@ -130,27 +142,27 @@ class SLDashboard(TemplateView):
         unsorted_dict = {}
         for se in se_new:
             datetime = timezone.localtime(se.datetime_created)
-            msg = str(se.user_created_by) + ' created service event ' + str(se.id)
+            msg = get_user_name(se.user_created_by) + ' created service event ' + str(se.id)
             populate_timeline_from_queryset(unsorted_dict, se, datetime, 'se_new', msg=msg)
 
         for se in se_edited:
             datetime = timezone.localtime(se.datetime_modified)
-            msg = str(se.user_modified_by) + ' modified service event ' + str(se.id)
+            msg = get_user_name(se.user_modified_by) + ' modified service event ' + str(se.id)
             populate_timeline_from_queryset(unsorted_dict, se, datetime, 'se_edit', msg=msg)
 
         for se in se_status:
             datetime = timezone.localtime(se.datetime_status_changed)
-            msg = str(se.user_status_changed_by) + ' changed status of service event ' + str(se.id) + ' to '
+            msg = get_user_name(se.user_status_changed_by) + ' changed status of service event ' + str(se.id) + ' to '
             populate_timeline_from_queryset(unsorted_dict, se, datetime, 'se_status', msg=msg)
 
         for qaf in qaf_new:
             datetime = timezone.localtime(qaf.datetime_assigned)
-            msg = str(qaf.user_assigned_by) + ' assigned a new followup (' + qaf.unit_test_collection.tests_object.name + ') for service event ' + str(qaf.service_event.id)
+            msg = get_user_name(qaf.user_assigned_by) + ' assigned a new followup (' + qaf.unit_test_collection.tests_object.name + ') for service event ' + str(qaf.service_event.id)
             populate_timeline_from_queryset(unsorted_dict, qaf, datetime, 'qaf_new', msg=msg)
 
         for qaf in qaf_complete:
             datetime = timezone.localtime(qaf.test_list_instance.created)
-            msg = str(qaf.test_list_instance.created_by) + ' performed a followup (' + qaf.unit_test_collection.tests_object.name + ') for service event ' + str(qaf.service_event.id)
+            msg = get_user_name(qaf.test_list_instance.created_by) + ' performed a followup (' + qaf.unit_test_collection.tests_object.name + ') for service event ' + str(qaf.service_event.id)
             populate_timeline_from_queryset(unsorted_dict, qaf, datetime, 'qaf_complete', msg=msg)
 
         for ud in unsorted_dict:
@@ -189,6 +201,7 @@ class ServiceEventUpdateCreate(SingleObjectTemplateResponseMixin, ModelFormMixin
         return super(ServiceEventUpdateCreate, self).get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
+        print('--- post ---')
         self.object = self.get_object()
         return super(ServiceEventUpdateCreate, self).post(request, *args, **kwargs)
 
@@ -201,13 +214,19 @@ class ServiceEventUpdateCreate(SingleObjectTemplateResponseMixin, ModelFormMixin
         return kwargs
 
     def get_context_data(self, *args, **kwargs):
+        print('--- get context data ---')
         context_data = super(ServiceEventUpdateCreate, self).get_context_data(**kwargs)
-        context_data['service_event_tag_colours'] = models.ServiceEvent.get_colour_dict()
+        if self.request.method == 'POST':
+            context_data['se_statuses'] = {se.id: se.service_status.id for se in models.ServiceEvent.objects.filter(pk__in=self.request.POST.getlist('service_event_related_field'))}
+        elif self.object:
+            context_data['se_statuses'] = {se.id: se.service_status.id for se in self.object.service_event_related.all()}
+        else:
+            context_data['se_statuses'] = {}
         context_data['status_tag_colours'] = models.ServiceEventStatus.get_colour_dict()
-
-        # group_linkers = models.GroupLinker.objects.all()
+        context_data['se_types_approval'] = {st.id: int(st.is_approval_required) for st in models.ServiceType.objects.all()}
 
         if self.request.method == 'POST':
+
             context_data['hours_formset'] = forms.HoursFormset(
                 self.request.POST,
                 instance=self.object,
@@ -242,7 +261,12 @@ class ServiceEventUpdateCreate(SingleObjectTemplateResponseMixin, ModelFormMixin
             return self.render_to_response(context)
 
         service_event = form.save()
-        print('--- ServiceEventUpdateCreate.form_valid ---')
+        service_event_related = form.cleaned_data.get('service_event_related_field')
+        try:
+            sers = models.ServiceEvent.objects.filter(pk__in=service_event_related)
+        except ValueError:
+            sers = []
+        service_event.service_event_related = sers
 
         for g_link in form.g_link_dict:
             if g_link in form.changed_data:
@@ -331,7 +355,7 @@ class CreateServiceEvent(ServiceEventUpdateCreate):
         form.instance.user_created_by = self.request.user
         form.instance.datetime_created = timezone.now()
 
-        if form.cleaned_data['service_status'] is not models.ServiceEventStatus.get_default():
+        if not form.cleaned_data['service_status'].id == models.ServiceEventStatus.get_default().id:
             form.instance.datetime_status_changed = timezone.now()
             form.instance.user_status_changed_by = self.request.user
 
@@ -343,6 +367,9 @@ class UpdateServiceEvent(ServiceEventUpdateCreate):
     def form_valid(self, form):
 
         self.instance = form.save(commit=False)
+
+        print('----------------------------')
+        print(form.changed_data)
 
         if 'service_status' in form.changed_data:
             form.instance.datetime_status_changed = timezone.now()
@@ -367,9 +394,10 @@ class DetailsServiceEvent(DetailView):
 
     def get_context_data(self, **kwargs):
         context_data = super(DetailsServiceEvent, self).get_context_data(**kwargs)
-        context_data['service_event_tag_colours'] = models.ServiceEvent.get_colour_dict()
+        # context_data['service_event_tag_colours'] = models.ServiceEvent.get_colour_dict()
         context_data['hours'] = models.Hours.objects.filter(service_event=self.object)
         context_data['followups'] = models.QAFollowup.objects.filter(service_event=self.object)
+        context_data['request'] = self.request
         return context_data
 
 
@@ -382,6 +410,15 @@ def unit_sa_utc(request):
     utcs_tl_qs = models.UnitTestCollection.objects.filter(unit=unit, content_type=testlist_ct, active=True)
     utcs_tl = sorted([{'id': utc.id, 'name': utc.test_objects_name()} for utc in utcs_tl_qs], key=lambda utc: utc['name'])
     return JsonResponse({'service_areas': service_areas, 'utcs': utcs_tl})
+
+
+def se_searcher(request):
+    se_search = request.GET['q']
+    service_events = models.ServiceEvent.objects\
+        .filter(Q(id__icontains=se_search) | Q(srn__icontains=se_search))\
+        .select_related('service_status')[0:50]\
+        .values_list('id', 'service_status__id', 'srn')
+    return JsonResponse({'colour_ids': list(service_events)})
 
 
 class ServiceEventsBaseList(BaseListableView):
@@ -400,6 +437,7 @@ class ServiceEventsBaseList(BaseListableView):
     fields = (
         'actions',
         'pk',
+        'srn',
         'datetime_service',
         'unit_service_area__unit__name',
         'unit_service_area__service_area__name',
@@ -411,6 +449,7 @@ class ServiceEventsBaseList(BaseListableView):
 
     headers = {
         'pk': _('ID'),
+        'srn': _('SRN'),
         'datetime_service': _('Service Date'),
         'unit_service_area__unit__name': _('Unit'),
         'unit_service_area__service_area__name': _('Service Area'),
@@ -462,6 +501,8 @@ class ServiceEventsBaseList(BaseListableView):
             [key, val] = filt.split('-')
             if key == 'ss':
                 to_return = to_return + ' - Status: ' + models.ServiceEventStatus.objects.get(pk=val).name
+            elif key == 'ar':
+                to_return = to_return + ' - Approval is ' + ((not bool(int(val))) * 'not ') + 'required'
 
         return to_return
 
@@ -492,7 +533,10 @@ class ServiceEventsBaseList(BaseListableView):
                 [key, val] = filt.split('-')
                 if key == 'ss':
                     qs = qs.filter(service_status=val)
-
+                elif key == 'ar':
+                    qs = qs.filter(is_approval_required=bool(int(val)))
+                elif key == 'ss.ar':
+                    qs = qs.filter(service_status__is_approval_required=bool(int(val)))
         return qs
 
     def format_col(self, field, obj):
@@ -549,7 +593,7 @@ class QAFollowupsBaseList(BaseListableView):
         'datetime_assigned': _('Date Assigned'),
         'service_event__unit_service_area__unit__name': _('Unit'),
         'unit_test_collection__tests_object__name': _('Test List'),
-        'test_list_instance_pass_fail': _('Pass/Fail Status'),
+        'test_list_instance_pass_fail': _('Pass/Fail'),
         'test_list_instance_review_status': _('Review Status'),
         'service_event__service_status__name': _('Service Event Status')
     }
@@ -603,10 +647,15 @@ class QAFollowupsBaseList(BaseListableView):
                     to_return += ' - Incomplete'
                 else:
                     to_return += ' - Complete'
+            elif key == 'tli.ar':
+                if bool(int(val)):
+                    to_return += ' - Test List Reviewed'
+                else:
+                    to_return += ' - Test List Not Reviewed'
             elif key == 'ses.irr':
                 to_return += ' - Service Event Status Not: '
                 names = []
-                for s in models.ServiceEventStatus.objects.filter(is_review_required=False):
+                for s in models.ServiceEventStatus.objects.filter(is_approval_required=False):
                     names.append(s.name)
                 to_return += ','.join(names)
 
@@ -641,10 +690,11 @@ class QAFollowupsBaseList(BaseListableView):
                 [key, val] = filt.split('-')
                 if key == 'tli.in':
                     query_kwargs['test_list_instance__isnull'] = bool(int(val))
+                elif key == 'tli.ar':
+                    query_kwargs['test_list_instance__all_reviewed'] = bool(int(val))
                 elif key == 'ses.irr':
-                    query_kwargs['service_event__service_status__is_review_required'] = bool(int(val))
+                    query_kwargs['service_event__service_status__is_approval_required'] = bool(int(val))
 
-            print(query_kwargs)
             qs = qs.filter(**query_kwargs)
 
         return qs
@@ -652,7 +702,7 @@ class QAFollowupsBaseList(BaseListableView):
     def actions(self, qaf):
         template = self.templates['actions']
         mext = reverse('qaf_list_all') + (('?f=' + self.kwarg_filters) if self.kwarg_filters else '')
-        c = Context({'qaf': qaf, 'request': self.request, 'next': mext})
+        c = Context({'qaf': qaf, 'request': self.request, 'next': mext, 'show_se_link': True})
         return template.render(c)
 
     def test_list_instance_pass_fail(self, qaf):
@@ -686,3 +736,24 @@ class QAFollowupsBaseList(BaseListableView):
         c = Context({"service_status": qaf.service_event.service_status, "request": self.request})
         return template.render(c)
 
+
+class TLISelect(UTCInstances):
+
+    qaf = None
+
+    def get_page_title(self):
+        try:
+            utc = models.UnitTestCollection.objects.get(pk=self.kwargs["pk"])
+            return "Select a %s instance" % utc.tests_object.name
+        except:
+            raise Http404
+
+    def actions(self, tli):
+        template = self.templates['actions']
+        c = Context({"instance": tli, "perms": PermWrapper(self.request.user), "select": True, 'f_form': self.kwargs['form']})
+        return template.render(c)
+
+
+def tli_statuses(request):
+    tli = qa_models.TestListInstance.objects.get(pk=request.GET.get('tli_id'))
+    return JsonResponse({'pass_fail': tli.pass_fail_summary(), 'review': tli.review_summary()}, safe=False)

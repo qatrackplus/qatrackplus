@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('units', '0002_029_to_030_first'),
-        ('qa', '0001_initial'),
+        ('qa', '0002_029_to_030_first'),
     ]
 
     operations = [
@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('time', models.DurationField(help_text='The time this person spent on this service event')),
             ],
-            options={'verbose_name_plural': 'Hours'},
+            options={'permissions': (('can_have_hours', 'Can have hours'),), 'verbose_name_plural': 'Hours'},
         ),
         migrations.CreateModel(
             name='ProblemType',
@@ -49,7 +49,6 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('name', models.CharField(help_text='Enter a short name for this service area', unique=True, max_length=32)),
-                ('units', models.ManyToManyField(related_name='service_areas', through='service_log.UnitServiceArea', to='units.Unit'))
             ],
         ),
         migrations.CreateModel(
@@ -68,6 +67,7 @@ class Migration(migrations.Migration):
                 ('duration_lost_time', models.DurationField(help_text='Enter the total clinical time lost for this service event', null=True, verbose_name='Lost time', blank=True)),
                 ('problem_type', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, blank=True, to='service_log.ProblemType', help_text='Select/create a problem type that describes this service event', null=True)),
                 ('service_event_related', models.ManyToManyField(blank=True, help_text='Was there a previous service event that might be related to this event?', related_name='_serviceevent_service_event_related_+', to='service_log.ServiceEvent', verbose_name='Service events related')),
+                ('is_approval_required', models.BooleanField(default=False, help_text='Does this service event require approval?')),
             ],
             options={'default_permissions': (), 'get_latest_by': 'datetime_service'},
         ),
@@ -77,7 +77,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('name', models.CharField(help_text='Enter a short name for this service status', unique=True, max_length=32)),
                 ('is_default', models.BooleanField(default=False, help_text='Is this the default status for all service events? If set to true every other service event status will be set to false')),
-                ('is_review_required', models.BooleanField(default=True, help_text='Do service events with this status require review?')),
+                ('is_approval_required', models.BooleanField(default=True, help_text='Do service events with this status require approval?')),
                 ('is_active', models.BooleanField(default=True, help_text='Set to false if service event status is no longer used')),
                 ('description', models.TextField(help_text='Give a brief description of this service event status', max_length=64, null=True, blank=True)),
                 ('colour', models.CharField(default='rgba(60,141,188,1)', max_length=22, validators=[RegexValidator(re.compile('^rgba\\(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]),([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]),([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]),(0(\\.[0-9][0-9]?)?|1)\\)$', 32), 'Enter a valid color.', 'invalid')]))
@@ -97,8 +97,8 @@ class Migration(migrations.Migration):
             name='ThirdParty',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('first_name', models.CharField(default='Some', help_text="Enter this person's first name", max_length=32)),
-                ('last_name', models.CharField(default='Dude', help_text="Enter this person's last name", max_length=32)),
+                ('first_name', models.CharField(help_text="Enter this person's first name", max_length=32)),
+                ('last_name', models.CharField(help_text="Enter this person's last name", max_length=32)),
                 ('vendor', models.ForeignKey(to='units.Vendor', on_delete=django.db.models.deletion.PROTECT)),
             ],
             options={'verbose_name': 'Third Party', 'verbose_name_plural': 'Third Parties'},
@@ -111,7 +111,7 @@ class Migration(migrations.Migration):
                 ('unit', models.ForeignKey(to='units.Unit', on_delete=django.db.models.deletion.CASCADE)),
                 ('notes', models.TextField(blank=True, null=True)),
             ],
-            options={'verbose_name_plural': 'Unit Service Area Memberships'}
+            options={'verbose_name_plural': 'Unit Service Area Memberships', 'ordering': ('unit', 'service_area')}
         ),
         migrations.CreateModel(
             name='GroupLinker',
@@ -197,6 +197,11 @@ class Migration(migrations.Migration):
             model_name='hours',
             name='user',
             field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, blank=True, to=settings.AUTH_USER_MODEL, null=True),
+        ),
+        migrations.AddField(
+            model_name='servicearea',
+            name='units',
+            field=models.ManyToManyField(related_name='service_areas', through='service_log.UnitServiceArea', to='units.Unit'),
         ),
         migrations.AlterUniqueTogether(
             name='hours',

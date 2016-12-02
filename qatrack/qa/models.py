@@ -1315,6 +1315,9 @@ class TestListInstance(models.Model):
         statuses = [(status, display, [x for x in instances if x.pass_fail == status]) for status, display in PASS_FAIL_CHOICES]
         return [x for x in statuses if len(x[2]) > 0]
 
+    def pass_fail_summary(self):
+        return {status[0]: len(status[2]) for status in self.pass_fail_status()}
+
     def duration(self):
         """return timedelta of time from start to completion"""
         return self.work_completed - self.work_started
@@ -1326,6 +1329,9 @@ class TestListInstance(models.Model):
         status_types = set([x.status for x in queryset])
         statuses = [(status, [x for x in queryset if x.status == status]) for status in status_types]
         return [x for x in statuses if len(x[1]) > 0]
+
+    def review_summary(self, queryset=None):
+        return {status[0].slug: {'num': len(status[1]), 'valid': status[0].valid, 'reqs_approval': status[0].requires_review, 'default': status[0].is_default} for status in self.status(queryset)}
 
     def unreviewed_instances(self):
         return self.testinstance_set.filter(status__requires_review=True)

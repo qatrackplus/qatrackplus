@@ -33,7 +33,7 @@ require.config({
         lodash: siteConfig.STATIC_URL + 'lodash/js/lodash',
         moment: siteConfig.STATIC_URL + 'moment/js/moment.min',
         multiselect: siteConfig.STATIC_URL + 'multiselect/js/bootstrap.multiselect',
-            select2: siteConfig.STATIC_URL + 'select2/js/select2.min',
+        select2: siteConfig.STATIC_URL + 'select2/js/select2.min',
         slimscroll: siteConfig.STATIC_URL + 'slimscroll/js/jquery.slimscroll.min',
 
         // Site wide:
@@ -64,31 +64,31 @@ require.config({
             deps: ['jquery']
         },
         datatables: {
-            // deps: ['jquery'],
+            deps: ['jquery'],
             exports: 'dataTable'
         },
         'datatables.bootstrap': {
-            deps: [/*'jquery', */'datatables'/*, 'bootstrap'*/]
+            deps: ['datatables']
         },
         'datatables.columnFilter': {
-            deps: [/*'jquery', */'datatables']
+            deps: ['datatables']
         },
         'datatables.searchPlugins': {
-            deps: [/*'jquery', */'datatables']
+            deps: ['datatables']
         },
         'datatables.sort': {
-            deps: [/*'jquery', */'datatables']
+            deps: ['datatables']
         },
-        // datepicker: {
-        //     deps: ['jquery', 'bootstrap']
-        // },
+        datepicker: {
+            deps: ['jquery', 'bootstrap']
+        },
         daterangepicker: {
             exports: 'DateRangePicker',
-            deps: [/*'jquery', */'moment']
+            deps: ['jquery', 'moment']
         },
-        // icheck: {
-        //     deps: ['jquery']
-        // },
+        icheck: {
+            deps: ['jquery']
+        },
         jquery: {
             exports: '$'
         },
@@ -106,9 +106,6 @@ require.config({
         },
 
         // Site wide:
-        sidebar: {
-            deps: [/*'jquery', 'admin_lte', 'bootstrap', */'icheck']
-        },
         site_base: {
             deps: ['jquery']
         },
@@ -117,19 +114,8 @@ require.config({
         qa: {
             deps: ['jquery', 'qautils', 'site_base', 'lodash', 'daterangepicker', 'sidebar', 'datatables', 'datatables.columnFilter', 'inputmask', 'select2', 'sl_utils']
         },
-        // qacharts: {
-        //     deps: ['jquery', 'site_base', 'bootstrap', 'amdin_lte', 'json2']
-        // },
-        // qaoverview: {
-        //     deps: ['jquery', 'site_base', 'bootstrap', 'admin_lte']
-        // }
+        
 
-        // unit module:
-
-        // service log module:
-        // sl_dash: {
-        //     deps: ['jquery', 'qautils', 'site_base', 'lodash', 'bootstrap']
-        // },
         sl_utils: {
             deps: ['jquery', 'site_base', 'bootstrap']
         }

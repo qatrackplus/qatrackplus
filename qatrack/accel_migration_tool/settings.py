@@ -1,6 +1,0 @@
-
-
-
-
-
-ACCEL_DB_LOCATION = ''

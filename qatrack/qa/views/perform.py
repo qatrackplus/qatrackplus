@@ -26,7 +26,7 @@ from .. import models, utils, signals
 from .base import BaseEditTestListInstance, TestListInstances, UTCList, logger
 from qatrack.contacts.models import Contact
 from qatrack.units.models import Unit
-from qatrack.service_log.models import QAFollowup, ServiceEvent
+from qatrack.service_log import models as sl_models
 
 from braces.views import JSONResponseMixin, PermissionRequiredMixin
 from functools import reduce
@@ -400,7 +400,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         k = super(PerformQA, self).get_form_kwargs()
         self.set_unit_test_collection()
         k['unit'] = self.unit_test_col.unit
-        k['followup'] = self.request.GET.get('f', False)
+        k['followup'] = self.request.GET.get('qaf', False)
         return k
 
     def set_test_lists(self):
@@ -585,14 +585,14 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         followup_id = form.cleaned_data.get('followup_id', False)
 
         print('-----sevice_event------')
-        followup_id = self.request.GET.get('f', False)
+        followup_id = self.request.GET.get('qaf', False)
         if service_event:
 
             if followup_id:
-                followup = QAFollowup.objects.get(pk=followup_id)
+                followup = sl_models.QAFollowup.objects.get(pk=followup_id)
                 followup.test_list_instance = self.object
             else:
-                followup = QAFollowup(
+                followup = sl_models.QAFollowup(
                     service_event=service_event,
                     unit_test_collection=self.object.unit_test_collection,
                     user_assigned_by=self.request.user,
@@ -614,7 +614,6 @@ class PerformQA(PermissionRequiredMixin, CreateView):
     def get_context_data(self, **kwargs):
         context = super(PerformQA, self).get_context_data(**kwargs)
 
-        print('--- PerformQA.get_context_data ---')
         # context['service_event'] = self.request.GET.get('se', False)
 
         # explicity refresh session expiry to prevent situation where a session
@@ -655,8 +654,18 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         context["unit_test_infos"] = json.dumps(self.template_unit_test_infos())
         context["unit_test_collection"] = self.unit_test_col
         context["contacts"] = list(Contact.objects.all().order_by("name"))
-        context['service_event_tag_colours'] = ServiceEvent.get_colour_dict()
-        print(context['service_event_tag_colours'])
+        print('----d-d----------')
+        print(self.object)
+        print(self.unit_test_col)
+        print(kwargs)
+        print(self.request.GET)
+        qa_followup_id = self.request.GET.get('qaf', None)
+        if qa_followup_id:
+            qa_followup = sl_models.QAFollowup.objects.get(pk=qa_followup_id)
+            context['se_statuses'] = {qa_followup.service_event.id: qa_followup.service_event.service_status.id}
+        else:
+            context['se_statuses'] = {}
+        context['status_tag_colours'] = sl_models.ServiceEventStatus.get_colour_dict()
 
         return context
 

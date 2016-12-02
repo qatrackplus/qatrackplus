@@ -34,7 +34,8 @@
         {% if perms.qa.can_override_date %}
             override_date = true;
         {% endif %}
-        var se_colours_dict = {{ service_event_tag_colours|safe }};
+        var status_colours_dict = {{ status_tag_colours|safe }};
+        var se_statuses = {{ se_statuses|safe }};
     </script>
 {% endblock %}
 

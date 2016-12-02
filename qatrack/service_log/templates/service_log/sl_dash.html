@@ -9,7 +9,7 @@
 {% endblock extra_css %}
 
 {% block require_javascript %}
-    require(['jquery', 'sl_dash'], function($) {
+    require(['jquery', 'sl_dash', 'sidebar'], function($) {
         $('body').removeClass("loading");
     });
 {% endblock require_javascript %}
@@ -38,8 +38,8 @@
                         </div>
                         <div class="row">
                             <div class="col-md-12">
-                                <label class="pull-left">Followups waiting approval</label>
-                                <a href="{% url 'qaf_list_all' %}?f=tli.in-0_ses.irr-1 " class="pull-right btn btn-flat btn-xs btn-primary left-btns">{{ counts.qa_not_approved }}</a>
+                                <label class="pull-left">Unreviewed followups</label>
+                                <a href="{% url 'qaf_list_all' %}?f=tli.in-0_tli.ar-0" class="pull-right btn btn-flat btn-xs btn-primary left-btns">{{ counts.qa_not_reviewed }}</a>
                             </div>
                         </div>
 
@@ -52,18 +52,30 @@
 
                     <div class="box-header">
                         <h3 class="box-title">
-                            Service Event Statuses
+                            Service Events
                         </h3>
                     </div>
                     <div class="box-body">
-                        {% for key, val in counts.se_statuses.items %}
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <label class="pull-left">{{ key }}</label>
-                                    <a href="{% url 'sl_list_all' %}?f=ss-{{ val.id }}" class="pull-right btn btn-flat btn-xs btn-primary left-btns">{{ val.num }}</a>
-                                </div>
+{#                        {% for key, val in counts.se_statuses.items %}#}
+{#                            <div class="row">#}
+{#                                <div class="col-md-12">#}
+{#                                    <label class="pull-left">{{ key }}</label>#}
+{#                                    <a href="{% url 'sl_list_all' %}?f=ss-{{ val.id }}" class="pull-right btn btn-flat btn-xs btn-primary left-btns">{{ val.num }}</a>#}
+{#                                </div>#}
+{#                            </div>#}
+{#                        {% endfor %}#}
+                        <div class="row">
+                            <div class="col-md-12">
+                                <label class="pull-left">{{ counts.se_default.status_name }}</label>
+                                <a href="{% url 'sl_list_all' %}?f=ss-{{ counts.se_default.id }}" class="pull-right btn btn-flat btn-xs btn-primary left-btns">{{ counts.se_default.count }}</a>
                             </div>
-                        {% endfor %}
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <label class="pull-left">Service Events Needing Approval</label>
+                                <a href="{% url 'sl_list_all' %}?f=ar-1_ss.ar-1" class="pull-right btn btn-flat btn-xs btn-primary left-btns">{{ counts.se_needing_approval }}</a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -132,12 +144,12 @@
                     <div class="box-body">
                         <div class="row">
                             <div class="col-md-12">
-                                <ul class="timeline">
+                                <ul class="timeline timeline-custom">
 
                                     {% for key, val in tl_dates.items %}
 
                                         <li class="time-label">
-                                            <span class="bg-aqua-gradient">
+                                            <span class="bg-aqua">
                                                 {{ val.display }}
                                             </span>
                                         </li>
@@ -173,13 +185,16 @@
                                                 {% else %}
                                                     <i class="fa fa-question bg-default"></i>
                                                 {% endif %}
-                                                <div class="timeline-item drop-shadow">
+                                                <div class="timeline-item">
                                                     <span class="time"><i class="fa fa-clock-o"></i> {{ obj.time }}</span>
 
-                                                    <h3 class="timeline-header">
+                                                    <h3 class="timeline-header header-{{ obj.class }}"
+                                                        {% if obj.class == 'qaf_new' or obj.class == 'qaf_complete' %}onclick="window.location='{% url 'sl_details' pk=obj.instance.service_event.id %}'"
+                                                        {% else %}onclick="window.location='{% url 'sl_details' pk=obj.instance.id %}'"
+                                                        {% endif %}>
                                                         <div class="pull-right">
                                                             {% if obj.class == 'se_new' or obj.class == 'se_edit' or obj.class == 'se_status' %}
-                                                                {% include "service_log/table_context_se_actions.html" with se=obj.instance next='/servicelog/' %}
+{#                                                                {% include "service_log/table_context_se_actions.html" with se=obj.instance next='/servicelog/' %}#}
                                                             {% elif obj.class == 'qaf_new' or obj.class == 'qaf_complete' %}
                                                                 {% include "service_log/table_context_qaf_actions.html" with qaf=obj.instance next='/servicelog/' %}
                                                             {% endif %}
@@ -192,7 +207,7 @@
 
                                                     {% if obj.class == 'qaf_complete' %}
                                                         <div class="timeline-body">
-                                                            <span>Pass/Fail Statuses: {% include "qa/pass_fail_status.html" with instance=obj.instance.test_list_instance show_icons=True %}</span>
+                                                            <span>Pass/Fails: {% include "qa/pass_fail_status.html" with instance=obj.instance.test_list_instance show_icons=True %}</span>
                                                             <span class="margin-l-20">Review Statuses: {% include "qa/review_status.html" with instance=obj.instance.test_list_instance show_icons=True statuses=obj.statuses_dict.statuses %}</span>
                                                         </div>
                                                     {% endif %}

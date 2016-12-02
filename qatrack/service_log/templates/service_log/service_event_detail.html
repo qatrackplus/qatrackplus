@@ -17,7 +17,7 @@
 {% endblock extra_js %}
 
 {% block require_javascript %}
-    require(['sl_se_details']);
+    require(['sl_se_details', 'sidebar']);
 {% endblock require_javascript %}
 
 {% block body %}
@@ -197,7 +197,7 @@
                                 <thead>
                                     <tr>
                                         <th style="min-width: 200px;">Test List</th>
-                                        <th>Pass/Fail Status</th>
+                                        <th>Pass/Fail</th>
                                         <th>Review Status</th>
 {#                                        <th>Is Complete</th>#}
 {#                                        <th>Is Approved</th>#}
@@ -219,9 +219,9 @@
                                             <td>{{ f.datetime_assigned }}</td>
                                             <td>
                                                 {% if f.test_list_instance.pk %}
-                                                    <a href="{% url 'review_test_list_instance' pk=f.test_list_instance.pk %}" class="btn btn-xs btn-primary btn-flat">Review</a>
+                                                    <a href="{% url 'review_test_list_instance' pk=f.test_list_instance.pk %}?next={% url 'sl_details' pk=serviceevent.pk %}" class="btn btn-xs btn-default btn-flat">Review</a>
                                                 {% else %}
-                                                    <a href="{% url 'perform_qa' pk=f.unit_test_collection.pk %}?f={{ f.id }}" class="btn btn-xs btn-primary btn-flat">Perform</a>
+                                                    <a href="{% url 'perform_qa' pk=f.unit_test_collection.pk %}?qaf={{ f.id }}&next={% url 'sl_details' pk=serviceevent.pk %}" class="btn btn-xs btn-default btn-flat">Perform</a>
                                                 {% endif %}
                                             </td>
                                         </tr>

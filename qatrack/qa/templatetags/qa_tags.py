@@ -97,8 +97,6 @@ def history_display(history, unit, test_list, test):
 def as_pass_fail_status(test_list_instance, show_label=True):
     template = get_template("qa/pass_fail_status.html")
     statuses_to_exclude = [models.NO_TOL]
-    print('--- filter: as_pass_fail_status ---')
-    print(show_label)
     c = Context({
         "instance": test_list_instance,
         "exclude": statuses_to_exclude,

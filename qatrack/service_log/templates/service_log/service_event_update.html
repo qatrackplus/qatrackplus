@@ -15,13 +15,15 @@
 
 {% block extra_js %}
     <script type="text/javascript">
-        var se_colours_dict = {{ service_event_tag_colours|safe }};
+{#        var se_colours_dict = {{ service_event_tag_colours|safe }};#}
         var status_colours_dict = {{ status_tag_colours|safe }};
+        var se_statuses = {{ se_statuses|safe }};
+        var se_types_approval = {{ se_types_approval|safe }};
     </script>
 {% endblock extra_js %}
 
 {% block require_javascript %}
-    require(['sl_se']);
+    require(['sl_se', 'sidebar']);
 {% endblock require_javascript %}
 
 {% block body %}
@@ -89,7 +91,7 @@
                                             {% if 'autosize' in field.field.widget.attrs.class %}
                                                 <div class="col-sm-12">
                                                     <label for="{{ field.id_for_label }}" class="">{{ field.label }}</label>
-                                                    {{ field|add_class:form.classes }}
+                                                    {{ field }}
                                                     {% for e in field.errors %}
                                                         <div class="col-sm-12 help-block text-center">{{ e }}</div>
                                                     {% endfor %}
@@ -97,7 +99,7 @@
                                             {% else %}
                                                 <label for="{{ field.id_for_label }}" class="col-sm-4">{{ field.label }}</label>
                                                 <div class="col-sm-8">
-                                                    {{ field|add_class:form.classes }}
+                                                    {{ field }}
                                                 </div>
                                                 {% for e in field.errors %}
                                                     <div class="col-sm-12 help-block text-center">{{ e }}</div>
@@ -114,7 +116,7 @@
                                             {% if 'autosize' in field.field.widget.attrs.class %}
                                                 <div class="col-sm-12">
                                                     <label for="{{ field.id_for_label }}" class="{% if field.field.required %} required{% endif %}">{{ field.label }}</label>
-                                                    {{ field|add_class:form.classes }}
+                                                    {{ field }}
                                                     {% for e in field.errors %}
                                                         <div class="col-sm-12 help-block text-center">{{ e }}</div>
                                                     {% endfor %}
@@ -122,7 +124,7 @@
                                             {% else %}
                                                 <label for="{{ field.id_for_label }}" class="col-sm-4{% if field.field.required %} required{% endif %}">{{ field.label }}</label>
                                                 <div class="col-sm-8">
-                                                    {{ field|add_class:form.classes }}
+                                                    {{ field }}
                                                 </div>
                                                 {% for e in field.errors %}
                                                     <div class="col-sm-12 help-block text-center">{{ e }}</div>
@@ -175,8 +177,8 @@
                                             {{ hours_formset.management_form }}
                                             <tr>
                                                 <th>User or Third Party</th>
-                                                <th>Time</th>
-                                                <th>Delete</th>
+                                                <th class="max-width-75">Time</th>
+                                                <th class="max-width-50">Delete</th>
                                             </tr>
                                         </thead>
 
@@ -193,13 +195,13 @@
                                                             {% endfor %}
 
                                                         </td>
-                                                        <td {% if h_form.time.errors %}class="has-error"{% endif %} title="{{ h_form.time.help_text }}">
+                                                        <td class="{% if h_form.time.errors %} has-error{% endif %}" title="{{ h_form.time.help_text }}">
                                                             {{ h_form.time|add_class:form.classes }}
                                                             {% for e in h_form.time.errors %}
                                                                 <div class="help-block">{{ e }}</div>
                                                             {% endfor %}
                                                         </td>
-                                                        <td>
+                                                        <td align="center">
                                                             {% if h_form.instance.pk %}{{ h_form.DELETE }}{% endif %}
                                                         </td>
                                                     </tr>
@@ -261,10 +263,8 @@
                                             {{ followup_formset.management_form }}
                                             <tr>
                                                 <th style="min-width: 200px;">Test List</th>
-                                                <th>Pass/Fail Status</th>
+                                                <th>Pass/Fail</th>
                                                 <th>Review Status</th>
-    {#                                            <th>Is Complete</th>#}
-    {#                                            <th>Is Approved</th>#}
                                                 <th>Assigned By</th>
                                                 <th>Assigned Date</th>
                                                 <th></th>
@@ -275,9 +275,9 @@
                                         <tbody id="followup-tbody">
 
                                             {% for f_form in followup_formset.forms %}
-    {#                                            {% if f_form.instance.pk or not f_form.DELETE.widget.attrs.checked %}#}
                                                 <tr id="{{ f_form.prefix }}">
                                                     {{ f_form.id }}
+                                                    {{ f_form.test_list_instance }}
                                                     <td  class="form-group{% if f_form.unit_test_collection.errors %} has-error{% endif %}">
                                                         {{ f_form.unit_test_collection|add_class:form.classes }}
                                                         {% for e in f_form.unit_test_collection.errors %}
@@ -285,36 +285,34 @@
                                                         {% endfor %}
                                                     </td>
                                                     {% if f_form.instance.pk %}
-                                                        <td>{% if f_form.instance.test_list_instance.pk %}{{ f_form.instance.test_list_instance|as_pass_fail_status:False }}{% else %}----{% endif %}</td>
-                                                        <td>{% if f_form.instance.test_list_instance.pk %}{{ f_form.instance.test_list_instance|as_review_status }}{% else %}----{% endif %}</td>
-    {#                                                    <td>{{ f_form.instance.is_complete }}</td>#}
-    {#                                                    <td>{{ f_form.instance.is_approved }}</td>#}
+                                                        <td id="pass-fail-{{ f_form.prefix }}">{% if f_form.instance.test_list_instance.pk %}{{ f_form.instance.test_list_instance|as_pass_fail_status:False }}{% else %}----{% endif %}</td>
+                                                        <td id="review-{{ f_form.prefix }}">{% if f_form.instance.test_list_instance.pk %}{{ f_form.instance.test_list_instance|as_review_status }}{% else %}----{% endif %}</td>
                                                         <td>{{ f_form.instance.user_assigned_by }}</td>
                                                         <td>{{ f_form.instance.datetime_assigned }}</td>
                                                         <td>
                                                             {% if f_form.instance.test_list_instance.pk %}
-                                                                <a href="{% url 'review_test_list_instance' pk=f_form.instance.test_list_instance.pk %}" class="btn btn-xs btn-default btn-flat">
+                                                                <a href="{% url 'review_test_list_instance' pk=f_form.instance.test_list_instance.pk %}?next={% url 'sl_edit' pk=form.instance.pk %}" class="btn btn-xs btn-default btn-flat">
                                                                     Review
                                                                 </a>
                                                             {% else %}
-                                                                <a href="{% url 'perform_qa' pk=f_form.instance.unit_test_collection.pk %}?f={{ f_form.instance.id }}" class="btn btn-xs btn-primary btn-flat">
+                                                                <a href="{% url 'perform_qa' pk=f_form.instance.unit_test_collection.pk %}?qaf={{ f_form.instance.id }}&next={% url 'sl_edit' pk=form.instance.pk %}" class="btn btn-xs btn-default btn-flat">
                                                                     Perform
+                                                                </a>
+                                                                <a id="select-tli-{{ f_form.prefix }}" class="btn btn-default btn-xs btn-flat select-tli" data-link="{% url 'tli_select' pk=f_form.instance.unit_test_collection.pk form=f_form.prefix%}">
+                                                                    Performed
                                                                 </a>
                                                             {% endif %}
                                                         </td>
-                                                        <td>{{ f_form.DELETE }}</td>
+                                                        <td align="center">{{ f_form.DELETE }}</td>
                                                     {% else %}
                                                         <td></td>
                                                         <td></td>
                                                         <td></td>
-    {#                                                    <td></td>#}
-    {#                                                    <td></td>#}
                                                         <td></td>
                                                         <td></td>
                                                         <td></td>
                                                     {% endif %}
                                                 </tr>
-    {#                                            {% endif %}#}
                                             {% endfor %}
 
                                         </tbody>
@@ -406,6 +404,7 @@
             {% with followup_formset.empty_form as f_form %}
                 <tr id="followup-__prefix__">
                     {{ f_form.id }}
+                    {{ f_form.test_list_instance }}
                     <td  class="form-group">{{ f_form.unit_test_collection }}</td>
                     <td></td>
                     <td></td>

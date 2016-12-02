@@ -53,8 +53,10 @@
                 OPTION_SEP: "&",
                 OVERVIEW_OBJECTS: "{% url "overview_objects" %}",
                 UNIT_SA_UTC: "{% url "unit_sa_utc" %}",
+                SE_SEARCHER: "{% url "se_searcher" %}",
+                TLI_STATUSES: "{% url "tli_statuses" %}",
 
-                options_from_url_hash : function(hash){
+                options_from_url_hash: function(hash){
                     var options = [];
                     if (hash.slice(0, 1) === "#"){
                         hash = hash.slice(1);
@@ -67,17 +69,21 @@
                     return options;
                 },
 
-                unit_test_chart_url : function(unit, test){
+                unit_test_chart_url: function(unit, test){
                     var unit_option = 'unit' + this.OPTION_DELIM + unit.number;
                     var test_option = 'slug' + this.OPTION_DELIM + test.slug;
                     return this.CHARTS_URL + '#' + [unit_option, test_option].join(this.OPTION_SEP);
                 },
-                unit_test_chart_link : function(unit, test, text, title){
+                unit_test_chart_link: function(unit, test, text, title) {
                     var url = this.unit_test_chart_url(unit, test);
-                    if (title === undefined){
+                    if (title === undefined) {
                         title = ["View Data for", unit.name, test.name, "data"].join(" ");
                     }
                     return '<a href="' + url + '" title="' + title + '">' + text + '</a>';
+                },
+                returnYourChoice: function(form, choice){
+                    opener.setSearchResult(form, choice);
+                    window.close();
                 }
             };
 
