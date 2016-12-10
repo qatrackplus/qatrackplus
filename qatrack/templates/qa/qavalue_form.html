@@ -60,6 +60,7 @@
             {% else %}
                  <span class="">{{form.value}}</span>
             {% endif %}
+            {{ form.user_attached }}
         </td>
         <td class="qa-skip"title="{{form.skipped.help_text|safe}}">
             {% if test.skip_required %}{{form.skipped}}{% endif %}

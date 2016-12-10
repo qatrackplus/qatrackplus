@@ -1,6 +1,7 @@
 {% extends "site_base.html" %}
 
 {% load qa_tags %}
+{% load attach_tags %}
 
 {% block extra_css %}
     <link href="{{ STATIC_URL }}qatrack_core/css/tables.css?v={{VERSION}}" rel="stylesheet">
@@ -184,18 +185,23 @@
                                             <input type="hidden" name="testinstance_set-{{forloop.counter0}}-id" value="{{ti.pk}}" id="id_testinstance_set-{{forloop.counter0}}-id">
                                             <td><strong>{{ti.unit_test_info.test.name}}</strong></td>
                                             <td class="review-value">
-                                                <span class="label pass-fail {{ti.pass_fail}}" title="{% if ti.string_value %}{{ti.value_display}}{% else %}{{ti.diff_display}}{% endif %}">
-                                                    {% with ti.pass_fail as status %}
-                                                        {% if ICON_SETTINGS.SHOW_STATUS_ICONS_REVIEW %}
-                                                            {% if status == 'tolerance' %}
-                                                                <i class="pull-left icon-warning-sign"></i>
-                                                            {% elif status == 'action' %}
-                                                                <i class="pull-left icon-minus-sign"></i>
+
+                                                {% if test.is_upload %}
+                                                    {{ti.value_display|safe|truncatechars_html:9}}
+                                                {% else %}
+                                                    <span class="label pass-fail {{ti.pass_fail}}" title="{% if ti.string_value %}{{ti.value_display}}{% else %}{{ti.diff_display}}{% endif %}">
+                                                        {% with ti.pass_fail as status %}
+                                                            {% if ICON_SETTINGS.SHOW_STATUS_ICONS_REVIEW %}
+                                                                {% if status == 'tolerance' %}
+                                                                    <i class="pull-left icon-warning-sign"></i>
+                                                                {% elif status == 'action' %}
+                                                                    <i class="pull-left icon-minus-sign"></i>
+                                                                {% endif %}
                                                             {% endif %}
-                                                        {% endif %}
-                                                    {% endwith %}
-                                                    {{ti.value_display|safe}}
-                                                </span>
+                                                        {% endwith %}
+                                                        {{ti.value_display|safe}}
+                                                    </span>
+                                                {% endif %}
                                             </td>
                                             <td class="review-ref">
                                                 {% reference_tolerance_span ti.unit_test_info.test ti.reference ti.tolerance%}
@@ -233,15 +239,28 @@
                                             <td class="review-selected"><input class="test-selected" type="checkbox" checked="checked"/></td>
                                             {% endif %}
                                         </tr>
-                                            {% if ti.comment %}
-                                                <tr class="qa-comment no-hover">
-                                                    <td colspan="8"  class="">
-                                                        <div class="comment-div callout callout-custom border-info">
-                                                            <div class="pad">{{ ti.comment }}</div>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            {% endif %}
+                                        {% if ti.comment %}
+                                            <tr class="qa-comment no-hover">
+                                                <td colspan="8"  class="">
+                                                    <div class="comment-div callout callout-custom border-info">
+                                                        <div class="pad">{{ ti.comment }}</div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endif %}
+
+                                        {% if ti.attachment_set.exists %}
+                                            <tr class="qa-attach no-hover">
+                                                <td>{{ti.unit_test_info.test.name}} Attachments</td>
+                                                <td colspan="7"  class="">
+                                                    <ul>
+                                                        {% for attach in ti.attachment_set.all %}
+                                                            <li>{{ attach | attachment_link }}</li>
+                                                        {% endfor %}
+                                                    </ul>
+                                                </td>
+                                            </tr>
+                                        {% endif %}
                                         {%endwith%}
                                     {% endfor %}
                                 </tbody>
@@ -266,14 +285,34 @@
                             </div>
                         </div>
 
+
+                        {% if test_list_instance.attachment_set.exists %}
+                            <div id="qa-attachments" class="box-footer">
+                                <h5 class="box-title">
+                                    <i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>
+                                    {{tli.work_completed|date}} {{tli.test_list.name}} Attachments
+                                </h5>
+
+                                <ul>
+                                    {% for attach in test_list_instance.attachment_set.all %}
+                                        <li>{{ attach | attachment_link }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+
                         <div id="qa-images" class="box-footer">
                             {% for ti_form in formset %}
                                 {% with test=ti_form.instance.unit_test_info.test ti=ti_form.instance %}
                                     {% if test.display_image %}
                                         {% if test_list_instance %}
                                             <div id="{{ test }}" class="qa-image-box">
-                                                <strong><p>Image for {{ test }}: </p></strong>
-                                                <img src="{{ ti.image_url }}" class="qa-image">
+                                                <strong><p>Images for {{ test }}: </p></strong>
+                                                {% for attach in ti.attachment_set.all %}
+                                                    {% if attach.is_image %}
+                                                        {{ attach | attachment_img }}
+                                                    {% endif %}
+                                                {% endfor %}
                                             </div>
                                         {% else %}
                                             <div id="{{ test }}"></div>
@@ -439,18 +478,22 @@
                                 <input type="hidden" name="testinstance_set-{{forloop.counter0}}-id" value="{{ti.pk}}" id="id_testinstance_set-{{forloop.counter0}}-id">
                                 <td><strong>{{ti.unit_test_info.test.name}}</strong></td>
                                 <td class="review-value">
-                                    <span class="label pass-fail {{ti.pass_fail}}" title="{% if ti.string_value %}{{ti.value_display}}{% else %}{{ti.diff_display}}{% endif %}">
-                                        {% with ti.pass_fail as status %}
-                                            {% if ICON_SETTINGS.SHOW_STATUS_ICONS_REVIEW %}
-                                                {% if status == 'tolerance' %}
-                                                    <i class="pull-left icon-warning-sign"></i>
-                                                {% elif status == 'action' %}
-                                                    <i class="pull-left icon-minus-sign"></i>
+                                    {% if test.is_upload %}
+                                        {{ti.value_display|safe|truncatechars_html:9}}
+                                    {% else %}
+                                        <span class="label pass-fail {{ti.pass_fail}}" title="{% if ti.string_value %}{{ti.value_display}}{% else %}{{ti.diff_display}}{% endif %}">
+                                            {% with ti.pass_fail as status %}
+                                                {% if ICON_SETTINGS.SHOW_STATUS_ICONS_REVIEW %}
+                                                    {% if status == 'tolerance' %}
+                                                        <i class="pull-left icon-warning-sign"></i>
+                                                    {% elif status == 'action' %}
+                                                        <i class="pull-left icon-minus-sign"></i>
+                                                    {% endif %}
                                                 {% endif %}
-                                            {% endif %}
-                                        {% endwith %}
-                                        {{ti.value_display|safe}}
-                                    </span>
+                                            {% endwith %}
+                                            {{ti.value_display|safe}}
+                                        </span>
+                                    {% endif %}
                                 </td>
                                 <td class="review-ref">
                                     {% reference_tolerance_span ti.unit_test_info.test ti.reference ti.tolerance%}
@@ -497,12 +540,11 @@
 
         </div>
         {% if perms.qa.can_review %}
-        <div class="row-fluid">
-            <div class="span12 actions review-buttons">
+            <div class="row-fluid">
+                <div class="span12 actions review-buttons">
                     <button type="submit" class="btn btn-primary pull-right">Update Test Statuses</button>
+                </div>
             </div>
-
-        </div>
         {% endif %}
     </form>{% endcomment %}
 

@@ -14,16 +14,16 @@ class TestAttachment(TestCase):
         a = Attachment(testlist=tl)
         assert a.owner is tl
 
-    def test_owner_unit(self):
-        unit = qam.Unit()
-        a = Attachment(unit=unit)
-        assert a.owner is unit
+    def test_owner_testinstances(self):
+        ti = qam.TestInstance()
+        a = Attachment(testinstance=ti)
+        assert a.owner is ti
 
     def test_owner_none(self):
         assert Attachment().owner is None
 
     def test_has_owner_yes(self):
-        assert Attachment(unit=qam.Unit(pk=1)).has_owner
+        assert Attachment(testinstance=qam.TestInstance(pk=1)).has_owner
 
     def test_has_owner_no(self):
         assert not Attachment().has_owner
@@ -76,5 +76,3 @@ class TestAttachment(TestCase):
 
         assert rename.call_args[0] == expected_rename_from_to
         assert makedirs.call_args[0] == expected_make_dirs
-
-

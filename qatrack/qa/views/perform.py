@@ -2,9 +2,6 @@ import collections
 import json
 import math
 import os
-import shutil
-import imghdr
-
 
 import dateutil
 import dicom
@@ -12,6 +9,7 @@ import numpy
 import scipy
 from django.conf import settings
 from django.contrib import messages
+from django.core.files.base import File, ContentFile
 from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.forms.models import model_to_dict
@@ -24,6 +22,7 @@ from django.utils.translation import ugettext as _
 from . import forms
 from .. import models, utils, signals
 from .base import BaseEditTestListInstance, TestListInstances, UTCList, logger
+from qatrack.attachments.models import Attachment, get_upload_path
 from qatrack.contacts.models import Contact
 from qatrack.units.models import Unit
 
@@ -49,33 +48,14 @@ def process_procedure(procedure):
     return "\n".join(["from __future__ import division", procedure, "\n"]).replace('\r', '\n')
 
 
-def process_file_upload_form(ti_form, test_list_instance):
-    """
-    Check if test instance form is file upload and move the file out of
-    tmp directory if it is
-    """
+def set_attachment_owners(test_list_instance, attachments):
 
-    upload_to_process = (
-        ti_form.unit_test_info.test.is_upload()
-        and not ti_form.cleaned_data["skipped"]
-        and ti_form.cleaned_data["string_value"].strip()
-    )
-
-    if upload_to_process:
-        fname = ti_form.cleaned_data["string_value"]
-        src = os.path.join(settings.TMP_UPLOAD_ROOT, fname)
-
-        if not os.path.exists(src):
-            # has already been moved (i.e. we are completing an
-            # in progress list or editing an already complete list
-            return
-
-        d = os.path.join(settings.UPLOAD_ROOT, "%s" % test_list_instance.pk)
-        if not os.path.exists(d):
-            os.mkdir(d)
-
-        dest = os.path.join(settings.UPLOAD_ROOT, d, fname)
-        shutil.move(src, dest)
+    tis = test_list_instance.testinstance_set.select_related("unit_test_info")
+    for uti_id, attachment in attachments:
+        for ti in tis:
+            if ti.unit_test_info.pk == uti_id:
+                attachment.testinstance = ti
+                attachment.save()
 
 
 class Upload(JSONResponseMixin, View):
@@ -86,7 +66,7 @@ class Upload(JSONResponseMixin, View):
 
     def post(self, *args, **kwargs):
         """process file, apply calculation procedure and return results"""
-        if self.request.POST.get('filename'):
+        if self.request.POST.get('attachment_id'):
             self.reprocess()
         else:
             self.handle_upload()
@@ -94,25 +74,26 @@ class Upload(JSONResponseMixin, View):
         return self.run_calc()
 
     def reprocess(self):
-        tli = self.request.POST.get("test_list_instance")
-        self.file_name = self.request.POST.get("filename")
+        self.attach_id = self.request.POST.get("attachment_id")
         try:
-            self.upload = open(os.path.join(settings.UPLOAD_ROOT, "%s" % tli, self.file_name), "r+b")
-        except IOError:
-            self.upload = None
+            self.attachment = Attachment.objects.get(pk=self.attach_id)
+        except Attachment.DoesNotExist:
+            self.attachment = None
 
     def run_calc(self):
         self.set_calculation_context()
 
         results = {
-            'temp_file_name': self.file_name,
-            'is_image': self.is_image(),
+            'url': self.attachment.attachment.url,
+            'attachment_id': self.attachment.id,
+            'is_image': self.attachment.is_image,
             'success': False,
             'errors': [],
             "result": None,
+            "user_attached": [],
         }
 
-        if self.upload is None:
+        if self.attachment is None:
             results["errors"] = ["Original file not found. Please re-upload."]
             return self.render_json_response(results)
 
@@ -123,6 +104,7 @@ class Upload(JSONResponseMixin, View):
             key = "result" if "result" in self.calculation_context else test.slug
             results["result"] = self.calculation_context[key]
             results["success"] = True
+            results["user_attached"] = self.user_attached
         except models.Test.DoesNotExist:
             results["errors"].append("Test with that ID does not exist")
         except Exception as e:
@@ -130,39 +112,17 @@ class Upload(JSONResponseMixin, View):
 
         return self.render_json_response(results)
 
-    @staticmethod
-    def get_upload_name(session_id, unit_test_info, name):
-        """construct a unique file name for uploaded file"""
-
-        name = name.rsplit(".", 1)
-        if len(name) == 1:
-            name.append("")
-        name, ext = name
-
-        name_parts = (
-            name,
-            unit_test_info,
-            "%s" % (timezone.now().date(),),
-            session_id[:6],
-        )
-        return "_".join(name_parts) + "." + ext
-
     def handle_upload(self):
         """read incoming file and save tmp file to disk ready for processing"""
 
-        self.file_name = self.get_upload_name(
-            self.request.COOKIES.get('sessionid'),
-            self.request.POST.get("test_id"),
-            self.request.FILES.get("upload").name,
+        comment = "Uploaded %s by %s" % (timezone.now(), self.request.user.username)
+        f = self.request.FILES.get('upload')
+        self.attachment = Attachment.objects.create(
+            attachment=f,
+            label=f.name,
+            comment=comment,
+            created_by=self.request.user
         )
-
-        self.upload = open(os.path.join(settings.TMP_UPLOAD_ROOT, self.file_name), "w+b")
-
-        for chunk in self.request.FILES.get("upload").chunks():
-            self.upload.write(chunk)
-
-        # rewind to beginning of file so it  can be read correctly by calc procedure
-        self.upload.seek(0)
 
     def set_calculation_context(self):
         """set up the environment that the composite test will be calculated in"""
@@ -179,13 +139,60 @@ class Upload(JSONResponseMixin, View):
         tols = self.get_json_data("tols")
 
         self.calculation_context = {
-            "FILE": open(self.upload.name, "r"),
-            "BIN_FILE": self.upload,
+            "FILE": open(self.attachment.attachment.path, "r"),
+            "BIN_FILE": self.attachment.attachment,
             "META": meta_data,
             "REFS": refs,
             "TOLS": tols,
+            "write_file": self.get_write_file_func(),
         }
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
+
+    def get_write_file_func(self):
+
+        self.user_attached = []
+
+        def write(fname, data):
+            fname = os.path.split(fname)[-1]
+            f = ContentFile(data, fname)
+
+            attachment = Attachment(
+                attachment=f,
+                comment=_("Composite created file"),
+                created_by=self.request.user,
+            )
+            attachment.save()
+
+            self.user_attached.append({
+                'attachment_id': attachment.id,
+                'url': attachment.attachment.url,
+                'is_image': attachment.is_image,
+
+            })
+
+        return write
+
+        def write_(fname, data):
+            fname = os.path.split(fname)[-1]
+            fname = get_upload_path(None, fname)
+            fpath = os.path.join(settings.TMP_UPLOAD_ROOT, fname)
+
+            with open(fpath, mode="w+b") as f:
+                if isinstance(data, str):
+                    data = data.encode("UTF-8")
+                f.write(data)
+
+                f = File(fpath, name=fname)
+                attachment = Attachment.objects.create(
+                    attachment=f,
+                    comment=_("Composite created file")
+                )
+                self.user_attached.append({
+                    'attachment_id': attachment.id,
+                    'url': attachment.attachment.url
+                })
+
+        return write
 
     def get_json_data(self, name):
         """return python data from GET json data"""
@@ -199,10 +206,6 @@ class Upload(JSONResponseMixin, View):
             return json.loads(json_string)
         except (KeyError, ValueError):
             return
-
-    def is_image(self):
-        """check if the uploaded file is an image"""
-        return self.upload and imghdr.what(self.upload.name)
 
 
 class CompositeCalculation(JSONResponseMixin, View):
@@ -536,13 +539,17 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         # and save below to get due deate set ocrrectly
         self.object.save()
 
+        self.create_tli_attachments()
+
         to_save = []
+
+        attachments = []
 
         for delta, ti_form in enumerate(formset):
 
-            process_file_upload_form(ti_form, self.object)
-
             now = self.object.created + timezone.timedelta(milliseconds=delta)
+
+            attachments.extend(ti_form.attachments_to_process)
 
             ti = models.TestInstance(
                 value=ti_form.cleaned_data.get("value", None),
@@ -568,6 +575,8 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
         models.TestInstance.objects.bulk_create(to_save)
 
+        set_attachment_owners(self.object, attachments)
+
         # set due date to account for any non default statuses
         self.object.unit_test_collection.set_due_date()
 
@@ -582,6 +591,16 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         messages.success(self.request, _("Successfully submitted %s " % self.object.test_list.name))
 
         return HttpResponseRedirect(self.get_success_url())
+
+    def create_tli_attachments(self):
+        for idx, f in enumerate(self.request.FILES.getlist('tli-attachments')):
+            attachment = Attachment.objects.create(
+                attachment=f,
+                comment = "Uploaded %s by %s" % (timezone.now(), self.request.user.username),
+                label=f.name,
+                testlistinstance=self.object,
+                created_by=self.request.user
+            )
 
     def get_context_data(self, **kwargs):
 
@@ -686,10 +705,14 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
             for ti_form in formset:
 
-                process_file_upload_form(ti_form, self.object)
-
                 ti = ti_form.save(commit=False)
+
                 self.update_test_instance(ti)
+
+                for uti_pk, attachment in ti_form.attachments_to_process:
+                    ti.attachment_set.clear()
+                    attachment.testinstance = ti
+                    attachment.save()
 
             self.object.unit_test_collection.set_due_date()
 

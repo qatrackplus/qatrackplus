@@ -96,6 +96,7 @@ DEFAULT_WARNING_MESSAGE = "Do not treat"
 #  Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
 MEDIA_ROOT = os.path.join(PROJECT_ROOT, "media")
+TMP_UPLOAD_PATH = os.path.join("uploads", "tmp")
 UPLOAD_ROOT = os.path.join(MEDIA_ROOT, "uploads")
 TMP_UPLOAD_ROOT = os.path.join(UPLOAD_ROOT, "tmp")
 for d in (MEDIA_ROOT, UPLOAD_ROOT, TMP_UPLOAD_ROOT):

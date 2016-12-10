@@ -226,7 +226,8 @@ function TestInstance(test_info, row){
     this.initialized = false;
     this.test_info = test_info;
     this.row = $(row);
-    this.inputs = this.row.find("td.qa-value").find("input, textarea, select");
+    this.inputs = this.row.find("td.qa-value").find("input, textarea, select").not("[name$=user_attached]");
+    this.user_attach_input = this.row.find("input[name$=user_attached]")
 
     this.comment = this.row.next();
 
@@ -317,9 +318,9 @@ function TestInstance(test_info, row){
             self.inputs.val(value);
         }else if (tt === QAUtils.UPLOAD){
             if (_.isNull(value)){
-                self.inputs.filter(":hidden").val("");
+                self.inputs.filter(".qa-input:hidden").val("");
             }else{
-                self.inputs.filter(":hidden").val(value["temp_file_name"]);
+                self.inputs.filter(".qa-input:hidden").val(value["attachment_id"]);
                 self.value = value.result;
             }
         }else if (tt === QAUtils.SIMPLE || tt === QAUtils.COMPOSITE){
@@ -328,6 +329,11 @@ function TestInstance(test_info, row){
             }else{
                 self.inputs.val(QAUtils.format_float(value));
             }
+        }
+
+        if (value && value.user_attached && value.user_attached.length > 0){
+            var attach_ids = _.map(value.user_attached, "attachment_id");
+            self.user_attach_input.val(attach_ids.join(","));
         }
 
         this.update_status();
@@ -345,7 +351,7 @@ function TestInstance(test_info, row){
         }else if (tt=== QAUtils.UPLOAD){
             if (editing_tli && !this.initialized){
                 var data = {
-                    filename: self.inputs.val(),
+                    attachment_id: self.inputs.val(),
                     test_id: self.test_info.test.id,
                     test_list_instance: editing_tli,
                     meta: JSON.stringify(get_meta_data()),
@@ -367,7 +373,7 @@ function TestInstance(test_info, row){
                         }else{
                             self.set_value(result);
                             self.status.addClass("btn-success").text("Success");
-                            self.status.attr("title",result['temp_file_name']);
+                            self.status.attr("title",result['url']);
                             $.Topic("valueChanged").publish();
                         }
                     },
@@ -506,13 +512,18 @@ function TestInstance(test_info, row){
                 } else {
                     self.set_value(response_data);
                     self.status.addClass("btn-success").text("Success");
-                    self.status.attr("title", response_data['temp_file_name']);
+                    self.status.attr("title", response_data.url);
 
                     // Display Image if required
                     if (response_data.is_image) {
-                        var image_url = QAURLs.MEDIA_URL + "uploads/tmp/" + response_data['temp_file_name'];
-                        self.display_image(image_url);
+                        self.display_image(response_data.url);
                     }
+
+                    _.each(response_data.user_attached, function(att){
+                        if (att.is_image){
+                            self.display_image(att.url);
+                        }
+                    })
 
                     $.Topic("valueChanged").publish();
                 }
@@ -536,7 +547,7 @@ function TestInstance(test_info, row){
         var html = test_name + img_tag;
         if (self.test_info.test.display_image){
           $("#qa-images").css({"display": "block"});
-          $("#" + id).addClass("qa-image-box").html(html);
+          $("#" + id).addClass("qa-image-box").append(html);
         }
     };
 }

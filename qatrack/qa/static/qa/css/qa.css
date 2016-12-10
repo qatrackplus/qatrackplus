@@ -168,6 +168,24 @@ tr.qa-comment td{
     border-width: 0 !important;
 }
 
+.qa-image {
+    width: 100%;
+    max-width: 1200px;
+    width: auto;
+    height: auto;
+}
+
+.qa-image-box {
+    padding: 5px;
+    margin: 10px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    width: auto;
+    height: auto;
+    display: inline-block;
+    vertical-align: top;
+}
+
 
 /* admin options */
 

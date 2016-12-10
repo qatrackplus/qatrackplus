@@ -2,6 +2,7 @@
 {#{% load staticfiles %}#}
 {% load qa_tags %}
 {% load qatrack_tags %}
+{% load attach_tags %}
 
 {% block head_title %}{% spaceless %}
     {% if test_list_instance %}
@@ -68,7 +69,7 @@
 
 {% block body %}
 
-    <form class="nosubmit form-inline" id="qa-form" method="POST" action="" autocomplete="off">
+    <form class="nosubmit form-inline" id="qa-form" method="POST" action="" autocomplete="off" enctype="multipart/form-data" >
         {% csrf_token %}
         {{ form.errors }}
         <div id="box-contacts" class="row" style="display: none;">
@@ -141,8 +142,9 @@
             </div>
         {% endif %}
 
-        <div id="box-admin" class="row" style="display: {% if perms.qa.can_review and perms.qa.can_review_own_tests or perms.qa.can_override_date %}block{% else %}none{% endif %};">
-            <div class="col-lg-12">
+        <div id="box-admin" class="row" style="">
+            {% if perms.qa.can_review and perms.qa.can_review_own_tests or perms.qa.can_override_date %}
+            <div class="col-lg-8">
                 <div class="box box-primary">
                     <div class="box-header">
                         <h3 class="box-title">
@@ -152,7 +154,7 @@
                     </div>
                     <div class="box-body">
                         <div class="row">
-                            <div class="col-md-4 left-border border-default">
+                            <div class="col-md-6 left-border border-default">
                                 <div class="date input-prepend input-append row" id="work-started" data-date="{% now 'd-m-Y'%}" data-date-format="dd-mm-yyyy">
                                     {% spaceless %}
                                         <label for="id_work_started" class="col-lg-6">
@@ -188,7 +190,7 @@
                                 {% endif %}
                             </div>
 
-                            <div class="col-md-4 left-border border-default">
+                            <div class="col-md-6 left-border border-default">
                                 {% if perms.qa.can_review and perms.qa.can_review_own_tests %}
                                     <div class="input-prepend input-append row" id="status">
                                         <label for="id_status" class="col-lg-6">
@@ -201,12 +203,43 @@
                                 {% endif %}
 
                             </div>
-                            <div class="col-md-4 left-border border-default"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            <div class="col-lg-4">
+                <div class="box box-primary">
+                    <div class="box-header">
+                        <h5 class="box-title">
+                            <i class="fa fa-paperclip" aria-hidden="true"></i>
+                            {{ test_list.name }} Test List Attachments
+                        </h5>
+                    </div>
+                    <div class="box-body">
+                        <div class="row">
+                            <div class="col-md-12 border-default">
+                                <ul>
+                                    {% for attach in test_list.attachment_set.all %}
+                                        <li>{{ attach|attachment_link }}</li>
+                                    {% endfor %}
+
+                                    {% if days %}
+                                        {% with unit_test_collection.tests_object as tlc %}
+                                            {% for attach in tlc.attachment_set.all %}
+                                                <li>{{ attach|attachment_link }}</li>
+                                            {% endfor %}
+                                        {% endwith %}
+                                    {% endif %}
+                                </ul>
+
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
 
         <div id="box-perform" class="row">
             <div class="col-lg-12">
@@ -293,7 +326,11 @@
                                         {% endfor %}
                                     </tbody>
                                 </table>
-
+                                <div class="row pad">
+                                    <div class="col-md-12 callout callout-custom border-primary">
+                                        <input class="file-upload" type="file" name="tli-attachments" multiple/>
+                                    </div>
+                                </div>
                                 <div class="row pad">
                                     <div id="qa-tli-comment" class="col-md-12 callout callout-custom border-primary">
                                         {{form.comment}}

@@ -1,46 +1,62 @@
+import imghdr
 import os
 import os.path
+from uuid import uuid4
 
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
+from django.utils import timezone
 
 import qatrack.qa.models as qam
-from qatrack.units.models import Unit
 
-def get_upload_path(instance, filename):
-    return settings.TMP_UPLOAD_ROOT
+
+def get_upload_path(instance, name):
+    name = name.rsplit(".", 1)
+    if len(name) == 1:
+        name.append("")
+    name, ext = name
+
+    name_parts = (
+        name,
+        "%s" % (timezone.now().date(),),
+        str(uuid4())[:6],
+    )
+
+    filename = "_".join(name_parts) + ("." + ext if ext else "")
+    return os.path.join(settings.TMP_UPLOAD_PATH, filename)
 
 
 class Attachment(models.Model):
 
     attachment = models.FileField(verbose_name=_("Attachment"), upload_to=get_upload_path)
+    label = models.CharField(verbose_name=_("Label"), max_length=255, blank=True)
     comment = models.TextField(verbose_name=_("Comment"), blank=True)
 
-    test = models.ForeignKey(qam.Test, null=True)
-    testlist = models.ForeignKey(qam.TestList, null=True)
-    testlistcycle = models.ForeignKey(qam.TestListCycle, null=True)
-    testinstance = models.ForeignKey(qam.TestInstance, null=True)
-    testlistinstance = models.ForeignKey(qam.TestListInstance, null=True)
-    unit = models.ForeignKey(Unit, null=True)
-    unittestcollection = models.ForeignKey(qam.UnitTestCollection, null=True)
+    test = models.ForeignKey(qam.Test, null=True, blank=True)
+    testlist = models.ForeignKey(qam.TestList, null=True, blank=True)
+    testlistcycle = models.ForeignKey(qam.TestListCycle, null=True, blank=True)
+    testinstance = models.ForeignKey(qam.TestInstance, null=True, blank=True)
+    testlistinstance = models.ForeignKey(qam.TestListInstance, null=True, blank=True)
 
     created = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, editable=False)
 
+    OWNER_MODELS = [
+        "test",
+        "testlist",
+        "testlistcycle",
+        "testinstance",
+        "testlistinstance",
+    ]
+
     @property
     def _possible_owners(self):
 
-        return  [
-            self.test,
-            self.testlist,
-            self.testlistcycle,
-            self.testinstance,
-            self.testlistinstance,
-            self.unit,
-            self.unittestcollection,
-        ]
+        return [getattr(self, a) for a in self.OWNER_MODELS]
+
 
     @property
     def owner(self):
@@ -53,7 +69,8 @@ class Attachment(models.Model):
     @property
     def type(self):
         """Model type of foreign owner e.g. 'testlist' or 'unittestcollection'"""
-        return self.owner._meta.model_name
+        if self.owner is not None:
+            return self.owner._meta.model_name
 
     def move_tmp_file(self, save=True):
         """Move from temp location to permanent location"""
@@ -65,9 +82,8 @@ class Attachment(models.Model):
         name_parts = [
             self.type,
             str(self.owner.pk),
-            self.attachment.name
+            self.attachment.name.replace(settings.TMP_UPLOAD_PATH, "").strip("/"),
         ]
-        new_name = '/'.join(name_parts)
         new_path = os.path.join(settings.UPLOAD_ROOT, *name_parts)
 
         if not os.path.exists(os.path.dirname(new_path)):
@@ -75,6 +91,7 @@ class Attachment(models.Model):
 
         os.rename(start_path, new_path)
 
+        new_name = "uploads/" + '/'.join(name_parts)
         self.attachment.name = new_name
 
         if save:
@@ -107,6 +124,16 @@ class Attachment(models.Model):
 
         if self.can_finalize:
             self.move_tmp_file()
+
+    def clean(self):
+        nowners = sum(1 for o in self._possible_owners if o)
+        if nowners > 1:
+            raise ValidationError(_("An attachment should only have one owner"))
+
+    @property
+    def is_image(self):
+        return imghdr.what(self.attachment) is not None
+
 
     def __str__(self):
         return "Attachment(%s, %s)" % (self.owner or _("No Owner"), self.attachment.name)
