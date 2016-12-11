@@ -597,6 +597,8 @@ function TestListInstance(){
 
     this.submit = $("#submit-qa");
 
+    this.attachInput = $("#tli-attachments");
+
     /***************************************************************/
     //set the intitial values, tolerances & refs for all of our tests
     this.initialize = function(){
@@ -607,6 +609,10 @@ function TestListInstance(){
         self.tests_by_slug = _.zipObject(self.slugs,self.test_instances);
         self.composites = _.filter(self.test_instances,function(ti){return ti.test_info.test.type === QAUtils.COMPOSITE || ti.test_info.test.type === QAUtils.STRING_COMPOSITE;});
         self.composite_ids = _.map(self.composites,function(ti){return ti.test_info.test.id;});
+        self.attachInput.on("change", function(){
+            var fnames = _.map(this.files, "name").join(", ");
+            $("#tli-attachment-names").html(fnames);
+        });
         self.calculate_composites();
     };
 

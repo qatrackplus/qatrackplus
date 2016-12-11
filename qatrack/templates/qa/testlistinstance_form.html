@@ -324,13 +324,27 @@
                                         {% for test_form in formset %}
                                             {% qa_value_form test_form test_list include_history=perms.qa.can_view_history include_ref_tols=perms.qa.can_view_ref_tol test_info=test_form.get_test_info  %}
                                         {% endfor %}
+                                        <tr>
+                                            <td>Attachments</td>
+                                            <td>
+                                                <label class="qa-input btn btn-primary btn-xs btn-flat">
+                                                    Browse <input id="tli-attachments" class="file-upload" type="file" name="tli-attachments" multiple style="display:none"/>
+                                                </label>
+                                            </td>
+
+                                            <td id="tli-attachment-names"
+                                                {% if perms.qa.can_view_ref_tol and perms.qa.can_view_history %}
+                                                    colspan="6"
+                                                {% elif perms.qa.can_view_ref_tol or perms.qa.can_view_history %}
+                                                    colspan="5"
+                                                {% else %}
+                                                    colspan="4"
+                                                {% endif %}
+                                            >
+                                            </td>
+                                        </tr>
                                     </tbody>
                                 </table>
-                                <div class="row pad">
-                                    <div class="col-md-12 callout callout-custom border-primary">
-                                        <input class="file-upload" type="file" name="tli-attachments" multiple/>
-                                    </div>
-                                </div>
                                 <div class="row pad">
                                     <div id="qa-tli-comment" class="col-md-12 callout callout-custom border-primary">
                                         {{form.comment}}
