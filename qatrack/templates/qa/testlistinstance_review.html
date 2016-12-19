@@ -305,18 +305,20 @@
                             {% for ti_form in formset %}
                                 {% with test=ti_form.instance.unit_test_info.test ti=ti_form.instance %}
                                     {% if test.display_image %}
-                                        {% if test_list_instance %}
-                                            <div id="{{ test }}" class="qa-image-box">
-                                                <strong><p>Images for {{ test }}: </p></strong>
+                                        <div class="row">
+                                            <div class="col-sm-12">
+                                                <strong><p>Images for {{ test }} Test: </p></strong>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div id="{{ test.slug }}">
                                                 {% for attach in ti.attachment_set.all %}
                                                     {% if attach.is_image %}
-                                                        {{ attach | attachment_img }}
+                                                        {{ attach | ti_attachment_img }}
                                                     {% endif %}
                                                 {% endfor %}
                                             </div>
-                                        {% else %}
-                                            <div id="{{ test }}"></div>
-                                        {% endif %}
+                                        </div>
                                     {% endif %}
                                 {% endwith %}
                             {% endfor %}

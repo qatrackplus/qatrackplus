@@ -65,6 +65,8 @@ jQuery.Topic = function( id ) {
     return topic;
 };
 
+window.imageTemplate = _.template($("#attach-template").html());
+
 function Test(data){
     _.extend(this,data);
 }
@@ -331,9 +333,24 @@ function TestInstance(test_info, row){
             }
         }
 
-        if (value && value.user_attached && value.user_attached.length > 0){
+        if (value && (value.attachment || (value.user_attached && value.user_attached.length > 0))){
+
             var attach_ids = _.map(value.user_attached, "attachment_id");
             self.user_attach_input.val(attach_ids.join(","));
+
+            self.clear_images();
+
+            // Display Image if required
+            if (value.attachment.is_image) {
+                self.display_image(response_data.attachment);
+            }
+
+            _.each(value.user_attached, function(att){
+                if (att.is_image){
+                    self.display_image(att);
+                }
+            })
+
         }
 
         this.update_status();
@@ -514,17 +531,6 @@ function TestInstance(test_info, row){
                     self.status.addClass("btn-success").text("Success");
                     self.status.attr("title", response_data.url);
 
-                    // Display Image if required
-                    if (response_data.is_image) {
-                        self.display_image(response_data.url);
-                    }
-
-                    _.each(response_data.user_attached, function(att){
-                        if (att.is_image){
-                            self.display_image(att.url);
-                        }
-                    })
-
                     $.Topic("valueChanged").publish();
                 }
             });
@@ -538,18 +544,23 @@ function TestInstance(test_info, row){
 
     //Set initial value
     this.update_value_from_input();
+
     // Display images
-    self.display_image = function(url){
-        var id = self.test_info.test.slug;
+    self.display_image = function(attachment){
         var name = self.test_info.test.name;
-        var test_name = '<strong><p>Test name: '+ name + '</p></strong>';
-        var img_tag =  '<img src="'+ url+ '" class="qa-image">';
-        var html = test_name + img_tag;
+        var html = imageTemplate({a: attachment, test: name});
         if (self.test_info.test.display_image){
           $("#qa-images").css({"display": "block"});
-          $("#" + id).addClass("qa-image-box").append(html);
+          $("#"+self.test_info.test.slug).append(html);
         }
     };
+
+    self.clear_images = function(){
+        if (self.test_info.test.display_image){
+          $("#qa-images").css({"display": ""});
+          $("#" + self.test_info.test.slug).removeClass("qa-image-box").html("");
+        }
+    }
 }
 
 function get_meta_data(){

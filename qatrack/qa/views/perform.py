@@ -7,14 +7,16 @@ import dateutil
 import dicom
 import numpy
 import scipy
+
 from django.conf import settings
 from django.contrib import messages
-from django.core.files.base import File, ContentFile
+from django.core.files.base import ContentFile
 from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.forms.models import model_to_dict
 from django.http import HttpResponseRedirect, Http404
 from django.shortcuts import get_object_or_404
+from django.template.defaultfilters import filesizeformat
 from django.views.generic import View, CreateView, TemplateView
 from django.utils import timezone
 from django.utils.translation import ugettext as _
@@ -22,7 +24,7 @@ from django.utils.translation import ugettext as _
 from . import forms
 from .. import models, utils, signals
 from .base import BaseEditTestListInstance, TestListInstances, UTCList, logger
-from qatrack.attachments.models import Attachment, get_upload_path
+from qatrack.attachments.models import Attachment
 from qatrack.contacts.models import Contact
 from qatrack.units.models import Unit
 
@@ -84,9 +86,8 @@ class Upload(JSONResponseMixin, View):
         self.set_calculation_context()
 
         results = {
-            'url': self.attachment.attachment.url,
             'attachment_id': self.attachment.id,
-            'is_image': self.attachment.is_image,
+            'attachment': self.attachment_info(self.attachment),
             'success': False,
             'errors': [],
             "result": None,
@@ -163,36 +164,18 @@ class Upload(JSONResponseMixin, View):
             )
             attachment.save()
 
-            self.user_attached.append({
-                'attachment_id': attachment.id,
-                'url': attachment.attachment.url,
-                'is_image': attachment.is_image,
-
-            })
+            self.user_attached.append(self.attachment_info(attachment))
 
         return write
 
-        def write_(fname, data):
-            fname = os.path.split(fname)[-1]
-            fname = get_upload_path(None, fname)
-            fpath = os.path.join(settings.TMP_UPLOAD_ROOT, fname)
-
-            with open(fpath, mode="w+b") as f:
-                if isinstance(data, str):
-                    data = data.encode("UTF-8")
-                f.write(data)
-
-                f = File(fpath, name=fname)
-                attachment = Attachment.objects.create(
-                    attachment=f,
-                    comment=_("Composite created file")
-                )
-                self.user_attached.append({
-                    'attachment_id': attachment.id,
-                    'url': attachment.attachment.url
-                })
-
-        return write
+    def attachment_info(self, attachment):
+        return {
+            'attachment_id': attachment.id,
+            'name': os.path.basename(attachment.attachment.name),
+            'size': filesizeformat(attachment.attachment.size),
+            'url': attachment.attachment.url,
+            'is_image': attachment.is_image,
+        }
 
     def get_json_data(self, name):
         """return python data from GET json data"""
@@ -709,8 +692,9 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
                 self.update_test_instance(ti)
 
+                ti.attachment_set.clear()
+
                 for uti_pk, attachment in ti_form.attachments_to_process:
-                    ti.attachment_set.clear()
                     attachment.testinstance = ti
                     attachment.save()
 

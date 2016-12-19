@@ -1,5 +1,6 @@
 {% load qatrack_tags %}
 {% load qa_tags %}
+{% load attach_tags %}
 {% for field in form %}
     {% if field.errors %}
         <tr class="no-hover">
@@ -35,8 +36,8 @@
 
         <td class="qa-category">{{test.category.name}}</td>
         <td class="qa-name qa-showproc">
-            {%if test.procedure or test.description %}
-                <a href="#" class="revealprocedure" title="Show/hide procedure for this test">{{test.name}}</a>
+            {%if test.procedure or test.description or test.attachment_set.exists %}
+                <a href="#" class="revealprocedure" title="Show/hide procedure & attachments for this test">{{test.name}}</a>
             {% else %}
                 {{test.name}}
             {% endif %}
@@ -94,8 +95,8 @@
 </tr>
 
 <tr class="qa-procedure no-hover">
-    <td colspan="8"  class="" >
-        {% if form.unit_test_info.test.procedure or form.unit_test_info.test.description %}
+    <td colspan="8" class="" >
+        {% if form.unit_test_info.test.procedure or form.unit_test_info.test.description  or form.unit_test_info.test.attachment_set.exists %}
             <div class="qa-procedure-text callout callout-custom border-info">
                 {% if form.unit_test_info.test.procedure %}
                     <h6>
@@ -105,13 +106,26 @@
                         </a>
                     </h6>
                 {% endif %}
-{#                {% spaceless %}#}
-                    {% if form.unit_test_info.test.description %}
-                        <div class="pre">{{form.unit_test_info.test.description.strip|safe}}</div>
+                {% if form.unit_test_info.test.description %}
+                    <div class="pre">{{form.unit_test_info.test.description.strip|safe}}</div>
+                {% endif %}
+
+                {% for attach in form.unit_test_info.test.attachment_set.all %}
+                    {% if forloop.first %}
+                        <h6>Attachments</h6>
+                        <ul>
                     {% endif %}
-{#                {% endspaceless%}#}
+
+                    <li>{{ attach|attachment_link }}</li>
+
+                    {% if forloop.last %}
+                        </ul>
+                    {% endif %}
+
+                {% endfor %}
             </div>
         {% endif %}
+
     </td>
 </tr>
 

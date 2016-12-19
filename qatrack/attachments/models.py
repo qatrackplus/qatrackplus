@@ -7,8 +7,9 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
+from django.utils.text import slugify
+from django.utils.translation import ugettext_lazy as _
 
 import qatrack.qa.models as qam
 
@@ -20,13 +21,39 @@ def get_upload_path(instance, name):
     name, ext = name
 
     name_parts = (
-        name,
+        slugify(name),
         "%s" % (timezone.now().date(),),
         str(uuid4())[:6],
     )
 
     filename = "_".join(name_parts) + ("." + ext if ext else "")
     return os.path.join(settings.TMP_UPLOAD_PATH, filename)
+
+
+def move_tmp_file(attach, save=True, force=False, new_name=None):
+    """Move from temp location to permanent location"""
+
+    if attach.finalized and not force:
+        return
+
+    start_path = attach.attachment.path
+    name_parts = [
+        attach.type,
+        str(attach.owner.pk),
+        new_name or os.path.basename(attach.attachment.name),
+    ]
+    new_path = os.path.join(settings.UPLOAD_ROOT, *name_parts)
+
+    if not os.path.exists(os.path.dirname(new_path)):
+        os.makedirs(os.path.dirname(new_path))
+
+    os.rename(start_path, new_path)
+
+    new_name = "uploads/" + '/'.join(name_parts)
+    attach.attachment.name = new_name
+
+    if save:
+        attach.save()
 
 
 class Attachment(models.Model):
@@ -54,9 +81,7 @@ class Attachment(models.Model):
 
     @property
     def _possible_owners(self):
-
         return [getattr(self, a) for a in self.OWNER_MODELS]
-
 
     @property
     def owner(self):
@@ -72,30 +97,10 @@ class Attachment(models.Model):
         if self.owner is not None:
             return self.owner._meta.model_name
 
-    def move_tmp_file(self, save=True):
+    def move_tmp_file(self, save=True, force=False):
         """Move from temp location to permanent location"""
 
-        if self.finalized:
-            return
-
-        start_path = self.attachment.path
-        name_parts = [
-            self.type,
-            str(self.owner.pk),
-            self.attachment.name.replace(settings.TMP_UPLOAD_PATH, "").strip("/"),
-        ]
-        new_path = os.path.join(settings.UPLOAD_ROOT, *name_parts)
-
-        if not os.path.exists(os.path.dirname(new_path)):
-            os.makedirs(os.path.dirname(new_path))
-
-        os.rename(start_path, new_path)
-
-        new_name = "uploads/" + '/'.join(name_parts)
-        self.attachment.name = new_name
-
-        if save:
-            self.save()
+        return move_tmp_file(self, save=save, force=force)
 
     @property
     def has_owner(self):
@@ -134,10 +139,5 @@ class Attachment(models.Model):
     def is_image(self):
         return imghdr.what(self.attachment) is not None
 
-
     def __str__(self):
         return "Attachment(%s, %s)" % (self.owner or _("No Owner"), self.attachment.name)
-
-
-
-

@@ -34,6 +34,29 @@
             override_date = true;
         {% endif %}
     </script>
+
+    <script id="attach-template" type="text/template">
+        <div class="col-sm-4">
+            <div class="row">
+                <div class="col-sm-4">
+                    <a target="_blank" href="<%= a.url %>">
+                        <img class="img-responsive" src="<%= a.url %>" alt="<%= a.name %>"/>
+                    </a>
+                </div>
+                <div class="col-sm-8">
+                    <dl>
+                        <dt>File</dt>
+                        <dd>
+                            <a target="_blank" href="<%= a.url %>"><%= a.name %></a>
+                        </dd>
+
+                        <dt>Size</dt>
+                        <dd><%= a.size %></dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </script>
 {% endblock %}
 
 {% block require_javascript %}
@@ -369,24 +392,23 @@
                                     </div>
                                 </div>
 
-{#                                 Code for displaying images under the test list#}
+
                                 <div id="qa-images">
                                     {% for test_form in formset %}
                                         {% with test=test_form.get_test_info.test ti=test_form.instance %}
                                             {% if test.display_image %}
-                                                {% if test_list_instance %}
-                                                    <div id="{{ test.slug }}" class="qa-image-box">
-                                                        <strong><p>Image for {{ test }}: </p></strong>
-                                                        <img src="{{ ti.image_url }}" class="qa-image">
+                                                <div class="row">
+                                                    <div class="col-sm-12">
+                                                        <strong><p>Images for {{ test }} Test: </p></strong>
                                                     </div>
-                                                {% else %}
+                                                </div>
+                                                <div class="row">
                                                     <div id="{{ test.slug }}"></div>
-                                                {% endif %}
+                                                </div>
                                             {% endif %}
                                         {% endwith %}
                                     {% endfor %}
                                 </div>
-
                             </div>
                         </div>
                     </div>

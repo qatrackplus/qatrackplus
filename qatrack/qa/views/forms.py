@@ -125,7 +125,7 @@ class TestInstanceWidgetsMixin(object):
         if upload:
             to_process.append((uti_pk, Attachment.objects.get(pk=sv)))
 
-        user_attached = [x for x in self.cleaned_data["user_attached"].split(",") if x]
+        user_attached = [x for x in self.cleaned_data.get("user_attached", "").split(",") if x]
         for aid in user_attached:
             to_process.append((uti_pk, Attachment.objects.get(pk=aid)))
 
@@ -197,9 +197,11 @@ class CreateTestInstanceFormSet(UserFormsetMixin, BaseTestInstanceFormSet):
 
 class UpdateTestInstanceForm(TestInstanceWidgetsMixin, forms.ModelForm):
 
+    user_attached = forms.CharField(widget=forms.HiddenInput, required=False)
+
     class Meta:
         model = models.TestInstance
-        fields = ("value", "string_value", "skipped", "comment",)
+        fields = ("value", "string_value", "skipped", "comment", "user_attached",)
 
     def __init__(self, *args, **kwargs):
 
