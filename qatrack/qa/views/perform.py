@@ -1,4 +1,5 @@
 import collections
+import io
 import json
 import math
 import os
@@ -27,6 +28,7 @@ from .base import BaseEditTestListInstance, TestListInstances, UTCList, logger
 from qatrack.attachments.models import Attachment
 from qatrack.contacts.models import Contact
 from qatrack.units.models import Unit
+from qatrack.qa.utils import to_bytes, imsave
 
 from braces.views import JSONResponseMixin, PermissionRequiredMixin
 from functools import reduce
@@ -153,8 +155,12 @@ class Upload(JSONResponseMixin, View):
 
         self.user_attached = []
 
-        def write(fname, data):
-            fname = os.path.split(fname)[-1]
+        def write(fname, obj):
+            fname = os.path.basename(fname)
+            data = imsave(obj, fname)
+            if data is None:
+                data = to_bytes(obj, fname)
+
             f = ContentFile(data, fname)
 
             attachment = Attachment(

@@ -1644,8 +1644,3 @@ class TestPaperForms(TestCase):
         pf.set_utc_all_lists(utcs)
         self.assertEqual(utcs[0].all_lists[0].utis[0].reference, ref1)
         self.assertEqual(utcs[1].all_lists[0].utis[0].reference, ref2)
-
-
-if __name__ == "__main__":
-    setup_test_environment()
-    unittest.main()
