@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 
 import os
 
+from django.conf import settings
 from django.core.files.base import File
 from django.db import migrations
 
@@ -12,16 +13,15 @@ from qatrack.qa.models import UPLOAD
 
 
 def uploads_to_attachments(apps, schema_editor):
+    """Convert all old style file uploads to Attachment models"""
 
-    from django.conf import settings
 
     TestInstance = apps.get_model("qa", "TestInstance")
     Attachment = apps.get_model("attachments", "Attachment")
 
     tis = TestInstance.objects.filter(
         unit_test_info__test__type=UPLOAD,
-        string_value__isnull=False,
-        test_list_instance__test_list__name="tmp"
+        string_value__isnull=False
     ).exclude(
         string_value=""
     )
@@ -42,12 +42,16 @@ def uploads_to_attachments(apps, schema_editor):
                 testinstance=ti
             )
 
+            # add attributes required to move temp file
             attachment.can_finalize = True
             attachment.finalized = False
             attachment.type = "testinstance"
             attachment.owner = ti
             attachment.attachment.save(fname, f)
+
+            # use old file name to avoid duplicate dates/unique ids in filename
             move_tmp_file(attachment, save=True, force=True, new_name=fname)
+
             TestInstance.objects.filter(pk=ti.pk).update(
                 string_value=attachment.pk
             )
