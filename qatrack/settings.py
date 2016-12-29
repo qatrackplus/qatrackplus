@@ -3,6 +3,9 @@ import django.conf.global_settings as DEFAULT_SETTINGS
 import os
 import sys
 
+import matplotlib
+matplotlib.use("Agg")
+
 
 # -----------------------------------------------------------------------------
 DEBUG = False

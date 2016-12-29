@@ -1,4 +1,3 @@
-
 from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin import widgets, options
@@ -600,6 +599,18 @@ class TestAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, admin.ModelAdmin):
             settings.STATIC_URL + "js/admin_description_editor.js",
             settings.STATIC_URL + "ace/ace.js",
         )
+
+    def save_model(self, request, obj, form, change):
+        if 'calculation_procedure' in form.changed_data:
+            cp = obj.calculation_procedure or ""
+            if "pyplot" in cp or "pylab" in cp:
+                warning = (
+                    "Instead of using pyplot or pylab, it is recommended that you use "
+                    "the object oriented interface to matplotlib."
+                )
+                messages.add_message(request, messages.WARNING, warning)
+
+        super(TestAdmin, self).save_model(request, obj, form, change)
 
 
 def unit_name(obj):

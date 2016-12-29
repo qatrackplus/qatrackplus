@@ -303,7 +303,7 @@ function TestInstance(test_info, row){
         $.Topic("qaUpdated").publish();
     });
 
-    this.set_value = function(value){
+    this.set_value = function(value, user_attached){
         //set value manually and update inputs accordingly
         var tt = self.test_info.test.type;
 
@@ -333,19 +333,27 @@ function TestInstance(test_info, row){
             }
         }
 
-        if (value && (value.attachment || (value.user_attached && value.user_attached.length > 0))){
+        var uploadAttached =  value && value.attachment;
+        var uploadUserAttached = value && (value.user_attached && value.user_attached.length > 0);
+        var compUserAttached = user_attached && user_attached.length > 0;
+        var uattachs = [];
+        if (uploadAttached){
+            uattachs = uattachs.concat(value.attachment);
+        }
+        if (uploadUserAttached){
+            uattachs = uattachs.concat(value.user_attached);
+        }
+        if (compUserAttached){
+            uattachs = uattachs.concat(user_attached);
+        }
+        if (uattachs.length > 0){
 
-            var attach_ids = _.map(value.user_attached, "attachment_id");
+            var attach_ids = _.map(uattachs, "attachment_id");
             self.user_attach_input.val(attach_ids.join(","));
 
             self.clear_images();
 
-            // Display Image if required
-            if (value.attachment.is_image) {
-                self.display_image(response_data.attachment);
-            }
-
-            _.each(value.user_attached, function(att){
+            _.each(uattachs, function(att){
                 if (att.is_image){
                     self.display_image(att);
                 }
@@ -365,7 +373,7 @@ function TestInstance(test_info, row){
         }else if (tt === QAUtils.MULTIPLE_CHOICE){
             var value = $.trim(self.inputs.find(":selected").text());
             self.value = value !== "" ? value : null;
-        }else if (tt=== QAUtils.UPLOAD){
+        }else if (tt === QAUtils.UPLOAD){
             if (editing_tli && !this.initialized){
                 var data = {
                     attachment_id: self.inputs.val(),
@@ -662,7 +670,7 @@ function TestListInstance(){
                 _.each(data.results,function(result, name){
                     var ti = self.tests_by_slug[name];
                     if (!ti.skipped){
-                        ti.set_value(result.value);
+                        ti.set_value(result.value, result.user_attached);
                     }
                 });
             }

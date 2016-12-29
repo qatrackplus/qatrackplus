@@ -48,13 +48,10 @@
                     <div class="col-xs-6">{{form.value.0}}</div>
                     <div class="col-xs-6">{{form.value.1}}</div>
                 </div>
-{#                <span class="pull-left">{{form.value.0}}</span>#}
-{#                <span class="pull-right">{{form.value.1}}</span>#}
             {% elif test.is_upload %}
                 <span class="upload-button">
                     {{form.string_value}}
                     <a id="upload-button-{{ test.id }}" type="button" class="qa-input btn btn-primary btn-sm btn-flat">Upload</a>
-{#                    <input class="file-upload" type="file" />#}
                 </span>
             {% elif test.is_string_type %}
                  <span class="">{{form.string_value}}</span>

@@ -477,6 +477,9 @@ class Test(models.Model):
     def is_string_composite(self):
         return self.type == STRING_COMPOSITE
 
+    def can_attach(self):
+        return self.type in (STRING_COMPOSITE, COMPOSITE, UPLOAD)
+
     def is_upload(self):
         """Return whether or not this is a boolean test"""
         return self.type == UPLOAD

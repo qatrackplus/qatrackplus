@@ -114,16 +114,17 @@ class TestInstanceWidgetsMixin(object):
 
         uti_pk = self.unit_test_info.pk
 
-        sv = self.cleaned_data["string_value"].strip()
+        #sv = self.cleaned_data["string_value"].strip()
 
-        upload = (
-            self.unit_test_info.test.is_upload()
-            and not self.cleaned_data["skipped"]
-            and sv
-        )
+        #upload = (
+        #    self.unit_test_info.test.is_upload()
+        #    and not self.cleaned_data["skipped"]
+        #    and sv
+        #)
 
-        if upload:
-            to_process.append((uti_pk, Attachment.objects.get(pk=sv)))
+        #if upload:
+        #    import ipdb; ipdb.set_trace()
+        #    to_process.append((uti_pk, Attachment.objects.get(pk=sv)))
 
         user_attached = [x for x in self.cleaned_data.get("user_attached", "").split(",") if x]
         for aid in user_attached:

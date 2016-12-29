@@ -1,11 +1,12 @@
 import collections
-import io
 import json
 import math
 import os
 
 import dateutil
 import dicom
+import matplotlib
+import matplotlib.pyplot as plt
 import numpy
 import scipy
 
@@ -26,18 +27,19 @@ from . import forms
 from .. import models, utils, signals
 from .base import BaseEditTestListInstance, TestListInstances, UTCList, logger
 from qatrack.attachments.models import Attachment
+from qatrack.attachments.utils import to_bytes, imsave
 from qatrack.contacts.models import Contact
 from qatrack.units.models import Unit
-from qatrack.qa.utils import to_bytes, imsave
 
 from braces.views import JSONResponseMixin, PermissionRequiredMixin
 from functools import reduce
 
 DEFAULT_CALCULATION_CONTEXT = {
-    "math": math,
-    "scipy": scipy,
-    "numpy": numpy,
     "dicom": dicom,
+    "math": math,
+    "numpy": numpy,
+    "matplotlib": matplotlib,
+    "scipy": scipy,
 }
 
 
@@ -62,7 +64,62 @@ def set_attachment_owners(test_list_instance, attachments):
                 attachment.save()
 
 
-class Upload(JSONResponseMixin, View):
+class AttachmentMixin(object):
+
+    def get_write_file_func(self):
+
+        self.user_attached = []
+
+        def write(fname, obj):
+            fname = os.path.basename(fname)
+            data = imsave(obj, fname)
+            if data is None:
+                data = to_bytes(obj, fname)
+
+            f = ContentFile(data, fname)
+
+            attachment = Attachment(
+                attachment=f,
+                comment=_("Composite created file"),
+                created_by=self.request.user,
+            )
+            attachment.save()
+
+            self.user_attached.append(self.attachment_info(attachment))
+
+        return write
+
+    def attachment_info(self, attachment):
+        return {
+            'attachment_id': attachment.id,
+            'name': os.path.basename(attachment.attachment.name),
+            'size': filesizeformat(attachment.attachment.size),
+            'url': attachment.attachment.url,
+            'is_image': attachment.is_image,
+        }
+
+    def set_calculation_context(self):
+
+        return {
+            "write_file": self.get_write_file_func(),
+        }
+
+    def post(self, *args, **kwargs):
+        """
+        At the end of any view which may use mpl.pyplot to generate a plot
+        we need to clean the figure, to attempt to  prevent any crosstalk
+        between plots.
+
+        Generally people should use the OO interface to MPL rather than
+        pyplot, because pyplot is not threadsafe.
+        """
+        resp = super(AttachmentMixin, self).post(*args, **kwargs)
+        plt.clf()
+        return resp
+
+
+
+class Upload(JSONResponseMixin, AttachmentMixin, View):
     """View for handling AJAX upload requests when performing QA"""
 
     # use html for IE8's sake :(
@@ -85,6 +142,7 @@ class Upload(JSONResponseMixin, View):
             self.attachment = None
 
     def run_calc(self):
+
         self.set_calculation_context()
 
         results = {
@@ -130,6 +188,8 @@ class Upload(JSONResponseMixin, View):
     def set_calculation_context(self):
         """set up the environment that the composite test will be calculated in"""
 
+        self.calculation_context = super(Upload, self).set_calculation_context()
+
         meta_data = self.get_json_data("meta")
 
         for d in ("work_completed", "work_started",):
@@ -141,47 +201,14 @@ class Upload(JSONResponseMixin, View):
         refs = self.get_json_data("refs")
         tols = self.get_json_data("tols")
 
-        self.calculation_context = {
+        self.calculation_context.update({
             "FILE": open(self.attachment.attachment.path, "r"),
             "BIN_FILE": self.attachment.attachment,
             "META": meta_data,
             "REFS": refs,
             "TOLS": tols,
-            "write_file": self.get_write_file_func(),
-        }
+        })
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
-
-    def get_write_file_func(self):
-
-        self.user_attached = []
-
-        def write(fname, obj):
-            fname = os.path.basename(fname)
-            data = imsave(obj, fname)
-            if data is None:
-                data = to_bytes(obj, fname)
-
-            f = ContentFile(data, fname)
-
-            attachment = Attachment(
-                attachment=f,
-                comment=_("Composite created file"),
-                created_by=self.request.user,
-            )
-            attachment.save()
-
-            self.user_attached.append(self.attachment_info(attachment))
-
-        return write
-
-    def attachment_info(self, attachment):
-        return {
-            'attachment_id': attachment.id,
-            'name': os.path.basename(attachment.attachment.name),
-            'size': filesizeformat(attachment.attachment.size),
-            'url': attachment.attachment.url,
-            'is_image': attachment.is_image,
-        }
 
     def get_json_data(self, name):
         """return python data from GET json data"""
@@ -197,7 +224,7 @@ class Upload(JSONResponseMixin, View):
             return
 
 
-class CompositeCalculation(JSONResponseMixin, View):
+class CompositeCalculation(JSONResponseMixin, AttachmentMixin, View):
     """validate all qa tests in the request for the :model:`TestList` with id test_list_id"""
 
     def get_json_data(self, name):
@@ -220,7 +247,7 @@ class CompositeCalculation(JSONResponseMixin, View):
             return self.render_json_response({"success": False, "errors": ["No Valid Composite ID's"]})
 
         self.set_calculation_context()
-        if not self.calculation_context:
+        if not self.calculation_context or list(self.calculation_context.keys()) == ["write_file"]:
             return self.render_json_response({"success": False, "errors": ["Invalid QA Values"]})
 
         self.set_dependencies()
@@ -240,13 +267,19 @@ class CompositeCalculation(JSONResponseMixin, View):
                 key = "result" if "result" in self.calculation_context else slug
                 result = self.calculation_context[key]
 
-                results[slug] = {'value': result, 'error': None}
+                results[slug] = {
+                    'value': result,
+                    'error': None,
+                    'user_attached': list(self.user_attached),
+                }
                 self.calculation_context[slug] = result
             except Exception:
-                results[slug] = {'value': None, 'error': "Invalid Test"}
+                results[slug] = {'value': None, 'error': "Invalid Test", 'user_attached': []}
             finally:
+                # clean up calculation context for next test
                 if "result" in self.calculation_context:
                     del self.calculation_context["result"]
+                del self.user_attached[:]
 
         return self.render_json_response({"success": True, "errors": [], "results": results})
 
@@ -268,6 +301,8 @@ class CompositeCalculation(JSONResponseMixin, View):
     def set_calculation_context(self):
         """set up the environment that the composite test will be calculated in"""
 
+        self.calculation_context = super(CompositeCalculation, self).set_calculation_context()
+
         values = self.get_json_data("qavalues")
         meta_data = self.get_json_data("meta")
 
@@ -278,17 +313,16 @@ class CompositeCalculation(JSONResponseMixin, View):
                 pass
 
         if values is None:
-            self.calculation_context = {}
             return
 
         refs = self.get_json_data("refs")
         tols = self.get_json_data("tols")
 
-        self.calculation_context = {
+        self.calculation_context.update({
             "META": meta_data,
             "REFS": refs,
             "TOLS": tols,
-        }
+        })
 
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
 

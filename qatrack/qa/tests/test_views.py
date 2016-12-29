@@ -520,7 +520,8 @@ class TestComposite(TestCase):
             "results": {
                 "testc": {
                     "value": 3.0,
-                    "error": None
+                    "error": None,
+                    "user_attached": [],
                 }
             },
             "success": True
@@ -564,7 +565,9 @@ class TestComposite(TestCase):
             "success": True,
             'results': {
                 'testc': {
-                    'error': 'Invalid Test', 'value': None
+                    'error': 'Invalid Test',
+                    'value': None,
+                    "user_attached": [],
                 }
             },
         }
@@ -635,9 +638,10 @@ class TestComposite(TestCase):
                 "testc": {
                     "value": None,
                     "error": "Invalid Test",
+                    "user_attached": [],
                 }
             },
-            "success": True
+            "success": True,
         }
         self.assertDictEqual(values, expected)
 
@@ -674,7 +678,8 @@ class TestComposite(TestCase):
                 },
                 'testc': {
                     'error': None,
-                    'value': 3.0
+                    'value': 3.0,
+                    "user_attached": [],
                 }
             },
 
@@ -1144,7 +1149,7 @@ result = json.load(FILE)
     def test_upload_fname_exists(self):
         response = self.client.post(self.url, {"test_id": self.test.pk, "upload": self.test_file, "meta": "{}"})
         data = json.loads(response.content.decode("UTF-8"))
-        self.assertTrue(os.path.exists(os.path.join(settings.TMP_UPLOAD_ROOT)), data["temp_file_name"])
+        self.assertTrue(os.path.exists(os.path.join(settings.TMP_UPLOAD_ROOT)), data['attachment']["name"])
 
     def test_invalid_test_id(self):
         response = self.client.post(self.url, {"test_id": 200, "upload": self.test_file, "meta": "{}"})
