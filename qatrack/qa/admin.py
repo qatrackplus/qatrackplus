@@ -584,6 +584,7 @@ class TestListMembershipFilter(admin.SimpleListFilter):
 
 
 class TestAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, admin.ModelAdmin):
+
     inlines = [get_attachment_inline("test")]
     list_display = ["name", "slug", "category", "type"]
     list_filter = ["category", "type", TestListMembershipFilter, "testlistmembership__test_list"]
@@ -605,10 +606,16 @@ class TestAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, admin.ModelAdmin):
             cp = obj.calculation_procedure or ""
             if "pyplot" in cp or "pylab" in cp:
                 warning = (
-                    "Instead of using pyplot or pylab, it is recommended that you use "
+                    "Warning: Instead of using pyplot or pylab, it is recommended that you use "
                     "the object oriented interface to matplotlib."
                 )
                 messages.add_message(request, messages.WARNING, warning)
+
+        if obj.procedure:
+            if not obj.procedure.startswith("http"):
+                warning = "Warning: test procedure links should usually begin with http:// or https://"
+                messages.add_message(request, messages.WARNING, warning)
+
 
         super(TestAdmin, self).save_model(request, obj, form, change)
 
