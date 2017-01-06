@@ -189,7 +189,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
                     error: function (e, data) {
                         console.log('ErROr');
                     }
-                });
+                }); 
             }
             else {
                 $service_areas.prop('disabled', true).find('option:not(:first)').remove();

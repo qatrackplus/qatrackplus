@@ -194,7 +194,7 @@ function TestInfo(data){
 
     };
 
-    this.check_dispatch = {}
+    this.check_dispatch = {};
     this.check_dispatch[QAUtils.BOOLEAN]=this.check_bool;
     this.check_dispatch[QAUtils.MULTIPLE_CHOICE]=this.check_multi;
     this.check_dispatch[QAUtils.CONSTANT]=this.check_numerical;

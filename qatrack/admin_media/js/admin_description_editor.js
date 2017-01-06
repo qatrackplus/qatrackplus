@@ -1,7 +1,8 @@
 $(document).ready(function() {
 
     var isNotIE78 = jQuery.support.leadingWhitespace;
-    var element = $("#id_description");
+    var element = $("#id_description"),
+        js_element = $('#id_javascript');
     if (isNotIE78 && element.length > 0){
         // IE7-8 explode with Ace editor <sigh>
         var description = element.hide();
@@ -18,8 +19,8 @@ $(document).ready(function() {
 
         descriptionEditor.setValue(description.val());
         descriptionSession.setMode( "ace/mode/html");
-        descriptionSession.setTabSize(2)
-        descriptionSession.setUseSoftTabs(true)
+        descriptionSession.setTabSize(2);
+        descriptionSession.setUseSoftTabs(true);
         descriptionEditor.on('blur', function(){
             description.val(descriptionEditor.getValue());
         });
@@ -28,5 +29,25 @@ $(document).ready(function() {
             preview.html(descriptionEditor.getValue());
         });
         descriptionEditor.resize();
+
+        var javascript = js_element.hide();
+        javascript.after(
+            '<div style="height: 100px;" id="javascript-editor" class="colM aligned vLargeTextField"></div>'
+        );
+        var javascriptEditor = ace.edit("javascript-editor");
+        var javascriptSession = javascriptEditor.getSession();
+
+        javascriptEditor.setValue(javascript.val());
+        javascriptSession.setMode( "ace/mode/javascript");
+        javascriptSession.setTabSize(2);
+        javascriptSession.setUseSoftTabs(true);
+        javascriptEditor.on('blur', function(){
+            javascript.val(javascriptEditor.getValue());
+        });
+
+        // javascriptEditor.on('change', function(){
+        //     preview.html(javascriptEditor.getValue());
+        // });
+        javascriptEditor.resize();
     }
 });

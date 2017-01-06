@@ -1,0 +1,30 @@
+div.daterangepicker.dropdown-menu button {
+    border-radius: 0;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+    border-width: 1px;
+}
+div.daterangepicker.dropdown-menu li {
+    background-color: #f4f4f4;
+    color: #444;
+    border-color: #ddd;
+    border-radius: 0;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+    border-width: 1px;
+}
+div.daterangepicker.dropdown-menu li.active {
+    background-color: #3c8dbc;
+    border-color: #367fa9;
+    color: #fff;
+}
+div.daterangepicker.dropdown-menu li.active:hover {
+    background-color: #367fa9;
+    border-color: #204d74;
+}
+div.daterangepicker.dropdown-menu li:hover {
+    background-color: #e7e7e7;
+    border-color: #adadad;
+}

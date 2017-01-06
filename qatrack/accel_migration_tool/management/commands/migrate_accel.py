@@ -467,7 +467,7 @@ class Command(BaseCommand):
                         continue
                     qa_service_area = sl_models.ServiceArea.objects.get(id=service_area_id)
 
-                    updating_cursor.execute(
+                    self.updating_cursor.execute(
                         """
                         UPDATE service_types
                         SET service_area = ?
@@ -771,7 +771,7 @@ class Command(BaseCommand):
                 break
 
             try:
-                if sl_models.ServiceEvent.objects.filter(srn=row.srn).exists():
+                if sl_models.ServiceEvent.objects.filter(id=row.srn).exists():
                     continue
 
                 user_created_row = self.updating_cursor.execute('select winlogon, third_party, PASSWORD from employees where employee_id = ?', row.employee_id).fetchone()
@@ -826,7 +826,7 @@ class Command(BaseCommand):
                     datetime_service=datetime_service,
                     datetime_modified=datetime_modified,
                     datetime_status_changed=datetime_status_changed,
-                    srn=row.srn,
+                    # srn=row.srn,
                     safety_precautions=row.safety_precautions,
                     problem_description=row.problem,
                     work_description=row.work_done,
@@ -840,6 +840,26 @@ class Command(BaseCommand):
                     user_status_changed_by=status_changed_by,
                     is_approval_required=is_approval_required
                 )
+                service_event.save()
+                self.updating_cursor.execute('update service set service_event_id = ? where srn = ?', str(service_event.id), str(row.srn))
+
+                # Search through problem in service event and create related events from description.
+                if amt_settings.FIND_RELATED_IN_PROBLEM and amt_settings.RELATED_EVENT_REGEX.search(row.problem) is not None:
+                    srn = amt_settings.RELATED_EVENT_REGEX.search(row.problem).groups(0)[1]
+                    try:
+                        rel_id = self.updating_cursor.execute('select service_event_id from service where srn = ?', srn).fetchone().service_event_id
+                        related_event = sl_models.ServiceEvent.objects.get(id=rel_id)
+                        service_event.service_event_related = [related_event]
+
+                        new_problem = re.sub(str(srn), str(related_event.id), row.problem)
+                        service_event.problem_description = new_problem
+
+                        print('---\tFound related service event. Changed srn: ' + str(srn) + ' to id: ' + str(rel_id))
+                    except AttributeError:
+                        print('---\tCould not find service event srn: ' + str(srn) + ' in Accel db. Skipping related event creation.')
+                    except ObjectDoesNotExist:
+                        print('---\tCould not find service event id: ' + str(rel_id) + ' in QaTrack db. Skipping related event creation.')
+
                 service_event.save()
 
                 if row.physicist_reported and row.physicist_reported.strip() != '':
@@ -917,11 +937,14 @@ class Command(BaseCommand):
             if not row.hours_id:
 
                 try:
-
                     try:
-                        service_event = sl_models.ServiceEvent.objects.get(srn=row.srn)
+                        service_event_id = self.updating_cursor.execute('select service_event_id from service where srn = ?', str(row.srn)).fetchone().service_event_id
+                        service_event = sl_models.ServiceEvent.objects.get(id=service_event_id)
                     except ObjectDoesNotExist:
-                        print('---\tServce with srn ' + str(row.srn) + ' not found')
+                        print('---\tServce with id ' + str(service_event_id) + ' not found in QaTrack db.')
+                        continue
+                    except AttributeError:
+                        print('---\tService with srn ' + str(row.srn) + ' not found in Accel db.')
                         continue
 
                     employee_row = self.updating_cursor.execute('select winlogon, third_party from employees where employee_id = ?', row.employee).fetchone()

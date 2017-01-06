@@ -78,7 +78,7 @@ class ServiceEventAdminForm(ModelForm):
 
         fields = [
             'datetime_service', 'unit_service_area', 'service_type', 'service_status',
-            'problem_description', 'problem_type', 'service_event_related', 'srn', 'work_description',
+            'problem_description', 'problem_type', 'service_event_related', 'work_description',
             'safety_precautions', 'duration_service_time', 'duration_lost_time'
         ]
 

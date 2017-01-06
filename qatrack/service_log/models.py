@@ -147,7 +147,6 @@ class ServiceEvent(models.Model):
     )
     datetime_modified = models.DateTimeField(null=True, blank=True)
 
-    srn = models.IntegerField(null=True, blank=True)  # TODO: Char field?
     safety_precautions = models.TextField(
         null=True, blank=True, help_text=_('Were any special safety precautions taken?')
     )
@@ -170,14 +169,13 @@ class ServiceEvent(models.Model):
     class Meta:
         get_latest_by = "datetime_service"
         default_permissions = ()
-    #     TODO:
-    #     permissions = (
-    #         ("can_view_overview", "Can view program overview"),
-    #         ("can_review_non_visible_tli", "Can view tli and utc not visible to user's groups")
-    #     )
+
+        permissions = (
+            ("can_approve_service_event", "Can Approve Service Event"),
+        )
 
     def __str__(self):
-        return 'id: %s%s' % (self.id, ', srn: ' + str(self.srn) if self.srn else '')
+        return 'id: %s' % self.id
 
     # def get_colour_dict():
     #     # return json.dumps({se.id: se.service_status.colour for se in ServiceEvent.objects.all()})
@@ -198,6 +196,9 @@ class ThirdParty(models.Model):
 
     def __str__(self):
         return self.last_name + ', ' + self.first_name + ' (' + self.vendor.name + ')'
+
+    def get_full_name(self):
+        return self.first_name + ' ' + self.last_name + ' (' + self.vendor.name + ')'
 
 
 class Hours(models.Model):

@@ -59,7 +59,6 @@ class Migration(migrations.Migration):
                 ('datetime_created', models.DateTimeField()),
                 ('datetime_service', models.DateTimeField(help_text='Date and time this event took place', verbose_name='Date and time')),
                 ('datetime_modified', models.DateTimeField(null=True, blank=True)),
-                ('srn', models.IntegerField(null=True, blank=True)),
                 ('safety_precautions', models.TextField(help_text='Were any special safety precautions taken?', null=True, blank=True)),
                 ('problem_description', models.TextField(help_text='Describe the problem leading to this service event')),
                 ('work_description', models.TextField(help_text='Describe the work done during this service event', null=True, blank=True)),
@@ -69,7 +68,7 @@ class Migration(migrations.Migration):
                 ('service_event_related', models.ManyToManyField(blank=True, help_text='Was there a previous service event that might be related to this event?', related_name='_serviceevent_service_event_related_+', to='service_log.ServiceEvent', verbose_name='Service events related')),
                 ('is_approval_required', models.BooleanField(default=False, help_text='Does this service event require approval?')),
             ],
-            options={'default_permissions': (), 'get_latest_by': 'datetime_service'},
+            options={'default_permissions': (), 'get_latest_by': 'datetime_service', 'permissions': (('can_approve_service_event', 'Can Approve Service Event'),)},
         ),
         migrations.CreateModel(
             name='ServiceEventStatus',

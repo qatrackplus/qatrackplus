@@ -30,6 +30,8 @@
             <link href="{{ STATIC_URL }}adminlte/css/admin-lte.css?v={{ VERSION }}" rel="stylesheet">
 {#            <link href="{{ STATIC_URL }}adminlte/css/skins/skin-blue.min.css?v={{ VERSION }}" rel="stylesheet">#}
             <link href="{{ STATIC_URL }}adminlte/css/skins/skin-black-dark.css?v={{ VERSION }}" rel="stylesheet">
+            <link href="{{ STATIC_URL }}qatrack_core/css/custom-adminlte.css?v={{ VERSION }}" rel="stylesheet">
+            <link href="{{ STATIC_URL }}qatrack_core/css/custom-fontawesome.css?v={{ VERSION }}" rel="stylesheet">
             <link href="{{ STATIC_URL }}qatrack_core/css/base.css?v={{VERSION}}" rel="stylesheet">
             {% block extra_css %}{% endblock extra_css %}
         {% endblock style_base %}
@@ -358,7 +360,7 @@
             <div class="content-wrapper">
                 <div class="content-header">
                 {% for message in messages %}
-                    <div class="alert fade in {% if message.tags %} alert-{{ message.tags }}{% endif %}">
+                    <div class="alert fade in{% if message.tags %} alert-{{ message.tags }}{% endif %}">
                         <a class="close" href="#" data-dismiss="alert">&times;</a>
                         {{ message }}
                     </div>

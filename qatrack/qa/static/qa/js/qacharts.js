@@ -1,3 +1,4 @@
+
 require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], function ($, _, d3, moment) {
 
     var waiting_timeout = null;
@@ -513,7 +514,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
             .attr("transform", "translate(0," + height2 + ")")
             .call(xAxis2);
 
-        // plot at the bottom
+        // plot at the bottom   
         var context_path = context.append('g')
                 .attr('class', 'context-path-group')
             .selectAll('.context-path')

@@ -8,6 +8,32 @@ from django.core.validators import RegexValidator
 from django.db import migrations, models
 import django.utils.timezone
 
+script_regex = re.compile(r'(<script[\sa-zA-Z0-9"\';-_=/]*>([\s\S]+?)</script>)')
+
+
+def migrate_script_tags_to_javascript(apps, schema_editor):
+
+    TestList = apps.get_model('qa', 'TestList')
+    TestListCycle = apps.get_model('qa', 'TestListCycle')
+
+    for tl in TestList.objects.all():
+
+        if tl.description and script_regex.search(tl.description) is not None:
+            js = script_regex.search(tl.description).groups(0)[1]
+            js_tags = script_regex.search(tl.description).groups(0)[0]
+            tl.javascript = js
+            tl.description = tl.description.replace(js_tags, '')
+            tl.save()
+
+    for tlc in TestListCycle.objects.all():
+
+        if tlc.description and script_regex.search(tlc.description) is not None:
+            js = script_regex.search(tlc.description).groups(0)[1]
+            js_tags = script_regex.search(tlc.description).groups(0)[0]
+            tlc.javascript = js
+            tlc.description = tlc.description.replace(js_tags, '')
+            tlc.save()
+
 
 class Migration(migrations.Migration):
 
@@ -81,4 +107,15 @@ class Migration(migrations.Migration):
             name='colour',
             field=models.CharField(default='rgba(60,141,188,1)', max_length=22, validators=[RegexValidator(re.compile('^rgba\\(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]),([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]),([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]),(0(\\.[0-9][0-9]?)?|1)\\)$', 32), 'Enter a valid color.', 'invalid')]),
         ),
+        migrations.AddField(
+            model_name='testlist',
+            name='javascript',
+            field=models.TextField(blank=True, help_text='Any extra javascript to run when loading perform page', null=True),
+        ),
+        migrations.AddField(
+            model_name='testlistcycle',
+            name='javascript',
+            field=models.TextField(blank=True, help_text='Any extra javascript to run when loading perform page', null=True),
+        ),
+        migrations.RunPython(migrate_script_tags_to_javascript),
     ]

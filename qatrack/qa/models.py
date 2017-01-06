@@ -757,6 +757,7 @@ class TestCollectionInterface(models.Model):
     name = models.CharField(max_length=255, db_index=True)
     slug = models.SlugField(unique=True, help_text=_("A short unique name for use in the URL of this list"), db_index=True)
     description = models.TextField(help_text=_("A concise description of this test checklist. (You may use HTML markup)"), null=True, blank=True)
+    javascript = models.TextField(help_text=_('Any extra javascript to run when loading perform page'), null=True, blank=True)
 
     assigned_to = GenericRelation(
         "UnitTestCollection",

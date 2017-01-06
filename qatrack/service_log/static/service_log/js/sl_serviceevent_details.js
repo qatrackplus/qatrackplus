@@ -1,4 +1,4 @@
-require(['jquery', 'sl_utils'], function ($) {
+require(['jquery', 'autosize', 'sl_utils'], function ($, autosize) {
     
     $(document).ready(function() {
 
@@ -27,6 +27,8 @@ require(['jquery', 'sl_utils'], function ($) {
             );
 
         });
+        
+        autosize($('textarea.autosize'));
     });
     
 });

@@ -2,8 +2,7 @@
 import json
 
 from collections import OrderedDict
-from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.conf import settings
+from braces.views import LoginRequiredMixin
 from django.contrib.auth.context_processors import PermWrapper
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
@@ -15,7 +14,7 @@ from django.http import JsonResponse, HttpResponseRedirect, Http404
 from django.template import Context
 from django.template.loader import get_template
 from django.utils.translation import ugettext as _
-from django.views.generic import TemplateView, CreateView, UpdateView, DetailView
+from django.views.generic import TemplateView, DetailView
 from django.views.generic.detail import SingleObjectTemplateResponseMixin
 from django.views.generic.edit import ModelFormMixin, ProcessFormView
 
@@ -180,7 +179,7 @@ class SLDashboard(TemplateView):
         return context
 
 
-class ServiceEventUpdateCreate(SingleObjectTemplateResponseMixin, ModelFormMixin, ProcessFormView):
+class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, ModelFormMixin, ProcessFormView):
     """
     CreateView and UpdateView functionality combined
     """
@@ -189,6 +188,10 @@ class ServiceEventUpdateCreate(SingleObjectTemplateResponseMixin, ModelFormMixin
     # form_class = AuthorForm
     template_name = 'service_log/service_event_update.html'
     form_class = forms.ServiceEventForm
+
+    def dispatch(self, request, *args, **kwargs):
+        self.user = request.user
+        return super(ServiceEventUpdateCreate, self).dispatch(request, *args, **kwargs)
 
     def get_object(self, queryset=None):
         try:
@@ -211,6 +214,7 @@ class ServiceEventUpdateCreate(SingleObjectTemplateResponseMixin, ModelFormMixin
         kwargs = super(ServiceEventUpdateCreate, self).get_form_kwargs()
         # group_linkers = models.GroupLinker.objects.all()
         kwargs['group_linkers'] = models.GroupLinker.objects.all()
+        kwargs['user'] = self.user
         return kwargs
 
     def get_context_data(self, *args, **kwargs):
@@ -368,9 +372,6 @@ class UpdateServiceEvent(ServiceEventUpdateCreate):
 
         self.instance = form.save(commit=False)
 
-        print('----------------------------')
-        print(form.changed_data)
-
         if 'service_status' in form.changed_data:
             form.instance.datetime_status_changed = timezone.now()
             form.instance.user_status_changed_by = self.request.user
@@ -398,6 +399,7 @@ class DetailsServiceEvent(DetailView):
         context_data['hours'] = models.Hours.objects.filter(service_event=self.object)
         context_data['followups'] = models.QAFollowup.objects.filter(service_event=self.object)
         context_data['request'] = self.request
+        context_data['g_links'] = models.GroupLinkerInstance.objects.filter(service_event=self.object)
         return context_data
 
 
@@ -415,9 +417,9 @@ def unit_sa_utc(request):
 def se_searcher(request):
     se_search = request.GET['q']
     service_events = models.ServiceEvent.objects\
-        .filter(Q(id__icontains=se_search) | Q(srn__icontains=se_search))\
+        .filter(id__icontains=se_search)\
         .select_related('service_status')[0:50]\
-        .values_list('id', 'service_status__id', 'srn')
+        .values_list('id', 'service_status__id')
     return JsonResponse({'colour_ids': list(service_events)})
 
 
@@ -437,24 +439,22 @@ class ServiceEventsBaseList(BaseListableView):
     fields = (
         'actions',
         'pk',
-        'srn',
         'datetime_service',
         'unit_service_area__unit__name',
         'unit_service_area__service_area__name',
         'service_type__name',
-        'problem_type__name',
+        # 'problem_type__name',
         'problem_description',
         'service_status__name'
     )
 
     headers = {
         'pk': _('ID'),
-        'srn': _('SRN'),
         'datetime_service': _('Service Date'),
         'unit_service_area__unit__name': _('Unit'),
         'unit_service_area__service_area__name': _('Service Area'),
         'service_type__name': _('Service Type'),
-        'problem_type__name': _('Problem Type'),
+        # 'problem_type__name': _('Problem Type'),
         'service_status__name': _('Service Status'),
     }
 
@@ -463,7 +463,7 @@ class ServiceEventsBaseList(BaseListableView):
         'unit_service_area__unit__name': SELECT_MULTI,
         'unit_service_area__service_area__name': SELECT_MULTI,
         'service_type__name': SELECT_MULTI,
-        'problem_type__name': SELECT_MULTI,
+        # 'problem_type__name': SELECT_MULTI,
         'service_status__name': SELECT_MULTI
     }
 
@@ -554,8 +554,8 @@ class ServiceEventsBaseList(BaseListableView):
         c = Context({'datetime': se.datetime_service})
         return template.render(c)
 
-    def problem_type__name(self, se):
-        return se.problem_type.name if se.problem_type else ""
+    # def problem_type__name(self, se):
+    #     return se.problem_type.name if se.problem_type else ""
 
     def service_status__name(self, se):
         template = self.templates['service_status__name']

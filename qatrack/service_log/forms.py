@@ -2,7 +2,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from django.conf import settings
-from django.contrib.auth.models import User, Permission
+from django.contrib.auth.models import User, Permission, Group
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Field, ObjectDoesNotExist, Q
 from django.forms.widgets import DateTimeInput
@@ -239,7 +239,7 @@ class ServiceEventForm(BetterModelForm):
                 'fields': ['datetime_service', 'unit_field', 'service_area_field', 'service_type', 'is_approval_required', 'service_status', 'problem_description'],
             }),
             ('optional_fields', {
-                'fields': ['problem_type', 'service_event_related_field', 'srn', 'work_description', 'safety_precautions'],
+                'fields': ['problem_type', 'service_event_related_field', 'work_description', 'safety_precautions'],
             }),
             ('time_fields', {
                 'fields': ['duration_service_time', 'duration_lost_time'],
@@ -248,6 +248,7 @@ class ServiceEventForm(BetterModelForm):
 
     def __init__(self, *args, **kwargs):
         self.group_linkers = kwargs.pop('group_linkers', [])
+        self.user = kwargs.pop('user', None)
         super(ServiceEventForm, self).__init__(*args, **kwargs)
 
         is_new = self.instance.id is None
@@ -294,6 +295,9 @@ class ServiceEventForm(BetterModelForm):
                 else:
                     self.fields['service_area_field'].widget.attrs.update({'disabled': True})
 
+            if not self.user.has_perm('service_log.can_approve_service_event'):
+                self.fields['service_status'].queryset = models.ServiceEventStatus.objects.filter(is_approval_required=True)
+
             # some data wasn't attempted to be submitted already
             if not is_bound:
                 self.initial['service_status'] = models.ServiceEventStatus.get_default()
@@ -315,11 +319,13 @@ class ServiceEventForm(BetterModelForm):
             self.fields['service_area_field'].queryset = models.ServiceArea.objects.filter(units=unit)
             self.initial['problem_type'] = self.instance.problem_type
 
-            print(self.instance.service_type.is_approval_required)
-            print(self.instance.service_type)
             if self.instance.service_type.is_approval_required:
-                print('*********')
                 self.fields['is_approval_required'].widget.attrs.update({'disabled': True})
+
+            if not self.user.has_perm('service_log.can_approve_service_event'):
+                self.fields['service_status'].queryset = models.ServiceEventStatus.objects.filter(
+                    Q(is_approval_required=True) | Q(pk=self.instance.service_status.id)
+                ).distinct()
 
         for f in ['safety_precautions', 'problem_description', 'work_description']:
             self.fields[f].widget.attrs.update({'rows': 3, 'class': 'autosize'})

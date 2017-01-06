@@ -118,11 +118,11 @@
                                     <dl>
                                         {% if serviceevent.work_description %}
                                             <dt>Work description:</dt>
-                                            <dd>{{ serviceevent.work_description }}</dd>
+                                            <dd><textarea class="autosize" style="width: 100%; resize: none;" readonly="readonly">{{ serviceevent.work_description }}</textarea></dd>
                                         {% endif %}
                                         {% if serviceevent.safety_precautions %}
                                             <dt>Safety precautions:</dt>
-                                            <dd>{{ serviceevent.safety_precautions }}</dd>
+                                            <dd><textarea class="autosize" style="width: 100%; resize: none;" readonly="readonly">{{ serviceevent.safety_precautions }}</textarea></dd>
                                         {% endif %}
                                     </dl>
                                 </div>
@@ -164,7 +164,7 @@
 
                                     {% for h in hours %}
                                         <tr>
-                                            <td>{{ h.user_or_thirdparty }}</td>
+                                            <td>{% if h.user_or_thirdparty.get_full_name %}{{ h.user_or_thirdparty.get_full_name }}{% else %} {{ h.user_or_thirdparty.username }}{% endif %}</td>
                                             <td>{{ h.time }}</td>
                                         </tr>
                                     {% endfor %}
@@ -190,6 +190,18 @@
                     </h3>
                 </div>
                 <div class="box-body">
+
+                    <div class="row">
+                        <div id="g-link-fields" class="col-md-8">
+                            <dl class="dl-horizontal">
+                                {% for gli in g_links %}
+                                    <dt>{{ gli.group_linker.name }}:</dt>
+                                    <dd>{% if gli.user.get_full_name %}{{gli.user.get_full_name}}{% else %} {{gli.user.username}}{% endif %}</dd>
+                                {% endfor %}
+                            </dl>
+                        </div>
+                    </div>
+
                     <div class="row">
                         <div class="col-md-12">
                             <table class="table table-striped table-hover table-condensed table-valign-middle">

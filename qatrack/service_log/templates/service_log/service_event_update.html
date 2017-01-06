@@ -8,6 +8,7 @@
 {% block extra_css %}
     {{ block.super }}
     <link href="{{ STATIC_URL }}daterangepicker/css/daterangepicker.css?v={{ VERSION }}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}qatrack_core/css/custom-daterangepicker.css?v={{ VERSION }}" rel="stylesheet">
     <link href="{{ STATIC_URL }}select2/css/select2.min.css?v={{ VERSION }}" rel="stylesheet">
     <link href="{{ STATIC_URL }}qatrack_core/css/tables.css?v={{ VERSION }}" rel="stylesheet">
     <link href="{{ STATIC_URL }}qatrack_core/css/custom-select2.css?v={{ VERSION }}" rel="stylesheet">
@@ -229,7 +230,7 @@
                         <div class="box-header">
                             <h3 class="box-title">
                                 <i class="fa fa-pencil-square-o fa-fw" aria-hidden="true"></i>
-                                QA Followups and Approvals
+                                QA Followups
                             </h3>
                             <div class="box-tools pull-right">
                                 <button type="button" class="btn btn-box-tool" data-widget="collapse">
