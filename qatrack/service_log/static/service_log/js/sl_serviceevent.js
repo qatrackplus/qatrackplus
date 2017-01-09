@@ -84,9 +84,8 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
             var results = [];
             for (var i in data.colour_ids) {
                 var se_id = data.colour_ids[i][0],
-                    s_id = data.colour_ids[i][1],
-                    se_srn = data.colour_ids[i][2];
-                results.push({id: se_id, text: 'id: ' + se_id + ' srn: ' + se_srn})
+                    s_id = data.colour_ids[i][1];
+                results.push({id: se_id, text: 'id: ' + se_id});
                 se_statuses[se_id] = s_id;
             }
             params.page = params.page || 1;
@@ -104,9 +103,11 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
                 dataType: 'json',
                 delay: '500',
                 data: function (params) {
+                    console.log($units.val());
                     return {
                         q: params.term, // search term
-                        page: params.page
+                        page: params.page,
+                        unit_id: $units.val()
                     }
                 },
                 processResults: process_related_results,
@@ -170,9 +171,11 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
                             $service_areas.append('<option value>No service areas found for unit</option>');
                         }
                         $service_areas.prop('disabled', false);
+                        $related_se.prop('disabled', false);
 
                         var $utcs = $('.followup-utc');
                         $utcs.find('option:not(:first)').remove();
+                        $related_se.find('option').remove();
                         var utcs = response.utcs;
                         if (utcs.length > 0) {
                             for (var utc in utcs) {
@@ -193,6 +196,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
             }
             else {
                 $service_areas.prop('disabled', true).find('option:not(:first)').remove();
+                $related_se.prop('disabled', true).find('option').remove();
                 var $utcs = $('.followup-utc');
                 $utcs.prop('disabled', true).find('option:not(:first)').remove();
             }

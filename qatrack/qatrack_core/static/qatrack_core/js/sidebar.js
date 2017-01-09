@@ -58,10 +58,10 @@ require(['jquery', 'icheck'], function($) {
 
     $(document).ready(function () {
 
-        // $('.iCheck').iCheck({
-        //     checkboxClass: 'icheckbox_minimal-blue',
-        //     radioClass: 'iradio_minimal-blue'
-        // });
+        $('.iCheck').iCheck({
+            checkboxClass: 'icheckbox_minimal-blue',
+            radioClass: 'iradio_minimal-blue'
+        });
 
         var icon = $('#toggle-icon');
 

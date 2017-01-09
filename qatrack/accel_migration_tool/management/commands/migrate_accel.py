@@ -860,7 +860,7 @@ class Command(BaseCommand):
                     except ObjectDoesNotExist:
                         print('---\tCould not find service event id: ' + str(rel_id) + ' in QaTrack db. Skipping related event creation.')
 
-                service_event.save()
+                    service_event.save()
 
                 if row.physicist_reported and row.physicist_reported.strip() != '':
                     physicist_winlogon = self.updating_cursor.execute('select winlogon from employees where staff_name = ?', row.physicist_reported.strip()).fetchone().winlogon

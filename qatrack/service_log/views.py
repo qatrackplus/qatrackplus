@@ -416,8 +416,10 @@ def unit_sa_utc(request):
 
 def se_searcher(request):
     se_search = request.GET['q']
+    unit_id = request.GET['unit_id']
     service_events = models.ServiceEvent.objects\
-        .filter(id__icontains=se_search)\
+        .filter(id__icontains=se_search, unit_service_area__unit=unit_id) \
+        .order_by('-id') \
         .select_related('service_status')[0:50]\
         .values_list('id', 'service_status__id')
     return JsonResponse({'colour_ids': list(service_events)})

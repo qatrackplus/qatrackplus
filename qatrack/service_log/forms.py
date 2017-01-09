@@ -289,11 +289,14 @@ class ServiceEventForm(BetterModelForm):
 
             if 'unit_field' not in self.data:
                 self.fields['service_area_field'].widget.attrs.update({'disabled': True})
+                self.fields['service_event_related_field'].widget.attrs.update({'disabled': True})
+
             else:
                 if self.data['unit_field']:
                     self.fields['service_area_field'].queryset = models.ServiceArea.objects.filter(units=self.data['unit_field'])
                 else:
                     self.fields['service_area_field'].widget.attrs.update({'disabled': True})
+                    self.fields['service_event_related_field'].widget.attrs.update({'disabled': True})
 
             if not self.user.has_perm('service_log.can_approve_service_event'):
                 self.fields['service_status'].queryset = models.ServiceEventStatus.objects.filter(is_approval_required=True)

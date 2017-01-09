@@ -756,27 +756,29 @@ $(document).ready(function(){
     function generate_se_result(res) {
         if (res.loading || !res.id) { return res.text; }
         var colour = status_colours_dict[se_statuses[res.id]];
-        var $div = $('<div class="select2-result-repository clearfix" style="min-width: 150px;">' + res.text + '<i class="fa fa-square fa-lg pull-right" style="color: ' + colour + '; margin-top: 7px;"></i></div>');
+        var $div = $('<div class="select2-result-repository clearfix" style="min-width: 75px;">' + res.text + '<i class="fa fa-square fa-lg pull-right" style="color: ' + colour + '; margin-top: 7px;"></i></div>');
         return $div;
     }
+
     $('#id_service_event').select2({
         ajax: {
             url: QAURLs.SE_SEARCHER,
             dataType: 'json',
             delay: '500',
             data: function (params) {
+                console.log(params);
                 return {
                     q: params.term, // search term
-                    page: params.page
+                    page: params.page,
+                    unit_id: unit_id
                 }
             },
             processResults: function (data, params) {
                 var results = [];
                 for (var i in data.colour_ids) {
                     var se_id = data.colour_ids[i][0],
-                        s_id = data.colour_ids[i][1],
-                        se_srn = data.colour_ids[i][2];
-                    results.push({id: se_id, text: 'id: ' + se_id + ' srn: ' + se_srn});
+                        s_id = data.colour_ids[i][1];
+                    results.push({id: se_id, text: 'id: ' + se_id});
                     se_statuses[se_id] = s_id;
                 }
                 params.page = params.page || 1;

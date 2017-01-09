@@ -37,6 +37,7 @@
         {% endif %}
         var status_colours_dict = {{ status_tag_colours|safe }};
         var se_statuses = {{ se_statuses|safe }};
+        var unit_id = {{ unit_test_collection.unit.id }};
     </script>
 {% endblock %}
 

@@ -30,24 +30,26 @@ $(document).ready(function() {
         });
         descriptionEditor.resize();
 
-        var javascript = js_element.hide();
-        javascript.after(
-            '<div style="height: 100px;" id="javascript-editor" class="colM aligned vLargeTextField"></div>'
-        );
-        var javascriptEditor = ace.edit("javascript-editor");
-        var javascriptSession = javascriptEditor.getSession();
+        if (js_element.length == 1) {
+            var javascript = js_element.hide();
+            javascript.after(
+                '<div style="height: 100px;" id="javascript-editor" class="colM aligned vLargeTextField"></div>'
+            );
+            var javascriptEditor = ace.edit("javascript-editor");
+            var javascriptSession = javascriptEditor.getSession();
 
-        javascriptEditor.setValue(javascript.val());
-        javascriptSession.setMode( "ace/mode/javascript");
-        javascriptSession.setTabSize(2);
-        javascriptSession.setUseSoftTabs(true);
-        javascriptEditor.on('blur', function(){
-            javascript.val(javascriptEditor.getValue());
-        });
+            javascriptEditor.setValue(javascript.val());
+            javascriptSession.setMode("ace/mode/javascript");
+            javascriptSession.setTabSize(2);
+            javascriptSession.setUseSoftTabs(true);
+            javascriptEditor.on('blur', function () {
+                javascript.val(javascriptEditor.getValue());
+            });
 
-        // javascriptEditor.on('change', function(){
-        //     preview.html(javascriptEditor.getValue());
-        // });
-        javascriptEditor.resize();
+            // javascriptEditor.on('change', function(){
+            //     preview.html(javascriptEditor.getValue());
+            // });
+            javascriptEditor.resize();
+        }
     }
 });

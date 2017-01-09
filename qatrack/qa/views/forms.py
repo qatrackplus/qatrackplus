@@ -242,7 +242,6 @@ class BaseTestListInstanceForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         print('--- BaseTestListInstanceForm.__init__ ---')
 
-        print(kwargs)
         self.unit = kwargs.pop('unit', None)
         self.followup_id = kwargs.pop('followup', None)
 

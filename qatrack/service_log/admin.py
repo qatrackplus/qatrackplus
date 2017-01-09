@@ -177,8 +177,8 @@ class UnitFormAdmin(ModelForm):
 
         if unit.pk:
             for sa in self.cleaned_data['service_areas']:
-                unit_service_area = UnitServiceArea(unit=unit, service_area=sa)
-                unit_service_area.save()
+                unit_service_area, created = UnitServiceArea.objects.get_or_create(unit=unit, service_area=sa)
+                # unit_service_area.save()
 
             for usa in UnitServiceArea.objects.filter(unit=unit).exclude(service_area__in=self.cleaned_data['service_areas']):
                 usa.delete()

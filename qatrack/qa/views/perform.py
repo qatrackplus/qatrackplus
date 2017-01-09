@@ -654,11 +654,8 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         context["unit_test_infos"] = json.dumps(self.template_unit_test_infos())
         context["unit_test_collection"] = self.unit_test_col
         context["contacts"] = list(Contact.objects.all().order_by("name"))
-        print('----d-d----------')
         print(self.object)
-        print(self.unit_test_col)
-        print(kwargs)
-        print(self.request.GET)
+        print(self.unit_test_col.unit.id)
         qa_followup_id = self.request.GET.get('qaf', None)
         if qa_followup_id:
             qa_followup = sl_models.QAFollowup.objects.get(pk=qa_followup_id)
@@ -666,7 +663,6 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         else:
             context['se_statuses'] = {}
         context['status_tag_colours'] = sl_models.ServiceEventStatus.get_colour_dict()
-
         return context
 
     def get_requested_day_to_perform(self):
