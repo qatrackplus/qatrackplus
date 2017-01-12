@@ -72,7 +72,7 @@ urlpatterns = [
 
     # test list instances
     url(r"^session/details/$", base.TestListInstances.as_view(), name="complete_instances"),
-    url(r"^session/details/(?P<pk>\d+)/$", review.TestListInstanceDetails.as_view(), name="view_test_list_instance"),
+    url(r"^session/details(?:/(?P<pk>\d+))?/$", review.TestListInstanceDetails.as_view(), name="view_test_list_instance"),
     url(r"^session/review/(?P<pk>\d+)/$", review.ReviewTestListInstance.as_view(), name="review_test_list_instance"),
     url(r"^session/unreviewed/$", review.Unreviewed.as_view(), name="unreviewed"),
     url(r"^session/unreviewedvisible/$", review.UnreviewedVisibleTo.as_view(), name="unreviewed_visible_to"),

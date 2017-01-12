@@ -265,6 +265,8 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseM
             return self.render_to_response(context)
 
         service_event = form.save()
+        print('--- form_valid ---')
+        print(service_event.test_list_instance_initiated_by)
         service_event_related = form.cleaned_data.get('service_event_related_field')
         try:
             sers = models.ServiceEvent.objects.filter(pk__in=service_event_related)
@@ -758,4 +760,7 @@ class TLISelect(UTCInstances):
 
 def tli_statuses(request):
     tli = qa_models.TestListInstance.objects.get(pk=request.GET.get('tli_id'))
-    return JsonResponse({'pass_fail': tli.pass_fail_summary(), 'review': tli.review_summary()}, safe=False)
+    return JsonResponse(
+        {'pass_fail': tli.pass_fail_summary(), 'review': tli.review_summary(), 'datetime': timezone.localtime(tli.created)},
+        safe=False
+    )

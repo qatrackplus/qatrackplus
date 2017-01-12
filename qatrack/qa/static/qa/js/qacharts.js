@@ -354,6 +354,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
                 area_data_upper_tol = [],
                 area_data_lower_tol = [],
                 visible = true,
+                lines_visible = true,
                 ref_tol_visible = true;
 
             d3.map(v).each(function (val) {
@@ -381,6 +382,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
                 area_data_lower_tol: area_data_lower_tol,
                 color: colors.pop(),
                 visible: visible,
+                lines_visible: lines_visible,
                 ref_tol_visible: ref_tol_visible
             });
         });
@@ -418,7 +420,8 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
             width = chart_width - margin.left - margin.right - legend_collapse_width,
             height = chart_height - margin.top - margin.bottom,
             height2 = margin.bottom - 2 * xAxisHeight - 10 - margin2.bottom,
-            legend_width = legend_collapse_width;
+            legend_width = legend_collapse_width,
+            legend_overhang = 0;
 
         var parseDate = d3.timeFormat("%Y%m%d").parse;
 
@@ -639,7 +642,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
                 return "line_result_" + d.test_name.replace(/\W+/g, "_");
             })
             .attr("d", function(d) {
-                return d.visible ? line(d.line_data_test_results) : null; // If array key "visible" = true then draw line, if not then don't
+                return d.visible && d.lines_visible ? line(d.line_data_test_results) : null; // If array key "visible" = true then draw line, if not then don't
             })
             .attr("clip-path", "url(#clip)")//use clip path to make irrelevant part invisible
             .attr('stroke-width', line_width)
@@ -690,7 +693,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
             // .attr('transform', 'translate(' + (width - 50) + ', 0)');
 
         legend.append('rect')
-            .attr("height", legendRowHeight * series_data.length + 30)
+            .attr("height", legendRowHeight * series_data.length + 35)
             .attr('width', 10)
             .attr('id', 'legend-rect')
             .style('fill', 'rgba(244, 244, 244, 0.5')
@@ -703,17 +706,26 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
                 .attr("transform", function(d, i) { return "translate(0," + ((i + 1) * legendRowHeight - 8) + ")"; })
                 .attr('class', 'legend-row');
 
+        // Legend series toggle
         legend_entry.append("rect")
-            .attr("width", 10)
-            .attr("height", 10)
+            .attr("width", 12)
+            .attr("height", 12)
             .attr("x", 10)
+            .attr("y", 1.5)
             .attr("fill", function (d) { return d.visible ? d.color : "#F1F1F2"; })
             .attr('id', function(d, i) { return 'tsb_' + i })
             .attr("class", "toggle-series-box")
+            .attr('stroke', function(d) { return d.lines_visible ? d.color : null; })
+            .attr('stroke-width', 4)
 
             .on("click", function (d, i, s) {
 
-                d.visible = !d.visible;
+                if (d.visible && d.lines_visible) d.lines_visible = false;
+                else if (d.visible) d.visible = false;
+                else {
+                    d.visible = true;
+                    d.lines_visible = true;
+                }
 
                 if (d.ref_tol_visible) {
                     if (!d.visible) {
@@ -730,6 +742,12 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
                                 .attr('stroke-width', 0.5);
                     }
                 }
+
+                d3.select(this)
+                    .transition()
+                    .attr("fill", function(d) { return d.visible ? d.color : "#ddd"; })
+                    .attr('stroke', function(d) { return d.visible && d.lines_visible ? d.color : '#ddd'; });
+
                 redrawMainContent();
             })
 
@@ -762,13 +780,17 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
                     d3.select('#line_result_' + d.test_name.replace(/\W+/g, "_"))
                         .transition()
                         .attr("stroke-width", line_width);
+                    // d3.select(this)
+                    //     .transition()
+                    //     .attr('stroke', function(d) { return d.lines_visible ? d.color : null })
                 }
 
             });
 
+        // Legend ref/tol toggle
         legend_entry.append('rect')
-            .attr("width", 10)
-            .attr("height", 10)
+            .attr("width", 15)
+            .attr("height", 15)
             .attr("x", 30)
             .style('fill', 'rgba(0, 166, 90, 0.3')
             .style('stroke', function (d) { return d.color; })
@@ -830,7 +852,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
 
         legend_entry.append("text")
             .attr("x", 50)
-            .attr('y', 8)
+            .attr('y', 12)
             // .attr('clip-path', 'url(#clip)')
             .text(function(d) { return d.test_name; })
             .style('font-size', 12);
@@ -851,7 +873,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
                 .attr('width', 40)
                 .attr('height', 14)
                 .attr('x', 5)
-                .attr('y', legendRowHeight * series_data.length + 10)
+                .attr('y', legendRowHeight * series_data.length + 15)
                 .style('fill', '#3c8dbc')
                 .style('cursor', 'pointer')
                 .style('stroke', '#367fa9')
@@ -872,7 +894,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
             .attr('width', 30)
             .attr('height', 10)
             .attr("x", 8)
-            .attr("y", legendRowHeight * series_data.length + 20)
+            .attr("y", legendRowHeight * series_data.length + 25)
             .style("pointer-events", "none")
             .style('font', '10px sans-serif')
             .style('fill', '#fff')
@@ -882,7 +904,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
             .attr('x2', width + legend_collapse_width)
             .attr('y2', 0)
             .attr('x1', width + legend_collapse_width)
-            .attr('y1', legendRowHeight * series_data.length + 30)
+            .attr('y1', legendRowHeight * series_data.length + 35)
             .style('stroke', '#ddd');
 
         ///////////////// Date display
@@ -890,7 +912,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
             .append('text')
                 .attr("class", "hover-text")
                 .attr("y", 20)
-                .attr("x", width - 170);
+                .attr("x", 10);
 
         // Add mouseover events for hover line.
         var old_x_closest,
@@ -921,12 +943,12 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
         d3.select(window).on('resize', function() {
 
             chart_width = $('#chart').width();
-            width = chart_width - margin.left - margin.right - legend_width;
+            width = chart_width - margin.left - margin.right - legend_collapse_width;
 
             d3.select("svg").transition().attr("width", chart_width);
             svg.transition().attr('width', chart_width - margin.left);
 
-            legend.transition().attr('transform', 'translate(' + width + ', 0)');
+            legend.transition().attr('transform', 'translate(' + (width - legend_overhang) + ', 0)');
             legendClip.transition().attr("width", width + legend_collapse_width);
             cheatLine.transition()
                 .attr('x1', width + legend_collapse_width)
@@ -939,17 +961,16 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
 
         function toggleLegend(expanded) {
 
-            legend_width = expanded ? legend_expand_width : legend_collapse_width;
-            width = chart_width - margin.left - margin.right - legend_width;
+            legend_overhang = expanded ? legend_expand_width - legend_collapse_width: 0;
 
             legend.transition()
-                .attr('transform', 'translate(' + width + ', 0)');
+                .attr('transform', 'translate(' + (width - legend_overhang) + ', 0)');
 
             if (expanded) toogle_text.text('hide \u25B6');
             else toogle_text.text('\u25C0 show');
 
-            redrawMainXAxis();
-            redrawMainContent();
+            // redrawMainXAxis();
+            // redrawMainContent();
 
         }
 
@@ -979,7 +1000,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
                 west_bound_date = xScale.invert(0),
                 east_selection_bound = xScale2(east_bound_date),
                 west_selection_bound = xScale2(west_bound_date),
-                context_width = width + legend_width - legend_collapse_width;
+                context_width = width;
 
             xScale2.range([0, context_width]);
 
@@ -1009,7 +1030,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
             test_result.selectAll('path')
                 .transition()
                 .attr("d", function (d) {
-                    return d.visible ? line(d.line_data_test_results) : null;
+                    return d.visible && d.lines_visible ? line(d.line_data_test_results) : null;
                 });
 
             // markers

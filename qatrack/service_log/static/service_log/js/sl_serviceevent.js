@@ -10,7 +10,21 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
             $service_status = $('#id_service_status'),
             $problem_type = $('#id_problem_type'),
             $service_type = $('#id_service_type'),
-            $approval_required = $('#id_is_approval_required');
+            $approval_required = $('#id_is_approval_required'),
+            $utc_initiated_by = $('#id_initiated_utc_field'),
+            $tli_initiated_by = $('#id_test_list_instance_initiated_by'),
+            $tli_initiated_display = $(
+                '<div id="tli_initiated_display" class="row">' +
+                '    <div class="col-md-12">' +
+                '        <span id="pass-fail-utc_initiated"></span>' +
+                '        <span id="review-utc_initiated"></span>' +
+                '        <a id="view-tli-btn" class="btn btn-default btn-xs btn-flat" href="">View</a>' +
+                '        <span id="tli-date-utc_initiated" class="pull-right"></span>' +
+                '    </div>' +
+                '</div>'
+            );
+
+        $utc_initiated_by.parent().append($tli_initiated_display);
 
         // General fields ------------------------------------------------------------------------------
         autosize($('textarea.autosize'));
@@ -174,19 +188,23 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
                         $related_se.prop('disabled', false);
 
                         var $utcs = $('.followup-utc');
+                        $utc_initiated_by.find('option:not(:first)').remove();
+                        $utc_initiated_by.val('').change();
                         $utcs.find('option:not(:first)').remove();
                         $related_se.find('option').remove();
                         var utcs = response.utcs;
                         if (utcs.length > 0) {
                             for (var utc in utcs) {
                                 $utcs.append('<option value=' + utcs[utc].id + '>' + utcs[utc].name + '</option>');
+                                $utc_initiated_by.append('<option value=' + utcs[utc].id + '>' + utcs[utc].name + '</option>');
                             }
                         }
                         else {
                             $utcs.append('<option value>No test lists found for unit</option>');
+                            $utc_initiated_by.append('<option value>No test lists found for unit</option>');
                         }
                         $utcs.prop('disabled', false);
-                        
+                        $utc_initiated_by.prop('disabled', false);
                     },
                     traditional: true,
                     error: function (e, data) {
@@ -199,8 +217,8 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
                 $related_se.prop('disabled', true).find('option').remove();
                 var $utcs = $('.followup-utc');
                 $utcs.prop('disabled', true).find('option:not(:first)').remove();
+                $utc_initiated_by.prop('disabled', true).find('option:not(:first)').remove();
             }
-
         });
         
         // Hours Formset --------------------------------------------------------------------------------------
@@ -227,7 +245,8 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
             var w = window.open($(this).attr('data-link'), '_blank', 'scrollbars=no,menubar=no,height=900,width=1200,resizable=yes,toolbar=yes,status=no');
             w.focus();
         });
-        displayTLI = function(prefix, data) {
+        displayTLI = function(prefix, data, returnValue) {
+            console.log(prefix);
             var $label_group = $('<span class="label-group"></span>');
             for (var status in data['pass_fail']) {
                 if (data['pass_fail'][status] > 0 && status != 'no_tol') {
@@ -262,16 +281,27 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
                 $label_group.append('<span class="' + label_class + '">' + icon + ' ' + data["review"][status]["num"] + ' ' + status + '</span>');
             }
             $('#review-' + prefix).html($label_group);
+
+            if (prefix == 'utc_initiated') {
+                $('#tli-date-utc_initiated').html(moment(data['datetime']).format('D MMM YYYY h:mm A'));
+                $('#view-tli-btn').attr('href', QAURLs.TLI_VIEW + returnValue);
+                $tli_initiated_display.slideDown('fast');
+            }
+            //TODO: date fpr initiated
         };
-        setSearchResult = function(followup_form, returnValue){
+        setSearchResult = function(form, returnValue) {
             // TODO
             window.focus();
-            $('#id_' + followup_form + '-test_list_instance').val(returnValue);
+            if (form == 'utc_initiated') {
+                $tli_initiated_by.val(returnValue);
+            } else {
+                $('#id_' + form + '-test_list_instance').val(returnValue);
+            }
             $.ajax({
                 url: QAURLs.TLI_STATUSES,
                 data: {'tli_id': returnValue},
-                success: function(res) {
-                    displayTLI(followup_form, res);
+                success: function (res) {
+                    displayTLI(form, res, returnValue);
                 }
             })
         };
@@ -289,6 +319,24 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
             });
 
             $followup_index.val(parseInt(followup_index) + 1);
+        });
+
+        // // initiated by -------------------------------------------------------------------------------------
+        if ($tli_initiated_by.val() == '') {
+            $tli_initiated_display.hide();
+        } else {
+            setSearchResult('utc_initiated', $tli_initiated_by.val());
+        }
+
+        $utc_initiated_by.change(function() {
+            if ($(this).val() != '') {
+                var w = window.open($(this).attr('data-link') + $(this).val() + '/utc_initiated', '_blank', 'scrollbars=no,menubar=no,height=900,width=1200,resizable=yes,toolbar=yes,status=no');
+                w.focus();
+            } else {
+                $tli_initiated_display.slideUp('fast', function() {
+                    $tli_initiated_by.val('');
+                });
+            }
         });
 
     });

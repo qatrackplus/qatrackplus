@@ -91,3 +91,6 @@
 .not_done {
     background-color: #b5bbc8;
 }
+#tli_initiated_display {
+    margin-top: 5px;
+}

@@ -48,22 +48,6 @@
     });
 {% endblock require_javascript %}
 
-{#{% block script_base %}#}
-{#    {{block.super}}#}
-{##}
-{#    <script type="text/javascript">#}
-{#        var unit_test_infos = {{unit_test_infos|safe}};#}
-{#        var editing_tli = {{ test_list_instance.pk|default:"0"}};#}
-{#    </script>#}
-{##}
-{#    <script src="{% static "js/qa.js" %}?v={{VERSION}}"></script>#}
-{#    <script src="{% static "datepicker/js/bootstrap-datepicker.js" %}?v={{VERSION}}"></script>#}
-{#    <script src="{% static "js/jquery.ui.widget.js" %}"></script>#}
-{#    <script src="{% static "js/jquery.iframe-transport.js" %}"></script>#}
-{#    <script src="{% static "js/jquery.fileupload.js" %}"></script>#}
-{##}
-{#{% endblock script_base %}#}
-
 {% block body_class %}sidebar-mini sidebar-collapse loading{% endblock body_class %}
 
 {% block sidebar_toggle %}

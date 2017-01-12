@@ -1,14 +1,17 @@
 
 from django import forms
 from django.core.exceptions import ValidationError
+from django.core.urlresolvers import reverse
 from django.conf import settings
 from django.contrib.auth.models import User, Permission, Group
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Field, ObjectDoesNotExist, Q
+from django.forms.utils import flatatt
 from django.forms.widgets import DateTimeInput
 from django.utils import timezone
 from django.utils.dateparse import parse_duration
 from django.utils.encoding import force_text
+from django.utils.html import conditional_escape, format_html, html_safe
 from django.utils.translation import ugettext as _
 from form_utils.forms import BetterModelForm
 
@@ -215,6 +218,22 @@ class ServiceEventRelatedField(forms.ModelMultipleChoiceField):
         return qs
 
 
+class TLIInitiatedField(forms.IntegerField):
+
+    label = ''
+    required = False
+    widget = forms.HiddenInput()
+
+    def to_python(self, value):
+        if value in self.empty_values:
+            return None
+        try:
+            tli = qa_models.TestListInstance.objects.get(pk=value)
+        except (ValueError, TypeError, qa_models.TestListInstance.DoesNotExist) as e:
+            raise ValidationError(self.error_messages['invalid_choice'], code='invalid_choice')
+        return tli
+
+
 class ServiceEventForm(BetterModelForm):
 
     unit_field = forms.ModelChoiceField(queryset=models.Unit.objects.all(), label='Unit')
@@ -224,9 +243,17 @@ class ServiceEventForm(BetterModelForm):
     )
     duration_service_time = HoursMinDurationField(label=_('Service time'), required=False)
     duration_lost_time = HoursMinDurationField(label=_('Lost time'), required=False)
-    problem_type = ProblemTypeModelChoiceField(queryset=models.ProblemType.objects.all(), required=False, to_field_name='name')
+    problem_type = ProblemTypeModelChoiceField(
+        queryset=models.ProblemType.objects.all(), required=False, to_field_name='name'
+    )
     service_event_related_field = ServiceEventRelatedField(required=False, queryset=models.ServiceEvent.objects.none())
     is_approval_required = forms.BooleanField(required=False, label=_('Approval required'))
+
+    test_list_instance_initiated_by = TLIInitiatedField()
+
+    initiated_utc_field = forms.ModelChoiceField(
+        queryset=qa_models.UnitTestCollection.objects.none(), label='Initiated by'
+    )
 
     _classes = ['form-control']
 
@@ -235,11 +262,20 @@ class ServiceEventForm(BetterModelForm):
         model = models.ServiceEvent
 
         fieldsets = [
+            ('hidden_fields', {
+                'fields': ['test_list_instance_initiated_by'],
+            }),
             ('required_fields', {
-                'fields': ['datetime_service', 'unit_field', 'service_area_field', 'service_type', 'is_approval_required', 'service_status', 'problem_description'],
+                'fields': [
+                    'datetime_service', 'unit_field', 'service_area_field', 'service_type', 'is_approval_required',
+                    'service_status', 'problem_description'
+                ],
             }),
             ('optional_fields', {
-                'fields': ['problem_type', 'service_event_related_field', 'work_description', 'safety_precautions'],
+                'fields': [
+                    'problem_type', 'service_event_related_field', 'initiated_utc_field', 'work_description',
+                    'safety_precautions'
+                ],
             }),
             ('time_fields', {
                 'fields': ['duration_service_time', 'duration_lost_time'],
@@ -285,11 +321,14 @@ class ServiceEventForm(BetterModelForm):
         if is_new:
 
             if 'service_event_related_field' in self.data:
-                self.fields['service_event_related_field'].queryset = models.ServiceEvent.objects.filter(pk__in=self.data.getlist('service_event_related_field'))
+                self.fields['service_event_related_field'].queryset = models.ServiceEvent.objects.filter(
+                    pk__in=self.data.getlist('service_event_related_field')
+                )
 
             if 'unit_field' not in self.data:
                 self.fields['service_area_field'].widget.attrs.update({'disabled': True})
                 self.fields['service_event_related_field'].widget.attrs.update({'disabled': True})
+                self.fields['initiated_utc_field'].widget.attrs.update({'disabled': True})
 
             else:
                 if self.data['unit_field']:
@@ -297,6 +336,7 @@ class ServiceEventForm(BetterModelForm):
                 else:
                     self.fields['service_area_field'].widget.attrs.update({'disabled': True})
                     self.fields['service_event_related_field'].widget.attrs.update({'disabled': True})
+                    self.fields['initiated_utc_field'].widget.attrs.update({'disabled': True})
 
             if not self.user.has_perm('service_log.can_approve_service_event'):
                 self.fields['service_status'].queryset = models.ServiceEventStatus.objects.filter(is_approval_required=True)
@@ -306,14 +346,13 @@ class ServiceEventForm(BetterModelForm):
                 self.initial['service_status'] = models.ServiceEventStatus.get_default()
                 self.initial['datetime_service'] = timezone.now()
 
-            # self.fields['service_event_related'].queryset = models.ServiceEvent.objects.none()
-
         # if we are editing a saved instance
         else:
             try:
                 unit = u_models.Unit.objects.get(pk=self.data['unit_field'])
             except (ObjectDoesNotExist, KeyError):
                 unit = self.instance.unit_service_area.unit
+            # self.fields['unit_field'].widget.attrs.update({'disabled': True})
             self.initial['unit_field'] = unit
             self.initial['service_area_field'] = self.instance.unit_service_area.service_area
             # self.fields['service_event_related'].queryset = models.ServiceEvent.objects.exclude(id=self.instance.id)
@@ -330,10 +369,20 @@ class ServiceEventForm(BetterModelForm):
                     Q(is_approval_required=True) | Q(pk=self.instance.service_status.id)
                 ).distinct()
 
+            if self.instance.test_list_instance_initiated_by:
+                self.initial['initiated_utc_field'] = self.instance.test_list_instance_initiated_by.unit_test_collection
+                self.initial['test_list_instance_initiated_by'] = self.instance.test_list_instance_initiated_by.id
+
+            self.fields['initiated_utc_field'].queryset = qa_models.UnitTestCollection.objects.filter(unit=unit, active=True)
+
         for f in ['safety_precautions', 'problem_description', 'work_description']:
             self.fields[f].widget.attrs.update({'rows': 3, 'class': 'autosize'})
 
-        for f in ['unit_field', 'service_area_field', 'service_type', 'service_event_related_field', 'service_status', 'problem_type']:
+        select2_fields = [
+            'unit_field', 'service_area_field', 'service_type', 'service_event_related_field', 'service_status',
+            'problem_type', 'initiated_utc_field'
+        ]
+        for f in select2_fields:
             self.fields[f].widget.attrs['class'] = 'select2'
 
         for f in ['datetime_service']:
@@ -358,6 +407,8 @@ class ServiceEventForm(BetterModelForm):
             classes = classes.replace('form-control', '')
             self.fields[f].widget.attrs.update({'class': classes})
 
+        self.fields['initiated_utc_field'].widget.attrs.update({'data-link': reverse('tli_select')})
+
     def save(self, *args, **kwargs):
         print('--- ServiceEventForm.save ---')
         unit = self.cleaned_data.get('unit_field')
@@ -372,14 +423,12 @@ class ServiceEventForm(BetterModelForm):
         #     sers = models.ServiceEvent.objects.filter(pk__in=service_event_related)
         # except ValueError:
         #     sers = []
-
+        self.instance.test_list_instance_initiated_by = self.cleaned_data.get('test_list_instance_initiated_by')
         self.instance.unit_service_area = usa
-
-        print(self.instance)
         super(ServiceEventForm, self).save(*args, **kwargs)
         # self.instance.save()
-        print(self.instance)
-        # self.instance.service_event_related = sers
+        # models.ServiceEvent.save()
+
         return self.instance
 
     @property

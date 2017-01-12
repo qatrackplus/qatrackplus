@@ -139,6 +139,7 @@ class ServiceEvent(models.Model):
         ProblemType, null=True, blank=True, on_delete=models.PROTECT,
         help_text=_('Select/create a problem type that describes this service event')
     )
+    test_list_instance_initiated_by = models.ForeignKey(TestListInstance, null=True, blank=True, on_delete=models.PROTECT)
 
     datetime_status_changed = models.DateTimeField(null=True, blank=True)
     datetime_created = models.DateTimeField()

@@ -1040,7 +1040,8 @@ class UnitTestCollection(models.Model):
             )
 
     def __str__(self):
-        return "UnitTestCollection(%s)" % self.pk
+        # return "UnitTestCollection(%s)" % self.pk
+        return self.tests_object.name
 
 
 class TestInstanceManager(models.Manager):

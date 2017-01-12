@@ -29,6 +29,10 @@
 
 {% block body %}
 
+    <div>
+
+    </div>
+
     <form action="" method="post" novalidate>
         {% csrf_token %}
         <div class="max-width-lg">
@@ -85,6 +89,12 @@
                         </div>
                         <div class="box-body">
                             <div class="row">
+                                {% for field in form.fieldsets.hidden_fields %}
+                                    {{ field }}
+                                    {% if field.errors %}
+                                        {{ field.errors }}
+                                    {% endif %}
+                                {% endfor %}
                                 <div id="required-fields" class="col-md-6 form-horizontal">
 
                                     {% for field in form.fieldsets.required_fields %}
@@ -124,6 +134,7 @@
                                                 </div>
                                             {% else %}
                                                 <label for="{{ field.id_for_label }}" class="col-sm-4{% if field.field.required %} required{% endif %}">{{ field.label }}</label>
+
                                                 <div class="col-sm-8">
                                                     {{ field }}
                                                 </div>
@@ -299,7 +310,7 @@
                                                                 <a href="{% url 'perform_qa' pk=f_form.instance.unit_test_collection.pk %}?qaf={{ f_form.instance.id }}&next={% url 'sl_edit' pk=form.instance.pk %}" class="btn btn-xs btn-default btn-flat">
                                                                     Perform
                                                                 </a>
-                                                                <a id="select-tli-{{ f_form.prefix }}" class="btn btn-default btn-xs btn-flat select-tli" data-link="{% url 'tli_select' pk=f_form.instance.unit_test_collection.pk form=f_form.prefix%}">
+                                                                <a id="select-tli-{{ f_form.prefix }}" class="btn btn-default btn-xs btn-flat select-tli" data-link="{% url 'tli_select' pk=f_form.instance.unit_test_collection.pk form=f_form.prefix %}">
                                                                     Performed
                                                                 </a>
                                                             {% endif %}

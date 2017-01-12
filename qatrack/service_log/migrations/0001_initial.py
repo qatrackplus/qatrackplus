@@ -163,6 +163,11 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(related_name='+', on_delete=django.db.models.deletion.PROTECT, blank=True, to=settings.AUTH_USER_MODEL, null=True),
         ),
         migrations.AddField(
+            model_name='serviceevent',
+            name='test_list_instance_initiated_by',
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, to='qa.TestListInstance'),
+        ),
+        migrations.AddField(
             model_name='qafollowup',
             name='service_event',
             field=models.ForeignKey(to='service_log.ServiceEvent', on_delete=django.db.models.deletion.PROTECT),
