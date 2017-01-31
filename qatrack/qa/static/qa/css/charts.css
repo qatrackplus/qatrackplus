@@ -109,11 +109,11 @@ input.date-only-input{
     height:50px;
 }
 .test-filter{
-    height:235px;
+    height:262px;
     padding-top: 5px;
 }
 #test {
-    height: 206px;
+    height: 233px;
     padding-top: 5px;
 }
 /**********************************************/
@@ -181,7 +181,7 @@ table thead tr:first-child th {
     stroke-width: 1px;
 }
 rect.handle {
-    width: 4px;
+    width: 6px;
     stroke: #888;
 }
 .hover-line {
@@ -220,4 +220,7 @@ line.horizontalGrid {
     shape-rendering: crispEdges;
     /*stroke: #bbb;*/
     stroke-width: 1px;
+}
+.se-tooltip-main {
+    width: 165px;
 }

@@ -139,10 +139,6 @@ class SLDashboard(TemplateView):
             .order_by('-test_list_instance__created')
 
         unsorted_dict = {}
-        for se in se_new:
-            datetime = timezone.localtime(se.datetime_created)
-            msg = get_user_name(se.user_created_by) + ' created service event ' + str(se.id)
-            populate_timeline_from_queryset(unsorted_dict, se, datetime, 'se_new', msg=msg)
 
         for se in se_edited:
             datetime = timezone.localtime(se.datetime_modified)
@@ -154,15 +150,20 @@ class SLDashboard(TemplateView):
             msg = get_user_name(se.user_status_changed_by) + ' changed status of service event ' + str(se.id) + ' to '
             populate_timeline_from_queryset(unsorted_dict, se, datetime, 'se_status', msg=msg)
 
-        for qaf in qaf_new:
-            datetime = timezone.localtime(qaf.datetime_assigned)
-            msg = get_user_name(qaf.user_assigned_by) + ' assigned a new followup (' + qaf.unit_test_collection.tests_object.name + ') for service event ' + str(qaf.service_event.id)
-            populate_timeline_from_queryset(unsorted_dict, qaf, datetime, 'qaf_new', msg=msg)
+        for se in se_new:
+            datetime = timezone.localtime(se.datetime_created)
+            msg = get_user_name(se.user_created_by) + ' created service event ' + str(se.id)
+            populate_timeline_from_queryset(unsorted_dict, se, datetime, 'se_new', msg=msg)
 
         for qaf in qaf_complete:
             datetime = timezone.localtime(qaf.test_list_instance.created)
             msg = get_user_name(qaf.test_list_instance.created_by) + ' performed a followup (' + qaf.unit_test_collection.tests_object.name + ') for service event ' + str(qaf.service_event.id)
             populate_timeline_from_queryset(unsorted_dict, qaf, datetime, 'qaf_complete', msg=msg)
+
+        for qaf in qaf_new:
+            datetime = timezone.localtime(qaf.datetime_assigned)
+            msg = get_user_name(qaf.user_assigned_by) + ' assigned a new followup (' + qaf.unit_test_collection.tests_object.name + ') for service event ' + str(qaf.service_event.id)
+            populate_timeline_from_queryset(unsorted_dict, qaf, datetime, 'qaf_new', msg=msg)
 
         for ud in unsorted_dict:
             unsorted_dict[ud]['objs'] = sorted(unsorted_dict[ud]['objs'], key=lambda obj: obj['datetime'], reverse=True)
@@ -265,8 +266,6 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseM
             return self.render_to_response(context)
 
         service_event = form.save()
-        print('--- form_valid ---')
-        print(service_event.test_list_instance_initiated_by)
         service_event_related = form.cleaned_data.get('service_event_related_field')
         try:
             sers = models.ServiceEvent.objects.filter(pk__in=service_event_related)

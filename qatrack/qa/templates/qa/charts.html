@@ -6,6 +6,7 @@
     <link href="{{ STATIC_URL }}qa/css/qa.css?v={{ VERSION }}" rel="stylesheet">
     <link href="{{ STATIC_URL }}qa/css/charts.css?v={{ VERSION }}" rel="stylesheet">
     <link href="{{ STATIC_URL }}daterangepicker/css/daterangepicker.css?v={{ VERSION }}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}qatrack_core/css/custom-daterangepicker.css?v={{ VERSION }}" rel="stylesheet">
 {% endblock %}
 
 {% block require_javascript %}
@@ -15,7 +16,9 @@
 {% block extra_js %}
     <script>
         var QACharts = {
-            unit_frequencies:{{unit_frequencies|safe}}
+            unit_frequencies:{{unit_frequencies|safe}},
+            se_types: {{ service_types|safe }},
+            se_probs: {{ problem_types|safe }}
         };
     </script>
 {% endblock %}
@@ -200,10 +203,38 @@
                             <div id="status-container" class="checkbox-container">
                                 {% for status in statuses %}
                                     <label class="checkbox">
-                                        <input type="checkbox" name="status[]" id="status-{{status.pk}}" value="{{status.pk}}" title="{{status.name}}" class="status status-{{status.pk}}" {% if status.export_by_default %}checked="checked"{% endif %}></input>
+                                        <input type="checkbox" name="status[]" id="status-{{status.pk}}" value="{{status.pk}}" title="{{status.name}}" class="status status-{{status.pk}}" {% if status.export_by_default %}checked="checked"{% endif %}>
                                         {{status.name}}
                                     </label>
                                 {% endfor %}
+                            </div>
+                            <hr/>
+
+                            <label for="show_events" class="checkbox basic-option" title="Display service event data with test results.">
+                                <input id="show_events" type="checkbox">
+                                Show service events?
+                            </label>
+                            <div id="service-event-container" class="row" style="display: none;">
+                                <div class="col-md-12">
+                                    <h5>Service Event Options</h5>
+                                </div>
+{#                                <div class="col-md-3">Types:</div>#}
+{#                                <div id="service-type-container" class="checkbox-container col-md-9">#}
+{#                                    {% for type in service_types %}#}
+{#                                        <label class="checkbox">#}
+{#                                            <input type="checkbox" name="service-types[]" id="service-type-{{type.pk}}" value="{{type.pk}}" title="{{type.name}}" checked="checked">#}
+{#                                            {{type.name}}#}
+{#                                        </label>#}
+{#                                    {% endfor %}#}
+{#                                </div>#}
+{#                                <div class="col-md-3">Approval required?</div>#}
+{#                                <br>#}
+                                <div id="approval-container" class="checkbox-container col-md-9">
+                                    <label class="checkbox">
+                                        <input type="checkbox" name="approval-required" id="approval-required" title="Show only service events that require approval." checked="checked">
+                                        Approval required?
+                                    </label>
+                                </div>
                             </div>
                             <hr/>
 
@@ -262,6 +293,54 @@
     </div>
 </div>
 
+<div id="se-tooltip-template" style="display: none;">
+    <div class="se-tooltip-main">
+        <div class="row">
+            <div class="col-md-12">
+                <strong>Service Event __se-id__</strong>
+                <a class="se-tooltip-description-toggle pull-right" title="__se-wd__"><i class="fa fa-question-circle fa-lg"></i></a>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="tooltip-se-date">__se-date__</div>
+
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="pull-left">__se-type__</div>
+                <a class="tooltip-se-btn btn btn-flat btn-xs btn-default pull-right" href="{% url 'sl_details' %}__se-id__">View</a>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="pull-left">__se-prob__</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="tli-tooltip-template" style="display: none;">
+    <div class="row">
+        <div class="col-md-12">
+            <strong>__tli-kind__</strong>
+        </div>
+        <div class="col-md-12">
+            <strong>__tli-tl-name__</strong>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div id="tooltip-se-date">__tli-date__</div>
+            <a id="tooltip-se-btn" class="btn btn-flat btn-xs btn-default pull-right" href="{% url 'view_test_list_instance' %}__tli-id__">View</a>
+        </div>
+    </div>
+    <div class="tli-se-links" style="display: none;">
+        
+    </div>
+</div>
 
 {% endblock %}
 

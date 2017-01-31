@@ -116,6 +116,7 @@
                                             <dd>
                                                 <div class="row">
                                                     <div class="col-md-12">
+                                                        <span class="margin-r-3">{{ serviceevent.test_list_instance_initiated_by.test_list.name }}</span>
                                                         <span class="margin-r-3">{{ serviceevent.test_list_instance_initiated_by|as_pass_fail_status:False }}</span>
                                                         <span class="margin-r-3">{{ serviceevent.test_list_instance_initiated_by|as_review_status }}</span>
                                                         <a id="view-tli-btn" class="margin-r-3 btn btn-default btn-xs btn-flat" href="{% url 'view_test_list_instance' pk=serviceevent.test_list_instance_initiated_by.id %}">View</a>

@@ -321,6 +321,11 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
             $followup_index.val(parseInt(followup_index) + 1);
         });
 
+        function prepTLISelection() {
+            var $followups = $('select.followup-utc');
+            
+        }
+
         // // initiated by -------------------------------------------------------------------------------------
         if ($tli_initiated_by.val() == '') {
             $tli_initiated_display.hide();

@@ -2,6 +2,7 @@
 require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], function ($, _, d3, moment) {
 
     var waiting_timeout = null;
+    // var test_list_names;
 
     $(document).ready(function () {
 
@@ -75,6 +76,9 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
 
         $("#data-table-wrapper").on('click', "#csv-export", export_csv);
 
+        $('#show_events').change(function() {
+            $('#service-event-container').slideToggle('fast');
+        });
 
         set_chart_options();
         set_options_from_url();
@@ -272,7 +276,10 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
             subgroup_size: $("#subgroup-size").val(),
             fit_data: $("#include-fit").is(":checked"),
             combine_data: $("#combine-data").is(":checked"),
-            relative: $("#relative-diff").is(":checked")
+            relative: $("#relative-diff").is(":checked"),
+            show_events: $('#show_events').is(':checked'),
+            approval_required: $('#approval-required').is(':checked'),
+            // service_types: QAUtils.get_checked("#service-type-container")
         };
 
         return filters;
@@ -319,8 +326,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
     }
 
     function plot_data(data) {
-        //TODO d3 charts:
-        var data_to_plot = convert_data_to_chart_series(data.data);
+        var data_to_plot = convert_data_to_chart_series(data);
         d3.select("svg").remove();
         create_chart(data_to_plot);
         update_data_table(data);
@@ -330,23 +336,30 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
         /**
          * Format data in the following pattern:
          *
-         * series = ]
-         *      {
-         *          test_name: name_of_test,
-         *          line_data_test_results: [{x: date, y: value }],
-         *          line_data_reference: [{x: date, y: reference }],
-         *          area_data_ok: [{x: date, y_high: tol_high, y_low: tol_low}],
-         *          area_data_upper_tol: [{x: date, y_high: act_high, y_low: tol_high}],
-         *          area_data_lower_tol: [{x: date, y_high: tol_low, y_low: act_low}]
-         *      }
+         * data = {
+         *     series = [
+         *          {
+         *              test_name: name_of_test,
+         *              line_data_test_results: [{x: date, y: value }],
+         *              line_data_reference: [{x: date, y: reference }],
+         *              area_data_ok: [{x: date, y_high: tol_high, y_low: tol_low}],
+         *              area_data_upper_tol: [{x: date, y_high: act_high, y_low: tol_high}],
+         *              area_data_lower_tol: [{x: date, y_high: tol_low, y_low: act_low}]
+         *          }
+         *      ],
+         *      events = {}
          * ]
          */
 
-        var series = [];
+        var _data = {},
+            series = [],
+            events = [];
 
-        var colors = ['#001F3F', '#A47D7C', '#444444', '#ff851b', '#39CCCC', '#605ca8', '#00a65a', '#D81B60', '#3c8dbc'];
+        var colors = ['#001F3F', '#3c8dbc', '#A47D7C', '#444444', '#ff851b', '#39CCCC', '#605ca8', '#00a65a', '#D81B60'];
 
-        d3.map(data).each(function (v, k, m) {
+        // test_list_names = data.plot_data.test_list_names;
+
+        d3.map(data.plot_data.series).each(function (v, k, m) {
 
             var line_data_test_results = [],
                 line_data_reference = [],
@@ -357,13 +370,13 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
                 lines_visible = true,
                 ref_tol_visible = true;
 
-            d3.map(v).each(function (val) {
+            d3.map(v.series_data).each(function (val) {
                 if (_.isNull(val.value)) {
                     return;
                 }
                 var x = moment(val.date).valueOf();
 
-                line_data_test_results.push({x: x, y: val.value});
+                line_data_test_results.push({x: x, y: val.value, test_instance_id: val.test_instance_id, test_list_instance_id: val.test_list_instance.id});
 
                 if (val.reference) {
                     line_data_reference.push({x: x, y: val.reference});
@@ -383,16 +396,27 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
                 color: colors.pop(),
                 visible: visible,
                 lines_visible: lines_visible,
-                ref_tol_visible: ref_tol_visible
+                ref_tol_visible: ref_tol_visible,
+                unit: v.unit,
+                test_list: v.test_list
             });
         });
 
-        return series;
+        d3.map(data.plot_data.events).each(function (v, k, m) {
+
+            var e_data = v;
+            e_data.x = moment(v.date).valueOf();
+            e_data.visible = true;
+            events.push(e_data)
+        });
+
+        _data._series = series;
+        _data._events = events;
+
+        return _data;
     }
 
-    function create_chart(series_data) {
-
-        var ntests = QAUtils.get_checked("#test-container").length;
+    function create_chart(_data) {
 
         // var allEmpty = _.every(_.map(series_data, function (o) {
         //     return o.data.length === 0
@@ -403,6 +427,9 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
         var range = $('#date-range');
         var from = range.val().split(' - ')[0];
         var to = range.val().split(' - ')[1];
+        var num_tests = _data._series.length;
+
+        var se_locked = false;
 
         ///////////////////////// CHART
         var chart_height = 700,
@@ -422,6 +449,13 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
             height2 = margin.bottom - 2 * xAxisHeight - 10 - margin2.bottom,
             legend_width = legend_collapse_width,
             legend_overhang = 0;
+
+        var event_group_height = 10;
+
+        var tooltip_height = 85,
+            tooltip_width = 175,
+            tooltip_padding = 7,
+            tooltip_expanded_width = 400;
 
         var parseDate = d3.timeFormat("%Y%m%d").parse;
 
@@ -473,13 +507,6 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
                 // .attr('class')
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-        ///////////// Create invisible rect for mouse tracking
-        var mouse_tracker = svg.append("rect")
-            .attr("width", width)
-            .attr("height", height)
-            .attr("id", "mouse-tracker")
-            .style("fill", 'transparent');
-
         //append clip path for lines plotted, hiding those part out of bounds
         var mainClip = svg.append("defs")
             .append("clipPath")
@@ -496,8 +523,8 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
                 .attr("height", height);
 
         xScale.domain([moment(from, "DD-MM-YYYY").valueOf(), moment(to, "DD-MM-YYYY").valueOf()]);
-        var maxY = findMaxY(series_data, xScale.domain());
-        var minY = findMinY(series_data, xScale.domain());
+        var maxY = findMaxY(_data._series, xScale.domain());
+        var minY = findMinY(_data._series, xScale.domain());
         
         yScale.domain(yBuff(minY, maxY));
         yScale2.domain([minY, maxY]);
@@ -521,7 +548,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
         var context_path = context.append('g')
                 .attr('class', 'context-path-group')
             .selectAll('.context-path')
-                .data(series_data)
+                .data(_data._series)
             .enter().append("path")
                 .attr("class", "line context-path")
                 .attr("d",  function(d) { return line2(d.line_data_test_results); })
@@ -578,7 +605,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
                 .style("opacity", 1e-6); // Set opacity to zero
 
         var test = svg.selectAll(".test")
-                .data(series_data)
+                .data(_data._series)
             .enter()
                 .append("g")
                     .attr("class", "test");
@@ -649,10 +676,13 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
             .style("stroke", function(d) { return d.color; });
 
         test_result.selectAll("circle")
-            .data(function(d) {
-                return d.line_data_test_results; })
+                .data(function(d) { return d.line_data_test_results; })
             .enter().append('circle')
                 // .style("pointer-events", "none") // Stop line interferring with cursor
+                .attr('id', function(d) {
+                    return 'ti_' + d.test_instance_id
+                })
+                .attr('class', function(d, i, s) { return 'tli_' + d.test_list_instance_id + ' tl_' + s[i].parentNode.__data__.test_list.id;})
                 .attr("clip-path", "url(#clip)")
                 .attr("stroke-width", 1)
                 .attr("stroke", function(d, i, s) { return s[i].parentNode.__data__.color; })
@@ -680,7 +710,37 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
             .style("stroke", function(d) { return d.color; })
             .style('stroke-width', line_width)
             .style('opacity', 0.7);
-        
+
+        var event_group = svg.append('g')
+            .attr("clip-path", "url(#clip)")
+            .attr('transform', 'translate(0, ' + (height - event_group_height - 1) + ')')
+            .attr('class', 'event-group');
+
+        var event = event_group.selectAll('.service-marker')
+                .data(_data._events)
+            .enter().append('g')
+                .attr('id', function(d, i, s) {
+                    return 'se_' + d.id;
+                })
+                .attr('class', 'service-marker')
+                .attr('transform', function(d) { return 'translate(' + (xScale(d.x) - event_group_height/2) + ',' + 0 + ')'});
+
+        var event_marker_points = '0,' + event_group_height + ' ' + event_group_height/2 + ',0 ' + event_group_height + ',' + event_group_height;
+        event.append('polygon')
+            .attr('stroke', function(d) { return d.followups.length == 0 ? 'grey' : '#00c0ef'})
+            .attr('fill', function(d) { return d.initiated_by == null ? 'none' : '#3c8dbc'})
+            .attr('stroke-width', 1)
+            .attr('class', 'service-marker-icon')
+            .attr('points', event_marker_points);
+
+        ///////////// Create invisible rect for mouse tracking
+        var mouse_tracker = svg.append("rect")
+            .attr("width", width)
+            .attr("height", height)
+            .attr("id", "mouse-tracker")
+            .style("fill", 'transparent')
+            .on("mousemove", mousemove);
+
         ////////////////////// legend
         var legendRowHeight = 25;
 
@@ -690,10 +750,8 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
                 .attr('transform', 'translate(' + width + ', 0)')
                 .attr('class', 'legend');
 
-            // .attr('transform', 'translate(' + (width - 50) + ', 0)');
-
         legend.append('rect')
-            .attr("height", legendRowHeight * series_data.length + 35)
+            .attr("height", legendRowHeight * num_tests + 35)
             .attr('width', 10)
             .attr('id', 'legend-rect')
             .style('fill', 'rgba(244, 244, 244, 0.5')
@@ -701,7 +759,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
             .style('stroke-width', 1);
 
         var legend_entry = legend.selectAll('.legend-row')
-                .data(series_data)
+                .data(_data._series)
             .enter().append("g")
                 .attr("transform", function(d, i) { return "translate(0," + ((i + 1) * legendRowHeight - 8) + ")"; })
                 .attr('class', 'legend-row');
@@ -873,7 +931,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
                 .attr('width', 40)
                 .attr('height', 14)
                 .attr('x', 5)
-                .attr('y', legendRowHeight * series_data.length + 15)
+                .attr('y', legendRowHeight * num_tests + 15)
                 .style('fill', '#3c8dbc')
                 .style('cursor', 'pointer')
                 .style('stroke', '#367fa9')
@@ -894,7 +952,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
             .attr('width', 30)
             .attr('height', 10)
             .attr("x", 8)
-            .attr("y", legendRowHeight * series_data.length + 25)
+            .attr("y", legendRowHeight * num_tests + 25)
             .style("pointer-events", "none")
             .style('font', '10px sans-serif')
             .style('fill', '#fff')
@@ -904,7 +962,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
             .attr('x2', width + legend_collapse_width)
             .attr('y2', 0)
             .attr('x1', width + legend_collapse_width)
-            .attr('y1', legendRowHeight * series_data.length + 35)
+            .attr('y1', legendRowHeight * num_tests + 35)
             .style('stroke', '#ddd');
 
         ///////////////// Date display
@@ -918,28 +976,8 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
         var old_x_closest,
             format = d3.timeFormat('%a, %b %e, %Y at %H:%M');
 
-        d3.select("#mouse-tracker")
-            .on("mousemove", mousemove)
-            .on("mouseout", function () {
-                hoverDate.text(null);
+        var highlighted_event;
 
-                d3.select("#hover-line")
-                    .style("opacity", 0);
-
-                d3.select('#context-hover-line')
-                    .style('opacity', 0);
-
-                d3.selectAll('circle[r="' + circle_radius_highlight + '"]')
-                    .attr('r', circle_radius)
-                    .attr('stroke-width', 1);
-
-                old_x_closest = null;
-            });
-
-        // lower y axis behind #mouse-tracker to prevent mouse interactions on gridlines.
-        d3.select('.y.axis').lower();
-
-        // resize everything on window resize
         d3.select(window).on('resize', function() {
 
             chart_width = $('#chart').width();
@@ -969,9 +1007,6 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
             if (expanded) toogle_text.text('hide \u25B6');
             else toogle_text.text('\u25C0 show');
 
-            // redrawMainXAxis();
-            // redrawMainContent();
-
         }
 
         function yBuff(minY, maxY) {
@@ -980,7 +1015,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
         }
 
         /**
-         * redraw axis along x. Used for legend collapse and expand
+         * redraw axis along x.
          */
         function redrawMainXAxis() {
 
@@ -990,27 +1025,18 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
             mainClip.transition().attr('width', width);
             x_axis_elem.transition().call(xAxis);
             yAxis.tickSizeInner(-width);
-            hoverDate.transition().attr("x", width - 170);
+            // hoverDate.transition().attr("x", width - 170);
 
         }
 
         function redrawContextXAxis() {
 
-            var east_bound_date = xScale.invert(width),
-                west_bound_date = xScale.invert(0),
-                east_selection_bound = xScale2(east_bound_date),
-                west_selection_bound = xScale2(west_bound_date),
-                context_width = width;
-
-            xScale2.range([0, context_width]);
+            xScale2.range([0, width]);
 
             x_axis2_elem.transition().call(xAxis2);
             context_path.transition().attr("d",  function(d) { return line2(d.line_data_test_results); });
-            brush.extent([[0, 0], [context_width, height2]]);
+            brush.extent([[0, 0], [width, height2]]);
             brush_elem.call(brush);
-
-            // TODO resize/move selection and move handles
-
         }
         
         /**
@@ -1018,8 +1044,10 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
          */
         function redrawMainContent() {
 
-            maxY = findMaxY(series_data, xScale.domain());
-            minY = findMinY(series_data, xScale.domain());
+            removeTooltip();
+
+            maxY = findMaxY(_data._series, xScale.domain());
+            minY = findMinY(_data._series, xScale.domain());
             yScale.domain(yBuff(minY, maxY));
 
             svg.select(".y.axis")
@@ -1033,7 +1061,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
                     return d.visible && d.lines_visible ? line(d.line_data_test_results) : null;
                 });
 
-            // markers
+            // circles
             test_result.filter(function(d) { return d.visible; }).selectAll("circle")
                 .transition()
                     .attr("cy", function (d) { return yScale(d.y); })
@@ -1071,6 +1099,13 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
                     return d.visible && d.ref_tol_visible ? area(d.area_data_lower_tol) : null;
                 });
 
+            // service markers
+            if ($('#show_events').is(':checked')) {
+                event_group.selectAll('.service-marker')
+                    .transition()
+                    .attr('transform', function(d) { return 'translate(' + (xScale(d.x) - event_group_height/2) + ',' + 0 + ')'});
+            }
+
             // Context path update
             context_path
                 .transition()
@@ -1079,37 +1114,356 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
 
         function mousemove() {
 
-            var mouse_x = d3.mouse(this)[0]; // Finding mouse x position on rect
+            if (!se_locked) {
+                var mouse_x = d3.mouse(this)[0], // Finding mouse x position on rect
+                    mouse_y = d3.mouse(this)[1];
 
-            var x0 = xScale.invert(mouse_x);
-            var x_closest = findClosestX(x0);
+                var x0 = xScale.invert(mouse_x),
+                    x_closest;
 
-            if (x_closest != old_x_closest) {
+                if ($('#show_events').is(':checked') && mouse_y > d3.select(this).attr('height') * .91) {
 
-                old_x_closest = x_closest;
-                
-                hoverDate.text(format(x_closest)); // scale mouse position to xScale date and format it to show month and year
+                    x_closest = findClosestEvent(x0);
 
-                d3.selectAll('circle[r="' + circle_radius_highlight + '"]')
-                    .attr('r', circle_radius)
-                    .attr('stroke-width', 1);
+                    if (x_closest != old_x_closest) {
+                        old_x_closest = x_closest;
+                        highlightEvent(x_closest);
+                    }
 
-                d3.selectAll('circle')
-                    .filter(function (d) { return d.x == x_closest; })
-                    .attr('r', circle_radius_highlight)
-                    .attr('stroke-width', 2);
+                } else {
+                    x_closest = findClosestX(x0);
 
-                d3.select("#hover-line") // select hover-line and changing attributes to mouse position
-                    .attr("x1", xScale(x_closest))
-                    .attr("x2", xScale(x_closest))
-                    .style("opacity", 1); // Making line visible
-
-                d3.select('#context-hover-line')
-                    .attr('x1', xScale2(x_closest))
-                    .attr('x2', xScale2(x_closest))
-                    .style('opacity', 0.3)
-
+                    if (x_closest != old_x_closest) {
+                        old_x_closest = x_closest;
+                        highlightCircles(x_closest);
+                    }
+                }
+                moveHoverLine(x_closest);
             }
+        }
+
+        function removeHighlights() {
+
+            d3.selectAll('circle[r="' + circle_radius_highlight + '"]')
+                .attr('r', circle_radius)
+                .attr('stroke-width', 1);
+
+            d3.selectAll('.service-marker-icon')
+                .attr('stroke-width', 1);
+
+            d3.selectAll('.service-marker-icon')
+                .attr('stroke-width', 1);
+
+            hoverDate.text(null);
+
+            d3.select("#hover-line")
+                .style("opacity", 0);
+
+            d3.select('#context-hover-line')
+                .style('opacity', 0);
+
+        }
+
+        function removeTooltip() {
+
+            svg.selectAll('.tli_line').remove();
+
+            d3.selectAll('circle[r="' + circle_radius_highlight + '"]')
+                .attr('r', circle_radius)
+                .attr('stroke-width', 1);
+
+            d3.selectAll('.tooltip')
+                .transition()
+                .style('opacity', 0)
+                .on('end', function() {
+                    this.remove();
+                });
+
+            se_locked = false;
+        }
+
+        function tooltipClick() {
+            se_locked = !se_locked;
+            d3.selectAll('.tooltip').each(function() {
+                var c = d3.color(d3.select(this).style('background-color'));
+                c.opacity = se_locked ? c.opacity + 0.3 : c.opacity - 0.3;
+                d3.select(this).style('background-color', c);
+            });
+        }
+
+        function highlightEvent(x) {
+            removeHighlights();
+            removeTooltip();
+
+            var h_event = d3.selectAll('.service-marker-icon')
+                .filter(function(d) { return d.x == x; })
+                .attr('stroke-width', 2);
+
+            var event_tooltip = d3.select("body")
+                .append("div")
+                    .attr('id', 'event_tooltip')
+                    .attr('class', 'tooltip')
+                    .style("position", "absolute")
+                    .style("z-index", "10")
+                    .style('width', tooltip_width + 'px')
+                    .style('height', tooltip_height + 'px')
+                    .style('padding', tooltip_padding + 'px')
+                    .style('background-color', 'rgba(25, 25, 25, 0.2)')
+                    .attr("opacity", 0)
+                    .text("a simple tooltip")
+                    .on('click', tooltipClick);
+
+            h_event.each(function(d) {
+                var event_data = d;
+
+                var top = window.pageYOffset + this.getBoundingClientRect().top - tooltip_height,
+                    left = window.pageXOffset + this.getBoundingClientRect().left - tooltip_width / 2 + event_group_height / 2;
+                highlighted_event = event_data.id;
+
+                event_tooltip
+                    .style('left', left + 'px')
+                    .style('top', top + 'px')
+                    .html($('#se-tooltip-template').html()
+                        .replace(/__se-id__/g, event_data.id)
+                        .replace(/__se-date__/g, format(event_data.x))
+                        .replace(/__se-wd__/g, event_data.work_description)
+                        .replace(/__se-type__/g, QACharts.se_types[event_data.type])
+                        .replace(/__se-prob__/g, QACharts.se_probs[event_data.prob_type] || '')
+                    )
+                    .transition()
+                    .style('opacity', 1);
+
+                var tli_coords = [],
+                    y_buffer = 20;
+                if (event_data.initiated_by) {
+
+                    var initiated_circles = d3.selectAll('.tli_' + event_data.initiated_by);
+
+                    initiated_circles
+                        .attr('r', circle_radius_highlight)
+                        .attr('stroke-width', 2);
+
+                    var initiated_test_list_data, initiated_x = 0;
+                    initiated_circles.each(function(d, i, s) {
+                        initiated_test_list_data = s[i].parentNode.__data__;
+                        initiated_x = xScale(d.x);
+                        return false;
+                    });
+
+                    var initiated_name = initiated_test_list_data.unit.name + ' - ' + initiated_test_list_data.test_list.name;
+
+                    var initiated_data = initiated_circles.data(),
+                        x_pos,
+                        y_pos = window.pageYOffset + this.getBoundingClientRect().top - height + event_group_height + y_buffer,
+                        x_buffer = 0,
+                        num_followups = event_data.followups.length,
+                        chart_div_offset = mouse_tracker.node().getBoundingClientRect().left;
+
+                    var line_from_right = true;
+                    if (initiated_x > tooltip_width + 2 * x_buffer) {
+                        x_pos = initiated_x + chart_div_offset - tooltip_width - x_buffer;
+                        x_pos = d3.min([chart_div_offset + width - tooltip_width - x_buffer, x_pos]);
+                        line_from_right = false;
+                    } else {
+                        x_pos = initiated_x + chart_div_offset + x_buffer;
+                        x_pos = d3.max([x_buffer + chart_div_offset, x_pos]);
+                    }
+
+                    tli_coords.push({ x: initiated_x, color: 'rgba(60, 141, 188, 0.6)'});
+
+                    var tli_initiated_tooltip = d3.select("body")
+                        .append("div")
+                        .attr('id', 'tli-' + initiated_data[0].test_list_instance_id + '_tooltip')
+                        .attr('class', 'tli_tooltip tooltip')
+                        .style("position", "absolute")
+                        .style("z-index", "10")
+                        .style('width', tooltip_width + 'px')
+                        .style('height', tooltip_height + 'px')
+                        .style('padding', tooltip_padding + 'px')
+                        .style('background-color', 'rgba(60, 141, 188, 0.6)')
+                        .attr("opacity", 0)
+                        .style('left', x_pos + 'px')
+                        .style('top', y_pos + 'px')
+                        .html($('#tli-tooltip-template').html()
+                            .replace(/__tli-id__/g, initiated_data[0].test_list_instance_id)
+                            .replace(/__tli-date__/g, moment(initiated_data.x).format('ddd, MMM D, YYYY, k:mm'))
+                            .replace(/__tli-tl-name__/g, initiated_name)
+                            .replace(/__tli-kind__/g, 'QA Event')
+                        );
+
+                    tli_initiated_tooltip
+                        .transition()
+                        .style('opacity', 1);
+                }
+
+                var _i = 0;
+                for (var i in event_data.followups) {
+                    var f = event_data.followups[i];
+
+                    var followup_circles = d3.selectAll('.tli_' + f.test_list_instance);
+
+                    if (followup_circles.size() == 0) {
+                        continue;
+                    }
+                    _i++;
+
+                    followup_circles
+                        .attr('r', circle_radius_highlight)
+                        .attr('stroke-width', 2);
+
+                    var followup_test_list_data, followup_x = 0;
+                    followup_circles.each(function(d, i, s) {
+                        followup_test_list_data = s[i].parentNode.__data__;
+                        followup_x = xScale(d.x);
+                        return false;
+                    });
+
+                    var followup_name = followup_test_list_data.unit.name + ' - ' + followup_test_list_data.test_list.name;
+
+                    var followup_data = followup_circles.data(),
+                        x_pos,
+                        y_pos = window.pageYOffset + this.getBoundingClientRect().top - height + event_group_height + y_buffer + _i * (y_buffer + tooltip_height),
+                        x_buffer = 0,
+                        num_followups = event_data.followups.length,
+                        chart_div_offset = mouse_tracker.node().getBoundingClientRect().left;
+
+                    var line_from_right = true;
+                    if (followup_x < width - tooltip_width - 2 * x_buffer) {
+
+                        x_pos = followup_x + chart_div_offset + x_buffer;
+                        x_pos = d3.max([x_buffer + chart_div_offset, x_pos]);
+                    } else {
+                        x_pos = followup_x + chart_div_offset - tooltip_width - x_buffer;
+                        x_pos = d3.min([chart_div_offset + width - tooltip_width - x_buffer, x_pos]);
+                        line_from_right = false;
+                    }
+
+                    tli_coords.push({ x: followup_x, color: 'rgba(0, 192, 239, 0.6)' });
+
+                    var tli_followup_tooltip = d3.select("body")
+                        .append("div")
+                        .attr('id', 'tli-' + followup_data[0].test_list_instance_id + '_tooltip')
+                        .attr('class', 'tli_tooltip tooltip')
+                        .style("position", "absolute")
+                        .style("z-index", "10")
+                        .style('width', tooltip_width + 'px')
+                        .style('height', tooltip_height + 'px')
+                        .style('padding', tooltip_padding + 'px')
+                        .style('background-color', 'rgba(0, 192, 239, 0.6)')
+                        .attr("opacity", 0)
+                        .style('left', x_pos + 'px')
+                        .style('top', y_pos + 'px')
+                        .html($('#tli-tooltip-template').html()
+                            .replace(/__tli-id__/g, followup_data[0].test_list_instance_id)
+                            .replace(/__tli-date__/g, moment(followup_data.x).format('ddd, MMM D, YYYY, k:mm'))
+                            .replace(/__tli-tl-name__/g, followup_name)
+                            .replace(/__tli-kind__/g, 'QA Followup')
+                        );
+
+                    tli_followup_tooltip
+                        .transition()
+                        .style('opacity', 1);
+
+                }
+
+                var tli_lines = svg.selectAll('.tli_line')
+                        .data(tli_coords)
+                    .enter().append('line')
+                        .attr('class', 'tli_line')
+                        .attr('x1', function(d) { return d.x; })
+                        .attr('x2', function(d) { return d.x; })
+                        .attr('y1', 0)
+                        .attr('y2', height)
+                        .attr('stroke-width', 1)
+                        .attr('stroke', function(d) { return d.color; })
+                        .style('opacity', 0)
+                        .transition()
+                        .style('opacity', 1);
+
+                svg.selectAll('.tli_line').exit().transition().style('opacity', 0).remove();
+            });
+        }
+
+        function highlightCircles(x) {
+
+            removeHighlights();
+            removeTooltip();
+
+            var ti_circles = d3.selectAll('circle')
+                .filter(function (d) { return d.x == x; })
+                .attr('r', circle_radius_highlight)
+                .attr('stroke-width', 2);
+
+            if (ti_circles.size() == 0) { return; }
+
+            var test_list_data;
+            ti_circles.each(function(d, i, s) {
+                test_list_data = s[i].parentNode.__data__;
+                return false;
+            });
+            var y_buffer = 20;
+
+            var tli_name = test_list_data.unit.name + ' - ' + test_list_data.test_list.name;
+
+            var tli_data = ti_circles.data(),
+                // x_c = xScale(initiated_data[0].x),
+                x_pos = xScale(x),
+                y_pos = window.pageYOffset + mouse_tracker.node().getBoundingClientRect().top + y_buffer,
+                x_buffer = 0,
+                chart_div_offset = mouse_tracker.node().getBoundingClientRect().left;
+
+            var line_from_right = true;
+            if (x_pos > tooltip_width + 2 * x_buffer) {
+                x_pos = x_pos + chart_div_offset - tooltip_width - x_buffer;
+                x_pos = d3.min([chart_div_offset + width - tooltip_width - x_buffer, x_pos]);
+                line_from_right = false;
+            } else {
+                x_pos = x_pos + chart_div_offset + x_buffer;
+                x_pos = d3.max([x_buffer + chart_div_offset, x_pos]);
+            }
+
+            var colour = 'rgba(25, 25, 25, 0.2)';
+
+            var tli_tooltip = d3.select("body")
+                .append("div")
+                .attr('id', 'tli-' + tli_data[0].test_list_instance_id + '_tooltip')
+                .attr('class', 'tli_tooltip tooltip')
+                .style("position", "absolute")
+                .style("z-index", "10")
+                .style('width', tooltip_width + 'px')
+                .style('height', tooltip_height + 'px')
+                .style('padding', tooltip_padding + 'px')
+                .style('background-color', colour)
+                .attr("opacity", 0)
+                .style('left', x_pos + 'px')
+                .style('top', y_pos + 'px')
+                .html($('#tli-tooltip-template').html()
+                    .replace(/__tli-id__/g, tli_data[0].test_list_instance_id)
+                    .replace(/__tli-date__/g, moment(x).format('ddd, MMM D, YYYY, k:mm'))
+                    .replace(/__tli-tl-name__/g, tli_name)
+                    .replace(/__tli-kind__/g, 'QA Session')
+                );
+
+            tli_tooltip
+                .transition()
+                .style('opacity', 1);
+
+
+        }
+
+        function moveHoverLine(x) {
+
+            d3.select("#hover-line") // select hover-line and changing attributes to mouse position
+                .attr("x1", xScale(x))
+                .attr("x2", xScale(x))
+                .style("opacity", 1); // Making line visible
+
+            d3.select('#context-hover-line')
+                .attr('x1', xScale2(x))
+                .attr('x2', xScale2(x))
+                .style('opacity', 0.3);
+
+            hoverDate.text(format(x));
         }
 
         //for brusher of the slider bar at the bottom
@@ -1208,21 +1562,22 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
             var best_x = 0, best_dist = Infinity,
                 bi_left = d3.bisector(function(d) { return d.x }).left;
 
-            d3.map(series_data).each(function(val) {
+            d3.map(_data._series).each(function(val) {
 
+                var x_min_max = xAxis.scale().domain();
                 if (val.visible) {
                     var v = val.line_data_test_results,
                         i = bi_left(v, x),
                         d1,
                         d2;
 
-                    if (i == 0) {
+                    if (i == 0 || (v[i - 1].x < x_min_max[0])) {
                         d1 = Infinity;
                     }
                     else {
                         d1 = x - v[i - 1].x;
                     }
-                    if (i == v.length) {
+                    if (i == v.length || (v[i].x > x_min_max[1])) {
                         d2 = Infinity;
                     }
                     else {
@@ -1237,6 +1592,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
                         best_dist = d2;
                         best_x = v[i].x;
                     }
+
                 }
             });
 
@@ -1244,6 +1600,23 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
 
         }
 
+        function findClosestEvent(x) {
+            var best_x = 0, best_dist = Infinity;
+
+            d3.map(_data._events).each(function(val) {
+                var x_min_max = xAxis.scale().domain();
+                if (val.visible && val.x > x_min_max[0] && val.x < x_min_max[1]) {
+
+                    var d = Math.abs(x - val.x);
+
+                    if (d < best_dist) {
+                        best_dist = d;
+                        best_x = val.x;
+                    }
+                }
+            });
+            return best_x;
+        }
     }
 
     function get_range_options(prev_selection) {
