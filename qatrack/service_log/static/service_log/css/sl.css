@@ -94,3 +94,6 @@
 #tli_initiated_display {
     margin-top: 5px;
 }
+.autosize {
+    resize: none;
+}

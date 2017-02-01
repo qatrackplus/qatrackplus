@@ -27,6 +27,7 @@ from qatrack.service_log import models, forms
 from qatrack.qa import models as qa_models
 from qatrack.qa.views.base import generate_review_status_context
 from qatrack.qa.views.review import UTCInstances
+from qatrack.units import models as u_models
 
 
 def get_time_display(dt):
@@ -205,7 +206,6 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseM
         return super(ServiceEventUpdateCreate, self).get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        print('--- post ---')
         self.object = self.get_object()
         return super(ServiceEventUpdateCreate, self).post(request, *args, **kwargs)
 
@@ -250,7 +250,7 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseM
                 prefix='followup',
                 form_kwargs={
                     'service_event_instance': self.object,
-                    'unit_field': None if self.object is None else self.object.unit_service_area.unit
+                    'unit_field': (qa_models.TestListInstance.objects.get(pk=self.request.GET.get('ib')).unit_test_collection.unit if self.request.GET.get('ib') else None) if self.object is None else self.object.unit_service_area.unit
                 }
             )
 
@@ -353,6 +353,11 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseM
 
 
 class CreateServiceEvent(ServiceEventUpdateCreate):
+
+    def get_form_kwargs(self):
+        kwargs = super(CreateServiceEvent, self).get_form_kwargs()
+        kwargs['initial_ib'] = self.request.GET.get('ib', None)
+        return kwargs
 
     def form_valid(self, form):
 

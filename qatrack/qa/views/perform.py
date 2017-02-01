@@ -663,6 +663,8 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         else:
             context['se_statuses'] = {}
         context['status_tag_colours'] = sl_models.ServiceEventStatus.get_colour_dict()
+
+        print(context['status_tag_colours'])
         return context
 
     def get_requested_day_to_perform(self):
@@ -821,6 +823,16 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         context = super(EditTestListInstance, self).get_context_data(**kwargs)
         self.unit_test_infos = [f.instance.unit_test_info for f in context["formset"]]
         context["unit_test_infos"] = json.dumps(self.template_unit_test_infos())
+
+        qa_followup_id = self.request.GET.get('qaf', None)
+        if qa_followup_id:
+            qa_followup = sl_models.QAFollowup.objects.get(pk=qa_followup_id)
+            context['se_statuses'] = {qa_followup.service_event.id: qa_followup.service_event.service_status.id}
+        else:
+            context['se_statuses'] = {}
+        context['status_tag_colours'] = sl_models.ServiceEventStatus.get_colour_dict()
+
+        print(context['status_tag_colours'])
         return context
 
 

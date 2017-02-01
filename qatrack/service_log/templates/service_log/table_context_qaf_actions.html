@@ -11,8 +11,10 @@
         <a class="btn btn-default btn-xs btn-flat pull-right margin-left-2" href="{% url 'perform_qa' pk=qaf.unit_test_collection.pk %}?qaf={{ qaf.id }}{% if next %}&next={{ next }}{% endif %}">
             Perform
         </a>
-        <a class="btn btn-default btn-xs btn-flat pull-right margin-left-2" href="{% url 'review_utc' pk=qaf.unit_test_collection.pk %}?qaf={{ qaf.id }}{% if next %}&next={{ next }}{% endif %}">
-            Performed
-        </a>
+        {% if show_performed %}
+            <a class="btn btn-default btn-xs btn-flat pull-right margin-left-2" href="{% url 'review_utc' pk=qaf.unit_test_collection.pk %}?qaf={{ qaf.id }}{% if next %}&next={{ next }}{% endif %}">
+                Performed
+            </a>
+        {% endif %}
     {% endif %}
 </div>

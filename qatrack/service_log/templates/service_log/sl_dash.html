@@ -196,7 +196,7 @@
                                                             {% if obj.class == 'se_new' or obj.class == 'se_edit' or obj.class == 'se_status' %}
 {#                                                                {% include "service_log/table_context_se_actions.html" with se=obj.instance next='/servicelog/' %}#}
                                                             {% elif obj.class == 'qaf_new' or obj.class == 'qaf_complete' %}
-                                                                {% include "service_log/table_context_qaf_actions.html" with qaf=obj.instance next='/servicelog/' %}
+                                                                {% include "service_log/table_context_qaf_actions.html" with qaf=obj.instance show_performed=False next='/servicelog/' %}
                                                             {% endif %}
                                                         </div>
                                                         {{ obj.msg }}

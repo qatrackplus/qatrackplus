@@ -59,6 +59,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
             startDate: moment().subtract(365, 'days'),
             endDate: moment(),
             linkedCalendars: false,
+            opens: 'left',
             locale: {
                 format: 'DD-MM-YYYY'
             }
@@ -429,7 +430,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
         var to = range.val().split(' - ')[1];
         var num_tests = _data._series.length;
 
-        var se_locked = false;
+        var tracker_locked = false;
 
         ///////////////////////// CHART
         var chart_height = 700,
@@ -454,8 +455,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
 
         var tooltip_height = 85,
             tooltip_width = 175,
-            tooltip_padding = 7,
-            tooltip_expanded_width = 400;
+            tooltip_padding = 7;
 
         var parseDate = d3.timeFormat("%Y%m%d").parse;
 
@@ -739,10 +739,12 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
             .attr("height", height)
             .attr("id", "mouse-tracker")
             .style("fill", 'transparent')
-            .on("mousemove", mousemove);
+            .on("mousemove", mousemove)
+            .on('click', toggleLock);
 
         ////////////////////// legend
-        var legendRowHeight = 25;
+        var legendRowHeight = 25,
+            legend_expanded = false;
 
         var legend = svg.append('g')
                 .attr("clip-path", "url(#clip-legend)")
@@ -754,7 +756,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
             .attr("height", legendRowHeight * num_tests + 35)
             .attr('width', 10)
             .attr('id', 'legend-rect')
-            .style('fill', 'rgba(244, 244, 244, 0.5')
+            .style('fill', 'rgba(244, 244, 244, 0.8')
             .style('stroke', '#ddd')
             .style('stroke-width', 1);
 
@@ -923,23 +925,21 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
         var legend_expand_width = largest_entry + 60;
         legend.select('#legend-rect').attr('width', legend_expand_width);
 
-        var legend_toggle = legend.selectAll('.legend-toggle')
-                .data([{ expanded: false }])
-            .enter().append('rect')
-                .attr('id', 'legend-toggle')
-                .attr('class', 'legend-toggle btn btn-primary btn-flat')
-                .attr('width', 40)
-                .attr('height', 14)
-                .attr('x', 5)
-                .attr('y', legendRowHeight * num_tests + 15)
-                .style('fill', '#3c8dbc')
-                .style('cursor', 'pointer')
-                .style('stroke', '#367fa9')
-                .style('stroke-width', '0.9px');
+        var legend_toggle = legend.append('rect')
+            .attr('id', 'legend-toggle')
+            .attr('class', 'legend-toggle btn btn-primary btn-flat')
+            .attr('width', 40)
+            .attr('height', 14)
+            .attr('x', 5)
+            .attr('y', legendRowHeight * num_tests + 15)
+            .style('fill', '#3c8dbc')
+            .style('cursor', 'pointer')
+            .style('stroke', '#367fa9')
+            .style('stroke-width', '0.9px');
 
         legend_toggle.on('click', function(d, i, s) {
-                d.expanded = !d.expanded;
-                toggleLegend(d.expanded);
+                legend_expanded = !legend_expanded;
+                toggleLegend();
             })
             .on('mouseover', function() {
                 d3.select(this).style('fill', '#367fa9').style('stroke', '#204d74');
@@ -957,12 +957,12 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
             .style('font', '10px sans-serif')
             .style('fill', '#fff')
             .text('\u25C0 show');
-
+        var legend_height = legendRowHeight * num_tests + 35;
         var cheatLine = svg.append('line')
             .attr('x2', width + legend_collapse_width)
             .attr('y2', 0)
             .attr('x1', width + legend_collapse_width)
-            .attr('y1', legendRowHeight * num_tests + 35)
+            .attr('y1', legend_height)
             .style('stroke', '#ddd');
 
         ///////////////// Date display
@@ -997,14 +997,14 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
             redrawContextXAxis();
         });
 
-        function toggleLegend(expanded) {
+        function toggleLegend() {
 
-            legend_overhang = expanded ? legend_expand_width - legend_collapse_width: 0;
+            legend_overhang = legend_expanded ? legend_expand_width - legend_collapse_width: 0;
 
             legend.transition()
                 .attr('transform', 'translate(' + (width - legend_overhang) + ', 0)');
 
-            if (expanded) toogle_text.text('hide \u25B6');
+            if (legend_expanded) toogle_text.text('hide \u25B6');
             else toogle_text.text('\u25C0 show');
 
         }
@@ -1114,7 +1114,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
 
         function mousemove() {
 
-            if (!se_locked) {
+            if (!tracker_locked) {
                 var mouse_x = d3.mouse(this)[0], // Finding mouse x position on rect
                     mouse_y = d3.mouse(this)[1];
 
@@ -1179,14 +1179,14 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
                     this.remove();
                 });
 
-            se_locked = false;
+            tracker_locked = false;
         }
 
-        function tooltipClick() {
-            se_locked = !se_locked;
+        function toggleLock() {
+            tracker_locked = !tracker_locked;
             d3.selectAll('.tooltip').each(function() {
                 var c = d3.color(d3.select(this).style('background-color'));
-                c.opacity = se_locked ? c.opacity + 0.3 : c.opacity - 0.3;
+                c.opacity = tracker_locked ? c.opacity + 0.3 : c.opacity - 0.3;
                 d3.select(this).style('background-color', c);
             });
         }
@@ -1211,7 +1211,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
                     .style('background-color', 'rgba(25, 25, 25, 0.2)')
                     .attr("opacity", 0)
                     .text("a simple tooltip")
-                    .on('click', tooltipClick);
+                    .on('click', toggleLock);
 
             h_event.each(function(d) {
                 var event_data = d;
@@ -1412,6 +1412,10 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
                 x_buffer = 0,
                 chart_div_offset = mouse_tracker.node().getBoundingClientRect().left;
 
+            if (x_pos > width - legend_expand_width + margin.right) {
+                y_pos += legend_height + y_buffer;
+            }
+
             var line_from_right = true;
             if (x_pos > tooltip_width + 2 * x_buffer) {
                 x_pos = x_pos + chart_div_offset - tooltip_width - x_buffer;
@@ -1442,7 +1446,10 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
                     .replace(/__tli-date__/g, moment(x).format('ddd, MMM D, YYYY, k:mm'))
                     .replace(/__tli-tl-name__/g, tli_name)
                     .replace(/__tli-kind__/g, 'QA Session')
-                );
+                )
+                .on('click', toggleLock);
+
+            $('#tooltip-se-new-btn').show();
 
             tli_tooltip
                 .transition()

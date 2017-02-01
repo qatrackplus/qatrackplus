@@ -327,14 +327,15 @@
         <div class="col-md-12">
             <strong>__tli-kind__</strong>
         </div>
-        <div class="col-md-12">
-            <strong>__tli-tl-name__</strong>
+        <div class="col-md-12" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+            <strong >__tli-tl-name__</strong>
         </div>
     </div>
     <div class="row">
         <div class="col-md-12">
             <div id="tooltip-se-date">__tli-date__</div>
             <a id="tooltip-se-btn" class="btn btn-flat btn-xs btn-default pull-right" href="{% url 'view_test_list_instance' %}__tli-id__">View</a>
+            <a id="tooltip-se-new-btn" class="btn btn-flat btn-xs btn-default pull-right margin-r-3" href="{% url 'sl_new' %}?ib=__tli-id__" style="display: none;">Initiate SE</a>
         </div>
     </div>
     <div class="tli-se-links" style="display: none;">

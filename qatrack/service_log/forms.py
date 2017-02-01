@@ -144,6 +144,7 @@ class FollowupForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.service_event_instance = kwargs.pop('service_event_instance')
         self.unit_field = kwargs.pop('unit_field')
+        print(self.unit_field)
         super(FollowupForm, self).__init__(*args, **kwargs)
 
         if self.unit_field:
@@ -286,6 +287,7 @@ class ServiceEventForm(BetterModelForm):
         ]
 
     def __init__(self, *args, **kwargs):
+        self.initial_ib = kwargs.pop('initial_ib', None)
         self.group_linkers = kwargs.pop('group_linkers', [])
         self.user = kwargs.pop('user', None)
         super(ServiceEventForm, self).__init__(*args, **kwargs)
@@ -320,20 +322,31 @@ class ServiceEventForm(BetterModelForm):
             g_fields.append(field_name)
         self._fieldsets.append(('g_link_fields', {'fields': g_fields}))
 
-        # If there is no saved instance yet
+        # If there are no saved instance yet
         if is_new:
+
+            # if url param 'ib' is included
+            if self.initial_ib and 'test_list_instance_initiated_by' not in self.data:
+                initial_ib_tli = qa_models.TestListInstance.objects.get(id=self.initial_ib)
+                self.initial['test_list_instance_initiated_by'] = initial_ib_tli.id
+                initial_ib_utc = initial_ib_tli.unit_test_collection
+                initial_ib_utc_u = initial_ib_utc.unit
+                self.initial['unit_field'] = initial_ib_utc_u
+                self.initial['initiated_utc_field'] = initial_ib_utc
+                self.fields['service_area_field'].queryset = models.ServiceArea.objects.filter(units=initial_ib_utc_u)
+                self.fields['initiated_utc_field'].queryset = qa_models.UnitTestCollection.objects.filter(unit=initial_ib_utc_u)
 
             if 'service_event_related_field' in self.data:
                 self.fields['service_event_related_field'].queryset = models.ServiceEvent.objects.filter(
                     pk__in=self.data.getlist('service_event_related_field')
                 )
 
-            if 'unit_field' not in self.data:
+            if 'unit_field' not in self.data and 'unit_field' not in self.initial:
                 self.fields['service_area_field'].widget.attrs.update({'disabled': True})
                 self.fields['service_event_related_field'].widget.attrs.update({'disabled': True})
                 self.fields['initiated_utc_field'].widget.attrs.update({'disabled': True})
 
-            else:
+            if 'unit_field' in self.data:
                 if self.data['unit_field']:
                     self.fields['service_area_field'].queryset = models.ServiceArea.objects.filter(units=self.data['unit_field'])
                     self.fields['initiated_utc_field'].queryset = qa_models.UnitTestCollection.objects.filter(unit=self.data['unit_field'])
