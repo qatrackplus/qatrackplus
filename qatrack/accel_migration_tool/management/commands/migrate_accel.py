@@ -759,7 +759,8 @@ class Command(BaseCommand):
               approved,
               edited_by,
               PMI,
-              user_win_id
+              user_win_id,
+              qa_followup
             FROM service
             ORDER BY srn
             """
@@ -821,13 +822,22 @@ class Command(BaseCommand):
                     modified_by = None
                     datetime_modified = None
 
+                if row.qa_followup and row.qa_followup != ' ':
+                    qa_followup = row.qa_followup
+                else:
+                    qa_followup = None
+
+                if row.safety_precautions and row.safety_precautions != ' ':
+                    safety_precautions = row.safety_precautions
+                else:
+                    safety_precautions = None
+
                 service_event = sl_models.ServiceEvent(
                     datetime_created=datetime_created,
                     datetime_service=datetime_service,
                     datetime_modified=datetime_modified,
                     datetime_status_changed=datetime_status_changed,
-                    # srn=row.srn,
-                    safety_precautions=row.safety_precautions,
+                    safety_precautions=safety_precautions,
                     problem_description=row.problem,
                     work_description=row.work_done,
                     duration_service_time=service_time,
@@ -838,6 +848,7 @@ class Command(BaseCommand):
                     user_created_by=created_by,
                     user_modified_by=modified_by,
                     user_status_changed_by=status_changed_by,
+                    qafollowup_notes=qa_followup,
                     is_approval_required=is_approval_required
                 )
                 service_event.save()

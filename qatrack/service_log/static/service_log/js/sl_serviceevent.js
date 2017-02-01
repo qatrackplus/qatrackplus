@@ -117,7 +117,6 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
                 dataType: 'json',
                 delay: '500',
                 data: function (params) {
-                    console.log($units.val());
                     return {
                         q: params.term, // search term
                         page: params.page,
@@ -135,28 +134,28 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
         });
 
         // Problem Type --------------------------------------------------------------------------------------------
-        $problem_type.select2({
-            tags: true,
-            placeholder: 'Enter new or search for problem type',
-            allowClear: true,
-            createTag: function (params) {
-                return {
-                    id: params.term,
-                    text: params.term,
-                    newOption: true
-                }
-            },
-            templateResult: function (data) {
-                var $result = $("<span></span>");
-                $result.text(data.text);
-                if (data.newOption) {
-                    $result.append(" <em>(new)</em>");
-                }
-                return $result;
-            },
-            // minimumResultsForSearch: 10,
-            width: '100%'
-        });
+        // $problem_type.select2({
+        //     tags: true,
+        //     placeholder: 'Enter new or search for problem type',
+        //     allowClear: true,
+        //     createTag: function (params) {
+        //         return {
+        //             id: params.term,
+        //             text: params.term,
+        //             newOption: true
+        //         }
+        //     },
+        //     templateResult: function (data) {
+        //         var $result = $("<span></span>");
+        //         $result.text(data.text);
+        //         if (data.newOption) {
+        //             $result.append(" <em>(new)</em>");
+        //         }
+        //         return $result;
+        //     },
+        //     // minimumResultsForSearch: 10,
+        //     width: '100%'
+        // });
         
         // Unit -----------------------------------------------------------------------------------------------
         $units.change(function() {
@@ -240,12 +239,14 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
         });
 
         // Qafollowup Formset --------------------------------------------------------------------------------
-        var $select_tli = $('.select-tli');
-        $select_tli.click(function(event) {
-            var w = window.open($(this).attr('data-link'), '_blank', 'scrollbars=no,menubar=no,height=900,width=1200,resizable=yes,toolbar=yes,status=no');
-            w.focus();
-        });
-        displayTLI = function(prefix, data, returnValue) {
+        function set_select_tli() {
+            var $select_tli = $('.select-tli');
+            $select_tli.click(function (event) {
+                var w = window.open($(this).attr('data-link'), '_blank', 'scrollbars=no,menubar=no,height=900,width=1200,resizable=yes,toolbar=yes,status=no');
+                w.focus();
+            });
+        }
+        displayTLI = function (prefix, data, returnValue) {
             console.log(prefix);
             var $label_group = $('<span class="label-group"></span>');
             for (var status in data['pass_fail']) {
@@ -289,8 +290,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
             }
             //TODO: date fpr initiated
         };
-        setSearchResult = function(form, returnValue) {
-            // TODO
+        setSearchResult = function (form, returnValue) {
             window.focus();
             if (form == 'utc_initiated') {
                 $tli_initiated_by.val(returnValue);
@@ -305,6 +305,8 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
                 }
             })
         };
+
+        set_select_tli();
         $('#add-followup').click(function() {
 
             var empty_followup_form = $('#empty-followup-form').html(),
@@ -321,10 +323,28 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
             $followup_index.val(parseInt(followup_index) + 1);
         });
 
-        function prepTLISelection() {
-            var $followups = $('select.followup-utc');
-            
-        }
+        $('select.followup-utc').change(function() {
+
+            var prefix = $(this).attr('data-prefix'),
+                utc_id = $(this).val();
+
+            if (utc_id == '') {
+                $('#utc-actions-' + prefix).html('');
+                $('#pass-fail-' + prefix).html('');
+                $('#review-' + prefix).html('');
+                $('#id_' + prefix + '-test_list_instance').val('');
+            } else {
+
+                // add utc action btns
+                $('#utc-actions-' + prefix).html(
+                    $('#utc-actions-template').html()
+                        .replace(/__utc-id__/g, utc_id)
+                        .replace(/__prefix__/g, prefix)
+                );
+                set_select_tli();
+            }
+
+        });
 
         // // initiated by -------------------------------------------------------------------------------------
         if ($tli_initiated_by.val() == '') {
@@ -335,7 +355,8 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
 
         $utc_initiated_by.change(function() {
             if ($(this).val() != '') {
-                var w = window.open($(this).attr('data-link') + $(this).val() + '/utc_initiated', '_blank', 'scrollbars=no,menubar=no,height=900,width=1200,resizable=yes,toolbar=yes,status=no');
+                console.log($(this).attr('data-link') + $(this).val() + '/utc_initiated');
+                var w = window.open($(this).attr('data-link') + '/' + $(this).val() + '/utc_initiated', '_blank', 'scrollbars=no,menubar=no,height=900,width=1200,resizable=yes,toolbar=yes,status=no');
                 w.focus();
             } else {
                 $tli_initiated_display.slideUp('fast', function() {

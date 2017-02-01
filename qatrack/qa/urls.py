@@ -85,7 +85,7 @@ urlpatterns = [
     url(r"^session/edit/(?P<pk>\d+)/$", perform.EditTestListInstance.as_view(), name="edit_tli"),
 
     url(r"^unit/$", perform.ChooseUnit.as_view(), name="choose_unit"),
-    url(r"^utc/perform/(?P<pk>\d+)/$", perform.PerformQA.as_view(), name="perform_qa"),
+    url(r"^utc/perform(?:/(?P<pk>\d+))?/$", perform.PerformQA.as_view(), name="perform_qa"),
 
     url(r"^unit/(?P<unit_number>[/\d]+)/frequency/(?P<frequency>[/\w-]+?)/$", perform.UnitFrequencyList.as_view(), name="qa_by_frequency_unit"),
     url(r"^unit/(?P<unit_number>[/\d]+)/$", perform.UnitList.as_view(), name="qa_by_unit"),
@@ -98,3 +98,5 @@ urlpatterns = [
     url(r"^backup/paper/$", backup.PaperForms.as_view(), name="qa_paper_forms"),
 
 ]
+
+

@@ -63,6 +63,7 @@ class Migration(migrations.Migration):
                 ('problem_description', models.TextField(help_text='Describe the problem leading to this service event')),
                 ('work_description', models.TextField(help_text='Describe the work done during this service event', null=True, blank=True)),
                 ('duration_service_time', models.DurationField(help_text='Enter the total time duration of this service event', null=True, verbose_name='Service time', blank=True)),
+                ('qafollowup_notes', models.TextField(blank=True, help_text='Provide any extra information regarding followups', null=True)),
                 ('duration_lost_time', models.DurationField(help_text='Enter the total clinical time lost for this service event', null=True, verbose_name='Lost time', blank=True)),
                 ('problem_type', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, blank=True, to='service_log.ProblemType', help_text='Select/create a problem type that describes this service event', null=True)),
                 ('service_event_related', models.ManyToManyField(blank=True, help_text='Was there a previous service event that might be related to this event?', related_name='_serviceevent_service_event_related_+', to='service_log.ServiceEvent', verbose_name='Service events related')),

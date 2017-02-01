@@ -16,7 +16,6 @@
 
 {% block extra_js %}
     <script type="text/javascript">
-{#        var se_colours_dict = {{ service_event_tag_colours|safe }};#}
         var status_colours_dict = {{ status_tag_colours|safe }};
         var se_statuses = {{ se_statuses|safe }};
         var se_types_approval = {{ se_types_approval|safe }};
@@ -140,6 +139,7 @@
                                                 </div>
                                                 {% for e in field.errors %}
                                                     <div class="col-sm-12 help-block text-center">{{ e }}</div>
+                                                    {{ field.id_for_label }}
                                                 {% endfor %}
                                             {% endif %}
                                         </div>
@@ -299,9 +299,9 @@
                                                     {% if f_form.instance.pk %}
                                                         <td id="pass-fail-{{ f_form.prefix }}">{% if f_form.instance.test_list_instance.pk %}{{ f_form.instance.test_list_instance|as_pass_fail_status:False }}{% else %}----{% endif %}</td>
                                                         <td id="review-{{ f_form.prefix }}">{% if f_form.instance.test_list_instance.pk %}{{ f_form.instance.test_list_instance|as_review_status }}{% else %}----{% endif %}</td>
-                                                        <td>{{ f_form.instance.user_assigned_by }}</td>
-                                                        <td>{{ f_form.instance.datetime_assigned }}</td>
-                                                        <td>
+                                                        <td id="assigned-by-{{ f_form.prefix }}">{{ f_form.instance.user_assigned_by }}</td>
+                                                        <td id="assigned-date-{{ f_form.prefix }}">{{ f_form.instance.datetime_assigned }}</td>
+                                                        <td id="utc-actions-{{ f_form.prefix }}">
                                                             {% if f_form.instance.test_list_instance.pk %}
                                                                 <a href="{% url 'review_test_list_instance' pk=f_form.instance.test_list_instance.pk %}?next={% url 'sl_edit' pk=form.instance.pk %}" class="btn btn-xs btn-default btn-flat">
                                                                     Review
@@ -317,11 +317,11 @@
                                                         </td>
                                                         <td align="center">{{ f_form.DELETE }}</td>
                                                     {% else %}
-                                                        <td></td>
-                                                        <td></td>
-                                                        <td></td>
-                                                        <td></td>
-                                                        <td></td>
+                                                        <td id="pass-fail-{{ f_form.prefix }}"></td>
+                                                        <td id="review-{{ f_form.prefix }}"></td>
+                                                        <td id="assigned-by-{{ f_form.prefix }}"></td>
+                                                        <td id="assigned-date-{{ f_form.prefix }}"></td>
+                                                        <td id="utc-actions-{{ f_form.prefix }}"></td>
                                                         <td></td>
                                                     {% endif %}
                                                 </tr>
@@ -339,7 +339,32 @@
                                 </div>
                             </div>
 
+                            <div class="row">
+                                <div class="col-md-12">
+                                    {% for field in form.fieldsets.followup_fields %}
+                                        <div class="form-group {% if field.errors %}has-error{% endif %}">
+                                            {% if 'autosize' in field.field.widget.attrs.class %}
+                                                <div class="col-sm-12">
+                                                    <label for="{{ field.id_for_label }}" class="{% if field.field.required %} required{% endif %}">{{ field.label }}</label>
+                                                    {{ field }}
+                                                    {% for e in field.errors %}
+                                                        <div class="col-sm-12 help-block text-center">{{ e }}</div>
+                                                    {% endfor %}
+                                                </div>
+                                            {% else %}
+                                                <label for="{{ field.id_for_label }}" class="col-sm-4{% if field.field.required %} required{% endif %}">{{ field.label }}</label>
 
+                                                <div class="col-sm-8">
+                                                    {{ field }}
+                                                </div>
+                                                {% for e in field.errors %}
+                                                    <div class="col-sm-12 help-block text-center">{{ e }}</div>
+                                                {% endfor %}
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
 
                         </div>
                     </div>
@@ -417,19 +442,24 @@
                 <tr id="followup-__prefix__">
                     {{ f_form.id }}
                     {{ f_form.test_list_instance }}
-                    <td  class="form-group">{{ f_form.unit_test_collection }}</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-{#                    <td></td>#}
-{#                    <td></td>#}
-                    <td></td>
-                    <td></td>
+                    <td class="form-group">{{ f_form.unit_test_collection }}</td>
+                    <td id="pass-fail-followup-__prefix__"></td>
+                    <td id="review-followup-__prefix__"></td>
+                    <td id="assigned-by-followup-__prefix__"></td>
+                    <td id="assigned-date-followup-__prefix__"></td>
+                    <td id="utc-actions-followup-__prefix__"></td>
                     <td></td>
                 </tr>
             {% endwith %}
         </tbody>
     </table>
+
+
+    <div id="utc-actions-template" style="display: none;">
+        <a id="select-tli-__prefix__" class="btn btn-default btn-xs btn-flat select-tli" data-link="{% url 'tli_select' %}/__utc-id__/__prefix__/">
+            Performed
+        </a>
+    </div>
 
 
 {% endblock body %}

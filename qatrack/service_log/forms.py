@@ -162,7 +162,7 @@ class FollowupForm(forms.ModelForm):
             self.fields['unit_test_collection'].disabled = True
             self.initial['test_list_instance'] = self.instance.test_list_instance.id
 
-        self.fields['unit_test_collection'].widget.attrs.update({'class': 'followup-utc select2'})
+        self.fields['unit_test_collection'].widget.attrs.update({'class': 'followup-utc select2', 'data-prefix': self.prefix})
 
     def is_valid(self):
         valid = super(FollowupForm, self).is_valid()
@@ -243,16 +243,16 @@ class ServiceEventForm(BetterModelForm):
     )
     duration_service_time = HoursMinDurationField(label=_('Service time'), required=False)
     duration_lost_time = HoursMinDurationField(label=_('Lost time'), required=False)
-    problem_type = ProblemTypeModelChoiceField(
-        queryset=models.ProblemType.objects.all(), required=False, to_field_name='name'
-    )
+    # problem_type = ProblemTypeModelChoiceField(
+    #     queryset=models.ProblemType.objects.all(), required=False, to_field_name='name'
+    # )
     service_event_related_field = ServiceEventRelatedField(required=False, queryset=models.ServiceEvent.objects.none())
     is_approval_required = forms.BooleanField(required=False, label=_('Approval required'))
 
-    test_list_instance_initiated_by = TLIInitiatedField()
+    test_list_instance_initiated_by = TLIInitiatedField(required=False)
 
     initiated_utc_field = forms.ModelChoiceField(
-        queryset=qa_models.UnitTestCollection.objects.none(), label='Initiated by'
+        required=False, queryset=qa_models.UnitTestCollection.objects.none(), label='Initiated by'
     )
 
     _classes = ['form-control']
@@ -280,6 +280,9 @@ class ServiceEventForm(BetterModelForm):
             ('time_fields', {
                 'fields': ['duration_service_time', 'duration_lost_time'],
             }),
+            ('followup_fields', {
+                'fields': ['qafollowup_notes'],
+            })
         ]
 
     def __init__(self, *args, **kwargs):
@@ -333,6 +336,7 @@ class ServiceEventForm(BetterModelForm):
             else:
                 if self.data['unit_field']:
                     self.fields['service_area_field'].queryset = models.ServiceArea.objects.filter(units=self.data['unit_field'])
+                    self.fields['initiated_utc_field'].queryset = qa_models.UnitTestCollection.objects.filter(unit=self.data['unit_field'])
                 else:
                     self.fields['service_area_field'].widget.attrs.update({'disabled': True})
                     self.fields['service_event_related_field'].widget.attrs.update({'disabled': True})
@@ -359,7 +363,7 @@ class ServiceEventForm(BetterModelForm):
             self.initial['service_event_related_field'] = self.instance.service_event_related.all()
             self.fields['service_event_related_field'].queryset = self.initial['service_event_related_field']
             self.fields['service_area_field'].queryset = models.ServiceArea.objects.filter(units=unit)
-            self.initial['problem_type'] = self.instance.problem_type
+            # self.initial['problem_type'] = self.instance.problem_type
 
             if self.instance.service_type.is_approval_required:
                 self.fields['is_approval_required'].widget.attrs.update({'disabled': True})
@@ -375,7 +379,7 @@ class ServiceEventForm(BetterModelForm):
 
             self.fields['initiated_utc_field'].queryset = qa_models.UnitTestCollection.objects.filter(unit=unit, active=True)
 
-        for f in ['safety_precautions', 'problem_description', 'work_description']:
+        for f in ['safety_precautions', 'problem_description', 'work_description', 'qafollowup_notes']:
             self.fields[f].widget.attrs.update({'rows': 3, 'class': 'autosize'})
 
         select2_fields = [
@@ -423,6 +427,7 @@ class ServiceEventForm(BetterModelForm):
         #     sers = models.ServiceEvent.objects.filter(pk__in=service_event_related)
         # except ValueError:
         #     sers = []
+
         self.instance.test_list_instance_initiated_by = self.cleaned_data.get('test_list_instance_initiated_by')
         self.instance.unit_service_area = usa
         super(ServiceEventForm, self).save(*args, **kwargs)
@@ -430,6 +435,12 @@ class ServiceEventForm(BetterModelForm):
         # models.ServiceEvent.save()
 
         return self.instance
+
+    def clean(self):
+        super(ServiceEventForm, self).clean()  # if necessary
+        if 'initiated_utc_field' in self._errors:
+            del self._errors['initiated_utc_field']
+        return self.cleaned_data
 
     @property
     def classes(self):
