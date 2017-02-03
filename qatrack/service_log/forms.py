@@ -144,7 +144,6 @@ class FollowupForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.service_event_instance = kwargs.pop('service_event_instance')
         self.unit_field = kwargs.pop('unit_field')
-        print(self.unit_field)
         super(FollowupForm, self).__init__(*args, **kwargs)
 
         if self.unit_field:
@@ -234,6 +233,14 @@ class TLIInitiatedField(forms.IntegerField):
             raise ValidationError(self.error_messages['invalid_choice'], code='invalid_choice')
         return tli
 
+    def _coerce(self, data):
+        if isinstance(data, str):
+            return int(data)
+        elif isinstance(data, qa_models.TestListInstance):
+            return data.id
+        else:
+            return data
+
 
 class ServiceEventForm(BetterModelForm):
 
@@ -248,7 +255,8 @@ class ServiceEventForm(BetterModelForm):
     #     queryset=models.ProblemType.objects.all(), required=False, to_field_name='name'
     # )
     service_event_related_field = ServiceEventRelatedField(required=False, queryset=models.ServiceEvent.objects.none())
-    is_approval_required = forms.BooleanField(required=False, label=_('Approval required'))
+    is_approval_required = forms.BooleanField(required=False)
+    is_approval_required_fake = forms.BooleanField(required=False, widget=forms.CheckboxInput(), label=_('Approval required'))
 
     test_list_instance_initiated_by = TLIInitiatedField(required=False)
 
@@ -264,11 +272,11 @@ class ServiceEventForm(BetterModelForm):
 
         fieldsets = [
             ('hidden_fields', {
-                'fields': ['test_list_instance_initiated_by'],
+                'fields': ['test_list_instance_initiated_by', 'is_approval_required'],
             }),
             ('required_fields', {
                 'fields': [
-                    'datetime_service', 'unit_field', 'service_area_field', 'service_type', 'is_approval_required',
+                    'datetime_service', 'unit_field', 'service_area_field', 'service_type', 'is_approval_required_fake',
                     'service_status', 'problem_description'
                 ],
             }),
@@ -379,7 +387,9 @@ class ServiceEventForm(BetterModelForm):
             # self.initial['problem_type'] = self.instance.problem_type
 
             if self.instance.service_type.is_approval_required:
-                self.fields['is_approval_required'].widget.attrs.update({'disabled': True})
+                self.fields['is_approval_required_fake'].widget.attrs.update({'disabled': True})
+
+            self.initial['is_approval_required_fake'] = self.instance.is_approval_required
 
             if not self.user.has_perm('service_log.can_approve_service_event'):
                 self.fields['service_status'].queryset = models.ServiceEventStatus.objects.filter(
@@ -388,7 +398,7 @@ class ServiceEventForm(BetterModelForm):
 
             if self.instance.test_list_instance_initiated_by:
                 self.initial['initiated_utc_field'] = self.instance.test_list_instance_initiated_by.unit_test_collection
-                self.initial['test_list_instance_initiated_by'] = self.instance.test_list_instance_initiated_by.id
+                self.initial['test_list_instance_initiated_by'] = str(self.instance.test_list_instance_initiated_by.id)
 
             self.fields['initiated_utc_field'].queryset = qa_models.UnitTestCollection.objects.filter(unit=unit, active=True)
 
@@ -419,7 +429,7 @@ class ServiceEventForm(BetterModelForm):
             classes += ' %s' % self.classes
             self.fields[f].widget.attrs.update({'class': classes})
 
-        for f in ['is_approval_required']:
+        for f in ['is_approval_required_fake', 'is_approval_required']:
             classes = self.fields[f].widget.attrs.get('class', '')
             classes = classes.replace('form-control', '')
             self.fields[f].widget.attrs.update({'class': classes})
@@ -427,30 +437,20 @@ class ServiceEventForm(BetterModelForm):
         self.fields['initiated_utc_field'].widget.attrs.update({'data-link': reverse('tli_select')})
 
     def save(self, *args, **kwargs):
-        print('--- ServiceEventForm.save ---')
         unit = self.cleaned_data.get('unit_field')
         service_area = self.cleaned_data.get('service_area_field')
         usa = models.UnitServiceArea.objects.get(unit=unit, service_area=service_area)
-        # service_event_related = self.cleaned_data.get('service_event_related_field')[1:-1].replace("'", "").split(',')
+
         if self.cleaned_data['service_type'].is_approval_required:
             self.instance.is_approval_required = True
 
-        # service_event_related = self.cleaned_data.get('service_event_related_field')
-        # try:
-        #     sers = models.ServiceEvent.objects.filter(pk__in=service_event_related)
-        # except ValueError:
-        #     sers = []
-
-        self.instance.test_list_instance_initiated_by = self.cleaned_data.get('test_list_instance_initiated_by')
         self.instance.unit_service_area = usa
         super(ServiceEventForm, self).save(*args, **kwargs)
-        # self.instance.save()
-        # models.ServiceEvent.save()
 
         return self.instance
 
     def clean(self):
-        super(ServiceEventForm, self).clean()  # if necessary
+        super(ServiceEventForm, self).clean()
         if 'initiated_utc_field' in self._errors:
             del self._errors['initiated_utc_field']
         return self.cleaned_data

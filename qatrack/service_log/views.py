@@ -116,7 +116,6 @@ class SLDashboard(TemplateView):
         return to_return
 
     def get_timeline(self):
-        print('--- SLDashboard.get_timeline ---')
 
         last_week_date = timezone.now().date() - timezone.timedelta(days=7)
         last_week_datetime = timezone.datetime(year=last_week_date.year, month=last_week_date.month, day=last_week_date.day)
@@ -219,7 +218,6 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseM
         return kwargs
 
     def get_context_data(self, *args, **kwargs):
-        print('--- get context data ---')
         context_data = super(ServiceEventUpdateCreate, self).get_context_data(**kwargs)
         if self.request.method == 'POST':
             context_data['se_statuses'] = {se.id: se.service_status.id for se in models.ServiceEvent.objects.filter(pk__in=self.request.POST.getlist('service_event_related_field'))}
@@ -378,6 +376,9 @@ class UpdateServiceEvent(ServiceEventUpdateCreate):
 
         self.instance = form.save(commit=False)
 
+        if 'is_approval_required_fake' in form.changed_data:
+            form.changed_data.remove('is_approval_required_fake')
+
         if 'service_status' in form.changed_data:
             form.instance.datetime_status_changed = timezone.now()
             form.instance.user_status_changed_by = self.request.user
@@ -390,6 +391,11 @@ class UpdateServiceEvent(ServiceEventUpdateCreate):
         elif len(form.changed_data) > 0:
             form.instance.user_modified_by = self.request.user
             form.instance.datetime_modified = timezone.now()
+
+            if not form.instance.service_status.is_approval_required:
+                form.instance.service_status = models.ServiceEventStatus.get_default()
+                form.instance.datetime_status_changed = timezone.now()
+                form.instance.user_status_changed_by = self.request.user
 
         return super(UpdateServiceEvent, self).form_valid(form)
 
@@ -686,7 +692,6 @@ class QAFollowupsBaseList(BaseListableView):
 
     def get_queryset(self):
         qs = super(QAFollowupsBaseList, self).get_queryset()
-        print('--- QAFollowupsBaseList.get_queryset ---')
 
         if self.kwarg_filters is None:
             self.kwarg_filters = self.request.GET.get('f', None)

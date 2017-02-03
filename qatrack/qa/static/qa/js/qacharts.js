@@ -1289,6 +1289,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
                             .replace(/__tli-date__/g, moment(initiated_data.x).format('ddd, MMM D, YYYY, k:mm'))
                             .replace(/__tli-tl-name__/g, initiated_name)
                             .replace(/__tli-kind__/g, 'QA Event')
+                            .replace(/__show-in__/g, 'style="display: none"')
                         );
 
                     tli_initiated_tooltip
@@ -1358,6 +1359,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
                             .replace(/__tli-date__/g, moment(followup_data.x).format('ddd, MMM D, YYYY, k:mm'))
                             .replace(/__tli-tl-name__/g, followup_name)
                             .replace(/__tli-kind__/g, 'QA Followup')
+                            .replace(/__show-in__/g, 'style="display: none"')
                         );
 
                     tli_followup_tooltip
@@ -1446,10 +1448,9 @@ require(['jquery', 'lodash', 'd3', 'moment', 'qautils', 'daterangepicker'], func
                     .replace(/__tli-date__/g, moment(x).format('ddd, MMM D, YYYY, k:mm'))
                     .replace(/__tli-tl-name__/g, tli_name)
                     .replace(/__tli-kind__/g, 'QA Session')
+                    .replace(/__show-in__/g, 'style="display: block"')
                 )
                 .on('click', toggleLock);
-
-            $('#tooltip-se-new-btn').show();
 
             tli_tooltip
                 .transition()

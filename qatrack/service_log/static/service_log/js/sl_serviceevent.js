@@ -11,6 +11,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
             $problem_type = $('#id_problem_type'),
             $service_type = $('#id_service_type'),
             $approval_required = $('#id_is_approval_required'),
+            $approval_required_fake = $('#id_is_approval_required_fake'),
             $utc_initiated_by = $('#id_initiated_utc_field'),
             $tli_initiated_by = $('#id_test_list_instance_initiated_by'),
             $tli_initiated_display = $(
@@ -71,10 +72,13 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
 
         // Service Type and Approval Required --------------------------------------------------------------
         $service_type.change(function() {
-            $approval_required.prop('disabled', se_types_approval[$service_type.val()]);
-            $approval_required.prop('checked', se_types_approval[$service_type.val()]);
+            $approval_required_fake.prop('disabled', se_types_approval[$service_type.val()]).prop('checked', se_types_approval[$service_type.val()]);
+            $approval_required_fake.change();
         });
-        
+        $approval_required_fake.change(function() {
+            $approval_required.prop('checked', this.checked);
+        });
+
         // Service Events Related ------------------------------------------------------------------------------
         function generate_related_result(res) {
             if (res.loading) { return res.text; }
