@@ -249,19 +249,32 @@ class ServiceEventForm(BetterModelForm):
         queryset=models.ServiceArea.objects.all(), label='Service area',
         help_text=_('Select service area (must select unit first)')
     )
-    duration_service_time = HoursMinDurationField(label=_('Service time'), required=False)
-    duration_lost_time = HoursMinDurationField(label=_('Lost time'), required=False)
+    duration_service_time = HoursMinDurationField(
+        label=_('Service time'), required=False,
+        help_text=models.ServiceEvent._meta.get_field('duration_service_time').help_text
+    )
+    duration_lost_time = HoursMinDurationField(
+        label=_('Lost time'), required=False,
+        help_text=models.ServiceEvent._meta.get_field('duration_lost_time').help_text
+    )
     # problem_type = ProblemTypeModelChoiceField(
     #     queryset=models.ProblemType.objects.all(), required=False, to_field_name='name'
     # )
-    service_event_related_field = ServiceEventRelatedField(required=False, queryset=models.ServiceEvent.objects.none())
+    service_event_related_field = ServiceEventRelatedField(
+        required=False, queryset=models.ServiceEvent.objects.none(),
+        help_text=models.ServiceEvent._meta.get_field('service_event_related').help_text
+    )
     is_approval_required = forms.BooleanField(required=False)
-    is_approval_required_fake = forms.BooleanField(required=False, widget=forms.CheckboxInput(), label=_('Approval required'))
+    is_approval_required_fake = forms.BooleanField(
+        required=False, widget=forms.CheckboxInput(), label=_('Approval required'),
+        help_text=models.ServiceEvent._meta.get_field('is_approval_required').help_text
+    )
 
     test_list_instance_initiated_by = TLIInitiatedField(required=False)
 
     initiated_utc_field = forms.ModelChoiceField(
-        required=False, queryset=qa_models.UnitTestCollection.objects.none(), label='Initiated by'
+        required=False, queryset=qa_models.UnitTestCollection.objects.none(), label='Initiated by',
+        help_text=_('Test list instance that initiated this service event')
     )
 
     _classes = ['form-control']

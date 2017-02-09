@@ -412,6 +412,7 @@ class DetailsServiceEvent(DetailView):
         context_data['followups'] = models.QAFollowup.objects.filter(service_event=self.object)
         context_data['request'] = self.request
         context_data['g_links'] = models.GroupLinkerInstance.objects.filter(service_event=self.object)
+
         return context_data
 
 

@@ -822,12 +822,12 @@ class Command(BaseCommand):
                     modified_by = None
                     datetime_modified = None
 
-                if row.qa_followup and row.qa_followup != ' ':
+                if row.qa_followup and row.qa_followup.strip() != '':
                     qa_followup = row.qa_followup
                 else:
                     qa_followup = None
 
-                if row.safety_precautions and row.safety_precautions != ' ':
+                if row.safety_precautions and row.safety_precautions.strip() != '':
                     safety_precautions = row.safety_precautions
                 else:
                     safety_precautions = None

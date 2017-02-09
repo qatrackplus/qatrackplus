@@ -12,4 +12,7 @@
     {% elif perms.qa.change_testlistinstance %}
         <a class="btn btn-primary btn-xs btn-flat" title="Edit this list" href="{% url 'edit_tli' pk=instance.pk %}?next={{request.path|cut:"data/"}}" >Edit</a>
     {% endif %}
+    {% if show_initiate_se %}
+        <a class="btn btn-primary btn-xs btn-flat" title="Create new service event initiated by this list" href="{% url 'sl_new' %}?ib={{ instance.pk }}&next={{request.path|cut:"data/"}}" >Initiate SE</a>
+    {% endif %}
 {% endif %}

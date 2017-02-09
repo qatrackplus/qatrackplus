@@ -397,7 +397,7 @@ class TestListInstances(BaseListableView):
 
     def actions(self, tli):
         template = self.templates['actions']
-        c = Context({"instance": tli, "perms": PermWrapper(self.request.user), "request": self.request})
+        c = Context({"instance": tli, "perms": PermWrapper(self.request.user), "request": self.request, 'show_initiate_se': True})
         return template.render(c)
 
     def work_completed(self, tli):

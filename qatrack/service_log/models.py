@@ -160,11 +160,11 @@ class ServiceEvent(models.Model):
     )
     duration_service_time = models.DurationField(
         verbose_name=_('Service time'), null=True, blank=True,
-        help_text=_('Enter the total time duration of this service event')
+        help_text=_('Enter the total time duration of this service event (Hours : minutes)')
     )
     duration_lost_time = models.DurationField(
         verbose_name=_('Lost time'), null=True, blank=True,
-        help_text=_('Enter the total clinical time lost for this service event')
+        help_text=_('Enter the total clinical time lost for this service event (Hours : minutes)')
     )
     is_approval_required = models.BooleanField(
         default=False, help_text=_('Does this service event require approval?'), blank=True

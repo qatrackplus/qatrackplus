@@ -296,18 +296,26 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
         };
         setSearchResult = function (form, returnValue) {
             window.focus();
+            console.log(returnValue);
             if (form == 'utc_initiated') {
-                $tli_initiated_by.val(returnValue);
+                if (returnValue) {
+                    $tli_initiated_by.val(returnValue);
+                } else {
+                    $utc_initiated_by.val('').change();
+                    $tli_initiated_by.val('');
+                }
             } else {
                 $('#id_' + form + '-test_list_instance').val(returnValue);
             }
-            $.ajax({
-                url: QAURLs.TLI_STATUSES,
-                data: {'tli_id': returnValue},
-                success: function (res) {
-                    displayTLI(form, res, returnValue);
-                }
-            })
+            if (returnValue) {
+                $.ajax({
+                    url: QAURLs.TLI_STATUSES,
+                    data: {'tli_id': returnValue},
+                    success: function (res) {
+                        displayTLI(form, res, returnValue);
+                    }
+                })
+            }
         };
 
         set_select_tli();
@@ -358,14 +366,18 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
         }
 
         $utc_initiated_by.change(function() {
+            $tli_initiated_display.slideUp('fast', function() {
+                $tli_initiated_by.val('');
+            });
             if ($(this).val() != '') {
                 console.log($(this).attr('data-link') + $(this).val() + '/utc_initiated');
                 var w = window.open($(this).attr('data-link') + '/' + $(this).val() + '/utc_initiated', '_blank', 'scrollbars=no,menubar=no,height=900,width=1200,resizable=yes,toolbar=yes,status=no');
                 w.focus();
-            } else {
-                $tli_initiated_display.slideUp('fast', function() {
-                    $tli_initiated_by.val('');
-                });
+                w.onbeforeunload = function() {
+                    // $utc_initiated_by.val('').change();
+                    setSearchResult('utc_initiated', $tli_initiated_by.val());
+                    return null;
+                }
             }
         });
 
