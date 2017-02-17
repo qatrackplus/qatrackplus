@@ -471,7 +471,7 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
                 control_chart.display(fig, numpy.array(data), subgroup_size, n_baseline_subgroups, fit=include_fit, dates=dates)
                 fig.autofmt_xdate()
                 canvas.print_png(response)
-            except (RuntimeError, OverflowError) as e:  # pragma: nocover
+            except (RuntimeError, OverflowError, TypeError) as e:  # pragma: nocover
                 fig.clf()
                 msg = "There was a problem generating your control chart:\n%s" % str(e)
                 fig.text(0.1, 0.9, "\n".join(textwrap.wrap(msg, 40)), fontsize=12)

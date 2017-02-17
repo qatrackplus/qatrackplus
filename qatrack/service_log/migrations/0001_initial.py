@@ -62,9 +62,9 @@ class Migration(migrations.Migration):
                 ('safety_precautions', models.TextField(help_text='Were any special safety precautions taken?', null=True, blank=True)),
                 ('problem_description', models.TextField(help_text='Describe the problem leading to this service event')),
                 ('work_description', models.TextField(help_text='Describe the work done during this service event', null=True, blank=True)),
-                ('duration_service_time', models.DurationField(help_text='Enter the total time duration of this service event', null=True, verbose_name='Service time', blank=True)),
+                ('duration_service_time', models.DurationField(blank=True, help_text='Enter the total time duration of this service event (Hours : minutes)', null=True, verbose_name='Service time')),
                 ('qafollowup_notes', models.TextField(blank=True, help_text='Provide any extra information regarding followups', null=True)),
-                ('duration_lost_time', models.DurationField(help_text='Enter the total clinical time lost for this service event', null=True, verbose_name='Lost time', blank=True)),
+                ('duration_lost_time', models.DurationField(blank=True, help_text='Enter the total clinical time lost for this service event (Hours : minutes)', null=True, verbose_name='Lost time')),
                 ('problem_type', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, blank=True, to='service_log.ProblemType', help_text='Select/create a problem type that describes this service event', null=True)),
                 ('service_event_related', models.ManyToManyField(blank=True, help_text='Was there a previous service event that might be related to this event?', related_name='_serviceevent_service_event_related_+', to='service_log.ServiceEvent', verbose_name='Service events related')),
                 ('is_approval_required', models.BooleanField(default=False, help_text='Does this service event require approval?')),
@@ -82,7 +82,7 @@ class Migration(migrations.Migration):
                 ('description', models.TextField(help_text='Give a brief description of this service event status', max_length=64, null=True, blank=True)),
                 ('colour', models.CharField(default='rgba(60,141,188,1)', max_length=22, validators=[RegexValidator(re.compile('^rgba\\(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]),([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]),([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]),(0(\\.[0-9][0-9]?)?|1)\\)$', 32), 'Enter a valid color.', 'invalid')]))
             ],
-            options={'verbose_name_plural': 'Service Event Statuses'},
+            options={'verbose_name_plural': 'Service event statuses'},
         ),
         migrations.CreateModel(
             name='ServiceType',
@@ -101,7 +101,7 @@ class Migration(migrations.Migration):
                 ('last_name', models.CharField(help_text="Enter this person's last name", max_length=32)),
                 ('vendor', models.ForeignKey(to='units.Vendor', on_delete=django.db.models.deletion.PROTECT)),
             ],
-            options={'verbose_name': 'Third Party', 'verbose_name_plural': 'Third Parties'},
+            options={'verbose_name': 'Third party', 'verbose_name_plural': 'Third parties'},
         ),
         migrations.CreateModel(
             name='UnitServiceArea',

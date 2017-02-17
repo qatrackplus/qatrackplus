@@ -84,7 +84,7 @@ class ServiceEventStatus(models.Model):
     colour = models.CharField(default=settings.DEFAULT_COLOURS[0], max_length=22, validators=[validate_color])
 
     class Meta:
-        verbose_name_plural = _('Service Event Statuses')
+        verbose_name_plural = _('Service event statuses')
 
     def save(self, *args, **kwargs):
         if self.is_default:
@@ -194,8 +194,8 @@ class ThirdParty(models.Model):
     last_name = models.CharField(max_length=32, help_text=_('Enter this person\'s last name'))
 
     class Meta:
-        verbose_name = _('Third Party')
-        verbose_name_plural = _('Third Parties')
+        verbose_name = _('Third party')
+        verbose_name_plural = _('Third parties')
         unique_together = ('first_name', 'last_name', 'vendor')
 
     def __str__(self):

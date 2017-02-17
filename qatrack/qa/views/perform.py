@@ -527,6 +527,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         status = self.get_test_status(form)
 
         self.object = form.save(commit=False)
+        self.object.due_date = self.unit_test_col.due_date
         self.object.test_list = self.test_list
         self.object.unit_test_collection = self.unit_test_col
         self.object.created_by = self.request.user
@@ -582,9 +583,6 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         self.object.update_all_reviewed()
 
         service_event = form.cleaned_data.get('service_event', False)
-        followup_id = form.cleaned_data.get('followup_id', False)
-
-        print('-----sevice_event------')
         followup_id = self.request.GET.get('qaf', False)
         if service_event:
 

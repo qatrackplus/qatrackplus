@@ -163,6 +163,7 @@ class UTCList(BaseListableView):
         "unit__name": "unit__number",
         "last_instance_pass_fail": False,
         "last_instance_review_status": False,
+        "due_date": "due_date"
     }
 
     widgets = {

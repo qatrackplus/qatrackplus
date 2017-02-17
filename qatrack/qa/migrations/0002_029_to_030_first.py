@@ -117,5 +117,10 @@ class Migration(migrations.Migration):
             name='javascript',
             field=models.TextField(blank=True, help_text='Any extra javascript to run when loading perform page', null=True),
         ),
+        migrations.AddField(
+            model_name='testlistinstance',
+            name='due_date',
+            field=models.DateTimeField(blank=True, help_text='When was this session due when it was performed', null=True),
+        ),
         migrations.RunPython(migrate_script_tags_to_javascript),
     ]

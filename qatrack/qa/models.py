@@ -1,7 +1,7 @@
 
 from django.conf import settings
 from django.db import models
-from django.db.models import Q, Count
+from django.db.models import Q, Count, F, ExpressionWrapper
 from django.contrib.auth.models import User, Group
 from django.utils.translation import ugettext as _
 from django.core import urlresolvers
@@ -922,14 +922,15 @@ class UnitTestCollection(models.Model):
         today = timezone.localtime(timezone.now()).date()
         due = timezone.localtime(self.due_date).date()
 
+        if today < due:
+            return NOT_DUE
+
         if self.frequency is not None:
             overdue = due + timezone.timedelta(days=self.frequency.overdue_interval - self.frequency.due_interval)
         else:
             overdue = due + timezone.timedelta(days=1)
 
-        if today < due:
-            return NOT_DUE
-        elif today < overdue:
+        if today < overdue:
             return DUE
         return OVERDUE
 
@@ -1282,6 +1283,8 @@ class TestListInstance(models.Model):
 
     work_started = models.DateTimeField(db_index=True)
     work_completed = models.DateTimeField(default=timezone.now, db_index=True, null=True)
+
+    due_date = models.DateTimeField(null=True, blank=True, help_text=_('When was this session due when it was performed'))
 
     comment = models.TextField(help_text=_("Add a comment to this set of tests"), null=True, blank=True)
 
