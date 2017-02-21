@@ -141,7 +141,7 @@ if not os.path.isfile(SITE_SPECIFIC_CSS_PATH):
 
 # ------------------------------------------------------------------------------
 # Middleware
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE_CLASSES = [
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -150,11 +150,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'qatrack.middleware.login_required.LoginRequiredMiddleware',
     'qatrack.middleware.maintain_filters.FilterPersistMiddleware',
-)
-
-# for django-debug-toolbar
-INTERNAL_IPS = ('127.0.0.1',)
-
+]
 
 # login required middleware settings
 LOGIN_EXEMPT_URLS = [r"^accounts/", ]
@@ -167,22 +163,6 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
             os.path.join(PROJECT_ROOT, 'templates'),
-# <<<<<<< HEAD
-#             # "genericdropdown/templates"
-#         ],
-#         # 'DIRS': ['templates'],
-#         'OPTIONS': {
-#             'context_processors':
-#                 list(DEFAULT_SETTINGS.TEMPLATE_CONTEXT_PROCESSORS) +
-#                 [
-#                     'django.core.context_processors.request',
-#                     'qatrack.context_processors.site',
-#                 ],
-#             'loaders': [
-#                 'django.template.loaders.filesystem.Loader',
-#                 'django.template.loaders.app_directories.Loader',
-#             ]
-# =======
             'genericdropdown/templates',
         ],
         'APP_DIRS': True,
@@ -201,7 +181,6 @@ TEMPLATES = [
 
                 'qatrack.context_processors.site',
             ],
-# >>>>>>> py34
         },
     },
 ]
@@ -432,6 +411,8 @@ DEFAULT_COLOURS = [
     'rgba(1,255,112,1)',
     'rgba(17,17,17,1)',
 ]
+
+USE_PARTS = False
 
 # ------------------------------------------------------------------------------
 # local_settings contains anything that should be overridden

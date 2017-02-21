@@ -192,17 +192,7 @@ class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
     list_filter = [ActiveUnitTestInfoFilter, "unit", "test__category", "test__testlistmembership__test_list"]
     readonly_fields = ("reference", "test", "unit",)
     search_fields = ("test__name", "test__slug", "unit__name",)
-
-    def queryset(self, *args, **kwargs):
-        """just display active ref/tols"""
-        qs = models.UnitTestInfo.objects.select_related(
-            "reference",
-            "tolerance",
-            "unit",
-            "test",
-        )
-
-        return qs
+    list_select_related = ['reference', 'tolerance', 'test', 'unit']
 
     def has_add_permission(self, request):
         """unittestinfo's are created automatically"""
@@ -325,6 +315,11 @@ class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
                 test_info.reference = None
 
         super(UnitTestInfoAdmin, self).save_model(request, test_info, form, change)
+
+    def lookup_allowed(self, lookup, value):
+        if lookup in ['test__testlistmembership__test_list__id__exact']:
+            return True
+        return super(UnitTestInfoAdmin, self).lookup_allowed(lookup, value)
 
 
 class TestListAdminForm(forms.ModelForm):
