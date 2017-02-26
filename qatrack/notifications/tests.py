@@ -37,6 +37,11 @@ class TestEmailSent(TestCase):
         user.email = "example@example.com"
         user.save()
 
+        self.inactive_user = models.User.objects.create_user('inactive', 'a@b.com', 'password')
+        self.inactive_user.groups.add(self.group)
+        self.inactive_user.is_active = False
+        self.inactive_user.save()
+
     def create_test_list_instance(self):
         utc = self.unit_test_collection
 
@@ -66,6 +71,13 @@ class TestEmailSent(TestCase):
         notification.save()
         signals.testlist_complete.send(sender=self, instance=self.test_list_instance, created=True)
         self.assertEqual(len(mail.outbox), 1)
+
+    def test_inactive_not_included(self):
+
+        notification = NotificationSubscription(group=self.group, warning_level=TOLERANCE)
+        notification.save()
+        signals.testlist_complete.send(sender=self, instance=self.test_list_instance, created=True)
+        self.assertNotIn(self.inactive_user.email, mail.outbox[0].recipients())
 
     def test_email_not_sent(self):
         # no failing tests so
