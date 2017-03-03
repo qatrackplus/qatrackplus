@@ -22,7 +22,7 @@ class Vendor(models.Model):
 
     def __str__(self):
         """Display more descriptive name"""
-        return "<Vendor(%s)>" % self.name
+        return self.name
 
 
 class UnitClass(models.Model):
@@ -46,7 +46,7 @@ class Site(models.Model):
     name = models.CharField(max_length=64, unique=True, help_text=_('Name of this site'))
 
     def __str__(self):
-        return '<Site(%s)>' % self.name
+        return self.name
 
 
 class UnitType(models.Model):

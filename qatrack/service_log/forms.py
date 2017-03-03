@@ -70,10 +70,10 @@ class ProblemTypeModelChoiceField(forms.ModelChoiceField):
         return super(ProblemTypeModelChoiceField, self).to_python(value)
 
 
-class UTCModelChoiceField(forms.ModelChoiceField):
-
-    def label_from_instance(self, obj):
-        return obj.test_objects_name()
+# class UTCModelChoiceField(forms.ModelChoiceField):
+#
+#     def label_from_instance(self, obj):
+#         return obj.test_objects_name()
 
 
 class UserModelChoiceField(forms.ModelChoiceField):
@@ -134,7 +134,8 @@ HoursFormset = forms.inlineformset_factory(models.ServiceEvent, models.Hours, fo
 
 class FollowupForm(forms.ModelForm):
 
-    unit_test_collection = UTCModelChoiceField(queryset=qa_models.UnitTestCollection.objects.none())
+    unit_test_collection = forms.ModelChoiceField(queryset=qa_models.UnitTestCollection.objects.none())
+    # unit_test_collection = UTCModelChoiceField(queryset=qa_models.UnitTestCollection.objects.none())
     test_list_instance = forms.IntegerField(widget=forms.HiddenInput(), required=False)
 
     class Meta:
@@ -147,12 +148,11 @@ class FollowupForm(forms.ModelForm):
         super(FollowupForm, self).__init__(*args, **kwargs)
 
         if self.unit_field:
-            testlist_ct = ContentType.objects.get(app_label="qa", model="testlist")
+            # testlist_ct = ContentType.objects.get(app_label="qa", model="testlist")
             self.fields['unit_test_collection'].queryset = qa_models.UnitTestCollection.objects.filter(
                 unit_id=self.unit_field,
-                active=True,
-                content_type=testlist_ct
-            ).order_by('test_list__name')
+                active=True
+            ).order_by('name')
 
         else:
             self.fields['unit_test_collection'].widget.attrs.update({'disabled': True})
@@ -163,10 +163,6 @@ class FollowupForm(forms.ModelForm):
             self.initial['test_list_instance'] = self.instance.test_list_instance.id
 
         self.fields['unit_test_collection'].widget.attrs.update({'class': 'followup-utc select2', 'data-prefix': self.prefix})
-
-    def is_valid(self):
-        valid = super(FollowupForm, self).is_valid()
-        return valid
 
     def clean_unit_test_collection(self):
         utc = self.cleaned_data['unit_test_collection']

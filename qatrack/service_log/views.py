@@ -3,6 +3,7 @@ import json
 
 from collections import OrderedDict
 from braces.views import LoginRequiredMixin
+from django.conf import settings
 from django.contrib.auth.context_processors import PermWrapper
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
@@ -11,6 +12,7 @@ from django.core.urlresolvers import reverse, resolve
 from django.db.models import Q
 from django.forms.utils import timezone
 from django.http import JsonResponse, HttpResponseRedirect, Http404
+from django.shortcuts import redirect
 from django.template import Context
 from django.template.loader import get_template
 from django.utils.translation import ugettext as _
@@ -23,6 +25,9 @@ from listable.views import (
     TODAY, YESTERDAY, TOMORROW, LAST_WEEK, THIS_WEEK, NEXT_WEEK, LAST_14_DAYS, LAST_MONTH, THIS_MONTH, THIS_YEAR
 )
 
+if settings.USE_PARTS:
+    from qatrack.parts import forms as p_forms
+    from qatrack.parts import models as p_models
 from qatrack.service_log import models, forms
 from qatrack.qa import models as qa_models
 from qatrack.qa.views.base import generate_review_status_context
@@ -179,6 +184,17 @@ class SLDashboard(TemplateView):
 
         return context
 
+    def dispatch(self, request, *args, **kwargs):
+        if models.ServiceEventStatus.objects.all().exists():
+            return super(SLDashboard, self).dispatch(request, *args, **kwargs)
+        else:
+            return redirect(reverse('err'))
+
+
+class ErrorView(TemplateView):
+
+    template_name = 'service_log/error_base.html'
+
 
 class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, ModelFormMixin, ProcessFormView):
     """
@@ -241,6 +257,12 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseM
                 prefix='followup',
                 form_kwargs={'service_event_instance': self.object, 'unit_field': self.request.POST.get('unit_field')}
             )
+            if settings.USE_PARTS:
+                context_data['part_used_formset'] = p_forms.PartUsedFormset(
+                    self.request.POST,
+                    instance=self.object,
+                    prefix='parts'
+                )
         else:
             context_data['hours_formset'] = forms.HoursFormset(instance=self.object, prefix='hours')
             context_data['followup_formset'] = forms.FollowupFormset(
@@ -251,6 +273,8 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseM
                     'unit_field': (qa_models.TestListInstance.objects.get(pk=self.request.GET.get('ib')).unit_test_collection.unit if self.request.GET.get('ib') else None) if self.object is None else self.object.unit_service_area.unit
                 }
             )
+            if settings.USE_PARTS:
+                context_data['part_used_formset'] = p_forms.PartUsedFormset(instance=self.object, prefix='parts')
 
         return context_data
 
@@ -259,6 +283,11 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseM
         context = self.get_context_data()
         hours_formset = context["hours_formset"]
         followup_formset = context["followup_formset"]
+
+        if settings.USE_PARTS:
+            parts_formset = context['part_used_formset']
+            if not parts_formset or not parts_formset.is_valid():
+                return self.render_to_response(context)
 
         if not hours_formset.is_valid() or not followup_formset.is_valid():
             return self.render_to_response(context)
@@ -340,6 +369,148 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseM
                     f_instance.service_event = service_event
                 f_instance.save()
 
+        if settings.USE_PARTS:
+
+            for p_form in parts_formset:
+
+                if not p_form.has_changed():
+                    print('Nothing changed on %s' % p_form.prefix)
+                    continue
+
+                delete = p_form.cleaned_data.get('DELETE')
+                is_new = p_form.instance.id is None
+
+                pu_instance = p_form.instance
+
+                initial_p = None if is_new else p_form.initial['part']
+                current_p = p_form.cleaned_data['part']
+
+                initial_s = p_form.initial['from_storage'] if 'from_storage' in p_form.initial else None
+                current_s = p_form.cleaned_data['from_storage'] if 'from_storage' in p_form.cleaned_data else None
+
+                try:
+                    current_psc = p_models.PartStorageCollection.objects.get(
+                        part=current_p, storage=current_s
+                    ) if current_s else None
+                except ObjectDoesNotExist:
+                    current_psc = p_models.PartStorageCollection(
+                        part=current_p, storage=current_s, quantity=0
+                    )
+                try:
+                    initial_psc = p_models.PartStorageCollection.objects.get(
+                        part=initial_p, storage=initial_s
+                    ) if initial_s and initial_p else None
+                except ObjectDoesNotExist:
+                    initial_psc = None
+
+                initial_qty = 0 if is_new else p_form.initial['quantity']
+                current_qty = p_form.cleaned_data['quantity']
+                change = current_qty - initial_qty
+
+                try:
+                    part_unit_storage_collection = p_models.PartStorageCollection.objects.get(
+                        unit=form.instance.unit_service_area.unit, part=current_p
+                    )
+                except ObjectDoesNotExist:
+                    part_unit_storage_collection = p_models.PartStorageCollection(
+                        unit=form.instance.unit_service_area.unit, part=current_p, quantity=0
+                    )
+                    part_unit_storage_collection.save()
+
+                if delete and not is_new:
+                    if current_psc:
+                        qty = pu_instance.quantity
+                        current_psc.quantity += qty
+                        part_unit_storage_collection.quantity -= qty
+
+                        if current_psc:
+                            if current_psc.quantity <= 0:
+                                if current_psc.id:
+                                    current_psc.delete()
+                            else:
+                                current_psc.save()
+
+                        if initial_psc:
+                            if initial_psc.quantity <= 0:
+                                if initial_psc.id:
+                                    initial_psc.delete()
+                            else:
+                                initial_psc.save()
+
+                        if part_unit_storage_collection.quantity <= 0:
+                            part_unit_storage_collection.delete()
+                        else:
+                            part_unit_storage_collection.save()
+
+                    pu_instance.delete()
+                    continue
+
+                elif p_form.has_changed():
+
+                    if is_new:
+                        pu_instance.service_event = service_event
+
+                    # If parts storage changed
+                    if 'from_storage' in p_form.changed_data:
+
+                        if initial_psc:
+                            initial_psc.quantity += initial_qty
+                            initial_psc.save()
+                        if current_psc:
+                            current_psc.quantity -= current_qty
+                            current_psc.save()
+                        pu_instance.from_storage = current_psc.storage if current_psc else None
+
+                        part_unit_storage_collection.quantity += change
+                        part_unit_storage_collection.save()
+
+                    # Edge case if part changed and storage didn't
+                    elif 'part' in p_form.changed_data and current_psc:
+
+                        if initial_s:
+                            if not initial_psc and change < 0:
+                                initial_psc = p_models.PartStorageCollection(
+                                    part=initial_p,
+                                    storage=initial_s,
+                                    quantity=-change
+                                )
+                                current_psc.save()
+                            initial_psc.quantity += initial_qty
+                            initial_psc.save()
+
+                        current_psc.quantity -= current_qty
+                        current_psc.save()
+
+                    # Else if just quantity changed
+                    elif 'quantity' in p_form.changed_data:
+
+                        if current_psc:
+                            current_psc.quantity -= change
+                            current_psc.save()
+                        # If trying to put a part back to storage with no part storage collection
+                        elif current_s and change < 0:
+                            current_psc = p_models.PartStorageCollection(
+                                part=current_p,
+                                storage=current_s,
+                                quantity=-change
+                            )
+                            current_psc.save()
+
+                        part_unit_storage_collection.quantity += change
+                        part_unit_storage_collection.save()
+
+                    pu_instance.save()
+                    current_p.set_quantity_current()
+                    initial_p.set_quantity_current()
+
+                    # Delete empty part storage collections
+                    if current_psc and current_psc.quantity <= 0 and current_psc.id:
+                        current_psc.delete()
+                    if initial_psc and initial_psc.quantity <= 0 and initial_psc.id:
+                        initial_psc.delete()
+                    if part_unit_storage_collection.quantity <= 0:
+                        part_unit_storage_collection.delete()
+
         return HttpResponseRedirect(self.get_success_url())
 
     def get_success_url(self):
@@ -410,6 +581,7 @@ class DetailsServiceEvent(DetailView):
         # context_data['service_event_tag_colours'] = models.ServiceEvent.get_colour_dict()
         context_data['hours'] = models.Hours.objects.filter(service_event=self.object)
         context_data['followups'] = models.QAFollowup.objects.filter(service_event=self.object)
+        context_data['parts_used'] = p_models.PartUsed.objects.filter(service_event=self.object)
         context_data['request'] = self.request
         context_data['g_links'] = models.GroupLinkerInstance.objects.filter(service_event=self.object)
 
@@ -421,9 +593,9 @@ def unit_sa_utc(request):
     unit = models.Unit.objects.get(id=request.GET['unit_id'])
     service_areas = list(models.ServiceArea.objects.filter(units=unit).values())
 
-    testlist_ct = ContentType.objects.get(app_label="qa", model="testlist")
-    utcs_tl_qs = models.UnitTestCollection.objects.filter(unit=unit, content_type=testlist_ct, active=True)
-    utcs_tl = sorted([{'id': utc.id, 'name': utc.test_objects_name()} for utc in utcs_tl_qs], key=lambda utc: utc['name'])
+    # testlist_ct = ContentType.objects.get(app_label="qa", model="testlist")
+    utcs_tl_qs = models.UnitTestCollection.objects.filter(unit=unit, active=True)
+    utcs_tl = sorted([{'id': utc.id, 'name': utc.name} for utc in utcs_tl_qs], key=lambda utc: utc['name'])
     return JsonResponse({'service_areas': service_areas, 'utcs': utcs_tl})
 
 
@@ -493,6 +665,13 @@ class ServiceEventsBaseList(BaseListableView):
     order_fields = {
         'actions': False,
     }
+
+    select_related = (
+        'unit_service_area__unit',
+        'unit_service_area__service_area',
+        'service_type',
+        'service_status'
+    )
 
     def __init__(self, *args, **kwargs):
 
@@ -758,7 +937,7 @@ class TLISelect(UTCInstances):
     def get_page_title(self):
         try:
             utc = models.UnitTestCollection.objects.get(pk=self.kwargs["pk"])
-            return "Select a %s instance" % utc.tests_object.name
+            return "Select a %s instance" % utc.name
         except:
             raise Http404
 

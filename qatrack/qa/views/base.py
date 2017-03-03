@@ -139,7 +139,7 @@ class UTCList(BaseListableView):
 
     fields = (
         "actions",
-        "utc_name",
+        "name",
         "due_date",
         "unit__name",
         "frequency__name",
@@ -151,7 +151,7 @@ class UTCList(BaseListableView):
 
     search_fields = {
         "actions": False,
-        "utc_name": "utc_name__icontains",
+        "name": "name__icontains",
         "assigned_to__name": "assigned_to__name",
         "last_instance_pass_fail": False,
         "last_instance_review_status": False,
@@ -187,7 +187,7 @@ class UTCList(BaseListableView):
     )
 
     headers = {
-        "utc_name": _("Test List/Cycle"),
+        "name": _("Test List/Cycle"),
         "unit__name": _("Unit"),
         "frequency__name": _("Frequency"),
         "assigned_to__name": _("Assigned To"),
@@ -203,7 +203,7 @@ class UTCList(BaseListableView):
         "last_instance__modified_by",
     )
 
-    order_by = ["unit__name", "frequency__name", "utc_name"]
+    order_by = ["unit__name", "frequency__name", "name"]
 
     def __init__(self, *args, **kwargs):
         super(UTCList, self).__init__(*args, **kwargs)
@@ -263,8 +263,8 @@ class UTCList(BaseListableView):
 
         return filters
 
-    def get_extra(self):
-        return utils.qs_extra_for_utc_name()
+    # def get_extra(self):
+    #     return utils.qs_extra_for_utc_name()
 
     def frequency__name(self, utc):
         return utc.frequency.name if utc.frequency else "Ad Hoc"

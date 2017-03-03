@@ -23,7 +23,9 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
                 '        <span id="tli-date-utc_initiated" class="pull-right"></span>' +
                 '    </div>' +
                 '</div>'
-            );
+            ),
+            $parts_used_parts = $('.parts-used-part'),
+            $parts_used_from_storage = $('.parts-used-part_storage_collection');
 
         $utc_initiated_by.parent().append($tli_initiated_display);
 
@@ -357,6 +359,84 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
             }
 
         });
+        // Parts formset --------------------------------------------------------------------------------------
+        if (siteConfig.USE_PARTS == 'True') {
+            function process_part_results(data, params) {
+                // console.log(data);
+                // console.log(params);
+                var results = [];
+                for (var i in data.data) {
+                    var p_id = data.data[i][0],
+                        p_number = data.data[i][1],
+                        p_alt_number = data.data[i][2],
+                        p_description = data.data[i][3],
+                        p_qty_current = data.data[i][4];
+                    results.push({
+                        id: p_id,
+                        text: p_alt_number ? p_number + ' (' + p_alt_number + ') - ' + p_description : p_number + ' - ' + p_description,
+                        title: p_qty_current + ' in storage'
+                    });
+                }
+                params.page = params.page || 1;
+                return {
+                    results: results,
+                    pagination: {
+                        more: (params.page * 30) < data.data.length
+                    }
+                };
+            }
+            $parts_used_parts.select2({
+                ajax: {
+                    url: QAURLs.PARTS_SEARCHER,
+                    dataType: 'json',
+                    delay: '500',
+                    data: function (params) {
+                        return {
+                            q: params.term, // search term
+                            page: params.page,
+                        }
+                    },
+                    success: function(res) {
+                        console.log(res);
+                    },
+                    processResults: process_part_results,
+                    cache: true
+                },
+                escapeMarkup: function (markup) { return markup; },
+                minimumInputLength: 1,
+                width: '100%',
+                // placeholder: "----------",
+                // allowClear: true,
+            });
+            $parts_used_parts.change(function(e) {
+                var prefix = $(this).attr('data-prefix'),
+                    p_id = $(this).val();
+
+                $.ajax({
+                    url: QAURLs.PARTS_STORAGE_SEARCHER,
+                    data: {'p_id': p_id},
+                    success: function (res) {
+                        console.log(res);
+                        var $s = $('#id_' + prefix + '-from_storage');
+
+                        $s.find('option:not(:first)').remove();
+
+                        for (var i in res.data) {
+                            var psc = res.data[i];
+                            var text = (psc[1] ? psc[1] + ' - ' : '') + psc[2] + ' - ' + psc[3] + ' - ' + psc[4] + ' (' + psc[5] + ')',
+                                title = (psc[1] ? 'Site: ' + psc[1] + '\n': '') +
+                                        'Room: ' + psc[2] + '\n' +
+                                        (psc[3] ? 'Cabinet: ' + psc[3] + '\n' : '') +
+                                        (psc[4] ? 'Shelf: ' + psc[4] + '\n' : '') +
+                                        'Quantity left: ' + psc[5];
+                            $s.append($('<option></option>').attr('value', psc[0]).text(text).attr('title', title));
+                        }
+                    }
+                })
+
+            });
+
+        }
 
         // // initiated by -------------------------------------------------------------------------------------
         if ($tli_initiated_by.val() == '') {

@@ -14,6 +14,7 @@ from django.utils import timezone
 from qatrack.service_log import models as sl_models
 from qatrack.units import models as u_models
 from qatrack.qa import models as qa_models
+from qatrack.parts import models as p_models
 
 from ... import accel_migration_settings as amt_settings
 
@@ -131,6 +132,15 @@ class Command(BaseCommand):
         self.updating_cursor = self.conn.cursor()
         self.iterating_cursor = self.conn.cursor()
 
+        if qat_settings.USE_PARTS:
+            parts_odbc_conn_str = 'DRIVER={Microsoft Access Driver (*.mdb)};DBQ=%s;UID=%s;PWD=%s' % (
+                amt_settings.ACCEL_PARTS_DB_LOCATION, amt_settings.PARTS_DB_USER, amt_settings.PARTS_DB_PASS
+            )
+
+            self.parts_conn = pyodbc.connect(parts_odbc_conn_str)
+            self.parts_cursor = self.parts_conn.cursor()
+            self.parts_updating_cursor = self.parts_conn.cursor()
+
     def migrate_accel(self):
 
         print('\n /------------------------------------------------------------------\\\n'
@@ -151,6 +161,8 @@ class Command(BaseCommand):
             print('\t3: Migrate equipment')
             print('\t4: Migrate service events (Complete 1 - 3 first)')
             print('\t5: Migrate workload (Complete 4 first)')
+            if qat_settings.USE_PARTS:
+                print('\t6: Migrate parts (Complete 5 first)')
             print('\t8: Commit changes to Accel database')
             print('\t9: Commit changes to Accel database and Exit')
 
@@ -163,12 +175,16 @@ class Command(BaseCommand):
                 8: self.commit_to_accel,
                 9: self.done_exit
             }
+            if qat_settings.USE_PARTS:
+                choices[6] = self.migrate_parts
 
-            choice = user_select_from_list_of_numbers('Select option', [1, 2, 3, 4, 5, 8, 9])
+            choice = user_select_from_list_of_numbers('Select option', choices.keys())
 
             done = choices[choice]()
 
         self.conn.close()
+        if qat_settings.USE_PARTS:
+            self.parts_conn.close()
 
     def migrate_users(self):
 
@@ -985,12 +1001,219 @@ class Command(BaseCommand):
 
         return False
 
+    def migrate_parts(self):
+
+        try:
+            self.parts_updating_cursor.execute('select part_id from parts')
+        except pyodbc.Error:
+            self.parts_updating_cursor.execute(""" ALTER TABLE parts ADD COLUMN part_id INT """)
+
+        self.parts_cursor.execute(
+            """
+            SELECT
+              idkey,
+              part_number,
+              description,
+              model,
+              alt_part_no,
+              cost,
+              qty_min,
+              comments,
+              Supplier,
+              Alt_Supplier,
+              part_id
+            FROM parts
+            ORDER BY idkey
+            """
+        )
+
+        print('\n---\tMigrating parts...')
+        while 1:
+            row = self.parts_cursor.fetchone()
+            if not row:
+                break
+
+            if not row.part_id:
+                try:
+
+                    category, _ = p_models.PartCategory.objects.get_or_create(name=row.model)
+                    sups = []
+                    for s in [row.Supplier, row.Alt_Supplier]:
+                        if s:
+                            try:
+                                supplier = p_models.Supplier.objects.get(name=s)
+                            except ObjectDoesNotExist:
+                                supplier = p_models.Supplier.objects.create(name=s)
+                                try:
+                                    vendor = u_models.Vendor.objects.get(name=s)
+                                    supplier.vendor = vendor
+                                except ObjectDoesNotExist:
+                                    pass
+                                supplier.save()
+                            sups.append(supplier)
+
+                    part = p_models.Part(
+                        part_category=category,
+                        part_number=row.part_number,
+                        alt_part_number=row.alt_part_no,
+                        description=row.description,
+                        quantity_min=row.qty_min,
+                        cost=row.cost,
+                        notes=row.comments
+                    )
+                    part.save()
+                    part.suppliers = sups
+                    part.save()
+
+                    self.parts_updating_cursor.execute('update parts set part_id = ? where idkey = ?', str(part.id), str(row.idkey))
+
+                except Exception as e:
+                    print('Error migrating part %s' % row.idkey)
+                    raise e
+
+        self.parts_conn.commit()
+
+        try:
+            self.parts_updating_cursor.execute('select parts_storage_id from locations')
+        except pyodbc.Error:
+            self.parts_updating_cursor.execute(""" ALTER TABLE locations ADD COLUMN parts_storage_id INT """)
+
+        self.parts_cursor.execute(
+            """
+            SELECT
+              idkey,
+              part_id,
+              room,
+              cabinet,
+              shelf,
+              loc,
+              qty,
+              parts_storage_id
+            FROM locations
+            ORDER BY idkey
+            """
+        )
+
+        print('\n---\tMigrating part locations ...')
+        while 1:
+            row = self.parts_cursor.fetchone()
+            if not row:
+                break
+
+            if not row.parts_storage_id:
+                try:
+                    try:
+                        part_id = self.parts_updating_cursor.execute('select part_id from parts where idkey = ?', str(row.part_id)).fetchone().part_id
+                    except AttributeError:
+                        print('---\tCan\'t find part with idkey %s' % row.part_id)
+                        continue
+                    room, _ = p_models.Room.objects.get_or_create(name=row.room)
+                    location = row.cabinet + ' ' + row.shelf
+                    storage, _ = p_models.Storage.objects.get_or_create(room=room, location=location)
+                    storage.description = row.loc
+                    storage.save()
+
+                    part = p_models.Part.objects.get(pk=part_id)
+                    qty = abs(row.qty)
+                    try:
+                        parts_storage = p_models.PartStorageCollection(
+                            part=part,
+                            storage=storage,
+                            quantity=qty
+                        )
+                        parts_storage.save()
+                    except IntegrityError:
+                        parts_storage = p_models.PartStorageCollection.objects.get(part=part, storage=storage)
+                        parts_storage.quantity += qty
+                        parts_storage.save()
+                    self.parts_updating_cursor.execute('update locations set parts_storage_id = ? where idkey = ?', str(parts_storage.id), str(row.idkey))
+
+                except Exception as e:
+                    print('Error migrating location %s' % row.idkey)
+                    raise e
+
+        self.parts_conn.commit()
+
+        try:
+            self.parts_updating_cursor.execute('select parts_used_id from parts_used')
+        except pyodbc.Error:
+            self.parts_updating_cursor.execute(""" ALTER TABLE parts_used ADD COLUMN parts_used_id INT """)
+
+        self.parts_cursor.execute(
+            """
+            SELECT
+              srn,
+              qty_used,
+              part_number,
+              location_id,
+              parts_used_id,
+              idkey
+            FROM parts_used
+            ORDER BY srn
+            """
+        )
+
+        print('\n---\tMigrating part parts used ...')
+        while 1:
+            row = self.parts_cursor.fetchone()
+            if not row:
+                break
+
+            if not row.parts_used_id:
+                try:
+                    try:
+                        part_storage_id = self.parts_updating_cursor.execute('select parts_storage_id from locations where idkey = ?', str(row.location_id)).fetchone().parts_storage_id
+                        parts_storage = p_models.PartStorageCollection.objects.get(pk=part_storage_id).storage
+                    except AttributeError:
+                        print('---\tBad location id for parts used on srn %s' % row.srn)
+                        parts_storage = None
+                    except ObjectDoesNotExist:
+                        print('---\tPartStorageCollection not found for part used on srn %s' % row.srn)
+                        print('---\tCan\'t find part storage collection %s' % part_storage_id)
+                        parts_storage = None
+
+                    try:
+                        service_event_id = self.updating_cursor.execute('select service_event_id from service where srn = ?', str(row.srn)).fetchone().service_event_id
+                    except AttributeError:
+                        print('---\tNo service event found for srn %s' % row.srn)
+                        continue
+                    service_event = sl_models.ServiceEvent.objects.get(pk=service_event_id)
+
+                    try:
+                        part_id = self.parts_updating_cursor.execute('select part_id from parts where part_number = ?', str(row.part_number)).fetchone().part_id
+                        part = p_models.Part.objects.get(pk=part_id)
+                    except (AttributeError, ObjectDoesNotExist):
+                        print('---\tNo part found for part used on srn %s' % row.srn)
+                        continue
+
+                    part_used = p_models.PartUsed(
+                        part=part,
+                        service_event=service_event,
+                        quantity=row.qty_used,
+                        from_storage=parts_storage
+                    )
+                    part_used.save()
+                    self.parts_updating_cursor.execute('update parts_used set parts_used_id = ? where srn = ? and idkey = ?', str(part_used.id), str(row.srn), str(row.idkey))
+
+                except Exception as e:
+                    print('Error migrating part used for srn %s' % row.srn)
+                    raise e
+
+        for p in p_models.Part.objects.all():
+            p.set_quantity_current()
+
+        self.parts_conn.commit()
+
     def commit_to_accel(self):
         self.conn.commit()
+        if qat_settings.USE_PARTS:
+            self.parts_conn.commit()
         return False
 
     def done_exit(self):
         self.conn.commit()
+        if qat_settings.USE_PARTS:
+            self.parts_conn.commit()
         return True
 
 

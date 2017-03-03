@@ -14,5 +14,6 @@ urlpatterns = [
     url(r'^se_searcher/$', views.se_searcher, name="se_searcher"),
     url(r'^tli_select(?:/(?P<pk>\d+))?(?:/(?P<form>[a-zA-Z0-9-_]+)/)?$', views.TLISelect.as_view(), name="tli_select"),
     url(r'^tli_statuses/$', views.tli_statuses, name="tli_statuses"),
-    url(r'^unit_sa_utc/$', views.unit_sa_utc, name="unit_sa_utc")
+    url(r'^unit_sa_utc/$', views.unit_sa_utc, name="unit_sa_utc"),
+    url(r'^err/$', views.ErrorView.as_view(), name='err')
 ]

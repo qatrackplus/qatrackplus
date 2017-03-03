@@ -58,7 +58,7 @@
                                             {% for utc in utcs %}
                                                 <tr>
                                                     <td>
-                                                        <a title="Perform {{utc.tests_object.name}} on {{utc.unit.name}}" href="{%url "perform_qa" utc.pk%}?day=next&next={{request.get_full_path}}">{{utc.tests_object.name}}</a>
+                                                        <a title="Perform {{utc.name}} on {{utc.unit.name}}" href="{%url "perform_qa" utc.pk%}?day=next&next={{request.get_full_path}}">{{utc.name}}</a>
                                                     </td>
                                                     <td>
                                                         {{utc.unit.name}}

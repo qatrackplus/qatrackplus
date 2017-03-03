@@ -674,23 +674,23 @@ class ActiveFilter(admin.SimpleListFilter):
         return queryset
 
 
-def utc_name(utc):
-    testlist_ct_id = models.ContentType.objects.get_for_model(models.TestList).pk
-    testlistcycle_ct_id = models.ContentType.objects.get_for_model(models.TestListCycle).pk
-    if utc.content_type.pk == testlist_ct_id:
-        return models.TestList.objects.get(pk=utc.object_id).name
-    elif utc.content_type.pk == testlistcycle_ct_id:
-        return models.TestListCycle.objects.get(pk=utc.object_id).name
-utc_name.admin_order_field = None
-utc_name.short_description = 'Utc name'
+# def utc_name(utc):
+#     testlist_ct_id = models.ContentType.objects.get_for_model(models.TestList).pk
+#     testlistcycle_ct_id = models.ContentType.objects.get_for_model(models.TestListCycle).pk
+#     if utc.content_type.pk == testlist_ct_id:
+#         return models.TestList.objects.get(pk=utc.object_id).name
+#     elif utc.content_type.pk == testlistcycle_ct_id:
+#         return models.TestListCycle.objects.get(pk=utc.object_id).name
+# utc_name.admin_order_field = None
+# utc_name.short_description = 'Utc name'
 
 
 class UnitTestCollectionAdmin(admin.ModelAdmin):
     # readonly_fields = ("unit","frequency",)
     filter_horizontal = ("visible_to",)
-    list_display = [utc_name, unit_name, freq_name, assigned_to_name, "active"]
+    list_display = ['name', unit_name, freq_name, assigned_to_name, "active"]
     list_filter = [UnitFilter, FrequencyFilter, AssignedToFilter, ActiveFilter]
-    search_fields = ["unit__name", "frequency__name"]
+    search_fields = ['name', "unit__name", "frequency__name"]
     change_form_template = "admin/treenav/menuitem/change_form.html"
     list_editable = ["active"]
     save_as = True
@@ -702,28 +702,28 @@ class UnitTestCollectionAdmin(admin.ModelAdmin):
             settings.STATIC_URL + "js/select2.min.js",
         )
 
-    def get_search_results(self, request, queryset, search_term):
-        """
-        Returns a tuple containing a queryset to implement the search,
-        and a boolean indicating if the results may contain duplicates.
-        """
-        # qs, use_distinct = super(UnitTestCollectionAdmin, self).get_search_results(request, queryset, search_term)
-
-        queryset &= self.get_queryset(request).extra(**qs_extra_for_utc_name()).extra(where=["(" + qs_extra_for_utc_name()['select']['utc_name'] + ") LIKE %s"], params=["%{0}%".format(search_term)])
-
-        #  The following casuses DatabaseError in MSSQL. 'The ORDER BY clause is invalid in views, inline
-        #  functions, derivedtables, subqueries, and common table expressions, unless TOP or FOR XML is also specified'
-
-        # def count():
-        #     from django.db import connection
-        #     cursor = connection.cursor()
-        #     sql, params = qs.query.sql_with_params()
-        #     count_sql =  "SELECT COUNT(*) FROM ({0})".format(sql)
-        #     cursor.execute(count_sql, params)
-        #     return cursor.fetchone()[0]
-
-        # qs.count = count
-        return queryset, True
+    # def get_search_results(self, request, queryset, search_term):
+    #     """
+    #     Returns a tuple containing a queryset to implement the search,
+    #     and a boolean indicating if the results may contain duplicates.
+    #     """
+    #     # qs, use_distinct = super(UnitTestCollectionAdmin, self).get_search_results(request, queryset, search_term)
+    #
+    #     queryset &= self.get_queryset(request).extra(**qs_extra_for_utc_name()).extra(where=["(" + qs_extra_for_utc_name()['select']['utc_name'] + ") LIKE %s"], params=["%{0}%".format(search_term)])
+    #
+    #     #  The following casuses DatabaseError in MSSQL. 'The ORDER BY clause is invalid in views, inline
+    #     #  functions, derivedtables, subqueries, and common table expressions, unless TOP or FOR XML is also specified'
+    #
+    #     # def count():
+    #     #     from django.db import connection
+    #     #     cursor = connection.cursor()
+    #     #     sql, params = qs.query.sql_with_params()
+    #     #     count_sql =  "SELECT COUNT(*) FROM ({0})".format(sql)
+    #     #     cursor.execute(count_sql, params)
+    #     #     return cursor.fetchone()[0]
+    #
+    #     # qs.count = count
+    #     return queryset, True
 
     def get_queryset(self, *args, **kwargs):
         qs = super(UnitTestCollectionAdmin, self).get_queryset(*args, **kwargs)
@@ -731,8 +731,6 @@ class UnitTestCollectionAdmin(admin.ModelAdmin):
             "unit",
             "frequency",
             "assigned_to"
-        ).prefetch_related(
-            "tests_object",
         )
 
 

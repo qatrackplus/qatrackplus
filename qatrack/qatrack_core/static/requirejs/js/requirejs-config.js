@@ -54,6 +54,9 @@ require.config({
         sl_se: siteConfig.STATIC_URL + 'service_log/js/sl_serviceevent',
         sl_se_details:siteConfig.STATIC_URL + 'service_log/js/sl_serviceevent_details',
         sl_utils: siteConfig.STATIC_URL + 'service_log/js/sl_utils',
+        
+        //parts module:
+        p_part: siteConfig.STATIC_URL + 'parts/js/p_part'
     },
     shim: {
         // Third party:

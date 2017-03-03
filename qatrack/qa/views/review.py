@@ -304,12 +304,10 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
             "tests_object",
         ).exclude(
             due_date=None
-        ).extra(
-            **utils.qs_extra_for_utc_name()
         ).order_by(
             "frequency__nominal_interval",
             "unit__number",
-            "utc_name",
+            "name",
         )
 
         return qs.distinct()
@@ -383,9 +381,7 @@ class OverviewObjects(JSONResponseMixin, View):
             "last_instance__testinstance_set",
             "last_instance__testinstance_set__status",
             "last_instance__modified_by",
-        ).extra(
-            **utils.qs_extra_for_utc_name()
-        ).order_by("frequency__nominal_interval", "unit__number", "utc_name", )
+        ).order_by("frequency__nominal_interval", "unit__number", "name", )
 
         return qs.distinct()
 
@@ -416,7 +412,7 @@ class OverviewObjects(JSONResponseMixin, View):
                             last_instance_pfs = 'New List'
 
                         ds = utc.due_status()
-                        unit_freqs[freq_name][utc.utc_name] = {
+                        unit_freqs[freq_name][utc.name] = {
                             'id': utc.pk,
                             'url': reverse('review_utc', args=(utc.pk,)),
                             'last_instance_status': last_instance_pfs,
@@ -437,7 +433,7 @@ class UTCInstances(TestListInstances):
     def get_page_title(self):
         try:
             utc = models.UnitTestCollection.objects.get(pk=self.kwargs["pk"])
-            return "History for %s" % utc.tests_object.name
+            return "History for %s" % utc.name
         except:
             raise Http404
 

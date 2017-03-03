@@ -804,14 +804,13 @@ class TestList(TestCollectionInterface):
 
     tests = models.ManyToManyField("Test", help_text=_("Which tests does this list contain"), through=TestListMembership)
 
-    sublists = models.ManyToManyField("self",
-                                      symmetrical=False, blank=True,
-                                      help_text=_("Choose any sublists that should be performed as part of this list.")
-                                      )
+    sublists = models.ManyToManyField(
+        "self", symmetrical=False, blank=True,
+        help_text=_("Choose any sublists that should be performed as part of this list.")
+    )
 
     warning_message = models.CharField(
-        max_length=255,
-        help_text=_("Message given when a test value is out of tolerance"),
+        max_length=255, help_text=_("Message given when a test value is out of tolerance"),
         default=settings.DEFAULT_WARNING_MESSAGE
     )
     utcs = GenericRelation('UnitTestCollection', related_query_name='test_list')
@@ -837,6 +836,10 @@ class TestList(TestCollectionInterface):
     def __str__(self):
         """return display representation of object"""
         return "(%s) %s" % (self.pk, self.name)
+
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        super(TestList, self).save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
+        self.utcs.update(name=self.name)
 
 
 class UnitTestListManager(models.Manager):
@@ -877,6 +880,7 @@ class UnitTestCollection(models.Model):
     object_id = models.PositiveIntegerField()
     tests_object = GenericForeignKey("content_type", "object_id")
     objects = UnitTestListManager()
+    name = models.CharField(max_length=255, db_index=True, default='', editable=False)
 
     last_instance = models.ForeignKey("TestListInstance", null=True, editable=False, on_delete=models.SET_NULL)
 
@@ -1014,12 +1018,6 @@ class UnitTestCollection(models.Model):
 
         return self.tests_object.get_list(day)
 
-    def name(self):
-        return self.__str__()
-
-    def test_objects_name(self):
-        return self.tests_object.name
-
     def get_absolute_url(self):
         return urlresolvers.reverse("perform_qa", kwargs={"pk": self.pk})
 
@@ -1041,8 +1039,11 @@ class UnitTestCollection(models.Model):
             )
 
     def __str__(self):
-        # return "UnitTestCollection(%s)" % self.pk
-        return self.tests_object.name
+        return self.name
+
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        super(UnitTestCollection, self).save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
+        self.name = self.tests_object.name
 
 
 class TestInstanceManager(models.Manager):
@@ -1493,6 +1494,10 @@ class TestListCycle(TestCollectionInterface):
 
     def __str__(self):
         return _(self.name)
+
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        super(TestListCycle, self).save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
+        self.utcs.update(name=self.name)
 
 
 class TestListCycleMembership(models.Model):

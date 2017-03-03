@@ -35,6 +35,27 @@ def migrate_script_tags_to_javascript(apps, schema_editor):
             tlc.save()
 
 
+def set_utc_name(apps, schema_editor):
+
+    UnitTestCollection = apps.get_model('qa', 'UnitTestCollection')
+    ContentType = apps.get_model('contenttypes', 'ContentType')
+    TestList = apps.get_model('qa', 'TestList')
+    TestListCycle = apps.get_model('qa', 'TestListCycle')
+
+    test_list_type = ContentType.objects.get_for_model(TestList)
+
+    for utc in UnitTestCollection.objects.all():
+
+        utc_ct = utc.content_type
+
+        if utc_ct.id == test_list_type.id:
+            utc.name = TestList.objects.get(pk=utc.object_id).name
+        else:
+            utc.name = TestListCycle.objects.get(pk=utc.object_id).name
+
+        utc.save()
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -123,4 +144,10 @@ class Migration(migrations.Migration):
             field=models.DateTimeField(blank=True, help_text='When was this session due when it was performed', null=True),
         ),
         migrations.RunPython(migrate_script_tags_to_javascript),
+        migrations.AddField(
+            model_name='unittestcollection',
+            name='name',
+            field=models.CharField(db_index=True, default='', editable=False, max_length=255),
+        ),
+        migrations.RunPython(set_utc_name),
     ]

@@ -4,10 +4,13 @@ import re
 from django.conf import settings as qat_settings
 
 ACCEL_DB_LOCATION = ''
-PARTS_DB_LOCATION = ''
+ACCEL_PARTS_DB_LOCATION = ''
 
 DB_USER = ''
 DB_PASS = ''
+
+PARTS_DB_USER = ''
+PARTS_DB_PASS = ''
 
 USE_LDAP = False
 

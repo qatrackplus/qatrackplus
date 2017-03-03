@@ -6,7 +6,6 @@ dist
 db/*
 downloads
 eggs
-parts
 src/*.egg-info
 lib
 lib64

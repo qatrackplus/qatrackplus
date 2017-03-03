@@ -190,3 +190,6 @@ input[type="number"] {
 .margin-r-10 {
     margin-right: 10px;
 }
+.align-top {
+    vertical-align: top !important;
+}

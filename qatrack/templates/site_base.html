@@ -41,7 +41,8 @@
             var siteConfig = {
                 VERSION: '{{ VERSION }}',
                 STATIC_URL: '{{ STATIC_URL }}',
-                DEBUG: '{{ DEBUG }}'
+                DEBUG: '{{ DEBUG }}',
+                USE_PARTS: '{{ USE_PARTS }}'
             };
 
             var QAURLs = {
@@ -59,6 +60,8 @@
                 TLI_STATUSES: "{% url "tli_statuses" %}",
                 TLI_SELECT: "{% url "tli_select" %}",
                 TLI_VIEW: "{% url "view_test_list_instance" %}",
+                PARTS_SEARCHER: "{% url 'parts_searcher' %}",
+                PARTS_STORAGE_SEARCHER: "{% url 'parts_storage_searcher' %}",
 
                 options_from_url_hash: function(hash){
                     var options = [];

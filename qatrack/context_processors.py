@@ -52,6 +52,7 @@ def site(request):
         'ICON_SETTINGS_JSON': json.dumps(settings.ICON_SETTINGS),
         'TEST_STATUS_SHORT_JSON': json.dumps(settings.TEST_STATUS_DISPLAY_SHORT),
         'REVIEW_DIFF_COL': settings.REVIEW_DIFF_COL,
-        'DEBUG': settings.DEBUG
+        'DEBUG': settings.DEBUG,
+        'USE_PARTS': settings.USE_PARTS
     }
 

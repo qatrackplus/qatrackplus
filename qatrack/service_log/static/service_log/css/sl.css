@@ -43,6 +43,10 @@
     max-width: 50px;
     width: 50px;
 }
+.max-width-300 {
+    max-width: 300px;
+    width: 300px;
+}
 .min-width-200 {
     min-width: 200px;
 }
@@ -51,6 +55,9 @@
 }
 .box.box-bordered-default {
     border: 1.5px solid rgb(210, 214, 222);
+}
+.width-400 {
+    width: 400px !important;
 }
 
 /* Override width of pk column to something smaller */
@@ -62,17 +69,14 @@
 #listable-table-qaf_list_all > tbody > tr > td:nth-child(2) {
     width: 50px;
 }
-/*#listable-table-sl_list_all > thead > tr:nth-child(2) > th:nth-child(3) > span > input {*/
-    /*min-width: 65px;*/
-/*}*/
-/*#listable-table-sl_list_all > tbody > tr > td:nth-child(3) {*/
-    /*width: 70px;*/
-/*}*/
 #listable-table-sl_list_all > thead > tr:nth-child(2) > th:nth-child(10) > span > input {
     min-width: 145px;
 }
 #listable-table-sl_list_all > tbody > tr > td:nth-child(10) {
     width: 150px;
+}
+#listable-table-parts_list > tbody > tr > td:nth-child(1) {
+    width: 100px;
 }
 
 /*QA Status Spans                                 */

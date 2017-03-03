@@ -186,12 +186,20 @@ class ServiceEvent(models.Model):
     #     return {se.id: se.service_status.colour for se in ServiceEvent.objects.all()}
 
 
+class ThirdPartyManager(models.Manager):
+
+    def get_queryset(self):
+        return super(ThirdPartyManager, self).get_queryset().select_related('vendor')
+
+
 class ThirdParty(models.Model):
 
     vendor = models.ForeignKey(Vendor, on_delete=models.PROTECT)
 
     first_name = models.CharField(max_length=32, help_text=_('Enter this person\'s first name'))
     last_name = models.CharField(max_length=32, help_text=_('Enter this person\'s last name'))
+
+    objects = ThirdPartyManager()
 
     class Meta:
         verbose_name = _('Third party')
