@@ -12,6 +12,7 @@ from django.utils.translation import ugettext as _
 
 from django.views.generic import UpdateView
 
+from qatrack.contacts.models import Contact
 from qatrack.qa import models, utils
 
 from braces.views import PrefetchRelatedMixin, SelectRelatedMixin
@@ -110,6 +111,7 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
         context["statuses"] = models.TestInstanceStatus.objects.all()
         context["test_list"] = self.object.test_list
         context["unit_test_collection"] = self.object.unit_test_collection
+        context["contacts"] = list(Contact.objects.all().order_by("name"))
         return context
 
     def form_valid(self, form):
