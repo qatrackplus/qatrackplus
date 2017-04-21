@@ -63,12 +63,20 @@ def get_mpl_figure(obj):
 
 def to_bytes(obj, fname=None):
 
+
+    if hasattr(obj, "read"):
+        # read from file like objects for handling bytes/string below
+        if hasattr(obj, "seek"):
+            obj.seek(0)
+        obj = obj.read()
+
     if isinstance(obj, bytes):
         return obj
 
     if isinstance(obj, str):
         return bytes(obj, "UTF-8")
 
+    # numpy array
     if hasattr(obj, "tobytes"):
         return obj.tobytes()
 
