@@ -50,7 +50,11 @@ Test docker-compose:
     
 ### Downloading and installing Dockerised QATrack+ (0.3.0-dev version)
 
-    git clone https://github.com/SimonBiggs/dockerised-qatrackplus.git
+    git clone https://bitbucket.org/tohccmedphys/qatrackplus.git
+    
+    cd qatrackplus
+    
+    git checkout py34
     
     cd qatrackplus/deploy/dockerised
     
