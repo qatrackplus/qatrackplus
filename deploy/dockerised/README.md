@@ -56,7 +56,7 @@ Test docker-compose:
     
     git checkout py34
     
-    cd qatrackplus/deploy/dockerised
+    cd deploy/dockerised
     
     ./first-time.sh
     
