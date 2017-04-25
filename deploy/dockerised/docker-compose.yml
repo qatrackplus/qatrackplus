@@ -1,0 +1,36 @@
+version: "3"
+
+services:
+  web:
+    restart: always
+    build: ../../.
+    expose:
+      - "8000"
+    links:
+      - postgres:postgres
+    volumes:
+      - static:/usr/src/app/qatrack/static
+    env_file: customise-server.env
+    command: /usr/local/bin/gunicorn qatrack.wsgi:application -w 2 -b :8000
+
+  nginx:
+    restart: always
+    build: ./nginx
+    ports:
+      - "80:80"
+    volumes:
+      - static:/usr/src/app/qatrack/static
+    links:
+      - web:web
+
+  postgres:
+    restart: always
+    build: ./postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - qatrackdb:/var/lib/postgresql/data/
+
+volumes:
+  static:
+  qatrackdb:

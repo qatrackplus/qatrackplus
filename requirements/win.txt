@@ -1,4 +1,0 @@
--r base.txt
-pywin32>=220
-django-mssql
-django-pyodbc-azure
