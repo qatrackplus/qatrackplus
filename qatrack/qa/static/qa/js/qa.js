@@ -629,7 +629,9 @@ function TestListInstance(){
         self.composites = _.filter(self.test_instances,function(ti){return ti.test_info.test.type === QAUtils.COMPOSITE || ti.test_info.test.type === QAUtils.STRING_COMPOSITE;});
         self.composite_ids = _.map(self.composites,function(ti){return ti.test_info.test.id;});
         self.attachInput.on("change", function(){
-            var fnames = _.map(this.files, "name").join(", ");
+            var fnames = _.map(this.files, function(f){
+                return '<i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>' + f.name +" ";
+            }).join("");
             $("#tli-attachment-names").html(fnames);
         });
         self.calculate_composites();

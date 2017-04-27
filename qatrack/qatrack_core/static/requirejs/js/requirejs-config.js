@@ -79,9 +79,9 @@ require.config({
             exports: 'DateRangePicker',
             deps: [/*'jquery', */'moment']
         },
-        // icheck: {
-        //     deps: ['jquery']
-        // },
+        icheck: {
+             deps: ['jquery']
+        },
         jquery: {
             exports: '$'
         },

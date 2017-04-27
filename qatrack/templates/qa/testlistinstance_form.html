@@ -350,7 +350,7 @@
                                         <tr>
                                             <td>Attachments</td>
                                             <td>
-                                                <label class="qa-input btn btn-primary btn-xs btn-flat">
+                                                <label class="qa-input btn btn-primary btn-xs btn-flat" title="Click to add attachments. (Hold Ctrl or Cmd in the dialog to include multiple attachments)">
                                                     Browse <input id="tli-attachments" class="file-upload" type="file" name="tli-attachments" multiple style="display:none"/>
                                                 </label>
                                             </td>
@@ -364,6 +364,12 @@
                                                     colspan="4"
                                                 {% endif %}
                                             >
+
+                                                {% if test_list_instance and test_list_instance.attachment_set.exists %}
+                                                    {% for attach in test_list_instance.attachment_set.all %}
+                                                        <i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>{{ attach | attachment_link }}
+                                                    {% endfor %}
+                                                {% endif %}
                                             </td>
                                         </tr>
                                     </tbody>
