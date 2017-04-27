@@ -775,6 +775,22 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
         self.object.save()
 
+        if self.request.FILES:
+            self.update_attachments()
+
+    def update_attachments(self):
+        for attach in self.object.attachment_set.all():
+            attach.delete()
+
+        for idx, f in enumerate(self.request.FILES.getlist('tli-attachments')):
+            attachment = Attachment.objects.create(
+                attachment=f,
+                comment = "Uploaded %s by %s" % (timezone.now(), self.request.user.username),
+                label=f.name,
+                testlistinstance=self.object,
+                created_by=self.request.user
+            )
+
     def set_status_object(self, status_pk):
 
         try:
