@@ -808,13 +808,13 @@ utc_unit_name.short_description = "Unit"
 class TestListInstanceAdmin(SaveInlineAttachmentUserMixin, admin.ModelAdmin):
     list_display = ["__str__", utc_unit_name, "test_list", "work_completed", "created_by"]
     list_filter = ["unit_test_collection__unit", "test_list", ]
-    inlines = [get_attachment_inline("testlist")]
+    inlines = [get_attachment_inline("testlistinstance")]
 
 
 class TestInstanceAdmin(SaveInlineAttachmentUserMixin, admin.ModelAdmin):
 
     list_display = ["__str__", "test_list_instance", "test_name", "unit_name", "test_list_name", "work_completed", "created_by"]
-    inlines = [get_attachment_inline("testlist")]
+    inlines = [get_attachment_inline("testinstance")]
 
     def get_queryset(self, request):
         qs = super(TestInstanceAdmin, self).get_queryset(request)
