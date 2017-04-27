@@ -41,6 +41,10 @@ class SaveInlineAttachmentUserMixin(object):
         for instance in instances:
             instance.created_by = request.user
             instance.save()
+
+        for obj in formset.deleted_objects:
+            obj.delete()
+
         formset.save_m2m()
 
 
