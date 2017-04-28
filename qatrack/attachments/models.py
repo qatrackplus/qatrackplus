@@ -137,7 +137,11 @@ class Attachment(models.Model):
 
     @property
     def is_image(self):
-        return imghdr.what(self.attachment) is not None
+
+        img = imghdr.what(self.attachment) is not None
+        ext = os.path.splitext(self.attachment.name)[1].strip(".")
+        force = ext in ["jpg", "jpeg", "png", "svg", "bmp", "gif"]
+        return img or force
 
     def __str__(self):
         return "Attachment(%s, %s)" % (self.owner or _("No Owner"), self.attachment.name)
