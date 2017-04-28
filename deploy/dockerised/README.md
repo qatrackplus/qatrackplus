@@ -4,11 +4,19 @@ WARNING
 
 This is a development version of QATrack+. It has not undergone sufficient testing.
 
-## Installation instructions
+## Prerequisites
+
+### Docker and Docker-Compose
 
 This installation method requires docker-compose and docker. Go to the following web adress and follow all the relevant instructions to install docker and docker-compose on your system.
 
  * https://docs.docker.com/compose/install/
+
+### Git
+
+To easily retrieve files from bitbucket you will need git installed. Follw the relevant instructions at the following web address for your operating system:
+
+ * https://www.atlassian.com/git/tutorials/install-git
 
 ## Dockerised QATrack+ (0.3.0-dev version) usage
 
