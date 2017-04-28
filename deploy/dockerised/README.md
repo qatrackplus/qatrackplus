@@ -32,7 +32,7 @@ To start the server once it has been built run:
 
     docker-compose up -d
 
-The first time this is run the server needs about 5 seconds to initialise. Go to http://localhost in browser to see the server. Default login is username admin, password admin.
+The first time this is run the server needs about 5 seconds to initialise. Go to http://localhost in browser to see the server. Default login is username admin, password admin. If you get an error when you first open this page you may need to refresh until initialisation is complete.
 
 ### Shutdown the server
 
@@ -51,6 +51,13 @@ Once any files have changed in the qatrackplus directory you need to run the fol
     docker-compose stop
     docker-compose build
     docker-compose up -d
+
+
+### Delete all docker data
+
+If for some reason you need it, the following command will delete all docker data from all docker projects:
+
+    docker stop $(docker ps -a -q) && docker rm $(docker ps -a -q) && echo 'y' | docker volume prune
 
 ### Backup database to file
 
