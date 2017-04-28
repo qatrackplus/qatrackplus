@@ -10,6 +10,7 @@ services:
       - postgres:postgres
     volumes:
       - static:/usr/src/app/qatrack/static
+      - uploads:/usr/src/app/qatrack/media/uploads
     env_file: customise-server.env
     command: /usr/local/bin/gunicorn qatrack.wsgi:application -w 2 -b :8000
 
@@ -34,3 +35,4 @@ services:
 volumes:
   static:
   qatrackdb:
+  uploads:
