@@ -1,6 +1,6 @@
 
 
-require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker', 'sl_utils', 'jquery.inputmask'], function ($, _, moment, autosize) {
+require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker', 'sl_utils', 'inputmask'], function ($, _, moment, autosize) {
     
     $(document).ready(function() {
 
@@ -24,8 +24,8 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
                 '    </div>' +
                 '</div>'
             ),
-            $parts_used_parts = $('.parts-used-part'),
-            $parts_used_from_storage = $('.parts-used-part_storage_collection');
+            $parts_used_parts = $('.parts-used-part:visible'),
+            $parts_used_from_storage = $('.parts-used-from_storage:visible');
 
         $utc_initiated_by.parent().append($tli_initiated_display);
 
@@ -99,13 +99,12 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
             return $label;
         }
         function process_related_results(data, params) {
-            // console.log(data);
-            // console.log(params);
             var results = [];
             for (var i in data.colour_ids) {
                 var se_id = data.colour_ids[i][0],
-                    s_id = data.colour_ids[i][1];
-                results.push({id: se_id, text: 'id: ' + se_id});
+                    s_id = data.colour_ids[i][1],
+                    s_pd = data.colour_ids[i][2];
+                results.push({id: se_id, text: 'id: ' + se_id, title: s_pd});
                 se_statuses[se_id] = s_id;
             }
             params.page = params.page || 1;
@@ -253,7 +252,6 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
             });
         }
         displayTLI = function (prefix, data, returnValue) {
-            console.log(prefix);
             var $label_group = $('<span class="label-group"></span>');
             for (var status in data['pass_fail']) {
                 if (data['pass_fail'][status] > 0 && status != 'no_tol') {
@@ -298,7 +296,6 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
         };
         setSearchResult = function (form, returnValue) {
             window.focus();
-            console.log(returnValue);
             if (form == 'utc_initiated') {
                 if (returnValue) {
                     $tli_initiated_by.val(returnValue);
@@ -359,11 +356,12 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
             }
 
         });
+
         // Parts formset --------------------------------------------------------------------------------------
         if (siteConfig.USE_PARTS == 'True') {
+
             function process_part_results(data, params) {
-                // console.log(data);
-                // console.log(params);
+                console.log(data);
                 var results = [];
                 for (var i in data.data) {
                     var p_id = data.data[i][0],
@@ -385,7 +383,8 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
                     }
                 };
             }
-            $parts_used_parts.select2({
+
+            var part_select2 = {
                 ajax: {
                     url: QAURLs.PARTS_SEARCHER,
                     dataType: 'json',
@@ -403,12 +402,13 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
                     cache: true
                 },
                 escapeMarkup: function (markup) { return markup; },
+                placeholder: '-------',
                 minimumInputLength: 1,
                 width: '100%',
-                // placeholder: "----------",
-                // allowClear: true,
-            });
-            $parts_used_parts.change(function(e) {
+                allowClear: true
+            };
+
+            function parts_used_changed() {
                 var prefix = $(this).attr('data-prefix'),
                     p_id = $(this).val();
 
@@ -416,30 +416,62 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
                     url: QAURLs.PARTS_STORAGE_SEARCHER,
                     data: {'p_id': p_id},
                     success: function (res) {
-                        console.log(res);
                         var $s = $('#id_' + prefix + '-from_storage');
 
                         $s.find('option:not(:first)').remove();
 
-                        for (var i in res.data) {
-                            var psc = res.data[i];
-                            var text = (psc[1] ? psc[1] + ' - ' : '') + psc[2] + ' - ' + psc[3] + ' - ' + psc[4] + ' (' + psc[5] + ')',
-                                title = (psc[1] ? 'Site: ' + psc[1] + '\n': '') +
+                        if (res.data !== '__clear__') {
+                            for (var i in res.data) {
+                                var psc = res.data[i];
+                                var text = (psc[1] ? psc[1] + ' - ' : '') + psc[2] + ' - ' + psc[3] + ' (' + psc[4] + ')',
+                                    title = (psc[1] ? 'Site: ' + psc[1] + '\n' : '') +
                                         'Room: ' + psc[2] + '\n' +
-                                        (psc[3] ? 'Cabinet: ' + psc[3] + '\n' : '') +
-                                        (psc[4] ? 'Shelf: ' + psc[4] + '\n' : '') +
-                                        'Quantity left: ' + psc[5];
-                            $s.append($('<option></option>').attr('value', psc[0]).text(text).attr('title', title));
+                                        (psc[4] ? 'Location: ' + psc[3] + '\n' : '') +
+                                        'Quantity left: ' + psc[4];
+                                $s.append($('<option></option>').attr('value', psc[0]).text(text).attr('title', title));
+                            }
                         }
                     }
                 })
+            }
 
+            $parts_used_parts.select2(part_select2);
+            $parts_used_parts.change(parts_used_changed);
+            // $parts_used_parts.change();
+
+            $parts_used_from_storage.select2({
+                placeholder: '-------',
+                minimumResultsForSearch: 10,
+                width: '100%',
+                allowClear: true
+            });
+
+            $('#add-part').click(function() {
+
+                var empty_part_form = $('#empty-parts-form').html(),
+                    $part_index = $('#id_parts-TOTAL_FORMS'),
+                    part_index = $part_index.val();
+
+                $('#parts-used-tbody').append(empty_part_form.replace(/__prefix__/g, part_index));
+
+                var $parts_part = $('#id_parts-' + part_index + '-part');
+                console.log($parts_part);
+                $parts_part.select2(part_select2);
+                $parts_part.change(parts_used_changed);
+                $('#id_parts-' + part_index + '-from_storage').select2({
+                    placeholder: '-------',
+                    minimumResultsForSearch: 10,
+                    width: '100%',
+                    allowClear: true
+                });
+
+                $part_index.val(parseInt(part_index) + 1);
             });
 
         }
 
         // // initiated by -------------------------------------------------------------------------------------
-        if ($tli_initiated_by.val() == '') {
+        if ($tli_initiated_by.val() === '') {
             $tli_initiated_display.hide();
         } else {
             setSearchResult('utc_initiated', $tli_initiated_by.val());

@@ -23,9 +23,10 @@ require.config({
         daterangepicker: siteConfig.STATIC_URL + 'daterangepicker/js/daterangepicker',
         dropzone: siteConfig.STATIC_URL + 'dropzone/js/dropzone-amd-module',
         icheck: siteConfig.STATIC_URL + 'icheck/js/icheck.min',
-        inputmask: siteConfig.STATIC_URL + "inputmask/js/inputmask",
-        "inputmask.dependencyLib": siteConfig.STATIC_URL + "inputmask/js/inputmask.dependencyLib.jquery",
-        'jquery.inputmask': siteConfig.STATIC_URL + 'inputmask/js/jquery.inputmask',
+        // inputmask: siteConfig.STATIC_URL + "inputmask/js/inputmask",
+        // "inputmask.dependencyLib": siteConfig.STATIC_URL + "inputmask/js/inputmask.dependencyLib.jquery",
+        // 'jquery.inputmask': siteConfig.STATIC_URL + 'inputmask/js/jquery.inputmask',
+        inputmask: siteConfig.STATIC_URL + 'inputmask/js/jquery.inputmask.bundle',
         jquery: siteConfig.STATIC_URL + 'jquery/js/jquery.min',
         'jquery-ui': siteConfig.STATIC_URL + 'jqueryui/js/jquery-ui.min',
         json2: siteConfig.STATIC_URL + 'json2/js/json2',
@@ -118,7 +119,7 @@ require.config({
             deps: ['jquery', 'qautils', 'site_base', 'lodash', 'daterangepicker', 'sidebar', 'datatables', 'datatables.columnFilter', 'inputmask', 'select2', 'sl_utils']
         },
         
-
+        // service_log module
         sl_utils: {
             deps: ['jquery', 'site_base', 'bootstrap']
         }

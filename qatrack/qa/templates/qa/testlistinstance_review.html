@@ -98,9 +98,19 @@
 
                                         <dt>Comment :</dt>
                                         <dd>{% if tli.comment %}{{tli.comment}}{% else %}<em>No comment</em>{% endif %}</dd>
-                                        {% if service_event %}
-                                            <dt>Service Event:</dt>
-                                            <dd><a id="service-event" href="{% url 'sl_details' pk=service_event.id %}" class="btn btn-xs btn-flat" data-bgcolour="{{ service_event.service_status.colour }}">{{ service_event }}</a></dd>
+
+{#                                        {% if service_event %}#}
+{#                                            <dt>Service Event:</dt>#}
+{#                                            <dd><a id="service-event" href="{% url 'sl_details' pk=service_event.id %}" class="btn btn-xs btn-flat" data-bgcolour="{{ service_event.service_status.colour }}">{{ service_event }}</a></dd>#}
+{#                                        {% endif %}    #}
+
+                                        {% if service_events %}
+                                            <dt>Service Events:</dt>
+                                            <dd>
+                                                {% for se in service_events %}
+                                                    <a id="service-event" href="{% url 'sl_details' pk=se.id %}" class="btn btn-xs btn-flat" data-bgcolour="{{ se.service_status.colour }}">{{ se }}</a>
+                                                {% endfor %}
+                                            </dd>
                                         {% endif %}
                                     </dl>
                                 </div>

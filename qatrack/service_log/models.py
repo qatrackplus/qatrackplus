@@ -29,14 +29,6 @@ class ServiceArea(models.Model):
     def __str__(self):
         return self.name
 
-    # @staticmethod
-    # def get_for_unit(unit):
-    #     usacs = UnitServiceArea.objects.filter(
-    #         unit=unit
-    #     ).values_list('service_area__pk', flat=True)
-    #
-    #     return ServiceArea.objects.filter(pk__in=usacs)
-
 
 class UnitServiceArea(models.Model):
 

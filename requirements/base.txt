@@ -4,7 +4,7 @@ django-admin-views==0.8.0
 django-braces==1.9.0
 django-crispy-forms==1.6.0
 -e git+https://github.com/django/django-formtools.git@bb97a8abd374c50991c0a9ce144f17e7322a0c48#egg=django-formtools
-django-listable==0.4.1
+-e git+https://github.com/randlet/django-listable.git@5eea3d18bdf1403e2661f5c69949f1754a1009b0#egg=django_listable
 django-registration-redux==1.4
 django-tastypie==0.13.3
 matplotlib==1.5.3

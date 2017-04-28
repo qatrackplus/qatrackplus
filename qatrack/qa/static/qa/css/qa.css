@@ -285,3 +285,8 @@ input[type="number"]::-webkit-inner-spin-button {
 input[type="number"] {
     -moz-appearance: textfield;
 }
+
+#listable-table-unreviewed > thead > tr > th:nth-child(1),
+#listable-table-unreviewed > tbody > tr > td:nth-child(1) {
+    min-width: 160px;
+}

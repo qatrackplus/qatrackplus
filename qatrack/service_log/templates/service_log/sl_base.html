@@ -65,13 +65,28 @@
                     <span>View Parts</span>
                 </a></li>
                 <li class="header">Units Actions</li>
-                <li class="danger"><a id="toggle-description" href="#!">
+                <li class="info"><a id="toggle-description" href="{% url 'unit_list' %}">
                     <i class="fa fa-stack fa-fw">
+                        <i class="fa fa-list fa-stack-custom-sub upper-left info"></i>
                         <i class="fa fa-cube fa-stack-custom-main fa-lg"></i>
-                        <i class="fa fa-key fa-stack-custom-sub upper-left danger"></i>
                     </i>
-                    <span>Restrict Unit</span>
+                    <span>View Units</span>
                 </a></li>
+                <li class="info"><a id="toggle-description" href="{% url 'vendor_list' %}">
+                    <i class="fa fa-stack fa-fw">
+                        <i class="fa fa-list fa-stack-custom-sub upper-left info"></i>
+                        <i class="fa fa-truck fa-flip-horizontal fa-stack-custom-main fa-lg"></i>
+                    </i>
+                    <span>View Vendors</span>
+                </a></li>
+
+{#                <li class="danger"><a id="toggle-description" href="#!">#}
+{#                    <i class="fa fa-stack fa-fw">#}
+{#                        <i class="fa fa-cube fa-stack-custom-main fa-lg"></i>#}
+{#                        <i class="fa fa-key fa-stack-custom-sub upper-left danger"></i>#}
+{#                    </i>#}
+{#                    <span>Restrict Unit</span>#}
+{#                </a></li>#}
 
             </ul>
         </section>

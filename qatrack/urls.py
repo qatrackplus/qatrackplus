@@ -13,6 +13,7 @@ urlpatterns = [
     url(r'^qa/', include('qatrack.qa.urls')),
     url(r'^servicelog/', include('qatrack.service_log.urls')),
     url(r'^parts/', include('qatrack.parts.urls')),
+    url(r'^units/', include('qatrack.units.urls')),
 
     # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),

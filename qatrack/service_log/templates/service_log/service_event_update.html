@@ -386,15 +386,15 @@
                             </div>
                             <div class="box-body">
                                 <div class="row">
-                                    <div class="col-lg-6">
+                                    <div class="col-md-6">
                                         <h4>Parts Used</h4>
                                     </div>
-                                    <div class="col-lg-6">
-                                        <h4>Parts Removed</h4>
-                                    </div>
+{#                                    <div class="col-lg-6">#}
+{#                                        <h4>Parts Removed</h4>#}
+{#                                    </div>#}
                                 </div>
                                 <div class="row">
-                                    <div class="col-lg-6">
+                                    <div class="col-md-12">
                                         <table class="table table-striped table-hover table-condensed table-valign-middle">
 
                                             <thead>
@@ -439,7 +439,9 @@
                                             </tbody>
 
                                             <tfoot>
-
+                                                <tr>
+                                                    <td><div id="add-part" class="btn btn-info btn-flat btn-sm">Add</div></td>
+                                                </tr>
                                             </tfoot>
 
                                         </table>
@@ -544,6 +546,20 @@
                     <td id="assigned-by-followup-__prefix__"></td>
                     <td id="assigned-date-followup-__prefix__"></td>
                     <td id="utc-actions-followup-__prefix__"></td>
+                    <td></td>
+                </tr>
+            {% endwith %}
+        </tbody>
+    </table>
+
+    <table style="display: none;">
+        <tbody id="empty-parts-form">
+            {% with part_used_formset.empty_form as pu_form %}
+                <tr id="parts-__prefix__">
+                    {{ pu_form.id }}
+                    <td class="form-group align-top" title="{{ pu_form.part.help_text }}">{{ pu_form.part }}</td>
+                    <td class="form-group align-top">{{ pu_form.quantity }}</td>
+                    <td class="form-group align-top">{{ pu_form.from_storage }}</td>
                     <td></td>
                 </tr>
             {% endwith %}

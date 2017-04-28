@@ -104,10 +104,9 @@ class PartCategory(models.Model):
 
 class Part(models.Model):
 
-    # unit_type_service_area = models.ManyToManyField(
-    #     ServiceAreaUnitType, blank=True, null=True, help_text=_('Unit type and service area for this part')
-    # )
-    part_category = models.ForeignKey(PartCategory)
+    part_categories = models.ManyToManyField(
+        PartCategory, blank=True, null=True, help_text=_('Categories for this part'), related_name='parts'
+    )
     suppliers = models.ManyToManyField(
         Supplier, blank=True, null=True, help_text=_('Suppliers of this part'), related_name='parts',
         through='PartSupplierCollection'
@@ -120,14 +119,14 @@ class Part(models.Model):
     alt_part_number = models.CharField(
         max_length=32, help_text=_('Alternate part number'), blank=True, null=True
     )
-    description = models.TextField(help_text=_('Brief description of this part'), blank=True, null=True)
+    description = models.TextField(help_text=_('Brief description of this part'))
     quantity_min = models.PositiveIntegerField(
-        default=None, help_text=_('Notify when the number parts falls below this number in storage'),
-        blank=True, null=True
+        default=0, help_text=_('Notify when the number parts falls below this number in storage'),
     )
     quantity_current = models.PositiveIntegerField(help_text=_('The number of parts in storage currently'), default=0, editable=False)
     cost = models.DecimalField(default=0, decimal_places=2, max_digits=10, help_text=_('Cost of this part'))
     notes = models.TextField(max_length=255, blank=True, null=True, help_text=_('Additional comments about this part'))
+    is_obsolete = models.BooleanField(default=False, help_text=_('Is this part now obsolete'), verbose_name=_('Obsolete'))
 
     def __str__(self):
         return '%s%s - %s' % (self.part_number, ' (%s)' % self.alt_part_number if self.alt_part_number else '', self.description)

@@ -32,6 +32,7 @@ from qatrack.service_log import models, forms
 from qatrack.qa import models as qa_models
 from qatrack.qa.views.base import generate_review_status_context
 from qatrack.qa.views.review import UTCInstances
+from qatrack.qa.views.perform import ChooseUnit
 from qatrack.units import models as u_models
 
 
@@ -90,6 +91,28 @@ def populate_timeline_from_queryset(unsorted_dict, obj, datetime, obj_class, msg
     return unsorted_dict
 
 
+def unit_sa_utc(request):
+
+    unit = models.Unit.objects.get(id=request.GET['unit_id'])
+    service_areas = list(models.ServiceArea.objects.filter(units=unit).values())
+
+    # testlist_ct = ContentType.objects.get(app_label="qa", model="testlist")
+    utcs_tl_qs = models.UnitTestCollection.objects.filter(unit=unit, active=True)
+    utcs_tl = sorted([{'id': utc.id, 'name': utc.name} for utc in utcs_tl_qs], key=lambda utc: utc['name'])
+    return JsonResponse({'service_areas': service_areas, 'utcs': utcs_tl})
+
+
+def se_searcher(request):
+    se_search = request.GET['q']
+    unit_id = request.GET['unit_id']
+    service_events = models.ServiceEvent.objects \
+        .filter(id__icontains=se_search, unit_service_area__unit=unit_id) \
+        .order_by('-id') \
+        .select_related('service_status')[0:50]\
+        .values_list('id', 'service_status__id', 'problem_description')
+    return JsonResponse({'colour_ids': list(service_events)})
+
+
 def get_user_name(user):
     return user.username if not user.first_name or not user.last_name else user.first_name + ' ' + user.last_name
 
@@ -125,23 +148,47 @@ class SLDashboard(TemplateView):
         last_week_date = timezone.now().date() - timezone.timedelta(days=7)
         last_week_datetime = timezone.datetime(year=last_week_date.year, month=last_week_date.month, day=last_week_date.day)
         se_new = models.ServiceEvent.objects\
-            .filter(datetime_created__gt=last_week_datetime)\
-            .order_by('-datetime_created')
+            .filter(datetime_created__gt=timezone.now() - timezone.timedelta(days=14))\
+            .select_related('unit_service_area__unit', 'user_created_by')\
+            .order_by('-datetime_created')[:40]
         se_edited = models.ServiceEvent.objects\
-            .filter(datetime_modified__gt=last_week_datetime)\
-            .order_by('-datetime_modified')
+            .filter(datetime_modified__gt=timezone.now() - timezone.timedelta(days=14))\
+            .select_related('unit_service_area__unit', 'user_modified_by')\
+            .order_by('-datetime_modified')[:40]
         se_status = models.ServiceEvent.objects\
-            .filter(datetime_status_changed__gt=last_week_datetime)\
-            .select_related('service_status')\
-            .order_by('-datetime_status_changed')
+            .filter(datetime_status_changed__gt=timezone.now() - timezone.timedelta(days=14))\
+            .select_related('service_status', 'unit_service_area__unit', 'user_status_changed_by')\
+            .order_by('-datetime_status_changed')[:40]
         qaf_new = models.QAFollowup.objects\
-            .filter(datetime_assigned__gt=last_week_datetime)\
-            .select_related('service_event', 'test_list_instance', 'unit_test_collection')\
-            .order_by('-datetime_assigned')
+            .filter(datetime_assigned__gt=timezone.now() - timezone.timedelta(days=14))\
+            .select_related(
+                'service_event',
+                'test_list_instance',
+                'unit_test_collection',
+                'service_event__unit_service_area__unit',
+                'user_assigned_by'
+            )\
+            .prefetch_related(
+                    'test_list_instance__testinstance_set',
+                    'test_list_instance__testinstance_set__status',
+                    'unit_test_collection__tests_object'
+            )\
+            .order_by('-datetime_assigned')[:40]
         qaf_complete = models.QAFollowup.objects\
-            .filter(test_list_instance__isnull=False, test_list_instance__created__gt=last_week_datetime)\
-            .select_related('service_event', 'test_list_instance', 'unit_test_collection')\
-            .order_by('-test_list_instance__created')
+            .filter(test_list_instance__isnull=False, test_list_instance__work_completed__gt=timezone.now() - timezone.timedelta(days=14))\
+            .select_related(
+                'service_event',
+                'test_list_instance',
+                'unit_test_collection',
+                'service_event__unit_service_area__unit',
+                'test_list_instance__created_by'
+            ) \
+            .prefetch_related(
+                'test_list_instance__testinstance_set',
+                'test_list_instance__testinstance_set__status',
+                'unit_test_collection__tests_object'
+            ) \
+           .order_by('-test_list_instance__created')[:40]
 
         unsorted_dict = {}
 
@@ -160,15 +207,15 @@ class SLDashboard(TemplateView):
             msg = get_user_name(se.user_created_by) + ' created service event ' + str(se.id)
             populate_timeline_from_queryset(unsorted_dict, se, datetime, 'se_new', msg=msg)
 
-        for qaf in qaf_complete:
-            datetime = timezone.localtime(qaf.test_list_instance.created)
-            msg = get_user_name(qaf.test_list_instance.created_by) + ' performed a followup (' + qaf.unit_test_collection.tests_object.name + ') for service event ' + str(qaf.service_event.id)
-            populate_timeline_from_queryset(unsorted_dict, qaf, datetime, 'qaf_complete', msg=msg)
-
         for qaf in qaf_new:
             datetime = timezone.localtime(qaf.datetime_assigned)
             msg = get_user_name(qaf.user_assigned_by) + ' assigned a new followup (' + qaf.unit_test_collection.tests_object.name + ') for service event ' + str(qaf.service_event.id)
             populate_timeline_from_queryset(unsorted_dict, qaf, datetime, 'qaf_new', msg=msg)
+
+        for qaf in qaf_complete:
+            datetime = timezone.localtime(qaf.test_list_instance.created)
+            msg = get_user_name(qaf.test_list_instance.created_by) + ' performed a followup (' + qaf.unit_test_collection.tests_object.name + ') for service event ' + str(qaf.service_event.id)
+            populate_timeline_from_queryset(unsorted_dict, qaf, datetime, 'qaf_complete', msg=msg)
 
         for ud in unsorted_dict:
             unsorted_dict[ud]['objs'] = sorted(unsorted_dict[ud]['objs'], key=lambda obj: obj['datetime'], reverse=True)
@@ -202,7 +249,6 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseM
     """
 
     model = models.ServiceEvent
-    # form_class = AuthorForm
     template_name = 'service_log/service_event_update.html'
     form_class = forms.ServiceEventForm
 
@@ -210,11 +256,55 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseM
         self.user = request.user
         return super(ServiceEventUpdateCreate, self).dispatch(request, *args, **kwargs)
 
+    # def get_object(self, queryset=None):
+    #     try:
+    #         return super(ServiceEventUpdateCreate, self).get_object(queryset)
+    #     except AttributeError:
+    #         return None
+
     def get_object(self, queryset=None):
-        try:
-            return super(ServiceEventUpdateCreate, self).get_object(queryset)
-        except AttributeError:
+        """
+        Returns the object the view is displaying.
+
+        By default this requires `self.queryset` and a `pk` or `slug` argument
+        in the URLconf, but subclasses can override this to return any object.
+        """
+        # Use a custom queryset if provided; this is required for subclasses
+        # like DateDetailView
+        if queryset is None:
+            queryset = self.get_queryset()
+
+        # Next, try looking up by primary key.
+        pk = self.kwargs.get(self.pk_url_kwarg)
+        slug = self.kwargs.get(self.slug_url_kwarg)
+        if pk is not None:
+            queryset = queryset.filter(pk=pk).select_related(
+                'test_list_instance_initiated_by',
+            ).prefetch_related(
+                'qafollowup_set',
+                'test_list_instance_initiated_by__testinstance_set',
+                'test_list_instance_initiated_by__testinstance_set__status',
+                'test_list_instance_initiated_by__unit_test_collection__tests_object'
+            )
+
+        # If none of those are defined, it's an error.
+        if pk is None and slug is None:
             return None
+
+        try:
+            # Get the single item from the filtered queryset
+            obj = queryset.get()
+        except queryset.model.DoesNotExist:
+            raise Http404(_("No %(verbose_name)s found matching the query") %
+                          {'verbose_name': queryset.model._meta.verbose_name})
+        return obj
+
+    # def get_queryset(self):
+    #     print('***************')
+    #     print(super(ServiceEventUpdateCreate, self).get_queryset())
+    #     print(super(ServiceEventUpdateCreate, self).get_queryset().prefetch_related('qafollowup_set'))
+    #     return super(ServiceEventUpdateCreate, self).get_queryset()
+
 
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -224,8 +314,6 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseM
         self.object = self.get_object()
         return super(ServiceEventUpdateCreate, self).post(request, *args, **kwargs)
 
-    # def get_form(self):
-    #     return self.form_class(**self.get_form_kwargs())
     def get_form_kwargs(self):
         kwargs = super(ServiceEventUpdateCreate, self).get_form_kwargs()
         # group_linkers = models.GroupLinker.objects.all()
@@ -244,6 +332,17 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseM
         context_data['status_tag_colours'] = models.ServiceEventStatus.get_colour_dict()
         context_data['se_types_approval'] = {st.id: int(st.is_approval_required) for st in models.ServiceType.objects.all()}
 
+        unit_field = self.object.unit_service_area.unit if self.object is not None else None
+        if not unit_field:
+            try:
+                if self.request.GET.get('ib'):
+                    unit_field = qa_models.TestListInstance.objects.get(
+                        pk=self.request.GET.get('ib')).unit_test_collection.unit
+                elif self.request.GET.get('u'):
+                    unit_field = u_models.Unit.objects.get(pk=self.request.GET.get('u'))
+            except ObjectDoesNotExist:
+                pass
+
         if self.request.method == 'POST':
 
             context_data['hours_formset'] = forms.HoursFormset(
@@ -255,7 +354,17 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseM
                 self.request.POST,
                 instance=self.object,
                 prefix='followup',
-                form_kwargs={'service_event_instance': self.object, 'unit_field': self.request.POST.get('unit_field')}
+                form_kwargs={'service_event_instance': self.object, 'unit_field': unit_field},
+                queryset=models.QAFollowup.objects.filter(service_event=self.object).select_related(
+                    'test_list_instance',
+                    'test_list_instance__test_list',
+                    'unit_test_collection',
+                    'user_assigned_by'
+                ).prefetch_related(
+                    "test_list_instance__testinstance_set",
+                    "test_list_instance__testinstance_set__status",
+                    'unit_test_collection__tests_object'
+                )
             )
             if settings.USE_PARTS:
                 context_data['part_used_formset'] = p_forms.PartUsedFormset(
@@ -264,14 +373,25 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseM
                     prefix='parts'
                 )
         else:
+
             context_data['hours_formset'] = forms.HoursFormset(instance=self.object, prefix='hours')
             context_data['followup_formset'] = forms.FollowupFormset(
                 instance=self.object,
                 prefix='followup',
                 form_kwargs={
                     'service_event_instance': self.object,
-                    'unit_field': (qa_models.TestListInstance.objects.get(pk=self.request.GET.get('ib')).unit_test_collection.unit if self.request.GET.get('ib') else None) if self.object is None else self.object.unit_service_area.unit
-                }
+                    'unit_field': unit_field
+                },
+                queryset=models.QAFollowup.objects.filter(service_event=self.object).select_related(
+                    'test_list_instance',
+                    'test_list_instance__test_list',
+                    'unit_test_collection',
+                    'user_assigned_by'
+                ).prefetch_related(
+                    "test_list_instance__testinstance_set",
+                    "test_list_instance__testinstance_set__status",
+                    'unit_test_collection__tests_object'
+                )
             )
             if settings.USE_PARTS:
                 context_data['part_used_formset'] = p_forms.PartUsedFormset(instance=self.object, prefix='parts')
@@ -383,7 +503,10 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseM
                 pu_instance = p_form.instance
 
                 initial_p = None if is_new else p_form.initial['part']
-                current_p = p_form.cleaned_data['part']
+                if delete:
+                    current_p = p_form.initial['part']
+                else:
+                    current_p = p_form.cleaned_data['part']
 
                 initial_s = p_form.initial['from_storage'] if 'from_storage' in p_form.initial else None
                 current_s = p_form.cleaned_data['from_storage'] if 'from_storage' in p_form.cleaned_data else None
@@ -501,7 +624,8 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseM
 
                     pu_instance.save()
                     current_p.set_quantity_current()
-                    initial_p.set_quantity_current()
+                    if initial_p:
+                        initial_p.set_quantity_current()
 
                     # Delete empty part storage collections
                     if current_psc and current_psc.quantity <= 0 and current_psc.id:
@@ -526,6 +650,7 @@ class CreateServiceEvent(ServiceEventUpdateCreate):
     def get_form_kwargs(self):
         kwargs = super(CreateServiceEvent, self).get_form_kwargs()
         kwargs['initial_ib'] = self.request.GET.get('ib', None)
+        kwargs['initial_u'] = self.request.GET.get('u', None)
         return kwargs
 
     def form_valid(self, form):
@@ -580,34 +705,21 @@ class DetailsServiceEvent(DetailView):
         context_data = super(DetailsServiceEvent, self).get_context_data(**kwargs)
         # context_data['service_event_tag_colours'] = models.ServiceEvent.get_colour_dict()
         context_data['hours'] = models.Hours.objects.filter(service_event=self.object)
-        context_data['followups'] = models.QAFollowup.objects.filter(service_event=self.object)
+        context_data['followups'] = models.QAFollowup.objects.filter(service_event=self.object).select_related(
+                'test_list_instance',
+                'test_list_instance__test_list',
+                'unit_test_collection',
+                'user_assigned_by'
+            ).prefetch_related(
+                "test_list_instance__testinstance_set",
+                "test_list_instance__testinstance_set__status",
+                'unit_test_collection__tests_object'
+            )
         context_data['parts_used'] = p_models.PartUsed.objects.filter(service_event=self.object)
         context_data['request'] = self.request
         context_data['g_links'] = models.GroupLinkerInstance.objects.filter(service_event=self.object)
 
         return context_data
-
-
-def unit_sa_utc(request):
-
-    unit = models.Unit.objects.get(id=request.GET['unit_id'])
-    service_areas = list(models.ServiceArea.objects.filter(units=unit).values())
-
-    # testlist_ct = ContentType.objects.get(app_label="qa", model="testlist")
-    utcs_tl_qs = models.UnitTestCollection.objects.filter(unit=unit, active=True)
-    utcs_tl = sorted([{'id': utc.id, 'name': utc.name} for utc in utcs_tl_qs], key=lambda utc: utc['name'])
-    return JsonResponse({'service_areas': service_areas, 'utcs': utcs_tl})
-
-
-def se_searcher(request):
-    se_search = request.GET['q']
-    unit_id = request.GET['unit_id']
-    service_events = models.ServiceEvent.objects\
-        .filter(id__icontains=se_search, unit_service_area__unit=unit_id) \
-        .order_by('-id') \
-        .select_related('service_status')[0:50]\
-        .values_list('id', 'service_status__id')
-    return JsonResponse({'colour_ids': list(service_events)})
 
 
 class ServiceEventsBaseList(BaseListableView):
@@ -697,6 +809,8 @@ class ServiceEventsBaseList(BaseListableView):
                 to_return = to_return + ' - Status: ' + models.ServiceEventStatus.objects.get(pk=val).name
             elif key == 'ar':
                 to_return = to_return + ' - Approval is ' + ((not bool(int(val))) * 'not ') + 'required'
+            elif key == 'u':
+                to_return = to_return + ' - ' + u_models.Unit.objects.get(pk=val).name
 
         return to_return
 
@@ -731,6 +845,9 @@ class ServiceEventsBaseList(BaseListableView):
                     qs = qs.filter(is_approval_required=bool(int(val)))
                 elif key == 'ss.ar':
                     qs = qs.filter(service_status__is_approval_required=bool(int(val)))
+                elif key == 'u':
+                    qs = qs.filter(unit_service_area__unit_id=val)
+
         return qs
 
     def format_col(self, field, obj):
@@ -747,9 +864,6 @@ class ServiceEventsBaseList(BaseListableView):
         template = self.templates['datetime_service']
         c = Context({'datetime': se.datetime_service})
         return template.render(c)
-
-    # def problem_type__name(self, se):
-    #     return se.problem_type.name if se.problem_type else ""
 
     def service_status__name(self, se):
         template = self.templates['service_status__name']
@@ -814,6 +928,17 @@ class QAFollowupsBaseList(BaseListableView):
         'test_list_instance_pass_fail': False,
         'test_list_instance_review_status': False
     }
+
+    select_related = (
+        'service_event__unit_service_area__unit',
+        'service_event__service_status'
+    )
+
+    prefetch_related = (
+        "test_list_instance__testinstance_set",
+        "test_list_instance__testinstance_set__status",
+        'unit_test_collection__tests_object'
+    )
 
     def __init__(self, *args, **kwargs):
 
@@ -953,3 +1078,16 @@ def tli_statuses(request):
         {'pass_fail': tli.pass_fail_summary(), 'review': tli.review_summary(), 'datetime': timezone.localtime(tli.created)},
         safe=False
     )
+
+
+class ChooseUnitForNewSE(ChooseUnit):
+    template_name = 'units/unittype_choose_for_service_event.html'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(ChooseUnitForNewSE, self).get_context_data(*args, **kwargs)
+        context['new_se'] = True
+        return context
+
+
+class ChooseUnitForViewSE(ChooseUnit):
+    template_name = 'units/unittype_choose_for_service_event.html'

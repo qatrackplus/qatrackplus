@@ -1,5 +1,6 @@
 
 from django import forms
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
 from django.conf import settings
@@ -135,7 +136,6 @@ HoursFormset = forms.inlineformset_factory(models.ServiceEvent, models.Hours, fo
 class FollowupForm(forms.ModelForm):
 
     unit_test_collection = forms.ModelChoiceField(queryset=qa_models.UnitTestCollection.objects.none())
-    # unit_test_collection = UTCModelChoiceField(queryset=qa_models.UnitTestCollection.objects.none())
     test_list_instance = forms.IntegerField(widget=forms.HiddenInput(), required=False)
 
     class Meta:
@@ -148,11 +148,18 @@ class FollowupForm(forms.ModelForm):
         super(FollowupForm, self).__init__(*args, **kwargs)
 
         if self.unit_field:
-            # testlist_ct = ContentType.objects.get(app_label="qa", model="testlist")
-            self.fields['unit_test_collection'].queryset = qa_models.UnitTestCollection.objects.filter(
-                unit_id=self.unit_field,
-                active=True
-            ).order_by('name')
+            uf_chache = cache.get('active_unit_test_collections_for_unit_%s' % self.unit_field.id, None)
+            if not uf_chache:
+                uf_chache = qa_models.UnitTestCollection.objects.filter(
+                    unit=self.unit_field,
+                    active=True
+                ).order_by('name')
+                cache.set('active_unit_test_collections_for_unit_%s' % self.unit_field.id, uf_chache)
+            self.fields['unit_test_collection'].queryset = uf_chache
+            # self.fields['unit_test_collection'].queryset = qa_models.UnitTestCollection.objects.filter(
+            #     unit_id=self.unit_field,
+            #     active=True
+            # ).order_by('name')
 
         else:
             self.fields['unit_test_collection'].widget.attrs.update({'disabled': True})
@@ -305,6 +312,7 @@ class ServiceEventForm(BetterModelForm):
 
     def __init__(self, *args, **kwargs):
         self.initial_ib = kwargs.pop('initial_ib', None)
+        self.initial_u = kwargs.pop('initial_u', None)
         self.group_linkers = kwargs.pop('group_linkers', [])
         self.user = kwargs.pop('user', None)
         super(ServiceEventForm, self).__init__(*args, **kwargs)
@@ -351,7 +359,16 @@ class ServiceEventForm(BetterModelForm):
                 self.initial['unit_field'] = initial_ib_utc_u
                 self.initial['initiated_utc_field'] = initial_ib_utc
                 self.fields['service_area_field'].queryset = models.ServiceArea.objects.filter(units=initial_ib_utc_u)
-                self.fields['initiated_utc_field'].queryset = qa_models.UnitTestCollection.objects.filter(unit=initial_ib_utc_u)
+                self.fields['initiated_utc_field'].queryset = qa_models.UnitTestCollection.objects.filter(unit=initial_ib_utc_u).order_by('name')
+
+            if self.initial_u and 'unit_field' not in self.data:
+                try:
+                    initial_unit = u_models.Unit.objects.get(pk=self.initial_u)
+                    self.initial['unit_field'] = initial_unit
+                    self.fields['service_area_field'].queryset = models.ServiceArea.objects.filter(units=initial_unit)
+                    self.fields['initiated_utc_field'].queryset = qa_models.UnitTestCollection.objects.filter(unit=initial_unit).order_by('name')
+                except ObjectDoesNotExist:
+                    pass
 
             if 'service_event_related_field' in self.data:
                 self.fields['service_event_related_field'].queryset = models.ServiceEvent.objects.filter(
@@ -409,7 +426,7 @@ class ServiceEventForm(BetterModelForm):
                 self.initial['initiated_utc_field'] = self.instance.test_list_instance_initiated_by.unit_test_collection
                 self.initial['test_list_instance_initiated_by'] = str(self.instance.test_list_instance_initiated_by.id)
 
-            self.fields['initiated_utc_field'].queryset = qa_models.UnitTestCollection.objects.filter(unit=unit, active=True)
+            self.fields['initiated_utc_field'].queryset = qa_models.UnitTestCollection.objects.filter(unit=unit, active=True).order_by('name')
 
         for f in ['safety_precautions', 'problem_description', 'work_description', 'qafollowup_notes']:
             self.fields[f].widget.attrs.update({'rows': 3, 'class': 'autosize'})
@@ -467,5 +484,3 @@ class ServiceEventForm(BetterModelForm):
     @property
     def classes(self):
         return ' '.join(self._classes)
-
-

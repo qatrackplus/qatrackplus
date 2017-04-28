@@ -19,6 +19,7 @@ class Vendor(models.Model):
     """
 
     name = models.CharField(max_length=64, unique=True, help_text=_('Name of this vendor'))
+    notes = models.TextField(max_length=255, blank=True, null=True, help_text=_('Additional notes about this vendor'))
 
     def __str__(self):
         """Display more descriptive name"""

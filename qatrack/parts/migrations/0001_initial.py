@@ -29,11 +29,12 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('part_number', models.CharField(help_text='Part number', max_length=32, unique=True)),
                 ('alt_part_number', models.CharField(blank=True, help_text='Alternate part number', max_length=32, null=True)),
-                ('description', models.TextField(blank=True, help_text='Brief description of this part', null=True)),
-                ('quantity_min', models.PositiveIntegerField(blank=True, default=None, help_text='Notify when the number parts falls below this number in storage', null=True)),
+                ('description', models.TextField(help_text='Brief description of this part')),
+                ('quantity_min', models.PositiveIntegerField(default=0, help_text='Notify when the number parts falls below this number in storage')),
                 ('quantity_current', models.PositiveIntegerField(default=0, editable=False, help_text='The number of parts in storage currently')),
                 ('cost', models.DecimalField(decimal_places=2, default=0, help_text='Cost of this part', max_digits=10)),
                 ('notes', models.TextField(blank=True, help_text='Additional comments about this part', max_length=255, null=True)),
+                ('is_obsolete', models.BooleanField(default=False, help_text='Is this part now obsolete', verbose_name='Obsolete')),
             ],
         ),
         migrations.CreateModel(
@@ -134,16 +135,21 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='part',
             name='suppliers',
-            field=models.ManyToManyField(blank=True, help_text='Suppliers of this part', null=True, related_name='parts', to='parts.Supplier'),
+            field=models.ManyToManyField(blank=True, help_text='Suppliers of this part', null=True, related_name='parts', through='parts.PartSupplierCollection', to='parts.Supplier')
         ),
         migrations.AlterUniqueTogether(
             name='room',
             unique_together=set([('site', 'name')]),
         ),
+        # migrations.AddField(
+        #     model_name='part',
+        #     name='part_categories',
+        #     field=models.ForeignKey(to='parts.PartCategory', blank=True, null=True, help_text='Categories for this part', related_name='parts'),
+        # ),
         migrations.AddField(
             model_name='part',
-            name='part_category',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='parts.PartCategory'),
+            name='part_categories',
+            field=models.ManyToManyField(blank=True, help_text='Categories for this part', null=True, related_name='parts', to='parts.PartCategory'),
         ),
         # migrations.AddField(
         #     model_name='partused',

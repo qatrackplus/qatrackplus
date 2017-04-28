@@ -92,6 +92,9 @@
 .select2-container .select2-selection--single .select2-selection__rendered {
   padding-right: 10px;
 }
-.has-error .select2-selection {
-    border-color: #b94a48;
+.has-error .select2-selection, .has-error .form-control {
+  border-color: #dd4b39;
+}
+.has-error .help-block {
+  color: #dd4b39;
 }

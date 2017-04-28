@@ -62,6 +62,7 @@
                 TLI_VIEW: "{% url "view_test_list_instance" %}",
                 PARTS_SEARCHER: "{% url 'parts_searcher' %}",
                 PARTS_STORAGE_SEARCHER: "{% url 'parts_storage_searcher' %}",
+                ROOM_LOCATION_SEARCHER: "{% url 'room_location_searcher' %}",
 
                 options_from_url_hash: function(hash){
                     var options = [];
@@ -286,10 +287,45 @@
                                         <b class="caret"></b>
                                     </a>
                                     <ul class="dropdown-menu" role="menu">
-                                        <li><a href="{% url "sl_dash" %}" title="Create a set of paper backup forms">
+                                        <li><a href="{% url "sl_dash" %}" title="Service Log dashboard">
                                             <i class="fa fa-th fa-fw" aria-hidden="true"></i>
                                             Service Log Dashboard
                                         </a></li>
+                                        <li class="divider"></li>
+                                        <li><a href="{% url "sl_unit_new" %}" title="Create a new service event for a unit">
+                                            <i class="fa fa-stack fa-fw">
+                                                <i class="fa fa-wrench fa-stack-custom-main fa-lg"></i>
+{#                                                <i class="fa fa-cube fa-stack-custom-sub lower-right text-gray"></i>#}
+                                                <i class="fa fa-plus fa-stack-custom-sub upper-left success"></i>
+                                            </i>
+                                            Create Service Event for Unit
+                                        </a></li>
+                                        <li><a href="{% url "sl_unit_view_se" %}" title="View service events for a unit">
+                                            <i class="fa fa-stack fa-fw">
+                                                <i class="fa fa-wrench fa-stack-custom-main fa-lg"></i>
+{#                                                <i class="fa fa-cube fa-stack-custom-sub lower-right text-gray"></i>#}
+                                                <i class="fa fa-list fa-stack-custom-sub upper-left info"></i>
+                                            </i>
+                                            View Service Events for Unit
+                                        </a></li>
+                                        <li class="divider"></li>
+                                        <li><a href="{% url "part_new" %}" title="Enter new part">
+                                            <i class="fa fa-stack fa-fw">
+                                                <i class="fa fa-cog fa-stack-custom-main fa-lg"></i>
+{#                                                <i class="fa fa-cube fa-stack-custom-sub lower-right text-gray"></i>#}
+                                                <i class="fa fa-plus fa-stack-custom-sub upper-left success"></i>
+                                            </i>
+                                            Enter New Part
+                                        </a></li>
+{#                                        <li class="divider"></li>#}
+{#                                        <li><a href="{% url "vendors" %}" title="View vendors">#}
+{#                                            <i class="fa fa-stack fa-fw">#}
+{#                                                <i class="fa fa-list fa-stack-custom-sub upper-left info"></i>#}
+{#                                                <i class="fa fa-truck fa-stack-custom-main fa-flip-horizontal fa-lg"></i>#}
+{#                                            </i>#}
+{#                                            View Vendors#}
+{#                                        </a></li>#}
+
                                     </ul>
                                 </li>
 

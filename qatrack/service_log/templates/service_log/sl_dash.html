@@ -115,7 +115,7 @@
                     <div class="box-header">
                         <h3 class="box-title">
                             <i class="fa fa-th fa-fw" aria-hidden="true"></i>
-                            Service Log for last 7 days
+                            Recent Service Log Activity
                         </h3>
                         <div class="box-tools pull-right">
                             <i id="se_new_toggle" class="fa fa-stack bg-dark-gray on timeline-toggle">
@@ -187,12 +187,18 @@
                                                 {% endif %}
                                                 <div class="timeline-item">
                                                     <span class="time"><i class="fa fa-clock-o"></i> {{ obj.time }}</span>
-
                                                     <h3 class="timeline-header header-{{ obj.class }}"
                                                         {% if obj.class == 'qaf_new' or obj.class == 'qaf_complete' %}onclick="window.location='{% url 'sl_details' pk=obj.instance.service_event.id %}'"
                                                         {% else %}onclick="window.location='{% url 'sl_details' pk=obj.instance.id %}'"
                                                         {% endif %}>
-                                                        <div class="pull-right">
+                                                        <div class="pull-right margin-right-20 label label-default">
+                                                            {% if obj.class == 'se_new' or obj.class == 'se_edit' or obj.class == 'se_status' %}
+                                                                {{ obj.instance.unit_service_area.unit }}
+                                                            {% else %}
+                                                                {{ obj.instance.service_event.unit_service_area.unit }}
+                                                            {% endif %}
+                                                        </div>
+                                                        <div class="pull-right margin-right-20">
                                                             {% if obj.class == 'se_new' or obj.class == 'se_edit' or obj.class == 'se_status' %}
 {#                                                                {% include "service_log/table_context_se_actions.html" with se=obj.instance next='/servicelog/' %}#}
                                                             {% elif obj.class == 'qaf_new' or obj.class == 'qaf_complete' %}

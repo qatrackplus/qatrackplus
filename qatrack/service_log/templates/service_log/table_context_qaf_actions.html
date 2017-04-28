@@ -1,20 +1,20 @@
 {% load qa_tags %}
-<div style="max-width: 240px; min-width: 85px;">
-    {% if show_se_link %}
-        <a class="btn btn-primary btn-xs btn-flat pull-right margin-left-2" href="{% url 'sl_details' pk=qaf.service_event.id %}">Service Event ({{ qaf.service_event.id }})</a>
-    {% endif %}
-    {% if qaf.test_list_instance.pk %}
+{% if show_se_link %}
+    <a class="btn btn-primary btn-xs btn-flat pull-right margin-left-2" href="{% url 'sl_details' pk=qaf.service_event.id %}">Service Event{% comment %}({{ qaf.service_event.id }}){% endcomment %}</a>
+{% endif %}
+{% if qaf.test_list_instance.pk %}
+    {% if perms.can_review %}
         <a class="btn btn-default btn-xs btn-flat pull-right margin-left-2" href="{% url 'review_test_list_instance' pk=qaf.test_list_instance.pk %}{% if next %}?next={{ next }}{% endif %}">
             Review
         </a>
-    {% else %}
-        <a class="btn btn-default btn-xs btn-flat pull-right margin-left-2" href="{% url 'perform_qa' pk=qaf.unit_test_collection.pk %}?qaf={{ qaf.id }}{% if next %}&next={{ next }}{% endif %}">
-            Perform
-        </a>
-        {% if show_performed %}
-            <a class="btn btn-default btn-xs btn-flat pull-right margin-left-2" href="{% url 'review_utc' pk=qaf.unit_test_collection.pk %}?qaf={{ qaf.id }}{% if next %}&next={{ next }}{% endif %}">
-                Performed
-            </a>
-        {% endif %}
     {% endif %}
-</div>
+{% else %}
+    <a class="btn btn-default btn-xs btn-flat pull-right margin-left-2" href="{% url 'perform_qa' pk=qaf.unit_test_collection.pk %}?qaf={{ qaf.id }}{% if next %}&next={{ next }}{% endif %}">
+        Perform
+    </a>
+    {% if show_performed %}
+        <a class="btn btn-default btn-xs btn-flat pull-right margin-left-2" href="{% url 'review_utc' pk=qaf.unit_test_collection.pk %}?qaf={{ qaf.id }}{% if next %}&next={{ next }}{% endif %}">
+            Performed
+        </a>
+    {% endif %}
+{% endif %}

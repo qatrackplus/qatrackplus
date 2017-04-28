@@ -2,13 +2,6 @@ table.table {
     width: 100%;
 }
 
-/*table.table > thead > tr > th,*/
-/*table.table > tbody > tr > td,*/
-/*table.table > tfoot > tr > th {*/
-    /*box-sizing: content-box;*/
-    /*clear: none;*/
-/*}*/
-
 table.dataTable tr.odd td.sorting_1 {
     background-color: rgba(60, 141, 188, 0.16);
     border-color: transparent;
@@ -77,7 +70,7 @@ table.table > thead > tr > th > span > div > ul > li.active > a:hover,
 
 .full-width, .filter_column, .filter_column > div.btn-group {
     width: 100% !important;
-    min-width: 100px;
+    /*min-width: 100px;*/
     box-sizing: border-box;
     -webkit-box-sizing:border-box;
     -moz-box-sizing: border-box;
@@ -95,15 +88,3 @@ table.table-valign-middle > thead > tr > td,
 table.table-valign-middle > tfoot > tr > td {
     vertical-align: middle;
 }
-
-/*.dropdown-menu {*/
-    /*background-color: #0d6aad;*/
-/*}*/
-
-
-/*.table-block {*/
-    /*display: block;*/
-/*}*/
-/*.table-block thead, .table-block tbody, .table-block tfoot {*/
-    /*width: 100%;*/
-/*}*/

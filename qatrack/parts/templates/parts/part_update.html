@@ -41,80 +41,194 @@
                         <h3 class="no-margin-top">Create Part</h3>
                     {% endif %}
                 </div>
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="box box-primary">
-                            <div class="box-header">
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="box box-primary">
+                        <div class="box-header">
 
+                        </div>
+                        <div class="box-body">
+                            <div class="row" style="display: none;">
+
+                                {% for field in form.hidden_fields %}
+                                    {{ field }}
+                                    {% if field.errors %}
+                                        {{ field.errors }}
+                                    {% endif %}
+                                {% endfor %}
                             </div>
-                            <div class="box-body">
-                                <div class="row" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-6 form-horizontal">
 
-                                    {% for field in form.hidden_fields %}
-                                        {{ field }}
-                                        {% if field.errors %}
-                                            {{ field.errors }}
-                                        {% endif %}
+                                    {% for field in form.fieldsets.required_fields %}
+                                        <div class="form-group {% if field.errors %}has-error{% endif %}" title="{{ field.help_text }}">
+                                            {% if 'autosize' in field.field.widget.attrs.class %}
+                                                <div class="col-sm-12">
+                                                    <label for="{{ field.id_for_label }}" class="">{{ field.label }}</label>
+                                                    {{ field }}
+                                                    {% for e in field.errors %}
+                                                        <div class="col-sm-12 help-block text-center">{{ e }}</div>
+                                                    {% endfor %}
+                                                </div>
+                                            {% else %}
+                                                <label for="{{ field.id_for_label }}" class="col-sm-4">{{ field.label }}</label>
+                                                <div class="col-sm-8">
+                                                    {{ field }}
+                                                </div>
+                                                {% for e in field.errors %}
+                                                    <div class="col-sm-12 help-block text-center">{{ e }}</div>
+                                                {% endfor %}
+                                            {% endif %}
+                                        </div>
                                     {% endfor %}
                                 </div>
-                                <div class="row">
-                                    <div class="col-md-6 form-horizontal">
+                                <div class="col-md-6 form-horizontal">
 
-                                        {% for field in form.fieldsets.required_fields %}
-                                            <div class="form-group {% if field.errors %}has-error{% endif %}" title="{{ field.help_text }}">
-                                                {% if 'autosize' in field.field.widget.attrs.class %}
-                                                    <div class="col-sm-12">
-                                                        <label for="{{ field.id_for_label }}" class="">{{ field.label }}</label>
-                                                        {{ field }}
-                                                        {% for e in field.errors %}
-                                                            <div class="col-sm-12 help-block text-center">{{ e }}</div>
-                                                        {% endfor %}
-                                                    </div>
-                                                {% else %}
-                                                    <label for="{{ field.id_for_label }}" class="col-sm-4">{{ field.label }}</label>
-                                                    <div class="col-sm-8">
-                                                        {{ field }}
-                                                    </div>
+                                    {% for field in form.fieldsets.optional_fields %}
+                                        <div class="form-group {% if field.errors %}has-error{% endif %}" title="{{ field.help_text }}">
+                                            {% if 'autosize' in field.field.widget.attrs.class %}
+                                                <div class="col-sm-12">
+                                                    <label for="{{ field.id_for_label }}" class="">{{ field.label }}</label>
+                                                    {{ field }}
                                                     {% for e in field.errors %}
                                                         <div class="col-sm-12 help-block text-center">{{ e }}</div>
                                                     {% endfor %}
-                                                {% endif %}
-                                            </div>
-                                        {% endfor %}
-                                    </div>
-                                    <div class="col-md-6 form-horizontal">
-
-                                        {% for field in form.fieldsets.optional_fields %}
-                                            <div class="form-group {% if field.errors %}has-error{% endif %}" title="{{ field.help_text }}">
-                                                {% if 'autosize' in field.field.widget.attrs.class %}
-                                                    <div class="col-sm-12">
-                                                        <label for="{{ field.id_for_label }}" class="">{{ field.label }}</label>
-                                                        {{ field }}
-                                                        {% for e in field.errors %}
-                                                            <div class="col-sm-12 help-block text-center">{{ e }}</div>
-                                                        {% endfor %}
-                                                    </div>
-                                                {% else %}
-                                                    <label for="{{ field.id_for_label }}" class="col-sm-4">{{ field.label }}</label>
-                                                    <div class="col-sm-8">
-                                                        {{ field }}
-                                                    </div>
-                                                    {% for e in field.errors %}
-                                                        <div class="col-sm-12 help-block text-center">{{ e }}</div>
-                                                    {% endfor %}
-                                                {% endif %}
-                                            </div>
-                                        {% endfor %}
-                                    </div>
-
-
-
+                                                </div>
+                                            {% else %}
+                                                <label for="{{ field.id_for_label }}" class="col-sm-4">{{ field.label }}</label>
+                                                <div class="col-sm-8">
+                                                    {{ field }}
+                                                </div>
+                                                {% for e in field.errors %}
+                                                    <div class="col-sm-12 help-block text-center">{{ e }}</div>
+                                                {% endfor %}
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
                                 </div>
+
+
+
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <div class="row">
+                <div class="col-md-5">
+
+                    <div class="box box-primary">
+                        <div class="box-header">
+                            <h4 class="box-title">Suppliers</h4>
+                        </div>
+
+                        <div class="box-body">
+                            <table class="table table-condensed table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Supplier</th>
+                                        <th>Supplier Specific Part #</th>
+                                        <th>Delete</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {{ supplier_formset.management_form }}
+                                    {% for sup_form in supplier_formset %}
+                                        {{ sup_form.part }}
+                                        {{ sup_form.id }}
+                                        <tr>
+                                            <td class="min-width-200 {% if sup_form.supplier.errors %}has-error{% endif %}">
+                                                {{ sup_form.supplier }}
+
+                                            </td>
+                                            <td class="{% if sup_form.part_number.errors %}has-error{% endif %}">{{ sup_form.part_number }}</td>
+                                            <td align="center">{{ sup_form.DELETE }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot>
+
+                                </tfoot>
+                            </table>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="col-md-7">
+
+                    <div class="box box-primary">
+                        <div class="box-header">
+                            <h4 class="box-title">Storage</h4>
+                        </div>
+
+                        <div class="box-body">
+                            <table class="table table-condensed table-hover">
+                                <thead>
+                                    <tr>
+{#                                        <th></th>#}
+                                        <th>Room</th>
+                                        <th>Location</th>
+                                        <th class="max-width-75">Quantity</th>
+                                        <th>Delete</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {{ storage_formset.management_form }}
+                                    {% for sto_form in storage_formset %}
+                                        {{ sto_form.part }}
+                                        {{ sto_form.id }}
+                                        <tr>
+                                            <td style="display: none;">
+                                                {{ sto_form.storage_field }}
+                                            </td>
+                                            <td class="min-width-150 room-td{% if sto_form.room.errors %}has-error{% endif %}">
+                                                {{ sto_form.room }}
+                                                {% for e in sto_form.room.errors %}
+                                                    <div class="help-block text-center">{{ e }}</div>
+                                                {% endfor %}
+                                            </td>
+                                            <td class="min-width-100{% if sto_form.location.errors %} has-error{% endif %}">
+                                                {{ sto_form.location }}
+                                                {% for e in sto_form.location.errors %}
+                                                    <div class="help-block text-center">{{ e }}</div>
+                                                {% endfor %}
+                                            </td>
+                                            <td class="max-width-75{% if sto_form.quantity.errors %} has-error{% endif %}">
+                                                {{ sto_form.quantity }}
+                                                {% for e in sto_form.quantity.errors %}
+                                                    <div class="help-block text-center">{{ e }}</div>
+                                                {% endfor %}
+                                            </td>
+                                            <td align="center">{{ sto_form.DELETE }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot>
+
+                                </tfoot>
+                            </table>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+
+
+
+            <div class="row">
+                <div class="col-md-12">
+                    <input class="btn btn-flat btn-primary" type="submit" value="{% if form.instance.id %}Save{% else %}Add{% endif %} Part" />
+                </div>
+            </div>
         </div>
+
+
+
+
     </form>
 {% endblock body %}

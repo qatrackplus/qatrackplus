@@ -776,7 +776,8 @@ class Command(BaseCommand):
               edited_by,
               PMI,
               user_win_id,
-              qa_followup
+              qa_followup,
+              service_event_id
             FROM service
             ORDER BY srn
             """
@@ -788,7 +789,7 @@ class Command(BaseCommand):
                 break
 
             try:
-                if sl_models.ServiceEvent.objects.filter(id=row.srn).exists():
+                if sl_models.ServiceEvent.objects.filter(id=row.service_event_id).exists():
                     continue
 
                 user_created_row = self.updating_cursor.execute('select winlogon, third_party, PASSWORD from employees where employee_id = ?', row.employee_id).fetchone()
@@ -827,7 +828,8 @@ class Command(BaseCommand):
                 else:
                     service_type = sl_models.ServiceType.objects.get(pk=other_service_type_id)
 
-                is_approval_required = service_type.is_approval_required
+                # is_approval_required = service_type.is_approval_required
+                is_approval_required = False
 
                 if row.edited_by:
                     modified_by_row = self.updating_cursor.execute('select winlogon, third_party, PASSWORD from employees where staff_name = ?', row.edited_by.strip()).fetchone()
@@ -1053,7 +1055,7 @@ class Command(BaseCommand):
                             sups.append(supplier)
 
                     part = p_models.Part(
-                        part_category=category,
+                        # part_category=category,
                         part_number=row.part_number,
                         alt_part_number=row.alt_part_no,
                         description=row.description,
@@ -1062,8 +1064,13 @@ class Command(BaseCommand):
                         notes=row.comments
                     )
                     part.save()
-                    part.suppliers = sups
-                    part.save()
+                    part.part_categories.add(category)  # TODO haven't tested this yet
+                    for s in sups:
+                        psc = p_models.PartSupplierCollection(
+                            part=part,
+                            supplier=s
+                        )
+                        psc.save()
 
                     self.parts_updating_cursor.execute('update parts set part_id = ? where idkey = ?', str(part.id), str(row.idkey))
 
@@ -1108,7 +1115,10 @@ class Command(BaseCommand):
                         print('---\tCan\'t find part with idkey %s' % row.part_id)
                         continue
                     room, _ = p_models.Room.objects.get_or_create(name=row.room)
-                    location = row.cabinet + ' ' + row.shelf
+                    shelf = row.shelf.strip()
+                    cabinet = row.cabinet.strip()
+                    location = ' '.join([cabinet, shelf])
+                    location = None if location.strip() == '' else location
                     storage, _ = p_models.Storage.objects.get_or_create(room=room, location=location)
                     storage.description = row.loc
                     storage.save()

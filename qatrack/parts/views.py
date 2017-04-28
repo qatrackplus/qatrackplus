@@ -3,8 +3,9 @@ from braces.views import LoginRequiredMixin
 from django.core.urlresolvers import reverse, resolve
 from django.db.models import Q
 from django.forms.utils import timezone
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect
 from django.template import Context
+from django.template.loader import get_template
 from django.utils.translation import ugettext as _
 from django.views.generic.edit import ModelFormMixin, ProcessFormView
 from django.views.generic.detail import SingleObjectTemplateResponseMixin
@@ -44,6 +45,25 @@ def parts_storage_searcher(request):
     return JsonResponse({'data': list(psc)}, safe=False)
 
 
+def room_location_searcher(request):
+
+    try:
+        r_id = int(request.GET['r_id'])
+    except ValueError:
+        return JsonResponse({'data': '__clear__'}, safe=False)
+
+    storage = p_models.Storage.objects \
+        .filter(room=r_id, location__isnull=False) \
+        .select_related('room', 'room__site') \
+        .order_by('room__site__name', 'room__name', 'location') \
+        .values_list('id', 'location', 'description')
+
+    storage_no_location, _ = p_models.Storage.objects \
+        .get_or_create(room=p_models.Room.objects.get(pk=r_id), location__isnull=True)
+
+    return JsonResponse({'storage': list(storage), 'storage_no_location': storage_no_location.id}, safe=False)
+
+
 class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, ModelFormMixin, ProcessFormView):
 
     model = p_models.Part
@@ -74,7 +94,7 @@ class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, Mo
 
         if self.request.method == 'POST':
 
-            context_data['supplier_formset'] = p_forms.SupplierFormset(
+            context_data['supplier_formset'] = p_forms.PartSupplierCollectionFormset(
                 self.request.POST,
                 instance=self.object,
                 prefix='supplier'
@@ -85,10 +105,66 @@ class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, Mo
                 prefix='storage'
             )
         else:
-            context_data['supplier_formset'] = p_forms.SupplierFormset(instance=self.object, prefix='supplier')
+            context_data['supplier_formset'] = p_forms.PartSupplierCollectionFormset(instance=self.object, prefix='supplier')
             context_data['storage_formset'] = p_forms.PartStorageCollectionFormset(instance=self.object, prefix='storage')
 
         return context_data
+
+    def form_valid(self, form):
+
+        context = self.get_context_data()
+        supplier_formset = context['supplier_formset']
+        storage_formset = context['storage_formset']
+
+        if not supplier_formset.is_valid() or not storage_formset.is_valid():
+            return self.render_to_response(context)
+
+        part = form.save()
+
+        for sup_form in supplier_formset:
+
+            delete = sup_form.cleaned_data.get('DELETE')
+            is_new = sup_form.instance.id is None
+
+            psc_instance = sup_form.instance
+
+            if delete and not is_new:
+                psc_instance.delete()
+                continue
+
+            elif sup_form.has_changed():
+                psc_instance.part = part
+                psc_instance.save()
+
+        for sto_form in storage_formset:
+
+            delete = sto_form.cleaned_data.get('DELETE')
+            is_new = sto_form.instance.id is None
+
+            psc_instance = sto_form.instance
+            print('+++++++++++++++++++++++++++++++++')
+            print(sto_form.changed_data)
+            if delete and not is_new:
+                psc_instance.delete()
+                continue
+
+            elif sto_form.has_changed():
+                psc_instance.part = part
+                storage_field = sto_form.cleaned_data['storage_field']
+                print('+++++++++++++++++++++++++++++++++')
+                print(storage_field)
+                if storage_field[0]:
+                    psc_instance.storage = p_models.Storage.objects.create(
+                        room=sto_form.cleaned_data['room'],
+                        location=storage_field[1]
+                    )
+                else:
+                    psc_instance.storage = storage_field[1]
+
+                psc_instance.save()
+                part.set_quantity_current()
+
+        return HttpResponseRedirect(reverse('parts_list'))
 
 
 # class CreatePart(PartUpdateCreate):
@@ -113,6 +189,7 @@ class PartsList(BaseListableView):
     kwarg_filters = None
 
     fields = (
+        'actions',
         'pk',
         'description',
         'part_number',
@@ -120,6 +197,7 @@ class PartsList(BaseListableView):
     )
 
     headers = {
+        'actions': _('Edit'),
         'pk': _('ID'),
         'description': _('Description'),
         'part_number': _('Part Number'),
@@ -127,10 +205,11 @@ class PartsList(BaseListableView):
     }
 
     widgets = {
+        'actions': None,
         'pk': TEXT,
         'description': TEXT,
         'part_number': TEXT,
-        'quantity_current': False,
+        'quantity_current': None,
     }
 
     search_fields = {
@@ -138,17 +217,9 @@ class PartsList(BaseListableView):
         'quantity_current': False,
     }
 
-    # select_related = (
-    #     'unit_service_area__unit',
-    #     'unit_service_area__service_area',
-    #     'service_type',
-    #     'service_status'
-    # )
-
-    # def __init__(self, *args, **kwargs):
-    #
-    #     super(PartsList, self).__init__(*args, **kwargs)
-    #     self.templates = {}
+    order_fields = {
+        'actions': False,
+    }
 
     def get_icon(self):
         return 'fa-cog'
@@ -160,21 +231,6 @@ class PartsList(BaseListableView):
     def format_col(self, field, obj):
         col = super(PartsList, self).format_col(field, obj)
         return col
-        # to_return = 'Service Events'
-        # filters = f.split('_')
-        # for filt in filters:
-        #     [key, val] = filt.split('-')
-        #     if key == 'ss':
-        #         to_return = to_return + ' - Status: ' + models.ServiceEventStatus.objects.get(pk=val).name
-        #     elif key == 'ar':
-        #         to_return = to_return + ' - Approval is ' + ((not bool(int(val))) * 'not ') + 'required'
-        #
-        # return to_return
-
-    # def get(self, request, *args, **kwargs):
-    #     if self.kwarg_filters is None:
-    #         self.kwarg_filters = kwargs.pop('f', None)
-    #     return super(PartsList, self).get(request, *args, **kwargs)
 
     def get_context_data(self, *args, **kwargs):
         context = super(PartsList, self).get_context_data(*args, **kwargs)
@@ -186,20 +242,8 @@ class PartsList(BaseListableView):
         context['page_title'] = self.get_page_title(f)
         return context
 
-    # def get_queryset(self):
-    #     qs = super(PartsList, self).get_queryset()
-    #
-    #     if self.kwarg_filters is None:
-    #         self.kwarg_filters = self.request.GET.get('f', None)
-    #
-    #     # if self.kwarg_filters is not None:
-    #     #     filters = self.kwarg_filters.split('_')
-    #     #     for filt in filters:
-    #     #         [key, val] = filt.split('-')
-    #     #         if key == 'ss':
-    #     #             qs = qs.filter(service_status=val)
-    #     #         elif key == 'ar':
-    #     #             qs = qs.filter(is_approval_required=bool(int(val)))
-    #     #         elif key == 'ss.ar':
-    #     #             qs = qs.filter(service_status__is_approval_required=bool(int(val)))
-    #     return qs
+    def actions(self, p):
+        template = get_template('parts/table_context_p_actions.html')
+        mext = reverse('parts_list')
+        c = Context({'p': p, 'request': self.request, 'next': mext})
+        return template.render(c)

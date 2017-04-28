@@ -32,32 +32,9 @@
 .small-pad {
     padding: 4px;
 }
-.max-width-100 {
-    max-width: 100px;
-}
-.max-width-75 {
-    max-width: 75px;
-    width: 75px;
-}
-.max-width-50 {
-    max-width: 50px;
-    width: 50px;
-}
-.max-width-300 {
-    max-width: 300px;
-    width: 300px;
-}
-.min-width-200 {
-    min-width: 200px;
-}
-.margin-left-2 {
-    margin-left: 2px;
-}
+
 .box.box-bordered-default {
     border: 1.5px solid rgb(210, 214, 222);
-}
-.width-400 {
-    width: 400px !important;
 }
 
 /* Override width of pk column to something smaller */
@@ -75,9 +52,31 @@
 #listable-table-sl_list_all > tbody > tr > td:nth-child(10) {
     width: 150px;
 }
-#listable-table-parts_list > tbody > tr > td:nth-child(1) {
-    width: 100px;
+
+#listable-table-parts_list > thead > tr > th:nth-child(2),
+#listable-table-parts_list > tbody > tr > td:nth-child(2) {
+    width: 75px;
+    max-width: 75px;
 }
+#listable-table-parts_list > thead > tr > th:nth-child(1),
+#listable-table-parts_list > tbody > tr > td:nth-child(1) {
+    width: 50px;
+    max-width: 50px;
+}
+#listable-table-vendors > thead > tr > th:nth-child(2) {
+    width: 50px;
+    max-width: 50px;
+}
+#listable-table-vendors > thead > tr > th:nth-child(3) {
+    width: 150px;
+    max-width: 150px;
+}
+#listable-table-unit_list > thead > tr > th {
+    width: 75px;
+}
+/*#listable-table-qaf_list_all > tbody > tr > td:nth-child(1) {*/
+    /*width: 180px;*/
+/*}*/
 
 /*QA Status Spans                                 */
 .no_tol {

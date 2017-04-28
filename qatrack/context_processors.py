@@ -4,10 +4,20 @@ from django.conf import settings
 from django.contrib.sites.models import Site
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
-from qatrack.qa.models import Frequency, TestListInstance
+from qatrack.qa.models import Frequency, TestListInstance, UnitTestCollection
+from qatrack.units.models import Unit
 
 cache.delete(settings.CACHE_UNREVIEWED_COUNT)
 cache.delete(settings.CACHE_QA_FREQUENCIES)
+
+
+# for u in Unit.objects.filter(active=True):
+#     qs = UnitTestCollection.objects.filter(
+#         unit=u,
+#         active=True
+#     ).order_by('name')
+#     cache.delete('active_unit_test_collections_for_unit_%s' % u.id)
+#     print('%s utc cache deleted' % u.name)
 
 
 @receiver(post_save, sender=TestListInstance)
@@ -22,6 +32,28 @@ def update_unreviewed_cache(*args, **kwargs):
 def update_qa_freq_cache(*args, **kwargs):
     """When a frequency is changed invalidate the frequencies"""
     cache.delete(settings.CACHE_QA_FREQUENCIES)
+
+
+@receiver(post_save, sender=UnitTestCollection)
+@receiver(post_delete, sender=UnitTestCollection)
+def update_active_unit_test_collections_for_unit(*args, **kwargs):
+    unit = kwargs['instance'].unit
+    qs = UnitTestCollection.objects.filter(
+        unit=unit,
+        active=True
+    ).order_by('name')
+    cache.set('active_unit_test_collections_for_unit_%s' % unit.id, qs)
+
+
+@receiver(post_save, sender=Unit)
+@receiver(post_delete, sender=Unit)
+def update_active_unit_test_collections_for_unit(*args, **kwargs):
+    unit = kwargs['instance']
+    qs = UnitTestCollection.objects.filter(
+        unit=unit,
+        active=True
+    ).order_by('name')
+    cache.set('active_unit_test_collections_for_unit_%s' % unit.id, qs)
 
 
 def site(request):

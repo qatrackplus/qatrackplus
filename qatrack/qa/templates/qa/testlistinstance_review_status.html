@@ -17,7 +17,7 @@
                             <i class="fa fa-minus-circle" aria-hidden="true"></i>
                         {% endif %}
                     {% endif %}
-                    {{status.count}} {{display}}
+                    {{status.count}} {% if show_labels %}{{display}} {% endif %}
                 </span>
             {% endfor %}
 

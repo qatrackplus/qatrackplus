@@ -861,7 +861,7 @@ $(document).ready(function(){
 
     ///////// Work time
     if (override_date) {
-        require(['jquery', 'moment', 'jquery.inputmask'], function ($, moment) {
+        require(['jquery', 'moment', 'inputmask'], function ($, moment) {
 
             var base_range_settings = {
                 singleDatePicker: true,
@@ -956,7 +956,7 @@ $(document).ready(function(){
                 do_not_treat.show();
                 box_perform.switchClass('box-primary box-pho-borders', 'box-danger box-red-borders', 1000);
                 sub_button.switchClass('btn-primary', 'btn-danger', 1000);
-                box_perform_header.addClass('red-bg', 1000);
+                box_perform_header.addClass('red-bg', 1000);    
 
 
             }() : function() {

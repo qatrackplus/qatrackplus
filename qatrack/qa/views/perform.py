@@ -25,7 +25,7 @@ from . import forms
 from .. import models, utils, signals
 from .base import BaseEditTestListInstance, TestListInstances, UTCList, logger
 from qatrack.contacts.models import Contact
-from qatrack.units.models import Unit
+from qatrack.units.models import Unit, Site
 from qatrack.service_log import models as sl_models
 
 from braces.views import JSONResponseMixin, PermissionRequiredMixin
@@ -371,13 +371,45 @@ class ChooseUnit(TemplateView):
             q = q.filter(active=True)
 
         units_ordering = "unit__%s" % (settings.ORDER_UNITS_BY,)
-        q = q.values("unit", "unit__type__name", "unit__name", "unit__number").order_by(units_ordering).distinct()
 
-        unit_types = collections.defaultdict(list)
-        for unit in q:
-            unit_types[unit["unit__type__name"]].append(unit)
+        if Site.objects.all().exists():
 
-        ordered = sorted(list(unit_types.items()), key=lambda x: min([u[units_ordering] for u in x[1]]))
+            unit_site_types = {}
+            for s in Site.objects.all():
+                unit_site_types[s.name] = collections.defaultdict(list)
+            if q.filter(unit__site__isnull=True).exists():
+                unit_site_types['zzzNonezzz'] = collections.defaultdict(list)
+
+            q = q.values("unit", "unit__type__name", "unit__name", "unit__number", 'unit__id', 'unit__site__name').order_by(units_ordering).distinct()
+
+            for unit in q:
+                if unit["unit__site__name"]:
+                    unit_site_types[unit["unit__site__name"]][unit["unit__type__name"]].append(unit)
+                else:
+                    unit_site_types['zzzNonezzz'][unit["unit__type__name"]].append(unit)
+
+            ordered = {}
+            for s in unit_site_types:
+                ordered[s] = sorted(list(unit_site_types[s].items()), key=lambda x: min([u[units_ordering] for u in x[1]]))
+
+            ordered = collections.OrderedDict(sorted(ordered.items(), key=lambda s: s[0]))
+
+            context['split_sites'] = True
+
+            split_by = 12 / len(ordered)
+            if split_by < 3:
+                split_by = 3
+            context['split_by'] = int(split_by)
+
+        else:
+            q = q.values("unit", "unit__type__name", "unit__name", "unit__number", 'unit__id').order_by(units_ordering).distinct()
+
+            unit_types = collections.defaultdict(list)
+            for unit in q:
+                unit_types[unit["unit__type__name"]].append(unit)
+
+            ordered = sorted(list(unit_types.items()), key=lambda x: min([u[units_ordering] for u in x[1]]))
+            context['split_sites'] = False
 
         context["unit_types"] = ordered
 
@@ -594,7 +626,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
                     service_event=service_event,
                     unit_test_collection=self.object.unit_test_collection,
                     user_assigned_by=self.request.user,
-                    datetime_assigned=timezone.now(),
+                    datetime_assigned=timezone.now() - timezone.timedelta(seconds=1),
                     test_list_instance=self.object
                 )
             followup.save()

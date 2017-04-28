@@ -96,10 +96,14 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
     def get_context_data(self, **kwargs):
         context = super(ReviewTestListInstance, self).get_context_data(kwargs=kwargs)
-        try:
-            context['service_event'] = QAFollowup.objects.get(test_list_instance=self.object).service_event
-        except ObjectDoesNotExist:
-            context['service_event'] = False
+
+        followups = QAFollowup.objects.filter(test_list_instance=self.object)
+        se = []
+        for f in followups:
+            if f.service_event not in se:
+                se.append(f.service_event)
+
+        context['service_events'] = se
         return context
 
 

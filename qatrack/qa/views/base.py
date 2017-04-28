@@ -292,7 +292,7 @@ class UTCList(BaseListableView):
 
     def last_instance_pass_fail(self, utc):
         template = self.templates['pass_fail']
-        c = Context({"instance": utc.last_instance, "exclude": [models.NO_TOL], "show_label": True, "show_icons": settings.ICON_SETTINGS['SHOW_STATUS_ICONS_LISTING']})
+        c = Context({"instance": utc.last_instance, "exclude": [models.NO_TOL], "show_label": settings.ICON_SETTINGS['SHOW_STATUS_LABELS_LISTING'], "show_icons": settings.ICON_SETTINGS['SHOW_STATUS_ICONS_LISTING']})
         return template.render(c)
 
 
@@ -408,11 +408,11 @@ class TestListInstances(BaseListableView):
 
     def review_status(self, tli):
         template = self.templates['review_status']
-        c = Context({"instance": tli, "perms": PermWrapper(self.request.user), "request": self.request})
+        c = Context({"instance": tli, "perms": PermWrapper(self.request.user), "request": self.request, "show_label": settings.ICON_SETTINGS['SHOW_REVIEW_LABELS_LISTING'], "show_icons": settings.ICON_SETTINGS['SHOW_STATUS_LABELS_REVIEW']})
         c.update(generate_review_status_context(tli))
         return template.render(c)
 
     def pass_fail(self, tli):
         template = self.templates['pass_fail']
-        c = Context({"instance": tli, "exclude": [models.NO_TOL], "show_label": True, "show_icons": settings.ICON_SETTINGS['SHOW_STATUS_ICONS_LISTING']})
+        c = Context({"instance": tli, "exclude": [models.NO_TOL], "show_label": settings.ICON_SETTINGS['SHOW_REVIEW_LABELS_LISTING'], "show_icons": settings.ICON_SETTINGS['SHOW_STATUS_ICONS_LISTING']})
         return template.render(c)
