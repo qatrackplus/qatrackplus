@@ -4,76 +4,54 @@ WARNING
 
 This is a development version of QATrack+. It has not undergone sufficient testing.
 
-## Ubuntu Instructions
+## Installation instructions
 
-### Installing Docker
+This installation method requires docker-compose and docker. Go to the following web adress and follow all the relevant instructions to install docker and docker-compose on your system.
 
-From https://docs.docker.com/engine/installation/linux/ubuntu/#install-docker
+ * https://docs.docker.com/compose/install/
 
-    sudo apt-get install \
-        apt-transport-https \
-        ca-certificates \
-        curl \
-        software-properties-common
+## Dockerised QATrack+ (0.3.0-dev version) usage
 
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-    
-    sudo add-apt-repository \
-        "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
-        $(lsb_release -cs) \
-        stable"
-        
-    sudo apt-get update
-    
-    sudo apt-get install docker-ce
-    
-    sudo groupadd docker
-    
-    sudo usermod -aG docker $USER
-    
-Log out and log back in then run the following to see that everything is working:
-
-    docker run hello-world
-    
-### Installing Docker Compose
-
-From https://docs.docker.com/compose/install/
-
-    curl -L https://github.com/docker/compose/releases/download/1.12.0/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
-    sudo chmod +x /usr/local/bin/docker-compose
-    
-Optionally install command completion https://docs.docker.com/compose/completion/
-
-Test docker-compose:
-
-    docker-compose --version
-    
-### Downloading and installing Dockerised QATrack+ (0.3.0-dev version)
+### Downloading
 
     git clone https://bitbucket.org/tohccmedphys/qatrackplus.git
-    
+
     cd qatrackplus
-    
+
     git checkout py34
-    
+
     cd deploy/dockerised
-    
-    ./first-time.sh
-    
-### Running and viewing server
 
-    ./start-server.sh
-    
-Go to http://localhost in browser.
+### Installing
 
-### Update server after editing server files
+To run any docker-compose commands you need to be within the `qatrackplus/deploy/dockerised` directory. To build the server run the following:
 
-    ./update-server-files.sh
-    
-### Wipe database and installation and start fresh
+    docker-compose build
 
-    ./delete-all-docker-containers.sh
-    
+To start the server once it has been built run:
+
+    docker-compose up -d
+
+The first time this is run the server needs about 5 seconds to initialise. Go to http://localhost in browser to see the server. Default login is username admin, password admin.
+
+### Shutdown the server
+
+To shutdown the server run:
+
+    docker-compose stop
+
+### Update server
+
+To update the server from bitbucket run:
+
+    git pull
+
+Once any files have changed in the qatrackplus directory you need to run the following:
+
+    docker-compose stop
+    docker-compose build
+    docker-compose up -d
+
 ### Backup database to file
 
 Coming soon...
@@ -82,18 +60,6 @@ Coming soon...
 
 Coming soon...
 
-### Update QATrack+ from a git
-
-Coming soon...
-
 ### Dump database as CSV files for redundancy
-
-Coming soon...
-
-## Windows Instructions
-
-Coming soon...
-
-## OSX Instructions
 
 Coming soon...

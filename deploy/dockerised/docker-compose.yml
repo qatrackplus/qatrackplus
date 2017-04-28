@@ -14,6 +14,15 @@ services:
     env_file: customise-server.env
     command: /usr/local/bin/gunicorn qatrack.wsgi:application -w 2 -b :8000
 
+  utility:
+    build: ../../.
+    links:
+      - postgres:postgres
+    volumes:
+      - static:/usr/src/app/qatrack/static
+    env_file: customise-server.env
+    command: /bin/bash -c 'echo "import runpy; runpy.run_path(\"/usr/src/app/deploy/dockerised/initialisation_script.py\")" | python /usr/src/app/manage.py shell'
+
   nginx:
     restart: always
     build: ./nginx
