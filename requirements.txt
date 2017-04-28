@@ -31,3 +31,4 @@ django-mssql; sys_platform=='win32'
 django-pyodbc-azure; sys_platform=='win32'
 psycopg2==2.6; sys_platform=='linux'
 gunicorn==19.3.0; sys_platform=='linux'
+pylinac==2.0.1
