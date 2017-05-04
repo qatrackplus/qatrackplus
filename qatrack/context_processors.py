@@ -27,9 +27,6 @@ def update_part_storage_quantity(*args, **kwargs):
     part = pu.part
     storage = pu.from_storage
     quantity = pu.quantity
-    print(part)
-    print(storage)
-    print(quantity)
     # Return parts used to storage:
     if storage:
         try:
@@ -38,6 +35,13 @@ def update_part_storage_quantity(*args, **kwargs):
             psc.save()
         except ObjectDoesNotExist:
             pass
+
+@receiver(post_delete, sender=PartStorageCollection)
+def update_part_quantity(*args, **kwargs):
+
+    psc = kwargs['instance']
+    part = psc.part
+    part.set_quantity_current()
 
 
 @receiver(post_save, sender=TestListInstance)

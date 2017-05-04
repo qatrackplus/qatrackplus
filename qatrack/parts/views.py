@@ -36,12 +36,13 @@ def parts_storage_searcher(request):
     except ValueError:
         return JsonResponse({'data': '__clear__'}, safe=False)
 
+    print(p_id)
     psc = p_models.PartStorageCollection.objects \
         .filter(part=p_id) \
         .select_related('storage', 'storage__room', 'storage__room__site') \
         .order_by('storage__room__site__name', 'storage__room__name', 'storage__location')[0:50] \
         .values_list('storage_id', 'storage__room__site__name', 'storage__room__name', 'storage__location', 'quantity')
-
+    print(psc)
     return JsonResponse({'data': list(psc)}, safe=False)
 
 

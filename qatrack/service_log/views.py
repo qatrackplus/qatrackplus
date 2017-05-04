@@ -535,18 +535,18 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseM
                         current_psc.quantity += qty
 
                         if current_psc:
-                            if current_psc.quantity <= 0:
-                                if current_psc.id:
-                                    current_psc.delete()
-                            else:
-                                current_psc.save()
+                            # if current_psc.quantity <= 0:
+                            #     if current_psc.id:
+                            #         current_psc.delete()
+                            # else:
+                            current_psc.save()
 
                         if initial_psc:
-                            if initial_psc.quantity <= 0:
-                                if initial_psc.id:
-                                    initial_psc.delete()
-                            else:
-                                initial_psc.save()
+                            # if initial_psc.quantity <= 0:
+                            #     if initial_psc.id:
+                            #         initial_psc.delete()
+                            # else:
+                            initial_psc.save()
 
                     pu_instance.delete()
                     continue
@@ -604,11 +604,11 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseM
                     if initial_p:
                         initial_p.set_quantity_current()
 
-                    # Delete empty part storage collections
-                    if current_psc and current_psc.quantity <= 0 and current_psc.id:
-                        current_psc.delete()
-                    if initial_psc and initial_psc.quantity <= 0 and initial_psc.id:
-                        initial_psc.delete()
+                    # # Delete empty part storage collections
+                    # if current_psc and current_psc.quantity <= 0 and current_psc.id:
+                    #     current_psc.delete()
+                    # if initial_psc and initial_psc.quantity <= 0 and initial_psc.id:
+                    #     initial_psc.delete()
 
         return HttpResponseRedirect(self.get_success_url())
 

@@ -118,6 +118,7 @@ class Part(models.Model):
             self.quantity_current = qs.aggregate(models.Sum('quantity'))['quantity__sum']
         else:
             self.quantity_current = 0
+        self.quantity_current = self.quantity_current if self.quantity_current >= 0 else 0
         self.save()
 
 
@@ -139,14 +140,17 @@ class PartStorageCollection(models.Model):
     class Meta:
         unique_together = ('part', 'storage')
 
-    # def save(self, *args, **kwargs):
-    #     if self.quantity > 0:
-    #         super(PartStorageCollection, self).save(*args, **kwargs)
-    #         self.part.set_quantity_current()
-    #     elif self.id:
-    #         part = self.part
-    #         self.delete()
-    #         part.set_quantity_current()
+    def save(self, *args, **kwargs):
+        # if self.quantity > 0:
+        #     super(PartStorageCollection, self).save(*args, **kwargs)
+        #     self.part.set_quantity_current()
+        # elif self.id:
+        #     part = self.part
+        #     self.delete()
+        #     part.set_quantity_current()
+        self.quantity = self.quantity if self.quantity >= 0 else 0
+        super(PartStorageCollection, self).save(*args, **kwargs)
+        self.part.set_quantity_current()
 
     def __str__(self):
         locs = []

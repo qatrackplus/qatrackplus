@@ -423,7 +423,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
                         if (res.data !== '__clear__') {
                             for (var i in res.data) {
                                 var psc = res.data[i];
-                                var text = (psc[1] ? psc[1] + ' - ' : '') + psc[2] + ' - ' + psc[3] + ' (' + psc[4] + ')',
+                                var text = (psc[1] ? psc[1] + ' - ' : '') + psc[2] + (psc[3] ? (' - ' + psc[3]) : '') + ' (' + psc[4] + ')',
                                     title = (psc[1] ? 'Site: ' + psc[1] + '\n' : '') +
                                         'Room: ' + psc[2] + '\n' +
                                         (psc[4] ? 'Location: ' + psc[3] + '\n' : '') +
