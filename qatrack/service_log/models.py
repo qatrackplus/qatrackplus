@@ -207,7 +207,7 @@ class ThirdParty(models.Model):
 
 class Hours(models.Model):
 
-    service_event = models.ForeignKey(ServiceEvent, on_delete=models.PROTECT)
+    service_event = models.ForeignKey(ServiceEvent, on_delete=models.CASCADE)
     third_party = models.ForeignKey(ThirdParty, null=True, blank=True, on_delete=models.PROTECT)
     user = models.ForeignKey(User, null=True, blank=True, on_delete=models.PROTECT)
 
@@ -228,14 +228,13 @@ class Hours(models.Model):
 class QAFollowup(models.Model):
 
     unit_test_collection = models.ForeignKey(
-        UnitTestCollection, help_text=_('Select a TestList to perform'), on_delete=models.PROTECT
+        UnitTestCollection, help_text=_('Select a TestList to perform'), on_delete=models.CASCADE
     )
     test_list_instance = models.ForeignKey(TestListInstance, null=True, blank=True, on_delete=models.CASCADE)
     user_assigned_by = models.ForeignKey(User, related_name='+', on_delete=models.PROTECT)
-    service_event = models.ForeignKey(ServiceEvent, on_delete=models.PROTECT)
+    service_event = models.ForeignKey(ServiceEvent, on_delete=models.CASCADE)
 
     is_complete = models.BooleanField(default=False, help_text=_('Has this QA been completed?'))
-    is_approved = models.BooleanField(default=False, help_text=_('Has the QA been approved?'))
     datetime_assigned = models.DateTimeField()
 
 
@@ -265,7 +264,7 @@ class GroupLinkerInstance(models.Model):
 
     group_linker = models.ForeignKey(GroupLinker, on_delete=models.PROTECT)
     user = models.ForeignKey(User, on_delete=models.PROTECT)
-    service_event = models.ForeignKey(ServiceEvent, on_delete=models.PROTECT)
+    service_event = models.ForeignKey(ServiceEvent, on_delete=models.CASCADE)
 
     datetime_linked = models.DateTimeField()
 

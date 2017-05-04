@@ -494,7 +494,6 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseM
             for p_form in parts_formset:
 
                 if not p_form.has_changed():
-                    print('Nothing changed on %s' % p_form.prefix)
                     continue
 
                 delete = p_form.cleaned_data.get('DELETE')
@@ -527,24 +526,13 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseM
                     initial_psc = None
 
                 initial_qty = 0 if is_new else p_form.initial['quantity']
-                current_qty = p_form.cleaned_data['quantity']
+                current_qty = p_form.cleaned_data['quantity'] if 'quantity' in p_form.cleaned_data else initial_qty
                 change = current_qty - initial_qty
-
-                try:
-                    part_unit_storage_collection = p_models.PartStorageCollection.objects.get(
-                        unit=form.instance.unit_service_area.unit, part=current_p
-                    )
-                except ObjectDoesNotExist:
-                    part_unit_storage_collection = p_models.PartStorageCollection(
-                        unit=form.instance.unit_service_area.unit, part=current_p, quantity=0
-                    )
-                    part_unit_storage_collection.save()
 
                 if delete and not is_new:
                     if current_psc:
                         qty = pu_instance.quantity
                         current_psc.quantity += qty
-                        part_unit_storage_collection.quantity -= qty
 
                         if current_psc:
                             if current_psc.quantity <= 0:
@@ -559,11 +547,6 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseM
                                     initial_psc.delete()
                             else:
                                 initial_psc.save()
-
-                        if part_unit_storage_collection.quantity <= 0:
-                            part_unit_storage_collection.delete()
-                        else:
-                            part_unit_storage_collection.save()
 
                     pu_instance.delete()
                     continue
@@ -583,9 +566,6 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseM
                             current_psc.quantity -= current_qty
                             current_psc.save()
                         pu_instance.from_storage = current_psc.storage if current_psc else None
-
-                        part_unit_storage_collection.quantity += change
-                        part_unit_storage_collection.save()
 
                     # Edge case if part changed and storage didn't
                     elif 'part' in p_form.changed_data and current_psc:
@@ -619,9 +599,6 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseM
                             )
                             current_psc.save()
 
-                        part_unit_storage_collection.quantity += change
-                        part_unit_storage_collection.save()
-
                     pu_instance.save()
                     current_p.set_quantity_current()
                     if initial_p:
@@ -632,8 +609,6 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseM
                         current_psc.delete()
                     if initial_psc and initial_psc.quantity <= 0 and initial_psc.id:
                         initial_psc.delete()
-                    if part_unit_storage_collection.quantity <= 0:
-                        part_unit_storage_collection.delete()
 
         return HttpResponseRedirect(self.get_success_url())
 
@@ -1082,6 +1057,7 @@ def tli_statuses(request):
 
 class ChooseUnitForNewSE(ChooseUnit):
     template_name = 'units/unittype_choose_for_service_event.html'
+    split_sites = True
 
     def get_context_data(self, *args, **kwargs):
         context = super(ChooseUnitForNewSE, self).get_context_data(*args, **kwargs)
@@ -1091,3 +1067,4 @@ class ChooseUnitForNewSE(ChooseUnit):
 
 class ChooseUnitForViewSE(ChooseUnit):
     template_name = 'units/unittype_choose_for_service_event.html'
+    split_sites = True

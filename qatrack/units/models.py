@@ -100,6 +100,8 @@ class Unit(models.Model):
     Stores a single radiation device (e.g. Linac, Tomo unit, Cyberkinfe etc.)
 
     """
+    type = models.ForeignKey(UnitType, on_delete=models.PROTECT)
+    site = models.ForeignKey(Site, null=True, blank=True, on_delete=models.PROTECT)
 
     number = models.PositiveIntegerField(null=False, unique=True, help_text=_("A unique number for this unit"))
     name = models.CharField(max_length=256, help_text=_("The display name for this unit"))
@@ -109,9 +111,6 @@ class Unit(models.Model):
     date_acceptance = models.DateField(null=True, blank=True, help_text=_('Optional date of acceptance'))
     active = models.BooleanField(default=True, help_text=_('Set to false if unit is no longer in use'))
     restricted = models.BooleanField(default=False, help_text=_('Set to false to restrict unit from operation'))
-
-    type = models.ForeignKey(UnitType, on_delete=models.PROTECT)
-    site = models.ForeignKey(Site, null=True, blank=True, on_delete=models.PROTECT)
 
     modalities = models.ManyToManyField(Modality)
 

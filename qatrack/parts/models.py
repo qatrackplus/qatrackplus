@@ -11,10 +11,6 @@ from qatrack.service_log import models as sl_models
 
 class Supplier(models.Model):
 
-    vendor = models.ForeignKey(
-        u_models.Vendor, blank=True, null=True, help_text=_('Is this supplier an existing vendor in QaTrack database?')
-    )
-
     name = models.CharField(max_length=32, unique=True)
     notes = models.TextField(
         max_length=255, blank=True, null=True, help_text=_('Additional comments about this supplier')
@@ -25,21 +21,6 @@ class Supplier(models.Model):
 
     def __str__(self):
         return self.name
-
-
-# class ServiceAreaUnitType(models.Model):
-#
-#     unit_type = models.ForeignKey(
-#         u_models.UnitType, blank=True, null=True, help_text=_('Is this model an existing unit type in QaTrack database')
-#     )
-#     service_area = models.ForeignKey(
-#         sl_models.ServiceArea, blank=True, null=True, help_text=_('Service area this part is used in'),
-#         on_delete=models.CASCADE
-#      )
-#
-#     class Meta:
-#
-#         unique_together = ['unit_type', 'service_area']
 
 
 class RoomManager(models.Manager):
@@ -132,47 +113,49 @@ class Part(models.Model):
         return '%s%s - %s' % (self.part_number, ' (%s)' % self.alt_part_number if self.alt_part_number else '', self.description)
 
     def set_quantity_current(self):
-        self.quantity_current = PartStorageCollection.objects.filter(part=self, storage__isnull=False).aggregate(models.Sum('quantity'))['quantity__sum']
+        qs = PartStorageCollection.objects.filter(part=self, storage__isnull=False)
+        if qs.exists():
+            self.quantity_current = qs.aggregate(models.Sum('quantity'))['quantity__sum']
+        else:
+            self.quantity_current = 0
         self.save()
 
 
 class PartStorageCollectionManager(models.Manager):
 
     def get_queryset(self):
-        return super(PartStorageCollectionManager, self).get_queryset().select_related('storage', 'unit', 'part')
+        return super(PartStorageCollectionManager, self).get_queryset().select_related('storage', 'part')
 
 
 class PartStorageCollection(models.Model):
 
     part = models.ForeignKey(Part)
-    unit = models.ForeignKey(u_models.Unit, blank=True, null=True)
-    storage = models.ForeignKey(Storage, blank=True, null=True)
+    storage = models.ForeignKey(Storage)
 
     quantity = models.IntegerField()
 
     objects = PartStorageCollectionManager()
 
     class Meta:
-        unique_together = ('part', 'storage', 'unit')
+        unique_together = ('part', 'storage')
 
-    def save(self, *args, **kwargs):
-        if not self.unit and not self.storage:
-            raise ValidationError("Unit and Storage cannot both be null")
-        super(PartStorageCollection, self).save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     if self.quantity > 0:
+    #         super(PartStorageCollection, self).save(*args, **kwargs)
+    #         self.part.set_quantity_current()
+    #     elif self.id:
+    #         part = self.part
+    #         self.delete()
+    #         part.set_quantity_current()
 
     def __str__(self):
         locs = []
-        if self.storage:
-            if self.storage.room.site:
-                locs.append(self.storage.room.site.name)
-            locs.append(self.storage.room.name)
-            if self.storage.location:
-                locs.append(self.storage.location)
-            locs.append('(%s)' % self.quantity)
-        elif self.unit:
-            if self.unit.site:
-                locs.append(self.unit.site.name)
-            locs.append(self.unit.name)
+        if self.storage.room.site:
+            locs.append(self.storage.room.site.name)
+        locs.append(self.storage.room.name)
+        if self.storage.location:
+            locs.append(self.storage.location)
+        locs.append('(%s)' % self.quantity)
         return ' - '.join(locs)
 
 
@@ -191,15 +174,9 @@ class PartSupplierCollection(models.Model):
 
 class PartUsed(models.Model):
 
-    service_event = models.ForeignKey(sl_models.ServiceEvent)
-    part = models.ForeignKey(Part, help_text=_('Select the part used'))
+    service_event = models.ForeignKey(sl_models.ServiceEvent, on_delete=models.CASCADE)
+    part = models.ForeignKey(Part, help_text=_('Select the part used'), on_delete=models.CASCADE)
     from_storage = models.ForeignKey(Storage, null=True, blank=True, on_delete=models.SET_NULL)
 
     quantity = models.IntegerField()
 
-
-class PartRemoved(models.Model):
-
-    service_event = models.ForeignKey(sl_models.ServiceEvent)
-    part = models.ForeignKey(Part, help_text=_('Select the part removed'))
-    part_storage_removed_to = models.ForeignKey(PartStorageCollection, blank=True, null=True, on_delete=models.SET_NULL)

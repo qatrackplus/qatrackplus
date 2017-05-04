@@ -63,7 +63,7 @@
         {% else %}
             <div class="row">
                 <div class="col-md-12">
-                    <h4>Choose a Unit to Perform QA On</h4>
+                    <h4><i class="fa fa-cube" aria-hidden="true"></i>Choose a Unit to Perform QA On</h4>
                     <p>Click a button to perform QA for one of the units below.</p>
                 </div>
             </div>
@@ -72,7 +72,6 @@
                     <div class="col-md-{{ split_by }}">
                         <div class="box box-primary">
                             <div class="box-header">
-                                <i class="fa fa-cube" aria-hidden="true"></i>
                                 <h3 class="box-title">{% if site == 'zzzNonezzz' %}Other{% else %}{{ site }}{% endif %}</h3>
                             </div>
                             <div class="box-body pad">

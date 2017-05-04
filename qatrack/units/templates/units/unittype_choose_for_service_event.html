@@ -1,3 +1,4 @@
+
 {% extends "service_log/sl_base.html" %}
 {#{% load staticfiles %}#}
 {% block require_javascript %}
@@ -8,33 +9,73 @@
 
 {% block body %}
 
-    <div class="row">
-        <div class="col-md-12">
-            <div class="box box-primary">
-                <div class="box-header">
-                    <i class="fa fa-cube" aria-hidden="true"></i>
-                    <h3 class="box-title">Choose a Unit to Create a New Service Event for</h3>
+
+        {% if not split_sites %}
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="box box-primary">
+                        <div class="box-header">
+                            <i class="fa fa-cube" aria-hidden="true"></i>
+                            <h3 class="box-title">Choose a Unit to Create a New Service Event for</h3>
+                            <p>Click a button to create a service event for one of the units below.</p>
+                        </div>
+                        <div class="box-body pad">
+                            {% for unit_type, units in unit_types%}
+
+                                <div class="row margin">
+                                    <div class="span12">
+
+                                        <h4 class="header-spacer">{{unit_type}}</h4>
+                                        {% for unit in units %}
+                                            <a class="btn btn-default btn-flat" href="{% if new_se %}{% url "sl_new" %}?u={{ unit.unit__id }}{% else %}{% url 'sl_list_all' %}?f=u-{{ unit.unit__id }}{% endif %}">{{unit.unit__name}}</a>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+
+                            {% endfor %}
+                        </div>
+                        <div class="box-footer"></div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="row">
+                <div class="col-md-12">
+                    <h4><i class="fa fa-cube" aria-hidden="true"></i>Choose a Unit to Create a New Service Event for</h4>
                     <p>Click a button to create a service event for one of the units below.</p>
                 </div>
-                <div class="box-body pad">
-                    {% for unit_type, units in unit_types%}
+            </div>
+            <div class="row">
+                {% for site, types in unit_types.items %}
+                    <div class="col-md-{{ split_by }}">
+                        <div class="box box-primary">
+                            <div class="box-header">
+                                <h3 class="box-title">{% if site == 'zzzNonezzz' %}Other{% else %}{{ site }}{% endif %}</h3>
+                            </div>
+                            <div class="box-body pad">
+                                {% for type, units in types %}
 
-                        <div class="row margin">
-                            <div class="col-sm-12">
+                                    <div class="row margin">
+                                        <div class="span12">
 
-                                <h4>{{unit_type}}</h4>
-                                {% for unit in units %}
-                                    <a class="btn btn-default btn-flat" href="{% if new_se %}{% url "sl_new" %}?u={{ unit.unit__id }}{% else %}{% url 'sl_list_all' %}?f=u-{{ unit.unit__id }}{% endif %}">{{unit.unit__name}}</a>
+                                            <h4 class="header-spacer">{{ type }}</h4>
+                                            {% for unit in units %}
+                                                <a class="btn btn-default btn-flat" href="{% if new_se %}{% url "sl_new" %}?u={{ unit.unit__id }}{% else %}{% url 'sl_list_all' %}?f=u-{{ unit.unit__id }}{% endif %}">{{unit.unit__name}}</a>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+
                                 {% endfor %}
                             </div>
+                            <div class="box-footer"></div>
                         </div>
+                    </div>
 
-                    {% endfor %}
-                </div>
-                <div class="box-footer"></div>
+                {% endfor %}
             </div>
-        </div>
-    </div>
 
+        {% endif %}
 {% endblock %}
+
+
 

@@ -12,7 +12,7 @@ from django.views.generic.detail import SingleObjectTemplateResponseMixin
 from django.views.generic import TemplateView, DetailView
 
 from listable.views import (
-    BaseListableView, DATE_RANGE, SELECT_MULTI, NONEORNULL, TEXT,
+    BaseListableView, DATE_RANGE, SELECT_MULTI, NONEORNULL, TEXT, SELECT_MULTI_FROM_MULTI,
     TODAY, YESTERDAY, TOMORROW, LAST_WEEK, THIS_WEEK, NEXT_WEEK, LAST_14_DAYS, LAST_MONTH, THIS_MONTH, THIS_YEAR
 )
 
@@ -37,7 +37,7 @@ def parts_storage_searcher(request):
         return JsonResponse({'data': '__clear__'}, safe=False)
 
     psc = p_models.PartStorageCollection.objects \
-        .filter(part=p_id, storage__isnull=False) \
+        .filter(part=p_id) \
         .select_related('storage', 'storage__room', 'storage__room__site') \
         .order_by('storage__room__site__name', 'storage__room__name', 'storage__location')[0:50] \
         .values_list('storage_id', 'storage__room__site__name', 'storage__room__name', 'storage__location', 'quantity')
@@ -179,7 +179,6 @@ class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, Mo
 # class UpdateServiceEvent(ServiceEventUpdateCreate):
 # class DetailsServiceEvent(DetailView):
 
-
 class PartsList(BaseListableView):
     model = p_models.Part
     template_name = 'service_log/service_event_list.html'
@@ -187,6 +186,7 @@ class PartsList(BaseListableView):
 
     # order_by = ['part_number']
     kwarg_filters = None
+    multi_separator = '<span class="padding-0-10">|</span>'
 
     fields = (
         'actions',
@@ -194,14 +194,16 @@ class PartsList(BaseListableView):
         'description',
         'part_number',
         'quantity_current',
+        'part_categories__name'
     )
 
     headers = {
-        'actions': _('Edit'),
+        'actions': _('Actions'),
         'pk': _('ID'),
         'description': _('Description'),
         'part_number': _('Part Number'),
         'quantity_current': _('In Storage'),
+        'part_categories__name': _('Categories')
     }
 
     widgets = {
@@ -210,16 +212,22 @@ class PartsList(BaseListableView):
         'description': TEXT,
         'part_number': TEXT,
         'quantity_current': None,
+        'part_categories__name': SELECT_MULTI_FROM_MULTI
     }
 
     search_fields = {
         'actions': False,
-        'quantity_current': False,
+        'quantity_current': False
     }
 
     order_fields = {
         'actions': False,
+        'part_categories__name': False
     }
+
+    prefetch_related = (
+        'part_categories',
+    )
 
     def get_icon(self):
         return 'fa-cog'
@@ -244,6 +252,73 @@ class PartsList(BaseListableView):
 
     def actions(self, p):
         template = get_template('parts/table_context_p_actions.html')
+        mext = reverse('parts_list')
+        c = Context({'p': p, 'request': self.request, 'next': mext})
+        return template.render(c)
+
+
+class SuppliersList(BaseListableView):
+
+    model = p_models.Supplier
+    template_name = 'service_log/service_event_list.html'
+    paginate_by = 50
+
+    # order_by = ['part_number']
+    kwarg_filters = None
+
+    fields = (
+        'actions',
+        'pk',
+        'name',
+        'notes'
+    )
+
+    headers = {
+        'actions': _('Actions'),
+        'pk': _('ID'),
+        'name': _('Name'),
+        'notes': _('Notes'),
+    }
+
+    widgets = {
+        'actions': None,
+        'pk': TEXT,
+        'name': TEXT,
+        'notes': TEXT,
+    }
+
+    search_fields = {
+        'actions': False,
+    }
+
+    order_fields = {
+        'actions': False,
+        'notes': False
+    }
+
+    def get_icon(self):
+        return 'fa-microchip'
+
+    def get_page_title(self, f=None):
+        if not f:
+            return 'All Suppliers'
+
+    def format_col(self, field, obj):
+        col = super(SuppliersList, self).format_col(field, obj)
+        return col
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(SuppliersList, self).get_context_data(*args, **kwargs)
+        current_url = resolve(self.request.path_info).url_name
+        context['view_name'] = current_url
+        context['icon'] = self.get_icon()
+        f = self.request.GET.get('f', False)
+        context['kwargs'] = {'f': f} if f else {}
+        context['page_title'] = self.get_page_title(f)
+        return context
+
+    def actions(self, p):
+        template = get_template('parts/table_context_suppliers_actions.html')
         mext = reverse('parts_list')
         c = Context({'p': p, 'request': self.request, 'next': mext})
         return template.render(c)

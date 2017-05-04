@@ -408,7 +408,7 @@ class TestListInstances(BaseListableView):
 
     def review_status(self, tli):
         template = self.templates['review_status']
-        c = Context({"instance": tli, "perms": PermWrapper(self.request.user), "request": self.request, "show_label": settings.ICON_SETTINGS['SHOW_REVIEW_LABELS_LISTING'], "show_icons": settings.ICON_SETTINGS['SHOW_STATUS_LABELS_REVIEW']})
+        c = Context({"instance": tli, "perms": PermWrapper(self.request.user), "request": self.request, "show_label": settings.ICON_SETTINGS['SHOW_REVIEW_LABELS_LISTING'], "show_icons": settings.ICON_SETTINGS['SHOW_STATUS_ICONS_REVIEW']})
         c.update(generate_review_status_context(tli))
         return template.render(c)
 

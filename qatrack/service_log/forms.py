@@ -147,6 +147,9 @@ class FollowupForm(forms.ModelForm):
         self.unit_field = kwargs.pop('unit_field')
         super(FollowupForm, self).__init__(*args, **kwargs)
 
+        if 'unit_field' in self.data and self.data['unit_field']:
+            self.unit_field = u_models.Unit.objects.get(pk=self.data['unit_field'])
+
         if self.unit_field:
             uf_chache = cache.get('active_unit_test_collections_for_unit_%s' % self.unit_field.id, None)
             if not uf_chache:

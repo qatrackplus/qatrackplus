@@ -38,13 +38,6 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
-            name='PartRemoved',
-            fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('part', models.ForeignKey(help_text='Select the part removed', on_delete=django.db.models.deletion.CASCADE, to='parts.Part')),
-            ],
-        ),
-        migrations.CreateModel(
             name='PartStorageCollection',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
@@ -93,19 +86,13 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=32, unique=True)),
                 ('notes', models.TextField(blank=True, help_text='Additional comments about this supplier', max_length=255, null=True)),
-                ('vendor', models.ForeignKey(blank=True, help_text='Is this supplier an existing vendor in QaTrack database?', null=True, on_delete=django.db.models.deletion.CASCADE, to='units.Vendor')),
             ],
             options={'ordering': ('name',)},
         ),
         migrations.AddField(
             model_name='partstoragecollection',
             name='storage',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='parts.Storage'),
-        ),
-        migrations.AddField(
-            model_name='partstoragecollection',
-            name='unit',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='units.Unit'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='parts.Storage'),
         ),
         migrations.AddField(
             model_name='partsuppliercollection',
@@ -116,16 +103,6 @@ class Migration(migrations.Migration):
             model_name='partsuppliercollection',
             name='supplier',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='parts.Supplier'),
-        ),
-        migrations.AddField(
-            model_name='partremoved',
-            name='part_storage_removed_to',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='parts.PartStorageCollection'),
-        ),
-        migrations.AddField(
-            model_name='partremoved',
-            name='service_event',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='service_log.ServiceEvent'),
         ),
         migrations.AddField(
             model_name='part',
@@ -141,21 +118,11 @@ class Migration(migrations.Migration):
             name='room',
             unique_together=set([('site', 'name')]),
         ),
-        # migrations.AddField(
-        #     model_name='part',
-        #     name='part_categories',
-        #     field=models.ForeignKey(to='parts.PartCategory', blank=True, null=True, help_text='Categories for this part', related_name='parts'),
-        # ),
         migrations.AddField(
             model_name='part',
             name='part_categories',
             field=models.ManyToManyField(blank=True, help_text='Categories for this part', null=True, related_name='parts', to='parts.PartCategory'),
         ),
-        # migrations.AddField(
-        #     model_name='partused',
-        #     name='part_storage_collection',
-        #     field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='parts.PartStorageCollection', blank=True, null=True),
-        # ),
         migrations.AddField(
             model_name='partused',
             name='from_storage',
@@ -167,7 +134,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterUniqueTogether(
             name='partstoragecollection',
-            unique_together=set([('part', 'storage', 'unit')]),
+            unique_together=set([('part', 'storage')]),
         ),
         migrations.AlterUniqueTogether(
             name='partsuppliercollection',

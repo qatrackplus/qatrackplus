@@ -63,16 +63,22 @@
     width: 50px;
     max-width: 50px;
 }
-#listable-table-vendors > thead > tr > th:nth-child(2) {
+#listable-table-vendor_list > thead > tr > th:nth-child(2) {
     width: 50px;
     max-width: 50px;
 }
-#listable-table-vendors > thead > tr > th:nth-child(3) {
+#listable-table-vendor_list > thead > tr > th:nth-child(3) {
     width: 150px;
     max-width: 150px;
 }
 #listable-table-unit_list > thead > tr > th {
     width: 75px;
+}
+#listable-table-suppliers_list > thead > tr > th:nth-child(2) {
+    width: 75px;
+}
+#listable-table-qaf_list_all > thead > tr > th:nth-child(1) {
+    width: 150px;
 }
 /*#listable-table-qaf_list_all > tbody > tr > td:nth-child(1) {*/
     /*width: 180px;*/
@@ -99,4 +105,10 @@
 }
 .autosize {
     resize: none;
+}
+body.sidebar-mini.sidebar-collapse > div.wrapper > aside.main-sidebar > section.sidebar > ul.sidebar-menu > li.header {
+    display: list-item !important;
+}
+body.sidebar-mini.sidebar-collapse > div.wrapper > aside.main-sidebar > section.sidebar > ul.sidebar-menu > li.header > span {
+    opacity: 0;
 }

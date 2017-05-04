@@ -133,7 +133,7 @@ class VendorsList(BaseListableView):
         names = []
         for tp in v.thirdparty_set.all():
             names.append('%s %s' % (tp.first_name, tp.last_name))
-        return ', '.join(names)
+        return '<span class="padding-0-10">|</span>'.join(names)
 
 
 class UnitList(BaseListableView):

@@ -2,10 +2,12 @@ import json
 from django.core.cache import cache
 from django.conf import settings
 from django.contrib.sites.models import Site
-from django.db.models.signals import post_save, post_delete
+from django.db.models import ObjectDoesNotExist
+from django.db.models.signals import post_save, post_delete, pre_delete
 from django.dispatch import receiver
 from qatrack.qa.models import Frequency, TestListInstance, UnitTestCollection
 from qatrack.units.models import Unit
+from qatrack.parts.models import PartUsed, PartStorageCollection
 
 cache.delete(settings.CACHE_UNREVIEWED_COUNT)
 cache.delete(settings.CACHE_QA_FREQUENCIES)
@@ -18,6 +20,24 @@ cache.delete(settings.CACHE_QA_FREQUENCIES)
 #     ).order_by('name')
 #     cache.delete('active_unit_test_collections_for_unit_%s' % u.id)
 #     print('%s utc cache deleted' % u.name)
+
+@receiver(pre_delete, sender=PartUsed)
+def update_part_storage_quantity(*args, **kwargs):
+    pu = kwargs['instance']
+    part = pu.part
+    storage = pu.from_storage
+    quantity = pu.quantity
+    print(part)
+    print(storage)
+    print(quantity)
+    # Return parts used to storage:
+    if storage:
+        try:
+            psc = PartStorageCollection.objects.get(part=part, storage=storage)
+            psc.quantity += quantity
+            psc.save()
+        except ObjectDoesNotExist:
+            pass
 
 
 @receiver(post_save, sender=TestListInstance)

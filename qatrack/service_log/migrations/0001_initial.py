@@ -40,7 +40,6 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('is_complete', models.BooleanField(default=False, help_text='Has this QA been completed?')),
-                ('is_approved', models.BooleanField(default=False, help_text='Has the QA been approved?')),
                 ('datetime_assigned', models.DateTimeField()),
             ],
         ),
@@ -129,7 +128,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('datetime_linked', models.DateTimeField()),
                 ('group_linker', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='service_log.GroupLinker')),
-                ('service_event', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='service_log.ServiceEvent')),
+                ('service_event', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='service_log.ServiceEvent')),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to=settings.AUTH_USER_MODEL)),
             ],
         ),
@@ -171,7 +170,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='qafollowup',
             name='service_event',
-            field=models.ForeignKey(to='service_log.ServiceEvent', on_delete=django.db.models.deletion.PROTECT),
+            field=models.ForeignKey(to='service_log.ServiceEvent', on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='qafollowup',
@@ -181,7 +180,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='qafollowup',
             name='unit_test_collection',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='qa.UnitTestCollection', help_text='Select a TestList to perform'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='qa.UnitTestCollection', help_text='Select a TestList to perform'),
         ),
         migrations.AddField(
             model_name='qafollowup',
@@ -191,7 +190,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='hours',
             name='service_event',
-            field=models.ForeignKey(to='service_log.ServiceEvent', on_delete=django.db.models.deletion.PROTECT),
+            field=models.ForeignKey(to='service_log.ServiceEvent', on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='hours',

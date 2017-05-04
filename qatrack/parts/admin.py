@@ -15,11 +15,14 @@ if settings.USE_PARTS:
 
     class StorageAdmin(admin.ModelAdmin):
         list_display = ['id', 'room', 'location', 'description']
-        search_fields = ['room', 'cabinet', 'shelf']
+        search_fields = ['room__name', 'location']
+
+        def get_queryset(self, request):
+            return super(StorageAdmin, self).get_queryset(request).select_related('room', 'room__site')
 
 
     class PartStorageCollectionAdmin(admin.ModelAdmin):
-        list_display = ['id', 'part', 'storage', 'unit', 'quantity']
+        list_display = ['id', 'part', 'storage', 'quantity']
 
         def get_queryset(self, request):
             return super(PartStorageCollectionAdmin, self).get_queryset(request).select_related('storage__room', 'storage__room__site')

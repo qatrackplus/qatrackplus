@@ -351,6 +351,7 @@ class ChooseUnit(TemplateView):
 
     template_name = "units/unittype_list.html"
     active_only = True
+    split_sites = True
 
     def get_context_data(self, *args, **kwargs):
         """
@@ -372,7 +373,7 @@ class ChooseUnit(TemplateView):
 
         units_ordering = "unit__%s" % (settings.ORDER_UNITS_BY,)
 
-        if Site.objects.all().exists():
+        if Site.objects.all().exists() and self.split_sites:
 
             unit_site_types = {}
             for s in Site.objects.all():
