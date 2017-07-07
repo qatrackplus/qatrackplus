@@ -1,9 +1,10 @@
 
 from braces.views import LoginRequiredMixin
+from decimal import Decimal
 from django.core.urlresolvers import reverse, resolve
-from django.db.models import Q
+from django.db.models import F, Q, Func, Sum
 from django.forms.utils import timezone
-from django.http import JsonResponse, HttpResponseRedirect
+from django.http import JsonResponse, HttpResponseRedirect, HttpResponse
 from django.template import Context
 from django.template.loader import get_template
 from django.utils.translation import ugettext as _
@@ -18,6 +19,8 @@ from listable.views import (
 
 from . import models as p_models
 from . import forms as p_forms
+from qatrack.units import models as u_models
+from qatrack.service_log import models as s_models
 
 
 def parts_searcher(request):
@@ -63,6 +66,68 @@ def room_location_searcher(request):
         .get_or_create(room=p_models.Room.objects.get(pk=r_id), location__isnull=True)
 
     return JsonResponse({'storage': list(storage), 'storage_no_location': storage_no_location.id}, safe=False)
+
+
+def go_units_parts_cost(request):
+
+    daterange = request.GET.get('date_range')
+    units = request.GET.get('units').split(',')
+    service_areas = request.GET.get('service_areas').split(',')
+    service_types = request.GET.get('service_types').split(',')
+
+    date_from = timezone.datetime.strptime(daterange.split(' - ')[0], '%d %b %Y')
+    date_to = timezone.datetime.strptime(daterange.split(' - ')[1], '%d %b %Y')
+
+    qs_pu = p_models.PartUsed.objects.select_related(
+        'service_event',
+        'service_event__unit_service_area',
+        'service_event__unit_service_area__unit',
+        'service_event__unit_service_area__service_area',
+        'service_event__service_type',
+        'part'
+    ).filter(
+        service_event__datetime_service__gte=date_from,
+        service_event__datetime_service__lte=date_to,
+        service_event__unit_service_area__unit_id__in=units,
+        service_event__unit_service_area__service_area_id__in=service_areas,
+        service_event__service_type_id__in=service_types
+    )
+
+    total_parts_cost = qs_pu.aggregate(total_parts_cost=Sum('part__cost'))['total_parts_cost']
+
+    import csv
+    from django.utils import formats
+    response = HttpResponse()
+    # response = HttpResponse(content_type='text/csv')
+    # response['Content-Disposition'] = 'attachment; filename="qatrack_parts_units_cost.csv"'
+
+    writer = csv.writer(response)
+    headers = [
+        ['Parts Cost for Units:', '', date_from.strftime('%d %b %Y'), ' to ', date_to.strftime('%d %b %Y')],
+        ['Total Parts Cost: ', '', float(total_parts_cost) if total_parts_cost else 0],
+        ['Service Types:', ''] + [st.name for st in s_models.ServiceType.objects.filter(pk__in=service_types)],
+        [''],
+        ['', 'Service Areas'],
+        ['Units', ''] + [u.name for u in u_models.Unit.objects.filter(pk__in=units)] + ['Totals'],
+    ]
+
+    for sa in s_models.ServiceArea.objects.filter(pk__in=service_areas):
+        row = ['', sa.name]
+        for u in u_models.Unit.objects.filter(pk__in=units):
+            try:
+                usa = s_models.UnitServiceArea.objects.get(unit=u, service_area=sa)
+                row.append(qs_pu.filter(service_event__unit_service_area=usa).aggregate(parts_cost=Sum('part__cost'))['parts_cost'] or 0)
+            except s_models.UnitServiceArea.DoesNotExist:
+                row.append('---')
+        row.append(sum([r for r in row if type(r) in [int, Decimal]]))
+        headers.append(row)
+
+    headers.append(['', 'Totals'] + [qs_pu.filter(service_event__unit_service_area__unit=u).aggregate(parts_cost=Sum('part__cost'))['parts_cost'] or 0 for u in u_models.Unit.objects.filter(pk__in=units)])
+
+    for h in headers:
+        writer.writerow(h)
+
+    return response
 
 
 class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, ModelFormMixin, ProcessFormView):
@@ -168,17 +233,59 @@ class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, Mo
         return HttpResponseRedirect(reverse('parts_list'))
 
 
-# class CreatePart(PartUpdateCreate):
-#
-#     def form_valid(self, form):
-#         self.instance = form.save(commit=False)
-#         form.instance.user_created_by = self.request.user
-#         form.instance.datetime_created = timezone.now()
-#
-#         return super(CreatePart, self).form_valid(form)
+class PartsUnitsCost(TemplateView):
+    template_name = 'parts/parts_units_cost.html'
+    queryset = u_models.Unit.objects.none()
 
-# class UpdateServiceEvent(ServiceEventUpdateCreate):
-# class DetailsServiceEvent(DetailView):
+    def get(self, request, *args, **kwargs):
+
+        filters = request.GET
+        self.queryset = self.get_queryset(filters, pk=kwargs.get('pk', None))
+        return super(PartsUnitsCost, self).get(request, *args, **kwargs)
+
+    def get_queryset(self, filters, pk=None):
+        """K, I guess this works :/ """
+        if pk is None:
+            qs = u_models.Unit.objects.prefetch_related('service_areas').all()
+            for filt in filters:
+                if filt in ['site', 'type', 'type__vendor', 'type__unit_class']:
+                    filt_multi = filters[filt].split(',')
+                    if NONEORNULL in filt_multi:
+                        qs = qs.filter(**{'%s__name__in' % filt: filt_multi}) | qs.filter(**{filt: None})
+                    else:
+                        qs = qs.filter(**{'%s__name__in' % filt: filt_multi})
+                # elif filt == 'klass':
+                #     filt_multi = filters[filt].split(',')
+                #     if NONEORNULL in filt_multi:
+                #         qs = qs.filter(class__name__in=filt_multi) | qs.filter(**{filt: None})
+                #     else:
+                #         qs = qs.filter(class__name__in=filt_multi)
+                elif filt in ['active', 'restricted']:
+                    qs = qs.filter(**{filt: filters[filt]})
+                else:
+                    qs = qs.filter(**{'%s__icontains' % filt: filters[filt]})
+        else:
+            qs = u_models.Unit.objects.filter(pk=pk)
+
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super(PartsUnitsCost, self).get_context_data(**kwargs)
+        context['names'] = [q.name for q in self.queryset]
+        context['units'] = self.queryset
+        context['service_areas'] = self.get_service_areas(self.queryset)
+        context['service_types'] = self.get_service_types()
+        return context
+
+    def get_service_areas(self, queryset):
+        sas = set()
+        for u in queryset:
+            sas.update(u.service_areas.all())
+        return sas
+
+    def get_service_types(self):
+        return s_models.ServiceType.objects.all()
+
 
 class PartsList(BaseListableView):
     model = p_models.Part
@@ -236,6 +343,39 @@ class PartsList(BaseListableView):
     def get_page_title(self, f=None):
         if not f:
             return 'All Parts'
+        to_return = 'Parts'
+        filters = f.split('_')
+        for filt in filters:
+            [key, val] = filt.split('-')
+            if key == 'qcqm':
+                if val == 'lt':
+                    to_return += ' - Low Inventory'
+
+        return to_return
+
+    def get(self, request, *args, **kwargs):
+        if self.kwarg_filters is None:
+            self.kwarg_filters = kwargs.pop('f', None)
+        return super(PartsList, self).get(request, *args, **kwargs)
+
+    def get_queryset(self):
+        qs = super(PartsList, self).get_queryset()
+
+        if self.kwarg_filters is None:
+            self.kwarg_filters = self.request.GET.get('f', None)
+
+        if self.kwarg_filters is not None:
+            filters = self.kwarg_filters.split('_')
+            query_kwargs = {}
+            for filt in filters:
+                [key, val] = filt.split('-')
+                if key == 'qcqm':
+                    if val == 'lt':
+                        qs = qs.filter(quantity_current__lt=F('quantity_min'))
+
+            qs = qs.filter(**query_kwargs)
+
+        return qs
 
     def format_col(self, field, obj):
         col = super(PartsList, self).format_col(field, obj)
@@ -323,3 +463,4 @@ class SuppliersList(BaseListableView):
         mext = reverse('parts_list')
         c = Context({'p': p, 'request': self.request, 'next': mext})
         return template.render(c)
+

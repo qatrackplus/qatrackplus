@@ -25,6 +25,7 @@
         <div class="row">
             <div class="col-md-3">
                 <h3 class="no-margin-top">Service Event {{ serviceevent.id }} Details</h3>
+                {% service_status_label serviceevent.service_status size="14" %}
             </div>
             <div class="col-md-8">
                 <div class="col-sm-4">
@@ -80,7 +81,7 @@
                                             <dt>Unit:</dt><dd><div>{{ serviceevent.unit_service_area.unit }}</div></dd>
                                             <dt>Service area:</dt><dd><div>{{ serviceevent.unit_service_area.service_area }}</div></dd>
                                             <dt>Service type:</dt><dd><div>{{ serviceevent.service_type }}</div></dd>
-                                            <dt>Status:</dt><dd><div>{{ serviceevent.service_status }}</div></dd>
+{#                                            <dt>Status:</dt><dd><div>{{ serviceevent.service_status }}</div></dd>#}
                                         </dl>
                                         <dl>
                                             <dt>Problem description:</dt>
@@ -93,9 +94,9 @@
                                 <div class="row">
                                     <div class="col-md-12">
                                         <dl class="dl-horizontal">
-                                            {% if serviceevent.problem_type %}
-                                                <dt>Problem type:</dt><dd><div>{{ serviceevent.problem_type }}</div></dd>
-                                            {% endif %}
+{#                                            {% if serviceevent.problem_type %}#}
+{#                                                <dt>Problem type:</dt><dd><div>{{ serviceevent.problem_type }}</div></dd>#}
+{#                                            {% endif %}#}
                                             {% if serviceevent.service_event_related.all|length > 0 %}
                                                 <dt>Related service events:</dt>
                                                 <dd><div>
@@ -158,8 +159,12 @@
                         <div class="row">
                             <div class="col-md-12">
                                 <dl class="dl-horizontal">
-                                    <dt>Service time:</dt><dd><div>{{ serviceevent.duration_service_time }}</div></dd>
-                                    <dt>Lost time:</dt><dd><div>{{ serviceevent.duration_lost_time }}</div></dd>
+                                    {% if serviceevent.duration_service_time %}
+                                        <dt>Service time (hh:mm):</dt><dd><div>{{ serviceevent.duration_service_time|hour_min }}</div></dd>
+                                    {% endif %}
+                                    {% if serviceevent.duration_lost_time %}
+                                        <dt>Lost time (hh:mm):</dt><dd><div>{{ serviceevent.duration_lost_time|hour_min }}</div></dd>
+                                    {% endif %}
                                 </dl>
                             </div>
                             <div class="col-md-12">
@@ -167,7 +172,7 @@
                                     <thead>
                                         <tr>
                                             <th>User or Third Party</th>
-                                            <th>Time</th>
+                                            <th>Time (hh:mm)</th>
                                         </tr>
                                     </thead>
 
@@ -176,7 +181,7 @@
                                         {% for h in hours %}
                                             <tr>
                                                 <td>{% if h.user_or_thirdparty.get_full_name %}{{ h.user_or_thirdparty.get_full_name }}{% else %} {{ h.user_or_thirdparty.username }}{% endif %}</td>
-                                                <td>{{ h.time }}</td>
+                                                <td>{{ h.time|hour_min }}</td>
                                             </tr>
                                         {% endfor %}
 
@@ -196,8 +201,11 @@
                 <div class="box box-primary">
                     <div class="box-header">
                         <h3 class="box-title">
-                            <i class="fa fa-pencil-square-o fa-fw" aria-hidden="true"></i>
-                            QA Followups
+                            <i class="fa fa-stack fa-fw">
+                                <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
+                                <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-extra-left info"></i>
+                            </i>
+                            Return To Service QA
                         </h3>
                     </div>
                     <div class="box-body">

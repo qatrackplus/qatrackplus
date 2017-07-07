@@ -146,10 +146,10 @@
                             <div class="col-md-4 left-border border-default">
                                 <div class="date input-prepend input-append row" id="work-started" data-date="{% now 'd-m-Y'%}" data-date-format="dd-mm-yyyy">
                                     {% spaceless %}
-                                        <label for="id_work_started" class="col-lg-6">
+                                        <label for="id_work_started" class="col-md-6">
                                             {{form.work_started.label}}:
                                         </label>
-                                        <div class="col-lg-6">
+                                        <div class="col-md-6">
                                             {{form.work_started}}
                                             <i class="fa fa-calendar fa-in-input"></i>
                                         </div>
@@ -158,20 +158,20 @@
 
                                 {% if perms.qa.can_override_date %}
                                     <div class="date input-prepend input-append row" id="work-time">
-                                        <label for="id_work_duration" class="col-lg-6">
+                                        <label for="id_work_duration" class="col-md-6">
                                             Work duration:
                                         </label>
-                                        <div class="col-lg-6">
+                                        <div class="col-md-6">
                                             <input id="id_work_duration" name="work_duration" class="input-medium">
                                             <i class="fa fa-clock-o fa-in-input"></i>
                                         </div>
                                     </div>
 
                                     <div class="date input-prepend input-append row" id="work-completed" data-date="{% now 'd-m-Y'%}" data-date-format="dd-mm-yyyy">
-                                        <label for="id_work_completed" class="col-lg-6">
+                                        <label for="id_work_completed" class="col-md-6">
                                             {{form.work_completed.label}}:
                                         </label>
-                                        <div class="col-lg-6">
+                                        <div class="col-md-6">
                                             {{form.work_completed}}
                                             <i class="fa fa-calendar fa-in-input"></i>
                                         </div>
@@ -182,10 +182,10 @@
                             <div class="col-md-4 left-border border-default">
                                 {% if perms.qa.can_review and perms.qa.can_review_own_tests %}
                                     <div class="input-prepend input-append row" id="status">
-                                        <label for="id_status" class="col-lg-6">
+                                        <label for="id_status" class="col-md-6">
                                             Set Status:
                                         </label>
-                                        <div class="col-lg-6">
+                                        <div class="col-md-6">
                                             {{form.status}}
                                         </div>
                                     </div>
@@ -194,10 +194,10 @@
                             </div>
                             <div class="col-md-4 left-border border-default">
                                 <div class="input-prepend input-append row" id="status">
-                                    <label for="id_status" class="col-lg-6">
+                                    <label for="id_status" class="col-md-6">
                                         Service Event:
                                     </label>
-                                    <div class="col-lg-6">
+                                    <div class="col-md-6">
                                         {{form.service_event}}
                                     </div>
                                 </div>

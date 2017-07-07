@@ -32,10 +32,10 @@ from braces.views import JSONResponseMixin, PermissionRequiredMixin
 from functools import reduce
 
 DEFAULT_CALCULATION_CONTEXT = {
-    "math": math,
-    "scipy": scipy,
-    "numpy": numpy,
-    "dicom": dicom,
+    'math': math,
+    'scipy': scipy,
+    'numpy': numpy,
+    'dicom': dicom,
 }
 
 
@@ -47,7 +47,7 @@ def process_procedure(procedure):
 
     """
 
-    return "\n".join(["from __future__ import division", procedure, "\n"]).replace('\r', '\n')
+    return '\n'.join(['from __future__ import division', procedure, '\n']).replace('\r', '\n')
 
 
 def process_file_upload_form(ti_form, test_list_instance):
@@ -58,12 +58,12 @@ def process_file_upload_form(ti_form, test_list_instance):
 
     upload_to_process = (
         ti_form.unit_test_info.test.is_upload()
-        and not ti_form.cleaned_data["skipped"]
-        and ti_form.cleaned_data["string_value"].strip()
+        and not ti_form.cleaned_data['skipped']
+        and ti_form.cleaned_data['string_value'].strip()
     )
 
     if upload_to_process:
-        fname = ti_form.cleaned_data["string_value"]
+        fname = ti_form.cleaned_data['string_value']
         src = os.path.join(settings.TMP_UPLOAD_ROOT, fname)
 
         if not os.path.exists(src):
@@ -71,7 +71,7 @@ def process_file_upload_form(ti_form, test_list_instance):
             # in progress list or editing an already complete list
             return
 
-        d = os.path.join(settings.UPLOAD_ROOT, "%s" % test_list_instance.pk)
+        d = os.path.join(settings.UPLOAD_ROOT, '%s' % test_list_instance.pk)
         if not os.path.exists(d):
             os.mkdir(d)
 
@@ -349,7 +349,7 @@ class CompositeCalculation(JSONResponseMixin, View):
 class ChooseUnit(TemplateView):
     """View for selecting a unit to perform QA on"""
 
-    template_name = "units/unittype_list.html"
+    template_name = 'units/unittype_list.html'
     active_only = True
     split_sites = True
 
@@ -369,9 +369,9 @@ class ChooseUnit(TemplateView):
         q = models.UnitTestCollection.objects.by_visibility(groups)
 
         if self.active_only:
-            q = q.filter(active=True)
+            q = q.filter(active=True, unit__active=True)
 
-        units_ordering = "unit__%s" % (settings.ORDER_UNITS_BY,)
+        units_ordering = 'unit__%s' % (settings.ORDER_UNITS_BY,)
 
         if Site.objects.all().exists() and self.split_sites:
 
@@ -381,13 +381,13 @@ class ChooseUnit(TemplateView):
             if q.filter(unit__site__isnull=True).exists():
                 unit_site_types['zzzNonezzz'] = collections.defaultdict(list)
 
-            q = q.values("unit", "unit__type__name", "unit__name", "unit__number", 'unit__id', 'unit__site__name').order_by(units_ordering).distinct()
+            q = q.values('unit', 'unit__type__name', 'unit__name', 'unit__number', 'unit__id', 'unit__site__name').order_by(units_ordering).distinct()
 
             for unit in q:
-                if unit["unit__site__name"]:
-                    unit_site_types[unit["unit__site__name"]][unit["unit__type__name"]].append(unit)
+                if unit['unit__site__name']:
+                    unit_site_types[unit['unit__site__name']][unit['unit__type__name']].append(unit)
                 else:
-                    unit_site_types['zzzNonezzz'][unit["unit__type__name"]].append(unit)
+                    unit_site_types['zzzNonezzz'][unit['unit__type__name']].append(unit)
 
             ordered = {}
             for s in unit_site_types:
@@ -403,7 +403,7 @@ class ChooseUnit(TemplateView):
             context['split_by'] = int(split_by)
 
         else:
-            q = q.values("unit", "unit__type__name", "unit__name", "unit__number", 'unit__id').order_by(units_ordering).distinct()
+            q = q.values('unit', 'unit__type__name', 'unit__name', 'unit__number', 'unit__id').order_by(units_ordering).distinct()
 
             unit_types = collections.defaultdict(list)
             for unit in q:
@@ -412,7 +412,7 @@ class ChooseUnit(TemplateView):
             ordered = sorted(list(unit_types.items()), key=lambda x: min([u[units_ordering] for u in x[1]]))
             context['split_sites'] = False
 
-        context["unit_types"] = ordered
+        context['unit_types'] = ordered
 
         return context
 

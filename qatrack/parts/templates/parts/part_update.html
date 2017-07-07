@@ -62,7 +62,7 @@
                                 <div class="col-md-6 form-horizontal">
 
                                     {% for field in form.fieldsets.required_fields %}
-                                        <div class="form-group {% if field.errors %}has-error{% endif %}" title="{{ field.help_text }}">
+                                        <div class="form-group{% if field.errors %} has-error{% endif %}" title="{{ field.help_text }}">
                                             {% if 'autosize' in field.field.widget.attrs.class %}
                                                 <div class="col-sm-12">
                                                     <label for="{{ field.id_for_label }}" class="">{{ field.label }}</label>

@@ -8,7 +8,6 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
             $service_areas = $('#id_service_area_field'),
             $related_se = $('#id_service_event_related_field'),
             $service_status = $('#id_service_status'),
-            $problem_type = $('#id_problem_type'),
             $service_type = $('#id_service_type'),
             $approval_required = $('#id_is_approval_required'),
             $approval_required_fake = $('#id_is_approval_required_fake'),
@@ -55,12 +54,12 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
         function generate_status_label(status) {
             if (status.id) {
                 var colour = status_colours_dict[status.id];
-                var $label = $('<span class="label" style="background-color: ' + colour + '">' + status.text + '</span>');
-                $label.css('background-color', colour);
-                $label.css('border-color', colour);
-                if (isTooBright(rgbaStringToArray(colour))) {
-                    $label.css('color', 'black').children().css('color', 'black');
-                }
+                var $label = $('<span class="label smooth-border" style="border-color: ' + colour + ';">' + status.text + '</span>');
+                // $label.css('background-color', colour);
+                // $label.css('border-color', colour);
+                // if (isTooBright(rgbaStringToArray(colour))) {
+                //     $label.css('color', 'black').children().css('color', 'black');
+                // }
                 return $label;
             }
             return status.text;
@@ -137,30 +136,6 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
             templateSelection: generate_related_selection,
             width: '100%'
         });
-
-        // Problem Type --------------------------------------------------------------------------------------------
-        // $problem_type.select2({
-        //     tags: true,
-        //     placeholder: 'Enter new or search for problem type',
-        //     allowClear: true,
-        //     createTag: function (params) {
-        //         return {
-        //             id: params.term,
-        //             text: params.term,
-        //             newOption: true
-        //         }
-        //     },
-        //     templateResult: function (data) {
-        //         var $result = $("<span></span>");
-        //         $result.text(data.text);
-        //         if (data.newOption) {
-        //             $result.append(" <em>(new)</em>");
-        //         }
-        //         return $result;
-        //     },
-        //     // minimumResultsForSearch: 10,
-        //     width: '100%'
-        // });
         
         // Unit -----------------------------------------------------------------------------------------------
         $units.change(function() {
@@ -198,10 +173,11 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
                         $related_se.find('option').remove();
                         var utcs = response.utcs;
                         if (utcs.length > 0) {
-                            for (var utc in utcs) {
-                                $utcs.append('<option value=' + utcs[utc].id + '>' + utcs[utc].name + '</option>');
-                                $utc_initiated_by.append('<option value=' + utcs[utc].id + '>' + utcs[utc].name + '</option>');
-                            }
+
+                            $.each(response.utcs, function(i, v) {
+                                $utcs.append('<option value=' + v.id + '>' + v.name + '</option>');
+                                $utc_initiated_by.append('<option value=' + v.id + '>(' + v.frequency + ') ' + v.name + '</option>');
+                            });
                         }
                         else {
                             $utcs.append('<option value>No test lists found for unit</option>');
@@ -275,13 +251,13 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
                 var label_class = 'label',
                     icon = '';
                 if (!data['review'][status]['valid']) {
-                    label_class += ' label-important';
+                    label_class += ' action';
                     icon = '<i class="icon-minus-sign"></i>';
                 } else if (data['review'][status]['reqs_approval']) {
-                    label_class += ' label-warning';
+                    label_class += ' tolerance';
                     icon = '<i class="icon-question-sign"></i>';
                 } else {
-                    label_class += ' label-success';
+                    label_class += ' ok';
                 }
                 $label_group.append('<span class="' + label_class + '">' + icon + ' ' + data["review"][status]["num"] + ' ' + status + '</span>');
             }
@@ -482,11 +458,9 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
                 $tli_initiated_by.val('');
             });
             if ($(this).val() != '') {
-                console.log($(this).attr('data-link') + $(this).val() + '/utc_initiated');
-                var w = window.open($(this).attr('data-link') + '/' + $(this).val() + '/utc_initiated', '_blank', 'scrollbars=no,menubar=no,height=900,width=1200,resizable=yes,toolbar=yes,status=no');
+                var w = window.open($(this).attr('data-link') + '/' + $(this).val() + '/utc_initiated', '_blank', 'scrollbars=no,menubar=no,height=900,width=1200,resizable=yes,toolbar=no,location=no,status=no');
                 w.focus();
                 w.onbeforeunload = function() {
-                    // $utc_initiated_by.val('').change();
                     setSearchResult('utc_initiated', $tli_initiated_by.val());
                     return null;
                 }

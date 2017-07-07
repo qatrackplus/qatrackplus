@@ -27,15 +27,22 @@
 
 .fa-stack-custom-sub {
     position: absolute;
-    width: 50%;
-    height: 50%;
+    /*width: 50%;*/
+    /*height: 50%;*/
     right: 0;
     top: -5px;
+    font-size: 80%;
 }
 .fa-stack-custom-sub.lower-left {
     right: auto;
     top: auto;
     left: 0;
+    bottom: 0;
+}
+.fa-stack-custom-sub.lower-extra-left {
+    right: auto;
+    top: auto;
+    left: -5px;
     bottom: 0;
 }
 .fa-stack-custom-sub.lower-right {
@@ -70,4 +77,7 @@ ul.timeline > li > i.fa-stack > .fa-stack-custom-main {
 ul.timeline > li > i.fa-stack > .fa-stack-custom-sub.upper-left {
     left: 3px;
     top: 5px;
+}
+.down-2 {
+    top: 1.5px;
 }

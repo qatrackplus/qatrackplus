@@ -6,89 +6,90 @@
 
 {% block extra_css %}
     <link href="{{ STATIC_URL }}service_log/css/sl.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}qatrack_core/css/sidebar.css?v={{VERSION}}" rel="stylesheet">
+{#    <link href="{{ STATIC_URL }}qatrack_core/css/sidebar.css?v={{VERSION}}" rel="stylesheet">#}
 {% endblock extra_css %}
 
 {% block require_javascript %}{% endblock require_javascript %}
 
-{% block body_class %}sidebar-mini sidebar-collapse{% endblock body_class %}
+{#{% block body_class %}sidebar-mini sidebar-collapse{% endblock body_class %}#}
+{% block body_class %}layout-top-nav{% endblock body_class %}
 
-{% block sidebar_toggle %}
-    <a href="#" class="sidebar-toggle" data-toggle="offcanvas" role="button">
+{#{% block sidebar_toggle %}#}
+{#    <a href="#" class="sidebar-toggle" data-toggle="offcanvas" role="button">#}
 {#        <span class="sr-only">Toggle navigation</span>#}
-        <i id="toggle-icon" class="fa fa-chevron-left fa-lg" aria-hidden="true"></i>
-    </a>
-{% endblock sidebar_toggle %}
+{#        <i id="toggle-icon" class="fa fa-chevron-left fa-lg" aria-hidden="true"></i>#}
+{#    </a>#}
+{#{% endblock sidebar_toggle %}#}
 
-{% block main_sidebar %}
-    <aside class="main-sidebar">
-        <section class="sidebar">
-            <ul class="sidebar-menu">
-
-                <li class="header"><span>Service Log Actions</span></li>
-
-                <li class="success"><a id="toggle-description" href="{% url "sl_new" %}">
-                    <i class="fa fa-stack fa-fw">
-                        <i class="fa fa-wrench fa-stack-custom-main fa-lg"></i>
-                        <i class="fa fa-plus fa-stack-custom-sub upper-left success"></i>
-                    </i>
+{#{% block main_sidebar %}#}
+{#    <aside class="main-sidebar">#}
+{#        <section class="sidebar">#}
+{#            <ul class="sidebar-menu">#}
+{##}
+{#                <li class="header"><span>Service Log Actions</span></li>#}
+{##}
+{#                <li class="success"><a id="toggle-description" href="{% url "sl_new" %}">#}
+{#                    <i class="fa fa-stack fa-fw">#}
+{#                        <i class="fa fa-wrench fa-stack-custom-main fa-lg"></i>#}
+{#                        <i class="fa fa-plus fa-stack-custom-sub upper-left success"></i>#}
+{#                    </i>#}
 {#                    <i class="fa fa-wrench fa-fw" aria-hidden="true"></i>#}
-                    <span>Open New Service Event</span>
-                </a></li>
-                <li class="info"><a id="toggle-description" href="{% url "sl_list_all" %}">
-                    <i class="fa fa-stack fa-fw">
-                        <i class="fa fa-list fa-stack-custom-sub upper-left info"></i>
-                        <i class="fa fa-wrench fa-stack-custom-main fa-lg"></i>
-                    </i>
-                    <span>View Service Events</span>
-                </a></li>
-                <li class="info"><a id="toggle-description" href="{% url "qaf_list_all" %}">
-                    <i class="fa fa-stack fa-fw">
-                        <i class="fa fa-list fa-stack-custom-sub upper-left info"></i>
-                        <i class="fa fa-pencil-square-o fa-stack-custom-main fa-lg"></i>
-                    </i>
-                    <span>View QA Followups</span>
-                </a></li>
-                {% if USE_PARTS %}
-                    <li class="header"><span>Parts Actions</span></li>
-                    <li class="success"><a id="toggle-description" href="{% url 'part_new' %}">
-                        <i class="fa fa-stack fa-fw">
-                            <i class="fa fa-plus fa-stack-custom-sub upper-left success"></i>
-                            <i class="fa fa-cog fa-stack-custom-main fa-lg"></i>
-                        </i>
-                        <span>Add Part</span>
-                    </a></li>
-                    <li class="info"><a id="toggle-description" href="{% url 'parts_list' %}">
-                        <i class="fa fa-stack fa-fw">
-                            <i class="fa fa-list fa-stack-custom-sub upper-left info"></i>
-                            <i class="fa fa-cog fa-stack-custom-main fa-lg"></i>
-                        </i>
-                        <span>View Parts</span>
-                    </a></li>
-                    <li class="info"><a id="toggle-description" href="{% url 'suppliers_list' %}">
-                        <i class="fa fa-stack fa-fw">
-                            <i class="fa fa-list fa-stack-custom-sub upper-left info"></i>
-                            <i class="fa fa-microchip fa-stack-custom-main fa-lg"></i>
-                        </i>
-                        <span>View Suppliers</span>
-                    </a></li>
-                {% endif %}
-                <li class="header"><span>Units Actions</span></li>
-                <li class="info"><a id="toggle-description" href="{% url 'unit_list' %}">
-                    <i class="fa fa-stack fa-fw">
-                        <i class="fa fa-list fa-stack-custom-sub upper-left info"></i>
-                        <i class="fa fa-cube fa-stack-custom-main fa-lg"></i>
-                    </i>
-                    <span>View Units</span>
-                </a></li>
-                <li class="info"><a id="toggle-description" href="{% url 'vendor_list' %}">
-                    <i class="fa fa-stack fa-fw">
-                        <i class="fa fa-list fa-stack-custom-sub upper-left info"></i>
-                        <i class="fa fa-truck fa-flip-horizontal fa-stack-custom-main fa-lg"></i>
-                    </i>
-                    <span>View Vendors</span>
-                </a></li>
-
+{#                    <span>Open New Service Event</span>#}
+{#                </a></li>#}
+{#                <li class="info"><a id="toggle-description" href="{% url "sl_list_all" %}">#}
+{#                    <i class="fa fa-stack fa-fw">#}
+{#                        <i class="fa fa-list fa-stack-custom-sub upper-left info"></i>#}
+{#                        <i class="fa fa-wrench fa-stack-custom-main fa-lg"></i>#}
+{#                    </i>#}
+{#                    <span>View Service Events</span>#}
+{#                </a></li>#}
+{#                <li class="info"><a id="toggle-description" href="{% url "qaf_list_all" %}">#}
+{#                    <i class="fa fa-stack fa-fw">#}
+{#                        <i class="fa fa-list fa-stack-custom-sub upper-left info"></i>#}
+{#                        <i class="fa fa-pencil-square-o fa-stack-custom-main fa-lg"></i>#}
+{#                    </i>#}
+{#                    <span>View QA Followups</span>#}
+{#                </a></li>#}
+{#                {% if USE_PARTS %}#}
+{#                    <li class="header"><span>Parts Actions</span></li>#}
+{#                    <li class="success"><a id="toggle-description" href="{% url 'part_new' %}">#}
+{#                        <i class="fa fa-stack fa-fw">#}
+{#                            <i class="fa fa-plus fa-stack-custom-sub upper-left success"></i>#}
+{#                            <i class="fa fa-cog fa-stack-custom-main fa-lg"></i>#}
+{#                        </i>#}
+{#                        <span>Add Part</span>#}
+{#                    </a></li>#}
+{#                    <li class="info"><a id="toggle-description" href="{% url 'parts_list' %}">#}
+{#                        <i class="fa fa-stack fa-fw">#}
+{#                            <i class="fa fa-list fa-stack-custom-sub upper-left info"></i>#}
+{#                            <i class="fa fa-cog fa-stack-custom-main fa-lg"></i>#}
+{#                        </i>#}
+{#                        <span>View Parts</span>#}
+{#                    </a></li>#}
+{#                    <li class="info"><a id="toggle-description" href="{% url 'suppliers_list' %}">#}
+{#                        <i class="fa fa-stack fa-fw">#}
+{#                            <i class="fa fa-list fa-stack-custom-sub upper-left info"></i>#}
+{#                            <i class="fa fa-microchip fa-stack-custom-main fa-lg"></i>#}
+{#                        </i>#}
+{#                        <span>View Suppliers</span>#}
+{#                    </a></li>#}
+{#                {% endif %}#}
+{#                <li class="header"><span>Units Actions</span></li>#}
+{#                <li class="info"><a id="toggle-description" href="{% url 'unit_list' %}">#}
+{#                    <i class="fa fa-stack fa-fw">#}
+{#                        <i class="fa fa-list fa-stack-custom-sub upper-left info"></i>#}
+{#                        <i class="fa fa-cube fa-stack-custom-main fa-lg"></i>#}
+{#                    </i>#}
+{#                    <span>View Units</span>#}
+{#                </a></li>#}
+{#                <li class="info"><a id="toggle-description" href="{% url 'vendor_list' %}">#}
+{#                    <i class="fa fa-stack fa-fw">#}
+{#                        <i class="fa fa-list fa-stack-custom-sub upper-left info"></i>#}
+{#                        <i class="fa fa-truck fa-flip-horizontal fa-stack-custom-main fa-lg"></i>#}
+{#                    </i>#}
+{#                    <span>View Vendors</span>#}
+{#                </a></li>#}
+{##}
 {#                <li class="danger"><a id="toggle-description" href="#!">#}
 {#                    <i class="fa fa-stack fa-fw">#}
 {#                        <i class="fa fa-cube fa-stack-custom-main fa-lg"></i>#}
@@ -96,11 +97,11 @@
 {#                    </i>#}
 {#                    <span>Restrict Unit</span>#}
 {#                </a></li>#}
-
-            </ul>
-        </section>
-    </aside>
-
-{% endblock main_sidebar %}
+{##}
+{#            </ul>#}
+{#        </section>#}
+{#    </aside>#}
+{##}
+{#{% endblock main_sidebar %}#}
 
 {% block body %}{% endblock body %}

@@ -7,6 +7,7 @@ from django.conf import settings
 from django.contrib.auth.context_processors import PermWrapper
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
+from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse, resolve
 from django.db.models import Q
@@ -97,8 +98,8 @@ def unit_sa_utc(request):
     service_areas = list(models.ServiceArea.objects.filter(units=unit).values())
 
     # testlist_ct = ContentType.objects.get(app_label="qa", model="testlist")
-    utcs_tl_qs = models.UnitTestCollection.objects.filter(unit=unit, active=True)
-    utcs_tl = sorted([{'id': utc.id, 'name': utc.name} for utc in utcs_tl_qs], key=lambda utc: utc['name'])
+    utcs_tl_qs = models.UnitTestCollection.objects.select_related('frequency').filter(unit=unit, active=True)
+    utcs_tl = sorted([{'id': utc.id, 'name': utc.name, 'frequency': utc.frequency.name if utc.frequency else 'Ad Hoc'} for utc in utcs_tl_qs], key=lambda utc: utc['name'])
     return JsonResponse({'service_areas': service_areas, 'utcs': utcs_tl})
 
 
@@ -209,12 +210,12 @@ class SLDashboard(TemplateView):
 
         for qaf in qaf_new:
             datetime = timezone.localtime(qaf.datetime_assigned)
-            msg = get_user_name(qaf.user_assigned_by) + ' assigned a new followup (' + qaf.unit_test_collection.tests_object.name + ') for service event ' + str(qaf.service_event.id)
+            msg = get_user_name(qaf.user_assigned_by) + ' assigned a new RTS QA (' + qaf.unit_test_collection.tests_object.name + ') for service event ' + str(qaf.service_event.id)
             populate_timeline_from_queryset(unsorted_dict, qaf, datetime, 'qaf_new', msg=msg)
 
         for qaf in qaf_complete:
             datetime = timezone.localtime(qaf.test_list_instance.created)
-            msg = get_user_name(qaf.test_list_instance.created_by) + ' performed a followup (' + qaf.unit_test_collection.tests_object.name + ') for service event ' + str(qaf.service_event.id)
+            msg = get_user_name(qaf.test_list_instance.created_by) + ' performed a RTS QA (' + qaf.unit_test_collection.tests_object.name + ') for service event ' + str(qaf.service_event.id)
             populate_timeline_from_queryset(unsorted_dict, qaf, datetime, 'qaf_complete', msg=msg)
 
         for ud in unsorted_dict:
@@ -298,13 +299,6 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseM
             raise Http404(_("No %(verbose_name)s found matching the query") %
                           {'verbose_name': queryset.model._meta.verbose_name})
         return obj
-
-    # def get_queryset(self):
-    #     print('***************')
-    #     print(super(ServiceEventUpdateCreate, self).get_queryset())
-    #     print(super(ServiceEventUpdateCreate, self).get_queryset().prefetch_related('qafollowup_set'))
-    #     return super(ServiceEventUpdateCreate, self).get_queryset()
-
 
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -419,6 +413,12 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseM
         except ValueError:
             sers = []
         service_event.service_event_related = sers
+
+        if 'service_status' in form.changed_data:
+            se_needing_approval_count = models.ServiceEvent.objects.filter(
+                service_status__in=models.ServiceEventStatus.objects.filter(is_approval_required=True),
+                is_approval_required=True).count()
+            cache.set('se_needing_approval_count', se_needing_approval_count)
 
         for g_link in form.g_link_dict:
             if g_link in form.changed_data:
@@ -766,7 +766,7 @@ class ServiceEventsBaseList(BaseListableView):
         self.templates = {
             'actions': get_template('service_log/table_context_se_actions.html'),
             'datetime_service': get_template('service_log/table_context_datetime.html'),
-            'service_status__name': get_template('service_log/table_context_service_status.html'),
+            'service_status__name': get_template('service_log/service_event_status_label.html'),
             'problem_description': get_template('service_log/table_context_problem_description.html'),
         }
 
@@ -842,7 +842,7 @@ class ServiceEventsBaseList(BaseListableView):
 
     def service_status__name(self, se):
         template = self.templates['service_status__name']
-        c = Context({'service_status': se.service_status, 'request': self.request})
+        c = Context({'colour': se.service_status.colour, 'name': se.service_status.name, 'request': self.request})
         return template.render(c)
 
     def problem_description(self, se):
@@ -923,7 +923,7 @@ class QAFollowupsBaseList(BaseListableView):
             'datetime_assigned': get_template("service_log/table_context_datetime.html"),
             'test_list_instance_pass_fail': get_template("qa/pass_fail_status.html"),
             'test_list_instance_review_status': get_template("qa/review_status.html"),
-            'service_event__service_status__name': get_template("service_log/table_context_service_status.html"),
+            'service_event__service_status__name': get_template("service_log/service_event_status_label.html"),
         }
 
     def get_icon(self):
@@ -931,8 +931,8 @@ class QAFollowupsBaseList(BaseListableView):
 
     def get_page_title(self, f=None):
         if not f:
-            return 'All QA Followups'
-        to_return = 'QA Followups'
+            return 'All RTS QA'
+        to_return = 'RTS QA'
         filters = f.split('_')
         for filt in filters:
             [key, val] = filt.split('-')
@@ -943,9 +943,9 @@ class QAFollowupsBaseList(BaseListableView):
                     to_return += ' - Complete'
             elif key == 'tli.ar':
                 if bool(int(val)):
-                    to_return += ' - Test List Reviewed'
+                    to_return += ' - Reviewed'
                 else:
-                    to_return += ' - Test List Not Reviewed'
+                    to_return += ' - Not Reviewed'
             elif key == 'ses.irr':
                 to_return += ' - Service Event Status Not: '
                 names = []
@@ -994,8 +994,9 @@ class QAFollowupsBaseList(BaseListableView):
 
     def actions(self, qaf):
         template = self.templates['actions']
-        mext = reverse('qaf_list_all') + (('?f=' + self.kwarg_filters) if self.kwarg_filters else '')
-        c = Context({'qaf': qaf, 'request': self.request, 'next': mext, 'show_se_link': True})
+        next = reverse('qaf_list_all') + (('?f=' + self.kwarg_filters) if self.kwarg_filters else '')
+        can_review = self.request.user.has_perm('qa.can_review')
+        c = Context({'qaf': qaf, 'request': self.request, 'next': next, 'show_se_link': True, 'can_review': can_review})
         return template.render(c)
 
     def test_list_instance_pass_fail(self, qaf):
@@ -1026,7 +1027,7 @@ class QAFollowupsBaseList(BaseListableView):
 
     def service_event__service_status__name(self, qaf):
         template = self.templates['service_event__service_status__name']
-        c = Context({"service_status": qaf.service_event.service_status, "request": self.request})
+        c = Context({'colour': qaf.service_event.service_status.colour, 'name': qaf.service_event.service_status.name, 'request': self.request})
         return template.render(c)
 
 
@@ -1068,3 +1069,84 @@ class ChooseUnitForNewSE(ChooseUnit):
 class ChooseUnitForViewSE(ChooseUnit):
     template_name = 'units/unittype_choose_for_service_event.html'
     split_sites = True
+
+
+class ServiceEventDownTimesList(ServiceEventsBaseList):
+
+    template_name = 'service_log/service_event_down_time.html'
+    model = models.ServiceEvent
+
+    fields = (
+        'actions',
+        # 'pk',
+        'datetime_service',
+        'unit_service_area__unit__name',
+        'unit_service_area__service_area__name',
+        'service_type__name',
+        'problem_description',
+        'duration_service_time',
+        'duration_lost_time'
+    )
+
+    headers = {
+        # 'pk': _('ID'),
+        'datetime_service': _('Service Date'),
+        'unit_service_area__unit__name': _('Unit'),
+        'unit_service_area__service_area__name': _('Service Area'),
+        'service_type__name': _('Service Type'),
+        'duration_service_time': _('Service Time'),
+        'duration_lost_time': _('Lost Time')
+    }
+
+    widgets = {
+        'datetime_service': DATE_RANGE,
+        'unit_service_area__unit__name': SELECT_MULTI,
+        'unit_service_area__service_area__name': SELECT_MULTI,
+        'service_type__name': SELECT_MULTI
+    }
+
+    date_ranges = {
+        'datetime_service': [TODAY, YESTERDAY, LAST_WEEK, THIS_WEEK, LAST_MONTH, THIS_MONTH, THIS_YEAR]
+    }
+
+    search_fields = {
+        'actions': False,
+        'duration_service_time': False,
+        'duration_lost_time': False
+    }
+
+    order_fields = {
+        'actions': False,
+    }
+
+    select_related = (
+        'unit_service_area__unit',
+        'unit_service_area__service_area',
+        'service_type',
+        'service_status'
+    )
+
+    def duration_lost_time(self, se):
+        duration = se.duration_lost_time
+        if duration:
+            total_seconds = int(duration.total_seconds())
+            hours = total_seconds // 3600
+            minutes = (total_seconds % 3600) // 60
+
+            return '{}:{}'.format(hours, minutes)
+
+
+    def duration_service_time(self, se):
+        duration = se.duration_service_time
+        if duration:
+            total_seconds = int(duration.total_seconds())
+            hours = total_seconds // 3600
+            minutes = (total_seconds % 3600) // 60
+
+            return '{}:{:02}'.format(hours, minutes)
+
+
+class DownTimesSummary(TemplateView):
+
+    template_name = 'service_log/service_event_down_time_summary.html'
+

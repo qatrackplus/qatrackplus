@@ -275,6 +275,12 @@ th.review-ref {
 .pad-r-10 {
     padding-right: 10px;
 }
+.status-boxes {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    vertical-align: bottom;
+}
 
 /* Remove spinners on number inputs */
 input[type="number"]::-webkit-outer-spin-button,

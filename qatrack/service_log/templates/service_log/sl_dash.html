@@ -14,7 +14,7 @@
     });
 {% endblock require_javascript %}
 
-{% block body_class %}sidebar-mini sidebar-collapse loading{% endblock body_class %}
+{#{% block body_class %}sidebar-mini sidebar-collapse loading{% endblock body_class %}#}
 
 {% block body %}
 
@@ -32,13 +32,13 @@
                     <div class="box-body">
                         <div class="row">
                             <div class="col-md-12">
-                                <label class="pull-left">Incomplete Followups</label>
+                                <label class="pull-left">Incomplete RTS QA</label>
                                 <a href="{% url 'qaf_list_all' %}?f=tli.in-1" class="pull-right btn btn-flat btn-xs btn-primary left-btns">{{ counts.qa_not_complete }}</a>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-12">
-                                <label class="pull-left">Unreviewed followups</label>
+                                <label class="pull-left">Unreviewed RTS QA</label>
                                 <a href="{% url 'qaf_list_all' %}?f=tli.in-0_tli.ar-0" class="pull-right btn btn-flat btn-xs btn-primary left-btns">{{ counts.qa_not_reviewed }}</a>
                             </div>
                         </div>
@@ -72,7 +72,7 @@
                         </div>
                         <div class="row">
                             <div class="col-md-12">
-                                <label class="pull-left">Service Events Needing Approval</label>
+                                <label class="pull-left">Needing Approval</label>
                                 <a href="{% url 'sl_list_all' %}?f=ar-1_ss.ar-1" class="pull-right btn btn-flat btn-xs btn-primary left-btns">{{ counts.se_needing_approval }}</a>
                             </div>
                         </div>
@@ -124,7 +124,7 @@
                             </i>
                             <i id="se_edit_toggle" class="fa fa-stack bg-dark-gray on timeline-toggle">
                                 <i class="fa fa-wrench fa-stack-custom-main fa-lg"></i>
-                                <i class="fa fa-pencil fa-stack-custom-sub fa-flip-horizontal primary"></i>
+                                <i class="fa fa-pencil fa-stack-custom-sub fa-flip-horizontal upper-left primary"></i>
                             </i>
                             <i id="se_status_toggle" class="fa fa-stack bg-dark-gray on timeline-toggle">
                                 <i class="fa fa-wrench fa-stack-custom-main fa-lg"></i>
@@ -202,12 +202,13 @@
                                                             {% if obj.class == 'se_new' or obj.class == 'se_edit' or obj.class == 'se_status' %}
 {#                                                                {% include "service_log/table_context_se_actions.html" with se=obj.instance next='/servicelog/' %}#}
                                                             {% elif obj.class == 'qaf_new' or obj.class == 'qaf_complete' %}
-                                                                {% include "service_log/table_context_qaf_actions.html" with qaf=obj.instance show_performed=False next='/servicelog/' %}
+{#                                                                {% include "service_log/table_context_qaf_actions.html" with qaf=obj.instance show_performed=False next='/servicelog/' %}#}
                                                             {% endif %}
                                                         </div>
                                                         {{ obj.msg }}
                                                         {% if obj.class == 'se_status' %}
-                                                            <span class="label status_colour" data-bgcolour="{{ obj.instance.service_status.colour }}">{{ obj.instance.service_status }}</span>
+                                                            {% service_status_label obj.instance.service_status %}
+{#                                                            <span class="label status_colour" data-bgcolour="{{ obj.instance.service_status.colour }}">{{ obj.instance.service_status }}</span>#}
                                                         {% endif %}
                                                     </h3>
 

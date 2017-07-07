@@ -7,6 +7,7 @@
     <link href="{{ STATIC_URL }}qa/css/charts.css?v={{ VERSION }}" rel="stylesheet">
     <link href="{{ STATIC_URL }}daterangepicker/css/daterangepicker.css?v={{ VERSION }}" rel="stylesheet">
     <link href="{{ STATIC_URL }}qatrack_core/css/custom-daterangepicker.css?v={{ VERSION }}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}felter/css/felter.css?v={{ VERSION }}" rel="stylesheet">
 {% endblock %}
 
 {% block require_javascript %}
@@ -18,7 +19,8 @@
         var QACharts = {
             unit_frequencies:{{unit_frequencies|safe}},
             se_types: {{ service_types|safe }},
-            se_probs: {{ problem_types|safe }}
+{#            se_probs: {{ problem_types|safe }}#}
+            unit_testlist_active: {{ active_unit_test_list|safe }}
         };
     </script>
 {% endblock %}
@@ -38,61 +40,92 @@
             </div>
 
             <div class="box-body">
-                <div id="unit-container" class="control-container col-sm-2">
-                    <h5>1. Units</h5>
-                    <div class="checkbox-container test-filter">
-                        {% for unit in units %}
-                            <label class="checkbox" title="{{unit.name}}" >
-                                <input type="checkbox" id="unit-{{unit.pk}}" name="unit[]" value="{{unit.pk}}" title="{{unit.name}}" class="unit unit-type-{{unit.type.pk}}"></input>
-                                {{unit.name}}
-                            </label>
-                        {% endfor %}
-                    </div>
-                </div>
-                <div id="frequency-container" class="control-container col-sm-2">
-                    <h5>2. Frequencies</h5>
-                    <div class="checkbox-container test-filter">
-                        {% for frequency in frequencies %}
-                            <label class="checkbox" title="{{frequency.name}}" >
-                                <input type="checkbox" id="frequency-{{frequency.pk}}" name="frequency[]" value="{{frequency.pk}}" checked="checked" class="frequency"></input>
-                                {{frequency.name}}
-                            </label>
-                        {% endfor %}
-                        <label class="checkbox" title="Ad-hoc" >
-                            <input type="checkbox" id="frequency-ad-hoc" name="frequency[]" value="0" checked="checked" class="frequency"></input>
-                            <em>Ad-hoc</em>
-                        </label>
-                    </div>
-                </div>
-                <div id="test-list-container" class="control-container col-sm-3">
-                    <h5 style="">3. Test Lists </h5>
-                    <div class="options">
-                        <label style="" class="checkbox filter-option">
-                            <input id="include_inactive" type="checkbox"/>
-                            <em>Include Inactive Test Lists</em>
-                        </label>
-                    </div>
-                    <div id="test" class="checkbox-container test-filter">
-                        {% for test_list in test_lists %}
-                            <label class="checkbox" title="{{test_list.name}}" >
-                                <input type="checkbox" id="test-list-{{test_list.pk}}" name="test-list[]" value="{{test_list.pk}}" title="{{test_list.description}}"  class="test-list"></input>
-                                {{test_list.name}}
-                            </label>
-                        {% endfor %}
-                    </div>
-                </div>
-                <div id="test-container" class="control-container col-sm-5">
-                    <h5>4. Tests to Plot</h5>
 
-                    <div class="checkbox-container test-filter">
-                        {% for test in tests %}
-                            <label class="checkbox" title="{{test.description}}" >
-                                <input value="{{test.pk}}" type="checkbox" name="test[]" id="test-{{test.pk}}"  class="test category-{{test.category}} type-{{test.type}}"></input>
-                                {{test.name}}
-                            </label>
-                        {% endfor %}
-                    </div>
-                </div>
+                <select id="units" multiple class="form-control">
+                    {% for u in units %}
+                        <option data-active="{{ u.active }}" value="{{ u.pk }}" title="{{ u.name }}{% if not u.active %} (inactive){% endif %}">{{ u.name }}</option>
+                    {% endfor %}
+                </select>
+
+                <select id="frequencies" multiple class="form-control">
+                    {% for f in frequencies %}
+                        <option value="{{ f.pk }}" title="{{ f.name }}">{{ f.name }}</option>
+                    {% endfor %}
+                    <option value="0" title="Ad Hoc">Ad Hoc</option>
+                </select>
+
+                <select id="test-lists" multiple class="form-control">
+                    {% for tl in test_lists %}
+                        <option value="{{ tl.pk }}">{{ tl.name }}</option>
+                    {% endfor %}
+                </select>
+
+                <select id="tests" multiple class="form-control">
+                    {% for t in tests %}
+                        <option value="{{ t.pk }}">{{ t.name }}</option>
+                    {% endfor %}
+                </select>
+
+
+
+
+
+
+{#                <div id="unit-container" class="control-container col-sm-2">#}
+{#                    <h5>1. Units</h5>#}
+{#                    <div class="checkbox-container test-filter">#}
+{#                        {% for unit in units %}#}
+{#                            <label class="checkbox" title="{{unit.name}}" >#}
+{#                                <input type="checkbox" id="unit-{{unit.pk}}" name="unit[]" value="{{unit.pk}}" title="{{unit.name}}" class="unit unit-type-{{unit.type.pk}}"></input>#}
+{#                                {{unit.name}}#}
+{#                            </label>#}
+{#                        {% endfor %}#}
+{#                    </div>#}
+{#                </div>#}
+{#                <div id="frequency-container" class="control-container col-sm-2">#}
+{#                    <h5>2. Frequencies</h5>#}
+{#                    <div class="checkbox-container test-filter">#}
+{#                        {% for frequency in frequencies %}#}
+{#                            <label class="checkbox" title="{{frequency.name}}" >#}
+{#                                <input type="checkbox" id="frequency-{{frequency.pk}}" name="frequency[]" value="{{frequency.pk}}" checked="checked" class="frequency"></input>#}
+{#                                {{frequency.name}}#}
+{#                            </label>#}
+{#                        {% endfor %}#}
+{#                        <label class="checkbox" title="Ad-hoc" >#}
+{#                            <input type="checkbox" id="frequency-ad-hoc" name="frequency[]" value="0" checked="checked" class="frequency"></input>#}
+{#                            <em>Ad-hoc</em>#}
+{#                        </label>#}
+{#                    </div>#}
+{#                </div>#}
+{#                <div id="test-list-container" class="control-container col-sm-3">#}
+{#                    <h5 style="">3. Test Lists </h5>#}
+{#                    <div class="options">#}
+{#                        <label style="" class="checkbox filter-option">#}
+{#                            <input id="include_inactive" type="checkbox"/>#}
+{#                            <em>Include Inactive Test Lists</em>#}
+{#                        </label>#}
+{#                    </div>#}
+{#                    <div id="test" class="checkbox-container test-filter">#}
+{#                        {% for test_list in test_lists %}#}
+{#                            <label class="checkbox" title="{{test_list.name}}" >#}
+{#                                <input type="checkbox" id="test-list-{{test_list.pk}}" name="test-list[]" value="{{test_list.pk}}" title="{{test_list.description}}"  class="test-list"></input>#}
+{#                                {{test_list.name}}#}
+{#                            </label>#}
+{#                        {% endfor %}#}
+{#                    </div>#}
+{#                </div>#}
+{#                <div id="test-container" class="control-container col-sm-5">#}
+{#                    <h5>4. Tests to Plot</h5>#}
+{##}
+{#                    <div class="checkbox-container test-filter">#}
+{#                        {% for test in tests %}#}
+{#                            <label class="checkbox" title="{{test.description}}" >#}
+{#                                <input value="{{test.pk}}" type="checkbox" name="test[]" id="test-{{test.pk}}"  class="test category-{{test.category}} type-{{test.type}}"></input>#}
+{#                                {{test.name}}#}
+{#                            </label>#}
+{#                        {% endfor %}#}
+{#                    </div>#}
+{#                </div>#}
             </div>
 
             <div class="box-footer"></div>
@@ -314,11 +347,11 @@
                 <a class="tooltip-se-btn btn btn-flat btn-xs btn-default pull-right" href="{% url 'sl_details' %}__se-id__">View</a>
             </div>
         </div>
-        <div class="row">
-            <div class="col-md-12">
-                <div class="pull-left">__se-prob__</div>
-            </div>
-        </div>
+{#        <div class="row">#}
+{#            <div class="col-md-12">#}
+{#                <div class="pull-left">__se-prob__</div>#}
+{#            </div>#}
+{#        </div>#}
     </div>
 </div>
 

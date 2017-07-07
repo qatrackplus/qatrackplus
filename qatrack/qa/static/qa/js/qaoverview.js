@@ -1,4 +1,4 @@
-require(['jquery', 'moment', 'lodash'], function ($, moment, _) {
+require(['jquery', 'moment', 'lodash', 'felter'], function ($, moment, _) {
     function unit_container_id(option) {
         return $(option).val();
     }
@@ -119,6 +119,27 @@ require(['jquery', 'moment', 'lodash'], function ($, moment, _) {
         }
 
         add_unit_boxes();
+        unit_filter.felter({
+            mainDivClass: 'col-md-12',
+            selectAllClass: 'btn btn-flat btn-xs btn-default',
+            // choiceDivClass: 'row',
+            label: 'Visible Units',
+            initially_displayed: true,
+            selectAll: true,
+            selectNone: true,
+            height: 250,
+            slimscroll: true,
+            // filters: {
+            //     showInactiveUnits: {
+            //         selected: false,
+            //         run_filter_when_selected: false,   // No, run filter when not selected
+            //         label: 'Show Inactive Units',
+            //         filter: function(obj_data) {
+            //             return $(obj_data.$option).attr('data-active') === 'True';
+            //         }
+            //     }
+            // }
+        })
     }
 
     function set_counts(due_counts) {
@@ -137,6 +158,7 @@ require(['jquery', 'moment', 'lodash'], function ($, moment, _) {
             url: QAURLs.OVERVIEW_OBJECTS,
             contentType: "application/json",
             dataType: "json",
+            data: {user: window.location.href.indexOf('overview-user') > -1},
             success: function (response) {
                 set_counts(response.due_counts);
                 setup_units(response.unit_lists);

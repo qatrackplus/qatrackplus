@@ -8,11 +8,12 @@ from django.contrib.auth.models import User, Permission, Group
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Field, ObjectDoesNotExist, Q
 from django.forms.utils import flatatt
-from django.forms.widgets import DateTimeInput
+from django.forms.widgets import Select
 from django.utils import timezone
 from django.utils.dateparse import parse_duration
 from django.utils.encoding import force_text
 from django.utils.html import conditional_escape, format_html, html_safe
+from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext as _
 from form_utils.forms import BetterModelForm
 
@@ -30,10 +31,35 @@ def duration_string_hours_mins(duration):
     minutes %= 60
     hours %= 60
 
-    if minutes < 1 and hours == 0:
+    if seconds > 0 and minutes < 1 and hours == 0:
         return '00:01'
 
     return '{:02d}:{:02d}'.format(hours, minutes)
+
+
+class SelectWithOptionTitles(Select):
+
+    def __init__(self, attrs=None, choices=(), model=None):
+        super(SelectWithOptionTitles, self).__init__(attrs=attrs, choices=choices)
+        self.model = model
+
+    def render_option(self, selected_choices, option_value, option_label):
+        if option_value in [None, '']:
+            option_value = ''
+            title = '------'
+        else:
+            objekt = self.model.objects.get(pk=option_value)
+            title = objekt.description or ''
+        option_value = force_text(option_value)
+        if option_value in selected_choices:
+            selected_html = mark_safe(' selected="selected"')
+            if not self.allow_multiple_selected:
+                # Only allow for a single selection.
+                selected_choices.remove(option_value)
+        else:
+            selected_html = ''
+
+        return format_html('<option value="{}" title="{}" {}>{}</option>', option_value, title, selected_html, force_text(option_label))
 
 
 class HoursMinDurationField(forms.DurationField):
@@ -48,33 +74,21 @@ class HoursMinDurationField(forms.DurationField):
         return value
 
     def to_python(self, value):
+        print(value)
+        if value is not None:
+            if value == '__:__':
+                return None
+            value = value.replace('_', '0').replace(':', '')
         if value in self.empty_values:
             return None
         if isinstance(value, timezone.timedelta):
             return value
-        value += ':00'
-        value = parse_duration(force_text(value))
+        value = '{:04d}'.format(int(value))
+        value = parse_duration(force_text(':'.join([value[:2], value[2:], '00'])))
         if value is None:
             raise ValidationError(self.error_messages['invalid'], code='invalid')
+
         return value
-
-
-class ProblemTypeModelChoiceField(forms.ModelChoiceField):
-
-    def to_python(self, value):
-        try:
-            return super(ProblemTypeModelChoiceField, self).to_python(value)
-        except ValidationError as e:
-            if e.code == 'invalid_choice':
-                models.ProblemType.objects.create(name=value)
-                self.queryset = models.ProblemType.objects.all()
-        return super(ProblemTypeModelChoiceField, self).to_python(value)
-
-
-# class UTCModelChoiceField(forms.ModelChoiceField):
-#
-#     def label_from_instance(self, obj):
-#         return obj.test_objects_name()
 
 
 class UserModelChoiceField(forms.ModelChoiceField):
@@ -111,7 +125,7 @@ class HoursForm(forms.ModelForm):
 
         self.fields['user_or_thirdparty'].widget.attrs.update({'class': 'select2'})
         time_classes = self.fields['time'].widget.attrs.get('class', '')
-        time_classes += ' max-width-75'
+        time_classes += ' max-width-100'
         self.fields['time'].widget.attrs.update({'class': time_classes})
 
         if self.instance.user:
@@ -128,6 +142,15 @@ class HoursForm(forms.ModelForm):
             raise ValidationError('Not a User or Third Party object.')
 
         return u_or_tp
+
+    # def clean_time(self):
+    #
+    #     time = self.cleaned_data['time']
+    #     print('------------------------')
+    #     print(self.data['service_time'])
+    #     print(time)
+    #     # service_time = self.cle
+    #     return time
 
 
 HoursFormset = forms.inlineformset_factory(models.ServiceEvent, models.Hours, form=HoursForm, extra=2)
@@ -256,16 +279,13 @@ class ServiceEventForm(BetterModelForm):
         help_text=_('Select service area (must select unit first)')
     )
     duration_service_time = HoursMinDurationField(
-        label=_('Service time'), required=False,
+        label=_('Service time (hh:mm)'), required=False,
         help_text=models.ServiceEvent._meta.get_field('duration_service_time').help_text
     )
     duration_lost_time = HoursMinDurationField(
-        label=_('Lost time'), required=False,
+        label=_('Lost time (hh:mm)'), required=False,
         help_text=models.ServiceEvent._meta.get_field('duration_lost_time').help_text
     )
-    # problem_type = ProblemTypeModelChoiceField(
-    #     queryset=models.ProblemType.objects.all(), required=False, to_field_name='name'
-    # )
     service_event_related_field = ServiceEventRelatedField(
         required=False, queryset=models.ServiceEvent.objects.none(),
         help_text=models.ServiceEvent._meta.get_field('service_event_related').help_text
@@ -282,27 +302,33 @@ class ServiceEventForm(BetterModelForm):
         required=False, queryset=qa_models.UnitTestCollection.objects.none(), label='Initiated by',
         help_text=_('Test list instance that initiated this service event')
     )
+    service_type = forms.ModelChoiceField(
+        queryset=models.ServiceType.objects.all(), widget=SelectWithOptionTitles(model=models.ServiceType)
+    )
 
     _classes = ['form-control']
 
     class Meta:
 
         model = models.ServiceEvent
-
         fieldsets = [
             ('hidden_fields', {
                 'fields': ['test_list_instance_initiated_by', 'is_approval_required'],
             }),
+            ('service_status', {
+               'fields': [
+                   'service_status'
+               ],
+            }),
             ('required_fields', {
                 'fields': [
                     'datetime_service', 'unit_field', 'service_area_field', 'service_type', 'is_approval_required_fake',
-                    'service_status', 'problem_description'
+                    'problem_description'
                 ],
             }),
             ('optional_fields', {
                 'fields': [
-                    'problem_type', 'service_event_related_field', 'initiated_utc_field', 'work_description',
-                    'safety_precautions'
+                    'service_event_related_field', 'initiated_utc_field', 'work_description', 'safety_precautions'
                 ],
             }),
             ('time_fields', {
@@ -392,7 +418,9 @@ class ServiceEventForm(BetterModelForm):
                     self.fields['service_event_related_field'].widget.attrs.update({'disabled': True})
                     self.fields['initiated_utc_field'].widget.attrs.update({'disabled': True})
 
-            if not self.user.has_perm('service_log.can_approve_service_event'):
+            if not self.user.has_perm('service_log.change_serviceeventstatus'):
+                self.fields['service_status'].widget.attrs.update({'disabled': True})
+            elif not self.user.has_perm('service_log.can_approve_service_event'):
                 self.fields['service_status'].queryset = models.ServiceEventStatus.objects.filter(is_approval_required=True)
 
             # some data wasn't attempted to be submitted already
@@ -420,7 +448,12 @@ class ServiceEventForm(BetterModelForm):
 
             self.initial['is_approval_required_fake'] = self.instance.is_approval_required
 
-            if not self.user.has_perm('service_log.can_approve_service_event'):
+            if not self.user.has_perm('service_log.change_serviceeventstatus'):
+                # self.fields['service_status'].queryset = models.ServiceEventStatus.objects.filter(
+                #     pk=self.instance.service_status_id
+                # )
+                self.fields['service_status'].widget.attrs.update({'disabled': True})
+            elif not self.user.has_perm('service_log.can_approve_service_event'):
                 self.fields['service_status'].queryset = models.ServiceEventStatus.objects.filter(
                     Q(is_approval_required=True) | Q(pk=self.instance.service_status.id)
                 ).distinct()
@@ -429,6 +462,7 @@ class ServiceEventForm(BetterModelForm):
                 self.initial['initiated_utc_field'] = self.instance.test_list_instance_initiated_by.unit_test_collection
                 self.initial['test_list_instance_initiated_by'] = str(self.instance.test_list_instance_initiated_by.id)
 
+            # TODO add frequency to this field (like ajax call)
             self.fields['initiated_utc_field'].queryset = qa_models.UnitTestCollection.objects.filter(unit=unit, active=True).order_by('name')
 
         for f in ['safety_precautions', 'problem_description', 'work_description', 'qafollowup_notes']:
@@ -436,7 +470,7 @@ class ServiceEventForm(BetterModelForm):
 
         select2_fields = [
             'unit_field', 'service_area_field', 'service_type', 'service_event_related_field', 'service_status',
-            'problem_type', 'initiated_utc_field'
+            'initiated_utc_field'
         ]
         for f in select2_fields:
             self.fields[f].widget.attrs['class'] = 'select2'
@@ -464,6 +498,7 @@ class ServiceEventForm(BetterModelForm):
             self.fields[f].widget.attrs.update({'class': classes})
 
         self.fields['initiated_utc_field'].widget.attrs.update({'data-link': reverse('tli_select')})
+
 
     def save(self, *args, **kwargs):
         unit = self.cleaned_data.get('unit_field')

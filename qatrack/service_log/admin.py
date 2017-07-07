@@ -2,12 +2,17 @@
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin.widgets import FilteredSelectMultiple
+from django.db.models import ObjectDoesNotExist
 from django.forms import ModelMultipleChoiceField, ModelForm, DateTimeField
+from django.shortcuts import HttpResponseRedirect
 from django.utils.translation import ugettext as _
 
-from .models import ServiceEventStatus, ServiceType, ProblemType, UnitServiceArea, ServiceArea, ServiceEvent, ThirdParty, Vendor, GroupLinker
-from qatrack.units.models import Unit, Modality
+from .models import ServiceEventStatus, ServiceType, UnitServiceArea, ServiceArea, ServiceEvent, ThirdParty, Vendor, GroupLinker
+from qatrack.units.models import Unit, Modality, UnitAvailableTime
 from .forms import ServiceEventForm, HoursMinDurationField
+from qatrack.units.forms import UnitAvailableTimeForm
+
+from admin_views.admin import AdminViews
 
 
 class ServiceEventStatusFormAdmin(ModelForm):
@@ -49,8 +54,8 @@ class ServiceTypeAdmin(DeleteOnlyFromOwnFormAdmin):
     list_display = ['name', 'is_approval_required', 'is_active']
 
 
-class ProblemTypeAdmin(DeleteOnlyFromOwnFormAdmin):
-    list_display = ['name']
+# class ProblemTypeAdmin(DeleteOnlyFromOwnFormAdmin):
+#     list_display = ['name']
 
 
 class ServiceAreaAdmin(DeleteOnlyFromOwnFormAdmin):
@@ -78,7 +83,7 @@ class ServiceEventAdminForm(ModelForm):
 
         fields = [
             'datetime_service', 'unit_service_area', 'service_type', 'service_status',
-            'problem_description', 'problem_type', 'service_event_related', 'work_description',
+            'problem_description', 'service_event_related', 'work_description',
             'safety_precautions', 'duration_service_time', 'duration_lost_time'
         ]
 
@@ -185,16 +190,96 @@ class UnitFormAdmin(ModelForm):
 
         return unit
 
+    def form_valid(self, request, queryset, form):
+        print('forms valid---------')
+        return super(UnitFormAdmin, self).form_valid(request, queryset, form)
+
+
+# class UnitAvailableTimeForm(ModelForm):
+#
+#     class Meta:
+#         fields = [
+#             'date_changed',
+#             'hours_monday',
+#             'hours_tuesday',
+#             'hours_wednesday',
+#             'hours_thursday',
+#             'hours_friday',
+#             'hours_saturday',
+#             'hours_sunday',
+#         ]
+
 
 class UnitAdmin(admin.ModelAdmin):
     form = UnitFormAdmin
+
+    class Media:
+        js = (
+            settings.STATIC_URL + 'jquery/js/jquery.min.js',
+            settings.STATIC_URL + 'inputmask/js/jquery.inputmask.bundle.js',
+        )
+        css = {
+            'all': (
+                settings.STATIC_URL + 'units/css/admin.css',
+            ),
+        }
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+
+        extra_context = extra_context or {}
+
+        form_kwargs = {}
+        if object_id:
+            form_kwargs['instance'] = UnitAvailableTime.objects.filter(unit=object_id).latest()
+        if request.method == 'POST':
+            form_kwargs['data'] = request.POST
+
+        if 'available_time_form' not in extra_context:
+            extra_context['available_time_form'] = UnitAvailableTimeForm(**form_kwargs)
+            extra_context['available_time_form'].fields['units'].initial = [object_id]
+
+        if request.method == 'POST':
+
+            uatf = extra_context['available_time_form']
+            if not uatf.is_valid():
+                request.method = 'GET'
+                return self.change_view(request, object_id, form_url, extra_context)
+            else:
+                try:
+                    uat = UnitAvailableTime.objects.get(date_changed=uatf.cleaned_data['date_changed'], unit=object_id)
+
+                    uat.hours_monday = uatf.cleaned_data['hours_monday']
+                    uat.hours_tuesday = uatf.cleaned_data['hours_tuesday']
+                    uat.hours_wednesday = uatf.cleaned_data['hours_wednesday']
+                    uat.hours_thursday = uatf.cleaned_data['hours_thursday']
+                    uat.hours_friday = uatf.cleaned_data['hours_friday']
+                    uat.hours_saturday = uatf.cleaned_data['hours_saturday']
+                    uat.hours_sunday = uatf.cleaned_data['hours_sunday']
+                    uat.save()
+                except ObjectDoesNotExist:
+                    UnitAvailableTime.objects.create(
+                        date_changed=uatf.cleaned_data['date_changed'],
+                        unit=object_id,
+                        hours_monday=uatf.cleaned_data['hours_monday'],
+                        hours_tuesday=uatf.cleaned_data['hours_tuesday'],
+                        hours_wednesday=uatf.cleaned_data['hours_wednesday'],
+                        hours_thursday=uatf.cleaned_data['hours_thursday'],
+                        hours_friday=uatf.cleaned_data['hours_friday'],
+                        hours_saturday=uatf.cleaned_data['hours_saturday'],
+                        hours_sunday=uatf.cleaned_data['hours_sunday']
+                    )
+
+        else:
+            print('Not posting')
+
+        return super(UnitAdmin, self).change_view(request, object_id, form_url='', extra_context=extra_context)
 
 
 admin.site.register(Unit, UnitAdmin)
 
 admin.site.register(ServiceEvent, ServiceEventAdmin)
 admin.site.register(ServiceArea, ServiceAreaAdmin)
-admin.site.register(ProblemType, ProblemTypeAdmin)
+# admin.site.register(ProblemType, ProblemTypeAdmin)
 admin.site.register(ServiceType, ServiceTypeAdmin)
 admin.site.register(ServiceEventStatus, ServiceEventStatusAdmin)
 

@@ -1,0 +1,161 @@
+{% extends "site_base.html" %}
+
+{% load widget_tweaks %}
+{% load qa_tags %}
+{% load comments %}
+
+{% block head_title %}Issue{% endblock %}
+
+{% block extra_css %}
+    {{ block.super }}
+    <link href="{{ STATIC_URL }}daterangepicker/css/daterangepicker.css?v={{ VERSION }}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}qatrack_core/css/custom-daterangepicker.css?v={{ VERSION }}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}select2/css/select2.min.css?v={{ VERSION }}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}qatrack_core/css/tables.css?v={{ VERSION }}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}qatrack_core/css/custom-select2.css?v={{ VERSION }}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}issue_tracker/css/issues.css?v={{ VERSION }}" rel="stylesheet">
+{% endblock extra_css %}
+
+{% block extra_js %}
+    <script type="text/javascript">
+         var colours = {{ colours|safe }};
+         var tags = {{ tags|safe }};
+    </script>
+{% endblock extra_js %}
+
+{% block require_javascript %}
+    require(['issues']);
+{% endblock require_javascript %}
+
+{% block body %}
+
+    <form action="" method="post" novalidate>
+        {% csrf_token %}
+        <div class="max-width-lg">
+            <div class="row">
+                <div class="col-md-3">
+                    {% if form.instance.id %}
+                        <h3 class="no-margin-top">Edit Issue {{ form.instance.id }}</h3>
+                    {% else %}
+                        <h3 class="no-margin-top">Create Issue</h3>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="box box-primary">
+                        <div class="box-header">
+
+                        </div>
+                        <div class="box-body">
+                            <div class="row" style="display: none;">
+
+                                {% for field in form.hidden_fields %}
+                                    {{ field }}
+                                    {% if field.errors %}
+                                        {{ field.errors }}
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12 form-horizontal">
+
+                                    {% for field in form.fieldsets.required_fields %}
+                                        <div class="form-group {% if field.errors %}has-error{% endif %}" title="{{ field.help_text }}">
+                                            {% if 'autosize' in field.field.widget.attrs.class %}
+                                                <div class="col-sm-12">
+                                                    <label for="{{ field.id_for_label }}" class="">{{ field.label }}</label>
+                                                    {{ field }}
+                                                    {% for e in field.errors %}
+                                                        <div class="col-sm-12 help-block text-center">{{ e }}</div>
+                                                    {% endfor %}
+                                                    {% if field.help_text %}
+                                                        {% if field.id_for_label == 'id_error_screen' %}
+                                                            <div class="col-sm-12 help-block text-center">
+                                                                <a class="pic_click cursor-pointer">{{ field.help_text }}</a>
+                                                                <div class="pic_display" style="display: none;">
+                                                                    <img class="error-pic" src="{{ STATIC_URL }}issue_tracker/img/error-example.png?v={{ VERSION }}">
+                                                                </div>
+                                                            </div>
+                                                        {% else %}
+                                                            <div class="col-sm-12 help-block text-center">{{ field.help_text }}</div>
+                                                        {% endif %}
+                                                    {% endif %}
+                                                </div>
+                                            {% else %}
+                                                <label for="{{ field.id_for_label }}" class="col-sm-4">{{ field.label }}</label>
+                                                <div class="col-sm-8">
+                                                    {{ field }}
+                                                </div>
+                                                {% for e in field.errors %}
+                                                    <div class="col-sm-12 help-block text-center">{{ e }}</div>
+                                                {% endfor %}
+                                                {% if field.help_text %}
+                                                    <div class="col-sm-12 help-block text-center">{{ field.help_text }}</div>
+                                                {% endif %}
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12 form-horizontal">
+
+                                    {% for field in form.fieldsets.optional_fields %}
+                                        <div class="form-group {% if field.errors %}has-error{% endif %}" title="{{ field.help_text }}">
+                                            {% if 'autosize' in field.field.widget.attrs.class %}
+                                                <div class="col-sm-12">
+                                                    <label for="{{ field.id_for_label }}" class="">{{ field.label }}</label>
+                                                    {{ field }}
+                                                    {% for e in field.errors %}
+                                                        <div class="col-sm-12 help-block text-center">{{ e }}</div>
+                                                    {% endfor %}
+                                                </div>
+                                            {% else %}
+                                                <label for="{{ field.id_for_label }}" class="col-sm-4">{{ field.label }}</label>
+                                                <div class="col-sm-8">
+                                                    {{ field }}
+                                                </div>
+                                                {% for e in field.errors %}
+                                                    <div class="col-sm-12 help-block text-center">{{ e }}</div>
+                                                {% endfor %}
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+{#                            <div class="row">#}
+{#                                <div class="col-md-12">#}
+{#                                    <h4>Comments</h4>#}
+{#                                    {% render_comment_form for form.instance %}#}
+{#                                    {% get_comment_form for event as form %}#}
+{#                                    <table>#}
+{#                                      <form action="{% comment_form_target %}" method="post">#}
+{#                                        {% csrf_token %}#}
+{#                                        {{ form }}#}
+{#                                        <tr>#}
+{#                                          <td colspan="2">#}
+{#                                            <input type="submit" name="submit" value="Post">#}
+{#                                            <input type="submit" name="preview" value="Preview">#}
+{#                                          </td>#}
+{#                                        </tr>#}
+{#                                      </form>#}
+{#                                    </table>#}
+{#                                </div>#}
+{#                            </div>#}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12">
+                    <input class="btn btn-flat btn-primary" type="submit" value="Add Issue" />
+                </div>
+            </div>
+
+        </div>
+
+    </form>
+{% endblock body %}

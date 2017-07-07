@@ -91,4 +91,39 @@ class Migration(migrations.Migration):
             name='unit_class',
             field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, blank=True, to='units.UnitClass', null=True),
         ),
+        migrations.CreateModel(
+            name='UnitAvailableTime',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('date_changed', models.DateField(help_text='Date the units available time changed or will change')),
+                ('hours_monday', models.DurationField(help_text='Duration of available time on mondays')),
+                ('hours_tuesday', models.DurationField(help_text='Duration of available time on tuesdays')),
+                ('hours_wednesday', models.DurationField(help_text='Duration of available time on wednesdays')),
+                ('hours_thursday', models.DurationField(help_text='Duration of available time on thursdays')),
+                ('hours_friday', models.DurationField(help_text='Duration of available time on fridays')),
+                ('hours_saturday', models.DurationField(help_text='Duration of available time on saturdays')),
+                ('hours_sunday', models.DurationField(help_text='Duration of available time on sundays')),
+                ('unit', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='units.Unit')),
+            ],
+            options={'default_permissions': ('can_change_available_time', 'Can change unit available time'), 'get_latest_by': 'date_changed', 'ordering': ['-date_changed']},
+        ),
+        migrations.CreateModel(
+            name='UnitAvailableTimeEdit',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('name', models.CharField(help_text='A quick name or reason for the change', max_length=64)),
+                ('date', models.DateField(help_text='Date of available time change')),
+                ('hours', models.DurationField(help_text='New duration of availability')),
+                ('unit', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='units.Unit')),
+            ],
+            options={'get_latest_by': 'date', 'ordering': ['-date']},
+        ),
+        migrations.AlterUniqueTogether(
+            name='unitavailabletime',
+            unique_together=set([('unit', 'date_changed')]),
+        ),
+        migrations.AlterUniqueTogether(
+            name='unitavailabletimeedit',
+            unique_together=set([('unit', 'date')]),
+        ),
     ]

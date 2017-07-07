@@ -51,6 +51,9 @@ class ServiceType(models.Model):
     name = models.CharField(max_length=32, unique=True, help_text=_('Enter a short name for this service type'))
     is_approval_required = models.BooleanField(default=False, help_text=_('Does this service type require approval'))
     is_active = models.BooleanField(default=True, help_text=_('Set to false if service type is no longer used'))
+    description = models.TextField(
+        max_length=64, help_text=_('Give a brief description of this service type'), null=True, blank=True
+    )
 
     def __str__(self):
         return self.name
@@ -94,7 +97,11 @@ class ServiceEventStatus(models.Model):
 
     @staticmethod
     def get_default():
-        return ServiceEventStatus.objects.get(is_default=True)
+        try:
+            default = ServiceEventStatus.objects.get(is_default=True)
+        except ServiceEventStatus.DoesNotExist:
+            return None
+        return default
 
     @staticmethod
     def get_colour_dict():
@@ -102,16 +109,16 @@ class ServiceEventStatus(models.Model):
         return {ses.id: ses.colour for ses in ServiceEventStatus.objects.all()}
 
 
-class ProblemType(models.Model):
-    """
-    Short description of common occurring problem themes.
-    """
-
-    name = models.CharField(max_length=64, unique=True, help_text=_('Enter a short name for this problem type'))
-    description = models.TextField(null=True, blank=True)
-
-    def __str__(self):
-        return self.name
+# class ProblemType(models.Model):
+#     """
+#     Short description of common occurring problem themes.
+#     """
+#
+#     name = models.CharField(max_length=64, unique=True, help_text=_('Enter a short name for this problem type'))
+#     description = models.TextField(null=True, blank=True)
+#
+#     def __str__(self):
+#         return self.name
 
 
 class ServiceEvent(models.Model):
@@ -127,10 +134,10 @@ class ServiceEvent(models.Model):
     user_status_changed_by = models.ForeignKey(User, null=True, blank=True, related_name='+', on_delete=models.PROTECT)
     user_created_by = models.ForeignKey(User, related_name='+', on_delete=models.PROTECT)
     user_modified_by = models.ForeignKey(User, null=True, blank=True, related_name='+', on_delete=models.PROTECT)
-    problem_type = models.ForeignKey(
-        ProblemType, null=True, blank=True, on_delete=models.PROTECT,
-        help_text=_('Select/create a problem type that describes this service event')
-    )
+    # problem_type = models.ForeignKey(
+    #     ProblemType, null=True, blank=True, on_delete=models.PROTECT,
+    #     help_text=_('Select/create a problem type that describes this service event')
+    # )
     test_list_instance_initiated_by = models.ForeignKey(TestListInstance, null=True, blank=True, on_delete=models.PROTECT)
 
     datetime_status_changed = models.DateTimeField(null=True, blank=True)

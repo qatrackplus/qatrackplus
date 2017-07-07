@@ -96,7 +96,8 @@ def history_display(history, unit, test_list, test):
 @register.filter
 def as_pass_fail_status(test_list_instance, show_label=True):
     template = get_template("qa/pass_fail_status.html")
-    statuses_to_exclude = [models.NO_TOL]
+    # statuses_to_exclude = [models.NO_TOL]
+    statuses_to_exclude = []
     c = Context({
         "instance": test_list_instance,
         "exclude": statuses_to_exclude,
@@ -155,3 +156,17 @@ def as_data_attributes(unit_test_collection):
     }
 
     return " ".join(['data-%s=%s' % (k, v) for k, v in list(attrs.items()) if v])
+
+
+@register.filter
+def hour_min(duration):
+    total_seconds = int(duration.total_seconds())
+    hours = total_seconds // 3600
+    minutes = (total_seconds % 3600) // 60
+    return '{:0>2}:{:0>2}'.format(hours, minutes)
+
+
+@register.simple_tag
+def service_status_label(status, size=None):
+    template = get_template('service_log/service_event_status_label.html')
+    return template.render(Context({'colour': status.colour, 'name': status.name, 'size': '10.5' if size is None else size}))

@@ -4,6 +4,7 @@ import collections
 import json
 
 from django.contrib import messages
+from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.db.models import Q, ObjectDoesNotExist
 from django.http import HttpResponseRedirect, Http404
@@ -184,7 +185,8 @@ class ChooseUnitForReview(ChooseUnit):
     """Allow user to choose a :model:`units.Unit` to review :model:`qa.TestListInstance`s for"""
 
     active_only = True
-    template_name = "units/unittype_choose_for_review.html"
+    template_name = 'units/unittype_choose_for_review.html'
+    # template_name = 'units/unittype_list.html'
 
 
 class ChooseFrequencyForReview(ListView):
@@ -367,15 +369,23 @@ class Overview(PermissionRequiredMixin, TemplateView):
                 return True
         return False
 
+    def get_context_data(self, **kwargs):
+        context = super(Overview, self).get_context_data()
+        context['title'] = 'Qa Program Overview'
+        context['msg'] = 'Overview of current QA status on all units'
+        if '-user' in self.request.path:
+            context['title'] += ' For Your Groups'
+            context['msg'] = 'Overview of current QA status (visible to your groups) on all units'
+        return context
+
 
 class OverviewObjects(JSONResponseMixin, View):
 
-    def get_queryset(self):
+    def get_queryset(self, request):
 
         qs = models.UnitTestCollection.objects.filter(
             active=True,
             unit__active=True,
-            # visible_to__in=self.request.user.groups.all(),
         ).select_related(
             "last_instance",
             "frequency",
@@ -387,11 +397,14 @@ class OverviewObjects(JSONResponseMixin, View):
             "last_instance__modified_by",
         ).order_by("frequency__nominal_interval", "unit__number", "name", )
 
+        if request.GET.get('user') == 'true':
+            qs = qs.filter(visible_to__in=request.user.groups.all())
+
         return qs.distinct()
 
     def get(self, request):
 
-        qs = self.get_queryset()
+        qs = self.get_queryset(request)
 
         units = Unit.objects.order_by("number")
         frequencies = list(models.Frequency.objects.order_by("nominal_interval")) + [None]

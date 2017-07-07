@@ -1,0 +1,4 @@
+{% load qa_tags %}
+<div style="min-width: 85px;">
+    <a class="btn btn-primary btn-xs btn-flat" href="{% url 'issue_details' i.pk %}{% if next %}?next={{ next }}{% endif %}">View</a>
+</div>

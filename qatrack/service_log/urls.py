@@ -18,4 +18,6 @@ urlpatterns = [
     url(r'^err/$', views.ErrorView.as_view(), name='err'),
     url(r'^sl_unit_new/$', views.ChooseUnitForNewSE.as_view(), name="sl_unit_new"),
     url(r'^sl_unit_view_se/$', views.ChooseUnitForViewSE.as_view(), name="sl_unit_view_se"),
+    url(r'^se_down_time/$', views.ServiceEventDownTimesList.as_view(), name='se_down_time'),
+    url(r'^go_se_down_time/$', views.DownTimesSummary.as_view(), name='go_se_down_time'),
 ]

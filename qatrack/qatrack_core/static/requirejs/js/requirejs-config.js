@@ -1,11 +1,11 @@
 
 require.config({
-    urlArgs: 'v=' + siteConfig.VERSION,
-    // urlArgs: (function () {
-    //     if (siteConfig.DEBUG == 'True')
-    //         return 'v=' + Math.random();
-    //     return 'v=' + siteConfig.VERSION;
-    // }()),
+    // urlArgs: 'v=' + siteConfig.VERSION,
+    urlArgs: (function () {
+        if (siteConfig.DEBUG == 'True')
+            return 'v=' + Math.random();
+        return 'v=' + siteConfig.VERSION;
+    }()),
     baseUrl: siteConfig.STATIC_URL,
     paths: {
         // Third party:
@@ -21,6 +21,7 @@ require.config({
         'datatables.sort': siteConfig.STATIC_URL + 'listable/js/jquery.dataTables.sort',
         datepicker: siteConfig.STATIC_URL + 'datepicker/js/bootstrap-datepicker.min',
         daterangepicker: siteConfig.STATIC_URL + 'daterangepicker/js/daterangepicker',
+        felter: siteConfig.STATIC_URL + 'felter/js/felter',
         dropzone: siteConfig.STATIC_URL + 'dropzone/js/dropzone-amd-module',
         icheck: siteConfig.STATIC_URL + 'icheck/js/icheck.min',
         // inputmask: siteConfig.STATIC_URL + "inputmask/js/inputmask",
@@ -34,7 +35,7 @@ require.config({
         lodash: siteConfig.STATIC_URL + 'lodash/js/lodash',
         moment: siteConfig.STATIC_URL + 'moment/js/moment.min',
         multiselect: siteConfig.STATIC_URL + 'multiselect/js/bootstrap.multiselect',
-        select2: siteConfig.STATIC_URL + 'select2/js/select2.min',
+        select2: siteConfig.STATIC_URL + 'select2/js/select2',
         slimscroll: siteConfig.STATIC_URL + 'slimscroll/js/jquery.slimscroll.min',
 
         // Site wide:
@@ -49,15 +50,23 @@ require.config({
         qaoverview: siteConfig.STATIC_URL + 'qa/js/qaoverview',
 
         // unit module:
+        unit_avail: siteConfig.STATIC_URL + 'units/js/unit_available_time',
+        unit_list: siteConfig.STATIC_URL + 'units/js/unit_list',
 
         // service log module
         sl_dash: siteConfig.STATIC_URL + 'service_log/js/sl_dash',
         sl_se: siteConfig.STATIC_URL + 'service_log/js/sl_serviceevent',
         sl_se_details:siteConfig.STATIC_URL + 'service_log/js/sl_serviceevent_details',
         sl_utils: siteConfig.STATIC_URL + 'service_log/js/sl_utils',
-        
+        service_event_down_time_list: siteConfig.STATIC_URL + 'service_log/js/service_event_down_time_list',
+        down_time_summary: siteConfig.STATIC_URL + 'service_log/js/down_time_summary',
+
         //parts module:
-        p_part: siteConfig.STATIC_URL + 'parts/js/p_part'
+        p_part: siteConfig.STATIC_URL + 'parts/js/p_part',
+        parts_reporting: siteConfig.STATIC_URL + 'parts/js/parts_reporting',
+
+        //issue module:
+        issues: siteConfig.STATIC_URL + 'issue_tracker/js/issues'
     },
     shim: {
         // Third party:

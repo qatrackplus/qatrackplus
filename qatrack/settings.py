@@ -228,6 +228,7 @@ INSTALLED_APPS = [
 
 CACHE_UNREVIEWED_COUNT = 'unreviewed-count'
 CACHE_QA_FREQUENCIES = 'qa-frequencies'
+CACHE_RTS_QA_COUNT = 'unreviewed-rts-qa'
 MAX_CACHE_TIMEOUT = 24 * 60 * 60  # 24hours
 
 CACHE_LOCATION = os.path.join(PROJECT_ROOT, "cache", "cache_data")

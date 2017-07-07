@@ -4,7 +4,8 @@ import json
 import textwrap
 
 from django.conf import settings
-from django.db.models import Count
+from django.contrib.contenttypes.models import ContentType
+from django.db.models import Count, Q, F, Case, When, IntegerField
 from django.http import HttpResponse
 from django.template import Context
 from django.template.loader import get_template
@@ -41,12 +42,12 @@ def get_test_lists_for_unit_frequencies(request):
 
     if not frequencies:
         frequencies = list(models.Frequency.objects.values_list("pk", flat=True)) + [None]
+    #
+    # include_inactive = request.GET.get("inactive") == "true"
 
-    include_inactive = request.GET.get("inactive") == "true"
+    # active = None if include_inactive else True
 
-    active = None if include_inactive else True
-
-    test_lists = models.get_utc_tl_ids(active=active, units=units, frequencies=frequencies)
+    test_lists = models.get_utc_tl_ids(units=units, frequencies=frequencies)
 
     json_context = json.dumps({"test_lists": test_lists})
 
@@ -90,21 +91,49 @@ class ChartView(PermissionRequiredMixin, TemplateView):
         now = timezone.now().astimezone(timezone.get_current_timezone()).date()
 
         c = {
-            "from_date": now - timezone.timedelta(days=365),
-            "to_date": now + timezone.timedelta(days=1),
-            "frequencies": models.Frequency.objects.all(),
-            "tests": self.tests,
-            "test_lists": self.test_lists,
-            "categories": models.Category.objects.all(),
-            "statuses": models.TestInstanceStatus.objects.all(),
-            "units": Unit.objects.values("pk", "name"),
-            "unit_frequencies": json.dumps(self.unit_frequencies, cls=SetEncoder),
+            'from_date': now - timezone.timedelta(days=365),
+            'to_date': now + timezone.timedelta(days=1),
+            'frequencies': models.Frequency.objects.all(),
+            'tests': self.tests,
+            'test_lists': self.test_lists,
+            'categories': models.Category.objects.all(),
+            'statuses': models.TestInstanceStatus.objects.all(),
+            'units': Unit.objects.values('pk', 'name', 'active'),
+            'unit_frequencies': json.dumps(self.unit_frequencies, cls=SetEncoder),
             # 'service_types': sl_models.ServiceType.objects.all(),
             'service_types': {st.id: st.name for st in sl_models.ServiceType.objects.all()},
-            'problem_types': {pt.id: pt.name for pt in sl_models.ProblemType.objects.all()}
+            'active_unit_test_list': self.get_active_test_lists()
         }
         context.update(c)
         return context
+
+    def get_active_test_lists(self):
+
+        utc_tl_active = models.UnitTestCollection.objects.filter(
+            active=True,
+            content_type=ContentType.objects.get_for_model(models.TestList)
+        )
+
+        to_return = {}
+        for utc in utc_tl_active:
+            if utc.unit_id not in to_return:
+                to_return[utc.unit_id] = [utc.object_id]
+            else:
+                to_return[utc.unit_id].append(utc.object_id)
+
+        utc_tlc_active = models.UnitTestCollection.objects.filter(
+            active=True,
+            content_type=ContentType.objects.get_for_model(models.TestListCycle)
+        )
+
+        for utc in utc_tlc_active:
+            for tlcm in models.TestListCycleMembership.objects.filter(cycle_id=utc.object_id):
+                if utc.unit_id not in to_return:
+                    to_return[utc.unit_id] = [tlcm.test_list_id]
+                else:
+                    to_return[utc.unit_id].append(tlcm.test_list_id)
+
+        return to_return
 
     def set_unit_frequencies(self):
 
@@ -123,14 +152,15 @@ class ChartView(PermissionRequiredMixin, TemplateView):
         """self.test_lists is set to all test lists that have been completed
         one or more times"""
 
-        self.test_lists = models.TestList.objects.annotate(
-            instance_count=Count("testlistinstance")
-        ).filter(
-            instance_count__gt=0
-        ).order_by(
+        self.test_lists = models.TestList.objects.order_by(
             "name"
         ).values(
             "pk", "description", "name",
+        ).annotate(
+            instance_count=Count("testlistinstance"),
+        ).filter(
+            instance_count__gt=0,
+            # testlistmembership__test__chart_visibility=True
         )
 
     def set_tests(self):
@@ -389,7 +419,6 @@ class BaseChartView(View):
                     'followups': [{'id': qaf.id, 'test_list_instance': qaf.test_list_instance_id, 'test_list': qaf.test_list_instance.test_list_id if qaf.test_list_instance else ''} for qaf in qa_followups],
                     'work_description': se.work_description,
                     'unit': se.unit_service_area.unit_id,
-                    'prob_type': se.problem_type_id
                 })
 
         # self.plot_data['test_list_names'] = test_list_names

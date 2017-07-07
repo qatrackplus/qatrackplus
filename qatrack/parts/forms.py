@@ -94,9 +94,6 @@ class PartUsedForm(forms.ModelForm):
         for f in self.fields:
             self.fields[f].widget.attrs['class'] = 'form-control'
 
-        # for f in ['from_storage', 'part']:
-        #     self.fields[f].widget.attrs['class'] += ' select2'
-
         self.fields['quantity'].widget.attrs['class'] += ' parts-used-quantity max-width-50'
         self.fields['part'].widget.attrs['class'] += ' parts-used-part'
         self.fields['from_storage'].widget.attrs['class'] += ' parts-used-from_storage'
@@ -139,11 +136,11 @@ class PartForm(BetterModelForm):
     def __init__(self, *args, **kwargs):
         super(PartForm, self).__init__(*args, **kwargs)
 
-        for f in ['part_number', 'cost', 'quantity_min', 'description', 'alt_part_number', 'part_categories', 'notes']:
+        for f in ['part_number', 'cost', 'quantity_min', 'alt_part_number', 'part_categories']:
             self.fields[f].widget.attrs['class'] = 'form-control'
 
         for f in ['description', 'notes']:
-            self.fields[f].widget.attrs['class'] += ' autosize'
+            self.fields[f].widget.attrs['class'] = 'form-control autosize'
             self.fields[f].widget.attrs['rows'] = 3
             self.fields[f].widget.attrs['cols'] = 4
 
@@ -200,7 +197,6 @@ class StorageField(forms.ChoiceField):
 
 class PartStorageCollectionForm(forms.ModelForm):
 
-    # TODO add fields here
     room = forms.ModelChoiceField(
         required=False, help_text=p_models.Storage._meta.get_field('room').help_text,
         queryset=p_models.Room.objects.all()
@@ -245,6 +241,3 @@ class PartStorageCollectionForm(forms.ModelForm):
 PartStorageCollectionFormset = forms.inlineformset_factory(
     p_models.Part, p_models.PartStorageCollection, form=PartStorageCollectionForm, extra=3
 )
-
-
-# class

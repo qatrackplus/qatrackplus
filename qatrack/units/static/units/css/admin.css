@@ -1,0 +1,19 @@
+.duration {
+    max-width: 75px;
+}
+.hours-container {
+    display: inline-block;
+}
+.hours-container label {
+    max-width: 75px;
+}
+.hours-error {
+    max-width: 75px;
+    color: #CC3434;
+}
+.hours-container.has-error input {
+    border-color: #CC3434;
+}
+.hours-container {
+    vertical-align: top;
+}

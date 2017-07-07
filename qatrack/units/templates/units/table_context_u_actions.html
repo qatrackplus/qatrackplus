@@ -1,4 +1,7 @@
 {% load qa_tags %}
 {#<a class="btn btn-primary btn-xs btn-flat" href="{% url 'sl_edit' se.pk %}{% if next %}?next={{ next }}{% endif %}">Edit</a>#}
-{#<a class="btn btn-primary btn-xs btn-flat" href="{% url 'sl_details' se.pk %}">Details</a>#}
-TODO
+{% if USE_PARTS %}
+    <a class="btn btn-primary btn-xs btn-flat" href="{% url 'parts_units_cost' u.pk %}">Parts Cost</a>
+    <a class="btn btn-primary btn-xs btn-flat" href="{% url 'unit_available_time' u.pk %}">Available Time</a>
+{% endif %}
+

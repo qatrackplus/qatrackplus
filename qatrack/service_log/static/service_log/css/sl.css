@@ -71,8 +71,8 @@
     width: 150px;
     max-width: 150px;
 }
-#listable-table-unit_list > thead > tr > th {
-    width: 75px;
+#listable-table-unit_list > thead > tr > th:nth-child(2) {
+    width: 50px;
 }
 #listable-table-suppliers_list > thead > tr > th:nth-child(2) {
     width: 75px;
@@ -111,4 +111,10 @@ body.sidebar-mini.sidebar-collapse > div.wrapper > aside.main-sidebar > section.
 }
 body.sidebar-mini.sidebar-collapse > div.wrapper > aside.main-sidebar > section.sidebar > ul.sidebar-menu > li.header > span {
     opacity: 0;
+}
+.smooth-border {
+    border-width: 2px;
+    border-radius: 4px;
+    color: black;
+    border-style: solid;
 }

@@ -1,0 +1,7 @@
+{% load qa_tags %}
+<span style="min-width: 150px;">
+{#    <div class="border-bottom-3" style="border-color: {{ issue_priority.colour }}">{{ issue_priority.name }}</div>#}
+    {{ issue_priority.name }}
+    <i class="fa fa-square fa-lg pull-left" style="color: {{ issue_priority.colour }}; margin-top: 5px;"></i>
+    {#<div class="label pull-right" style="background-color: {{ service_status.colour }}">&nbsp;</div>#}
+</span>

@@ -8,9 +8,13 @@ from django.dispatch import receiver
 from qatrack.qa.models import Frequency, TestListInstance, UnitTestCollection
 from qatrack.units.models import Unit
 from qatrack.parts.models import PartUsed, PartStorageCollection
+from qatrack.service_log.models import QAFollowup, ServiceEvent, ServiceEventStatus
 
 cache.delete(settings.CACHE_UNREVIEWED_COUNT)
 cache.delete(settings.CACHE_QA_FREQUENCIES)
+cache.delete(settings.CACHE_RTS_QA_COUNT)
+cache.delete('default-se-status')
+cache.delete('se_needing_approval_count')
 
 
 # for u in Unit.objects.filter(active=True):
@@ -49,6 +53,22 @@ def update_part_quantity(*args, **kwargs):
 def update_unreviewed_cache(*args, **kwargs):
     """When a test list is completed invalidate the unreviewed counts"""
     cache.delete(settings.CACHE_UNREVIEWED_COUNT)
+    cache.delete(settings.CACHE_RTS_QA_COUNT)
+
+
+@receiver(post_save, sender=QAFollowup)
+@receiver(post_delete, sender=QAFollowup)
+def update_unreviewed_cache(*args, **kwargs):
+    """When a RTS is completed invalidate the unreviewed counts"""
+    cache.delete(settings.CACHE_RTS_QA_COUNT)
+
+
+@receiver(post_save, sender=ServiceEventStatus)
+@receiver(post_delete, sender=ServiceEventStatus)
+def update_unreviewed_cache(*args, **kwargs):
+    """When a service status is changed invalidate the default and approval count"""
+    cache.delete('default-se-status')
+    cache.delete('se_needing_approval_count')
 
 
 @receiver(post_save, sender=Frequency)
@@ -88,12 +108,27 @@ def site(request):
         unreviewed = TestListInstance.objects.unreviewed_count()
         cache.set(settings.CACHE_UNREVIEWED_COUNT, unreviewed)
 
+    unreviewed_rts = cache.get(settings.CACHE_RTS_QA_COUNT)
+    if unreviewed_rts is None:
+        unreviewed_rts = QAFollowup.objects.filter(test_list_instance__isnull=False, test_list_instance__all_reviewed=False).count()
+        cache.set(settings.CACHE_RTS_QA_COUNT, unreviewed_rts)
+
     your_unreviewed = TestListInstance.objects.your_unreviewed_count(request.user)
 
     qa_frequencies = cache.get(settings.CACHE_QA_FREQUENCIES)
     if qa_frequencies is None:
         qa_frequencies = list(Frequency.objects.frequency_choices())
         cache.set(settings.CACHE_QA_FREQUENCIES, qa_frequencies)
+
+    default_se_status = cache.get('default-se-status')
+    if default_se_status is None:
+        default_se_status = ServiceEventStatus.get_default()
+        cache.set('default-se-status', default_se_status)
+
+    se_needing_approval_count = cache.get('se_needing_approval_count')
+    if se_needing_approval_count is None:
+        se_needing_approval_count = ServiceEvent.objects.filter(service_status__in=ServiceEventStatus.objects.filter(is_approval_required=True), is_approval_required=True).count()
+        cache.set('se_needing_approval_count', se_needing_approval_count)
 
     return {
         'SITE_NAME': site.name,
@@ -103,12 +138,15 @@ def site(request):
         'FEATURE_REQUEST_URL': settings.FEATURE_REQUEST_URL,
         'QA_FREQUENCIES': qa_frequencies,
         'UNREVIEWED': unreviewed,
+        'UNREVIEWED_RTS': unreviewed_rts,
         'YOUR_UNREVIEWED': your_unreviewed,
         'ICON_SETTINGS': settings.ICON_SETTINGS,
         'ICON_SETTINGS_JSON': json.dumps(settings.ICON_SETTINGS),
         'TEST_STATUS_SHORT_JSON': json.dumps(settings.TEST_STATUS_DISPLAY_SHORT),
         'REVIEW_DIFF_COL': settings.REVIEW_DIFF_COL,
         'DEBUG': settings.DEBUG,
-        'USE_PARTS': settings.USE_PARTS
+        'USE_PARTS': settings.USE_PARTS,
+        'DEFAULT_SE_STATUS': default_se_status,
+        'SE_NEEDING_APPROVAL_COUNT': se_needing_approval_count
     }
 

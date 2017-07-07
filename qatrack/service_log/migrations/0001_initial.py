@@ -28,14 +28,6 @@ class Migration(migrations.Migration):
             options={'permissions': (('can_have_hours', 'Can have hours'),), 'verbose_name_plural': 'Hours'},
         ),
         migrations.CreateModel(
-            name='ProblemType',
-            fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('name', models.CharField(help_text='Enter a short name for this problem type', unique=True, max_length=64)),
-                ('description', models.TextField(null=True, blank=True)),
-            ],
-        ),
-        migrations.CreateModel(
             name='QAFollowup',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
@@ -64,7 +56,6 @@ class Migration(migrations.Migration):
                 ('duration_service_time', models.DurationField(blank=True, help_text='Enter the total time duration of this service event (Hours : minutes)', null=True, verbose_name='Service time')),
                 ('qafollowup_notes', models.TextField(blank=True, help_text='Provide any extra information regarding followups', null=True)),
                 ('duration_lost_time', models.DurationField(blank=True, help_text='Enter the total clinical time lost for this service event (Hours : minutes)', null=True, verbose_name='Lost time')),
-                ('problem_type', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, blank=True, to='service_log.ProblemType', help_text='Select/create a problem type that describes this service event', null=True)),
                 ('service_event_related', models.ManyToManyField(blank=True, help_text='Was there a previous service event that might be related to this event?', related_name='_serviceevent_service_event_related_+', to='service_log.ServiceEvent', verbose_name='Service events related')),
                 ('is_approval_required', models.BooleanField(default=False, help_text='Does this service event require approval?')),
             ],
@@ -90,6 +81,7 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(help_text='Enter a short name for this service type', unique=True, max_length=32)),
                 ('is_approval_required', models.BooleanField(default=False, help_text='Does this service type require approval')),
                 ('is_active', models.BooleanField(default=True, help_text='Set to false if service type is no longer used')),
+                ('description', models.TextField(blank=True, help_text='Give a brief description of this service type', max_length=64, null=True)),
             ],
         ),
         migrations.CreateModel(

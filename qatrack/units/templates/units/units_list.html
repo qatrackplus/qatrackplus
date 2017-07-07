@@ -21,7 +21,7 @@
 {% endblock %}
 
 {% block require_javascript %}
-    require(['listable', 'sidebar']);
+    require(['listable', 'parts_reporting', 'unit_list']);
 {% endblock require_javascript %}
 
 {% block body %}
@@ -35,6 +35,17 @@
 
                 </div>
                 <div class="box-body pad">
+                    <div class="row">
+                        <div class="col-md-12">
+                            For units selected below...
+                        </div>
+                        <div class="col-md-12 margin-bottom-20">
+                            <span id="parts_units_cost_summary" class="btn btn-info btn-flat btn-sm">Parts Costs Reports</span>
+                            {% if perms.can_change_available_time %}
+                                <span id="units_change_available_time" class="btn btn-info btn-flat btn-sm">Change Available Times</span>
+                            {% endif %}
+                        </div>
+                    </div>
                     {{ listable_table }}
                 </div>
             </div>

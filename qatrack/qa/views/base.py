@@ -151,7 +151,7 @@ class UTCList(BaseListableView):
 
     search_fields = {
         "actions": False,
-        "name": "name__icontains",
+        "name": "name",
         "assigned_to__name": "assigned_to__name",
         "last_instance_pass_fail": False,
         "last_instance_review_status": False,
@@ -262,9 +262,6 @@ class UTCList(BaseListableView):
             filters = [(NONEORNULL, 'Ad Hoc') if f == (NONEORNULL, 'None') else f for f in filters]
 
         return filters
-
-    # def get_extra(self):
-    #     return utils.qs_extra_for_utc_name()
 
     def frequency__name(self, utc):
         return utc.frequency.name if utc.frequency else "Ad Hoc"

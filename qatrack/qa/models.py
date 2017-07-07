@@ -1042,8 +1042,8 @@ class UnitTestCollection(models.Model):
         return self.name
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        super(UnitTestCollection, self).save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
         self.name = self.tests_object.name
+        super(UnitTestCollection, self).save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
 
 
 class TestInstanceManager(models.Manager):

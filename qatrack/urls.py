@@ -14,11 +14,13 @@ urlpatterns = [
     url(r'^servicelog/', include('qatrack.service_log.urls')),
     url(r'^parts/', include('qatrack.parts.urls')),
     url(r'^units/', include('qatrack.units.urls')),
+    url(r'^issues/', include('qatrack.issue_tracker.urls')),
 
     # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),
 
     url(r'^', include('genericdropdown.urls')),
+    url(r'^comments/', include('django_comments.urls'))
 
 ]
 
