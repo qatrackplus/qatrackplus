@@ -5,11 +5,11 @@ django-braces==1.9.0
 django-crispy-forms==1.6.0
 -e git+https://github.com/django/django-formtools.git@bb97a8abd374c50991c0a9ce144f17e7322a0c48#egg=django-formtools
 -e git+https://github.com/randlet/django-listable.git@d4c73d92588caee00cc3dfad1c1c0d63c8213f74#egg=django_listable
-django-registration-redux==1.4
+django-registration==2.1.2
 django-tastypie==0.13.3
 matplotlib==1.5.3
-numpy>=1.11,<=1.12
+numpy==1.11.2rc1+mkl
 pydicom==0.9.9
 python-dateutil==2.5.3
-pytz==2016.6.1
+pytz==2016.7
 scipy==0.18.1
