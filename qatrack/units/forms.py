@@ -32,7 +32,7 @@ class UnitAvailableTimeForm(forms.ModelForm):
     hours_saturday = HoursMinDurationField(help_text='Hours available on saturdays (hh:mm)', label='Saturday', validators=[max_24hr])
     hours_sunday = HoursMinDurationField(help_text='Hours available on sundays (hh:mm)', label='Sunday', validators=[max_24hr])
 
-    units = forms.ModelMultipleChoiceField(queryset=u_models.Unit.objects.all())
+    units = forms.ModelMultipleChoiceField(queryset=u_models.Unit.objects.all(), required=False)
 
     class Meta:
         model = u_models.UnitAvailableTime

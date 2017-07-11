@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models
 import django.db.models.deletion
+from django.utils import timezone
+
 
 def migrate_unitype_vendor_char_to_vendor(apps, schema_editor):
 
@@ -15,6 +17,39 @@ def migrate_unitype_vendor_char_to_vendor(apps, schema_editor):
         vendor, is_new = Vendor.objects.get_or_create(name=vendor_char)
         ut.vendor = vendor
         ut.save()
+
+
+def add_initial_available_times(apps, schema_editor):
+
+    Unit = apps.get_model('units', 'Unit')
+    UnitAvailableTime = apps.get_model('units', 'UnitAvailableTime')
+
+    for u in Unit.objects.all():
+
+        if not u.active:
+            UnitAvailableTime.objects.create(
+                date_changed=u.install_date or timezone.now(),
+                unit=u,
+                hours_monday=timezone.timedelta(hours=0),
+                hours_tuesday=timezone.timedelta(hours=0),
+                hours_wednesday=timezone.timedelta(hours=0),
+                hours_thursday=timezone.timedelta(hours=0),
+                hours_friday=timezone.timedelta(hours=0),
+                hours_saturday=timezone.timedelta(hours=0),
+                hours_sunday=timezone.timedelta(hours=0),
+            )
+        else:
+            UnitAvailableTime.objects.create(
+                date_changed=u.install_date or timezone.now(),
+                unit=u,
+                hours_monday=timezone.timedelta(hours=8),
+                hours_tuesday=timezone.timedelta(hours=8),
+                hours_wednesday=timezone.timedelta(hours=8),
+                hours_thursday=timezone.timedelta(hours=8),
+                hours_friday=timezone.timedelta(hours=8),
+                hours_saturday=timezone.timedelta(hours=0),
+                hours_sunday=timezone.timedelta(hours=0),
+            )
 
 
 class Migration(migrations.Migration):
@@ -126,4 +161,5 @@ class Migration(migrations.Migration):
             name='unitavailabletimeedit',
             unique_together=set([('unit', 'date')]),
         ),
+        migrations.RunPython(add_initial_available_times),
     ]
