@@ -673,7 +673,14 @@ function TestListInstance(){
                     var ti = self.tests_by_slug[name];
                     if (!ti.skipped){
                         ti.set_value(result.value, result.user_attached);
+
+                        if (result.error){
+                            ti.status.attr("title", result.error);
+                        }else{
+                            ti.status.attr("title", "");
+                        }
                     }
+
                 });
             }
             $.Topic("qaUpdated").publish();

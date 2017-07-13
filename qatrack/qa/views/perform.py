@@ -2,6 +2,7 @@ import collections
 import json
 import math
 import os
+import traceback
 
 import dateutil
 import dicom
@@ -34,6 +35,7 @@ from qatrack.units.models import Unit
 from braces.views import JSONResponseMixin, PermissionRequiredMixin
 from functools import reduce
 
+
 DEFAULT_CALCULATION_CONTEXT = {
     "dicom": dicom,
     "math": math,
@@ -50,7 +52,6 @@ def process_procedure(procedure):
     :view:`qa.perform.CompositeCalculation` views.
 
     """
-
     return "\n".join(["from __future__ import division", procedure, "\n"]).replace('\r', '\n')
 
 
@@ -118,7 +119,6 @@ class AttachmentMixin(object):
         return resp
 
 
-
 class Upload(JSONResponseMixin, AttachmentMixin, View):
     """View for handling AJAX upload requests when performing QA"""
 
@@ -127,12 +127,22 @@ class Upload(JSONResponseMixin, AttachmentMixin, View):
 
     def post(self, *args, **kwargs):
         """process file, apply calculation procedure and return results"""
-        if self.request.POST.get('attachment_id'):
-            self.reprocess()
-        else:
-            self.handle_upload()
+        try:
+            if self.request.POST.get('attachment_id'):
+                self.reprocess()
+            else:
+                self.handle_upload()
 
-        return self.run_calc()
+            return self.run_calc()
+        except Exception:
+            msg = traceback.format_exc()
+            results = {
+                'success': False,
+                'errors': [msg],
+                "result": None,
+                "user_attached": [],
+            }
+            return self.render_json_response(results)
 
     def reprocess(self):
         self.attach_id = self.request.POST.get("attachment_id")
@@ -160,7 +170,7 @@ class Upload(JSONResponseMixin, AttachmentMixin, View):
 
         try:
             test = models.Test.objects.get(pk=self.request.POST.get("test_id"))
-            code = compile(process_procedure(test.calculation_procedure), "<string>", "exec")
+            code = compile(process_procedure(test.calculation_procedure), "__QAT+COMP_%s.py" % test.slug, "exec")
             exec(code, self.calculation_context)
             key = "result" if "result" in self.calculation_context else test.slug
             results["result"] = self.calculation_context[key]
@@ -168,8 +178,9 @@ class Upload(JSONResponseMixin, AttachmentMixin, View):
             results["user_attached"] = self.user_attached
         except models.Test.DoesNotExist:
             results["errors"].append("Test with that ID does not exist")
-        except Exception as e:
-            results["errors"].append("Invalid Test Procedure: %s" % e)
+        except Exception:
+            msg = traceback.format_exc().split("__QAT+COMP_")[-1].replace("<module>", "Test: %s" % test.name)
+            results["errors"].append("Invalid Test Procedure: %s" % msg)
 
         return self.render_json_response(results)
 
@@ -262,7 +273,7 @@ class CompositeCalculation(JSONResponseMixin, AttachmentMixin, View):
             raw_procedure = self.composite_tests[slug]
             procedure = process_procedure(raw_procedure)
             try:
-                code = compile(procedure, "<string>", "exec")
+                code = compile(procedure, "__QAT+COMP_%s" % slug, "exec")
                 exec(code, self.calculation_context)
                 key = "result" if "result" in self.calculation_context else slug
                 result = self.calculation_context[key]
@@ -274,7 +285,12 @@ class CompositeCalculation(JSONResponseMixin, AttachmentMixin, View):
                 }
                 self.calculation_context[slug] = result
             except Exception:
-                results[slug] = {'value': None, 'error': "Invalid Test", 'user_attached': []}
+                msg = traceback.format_exc().split("__QAT+COMP_")[-1].replace("<module>", slug)
+                results[slug] = {
+                    'value': None,
+                    'error': "Invalid Test Procedure: %s" % msg,
+                    'user_attached': [],
+                }
             finally:
                 # clean up calculation context for next test
                 if "result" in self.calculation_context:
@@ -617,9 +633,9 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
     def create_tli_attachments(self):
         for idx, f in enumerate(self.request.FILES.getlist('tli-attachments')):
-            attachment = Attachment.objects.create(
+            Attachment.objects.create(
                 attachment=f,
-                comment = "Uploaded %s by %s" % (timezone.now(), self.request.user.username),
+                comment="Uploaded %s by %s" % (timezone.now(), self.request.user.username),
                 label=f.name,
                 testlistinstance=self.object,
                 created_by=self.request.user
@@ -783,9 +799,9 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
             attach.delete()
 
         for idx, f in enumerate(self.request.FILES.getlist('tli-attachments')):
-            attachment = Attachment.objects.create(
+            Attachment.objects.create(
                 attachment=f,
-                comment = "Uploaded %s by %s" % (timezone.now(), self.request.user.username),
+                comment="Uploaded %s by %s" % (timezone.now(), self.request.user.username),
                 label=f.name,
                 testlistinstance=self.object,
                 created_by=self.request.user
