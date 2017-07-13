@@ -881,6 +881,8 @@ $(document).ready(function(){
                     $(duration_picker).val(hours + mins);
                     duration_change = false;
                 }
+
+                $.Topic("valueChanged").publish();
             }
 
             $(start_picker).daterangepicker(
@@ -938,6 +940,7 @@ $(document).ready(function(){
                         $(completed_picker).data('daterangepicker').setStartDate(end_time);
                         $(completed_picker).data('daterangepicker').setEndDate(end_time);
                         end_date_change = false;
+                        $.Topic("valueChanged").publish();
                     }
                 }
             }).on('keypress', function () {
