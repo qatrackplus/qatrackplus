@@ -727,7 +727,7 @@ function TestListInstance(){
 
 function set_tab_stops(){
 
-    var user_inputs=  $('.qa-input',context).not("[readonly=readonly]").not("[type=hidden]");
+    var user_inputs=  $('.qa-input',context).not("[readonly=readonly]").not("[type=hidden]").not(".btn");
     var visible_user_inputs = user_inputs;
 
     var tabindex = 1;
@@ -744,6 +744,7 @@ function set_tab_stops(){
     //allow arrow key and enter navigation
     $(document).on("keydown","input, select", function(e) {
 
+        var visible_user_inputs = user_inputs.filter(":visible");
         var to_focus;
         //rather than submitting form on enter, move to next value
         if (e.which == QAUtils.KC_ENTER  || e.which == QAUtils.KC_DOWN ) {
@@ -755,7 +756,7 @@ function set_tab_stops(){
                 to_focus = visible_user_inputs[idx+1];
             }
             to_focus.focus()
-            if (to_focus.type === "text"){
+            if (to_focus.type === "text" || to_focus.type === "number"){
                 to_focus.select();
             }
             return false;
@@ -768,7 +769,7 @@ function set_tab_stops(){
                 to_focus = visible_user_inputs[idx-1];
             }
             to_focus.focus()
-            if (to_focus.type === "text"){
+            if (to_focus.type === "text" || to_focus.type === "number"){
                 to_focus.select();
             }
             return false;
