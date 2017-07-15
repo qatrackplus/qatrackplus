@@ -561,15 +561,18 @@ class TestComposite(TestCase):
         values = json.loads(response.content.decode("UTF-8"))
 
         expected = {
-            "errors": [],
-            "success": True,
+            'errors': [],
             'results': {
                 'testc': {
-                    'error': 'Invalid Test',
-                    'value': None,
-                    "user_attached": [],
+                    'error': 'Invalid Test Procedure: testc", line 2, in '
+                            'testc\n'
+                            'TypeError: unsupported operand type(s) for +: '
+                            "'dict' and 'dict'\n",
+                    'user_attached': [],
+                    'value': None
                 }
             },
+            'success': True
         }
         self.assertDictEqual(values, expected)
 
@@ -632,16 +635,19 @@ class TestComposite(TestCase):
         request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
         response = self.view(request)
         values = json.loads(response.content.decode("UTF-8"))
+
         expected = {
-            "errors": [],
-            "results": {
-                "testc": {
-                    "value": None,
-                    "error": "Invalid Test",
-                    "user_attached": [],
+            'errors': [],
+            'results': {
+                'testc': {
+                    'error': 'Invalid Test Procedure: testc", line 2, in '
+                            'testc\n'
+                            "NameError: name 'foo' is not defined\n",
+                    'user_attached': [],
+                    'value': None
                 }
             },
-            "success": True,
+            'success': True
         }
         self.assertDictEqual(values, expected)
 
