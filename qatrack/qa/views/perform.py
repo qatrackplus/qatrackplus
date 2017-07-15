@@ -416,6 +416,17 @@ class ChooseUnit(TemplateView):
 
         unit_types = collections.defaultdict(list)
         for unit in q:
+            unit['frequencies'] = models.UnitTestCollection.objects.filter(
+                unit_id=unit['unit'],
+                active=True
+            ).exclude(
+                frequency=None,
+            ).values_list(
+                "frequency__slug",
+                "frequency__name"
+            ).order_by(
+                "frequency__nominal_interval"
+            ).distinct()
             unit_types[unit["unit__type__name"]].append(unit)
 
         ordered = sorted(list(unit_types.items()), key=lambda x: min([u[units_ordering] for u in x[1]]))
