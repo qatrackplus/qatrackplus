@@ -5,7 +5,6 @@ from django.contrib.auth.models import User, Group
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 from django.test.client import RequestFactory
-from django.test.utils import setup_test_environment
 from django.utils import timezone
 from qatrack.qa import models, views
 from qatrack.qa.views import forms
@@ -21,12 +20,10 @@ import json
 import os
 import glob
 import random
-import io
 from . import utils
 
 
 logger = qatrack.qa.views.base.logger
-
 
 
 class MockUser(object):
@@ -564,10 +561,12 @@ class TestComposite(TestCase):
             'errors': [],
             'results': {
                 'testc': {
-                    'error': 'Invalid Test Procedure: testc", line 2, in '
-                            'testc\n'
-                            'TypeError: unsupported operand type(s) for +: '
-                            "'dict' and 'dict'\n",
+                    'error': (
+                        'Invalid Test Procedure: testc", line 2, in '
+                        'testc\n'
+                        'TypeError: unsupported operand type(s) for +: '
+                        "'dict' and 'dict'\n"
+                    ),
                     'user_attached': [],
                     'value': None
                 }
@@ -640,9 +639,11 @@ class TestComposite(TestCase):
             'errors': [],
             'results': {
                 'testc': {
-                    'error': 'Invalid Test Procedure: testc", line 2, in '
-                            'testc\n'
-                            "NameError: name 'foo' is not defined\n",
+                    'error': (
+                        'Invalid Test Procedure: testc", line 2, in '
+                        'testc\n'
+                        "NameError: name 'foo' is not defined\n"
+                    ),
                     'user_attached': [],
                     'value': None
                 }
@@ -1282,7 +1283,7 @@ class TestEditTestListInstance(TestCase):
             "in_progress": True
         })
 
-        resp = self.client.post(self.url, data=self.base_data)
+        self.client.post(self.url, data=self.base_data)
         ntests = models.Test.objects.count()
         self.assertEqual(models.TestInstance.objects.in_progress().count(), ntests)
         del self.base_data["in_progress"]
