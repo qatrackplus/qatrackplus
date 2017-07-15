@@ -10,12 +10,12 @@
         {% load i18n %}
         {% load l10n %}
         {% load qatrack_tags %}
-        {#{% load staticfiles %}#}
+        {% load staticfiles %}
 
-        {#{% block favicon %}#}
-        {#    <link rel="shortcut icon" href="{% static "qatrack_theme/favicon.ico" %}?v={{VERSION}}">#}
-        {#    <link rel="apple-touch-icon" href="{% static "qatrack_theme/apple-touch-icon.png" %}?v={{VERSION}}">#}
-        {#{% endblock favicon %}#}
+        {% block favicon %}
+            <link rel="shortcut icon" href="{% static "qatrack_core/img/favicon.ico" %}">
+            <link rel="apple-touch-icon" href="{% static "qatrack_core/img/apple-touch-icon.png" %}">
+        {% endblock favicon %}
         {##}
         {#{% block extra_style %}#}
         {#    <link href="{% static "css/qa.css" %}?v={{VERSION}}" rel="stylesheet">#}
