@@ -403,6 +403,11 @@ class Tolerance(models.Model):
             return "M.C.(%s=%s, %s=%s)" % (OK_DISP, ":".join(self.pass_choices()), TOL_DISP, ":".join(self.tol_choices()))
 
 
+class CategoryManager(models.Manager):
+    def get_by_natural_key(self, name):
+        return self.get(name=name)
+
+
 class Category(models.Model):
     """A model used for categorizing :model:`Test`s"""
 
@@ -415,13 +420,29 @@ class Category(models.Model):
         help_text=_("Give a brief description of what type of tests should be included in this grouping")
     )
 
+    objects = CategoryManager()
+
     class Meta:
         verbose_name_plural = "categories"
         ordering = ("name",)
 
+    @classmethod
+    def get_test_pack_fields(cls):
+        exclude = ["id"]
+        return [f.name for f in cls._meta.concrete_fields if f.name not in exclude]
+
+    def natural_key(self):
+        return (self.name,)
+
     def __str__(self):
         """return display representation of object"""
         return self.name
+
+
+class TestManager(models.Manager):
+
+    def get_by_natural_key(self, name):
+        return self.get(name=name)
 
 
 class Test(models.Model):
@@ -463,6 +484,8 @@ class Test(models.Model):
     created_by = models.ForeignKey(User, editable=False, related_name="test_creator")
     modified = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(User, editable=False, related_name="test_modifier")
+
+    objects = TestManager()
 
     def is_numerical_type(self):
         """return whether or not this is a numerical test"""
@@ -582,6 +605,15 @@ class Test(models.Model):
         if self.type == MULTIPLE_CHOICE:
             cs = self.choices.split(",")
             return list(zip(cs, cs))
+
+    @classmethod
+    def get_test_pack_fields(cls):
+        exclude = ["id", "modified", "modified_by", "created", "created_by"]
+        return [f.name for f in cls._meta.concrete_fields if f.name not in exclude]
+
+    def natural_key(self):
+        return (self.name,)
+    natural_key.dependencies = ['qa.category']
 
     def __str__(self):
         """return display representation of object"""
@@ -732,15 +764,32 @@ class UnitTestInfo(models.Model):
         return "UnitTestInfo(%s)" % self.pk
 
 
+class TestListMembershipManager(models.Manager):
+
+    def get_by_natural_key(self, order, test_list_slug, test_name):
+        return self.get(order=order, test_list__slug=test_list_slug, test__name=test_name)
+
+
 class TestListMembership(models.Model):
     """Keep track of ordering for tests within a test list"""
     test_list = models.ForeignKey("TestList")
     test = models.ForeignKey(Test)
     order = models.IntegerField(db_index=True)
 
+    objects = TestListMembershipManager()
+
     class Meta:
         ordering = ("order",)
         unique_together = ("test_list", "test",)
+
+    @classmethod
+    def get_test_pack_fields(cls):
+        exclude = ["id"]
+        return [f.name for f in cls._meta.concrete_fields if f.name not in exclude]
+
+    def natural_key(self):
+        return (self.order,) + self.test_list.natural_key() + self.test.natural_key()
+    natural_key.dependencies = ["qa.testlist", "qa.test"]
 
     def __str__(self):
         return "TestListMembership(pk=%s)" % self.pk
@@ -793,6 +842,14 @@ class TestCollectionInterface(models.Model):
         return ContentType.objects.get_for_model(self)
 
 
+
+class TestListManager(models.Manager):
+
+    def get_by_natural_key(self, slug):
+        return self.get(slug=slug)
+
+
+
 class TestList(TestCollectionInterface):
     """Container for a collection of QA :model:`Test`s"""
 
@@ -809,6 +866,8 @@ class TestList(TestCollectionInterface):
         default=settings.DEFAULT_WARNING_MESSAGE
     )
 
+    objects = TestListManager()
+
     def test_list_members(self):
         """return all days from this collection"""
         return TestList.objects.filter(pk=self.pk)
@@ -823,6 +882,14 @@ class TestList(TestCollectionInterface):
         for sublist in self.sublists.order_by("name"):
             tests.extend(sublist.ordered_tests())
         return tests
+
+    @classmethod
+    def get_test_pack_fields(cls):
+        exclude = ["id", "created", "created_by", "modified", "modified_by"]
+        return [f.name for f in cls._meta.concrete_fields if f.name not in exclude]
+
+    def natural_key(self):
+        return (self.slug,)
 
     def __len__(self):
         return 1
@@ -893,7 +960,7 @@ class UnitTestCollection(models.Model):
             elif last_valid is not None and last_valid.work_completed:
                 return last_valid.work_completed + self.frequency.due_delta()
 
-        #return existing due date (could be None)
+        # return existing due date (could be None)
         return self.due_date
 
     def set_due_date(self, due_date=None):
@@ -1397,6 +1464,12 @@ class TestListInstance(models.Model):
         return "TestListInstance(pk=%s)" % self.pk
 
 
+class TestListCycleManager(models.Manager):
+
+    def get_by_natural_key(self, slug):
+        return self.get(slug=slug)
+
+
 class TestListCycle(TestCollectionInterface):
     """
     A basic model for creating a collection of test lists that cycle
@@ -1413,6 +1486,8 @@ class TestListCycle(TestCollectionInterface):
     test_lists = models.ManyToManyField(TestList, through="TestListCycleMembership")
     drop_down_label = models.CharField(max_length=128, default="Choose Day")
     day_option_text = models.CharField(max_length=8, choices=DAY_OPTIONS_TEXT_CHOICES, default=DAY)
+
+    objects = TestListCycleManager()
 
     def __len__(self):
         """return the number of test_lists"""
@@ -1476,8 +1551,22 @@ class TestListCycle(TestCollectionInterface):
 
         return [(d, "Day %d" % d) for d in days]
 
+    @classmethod
+    def get_test_pack_fields(cls):
+        exclude = ["id", "created", "created_by", "modified", "modified_by"]
+        return [f.name for f in cls._meta.concrete_fields if f.name not in exclude]
+
+    def natural_key(self):
+        return (self.slug,)
+
     def __str__(self):
         return _(self.name)
+
+
+class TestListCycleMembershipManager(models.Manager):
+
+    def get_by_natural_key(self, order, test_list_slug, cycle_slug):
+        return self.get(order=order, test_list__slug=test_list_slug, cycle__slug=cycle_slug)
 
 
 class TestListCycleMembership(models.Model):
@@ -1487,6 +1576,8 @@ class TestListCycleMembership(models.Model):
     cycle = models.ForeignKey(TestListCycle)
     order = models.IntegerField()
 
+    objects = TestListCycleMembershipManager()
+
     class Meta:
         ordering = ("order",)
 
@@ -1494,5 +1585,24 @@ class TestListCycleMembership(models.Model):
         # memberships they can have the same order temporarily when orders are changed
         # unique_together = (("order", "cycle"),)
 
+    @classmethod
+    def get_test_pack_fields(cls):
+        exclude = ["id"]
+        return [f.name for f in cls._meta.concrete_fields if f.name not in exclude]
+
+    def natural_key(self):
+        return (self.order,) + self.test_list.natural_key() + self.cycle.natural_key()
+    natural_key.dependencies = ["qa.testlist", "qa.testlistcycle"]
+
     def __str__(self):
         return "TestListCycleMembership(pk=%s)" % self.pk
+
+
+TEST_PACK_MODELS = [
+    Category,
+    Test,
+    TestList,
+    TestListMembership,
+    TestListCycle,
+    TestListCycleMembership,
+]

@@ -1,11 +1,17 @@
+from collections import defaultdict
+import io
 import json
 import math
-import io
-import tokenize
 import token
+import tokenize
 
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
+from django.core.serializers import serialize, deserialize
+from django.utils import timezone
+
+from qatrack.qa import models
 
 
 class SetEncoder(json.JSONEncoder):
@@ -150,8 +156,10 @@ def almost_equal(a, b, significant=7):
 
 
 def check_query_count():  # pragma: nocover
-    """ A useful debugging decorator for checking the number of queries
-    a function is making"""
+    """
+    A useful debugging decorator for checking the number of queries a function
+    is making
+    """
 
     from django.db import connection
     import time
@@ -169,3 +177,148 @@ def check_query_count():  # pragma: nocover
             return inner
         return func
     return decorator
+
+
+def create_testpack(test_lists=None, cycles=None, extra_tests=None):
+    """
+    Take input test lists queryset and cycles queryset and generate a test pack from them.  The
+    test pack will includ all objects they depend on.
+    """
+
+    cycles = cycles or models.TestListCycle.objects.none()
+
+    test_lists = test_lists or models.TestList.objects.none()
+    test_lists |= models.TestList.objects.filter(
+        pk__in=cycles.values_list("test_lists")
+    ).order_by("pk")
+
+    tlc_memberships = models.TestListCycleMembership.objects.filter(cycle=cycles)
+
+    tl_memberships = models.TestListMembership.objects.filter(
+        pk__in=test_lists.values_list("testlistmembership")
+    )
+
+    tests = models.Test.objects.filter(
+        pk__in=tl_memberships.values_list("test")
+    )
+
+    tests |= (extra_tests or models.Test.objects.none())
+
+
+    categories = models.Category.objects.filter(
+        pk__in=tests.values_list("category")
+    )
+
+    to_dump = [
+        categories,
+        tests,
+        test_lists,
+        tl_memberships,
+        cycles,
+        tlc_memberships
+    ]
+
+    objects = []
+    for qs in to_dump:
+        fields = qs.model.get_test_pack_fields()
+        objects.append(
+            serialize("json", qs, fields=fields, use_natural_foreign_keys=True, use_natural_primary_keys=True)
+        )
+
+    meta = {
+        'version': settings.VERSION,
+        'datetime': "%s" % timezone.now(),
+    }
+
+    return {'meta': meta, 'objects': objects}
+
+
+def save_test_pack(pack, fp):
+    """
+    Write input test pack to file like object fp. If fp is a string it
+    will be written to a new file with the name/path given by fp.
+    """
+
+    if isinstance(fp, str):
+        fp = open(fp, 'w', encoding="utf-8")
+
+    json.dump(pack, fp, indent=2)
+
+
+def test_pack_object_names(serialized_pack):
+    """Look in test pack and return names of test lists & test list cycles"""
+
+    pack = deserialize_pack(serialized_pack)
+    names = defaultdict(list)
+
+    for obj in pack['objects']:
+        if obj['model'] in ["qa.testlistcycle", "qa.testlist", "qa.test"]:
+            display = obj['fields']['name']
+            names[obj['model'].replace("qa.", "")].append(display)
+
+    return names
+
+
+def deserialize_pack(serialized_pack):
+    """deserialize test pack data to dictionary"""
+
+    data = json.loads(serialized_pack)
+    pack = {'meta': data['meta'], 'objects': []}
+    for qs in data['objects']:
+        for obj in json.loads(qs):
+            pack['objects'].append(obj)
+    return pack
+
+
+def add_test_pack(serialized_pack, user=None, test_names=None, test_list_names=None, cycle_names=None):
+    """Takes a serialized data pack and saves the deserialized objects to the db"""
+
+    def include_test(obj):
+        if not test_names:
+            return True
+        return
+
+    modified = created = timezone.now()
+    user = user or User.objects.earliest("pk")
+
+    data = json.loads(serialized_pack)
+    to_delete = []
+    for qs in data['objects']:
+        for obj in deserialize("json", qs):
+
+            exclude = (
+                (obj.object._meta.model_name == "test" and test_names is not None and obj.object.name not in test_names) or
+                (obj.object._meta.model_name == "testlist" and test_list_names is not None and obj.object.name not in test_list_names) or
+                (obj.object._meta.model_name == "testlistcycle" and cycle_names is not None and obj.object.name not in cycle_names)
+            )
+
+            try:
+                existing_obj = obj.object._meta.model.objects.get_by_natural_key(*obj.object.natural_key())
+            except obj.object._meta.model.DoesNotExist:
+                existing_obj = None
+
+            if exclude and not existing_obj:
+                to_delete.append(obj.object)
+
+            if hasattr(obj.object, "created"):
+                obj.object.created = created
+                obj.object.created_by = user
+
+            if hasattr(obj.object, "modified"):
+                obj.object.modified = modified
+                obj.object.modified_by = user
+
+            if not existing_obj:
+                obj.save()
+
+    for obj in to_delete:
+        obj.delete()
+
+
+def load_test_pack(fp, user=None, test_names=None, test_list_names=None, cycle_names=None):
+    """Takes a file like object or path and loads the test pack into the database."""
+
+    if isinstance(fp, str):
+        fp = open(fp, 'r', encoding="utf-8")
+
+    add_test_pack(fp.read(), user, test_names, test_list_names, cycle_names)
