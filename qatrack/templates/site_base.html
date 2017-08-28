@@ -159,12 +159,12 @@
                                                 All QA
                                             </a>
                                         </li>
-                                        <li>
+                                        <li class="hover-parent">
                                             <a href="{% url 'qaf_list_all' %}?f=tli.in-1" title="View all incomplete RTS">
                                                 <i class="fa fa-stack fa-lg fa-fw">
                                                     <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
     {#                                                <i class="fa fa-cube fa-stack-custom-sub lower-right text-gray"></i>#}
-                                                    <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-extra-left info"></i>
+                                                    <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-extra-left hover-sub-info"></i>
                                                 </i>
                                                 All Incomplete RTS QA
                                             </a>
@@ -266,15 +266,15 @@
                                                 <li class="divider"></li>
                                                 <li class="nav-header">Test Lists</li>
                                                 {% if perms.qa.can_review_non_visible_tli %}
-                                                    <li><a href="{% url "review_all" %}" title="View all test lists.">
-                                                        <i class="fa fa-users fa-lg fa-fw primary" aria-hidden="true"></i>
+                                                    <li class="hover-parent"><a href="{% url "review_all" %}" title="View all test lists.">
+                                                        <i class="fa fa-users fa-lg fa-fw hover-sub-primary" aria-hidden="true"></i>
                                                         All Groups Test Lists
                                                     </a></li>
                                                 {% endif %}
-                                                <li><a href="{% url "review_your_all" %}" title="View all your groups test lists.">
+                                                <li class="hover-parent"><a href="{% url "review_your_all" %}" title="View all your groups test lists.">
                                                     <i class="fa fa-stack fa-lg fa-fw">
                                                         <i class="fa fa-users fa-stack-custom-main"></i>
-                                                        <i class="fa fa-user fa-stack-custom-main primary down-2"></i>
+                                                        <i class="fa fa-user fa-stack-custom-main hover-sub-primary down-2"></i>
                                                     </i>
                                                     Your Groups Test Lists
                                                 </a></li>
@@ -316,47 +316,40 @@
                                         </a></li>
                                         <li class="divider"></li>
                                         <li class="nav-header">Service Events</li>
-                                        <li><a href="{% url "sl_new" %}" title="Create a new service event">
+                                        <li class="hover-parent"><a href="{% url "sl_new" %}" title="Create a new service event">
                                             <i class="fa fa-stack fa-lg fa-fw">
                                                 <i class="fa fa-wrench fa-stack-custom-main"></i>
-{#                                                <i class="fa fa-cube fa-stack-custom-sub lower-right text-gray"></i>#}
-                                                <i class="fa fa-plus fa-stack-custom-sub upper-left success"></i>
+                                                <i class="fa fa-plus fa-stack-custom-sub upper-left hover-sub-success"></i>
                                             </i>
                                             Open New Service Event
                                         </a></li>
                                         <li><a href="{% url "sl_unit_new" %}" title="Create a new service event for a unit">
-{#                                            <i class="fa fa-stack fa-lg fa-fw">#}
-{#                                                <i class="fa fa-wrench fa-stack-custom-main"></i>#}
-{#                                                <i class="fa fa-cube fa-stack-custom-sub lower-right text-gray"></i>#}
-{#                                                <i class="fa fa-plus fa-stack-custom-sub upper-left success"></i>#}
-{#                                            </i>#}
                                             <i class="fa fa-cubes fa-lg fa-fw" aria-hidden="true"></i>
                                             Choose Unit For New Service Event
                                         </a></li>
-                                        <li><a href="{% url "sl_list_all" %}" title="View service events for a unit">
+                                        <li class="hover-parent"><a href="{% url "sl_list_all" %}" title="View service events for a unit">
                                             <i class="fa fa-stack fa-lg fa-fw">
                                                 <i class="fa fa-wrench fa-stack-custom-main"></i>
-{#                                                <i class="fa fa-cube fa-stack-custom-sub lower-right text-gray"></i>#}
-                                                <i class="fa fa-list fa-stack-custom-sub upper-left info"></i>
+                                                <i class="fa fa-wrench fa-flip-horizontal left--5 fa-stack-custom-main "></i>
+{#                                                <i class="fa fa-list fa-stack-custom-sub upper-left hover-sub-info"></i>#}
                                             </i>
                                             View All Service Events
                                         </a></li>
                                         {% if DEFAULT_SE_STATUS %}
-                                            <li><a href="{% url 'sl_list_all' %}?f=ss-{{ DEFAULT_SE_STATUS.id }}" title="View service events that are {{ DEFAULT_SE_STATUS.name }}">
+                                            <li class="hover-parent"><a href="{% url 'sl_list_all' %}?f=ss-{{ DEFAULT_SE_STATUS.id }}" title="View service events that are {{ DEFAULT_SE_STATUS.name }}">
                                                 <i class="fa fa-stack fa-lg fa-fw">
-                                                    <i class="fa fa-wrench fa-stack-custom-main"></i>
-        {#                                                <i class="fa fa-cube fa-stack-custom-sub lower-right text-gray"></i>#}
-                                                    <i class="fa fa-list fa-stack-custom-sub upper-left info"></i>
+                                                    <i class="fa fa-wrench fa-stack-custom-main hover-sub-not" style="color: {{ DEFAULT_SE_STATUS.colour }};"></i>
+                                                    <i class="fa fa-wrench fa-flip-horizontal left--5 fa-stack-custom-main hover-sub-not" style="color: {{ DEFAULT_SE_STATUS.colour }};"></i>
+    {#                                                <i class="fa fa-list fa-stack-custom-sub upper-left hover-sub-info"></i>#}
                                                 </i>
                                                 View {{ DEFAULT_SE_STATUS.name }}
                                             </a></li>
                                         {% endif %}
                                         {% if perms.service_log.can_approve_service_event %}
-                                            <li><a href="{% url 'sl_list_all' %}?f=ar-1_ss.ar-1" title="View service events that are require approval">
+                                            <li class="hover-parent"><a href="{% url 'sl_list_all' %}?f=ar-1_ss.ar-1" title="View service events that are require approval">
                                                 <i class="fa fa-stack fa-lg fa-fw">
                                                     <i class="fa fa-wrench fa-stack-custom-main"></i>
-    {#                                                <i class="fa fa-cube fa-stack-custom-sub lower-right text-gray"></i>#}
-                                                    <i class="fa fa-exclamation fa-stack-custom-sub upper-left"></i>
+                                                    <i class="fa fa-exclamation fa-stack-custom-sub upper-left hover-sub-info"></i>
                                                 </i>
                                                 <span title="There are currently {{SE_NEEDING_APPROVAL_COUNT}} unreviewed RTS QA Sessions" class="label {% if SE_NEEDING_APPROVAL_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
                                                     <span class="total-unreviewed-count">{{SE_NEEDING_APPROVAL_COUNT}}</span>
@@ -366,19 +359,17 @@
                                         {% endif %}
                                         <li class="divider"></li>
                                         <li class="nav-header">RTS QA</li>
-                                        <li><a href="{% url "qaf_list_all" %}" title="View all return to service qa">
+                                        <li class="hover-parent"><a href="{% url "qaf_list_all" %}" title="View all return to service qa">
                                             <i class="fa fa-stack fa-lg fa-fw">
                                                 <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
-{#                                                <i class="fa fa-cube fa-stack-custom-sub lower-right text-gray"></i>#}
-                                                <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-extra-left info"></i>
+                                                <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-extra-left hover-sub-info"></i>
                                             </i>
                                             View All RTS QA
                                         </a></li>
-                                        <li><a href="{% url 'qaf_list_all' %}?f=tli.in-1" title="View all incomplete return to service qa">
+                                        <li class="hover-parent"><a href="{% url 'qaf_list_all' %}?f=tli.in-1" title="View all incomplete return to service qa">
                                             <i class="fa fa-stack fa-lg fa-fw">
                                                 <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
-{#                                                <i class="fa fa-cube fa-stack-custom-sub lower-right text-gray"></i>#}
-                                                <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-extra-left info"></i>
+                                                <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-extra-left hover-sub-info"></i>
                                             </i>
                                             View All Incomplete RTS QA
                                         </a></li>
@@ -396,24 +387,22 @@
                                         {% if USE_PARTS %}
                                             <li class="divider"></li>
                                             <li class="nav-header">Parts</li>
-                                            <li><a href="{% url "part_new" %}" title="Enter new part">
+                                            <li class="hover-parent"><a href="{% url "part_new" %}" title="Enter new part">
                                                 <i class="fa fa-stack fa-lg fa-fw">
                                                     <i class="fa fa-cog fa-stack-custom-main"></i>
-                                                    <i class="fa fa-plus fa-stack-custom-sub upper-left success"></i>
+                                                    <i class="fa fa-plus fa-stack-custom-sub upper-left hover-sub-success"></i>
                                                 </i>
                                                 Enter New Part
                                             </a></li>
                                             <li><a href="{% url "parts_list" %}" title="Enter new part">
                                                 <i class="fa fa-stack fa-lg fa-fw">
-                                                    <i class="fa fa-list fa-stack-custom-sub upper-left info"></i>
-                                                    <i class="fa fa-cog fa-stack-custom-main"></i>
+                                                    <i class="fa fa-cogs fa-flip-horizontal fa-stack-custom-main"></i>
                                                 </i>
                                                 View All Parts
                                             </a></li>
-                                            <li><a href="{% url "parts_list" %}?f=qcqm-lt" title="Enter new part">
+                                            <li class="hover-parent"><a href="{% url "parts_list" %}?f=qcqm-lt" title="Enter new part">
                                                 <i class="fa fa-stack fa-lg fa-fw">
-                                                    <i class="fa fa-list fa-stack-custom-sub upper-left danger"></i>
-                                                    <i class="fa fa-cog fa-stack-custom-main"></i>
+                                                    <i class="fa fa-cogs fa-flip-horizontal fa-stack-custom-main hover-sub-danger"></i>
                                                 </i>
                                                 View Low Inventory Parts
                                             </a></li>
@@ -436,17 +425,18 @@
                                     </a>
                                     <ul class="dropdown-menu" role="menu">
                                         <li><a href="{% url "issue_list" %}" title="All Issues">
-                                            <i class="fa fa-stack fa-fw">
-                                                <i class="fa fa-list fa-stack-custom-sub upper-left info"></i>
-                                                <i class="fa fa-bug fa-stack-custom-main fa-lg"></i>
+                                            <i class="fa fa-stack fa-fw fa-lg">
+                                                <i class="fa fa-bug fa-stack-custom-sub upper-left"></i>
+                                                <i class="fa fa-bug fa-stack-custom-main"></i>
+                                                <i class="fa fa-bug fa-stack-custom-sub fa-rotate-90 lower-xxleft"></i>
                                             </i>
                                             All Issues
                                         </a></li>
                                         <li class="divider"></li>
-                                        <li><a href="{% url "issue_new" %}" title="Create a new issue">
-                                            <i class="fa fa-stack fa-fw">
-                                                <i class="fa fa-plus fa-stack-custom-sub upper-left success"></i>
-                                                <i class="fa fa-bug fa-stack-custom-main fa-lg"></i>
+                                        <li class="hover-parent"><a href="{% url "issue_new" %}" title="Create a new issue">
+                                            <i class="fa fa-stack fa-fw fa-lg">
+                                                <i class="fa fa-plus fa-stack-custom-sub upper-left hover-sub-success"></i>
+                                                <i class="fa fa-bug fa-stack-custom-main"></i>
 {#                                                <i class="fa fa-cube fa-stack-custom-sub lower-right text-gray"></i>#}
                                             </i>
                                             Create Issue
@@ -474,36 +464,35 @@
 
                                             <li><a href="{% url 'unit_list' %}">
                                                 <i class="fa fa-stack fa-fw fa-lg">
-                                                    <i class="fa fa-list fa-stack-custom-sub upper-left info"></i>
-                                                    <i class="fa fa-cube fa-stack-custom-main"></i>
+{#                                                    <i class="fa fa-list fa-stack-custom-sub upper-left info"></i>#}
+                                                    <i class="fa fa-cubes fa-stack-custom-main"></i>
                                                 </i>
                                                 Units
                                             </a></li>
-                                            <li><a href="{% url 'se_down_time' %}">
+                                            <li class="hover-parent"><a href="{% url 'se_down_time' %}">
                                                 <i class="fa fa-stack fa-fw fa-lg">
-                                                    <i class="fa fa-list fa-stack-custom-sub upper-left info"></i>
+                                                    <i class="fa fa-clock-o fa-stack-custom-sub upper-left hover-sub-warning"></i>
                                                     <i class="fa fa-wrench fa-stack-custom-main"></i>
                                                 </i>
                                                 Service and Lost Time
                                             </a></li>
                                             <li><a href="{% url 'vendor_list' %}">
                                                 <i class="fa fa-stack fa-fw fa-lg">
-                                                    <i class="fa fa-list fa-stack-custom-sub upper-left info"></i>
+{#                                                    <i class="fa fa-list fa-stack-custom-sub upper-left info"></i>#}
                                                     <i class="fa fa-truck fa-flip-horizontal fa-stack-custom-main"></i>
                                                 </i>
                                                 Vendors
                                             </a></li>
                                             {% if USE_PARTS %}
-                                                <li><a href="{% url "parts_list" %}?f=qcqm-lt" title="Enter new part">
+                                                <li class="hover-parent"><a href="{% url "parts_list" %}?f=qcqm-lt" title="Enter new part">
                                                     <i class="fa fa-stack fa-lg fa-fw">
-                                                        <i class="fa fa-list fa-stack-custom-sub upper-left danger"></i>
-                                                        <i class="fa fa-cog fa-stack-custom-main"></i>
+                                                        <i class="fa fa-cogs fa-flip-horizontal fa-stack-custom-main hover-sub-danger"></i>
                                                     </i>
                                                     Low Inventory Parts
                                                 </a></li>
                                                 <li><a href="{% url 'suppliers_list' %}">
                                                     <i class="fa fa-stack fa-fw fa-lg">
-                                                        <i class="fa fa-list fa-stack-custom-sub upper-left info"></i>
+{#                                                        <i class="fa fa-list fa-stack-custom-sub upper-left info"></i>#}
                                                         <i class="fa fa-microchip fa-stack-custom-main"></i>
                                                     </i>
                                                     Suppliers

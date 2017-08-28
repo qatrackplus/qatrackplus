@@ -1,0 +1,160 @@
+{% extends "service_log/sl_base.html" %}
+
+{% load widget_tweaks %}
+{% load qa_tags %}
+
+{% block head_title %}Part{% endblock %}
+
+{% block extra_css %}
+    {{ block.super }}
+{% endblock extra_css %}
+
+{% block extra_js %}
+    <script type="text/javascript">
+
+    </script>
+{% endblock extra_js %}
+
+{% block require_javascript %}
+{#    require(['p_part', 'sidebar']);#}
+{% endblock require_javascript %}
+
+{% block body %}
+
+    <div>
+
+    </div>
+
+    <form action="" method="post" novalidate>
+        {% csrf_token %}
+        <div class="max-width-lg">
+            <div class="row">
+                <div class="col-md-3">
+                    <h3 class="no-margin-top">Part {{ part.id }} Details</h3>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="box">
+                        <div class="box-header">
+
+                        </div>
+                        <div class="box-body">
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <dl class="dl-horizontal">
+                                        <dt>Part number:</dt><dd><div>{{ part.part_number }}</div></dd>
+                                        <dt>Cost:</dt><dd><div>{{ part.cost }}</div></dd>
+                                        <dt>Quantity min:</dt><dd><div>{{ part.quantity_min }}</div></dd>
+                                        <dt>Quantity current:</dt><dd><div>{{ part.quantity_current }}</div></dd>
+                                    </dl>
+                                    <dl>
+                                        <dt>Description:</dt>
+                                        <dd>{{ part.description }}</dd>
+                                    </dl>
+                                </div>
+                                <div class="col-sm-6">
+                                    <dl class="dl-horizontal">
+                                        <dt>Alt part number:</dt><dd><div>{{ part.alt_part_number }}</div></dd>
+                                        <dt>Part category:</dt><dd><div>{% if part.part_category %}{{ part.part_category }}{% endif %}</div></dd>
+                                        <dt>Obsolete:</dt><dd><div>{{ part.is_obsolete }}</div></dd>
+                                    </dl>
+                                    <dl>
+                                        <dt>Notes:</dt>
+                                        <dd>{{ part.notes }}</dd>
+                                    </dl>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-5">
+
+                    <div class="box">
+                        <div class="box-header">
+                            <h4 class="box-title">Suppliers</h4>
+                        </div>
+
+                        <div class="box-body">
+                            <table class="table table-condensed table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Supplier</th>
+                                        <th>Supplier Specific Part #</th>
+                                        <th>Delete</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for psc in part_supplier_collections %}
+                                        <tr>
+                                            <td class="min-width-200">{{ psc.supplier.name }}</td>
+                                            <td>{{ psc.part_number }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot>
+
+                                </tfoot>
+                            </table>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="col-md-7">
+
+                    <div class="box">
+                        <div class="box-header">
+                            <h4 class="box-title">Storage</h4>
+                        </div>
+
+                        <div class="box-body">
+                            <table class="table table-condensed table-hover">
+                                <thead>
+                                    <tr>
+{#                                        <th></th>#}
+                                        <th>Room</th>
+                                        <th>Location</th>
+                                        <th class="max-width-75">Quantity</th>
+                                        <th>Delete</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for sto in part.storage.all %}
+                                        <tr>
+                                            <td class="min-width-150 room-td">{{ sto.room }}</td>
+                                            <td class="min-width-100">{{ sto.location }}</td>
+                                            <td class="max-width-75">{{ sto_form.quantity }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot>
+
+                                </tfoot>
+                            </table>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+
+
+
+            <div class="row">
+                <div class="col-md-12">
+                    <a href="{% url 'part_edit' part.id %}" class="btn btn-flat btn-primary">Edit</a>
+                </div>
+            </div>
+        </div>
+
+
+
+
+    </form>
+{% endblock body %}

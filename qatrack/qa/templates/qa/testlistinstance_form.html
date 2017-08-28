@@ -64,7 +64,7 @@
         {{ form.errors }}
         <div id="box-contacts" class="row" style="display: none;">
             <div class="col-lg-12">
-                <div class="box box-info">
+                <div class="box">
                     <div class="box-header">
                         <h3 class="box-title">
                             <i class="fa fa-phone fa-fw" aria-hidden="true"></i>
@@ -99,7 +99,7 @@
         {% if test_list.description or unit_test_collection.tests_object.description %}
             <div id="box-description" class="row" style="display: none;">
                 <div class="col-lg-12">
-                    <div class="box box-info">
+                    <div class="box">
                         <div class="box-header">
                             <h3 class="box-title">
                                 <span class="fa fa-stack fa-fw" aria-hidden="true">
@@ -134,7 +134,7 @@
 
         <div id="box-admin" class="row" style="display: {% if perms.qa.can_review and perms.qa.can_review_own_tests or perms.qa.can_override_date %}block{% else %}none{% endif %};">
             <div class="col-lg-12">
-                <div class="box box-primary">
+                <div class="box">
                     <div class="box-header">
                         <h3 class="box-title">
                             <i class="fa fa-wrench" aria-hidden="true"></i>
@@ -210,7 +210,7 @@
 
         <div id="box-perform" class="row">
             <div class="col-lg-12">
-                <div class="box box-primary box-pho-borders">
+                <div class="box box-pho-borders">
 
                     <div class="box-header">
                         <div class="row">
@@ -262,7 +262,7 @@
 
                                 {{formset.management_form}}
 
-                                <table id="perform-qa-table" class="qa-table table table-bordered table-responsive table-hover table-condensed">
+                                <table id="perform-qa-table" class="qa-table table table-bordered table-responsive table-condensed">
                                     <thead>
                                         <tr>
                                             <th class="qa-category">Category</th>

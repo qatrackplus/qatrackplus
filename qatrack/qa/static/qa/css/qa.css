@@ -137,36 +137,105 @@ th.qa-history div{
 tr .callout {
     margin: 10px 0;
 }
-tr.qa-comment .comment-div {
-    /*height:50px;*/
-    display:none;
-    padding: 0;
-    /*height: auto;*/
+tr.qa-comment div.comment-container {
+    display: none;
 }
-tr.qa-comment .comment-div textarea {
-    width:100%;
+tr.qa-comment div.comment-container div.comment-div {
+    padding: 10px;
+    width: 100%;
+    border-top: 1px solid #eeeeee;
+}
+tr.qa-comment div.comment-container div.comment-div textarea {
+    width: 100%;
     resize: none;
-    border: none;
     vertical-align: top;
     overflow: hidden !important;
 }
-tr.qa-procedure div.qa-procedure-text {
+tr.qa-procedure div.procedure-container {
     display:none;
-    width: 100%;
 }
-tr.qa-procedure,
+tr.qa-procedure div.procedure-container div.qa-procedure-text {
+    width: 100%;
+    padding: 10px;
+    border-top: 1px solid #eeeeee;
+}
+tr.qa-error div.error-container div.qa-error-text {
+    width: 100%;
+    padding: 10px;
+    border-top: 1px solid #eeeeee;
+    color: #dd4b39;
+}
+tr.qa-error > td {
+    padding-left: 0 !important;
+    padding-bottom: 0 !important;
+}
+#perform-qa-table > tbody > tr > td .null-bar {
+    border-left: 3px solid transparent;
+}
+#perform-qa-table > tbody > tr > td .procedure-bar {
+    border-left: 3px solid transparent;
+    -webkit-transition: border-color 1s; /* Safari */
+    transition: border-color 1s;
+}
+#perform-qa-table > tbody > tr > td .procedure-bar.in {
+    border-left: 3px solid #00c0ef;
+    -webkit-transition: border-color 1s; /* Safari */
+    transition: border-color 1s;
+}
+#perform-qa-table > tbody > tr > td .comment-bar {
+    border-left: 3px solid transparent;
+    -webkit-transition: border-color 1s; /* Safari */
+    transition: border-color 1s;
+}
+#perform-qa-table > tbody > tr > td .comment-bar.in {
+    border-left: 3px solid #3c8dbc;
+    -webkit-transition: border-left 1s; /* Safari */
+    transition: border-left 1s;
+}
+#perform-qa-table > tbody > tr > td .error-bar {
+    border-left: 3px solid transparent;
+    -webkit-transition: border-color 1s; /* Safari */
+    transition: border-color 1s;
+}
+#perform-qa-table > tbody > tr > td .error-bar.in {
+    border-left: 3px solid #dd4b39;
+    -webkit-transition: border-left 1s; /* Safari */
+    transition: border-left 1s;
+}
+#perform-qa-table > tbody > tr > td.qa-category {
+    padding: 0;
+}
+#perform-qa-table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+#perform-qa-table td {
+    border-image: none !important;
+    border: none !important;
+}
+/*#perform-qa-table .qa-valuerow td {*/
+    /*border-bottom: 1px solid #eeeeee !important;*/
+/*}*/
+#perform-qa-table > tbody > tr.hover {
+    background-color: #eeeeee;
+}
+#perform-qa-table > tbody > tr.qa-procedure {
+    /*display: none;*/
+    border-bottom: 1px solid #eeeeee !important;
+}
 tr.qa-comment {
     display: none;
 }
 tr.qa-procedure,
 tr.qa-procedure td,
 tr.qa-comment,
-tr.qa-comment td{
+tr.qa-comment td {
     padding: 0 !important;
     margin: 0 !important;
     overflow: hidden;
     border-width: 0 !important;
 }
+
 
 
 /* admin options */
@@ -295,4 +364,7 @@ input[type="number"] {
 #listable-table-unreviewed > thead > tr > th:nth-child(1),
 #listable-table-unreviewed > tbody > tr > td:nth-child(1) {
     min-width: 160px;
+}
+row.procedure-open > td:nth-child(1) {
+    border-left: 3px solid #00ff00;
 }

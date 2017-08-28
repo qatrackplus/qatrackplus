@@ -17,7 +17,7 @@
 
 {% block extra_js %}
     {% autoescape off %}
-        {% listable view_name dom="<'row'<'col-sm-5'i><'col-sm-7'p>><'row'<'col-sm-12'tr>><'row'<'col-sm-5'><'col-sm-7'p>>" requirejs=True pagination_type='bootstrap3' css_table_class='table-hover table-condensed table-striped' css_input_class='btn-flat btn-sm input-sm full-width' auto_width=False %}
+        {% listable view_name dom="<'row'<'col-sm-5'i><'col-sm-7'p>><'row'<'col-sm-12'tr>><'row'<'col-sm-5'><'col-sm-7'p>>" requirejs=True pagination_type='bootstrap3' css_table_class='table-hover table-condensed' css_input_class='btn-flat btn-sm input-sm full-width' auto_width=False %}
     {% endautoescape %}
 {% endblock %}
 
@@ -29,7 +29,7 @@
 
     <div class="row">
         <div class="col-md-12">
-            <div class="box box-primary">
+            <div class="box">
                 <div class="box-header">
                     <i class="fa {{ icon }} fa-fw" aria-hidden="true"></i>
                     <h3 class="box-title">{{page_title}}</h3>

@@ -1,6 +1,6 @@
 {% load qa_tags %}
 {% if show_se_link %}
-    <a class="btn btn-primary btn-xs btn-flat pull-right margin-left-2" href="{% url 'sl_details' pk=qaf.service_event.id %}">Service Event{% comment %}({{ qaf.service_event.id }}){% endcomment %}</a>
+    <a class="btn btn-default btn-xs btn-flat pull-right margin-left-2" href="{% url 'sl_details' pk=qaf.service_event.id %}">Service Event{% comment %}({{ qaf.service_event.id }}){% endcomment %}</a>
 {% endif %}
 {% if qaf.test_list_instance.pk %}
     {% if can_review %}

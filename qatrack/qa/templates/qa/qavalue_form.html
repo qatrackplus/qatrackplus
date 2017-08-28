@@ -2,14 +2,15 @@
 {% load qa_tags %}
 {% for field in form %}
     {% if field.errors %}
-        <tr class="no-hover">
+        <tr class="no-hover qa-error row-{{ form.prefix }}">
             <td colspan="8">
-                {% for error in field.errors %}
-                    <div class="qa-procedure-text callout callout-custom border-danger">
-                        {{test_info.test.name}}:&nbsp;{{ error }}
-                    </div>
-                {% endfor %}
-
+                <div class="error-container error-bar in">
+                    {% for error in field.errors %}
+                        <div class="qa-error-text">
+                            {{test_info.test.name}}:&nbsp;{{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
             </td>
         </tr>
 {#            <td>#}
@@ -25,7 +26,7 @@
 {#        </tr>#}
     {% endif %}
 {% endfor %}
-<tr class="control-group qa-valuerow {%if test_info.test.hidden %}hidden{% endif %}" >
+<tr class="control-group qa-valuerow {%if test_info.test.hidden %}hidden{% endif %} row-{{ form.prefix }}" data-prefix="{{ form.prefix }}">
 
     {% for hidden in form.hidden_fields %}
         {{ hidden }}
@@ -33,7 +34,17 @@
 
     {% with ref=test_info.reference  tol=test_info.tolerance  test=test_info.test uti=test_info.unit_test_info %}
 
-        <td class="qa-category">{{test.category.name}}</td>
+        <td class="qa-category">
+            <div class="error-bar {% if form.errors %}in{% endif %}">
+                <div class="procedure-bar">
+                    <div class="comment-bar">
+                        <div class="padding-left-5">
+                            {{test.category.name}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </td>
         <td class="qa-name qa-showproc">
             {%if test.procedure or test.description %}
                 <a href="#" class="revealprocedure" title="Show/hide procedure for this test">{{test.name}}</a>
@@ -84,31 +95,41 @@
 
     {% endwith %}
 </tr>
-<tr class="qa-comment no-hover">
+<tr class="qa-comment no-hover row-{{ form.prefix }}">
     <td colspan="8"  class="">
-        <div class="comment-div callout callout-custom border-primary">
-            {{ form.comment|addplaceholder:"Add Comment For Reviewer" }}
+        <div class="error-bar {% if form.errors %}in{% endif %}">
+            <div class="procedure-bar">
+                <div class="comment-container comment-bar">
+                    <div class="comment-div">
+                        {{ form.comment|addplaceholder:"Add Comment For Reviewer" }}
+                    </div>
+                </div>
+            </div>
         </div>
     </td>
 </tr>
 
-<tr class="qa-procedure no-hover">
+<tr class="qa-procedure no-hover row-{{ form.prefix }}">
     <td colspan="8"  class="" >
         {% if form.unit_test_info.test.procedure or form.unit_test_info.test.description %}
-            <div class="qa-procedure-text callout callout-custom border-info">
-                {% if form.unit_test_info.test.procedure %}
-                    <h6>
-                        Detailed procedure link:
-                        <a href="{{form.unit_test_info.test.procedure}}" class="revealprocedure" title="Show detailed procedure for this test" target="_blank">
-                            {{form.unit_test_info.test.name}}
-                        </a>
-                    </h6>
-                {% endif %}
-{#                {% spaceless %}#}
-                    {% if form.unit_test_info.test.description %}
-                        <div class="pre">{{form.unit_test_info.test.description.strip|safe}}</div>
-                    {% endif %}
-{#                {% endspaceless%}#}
+            <div class="error-bar {% if form.errors %}in{% endif %}">
+                <div class="procedure-container procedure-bar">
+                    <div class="qa-procedure-text">
+                        {% if form.unit_test_info.test.procedure %}
+                            <h6>
+                                Detailed procedure link:
+                                <a href="{{form.unit_test_info.test.procedure}}" class="revealprocedure" title="Show detailed procedure for this test" target="_blank">
+                                    {{form.unit_test_info.test.name}}
+                                </a>
+                            </h6>
+                        {% endif %}
+        {#                {% spaceless %}#}
+                            {% if form.unit_test_info.test.description %}
+                                <div class="pre">{{form.unit_test_info.test.description.strip|safe}}</div>
+                            {% endif %}
+        {#                {% endspaceless%}#}
+                    </div>
+                </div>
             </div>
         {% endif %}
     </td>

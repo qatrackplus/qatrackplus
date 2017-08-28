@@ -30,5 +30,6 @@ if settings.USE_PARTS:
 
     admin.site.register([p_models.Part], PartAdmin)
     admin.site.register([p_models.Storage], StorageAdmin)
+    admin.site.register([p_models.PartCategory], admin.ModelAdmin)
     admin.site.register([p_models.PartStorageCollection], PartStorageCollectionAdmin)
     admin.site.register([p_models.Supplier, p_models.Room], admin.ModelAdmin)

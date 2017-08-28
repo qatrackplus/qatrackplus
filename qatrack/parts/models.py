@@ -85,9 +85,8 @@ class PartCategory(models.Model):
 
 class Part(models.Model):
 
-    part_categories = models.ManyToManyField(
-        PartCategory, blank=True, null=True, help_text=_('Categories for this part'), related_name='parts'
-    )
+    # TODO change categories to FK that is required
+    part_category = models.ForeignKey(PartCategory, blank=True, null=True, help_text=_('Category for this part'))
     suppliers = models.ManyToManyField(
         Supplier, blank=True, null=True, help_text=_('Suppliers of this part'), related_name='parts',
         through='PartSupplierCollection'

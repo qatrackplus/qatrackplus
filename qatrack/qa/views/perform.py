@@ -685,8 +685,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         context["unit_test_infos"] = json.dumps(self.template_unit_test_infos())
         context["unit_test_collection"] = self.unit_test_col
         context["contacts"] = list(Contact.objects.all().order_by("name"))
-        print(self.object)
-        print(self.unit_test_col.unit.id)
+
         qa_followup_id = self.request.GET.get('qaf', None)
         if qa_followup_id:
             qa_followup = sl_models.QAFollowup.objects.get(pk=qa_followup_id)

@@ -36,7 +36,7 @@
 .fa-stack-custom-sub.lower-left {
     right: auto;
     top: auto;
-    left: 0;
+    left: -5px;
     bottom: 0;
 }
 .fa-stack-custom-sub.lower-extra-left {
@@ -44,6 +44,12 @@
     top: auto;
     left: -5px;
     bottom: 0;
+}
+.fa-stack-custom-sub.lower-xxleft {
+    right: auto;
+    top: auto;
+    left: -10px;
+    bottom: -3px;
 }
 .fa-stack-custom-sub.lower-right {
     right: 0;

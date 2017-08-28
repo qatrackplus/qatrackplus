@@ -128,7 +128,7 @@ class PartForm(BetterModelForm):
             }),
             ('optional_fields', {
                 'fields': [
-                    'alt_part_number', 'part_categories', 'notes', 'is_obsolete'
+                    'alt_part_number', 'part_category', 'notes', 'is_obsolete'
                 ]
             })
         ]
@@ -136,7 +136,7 @@ class PartForm(BetterModelForm):
     def __init__(self, *args, **kwargs):
         super(PartForm, self).__init__(*args, **kwargs)
 
-        for f in ['part_number', 'cost', 'quantity_min', 'alt_part_number', 'part_categories']:
+        for f in ['part_number', 'cost', 'quantity_min', 'alt_part_number', 'part_category']:
             self.fields[f].widget.attrs['class'] = 'form-control'
 
         for f in ['description', 'notes']:

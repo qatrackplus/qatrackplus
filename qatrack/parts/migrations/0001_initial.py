@@ -120,8 +120,8 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='part',
-            name='part_categories',
-            field=models.ManyToManyField(blank=True, help_text='Categories for this part', null=True, related_name='parts', to='parts.PartCategory'),
+            name='part_category',
+            field=models.ForeignKey(blank=True, help_text='Category for this part', null=True, on_delete=django.db.models.deletion.CASCADE, to='parts.PartCategory'),
         ),
         migrations.AddField(
             model_name='partused',

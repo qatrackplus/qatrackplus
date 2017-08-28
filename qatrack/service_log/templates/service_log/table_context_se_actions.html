@@ -1,5 +1,5 @@
 {% load qa_tags %}
 <div style="min-width: 85px;">
-    <a class="btn btn-primary btn-xs btn-flat" href="{% url 'sl_edit' se.pk %}{% if next %}?next={{ next }}{% endif %}">Edit</a>
-    <a class="btn btn-primary btn-xs btn-flat" href="{% url 'sl_details' se.pk %}">Details</a>
+    <a class="btn btn-default btn-xs btn-flat" href="{% url 'sl_edit' se.pk %}{% if next %}?next={{ next }}{% endif %}">Edit</a>
+    <a class="btn btn-default btn-xs btn-flat" href="{% url 'sl_details' se.pk %}">Details</a>
 </div>

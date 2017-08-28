@@ -247,6 +247,10 @@ CACHES = {
 # Session Settings
 SESSION_COOKIE_AGE = 14 * 24 * 60 * 60
 SESSION_SAVE_EVERY_REQUEST = True
+# SESSION_COOKIE_NAME = 'QaTrack'
+# SESSION_COOKIE_PATH = '/qatrack'
+# CSRF_COOKIE_PATH = '/qatrack'
+# CSRF_COOKIE_NAME = 'csrftoken-qatrack'
 
 # -----------------------------------------------------------------------------
 # Email and notification settings

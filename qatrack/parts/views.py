@@ -233,6 +233,18 @@ class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, Mo
         return HttpResponseRedirect(reverse('parts_list'))
 
 
+class PartDetails(DetailView):
+
+    model = p_models.Part
+    template_name = 'parts/part_details.html'
+
+    def get_context_data(self, **kwargs):
+        context_data = super().get_context_data(**kwargs)
+        context_data['part_supplier_collections'] = p_models.PartSupplierCollection.objects.filter(part=self.object)
+
+        return context_data
+
+
 class PartsUnitsCost(TemplateView):
     template_name = 'parts/parts_units_cost.html'
     queryset = u_models.Unit.objects.none()
@@ -302,7 +314,7 @@ class PartsList(BaseListableView):
         'description',
         'part_number',
         'quantity_current',
-        'part_categories__name'
+        'part_category__name'
     )
 
     headers = {
@@ -311,7 +323,7 @@ class PartsList(BaseListableView):
         'description': _('Description'),
         'part_number': _('Part Number'),
         'quantity_current': _('In Storage'),
-        'part_categories__name': _('Categories')
+        'part_category__name': _('Category')
     }
 
     widgets = {
@@ -320,7 +332,7 @@ class PartsList(BaseListableView):
         'description': TEXT,
         'part_number': TEXT,
         'quantity_current': None,
-        'part_categories__name': SELECT_MULTI_FROM_MULTI
+        'part_category__name': SELECT_MULTI
     }
 
     search_fields = {
@@ -330,12 +342,10 @@ class PartsList(BaseListableView):
 
     order_fields = {
         'actions': False,
-        'part_categories__name': False
+        'part_category__name': False
     }
 
-    prefetch_related = (
-        'part_categories',
-    )
+    select_related = ('part_category',)
 
     def get_icon(self):
         return 'fa-cog'

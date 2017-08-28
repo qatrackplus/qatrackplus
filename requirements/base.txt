@@ -2,11 +2,14 @@
 Django==1.10.2
 django-admin-views==0.8.0
 django-braces==1.9.0
+django-contrib-comments==1.8.0
 django-crispy-forms==1.6.0
+django-form-utils==1.0.3
 -e git+https://github.com/django/django-formtools.git@bb97a8abd374c50991c0a9ce144f17e7322a0c48#egg=django-formtools
--e git+https://github.com/randlet/django-listable.git@d4c73d92588caee00cc3dfad1c1c0d63c8213f74#egg=django_listable
+-e git+https://github.com/randlet/django-listable.git@500546d1795b668541d1664f2176c36f294ec956#egg=django_listable
 django-registration==2.1.2
 django-tastypie==0.13.3
+django-widget-tweaks==1.4.1
 matplotlib==1.5.3
 numpy==1.11.2rc1+mkl
 pydicom==0.9.9

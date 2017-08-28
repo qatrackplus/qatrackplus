@@ -16,15 +16,18 @@ div.daterangepicker.dropdown-menu li {
     border-width: 1px;
 }
 div.daterangepicker.dropdown-menu li.active {
-    background-color: #3c8dbc;
-    border-color: #367fa9;
+    background-color: #627585;
+    border-color: #546777;
     color: #fff;
 }
 div.daterangepicker.dropdown-menu li.active:hover {
-    background-color: #367fa9;
-    border-color: #204d74;
+    background-color: #546777;
+    border-color: #3d4c5b;
 }
 div.daterangepicker.dropdown-menu li:hover {
     background-color: #e7e7e7;
     border-color: #adadad;
+}
+body > div.daterangepicker.dropdown-menu > div.calendar > div.calendar-table > table > tbody > tr > td.active {
+    background-color: #546777;
 }

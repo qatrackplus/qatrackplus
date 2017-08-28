@@ -532,6 +532,8 @@ class Command(BaseCommand):
 
     def migrate_equipment(self):
 
+        # TODO: If unit not in QaTrack and
+
         print('\n---\tMigrating equipment. This will iterate through equipment in Accel database and\n'
               '\tadd new units and models in the QaTrack database as needed.\n')
 
@@ -1061,10 +1063,10 @@ class Command(BaseCommand):
                         description=row.description,
                         quantity_min=row.qty_min,
                         cost=row.cost,
-                        notes=row.comments
+                        notes=row.comments,
+                        part_category=category
                     )
                     part.save()
-                    part.part_categories.add(category)  # TODO haven't tested this yet
                     for s in sups:
                         psc = p_models.PartSupplierCollection(
                             part=part,

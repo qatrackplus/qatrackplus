@@ -226,11 +226,14 @@ function TestInstance(test_info, row){
     this.initialized = false;
     this.test_info = test_info;
     this.row = $(row);
+    this.prefix = this.row.attr('data-prefix');
     this.inputs = this.row.find("td.qa-value").find("input, textarea, select");
 
     this.comment = this.row.next();
 
     this.visible = true;
+
+    this.hover = false;
 
     this.status = this.row.find("td.qa-status");
     this.test_status = null;
@@ -256,6 +259,17 @@ function TestInstance(test_info, row){
         }
     });
 
+    var self = this;
+    self.rows = $('.row-' + self.prefix);
+    self.rows.hover(
+        function() {
+            self.rows.addClass('hover');
+        },
+        function() {
+            $('.hover').removeClass('hover');
+        }
+    );
+
     this.show_comment = this.row.find("td.qa-showcmt a");
     this.comment_box = this.comment.find("textarea");
     this.comment_icon = this.row.find(".qa-showcmt i");
@@ -263,8 +277,8 @@ function TestInstance(test_info, row){
     this.show_comment.click(function(){
 
         self.comment.toggle('fast');
-        self.comment.find('.comment-div').slideToggle('fast');
-
+        self.comment.find('.comment-bar').slideToggle('fast').toggleClass('in');
+        self.row.find('.comment-bar').toggleClass('in');
         return false;
     });
     this.set_comment_icon = function(){
@@ -284,8 +298,10 @@ function TestInstance(test_info, row){
     this.show_procedure = this.row.find("td.qa-showproc a");
     this.procedure = this.comment.next();
     this.show_procedure.click(function(){
-        self.procedure.toggle('fast');
-        self.procedure.find('.qa-procedure-text').slideToggle('fast');
+        // self.procedure.toggle('fast');
+        self.procedure.find('.procedure-bar').slideToggle('fast').toggleClass('in');
+        self.comment.find('.procedure-bar').toggleClass('in');
+        self.row.find('.procedure-bar').toggleClass('in');
         return false;
     });
 
@@ -431,7 +447,7 @@ function TestInstance(test_info, row){
         self.comment.hide();
         self.comment.find('.comment-div').hide();
         self.procedure.hide('fast');
-        self.procedure.find('.qa-procedure-text').hide();
+        self.procedure.find('.procedure-container').hide();
         self.set_skip(false);
         self.visible = true;
         self.comment_box.val(self.comment_box.val().replace(self.NOT_PERFORMED,""));
@@ -445,7 +461,7 @@ function TestInstance(test_info, row){
         self.comment.hide();
         self.comment.find('.comment-div').hide();
         self.procedure.hide('fast');
-        self.procedure.find('.qa-procedure-text').hide();
+        self.procedure.find('.procedure-container').hide();
         self.visible = false;
 
         // skipping sets value to null but we want to presever value in case it
@@ -954,13 +970,13 @@ $(document).ready(function(){
         require(['jquery-ui'], function() {
             fail ? function() {
                 do_not_treat.show();
-                box_perform.switchClass('box-primary box-pho-borders', 'box-danger box-red-borders', 1000);
+                box_perform.switchClass('box-pho-borders', 'box-danger box-red-borders', 1000);
                 sub_button.switchClass('btn-primary', 'btn-danger', 1000);
                 box_perform_header.addClass('red-bg', 1000);    
 
 
             }() : function() {
-                box_perform.switchClass('box-danger box-red-borders', 'box-primary box-pho-borders', 1000);
+                box_perform.switchClass('box-danger box-red-borders', 'box-pho-borders', 1000);
                 sub_button.switchClass('btn-danger', 'btn-primary', 1000);
                 box_perform_header.removeClass('red-bg', 1000, function() {
                     do_not_treat.hide();

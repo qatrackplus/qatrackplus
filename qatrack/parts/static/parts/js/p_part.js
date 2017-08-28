@@ -3,12 +3,12 @@ require(['jquery', 'moment', 'autosize', 'select2', 'sl_utils', 'inputmask'], fu
 
     $(document).ready(function () {
 
-        var $part_categories = $('#id_part_categories'),
+        var $part_category = $('#id_part_category'),
             $cost = $('#id_cost');
 
         autosize($('textarea.autosize'));
 
-        $part_categories.select2({
+        $part_category.select2({
             minimumResultsForSearch: 10,
             width: '100%'
         });
