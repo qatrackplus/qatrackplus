@@ -35,6 +35,14 @@
 
                 </div>
                 <div class="box-body pad">
+                    {% if print_parts %}
+                        <div class="row noprint">
+                            <div class="col-sm-12">
+                                <a href="javascript:window.print()" class="btn btn-flat btn-info">Print</a>
+                                <a href="{% url 'low_parts_pdf' %}" class="btn btn-flat btn-info">PDF</a>
+                            </div>
+                        </div>
+                    {% endif %}
                     {{ listable_table }}
                 </div>
             </div>

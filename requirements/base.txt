@@ -15,4 +15,5 @@ numpy==1.11.2rc1+mkl
 pydicom==0.9.9
 python-dateutil==2.5.3
 pytz==2016.7
+reportlab==3.4.0
 scipy==0.18.1

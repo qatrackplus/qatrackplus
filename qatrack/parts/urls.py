@@ -13,5 +13,6 @@ urlpatterns = [
     url(r'^details/(?P<pk>\d+)?$', views.PartDetails.as_view(), name='part_details'),
     url(r'^suppliers/$', views.SuppliersList.as_view(), name='suppliers_list'),
     url(r'^parts_units_cost(?:/(?P<pk>\d+))?/$', views.PartsUnitsCost.as_view(), name='parts_units_cost'),
-    url(r'^go_parts_units_cost/$', views.go_units_parts_cost, name='go_units_parts_cost')
+    url(r'^go_parts_units_cost/$', views.go_units_parts_cost, name='go_units_parts_cost'),
+    url(r'^low_parts_pdf/$', views.low_parts_pdf, name='low_parts_pdf'),
 ]

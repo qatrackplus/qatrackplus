@@ -11,6 +11,8 @@ from django.utils.translation import ugettext as _
 from django.views.generic.edit import ModelFormMixin, ProcessFormView
 from django.views.generic.detail import SingleObjectTemplateResponseMixin
 from django.views.generic import TemplateView, DetailView
+from io import BytesIO
+from reportlab.pdfgen import canvas
 
 from listable.views import (
     BaseListableView, DATE_RANGE, SELECT_MULTI, NONEORNULL, TEXT, SELECT_MULTI_FROM_MULTI,
@@ -39,13 +41,12 @@ def parts_storage_searcher(request):
     except ValueError:
         return JsonResponse({'data': '__clear__'}, safe=False)
 
-    print(p_id)
     psc = p_models.PartStorageCollection.objects \
         .filter(part=p_id) \
         .select_related('storage', 'storage__room', 'storage__room__site') \
         .order_by('storage__room__site__name', 'storage__room__name', 'storage__location')[0:50] \
         .values_list('storage_id', 'storage__room__site__name', 'storage__room__name', 'storage__location', 'quantity')
-    print(psc)
+
     return JsonResponse({'data': list(psc)}, safe=False)
 
 
@@ -301,7 +302,7 @@ class PartsUnitsCost(TemplateView):
 
 class PartsList(BaseListableView):
     model = p_models.Part
-    template_name = 'service_log/service_event_list.html'
+    template_name = 'parts/parts_list.html'
     paginate_by = 50
 
     # order_by = ['part_number']
@@ -398,6 +399,8 @@ class PartsList(BaseListableView):
         context['icon'] = self.get_icon()
         f = self.request.GET.get('f', False)
         context['kwargs'] = {'f': f} if f else {}
+        if f == 'qcqm-lt':
+            context['print_parts'] = True
         context['page_title'] = self.get_page_title(f)
         return context
 
@@ -474,3 +477,55 @@ class SuppliersList(BaseListableView):
         c = Context({'p': p, 'request': self.request, 'next': mext})
         return template.render(c)
 
+
+def low_parts_pdf(request):
+
+    low_parts_qs = p_models.Part.objects.filter(quantity_current__lt=F('quantity_min')).prefetch_related('suppliers')
+    response = HttpResponse(content_type='application/pdf')
+    date = timezone.now().strftime('%Y-%m-%d')
+    filename = 'low-parts_%s' % date
+    response['Content-Disposition'] = 'attachement; filename={0}.pdf'.format(filename)
+    buffer = BytesIO()
+    report = canvas.Canvas(buffer, bottomup=False)
+
+    report.setFont('Helvetica-Bold', 10)
+
+    report.drawString(80, 40, 'Low Parts (%s)' % date)
+
+    report.drawString(30, 80, 'ID')
+    report.drawString(70, 80, 'Description')
+    report.drawString(270, 80, 'Part Number')
+    report.drawString(360, 80, 'Quantity')
+    report.drawString(420, 80, 'Suppliers')
+
+    report.setFont('Helvetica', 8)
+    page = 1
+    report.drawString(500, 40, 'Page %s' % page)
+    count = 1
+    for lp in low_parts_qs:
+        report.drawString(30, count * 10 + 90, str(lp.id))
+        report.drawString(70, count * 10 + 90, str(lp.description))
+        report.drawString(270, count * 10 + 90, str(lp.part_number))
+        report.drawString(360, count * 10 + 90, str(lp.quantity_current))
+        report.drawString(420, count * 10 + 90, str(' | '.join([s.name for s in lp.suppliers.all()])))
+        count += 1
+        if count > 70:
+
+            page += 1
+            report.showPage()
+            report.setFont('Helvetica-Bold', 10)
+            report.drawString(30, 80, 'ID')
+            report.drawString(70, 80, 'Description')
+            report.drawString(270, 80, 'Part Number')
+            report.drawString(360, 80, 'Quantity')
+            report.drawString(420, 80, 'Suppliers')
+            report.setFont('Helvetica', 8)
+            report.drawString(500, 40, 'Page %s' % page)
+            count = 1
+
+    report.showPage()
+    report.save()
+    pdf = buffer.getvalue()
+    buffer.close()
+    response.write(pdf)
+    return response

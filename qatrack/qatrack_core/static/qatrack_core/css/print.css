@@ -1,0 +1,15 @@
+@media print{
+   .noprint{
+       display: none;
+   }
+    #listable-table-parts_list > tbody > tr > td:nth-child(1),
+    #listable-table-parts_list > thead > tr > th:nth-child(1) {
+        display: none;
+    }
+    div.dataTables_paginate {
+        display: none;
+    }
+    #listable-table-parts_list > thead > tr:nth-child(2) {
+        display: none;
+    }
+}
