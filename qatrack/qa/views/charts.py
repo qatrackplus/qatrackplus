@@ -398,7 +398,7 @@ class BaseChartView(View):
                 datetime_service__gte=from_date,
                 datetime_service__lte=to_date
             ).select_related(
-                'test_list_instance_initiated_by', 'unit_service_area__unit'
+                'test_list_instance_initiated_by', 'unit_service_area__unit', 'unit_service_area__service_area'
             ).order_by('datetime_service')
 
             if se_approval_required:
@@ -418,7 +418,9 @@ class BaseChartView(View):
                     'initiated_by': se.test_list_instance_initiated_by_id,
                     'followups': [{'id': qaf.id, 'test_list_instance': qaf.test_list_instance_id, 'test_list': qaf.test_list_instance.test_list_id if qaf.test_list_instance else ''} for qaf in qa_followups],
                     'work_description': se.work_description,
-                    'unit': se.unit_service_area.unit_id,
+                    'problem_description': se.problem_description,
+                    'unit': {'id': se.unit_service_area.unit_id, 'name': se.unit_service_area.unit.name},
+                    'service_area': {'id': se.unit_service_area.service_area_id, 'name': se.unit_service_area.service_area.name},
                 })
 
         # self.plot_data['test_list_names'] = test_list_names

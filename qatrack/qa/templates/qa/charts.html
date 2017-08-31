@@ -28,13 +28,13 @@
 {% block body %}
 
 <div class="row">
-    <div class="col-md-12">
+    <div class="col-sm-12">
         <h3>Trending</h3>
     </div>
 </div>
 <div id="test-filters" class="row">
-    <div class="col-md-9">
-        <div class="box box-primary">
+    <div class="col-sm-9">
+        <div class="box">
             <div class="box-header">
                 <h3 class="box-title">Filters</h3>
             </div>
@@ -132,19 +132,19 @@
         </div>
     </div>
 
-    <div class="col-md-3">
-        <div class="box box-primary">
+    <div class="col-sm-3">
+        <div class="box">
             <div class="box-header">
                 <h3 class="box-title">Chart Options</h3>
             </div>
 
             <div class="box-body">
                 <div class="row">
-                    <div class="col-md-12">
+                    <div class="col-sm-12">
                         <div id="chart-options" class="control-container form-inline">
     {#                        <h5>Chart Options</h5>#}
                             <div class="row">
-                                <div class="col-md-12">
+                                <div class="col-sm-12">
                                     <label class="control-label" for="chart-type">
                                         Type:
                                         <select id="chart-type" class="inline input-medium">
@@ -155,7 +155,7 @@
                                 </div>
                             </div>
                             <div id="basic-chart-options" class="row">
-                                <div class="col-md-12">
+                                <div class="col-sm-12">
                                     {% comment %}<label class="checkbox basic-option" for="show-lines">
                                         <input type="checkbox" id="show-lines" checked="checked" />
                                         Lines
@@ -248,11 +248,11 @@
                                 Show service events?
                             </label>
                             <div id="service-event-container" class="row" style="display: none;">
-                                <div class="col-md-12">
+                                <div class="col-sm-12">
                                     <h5>Service Event Options</h5>
                                 </div>
-{#                                <div class="col-md-3">Types:</div>#}
-{#                                <div id="service-type-container" class="checkbox-container col-md-9">#}
+{#                                <div class="col-sm-3">Types:</div>#}
+{#                                <div id="service-type-container" class="checkbox-container col-sm-9">#}
 {#                                    {% for type in service_types %}#}
 {#                                        <label class="checkbox">#}
 {#                                            <input type="checkbox" name="service-types[]" id="service-type-{{type.pk}}" value="{{type.pk}}" title="{{type.name}}" checked="checked">#}
@@ -260,9 +260,9 @@
 {#                                        </label>#}
 {#                                    {% endfor %}#}
 {#                                </div>#}
-{#                                <div class="col-md-3">Approval required?</div>#}
+{#                                <div class="col-sm-3">Approval required?</div>#}
 {#                                <br>#}
-                                <div id="approval-container" class="checkbox-container col-md-9">
+                                <div id="approval-container" class="checkbox-container col-sm-9">
                                     <label class="checkbox">
                                         <input type="checkbox" name="approval-required" id="approval-required" title="Show only service events that require approval." checked="checked">
                                         Approval required?
@@ -287,7 +287,7 @@
 
             <div class="box-footer">
                 <div class="row">
-                    <div class="col-md-12">
+                    <div class="col-sm-12">
                         <button type="button" class="btn btn-primary btn-flat pull-right" data-loading-text="Generating Chart..." id="gen-chart">5. Generate Chart</button>
                     </div>
                 </div>
@@ -298,9 +298,9 @@
 
 
 <div class="row">
-    <div class="col-md-12">
+    <div class="col-sm-12">
         <div id="chart-container" class="row">
-            <div id="chart"  class="col-md-12">
+            <div id="chart"  class="col-sm-12">
 {#                <svg id="canvas"></svg>#}
             </div>
         </div>
@@ -310,9 +310,9 @@
     </div>
 </div>
 <div class="row">
-    <div class="col-md-12">
+    <div class="col-sm-12">
 
-        <div class="box box-primary">
+        <div class="box">
 
             <div class="box-header">
 
@@ -329,26 +329,33 @@
 <div id="se-tooltip-template" style="display: none;">
     <div class="se-tooltip-main">
         <div class="row">
-            <div class="col-md-12">
-                <strong>Service Event __se-id__</strong>
+            <a class="col-sm-10 font-weight-bold cursor-default" title="__se-pd__">
+                Service Event __se-id__
+            </a>
+            <div class="col-sm-2">
                 <a class="se-tooltip-description-toggle pull-right" title="__se-wd__"><i class="fa fa-question-circle fa-lg"></i></a>
             </div>
         </div>
         <div class="row">
-            <div class="col-md-12">
+            <div class="col-sm-12">
+                <div class="tooltip-se-unit text-overflow-ellipsis white-space-nowrap">__se-u__ | __se-sa__</div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
                 <div class="tooltip-se-date">__se-date__</div>
 
             </div>
         </div>
 
         <div class="row">
-            <div class="col-md-12">
+            <div class="col-sm-12">
                 <div class="pull-left">__se-type__</div>
                 <a class="tooltip-se-btn btn btn-flat btn-xs btn-default pull-right" href="{% url 'sl_details' %}__se-id__">View</a>
             </div>
         </div>
 {#        <div class="row">#}
-{#            <div class="col-md-12">#}
+{#            <div class="col-sm-12">#}
 {#                <div class="pull-left">__se-prob__</div>#}
 {#            </div>#}
 {#        </div>#}
@@ -357,15 +364,15 @@
 
 <div id="tli-tooltip-template" style="display: none;">
     <div class="row">
-        <div class="col-md-12">
+        <div class="col-sm-12">
             <strong>__tli-kind__</strong>
         </div>
-        <div class="col-md-12" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+        <div class="col-sm-12" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
             <strong >__tli-tl-name__</strong>
         </div>
     </div>
     <div class="row">
-        <div class="col-md-12">
+        <div class="col-sm-12">
             <div id="tooltip-se-date">__tli-date__</div>
             <a id="tooltip-se-btn" class="btn btn-flat btn-xs btn-default pull-right" href="{% url 'view_test_list_instance' %}__tli-id__">View</a>
             <a id="tooltip-se-new-btn" class="btn btn-flat btn-xs btn-default pull-right margin-r-3" href="{% url 'sl_new' %}?ib=__tli-id__" __show-in__>Initiate SE</a>

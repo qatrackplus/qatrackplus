@@ -180,9 +180,18 @@ input[type="number"] {
 .bottom-0 {
     bottom: 0;
 }
+.cursor-default {
+    cursor: default;
+}
 .drop-shadow {
     box-shadow: 2px 6px 4px rgba(53, 124, 165, .25) !important;
     border: 1px solid #ddd;
+}
+.font-arial-black {
+    font-family: "Arial Black"
+}
+.font-weight-bold {
+    font-weight: bold;
 }
 .left--5 {
     left: -5px;
@@ -202,7 +211,13 @@ input[type="number"] {
 .align-top {
     vertical-align: top !important;
 }
-
+.text-overflow-ellipsis {
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+.white-space-nowrap {
+    white-space: nowrap;
+}
 .width-300 {
     width: 300px;
 }

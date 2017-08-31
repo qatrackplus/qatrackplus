@@ -8,7 +8,9 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
         var $units = $('#units'),
             $frequencies = $('#frequencies'),
             $test_lists = $('#test-lists'),
-            $tests = $('#tests');
+            $tests = $('#tests'),
+            $show_events = $('#show_events'),
+            $service_event_container = $('#service-event-container');
 
         $units.felter({
             mainDivClass: 'col-sm-2',
@@ -281,8 +283,9 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
 
         $("#data-table-wrapper").on('click', "#csv-export", export_csv);
 
-        $('#show_events').change(function () {
-            $('#service-event-container').slideToggle('fast');
+        $show_events.prop('checked') ? $service_event_container.show() : '';
+        $show_events.change(function () {
+            $service_event_container.slideToggle('fast');
         });
 
         set_chart_options();
@@ -1388,7 +1391,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
                     .style('width', tooltip_width + 'px')
                     .style('height', tooltip_height + 'px')
                     .style('padding', tooltip_padding + 'px')
-                    .style('background-color', 'rgba(54, 127, 169, 0.2)')
+                    .style('background-color', 'rgba(100, 100, 100, 0.2)')
                     .attr("opacity", 0)
                     .text("a simple tooltip")
                     .on('click', toggleLock);
@@ -1406,9 +1409,11 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
                         .html($('#se-tooltip-template').html()
                                 .replace(/__se-id__/g, event_data.id)
                                 .replace(/__se-date__/g, format(event_data.x))
-                                .replace(/__se-wd__/g, event_data.work_description)
+                                .replace(/__se-wd__/g, event_data.work_description.replace(/"/g, "'"))
+                                .replace(/__se-pd__/g, event_data.problem_description.replace(/"/g, "'"))
+                                .replace(/__se-u__/g, event_data.unit.name)
+                                .replace(/__se-sa__/g, event_data.service_area.name)
                                 .replace(/__se-type__/g, QACharts.se_types[event_data.type])
-                            // .replace(/__se-prob__/g, QACharts.se_probs[event_data.prob_type] || '')
                         )
                         .transition()
                         .style('opacity', 1);
@@ -1618,7 +1623,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
                     x_pos = d3.max([x_buffer + chart_div_offset, x_pos]);
                 }
 
-                var colour = 'rgba(54, 127, 169, 0.2)';
+                var colour = 'rgba(100, 100, 100, 0.2)';
 
                 var tli_tooltip = d3.select("body")
                     .append("div")
