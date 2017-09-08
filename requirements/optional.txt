@@ -1,9 +1,0 @@
-pep8>=0.6.1
-pylint>=0.25.1,<1.0
-coverage>=3.7.1
-django-debug-toolbar>=0.9.4,<1.0
-nose>=1.1.2
-mock>=1.0
-django-nose>=1.4,<1.4.4
-selenium>=2.53.6
-PyVirtualDisplay>=0.2

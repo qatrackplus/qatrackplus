@@ -1,3 +1,0 @@
--r base.txt
-pywin32>=220
-django-pyodbc-azure==1.10.0.1

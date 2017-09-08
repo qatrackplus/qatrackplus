@@ -108,6 +108,30 @@ class TestInstanceWidgetsMixin(object):
         elif self.unit_test_info.test.type in (models.STRING_COMPOSITE,):
             self.fields["string_value"].widget.attrs["readonly"] = "readonly"
 
+    @property
+    def attachments_to_process(self):
+        from qatrack.attachments.models import Attachment
+        to_process = []
+
+        uti_pk = self.unit_test_info.pk
+
+        #sv = self.cleaned_data["string_value"].strip()
+
+        #upload = (
+        #    self.unit_test_info.test.is_upload()
+        #    and not self.cleaned_data["skipped"]
+        #    and sv
+        #)
+
+        #if upload:
+        #    import ipdb; ipdb.set_trace()
+        #    to_process.append((uti_pk, Attachment.objects.get(pk=sv)))
+
+        user_attached = [x for x in self.cleaned_data.get("user_attached", "").split(",") if x]
+        for aid in user_attached:
+            to_process.append((uti_pk, Attachment.objects.get(pk=aid)))
+
+        return to_process
 
 class CreateTestInstanceForm(TestInstanceWidgetsMixin, forms.Form):
 
@@ -116,6 +140,8 @@ class CreateTestInstanceForm(TestInstanceWidgetsMixin, forms.Form):
 
     skipped = forms.BooleanField(required=False, help_text=_("Was this test skipped for some reason (add comment)"))
     comment = forms.CharField(widget=forms.Textarea, required=False, help_text=_("Show or hide comment field"))
+
+    user_attached = forms.CharField(widget=forms.HiddenInput, required=False)
 
     def __init__(self, *args, **kwargs):
         super(CreateTestInstanceForm, self).__init__(*args, **kwargs)
@@ -173,9 +199,11 @@ class CreateTestInstanceFormSet(UserFormsetMixin, BaseTestInstanceFormSet):
 
 class UpdateTestInstanceForm(TestInstanceWidgetsMixin, forms.ModelForm):
 
+    user_attached = forms.CharField(widget=forms.HiddenInput, required=False)
+
     class Meta:
         model = models.TestInstance
-        fields = ("value", "string_value", "skipped", "comment",)
+        fields = ("value", "string_value", "skipped", "comment", "user_attached",)
 
     def __init__(self, *args, **kwargs):
 

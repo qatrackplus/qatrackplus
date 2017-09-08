@@ -497,6 +497,9 @@ class Test(models.Model):
     def is_string_composite(self):
         return self.type == STRING_COMPOSITE
 
+    def can_attach(self):
+        return self.type in (STRING_COMPOSITE, COMPOSITE, UPLOAD)
+
     def is_upload(self):
         """Return whether or not this is a boolean test"""
         return self.type == UPLOAD
@@ -1226,7 +1229,7 @@ class TestInstance(models.Model):
         if test.is_boolean():
             return "Yes" if int(self.value) == 1 else "No"
         elif test.is_upload():
-            return self.upload_url()
+            return self.upload_link()
         elif test.is_string_type():
             return self.string_value
         return "%.4g" % self.value
@@ -1244,17 +1247,20 @@ class TestInstance(models.Model):
                 display = "Zero ref with % diff tol"
         return display
 
-    def upload_url(self):
-        if not self.unit_test_info.test.is_upload():
+    def upload_link(self):
+        attachment = self.attachment_set.first()
+        if attachment is None:
             return None
-        url = "%s%d/%s" % (settings.UPLOADS_URL, self.test_list_instance.pk, self.string_value)
-        return '<a href="%s" title="%s">%s</a>' % (url, self.string_value, self.string_value)
+        name = attachment.attachment.name.split("/")[-1]
+        return '<a href="%s" title="%s">%s</a>' % (attachment.attachment.url, name, name)
 
     def image_url(self):
-        if not self.unit_test_info.test.is_upload() or not self.unit_test_info.test.display_image:
+
+        attachment = self.attachment_set.first()
+        if attachment is None:
             return None
-        url = "%s%d/%s" % (settings.UPLOADS_URL, self.test_list_instance.pk, self.string_value)
-        return url
+
+        return attachment.attachment.url
 
     def __str__(self):
         """return display representation of object"""

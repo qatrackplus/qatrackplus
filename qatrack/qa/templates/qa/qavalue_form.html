@@ -1,5 +1,6 @@
 {% load qatrack_tags %}
 {% load qa_tags %}
+{% load attach_tags %}
 {% for field in form %}
     {% if field.errors %}
         <tr class="no-hover qa-error row-{{ form.prefix }}">
@@ -46,8 +47,8 @@
             </div>
         </td>
         <td class="qa-name qa-showproc">
-            {%if test.procedure or test.description %}
-                <a href="#" class="revealprocedure" title="Show/hide procedure for this test">{{test.name}}</a>
+            {%if test.procedure or test.description or test.attachment_set.exists %}
+                <a href="#" class="revealprocedure" title="Show/hide procedure & attachments for this test">{{test.name}}</a>
             {% else %}
                 {{test.name}}
             {% endif %}
@@ -61,7 +62,11 @@
             {% elif test.is_upload %}
                 <span class="upload-button">
                     {{form.string_value}}
+<<<<<<< HEAD:qatrack/qa/templates/qa/qavalue_form.html
                     <a id="upload-button-{{ test.id }}" type="button" class="qa-input btn btn-default btn-sm btn-flat">Upload</a>
+=======
+                    <a id="upload-button-{{ test.id }}" type="button" class="qa-input btn btn-primary btn-sm btn-flat">Upload</a>
+>>>>>>> py34:qatrack/templates/qa/qavalue_form.html
                 </span>
             {% elif test.is_string_type %}
                  <div>{{form.string_value}}</div>
@@ -106,6 +111,7 @@
     </td>
 </tr>
 
+<<<<<<< HEAD:qatrack/qa/templates/qa/qavalue_form.html
 <tr class="qa-procedure no-hover row-{{ form.prefix }}">
     <td colspan="8"  class="" >
         {% if form.unit_test_info.test.procedure or form.unit_test_info.test.description %}
@@ -127,8 +133,40 @@
         {#                {% endspaceless%}#}
                     </div>
                 </div>
+=======
+<tr class="qa-procedure no-hover">
+    <td colspan="8" class="" >
+        {% if form.unit_test_info.test.procedure or form.unit_test_info.test.description  or form.unit_test_info.test.attachment_set.exists %}
+            <div class="qa-procedure-text callout callout-custom border-info">
+                {% if form.unit_test_info.test.procedure %}
+                    <h6>
+                        Detailed procedure link:
+                        <a href="{{form.unit_test_info.test.procedure}}" class="revealprocedure" title="Show detailed procedure for this test" target="_blank">
+                            {{form.unit_test_info.test.name}}
+                        </a>
+                    </h6>
+                {% endif %}
+                {% if form.unit_test_info.test.description %}
+                    <div class="pre">{{form.unit_test_info.test.description.strip|safe}}</div>
+                {% endif %}
+
+                {% for attach in form.unit_test_info.test.attachment_set.all %}
+                    {% if forloop.first %}
+                        <h6>Attachments</h6>
+                        <ul>
+                    {% endif %}
+
+                    <li>{{ attach|attachment_link }}</li>
+
+                    {% if forloop.last %}
+                        </ul>
+                    {% endif %}
+
+                {% endfor %}
+>>>>>>> py34:qatrack/templates/qa/qavalue_form.html
             </div>
         {% endif %}
+
     </td>
 </tr>
 

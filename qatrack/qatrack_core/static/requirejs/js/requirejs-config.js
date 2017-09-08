@@ -99,6 +99,9 @@ require.config({
         icheck: {
             deps: ['jquery']
         },
+        icheck: {
+             deps: ['jquery']
+        },
         jquery: {
             exports: '$'
         },

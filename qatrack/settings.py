@@ -3,6 +3,10 @@ import django.conf.global_settings as DEFAULT_SETTINGS
 import os
 import sys
 
+import matplotlib
+matplotlib.use("Agg")
+
+# -----------------------------------------------------------------------------
 DEBUG = False
 
 # Who to email when server errors occur
@@ -94,6 +98,7 @@ DEFAULT_WARNING_MESSAGE = "Do not treat"
 #  Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
 MEDIA_ROOT = os.path.join(PROJECT_ROOT, "media")
+TMP_UPLOAD_PATH = os.path.join("uploads", "tmp")
 UPLOAD_ROOT = os.path.join(MEDIA_ROOT, "uploads")
 TMP_UPLOAD_ROOT = os.path.join(UPLOAD_ROOT, "tmp")
 for d in (MEDIA_ROOT, UPLOAD_ROOT, TMP_UPLOAD_ROOT):
@@ -220,6 +225,7 @@ INSTALLED_APPS = [
     'qatrack.notifications',
     'qatrack.contacts',
     'qatrack.service_log',
+    'qatrack.attachments',
 
     'admin_views',
 ]
@@ -229,6 +235,7 @@ INSTALLED_APPS = [
 CACHE_UNREVIEWED_COUNT = 'unreviewed-count'
 CACHE_QA_FREQUENCIES = 'qa-frequencies'
 CACHE_RTS_QA_COUNT = 'unreviewed-rts-qa'
+
 MAX_CACHE_TIMEOUT = 24 * 60 * 60  # 24hours
 
 CACHE_LOCATION = os.path.join(PROJECT_ROOT, "cache", "cache_data")

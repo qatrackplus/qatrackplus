@@ -70,7 +70,13 @@ def get_notification_recipients():
 
     from qatrack.notifications import models
 
-    tolerance_users = User.objects.filter(groups__notificationsubscription__warning_level__lte=models.TOLERANCE).distinct()
-    action_users = User.objects.filter(groups__notificationsubscription__warning_level__lte=models.ACTION).distinct()
+    users = User.objects.filter(is_active=True)
+
+    tolerance_users = users.filter(
+        groups__notificationsubscription__warning_level__lte=models.TOLERANCE
+    ).distinct()
+    action_users = users.filter(
+        groups__notificationsubscription__warning_level__lte=models.ACTION
+    ).distinct()
 
     return tolerance_users, action_users

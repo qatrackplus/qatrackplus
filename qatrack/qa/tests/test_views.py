@@ -5,7 +5,6 @@ from django.contrib.auth.models import User, Group
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 from django.test.client import RequestFactory
-from django.test.utils import setup_test_environment
 from django.utils import timezone
 from qatrack.qa import models, views
 from qatrack.qa.views import forms
@@ -21,12 +20,10 @@ import json
 import os
 import glob
 import random
-import io
 from . import utils
 
 
 logger = qatrack.qa.views.base.logger
-
 
 
 class MockUser(object):
@@ -520,7 +517,8 @@ class TestComposite(TestCase):
             "results": {
                 "testc": {
                     "value": 3.0,
-                    "error": None
+                    "error": None,
+                    "user_attached": [],
                 }
             },
             "success": True
@@ -560,13 +558,20 @@ class TestComposite(TestCase):
         values = json.loads(response.content.decode("UTF-8"))
 
         expected = {
-            "errors": [],
-            "success": True,
+            'errors': [],
             'results': {
                 'testc': {
-                    'error': 'Invalid Test', 'value': None
+                    'error': (
+                        'Invalid Test Procedure: testc", line 2, in '
+                        'testc\n'
+                        'TypeError: unsupported operand type(s) for +: '
+                        "'dict' and 'dict'\n"
+                    ),
+                    'user_attached': [],
+                    'value': None
                 }
             },
+            'success': True
         }
         self.assertDictEqual(values, expected)
 
@@ -629,15 +634,21 @@ class TestComposite(TestCase):
         request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
         response = self.view(request)
         values = json.loads(response.content.decode("UTF-8"))
+
         expected = {
-            "errors": [],
-            "results": {
-                "testc": {
-                    "value": None,
-                    "error": "Invalid Test",
+            'errors': [],
+            'results': {
+                'testc': {
+                    'error': (
+                        'Invalid Test Procedure: testc", line 2, in '
+                        'testc\n'
+                        "NameError: name 'foo' is not defined\n"
+                    ),
+                    'user_attached': [],
+                    'value': None
                 }
             },
-            "success": True
+            'success': True
         }
         self.assertDictEqual(values, expected)
 
@@ -674,7 +685,8 @@ class TestComposite(TestCase):
                 },
                 'testc': {
                     'error': None,
-                    'value': 3.0
+                    'value': 3.0,
+                    "user_attached": [],
                 }
             },
 
@@ -1144,7 +1156,7 @@ result = json.load(FILE)
     def test_upload_fname_exists(self):
         response = self.client.post(self.url, {"test_id": self.test.pk, "upload": self.test_file, "meta": "{}"})
         data = json.loads(response.content.decode("UTF-8"))
-        self.assertTrue(os.path.exists(os.path.join(settings.TMP_UPLOAD_ROOT)), data["temp_file_name"])
+        self.assertTrue(os.path.exists(os.path.join(settings.TMP_UPLOAD_ROOT)), data['attachment']["name"])
 
     def test_invalid_test_id(self):
         response = self.client.post(self.url, {"test_id": 200, "upload": self.test_file, "meta": "{}"})
@@ -1271,7 +1283,7 @@ class TestEditTestListInstance(TestCase):
             "in_progress": True
         })
 
-        resp = self.client.post(self.url, data=self.base_data)
+        self.client.post(self.url, data=self.base_data)
         ntests = models.Test.objects.count()
         self.assertEqual(models.TestInstance.objects.in_progress().count(), ntests)
         del self.base_data["in_progress"]
@@ -1644,8 +1656,3 @@ class TestPaperForms(TestCase):
         pf.set_utc_all_lists(utcs)
         self.assertEqual(utcs[0].all_lists[0].utis[0].reference, ref1)
         self.assertEqual(utcs[1].all_lists[0].utis[0].reference, ref2)
-
-
-if __name__ == "__main__":
-    setup_test_environment()
-    unittest.main()

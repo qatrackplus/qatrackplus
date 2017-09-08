@@ -382,5 +382,8 @@ input[type="number"] {
 .hover-parent:not(:hover) .hover-sub-not {
     color: inherit !important;
 }
+input[type="number"] {
+    -moz-appearance: textfield;
+}
 
 

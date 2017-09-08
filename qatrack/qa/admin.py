@@ -1,4 +1,3 @@
-
 from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin import widgets, options
@@ -16,6 +15,10 @@ from django.utils.translation import ugettext as _
 
 from admin_views.admin import AdminViews
 
+from qatrack.attachments.admin import (
+    get_attachment_inline,
+    SaveInlineAttachmentUserMixin,
+)
 import qatrack.qa.models as models
 from qatrack.qa.utils import qs_extra_for_utc_name
 from qatrack.units.models import Unit
@@ -36,6 +39,7 @@ class SaveUserMixin(object):
             obj.created_by = request.user
             obj.created = timezone.now()
         obj.modified_by = request.user
+
         super(SaveUserMixin, self).save_model(request, obj, form, change)
 
 
@@ -503,7 +507,7 @@ class FrequencyTestListFilter(admin.SimpleListFilter):
         return qs
 
 
-class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
+class TestListAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, admin.ModelAdmin):
 
     prepopulated_fields = {'slug': ('name',)}
     search_fields = ("name", "description", "slug",)
@@ -513,7 +517,7 @@ class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
     list_filter = [ActiveTestListFilter, UnitTestListFilter, FrequencyTestListFilter]
 
     form = TestListAdminForm
-    inlines = [TestListMembershipInline]
+    inlines = [TestListMembershipInline, get_attachment_inline("testlist")]
     save_as = True
 
     class Media:
@@ -528,6 +532,7 @@ class TestListAdmin(SaveUserMixin, admin.ModelAdmin):
     def queryset(self, *args, **kwargs):
         qs = super(TestListAdmin, self).queryset(*args, **kwargs)
         return qs.select_related("modified_by")
+
 
 
 class TestForm(forms.ModelForm):
@@ -574,7 +579,9 @@ class TestListMembershipFilter(admin.SimpleListFilter):
         return qs
 
 
-class TestAdmin(SaveUserMixin, admin.ModelAdmin):
+class TestAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, admin.ModelAdmin):
+
+    inlines = [get_attachment_inline("test")]
     list_display = ["name", "slug", "category", "type"]
     list_filter = ["category", "type", TestListMembershipFilter, "testlistmembership__test_list"]
     search_fields = ["name", "slug", "category__name"]
@@ -589,6 +596,24 @@ class TestAdmin(SaveUserMixin, admin.ModelAdmin):
             settings.STATIC_URL + "js/admin_description_editor.js",
             settings.STATIC_URL + "ace/ace.js",
         )
+
+    def save_model(self, request, obj, form, change):
+        if 'calculation_procedure' in form.changed_data:
+            cp = obj.calculation_procedure or ""
+            if "pyplot" in cp or "pylab" in cp:
+                warning = (
+                    "Warning: Instead of using pyplot or pylab, it is recommended that you use "
+                    "the object oriented interface to matplotlib."
+                )
+                messages.add_message(request, messages.WARNING, warning)
+
+        if obj.procedure:
+            if not obj.procedure.startswith("http"):
+                warning = "Warning: test procedure links should usually begin with http:// or https://"
+                messages.add_message(request, messages.WARNING, warning)
+
+
+        super(TestAdmin, self).save_model(request, obj, form, change)
 
 
 def unit_name(obj):
@@ -707,9 +732,9 @@ class TestListCycleMembershipInline(admin.TabularInline):
     raw_id_fields = ("test_list",)
 
 
-class TestListCycleAdmin(SaveUserMixin, admin.ModelAdmin):
+class TestListCycleAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, admin.ModelAdmin):
     """Admin for daily test list cycles"""
-    inlines = [TestListCycleMembershipInline]
+    inlines = [TestListCycleMembershipInline, get_attachment_inline("testlistcycle")]
     prepopulated_fields = {'slug': ('name',)}
     search_fields = ("name", "slug",)
 
@@ -755,9 +780,42 @@ utc_unit_name.admin_order_field = "unit_test_collection__unit__name"
 utc_unit_name.short_description = "Unit"
 
 
-class TestListInstanceAdmin(admin.ModelAdmin):
+class TestListInstanceAdmin(SaveInlineAttachmentUserMixin, admin.ModelAdmin):
     list_display = ["__str__", utc_unit_name, "test_list", "work_completed", "created_by"]
     list_filter = ["unit_test_collection__unit", "test_list", ]
+    inlines = [get_attachment_inline("testlistinstance")]
+
+
+class TestInstanceAdmin(SaveInlineAttachmentUserMixin, admin.ModelAdmin):
+
+    list_display = ["__str__", "test_list_instance", "test_name", "unit_name", "test_list_name", "work_completed", "created_by"]
+    inlines = [get_attachment_inline("testinstance")]
+
+    def get_queryset(self, request):
+        qs = super(TestInstanceAdmin, self).get_queryset(request)
+        return qs.select_related(
+            "test_list_instance",
+            "test_list_instance__test_list",
+            "unit_test_info",
+            "unit_test_info__test",
+            "created_by"
+        )
+
+    def test_list_name(self, obj):
+        return obj.test_list_instance.test_list.name
+    test_list_name.short_description = _("Test List Name")
+    test_list_name.admin_order_field = "test_list_instance__test_list__name"
+
+    def test_name(self, obj):
+        return obj.unit_test_info.test.name
+    test_name.short_description = _("Test Name")
+    test_name.admin_order_field = "unit_test_info__test__name"
+
+    def unit_name(self, obj):
+        return obj.unit_test_info.unit
+    unit_name.short_description = _("Unit Name")
+    unit_name.admin_order_field = "unit_test_info__unit__number"
+
 
     def has_add_permission(self, request):
         """testlistinstancess are created via front end only"""
@@ -797,4 +855,5 @@ admin.site.register([models.UnitTestCollection], UnitTestCollectionAdmin)
 admin.site.register([models.TestListCycle], TestListCycleAdmin)
 admin.site.register([models.Frequency], FrequencyAdmin)
 admin.site.register([models.TestInstanceStatus], StatusAdmin)
+admin.site.register([models.TestInstance], TestInstanceAdmin)
 admin.site.register([models.TestListInstance], TestListInstanceAdmin)

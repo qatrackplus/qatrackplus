@@ -5,6 +5,7 @@ from django.contrib.sites.models import Site
 from django.db.models import ObjectDoesNotExist
 from django.db.models.signals import post_save, post_delete, pre_delete
 from django.dispatch import receiver
+
 from qatrack.qa.models import Frequency, TestListInstance, UnitTestCollection
 from qatrack.units.models import Unit
 from qatrack.parts.models import PartUsed, PartStorageCollection
@@ -39,6 +40,7 @@ def update_part_storage_quantity(*args, **kwargs):
             psc.save()
         except ObjectDoesNotExist:
             pass
+
 
 @receiver(post_delete, sender=PartStorageCollection)
 def update_part_quantity(*args, **kwargs):
@@ -101,7 +103,7 @@ def update_active_unit_test_collections_for_unit(*args, **kwargs):
 
 
 def site(request):
-    site = Site.objects.get_current()
+    cur_site = Site.objects.get_current()
 
     unreviewed = cache.get(settings.CACHE_UNREVIEWED_COUNT)
     if unreviewed is None:
@@ -131,12 +133,11 @@ def site(request):
         cache.set('se_needing_approval_count', se_needing_approval_count)
 
     return {
-        'SITE_NAME': site.name,
-        'SITE_URL': site.domain,
+        'SITE_NAME': cur_site.name,
+        'SITE_URL': cur_site.domain,
         'VERSION': settings.VERSION,
         'BUG_REPORT_URL': settings.BUG_REPORT_URL,
         'FEATURE_REQUEST_URL': settings.FEATURE_REQUEST_URL,
-        'QA_FREQUENCIES': qa_frequencies,
         'UNREVIEWED': unreviewed,
         'UNREVIEWED_RTS': unreviewed_rts,
         'YOUR_UNREVIEWED': your_unreviewed,
@@ -149,4 +150,3 @@ def site(request):
         'DEFAULT_SE_STATUS': default_se_status,
         'SE_NEEDING_APPROVAL_COUNT': se_needing_approval_count
     }
-

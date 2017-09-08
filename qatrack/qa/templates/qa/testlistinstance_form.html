@@ -2,6 +2,7 @@
 
 {% load qa_tags %}
 {% load qatrack_tags %}
+{% load attach_tags %}
 
 {% block head_title %}{% spaceless %}
     {% if test_list_instance %}
@@ -13,17 +14,14 @@
 
 {% block extra_css %}
 
-{#    <link href="{{ STATIC_URL }}datepicker/css/bootstrap-datepicker.min.css?v={{ VERSION }}" rel="stylesheet">#}
     <link href="{{ STATIC_URL }}daterangepicker/css/daterangepicker.css?v={{ VERSION }}" rel="stylesheet">
     <link href="{{ STATIC_URL }}qatrack_core/css/custom-daterangepicker.css?v={{ VERSION }}" rel="stylesheet">
-{#    <link href="{{ STATIC_URL }}multiselect/css/bootstrap.multiselect.css?v={{VERSION}}" rel="stylesheet">#}
     <link href="{{ STATIC_URL }}qatrack_core/css/tables.css?v={{VERSION}}" rel="stylesheet">
     <link href="{{ STATIC_URL }}qa/css/qa.css?v={{VERSION}}" rel="stylesheet">
     <link href="{{ STATIC_URL }}icheck/css/blue.css?v={{VERSION}}" rel="stylesheet">
     <link href="{{ STATIC_URL }}qatrack_core/css/sidebar.css?v={{VERSION}}" rel="stylesheet">
     <link href="{{ STATIC_URL }}select2/css/select2.min.css?v={{ VERSION }}" rel="stylesheet">
     <link href="{{ STATIC_URL }}qatrack_core/css/custom-select2.css?v={{ VERSION }}" rel="stylesheet">
-{#    <link href="{{ STATIC_URL }}qa/css/qa-old.css?v={{VERSION}}" rel="stylesheet">#}
 
 {% endblock extra_css %}
 
@@ -38,6 +36,29 @@
         var status_colours_dict = {{ status_tag_colours|safe }};
         var se_statuses = {{ se_statuses|safe }};
         var unit_id = {{ unit_test_collection.unit.id }};
+    </script>
+
+    <script id="attach-template" type="text/template">
+        <div class="col-sm-6">
+            <div class="row">
+                <div class="col-sm-6">
+                    <a target="_blank" href="<%= a.url %>">
+                        <img class="img-responsive" src="<%= a.url %>" alt="<%= a.name %>"/>
+                    </a>
+                </div>
+                <div class="col-sm-6">
+                    <dl>
+                        <dt>File</dt>
+                        <dd>
+                            <a target="_blank" href="<%= a.url %>"><%= a.name %></a>
+                        </dd>
+
+                        <dt>Size</dt>
+                        <dd><%= a.size %></dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
     </script>
 {% endblock %}
 
@@ -59,7 +80,7 @@
 
 {% block body %}
 
-    <form class="nosubmit form-inline" id="qa-form" method="POST" action="" autocomplete="off">
+    <form class="nosubmit form-inline" id="qa-form" method="POST" action="" autocomplete="off" enctype="multipart/form-data" >
         {% csrf_token %}
         {{ form.errors }}
         <div id="box-contacts" class="row" style="display: none;">
@@ -132,8 +153,9 @@
             </div>
         {% endif %}
 
-        <div id="box-admin" class="row" style="display: {% if perms.qa.can_review and perms.qa.can_review_own_tests or perms.qa.can_override_date %}block{% else %}none{% endif %};">
-            <div class="col-lg-12">
+        <div id="box-admin" class="row" style="">
+            {% if perms.qa.can_review and perms.qa.can_review_own_tests or perms.qa.can_override_date %}
+            <div class="col-lg-8">
                 <div class="box">
                     <div class="box-header">
                         <h3 class="box-title">
@@ -143,7 +165,7 @@
                     </div>
                     <div class="box-body">
                         <div class="row">
-                            <div class="col-md-4 left-border border-default">
+                            <div class="col-md-6 left-border border-default">
                                 <div class="date input-prepend input-append row" id="work-started" data-date="{% now 'd-m-Y'%}" data-date-format="dd-mm-yyyy">
                                     {% spaceless %}
                                         <label for="id_work_started" class="col-md-6">
@@ -179,7 +201,7 @@
                                 {% endif %}
                             </div>
 
-                            <div class="col-md-4 left-border border-default">
+                            <div class="col-md-6 left-border border-default">
                                 {% if perms.qa.can_review and perms.qa.can_review_own_tests %}
                                     <div class="input-prepend input-append row" id="status">
                                         <label for="id_status" class="col-md-6">
@@ -192,21 +214,43 @@
                                 {% endif %}
 
                             </div>
-                            <div class="col-md-4 left-border border-default">
-                                <div class="input-prepend input-append row" id="status">
-                                    <label for="id_status" class="col-md-6">
-                                        Service Event:
-                                    </label>
-                                    <div class="col-md-6">
-                                        {{form.service_event}}
-                                    </div>
-                                </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            <div class="col-lg-4">
+                <div class="box">
+                    <div class="box-header">
+                        <h5 class="box-title">
+                            <i class="fa fa-paperclip" aria-hidden="true"></i>
+                            {{ test_list.name }} Test List Attachments
+                        </h5>
+                    </div>
+                    <div class="box-body">
+                        <div class="row">
+                            <div class="col-md-12 border-default">
+                                <ul>
+                                    {% for attach in test_list.attachment_set.all %}
+                                        <li>{{ attach|attachment_link }}</li>
+                                    {% endfor %}
+
+                                    {% if days %}
+                                        {% with unit_test_collection.tests_object as tlc %}
+                                            {% for attach in tlc.attachment_set.all %}
+                                                <li>{{ attach|attachment_link }}</li>
+                                            {% endfor %}
+                                        {% endwith %}
+                                    {% endif %}
+                                </ul>
+
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
 
         <div id="box-perform" class="row">
             <div class="col-lg-12">
@@ -291,9 +335,33 @@
                                         {% for test_form in formset %}
                                             {% qa_value_form test_form test_list include_history=perms.qa.can_view_history include_ref_tols=perms.qa.can_view_ref_tol test_info=test_form.get_test_info  %}
                                         {% endfor %}
+                                        <tr>
+                                            <td>Attachments</td>
+                                            <td>
+                                                <label class="qa-input btn btn-primary btn-xs btn-flat" title="Click to add attachments. (Hold Ctrl or Cmd in the dialog to include multiple attachments)">
+                                                    Browse <input id="tli-attachments" class="file-upload" type="file" name="tli-attachments" multiple style="display:none"/>
+                                                </label>
+                                            </td>
+
+                                            <td id="tli-attachment-names"
+                                                {% if perms.qa.can_view_ref_tol and perms.qa.can_view_history %}
+                                                    colspan="6"
+                                                {% elif perms.qa.can_view_ref_tol or perms.qa.can_view_history %}
+                                                    colspan="5"
+                                                {% else %}
+                                                    colspan="4"
+                                                {% endif %}
+                                            >
+
+                                                {% if test_list_instance and test_list_instance.attachment_set.exists %}
+                                                    {% for attach in test_list_instance.attachment_set.all %}
+                                                        <i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>{{ attach | attachment_link }}
+                                                    {% endfor %}
+                                                {% endif %}
+                                            </td>
+                                        </tr>
                                     </tbody>
                                 </table>
-
                                 <div class="row pad">
                                     <div id="qa-tli-comment" class="col-md-12 callout callout-custom border-primary">
                                         {{form.comment}}
@@ -318,24 +386,23 @@
                                     </div>
                                 </div>
 
-{#                                 Code for displaying images under the test list#}
+
                                 <div id="qa-images">
                                     {% for test_form in formset %}
                                         {% with test=test_form.get_test_info.test ti=test_form.instance %}
                                             {% if test.display_image %}
-                                                {% if test_list_instance %}
-                                                    <div id="{{ test.slug }}" class="qa-image-box">
-                                                        <strong><p>Image for {{ test }}: </p></strong>
-                                                        <img src="{{ ti.image_url }}" class="qa-image">
+                                                <div class="row">
+                                                    <div class="col-sm-12">
+                                                        <strong><p>Images for {{ test }} Test: </p></strong>
                                                     </div>
-                                                {% else %}
+                                                </div>
+                                                <div class="row">
                                                     <div id="{{ test.slug }}"></div>
-                                                {% endif %}
+                                                </div>
                                             {% endif %}
                                         {% endwith %}
                                     {% endfor %}
                                 </div>
-
                             </div>
                         </div>
                     </div>

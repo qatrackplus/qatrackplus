@@ -111,6 +111,7 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
         context["statuses"] = models.TestInstanceStatus.objects.all()
         context["test_list"] = self.object.test_list
         context["unit_test_collection"] = self.object.unit_test_collection
+        context["current_day"] = self.object.day + 1
         return context
 
     def form_valid(self, form):

@@ -1417,14 +1417,12 @@ class TestTestInstance(TestCase):
 
         self.assertEqual(models.TestInstance.objects.in_progress()[0], ti)
 
-    def test_upload_url_none(self):
+    def test_upload_link_none(self):
         ti = utils.create_test_instance(self.tli, unit_test_info=self.uti)
-
-        self.assertEqual(ti.upload_url(), None)
+        self.assertEqual(ti.upload_link(), None)
 
     def test_image_url_none(self):
         ti = utils.create_test_instance(self.tli, unit_test_info=self.uti)
-
         self.assertEqual(ti.image_url(), None)
 
     def test_upload_value_display(self):
@@ -1434,13 +1432,8 @@ class TestTestInstance(TestCase):
         tli = utils.create_test_list_instance(unit_test_collection=self.utc)
         ti = utils.create_test_instance(tli, unit_test_info=uti)
 
-        fname = "test.tmp"
-        ti.string_value = fname
-
-        url = "%s%d/%s" % (settings.UPLOADS_URL, tli.pk, fname)
-        display = '<a href="%s" title="%s">%s</a>' % (url, fname, fname)
-
-        self.assertEqual(display, ti.value_display())
+        # no actual attachment so value display will be None
+        self.assertEqual(None, ti.value_display())
 
     def test_string_value_display(self):
         t = models.Test(type=models.STRING)

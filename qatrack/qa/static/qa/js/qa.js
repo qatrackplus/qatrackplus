@@ -65,6 +65,8 @@ jQuery.Topic = function( id ) {
     return topic;
 };
 
+window.imageTemplate = _.template($("#attach-template").html());
+
 function Test(data){
     _.extend(this,data);
 }
@@ -227,7 +229,8 @@ function TestInstance(test_info, row){
     this.test_info = test_info;
     this.row = $(row);
     this.prefix = this.row.attr('data-prefix');
-    this.inputs = this.row.find("td.qa-value").find("input, textarea, select");
+    this.inputs = this.row.find("td.qa-value").find("input, textarea, select").not("[name$=user_attached]");
+    this.user_attach_input = this.row.find("input[name$=user_attached]");
 
     this.comment = this.row.next();
 
@@ -316,7 +319,7 @@ function TestInstance(test_info, row){
         $.Topic("qaUpdated").publish();
     });
 
-    this.set_value = function(value){
+    this.set_value = function(value, user_attached){
         //set value manually and update inputs accordingly
         var tt = self.test_info.test.type;
 
@@ -333,9 +336,9 @@ function TestInstance(test_info, row){
             self.inputs.val(value);
         }else if (tt === QAUtils.UPLOAD){
             if (_.isNull(value)){
-                self.inputs.filter(":hidden").val("");
+                self.inputs.filter(".qa-input:hidden").val("");
             }else{
-                self.inputs.filter(":hidden").val(value["temp_file_name"]);
+                self.inputs.filter(".qa-input:hidden").val(value["attachment_id"]);
                 self.value = value.result;
             }
         }else if (tt === QAUtils.SIMPLE || tt === QAUtils.COMPOSITE){
@@ -344,6 +347,34 @@ function TestInstance(test_info, row){
             }else{
                 self.inputs.val(QAUtils.format_float(value));
             }
+        }
+
+        var uploadAttached =  value && value.attachment;
+        var uploadUserAttached = value && (value.user_attached && value.user_attached.length > 0);
+        var compUserAttached = user_attached && user_attached.length > 0;
+        var uattachs = [];
+        if (uploadAttached){
+            uattachs = uattachs.concat(value.attachment);
+        }
+        if (uploadUserAttached){
+            uattachs = uattachs.concat(value.user_attached);
+        }
+        if (compUserAttached){
+            uattachs = uattachs.concat(user_attached);
+        }
+        if (uattachs.length > 0){
+
+            var attach_ids = _.map(uattachs, "attachment_id");
+            self.user_attach_input.val(attach_ids.join(","));
+
+            self.clear_images();
+
+            _.each(uattachs, function(att){
+                if (att.is_image){
+                    self.display_image(att);
+                }
+            })
+
         }
 
         this.update_status();
@@ -358,10 +389,10 @@ function TestInstance(test_info, row){
         }else if (tt === QAUtils.MULTIPLE_CHOICE){
             var value = $.trim(self.inputs.find(":selected").text());
             self.value = value !== "" ? value : null;
-        }else if (tt=== QAUtils.UPLOAD){
+        }else if (tt === QAUtils.UPLOAD){
             if (editing_tli && !this.initialized){
                 var data = {
-                    filename: self.inputs.val(),
+                    attachment_id: self.inputs.val(),
                     test_id: self.test_info.test.id,
                     test_list_instance: editing_tli,
                     meta: JSON.stringify(get_meta_data()),
@@ -383,7 +414,7 @@ function TestInstance(test_info, row){
                         }else{
                             self.set_value(result);
                             self.status.addClass("btn-success").text("Success");
-                            self.status.attr("title",result['temp_file_name']);
+                            self.status.attr("title",result['url']);
                             $.Topic("valueChanged").publish();
                         }
                     },
@@ -522,13 +553,7 @@ function TestInstance(test_info, row){
                 } else {
                     self.set_value(response_data);
                     self.status.addClass("btn-success").text("Success");
-                    self.status.attr("title", response_data['temp_file_name']);
-
-                    // Display Image if required
-                    if (response_data.is_image) {
-                        var image_url = QAURLs.MEDIA_URL + "uploads/tmp/" + response_data['temp_file_name'];
-                        self.display_image(image_url);
-                    }
+                    self.status.attr("title", response_data.url);
 
                     $.Topic("valueChanged").publish();
                 }
@@ -543,18 +568,23 @@ function TestInstance(test_info, row){
 
     //Set initial value
     this.update_value_from_input();
+
     // Display images
-    self.display_image = function(url){
-        var id = self.test_info.test.slug;
+    self.display_image = function(attachment){
         var name = self.test_info.test.name;
-        var test_name = '<strong><p>Test name: '+ name + '</p></strong>';
-        var img_tag =  '<img src="'+ url+ '" class="qa-image">';
-        var html = test_name + img_tag;
+        var html = imageTemplate({a: attachment, test: name});
         if (self.test_info.test.display_image){
           $("#qa-images").css({"display": "block"});
-          $("#" + id).addClass("qa-image-box").html(html);
+          $("#"+self.test_info.test.slug).append(html);
         }
     };
+
+    self.clear_images = function(){
+        if (self.test_info.test.display_image){
+          $("#qa-images").css({"display": ""});
+          $("#" + self.test_info.test.slug).removeClass("qa-image-box").html("");
+        }
+    }
 }
 
 function get_meta_data(){
@@ -602,6 +632,8 @@ function TestListInstance(){
 
     this.submit = $("#submit-qa");
 
+    this.attachInput = $("#tli-attachments");
+
     /***************************************************************/
     //set the intitial values, tolerances & refs for all of our tests
     this.initialize = function(){
@@ -612,6 +644,12 @@ function TestListInstance(){
         self.tests_by_slug = _.zipObject(self.slugs,self.test_instances);
         self.composites = _.filter(self.test_instances,function(ti){return ti.test_info.test.type === QAUtils.COMPOSITE || ti.test_info.test.type === QAUtils.STRING_COMPOSITE;});
         self.composite_ids = _.map(self.composites,function(ti){return ti.test_info.test.id;});
+        self.attachInput.on("change", function(){
+            var fnames = _.map(this.files, function(f){
+                return '<i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>' + f.name +" ";
+            }).join("");
+            $("#tli-attachment-names").html(fnames);
+        });
         self.calculate_composites();
     };
 
@@ -650,8 +688,15 @@ function TestListInstance(){
                 _.each(data.results,function(result, name){
                     var ti = self.tests_by_slug[name];
                     if (!ti.skipped){
-                        ti.set_value(result.value);
+                        ti.set_value(result.value, result.user_attached);
+
+                        if (result.error){
+                            ti.status.attr("title", result.error);
+                        }else{
+                            ti.status.attr("title", "");
+                        }
                     }
+
                 });
             }
             $.Topic("qaUpdated").publish();
@@ -698,7 +743,7 @@ function TestListInstance(){
 
 function set_tab_stops(){
 
-    var user_inputs=  $('.qa-input',context).not("[readonly=readonly]").not("[type=hidden]");
+    var user_inputs=  $('.qa-input',context).not("[readonly=readonly]").not("[type=hidden]").not(".btn");
     var visible_user_inputs = user_inputs;
 
     var tabindex = 1;
@@ -715,6 +760,7 @@ function set_tab_stops(){
     //allow arrow key and enter navigation
     $(document).on("keydown","input, select", function(e) {
 
+        var visible_user_inputs = user_inputs.filter(":visible");
         var to_focus;
         //rather than submitting form on enter, move to next value
         if (e.which == QAUtils.KC_ENTER  || e.which == QAUtils.KC_DOWN ) {
@@ -726,7 +772,7 @@ function set_tab_stops(){
                 to_focus = visible_user_inputs[idx+1];
             }
             to_focus.focus()
-            if (to_focus.type === "text"){
+            if (to_focus.type === "text" || to_focus.type === "number"){
                 to_focus.select();
             }
             return false;
@@ -739,7 +785,7 @@ function set_tab_stops(){
                 to_focus = visible_user_inputs[idx-1];
             }
             to_focus.focus()
-            if (to_focus.type === "text"){
+            if (to_focus.type === "text" || to_focus.type === "number"){
                 to_focus.select();
             }
             return false;
@@ -908,6 +954,8 @@ $(document).ready(function(){
                     $(duration_picker).val(hours + mins);
                     duration_change = false;
                 }
+
+                $.Topic("valueChanged").publish();
             }
 
             $(start_picker).daterangepicker(
@@ -943,18 +991,33 @@ $(document).ready(function(){
                 duration_change = true;
             });
 
-            $(duration_picker).inputmask('99:99', {
-                numericInput: true,
-                placeholder: "_",
-                removeMaskOnSubmit: true
-            }).on('keyup', function () {
-                var duration = ('0000' + this.inputmask.unmaskedvalue()).substr(-4, 4);
-                var start_time = $($(start_picker)).data('daterangepicker').startDate,
-                    hours = duration[0] + duration[1],
-                    mins = duration[2] + duration[3];
-                var end_time = start_time.clone().add(hours, 'hours').add(mins, 'minutes')/*.format('DD-MM-YYYY HH:mm')*/;
-                $(completed_picker).data('daterangepicker').setStartDate(end_time);
-                $(completed_picker).data('daterangepicker').setEndDate(end_time);
+            $(duration_picker).inputmask({
+                mask: "99hr : 'min",
+                definitions: {
+                    "'": {
+                        validator: "[0-5][0-9]",
+                        cardinality: 2,
+                        prevalidator: [{
+                            validator: "[0-5]",
+                            cardinality: 1
+                        }]
+                    }
+                },
+                "oncomplete": function () {
+                    if (end_date_change) {
+                        var duration = this.inputmask.unmaskedvalue();
+                        var start_time = $($(start_picker)).data('daterangepicker').startDate,
+                            hours = duration[0] + duration[1],
+                            mins = duration[2] + duration[3];
+                        var end_time = start_time.clone().add(hours, 'hours').add(mins, 'minutes')/*.format('DD-MM-YYYY HH:mm')*/;
+                        $(completed_picker).data('daterangepicker').setStartDate(end_time);
+                        $(completed_picker).data('daterangepicker').setEndDate(end_time);
+                        end_date_change = false;
+                        $.Topic("valueChanged").publish();
+                    }
+                }
+            }).on('keypress', function () {
+                end_date_change = true;
             });
         });
     }

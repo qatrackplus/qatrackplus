@@ -1,7 +1,8 @@
+import json
+
 from django.test import TestCase
 
 from qatrack.qa import utils as qautils
-import json
 
 
 class TestUtils(TestCase):
