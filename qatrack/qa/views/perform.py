@@ -416,22 +416,6 @@ class ChooseUnit(TemplateView):
         units_ordering = 'unit__%s' % (settings.ORDER_UNITS_BY,)
 
         if Site.objects.all().exists() and self.split_sites:
-# =======
-#         unit_types = collections.defaultdict(list)
-#         for unit in q:
-#             unit['frequencies'] = models.UnitTestCollection.objects.filter(
-#                 unit_id=unit['unit'],
-#                 active=True
-#             ).exclude(
-#                 frequency=None,
-#             ).values_list(
-#                 "frequency__slug",
-#                 "frequency__name"
-#             ).order_by(
-#                 "frequency__nominal_interval"
-#             ).distinct()
-#             unit_types[unit["unit__type__name"]].append(unit)
-# >>>>>>> py34
 
             unit_site_types = {}
             for s in Site.objects.all():
@@ -441,7 +425,11 @@ class ChooseUnit(TemplateView):
 
             q = q.values('unit', 'unit__type__name', 'unit__name', 'unit__number', 'unit__id', 'unit__site__name').order_by(units_ordering).distinct()
 
+            freq_qs = models.Frequency.objects.prefetch_related('unittestcollections__unit').all()
+
             for unit in q:
+                unit['frequencies'] = freq_qs.filter(unittestcollections__unit_id=unit['unit__id']).distinct().values('id', 'name')
+
                 if unit['unit__site__name']:
                     unit_site_types[unit['unit__site__name']][unit['unit__type__name']].append(unit)
                 else:

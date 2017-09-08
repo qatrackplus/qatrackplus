@@ -12,7 +12,6 @@ from qatrack.parts.models import PartUsed, PartStorageCollection
 from qatrack.service_log.models import QAFollowup, ServiceEvent, ServiceEventStatus
 
 cache.delete(settings.CACHE_UNREVIEWED_COUNT)
-cache.delete(settings.CACHE_QA_FREQUENCIES)
 cache.delete(settings.CACHE_RTS_QA_COUNT)
 cache.delete('default-se-status')
 cache.delete('se_needing_approval_count')
@@ -73,13 +72,6 @@ def update_unreviewed_cache(*args, **kwargs):
     cache.delete('se_needing_approval_count')
 
 
-@receiver(post_save, sender=Frequency)
-@receiver(post_delete, sender=Frequency)
-def update_qa_freq_cache(*args, **kwargs):
-    """When a frequency is changed invalidate the frequencies"""
-    cache.delete(settings.CACHE_QA_FREQUENCIES)
-
-
 @receiver(post_save, sender=UnitTestCollection)
 @receiver(post_delete, sender=UnitTestCollection)
 def update_active_unit_test_collections_for_unit(*args, **kwargs):
@@ -117,11 +109,6 @@ def site(request):
 
     your_unreviewed = TestListInstance.objects.your_unreviewed_count(request.user)
 
-    qa_frequencies = cache.get(settings.CACHE_QA_FREQUENCIES)
-    if qa_frequencies is None:
-        qa_frequencies = list(Frequency.objects.frequency_choices())
-        cache.set(settings.CACHE_QA_FREQUENCIES, qa_frequencies)
-
     default_se_status = cache.get('default-se-status')
     if default_se_status is None:
         default_se_status = ServiceEventStatus.get_default()
@@ -148,5 +135,5 @@ def site(request):
         'DEBUG': settings.DEBUG,
         'USE_PARTS': settings.USE_PARTS,
         'DEFAULT_SE_STATUS': default_se_status,
-        'SE_NEEDING_APPROVAL_COUNT': se_needing_approval_count
+        'SE_NEEDING_APPROVAL_COUNT': se_needing_approval_count,
     }

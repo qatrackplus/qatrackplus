@@ -5,6 +5,8 @@ from django.utils.translation import ugettext as _
 
 from django.apps import apps
 
+# from qatrack.qa.models import Frequency
+
 
 # ServiceArea = apps.get_app_config('service_log').get_model('ServiceArea')
 # UnitServiceArea = apps.get_app_config('service_log').get_model('UnitServiceArea')

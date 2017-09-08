@@ -9,7 +9,7 @@ import django.utils.timezone
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('qa', '0001_initial'),
+        ('qa', '0002_029_to_030_first'),
     ]
 
     operations = [
