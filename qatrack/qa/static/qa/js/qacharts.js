@@ -1,4 +1,4 @@
-require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterangepicker', 'felter'], function ($, _, d3, moment) {
+require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterangepicker', 'felter', 'select2'], function ($, _, d3, moment) {
 
     var waiting_timeout = null;
     // var test_list_names;
@@ -10,7 +10,13 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
             $test_lists = $('#test-lists'),
             $tests = $('#tests'),
             $show_events = $('#show_events'),
-            $service_event_container = $('#service-event-container');
+            $service_event_container = $('#service-event-container'),
+            $status_selector = $('#status-selector'),
+            $gen_chart = $('#gen-chart'),
+            $filter_box = d3.select('#filter-box'),
+            $filter_resizer = d3.select('#filter-resizer'),
+            $chart_options = $('#chart-options'),
+            d3chart_resizer = d3.select('#chart-resizer');
 
         $units.felter({
             mainDivClass: 'col-sm-2',
@@ -205,8 +211,35 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
             ]
         });
 
-        // $units.change();
-        // $test_lists.change();
+        $tests.change(function() {
+            $gen_chart.prop('disabled', !$(this).val());
+        });
+
+        $status_selector.select2({
+            minimumResultsForSearch: 10,
+            width: '100%'
+        });
+
+        var y;
+        var max_y_resize = $chart_options.height() + 13;
+        var is_max = true;
+        var dragResize = d3.drag()
+            .on('start', function() {
+                y = d3.mouse(this)[1];
+                remove_tooltip_outter();
+            }).on('drag', function() {
+                var h = $filter_box.node().offsetHeight;
+                // Determine resizer position relative to resizable (parent)
+                var dy = d3.mouse(this)[1] - y;
+
+                // Avoid negative or really small widths
+                var new_h = d3.max([50, d3.min([max_y_resize, h + dy])]);
+                is_max = !(new_h < max_y_resize);
+
+                $filter_box.style('height', new_h + 'px');
+            });
+
+        $filter_resizer.call(dragResize);
 
         initialize_charts();
 
@@ -272,21 +305,22 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
 
         $("#chart-type").change(switch_chart_type);
 
-        // $("#toggle-instructions").click(toggle_instructions);
-
-        // TODO
-        // $($units).change(update_tests);
-        // $($frequencies).change(update_tests);
-        // $($test_lists).change(update_tests);
-
         $("#gen-chart").click(update_chart);
 
         $("#data-table-wrapper").on('click', "#csv-export", export_csv);
 
         $show_events.prop('checked') ? $service_event_container.show() : '';
         $show_events.change(function () {
-            $service_event_container.slideToggle('fast');
+            $service_event_container.slideToggle('fast', set_filter_height);
         });
+
+        function set_filter_height() {
+            max_y_resize = $chart_options.height() + 13;
+            if (is_max) {
+                $filter_box.transition().style('height', max_y_resize + 'px');
+                remove_tooltip_outter();
+            }
+        }
 
         set_chart_options();
         set_options_from_url();
@@ -304,17 +338,14 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
 
         function set_chart_options() {
             if (basic_chart_selected()) {
-                $("#basic-chart-options").show();
-                $("#cc-chart-options").hide();
+                $("#cc-chart-options").slideUp('fast', set_filter_height);
             } else {
-                $("#basic-chart-options").hide();
-                $("#cc-chart-options").show();
+                $("#cc-chart-options").slideDown('fast', set_filter_height);
                 $("#relative-diff").attr("checked", false)
             }
         }
 
         function update_chart() {
-            //TODO d3 charts:
             start_chart_update();
             set_chart_url();
             if (basic_chart_selected()) {
@@ -359,9 +390,10 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
         }
 
         function get_data_filters() {
+
             var filters = {
                 units: $units.val(),
-                statuses: QAUtils.get_checked("#status-container"),
+                statuses: $status_selector.val(),
                 date_range: $('#date-range').val(),
                 tests: $tests.val(),
                 test_lists: $test_lists.val(),
@@ -373,8 +405,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
                 combine_data: $("#combine-data").is(":checked"),
                 relative: $("#relative-diff").is(":checked"),
                 show_events: $('#show_events').is(':checked'),
-                approval_required: $('#approval-required').is(':checked'),
-                // service_types: QAUtils.get_checked("#service-type-container")
+                approval_required: $('#approval-required').is(':checked')
             };
 
             return filters;
@@ -516,6 +547,8 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
             return _data;
         }
 
+        function remove_tooltip_outter() {};
+
         function create_chart(_data) {
 
             // var allEmpty = _.every(_.map(series_data, function (o) {
@@ -532,8 +565,9 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
             var tracker_locked = false;
 
             ///////////////////////// CHART
-            var chart_height = 700,
-                chart_width = $('#chart').width(),
+
+            var chart_height = $(window).height() - 50,
+                chart_width = $('#chart').width() - 15,
                 xAxisHeight = 20;
 
             var circle_radius = 2,
@@ -899,37 +933,38 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
                 .attr("height", legendRowHeight * num_tests + 35)
                 .attr('width', 10)
                 .attr('id', 'legend-rect')
-                .style('fill', 'rgba(244, 244, 244, 0.8')
+                .style('fill', 'rgba(244, 244, 244, 0.8)')
+                // .style('background-color', 'rgba(244, 244, 244, 0.8)')
                 .style('stroke', '#ddd')
                 .style('stroke-width', 1);
 
             var legend_entry = legend.selectAll('.legend-row')
                 .data(_data._series)
-                .enter().append("g")
-                .attr("transform", function (d, i) {
-                    return "translate(0," + ((i + 1) * legendRowHeight - 8) + ")";
+                .enter().append('g')
+                .attr('transform', function (d, i) {
+                    return 'translate(0,' + ((i + 1) * legendRowHeight - 8) + ')';
                 })
                 .attr('class', 'legend-row');
 
             // Legend series toggle
-            legend_entry.append("rect")
-                .attr("width", 12)
-                .attr("height", 12)
-                .attr("x", 10)
-                .attr("y", 1.5)
-                .attr("fill", function (d) {
-                    return d.visible ? d.color : "#F1F1F2";
+            legend_entry.append('rect')
+                .attr('width', 12)
+                .attr('height', 12)
+                .attr('x', 10)
+                .attr('y', 1.5)
+                .attr('fill', function (d) {
+                    return d.visible ? d.color : '#F1F1F2';
                 })
                 .attr('id', function (d, i) {
                     return 'tsb_' + i
                 })
-                .attr("class", "toggle-series-box")
+                .attr('class', 'toggle-series-box')
                 .attr('stroke', function (d) {
                     return d.lines_visible ? d.color : null;
                 })
                 .attr('stroke-width', 4)
 
-                .on("click", function (d, i, s) {
+                .on('click', function (d, i, s) {
 
                     if (d.visible && d.lines_visible) d.lines_visible = false;
                     else if (d.visible) d.visible = false;
@@ -949,15 +984,15 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
                         else {
                             d3.select(s[i].parentNode.childNodes[1])
                                 .transition()
-                                .style("fill", 'rgba(0, 166, 90, 0.3')
+                                .style('fill', 'rgba(0, 166, 90, 0.3)')
                                 .attr('stroke-width', 0.5);
                         }
                     }
 
                     d3.select(this)
                         .transition()
-                        .attr("fill", function (d) {
-                            return d.visible ? d.color : "#ddd";
+                        .attr('fill', function (d) {
+                            return d.visible ? d.color : '#ddd';
                         })
                         .attr('stroke', function (d) {
                             return d.visible && d.lines_visible ? d.color : '#ddd';
@@ -966,35 +1001,35 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
                     redrawMainContent();
                 })
 
-                .on("mouseover", function (d) {
+                .on('mouseover', function (d) {
 
                     if (!d.visible) {
                         d3.select(this)
                             .transition()
-                            .attr("fill", function (d) {
+                            .attr('fill', function (d) {
                                 return d.color;
                             });
                     }
 
                     if (d.visible) {
-                        d3.select('#line_result_' + d.test_name.replace(/\W+/g, "_"))
+                        d3.select('#line_result_' + d.test_name.replace(/\W+/g, '_'))
                             .transition()
-                            .attr("stroke-width", line_width_highlight);
+                            .attr('stroke-width', line_width_highlight);
                     }
                 })
 
-                .on("mouseout", function (d) {
+                .on('mouseout', function (d) {
 
                     if (!d.visible) {
                         d3.select(this)
                             .transition()
-                            .attr("fill", "#ddd");
+                            .attr('fill', '#ddd');
                     }
 
                     if (d.visible) {
-                        d3.select('#line_result_' + d.test_name.replace(/\W+/g, "_"))
+                        d3.select('#line_result_' + d.test_name.replace(/\W+/g, '_'))
                             .transition()
-                            .attr("stroke-width", line_width);
+                            .attr('stroke-width', line_width);
                         // d3.select(this)
                         //     .transition()
                         //     .attr('stroke', function(d) { return d.lines_visible ? d.color : null })
@@ -1004,42 +1039,42 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
 
             // Legend ref/tol toggle
             legend_entry.append('rect')
-                .attr("width", 15)
-                .attr("height", 15)
-                .attr("x", 30)
-                .style('fill', 'rgba(0, 166, 90, 0.3')
+                .attr('width', 15)
+                .attr('height', 15)
+                .attr('x', 30)
+                .style('fill', 'rgba(0, 166, 90, 0.3)')
                 .style('stroke', function (d) {
                     return d.color;
                 })
-                .style("stroke-dasharray", ("2, 2"))
+                .style('stroke-dasharray', ('2, 2'))
                 .attr('stroke-width', function (d) {
                     return d.ref_tol_visible ? 0.5 : 0;
                 })
-                .attr("class", "toggle-ref-tol-box")
+                .attr('class', 'toggle-ref-tol-box')
                 .attr('id', function (d, i) {
                     return 'trtb_' + i
                 })
 
-                .on("click", function (d, i, s) {
+                .on('click', function (d, i, s) {
                     d.ref_tol_visible = !d.ref_tol_visible;
                     redrawMainContent();
                 })
 
-                .on("mouseover", function (d) {
+                .on('mouseover', function (d) {
 
                     if (!d.ref_tol_visible && d.visible) {
                         d3.select(this)
                             .transition()
-                            .style("fill", 'rgba(0, 166, 90, 0.3')
+                            .style('fill', 'rgba(0, 166, 90, 0.3)')
                             .attr('stroke-width', 0.5);
                     }
 
                     if (d.visible) {
 
                         d3.selectAll(
-                            '#area_ok_' + d.test_name.replace(/\W+/g, "_") +
-                            ',#area_upper_tol_' + d.test_name.replace(/\W+/g, "_") +
-                            ',#area_lower_tol_' + d.test_name.replace(/\W+/g, "_")
+                            '#area_ok_' + d.test_name.replace(/\W+/g, '_') +
+                            ',#area_upper_tol_' + d.test_name.replace(/\W+/g, '_') +
+                            ',#area_lower_tol_' + d.test_name.replace(/\W+/g, '_')
                         )
                             .transition()
                             .attr('opacity', 0.3);
@@ -1047,7 +1082,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
 
                 })
 
-                .on("mouseout", function (d) {
+                .on('mouseout', function (d) {
 
                     if (!d.ref_tol_visible && d.visible) {
                         d3.select(this)
@@ -1060,9 +1095,9 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
 
                         if (d.ref_tol_visible) {
                             d3.selectAll(
-                                '#area_ok_' + d.test_name.replace(/\W+/g, "_") +
-                                ',#area_upper_tol_' + d.test_name.replace(/\W+/g, "_") +
-                                ',#area_lower_tol_' + d.test_name.replace(/\W+/g, "_")
+                                '#area_ok_' + d.test_name.replace(/\W+/g, '_') +
+                                ',#area_upper_tol_' + d.test_name.replace(/\W+/g, '_') +
+                                ',#area_lower_tol_' + d.test_name.replace(/\W+/g, '_')
                             )
                                 .transition()
                                 .attr('opacity', 0.1);
@@ -1071,8 +1106,8 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
 
                 });
 
-            legend_entry.append("text")
-                .attr("x", 50)
+            legend_entry.append('text')
+                .attr('x', 50)
                 .attr('y', 12)
                 // .attr('clip-path', 'url(#clip)')
                 .text(function (d) {
@@ -1159,6 +1194,35 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
                 redrawMainContent();
                 redrawContextXAxis();
             });
+            var y, h;
+            var dragChartResize = d3.drag()
+                .on('start', function() {
+                    // y = d3.mouse(this)[1];
+                    y = d3.event.sourceEvent.clientY;
+                    h = chart_height;
+                    console.log(y);
+                    remove_tooltip_outter();
+                }).on('drag', function() {
+                    // Determine resizer position relative to resizable (parent)
+
+                    // var dy = d3.mouse(this)[1] - y;
+                    var dy = d3.event.sourceEvent.clientY - y;
+
+                    // Avoid negative or really small widths
+                    chart_height = d3.max([50, h + dy]);
+
+                    xAxisHeight = 0.028 * chart_height;
+                    margin2.top = chart_height - margin.bottom;
+                    height = chart_height - margin.top - margin.bottom;
+                    height2 = margin.bottom - 2 * xAxisHeight - 10 - margin2.bottom;
+
+                    d3.select("svg").transition().attr('height', chart_height);
+                    svg.transition().attr('height', chart_height);
+
+                    redrawMainYAxis();
+                    redrawMainContent();
+                });
+            d3chart_resizer.call(dragChartResize);
 
             function toggleLegend() {
 
@@ -1189,6 +1253,20 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
                 x_axis_elem.transition().call(xAxis);
                 yAxis.tickSizeInner(-width);
                 // hoverDate.transition().attr("x", width - 170);
+
+            }
+            /**
+             * redraw axis along y.
+             */
+            function redrawMainYAxis() {
+
+                yScale.range([height, 0]);
+                x_axis_elem.transition().attr("transform", "translate(0," + height + ")");
+                context.transition().attr("transform", "translate(0," + (margin2.top + 10) + ")");
+                event_group.transition().attr('transform', 'translate(0, ' + (height - event_group_height - 1) + ')');
+
+                mouse_tracker.transition().attr('height', height);
+                mainClip.transition().attr('height', height);
 
             }
 
@@ -1357,11 +1435,12 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
                     .transition()
                     .style('opacity', 0)
                     .on('end', function () {
-                        this.remove();
+                        $(this).remove();
                     });
 
                 tracker_locked = false;
             }
+            remove_tooltip_outter = removeTooltip;
 
             function toggleLock() {
                 tracker_locked = !tracker_locked;
@@ -1424,62 +1503,64 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
 
                         var initiated_circles = d3.selectAll('.tli_' + event_data.initiated_by);
 
-                        initiated_circles
-                            .attr('r', circle_radius_highlight)
-                            .attr('stroke-width', 2);
+                        if (initiated_circles.size() > 0) {
+                            initiated_circles
+                                .attr('r', circle_radius_highlight)
+                                .attr('stroke-width', 2);
 
-                        var initiated_test_list_data, initiated_x = 0;
-                        initiated_circles.each(function (d, i, s) {
-                            initiated_test_list_data = s[i].parentNode.__data__;
-                            initiated_x = xScale(d.x);
-                            return false;
-                        });
+                            var initiated_test_list_data, initiated_x = 0, initiated_name;
+                            initiated_circles.each(function (d, i, s) {
+                                initiated_test_list_data = s[i].parentNode.__data__;
+                                initiated_x = xScale(d.x);
+                                return false;
+                            });
+                            console.log(event_data);
+                            initiated_name = event_data.unit.name + ' - ' + initiated_test_list_data.test_list.name;
 
-                        var initiated_name = initiated_test_list_data.unit.name + ' - ' + initiated_test_list_data.test_list.name;
+                            var initiated_data = initiated_circles.data(),
+                                x_pos,
+                                y_pos = window.pageYOffset + this.getBoundingClientRect().top - height + event_group_height + y_buffer,
+                                x_buffer = 0,
+                                num_followups = event_data.followups.length,
+                                chart_div_offset = mouse_tracker.node().getBoundingClientRect().left;
 
-                        var initiated_data = initiated_circles.data(),
-                            x_pos,
-                            y_pos = window.pageYOffset + this.getBoundingClientRect().top - height + event_group_height + y_buffer,
-                            x_buffer = 0,
-                            num_followups = event_data.followups.length,
-                            chart_div_offset = mouse_tracker.node().getBoundingClientRect().left;
+                            var line_from_right = true;
+                            if (initiated_x > tooltip_width + 2 * x_buffer) {
+                                x_pos = initiated_x + chart_div_offset - tooltip_width - x_buffer;
+                                x_pos = d3.min([chart_div_offset + width - tooltip_width - x_buffer, x_pos]);
+                                line_from_right = false;
+                            } else {
+                                x_pos = initiated_x + chart_div_offset + x_buffer;
+                                x_pos = d3.max([x_buffer + chart_div_offset, x_pos]);
+                            }
 
-                        var line_from_right = true;
-                        if (initiated_x > tooltip_width + 2 * x_buffer) {
-                            x_pos = initiated_x + chart_div_offset - tooltip_width - x_buffer;
-                            x_pos = d3.min([chart_div_offset + width - tooltip_width - x_buffer, x_pos]);
-                            line_from_right = false;
-                        } else {
-                            x_pos = initiated_x + chart_div_offset + x_buffer;
-                            x_pos = d3.max([x_buffer + chart_div_offset, x_pos]);
+                            tli_coords.push({x: initiated_x, color: 'rgba(60, 141, 188, 0.6)'});
+
+                            var tli_initiated_tooltip = d3.select("body")
+                                .append("div")
+                                .attr('id', 'tli-' + initiated_data[0].test_list_instance_id + '_tooltip')
+                                .attr('class', 'tli_tooltip tooltip')
+                                .style("position", "absolute")
+                                .style("z-index", "10")
+                                .style('width', tooltip_width + 'px')
+                                .style('height', tooltip_height + 'px')
+                                .style('padding', tooltip_padding + 'px')
+                                .style('background-color', 'rgba(60, 141, 188, 0.2)')
+                                .attr("opacity", 0)
+                                .style('left', x_pos + 'px')
+                                .style('top', y_pos + 'px')
+                                .html($('#tli-tooltip-template').html()
+                                    .replace(/__tli-id__/g, initiated_data[0].test_list_instance_id)
+                                    .replace(/__tli-date__/g, moment(initiated_data.x).format('ddd, MMM D, YYYY, k:mm'))
+                                    .replace(/__tli-tl-name__/g, initiated_name)
+                                    .replace(/__tli-kind__/g, 'QA Event')
+                                    .replace(/__show-in__/g, 'style="display: none"')
+                                );
+
+                            tli_initiated_tooltip
+                                .transition()
+                                .style('opacity', 1);
                         }
-
-                        tli_coords.push({x: initiated_x, color: 'rgba(60, 141, 188, 0.6)'});
-
-                        var tli_initiated_tooltip = d3.select("body")
-                            .append("div")
-                            .attr('id', 'tli-' + initiated_data[0].test_list_instance_id + '_tooltip')
-                            .attr('class', 'tli_tooltip tooltip')
-                            .style("position", "absolute")
-                            .style("z-index", "10")
-                            .style('width', tooltip_width + 'px')
-                            .style('height', tooltip_height + 'px')
-                            .style('padding', tooltip_padding + 'px')
-                            .style('background-color', 'rgba(60, 141, 188, 0.6)')
-                            .attr("opacity", 0)
-                            .style('left', x_pos + 'px')
-                            .style('top', y_pos + 'px')
-                            .html($('#tli-tooltip-template').html()
-                                .replace(/__tli-id__/g, initiated_data[0].test_list_instance_id)
-                                .replace(/__tli-date__/g, moment(initiated_data.x).format('ddd, MMM D, YYYY, k:mm'))
-                                .replace(/__tli-tl-name__/g, initiated_name)
-                                .replace(/__tli-kind__/g, 'QA Event')
-                                .replace(/__show-in__/g, 'style="display: none"')
-                            );
-
-                        tli_initiated_tooltip
-                            .transition()
-                            .style('opacity', 1);
                     }
 
                     var _i = 0;
@@ -1535,7 +1616,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
                             .style('width', tooltip_width + 'px')
                             .style('height', tooltip_height + 'px')
                             .style('padding', tooltip_padding + 'px')
-                            .style('background-color', 'rgba(0, 192, 239, 0.6)')
+                            .style('background-color', 'rgba(0, 192, 239, 0.2)')
                             .attr("opacity", 0)
                             .style('left', x_pos + 'px')
                             .style('top', y_pos + 'px')

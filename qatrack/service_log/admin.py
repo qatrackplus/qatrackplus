@@ -54,10 +54,6 @@ class ServiceTypeAdmin(DeleteOnlyFromOwnFormAdmin):
     list_display = ['name', 'is_approval_required', 'is_active']
 
 
-# class ProblemTypeAdmin(DeleteOnlyFromOwnFormAdmin):
-#     list_display = ['name']
-
-
 class ServiceAreaAdmin(DeleteOnlyFromOwnFormAdmin):
     list_display = ['name']
     filter_horizontal = ("units",)
@@ -195,23 +191,10 @@ class UnitFormAdmin(ModelForm):
         return super(UnitFormAdmin, self).form_valid(request, queryset, form)
 
 
-# class UnitAvailableTimeForm(ModelForm):
-#
-#     class Meta:
-#         fields = [
-#             'date_changed',
-#             'hours_monday',
-#             'hours_tuesday',
-#             'hours_wednesday',
-#             'hours_thursday',
-#             'hours_friday',
-#             'hours_saturday',
-#             'hours_sunday',
-#         ]
-
-
 class UnitAdmin(admin.ModelAdmin):
     form = UnitFormAdmin
+    list_display = ['pk', 'name', 'number', 'active', 'type', 'site']
+    list_filter = ['active', 'site', 'modalities']
 
     class Media:
         js = (
@@ -283,4 +266,4 @@ admin.site.register(ServiceArea, ServiceAreaAdmin)
 admin.site.register(ServiceType, ServiceTypeAdmin)
 admin.site.register(ServiceEventStatus, ServiceEventStatusAdmin)
 
-admin.site.register([ThirdParty, GroupLinker], admin.ModelAdmin)
+admin.site.register([ThirdParty, GroupLinker, UnitServiceArea], admin.ModelAdmin)

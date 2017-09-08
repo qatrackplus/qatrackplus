@@ -85,7 +85,6 @@ class PartCategory(models.Model):
 
 class Part(models.Model):
 
-    # TODO change categories to FK that is required
     part_category = models.ForeignKey(PartCategory, blank=True, null=True, help_text=_('Category for this part'))
     suppliers = models.ManyToManyField(
         Supplier, blank=True, null=True, help_text=_('Suppliers of this part'), related_name='parts',
@@ -104,9 +103,14 @@ class Part(models.Model):
         default=0, help_text=_('Notify when the number parts falls below this number in storage'),
     )
     quantity_current = models.PositiveIntegerField(help_text=_('The number of parts in storage currently'), default=0, editable=False)
-    cost = models.DecimalField(default=0, decimal_places=2, max_digits=10, help_text=_('Cost of this part'))
+    cost = models.DecimalField(default=0, decimal_places=2, max_digits=10, help_text=_('Cost of this part'), null=True, blank=True)
     notes = models.TextField(max_length=255, blank=True, null=True, help_text=_('Additional comments about this part'))
     is_obsolete = models.BooleanField(default=False, help_text=_('Is this part now obsolete'), verbose_name=_('Obsolete'))
+
+    class Meta:
+        permissions = (
+            ('view_part', 'Can View Part'),
+        )
 
     def __str__(self):
         return '%s%s - %s' % (self.part_number, ' (%s)' % self.alt_part_number if self.alt_part_number else '', self.description)

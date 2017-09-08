@@ -388,14 +388,16 @@ class ServiceEventForm(BetterModelForm):
                 self.initial['unit_field'] = initial_ib_utc_u
                 self.initial['initiated_utc_field'] = initial_ib_utc
                 self.fields['service_area_field'].queryset = models.ServiceArea.objects.filter(units=initial_ib_utc_u)
-                self.fields['initiated_utc_field'].queryset = qa_models.UnitTestCollection.objects.filter(unit=initial_ib_utc_u).order_by('name')
+                i_utc_f_qs = qa_models.UnitTestCollection.objects.filter(unit=initial_ib_utc_u, active=True).order_by('name')
+                self.fields['initiated_utc_field'].choices = (('', '---------'),) + tuple(((utc.id, '(%s) %s' % (utc.frequency if utc.frequency else 'Ad Hoc', utc.name)) for utc in i_utc_f_qs))
 
             if self.initial_u and 'unit_field' not in self.data:
                 try:
                     initial_unit = u_models.Unit.objects.get(pk=self.initial_u)
                     self.initial['unit_field'] = initial_unit
                     self.fields['service_area_field'].queryset = models.ServiceArea.objects.filter(units=initial_unit)
-                    self.fields['initiated_utc_field'].queryset = qa_models.UnitTestCollection.objects.filter(unit=initial_unit).order_by('name')
+                    i_utc_f_qs = qa_models.UnitTestCollection.objects.filter(unit=initial_unit, active=True).order_by('name')
+                    self.fields['initiated_utc_field'].choices = (('', '---------'),) + tuple(((utc.id, '(%s) %s' %(utc.frequency if utc.frequency else 'Ad Hoc', utc.name)) for utc in i_utc_f_qs))
                 except ObjectDoesNotExist:
                     pass
 
@@ -420,7 +422,7 @@ class ServiceEventForm(BetterModelForm):
 
             if not self.user.has_perm('service_log.change_serviceeventstatus'):
                 self.fields['service_status'].widget.attrs.update({'disabled': True})
-            elif not self.user.has_perm('service_log.can_approve_service_event'):
+            elif not self.user.has_perm('service_log.approve_serviceevent'):
                 self.fields['service_status'].queryset = models.ServiceEventStatus.objects.filter(is_approval_required=True)
 
             # some data wasn't attempted to be submitted already
@@ -453,7 +455,7 @@ class ServiceEventForm(BetterModelForm):
                 #     pk=self.instance.service_status_id
                 # )
                 self.fields['service_status'].widget.attrs.update({'disabled': True})
-            elif not self.user.has_perm('service_log.can_approve_service_event'):
+            elif not self.user.has_perm('service_log.approve_serviceevent'):
                 self.fields['service_status'].queryset = models.ServiceEventStatus.objects.filter(
                     Q(is_approval_required=True) | Q(pk=self.instance.service_status.id)
                 ).distinct()
@@ -462,14 +464,14 @@ class ServiceEventForm(BetterModelForm):
                 self.initial['initiated_utc_field'] = self.instance.test_list_instance_initiated_by.unit_test_collection
                 self.initial['test_list_instance_initiated_by'] = str(self.instance.test_list_instance_initiated_by.id)
 
-            # TODO add frequency to this field (like ajax call)
-            self.fields['initiated_utc_field'].queryset = qa_models.UnitTestCollection.objects.filter(unit=unit, active=True).order_by('name')
+            i_utc_f_qs = qa_models.UnitTestCollection.objects.filter(unit=unit, active=True).order_by('name')
+            self.fields['initiated_utc_field'].choices = (('', '---------'),) + tuple(((utc.id, '(%s) %s' % (utc.frequency if utc.frequency else 'Ad Hoc', utc.name)) for utc in i_utc_f_qs))
 
         for f in ['safety_precautions', 'problem_description', 'work_description', 'qafollowup_notes']:
             self.fields[f].widget.attrs.update({'rows': 3, 'class': 'autosize'})
 
         select2_fields = [
-            'unit_field', 'service_area_field', 'service_type', 'service_event_related_field', 'service_status',
+            'unit_field', 'service_area_field', 'service_type', 'service_status',
             'initiated_utc_field'
         ]
         for f in select2_fields:

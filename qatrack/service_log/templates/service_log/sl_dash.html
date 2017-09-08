@@ -33,13 +33,13 @@
                         <div class="row">
                             <div class="col-md-12">
                                 <label class="pull-left">Incomplete RTS QA</label>
-                                <a href="{% url 'qaf_list_all' %}?f=tli.in-1" class="pull-right btn btn-flat btn-xs btn-primary left-btns">{{ counts.qa_not_complete }}</a>
+                                <a href="{% url 'qaf_list_all' %}?f=tli.in-1" class="pull-right btn btn-flat btn-xs btn-info left-btns">{{ counts.qa_not_complete }}</a>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-12">
                                 <label class="pull-left">Unreviewed RTS QA</label>
-                                <a href="{% url 'qaf_list_all' %}?f=tli.in-0_tli.ar-0" class="pull-right btn btn-flat btn-xs btn-primary left-btns">{{ counts.qa_not_reviewed }}</a>
+                                <a href="{% url 'qaf_list_all' %}?f=tli.in-0_tli.ar-0" class="pull-right btn btn-flat btn-xs btn-info left-btns">{{ counts.qa_not_reviewed }}</a>
                             </div>
                         </div>
 
@@ -67,13 +67,13 @@
                         <div class="row">
                             <div class="col-md-12">
                                 <label class="pull-left">{{ counts.se_default.status_name }}</label>
-                                <a href="{% url 'sl_list_all' %}?f=ss-{{ counts.se_default.id }}" class="pull-right btn btn-flat btn-xs btn-primary left-btns">{{ counts.se_default.count }}</a>
+                                <a href="{% url 'sl_list_all' %}?f=ss-{{ counts.se_default.id }}" class="pull-right btn btn-flat btn-xs btn-info left-btns">{{ counts.se_default.count }}</a>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-12">
                                 <label class="pull-left">Needing Approval</label>
-                                <a href="{% url 'sl_list_all' %}?f=ar-1_ss.ar-1" class="pull-right btn btn-flat btn-xs btn-primary left-btns">{{ counts.se_needing_approval }}</a>
+                                <a href="{% url 'sl_list_all' %}?f=ar-1_ss.ar-1" class="pull-right btn btn-flat btn-xs btn-info left-btns">{{ counts.se_needing_approval }}</a>
                             </div>
                         </div>
                     </div>
@@ -149,7 +149,7 @@
                                     {% for key, val in tl_dates.items %}
 
                                         <li class="time-label">
-                                            <span class="bg-aqua">
+                                            <span class="bg-gray">
                                                 {{ val.display }}
                                             </span>
                                         </li>

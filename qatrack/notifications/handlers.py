@@ -1,5 +1,7 @@
+
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.contrib.messages import add_message, ERROR
 from django.core.mail import send_mail
 from django.dispatch import receiver
 from django.template import Context

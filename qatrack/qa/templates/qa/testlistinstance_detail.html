@@ -23,7 +23,7 @@
     <div class="row">
         <div class="col-md-12">
 
-            <div class="box box-info">
+            <div class="box">
                 <div class="box-header">
                     <h3 class="box-title">{{test_list_instance.work_completed|date}} {{test_list_instance.test_list.name}} Details</h3>
                 </div>
@@ -59,9 +59,9 @@
                                         <a class="btn btn-danger btn-xs btn-flat" title="This will redirect you to the admin site where you can permanently delete this qa session" href="{% url 'admin:qa_testlistinstance_delete' test_list_instance.pk%}">Delete</a>
                                         {% endif %}
                                         {% if tli.in_progress %}
-                                            <a class="btn btn-primary btn-xs btn-flat" title="Continue this list" href="{%url 'continue_tli' pk=tli.pk%}?next={{request.get_full_path}}" >Continue</a>
+                                            <a class="btn btn-default btn-xs btn-flat" title="Continue this list" href="{%url 'continue_tli' pk=tli.pk%}?next={{request.get_full_path}}" >Continue</a>
                                         {% elif perms.qa.change_testlistinstance %}
-                                            <a class="btn btn-primary btn-xs btn-flat" title="Edit this list" href="{%url 'edit_tli' pk=tli.pk%}?next={{request.get_full_path}}" >Edit</a>
+                                            <a class="btn btn-default btn-xs btn-flat" title="Edit this list" href="{%url 'edit_tli' pk=tli.pk%}?next={{request.get_full_path}}" >Edit</a>
                                         {% endif %}
                                     </dd>
                                </dl>
@@ -138,7 +138,7 @@
     <div class="row">
         <div class="col-md-12">
 
-            <div class="box box-info">
+            <div class="box">
                 <div class="box-header">
 
                 </div>

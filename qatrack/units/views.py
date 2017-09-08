@@ -60,7 +60,7 @@ class UnitsFromKwargs(TemplateView):
 
 class UnitAvailableTimeChange(PermissionRequiredMixin, UnitsFromKwargs):
 
-    permission_required = "units.can_change_available_time"
+    permission_required = 'units.change_unitavailabletime'
     raise_exception = True
     template_name = 'units/unit_available_time_change.html'
 
@@ -79,7 +79,7 @@ class UnitAvailableTimeChange(PermissionRequiredMixin, UnitsFromKwargs):
 
 class HandleUnitAvailableTimeChange(PermissionRequiredMixin, CreateView):
 
-    permission_required = "units.can_change_available_time"
+    permission_required = 'units.change_unitavailabletime'
     raise_exception = True
     model = u_models.UnitAvailableTime
     form_class = forms.UnitAvailableTimeForm
@@ -129,7 +129,7 @@ class HandleUnitAvailableTimeChange(PermissionRequiredMixin, CreateView):
 
 class HandleUnitAvailableTimeEditAdd(PermissionRequiredMixin, CreateView):
 
-    permission_required = "units.can_change_available_time"
+    permission_required = 'units.change_unitavailabletime'
     raise_exception = True
     model = u_models.UnitAvailableTimeEdit
     form_class = forms.UnitAvailableTimeEditForm

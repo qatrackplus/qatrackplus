@@ -1,5 +1,5 @@
 #chart {
-    height: 800px;
+    /*height: 800px;*/
     min-width: 300px;
 }
 
@@ -159,6 +159,19 @@ table thead tr:first-child th {
 }
 #csv-export {
     margin: 5px;
+}
+#filter-box {
+    position: relative;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+#filter-resizer,
+#chart-resizer {
+    cursor: ns-resize;
+}
+#filter-resizer:hover,
+#chart-resizer:hover {
+    background-color: #d9dadd;
 }
 
 

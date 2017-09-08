@@ -34,6 +34,7 @@ class Migration(migrations.Migration):
                 ('is_complete', models.BooleanField(default=False, help_text='Has this QA been completed?')),
                 ('datetime_assigned', models.DateTimeField()),
             ],
+            options={'permissions': (('view_qafollowup', 'Can View Return To Service QA'),)},
         ),
         migrations.CreateModel(
             name='ServiceArea',
@@ -59,7 +60,7 @@ class Migration(migrations.Migration):
                 ('service_event_related', models.ManyToManyField(blank=True, help_text='Was there a previous service event that might be related to this event?', related_name='_serviceevent_service_event_related_+', to='service_log.ServiceEvent', verbose_name='Service events related')),
                 ('is_approval_required', models.BooleanField(default=False, help_text='Does this service event require approval?')),
             ],
-            options={'default_permissions': (), 'get_latest_by': 'datetime_service', 'permissions': (('can_approve_service_event', 'Can Approve Service Event'),)},
+            options={'get_latest_by': 'datetime_service', 'permissions': (('approve_serviceevent', 'Can Approve Service Event'), ('view_serviceevent', 'Can View Service Event'))},
         ),
         migrations.CreateModel(
             name='ServiceEventStatus',

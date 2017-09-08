@@ -108,7 +108,7 @@ i.timeline-toggle:hover {
     cursor: pointer;
 }
 .timeline-custom > li > .timeline-item:hover {
-    background-color: rgba(60,141,188,0.6);
+    background-color: rgba(207, 213, 221, 0.6);
 }
 .timeline-custom > li > .timeline-item > .time {
     width: 120px;
@@ -172,4 +172,7 @@ i.timeline-toggle:hover {
 }
 .box.box-solid.box-info {
     border-color: #748e9f;
+}
+.control-sidebar-dark, .control-sidebar-bg {
+    background-color: #323e46 !important;
 }

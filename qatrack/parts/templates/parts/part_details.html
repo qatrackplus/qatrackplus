@@ -148,7 +148,9 @@
 
             <div class="row">
                 <div class="col-md-12">
-                    <a href="{% url 'part_edit' part.id %}" class="btn btn-flat btn-primary">Edit</a>
+                    {% if perms.parts.change_part %}
+                        <a href="{% url 'part_edit' part.id %}" class="btn btn-flat btn-primary">Edit</a>
+                    {% endif %}
                 </div>
             </div>
         </div>

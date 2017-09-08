@@ -1,6 +1,6 @@
 
 
-require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker', 'sl_utils', 'inputmask'], function ($, _, moment, autosize) {
+require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker', 'sl_utils', 'inputmask', 'site_base'], function ($, _, moment, autosize) {
     
     $(document).ready(function() {
 
@@ -32,6 +32,10 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
         autosize($('textarea.autosize'));
 
         $('.select2:visible').select2({
+            minimumResultsForSearch: 10,
+            width: '100%'
+        }).overrideSelect2Keys();
+        $related_se.select2({
             minimumResultsForSearch: 10,
             width: '100%'
         });
@@ -69,7 +73,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
             templateSelection: generate_status_label,
             minimumResultsForSearch: 10,
             width: '100%'
-        });
+        }).overrideSelect2Keys();
 
         // Service Type and Approval Required --------------------------------------------------------------
         $service_type.change(function() {

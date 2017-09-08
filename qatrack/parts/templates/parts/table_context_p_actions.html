@@ -1,5 +1,9 @@
 {% load qa_tags %}
 <div style="min-width: 85px;">
-    <a class="btn btn-default btn-xs btn-flat" href="{% url 'part_edit' p.pk %}{% if next %}?next={{ next }}{% endif %}">Edit</a>
-    <a class="btn btn-default btn-xs btn-flat" href="{% url 'part_details' p.pk %}{% if next %}?next={{ next }}{% endif %}">Details</a>
+    {% if perms.parts.change_part %}
+        <a class="btn btn-default btn-xs btn-flat" href="{% url 'part_edit' p.pk %}{% if next %}?next={{ next }}{% endif %}">Edit</a>
+    {% endif %}
+    {% if perms.parts.view_part %}
+        <a class="btn btn-default btn-xs btn-flat" href="{% url 'part_details' p.pk %}{% if next %}?next={{ next }}{% endif %}">Details</a>
+    {% endif %}
 </div>

@@ -5,7 +5,7 @@ from collections import OrderedDict
 from braces.views import LoginRequiredMixin
 from django.conf import settings
 from django.contrib.auth.context_processors import PermWrapper
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
@@ -832,7 +832,8 @@ class ServiceEventsBaseList(BaseListableView):
     def actions(self, se):
         template = self.templates['actions']
         mext = reverse('sl_list_all') + (('?f=' + self.kwarg_filters) if self.kwarg_filters else '')
-        c = Context({'se': se, 'request': self.request, 'next': mext})
+        perms = PermWrapper(self.request.user)
+        c = Context({'se': se, 'request': self.request, 'next': mext, 'perms': perms})
         return template.render(c)
 
     def datetime_service(self, se):
@@ -995,8 +996,8 @@ class QAFollowupsBaseList(BaseListableView):
     def actions(self, qaf):
         template = self.templates['actions']
         next = reverse('qaf_list_all') + (('?f=' + self.kwarg_filters) if self.kwarg_filters else '')
-        can_review = self.request.user.has_perm('qa.can_review')
-        c = Context({'qaf': qaf, 'request': self.request, 'next': next, 'show_se_link': True, 'can_review': can_review})
+        perms = PermWrapper(self.request.user)
+        c = Context({'qaf': qaf, 'request': self.request, 'next': next, 'show_se_link': True, 'perms': perms})
         return template.render(c)
 
     def test_list_instance_pass_fail(self, qaf):
@@ -1012,9 +1013,9 @@ class QAFollowupsBaseList(BaseListableView):
     def test_list_instance_review_status(self, qaf):
         template = self.templates['test_list_instance_review_status']
         c = Context({
-            "instance": qaf.test_list_instance if qaf.test_list_instance else None,
-            "perms": PermWrapper(self.request.user),
-            "request": self.request,
+            'instance': qaf.test_list_instance if qaf.test_list_instance else None,
+            'perms': PermWrapper(self.request.user),
+            'request': self.request,
             'show_dash': True,
         })
         c.update(generate_review_status_context(qaf.test_list_instance))
@@ -1022,7 +1023,7 @@ class QAFollowupsBaseList(BaseListableView):
 
     def datetime_assigned(self, qaf):
         template = self.templates['datetime_assigned']
-        c = Context({"datetime": qaf.datetime_assigned})
+        c = Context({'datetime': qaf.datetime_assigned})
         return template.render(c)
 
     def service_event__service_status__name(self, qaf):

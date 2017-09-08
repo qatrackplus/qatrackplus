@@ -1,10 +1,19 @@
 /* Override select2 styles */
-.select2-container--default.select2-container--focus,
-.select2-selection.select2-container--focus,
-.select2-container--default:focus,
-.select2-selection:focus,
-.select2-container--default:active,
-.select2-selection:active {
+/*.select2-container--default.select2-container--focus,*/
+/*.select2-selection.select2-container--focus,*/
+/*.select2-container--default:focus,*/
+/*.select2-selection:focus,*/
+/*.select2-container--default:active,*/
+/*.select2-selection:active {*/
+  /*outline: none;*/
+/*}*/
+.select2-container--default.select2-container--focus .select2-selection,
+.select2-selection.select2-container--focus .select2-selection,
+.select2-container--default:focus .select2-selection,
+.select2-selection:focus .select2-selection,
+.select2-container--default:active .select2-selection,
+.select2-selection:active .select2-selection {
+  border-color: #3c8dbc !important;
   outline: none;
 }
 .select2-container--default .select2-selection--single,
@@ -22,7 +31,7 @@
   border-radius: 0;
 }
 .select2-container--default .select2-results__option--highlighted[aria-selected] {
-  background-color: #424f57;
+  background-color: #627585;
   color: white;
 }
 .select2-results__option {
@@ -71,14 +80,14 @@
   border-radius: 0;
 }
 .select2-container--default .select2-selection--multiple:focus {
-  border-color: #424f57;
+  border-color: #627585;
 }
 .select2-container--default.select2-container--focus .select2-selection--multiple {
   border-color: #d2d6de;
 }
 .select2-container--default .select2-selection--multiple .select2-selection__choice {
-  background-color: #424f57;
-  border-color: #323e46;
+  background-color: #627585;
+  border-color: #3d4d5e;
   padding: 1px 10px;
   color: #fff;
 }
@@ -97,4 +106,8 @@
 }
 .has-error .help-block {
   color: #dd4b39;
+}
+
+.select2-container--default .select2-selection--multiple:focus {
+  border-color: #3c8dbc;
 }

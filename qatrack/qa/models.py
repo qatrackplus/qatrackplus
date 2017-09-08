@@ -108,29 +108,41 @@ validate_color = RegexValidator(color_re, _('Enter a valid color.'), 'invalid')
 #  A collection of the permissions most relevant to QATrack+
 PERMISSIONS = (
     (
-        "Performing",
+        'Performing',
         (
-            ("qa.add_testlistinstance", "Can add test list instance", "Allow user to perform test lists and continue in-progress lists"),
-            ("qa.can_choose_frequency", "Choose QA by frequency", "Allows user to pre-emptively filter test lists based on frequency."),
-            ("qa.can_view_ref_tol", "Can view refs and tols", "Makes reference and tolerance values visible when performing a test list."),
-            ("qa.can_view_history", "Can view test history", "Makes test history visible when performing a test list."),
-            ("qa.can_skip_without_comment", "Can skip without comment", "Allow a user to skip tests with adding a comment"),
-            ("qa.can_override_date", "Can override date", "Allow a user to override the work_completed data"),
-            ("qa.can_perform_subset", "Can perform subset of tests", "Allow a user to filter tests to perform  based on a tests category"),
-            ("qa.change_testlistinstance", "Can edit prior test results", "Allow a user to edit already completed test results"),
+            ('qa.add_testlistinstance', 'Can add test list instance', 'Allow user to perform test lists and continue in-progress lists'),
+            ('qa.can_choose_frequency', 'Choose QA by frequency', 'Allows user to pre-emptively filter test lists based on frequency.'),
+            ('qa.can_view_ref_tol', 'Can view refs and tols', 'Makes reference and tolerance values visible when performing a test list.'),
+            ('qa.can_view_history', 'Can view test history', 'Makes test history visible when performing a test list.'),
+            ('qa.can_skip_without_comment', 'Can skip without comment', 'Allow a user to skip tests with adding a comment'),
+            ('qa.can_override_date', 'Can override date', 'Allow a user to override the work_completed data'),
+            ('qa.can_perform_subset', 'Can perform subset of tests', 'Allow a user to filter tests to perform  based on a tests category'),
+            ('qa.change_testlistinstance', 'Can edit prior test results', 'Allow a user to edit already completed test results'),
         ),
     ),
     (
-        "Reviewing",
+        'Reviewing',
         (
-            ("qa.can_view_completed", "Can view previously completed instances", "Allow a user to view previous test list results"),
-            ("qa.can_view_overview", "Can view program overview", "Allows a user to view the overall program status"),
-            ("qa.can_review", "Can review tests", "Allows a user to perform review & approval functions"),
-            ("qa.can_view_charts", "Can chart test history", "Gives user the ability to view and create charts of historical test results"),
-            ("qa.can_review_own_tests", "Can review self-performed tests", "Allows a user to perform review & approval functions on self-performed tests"),
-            ("qa.can_review_non_visible_tli", "Can review test list instances not visible to a user", "Allows a user to review test list instances that are not visible to any of their groups")
+            ('qa.can_view_completed', 'Can view previously completed instances', 'Allow a user to view previous test list results'),
+            ('qa.can_view_overview', 'Can view program overview', 'Allows a user to view the overall program status'),
+            ('qa.can_review', 'Can review tests', 'Allows a user to perform review & approval functions'),
+            ('qa.can_view_charts', 'Can chart test history', 'Gives user the ability to view and create charts of historical test results'),
+            ('qa.can_review_own_tests', 'Can review self-performed tests', 'Allows a user to perform review & approval functions on self-performed tests'),
+            ('qa.can_review_non_visible_tli', 'Can review non visible test list instances', 'Allows a user to review test list instances that are not visible to any of their groups')
         ),
     ),
+    (
+        'Service Log',
+        (
+            ('service_log.perform_qafollowup', 'Can perform return to service qa', 'Allow user to perform qa linked to service events.'),
+            ('service_log.view_qafollowup', 'Can view existing return to service qa', 'Allow user to view qa linked to service events.'),
+            ('service_log.add_serviceevent', 'Can create service event', 'Allows user to create new service events.'),
+            ('service_log.view_serviceevent', 'Can view service events', 'Allows user to view existing service events.'),
+            ('service_log.approve_serviceevent', 'Can approve service events', 'Allows user to change status of service events to statuses with \'is approval required = false\'.'),
+            ('parts.add_part', 'Can add part', 'Allow user to enter new parts.'),
+            ('parts.view_part', 'Can view parts', 'Allow user to view existing parts'),
+        )
+    )
 )
 
 

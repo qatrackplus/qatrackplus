@@ -32,10 +32,11 @@ class Migration(migrations.Migration):
                 ('description', models.TextField(help_text='Brief description of this part')),
                 ('quantity_min', models.PositiveIntegerField(default=0, help_text='Notify when the number parts falls below this number in storage')),
                 ('quantity_current', models.PositiveIntegerField(default=0, editable=False, help_text='The number of parts in storage currently')),
-                ('cost', models.DecimalField(decimal_places=2, default=0, help_text='Cost of this part', max_digits=10)),
+                ('cost', models.DecimalField(decimal_places=2, default=0, help_text='Cost of this part', max_digits=10, blank=True, null=True)),
                 ('notes', models.TextField(blank=True, help_text='Additional comments about this part', max_length=255, null=True)),
                 ('is_obsolete', models.BooleanField(default=False, help_text='Is this part now obsolete', verbose_name='Obsolete')),
             ],
+            options={'permissions': (('view_part', 'Can View Part'))},
         ),
         migrations.CreateModel(
             name='PartStorageCollection',

@@ -226,7 +226,6 @@ class BaseTestListInstanceForm(forms.ModelForm):
     )
 
     work_completed = forms.DateTimeField(required=False)
-    # work_duration = forms.DurationField(required=False)
 
     modified = forms.DateTimeField(required=False)
 
@@ -240,20 +239,19 @@ class BaseTestListInstanceForm(forms.ModelForm):
         exclude = ("day",)
 
     def __init__(self, *args, **kwargs):
-        print('--- BaseTestListInstanceForm.__init__ ---')
 
         self.unit = kwargs.pop('unit', None)
         self.followup_id = kwargs.pop('followup', None)
 
         super(BaseTestListInstanceForm, self).__init__(*args, **kwargs)
 
-        for field in ("work_completed", "work_started"):
+        for field in ('work_completed', 'work_started'):
             self.fields[field].widget = forms.widgets.DateTimeInput()
 
             self.fields[field].widget.format = settings.INPUT_DATE_FORMATS[0]
             self.fields[field].input_formats = settings.INPUT_DATE_FORMATS
             self.fields[field].widget.attrs["title"] = settings.DATETIME_HELP
-            self.fields[field].widget.attrs["class"] = "input-medium"
+            self.fields[field].widget.attrs['class'] = 'form-control'
             self.fields[field].help_text = settings.DATETIME_HELP
 
         self.fields["status"].widget.attrs["class"] = "input-medium select2"
@@ -262,7 +260,6 @@ class BaseTestListInstanceForm(forms.ModelForm):
 
         self.fields["comment"].widget.attrs["rows"] = "4"
         self.fields["comment"].widget.attrs["placeholder"] = "Add comment about this set of tests"
-        # self.fields["comment"].widget.attrs.pop("cols")
         self.fields['service_event'].widget.attrs.update({'class': 'select2'})
 
         if self.followup_id:

@@ -635,7 +635,13 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         if not self.object.in_progress:
             # TestListInstance & TestInstances have been successfully create, fire signal
             # to inform any listeners (e.g notifications.handlers.email_no_testlist_save)
-            signals.testlist_complete.send(sender=self, instance=self.object, created=False)
+            try:
+                signals.testlist_complete.send(sender=self, instance=self.object, created=False)
+            except:
+                messages.add_message(
+                    request=self.request,
+                    message='Error sending notification email.', level=messages.ERROR
+                )
 
         # let user know request succeeded and return to unit list
         messages.success(self.request, _("Successfully submitted %s " % self.object.test_list.name))
@@ -765,7 +771,13 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
             self.object.update_all_reviewed()
 
             if not self.object.in_progress:
-                signals.testlist_complete.send(sender=self, instance=self.object, created=False)
+                try:
+                    signals.testlist_complete.send(sender=self, instance=self.object, created=False)
+                except:
+                    messages.add_message(
+                        request=self.request,
+                        message='Error sending notification email.', level=messages.ERROR
+                    )
 
             # let user know request succeeded and return to unit list
             messages.success(self.request, _("Successfully submitted %s " % self.object.test_list.name))

@@ -71,7 +71,7 @@ class UnitType(models.Model):
 
     def __str__(self):
         """Display more descriptive name"""
-        return '<UnitType(%s,%s)>' % (self.name, self.model)
+        return '%s%s' % (self.name, ' - %s' % self.model if self.model else '')
 
 
 class Modality(models.Model):
@@ -146,17 +146,17 @@ class UnitAvailableTime(models.Model):
     unit = models.ForeignKey(Unit, on_delete=models.CASCADE)
 
     date_changed = models.DateField(help_text=_('Date the units available time changed or will change'))
-    hours_monday = models.DurationField(help_text=_('Duration of available time on mondays'))
-    hours_tuesday = models.DurationField(help_text=_('Duration of available time on tuesdays'))
-    hours_wednesday = models.DurationField(help_text=_('Duration of available time on wednesdays'))
-    hours_thursday = models.DurationField(help_text=_('Duration of available time on thursdays'))
-    hours_friday = models.DurationField(help_text=_('Duration of available time on fridays'))
-    hours_saturday = models.DurationField(help_text=_('Duration of available time on saturdays'))
-    hours_sunday = models.DurationField(help_text=_('Duration of available time on sundays'))
+    hours_monday = models.DurationField(help_text=_('Duration of available time on Mondays'))
+    hours_tuesday = models.DurationField(help_text=_('Duration of available time on Tuesdays'))
+    hours_wednesday = models.DurationField(help_text=_('Duration of available time on Wednesdays'))
+    hours_thursday = models.DurationField(help_text=_('Duration of available time on Thursdays'))
+    hours_friday = models.DurationField(help_text=_('Duration of available time on Fridays'))
+    hours_saturday = models.DurationField(help_text=_('Duration of available time on Saturdays'))
+    hours_sunday = models.DurationField(help_text=_('Duration of available time on Sundays'))
 
     class Meta:
         ordering = ['-date_changed']
-        default_permissions = ('can_change_available_time', 'Can change unit available time')
+        default_permissions = ('change',)
         get_latest_by = 'date_changed'
         unique_together = [('unit', 'date_changed')]
 

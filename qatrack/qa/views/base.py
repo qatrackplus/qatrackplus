@@ -264,16 +264,17 @@ class UTCList(BaseListableView):
         return filters
 
     def frequency__name(self, utc):
-        return utc.frequency.name if utc.frequency else "Ad Hoc"
+        return utc.frequency.name if utc.frequency else 'Ad Hoc'
 
     def actions(self, utc):
         template = self.templates['actions']
-        c = Context({"utc": utc, "request": self.request, "action": self.action})
+        perms = PermWrapper(self.request.user)
+        c = Context({'utc': utc, 'request': self.request, 'action': self.action, 'perms': perms})
         return template.render(c)
 
     def due_date(self, utc):
         template = self.templates['due_date']
-        c = Context({"unit_test_collection": utc, "show_icons": settings.ICON_SETTINGS["SHOW_DUE_ICONS"]})
+        c = Context({'unit_test_collection': utc, 'show_icons': settings.ICON_SETTINGS['SHOW_DUE_ICONS']})
         return template.render(c)
 
     def last_instance__work_completed(self, utc):
@@ -283,13 +284,13 @@ class UTCList(BaseListableView):
 
     def last_instance_review_status(self, utc):
         template = self.templates['review_status']
-        c = Context({"instance": utc.last_instance, "perms": PermWrapper(self.request.user), "request": self.request})
+        c = Context({'instance': utc.last_instance, 'perms': PermWrapper(self.request.user), 'request': self.request})
         c.update(generate_review_status_context(utc.last_instance))
         return template.render(c)
 
     def last_instance_pass_fail(self, utc):
         template = self.templates['pass_fail']
-        c = Context({"instance": utc.last_instance, "exclude": [models.NO_TOL], "show_label": settings.ICON_SETTINGS['SHOW_STATUS_LABELS_LISTING'], "show_icons": settings.ICON_SETTINGS['SHOW_STATUS_ICONS_LISTING']})
+        c = Context({'instance': utc.last_instance, 'exclude': [models.NO_TOL], 'show_label': settings.ICON_SETTINGS['SHOW_STATUS_LABELS_LISTING'], 'show_icons': settings.ICON_SETTINGS['SHOW_STATUS_ICONS_LISTING']})
         return template.render(c)
 
 

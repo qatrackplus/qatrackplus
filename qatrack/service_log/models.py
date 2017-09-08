@@ -43,7 +43,7 @@ class UnitServiceArea(models.Model):
         ordering = ('unit', 'service_area')
 
     def __str__(self):
-        return '<usa(%s::%s)>' % (self.unit.name, self.service_area.name)
+        return '%s :: %s' % (self.unit.name, self.service_area.name)
 
 
 class ServiceType(models.Model):
@@ -109,18 +109,6 @@ class ServiceEventStatus(models.Model):
         return {ses.id: ses.colour for ses in ServiceEventStatus.objects.all()}
 
 
-# class ProblemType(models.Model):
-#     """
-#     Short description of common occurring problem themes.
-#     """
-#
-#     name = models.CharField(max_length=64, unique=True, help_text=_('Enter a short name for this problem type'))
-#     description = models.TextField(null=True, blank=True)
-#
-#     def __str__(self):
-#         return self.name
-
-
 class ServiceEvent(models.Model):
 
     unit_service_area = models.ForeignKey(UnitServiceArea, on_delete=models.PROTECT)
@@ -171,18 +159,14 @@ class ServiceEvent(models.Model):
 
     class Meta:
         get_latest_by = "datetime_service"
-        default_permissions = ()
 
         permissions = (
-            ("can_approve_service_event", "Can Approve Service Event"),
+            ('approve_serviceevent', 'Can Approve Service Event'),
+            ('view_serviceevent', 'Can View Service Event'),
         )
 
     def __str__(self):
         return 'id: %s' % self.id
-
-    # def get_colour_dict():
-    #     # return json.dumps({se.id: se.service_status.colour for se in ServiceEvent.objects.all()})
-    #     return {se.id: se.service_status.colour for se in ServiceEvent.objects.all()}
 
 
 class ThirdPartyManager(models.Manager):
@@ -243,6 +227,12 @@ class QAFollowup(models.Model):
 
     is_complete = models.BooleanField(default=False, help_text=_('Has this QA been completed?'))
     datetime_assigned = models.DateTimeField()
+
+    class Meta:
+        permissions = (
+            ('view_qafollowup', 'Can view veturn vo service qa'),
+            ('perform_qafollowup', 'Can perform return to service qa')
+        )
 
 
 class GroupLinker(models.Model):

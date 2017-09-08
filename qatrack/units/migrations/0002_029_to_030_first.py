@@ -140,7 +140,7 @@ class Migration(migrations.Migration):
                 ('hours_sunday', models.DurationField(help_text='Duration of available time on sundays')),
                 ('unit', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='units.Unit')),
             ],
-            options={'default_permissions': ('can_change_available_time', 'Can change unit available time'), 'get_latest_by': 'date_changed', 'ordering': ['-date_changed']},
+            options={'default_permissions': ('change',), 'get_latest_by': 'date_changed', 'ordering': ['-date_changed']},
         ),
         migrations.CreateModel(
             name='UnitAvailableTimeEdit',

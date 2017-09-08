@@ -180,6 +180,12 @@ input[type="number"] {
 .bottom-0 {
     bottom: 0;
 }
+.border-none {
+    border: none !important;
+}
+.border-d2d6de {
+    border: 1px solid #d2d6de;
+}
 .cursor-default {
     cursor: default;
 }
@@ -254,6 +260,15 @@ input[type="number"] {
 .max-width-300 {
     max-width: 300px;
 }
+.margin-0 {
+    margin: 0;
+}
+.margin-10 {
+    margin: 10px;
+}
+.margin-right-10 {
+    margin-right: 10px;
+}
 .margin-right-20 {
     margin-right: 20px;
 }
@@ -262,6 +277,9 @@ input[type="number"] {
 }
 .margin-bottom-3 {
     margin-bottom: 3px;
+}
+.margin-bottom-10 {
+    margin-bottom: 10px;
 }
 .margin-bottom-20 {
     margin-bottom: 20px;
@@ -272,14 +290,35 @@ input[type="number"] {
 .margin-left-5 {
     margin-left: 5px;
 }
+.margin-left-10 {
+    margin-left: 10px;
+}
+.padding-10 {
+    padding: 10px;
+}
 .padding-0-10 {
     padding: 0 10px;
+}
+.padding-bottom-0 {
+    padding-bottom: 0;
+}
+.padding-bottom-3 {
+    padding-bottom: 3px;
+}
+.padding-bottom-8 {
+    padding-bottom: 8px;
 }
 .padding-left-5 {
     padding-left: 5px;
 }
 .padding-right-5 {
     padding-right: 5px;
+}
+.padding-top-3 {
+    padding-top: 3px;
+}
+.text-align-center {
+    text-align: center;
 }
 
 
@@ -343,4 +382,5 @@ input[type="number"] {
 .hover-parent:not(:hover) .hover-sub-not {
     color: inherit !important;
 }
+
 

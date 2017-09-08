@@ -61,7 +61,9 @@
                 {% endif %}
             </div>
             <div class="col-md-1">
-                <a class="btn btn-flat btn-primary pull-right" href="{% url "sl_edit" serviceevent.id %}">Edit</a>
+                {% if perms.service_log.change_serviceevent %}
+                    <a class="btn btn-flat btn-primary pull-right" href="{% url "sl_edit" serviceevent.id %}">Edit</a>
+                {% endif %}
             </div>
         </div>
 
@@ -230,8 +232,8 @@
                                             <th style="min-width: 200px;">Test List</th>
                                             <th>Pass/Fail</th>
                                             <th>Review Status</th>
-                                            <th>Assigned By</th>
-                                            <th>Assigned Date</th>
+{#                                            <th>Assigned By</th>#}
+{#                                            <th>Assigned Date</th>#}
                                             <th></th>
                                         </tr>
                                     </thead>
@@ -242,8 +244,8 @@
                                                 <td>{{ f.unit_test_collection.tests_object.name }}</td>
                                                 <td>{% if f.test_list_instance.pk %}{{ f.test_list_instance|as_pass_fail_status:False }}{% else %}----{% endif %}</td>
                                                 <td>{% if f.test_list_instance.pk %}{{ f.test_list_instance|as_review_status }}{% else %}----{% endif %}</td>
-                                                <td>{{ f.user_assigned_by }}</td>
-                                                <td>{{ f.datetime_assigned }}</td>
+{#                                                <td>{{ f.user_assigned_by }}</td>#}
+{#                                                <td>{{ f.datetime_assigned }}</td>#}
                                                 <td>
                                                     {% if f.test_list_instance.pk %}
                                                         <a href="{% url 'review_test_list_instance' pk=f.test_list_instance.pk %}?next={% url 'sl_details' pk=serviceevent.pk %}" class="btn btn-xs btn-default btn-flat">Review</a>

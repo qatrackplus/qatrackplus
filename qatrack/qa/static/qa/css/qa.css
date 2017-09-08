@@ -73,6 +73,7 @@ input[disabled].qa-input, input[readonly].qa-input {
     width:110px;
     text-align:center;
     padding: 0;
+    vertical-align: middle;
 }
 .qa-skip {
     width:34px;
@@ -204,7 +205,15 @@ tr.qa-error > td {
 }
 #perform-qa-table > tbody > tr > td.qa-category {
     padding: 0;
+    height: 100%;
 }
+#perform-qa-table > tbody > tr > td.qa-category > .error-bar {
+    height: 100%;
+    top:0;
+}
+/*#perform-qa-table > tbody > tr > td.qa-category > .error-bar > .procedure-bar {*/
+    /*padding-bottom: 4px;*/
+/*}*/
 #perform-qa-table {
     border-collapse: collapse;
     border-spacing: 0;
@@ -364,6 +373,12 @@ input[type="number"] {
 #listable-table-unreviewed > thead > tr > th:nth-child(1),
 #listable-table-unreviewed > tbody > tr > td:nth-child(1) {
     min-width: 160px;
+}
+#listable-table-review_utc > tbody > tr > td:nth-child(1) {
+    width: 180px !important;
+}
+#listable-table-review_utc > tbody > tr > td:nth-child(5) {
+    width: 160px !important;
 }
 row.procedure-open > td:nth-child(1) {
     border-left: 3px solid #00ff00;
