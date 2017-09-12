@@ -112,6 +112,11 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
         context["test_list"] = self.object.test_list
         context["unit_test_collection"] = self.object.unit_test_collection
         context["current_day"] = self.object.day + 1
+
+        context['attachments'] = self.object.unit_test_collection.tests_object.attachment_set.all()
+
+        print(context['attachments'])
+
         return context
 
     def form_valid(self, form):

@@ -119,7 +119,7 @@
 
         {% if test_list.description or unit_test_collection.tests_object.description %}
             <div id="box-description" class="row" style="display: none;">
-                <div class="col-lg-12">
+                <div class="col-sm-12">
                     <div class="box">
                         <div class="box-header">
                             <h3 class="box-title">
@@ -132,14 +132,14 @@
                         </div>
                         <div class="box-body">
                             {% spaceless %}
-                                <div class="col-lg-12 pre left-border border-default">
+                                <div class="col-sm-12 pre left-border border-default">
                                     {% if days and unit_test_collection.tests_object.description %}
                                         {% for day, display in days %}
                                             {% if day == current_day %}
                                                     <h5><b>Cycle Description: </b></h5>
                                                     <div>{{unit_test_collection.tests_object.description|safe}}</div>
                                                 </div>
-                                                <div class="col-lg-12 pre left-border border-default">
+                                                <div class="col-sm-12 pre left-border border-default">
                                                     <h5><b>Test List Description - {{ display }}: </b></h5>
                                             {% endif %}
                                         {% endfor %}
@@ -153,10 +153,10 @@
             </div>
         {% endif %}
 
-        <div id="box-admin" class="row" style="">
+        <div class="row" style="">
             {% if perms.qa.can_review and perms.qa.can_review_own_tests or perms.qa.can_override_date %}
-            <div class="col-lg-8">
-                <div class="box">
+            <div class="col-sm-8">
+                <div id="box-admin" class="box">
                     <div class="box-header">
                         <h3 class="box-title">
                             <i class="fa fa-wrench" aria-hidden="true"></i>
@@ -165,13 +165,13 @@
                     </div>
                     <div class="box-body">
                         <div class="row">
-                            <div class="col-md-6 left-border border-default">
+                            <div class="col-sm-6 left-border border-default">
                                 <div class="date input-prepend input-append row" id="work-started" data-date="{% now 'd-m-Y'%}" data-date-format="dd-mm-yyyy">
                                     {% spaceless %}
-                                        <label for="id_work_started" class="col-md-6">
+                                        <label for="id_work_started" class="col-lg-6">
                                             {{form.work_started.label}}:
                                         </label>
-                                        <div class="col-md-6">
+                                        <div class="col-lg-6">
                                             {{form.work_started}}
                                             <i class="fa fa-calendar fa-in-input"></i>
                                         </div>
@@ -180,20 +180,20 @@
 
                                 {% if perms.qa.can_override_date %}
                                     <div class="date input-prepend input-append row" id="work-time">
-                                        <label for="id_work_duration" class="col-md-6">
+                                        <label for="id_work_duration" class="col-lg-6">
                                             Work duration:
                                         </label>
-                                        <div class="col-md-6">
+                                        <div class="col-lg-6">
                                             <input id="id_work_duration" name="work_duration" class="form-control">
                                             <i class="fa fa-clock-o fa-in-input"></i>
                                         </div>
                                     </div>
 
                                     <div class="date input-prepend input-append row" id="work-completed" data-date="{% now 'd-m-Y'%}" data-date-format="dd-mm-yyyy">
-                                        <label for="id_work_completed" class="col-md-6">
+                                        <label for="id_work_completed" class="col-lg-6">
                                             {{form.work_completed.label}}:
                                         </label>
-                                        <div class="col-md-6">
+                                        <div class="col-lg-6">
                                             {{form.work_completed}}
                                             <i class="fa fa-calendar fa-in-input"></i>
                                         </div>
@@ -201,17 +201,25 @@
                                 {% endif %}
                             </div>
 
-                            <div class="col-md-6 left-border border-default">
+                            <div class="col-sm-6 left-border border-default">
                                 {% if perms.qa.can_review and perms.qa.can_review_own_tests %}
                                     <div class="input-prepend input-append row" id="status">
-                                        <label for="id_status" class="col-md-6">
+                                        <label for="id_status" class="col-lg-6">
                                             Set Status:
                                         </label>
-                                        <div class="col-md-6">
+                                        <div class="col-lg-6">
                                             {{form.status}}
                                         </div>
                                     </div>
                                 {% endif %}
+                                <div class="input-prepend input-append row" id="status">
+                                    <label for="id_status" class="col-lg-6">
+                                        RTS for Service Event:
+                                    </label>
+                                    <div class="col-lg-6">
+                                        {{form.service_event}}
+                                    </div>
+                                </div>
 
                             </div>
                         </div>
@@ -219,46 +227,40 @@
                 </div>
             </div>
             {% endif %}
-            <div class="col-lg-4">
-                <div class="box">
-                    <div class="box-header">
-                        <h5 class="box-title">
-                            <i class="fa fa-paperclip" aria-hidden="true"></i>
-                            {{ test_list.name }} Test List Attachments
-                        </h5>
-                    </div>
-                    <div class="box-body">
-                        <div class="row">
-                            <div class="col-md-12 border-default">
-                                <ul>
-                                    {% for attach in test_list.attachment_set.all %}
-                                        <li>{{ attach|attachment_link }}</li>
-                                    {% endfor %}
+            {% if attachments|length > 0 %}
+                <div id="box-attachments" class="col-sm-4">
+                    <div class="box">
+                        <div class="box-header">
+                            <h5 class="box-title">
+                                <i class="fa fa-paperclip" aria-hidden="true"></i>
+                                {{ test_list.name }} Test List Attachments
+                            </h5>
+                        </div>
+                        <div class="box-body">
+                            <div class="row">
+                                <div class="col-sm-12 border-default">
+                                    <ul>
+                                        {% for attach in attachments %}
+                                            <li>{{ attach|attachment_link }}</li>
+                                        {% endfor %}
+                                    </ul>
 
-                                    {% if days %}
-                                        {% with unit_test_collection.tests_object as tlc %}
-                                            {% for attach in tlc.attachment_set.all %}
-                                                <li>{{ attach|attachment_link }}</li>
-                                            {% endfor %}
-                                        {% endwith %}
-                                    {% endif %}
-                                </ul>
-
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            {% endif %}
         </div>
 
 
         <div id="box-perform" class="row">
-            <div class="col-lg-12">
+            <div class="col-sm-12">
                 <div class="box box-pho-borders">
 
                     <div class="box-header">
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-sm-6">
                                 {% if test_list_instance %}
                                     <i class="fa fa-pencil-square-o box-title" aria-hidden="true"></i>
                                     <h3 class="box-title">Edit {{test_list_instance.unit_test_collection.unit.name}} : {{test_list_instance.test_list.name}}</h3>
@@ -271,7 +273,7 @@
                                 {% endif %}
                             </div>
 
-                            <div class="col-md-6">
+                            <div class="col-sm-6">
                                 {% if test_list.warning_message %}
                                     <h3 class="do-not-treat box-title pull-right">
                                         <i class="fa fa-exclamation"></i>
@@ -285,7 +287,7 @@
                     <div class="box-body">
 
                         <div class="row">
-                            <div class="col-lg-12">
+                            <div class="col-sm-12">
 
                                 <input type="hidden" id="test-list-id" value="{{test_list.pk}}"/>
                                 <input type="hidden" id="test-list-name" value="{{test_list.name}}"/>
@@ -335,46 +337,56 @@
                                         {% for test_form in formset %}
                                             {% qa_value_form test_form test_list include_history=perms.qa.can_view_history include_ref_tols=perms.qa.can_view_ref_tol test_info=test_form.get_test_info  %}
                                         {% endfor %}
-                                        <tr>
-                                            <td>Attachments</td>
-                                            <td>
-                                                <label class="qa-input btn btn-primary btn-xs btn-flat" title="Click to add attachments. (Hold Ctrl or Cmd in the dialog to include multiple attachments)">
-                                                    Browse <input id="tli-attachments" class="file-upload" type="file" name="tli-attachments" multiple style="display:none"/>
-                                                </label>
-                                            </td>
 
-                                            <td id="tli-attachment-names"
-                                                {% if perms.qa.can_view_ref_tol and perms.qa.can_view_history %}
-                                                    colspan="6"
-                                                {% elif perms.qa.can_view_ref_tol or perms.qa.can_view_history %}
-                                                    colspan="5"
-                                                {% else %}
-                                                    colspan="4"
-                                                {% endif %}
-                                            >
-
-                                                {% if test_list_instance and test_list_instance.attachment_set.exists %}
-                                                    {% for attach in test_list_instance.attachment_set.all %}
-                                                        <i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>{{ attach | attachment_link }}
-                                                    {% endfor %}
-                                                {% endif %}
-                                            </td>
-                                        </tr>
                                     </tbody>
                                 </table>
-                                <div class="row pad">
-                                    <div id="qa-tli-comment" class="col-md-12 callout callout-custom border-primary">
-                                        {{form.comment}}
-                                    </div>
-                                </div>
+
+
+{#                                <div class="row pad">#}
+{#                                    <div id="qa-tli-comment" class="col-sm-12 callout callout-custom border-primary">#}
+{#                                        {{form.comment}}#}
+{#                                    </div>#}
+{#                                </div>#}
 
                                 <div class="row">
-{#                                    <div class="col-md-6"></div>#}
-                                    <div class="col-md-12">
+{#                                    <div class="col-sm-6"></div>#}
+                                    <div class="col-sm-7">
+                                        <table class="table table-responsive table-condensed">
+                                            <tbody>
+                                                <tr>
+                                                    <td>Attachments</td>
+                                                    <td>
+                                                        <label class="qa-input btn btn-default btn-sm btn-flat" title="Click to add attachments. (Hold Ctrl or Cmd in the dialog to include multiple attachments)">
+                                                            Browse <input id="tli-attachments" class="file-upload" type="file" name="tli-attachments" multiple style="display:none"/>
+                                                        </label>
+                                                    </td>
+
+                                                    <td id="tli-attachment-names"
+                                                        {% if perms.qa.can_view_ref_tol and perms.qa.can_view_history %}
+                                                            colspan="6"
+                                                        {% elif perms.qa.can_view_ref_tol or perms.qa.can_view_history %}
+                                                            colspan="5"
+                                                        {% else %}
+                                                            colspan="4"
+                                                        {% endif %}
+                                                    >
+
+                                                    {% if test_list_instance and test_list_instance.attachment_set.exists %}
+                                                        {% for attach in test_list_instance.attachment_set.all %}
+                                                            <i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>{{ attach | attachment_link }}
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <div class="col-sm-5">
 
                                         <button id="submit-qa" type="submit" class="btn btn-primary btn-flat margin-r-5 pull-right">Submit QA Results</button>
 
-                                        <a id="toggle-gen-comment" class="btn btn-primary btn-flat pull-right margin-r-5" href="#!" title="Click here to add a general comment about this set of tests"><i class="icon-edit"></i> Add Comment</a>
+                                        <a id="toggle-gen-comment" class="btn btn-default btn-flat pull-right margin-r-5" href="#!" title="Click here to add a general comment about this set of tests"><i class="icon-edit"></i> Add Comment</a>
 
                                         <div class="pull-right margin-r-5">
                                             <label title="{{form.in_progress.help_text}}" for="id_in_progress" class="add-on">
@@ -385,7 +397,6 @@
 
                                     </div>
                                 </div>
-
 
                                 <div id="qa-images">
                                     {% for test_form in formset %}
@@ -410,7 +421,7 @@
                     {% if test_list.warning_message %}
                         <div class="box-footer">
                             <div class="row">
-                                <div class="col-md-12">
+                                <div class="col-sm-12">
                                     <h3 class="do-not-treat box-title pull-right">
                                         <i class="fa fa-exclamation"></i>
                                         <strong>{{test_list.warning_message}}</strong>
@@ -451,6 +462,13 @@
                     <li class="primary toggle-element active" data-toggle="admin"><a id="toggle-options" href="#!">
                         <i class="fa fa-wrench fa-fw" aria-hidden="true"></i>
                         <span>Admin Options</span>
+                    </a></li>
+                {% endif %}
+
+                {% if attachments|length > 0 %}
+                    <li class="primary toggle-element active" data-toggle="attachments"><a id="toggle-options" href="#!">
+                        <i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>
+                        <span>Attachemnts</span>
                     </a></li>
                 {% endif %}
 

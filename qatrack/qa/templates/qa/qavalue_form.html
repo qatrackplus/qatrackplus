@@ -62,11 +62,7 @@
             {% elif test.is_upload %}
                 <span class="upload-button">
                     {{form.string_value}}
-<<<<<<< HEAD:qatrack/qa/templates/qa/qavalue_form.html
-                    <a id="upload-button-{{ test.id }}" type="button" class="qa-input btn btn-default btn-sm btn-flat">Upload</a>
-=======
-                    <a id="upload-button-{{ test.id }}" type="button" class="qa-input btn btn-primary btn-sm btn-flat">Upload</a>
->>>>>>> py34:qatrack/templates/qa/qavalue_form.html
+                    <a id="upload-button-{{ test.id }}" type="button" class="qa-input btn btn-default btn-xs btn-flat">Upload</a>
                 </span>
             {% elif test.is_string_type %}
                  <div>{{form.string_value}}</div>
@@ -111,7 +107,6 @@
     </td>
 </tr>
 
-<<<<<<< HEAD:qatrack/qa/templates/qa/qavalue_form.html
 <tr class="qa-procedure no-hover row-{{ form.prefix }}">
     <td colspan="8"  class="" >
         {% if form.unit_test_info.test.procedure or form.unit_test_info.test.description %}
@@ -131,39 +126,40 @@
                                 <div class="pre">{{form.unit_test_info.test.description.strip|safe}}</div>
                             {% endif %}
         {#                {% endspaceless%}#}
+                        {% for attach in form.unit_test_info.test.attachment_set.all %}
+                            {% if forloop.first %}
+                                <h6>Attachments</h6>
+                                <ul>
+                            {% endif %}
+
+                            <li>{{ attach|attachment_link }}</li>
+
+                            {% if forloop.last %}
+                                </ul>
+                            {% endif %}
+
+                        {% endfor %}
                     </div>
                 </div>
-=======
-<tr class="qa-procedure no-hover">
-    <td colspan="8" class="" >
-        {% if form.unit_test_info.test.procedure or form.unit_test_info.test.description  or form.unit_test_info.test.attachment_set.exists %}
-            <div class="qa-procedure-text callout callout-custom border-info">
-                {% if form.unit_test_info.test.procedure %}
-                    <h6>
-                        Detailed procedure link:
-                        <a href="{{form.unit_test_info.test.procedure}}" class="revealprocedure" title="Show detailed procedure for this test" target="_blank">
-                            {{form.unit_test_info.test.name}}
-                        </a>
-                    </h6>
-                {% endif %}
-                {% if form.unit_test_info.test.description %}
-                    <div class="pre">{{form.unit_test_info.test.description.strip|safe}}</div>
-                {% endif %}
-
-                {% for attach in form.unit_test_info.test.attachment_set.all %}
-                    {% if forloop.first %}
-                        <h6>Attachments</h6>
-                        <ul>
-                    {% endif %}
-
-                    <li>{{ attach|attachment_link }}</li>
-
-                    {% if forloop.last %}
-                        </ul>
-                    {% endif %}
-
-                {% endfor %}
->>>>>>> py34:qatrack/templates/qa/qavalue_form.html
+{#=======#}
+{#<tr class="qa-procedure no-hover">#}
+{#    <td colspan="8" class="" >#}
+{#        {% if form.unit_test_info.test.procedure or form.unit_test_info.test.description  or form.unit_test_info.test.attachment_set.exists %}#}
+{#            <div class="qa-procedure-text callout callout-custom border-info">#}
+{#                {% if form.unit_test_info.test.procedure %}#}
+{#                    <h6>#}
+{#                        Detailed procedure link:#}
+{#                        <a href="{{form.unit_test_info.test.procedure}}" class="revealprocedure" title="Show detailed procedure for this test" target="_blank">#}
+{#                            {{form.unit_test_info.test.name}}#}
+{#                        </a>#}
+{#                    </h6>#}
+{#                {% endif %}#}
+{#                {% if form.unit_test_info.test.description %}#}
+{#                    <div class="pre">{{form.unit_test_info.test.description.strip|safe}}</div>#}
+{#                {% endif %}#}
+{##}
+{#                #}
+{#>>>>>>> py34:qatrack/templates/qa/qavalue_form.html#}
             </div>
         {% endif %}
 

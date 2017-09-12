@@ -26,6 +26,15 @@
 
 {{ block.super }}
 <script>
+
+    var admin_urls = {
+        TEST_SEARCHER: "{% url 'test_searcher' %}",
+        TEST_LIST_SEARCHER: "{% url 'test_list_searcher' %}",
+        TEST_LIST_CYCLE_SEARCHER: "{% url 'test_list_cycle_searcher' %}",
+        TEST_INSTANCE_SEARCHER: "{% url 'test_instance_searcher' %}",
+        TEST_LIST_INSTANCE_SEARCHER: "{% url 'test_list_instance_searcher' %}",
+    };
+
     if (window.django){
         django.jQuery(function(){
 

@@ -115,16 +115,16 @@ th.qa-history div{
     height:1px;
 }
 .history-value,.history-label {
-    /*color: #fff;*/
-    display:inline-block;
+    display: inline-block;
     width: 56px;
-    text-align:right;
+    text-align: right;
     margin-right: 1px; /*fix ie inline block bug*/
-    text-overflow:ellipsis;
+    text-overflow: ellipsis;
     white-space: nowrap;
-    overflow:hidden;
+    overflow: hidden;
     padding: 3px 4px;
     vertical-align: middle;
+    font-size: 12px;
 }
 .history-value > i, .pass-fail > i {
     margin-top:2px;

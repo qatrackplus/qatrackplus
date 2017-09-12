@@ -501,7 +501,6 @@ class ServiceEventForm(BetterModelForm):
 
         self.fields['initiated_utc_field'].widget.attrs.update({'data-link': reverse('tli_select')})
 
-
     def save(self, *args, **kwargs):
         unit = self.cleaned_data.get('unit_field')
         service_area = self.cleaned_data.get('service_area_field')

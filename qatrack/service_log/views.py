@@ -6,7 +6,6 @@ from braces.views import LoginRequiredMixin
 from django.conf import settings
 from django.contrib.auth.context_processors import PermWrapper
 from django.contrib.auth.models import User, Permission
-from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse, resolve

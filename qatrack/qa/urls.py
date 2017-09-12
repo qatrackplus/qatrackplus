@@ -98,6 +98,12 @@ urlpatterns = [
     url(r"^backup/$", backup.PaperFormRequest.as_view(), name="qa_paper_forms_request"),
     url(r"^backup/paper/$", backup.PaperForms.as_view(), name="qa_paper_forms"),
 
+    url(r"^searcher/test/$", api.test_searcher, name='test_searcher'),
+    url(r"^searcher/test_list/$", api.test_list_searcher, name='test_list_searcher'),
+    url(r"^searcher/test_list_cycle/$", api.test_list_cycle_searcher, name='test_list_cycle_searcher'),
+    url(r"^searcher/test_instance/$", api.test_instance_searcher, name='test_instance_searcher'),
+    url(r"^searcher/test_list_instance/$", api.test_list_instance_searcher, name='test_list_instance_searcher'),
+
 ]
 
 
