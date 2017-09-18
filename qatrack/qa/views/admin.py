@@ -1,15 +1,57 @@
 import json
 
-from formtools.preview import FormPreview
+from django import forms
 from django.contrib import messages
-from django.core.urlresolvers import reverse_lazy
-from django.shortcuts import HttpResponse, HttpResponseRedirect
+from django.contrib.auth.models import Group
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
+from django.core.urlresolvers import reverse
+from django.shortcuts import HttpResponse, HttpResponseRedirect
 from django.utils.translation import ugettext as _
+from django.views.decorators.gzip import gzip_page
+from django.views.generic import FormView
+from formtools.preview import FormPreview
 
-from qatrack.qa.views import forms
-from qatrack.qa.models import UnitTestCollection, TestList, TestListCycle, UnitTestInfo
+from qatrack.qa import models
+from qatrack.qa.utils import create_testpack
+from qatrack.units.models import Unit
+
+
+class SetReferencesAndTolerancesForm(forms.Form):
+    """Form for copying references and tolerances from TestList Unit 'x' to TestList Unit 'y' """
+
+    source_unit = forms.ModelChoiceField(queryset=models.Unit.objects.all())
+    content_type = forms.ChoiceField((('', '---------'), ('testlist', 'TestList'), ('testlistcycle', 'TestListCycle')))
+
+    # Populate the source testlist field
+    source_testlist = forms.ChoiceField([], label='Source testlist(cycle)')
+
+    # Populate the dest_unit field
+    dest_unit = forms.ModelChoiceField(queryset=models.Unit.objects.all())
+
+    def __init__(self, *args, **kwargs):
+
+        super(SetReferencesAndTolerancesForm, self).__init__(*args, **kwargs)
+
+        testlistchoices = models.TestList.objects.all().order_by("name").values_list("pk", 'name')
+        testlistcyclechoices = models.TestListCycle.objects.all().order_by("name").values_list("pk", 'name')
+        choices = [('', '---------')] + list(testlistchoices) + list(testlistcyclechoices)
+
+        self.fields['source_testlist'].choices = choices
+
+    def save(self):
+        source_unit = self.cleaned_data.get("source_unit")
+        source_testlist = self.cleaned_data.get("source_testlist")
+        dest_unit = self.cleaned_data.get("dest_unit")
+        ctype = ContentType.objects.get(model=self.cleaned_data.get("content_type"))
+
+        try:
+            source_utc = models.UnitTestCollection.objects.get(
+                unit=source_unit, object_id=source_testlist, content_type=ctype
+            )
+        except models.UnitTestCollection.DoesNotExist:
+            raise ValidationError(_('Invalid value'), code='invalid')
+        source_utc.copy_references(dest_unit)
 
 
 class SetReferencesAndTolerances(FormPreview):
@@ -20,6 +62,7 @@ class SetReferencesAndTolerances(FormPreview):
     def get_context(self, request, form):
 
         context = super(SetReferencesAndTolerances, self).get_context(request, form)
+        context['title'] = "Set References & Tolerances"
         if not request.POST:
             return context
 
@@ -36,13 +79,13 @@ class SetReferencesAndTolerances(FormPreview):
         source_testlist = ModelClass.objects.get(pk=source_testlist_pk)
         all_tests = source_testlist.all_tests()
 
-        dest_utis = UnitTestInfo.objects.filter(
+        dest_utis = models.UnitTestInfo.objects.filter(
             test__in=all_tests, unit=dest_unit
         ).select_related(
             "reference", "tolerance", "test"
         ).order_by("test")
 
-        source_utis = UnitTestInfo.objects.filter(
+        source_utis = models.UnitTestInfo.objects.filter(
             test__in=all_tests, unit=source_unit
         ).select_related(
             "reference", "tolerance"
@@ -60,25 +103,90 @@ class SetReferencesAndTolerances(FormPreview):
         if 'cancel' in request.POST:
             messages.warning(request, "Copy references & tolerances cancelled")
         else:
-            form = forms.SetReferencesAndTolerancesForm(request.POST)
+            form = SetReferencesAndTolerancesForm(request.POST)
             form.full_clean()
             form.save()
 
             messages.success(request, "References & tolerances successfully copied")
 
-        return HttpResponseRedirect(reverse_lazy('qa_copy_refs_and_tols'))
+        return HttpResponseRedirect(reverse('qa_copy_refs_and_tols'))
 
 
 def testlist_json(request, source_unit, content_type):
     ctype = ContentType.objects.get(model=content_type)
 
     if ctype.name == 'test list':
-        utcs = UnitTestCollection.objects.filter(unit__pk=source_unit, content_type=ctype).values_list('object_id', flat=True)
-        testlists = list(TestList.objects.filter(pk__in=utcs).values_list('pk', 'name'))
+        utcs = models.UnitTestCollection.objects.filter(unit__pk=source_unit, content_type=ctype).values_list('object_id', flat=True)
+        testlists = list(models.TestList.objects.filter(pk__in=utcs).values_list('pk', 'name'))
         return HttpResponse(json.dumps(testlists), content_type='application/json')
     elif ctype.name == 'test list cycle':
-        utcs = UnitTestCollection.objects.filter(unit__pk=source_unit, content_type=ctype).values_list('object_id', flat=True)
-        testlistcycles = list(TestListCycle.objects.filter(pk__in=utcs).values_list('pk', 'name'))
+        utcs = models.UnitTestCollection.objects.filter(unit__pk=source_unit, content_type=ctype).values_list('object_id', flat=True)
+        testlistcycles = list(models.TestListCycle.objects.filter(pk__in=utcs).values_list('pk', 'name'))
         return HttpResponse(json.dumps(testlistcycles), content_type='application/json')
     else:
         raise ValidationError(_('Invalid value'))
+
+
+class ExportTestPackForm(forms.Form):
+
+
+    name = forms.SlugField(label="Test Pack Name")
+    testlists = forms.CharField(widget=forms.HiddenInput(), required=False)
+    testlistcycles = forms.CharField(widget=forms.HiddenInput(), required=False)
+    tests = forms.CharField(widget=forms.HiddenInput(), required=False)
+
+    def clean_testlists(self):
+        t = self.cleaned_data['testlists'].strip()
+        if t:
+            return models.TestList.objects.filter(id__in=t.split(","))
+        return models.TestList.objects.none()
+
+    def clean_testlistcycles(self):
+        t = self.cleaned_data['testlistcycles'].strip()
+        if t:
+            return models.TestListCycle.objects.filter(id__in=t.split(","))
+        return models.TestListCycle.objects.none()
+
+    def clean_tests(self):
+        t = self.cleaned_data['tests'].strip()
+        if t:
+            return models.Test.objects.filter(id__in=t.split(","))
+        return models.Test.objects.none()
+
+
+class ExportTestPack(FormView):
+    """View for exporting a QATrack+ test pack"""
+
+    form_class = ExportTestPackForm
+    template_name = "admin/qa/testpack/export.html"
+
+    def get_context_data(self, **kwargs):
+
+        context = super(ExportTestPack, self).get_context_data(**kwargs)
+        context['title'] = "Export Test Pack"
+
+        context['cycles'] = models.TestListCycle.objects.all()
+        context['testlists'] = models.TestList.objects.only("pk", "name", "description")
+        context['tests'] = models.Test.objects.select_related(
+            "category"
+        ).only(
+            "pk",
+            "name",
+            "type",
+            "description",
+            "category__name",
+        )
+
+        return context
+
+    def form_valid(self, form):
+        tls = form.cleaned_data['testlists']
+        cycles = form.cleaned_data['testlistcycles']
+        extra_tests = form.cleaned_data['tests']
+        tp = create_testpack(test_lists=tls, cycles=cycles, extra_tests=extra_tests)
+
+        response = HttpResponse(json.dumps(tp), content_type='application/json')
+        name = form.cleaned_data['name'] + ".tpk"
+        response['Content-Disposition'] = 'attachment; filename=%s' % name
+        return response
+

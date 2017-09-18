@@ -1,0 +1,197 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_list %}
+
+{% block extrastyle %}
+  {{ block.super }}
+
+  <link href="{% static "fontawsome/css/font-awesome.min.css" %}" rel="stylesheet">
+  <link href="{% static "css/bootstrap-grid.css" %}" rel="stylesheet">
+  <link href="{% static "css/datatables.min.css" %}" rel="stylesheet">
+{% endblock %}
+
+
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a> &rsaquo;
+    <a href="{% url 'admin:app_list' app_label='qa' %}">Qa</a> &rsaquo;
+    Export Test Pack
+  </div>
+{% endblock %}
+
+{% block coltype %}flex{% endblock %}
+
+
+{% block content %}
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-sm-12">
+      <p>
+        On this page you may create a "Test Pack" for sharing test lists, tests, and
+        other QATrack+ configuration data with other QATrack+ installations.
+      </p>
+    </div>
+  </div>
+
+  <div class="row">
+
+    <div class="col-sm-8">
+      <div class="row">
+        <div class="col-sm-12 tp-container">
+          <hr/>
+          <h2>Test Lists To Include</h2>
+
+          <em class="loading">Loading Test List table...</em>
+          <table id="testlists-table" style="display: none">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Test List</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for list in testlists %}
+                <tr>
+                  <td>{{ list.id }}</td>
+                  <td>{{ list.name }}</td>
+                  <td>{{ list.description }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+
+          </table>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-sm-12 tp-container">
+          <hr/>
+          <h2>Test List Cycles To Include</h2>
+
+          <em class="loading">Loading Test List Cycle table...</em>
+          <table id="testlistcycles-table" style="display: none">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Cycle</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for cycle in cycles %}
+                <tr>
+                  <td>{{ cycle.id }}</td>
+                  <td>{{ cycle.name }}</td>
+                  <td>{{ cycle.description }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+
+          </table>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-sm-12 tp-container">
+          <hr/>
+          <h2>Select Extra Tests To Include</h2>
+
+          <p>
+            <em>
+              Note that there is no need to select tests that are already
+              included as part of a test list
+            </em>
+          </p>
+
+          <em class="loading">Loading Test table...</em>
+          <table id="tests-table" style="display: none">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Test</th>
+                <th>Category</th>
+                <th>Type</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for test in tests %}
+                <tr>
+                  <td>{{ test.id }}</td>
+                  <td>{{ test }}</td>
+                  <td>{{ test.category.name }}</td>
+                  <td>{{ test.get_type_display }}</td>
+                  <td>{{ test.description }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-sm-4">
+      <h2>Summary</h2>
+      <hr/>
+      <div id="summary">
+
+        <div class="row">
+          <div class="col-sm-6">Test Lists:</div>
+          <div class="col-sm-6" style="text-align: right" id="testlists-summary">0 Selected</div>
+        </div>
+
+        <div class="row">
+          <div class="col-sm-6">Test Lists Cycles:</div>
+          <div class="col-sm-6" style="text-align: right" id="testlistcycles-summary">0 Selected</div>
+        </div>
+
+        <div class="row">
+          <div class="col-sm-6">Tests:</div>
+          <div class="col-sm-6" style="text-align: right" id="tests-summary">0 Selected</div>
+        </div>
+
+      </div>
+      <hr/>
+      <form method="post" action>
+        {% csrf_token %}
+        <div class="row">
+          <div class="col-sm-6">
+            Test Pack Name:
+          </div>
+          <div class="col-sm-6" style="text-align: right">
+            {{ form.name }}
+            {{ form.name.errors }}
+          </div>
+        </div>
+        <div class="submit-row">
+          <input type="submit" value="Download" class="default">
+        </div>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}
+
+{% block footer %}
+<script type="text/javascript">
+</script>
+
+<script src="{% static "jquery/js/jquery.min.js" %}"></script>
+
+
+{% if DEBUG %}
+  <script src="{% static "vue/js/vue.js" %}"></script>
+{% else %}
+  <script src="{% static "vue/js/vue.min.js" %}"></script>
+{% endif %}
+
+<script src="{% static "js/datatables.min.js" %}"></script>
+<script src="{% static "js/testpack-export.js" %}"></script>
+
+{% endblock %}
+

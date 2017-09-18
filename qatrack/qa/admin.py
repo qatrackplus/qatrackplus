@@ -3,7 +3,7 @@ from django.contrib import admin, messages
 from django.contrib.admin import widgets, options
 from django.contrib.admin.models import LogEntry, CHANGE
 from django.contrib.contenttypes.models import ContentType
-from django.core.urlresolvers import reverse_lazy
+from django.core.urlresolvers import reverse
 import django.db
 from django.db.models import Count, Q
 import django.forms as forms
@@ -181,9 +181,6 @@ class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
         ('Copy References & Tolerances', 'redirect_to'),
     )
 
-    def redirect_to(self, *args, **kwargs):
-        return redirect(reverse_lazy("qa_copy_refs_and_tols"))
-
     actions = ['set_multiple_references_and_tolerances']
     form = TestInfoForm
     fields = (
@@ -195,6 +192,9 @@ class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
     list_filter = [ActiveUnitTestInfoFilter, "unit", "test__category", "test__testlistmembership__test_list"]
     readonly_fields = ("reference", "test", "unit",)
     search_fields = ("test__name", "test__slug", "unit__name",)
+
+    def redirect_to(self, *args, **kwargs):
+        return redirect(reverse("qa_copy_refs_and_tols"))
 
     def queryset(self, *args, **kwargs):
         """just display active ref/tols"""
@@ -510,7 +510,12 @@ class FrequencyTestListFilter(admin.SimpleListFilter):
         return qs
 
 
-class TestListAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, admin.ModelAdmin):
+class TestListAdmin(AdminViews, SaveUserMixin, SaveInlineAttachmentUserMixin, admin.ModelAdmin):
+
+    admin_views = (
+        ('Export Test Pack', 'export_test_pack'),
+        ('Import Test Pack', 'import_test_pack'),
+    )
 
     prepopulated_fields = {'slug': ('name',)}
     search_fields = ("name", "description", "slug",)
@@ -537,9 +542,31 @@ class TestListAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, admin.ModelAdm
         qs = super(TestListAdmin, self).queryset(*args, **kwargs)
         return qs.select_related("modified_by")
 
+    def export_test_pack(self, *args, **kwargs):
+        return redirect(reverse("qa_export_test_pack"))
+
+    def import_test_pack(self, *args, **kwargs):
+        return redirect(reverse(""))
+
     def export_test_lists(self, request, queryset):
 
-        import ipdb; ipdb.set_trace()
+        qs = queryset.prefetch_selected(
+            "testlistmembership_set",
+            "testlistmembership_set__test"
+        )
+        meta = {
+            "version": settings.VERSION,
+
+
+        }
+        to_dump = {
+            "meta": meta,
+            "test_lists": [],
+            "tests": [],
+        }
+
+        for tl in qs:
+            pass
 
         testtypes = set(queryset.values_list('test__type', flat=True).distinct())
 
