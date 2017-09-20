@@ -31,7 +31,7 @@ class DeleteOnlyFromOwnFormAdmin(admin.ModelAdmin):
 
 
 class ServiceEventStatusAdmin(DeleteOnlyFromOwnFormAdmin):
-    list_display = ["name", "is_approval_required", "is_default", "is_active"]
+    list_display = ['name', 'is_review_required', 'is_default', 'rts_qa_must_be_reviewed']
     form = ServiceEventStatusFormAdmin
 
     class Media:
@@ -51,7 +51,7 @@ class ServiceEventStatusAdmin(DeleteOnlyFromOwnFormAdmin):
 
 
 class ServiceTypeAdmin(DeleteOnlyFromOwnFormAdmin):
-    list_display = ['name', 'is_approval_required', 'is_active']
+    list_display = ['name', 'is_review_required', 'is_active']
 
 
 class ServiceAreaAdmin(DeleteOnlyFromOwnFormAdmin):

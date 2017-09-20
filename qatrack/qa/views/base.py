@@ -355,13 +355,12 @@ class TestListInstances(BaseListableView):
 
     select_related = (
         "test_list",
-        # "testinstance_set__status",
         "unit_test_collection__unit",
         "unit_test_collection__frequency",
         "created_by", "modified_by", "reviewed_by",
     )
 
-    prefetch_related = ("testinstance_set", "testinstance_set__status")
+    prefetch_related = ('testinstance_set', 'testinstance_set__status', 'qafollowup_for_tli', 'serviceevents_initiated')
 
     def __init__(self, *args, **kwargs):
         super(TestListInstances, self).__init__(*args, **kwargs)
@@ -402,7 +401,19 @@ class TestListInstances(BaseListableView):
 
     def actions(self, tli):
         template = self.templates['actions']
-        c = Context({"instance": tli, "perms": PermWrapper(self.request.user), "request": self.request, 'show_initiate_se': True})
+        initiated_se = tli.serviceevents_initiated.all()
+        followup_for_se = [qa.service_event for qa in tli.qafollowup_for_tli.all()]
+        c = Context({
+            'instance': tli,
+            'perms': PermWrapper(self.request.user),
+            'request': self.request,
+            'show_initiate_se': True,
+            'initiated_se': initiated_se,
+            'num_initiated_se': len(initiated_se),
+            'show_followup_se': True,
+            'followup_for_se': followup_for_se,
+            'num_followup_se': len(followup_for_se)
+        })
         return template.render(c)
 
     def work_completed(self, tli):

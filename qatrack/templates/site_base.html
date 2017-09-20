@@ -308,7 +308,7 @@
 
                                     </li>
                                 {% endif %}
-                                {% if perms.service_log.add_serviceevent or perms.service_log.view_serviceevent or perms.service_log.approve_serviceevent or perms.qa.can_review or service_log.view_qafollowup or perms.service_log.perform_qafollowup or perms.parts.add_part or perms.parts.view_part %}
+                                {% if perms.service_log.add_serviceevent or perms.service_log.view_serviceevent or perms.service_log.review_serviceevent or perms.qa.can_review or service_log.view_qafollowup or perms.service_log.perform_qafollowup or perms.parts.add_part or perms.parts.view_part %}
                                 <li class="dropdown">
                                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                                         Service Log
@@ -319,7 +319,7 @@
                                             <i class="fa fa-th fa-lg fa-fw" aria-hidden="true"></i>
                                             Service Log Dashboard
                                         </a></li>
-                                        {% if perms.service_log.add_serviceevent or perms.service_log.view_serviceevent or perms.service_log.approve_serviceevent %}
+                                        {% if perms.service_log.add_serviceevent or perms.service_log.view_serviceevent or perms.service_log.review_serviceevent %}
                                             <li class="divider"></li>
                                             <li class="nav-header">Service Events</li>
                                             {% if perms.service_log.add_serviceevent %}
@@ -355,16 +355,16 @@
                                                     </a></li>
                                                 {% endif %}
                                             {% endif %}
-                                            {% if perms.service_log.approve_serviceevent %}
-                                                <li class="hover-parent"><a href="{% url 'sl_list_all' %}?f=ar-1_ss.ar-1" title="View service events that are require approval">
+                                            {% if perms.service_log.review_serviceevent %}
+                                                <li class="hover-parent"><a href="{% url 'sl_list_all' %}?f=ar-1_ss.ar-1" title="View service events that are require review">
                                                     <i class="fa fa-stack fa-lg fa-fw">
                                                         <i class="fa fa-wrench fa-stack-custom-main"></i>
                                                         <i class="fa fa-exclamation fa-stack-custom-sub upper-left hover-sub-info"></i>
                                                     </i>
-                                                    <span title="There are currently {{SE_NEEDING_APPROVAL_COUNT}} unreviewed RTS QA Sessions" class="label {% if SE_NEEDING_APPROVAL_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
-                                                        <span class="total-unreviewed-count">{{SE_NEEDING_APPROVAL_COUNT}}</span>
+                                                    <span title="There are currently {{SE_NEEDING_REVIEW_COUNT}} unreviewed RTS QA Sessions" class="label {% if SE_NEEDING_REVIEW_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                                                        <span class="total-unreviewed-count">{{SE_NEEDING_REVIEW_COUNT}}</span>
                                                     </span>
-                                                    Service Events Needing Approval
+                                                    Service Events Needing Review
                                                 </a></li>
                                             {% endif %}
                                         {% endif %}
@@ -556,7 +556,7 @@
 
                             <ul class="nav navbar-nav navbar-right">
                                 <li class="margin-right-10">
-                                    <a href="#" data-toggle="control-sidebar">{{ request.user.username }} :: <i class="fa fa-gears fa-fw"></i></a>
+                                    <a id="control-sidebar-btn" href="#" data-toggle="control-sidebar">{{ request.user.username }} :: <i class="fa fa-gears fa-fw"></i></a>
                                 </li>
                             </ul>
 
@@ -569,7 +569,7 @@
 {#                            </ul>#}
                             <ul class="nav navbar-nav navbar-right ">
                                 <li class="margin-right-10">
-                                    <a href="#" data-toggle="control-sidebar"><i class="fa fa-gears fa-fw"></i></a>
+                                    <a id="control-sidebar-btn" href="#" data-toggle="control-sidebar"><i class="fa fa-gears fa-fw"></i></a>
                                 </li>
                             </ul>
                         {% endif %}

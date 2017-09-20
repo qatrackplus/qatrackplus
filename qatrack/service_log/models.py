@@ -49,7 +49,7 @@ class UnitServiceArea(models.Model):
 class ServiceType(models.Model):
 
     name = models.CharField(max_length=32, unique=True, help_text=_('Enter a short name for this service type'))
-    is_approval_required = models.BooleanField(default=False, help_text=_('Does this service type require approval'))
+    is_review_required = models.BooleanField(default=False, help_text=_('Does this service type require review'))
     is_active = models.BooleanField(default=True, help_text=_('Set to false if service type is no longer used'))
     description = models.TextField(
         max_length=64, help_text=_('Give a brief description of this service type'), null=True, blank=True
@@ -69,10 +69,12 @@ class ServiceEventStatus(models.Model):
             'status will be set to false'
         )
     )
-    is_approval_required = models.BooleanField(
-        default=True, help_text=_('Do service events with this status require approval?')
+    is_review_required = models.BooleanField(
+        default=True, help_text=_('Do service events with this status require review?')
     )
-    is_active = models.BooleanField(default=True, help_text=_('Set to false if service event status is no longer used'))
+    rts_qa_must_be_reviewed = models.BooleanField(
+        default=True, help_text=_('Service events with rts that has not been reviewed can not have this status selected if set to true.')
+    )
     description = models.TextField(
         max_length=64, help_text=_('Give a brief description of this service event status'), null=True, blank=True
     )
@@ -126,7 +128,7 @@ class ServiceEvent(models.Model):
     #     ProblemType, null=True, blank=True, on_delete=models.PROTECT,
     #     help_text=_('Select/create a problem type that describes this service event')
     # )
-    test_list_instance_initiated_by = models.ForeignKey(TestListInstance, null=True, blank=True, on_delete=models.PROTECT)
+    test_list_instance_initiated_by = models.ForeignKey(TestListInstance, null=True, blank=True, on_delete=models.PROTECT, related_name='serviceevents_initiated')
 
     datetime_status_changed = models.DateTimeField(null=True, blank=True)
     datetime_created = models.DateTimeField()
@@ -153,15 +155,15 @@ class ServiceEvent(models.Model):
         verbose_name=_('Lost time'), null=True, blank=True,
         help_text=_('Enter the total clinical time lost for this service event (Hours : minutes)')
     )
-    is_approval_required = models.BooleanField(
-        default=False, help_text=_('Does this service event require approval?'), blank=True
+    is_review_required = models.BooleanField(
+        default=False, help_text=_('Does this service event require review?'), blank=True
     )
 
     class Meta:
         get_latest_by = "datetime_service"
 
         permissions = (
-            ('approve_serviceevent', 'Can Approve Service Event'),
+            ('review_serviceevent', 'Can Review Service Event'),
             ('view_serviceevent', 'Can View Service Event'),
         )
 
@@ -221,11 +223,11 @@ class QAFollowup(models.Model):
     unit_test_collection = models.ForeignKey(
         UnitTestCollection, help_text=_('Select a TestList to perform'), on_delete=models.CASCADE
     )
-    test_list_instance = models.ForeignKey(TestListInstance, null=True, blank=True, on_delete=models.CASCADE)
+    test_list_instance = models.ForeignKey(TestListInstance, null=True, blank=True, on_delete=models.CASCADE, related_name='qafollowup_for_tli')
     user_assigned_by = models.ForeignKey(User, related_name='+', on_delete=models.PROTECT)
     service_event = models.ForeignKey(ServiceEvent, on_delete=models.CASCADE)
 
-    is_complete = models.BooleanField(default=False, help_text=_('Has this QA been completed?'))
+    # is_complete = models.BooleanField(default=False, help_text=_('Has this QA been completed?'))
     datetime_assigned = models.DateTimeField()
 
     class Meta:

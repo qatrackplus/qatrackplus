@@ -328,7 +328,7 @@ class BaseChartView(View):
         statuses = self.request.GET.getlist("statuses[]", [])
 
         show_events = self.request.GET.get('show_events') == 'true'
-        se_approval_required = self.request.GET.get('approval_required') == 'true'
+        se_review_required = self.request.GET.get('review_required') == 'true'
         # se_types = self.request.GET.getlist('service_types[]', [])
 
         if not (tests and test_lists and units and statuses):
@@ -401,8 +401,8 @@ class BaseChartView(View):
                 'test_list_instance_initiated_by', 'unit_service_area__unit', 'unit_service_area__service_area'
             ).order_by('datetime_service')
 
-            if se_approval_required:
-                ses = ses.filter(is_approval_required=True)
+            if se_review_required:
+                ses = ses.filter(is_review_required=True)
 
             for se in ses:
 
@@ -414,7 +414,7 @@ class BaseChartView(View):
                     'date': timezone.localtime(se.datetime_service),
                     'id': se.id,
                     'type': se.service_type_id,
-                    'is_approval_required': se.is_approval_required,
+                    'is_review_required': se.is_review_required,
                     'initiated_by': se.test_list_instance_initiated_by_id,
                     'followups': [{'id': qaf.id, 'test_list_instance': qaf.test_list_instance_id, 'test_list': qaf.test_list_instance.test_list_id if qaf.test_list_instance else ''} for qaf in qa_followups],
                     'work_description': se.work_description,

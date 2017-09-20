@@ -132,7 +132,7 @@ class SLDashboard(TemplateView):
             'units_restricted': models.Unit.objects.filter(restricted=True).count(),
             'parts_low': 0,
             'se_statuses': {},
-            'se_needing_approval': models.ServiceEvent.objects.filter(service_status__in=models.ServiceEventStatus.objects.filter(is_approval_required=True), is_approval_required=True).count(),
+            'se_needing_review': models.ServiceEvent.objects.filter(service_status__in=models.ServiceEventStatus.objects.filter(is_review_required=True), is_review_required=True).count(),
             'se_default': {'status_name': default_status.name, 'id': default_status.id, 'count': models.ServiceEvent.objects.filter(service_status=default_status).count()}
         }
         # qs = models.ServiceEventStatus.objects.filter(is_active=True).order_by('pk')
@@ -323,7 +323,16 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseM
         else:
             context_data['se_statuses'] = {}
         context_data['status_tag_colours'] = models.ServiceEventStatus.get_colour_dict()
-        context_data['se_types_approval'] = {st.id: int(st.is_approval_required) for st in models.ServiceType.objects.all()}
+        context_data['se_types_review'] = {st.id: int(st.is_review_required) for st in models.ServiceType.objects.all()}
+
+        context_data['ses_status_details'] = {
+            ses.id: {
+                'is_review_required': int(ses.is_review_required),
+                'rts_qa_must_be_reviewed': int(ses.rts_qa_must_be_reviewed),
+                'is_default': int(ses.is_default)
+            } for ses in models.ServiceEventStatus.objects.all()
+        }
+        context_data['default_qa_status_name'] = qa_models.TestInstanceStatus.objects.filter(is_default=True).first().name
 
         unit_field = self.object.unit_service_area.unit if self.object is not None else None
         if not unit_field:
@@ -414,10 +423,11 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseM
         service_event.service_event_related = sers
 
         if 'service_status' in form.changed_data:
-            se_needing_approval_count = models.ServiceEvent.objects.filter(
-                service_status__in=models.ServiceEventStatus.objects.filter(is_approval_required=True),
-                is_approval_required=True).count()
-            cache.set('se_needing_approval_count', se_needing_approval_count)
+            se_needing_review_count = models.ServiceEvent.objects.filter(
+                service_status__in=models.ServiceEventStatus.objects.filter(is_review_required=True),
+                is_review_required=True
+            ).count()
+            cache.set('se_needing_review_count', se_needing_review_count)
 
         for g_link in form.g_link_dict:
             if g_link in form.changed_data:
@@ -646,8 +656,8 @@ class UpdateServiceEvent(ServiceEventUpdateCreate):
 
         self.instance = form.save(commit=False)
 
-        if 'is_approval_required_fake' in form.changed_data:
-            form.changed_data.remove('is_approval_required_fake')
+        if 'is_review_required_fake' in form.changed_data:
+            form.changed_data.remove('is_review_required_fake')
 
         if 'service_status' in form.changed_data:
             form.instance.datetime_status_changed = timezone.now()
@@ -662,7 +672,7 @@ class UpdateServiceEvent(ServiceEventUpdateCreate):
             form.instance.user_modified_by = self.request.user
             form.instance.datetime_modified = timezone.now()
 
-            if not form.instance.service_status.is_approval_required:
+            if not form.instance.service_status.is_review_required:
                 form.instance.service_status = models.ServiceEventStatus.get_default()
                 form.instance.datetime_status_changed = timezone.now()
                 form.instance.user_status_changed_by = self.request.user
@@ -782,9 +792,11 @@ class ServiceEventsBaseList(BaseListableView):
             if key == 'ss':
                 to_return = to_return + ' - Status: ' + models.ServiceEventStatus.objects.get(pk=val).name
             elif key == 'ar':
-                to_return = to_return + ' - Approval is ' + ((not bool(int(val))) * 'not ') + 'required'
+                to_return = to_return + ' - Review is ' + ((not bool(int(val))) * 'not ') + 'required'
             elif key == 'u':
                 to_return = to_return + ' - ' + u_models.Unit.objects.get(pk=val).name
+            elif key == 'id':
+                to_return = ' with IDs ' + val
 
         return to_return
 
@@ -816,11 +828,13 @@ class ServiceEventsBaseList(BaseListableView):
                 if key == 'ss':
                     qs = qs.filter(service_status=val)
                 elif key == 'ar':
-                    qs = qs.filter(is_approval_required=bool(int(val)))
+                    qs = qs.filter(is_review_required=bool(int(val)))
                 elif key == 'ss.ar':
-                    qs = qs.filter(service_status__is_approval_required=bool(int(val)))
+                    qs = qs.filter(service_status__is_review_required=bool(int(val)))
                 elif key == 'u':
                     qs = qs.filter(unit_service_area__unit_id=val)
+                elif key == 'id':
+                    qs = qs.filter(pk__in=val.split(','))
 
         return qs
 
@@ -949,7 +963,7 @@ class QAFollowupsBaseList(BaseListableView):
             elif key == 'ses.irr':
                 to_return += ' - Service Event Status Not: '
                 names = []
-                for s in models.ServiceEventStatus.objects.filter(is_approval_required=False):
+                for s in models.ServiceEventStatus.objects.filter(is_review_required=False):
                     names.append(s.name)
                 to_return += ','.join(names)
 
@@ -986,7 +1000,7 @@ class QAFollowupsBaseList(BaseListableView):
                 elif key == 'tli.ar':
                     query_kwargs['test_list_instance__all_reviewed'] = bool(int(val))
                 elif key == 'ses.irr':
-                    query_kwargs['service_event__service_status__is_approval_required'] = bool(int(val))
+                    query_kwargs['service_event__service_status__is_review_required'] = bool(int(val))
 
             qs = qs.filter(**query_kwargs)
 
@@ -1051,7 +1065,12 @@ class TLISelect(UTCInstances):
 def tli_statuses(request):
     tli = qa_models.TestListInstance.objects.get(pk=request.GET.get('tli_id'))
     return JsonResponse(
-        {'pass_fail': tli.pass_fail_summary(), 'review': tli.review_summary(), 'datetime': timezone.localtime(tli.created)},
+        {
+            'pass_fail': tli.pass_fail_summary(),
+            'review': tli.review_summary(),
+            'datetime': timezone.localtime(tli.created),
+            'all_reviewed': int(tli.all_reviewed)
+        },
         safe=False
     )
 

@@ -665,24 +665,36 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         # set due date to account for any non default statuses
         self.object.unit_test_collection.set_due_date()
 
-        self.object.update_all_reviewed()
-
-        service_event = form.cleaned_data.get('service_event', False)
+        service_events = form.cleaned_data.get('service_events', False)
         followup_id = self.request.GET.get('qaf', False)
-        if service_event:
+        if len(service_events) > 0:
 
             if followup_id:
                 followup = sl_models.QAFollowup.objects.get(pk=followup_id)
                 followup.test_list_instance = self.object
+                followup.save()
             else:
-                followup = sl_models.QAFollowup(
-                    service_event=service_event,
-                    unit_test_collection=self.object.unit_test_collection,
-                    user_assigned_by=self.request.user,
-                    datetime_assigned=timezone.now() - timezone.timedelta(seconds=1),
-                    test_list_instance=self.object
+                for se in service_events:
+                    followup = sl_models.QAFollowup(
+                        service_event=se,
+                        unit_test_collection=self.object.unit_test_collection,
+                        user_assigned_by=self.request.user,
+                        datetime_assigned=timezone.now() - timezone.timedelta(seconds=1),
+                        test_list_instance=self.object
+                    )
+                    followup.save()
+
+        changed_se = self.object.update_all_reviewed()
+
+        if len(changed_se) > 0:
+            messages.add_message(
+                request=self.request,
+                level=messages.INFO,
+                message='Changed status of service event(s) %s to "%s".' % (
+                    ', '.join(str(x) for x in changed_se),
+                    sl_models.ServiceEventStatus.get_default().name
                 )
-            followup.save()
+            )
 
         if not self.object.in_progress:
             # TestListInstance & TestInstances have been successfully create, fire signal
@@ -836,7 +848,40 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
             self.object.unit_test_collection.set_due_date()
 
-            self.object.update_all_reviewed()
+            service_events = form.cleaned_data.get('service_events', False)
+            followup_id = self.request.GET.get('qaf', False)
+
+            print('******')
+            print(service_events)
+            print(followup_id)
+            if len(service_events) > 0:
+
+                if followup_id:
+                    followup = sl_models.QAFollowup.objects.get(pk=followup_id)
+                    followup.test_list_instance = self.object
+                    followup.save()
+                else:
+                    for se in service_events:
+                        followup = sl_models.QAFollowup(
+                            service_event=se,
+                            unit_test_collection=self.object.unit_test_collection,
+                            user_assigned_by=self.request.user,
+                            datetime_assigned=timezone.now() - timezone.timedelta(seconds=1),
+                            test_list_instance=self.object
+                        )
+                        followup.save()
+
+            changed_se = self.object.update_all_reviewed()
+
+            if len(changed_se) > 0:
+                messages.add_message(
+                    request=self.request,
+                    level=messages.INFO,
+                    message='Changed status of service event(s) %s to "%s".' % (
+                        ', '.join(str(x) for x in changed_se),
+                        sl_models.ServiceEventStatus.get_default().name
+                    )
+                )
 
             if not self.object.in_progress:
                 try:
@@ -951,7 +996,9 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         context["unit_test_infos"] = json.dumps(self.template_unit_test_infos())
 
         qa_followup_id = self.request.GET.get('qaf', None)
-        if qa_followup_id:
+        if self.object.pk:
+            context['se_statuses'] = {qaf.service_event.id: qaf.service_event.service_status.id for qaf in self.object.qafollowup_for_tli.all()}
+        elif qa_followup_id:
             qa_followup = sl_models.QAFollowup.objects.get(pk=qa_followup_id)
             context['se_statuses'] = {qa_followup.service_event.id: qa_followup.service_event.service_status.id}
         else:

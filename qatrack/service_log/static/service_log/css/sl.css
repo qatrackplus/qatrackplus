@@ -118,3 +118,6 @@ body.sidebar-mini.sidebar-collapse > div.wrapper > aside.main-sidebar > section.
     color: black;
     border-style: solid;
 }
+.label.disabled {
+    opacity: 0.2;
+}

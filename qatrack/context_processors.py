@@ -14,7 +14,7 @@ from qatrack.service_log.models import QAFollowup, ServiceEvent, ServiceEventSta
 cache.delete(settings.CACHE_UNREVIEWED_COUNT)
 cache.delete(settings.CACHE_RTS_QA_COUNT)
 cache.delete('default-se-status')
-cache.delete('se_needing_approval_count')
+cache.delete('se_needing_review_count')
 
 
 # for u in Unit.objects.filter(active=True):
@@ -67,9 +67,9 @@ def update_unreviewed_cache(*args, **kwargs):
 @receiver(post_save, sender=ServiceEventStatus)
 @receiver(post_delete, sender=ServiceEventStatus)
 def update_unreviewed_cache(*args, **kwargs):
-    """When a service status is changed invalidate the default and approval count"""
+    """When a service status is changed invalidate the default and review count"""
     cache.delete('default-se-status')
-    cache.delete('se_needing_approval_count')
+    cache.delete('se_needing_review_count')
 
 
 @receiver(post_save, sender=UnitTestCollection)
@@ -114,10 +114,10 @@ def site(request):
         default_se_status = ServiceEventStatus.get_default()
         cache.set('default-se-status', default_se_status)
 
-    se_needing_approval_count = cache.get('se_needing_approval_count')
-    if se_needing_approval_count is None:
-        se_needing_approval_count = ServiceEvent.objects.filter(service_status__in=ServiceEventStatus.objects.filter(is_approval_required=True), is_approval_required=True).count()
-        cache.set('se_needing_approval_count', se_needing_approval_count)
+    se_needing_review_count = cache.get('se_needing_review_count')
+    if se_needing_review_count is None:
+        se_needing_review_count = ServiceEvent.objects.filter(service_status__in=ServiceEventStatus.objects.filter(is_review_required=True), is_review_required=True).count()
+        cache.set('se_needing_review_count', se_needing_review_count)
 
     return {
         'SITE_NAME': cur_site.name,
@@ -135,5 +135,5 @@ def site(request):
         'DEBUG': settings.DEBUG,
         'USE_PARTS': settings.USE_PARTS,
         'DEFAULT_SE_STATUS': default_se_status,
-        'SE_NEEDING_APPROVAL_COUNT': se_needing_approval_count,
+        'SE_NEEDING_REVIEW_COUNT': se_needing_review_count,
     }

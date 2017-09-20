@@ -190,4 +190,11 @@ require(['jquery'], function ($) {
             });
         };
     })(jQuery);
+
+    $('.control-sidebar').hover(
+        function() {},
+        function() {
+            $('#control-sidebar-btn').click();
+        }
+    )
 });

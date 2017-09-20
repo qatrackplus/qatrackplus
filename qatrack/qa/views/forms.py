@@ -1,3 +1,4 @@
+
 from django import forms
 from django.core.validators import MaxLengthValidator
 from django.core.exceptions import ValidationError
@@ -11,8 +12,7 @@ from django.conf import settings
 
 from .. import models
 from qatrack.service_log import models as sl_models
-
-
+from qatrack.service_log.forms import ServiceEventMultipleField
 from qatrack.qa import utils
 
 BOOL_CHOICES = [(0, "No"), (1, "Yes")]
@@ -132,6 +132,7 @@ class TestInstanceWidgetsMixin(object):
             to_process.append((uti_pk, Attachment.objects.get(pk=aid)))
 
         return to_process
+
 
 class CreateTestInstanceForm(TestInstanceWidgetsMixin, forms.Form):
 
@@ -257,7 +258,7 @@ class BaseTestListInstanceForm(forms.ModelForm):
 
     modified = forms.DateTimeField(required=False)
 
-    service_event = forms.ModelChoiceField(queryset=sl_models.ServiceEvent.objects.none(), required=False)
+    service_events = ServiceEventMultipleField(queryset=sl_models.ServiceEvent.objects.none(), required=False)
     followup_id = forms.IntegerField(required=False, widget=HiddenInput())
 
     # now handle saving of qa or service event and link followup
@@ -288,15 +289,27 @@ class BaseTestListInstanceForm(forms.ModelForm):
 
         self.fields["comment"].widget.attrs["rows"] = "4"
         self.fields["comment"].widget.attrs["placeholder"] = "Add comment about this set of tests"
-        self.fields['service_event'].widget.attrs.update({'class': 'select2'})
+        self.fields['service_events'].widget.attrs.update({'class': 'select2'})
 
-        if self.followup_id:
+        print('--- >> in BaseTestListInstanceForm.__init__')
+        print(self.followup_id)
+
+        if self.instance.pk:
+            se_ids = []
+            qaf_ids = []
+            for qaf in self.instance.qafollowup_for_tli.all():
+                se_ids.append(qaf.service_event_id)
+                qaf_ids.append(qaf.id)
+            self.initial['followup_id'] = ','.join(str(x) for x in qaf_ids)
+            se_qs = sl_models.ServiceEvent.objects.filter(pk__in=se_ids)
+            self.fields['service_events'].queryset = se_qs
+            self.initial['service_events'] = se_qs
+
+        elif self.followup_id:
             followup = sl_models.QAFollowup.objects.get(pk=self.followup_id)
-            self.fields['service_event'].queryset = sl_models.ServiceEvent.objects.filter(pk=followup.service_event.id)
-            self.initial['service_event'] = sl_models.ServiceEvent.objects.get(pk=followup.service_event.id)
+            self.fields['service_events'].queryset = sl_models.ServiceEvent.objects.filter(pk=followup.service_event.id)
+            self.initial['service_events'] = sl_models.ServiceEvent.objects.filter(pk=followup.service_event.id)
             self.initial['followup_id'] = sl_models.QAFollowup.objects.get(pk=self.followup_id).id
-        else:
-            self.fields['service_event'].queryset = sl_models.ServiceEvent.objects.filter(unit_service_area__unit=self.unit)
 
     def clean(self):
         """validate the work_completed & work_started values"""

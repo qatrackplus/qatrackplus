@@ -208,7 +208,7 @@
                                             Set Status:
                                         </label>
                                         <div class="col-lg-6">
-                                            {{form.status}}
+                                            {{ form.status }}
                                         </div>
                                     </div>
                                 {% endif %}
@@ -217,7 +217,7 @@
                                         RTS for Service Event:
                                     </label>
                                     <div class="col-lg-6">
-                                        {{form.service_event}}
+                                        {{ form.service_events }}
                                     </div>
                                 </div>
 
@@ -354,7 +354,7 @@
                                         <table class="table table-responsive table-condensed">
                                             <tbody>
                                                 <tr>
-                                                    <td>Attachments</td>
+                                                    <td class="width-"><strong>Attachments</strong></td>
                                                     <td>
                                                         <label class="qa-input btn btn-default btn-sm btn-flat" title="Click to add attachments. (Hold Ctrl or Cmd in the dialog to include multiple attachments)">
                                                             Browse <input id="tli-attachments" class="file-upload" type="file" name="tli-attachments" multiple style="display:none"/>

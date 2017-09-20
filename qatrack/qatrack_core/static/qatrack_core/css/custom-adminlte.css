@@ -176,3 +176,6 @@ i.timeline-toggle:hover {
 .control-sidebar-dark, .control-sidebar-bg {
     background-color: #323e46 !important;
 }
+.control-sidebar {
+    height: 100%; !important;
+}

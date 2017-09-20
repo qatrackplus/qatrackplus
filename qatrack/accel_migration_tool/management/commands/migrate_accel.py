@@ -724,10 +724,10 @@ class Command(BaseCommand):
 
         # Set up ServiceEventStatuses
         print('\n---\tSelect service event status for all approved Accel services')
-        for ses in sl_models.ServiceEventStatus.objects.filter(is_approval_required=False):
+        for ses in sl_models.ServiceEventStatus.objects.filter(is_review_required=False):
             print('\t' + str(ses.id) + ': ' + ses.name)
 
-        approved_status_id = user_select_from_list_of_numbers('Select approved status id', list(sl_models.ServiceEventStatus.objects.filter(is_approval_required=False).values_list('id', flat=True)))
+        reviewed_status_id = user_select_from_list_of_numbers('Select reviewed status id', list(sl_models.ServiceEventStatus.objects.filter(is_review_required=False).values_list('id', flat=True)))
 
         print('\n---\tSelect service event status for all other Accel services')
         for ses in sl_models.ServiceEventStatus.objects.all():
@@ -814,7 +814,7 @@ class Command(BaseCommand):
                 lost_time = timezone.timedelta(hours=row.lost_time, minutes=row.lost_time_min)
 
                 if row.approved:
-                    service_status = sl_models.ServiceEventStatus.objects.get(pk=approved_status_id)
+                    service_status = sl_models.ServiceEventStatus.objects.get(pk=reviewed_status_id)
                     status_changed_by_winlogon = self.updating_cursor.execute('select winlogon from employees where staff_name = ?', row.physics_approval.strip()).fetchone().winlogon
                     status_changed_by = User.objects.get(username=status_changed_by_winlogon)
                     datetime_status_changed = row.approval_date
@@ -831,7 +831,7 @@ class Command(BaseCommand):
                     service_type = sl_models.ServiceType.objects.get(pk=other_service_type_id)
 
                 # is_approval_required = service_type.is_approval_required
-                is_approval_required = False
+                    is_review_required = False
 
                 if row.edited_by:
                     modified_by_row = self.updating_cursor.execute('select winlogon, third_party, PASSWORD from employees where staff_name = ?', row.edited_by.strip()).fetchone()
@@ -869,7 +869,7 @@ class Command(BaseCommand):
                     user_modified_by=modified_by,
                     user_status_changed_by=status_changed_by,
                     qafollowup_notes=qa_followup,
-                    is_approval_required=is_approval_required
+                    is_review_required=is_review_required
                 )
                 service_event.save()
                 self.updating_cursor.execute('update service set service_event_id = ? where srn = ?', str(service_event.id), str(row.srn))

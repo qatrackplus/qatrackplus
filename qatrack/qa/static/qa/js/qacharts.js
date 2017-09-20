@@ -405,7 +405,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
                 combine_data: $("#combine-data").is(":checked"),
                 relative: $("#relative-diff").is(":checked"),
                 show_events: $('#show_events').is(':checked'),
-                approval_required: $('#approval-required').is(':checked')
+                review_required: $('#review-required').is(':checked')
             };
 
             return filters;

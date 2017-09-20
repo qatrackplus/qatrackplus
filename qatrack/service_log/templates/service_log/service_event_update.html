@@ -18,7 +18,10 @@
     <script type="text/javascript">
         var status_colours_dict = {{ status_tag_colours|safe }};
         var se_statuses = {{ se_statuses|safe }};
-        var se_types_approval = {{ se_types_approval|safe }};
+        var ses_status_details = {{ ses_status_details|safe }};
+        var se_types_review = {{ se_types_review|safe }};
+        var user_perm_can_approve_se = {{ perms.service_log.approve_serviceevent|yesno:'1,0' }};
+        var default_qa_status_name = "{{ default_qa_status_name|safe }}";
     </script>
 {% endblock extra_js %}
 
@@ -32,11 +35,11 @@
 
     </div>
 
-    <form action="" method="post" novalidate>
+    <form id="service-event-form" action="" method="post" novalidate>
         {% csrf_token %}
         <div class="max-width-lg">
             <div class="row">
-                <div class="col-md-3">
+                <div class="col-md-4">
                     {% if form.instance.id %}
                         <h3 class="no-margin-top">Edit Service Event {{ form.instance.id }}</h3>
                     {% else %}
@@ -44,9 +47,9 @@
                     {% endif %}
                     {% for field in form.fieldsets.service_status %}
                         <div class="form-horizontal">
-                            <div class="form-group">
-                                <label for="{{ field.id_for_label }}" class="col-sm-4">{{ field.label }}</label>
-                                <div class="col-sm-8">
+                            <div class="form-group {% if field.errors %}has-error{% endif %}">
+                                <label for="{{ field.id_for_label }}" class="col-sm-5">{{ field.label }}</label>
+                                <div class="col-sm-7">
                                     {{ field }}
                                 </div>
                                 {% for e in field.errors %}
@@ -56,7 +59,7 @@
                         </div>
                     {% endfor %}
                 </div>
-                <div class="col-md-8">
+                <div class="col-md-7">
                     {% if form.instance.id %}
                         <div class="col-sm-4">
                             <dl>
@@ -91,6 +94,9 @@
                         {% endif %}
                     {% endif %}
                 </div>
+                <div class="col-sm-1">
+                    <button class="btn btn-flat btn-primary service-save">Save</button>
+                </div>
             </div>
 
             <div class="row">
@@ -108,6 +114,7 @@
                                         {{ field.errors }}
                                     {% endif %}
                                 {% endfor %}
+                                <input id="instance-id" type="hidden" readonly="readonly" value="{{ form.instance.pk }}">
                             </div>
                             <div class="row">
                                 <div id="required-fields" class="col-md-6 form-horizontal">
@@ -169,7 +176,7 @@
 
             <div class="row">
 
-                <div class="col-lg-4">
+                <div class="col-md-4">
                     <div class="box">
                         <div class="box-header">
                             <h3 class="box-title">
@@ -252,7 +259,7 @@
                     </div>
                 </div>
 
-                <div class="col-lg-8">
+                <div class="col-md-8">
                     <div class="box">
                         <div class="box-header">
                             <h3 class="box-title">
@@ -308,47 +315,48 @@
                                         <tbody id="followup-tbody">
 
                                             {% for f_form in followup_formset.forms %}
-                                                <tr id="{{ f_form.prefix }}">
+                                                <tr id="{{ f_form.prefix }}" class="followup-row">
                                                     {{ f_form.id }}
                                                     {{ f_form.test_list_instance }}
+                                                    {{ f_form.all_reviewed }}
                                                     <td  class="form-group{% if f_form.unit_test_collection.errors %} has-error{% endif %}">
                                                         {{ f_form.unit_test_collection|add_class:form.classes }}
                                                         {% for e in f_form.unit_test_collection.errors %}
                                                             <div class="help-block">{{ e }}</div>
                                                         {% endfor %}
                                                     </td>
-                                                    {% if f_form.instance.pk %}
-                                                        <td id="pass-fail-{{ f_form.prefix }}">{% if f_form.instance.test_list_instance.pk %}{{ f_form.instance.test_list_instance|as_pass_fail_status:False }}{% else %}----{% endif %}</td>
-                                                        <td id="review-{{ f_form.prefix }}">{% if f_form.instance.test_list_instance.pk %}{{ f_form.instance.test_list_instance|as_review_status }}{% else %}----{% endif %}</td>
+{#                                                    {% if f_form.instance.pk %}#}
+{#                                                        <td id="pass-fail-{{ f_form.prefix }}">{% if f_form.instance.test_list_instance.pk %}{{ f_form.instance.test_list_instance|as_pass_fail_status:False }}{% else %}----{% endif %}</td>#}
+{#                                                        <td id="review-{{ f_form.prefix }}">{% if f_form.instance.test_list_instance.pk %}{{ f_form.instance.test_list_instance|as_review_status }}{% else %}----{% endif %}</td>#}
 {#                                                        <td id="assigned-by-{{ f_form.prefix }}">{{ f_form.instance.user_assigned_by }}</td>#}
 {#                                                        <td id="assigned-date-{{ f_form.prefix }}">{{ f_form.instance.datetime_assigned }}</td>#}
-                                                        <td id="utc-actions-{{ f_form.prefix }}">
-                                                            {% if f_form.instance.test_list_instance.pk and perms.qa.can_review %}
-                                                                <a href="{% url 'review_test_list_instance' pk=f_form.instance.test_list_instance.pk %}?next={% url 'sl_edit' pk=form.instance.pk %}" class="btn btn-xs btn-default btn-flat">
-                                                                    Review
-                                                                </a>
-                                                            {% else %}
-                                                                {% if perms.service_log.add_qafollowup %}
-                                                                    <a href="{% url 'perform_qa' pk=f_form.instance.unit_test_collection.pk %}?qaf={{ f_form.instance.id }}&next={% url 'sl_edit' pk=form.instance.pk %}" class="btn btn-xs btn-default btn-flat">
-                                                                        Perform
-                                                                    </a>
-                                                                    <a id="select-tli-{{ f_form.prefix }}" class="btn btn-default btn-xs btn-flat select-tli" data-link="{% url 'tli_select' pk=f_form.instance.unit_test_collection.pk form=f_form.prefix %}">
-                                                                        Performed
-                                                                    </a>
-                                                                {% endif %}
-                                                            {% endif %}
-                                                        </td>
-                                                        {% if perms.service_log.delete_qafollowup %}
-                                                            <td align="center">{{ f_form.DELETE }}</td>
-                                                        {% endif %}
-                                                    {% else %}
+{#                                                        <td id="utc-actions-{{ f_form.prefix }}">#}
+{#                                                            {% if f_form.instance.test_list_instance.pk and perms.qa.can_review %}#}
+{#                                                                <a href="{% url 'review_test_list_instance' pk=f_form.instance.test_list_instance.pk %}?next={% url 'sl_edit' pk=form.instance.pk %}" class="btn btn-xs btn-default btn-flat">#}
+{#                                                                    Review#}
+{#                                                                </a>#}
+{#                                                            {% else %}#}
+{#                                                                {% if perms.service_log.add_qafollowup %}#}
+{#                                                                    <a href="{% url 'perform_qa' pk=f_form.instance.unit_test_collection.pk %}?qaf={{ f_form.instance.id }}&next={% url 'sl_edit' pk=form.instance.pk %}" class="btn btn-xs btn-default btn-flat">#}
+{#                                                                        Perform#}
+{#                                                                    </a>#}
+{#                                                                    <a id="select-tli-{{ f_form.prefix }}" class="btn btn-default btn-xs btn-flat select-tli" data-link="{% url 'tli_select' pk=f_form.instance.unit_test_collection.pk form=f_form.prefix %}">#}
+{#                                                                        Performed#}
+{#                                                                    </a>#}
+{#                                                                {% endif %}#}
+{#                                                            {% endif %}#}
+{#                                                        </td>#}
+{#                                                        {% if perms.service_log.delete_qafollowup %}#}
+{#                                                            <td align="center">{{ f_form.DELETE }}</td>#}
+{#                                                        {% endif %}#}
+{#                                                    {% else %}#}
                                                         <td id="pass-fail-{{ f_form.prefix }}"></td>
                                                         <td id="review-{{ f_form.prefix }}"></td>
-                                                        <td id="assigned-by-{{ f_form.prefix }}"></td>
-                                                        <td id="assigned-date-{{ f_form.prefix }}"></td>
+{#                                                        <td id="assigned-by-{{ f_form.prefix }}"></td>#}
+{#                                                        <td id="assigned-date-{{ f_form.prefix }}"></td>#}
                                                         <td id="utc-actions-{{ f_form.prefix }}"></td>
-                                                        <td></td>
-                                                    {% endif %}
+                                                        <td align="center">{% if perms.service_log.delete_qafollowup and f_form.instance.pk %}{{ f_form.DELETE }}{% endif %}</td>
+{#                                                    {% endif %}#}
                                                 </tr>
                                             {% endfor %}
 
@@ -481,7 +489,7 @@
 
             <div class="row">
                 <div class="col-md-12">
-                    <input class="btn btn-flat btn-primary" type="submit" value="Save" />
+                    <button class="btn btn-flat btn-primary service-save">Save</button>
                 </div>
             </div>
         </div>
@@ -492,15 +500,9 @@
             {% with hours_formset.empty_form as h_form %}
                 <tr id="hours-__prefix__">
                     {{ h_form.id }}
-                    <td>
-                        {{ h_form.user_or_thirdparty }}
-                    </td>
-                    <td>
-                        {{ h_form.time|add_class:form.classes }}
-                    </td>
-                    <td>
-
-                    </td>
+                    <td>{{ h_form.user_or_thirdparty }}</td>
+                    <td>{{ h_form.time|add_class:form.classes }}</td>
+                    <td></td>
                 </tr>
             {% endwith %}
         </tbody>
@@ -512,11 +514,12 @@
                 <tr id="followup-__prefix__">
                     {{ f_form.id }}
                     {{ f_form.test_list_instance }}
+                    {{ f_form.all_reviewed }}
                     <td class="form-group">{{ f_form.unit_test_collection }}</td>
                     <td id="pass-fail-followup-__prefix__"></td>
                     <td id="review-followup-__prefix__"></td>
-                    <td id="assigned-by-followup-__prefix__"></td>
-                    <td id="assigned-date-followup-__prefix__"></td>
+{#                    <td id="assigned-by-followup-__prefix__"></td>#}
+{#                    <td id="assigned-date-followup-__prefix__"></td>#}
                     <td id="utc-actions-followup-__prefix__"></td>
                     <td></td>
                 </tr>
@@ -540,9 +543,21 @@
 
 
     <div id="utc-actions-template" style="display: none;">
-        <a id="select-tli-__prefix__" class="btn btn-default btn-xs btn-flat select-tli" data-link="{% url 'tli_select' %}/__utc-id__/__prefix__/">
-            Performed
-        </a>
+        <div class="__prefix__-hider" style="display: none;">
+            {% if perms.service_log.add_qafollowup %}
+                <a id="select-tli-__prefix__" class="btn btn-default btn-xs btn-flat select-tli" data-link="{% url 'tli_select' %}/__utc-id__/__prefix__/">
+                    Performed
+                </a>
+                <a href="{% url 'perform_qa' %}__utc-id__/?qaf=__qaf-id__&next={% url 'sl_edit' %}__se-id__/" class="btn btn-xs btn-default btn-flat">
+                    Perform
+                </a>
+            {% endif %}
+            {% if perms.qa.can_review %}
+                <a id="__prefix__-review-btn" href="{% url 'review_test_list_instance' %}__tli-id__?next={% url 'sl_edit' %}__se-id__" class="btn btn-xs btn-default btn-flat review-btn __prefix__-hider" style="display: none;">
+                    Review
+                </a>
+            {% endif %}
+        </div>
     </div>
 
 

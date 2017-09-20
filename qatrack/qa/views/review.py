@@ -18,7 +18,7 @@ from .base import TestListInstanceMixin, BaseEditTestListInstance, TestListInsta
 from .perform import ChooseUnit
 
 from qatrack.units.models import Unit
-from qatrack.service_log.models import ServiceEvent, QAFollowup
+from qatrack.service_log.models import ServiceEvent, QAFollowup, ServiceEventStatus
 
 from braces.views import PermissionRequiredMixin, JSONResponseMixin
 
@@ -88,11 +88,23 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         if still_requires_review:
             test_list_instance.all_reviewed = False
             test_list_instance.save()
+            changed_se = test_list_instance.update_service_event_statuses()
+            if len(changed_se) > 0:
+                messages.add_message(
+                    request=self.request, level=messages.INFO,
+                    message='Changed status of service event(s) %s to "%s".' % (
+                        ', '.join(str(x) for x in changed_se),
+                        ServiceEventStatus.get_default().name
+                    )
+                )
 
         test_list_instance.unit_test_collection.set_due_date()
 
         # let user know request succeeded and return to unit list
-        messages.success(self.request, _("Successfully updated %s " % self.object.test_list.name))
+        messages.add_message(
+            request=self.request, message=_("Successfully updated %s " % self.object.test_list.name),
+            level=messages.SUCCESS
+        )
         return HttpResponseRedirect(self.get_success_url())
 
     def get_context_data(self, **kwargs):

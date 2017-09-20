@@ -392,10 +392,14 @@ input[type="number"] {
 #listable-table-unreviewed > tbody > tr > td:nth-child(1) {
     min-width: 160px;
 }
-#listable-table-review_utc > tbody > tr > td:nth-child(1) {
-    width: 180px !important;
-}
-#listable-table-review_utc > tbody > tr > td:nth-child(5) {
+#listable-table-review_utc > tbody > tr > td:nth-child(1),
+#listable-table-unreviewed > tbody > tr > td:nth-child(1),
+#listable-table-unreviewed_visible_to > tbody > tr > td:nth-child(1),
+#listable-table-unreviewed_by_group > tbody > tr > td:nth-child(1),
+#listable-table-review_utc > tbody > tr > td:nth-child(5),
+#listable-table-unreviewed > tbody > tr > td:nth-child(5),
+#listable-table-unreviewed_visible_to > tbody > tr > td:nth-child(5),
+#listable-table-unreviewed_by_group > tbody > tr > td:nth-child(5) {
     width: 160px !important;
 }
 row.procedure-open > td:nth-child(1) {

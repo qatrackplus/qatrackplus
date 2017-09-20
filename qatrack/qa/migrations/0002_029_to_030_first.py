@@ -124,11 +124,6 @@ class Migration(migrations.Migration):
             field=models.CharField(choices=[('absolute', 'Absolute'), ('percent', 'Percentage'), ('multchoice', 'Multiple Choice')], help_text='Select whether this will be an absolute or relative tolerance criteria', max_length=20),
         ),
         migrations.AddField(
-            model_name='testinstancestatus',
-            name='colour',
-            field=models.CharField(default='rgba(60,141,188,1)', max_length=22, validators=[RegexValidator(re.compile('^rgba\\(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]),([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]),([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]),(0(\\.[0-9][0-9]?)?|1)\\)$', 32), 'Enter a valid color.', 'invalid')]),
-        ),
-        migrations.AddField(
             model_name='testlist',
             name='javascript',
             field=models.TextField(blank=True, help_text='Any extra javascript to run when loading perform page', null=True),

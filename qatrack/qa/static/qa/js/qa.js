@@ -815,14 +815,24 @@ $(document).ready(function(){
         width: '100%'
     });
     
-    function generate_se_result(res) {
+    function generate_se_selection(res, container) {
         if (res.loading || !res.id) { return res.text; }
         var colour = status_colours_dict[se_statuses[res.id]];
-        var $div = $('<div class="select2-result-repository clearfix" style="min-width: 75px;">' + res.text + '<i class="fa fa-square fa-lg pull-right" style="color: ' + colour + '; margin-top: 7px;"></i></div>');
-        return $div;
+        $(container).css('border-color', colour);
+        $(container).addClass('service-event-status-label');
+        return $('<span>' + res.text + '</span>');
+    }
+    function generate_se_result(res, container) {
+        if (res.loading || !res.id) { return res.text; }
+        var colour = status_colours_dict[se_statuses[res.id]];
+        // $(container).css('border-color', colour);
+        // $(container).addClass('service-event-status-label');
+
+        var $label =  $('<span class="label service-event-status-label" style="border-color: ' + colour + '">' + res.text + '</span>');
+        return $label
     }
 
-    $('#id_service_event').select2({
+    $('#id_service_events').select2({
         ajax: {
             url: QAURLs.SE_SEARCHER,
             dataType: 'json',
@@ -856,7 +866,7 @@ $(document).ready(function(){
         escapeMarkup: function (markup) { return markup; },
         minimumInputLength: 1,
         templateResult: generate_se_result,
-        templateSelection: generate_se_result,
+        templateSelection: generate_se_selection,
         width: '100%'
     });
 

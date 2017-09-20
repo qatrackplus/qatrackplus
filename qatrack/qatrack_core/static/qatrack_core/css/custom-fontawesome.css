@@ -61,6 +61,10 @@
     right: auto;
     left: -5px;
 }
+.fa-stack-custom-sub.upper-0 {
+    right: auto;
+    left: 0px;
+}
 .fa.larger {
     width: 150%;
     height: 150%;

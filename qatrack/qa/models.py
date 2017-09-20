@@ -1,4 +1,5 @@
 
+from django.apps import apps
 from django.conf import settings
 from django.db import models
 from django.db.models import Q, Count, F, ExpressionWrapper
@@ -138,7 +139,7 @@ PERMISSIONS = (
             ('service_log.view_qafollowup', 'Can view existing return to service qa', 'Allow user to view qa linked to service events.'),
             ('service_log.add_serviceevent', 'Can create service event', 'Allows user to create new service events.'),
             ('service_log.view_serviceevent', 'Can view service events', 'Allows user to view existing service events.'),
-            ('service_log.approve_serviceevent', 'Can approve service events', 'Allows user to change status of service events to statuses with \'is approval required = false\'.'),
+            ('service_log.review_serviceevent', 'Can review service events', 'Allows user to change status of service events to statuses with \'is review required = false\'.'),
             ('parts.add_part', 'Can add part', 'Allow user to enter new parts.'),
             ('parts.view_part', 'Can view parts', 'Allow user to view existing parts'),
         )
@@ -235,7 +236,7 @@ class TestInstanceStatus(models.Model):
         help_text=_("If unchecked, data with this status will not be exported and the TestInstance will not be considered a valid completed Test")
     )
 
-    colour = models.CharField(default=settings.DEFAULT_COLOURS[0], max_length=22, validators=[validate_color])
+    # colour = models.CharField(default=settings.DEFAULT_COLOURS[0], max_length=22, validators=[validate_color])
 
     objects = StatusManager()
 
@@ -1355,7 +1356,7 @@ class TestListInstance(models.Model):
         return [x for x in statuses if len(x[1]) > 0]
 
     def review_summary(self, queryset=None):
-        return {status[0].slug: {'num': len(status[1]), 'valid': status[0].valid, 'reqs_approval': status[0].requires_review, 'default': status[0].is_default} for status in self.status(queryset)}
+        return {status[0].slug: {'num': len(status[1]), 'valid': status[0].valid, 'reqs_review': status[0].requires_review, 'default': status[0].is_default} for status in self.status(queryset)}
 
     def unreviewed_instances(self):
         return self.testinstance_set.filter(status__requires_review=True)
@@ -1366,6 +1367,23 @@ class TestListInstance(models.Model):
 
         # use update instead of save so we don't trigger save signal
         TestListInstance.objects.filter(pk=self.pk).update(all_reviewed=self.all_reviewed)
+
+        return self.update_service_event_statuses()
+
+    def update_service_event_statuses(self):
+        # set linked service events to default status if not all reviewed.
+        changed_se = []
+        print('--- >> in update_service_event_statuses')
+        for qaf in self.qafollowup_for_tli.all():
+            print(qaf)
+            print(self.all_reviewed)
+            print(qaf.service_event.service_status.rts_qa_must_be_reviewed)
+            if not self.all_reviewed and qaf.service_event.service_status.rts_qa_must_be_reviewed:
+                qaf.service_event.service_status = apps.get_model('service_log', 'ServiceEventStatus').get_default()
+                qaf.service_event.save()
+                changed_se.append(qaf.service_event_id)
+
+        return changed_se
 
     def tolerance_tests(self):
         return self.testinstance_set.filter(pass_fail=TOLERANCE)
@@ -1423,6 +1441,8 @@ class TestListInstance(models.Model):
                 test_history.append(match[0] if match else None)
 
             instances.append((ti, test_history))
+
+
 
         return instances, dates
 
