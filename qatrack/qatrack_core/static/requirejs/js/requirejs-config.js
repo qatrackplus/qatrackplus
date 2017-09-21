@@ -38,6 +38,7 @@ require.config({
         // Site wide:
         sidebar: siteConfig.STATIC_URL + 'qatrack_core/js/sidebar',
         site_base: siteConfig.STATIC_URL + 'qatrack_core/js/base',
+        comments: siteConfig.STATIC_URL + 'qatrack_core/js/comments',
 
         // qa module:
         qa: siteConfig.STATIC_URL + 'qa/js/qa',

@@ -260,7 +260,6 @@ class BaseTestListInstanceForm(forms.ModelForm):
 
     service_events = ServiceEventMultipleField(queryset=sl_models.ServiceEvent.objects.none(), required=False)
     followup_id = forms.IntegerField(required=False, widget=HiddenInput())
-
     # now handle saving of qa or service event and link followup
 
     class Meta:
@@ -284,15 +283,8 @@ class BaseTestListInstanceForm(forms.ModelForm):
             self.fields[field].help_text = settings.DATETIME_HELP
 
         self.fields["status"].widget.attrs["class"] = "input-medium select2"
-
         self.fields["work_completed"].widget.attrs["placeholder"] = "optional"
-
-        self.fields["comment"].widget.attrs["rows"] = "4"
-        self.fields["comment"].widget.attrs["placeholder"] = "Add comment about this set of tests"
         self.fields['service_events'].widget.attrs.update({'class': 'select2'})
-
-        print('--- >> in BaseTestListInstanceForm.__init__')
-        print(self.followup_id)
 
         if self.instance.pk:
             se_ids = []
@@ -310,6 +302,7 @@ class BaseTestListInstanceForm(forms.ModelForm):
             self.fields['service_events'].queryset = sl_models.ServiceEvent.objects.filter(pk=followup.service_event.id)
             self.initial['service_events'] = sl_models.ServiceEvent.objects.filter(pk=followup.service_event.id)
             self.initial['followup_id'] = sl_models.QAFollowup.objects.get(pk=self.followup_id).id
+
 
     def clean(self):
         """validate the work_completed & work_started values"""
@@ -347,9 +340,14 @@ class BaseTestListInstanceForm(forms.ModelForm):
 class CreateTestListInstanceForm(BaseTestListInstanceForm):
     """form for doing qa test list"""
 
+    comment = forms.CharField(widget=forms.Textarea, required=False)
+
     def __init__(self, *args, **kwargs):
         super(CreateTestListInstanceForm, self).__init__(*args, **kwargs)
-        self.fields["work_started"].initial = timezone.localtime(timezone.now()).strftime(settings.INPUT_DATE_FORMATS[0])
+        self.fields['work_started'].initial = timezone.localtime(timezone.now()).strftime(settings.INPUT_DATE_FORMATS[0])
+        self.fields['comment'].widget.attrs['rows'] = '3'
+        self.fields['comment'].widget.attrs['placeholder'] = 'Add comment about this set of tests'
+        self.fields['comment'].widget.attrs['class'] = 'autosize form-control'
 
 
 class UpdateTestListInstanceForm(BaseTestListInstanceForm):

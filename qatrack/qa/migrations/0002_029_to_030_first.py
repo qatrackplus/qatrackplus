@@ -56,6 +56,26 @@ def set_utc_name(apps, schema_editor):
         utc.save()
 
 
+def migrate_test_list_instance_comments(apps, schema):
+
+    TestListInstance = apps.get_model('qa', 'TestListInstance')
+    ContentType = apps.get_model('contenttypes', 'ContentType')
+    Comment = apps.get_model('django_comments', 'Comment')
+    tli_ct = ContentType.objects.get_for_model(TestListInstance)
+
+    tli_qs = TestListInstance.objects.filter(comment__isnull=False).exclude(comment='')
+
+    for tli in tli_qs:
+        comment = Comment(
+            content_type=tli_ct,
+            object_pk=tli.id,
+            comment=tli.comment,
+            submit_date=tli.created,
+            site_id=1
+        )
+        comment.save()
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -145,4 +165,14 @@ class Migration(migrations.Migration):
             field=models.CharField(db_index=True, default='', editable=False, max_length=255),
         ),
         migrations.RunPython(set_utc_name),
+        migrations.AlterField(
+            model_name='unittestcollection',
+            name='frequency',
+            field=models.ForeignKey(blank=True, help_text='Frequency with which this test list is to be performed', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='unittestcollections', to='qa.Frequency'),
+        ),
+        migrations.RunPython(migrate_test_list_instance_comments),
+        migrations.RemoveField(
+            model_name='testlistinstance',
+            name='comment',
+        ),
     ]

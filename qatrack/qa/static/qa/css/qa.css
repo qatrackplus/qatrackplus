@@ -206,6 +206,7 @@ tr.qa-error > td {
 #perform-qa-table > tbody > tr > td.qa-category {
     padding: 0;
     height: 100%;
+    width: 120px;
 }
 #perform-qa-table > tbody > tr > td.qa-category > .error-bar {
     height: 100%;
@@ -287,14 +288,18 @@ tr.qa-comment td {
 }
 #qa-tli-comment {
     padding: 0 !important;
-    display: none;
 }
 #qa-tli-comment textarea {
     width:100%;
     resize: none;
-    border: none;
     vertical-align: top;
     overflow: hidden !important;
+}
+#comments {
+    margin: 0;
+}
+#comments p {
+    padding-left: 10px;
 }
 #box-perform .box-footer {
     min-height: 40px;

@@ -3,6 +3,7 @@
 {% load qa_tags %}
 {% load qatrack_tags %}
 {% load attach_tags %}
+{% load comments %}
 
 {% block head_title %}{% spaceless %}
     {% if test_list_instance %}
@@ -341,13 +342,6 @@
                                     </tbody>
                                 </table>
 
-
-{#                                <div class="row pad">#}
-{#                                    <div id="qa-tli-comment" class="col-sm-12 callout callout-custom border-primary">#}
-{#                                        {{form.comment}}#}
-{#                                    </div>#}
-{#                                </div>#}
-
                                 <div class="row">
 {#                                    <div class="col-sm-6"></div>#}
                                     <div class="col-sm-7">
@@ -386,7 +380,7 @@
 
                                         <button id="submit-qa" type="submit" class="btn btn-primary btn-flat margin-r-5 pull-right">Submit QA Results</button>
 
-                                        <a id="toggle-gen-comment" class="btn btn-default btn-flat pull-right margin-r-5" href="#!" title="Click here to add a general comment about this set of tests"><i class="icon-edit"></i> Add Comment</a>
+{#                                        <a id="toggle-gen-comment" class="btn btn-default btn-flat pull-right margin-r-5" href="#!" title="Click here to add a general comment about this set of tests">Add Comment</a>#}
 
                                         <div class="pull-right margin-r-5">
                                             <label title="{{form.in_progress.help_text}}" for="id_in_progress" class="add-on">
@@ -434,7 +428,71 @@
             </div>
         </div>
 
+    {% if test_list_instance %}
+
     </form>
+        <div id="box-comments" class="row">
+            <div class="col-sm-12">
+                <div class="box">
+                    <div class="box-header">
+                        <h3 class="box-title">
+                            <i class="fa fa-commenting-o fa-fw"></i>
+                            Comments
+                        </h3>
+                    </div>
+                    <div class="box-body">
+                        <div class="row">
+                            <div class="col-md-12">
+                                {% render_comment_list for test_list_instance %}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12 padding-top-20">
+                                {% get_comment_form for test_list_instance as form %}
+
+                                    <form id="comment-form" method="post">
+                                        {% csrf_token %}
+                                        <input id="id_name" maxlength="50" name="name" type="hidden" required="" value="{{ user.username }}">
+                                        {{ form.object_pk }}
+                                        {{ form.content_type }}
+                                        {{ form.security_hash }}
+                                        {{ form.timestamp }}
+                                        <textarea cols="40" id="id_comment" maxlength="3000" name="comment" rows="3" required="" placeholder="Add comment" class="margin-bottom-20 form-control autosize"></textarea>
+
+                                    </form>
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <button id="post-comment" class="btn btn-flat btn-info btn-sm" disabled="disabled">Post Comment</button>
+                                        </div>
+                                    </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {% else %}
+        <div id="box-comments" class="row">
+            <div class="col-sm-12">
+                <div class="box">
+                    <div class="box-header">
+                        <h3 class="box-title">
+                            <i class="fa fa-commenting-o fa-fw"></i>
+                            Comments
+                        </h3>
+                    </div>
+                    <div class="box-body">
+                        <div id="qa-tli-comment">
+                            {{ form.comment }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+    {% endif %}
+
 
 
 {% endblock %}
@@ -471,6 +529,11 @@
                         <span>Attachemnts</span>
                     </a></li>
                 {% endif %}
+
+                <li class="primary toggle-element active" data-toggle="comments"><a id="toggle-options" href="#!">
+                    <i class="fa fa-commenting-o fa-fw" aria-hidden="true"></i>
+                    <span>Comments</span>
+                </a></li>
 
                 {# Category selection #}
                 {% if perms.qa.can_perform_subset and categories|length > 1 %}

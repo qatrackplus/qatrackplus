@@ -33,7 +33,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('datetime_assigned', models.DateTimeField()),
             ],
-            options={'permissions': (('view_qafollowup', 'Can view return to service qa'), ('perform_qafollowup', 'Can perform return to service qa'))},
+            options={'permissions': (('view_qafollowup', 'Can view return vo service qa'), ('perform_qafollowup', 'Can perform return to service qa'))},
         ),
         migrations.CreateModel(
             name='ServiceArea',
@@ -68,7 +68,7 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(help_text='Enter a short name for this service status', unique=True, max_length=32)),
                 ('is_default', models.BooleanField(default=False, help_text='Is this the default status for all service events? If set to true every other service event status will be set to false')),
                 ('is_review_required', models.BooleanField(default=True, help_text='Do service events with this status require review?')),
-                ('rts_qa_must_be_reviewed', models.BooleanField(default=True, help_text='Set to false if review status of attached rts qa test lists is not important. Service events with rts that has not been reviewed can not have this status selected if set to true.'),),
+                ('rts_qa_must_be_reviewed', models.BooleanField(default=True, help_text='Service events with rts that has not been reviewed can not have this status selected if set to true.'),),
                 ('description', models.TextField(help_text='Give a brief description of this service event status', max_length=64, null=True, blank=True)),
                 ('colour', models.CharField(default='rgba(60,141,188,1)', max_length=22, validators=[RegexValidator(re.compile('^rgba\\(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]),([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]),([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]),(0(\\.[0-9][0-9]?)?|1)\\)$', 32), 'Enter a valid color.', 'invalid')]))
             ],

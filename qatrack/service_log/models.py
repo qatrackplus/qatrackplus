@@ -232,7 +232,7 @@ class QAFollowup(models.Model):
 
     class Meta:
         permissions = (
-            ('view_qafollowup', 'Can view veturn vo service qa'),
+            ('view_qafollowup', 'Can view return vo service qa'),
             ('perform_qafollowup', 'Can perform return to service qa')
         )
 

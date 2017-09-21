@@ -11,6 +11,7 @@ from django.core.validators import RegexValidator
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation, GenericForeignKey
 from django.utils import timezone
+from django_comments.models import Comment
 
 from qatrack.units.models import Unit
 from qatrack.qa import utils
@@ -1209,7 +1210,7 @@ class TestInstance(models.Model):
 
     def auto_review(self):
         """set review status of the current value if allowed"""
-        has_comment = self.comment or self.test_list_instance.comment
+        has_comment = self.comment or self.test_list_instance.comments.all().exists()
         if has_comment and not self.skipped:
             return
 
@@ -1306,7 +1307,8 @@ class TestListInstance(models.Model):
 
     due_date = models.DateTimeField(null=True, blank=True, help_text=_('When was this session due when it was performed'))
 
-    comment = models.TextField(help_text=_("Add a comment to this set of tests"), null=True, blank=True)
+    # comment = models.TextField(help_text=_("Add a comment to this set of tests"), null=True, blank=True)
+    comments = GenericRelation(Comment, object_id_field='object_pk')
 
     in_progress = models.BooleanField(help_text=_("Mark this session as still in progress so you can complete later (will not be submitted for review)"), default=False, db_index=True)
 
@@ -1373,11 +1375,7 @@ class TestListInstance(models.Model):
     def update_service_event_statuses(self):
         # set linked service events to default status if not all reviewed.
         changed_se = []
-        print('--- >> in update_service_event_statuses')
         for qaf in self.qafollowup_for_tli.all():
-            print(qaf)
-            print(self.all_reviewed)
-            print(qaf.service_event.service_status.rts_qa_must_be_reviewed)
             if not self.all_reviewed and qaf.service_event.service_status.rts_qa_must_be_reviewed:
                 qaf.service_event.service_status = apps.get_model('service_log', 'ServiceEventStatus').get_default()
                 qaf.service_event.save()

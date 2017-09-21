@@ -1,4 +1,4 @@
-require(['jquery', 'sl_utils'], function($) {
+require(['jquery', 'sl_utils', 'comments'], function($) {
 	$(document).ready(function () {
 
 		//(de)select checkboxes for child tests when user clicks on header checkbox

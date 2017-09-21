@@ -104,6 +104,8 @@ urlpatterns = [
     url(r"^searcher/test_instance/$", api.test_instance_searcher, name='test_instance_searcher'),
     url(r"^searcher/test_list_instance/$", api.test_list_instance_searcher, name='test_list_instance_searcher'),
 
+    url(r"^comment/ajax_comment/$", base.ajax_comment, name='ajax_comment'),
+
 ]
 
 

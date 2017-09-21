@@ -13,6 +13,7 @@ import scipy
 
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.sites.shortcuts import get_current_site
 from django.core.files.base import ContentFile
 from django.core.urlresolvers import reverse
 from django.db.models import Q
@@ -23,6 +24,7 @@ from django.template.defaultfilters import filesizeformat
 from django.views.generic import View, CreateView, TemplateView
 from django.utils import timezone
 from django.utils.translation import ugettext as _
+from django_comments.models import Comment
 
 from . import forms
 from .. import models, utils, signals
@@ -630,6 +632,16 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
         attachments = []
 
+        if form.cleaned_data['comment']:
+            comment = Comment(
+                submit_date=timezone.now(),
+                user=self.request.user,
+                content_object=self.object,
+                comment=form.cleaned_data['comment'],
+                site=get_current_site(self.request)
+            )
+            comment.save()
+
         for delta, ti_form in enumerate(formset):
 
             now = self.object.created + timezone.timedelta(milliseconds=delta)
@@ -851,9 +863,6 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
             service_events = form.cleaned_data.get('service_events', False)
             followup_id = self.request.GET.get('qaf', False)
 
-            print('******')
-            print(service_events)
-            print(followup_id)
             if len(service_events) > 0:
 
                 if followup_id:
