@@ -119,8 +119,9 @@ def as_review_status(test_list_instance):
         statuses[ti.status.name]["reviewed"] = test_list_instance.reviewed
         if ti.comment:
             comment_count += 1
-    if test_list_instance.comment:
-        comment_count += 1
+    # if test_list_instance.comment:
+    #     comment_count += 1
+    comment_count += test_list_instance.comments.count()
     template = get_template("qa/review_status.html")
     c = Context({"statuses": dict(statuses), "comments": comment_count, "show_icons": settings.ICON_SETTINGS['SHOW_REVIEW_ICONS']})
     return template.render(c)

@@ -18,7 +18,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
                 '    <div class="col-md-12">' +
                 '        <span id="pass-fail-utc_initiated"></span>' +
                 '        <span id="review-utc_initiated"></span>' +
-                '        <a id="view-tli-btn" class="btn btn-default btn-xs btn-flat" href="">View</a>' +
+                '        <a id="view-tli-btn" class="btn btn-default btn-xs btn-flat margin-left-5" href="">View</a>' +
                 '        <span id="tli-date-utc_initiated" class="pull-right"></span>' +
                 '    </div>' +
                 '</div>'
@@ -32,7 +32,6 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
 
         var num_click = 0;
         $service_save.one('click', function (event) {
-            console.log('clicked ' + num_click);
             event.preventDefault();
             $service_event_form.submit();
             $(this).prop('disabled', true);
@@ -48,10 +47,6 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
             minimumResultsForSearch: 10,
             width: '100%'
         }).overrideSelect2Keys();
-        // $related_se.select2({
-        //     minimumResultsForSearch: 10,
-        //     width: '100%'
-        // });
         
         $('.daterangepicker-input').daterangepicker({
             singleDatePicker: true,
@@ -60,9 +55,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
             keyboardNavigation: false,
             timePicker: true,
             timePicker24Hour: true,
-            locale: {"format": "DD-MM-YYYY HH:mm"},
-            // startDate: moment(),
-            // endDate: moment()
+            locale: {"format": "DD-MM-YYYY HH:mm"}
         });
         
         $('.inputmask').inputmask('99:99', {numericInput: true, placeholder: "_", removeMaskOnSubmit: true});
@@ -241,6 +234,8 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
             });
         }
         displayTLI = function (prefix, data, returnValue) {
+            console.log(data);
+            console.log(returnValue);
             var $label_group = $('<span class="label-group ' + prefix + '-hider" style="display: none;"></span>');
             for (var status in data['pass_fail']) {
                 if (data['pass_fail'][status] > 0 && status != 'no_tol') {
@@ -262,8 +257,13 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
             $label_group = $('<span class="label-group ' + prefix + '-hider" style="display: none;"></span>');
             for (status in data['review']) {
                 var label_class = 'label',
+                    status_name = status,
                     icon = '';
-                if (!data['review'][status]['valid']) {
+                if (data['review'][status]['is_comments']) {
+                    label_class += ' label-info';
+                    status_name = '';
+                    icon = '<i class="fa fa-commenting"></i>';
+                } else if (!data['review'][status]['valid']) {
                     label_class += ' action';
                     icon = '<i class="icon-minus-sign"></i>';
                 } else if (data['review'][status]['reqs_review']) {
@@ -272,7 +272,11 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
                 } else {
                     label_class += ' ok';
                 }
-                $label_group.append('<span class="' + label_class + '">' + icon + ' ' + data["review"][status]["num"] + ' ' + status + '</span>');
+                if (data['review'][status]['is_comments']) {
+                    $label_group.append('<span class="' + label_class + '">' + icon + ' ' + data["review"][status]["num"] + ' ' + status_name + '</span>');
+                } else {
+                    $label_group.prepend('<span class="' + label_class + '">' + icon + ' ' + data["review"][status]["num"] + ' ' + status_name + '</span>');
+                }
             }
             $('#review-' + prefix).html($label_group);
 
@@ -286,8 +290,6 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
 
             $('#' + prefix + '-review-btn').addClass(prefix + '-hider');
             $('.' + prefix + '-hider').fadeIn('fast');
-
-            disable_statuses();
         };
         setSearchResult = function (form, returnValue) {
             window.focus();
@@ -339,41 +341,6 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
             $followup_index.val(parseInt(followup_index) + 1);
         });
 
-        // make
-        function disable_statuses() {
-
-            // var all_reviewed = true;
-            // $.each($followup_rows, function (i, v) {
-            //     if ($(v).find('select.followup-utc').val() && parseInt($(v).find('input.tli-all-reviewed').val()) !== 1) {
-            //         all_reviewed = false;
-            //         return false;
-            //     }
-            // });
-            //
-            // $.each(ses_status_details, function (k, v) {
-            //     var disable = false;
-            //
-            //     var title = '';
-            //     if (!all_reviewed && v.rts_qa_must_be_reviewed) {
-            //         disable = true;
-            //         title = 'Cannot select status: ' + default_qa_status_name + ' RTS QA'
-            //     } else if (!user_perm_can_approve_se && !v.is_review_required) {
-            //         disable = true;
-            //         title = 'Cannot select status: Permission denied'
-            //     }
-            //     var option = $service_status.find('option[value="' + k + '"]');
-            //     option.attr('title', title);
-            //     disable ? option.attr('disabled', 'disabled') : option.prop('disabled', false);
-            // });
-            // $service_status.select2({
-            //     templateResult: generate_status_label,
-            //     templateSelection: generate_status_label,
-            //     minimumResultsForSearch: 10,
-            //     width: '100%'
-            // }).overrideSelect2Keys();
-
-        }
-
         $('select.followup-utc').change(function() {
 
             var prefix = $(this).attr('data-prefix'),
@@ -404,7 +371,6 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
                 $('.' + prefix + '-hider').fadeIn('fast');
                 set_select_tli();
             }
-            disable_statuses();
 
         });
         $('select.followup-utc').change();

@@ -54,7 +54,13 @@
                             <dt>Status Changed:</dt>
                             <dd>
                                 <div>{{ serviceevent.datetime_status_changed }}</div>
-                                <div>by {{ serviceevent.user_status_changed_by }}</div>
+                                <div>by
+                                    {% if serviceevent.user_status_changed_by %}
+                                        {{ serviceevent.user_status_changed_by }}
+                                    {% else %}
+                                        System
+                                    {% endif %}
+                                </div>
                             </dd>
                         </dl>
                     </div>

@@ -87,7 +87,13 @@
                                     <dt>Status Changed:</dt>
                                     <dd>
                                         <div>{{ form.instance.datetime_status_changed }}</div>
-                                        <div>by {{ form.instance.user_status_changed_by }}</div>
+                                        <div>by
+                                            {% if form.instance.user_status_changed_by %}
+                                                {{ form.instance.user_status_changed_by }}
+                                            {% else %}
+                                                System
+                                            {% endif %}
+                                        </div>
                                     </dd>
                                 </dl>
                             </div>
@@ -119,52 +125,63 @@
                             <div class="row">
                                 <div id="required-fields" class="col-md-6 form-horizontal">
 
-                                    {% for field in form.fieldsets.required_fields %}
+                                    {% for field in form.fieldsets.left_fields %}
                                         <div class="form-group {% if field.errors %}has-error{% endif %}" title="{{ field.help_text }}">
-                                            {% if 'autosize' in field.field.widget.attrs.class %}
-                                                <div class="col-sm-12">
-                                                    <label for="{{ field.id_for_label }}" class="">{{ field.label }}</label>
-                                                    {{ field }}
-                                                    {% for e in field.errors %}
-                                                        <div class="col-sm-12 help-block text-center">{{ e }}</div>
-                                                    {% endfor %}
-                                                </div>
-                                            {% else %}
-                                                <label for="{{ field.id_for_label }}" class="col-sm-4">{{ field.label }}</label>
-                                                <div class="col-sm-8">
-                                                    {{ field }}
-                                                </div>
-                                                {% for e in field.errors %}
-                                                    <div class="col-sm-12 help-block text-center">{{ e }}</div>
-                                                {% endfor %}
-                                            {% endif %}
+                                            <label for="{{ field.id_for_label }}" class="col-sm-4">{{ field.label }}</label>
+                                            <div class="col-sm-8">
+                                                {{ field }}
+                                            </div>
+                                            {% for e in field.errors %}
+                                                <div class="col-sm-12 help-block text-center">{{ e }}</div>
+                                            {% endfor %}
                                         </div>
                                     {% endfor %}
                                 </div>
 
                                 <div id="optional-fields" class="col-md-6 form-horizontal">
 
-                                    {% for field in form.fieldsets.optional_fields %}
+                                    {% for field in form.fieldsets.right_fields %}
                                         <div class="form-group {% if field.errors %}has-error{% endif %}" title="{{ field.help_text }}">
-                                            {% if 'autosize' in field.field.widget.attrs.class %}
-                                                <div class="col-sm-12">
-                                                    <label for="{{ field.id_for_label }}" class="{% if field.field.required %} required{% endif %}">{{ field.label }}</label>
-                                                    {{ field }}
-                                                    {% for e in field.errors %}
-                                                        <div class="col-sm-12 help-block text-center">{{ e }}</div>
-                                                    {% endfor %}
-                                                </div>
-                                            {% else %}
-                                                <label for="{{ field.id_for_label }}" class="col-sm-4{% if field.field.required %} required{% endif %}">{{ field.label }}</label>
 
-                                                <div class="col-sm-8">
-                                                    {{ field }}
-                                                </div>
+                                            <label for="{{ field.id_for_label }}" class="col-sm-4{% if field.field.required %} required{% endif %}">{{ field.label }}</label>
+
+                                            <div class="col-sm-8">
+                                                {{ field }}
+                                            </div>
+                                            {% for e in field.errors %}
+                                                <div class="col-sm-12 help-block text-center">{{ e }}</div>
+                                                {{ field.id_for_label }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="row">
+                                {% for field in form.fieldsets.problem_and_safety %}
+                                    <div class="col-sm-6 form-horizontal">
+                                        <div class="form-group {% if field.errors %}has-error{% endif %}" title="{{ field.help_text }}">
+                                            <div class="col-sm-12">
+                                                <label for="{{ field.id_for_label }}" class="{% if field.field.required %} required{% endif %}">{{ field.label }}</label>
+                                                {{ field }}
                                                 {% for e in field.errors %}
                                                     <div class="col-sm-12 help-block text-center">{{ e }}</div>
-                                                    {{ field.id_for_label }}
                                                 {% endfor %}
-                                            {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-12 form-horizontal">
+                                    {% for field in form.fieldsets.work_description %}
+                                        <div class="form-group {% if field.errors %}has-error{% endif %}" title="{{ field.help_text }}">
+                                            <div class="col-sm-12">
+                                                <label for="{{ field.id_for_label }}" class="{% if field.field.required %} required{% endif %}">{{ field.label }}</label>
+                                                {{ field }}
+                                                {% for e in field.errors %}
+                                                    <div class="col-sm-12 help-block text-center">{{ e }}</div>
+                                                {% endfor %}
+                                            </div>
                                         </div>
                                     {% endfor %}
                                 </div>

@@ -430,7 +430,7 @@ class ChooseUnit(TemplateView):
             freq_qs = models.Frequency.objects.prefetch_related('unittestcollections__unit').all()
 
             for unit in q:
-                unit['frequencies'] = freq_qs.filter(unittestcollections__unit_id=unit['unit__id']).distinct().values('id', 'name')
+                unit['frequencies'] = freq_qs.filter(unittestcollections__unit_id=unit['unit__id']).distinct().values('slug', 'name')
 
                 if unit['unit__site__name']:
                     unit_site_types[unit['unit__site__name']][unit['unit__type__name']].append(unit)
@@ -1077,7 +1077,7 @@ class UnitFrequencyList(FrequencyList):
 
         qs = super(UnitFrequencyList, self).get_queryset()
         self.units = Unit.objects.filter(number__in=self.kwargs["unit_number"].split("/"))
-        return qs.filter(unit__in=self.units)
+        return qs.filter(unit__number__in=self.units)
 
     def get_page_title(self):
         title = ", ".join([x.name for x in self.units])

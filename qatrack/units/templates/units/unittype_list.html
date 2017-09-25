@@ -95,7 +95,7 @@
                                                             <ul class="dropdown-menu">
                                                                 {% for freq in unit.frequencies %}
                                                                     <li>
-                                                                        <a href="{% url "qa_by_frequency_unit" frequency=freq.id unit_number=unit.unit__number %}">{{unit.unit__name}} &mdash; {{freq.name}}</a>
+                                                                        <a href="{% url "qa_by_frequency_unit" frequency=freq.slug unit_number=unit.unit__number %}">{{unit.unit__name}} &mdash; {{freq.name}}</a>
                                                                     </li>
                                                                 {% endfor %}
                                                                 <li>

@@ -124,10 +124,6 @@ class ServiceEvent(models.Model):
     user_status_changed_by = models.ForeignKey(User, null=True, blank=True, related_name='+', on_delete=models.PROTECT)
     user_created_by = models.ForeignKey(User, related_name='+', on_delete=models.PROTECT)
     user_modified_by = models.ForeignKey(User, null=True, blank=True, related_name='+', on_delete=models.PROTECT)
-    # problem_type = models.ForeignKey(
-    #     ProblemType, null=True, blank=True, on_delete=models.PROTECT,
-    #     help_text=_('Select/create a problem type that describes this service event')
-    # )
     test_list_instance_initiated_by = models.ForeignKey(TestListInstance, null=True, blank=True, on_delete=models.PROTECT, related_name='serviceevents_initiated')
 
     datetime_status_changed = models.DateTimeField(null=True, blank=True)
@@ -227,7 +223,6 @@ class QAFollowup(models.Model):
     user_assigned_by = models.ForeignKey(User, related_name='+', on_delete=models.PROTECT)
     service_event = models.ForeignKey(ServiceEvent, on_delete=models.CASCADE)
 
-    # is_complete = models.BooleanField(default=False, help_text=_('Has this QA been completed?'))
     datetime_assigned = models.DateTimeField()
 
     class Meta:
