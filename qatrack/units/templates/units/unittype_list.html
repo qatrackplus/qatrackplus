@@ -37,9 +37,9 @@
                                                             <span class="caret"></span>
                                                         </button>
                                                         <ul class="dropdown-menu">
-                                                            {% for freq in QA_FREQUENCIES %}
+                                                            {% for freq in unit.frequencies %}
                                                             <li>
-                                                                <a href="{% url "qa_by_frequency_unit" frequency=freq.0 unit_number=unit.unit__number %}">{{unit.unit__name}} &mdash; {{freq.1}}</a>
+                                                                <a href="{% url "qa_by_frequency_unit" frequency=freq.slug unit_number=unit.unit__number %}">{{unit.unit__name}} &mdash; {{freq.name}}</a>
                                                             </li>
                                                             {% endfor %}
                                                             <li>

@@ -80,6 +80,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('qa', '0001_initial'),
+        ('django_comments', '0003_add_submit_date_index'),
     ]
 
     operations = [
