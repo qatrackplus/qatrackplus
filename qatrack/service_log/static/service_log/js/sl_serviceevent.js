@@ -375,10 +375,6 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
         });
         $('select.followup-utc').change();
 
-        // TODO: when rts qa changes, have server also send what statuses should be disabled if there are some rts that have not been reviewed. Also check user perms
-
-        // TODO: also make sure to check status when editing and existing rts qa and change status of any linked service events to default.
-
         // Parts formset --------------------------------------------------------------------------------------
         if (siteConfig.USE_PARTS == 'True') {
 

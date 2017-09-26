@@ -480,10 +480,10 @@ class ServiceEventForm(BetterModelForm):
                     choices.append(
                         (value, {'label': label, 'disabled': True, 'title': _('Cannot select status: Permission denied')})
                     )
-                elif ses.rts_qa_must_be_reviewed:
-                    choices.append(
-                        (value, {'label': label, 'disabled': True, 'title': _('Cannot select status: Unreviewed RTS QA')})
-                    )
+                # elif ses.rts_qa_must_be_reviewed:
+                #     choices.append(
+                #         (value, {'label': label, 'disabled': True, 'title': _('Cannot select status: Unreviewed RTS QA')})
+                #     )
                 else:
                     choices.append((value, label))
             self.fields['service_status'] = ServiceEventStatusField(choices=choices, widget=SelectWithDisabledWidget)
