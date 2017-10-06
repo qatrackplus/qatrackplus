@@ -37,7 +37,7 @@ class Migration(migrations.Migration):
                 ('notes', models.TextField(blank=True, help_text='Additional comments about this part', max_length=255, null=True)),
                 ('is_obsolete', models.BooleanField(default=False, help_text='Is this part now obsolete', verbose_name='Obsolete')),
             ],
-            options={'permissions': (('view_part', 'Can View Part'))},
+            options={'permissions': (('view_part', 'Can View Part'),)},
         ),
         migrations.CreateModel(
             name='PartStorageCollection',
