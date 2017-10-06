@@ -224,7 +224,9 @@ INSTALLED_APPS = [
 
     'qatrack.notifications',
     'qatrack.contacts',
+    'qatrack.issue_tracker',
     'qatrack.service_log',
+    'qatrack.parts',
     'qatrack.attachments',
 
     'admin_views',

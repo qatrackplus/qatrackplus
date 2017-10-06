@@ -11,7 +11,7 @@ django-registration==2.1.2
 django-tastypie==0.13.3
 django-widget-tweaks==1.4.1
 matplotlib==1.5.3
-numpy==1.11.2rc1+mkl
+numpy==1.11.2
 pydicom==0.9.9
 python-dateutil==2.5.3
 pytz==2016.7
