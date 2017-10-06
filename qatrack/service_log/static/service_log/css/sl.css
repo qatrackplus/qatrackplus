@@ -38,10 +38,11 @@
 }
 
 /* Override width of pk column to something smaller */
-#listable-table-sl_list_all > thead > tr:nth-child(2) > th:nth-child(2) > span > input,
-#listable-table-qaf_list_all > thead > tr:nth-child(2) > th:nth-child(2) > span > input {
-    min-width: 45px;
-}
+/*#listable-table-sl_list_all > thead > tr > th:nth-child(2) > span > input,*/
+/*#listable-table-qaf_list_all > thead > tr > th:nth-child(2) > span > input {*/
+    /*width: 45px;*/
+/*}*/
+#listable-table-sl_list_all > thead > tr > th:nth-child(2),
 #listable-table-sl_list_all > tbody > tr > td:nth-child(2),
 #listable-table-qaf_list_all > tbody > tr > td:nth-child(2) {
     width: 50px;

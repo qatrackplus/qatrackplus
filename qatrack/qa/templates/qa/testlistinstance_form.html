@@ -452,6 +452,7 @@
 
                                     <form id="comment-form" method="post">
                                         {% csrf_token %}
+                                        <input id="edit-tli" name="edit-tli" type="hidden" value="edit-tli">
                                         <input id="id_name" maxlength="50" name="name" type="hidden" required="" value="{{ user.username }}">
                                         {{ form.object_pk }}
                                         {{ form.content_type }}
@@ -553,7 +554,7 @@
                             {% for category in categories %}
                                 <li><a class="has-icheck row" href="#!">
                                     <input id="category-{{ category.pk }}" class="iCheck check-category" type="checkbox" checked="checked">
-                                    <label for="category-{{ category.pk }}">{{category.name}}</label>
+                                    <label for="category-{{ category.pk }}">{{ category.name }}</label>
                                 </a></li>
                             {% endfor %}
 

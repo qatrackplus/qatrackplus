@@ -4,6 +4,7 @@ import json
 from collections import OrderedDict
 from braces.views import LoginRequiredMixin
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.context_processors import PermWrapper
 from django.contrib.auth.models import User, Permission
 from django.core.cache import cache
@@ -124,7 +125,7 @@ class SLDashboard(TemplateView):
     def get_counts(self):
 
         # TODO: Parts low
-        qaf_qs = models.QAFollowup.objects.filter()
+        qaf_qs = models.QAFollowup.objects.prefetch_related().all()
         default_status = models.ServiceEventStatus.objects.get(is_default=True)
         to_return = {
             'qa_not_reviewed': qaf_qs.filter(test_list_instance__isnull=False, test_list_instance__all_reviewed=False).count(),
@@ -146,49 +147,55 @@ class SLDashboard(TemplateView):
     def get_timeline(self):
 
         last_week_date = timezone.now().date() - timezone.timedelta(days=7)
-        last_week_datetime = timezone.datetime(year=last_week_date.year, month=last_week_date.month, day=last_week_date.day)
-        se_new = models.ServiceEvent.objects\
-            .filter(datetime_created__gt=timezone.now() - timezone.timedelta(days=14))\
-            .select_related('unit_service_area__unit', 'user_created_by')\
-            .order_by('-datetime_created')[:40]
-        se_edited = models.ServiceEvent.objects\
-            .filter(datetime_modified__gt=timezone.now() - timezone.timedelta(days=14))\
-            .select_related('unit_service_area__unit', 'user_modified_by')\
-            .order_by('-datetime_modified')[:40]
-        se_status = models.ServiceEvent.objects\
-            .filter(datetime_status_changed__gt=timezone.now() - timezone.timedelta(days=14))\
-            .select_related('service_status', 'unit_service_area__unit', 'user_status_changed_by')\
-            .order_by('-datetime_status_changed')[:40]
-        qaf_new = models.QAFollowup.objects\
-            .filter(datetime_assigned__gt=timezone.now() - timezone.timedelta(days=14))\
-            .select_related(
-                'service_event',
-                'test_list_instance',
-                'unit_test_collection',
-                'service_event__unit_service_area__unit',
-                'user_assigned_by'
-            )\
-            .prefetch_related(
-                    'test_list_instance__testinstance_set',
-                    'test_list_instance__testinstance_set__status',
-                    'unit_test_collection__tests_object'
-            )\
-            .order_by('-datetime_assigned')[:40]
-        qaf_complete = models.QAFollowup.objects\
-            .filter(test_list_instance__isnull=False, test_list_instance__work_completed__gt=timezone.now() - timezone.timedelta(days=14))\
-            .select_related(
-                'service_event',
-                'test_list_instance',
-                'unit_test_collection',
-                'service_event__unit_service_area__unit',
-                'test_list_instance__created_by'
-            ) \
-            .prefetch_related(
+        last_week_datetime = timezone.datetime(
+            year=last_week_date.year, month=last_week_date.month, day=last_week_date.day
+        )
+
+        se_new = models.ServiceEvent.objects.filter(
+            datetime_created__gt=timezone.now() - timezone.timedelta(days=14)
+        ).select_related('unit_service_area__unit', 'user_created_by').order_by('-datetime_created')[:40]
+
+        se_edited = models.ServiceEvent.objects.filter(
+            datetime_modified__gt=timezone.now() - timezone.timedelta(days=14)
+        ).select_related('unit_service_area__unit', 'user_modified_by').order_by('-datetime_modified')[:40]
+
+        se_status = models.ServiceEvent.objects.filter(
+            datetime_status_changed__gt=timezone.now() - timezone.timedelta(days=14)
+        ).select_related(
+            'service_status', 'unit_service_area__unit', 'user_status_changed_by'
+        ).order_by('-datetime_status_changed')[:40]
+
+        qaf_new = models.QAFollowup.objects.filter(
+            datetime_assigned__gt=timezone.now() - timezone.timedelta(days=14)
+        ).select_related(
+            'service_event',
+            'test_list_instance',
+            'unit_test_collection',
+            'service_event__unit_service_area__unit',
+            'user_assigned_by'
+        ).prefetch_related(
+                'test_list_instance__comments',
                 'test_list_instance__testinstance_set',
                 'test_list_instance__testinstance_set__status',
                 'unit_test_collection__tests_object'
-            ) \
-           .order_by('-test_list_instance__created')[:40]
+        ).order_by('-datetime_assigned')[:40]
+
+        qaf_complete = models.QAFollowup.objects.filter(
+            test_list_instance__isnull=False,
+            test_list_instance__work_completed__gt=timezone.now() - timezone.timedelta(days=14)
+        ).select_related(
+            'service_event',
+            'test_list_instance',
+            'unit_test_collection',
+            'service_event__unit_service_area__unit',
+            'test_list_instance__created_by',
+            'test_list_instance__reviewed_by',
+        ).prefetch_related(
+            'test_list_instance__comments',
+            'test_list_instance__testinstance_set',
+            'test_list_instance__testinstance_set__status',
+            'unit_test_collection__tests_object'
+        ).order_by('-test_list_instance__created')[:40]
 
         unsorted_dict = {}
 
@@ -609,15 +616,14 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseM
                             current_psc.save()
 
                     pu_instance.save()
-                    current_p.set_quantity_current()
+                    if current_p.set_quantity_current():
+                        messages.add_message(
+                            request=self.request,
+                            level=messages.INFO,
+                            message='Part number %s is low (%s left in stock).' % (current_p.part_number, current_p.quantity_current)
+                        )
                     if initial_p:
                         initial_p.set_quantity_current()
-
-                    # # Delete empty part storage collections
-                    # if current_psc and current_psc.quantity <= 0 and current_psc.id:
-                    #     current_psc.delete()
-                    # if initial_psc and initial_psc.quantity <= 0 and initial_psc.id:
-                    #     initial_psc.delete()
 
         return HttpResponseRedirect(self.get_success_url())
 

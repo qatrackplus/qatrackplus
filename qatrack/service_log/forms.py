@@ -363,16 +363,25 @@ class ServiceEventForm(BetterModelForm):
                    'service_status'
                ],
             }),
-            ('required_fields', {
+            ('left_fields', {
                 'fields': [
-                    'datetime_service', 'unit_field', 'service_area_field', 'service_type', 'is_review_required_fake',
-                    'problem_description'
+                    'unit_field', 'service_area_field', 'service_type', 'is_review_required_fake',
                 ],
             }),
-            ('optional_fields', {
+            ('right_fields', {
                 'fields': [
-                    'service_event_related_field', 'initiated_utc_field', 'work_description', 'safety_precautions'
+                    'datetime_service', 'service_event_related_field', 'initiated_utc_field',
                 ],
+            }),
+            ('problem_and_safety', {
+                'fields': [
+                    'problem_description', 'safety_precautions',
+                ]
+            }),
+            ('work_description', {
+                'fields': [
+                    'work_description'
+                ]
             }),
             ('time_fields', {
                 'fields': ['duration_service_time', 'duration_lost_time'],
@@ -471,10 +480,10 @@ class ServiceEventForm(BetterModelForm):
                     choices.append(
                         (value, {'label': label, 'disabled': True, 'title': _('Cannot select status: Permission denied')})
                     )
-                elif ses.rts_qa_must_be_reviewed:
-                    choices.append(
-                        (value, {'label': label, 'disabled': True, 'title': _('Cannot select status: Unreviewed RTS QA')})
-                    )
+                # elif ses.rts_qa_must_be_reviewed:
+                #     choices.append(
+                #         (value, {'label': label, 'disabled': True, 'title': _('Cannot select status: Unreviewed RTS QA')})
+                #     )
                 else:
                     choices.append((value, label))
             self.fields['service_status'] = ServiceEventStatusField(choices=choices, widget=SelectWithDisabledWidget)

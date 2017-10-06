@@ -398,7 +398,10 @@ class BaseChartView(View):
                 datetime_service__gte=from_date,
                 datetime_service__lte=to_date
             ).select_related(
-                'test_list_instance_initiated_by', 'unit_service_area__unit', 'unit_service_area__service_area'
+                'unit_service_area__unit', 'unit_service_area__service_area'
+            ).prefetch_related(
+                'qafollowup_set',
+                'qafollowup_set__test_list_instance'
             ).order_by('datetime_service')
 
             if se_review_required:
@@ -406,9 +409,7 @@ class BaseChartView(View):
 
             for se in ses:
 
-                qa_followups = sl_models.QAFollowup.objects.filter(service_event=se).select_related(
-                    'test_list_instance', 'test_list_instance__test_list'
-                )
+                qa_followups = se.qafollowup_set.all()
 
                 self.plot_data['events'].append({
                     'date': timezone.localtime(se.datetime_service),

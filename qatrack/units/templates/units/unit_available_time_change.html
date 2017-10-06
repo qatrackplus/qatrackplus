@@ -23,7 +23,7 @@
 {% block body %}
     <div class="row">
         <div class="col-md-12">
-            <div class="box box-body box-primary">
+            <div class="box">
                 <div class="box-header">
                     <h3 class="box-title">
                         <i class="fa fa-cube" aria-hidden="true"></i>
@@ -38,11 +38,13 @@
 {#                                <div class="col-md-10"><input id="date_range_selector" class="form-control"></div>#}
 {#                            </div>#}
                             <div class="row">
-                                <select id="units" multiple class="form-control">
-                                    {% for u in units %}
-                                        <option selected data-active="{{ u.active }}" value="{{ u.pk }}" title="{{ u.name }}{% if not u.active %} (inactive){% endif %}">{{ u.name }}</option>
-                                    {% endfor %}
-                                </select>
+                                <div class="col-sm-12">
+                                    <select id="units" multiple class="form-control">
+                                        {% for u in units %}
+                                            <option selected data-active="{{ u.active }}" value="{{ u.pk }}" title="{{ u.name }}{% if not u.active %} (inactive){% endif %}">{{ u.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
                             </div>
                             <div class="row">
                                 <div id="units-errors" class="col-md-12 help-block text-center"></div>

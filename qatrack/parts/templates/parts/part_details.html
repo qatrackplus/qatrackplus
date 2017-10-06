@@ -85,14 +85,13 @@
                                     <tr>
                                         <th>Supplier</th>
                                         <th>Supplier Specific Part #</th>
-                                        <th>Delete</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for psc in part_supplier_collections %}
+                                    {% for psc in part.partsuppliercollection_set.all %}
                                         <tr>
                                             <td class="min-width-200">{{ psc.supplier.name }}</td>
-                                            <td>{{ psc.part_number }}</td>
+                                            <td>{% if psc.part_number %}{{ psc.part_number }}{% endif %}</td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>
@@ -121,15 +120,14 @@
                                         <th>Room</th>
                                         <th>Location</th>
                                         <th class="max-width-75">Quantity</th>
-                                        <th>Delete</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for sto in part.storage.all %}
+                                    {% for psc in part.partstoragecollection_set.all %}
                                         <tr>
-                                            <td class="min-width-150 room-td">{{ sto.room }}</td>
-                                            <td class="min-width-100">{{ sto.location }}</td>
-                                            <td class="max-width-75">{{ sto_form.quantity }}</td>
+                                            <td class="min-width-150 room-td">{{ psc.storage.room }}</td>
+                                            <td class="min-width-100">{{ psc.storage.location }}</td>
+                                            <td class="max-width-75">{{ psc.quantity }}</td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>

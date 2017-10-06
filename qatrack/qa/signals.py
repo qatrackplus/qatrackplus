@@ -2,9 +2,15 @@ from django.dispatch import receiver, Signal
 from django.db.models.signals import pre_save, post_save, post_delete
 
 from django.core.exceptions import ValidationError
+from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
+from django.utils import timezone
+
+from django_comments.models import Comment
+from django_comments.signals import comment_was_posted
 
 from . import models
+from qatrack.service_log import models as sl_models
 
 
 def loaded_from_fixture(kwargs):
@@ -193,3 +199,19 @@ def test_list_added_to_cycle(*args, **kwargs):
     """
     if (not loaded_from_fixture(kwargs)):
         update_unit_test_infos(kwargs["instance"].test_list)
+
+
+@receiver(comment_was_posted, sender=Comment)
+def check_approved_statuses(*args, **kwargs):
+
+    if kwargs['edit_tli']:
+        tli_id = kwargs['comment'].object_pk
+        tli = models.TestListInstance.objects.get(pk=tli_id)
+
+        default_status = sl_models.ServiceEventStatus.get_default()
+        for f in tli.qafollowup_for_tli.all():
+            if not f.service_event.service_status.is_review_required:
+                f.service_event.service_status = default_status
+                f.service_event.datetime_status_changed = timezone.now()
+                f.service_event.user_status_changed_by = None
+                f.service_event.save()

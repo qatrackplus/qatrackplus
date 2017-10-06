@@ -124,8 +124,6 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
 
         context['attachments'] = self.object.unit_test_collection.tests_object.attachment_set.all()
 
-        print(context['attachments'])
-
         return context
 
     def form_valid(self, form):
@@ -460,6 +458,7 @@ def ajax_comment(request, next=None, using=None):
     """
     # Fill out some initial data fields from an authenticated user, if present
     data = request.POST.copy()
+
     try:
         user_is_authenticated = request.user.is_authenticated()
     except TypeError:  # Django >= 1.11
@@ -534,13 +533,20 @@ def ajax_comment(request, next=None, using=None):
         if response is False:
             return JsonResponse({'error': True, 'message': 'comment_will_be_posted receiver %r killed the comment' % receiver.__name__}, status=500)
 
+    edit_tli = 'edit-tli' in data and data['edit-tli'] == 'edit-tli'
     # Save the comment and signal that it was saved
     comment.save()
     dc_signals.comment_was_posted.send(
         sender=comment.__class__,
         comment=comment,
-        request=request
+        request=request,
+        edit_tli=edit_tli
     )
 
-    return JsonResponse({'success': True, 'comment': comment.comment, 'c_id': comment.id, 'user_name': comment.user.get_full_name(), 'submit_date': comment.submit_date})
-    # return next_redirect(request, fallback=next or 'comments-comment-done', c=comment._get_pk_val())
+    return JsonResponse({
+        'success': True,
+        'comment': comment.comment,
+        'c_id': comment.id,
+        'user_name': comment.user.get_full_name(),
+        'submit_date': comment.submit_date,
+    })

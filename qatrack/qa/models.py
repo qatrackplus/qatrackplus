@@ -1358,7 +1358,19 @@ class TestListInstance(models.Model):
         return [x for x in statuses if len(x[1]) > 0]
 
     def review_summary(self, queryset=None):
-        return {status[0].slug: {'num': len(status[1]), 'valid': status[0].valid, 'reqs_review': status[0].requires_review, 'default': status[0].is_default} for status in self.status(queryset)}
+        if queryset is None:
+            queryset = self.testinstance_set.prefetch_related('status').all()
+        comment_count = queryset.filter(comment__isnull=False).count() + self.comments.count()
+        to_return = {
+            status[0].slug: {
+                'num': len(status[1]),
+                'valid': status[0].valid,
+                'reqs_review': status[0].requires_review,
+                'default': status[0].is_default
+            } for status in self.status(queryset)
+        }
+        to_return['Comments'] = {'num': comment_count, 'is_comments': 1}
+        return to_return
 
     def unreviewed_instances(self):
         return self.testinstance_set.filter(status__requires_review=True)

@@ -430,7 +430,7 @@ class ChooseUnit(TemplateView):
             freq_qs = models.Frequency.objects.prefetch_related('unittestcollections__unit').all()
 
             for unit in q:
-                unit['frequencies'] = freq_qs.filter(unittestcollections__unit_id=unit['unit__id']).distinct().values('id', 'name')
+                unit['frequencies'] = freq_qs.filter(unittestcollections__unit_id=unit['unit__id']).distinct().values('slug', 'name')
 
                 if unit['unit__site__name']:
                     unit_site_types[unit['unit__site__name']][unit['unit__type__name']].append(unit)
@@ -452,9 +452,11 @@ class ChooseUnit(TemplateView):
 
         else:
             q = q.values('unit', 'unit__type__name', 'unit__name', 'unit__number', 'unit__id').order_by(units_ordering).distinct()
+            freq_qs = models.Frequency.objects.prefetch_related('unittestcollections__unit').all()
 
             unit_types = collections.defaultdict(list)
             for unit in q:
+                unit['frequencies'] = freq_qs.filter(unittestcollections__unit_id=unit['unit__id']).distinct().values('slug', 'name')
                 unit_types[unit["unit__type__name"]].append(unit)
 
             ordered = sorted(list(unit_types.items()), key=lambda x: min([u[units_ordering] for u in x[1]]))

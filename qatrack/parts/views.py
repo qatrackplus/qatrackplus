@@ -210,8 +210,6 @@ class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, Mo
             is_new = sto_form.instance.id is None
 
             psc_instance = sto_form.instance
-            print('+++++++++++++++++++++++++++++++++')
-            print(sto_form.changed_data)
             if delete and not is_new:
                 psc_instance.delete()
                 continue
@@ -219,8 +217,6 @@ class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, Mo
             elif sto_form.has_changed():
                 psc_instance.part = part
                 storage_field = sto_form.cleaned_data['storage_field']
-                print('+++++++++++++++++++++++++++++++++')
-                print(storage_field)
                 if storage_field[0]:
                     psc_instance.storage = p_models.Storage.objects.create(
                         room=sto_form.cleaned_data['room'],
@@ -239,12 +235,6 @@ class PartDetails(DetailView):
 
     model = p_models.Part
     template_name = 'parts/part_details.html'
-
-    def get_context_data(self, **kwargs):
-        context_data = super().get_context_data(**kwargs)
-        context_data['part_supplier_collections'] = p_models.PartSupplierCollection.objects.filter(part=self.object)
-
-        return context_data
 
 
 class PartsUnitsCost(TemplateView):

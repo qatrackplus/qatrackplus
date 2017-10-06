@@ -1,5 +1,6 @@
 
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.models import User, Group
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -79,6 +80,9 @@ class PartCategory(models.Model):
 
     name = models.CharField(max_length=64)
 
+    class Meta:
+        verbose_name_plural = 'Categories'
+
     def __str__(self):
         return self.name
 
@@ -123,6 +127,7 @@ class Part(models.Model):
             self.quantity_current = 0
         self.quantity_current = self.quantity_current if self.quantity_current >= 0 else 0
         self.save()
+        return self.quantity_current < self.quantity_min
 
 
 class PartStorageCollectionManager(models.Manager):
