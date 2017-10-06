@@ -1092,8 +1092,8 @@ class TestUnitTestCollection(TestCase):
     def test_name(self):
         tl = utils.create_test_list("tl1")
         utc = utils.create_unit_test_collection(test_collection=tl)
-        self.assertEqual(utc.name(), str(utc))
-        self.assertEqual(tl.name, utc.test_objects_name())
+        self.assertEqual(utc.name, str(utc))
+        self.assertEqual(tl.name, utc.name)
 
     def test_delete_utc(self):
 
