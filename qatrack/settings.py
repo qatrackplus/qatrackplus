@@ -450,8 +450,9 @@ if FORCE_SCRIPT_NAME:
 SELENIUM_VIRTUAL_DISPLAY = False # Set to True to use headless browser for testing (requires xvfb)
 SELENIUM_USE_CHROME = False # Set to True to use Chrome instead of FF (requires ChromeDriver)
 SELENIUM_CHROME_PATH = '' # Set full path of Chromedriver binary if SELENIUM_USE_CHROME == True
+SELENIUM_VIRTUAL_DISPLAY = False # Set to True to use headless browser for testing (requires xvfb)
 
 
-if 'test' in sys.argv:
+if any(['py.test' in v for v in sys.argv]):
 
     from .test_settings import * # noqa

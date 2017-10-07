@@ -1,20 +1,24 @@
-
+from functools import wraps
 import time
 from . import utils
 
 from django.conf import settings
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.test import TestCase, override_settings
-from django.test.testcases import LiveServerTestCase
 import pytest
-from selenium.common.exceptions import NoSuchElementException
+from contextlib import contextmanager
 from selenium import webdriver
+from selenium.common.exceptions import NoSuchElementException, WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support import expected_conditions as e_c
-from selenium.webdriver.support.select import Select
-from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
+from selenium.webdriver.remote.command import Command
+from selenium.webdriver.remote.webelement import WebElement
+from selenium.webdriver.support import expected_conditions as e_c
+from selenium.webdriver.support.expected_conditions import staleness_of
+from selenium.webdriver.support.select import Select
+from selenium.webdriver.support.ui import Select
+from selenium.webdriver.support.wait import WebDriverWait
 
 from qatrack.qa import models
 
@@ -146,6 +150,48 @@ objects = {
 
 }
 
+
+# From http://stackoverflow.com/a/20559494
+def retry_if_exception(ex, max_retries, sleep_time=None, reraise=True):
+    def outer(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            assert max_retries > 0
+            x = max_retries
+            while x:
+                try:
+                    return func(*args, **kwargs)
+                except ex as e:
+                    x -= 1
+                    if x == 0 and reraise:
+                        raise
+                if sleep_time is not None:
+                    time.sleep(sleep_time)
+        return wrapper
+    return outer
+
+
+@retry_if_exception(WebDriverException, 5, sleep_time=1)
+def WebElement_click(self):
+    """
+    Monkey patches the element click command to work around issue with
+    later versions of webdrivers that won't click on an element if it
+    is not in view
+    """
+    self.parent.execute_script("arguments[0].scrollIntoView();", self)
+    return self._execute(Command.CLICK_ELEMENT)
+WebElement.click = WebElement_click
+
+
+orig_send_keys = WebElement.send_keys
+@retry_if_exception(WebDriverException, 5, sleep_time=1)
+def WebElement_send_keys(self, keys):
+    """Monky patch send_keys to ensure element is in view"""
+    self.parent.execute_script("arguments[0].scrollIntoView();", self)
+    return orig_send_keys(self, keys)
+WebElement.send_keys = WebElement_send_keys
+
+
 @pytest.mark.selenium
 @override_settings(DEBUG=True)
 class SeleniumTests(TestCase, StaticLiveServerTestCase):
@@ -170,12 +216,33 @@ class SeleniumTests(TestCase, StaticLiveServerTestCase):
             ff_profile = FirefoxProfile()
             cls.driver = webdriver.Firefox(ff_profile)
 
-        cls.driver.maximize_window()
+        orig_find_element = cls.driver.find_element
+        @retry_if_exception(WebDriverException, 5, sleep_time=1)
+        def WebElement_find_element(*args, **kwargs):
+            """Monky patch find element to allow retries"""
+            return orig_find_element(*args, **kwargs)
+        cls.driver.find_element = WebElement_find_element
+
+        cls.driver.set_page_load_timeout(5)
         cls.driver.implicitly_wait(5)
+
+        cls.maximize()
+        cls.wait = WebDriverWait(cls.driver, 5)
 
         super(SeleniumTests, cls).setUpClass()
 
-        cls.wait = WebDriverWait(cls.driver, 5)
+    @classmethod
+    def maximize(cls):
+
+        if getattr(settings, 'SELENIUM_VIRTUAL_DISPLAY', False):
+            for i in range(5):
+                try:
+                    cls.driver.maximize_window()
+                    return
+                except WebDriverException:
+                    time.sleep(1)
+
+        cls.driver.set_window_size(1920, 1080)
 
     @classmethod
     def tearDownClass(cls):
@@ -185,11 +252,26 @@ class SeleniumTests(TestCase, StaticLiveServerTestCase):
         super(SeleniumTests, cls).tearDownClass()
 
     def load_main(self):
-        self.driver.get(self.live_server_url)
+        self.open("")
         self.wait.until(e_c.presence_of_element_located((By.CSS_SELECTOR, "head > title")))
 
+    @contextmanager
+    def wait_for_page_load(self, timeout=10):
+        old_page = self.driver.find_element_by_tag_name('html')
+        yield
+        WebDriverWait(self.driver, timeout).until(
+            staleness_of(old_page)
+        )
+
+    @retry_if_exception(Exception, 5, sleep_time=1)
+    def open(self, url):
+        with self.wait_for_page_load():
+            self.driver.execute_script(
+                "window.location.href='%s%s'" % (self.live_server_url, url)
+            )
+
     def load_admin(self):
-        self.driver.get(self.live_server_url + '/admin/')
+        self.open("/admin/")
         try:
             self.driver.find_element_by_id('id_username').send_keys(self.user.username)
             self.driver.find_element_by_id('id_password').send_keys(self.password)
@@ -463,8 +545,8 @@ class SeleniumTests(TestCase, StaticLiveServerTestCase):
     def test_admin_statuses(self):
 
         self.load_admin()
-        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Statuses')))
-        self.driver.find_element_by_link_text('Statuses').click()
+        self.wait.until(e_c.presence_of_element_located((By.XPATH, "//a[contains(@href,'testinstancestatus')]")))
+        self.driver.find_element_by_xpath( "//a[contains(@href,'testinstancestatus')]").click()
         self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'ADD TEST INSTANCE STATUS')))
         self.driver.find_element_by_link_text('ADD TEST INSTANCE STATUS').click()
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
