@@ -1,8 +1,7 @@
-
 from django.apps import apps
 from django.conf import settings
 from django.db import models
-from django.db.models import Q, Count, F, ExpressionWrapper
+from django.db.models import Q, Count
 from django.contrib.auth.models import User, Group
 from django.utils.translation import ugettext as _
 from django.core import urlresolvers
@@ -921,7 +920,7 @@ class UnitTestCollection(models.Model):
             elif last_valid is not None and last_valid.work_completed:
                 return last_valid.work_completed + self.frequency.due_delta()
 
-        #return existing due date (could be None)
+        # return existing due date (could be None)
         return self.due_date
 
     def set_due_date(self, due_date=None):
@@ -1452,8 +1451,6 @@ class TestListInstance(models.Model):
 
             instances.append((ti, test_history))
 
-
-
         return instances, dates
 
     def __str__(self):
@@ -1564,4 +1561,3 @@ class TestListCycleMembership(models.Model):
 
     def __str__(self):
         return "TestListCycleMembership(pk=%s)" % self.pk
-

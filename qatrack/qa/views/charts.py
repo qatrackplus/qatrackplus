@@ -465,9 +465,6 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
 
         super(ControlChartImage, self).get_plot_data()
 
-        if self.plot_data:
-            self.plot_data = dict([self.plot_data.popitem()])
-
     def render_to_response(self, context):
         """Create a png image and write the control chart image to it"""
 
@@ -480,8 +477,9 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
         canvas = FigureCanvas(fig)
         dates, data = [], []
 
-        if context["data"] and list(context["data"].values()):
-            name, points = list(context["data"].items())[0]
+        if context["plot_data"]['series'] and list(context["plot_data"]['series'].values()):
+            name, series = list(context["plot_data"]['series'].items())[0]
+            points = series['series_data']
             if points:
                 dates, data = list(zip(*[(ti["date"], ti["value"]) for ti in points]))
 
