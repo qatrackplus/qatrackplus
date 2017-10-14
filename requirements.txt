@@ -1,6 +1,6 @@
 -e git+https://github.com/django/django-formtools.git@bb97a8abd374c50991c0a9ce144f17e7322a0c48#egg=django-formtools
 -e git+https://github.com/randlet/django-genericdropdown.git@56dbaf6b4f518a3946e5e253fec85ede175f3727#egg=django_genericdropdown-master
--e git+https://github.com/randlet/django-listable.git@440838341d49c1d39826af8ccf88a27f0f2a2741#egg=django_listable
+-e git+https://github.com/randlet/django-listable.git@c608c0cc5f74073775b076f86133483f930d08f2#egg=django_listable
 Django==1.10.2
 PyVirtualDisplay==0.2
 coverage==4.2
