@@ -111,37 +111,121 @@ PERMISSIONS = (
     (
         'Performing',
         (
-            ('qa.add_testlistinstance', 'Can add test list instance', 'Allow user to perform test lists and continue in-progress lists'),
-            ('qa.can_choose_frequency', 'Choose QA by frequency', 'Allows user to pre-emptively filter test lists based on frequency.'),
-            ('qa.can_view_ref_tol', 'Can view refs and tols', 'Makes reference and tolerance values visible when performing a test list.'),
-            ('qa.can_view_history', 'Can view test history', 'Makes test history visible when performing a test list.'),
-            ('qa.can_skip_without_comment', 'Can skip without comment', 'Allow a user to skip tests with adding a comment'),
-            ('qa.can_override_date', 'Can override date', 'Allow a user to override the work_completed data'),
-            ('qa.can_perform_subset', 'Can perform subset of tests', 'Allow a user to filter tests to perform  based on a tests category'),
-            ('qa.change_testlistinstance', 'Can edit prior test results', 'Allow a user to edit already completed test results'),
+            (
+                'qa.add_testlistinstance',
+                'Can add test list instance',
+                'Allow user to perform test lists and continue in-progress lists',
+            ),
+            (
+                'qa.can_choose_frequency',
+                'Choose QA by frequency',
+                'Allows user to pre-emptively filter test lists based on frequency.',
+            ),
+            (
+                'qa.can_view_ref_tol',
+                'Can view refs and tols',
+                'Makes reference and tolerance values visible when performing a test list.',
+            ),
+            (
+                'qa.can_view_history',
+                'Can view test history',
+                'Makes test history visible when performing a test list.',
+            ),
+            (
+                'qa.can_skip_without_comment',
+                'Can skip without comment',
+                'Allow a user to skip tests with adding a comment',
+            ),
+            (
+                'qa.can_override_date',
+                'Can override date',
+                'Allow a user to override the work_completed data',
+            ),
+            (
+                'qa.can_perform_subset',
+                'Can perform subset of tests',
+                'Allow a user to filter tests to perform  based on a tests category',
+            ),
+            (
+                'qa.change_testlistinstance',
+                'Can edit prior test results',
+                'Allow a user to edit already completed test results',
+            ),
         ),
     ),
     (
         'Reviewing',
         (
-            ('qa.can_view_completed', 'Can view previously completed instances', 'Allow a user to view previous test list results'),
-            ('qa.can_view_overview', 'Can view program overview', 'Allows a user to view the overall program status'),
-            ('qa.can_review', 'Can review tests', 'Allows a user to perform review & approval functions'),
-            ('qa.can_view_charts', 'Can chart test history', 'Gives user the ability to view and create charts of historical test results'),
-            ('qa.can_review_own_tests', 'Can review self-performed tests', 'Allows a user to perform review & approval functions on self-performed tests'),
-            ('qa.can_review_non_visible_tli', 'Can review non visible test list instances', 'Allows a user to review test list instances that are not visible to any of their groups')
+            (
+                'qa.can_view_completed',
+                'Can view previously completed instances',
+                'Allow a user to view previous test list results',
+            ),
+            (
+                'qa.can_view_overview',
+                'Can view program overview',
+                'Allows a user to view the overall program status',
+            ),
+            (
+                'qa.can_review',
+                'Can review tests',
+                'Allows a user to perform review & approval functions',
+            ),
+            (
+                'qa.can_view_charts',
+                'Can chart test history',
+                'Gives user the ability to view and create charts of historical test results',
+            ),
+            (
+                'qa.can_review_own_tests',
+                'Can review self-performed tests',
+                'Allows a user to perform review & approval functions on self-performed tests',
+            ),
+            (
+                'qa.can_review_non_visible_tli',
+                'Can review non visible test list instances',
+                'Allows a user to review test list instances that are not visible to any of their groups',
+            )
         ),
     ),
     (
         'Service Log',
         (
-            ('service_log.perform_qafollowup', 'Can perform return to service qa', 'Allow user to perform qa linked to service events.'),
-            ('service_log.view_qafollowup', 'Can view existing return to service qa', 'Allow user to view qa linked to service events.'),
-            ('service_log.add_serviceevent', 'Can create service event', 'Allows user to create new service events.'),
-            ('service_log.view_serviceevent', 'Can view service events', 'Allows user to view existing service events.'),
-            ('service_log.review_serviceevent', 'Can review service events', 'Allows user to change status of service events to statuses with \'is review required = false\'.'),
-            ('parts.add_part', 'Can add part', 'Allow user to enter new parts.'),
-            ('parts.view_part', 'Can view parts', 'Allow user to view existing parts'),
+            (
+                'service_log.perform_qafollowup',
+                'Can perform return to service qa',
+                'Allow user to perform qa linked to service events.',
+            ),
+            (
+                'service_log.view_qafollowup',
+                'Can view existing return to service qa',
+                'Allow user to view qa linked to service events.',
+            ),
+            (
+                'service_log.add_serviceevent',
+                'Can create service event',
+                'Allows user to create new service events.',
+            ),
+            (
+                'service_log.view_serviceevent',
+                'Can view service events',
+                'Allows user to view existing service events.',
+            ),
+            (
+                'service_log.review_serviceevent',
+                'Can review service events',
+                'Allows user to change status of service events to statuses with \'is review required = false\'.',
+            ),
+            (
+                'parts.add_part',
+                'Can add part',
+                'Allow user to enter new parts.',
+            ),
+            (
+                'parts.view_part',
+                'Can view parts',
+                'Allow user to view existing parts',
+            ),
         )
     )
 )
@@ -545,7 +629,10 @@ class Test(models.Model):
                 # don't require a user defined calc procedure for uploads
                 self.calculation_procedure = "%s = None" % (self.slug, )
             else:
-                errors.append(_('Snippet must set macro name to a value or contain a result line (e.g. %s = my_var/another_var*2 or result = my_var/another_var*2)' % self.slug))
+                errors.append(_(
+                    'Snippet must set macro name to a value or contain a result line '
+                    '(e.g. %s = my_var/another_var*2 or result = my_var/another_var*2)' % self.slug
+                ))
 
         try:
             utils.tokenize_composite_calc(self.calculation_procedure)
@@ -709,7 +796,13 @@ class UnitTestInfo(models.Model):
 
     active = models.BooleanField(help_text=_("Uncheck to disable this test on this unit"), default=True, db_index=True)
 
-    assigned_to = models.ForeignKey(Group, help_text=_("QA group that this test list should nominally be performed by"), null=True, blank=True, on_delete=models.SET_NULL)
+    assigned_to = models.ForeignKey(
+        Group,
+        help_text=_("QA group that this test list should nominally be performed by"),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
 
     objects = UnitTestInfoManager()
 
@@ -882,12 +975,22 @@ class UnitTestCollection(models.Model):
 
     unit = models.ForeignKey(Unit)
 
-    frequency = models.ForeignKey(Frequency, help_text=_("Frequency with which this test list is to be performed"), null=True, blank=True, related_name='unittestcollections')
+    frequency = models.ForeignKey(
+        Frequency,
+        help_text=_("Frequency with which this test list is to be performed"),
+        null=True,
+        blank=True,
+        related_name='unittestcollections'
+    )
     due_date = models.DateTimeField(help_text=_("Next time this item is due"), null=True, blank=True)
     auto_schedule = models.BooleanField(help_text=_("If this is checked, due_date will be auto set based on the assigned frequency"), default=True)
 
     assigned_to = models.ForeignKey(Group, help_text=_("QA group that this test list should nominally be performed by"), null=True)
-    visible_to = models.ManyToManyField(Group, help_text=_("Select groups who will be able to see this test collection on this unit"), related_name="test_collection_visibility")
+    visible_to = models.ManyToManyField(
+        Group,
+        help_text=_("Select groups who will be able to see this test collection on this unit"),
+        related_name="test_collection_visibility",
+    )
 
     active = models.BooleanField(help_text=_("Uncheck to disable this test on this unit"), default=True, db_index=True)
 
@@ -1309,7 +1412,11 @@ class TestListInstance(models.Model):
     # comment = models.TextField(help_text=_("Add a comment to this set of tests"), null=True, blank=True)
     comments = GenericRelation(Comment, object_id_field='object_pk')
 
-    in_progress = models.BooleanField(help_text=_("Mark this session as still in progress so you can complete later (will not be submitted for review)"), default=False, db_index=True)
+    in_progress = models.BooleanField(
+        help_text=_("Mark this session as still in progress so you can complete later (will not be submitted for review)"),
+        default=False,
+        db_index=True,
+    )
 
     reviewed = models.DateTimeField(null=True, blank=True)
     reviewed_by = models.ForeignKey(User, editable=False, null=True, blank=True, related_name="test_list_instance_reviewer")
@@ -1531,7 +1638,7 @@ class TestListCycle(TestCollectionInterface):
 
     def days_display(self):
         names = self.testlistcyclemembership_set.values_list("test_list__name", flat=True)
-        days = list(range(1, len(names)+1))
+        days = list(range(1, len(names) + 1))
         if self.day_option_text == self.TEST_LIST_NAME:
             return list(zip(days, names))
 

@@ -1,5 +1,4 @@
 # Django settings for qatrack project.
-import django.conf.global_settings as DEFAULT_SETTINGS
 import os
 import sys
 
@@ -147,6 +146,7 @@ if not os.path.isfile(SITE_SPECIFIC_CSS_PATH):
 # ------------------------------------------------------------------------------
 # Middleware
 MIDDLEWARE_CLASSES = [
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -208,6 +208,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+    'django_extensions',
+    'debug_toolbar',
 
     'django_comments',
     'formtools',
