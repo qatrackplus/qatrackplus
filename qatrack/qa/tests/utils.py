@@ -4,7 +4,7 @@ from django.apps import apps
 from django.utils import timezone
 
 from qatrack.qa import models
-from qatrack.units.models import Unit, UnitType, Modality, PHOTON
+from qatrack.units.models import Unit, UnitType, Modality, PHOTON, Vendor
 
 
 def exists(app, model, field, value):
@@ -169,6 +169,7 @@ def create_modality(energy=6, particle=PHOTON, name=None):
 
 
 def create_unit_type(name="utype", vendor="vendor", model="model"):
+    vendor, _ = Vendor.objects.get_or_create(name=vendor)
     ut, _ = UnitType.objects.get_or_create(name=name, vendor=vendor, model=model)
     ut.save()
     return ut

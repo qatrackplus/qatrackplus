@@ -1,10 +1,10 @@
-
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.conf import settings
 from django.test import TestCase
 from django.test.utils import setup_test_environment
 from django.utils import timezone
+from django_comments.models import Comment
 
 from qatrack.qa import models
 
@@ -1092,8 +1092,8 @@ class TestUnitTestCollection(TestCase):
     def test_name(self):
         tl = utils.create_test_list("tl1")
         utc = utils.create_unit_test_collection(test_collection=tl)
-        self.assertEqual(utc.name(), str(utc))
-        self.assertEqual(tl.name, utc.test_objects_name())
+        self.assertEqual(utc.name, str(utc))
+        self.assertEqual(tl.name, utc.name)
 
     def test_delete_utc(self):
 
@@ -1713,7 +1713,9 @@ class TestAutoReview(TestCase):
         ti = utils.create_test_instance(self.test_list_instance, unit_test_info=uti, value=self.ref.value, status=self.statuses[0])
         ti.reference = self.ref
         ti.tolerance = self.tol
-        self.test_list_instance.comment = "comment"
+        c = Comment.objects.create(comment="comment", content_type_id=999, site_id=1)
+        self.test_list_instance.comments.add(c)
+        #self.test_list_instance.save()
         ti.calculate_pass_fail()
         ti.auto_review()
         ti.save()

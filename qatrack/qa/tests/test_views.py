@@ -364,6 +364,7 @@ class TestChartView(TestCase):
             tolerance=tol,
             value=100
         )
+        ti.test_list_instance = qatrack.qa.models.TestListInstance()
         ti.value_display = lambda: str(ti.value)
         view = views.charts.BaseChartView()
         point = view.test_instance_to_point(ti, relative=True)
@@ -437,7 +438,7 @@ class TestChartData(TestCase):
         resp = self.client.get(self.url, data=data)
         data = json.loads(resp.content.decode("UTF-8"))
         expected = [1.]*self.NPOINTS
-        actual = [x['value'] for x in data['data']['unit - tl1 :: test1']]
+        actual = [x['value'] for x in data['plot_data']['series']['unit - tl2 :: test1']['series_data']]
         self.assertListEqual(actual, expected)
 
     def test_basic_data_relative(self):
@@ -451,7 +452,7 @@ class TestChartData(TestCase):
         resp = self.client.get(self.url, data=data)
         data = json.loads(resp.content.decode("UTF-8"))
         expected = [50.]*(self.NPOINTS//2)
-        actual = [x['value'] for x in data['data']['unit - tl2 :: test2 (relative to ref)']]
+        actual = [x['value'] for x in data['plot_data']['series']['unit - tl2 :: test2 (relative to ref)']['series_data']]
         self.assertListEqual(actual, expected)
 
     def test_basic_data_combined(self):
@@ -465,7 +466,7 @@ class TestChartData(TestCase):
         resp = self.client.get(self.url, data=data)
         data = json.loads(resp.content.decode("UTF-8"))
         expected = [1.]*(2*self.NPOINTS)
-        actual = [x['value'] for x in data['data']['unit :: test1']]
+        actual = [x['value'] for x in data['plot_data']['series']['unit :: test1']['series_data']]
         self.assertListEqual(actual, expected)
 
     def test_export_csv_view(self):

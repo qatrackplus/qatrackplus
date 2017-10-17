@@ -525,7 +525,7 @@ function create_control_chart(){
     $("#control-chart-container img").error(control_chart_error);
     $("#control-chart-container").append('<div class="please-wait"><em>Please wait for control chart to be generated...this could take a few minutes.</em></div>');
 
-    waiting_timeout = setInterval("check_cc_loaded()",250);
+    waiting_timeout = setInterval(check_cc_loaded,250);
     var chart_src_url = get_control_chart_url();
     $("#control-chart-container img").attr("src",chart_src_url);
 

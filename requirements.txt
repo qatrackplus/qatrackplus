@@ -1,38 +1,39 @@
+-e git+https://github.com/django/django-formtools.git@bb97a8abd374c50991c0a9ce144f17e7322a0c48#egg=django-formtools
 -e git+https://github.com/randlet/django-genericdropdown.git@56dbaf6b4f518a3946e5e253fec85ede175f3727#egg=django_genericdropdown-master
+-e git+https://github.com/randlet/django-listable.git@440838341d49c1d39826af8ccf88a27f0f2a2741#egg=django_listable
 Django==1.10.2
+PyVirtualDisplay==0.2
+coverage==4.2
 django-admin-views==0.8.0
 django-braces==1.9.0
 django-contrib-comments==1.8.0
 django-crispy-forms==1.6.0
+django-debug-toolbar==1.5
+django-extensions==1.7.4
 django-form-utils==1.0.3
--e git+https://github.com/django/django-formtools.git@bb97a8abd374c50991c0a9ce144f17e7322a0c48#egg=django-formtools
--e git+https://github.com/randlet/django-listable.git@440838341d49c1d39826af8ccf88a27f0f2a2741#egg=django_listable
+django-mssql; sys_platform=='win32'
+django-pyodbc-azure; sys_platform=='win32'
 django-registration==2.1.2
 django-tastypie==0.13.3
 django-widget-tweaks==1.4.1
+gunicorn==19.3.0; sys_platform=='linux'
+ipdb==0.10.1
+ipython==5.1.0
 matplotlib==1.5.3
-numpy==1.11.2rc1+mkl
+mock==2.0.0
+numpy==1.11.2
+pep8==1.7.0
+psycopg2==2.6; sys_platform=='linux'
 pydicom==0.9.9
+pylinac==2.0.1
+pylint==1.6.4
+pytest-cov==2.5.1
+pytest-django==3.1.2
+pytest-sugar==0.9.0
+pytest==3.2.3
 python-dateutil==2.5.3
 pytz==2016.7
+pywin32>=220; sys_platform=='win32'
 reportlab==3.4.0
 scipy==0.18.1
-pep8==1.7.0
-pylint==1.6.4
-coverage==4.2
-django-debug-toolbar==1.5
-mock==2.0.0
 selenium==2.53.6
-PyVirtualDisplay==0.2
-pytest==3.0.3
-pytest-cov==2.3.1
-pytest-django==3.0.0
-django-extensions==1.7.4
-ipython==5.1.0
-ipdb==0.10.1
-pywin32>=220; sys_platform=='win32'
-django-mssql; sys_platform=='win32'
-django-pyodbc-azure; sys_platform=='win32'
-psycopg2==2.6; sys_platform=='linux'
-gunicorn==19.3.0; sys_platform=='linux'
-pylinac==2.0.1
