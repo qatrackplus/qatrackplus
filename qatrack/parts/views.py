@@ -3,6 +3,7 @@ from braces.views import LoginRequiredMixin
 from decimal import Decimal
 from django.core.urlresolvers import reverse, resolve
 from django.contrib.auth.context_processors import PermWrapper
+from django.contrib import messages
 from django.db.models import F, Q, Func, Sum
 from django.forms.utils import timezone
 from django.http import JsonResponse, HttpResponseRedirect, HttpResponse
@@ -277,7 +278,7 @@ class PartsUnitsCost(TemplateView):
     def get_context_data(self, **kwargs):
         context = super(PartsUnitsCost, self).get_context_data(**kwargs)
         context['names'] = [q.name for q in self.queryset]
-        context['units'] = self.queryset
+        context['units'] = self.queryset.exclude(service_areas=None)
         context['service_areas'] = self.get_service_areas(self.queryset)
         context['service_types'] = self.get_service_types()
         return context
@@ -292,10 +293,9 @@ class PartsUnitsCost(TemplateView):
         return s_models.ServiceType.objects.all()
 
     def dispatch(self, request, *args, **kwargs):
-        if s_models.ServiceType.objects.all().exists() and u_models.Unit.objects.all().exists():
+        if s_models.ServiceType.objects.all().exists() and u_models.Unit.objects.all().exists() and s_models.ServiceArea.objects.all().exists():
             return super().dispatch(request, *args, **kwargs)
-        else:
-            return redirect(reverse('err'))
+        return redirect(reverse('err'))
 
 
 class PartsList(BaseListableView):
