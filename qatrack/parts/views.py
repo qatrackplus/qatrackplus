@@ -292,7 +292,7 @@ class PartsUnitsCost(TemplateView):
         return s_models.ServiceType.objects.all()
 
     def dispatch(self, request, *args, **kwargs):
-        if s_models.ServiceType.objects.all().exists():
+        if s_models.ServiceType.objects.all().exists() and u_models.Unit.objects.all().exists():
             return super().dispatch(request, *args, **kwargs)
         else:
             return redirect(reverse('err'))
