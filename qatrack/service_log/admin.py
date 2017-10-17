@@ -3,16 +3,13 @@ from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.db.models import ObjectDoesNotExist
-from django.forms import ModelMultipleChoiceField, ModelForm, DateTimeField
-from django.shortcuts import HttpResponseRedirect
+from django.forms import ModelMultipleChoiceField, ModelForm, DateTimeField, ValidationError
 from django.utils.translation import ugettext as _
 
 from .models import ServiceEventStatus, ServiceType, UnitServiceArea, ServiceArea, ServiceEvent, ThirdParty, Vendor, GroupLinker
 from qatrack.units.models import Unit, Modality, UnitAvailableTime
 from .forms import ServiceEventForm, HoursMinDurationField
 from qatrack.units.forms import UnitAvailableTimeForm
-
-from admin_views.admin import AdminViews
 
 
 class ServiceEventStatusFormAdmin(ModelForm):
@@ -130,7 +127,7 @@ class UnitFormAdmin(ModelForm):
 
     service_areas = ModelMultipleChoiceField(
         queryset=ServiceArea.objects.all(),
-        required=False,
+        required=True,
         widget=FilteredSelectMultiple(
             verbose_name=_('Service areas'),
             is_stacked=False
@@ -182,13 +179,22 @@ class UnitFormAdmin(ModelForm):
                 # unit_service_area.save()
 
             for usa in UnitServiceArea.objects.filter(unit=unit).exclude(service_area__in=self.cleaned_data['service_areas']):
-                usa.delete()
+                if not ServiceEvent.objects.filter(unit_service_area=usa).exists():
+                    usa.delete()
 
         return unit
 
-    def form_valid(self, request, queryset, form):
-        print('forms valid---------')
-        return super(UnitFormAdmin, self).form_valid(request, queryset, form)
+    def clean_service_areas(self):
+        if self.instance:
+            unit = self.instance
+            for usa in UnitServiceArea.objects.filter(unit=unit).exclude(service_area__in=self.cleaned_data['service_areas']):
+                if ServiceEvent.objects.filter(unit_service_area=usa).exists():
+                    data_copy = self.data.copy()
+                    data_copy.setlist('service_areas', [str(sa.id) for sa in (self.cleaned_data['service_areas'] | ServiceArea.objects.filter(pk=usa.service_area_id))])
+                    self.data = data_copy
+                    raise ValidationError('Cannot remove %s from unit %s. There exists Service Event(s) with that Unit and Service Area.' % (usa.service_area.name, unit.name))
+
+        return self.cleaned_data['service_areas']
 
 
 class UnitAdmin(admin.ModelAdmin):

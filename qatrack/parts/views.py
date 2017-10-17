@@ -6,6 +6,7 @@ from django.contrib.auth.context_processors import PermWrapper
 from django.db.models import F, Q, Func, Sum
 from django.forms.utils import timezone
 from django.http import JsonResponse, HttpResponseRedirect, HttpResponse
+from django.shortcuts import redirect
 from django.template import Context
 from django.template.loader import get_template
 from django.utils.translation import ugettext as _
@@ -289,6 +290,12 @@ class PartsUnitsCost(TemplateView):
 
     def get_service_types(self):
         return s_models.ServiceType.objects.all()
+
+    def dispatch(self, request, *args, **kwargs):
+        if s_models.ServiceType.objects.all().exists():
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            return redirect(reverse('err'))
 
 
 class PartsList(BaseListableView):
