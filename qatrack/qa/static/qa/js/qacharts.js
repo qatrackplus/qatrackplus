@@ -675,12 +675,16 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
                 .attr("width", width + legend_collapse_width)
                 .attr("height", height);
 
-            xScale.domain([moment(from, "DD-MM-YYYY").valueOf(), moment(to, "DD-MM-YYYY").valueOf()]);
+            // find min and max X within date range
+            xScale.domain([moment(from, "DD-MM-YYYY").valueOf(), moment(to, "DD-MM-YYYY").endOf('day').valueOf()]);
             var maxY = findMaxY(_data._series, xScale.domain());
             var minY = findMinY(_data._series, xScale.domain());
 
+            var maxX = findMaxX(_data._series);
+            var minX = findMinX(_data._series);
+
             yScale.domain(yBuff(minY, maxY));
-            yScale2.domain([minY, maxY]);
+            yScale2.domain(yBuff(minY, maxY));
             xScale2.domain(xScale.domain());
 
             ////////////////////// for slider
@@ -1200,7 +1204,6 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
                     // y = d3.mouse(this)[1];
                     y = d3.event.sourceEvent.clientY;
                     h = chart_height;
-                    console.log(y);
                     remove_tooltip_outter();
                 }).on('drag', function() {
                     // Determine resizer position relative to resizable (parent)
@@ -1237,7 +1240,12 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
             }
 
             function yBuff(minY, maxY) {
-                var y_buff = (maxY - minY) * 0.1;
+                var y_buff;
+                if (minY === maxY) {
+                    y_buff = maxY === 0 ? 2 : minY * 0.1;
+                } else {
+                    y_buff = (maxY - minY) * 0.1;
+                }
                 return [minY - y_buff, maxY + y_buff];
             }
 
@@ -1514,7 +1522,6 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
                                 initiated_x = xScale(d.x);
                                 return false;
                             });
-                            console.log(event_data);
                             initiated_name = event_data.unit.name + ' - ' + initiated_test_list_data.test_list.name;
 
                             var initiated_data = initiated_circles.data(),
@@ -1762,6 +1769,27 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
                 redrawMainContent();
             }
 
+            brush_elem.transition()
+              .call(brush.move, [xScale2(minX), xScale2(maxX)]);
+
+            function findMaxX(data) {
+                var maxXValues = data.map(function(d) {
+                    return d3.max(d.line_data_test_results, function (value) {
+                        return value.x;
+                    })
+                });
+                return d3.max(maxXValues) || 0;
+            }
+
+            function findMinX(data) {
+                var minXValues = data.map(function(d) {
+                    return d3.min(d.line_data_test_results, function (value) {
+                        return value.x;
+                    })
+                });
+                return d3.min(minXValues) || 0;
+            }
+
             function findMaxY(data, range) {  // Define function "findMaxY"
                 var maxYValues = data.map(function (d) {
                     if (d.visible) {
@@ -1946,15 +1974,16 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
             $("#control-chart-container").find("img, div.please-wait, div.cc-error").remove();
             $("#control-chart-container").append("<img/>");
             $("#control-chart-container img").error(control_chart_error);
-            $("#control-chart-container").append('<div class="please-wait"><em>Please wait for control chart to be generated...this could take a few minutes.</em></div>');
+            $("#control-chart-container").append(
+                '<div class="please-wait"><em>Please wait for control chart to be generated...this could take a few minutes.</em></div>'
+            );
 
-            waiting_timeout = setInterval("check_cc_loaded()", 250);
+            waiting_timeout = setInterval(check_cc_loaded, 250);
             var chart_src_url = get_control_chart_url();
             $("#control-chart-container img").attr("src", chart_src_url);
         }
 
         function check_cc_loaded() {
-
             if ($("#control-chart-container img").height() > 100) {
                 control_chart_finished();
             }
@@ -1963,11 +1992,13 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
         function control_chart_error() {
             control_chart_finished();
             $("#control-chart-container img").remove();
-            $("#control-chart-container").append('<div class="cc-error">Something went wrong while generating your control chart</div>');
+            $("#control-chart-container").append(
+                '<div class="cc-error">Something went wrong while generating your control chart</div>'
+            );
         }
 
         function control_chart_finished() {
-            $("#control-chart-container div.please-wait").remove();
+            $(".please-wait").remove();
             $("#data-table-wrapper").html("");
             clearInterval(waiting_timeout);
             retrieve_data(update_data_table);
@@ -1975,10 +2006,10 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
 
         function get_control_chart_url() {
             var filters = get_data_filters();
-
             var props = [
-                "width=" + $("#chart-container").width(),
-                "height=" + $("#chart").height(),
+                "width=" + ($("#control-chart-container").width() - 15),
+                // "height=" + $("#chart").height(),
+                "height=" + 800,
                 "timestamp=" + new Date().getTime()
             ];
 

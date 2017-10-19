@@ -1105,9 +1105,7 @@ class TestInstance(models.Model):
     work_started = models.DateTimeField(editable=False, db_index=True)
 
     # when was the work actually performed
-    work_completed = models.DateTimeField(default=timezone.now,
-                                          help_text=settings.DATETIME_HELP, db_index=True,
-                                          )
+    work_completed = models.DateTimeField(default=timezone.now, help_text=settings.DATETIME_HELP, db_index=True)
 
     # for keeping a very basic history
     created = models.DateTimeField(default=timezone.now)

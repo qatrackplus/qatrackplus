@@ -195,7 +195,8 @@ table thead tr:first-child th {
 }
 rect.handle {
     width: 6px;
-    stroke: #888;
+    /*stroke: #888;*/
+    visibility: hidden;
 }
 .hover-line {
     stroke: #E6E7E8;
@@ -218,6 +219,9 @@ rect.handle {
 .brush .extent {
     stroke: #FFF;
     shape-rendering: crispEdges;
+}
+rect.selection {
+    stroke: #222222;
 }
 .hidden {
     display: none;
