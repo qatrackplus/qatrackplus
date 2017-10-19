@@ -682,6 +682,10 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
 
             var maxX = findMaxX(_data._series);
             var minX = findMinX(_data._series);
+            if (maxX === minX) {
+                minX = moment(minX).subtract(1, 'days').valueOf();
+                maxX = moment(maxX).add(1, 'days').valueOf();
+            }
 
             yScale.domain(yBuff(minY, maxY));
             yScale2.domain(yBuff(minY, maxY));
