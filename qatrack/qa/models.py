@@ -683,9 +683,10 @@ class UnitTestInfoManager(models.Manager):
         is assigned to an active UnitTestCollection"""
 
         qs = queryset or self.get_queryset()
-
+        tl_ids = get_utc_tl_ids(active=True)
         return qs.filter(
-            test__testlistmembership__test_list__in=get_utc_tl_ids(active=True)
+            Q(test__testlistmembership__test_list__in=tl_ids) |
+            Q(test__testlistmembership__test_list__testlist__in=tl_ids)
         ).distinct()
 
     def inactive(self, queryset=None):
@@ -694,8 +695,10 @@ class UnitTestInfoManager(models.Manager):
 
         qs = queryset or self.get_queryset()
 
+        tl_ids = get_utc_tl_ids(active=True)
         return qs.exclude(
-            test__testlistmembership__test_list__in=get_utc_tl_ids(active=True)
+            Q(test__testlistmembership__test_list__in=tl_ids) |
+            Q(test__testlistmembership__test_list__testlist__in=tl_ids)
         ).distinct()
 
 
