@@ -473,9 +473,15 @@ class ActiveTestListFilter(admin.SimpleListFilter):
         active_tl_ids = models.get_utc_tl_ids(active=True)
 
         if self.value() == self.NOACTIVEUTCS:
-            return qs.exclude(id__in=active_tl_ids)
+            return qs.exclude(
+                Q(id__in=active_tl_ids) |
+                Q(testlist__id__in=active_tl_ids)
+            )
         elif self.value() == self.HASACTIVEUTCS:
-            return qs.filter(id__in=active_tl_ids)
+            return qs.filter(
+                Q(id__in=active_tl_ids) |
+                Q(testlist__id__in=active_tl_ids)
+            )
         return qs
 
 
