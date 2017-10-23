@@ -22,6 +22,7 @@ require.config({
         datepicker: siteConfig.STATIC_URL + 'datepicker/js/bootstrap-datepicker.min',
         daterangepicker: siteConfig.STATIC_URL + 'daterangepicker/js/daterangepicker',
         felter: siteConfig.STATIC_URL + 'felter/js/felter',
+        flatpickr: siteConfig.STATIC_URL + 'flatpickr/js/flatpickr',
         dropzone: siteConfig.STATIC_URL + 'dropzone/js/dropzone-amd-module',
         icheck: siteConfig.STATIC_URL + 'icheck/js/icheck.min',
         inputmask: siteConfig.STATIC_URL + 'inputmask/js/jquery.inputmask.bundle',
@@ -97,11 +98,11 @@ require.config({
             exports: 'DateRangePicker',
             deps: ['jquery', 'moment']
         },
-        icheck: {
-            deps: ['jquery']
+        flatpickr: {
+            exports: 'Flatpickr'
         },
         icheck: {
-             deps: ['jquery']
+            deps: ['jquery']
         },
         jquery: {
             exports: '$'

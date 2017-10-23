@@ -263,7 +263,13 @@ tr.qa-comment td {
     display: inline-block;
     vertical-align: top;
 }
-
+.datetime-clear {
+    cursor: pointer;
+    display: none;
+}
+.datetime-clear:hover {
+    color: #bb6666;
+}
 
 
 /* admin options */

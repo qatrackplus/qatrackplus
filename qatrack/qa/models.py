@@ -675,8 +675,8 @@ def get_utc_tl_ids(active=None, units=None, frequencies=None):
 
 class UnitTestInfoManager(models.Manager):
 
-    def get_query_set(self):
-        return super(UnitTestInfoManager, self).get_query_set()
+    # def get_queryset(self):
+    #     return super(UnitTestInfoManager, self).get_queryset()
 
     def active(self, queryset=None):
         """Only return UTI's who's tests belong to at least 1 test list that

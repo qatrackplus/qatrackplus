@@ -1,5 +1,5 @@
 "use strict";
-require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jquery-ui', 'comments'], function ($, _, moment, Dropzone, autosize) {
+require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jquery-ui', 'comments', 'flatpickr'], function ($, _, moment, Dropzone, autosize) {
     var csrf_token = $("input[name=csrfmiddlewaretoken]").val();
 
     function csrfSafeMethod(method) {
@@ -957,73 +957,121 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jqu
                 }
             };
 
-            var start_picker = $('#id_work_started'),
-                completed_picker = $('#id_work_completed'),
-                duration_picker = $('#id_work_duration');
+            var $start_picker = $('#id_work_started'),
+                $completed_picker = $('#id_work_completed'),
+                $duration_picker = $('#id_work_duration'),
+                $start_clear = $('#clear-work_started'),
+                $complete_clear = $('#clear-work_completed');
+
+            if ($start_picker.val()) {
+                $start_clear.show();
+            }
+            if ($completed_picker.val()) {
+                $complete_clear.show();
+            }
 
             var duration_change = true;
 
-            $(start_picker).daterangepicker(
-                base_range_settings
-            ).on('apply.daterangepicker', function (ev, picker) {
-                var min_date = picker.startDate.clone();
-                $(completed_picker).daterangepicker(
-                    $.extend({},
-                        base_range_settings,
-                        {
-                            minDate: min_date,
-                            maxDate: min_date.clone().add(99, 'hours').add(59, 'minutes')
-                        }
-                    )
-                ).on('apply.daterangepicker', apply_completed);
-                duration_change = false;
-                $(duration_picker).val('');
-                $(completed_picker).data('daterangepicker').setStartDate(min_date);
-                $(completed_picker).data('daterangepicker').setEndDate(min_date);
-                $(completed_picker).trigger('apply.daterangepicker');
+            // $start_picker.daterangepicker(
+            //     base_range_settings
+            // ).on('apply.daterangepicker', function (ev, picker) {
+            //     var min_date = picker.startDate.clone();
+            //     $completed_picker.daterangepicker(
+            //         $.extend({},
+            //             base_range_settings,
+            //             {
+            //                 // minDate: min_date,
+            //                 // maxDate: min_date.clone().add(99, 'hours').add(59, 'minutes')
+            //             }
+            //         )
+            //     ).on('apply.daterangepicker', apply_completed);
+            //     duration_change = false;
+            //     $duration_picker.val('');
+            //     $completed_picker.data('daterangepicker').setStartDate(min_date);
+            //     $completed_picker.data('daterangepicker').setEndDate(min_date);
+            //     $completed_picker.trigger('apply.daterangepicker');
+            // });
+
+            // var min_date = $start_picker.data('daterangepicker').startDate.clone();
+            // $completed_picker.daterangepicker(
+            //     $.extend({},
+            //         base_range_settings,
+            //         {
+            //             // minDate: min_date,
+            //             // maxDate: min_date.clone().add(99, 'hours').add(59, 'minutes')
+            //         }
+            //     )
+            // ).on('apply.daterangepicker', apply_completed).focus(function () {
+            //     duration_change = true;
+            // });
+            console.log($start_picker.val());
+            var start_fp = $start_picker.flatpickr({
+                enableTime: true,
+                time_24hr: true,
+                dateFormat: 'd-m-Y H:i',
+                onChange: function(selectedDates, dateStr, instance) {
+                    console.log(selectedDates);
+                    console.log(dateStr);
+                    console.log(instance);
+                    $start_clear.fadeIn('fast');
+                }
+            });
+            $start_clear.click(function() {
+                start_fp.clear();
+                $(this).fadeOut('fast');
             });
 
-            var min_date = $(start_picker).data('daterangepicker').startDate.clone();
-            $(completed_picker).daterangepicker(
-                $.extend({},
-                    base_range_settings,
-                    {
-                        minDate: min_date,
-                        maxDate: min_date.clone().add(99, 'hours').add(59, 'minutes')
-                    }
-                )
-            ).on('apply.daterangepicker', apply_completed).focus(function () {
-                duration_change = true;
-            });
-
-            $(duration_picker).inputmask({
-                mask: "99hr : 'min",
-                definitions: {
-                    "'": {
-                        validator: "[0-5][0-9]",
-                        cardinality: 2,
-                        prevalidator: [{
-                            validator: "[0-5]",
-                            cardinality: 1
-                        }]
-                    }
-                },
-                "oncomplete": function () {
-                    if (end_date_change) {
-                        var duration = this.inputmask.unmaskedvalue();
-                        var start_time = $($(start_picker)).data('daterangepicker').startDate,
-                            hours = duration[0] + duration[1],
-                            mins = duration[2] + duration[3];
-                        var end_time = start_time.clone().add(hours, 'hours').add(mins, 'minutes')/*.format('DD-MM-YYYY HH:mm')*/;
-                        $(completed_picker).data('daterangepicker').setStartDate(end_time);
-                        $(completed_picker).data('daterangepicker').setEndDate(end_time);
-                        end_date_change = false;
-                        $.Topic("valueChanged").publish();
+            console.log('<<< dates >>>');
+            var complete_fp = $completed_picker.flatpickr({
+                enableTime: true,
+                time_24hr: true,
+                dateFormat: 'd-m-Y H:i',
+                onOpen: function(selectedDates, dateStr, instance) {
+                    console.log(selectedDates);
+                    console.log(dateStr);
+                    console.log(instance);
+                    if (dateStr === '') {
+                        instance.setDate(moment().valueOf())
                     }
                 }
-            }).on('keypress', function () {
-                end_date_change = true;
             });
+
+            // working on flatpickr for start and end times. fix duration shortly
+
+            $complete_clear.click(function() {
+                complete_fp.clear();
+                $(this).fadeOut('fast');
+            });
+
+
+            // $duration_picker.inputmask({
+            //     mask: "99hr : 'min",
+            //     definitions: {
+            //         "'": {
+            //             validator: "[0-5][0-9]",
+            //             cardinality: 2,
+            //             prevalidator: [{
+            //                 validator: "[0-5]",
+            //                 cardinality: 1
+            //             }]
+            //         }
+            //     },
+            //     "oncomplete": function () {
+            //         if (end_date_change) {
+            //             var duration = this.inputmask.unmaskedvalue();
+            //             var start_time = $($start_picker).data('daterangepicker').startDate,
+            //                 hours = duration[0] + duration[1],
+            //                 mins = duration[2] + duration[3];
+            //             var end_time = start_time.clone().add(hours, 'hours').add(mins, 'minutes')/*.format('DD-MM-YYYY HH:mm')*/;
+            //             $completed_picker.data('daterangepicker').setStartDate(end_time);
+            //             $completed_picker.data('daterangepicker').setEndDate(end_time);
+            //             end_date_change = false;
+            //             $.Topic("valueChanged").publish();
+            //         }
+            //     }
+            // }).on('keypress', function () {
+            //     end_date_change = true;
+            // });
         }
 
         //////// Warning message

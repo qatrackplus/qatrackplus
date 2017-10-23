@@ -197,7 +197,19 @@ class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
     list_filter = [ActiveUnitTestInfoFilter, "unit", "test__category", "test__testlistmembership__test_list"]
     readonly_fields = ("reference", "test", "unit",)
     search_fields = ("test__name", "test__slug", "unit__name",)
-    list_select_related = ['reference', 'tolerance', 'test', 'unit']
+    # list_select_related = ['reference', 'tolerance', 'test', 'unit']
+
+    def get_queryset(self, *args, **kwargs):
+        print('<<< queryset >>>')
+        """just display active ref/tols"""
+        qs = models.UnitTestInfo.objects.select_related(
+            "reference",
+            "tolerance",
+            "unit",
+            "test",
+        )
+
+        return qs
 
     def has_add_permission(self, request):
         """unittestinfo's are created automatically"""

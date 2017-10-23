@@ -23,6 +23,7 @@
     <link href="{{ STATIC_URL }}qatrack_core/css/sidebar.css?v={{VERSION}}" rel="stylesheet">
     <link href="{{ STATIC_URL }}select2/css/select2.min.css?v={{ VERSION }}" rel="stylesheet">
     <link href="{{ STATIC_URL }}qatrack_core/css/custom-select2.css?v={{ VERSION }}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}flatpickr/css/flatpickr.css?v={{ VERSION }}" rel="stylesheet">
 
 {% endblock extra_css %}
 
@@ -37,6 +38,11 @@
         var status_colours_dict = {{ status_tag_colours|safe }};
         var se_statuses = {{ se_statuses|safe }};
         var unit_id = {{ unit_test_collection.unit.id }};
+        {% if test_list_instance.work_completed %}
+            var work_completed_initial = "{{ test_list_instance.work_completed|safe }}";
+        {% else %}
+            var work_completed_initial = null;
+        {% endif %}
     </script>
 
     <script id="attach-template" type="text/template">
@@ -174,7 +180,9 @@
                                         </label>
                                         <div class="col-lg-6">
                                             {{form.work_started}}
-                                            <i class="fa fa-calendar fa-in-input"></i>
+{#                                            <div id="clear-work_started" class="btn btn-flat btn-xs datetime-clear">X</div>#}
+                                            <i id="clear-work_started" class="fa fa-times fa-in-input datetime-clear"></i>
+{#                                            <i class="fa fa-calendar fa-in-input"></i>#}
                                         </div>
                                     {% endspaceless %}
                                 </div>
@@ -196,7 +204,8 @@
                                         </label>
                                         <div class="col-lg-6">
                                             {{form.work_completed}}
-                                            <i class="fa fa-calendar fa-in-input"></i>
+{#                                            <i class="fa fa-calendar fa-in-input"></i>#}
+                                            <i id="clear-work_completed" class="fa fa-times fa-in-input datetime-clear"></i>
                                         </div>
                                     </div>
                                 {% endif %}
