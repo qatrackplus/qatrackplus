@@ -565,12 +565,12 @@
                 <a id="select-tli-__prefix__" class="btn btn-default btn-xs btn-flat select-tli" data-link="{% url 'tli_select' %}/__utc-id__/__prefix__/">
                     Performed
                 </a>
-                <a href="{% url 'perform_qa' %}__utc-id__/?qaf=__qaf-id__&next={% url 'sl_edit' %}__se-id__/" class="btn btn-xs btn-default btn-flat">
+                <a href="{% url 'perform_qa' %}__utc-id__/?qaf=__qaf-id__&next={% url 'sl_edit' %}__se-id__/" class="btn btn-xs btn-default btn-flat" target="Perform-__qaf-id__-__prefix__">
                     Perform
                 </a>
             {% endif %}
             {% if perms.qa.can_review %}
-                <a id="__prefix__-review-btn" href="{% url 'review_test_list_instance' %}__tli-id__?next={% url 'sl_edit' %}__se-id__" class="btn btn-xs btn-default btn-flat review-btn __prefix__-hider" style="display: none;">
+                <a id="__prefix__-review-btn" href="{% url 'review_test_list_instance' %}__tli-id__?next={% url 'sl_edit' %}__se-id__" class="btn btn-xs btn-default btn-flat review-btn __prefix__-hider" target="Review-__qaf-id__-__prefix__" style="display: none;">
                     Review
                 </a>
             {% endif %}
