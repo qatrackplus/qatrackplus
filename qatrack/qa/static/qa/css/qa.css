@@ -278,10 +278,10 @@ tr.qa-comment td {
     display: table;
     width: 100%;
 }
-#box-admin div.left-border {
-    display: table-cell;
-    float: none;
-}
+/*#box-admin div.left-border {*/
+    /*display: table-cell;*/
+    /*float: none;*/
+/*}*/
 #box-admin .box-body > .row .row {
     margin-top: 4px;
 }

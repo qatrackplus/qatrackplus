@@ -24,6 +24,7 @@
     <link href="{{ STATIC_URL }}select2/css/select2.min.css?v={{ VERSION }}" rel="stylesheet">
     <link href="{{ STATIC_URL }}qatrack_core/css/custom-select2.css?v={{ VERSION }}" rel="stylesheet">
     <link href="{{ STATIC_URL }}flatpickr/css/flatpickr.css?v={{ VERSION }}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}qatrack_core/css/flatpickr-custom.css?v={{ VERSION }}" rel="stylesheet">
 
 {% endblock extra_css %}
 
@@ -42,6 +43,11 @@
             var work_completed_initial = "{{ test_list_instance.work_completed|safe }}";
         {% else %}
             var work_completed_initial = null;
+        {% endif %}
+        {% if test_list_instance.work_started %}
+            var work_started_initial = "{{ test_list_instance.work_started|safe }}";
+        {% else %}
+            var work_started_initial = null;
         {% endif %}
     </script>
 
@@ -89,7 +95,6 @@
 
     <form class="nosubmit form-inline" id="qa-form" method="POST" action="" autocomplete="off" enctype="multipart/form-data" >
         {% csrf_token %}
-        {{ form.errors }}
         <div id="box-contacts" class="row" style="display: none;">
             <div class="col-lg-12">
                 <div class="box">
@@ -172,46 +177,56 @@
                     </div>
                     <div class="box-body">
                         <div class="row">
-                            <div class="col-sm-6 left-border border-default">
-                                <div class="date input-prepend input-append row" id="work-started" data-date="{% now 'd-m-Y'%}" data-date-format="dd-mm-yyyy">
-                                    {% spaceless %}
-                                        <label for="id_work_started" class="col-lg-6">
-                                            {{form.work_started.label}}:
-                                        </label>
-                                        <div class="col-lg-6">
-                                            {{form.work_started}}
-{#                                            <div id="clear-work_started" class="btn btn-flat btn-xs datetime-clear">X</div>#}
-                                            <i id="clear-work_started" class="fa fa-times fa-in-input datetime-clear"></i>
-{#                                            <i class="fa fa-calendar fa-in-input"></i>#}
+                            <div class="col-sm-6 {% comment %}left-border border-default{% endcomment %}">
+                                <div class="row">
+                                    <div class="form-horizontal">
+                                        <div class="row {% if form.work_started.errors %} has-error{% endif %}" {% comment %}id="work-started" data-date="{% now 'd-m-Y'%}" data-date-format="dd-mm-yyyy"{% endcomment %}>
+        {#                                    {% spaceless %}#}
+                                                <label for="id_work_started" class="col-lg-6">
+                                                    {{form.work_started.label}}:
+                                                </label>
+                                                <div class="col-lg-6">
+                                                    {{form.work_started}}
+        {#                                            <div id="clear-work_started" class="btn btn-flat btn-xs datetime-clear">X</div>#}
+                                                    <i id="clear-work_started" class="fa fa-refresh fa-in-input datetime-clear"></i>
+        {#                                            <i class="fa fa-calendar fa-in-input"></i>#}
+                                                </div>
+                                                {% for e in form.work_started.errors %}
+                                                    <div class="col-sm-12 help-block text-center">{{ e }}</div>
+                                                {% endfor %}
+        {#                                    {% endspaceless %}#}
                                         </div>
-                                    {% endspaceless %}
+
+                                        {% if perms.qa.can_override_date %}
+                                            <div class="row">
+                                                <label for="id_work_duration" class="col-lg-6">
+                                                    Work duration:
+                                                </label>
+                                                <div class="col-lg-6">
+                                                    <input id="id_work_duration" name="work_duration" class="form-control">
+                                                    <i class="fa fa-clock-o fa-in-input"></i>
+                                                </div>
+                                            </div>
+
+                                            <div class="row{% if form.work_completed.errors %} has-error{% endif %}">
+                                                <label for="id_work_completed" class="col-lg-6">
+                                                    {{form.work_completed.label}}:
+                                                </label>
+                                                <div class="col-lg-6">
+                                                    {{form.work_completed}}
+        {#                                            <i class="fa fa-calendar fa-in-input"></i>#}
+                                                    <i id="clear-work_completed" class="fa {% if test_list_instance.work_started %}fa-refresh{% else %}fa-times{% endif %} fa-in-input datetime-clear"></i>
+                                                </div>
+                                                {% for e in form.work_completed.errors %}
+                                                    <div class="col-sm-12 help-block text-center">{{ e }}</div>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
                                 </div>
-
-                                {% if perms.qa.can_override_date %}
-                                    <div class="date input-prepend input-append row" id="work-time">
-                                        <label for="id_work_duration" class="col-lg-6">
-                                            Work duration:
-                                        </label>
-                                        <div class="col-lg-6">
-                                            <input id="id_work_duration" name="work_duration" class="form-control">
-                                            <i class="fa fa-clock-o fa-in-input"></i>
-                                        </div>
-                                    </div>
-
-                                    <div class="date input-prepend input-append row" id="work-completed" data-date="{% now 'd-m-Y'%}" data-date-format="dd-mm-yyyy">
-                                        <label for="id_work_completed" class="col-lg-6">
-                                            {{form.work_completed.label}}:
-                                        </label>
-                                        <div class="col-lg-6">
-                                            {{form.work_completed}}
-{#                                            <i class="fa fa-calendar fa-in-input"></i>#}
-                                            <i id="clear-work_completed" class="fa fa-times fa-in-input datetime-clear"></i>
-                                        </div>
-                                    </div>
-                                {% endif %}
                             </div>
 
-                            <div class="col-sm-6 left-border border-default">
+                            <div class="col-sm-6 {% comment %}left-border border-default{% endcomment %}">
                                 {% if perms.qa.can_review and perms.qa.can_review_own_tests %}
                                     <div class="input-prepend input-append row" id="status">
                                         <label for="id_status" class="col-lg-6">

@@ -683,6 +683,7 @@ class UnitTestInfoManager(models.Manager):
         is assigned to an active UnitTestCollection"""
 
         qs = queryset or self.get_queryset()
+
         tl_ids = get_utc_tl_ids(active=True)
         return qs.filter(
             Q(test__testlistmembership__test_list__in=tl_ids) |
