@@ -189,7 +189,12 @@ class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, Mo
         if not supplier_formset.is_valid() or not storage_formset.is_valid():
             return self.render_to_response(context)
 
-        part = form.save()
+        part = form.save(commit=False)
+        if not part.pk:
+            messages.add_message(request=self.request, level=messages.SUCCESS, message='New part %s added' % part.part_number)
+        else:
+            messages.add_message(request=self.request, level=messages.SUCCESS, message='Part %s updated' % part.part_number)
+        part.save()
 
         for sup_form in supplier_formset:
 
