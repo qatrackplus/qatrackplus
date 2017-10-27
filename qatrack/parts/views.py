@@ -1,14 +1,14 @@
+import csv
 
 from braces.views import LoginRequiredMixin
 from decimal import Decimal
 from django.core.urlresolvers import reverse, resolve
 from django.contrib.auth.context_processors import PermWrapper
 from django.contrib import messages
-from django.db.models import F, Q, Func, Sum
+from django.db.models import F, Q, Sum
 from django.forms.utils import timezone
 from django.http import JsonResponse, HttpResponseRedirect, HttpResponse
 from django.shortcuts import redirect
-from django.template import Context
 from django.template.loader import get_template
 from django.utils.translation import ugettext as _
 from django.views.generic.edit import ModelFormMixin, ProcessFormView
@@ -18,8 +18,10 @@ from io import BytesIO
 from reportlab.pdfgen import canvas
 
 from listable.views import (
-    BaseListableView, DATE_RANGE, SELECT_MULTI, NONEORNULL, TEXT, SELECT_MULTI_FROM_MULTI,
-    TODAY, YESTERDAY, TOMORROW, LAST_WEEK, THIS_WEEK, NEXT_WEEK, LAST_14_DAYS, LAST_MONTH, THIS_MONTH, THIS_YEAR
+    BaseListableView,
+    SELECT_MULTI,
+    NONEORNULL,
+    TEXT,
 )
 
 from . import models as p_models
@@ -99,8 +101,6 @@ def go_units_parts_cost(request):
 
     total_parts_cost = qs_pu.aggregate(total_parts_cost=Sum('part__cost'))['total_parts_cost']
 
-    import csv
-    from django.utils import formats
     response = HttpResponse()
     # response = HttpResponse(content_type='text/csv')
     # response['Content-Disposition'] = 'attachment; filename="qatrack_parts_units_cost.csv"'
@@ -126,7 +126,16 @@ def go_units_parts_cost(request):
         row.append(sum([r for r in row if type(r) in [int, Decimal]]))
         headers.append(row)
 
-    headers.append(['', 'Totals'] + [qs_pu.filter(service_event__unit_service_area__unit=u).aggregate(parts_cost=Sum('part__cost'))['parts_cost'] or 0 for u in u_models.Unit.objects.filter(pk__in=units)])
+    headers.append(
+        ['', 'Totals'] +
+        [
+            qs_pu.filter(
+                service_event__unit_service_area__unit=u
+            ).aggregate(
+                parts_cost=Sum('part__cost')
+            )['parts_cost'] or 0 for u in u_models.Unit.objects.filter(pk__in=units)
+        ]
+    )
 
     for h in headers:
         writer.writerow(h)
@@ -411,7 +420,7 @@ class PartsList(BaseListableView):
         template = get_template('parts/table_context_p_actions.html')
         mext = reverse('parts_list')
         perms = PermWrapper(self.request.user)
-        c = Context({'p': p, 'request': self.request, 'next': mext, 'perms': perms})
+        c = {'p': p, 'request': self.request, 'next': mext, 'perms': perms}
         return template.render(c)
 
 
@@ -478,7 +487,7 @@ class SuppliersList(BaseListableView):
     def actions(self, p):
         template = get_template('parts/table_context_suppliers_actions.html')
         mext = reverse('parts_list')
-        c = Context({'p': p, 'request': self.request, 'next': mext})
+        c = {'p': p, 'request': self.request, 'next': mext}
         return template.render(c)
 
 

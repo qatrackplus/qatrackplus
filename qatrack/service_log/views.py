@@ -1,20 +1,16 @@
-
-import json
-
 from collections import OrderedDict
+
 from braces.views import LoginRequiredMixin
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.context_processors import PermWrapper
-from django.contrib.auth.models import User, Permission
+from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse, resolve
-from django.db.models import Q
 from django.forms.utils import timezone
 from django.http import JsonResponse, HttpResponseRedirect, Http404
 from django.shortcuts import redirect
-from django.template import Context
 from django.template.loader import get_template
 from django.utils.translation import ugettext as _
 from django.views.generic import TemplateView, DetailView
@@ -22,8 +18,8 @@ from django.views.generic.detail import SingleObjectTemplateResponseMixin
 from django.views.generic.edit import ModelFormMixin, ProcessFormView
 
 from listable.views import (
-    BaseListableView, DATE_RANGE, SELECT_MULTI, NONEORNULL, TEXT,
-    TODAY, YESTERDAY, TOMORROW, LAST_WEEK, THIS_WEEK, NEXT_WEEK, LAST_14_DAYS, LAST_MONTH, THIS_MONTH, THIS_YEAR
+    BaseListableView, DATE_RANGE, SELECT_MULTI,
+    TODAY, YESTERDAY, LAST_WEEK, THIS_WEEK, LAST_MONTH, THIS_MONTH, THIS_YEAR
 )
 
 if settings.USE_PARTS:
@@ -99,7 +95,13 @@ def unit_sa_utc(request):
 
     # testlist_ct = ContentType.objects.get(app_label="qa", model="testlist")
     utcs_tl_qs = models.UnitTestCollection.objects.select_related('frequency').filter(unit=unit, active=True)
-    utcs_tl = sorted([{'id': utc.id, 'name': utc.name, 'frequency': utc.frequency.name if utc.frequency else 'Ad Hoc'} for utc in utcs_tl_qs], key=lambda utc: utc['name'])
+    utcs_tl = sorted(
+        [
+            {'id': utc.id, 'name': utc.name, 'frequency': utc.frequency.name if utc.frequency else 'Ad Hoc'}
+            for utc in utcs_tl_qs
+        ],
+        key=lambda utc: utc['name']
+    )
     return JsonResponse({'service_areas': service_areas, 'utcs': utcs_tl})
 
 
@@ -133,8 +135,17 @@ class SLDashboard(TemplateView):
             'units_restricted': models.Unit.objects.filter(restricted=True).count(),
             'parts_low': 0,
             'se_statuses': {},
-            'se_needing_review': models.ServiceEvent.objects.filter(service_status__in=models.ServiceEventStatus.objects.filter(is_review_required=True), is_review_required=True).count(),
-            'se_default': {'status_name': default_status.name, 'id': default_status.id, 'count': models.ServiceEvent.objects.filter(service_status=default_status).count()}
+            'se_needing_review': models.ServiceEvent.objects.filter(
+                service_status__in=models.ServiceEventStatus.objects.filter(
+                    is_review_required=True
+                ),
+                is_review_required=True
+            ).count(),
+            'se_default': {
+                'status_name': default_status.name,
+                'id': default_status.id,
+                'count': models.ServiceEvent.objects.filter(service_status=default_status).count()
+            }
         }
         # qs = models.ServiceEventStatus.objects.filter(is_active=True).order_by('pk')
         # for s in qs:
@@ -145,11 +156,6 @@ class SLDashboard(TemplateView):
         return to_return
 
     def get_timeline(self):
-
-        last_week_date = timezone.now().date() - timezone.timedelta(days=7)
-        last_week_datetime = timezone.datetime(
-            year=last_week_date.year, month=last_week_date.month, day=last_week_date.day
-        )
 
         se_new = models.ServiceEvent.objects.filter(
             datetime_created__gt=timezone.now() - timezone.timedelta(days=14)
@@ -174,10 +180,10 @@ class SLDashboard(TemplateView):
             'service_event__unit_service_area__unit',
             'user_assigned_by'
         ).prefetch_related(
-                'test_list_instance__comments',
-                'test_list_instance__testinstance_set',
-                'test_list_instance__testinstance_set__status',
-                'unit_test_collection__tests_object'
+            'test_list_instance__comments',
+            'test_list_instance__testinstance_set',
+            'test_list_instance__testinstance_set__status',
+            'unit_test_collection__tests_object'
         ).order_by('-datetime_assigned')[:40]
 
         qaf_complete = models.QAFollowup.objects.filter(
@@ -216,12 +222,24 @@ class SLDashboard(TemplateView):
 
         for qaf in qaf_new:
             datetime = timezone.localtime(qaf.datetime_assigned)
-            msg = get_user_name(qaf.user_assigned_by) + ' assigned a new RTS QA (' + qaf.unit_test_collection.tests_object.name + ') for service event ' + str(qaf.service_event.id)
+            msg = (
+                get_user_name(qaf.user_assigned_by) +
+                ' assigned a new RTS QA (' +
+                qaf.unit_test_collection.tests_object.name +
+                ') for service event ' +
+                str(qaf.service_event.id)
+            )
             populate_timeline_from_queryset(unsorted_dict, qaf, datetime, 'qaf_new', msg=msg)
 
         for qaf in qaf_complete:
             datetime = timezone.localtime(qaf.test_list_instance.created)
-            msg = get_user_name(qaf.test_list_instance.created_by) + ' performed a RTS QA (' + qaf.unit_test_collection.tests_object.name + ') for service event ' + str(qaf.service_event.id)
+            msg = (
+                get_user_name(qaf.test_list_instance.created_by) +
+                ' performed a RTS QA (' +
+                qaf.unit_test_collection.tests_object.name +
+                ') for service event ' +
+                str(qaf.service_event.id)
+            )
             populate_timeline_from_queryset(unsorted_dict, qaf, datetime, 'qaf_complete', msg=msg)
 
         for ud in unsorted_dict:
@@ -324,7 +342,8 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseM
     def get_context_data(self, *args, **kwargs):
         context_data = super(ServiceEventUpdateCreate, self).get_context_data(**kwargs)
         if self.request.method == 'POST':
-            context_data['se_statuses'] = {se.id: se.service_status.id for se in models.ServiceEvent.objects.filter(pk__in=self.request.POST.getlist('service_event_related_field'))}
+            qs = models.ServiceEvent.objects.filter(pk__in=self.request.POST.getlist('service_event_related_field'))
+            context_data['se_statuses'] = {se.id: se.service_status.id for se in qs}
         elif self.object:
             context_data['se_statuses'] = {se.id: se.service_status.id for se in self.object.service_event_related.all()}
         else:
@@ -696,15 +715,15 @@ class DetailsServiceEvent(DetailView):
         # context_data['service_event_tag_colours'] = models.ServiceEvent.get_colour_dict()
         context_data['hours'] = models.Hours.objects.filter(service_event=self.object)
         context_data['followups'] = models.QAFollowup.objects.filter(service_event=self.object).select_related(
-                'test_list_instance',
-                'test_list_instance__test_list',
-                'unit_test_collection',
-                'user_assigned_by'
-            ).prefetch_related(
-                "test_list_instance__testinstance_set",
-                "test_list_instance__testinstance_set__status",
-                'unit_test_collection__tests_object'
-            )
+            'test_list_instance',
+            'test_list_instance__test_list',
+            'unit_test_collection',
+            'user_assigned_by'
+        ).prefetch_related(
+            "test_list_instance__testinstance_set",
+            "test_list_instance__testinstance_set__status",
+            'unit_test_collection__tests_object'
+        )
         context_data['parts_used'] = p_models.PartUsed.objects.filter(service_event=self.object)
         context_data['request'] = self.request
         context_data['g_links'] = models.GroupLinkerInstance.objects.filter(service_event=self.object)
@@ -852,22 +871,22 @@ class ServiceEventsBaseList(BaseListableView):
         template = self.templates['actions']
         mext = reverse('sl_list_all') + (('?f=' + self.kwarg_filters) if self.kwarg_filters else '')
         perms = PermWrapper(self.request.user)
-        c = Context({'se': se, 'request': self.request, 'next': mext, 'perms': perms})
+        c = {'se': se, 'request': self.request, 'next': mext, 'perms': perms}
         return template.render(c)
 
     def datetime_service(self, se):
         template = self.templates['datetime_service']
-        c = Context({'datetime': se.datetime_service})
+        c = {'datetime': se.datetime_service}
         return template.render(c)
 
     def service_status__name(self, se):
         template = self.templates['service_status__name']
-        c = Context({'colour': se.service_status.colour, 'name': se.service_status.name, 'request': self.request})
+        c = {'colour': se.service_status.colour, 'name': se.service_status.name, 'request': self.request}
         return template.render(c)
 
     def problem_description(self, se):
         template = self.templates['problem_description']
-        c = Context({'problem_description': se.problem_description, 'request': self.request})
+        c = {'problem_description': se.problem_description, 'request': self.request}
         return template.render(c)
 
 
@@ -1016,38 +1035,38 @@ class QAFollowupsBaseList(BaseListableView):
         template = self.templates['actions']
         next = reverse('qaf_list_all') + (('?f=' + self.kwarg_filters) if self.kwarg_filters else '')
         perms = PermWrapper(self.request.user)
-        c = Context({'qaf': qaf, 'request': self.request, 'next': next, 'show_se_link': True, 'perms': perms})
+        c = {'qaf': qaf, 'request': self.request, 'next': next, 'show_se_link': True, 'perms': perms}
         return template.render(c)
 
     def test_list_instance_pass_fail(self, qaf):
         template = self.templates['test_list_instance_pass_fail']
-        c = Context({
+        c = {
             'instance': qaf.test_list_instance if qaf.test_list_instance else None,
             'show_dash': True,
             'exclude': ['no_tol'],
             'show_icons': True
-        })
+        }
         return template.render(c)
 
     def test_list_instance_review_status(self, qaf):
         template = self.templates['test_list_instance_review_status']
-        c = Context({
+        c = {
             'instance': qaf.test_list_instance if qaf.test_list_instance else None,
             'perms': PermWrapper(self.request.user),
             'request': self.request,
             'show_dash': True,
-        })
+        }
         c.update(generate_review_status_context(qaf.test_list_instance))
         return template.render(c)
 
     def datetime_assigned(self, qaf):
         template = self.templates['datetime_assigned']
-        c = Context({'datetime': qaf.datetime_assigned})
+        c = {'datetime': qaf.datetime_assigned}
         return template.render(c)
 
     def service_event__service_status__name(self, qaf):
         template = self.templates['service_event__service_status__name']
-        c = Context({'colour': qaf.service_event.service_status.colour, 'name': qaf.service_event.service_status.name, 'request': self.request})
+        c = {'colour': qaf.service_event.service_status.colour, 'name': qaf.service_event.service_status.name, 'request': self.request}
         return template.render(c)
 
 
@@ -1064,7 +1083,7 @@ class TLISelect(UTCInstances):
 
     def actions(self, tli):
         template = self.templates['actions']
-        c = Context({"instance": tli, "perms": PermWrapper(self.request.user), "select": True, 'f_form': self.kwargs['form']})
+        c = {"instance": tli, "perms": PermWrapper(self.request.user), "select": True, 'f_form': self.kwargs['form']}
         return template.render(c)
 
 
@@ -1160,7 +1179,6 @@ class ServiceEventDownTimesList(ServiceEventsBaseList):
 
             return '{}:{}'.format(hours, minutes)
 
-
     def duration_service_time(self, se):
         duration = se.duration_service_time
         if duration:
@@ -1174,4 +1192,3 @@ class ServiceEventDownTimesList(ServiceEventsBaseList):
 class DownTimesSummary(TemplateView):
 
     template_name = 'service_log/service_event_down_time_summary.html'
-

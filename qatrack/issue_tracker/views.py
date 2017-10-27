@@ -1,22 +1,21 @@
-
 from braces.views import LoginRequiredMixin
-from django.conf import settings
-from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse, resolve
 from django.forms.utils import timezone
-from django.http import JsonResponse, HttpResponseRedirect, Http404
-from django.shortcuts import redirect
-from django.template import Context
+from django.http import HttpResponseRedirect
 from django.template.loader import get_template
-from django.views.generic import TemplateView, DetailView, CreateView
-from django.views.generic.detail import SingleObjectTemplateResponseMixin
-from django.views.generic.edit import ModelFormMixin, ProcessFormView
+from django.views.generic import DetailView, CreateView
 
 from listable.views import (
-    BaseListableView, DATE_RANGE, SELECT_MULTI, NONEORNULL, TEXT, SELECT_MULTI_FROM_MULTI,
-    TODAY, YESTERDAY, TOMORROW, LAST_WEEK, THIS_WEEK, NEXT_WEEK, LAST_14_DAYS, LAST_MONTH, THIS_MONTH, THIS_YEAR
+    BaseListableView,
+    DATE_RANGE,
+    LAST_MONTH,
+    LAST_WEEK,
+    SELECT_MULTI,
+    SELECT_MULTI_FROM_MULTI,
+    TEXT,
+    TODAY,
+    YESTERDAY,
 )
 
 from qatrack.issue_tracker import models as i_models
@@ -32,7 +31,7 @@ class IssueCreate(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
 
-        context = self.get_context_data()
+        self.get_context_data()
 
         issue = form.save(commit=False)
         issue.user_submitted_by = self.request.user
@@ -167,25 +166,25 @@ class IssueList(BaseListableView):
     def actions(self, i):
         template = get_template('issue_tracker/table_context_issue_actions.html')
         mext = reverse('issue_list')
-        c = Context({'i': i, 'request': self.request, 'next': mext})
+        c = {'i': i, 'request': self.request, 'next': mext}
         return template.render(c)
 
     def datetime_submitted(self, i):
         template = get_template('service_log/table_context_datetime.html')
-        c = Context({'datetime': i.datetime_submitted})
+        c = {'datetime': i.datetime_submitted}
         return template.render(c)
 
     def issue_priority__name(self, i):
         template = get_template('issue_tracker/table_context_issue_priority.html')
-        c = Context({'issue_priority': i.issue_priority, 'request': self.request})
+        c = {'issue_priority': i.issue_priority, 'request': self.request}
         return template.render(c)
 
     def issue_status__name(self, i):
         template = get_template('issue_tracker/table_context_issue_status.html')
-        c = Context({'issue_status': i.issue_status, 'request': self.request})
+        c = {'issue_status': i.issue_status, 'request': self.request}
         return template.render(c)
 
     def description(self, i):
         template = get_template('issue_tracker/table_context_issue_description.html')
-        c = Context({'description': i.description, 'request': self.request})
+        c = {'description': i.description, 'request': self.request}
         return template.render(c)

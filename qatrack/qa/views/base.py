@@ -12,7 +12,6 @@ from django.core.urlresolvers import reverse, resolve
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import render
-from django.template import Context
 from django.template.loader import get_template
 from django.utils.html import escape
 from django.utils.translation import ugettext as _
@@ -21,9 +20,8 @@ from django.views.decorators.http import require_POST
 from django.views.generic import UpdateView
 from django_comments import get_form
 from django_comments import signals as dc_signals
-from django_comments.views.utils import next_redirect
 
-from qatrack.qa import models, utils
+from qatrack.qa import models
 
 from braces.views import PrefetchRelatedMixin, SelectRelatedMixin
 from listable.views import (
@@ -284,28 +282,33 @@ class UTCList(BaseListableView):
     def actions(self, utc):
         template = self.templates['actions']
         perms = PermWrapper(self.request.user)
-        c = Context({'utc': utc, 'request': self.request, 'action': self.action, 'perms': perms})
+        c = {'utc': utc, 'request': self.request, 'action': self.action, 'perms': perms}
         return template.render(c)
 
     def due_date(self, utc):
         template = self.templates['due_date']
-        c = Context({'unit_test_collection': utc, 'show_icons': settings.ICON_SETTINGS['SHOW_DUE_ICONS']})
+        c = {'unit_test_collection': utc, 'show_icons': settings.ICON_SETTINGS['SHOW_DUE_ICONS']}
         return template.render(c)
 
     def last_instance__work_completed(self, utc):
         template = self.templates['work_completed']
-        c = Context({"instance": utc.last_instance})
+        c = {"instance": utc.last_instance}
         return template.render(c)
 
     def last_instance_review_status(self, utc):
         template = self.templates['review_status']
-        c = Context({'instance': utc.last_instance, 'perms': PermWrapper(self.request.user), 'request': self.request})
+        c = {'instance': utc.last_instance, 'perms': PermWrapper(self.request.user), 'request': self.request}
         c.update(generate_review_status_context(utc.last_instance))
         return template.render(c)
 
     def last_instance_pass_fail(self, utc):
         template = self.templates['pass_fail']
-        c = Context({'instance': utc.last_instance, 'exclude': [models.NO_TOL], 'show_label': settings.ICON_SETTINGS['SHOW_STATUS_LABELS_LISTING'], 'show_icons': settings.ICON_SETTINGS['SHOW_STATUS_ICONS_LISTING']})
+        c = {
+            'instance': utc.last_instance,
+            'exclude': [models.NO_TOL],
+            'show_label': settings.ICON_SETTINGS['SHOW_STATUS_LABELS_LISTING'],
+            'show_icons': settings.ICON_SETTINGS['SHOW_STATUS_ICONS_LISTING']
+        }
         return template.render(c)
 
 
@@ -418,7 +421,7 @@ class TestListInstances(BaseListableView):
         template = self.templates['actions']
         initiated_se = tli.serviceevents_initiated.all()
         followup_for_se = [qa.service_event for qa in tli.qafollowup_for_tli.all()]
-        c = Context({
+        c = {
             'instance': tli,
             'perms': PermWrapper(self.request.user),
             'request': self.request,
@@ -428,23 +431,33 @@ class TestListInstances(BaseListableView):
             'show_followup_se': True,
             'followup_for_se': followup_for_se,
             'num_followup_se': len(followup_for_se)
-        })
+        }
         return template.render(c)
 
     def work_completed(self, tli):
         template = self.templates['work_completed']
-        c = Context({"instance": tli})
-        return template.render(c)
+        return template.render({"instance": tli})
 
     def review_status(self, tli):
         template = self.templates['review_status']
-        c = Context({"instance": tli, "perms": PermWrapper(self.request.user), "request": self.request, "show_label": settings.ICON_SETTINGS['SHOW_REVIEW_LABELS_LISTING'], "show_icons": settings.ICON_SETTINGS['SHOW_STATUS_ICONS_REVIEW']})
+        c = {
+            "instance": tli,
+            "perms": PermWrapper(self.request.user),
+            "request": self.request,
+            "show_label": settings.ICON_SETTINGS['SHOW_REVIEW_LABELS_LISTING'],
+            "show_icons": settings.ICON_SETTINGS['SHOW_STATUS_ICONS_REVIEW']
+        }
         c.update(generate_review_status_context(tli))
         return template.render(c)
 
     def pass_fail(self, tli):
         template = self.templates['pass_fail']
-        c = Context({"instance": tli, "exclude": [models.NO_TOL], "show_label": settings.ICON_SETTINGS['SHOW_REVIEW_LABELS_LISTING'], "show_icons": settings.ICON_SETTINGS['SHOW_STATUS_ICONS_LISTING']})
+        c = {
+            "instance": tli,
+            "exclude": [models.NO_TOL],
+            "show_label": settings.ICON_SETTINGS['SHOW_REVIEW_LABELS_LISTING'],
+            "show_icons": settings.ICON_SETTINGS['SHOW_STATUS_ICONS_LISTING']
+        }
         return template.render(c)
 
 
@@ -482,9 +495,21 @@ def ajax_comment(request, next=None, using=None):
     except AttributeError:
         return JsonResponse({'error': True, 'message': 'The given content-type %r does not resolve to a valid model.' % escape(ctype)}, status=500)
     except ObjectDoesNotExist:
-        return JsonResponse({'error': True, 'message': 'No object matching content-type %r and object PK %r exists.' % (escape(ctype), escape(object_pk))}, status=500)
+        return JsonResponse(
+            {
+                'error': True,
+                'message': 'No object matching content-type %r and object PK %r exists.' % (escape(ctype), escape(object_pk))
+            },
+            status=500,
+        )
     except (ValueError, ValidationError) as e:
-        return JsonResponse({'error': True, 'message': 'Attempting go get content-type %r and object PK %r exists raised %s' % (escape(ctype), escape(object_pk), e.__class__.__name__)}, status=500)
+        return JsonResponse(
+            {
+                'error': True,
+                'message': 'Attempting go get content-type %r and object PK %r exists raised %s' % (escape(ctype), escape(object_pk), e.__class__.__name__)
+            },
+            status=500,
+        )
 
     # Do we want to preview the comment?
     preview = "preview" in data
@@ -513,8 +538,7 @@ def ajax_comment(request, next=None, using=None):
             "comment": form.data.get("comment", ""),
             "form": form,
             "next": data.get("next", next),
-        },
-                      )
+        })
 
     # Otherwise create the comment
     comment = form.get_comment_object(site_id=get_current_site(request).id)

@@ -7,7 +7,6 @@ from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Count
 from django.http import HttpResponse
-from django.template import Context
 from django.template.loader import get_template
 from django.utils import timezone
 from django.views.generic import TemplateView, View
@@ -145,7 +144,7 @@ class ChartView(PermissionRequiredMixin, TemplateView):
 
         self.unit_frequencies = collections.defaultdict(set)
         for u, f in unit_frequencies:
-            f = f or 0 # use 0 id for ad hoc frequencies
+            f = f or 0  # use 0 id for ad hoc frequencies
             self.unit_frequencies[u].add(f)
 
     def set_test_lists(self):
@@ -222,11 +221,11 @@ class BaseChartView(View):
 
     def render_table(self, headers, rows):
 
-        context = Context({
+        context = {
             "ncols": 3 * len(rows[0]) if rows else 0,
             "rows": rows,
             "headers": headers
-        })
+        }
         template = get_template("qa/qa_data_table.html")
 
         return template.render(context)
@@ -419,7 +418,13 @@ class BaseChartView(View):
                     'type': se.service_type_id,
                     'is_review_required': se.is_review_required,
                     'initiated_by': se.test_list_instance_initiated_by_id,
-                    'followups': [{'id': qaf.id, 'test_list_instance': qaf.test_list_instance_id, 'test_list': qaf.test_list_instance.test_list_id if qaf.test_list_instance else ''} for qaf in qa_followups],
+                    'followups': [
+                        {
+                            'id': qaf.id,
+                            'test_list_instance': qaf.test_list_instance_id,
+                            'test_list': qaf.test_list_instance.test_list_id if qaf.test_list_instance else ''
+                        } for qaf in qa_followups
+                    ],
                     'work_description': se.work_description,
                     'problem_description': se.problem_description,
                     'unit': {'id': se.unit_service_area.unit_id, 'name': se.unit_service_area.unit.name},

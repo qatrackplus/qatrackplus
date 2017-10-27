@@ -4,21 +4,20 @@ from django.conf import settings
 from django.core.urlresolvers import reverse, resolve
 from django.db.models import ObjectDoesNotExist
 from django.http import JsonResponse
-from django.shortcuts import redirect
-from django.template import Context
 from django.template.loader import get_template
-from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django.views.generic import TemplateView, CreateView
 
 from listable.views import (
-    BaseListableView, DATE_RANGE, SELECT, SELECT_MULTI, NONEORNULL, TEXT,
-    TODAY, YESTERDAY, TOMORROW, LAST_WEEK, THIS_WEEK, NEXT_WEEK, LAST_14_DAYS, LAST_MONTH, THIS_MONTH, THIS_YEAR
+    BaseListableView,
+    SELECT,
+    SELECT_MULTI,
+    NONEORNULL,
+    TEXT,
 )
 
 from qatrack.units import models as u_models
 from qatrack.units import forms
-from qatrack.service_log import models as sl_models
 
 
 class UnitsFromKwargs(TemplateView):
@@ -256,7 +255,7 @@ class VendorsList(BaseListableView):
     def actions(self, se):
         template = self.templates['actions']
         mext = reverse('sl_list_all') + (('?f=' + self.kwarg_filters) if self.kwarg_filters else '')
-        c = Context({'se': se, 'request': self.request, 'next': mext})
+        c = {'se': se, 'request': self.request, 'next': mext}
         return template.render(c)
 
     def thirdparties(self, v):
@@ -366,7 +365,7 @@ class UnitList(BaseListableView):
     def actions(self, u):
         template = self.templates['actions']
         mext = reverse('sl_list_all') + (('?f=' + self.kwarg_filters) if self.kwarg_filters else '')
-        c = Context({'u': u, 'request': self.request, 'next': mext, 'USE_PARTS': settings.USE_PARTS})
+        c = {'u': u, 'request': self.request, 'next': mext, 'USE_PARTS': settings.USE_PARTS}
         return template.render(c)
 
     def modalities(self, u):

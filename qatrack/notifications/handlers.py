@@ -1,10 +1,7 @@
-
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.contrib.messages import add_message, ERROR
 from django.core.mail import send_mail
 from django.dispatch import receiver
-from django.template import Context
 from django.template.loader import get_template
 
 from qatrack.qa.signals import testlist_complete
@@ -38,11 +35,11 @@ def email_on_testlist_save(*args, **kwargs):
     pwd = getattr(settings, "EMAIL_NOTIFICATION_PWD", None)
     fail_silently = getattr(settings, "EMAIL_FAIL_SILENTLY", True)
 
-    context = Context({
+    context = {
         "failing_tests": failing,
         "tolerance_tests": tolerance,
         "test_list_instance": test_list_instance,
-    })
+    }
 
     if subject_template is not None:
         subject = get_template(subject_template).render(context).strip()

@@ -1,20 +1,14 @@
-
-import json
 import re
 
 from django.conf import settings
-from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
 from django.contrib.auth.models import User, Group
-from django.template import Context
-from django.template.loader import get_template
-from django.utils import timezone
 from django.utils.translation import ugettext as _
 
 from qatrack.units.models import Unit, Vendor
 from qatrack.qa.models import UnitTestCollection, TestListInstance
-from qatrack.qa import utils
+
 
 re_255 = '([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])'
 color_re = re.compile('^rgba\(' + re_255 + ',' + re_255 + ',' + re_255 + ',(0(\.[0-9][0-9]?)?|1)\)$')
@@ -124,7 +118,13 @@ class ServiceEvent(models.Model):
     user_status_changed_by = models.ForeignKey(User, null=True, blank=True, related_name='+', on_delete=models.PROTECT)
     user_created_by = models.ForeignKey(User, related_name='+', on_delete=models.PROTECT)
     user_modified_by = models.ForeignKey(User, null=True, blank=True, related_name='+', on_delete=models.PROTECT)
-    test_list_instance_initiated_by = models.ForeignKey(TestListInstance, null=True, blank=True, on_delete=models.PROTECT, related_name='serviceevents_initiated')
+    test_list_instance_initiated_by = models.ForeignKey(
+        TestListInstance,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name='serviceevents_initiated'
+    )
 
     datetime_status_changed = models.DateTimeField(null=True, blank=True)
     datetime_created = models.DateTimeField()
@@ -264,4 +264,3 @@ class GroupLinkerInstance(models.Model):
 
     class Meta:
         unique_together = ('service_event', 'group_linker')
-
