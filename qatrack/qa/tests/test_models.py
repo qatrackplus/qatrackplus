@@ -1,3 +1,5 @@
+from unittest import mock
+
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.conf import settings
@@ -7,7 +9,6 @@ from django_comments.models import Comment
 
 from qatrack.qa import models
 
-import mock
 from . import utils
 
 
@@ -1406,6 +1407,8 @@ class TestTestInstance(TestCase):
 
     def test_skipped(self):
         ti = models.TestInstance(skipped=True)
+        ti.unit_test_info = models.UnitTestInfo()
+        ti.unit_test_info.test = models.Test(hidden=False)
         ti.calculate_pass_fail()
         self.assertEqual(models.NOT_DONE, ti.pass_fail)
 
