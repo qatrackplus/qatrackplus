@@ -1,5 +1,5 @@
 "use strict";
-require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jquery-ui', 'comments'], function ($, _, moment, Dropzone, autosize) {
+require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jquery-ui', 'comments', 'flatpickr'], function ($, _, moment, Dropzone, autosize) {
     var csrf_token = $("input[name=csrfmiddlewaretoken]").val();
 
     function csrfSafeMethod(method) {
@@ -945,85 +945,117 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jqu
         ///////// Work time
         if (override_date) {
 
-            var base_range_settings = {
-                singleDatePicker: true,
-                autoclose: true,
-                keyboardNavigation: false,
-                timePicker: true,
-                timePicker24Hour: true,
-                // timePickerIncrement: 5,
-                locale: {
-                    "format": "DD-MM-YYYY HH:mm"
-                }
-            };
-
-            var start_picker = $('#id_work_started'),
-                completed_picker = $('#id_work_completed'),
-                duration_picker = $('#id_work_duration');
+            var $start_picker = $('#id_work_started'),
+                $completed_picker = $('#id_work_completed'),
+                $duration_picker = $('#id_work_duration'),
+                $start_clear = $('#clear-work_started'),
+                $complete_clear = $('#clear-work_completed');
 
             var duration_change = true;
+            work_started_initial = !work_started_initial ? moment().valueOf() : moment(work_started_initial).valueOf();
+            work_completed_initial = !work_completed_initial ? false : moment(work_completed_initial).valueOf();
 
-            $(start_picker).daterangepicker(
-                base_range_settings
-            ).on('apply.daterangepicker', function (ev, picker) {
-                var min_date = picker.startDate.clone();
-                $(completed_picker).daterangepicker(
-                    $.extend({},
-                        base_range_settings,
-                        {
-                            minDate: min_date,
-                            maxDate: min_date.clone().add(99, 'hours').add(59, 'minutes')
-                        }
-                    )
-                ).on('apply.daterangepicker', apply_completed);
-                duration_change = false;
-                $(duration_picker).val('');
-                $(completed_picker).data('daterangepicker').setStartDate(min_date);
-                $(completed_picker).data('daterangepicker').setEndDate(min_date);
-                $(completed_picker).trigger('apply.daterangepicker');
-            });
+            var setDuration = function(start_date, complete_date) {
+                if (!start_date || !complete_date) {
+                    $duration_picker.val('');
+                    return;
+                }
+                var diff = complete_date - start_date,
+                    hours = Math.floor(diff / 3600000),
+                    mins = Math.floor((diff - hours * 3600000) / 60000);
 
-            var min_date = $(start_picker).data('daterangepicker').startDate.clone();
-            $(completed_picker).daterangepicker(
-                $.extend({},
-                    base_range_settings,
-                    {
-                        minDate: min_date,
-                        maxDate: min_date.clone().add(99, 'hours').add(59, 'minutes')
+                if (mins < 10) mins = '0' + mins; else mins = mins.toString();
+                $duration_picker.val(hours.toString() + mins);
+            };
+
+            var start_fp = $start_picker.flatpickr({
+                enableTime: true,
+                time_24hr: true,
+                minuteIncrement: 1,
+                dateFormat: 'd-m-Y H:i',
+                maxDate: work_completed_initial ? _.max([work_completed_initial, moment().valueOf()]) : moment().valueOf(),
+                onChange: function(selectedDates, dateStr, instance) {
+
+                    if (dateStr === '') {
+                        instance.setDate(work_started_initial);
+                        selectedDates = [work_started_initial]
                     }
-                )
-            ).on('apply.daterangepicker', apply_completed).focus(function () {
-                duration_change = true;
+
+                    if ($completed_picker.val() !== '') {
+                        setDuration(selectedDates[0], $completed_picker[0]._flatpickr.selectedDates[0]);
+                    }
+                    $completed_picker[0]._flatpickr.set('minDate', selectedDates[0].valueOf());
+                    $start_clear.fadeIn('fast');
+                }
+            });
+            $start_clear.click(function() {
+                start_fp.clear();
+                $(this).fadeOut('fast');
             });
 
-            $(duration_picker).inputmask({
-                mask: "99hr : 'min",
-                definitions: {
-                    "'": {
-                        validator: "[0-5][0-9]",
-                        cardinality: 2,
-                        prevalidator: [{
-                            validator: "[0-5]",
-                            cardinality: 1
-                        }]
+            var complete_fp = $completed_picker.flatpickr({
+                enableTime: true,
+                time_24hr: true,
+                dateFormat: 'd-m-Y H:i',
+                minuteIncrement: 1,
+                minDate: $start_picker[0]._flatpickr.selectedDates[0],
+                onOpen: function(selectedDates, dateStr, instance) {
+                    if (dateStr === '') {
+                        instance.setDate(work_completed_initial ? work_completed_initial : moment().valueOf(), true);
                     }
                 },
-                "oncomplete": function () {
-                    if (end_date_change) {
-                        var duration = this.inputmask.unmaskedvalue();
-                        var start_time = $($(start_picker)).data('daterangepicker').startDate,
-                            hours = duration[0] + duration[1],
-                            mins = duration[2] + duration[3];
-                        var end_time = start_time.clone().add(hours, 'hours').add(mins, 'minutes')/*.format('DD-MM-YYYY HH:mm')*/;
-                        $(completed_picker).data('daterangepicker').setStartDate(end_time);
-                        $(completed_picker).data('daterangepicker').setEndDate(end_time);
-                        end_date_change = false;
-                        $.Topic("valueChanged").publish();
+                onChange: function(selectedDates, dateStr, instance) {
+
+                    if (dateStr === '' && work_completed_initial) {
+                        instance.setDate(work_completed_initial);
+                        selectedDates = [work_completed_initial]
+                    }
+
+                    setDuration($start_picker[0]._flatpickr.selectedDates[0], selectedDates[0]);
+
+                    if (selectedDates.length > 0) {
+                        $start_picker[0]._flatpickr.set('maxDate', _.max([selectedDates[0].valueOf(), moment().valueOf()]));
+                        $complete_clear.fadeIn('fast');
+                    } else {
+                        $start_picker[0]._flatpickr.set('maxDate', moment().valueOf());
                     }
                 }
-            }).on('keypress', function () {
-                end_date_change = true;
             });
+
+            $complete_clear.click(function() {
+                complete_fp.clear();
+                $(this).fadeOut('fast');
+                // $duration_picker.val('');
+            });
+
+            $duration_picker.inputmask('9{1,4}hr:99min', {
+                numericInput: true,
+                placeholder: "_",
+                removeMaskOnSubmit: true
+            }).on('keyup', function () {
+                var duration = this.inputmask.unmaskedvalue(),
+                    hour, min;
+                if (duration === '') {
+                    $completed_picker[0]._flatpickr.setDate('', true);
+                    $complete_clear.fadeOut('fast');
+                    return;
+                }
+                if (duration.length <= 2) {
+                    hour = 0;
+                    min = parseInt(duration);
+                } else {
+                    hour = parseInt(duration.substring(0, duration.length - 2));
+                    min = parseInt(duration.substring(duration.length - 2));
+                }
+                $completed_picker[0]._flatpickr.setDate(
+                    moment($start_picker.val(), 'DD-MM-YYYY HH:mm').add(hour, 'hours').add(min, 'minutes').valueOf()
+                );
+                $complete_clear.fadeIn('fast');
+            });
+
+            if ($start_picker[0]._flatpickr.selectedDates && $completed_picker[0]._flatpickr.selectedDates) {
+                setDuration($start_picker[0]._flatpickr.selectedDates[0], $completed_picker[0]._flatpickr.selectedDates[0]);
+            }
         }
 
         //////// Warning message

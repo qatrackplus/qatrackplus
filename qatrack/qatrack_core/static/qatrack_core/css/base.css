@@ -335,6 +335,17 @@ input[type="number"] {
 .text-align-center {
     text-align: center;
 }
+#listable-table-issue_list > thead > tr > th,
+#listable-table-issue_list > tbody > tr > td {
+    width: 300px;
+    max-width: 300px;
+}
+.hide-extra-text {
+    text-overflow: ellipsis;
+    text-wrap: none;
+    overflow: hidden;
+    white-space: nowrap;
+}
 
 .no-error {
     border-color: #d2d6de !important;
@@ -399,5 +410,4 @@ input[type="number"] {
 input[type="number"] {
     -moz-appearance: textfield;
 }
-
 

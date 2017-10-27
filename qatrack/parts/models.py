@@ -112,9 +112,7 @@ class Part(models.Model):
     is_obsolete = models.BooleanField(default=False, help_text=_('Is this part now obsolete'), verbose_name=_('Obsolete'))
 
     class Meta:
-        permissions = (
-            ('view_part', 'Can View Part'),
-        )
+        permissions = (('view_part', 'Can View Part'),)
 
     def __str__(self):
         return '%s%s - %s' % (self.part_number, ' (%s)' % self.alt_part_number if self.alt_part_number else '', self.description)

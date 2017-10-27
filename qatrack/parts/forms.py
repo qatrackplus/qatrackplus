@@ -113,7 +113,7 @@ class CostInputField(forms.CharField):
 
 class PartForm(BetterModelForm):
 
-    cost = CostInputField(required=False)
+    cost = CostInputField()
 
     class Meta:
         model = p_models.Part

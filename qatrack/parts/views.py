@@ -3,9 +3,11 @@ from braces.views import LoginRequiredMixin
 from decimal import Decimal
 from django.core.urlresolvers import reverse, resolve
 from django.contrib.auth.context_processors import PermWrapper
+from django.contrib import messages
 from django.db.models import F, Q, Func, Sum
 from django.forms.utils import timezone
 from django.http import JsonResponse, HttpResponseRedirect, HttpResponse
+from django.shortcuts import redirect
 from django.template import Context
 from django.template.loader import get_template
 from django.utils.translation import ugettext as _
@@ -187,7 +189,12 @@ class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, Mo
         if not supplier_formset.is_valid() or not storage_formset.is_valid():
             return self.render_to_response(context)
 
-        part = form.save()
+        part = form.save(commit=False)
+        if not part.pk:
+            messages.add_message(request=self.request, level=messages.SUCCESS, message='New part %s added' % part.part_number)
+        else:
+            messages.add_message(request=self.request, level=messages.SUCCESS, message='Part %s updated' % part.part_number)
+        part.save()
 
         for sup_form in supplier_formset:
 
@@ -276,7 +283,7 @@ class PartsUnitsCost(TemplateView):
     def get_context_data(self, **kwargs):
         context = super(PartsUnitsCost, self).get_context_data(**kwargs)
         context['names'] = [q.name for q in self.queryset]
-        context['units'] = self.queryset
+        context['units'] = self.queryset.exclude(service_areas=None)
         context['service_areas'] = self.get_service_areas(self.queryset)
         context['service_types'] = self.get_service_types()
         return context
@@ -289,6 +296,11 @@ class PartsUnitsCost(TemplateView):
 
     def get_service_types(self):
         return s_models.ServiceType.objects.all()
+
+    def dispatch(self, request, *args, **kwargs):
+        if s_models.ServiceType.objects.all().exists() and u_models.Unit.objects.all().exists() and s_models.ServiceArea.objects.all().exists():
+            return super().dispatch(request, *args, **kwargs)
+        return redirect(reverse('err'))
 
 
 class PartsList(BaseListableView):

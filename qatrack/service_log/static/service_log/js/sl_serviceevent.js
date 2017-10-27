@@ -336,12 +336,12 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
             $('#id_followup-' + followup_index + '-unit_test_collection').select2({
                 minimumResultsForSearch: 10,
                 width: '100%'
-            });
+            }).change(rtsqa_change);
 
             $followup_index.val(parseInt(followup_index) + 1);
         });
 
-        $('select.followup-utc').change(function() {
+        function rtsqa_change() {
 
             var prefix = $(this).attr('data-prefix'),
                 utc_id = $(this).val(),
@@ -371,8 +371,9 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
                 $('.' + prefix + '-hider').fadeIn('fast');
                 set_select_tli();
             }
+        }
 
-        });
+        $('select.followup-utc').change(rtsqa_change);
         $('select.followup-utc').change();
 
         // Parts formset --------------------------------------------------------------------------------------

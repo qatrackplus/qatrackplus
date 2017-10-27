@@ -762,8 +762,8 @@ def get_utc_tl_ids(active=None, units=None, frequencies=None):
 
 class UnitTestInfoManager(models.Manager):
 
-    def get_query_set(self):
-        return super(UnitTestInfoManager, self).get_query_set()
+    # def get_queryset(self):
+    #     return super(UnitTestInfoManager, self).get_queryset()
 
     def active(self, queryset=None):
         """Only return UTI's who's tests belong to at least 1 test list that
@@ -771,8 +771,10 @@ class UnitTestInfoManager(models.Manager):
 
         qs = queryset or self.get_queryset()
 
+        tl_ids = get_utc_tl_ids(active=True)
         return qs.filter(
-            test__testlistmembership__test_list__in=get_utc_tl_ids(active=True)
+            Q(test__testlistmembership__test_list__in=tl_ids) |
+            Q(test__testlistmembership__test_list__testlist__in=tl_ids)
         ).distinct()
 
     def inactive(self, queryset=None):
@@ -781,8 +783,10 @@ class UnitTestInfoManager(models.Manager):
 
         qs = queryset or self.get_queryset()
 
+        tl_ids = get_utc_tl_ids(active=True)
         return qs.exclude(
-            test__testlistmembership__test_list__in=get_utc_tl_ids(active=True)
+            Q(test__testlistmembership__test_list__in=tl_ids) |
+            Q(test__testlistmembership__test_list__testlist__in=tl_ids)
         ).distinct()
 
 
@@ -1208,9 +1212,7 @@ class TestInstance(models.Model):
     work_started = models.DateTimeField(editable=False, db_index=True)
 
     # when was the work actually performed
-    work_completed = models.DateTimeField(default=timezone.now,
-                                          help_text=settings.DATETIME_HELP, db_index=True,
-                                          )
+    work_completed = models.DateTimeField(default=timezone.now, help_text=settings.DATETIME_HELP, db_index=True)
 
     # for keeping a very basic history
     created = models.DateTimeField(default=timezone.now)

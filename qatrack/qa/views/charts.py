@@ -5,7 +5,7 @@ import textwrap
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Count, Q, F, Case, When, IntegerField
+from django.db.models import Count
 from django.http import HttpResponse
 from django.template import Context
 from django.template.loader import get_template
@@ -247,9 +247,8 @@ class BaseChartView(View):
         except:
             d_to = default_to
 
-        if timezone.is_naive(d_to):
-            d_to = timezone.make_aware(d_to, timezone.get_current_timezone())
-            d_from = timezone.make_aware(d_from, timezone.get_current_timezone())
+        d_to = timezone.datetime(d_to.year, d_to.month, d_to.day, 23, 59, 59, tzinfo=timezone.get_current_timezone())
+        d_from = timezone.datetime(d_from.year, d_from.month, d_from.day, tzinfo=timezone.get_current_timezone())
 
         return [d_from.astimezone(timezone.utc), d_to.astimezone(timezone.utc)]
 
@@ -315,6 +314,9 @@ class BaseChartView(View):
 
         now = timezone.now()
         dates = self.get_date(now, now - timezone.timedelta(days=365))
+
+        print('<<< get_plot_data >>>')
+        print(dates)
 
         from_date = dates[0]
         to_date = dates[1]
@@ -493,6 +495,7 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
         include_fit = self.request.GET.get("fit_data", "") == "true"
 
         response = HttpResponse(content_type="image/png")
+
         if n_baseline_subgroups < 1 or n_baseline_subgroups > len(data) / subgroup_size:
             fig.text(0.1, 0.9, "Not enough data for control chart", fontsize=20)
             canvas.print_png(response)

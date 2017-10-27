@@ -680,8 +680,8 @@ class UpdateServiceEvent(ServiceEventUpdateCreate):
 
             if not form.instance.service_status.is_review_required:
                 form.instance.service_status = models.ServiceEventStatus.get_default()
-                form.instance.datetime_status_changed = timezone.now()
-                form.instance.user_status_changed_by = self.request.user
+                # form.instance.datetime_status_changed = timezone.now()
+                # form.instance.user_status_changed_by = self.request.user
 
         return super(UpdateServiceEvent, self).form_valid(form)
 

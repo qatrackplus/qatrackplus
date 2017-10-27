@@ -1,18 +1,24 @@
 
 from django.conf import settings
 from django.contrib import admin
+from django.contrib.admin import helpers
+from django.contrib.admin.exceptions import DisallowedModelAdminToField
+from django.contrib.admin.options import TO_FIELD_VAR, IS_POPUP_VAR
+from django.contrib.admin.utils import unquote
 from django.contrib.admin.widgets import FilteredSelectMultiple
+from django.core.exceptions import PermissionDenied
 from django.db.models import ObjectDoesNotExist
-from django.forms import ModelMultipleChoiceField, ModelForm, DateTimeField
-from django.shortcuts import HttpResponseRedirect
+from django.forms import ModelMultipleChoiceField, ModelForm, DateTimeField, ValidationError
+from django.forms.formsets import all_valid
+from django.http import Http404
+from django.utils.encoding import force_text
+from django.utils.html import escape
 from django.utils.translation import ugettext as _
 
 from .models import ServiceEventStatus, ServiceType, UnitServiceArea, ServiceArea, ServiceEvent, ThirdParty, Vendor, GroupLinker
 from qatrack.units.models import Unit, Modality, UnitAvailableTime
 from .forms import ServiceEventForm, HoursMinDurationField
 from qatrack.units.forms import UnitAvailableTimeForm
-
-from admin_views.admin import AdminViews
 
 
 class ServiceEventStatusFormAdmin(ModelForm):
@@ -130,7 +136,7 @@ class UnitFormAdmin(ModelForm):
 
     service_areas = ModelMultipleChoiceField(
         queryset=ServiceArea.objects.all(),
-        required=False,
+        required=True,
         widget=FilteredSelectMultiple(
             verbose_name=_('Service areas'),
             is_stacked=False
@@ -164,31 +170,22 @@ class UnitFormAdmin(ModelForm):
         ]
 
     def __init__(self, *args, **kwargs):
-        super(UnitFormAdmin, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         if self.instance and self.instance.pk:
             self.fields['service_areas'].initial = self.instance.service_areas.all()
 
-    def save(self, commit=True):
-        unit = super(UnitFormAdmin, self).save(commit=False)
-
-        if commit:
-            unit.save()
-            self.save_m2m()
-
-        if unit.pk:
-            for sa in self.cleaned_data['service_areas']:
-                unit_service_area, created = UnitServiceArea.objects.get_or_create(unit=unit, service_area=sa)
-                # unit_service_area.save()
-
+    def clean_service_areas(self):
+        if self.instance:
+            unit = self.instance
             for usa in UnitServiceArea.objects.filter(unit=unit).exclude(service_area__in=self.cleaned_data['service_areas']):
-                usa.delete()
+                if ServiceEvent.objects.filter(unit_service_area=usa).exists():
+                    data_copy = self.data.copy()
+                    data_copy.setlist('service_areas', [str(sa.id) for sa in (self.cleaned_data['service_areas'] | ServiceArea.objects.filter(pk=usa.service_area_id))])
+                    self.data = data_copy
+                    raise ValidationError('Cannot remove %s from unit %s. There exists Service Event(s) with that Unit and Service Area.' % (usa.service_area.name, unit.name))
 
-        return unit
-
-    def form_valid(self, request, queryset, form):
-        print('forms valid---------')
-        return super(UnitFormAdmin, self).form_valid(request, queryset, form)
+        return self.cleaned_data['service_areas']
 
 
 class UnitAdmin(admin.ModelAdmin):
@@ -207,7 +204,8 @@ class UnitAdmin(admin.ModelAdmin):
             ),
         }
 
-    def change_view(self, request, object_id, form_url='', extra_context=None):
+    def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
+        # def change_view(self, request, object_id, form_url='', extra_context=None):
 
         extra_context = extra_context or {}
 
@@ -219,17 +217,66 @@ class UnitAdmin(admin.ModelAdmin):
 
         if 'available_time_form' not in extra_context:
             extra_context['available_time_form'] = UnitAvailableTimeForm(**form_kwargs)
-            extra_context['available_time_form'].fields['units'].initial = [object_id]
+            if object_id:
+                extra_context['available_time_form'].fields['units'].initial = [object_id]
+
+        to_field = request.POST.get(TO_FIELD_VAR, request.GET.get(TO_FIELD_VAR))
+        if to_field and not self.to_field_allowed(request, to_field):
+            raise DisallowedModelAdminToField("The field %s cannot be referenced." % to_field)
+
+        model = self.model
+        opts = model._meta
+
+        if request.method == 'POST' and '_saveasnew' in request.POST:
+            object_id = None
+        add = object_id is None
+
+        if add:
+            if not self.has_add_permission(request):
+                raise PermissionDenied
+            obj = None
+        else:
+            obj = self.get_object(request, unquote(object_id), to_field)
+            if not self.has_change_permission(request, obj):
+                raise PermissionDenied
+
+            if obj is None:
+                raise Http404(_('%(name)s object with primary key %(key)r does not exist.') % {
+                    'name': force_text(opts.verbose_name), 'key': escape(object_id)})
+
+        UnitForm = self.get_form(request, obj)
+        uatf = extra_context['available_time_form']
 
         if request.method == 'POST':
-
-            uatf = extra_context['available_time_form']
-            if not uatf.is_valid():
-                request.method = 'GET'
-                return self.change_view(request, object_id, form_url, extra_context)
+            form = UnitForm(request.POST, request.FILES, instance=obj)
+            if form.is_valid():
+                form_validated = True
+                new_object = self.save_form(request, form, change=not add)
             else:
+                form_validated = False
+                new_object = form.instance
+            formsets, inline_instances = self._create_formsets(request, new_object, change=not add)
+
+            if not uatf.is_valid():
+                form_validated = False
+                # new_object = form.instance
+
+            if all_valid(formsets) and form_validated:
+                self.save_model(request, new_object, form, not add)
+                self.save_related(request, form, formsets, not add)
+
+                for sa in form.cleaned_data['service_areas']:
+                    unit_service_area, created = UnitServiceArea.objects.get_or_create(unit=new_object, service_area=sa)
+                    unit_service_area.save()
+
+                for usa in UnitServiceArea.objects.filter(unit=new_object).exclude(service_area__in=form.cleaned_data['service_areas']):
+                    if not ServiceEvent.objects.filter(unit_service_area=usa).exists():
+                        usa.delete()
+
+                change_message = self.construct_change_message(request, form, formsets, add)
+
                 try:
-                    uat = UnitAvailableTime.objects.get(date_changed=uatf.cleaned_data['date_changed'], unit=object_id)
+                    uat = UnitAvailableTime.objects.get(date_changed=uatf.cleaned_data['date_changed'], unit=new_object)
 
                     uat.hours_monday = uatf.cleaned_data['hours_monday']
                     uat.hours_tuesday = uatf.cleaned_data['hours_tuesday']
@@ -242,7 +289,7 @@ class UnitAdmin(admin.ModelAdmin):
                 except ObjectDoesNotExist:
                     UnitAvailableTime.objects.create(
                         date_changed=uatf.cleaned_data['date_changed'],
-                        unit=object_id,
+                        unit=new_object,
                         hours_monday=uatf.cleaned_data['hours_monday'],
                         hours_tuesday=uatf.cleaned_data['hours_tuesday'],
                         hours_wednesday=uatf.cleaned_data['hours_wednesday'],
@@ -252,10 +299,66 @@ class UnitAdmin(admin.ModelAdmin):
                         hours_sunday=uatf.cleaned_data['hours_sunday']
                     )
 
-        else:
-            print('Not posting')
+                if add:
+                    self.log_addition(request, new_object, change_message)
+                    return self.response_add(request, new_object)
+                else:
+                    self.log_change(request, new_object, change_message)
+                    return self.response_change(request, new_object)
+            else:
+                form_validated = False
 
-        return super(UnitAdmin, self).change_view(request, object_id, form_url='', extra_context=extra_context)
+        else:
+            if add:
+                initial = self.get_changeform_initial_data(request)
+                form = UnitForm(initial=initial)
+                formsets, inline_instances = self._create_formsets(request, form.instance, change=False)
+            else:
+                form = UnitForm(instance=obj)
+                formsets, inline_instances = self._create_formsets(request, obj, change=True)
+
+        adminForm = helpers.AdminForm(
+            form,
+            list(self.get_fieldsets(request, obj)),
+            self.get_prepopulated_fields(request, obj),
+            self.get_readonly_fields(request, obj),
+            model_admin=self)
+        media = self.media + adminForm.media
+
+        inline_formsets = self.get_inline_formsets(request, formsets, inline_instances, obj)
+        for inline_formset in inline_formsets:
+            media = media + inline_formset.media
+
+        err_list = helpers.AdminErrorList(form, formsets)
+        for el in helpers.AdminErrorList(uatf, []):
+            err_list.append(el)
+
+        context = dict(
+            self.admin_site.each_context(request),
+            title=(_('Add %s') if add else _('Change %s')) % force_text(opts.verbose_name),
+            adminform=adminForm,
+            object_id=object_id,
+            original=obj,
+            is_popup=(IS_POPUP_VAR in request.POST or
+                      IS_POPUP_VAR in request.GET),
+            to_field=to_field,
+            media=media,
+            inline_admin_formsets=inline_formsets,
+            errors=err_list,
+            preserved_filters=self.get_preserved_filters(request),
+        )
+
+        # Hide the "Save" and "Save and continue" buttons if "Save as New" was
+        # previously chosen to prevent the interface from getting confusing.
+        if request.method == 'POST' and not form_validated and "_saveasnew" in request.POST:
+            context['show_save'] = False
+            context['show_save_and_continue'] = False
+            # Use the change template instead of the add template.
+            add = False
+
+        context.update(extra_context or {})
+
+        return self.render_change_form(request, context, add=add, change=not add, obj=obj, form_url=form_url)
 
 
 admin.site.register(Unit, UnitAdmin)

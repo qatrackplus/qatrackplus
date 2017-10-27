@@ -25,12 +25,15 @@
     <fieldset class="module aligned" >
         <h2>Available Time</h2>
 
-        <div class="form-row field-changed_date">
+        <div class="form-row hours-container field-changed_date{% if available_time_form.date_changed.errors %} has-error{% endif %}">
             <div>
                 <label for="{{ available_time_form.date_changed.id_for_label }}">{{ available_time_form.date_changed.label }}</label>
-                {{ available_time_form.date_changed }}
+                <div class="">
+                    {{ available_time_form.date_changed }}
+                </div>
                 <p class="help">{{ available_time_form.date_changed.help_text }}</p>
             </div>
+            {% for e in available_time_form.date_changed.errors %}<div class="hours-error">{{ e }}</div>{% endfor %}
         </div>
         <div class="form-row field-changed_date">
             <div>

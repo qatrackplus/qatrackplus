@@ -10,7 +10,9 @@
 {% endblock extra_css %}
 
 {% block extra_js %}
-{#    <script type="text/javascript" src="{% static "js/review_test_list.js" %}?v={{VERSION}}"></script>#}
+    <script type="text/javascript">
+        var override_date = false;
+    </script>
 {% endblock %}
 
 {% block require_javascript %}
