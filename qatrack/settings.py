@@ -145,7 +145,7 @@ if not os.path.isfile(SITE_SPECIFIC_CSS_PATH):
 
 # ------------------------------------------------------------------------------
 # Middleware
-MIDDLEWARE_CLASSES = [
+MIDDLEWARE = [
     'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -156,6 +156,7 @@ MIDDLEWARE_CLASSES = [
     'qatrack.middleware.login_required.LoginRequiredMiddleware',
     'qatrack.middleware.maintain_filters.FilterPersistMiddleware',
 ]
+
 
 # login required middleware settings
 LOGIN_EXEMPT_URLS = [r"^accounts/", ]
