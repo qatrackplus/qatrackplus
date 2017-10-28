@@ -20,7 +20,6 @@ from qatrack.attachments.admin import (
     SaveInlineAttachmentUserMixin,
 )
 import qatrack.qa.models as models
-from qatrack.qa.utils import qs_extra_for_utc_name
 from qatrack.units.models import Unit
 
 admin.site.disable_action("delete_selected")
@@ -92,7 +91,6 @@ class TestInfoForm(forms.ModelForm):
                 self.initial["reference_value"] = val
 
             if self.instance.reference:
-                r = self.instance.reference
                 les = LogEntry.objects.filter(
                     Q(change_message__contains="reference_value") | Q(change_message__contains="tolerance"),
                     content_type_id=ContentType.objects.get_for_model(self.instance).pk,
@@ -259,12 +257,20 @@ class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
 
         testtypes = set(queryset.values_list('test__type', flat=True).distinct())
 
-        # check if tests have the same type of tolerance, else return with error message
-        if (len(testtypes) > 1 and 'multchoice' in testtypes or
-                len(testtypes) > 1 and 'boolean' in testtypes):
+        has_upload = models.UPLOAD in testtypes
+        has_bool = models.BOOLEAN in testtypes
+        has_num = len(set(models.NUMERICAL_TYPES) & testtypes) > 0
+        has_str = len(set(models.STRING_TYPES) & testtypes) > 0
 
-            messages.error(request, "Multiple choice and/or boolean references and tolerances can't be set"
-                                    " together with other test types")
+        # check if tests have the same type of tolerance, else return with error message
+        if [has_bool, has_num, has_str].count(True) > 1 or has_upload:
+            messages.error(
+                request,
+                (
+                    "Invalid combination of tests selected.  Tests must be either all "
+                    "Numerical types, all String types, or all Boolean"
+                )
+            )
             return HttpResponseRedirect(request.get_full_path())
 
         if 'apply' in request.POST:
@@ -273,12 +279,12 @@ class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
             form = SetMultipleReferencesAndTolerancesForm(initial={'contenttype': None})
 
         # if selected tests are NOT multiple choice or boolean, select all the tolerances which are NOT multiple choice or boolean
-        if 'boolean' not in testtypes and 'multchoice' not in testtypes:
-            tolerances = models.Tolerance.objects.exclude(type="multchoice").exclude(type="boolean")
+        if has_num:
+            tolerances = models.Tolerance.objects.exclude(type="multchoice")
             form.fields["tolerance"].queryset = tolerances
 
         # if selected tests are multiple choice select all the tolerances which are multiple choice
-        elif 'multchoice' in testtypes:
+        elif has_str:
             tolerances = models.Tolerance.objects.filter(type="multchoice")
             form.fields["contenttype"].initial = 'multchoice'
             form.fields["tolerance"].queryset = tolerances
@@ -286,7 +292,7 @@ class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
             form.fields["reference"].widget = forms.HiddenInput()
 
         # if selected tests are boolean select all the tolerances which are boolean
-        elif 'boolean' in testtypes:
+        elif has_bool:
             form.fields["contenttype"].initial = 'boolean'
             form.fields["reference"].widget = forms.NullBooleanSelect()
             form.fields["tolerance"].required = False
@@ -552,7 +558,6 @@ class TestListAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, admin.ModelAdm
         return qs.select_related("modified_by")
 
 
-
 class TestForm(forms.ModelForm):
 
     class Meta:
@@ -629,7 +634,6 @@ class TestAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, admin.ModelAdmin):
             if not obj.procedure.startswith("http"):
                 warning = "Warning: test procedure links should usually begin with http:// or https://"
                 messages.add_message(request, messages.WARNING, warning)
-
 
         super(TestAdmin, self).save_model(request, obj, form, change)
 
@@ -833,7 +837,6 @@ class TestInstanceAdmin(SaveInlineAttachmentUserMixin, admin.ModelAdmin):
         return obj.unit_test_info.unit
     unit_name.short_description = _("Unit Name")
     unit_name.admin_order_field = "unit_test_info__unit__number"
-
 
     def has_add_permission(self, request):
         """testlistinstancess are created via front end only"""
