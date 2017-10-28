@@ -62,6 +62,16 @@ def get_tests_for_test_lists(request):
         tl = models.TestList.objects.get(pk=pk)
         tests.extend([t.pk for t in tl.ordered_tests() if t.chart_visibility])
 
+        # also include tests that are no longer part of this test list
+        inactive_tests = models.TestInstance.objects.filter(
+            test_list_instance__test_list__pk=pk,
+            unit_test_info__test__chart_visibility=True
+        ).values_list(
+            "unit_test_info__test__pk",
+            flat=True
+        ).distinct()
+        tests.extend(inactive_tests)
+
     json_context = json.dumps({"tests": tests})
     return HttpResponse(json_context, content_type=JSON_CONTENT_TYPE)
 
