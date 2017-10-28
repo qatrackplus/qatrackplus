@@ -238,7 +238,7 @@ class BaseChartView(View):
 
         try:
             d_from = timezone.datetime.strptime(self.request.GET.get('date_range').split(' - ')[0], settings.SIMPLE_DATE_FORMAT)
-        except Exception as e:
+        except Exception:
             d_from = default_from
 
         try:
@@ -488,7 +488,7 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
             name, series = list(context["plot_data"]['series'].items())[0]
             points = series['series_data']
             if points:
-                dates, data = list(zip(*[(ti["date"], ti["value"]) for ti in points]))
+                dates, data = list(zip(*[(ti["date"], ti["value"]) for ti in points if ti['value'] is not None]))
 
         n_baseline_subgroups = self.get_number_from_request("n_baseline_subgroups", 2, dtype=int)
         n_baseline_subgroups = max(2, n_baseline_subgroups)
