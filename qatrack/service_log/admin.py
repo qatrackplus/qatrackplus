@@ -104,6 +104,7 @@ class ServiceEventAdmin(DeleteOnlyFromOwnFormAdmin):
 
     list_display = ['pk', 'datetime_service', 'unit_name', 'service_area_name']
     form = ServiceEventAdminForm
+    list_select_related = ['unit_service_area__unit', 'unit_service_area__service_area']
 
     def unit_name(self, obj):
         return obj.unit_service_area.unit
@@ -116,9 +117,9 @@ class ServiceEventAdmin(DeleteOnlyFromOwnFormAdmin):
             settings.STATIC_URL + "jquery/js/jquery.min.js",
             settings.STATIC_URL + 'moment/js/moment.min.js',
             settings.STATIC_URL + 'daterangepicker/js/daterangepicker.js',
-            settings.STATIC_URL + "inputmask/js/inputmask.js",
-            settings.STATIC_URL + 'inputmask/js/jquery.inputmask.js',
-            settings.STATIC_URL + "inputmask/js/inputmask.dependencyLib.jquery.js",
+            # settings.STATIC_URL + "inputmask/js/inputmask.js",
+            settings.STATIC_URL + 'inputmask/js/jquery.inputmask.bundle.js',
+            # settings.STATIC_URL + "inputmask/js/inputmask.dependencyLib.jquery.js",
             settings.STATIC_URL + 'service_log/js/sl_admin_serviceevent.js'
         )
         css = {

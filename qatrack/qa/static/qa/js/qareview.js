@@ -18,9 +18,11 @@ require(['jquery', 'sl_utils', 'comments'], function($) {
 		});
 
 		$('.qa-showcmt > a.revealcomment').click(function () {
-			var comment_row = $(this).parent().parent().next();
+			var this_row = $(this).parent().parent();
+			var comment_row = this_row.next();
 			comment_row.toggle('fast');
-			comment_row.find('.comment-div').slideToggle('fast');
+			comment_row.find('.comment-bar').toggleClass('in').slideToggle('fast');
+			this_row.find('.comment-bar').toggleClass('in');
 			return false;
 		});
 
