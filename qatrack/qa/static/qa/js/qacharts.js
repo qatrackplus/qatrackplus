@@ -1279,7 +1279,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
 
                 mouse_tracker.transition().attr('height', height);
                 mainClip.transition().attr('height', height);
-
+                hoverLine.transition().attr("y2", height);
             }
 
             function redrawContextXAxis() {

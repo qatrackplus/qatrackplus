@@ -62,6 +62,16 @@ def get_tests_for_test_lists(request):
         tl = models.TestList.objects.get(pk=pk)
         tests.extend([t.pk for t in tl.ordered_tests() if t.chart_visibility])
 
+        # also include tests that are no longer part of this test list
+        inactive_tests = models.TestInstance.objects.filter(
+            test_list_instance__test_list__pk=pk,
+            unit_test_info__test__chart_visibility=True
+        ).values_list(
+            "unit_test_info__test__pk",
+            flat=True
+        ).distinct()
+        tests.extend(inactive_tests)
+
     json_context = json.dumps({"tests": tests})
     return HttpResponse(json_context, content_type=JSON_CONTENT_TYPE)
 
@@ -238,7 +248,7 @@ class BaseChartView(View):
 
         try:
             d_from = timezone.datetime.strptime(self.request.GET.get('date_range').split(' - ')[0], settings.SIMPLE_DATE_FORMAT)
-        except Exception as e:
+        except Exception:
             d_from = default_from
 
         try:
@@ -488,7 +498,7 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
             name, series = list(context["plot_data"]['series'].items())[0]
             points = series['series_data']
             if points:
-                dates, data = list(zip(*[(ti["date"], ti["value"]) for ti in points]))
+                dates, data = list(zip(*[(ti["date"], ti["value"]) for ti in points if ti['value'] is not None]))
 
         n_baseline_subgroups = self.get_number_from_request("n_baseline_subgroups", 2, dtype=int)
         n_baseline_subgroups = max(2, n_baseline_subgroups)
