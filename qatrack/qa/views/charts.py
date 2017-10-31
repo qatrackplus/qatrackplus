@@ -324,9 +324,6 @@ class BaseChartView(View):
         now = timezone.now()
         dates = self.get_date(now, now - timezone.timedelta(days=365))
 
-        print('<<< get_plot_data >>>')
-        print(dates)
-
         from_date = dates[0]
         to_date = dates[1]
 
