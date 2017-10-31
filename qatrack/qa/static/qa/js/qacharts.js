@@ -571,8 +571,8 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
                 chart_width = $('#chart').width() - 15,
                 xAxisHeight = 20;
 
-            var circle_radius = 2,
-                circle_radius_highlight = 3,
+            var circle_radius = 3,
+                circle_radius_highlight = 4,
                 line_width = 1.5,
                 line_width_highlight = 2.5;
 

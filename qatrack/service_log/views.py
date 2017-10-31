@@ -697,10 +697,9 @@ class UpdateServiceEvent(ServiceEventUpdateCreate):
             form.instance.user_modified_by = self.request.user
             form.instance.datetime_modified = timezone.now()
 
+            # If service status was not changed explicitly, but needs to be reset to default status due to other changes.
             if not form.instance.service_status.is_review_required:
                 form.instance.service_status = models.ServiceEventStatus.get_default()
-                # form.instance.datetime_status_changed = timezone.now()
-                # form.instance.user_status_changed_by = self.request.user
 
         return super(UpdateServiceEvent, self).form_valid(form)
 
