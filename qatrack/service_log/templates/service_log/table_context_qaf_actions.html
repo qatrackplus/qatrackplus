@@ -9,7 +9,7 @@
         </a>
     {% endif %}
 {% else %}
-    {% if perms.service_log.add_testlistinstance %}
+    {% if perms.qa.add_testlistinstance %}
         <a class="btn btn-default btn-xs btn-flat pull-right margin-left-2" href="{% url 'perform_qa' pk=qaf.unit_test_collection.pk %}?qaf={{ qaf.id }}{% if next %}&next={{ next }}{% endif %}">
             Perform
         </a>
