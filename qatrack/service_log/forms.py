@@ -326,7 +326,7 @@ class ServiceEventForm(BetterModelForm):
         help_text=models.ServiceEvent._meta.get_field('duration_lost_time').help_text
     )
     service_event_related_field = ServiceEventMultipleField(
-        required=False, queryset=models.ServiceEvent.objects.none(),
+        required=False, queryset=models.ServiceEvent.objects.none(), label=_('Service Event Related'),
         help_text=models.ServiceEvent._meta.get_field('service_event_related').help_text
     )
     is_review_required = forms.BooleanField(required=False)
@@ -497,7 +497,7 @@ class ServiceEventForm(BetterModelForm):
         else:
             try:
                 unit = u_models.Unit.objects.get(pk=self.data['unit_field'])
-            except (ObjectDoesNotExist, KeyError):
+            except (ObjectDoesNotExist, ValueError, KeyError):
                 unit = self.instance.unit_service_area.unit
             self.initial['unit_field'] = unit
             self.initial['service_area_field'] = self.instance.unit_service_area.service_area

@@ -175,25 +175,25 @@ tr.qa-error > td {
 }
 #perform-qa-table > tbody > tr > td .procedure-bar {
     border-left: 3px solid transparent;
-    -webkit-transition: border-color 1s; /* Safari */
-    transition: border-color 1s;
+    -webkit-transition: border-color 0.5s; /* Safari */
+    transition: border-color 0.5s;
 }
 #perform-qa-table > tbody > tr > td .procedure-bar.in {
     border-left: 3px solid #00c0ef;
-    -webkit-transition: border-color 1s; /* Safari */
-    transition: border-color 1s;
+    -webkit-transition: border-color 0.5s; /* Safari */
+    transition: border-color 0.5s;
 }
 td .comment-bar {
     border-left: 3px solid transparent;
-    -webkit-transition: border-color 1s; /* Safari */
-    transition: border-color 1s;
+    -webkit-transition: border-color 0.5s; /* Safari */
+    transition: border-color 0.5s;
     height: 100%;
     top: 0;
 }
 td .comment-bar.in {
     border-left: 3px solid #3c8dbc;
-    -webkit-transition: border-left 1s; /* Safari */
-    transition: border-left 1s;
+    -webkit-transition: border-left 0.5s; /* Safari */
+    transition: border-left 0.5s;
 }
 td.test-name {
     font-weight: 700;
@@ -205,13 +205,13 @@ td.test-name {
 }
 #perform-qa-table > tbody > tr > td .error-bar {
     border-left: 3px solid transparent;
-    -webkit-transition: border-color 1s; /* Safari */
-    transition: border-color 1s;
+    -webkit-transition: border-color 0.5s; /* Safari */
+    transition: border-color 0.5s;
 }
 #perform-qa-table > tbody > tr > td .error-bar.in {
     border-left: 3px solid #dd4b39;
-    -webkit-transition: border-left 1s; /* Safari */
-    transition: border-left 1s;
+    -webkit-transition: border-left 0.5s; /* Safari */
+    transition: border-left 0.5s;
 }
 #perform-qa-table > tbody > tr > td.qa-category {
 

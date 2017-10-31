@@ -21,7 +21,8 @@ require(['jquery', 'sl_utils', 'comments'], function($) {
 			var this_row = $(this).parent().parent();
 			var comment_row = this_row.next();
 			comment_row.toggle('fast');
-			comment_row.find('.comment-bar').toggleClass('in').slideToggle('fast');
+			comment_row.find('.comment-bar').slideToggle('fast');
+			comment_row.find('.comment-bar').toggleClass('in');
 			this_row.find('.comment-bar').toggleClass('in');
 			return false;
 		});
