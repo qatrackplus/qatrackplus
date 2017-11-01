@@ -7,6 +7,23 @@ from django.db import migrations, models
 import django.db.models.deletion
 
 
+def fix_permissions(apps, schema):
+
+    Permission = apps.get_model('auth', 'Permission')
+
+    view_qaf = Permission.objects.get(codename='view_qafollowup')
+    perform_qaf = Permission.objects.get(codename='perform_qafollowup')
+
+    view_qaf.codename = 'view_returntoserviceqa'
+    perform_qaf.codename = 'perform_returntoserviceqa'
+
+    view_qaf.save()
+    perform_qaf.save()
+
+    old_perms = Permission.objects.filter(codename__in=['add_qafollowup', 'change_qafollowup', 'delete_qafollowup'])
+    old_perms.delete()
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -23,5 +40,5 @@ class Migration(migrations.Migration):
             field=models.TextField(blank=True, help_text='Provide any extra information regarding return to services', null=True),
         ),
         migrations.RenameModel('QAFollowup', 'ReturnToServiceQA'),
-
+        migrations.RunPython(fix_permissions)
     ]

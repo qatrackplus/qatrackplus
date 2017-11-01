@@ -162,7 +162,7 @@
                                                     All QA
                                                 </a>
                                             </li>
-                                            {% if perms.service_log.perform_rtsqa %}
+                                            {% if perms.service_log.perform_returntoserviceqa %}
                                                 <li class="hover-parent">
                                                     <a href="{% url 'rtsqa_list_all' %}?f=tli.in-1" title="View all incomplete RTS">
                                                         <i class="fa fa-stack fa-lg fa-fw">
@@ -309,7 +309,7 @@
 
                                     </li>
                                 {% endif %}
-                                {% if perms.service_log.add_serviceevent or perms.service_log.view_serviceevent or perms.service_log.review_serviceevent or perms.qa.can_review or service_log.view_rtsqa or perms.service_log.perform_rtsqa or perms.parts.add_part or perms.parts.view_part %}
+                                {% if perms.service_log.add_serviceevent or perms.service_log.view_serviceevent or perms.service_log.review_serviceevent or perms.qa.can_review or service_log.view_returntoserviceqa or perms.service_log.perform_returntoserviceqa or perms.parts.add_part or perms.parts.view_part %}
                                 <li class="dropdown">
                                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                                         Service Log
@@ -369,10 +369,10 @@
                                                 </a></li>
                                             {% endif %}
                                         {% endif %}
-                                        {% if perms.qa.can_review or service_log.view_rtsqa or perms.service_log.perform_rtsqa %}
+                                        {% if perms.qa.can_review or service_log.view_returntoserviceqa or perms.service_log.perform_returntoserviceqa %}
                                             <li class="divider"></li>
                                             <li class="nav-header">RTS QA</li>
-                                            {% if perms.service_log.view_rtsqa %}
+                                            {% if perms.service_log.view_returntoserviceqa %}
                                                 <li class="hover-parent"><a href="{% url "rtsqa_list_all" %}" title="View all return to service qa">
                                                     <i class="fa fa-stack fa-lg fa-fw">
                                                         <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
@@ -381,7 +381,7 @@
                                                     View All RTS QA
                                                 </a></li>
                                             {% endif %}
-                                            {% if perms.service_log.perform_rtsqa %}
+                                            {% if perms.service_log.perform_returntoserviceqa %}
                                                 <li class="hover-parent"><a href="{% url 'rtsqa_list_all' %}?f=tli.in-1" title="View all incomplete return to service qa">
                                                     <i class="fa fa-stack fa-lg fa-fw">
                                                         <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>

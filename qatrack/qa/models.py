@@ -192,12 +192,12 @@ PERMISSIONS = (
         'Service Log',
         (
             (
-                'service_log.perform_rtsqa',
+                'service_log.perform_returntoserviceqa',
                 'Can perform return to service qa',
                 'Allow user to perform qa linked to service events.',
             ),
             (
-                'service_log.view_rtsqa',
+                'service_log.view_returntoserviceqa',
                 'Can view existing return to service qa',
                 'Allow user to view qa linked to service events.',
             ),

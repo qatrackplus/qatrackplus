@@ -323,7 +323,7 @@
 {#                                                <th>Assigned By</th>#}
 {#                                                <th>Assigned Date</th>#}
                                                 <th></th>
-                                                {% if perms.service_log.delete_rtsqa %}
+                                                {% if perms.service_log.delete_returntoserviceqa %}
                                                     <th>Delete?</th>
                                                 {% endif %}
                                             </tr>
@@ -345,7 +345,7 @@
                                                         <td id="pass-fail-{{ f_form.prefix }}"></td>
                                                         <td id="review-{{ f_form.prefix }}"></td>
                                                         <td id="utc-actions-{{ f_form.prefix }}"></td>
-                                                        <td align="center">{% if perms.service_log.delete_rtsqa and f_form.instance.pk %}{{ f_form.DELETE }}{% endif %}</td>
+                                                        <td align="center">{% if perms.service_log.delete_returntoserviceqa and f_form.instance.pk %}{{ f_form.DELETE }}{% endif %}</td>
 {#                                                    {% endif %}#}
                                                 </tr>
                                             {% endfor %}
@@ -532,7 +532,7 @@
 
     <div id="utc-actions-template" style="display: none;">
         <div class="__prefix__-hider" style="display: none;">
-            {% if perms.service_log.add_rtsqa %}
+            {% if perms.qa.add_testlistinstance %}
                 <a id="select-tli-__prefix__" class="btn btn-default btn-xs btn-flat select-tli" data-link="{% url 'tli_select' %}/__utc-id__/__prefix__/">
                     Performed
                 </a>

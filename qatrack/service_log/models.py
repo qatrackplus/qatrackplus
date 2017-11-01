@@ -227,8 +227,8 @@ class ReturnToServiceQA(models.Model):
 
     class Meta:
         permissions = (
-            ('view_rtsqa', 'Can view return vo service qa'),
-            ('perform_rtsqa', 'Can perform return to service qa')
+            ('view_returntoserviceqa', 'Can view return vo service qa'),
+            ('perform_returntoserviceqa', 'Can perform return to service qa')
         )
 
 
