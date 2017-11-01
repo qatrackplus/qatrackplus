@@ -315,7 +315,7 @@
 
                                     <table class="table table-hover table-condensed table-valign-middle">
                                         <thead>
-                                            {{ followup_formset.management_form }}
+                                            {{ rtsqa_formset.management_form }}
                                             <tr>
                                                 <th style="min-width: 200px;">Test List</th>
                                                 <th>Pass/Fail</th>
@@ -323,16 +323,16 @@
 {#                                                <th>Assigned By</th>#}
 {#                                                <th>Assigned Date</th>#}
                                                 <th></th>
-                                                {% if perms.service_log.delete_qafollowup %}
+                                                {% if perms.service_log.delete_rtsqa %}
                                                     <th>Delete?</th>
                                                 {% endif %}
                                             </tr>
                                         </thead>
 
-                                        <tbody id="followup-tbody">
+                                        <tbody id="rtsqa-tbody">
 
-                                            {% for f_form in followup_formset.forms %}
-                                                <tr id="{{ f_form.prefix }}" class="followup-row">
+                                            {% for f_form in rtsqa_formset.forms %}
+                                                <tr id="{{ f_form.prefix }}" class="rtsqa-row">
                                                     {{ f_form.id }}
                                                     {{ f_form.test_list_instance }}
                                                     {{ f_form.all_reviewed }}
@@ -342,37 +342,10 @@
                                                             <div class="help-block">{{ e }}</div>
                                                         {% endfor %}
                                                     </td>
-{#                                                    {% if f_form.instance.pk %}#}
-{#                                                        <td id="pass-fail-{{ f_form.prefix }}">{% if f_form.instance.test_list_instance.pk %}{{ f_form.instance.test_list_instance|as_pass_fail_status:False }}{% else %}----{% endif %}</td>#}
-{#                                                        <td id="review-{{ f_form.prefix }}">{% if f_form.instance.test_list_instance.pk %}{{ f_form.instance.test_list_instance|as_review_status }}{% else %}----{% endif %}</td>#}
-{#                                                        <td id="assigned-by-{{ f_form.prefix }}">{{ f_form.instance.user_assigned_by }}</td>#}
-{#                                                        <td id="assigned-date-{{ f_form.prefix }}">{{ f_form.instance.datetime_assigned }}</td>#}
-{#                                                        <td id="utc-actions-{{ f_form.prefix }}">#}
-{#                                                            {% if f_form.instance.test_list_instance.pk and perms.qa.can_review %}#}
-{#                                                                <a href="{% url 'review_test_list_instance' pk=f_form.instance.test_list_instance.pk %}?next={% url 'sl_edit' pk=form.instance.pk %}" class="btn btn-xs btn-default btn-flat">#}
-{#                                                                    Review#}
-{#                                                                </a>#}
-{#                                                            {% else %}#}
-{#                                                                {% if perms.service_log.add_qafollowup %}#}
-{#                                                                    <a href="{% url 'perform_qa' pk=f_form.instance.unit_test_collection.pk %}?qaf={{ f_form.instance.id }}&next={% url 'sl_edit' pk=form.instance.pk %}" class="btn btn-xs btn-default btn-flat">#}
-{#                                                                        Perform#}
-{#                                                                    </a>#}
-{#                                                                    <a id="select-tli-{{ f_form.prefix }}" class="btn btn-default btn-xs btn-flat select-tli" data-link="{% url 'tli_select' pk=f_form.instance.unit_test_collection.pk form=f_form.prefix %}">#}
-{#                                                                        Performed#}
-{#                                                                    </a>#}
-{#                                                                {% endif %}#}
-{#                                                            {% endif %}#}
-{#                                                        </td>#}
-{#                                                        {% if perms.service_log.delete_qafollowup %}#}
-{#                                                            <td align="center">{{ f_form.DELETE }}</td>#}
-{#                                                        {% endif %}#}
-{#                                                    {% else %}#}
                                                         <td id="pass-fail-{{ f_form.prefix }}"></td>
                                                         <td id="review-{{ f_form.prefix }}"></td>
-{#                                                        <td id="assigned-by-{{ f_form.prefix }}"></td>#}
-{#                                                        <td id="assigned-date-{{ f_form.prefix }}"></td>#}
                                                         <td id="utc-actions-{{ f_form.prefix }}"></td>
-                                                        <td align="center">{% if perms.service_log.delete_qafollowup and f_form.instance.pk %}{{ f_form.DELETE }}{% endif %}</td>
+                                                        <td align="center">{% if perms.service_log.delete_rtsqa and f_form.instance.pk %}{{ f_form.DELETE }}{% endif %}</td>
 {#                                                    {% endif %}#}
                                                 </tr>
                                             {% endfor %}
@@ -381,7 +354,7 @@
 
                                         <tfoot>
                                             <tr><td>
-                                                <div id="add-followup" class="btn btn-sm btn-flat btn-info" title="Add another QA followup object.">Add</div>
+                                                <div id="add-rtsqa" class="btn btn-sm btn-flat btn-info" title="Add another RTS QA object.">Add</div>
                                             </td></tr>
                                         </tfoot>
 
@@ -391,7 +364,7 @@
 
                             <div class="row">
                                 <div class="col-md-12">
-                                    {% for field in form.fieldsets.followup_fields %}
+                                    {% for field in form.fieldsets.rtsqa_fields %}
                                         <div class="form-group {% if field.errors %}has-error{% endif %}">
                                             {% if 'autosize' in field.field.widget.attrs.class %}
                                                 <div class="col-sm-12">
@@ -526,18 +499,16 @@
     </table>
 
     <table style="display: none;">
-        <tbody id="empty-followup-form">
-            {% with followup_formset.empty_form as f_form %}
-                <tr id="followup-__prefix__">
+        <tbody id="empty-rtsqa-form">
+            {% with rtsqa_formset.empty_form as f_form %}
+                <tr id="rtsqa-__prefix__">
                     {{ f_form.id }}
                     {{ f_form.test_list_instance }}
                     {{ f_form.all_reviewed }}
                     <td class="form-group">{{ f_form.unit_test_collection }}</td>
-                    <td id="pass-fail-followup-__prefix__"></td>
-                    <td id="review-followup-__prefix__"></td>
-{#                    <td id="assigned-by-followup-__prefix__"></td>#}
-{#                    <td id="assigned-date-followup-__prefix__"></td>#}
-                    <td id="utc-actions-followup-__prefix__"></td>
+                    <td id="pass-fail-rtsqa-__prefix__"></td>
+                    <td id="review-rtsqa-__prefix__"></td>
+                    <td id="utc-actions-rtsqa-__prefix__"></td>
                     <td></td>
                 </tr>
             {% endwith %}
@@ -561,16 +532,18 @@
 
     <div id="utc-actions-template" style="display: none;">
         <div class="__prefix__-hider" style="display: none;">
-            {% if perms.service_log.add_qafollowup %}
+            {% if perms.service_log.add_rtsqa %}
                 <a id="select-tli-__prefix__" class="btn btn-default btn-xs btn-flat select-tli" data-link="{% url 'tli_select' %}/__utc-id__/__prefix__/">
                     Performed
                 </a>
-                <a href="{% url 'perform_qa' %}__utc-id__/?qaf=__qaf-id__&next={% url 'sl_edit' %}__se-id__/" class="btn btn-xs btn-default btn-flat" target="Perform-__qaf-id__-__prefix__">
-                    Perform
-                </a>
+{#                {% if form.instance.pk %}#}
+{#                    <a href="{% url 'perform_qa' %}__utc-id__/?rtsqa=__rtsqa-id__&next={% url 'sl_edit' %}__se-id__/" class="btn btn-xs btn-default btn-flat perform-btn" target="Perform-__rtsqa-id__-__prefix__">#}
+{#                        Perform#}
+{#                    </a>#}
+{#                {% endif %}#}
             {% endif %}
             {% if perms.qa.can_review %}
-                <a id="__prefix__-review-btn" href="{% url 'review_test_list_instance' %}__tli-id__?next={% url 'sl_edit' %}__se-id__" class="btn btn-xs btn-default btn-flat review-btn __prefix__-hider" target="Review-__qaf-id__-__prefix__" style="display: none;">
+                <a id="__prefix__-review-btn" href="{% url 'review_test_list_instance' %}__tli-id__?next={% url 'sl_edit' %}__se-id__" class="btn btn-xs btn-default btn-flat review-btn __prefix__-hider" target="Review-__rtsqa-id__-__prefix__" style="display: none;">
                     Review
                 </a>
             {% endif %}

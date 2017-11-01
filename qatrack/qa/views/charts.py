@@ -408,16 +408,15 @@ class BaseChartView(View):
             ).select_related(
                 'unit_service_area__unit', 'unit_service_area__service_area'
             ).prefetch_related(
-                'qafollowup_set',
-                'qafollowup_set__test_list_instance'
+                'returntoserviceqa_set',
+                'returntoserviceqa_set__test_list_instance'
             ).order_by('datetime_service')
 
             if se_review_required:
                 ses = ses.filter(is_review_required=True)
 
             for se in ses:
-
-                qa_followups = se.qafollowup_set.all()
+                rtsqas = se.returntoserviceqa_set.all()
 
                 self.plot_data['events'].append({
                     'date': timezone.localtime(se.datetime_service),
@@ -425,12 +424,12 @@ class BaseChartView(View):
                     'type': se.service_type_id,
                     'is_review_required': se.is_review_required,
                     'initiated_by': se.test_list_instance_initiated_by_id,
-                    'followups': [
+                    'rtsqas': [
                         {
-                            'id': qaf.id,
-                            'test_list_instance': qaf.test_list_instance_id,
-                            'test_list': qaf.test_list_instance.test_list_id if qaf.test_list_instance else ''
-                        } for qaf in qa_followups
+                            'id': rtsqa.id,
+                            'test_list_instance': rtsqa.test_list_instance_id,
+                            'test_list': rtsqa.test_list_instance.test_list_id if rtsqa.test_list_instance else ''
+                        } for rtsqa in rtsqas
                     ],
                     'work_description': se.work_description,
                     'problem_description': se.problem_description,

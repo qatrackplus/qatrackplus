@@ -157,20 +157,20 @@ class HoursForm(forms.ModelForm):
 HoursFormset = forms.inlineformset_factory(models.ServiceEvent, models.Hours, form=HoursForm, extra=2)
 
 
-class FollowupForm(forms.ModelForm):
+class ReturnToServiceQAForm(forms.ModelForm):
 
     unit_test_collection = forms.ModelChoiceField(queryset=qa_models.UnitTestCollection.objects.none())
     test_list_instance = forms.IntegerField(widget=forms.HiddenInput(), required=False)
     all_reviewed = forms.BooleanField(widget=forms.HiddenInput(), required=False)
 
     class Meta:
-        model = models.QAFollowup
+        model = models.ReturnToServiceQA
         fields = ('unit_test_collection', 'test_list_instance', 'all_reviewed')
 
     def __init__(self, *args, **kwargs):
         self.service_event_instance = kwargs.pop('service_event_instance')
         self.unit_field = kwargs.pop('unit_field')
-        super(FollowupForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         if 'unit_field' in self.data and self.data['unit_field']:
             self.unit_field = u_models.Unit.objects.get(pk=self.data['unit_field'])
@@ -196,7 +196,7 @@ class FollowupForm(forms.ModelForm):
         else:
             self.initial['all_reviewed'] = 0
 
-        self.fields['unit_test_collection'].widget.attrs.update({'class': 'followup-utc select2', 'data-prefix': self.prefix})
+        self.fields['unit_test_collection'].widget.attrs.update({'class': 'rtsqa-utc select2', 'data-prefix': self.prefix})
         self.fields['test_list_instance'].widget.attrs.update({'class': 'tli-instance'})
         self.fields['all_reviewed'].widget.attrs.update({'class': 'tli-all-reviewed'})
 
@@ -211,7 +211,7 @@ class FollowupForm(forms.ModelForm):
         return None
 
 
-FollowupFormset = forms.inlineformset_factory(models.ServiceEvent, models.QAFollowup, form=FollowupForm, extra=2)
+ReturnToServiceQAFormset = forms.inlineformset_factory(models.ServiceEvent, models.ReturnToServiceQA, form=ReturnToServiceQAForm, extra=2)
 
 
 class ServiceEventMultipleField(forms.ModelMultipleChoiceField):
@@ -411,7 +411,7 @@ class ServiceEventForm(BetterModelForm):
             ('time_fields', {
                 'fields': ['duration_service_time', 'duration_lost_time'],
             }),
-            ('followup_fields', {
+            ('rtsqa_fields', {
                 'fields': ['qafollowup_notes'],
             })
         ]
@@ -515,7 +515,7 @@ class ServiceEventForm(BetterModelForm):
 
             # some data wasn't attempted to be submitted already
             if not is_bound:
-                self.initial['service_status'] = models.ServiceEventStatus.get_default()
+                self.initial['service_status'] = models.ServiceEventStatus.get_default().id
                 self.initial['datetime_service'] = timezone.now()
 
         # if we are editing a saved instance
@@ -545,7 +545,7 @@ class ServiceEventForm(BetterModelForm):
                 label = ses.name
                 if not self.user.has_perm('service_log.review_serviceevent') and not (ses.is_review_required or ses.pk == self.instance.service_status.id):
                     choices.append((value, {'label': label, 'disabled': True, 'title': 'Cannot select status: Permission denied'}))
-                # elif ses.rts_qa_must_be_reviewed and self.instance.qafollowup_set.filter(Q(test_list_instance__isnull=True) | Q(test_list_instance__all_reviewed=False)).exists():
+                # elif ses.rts_qa_must_be_reviewed and self.instance.returntoserviceqa_set.filter(Q(test_list_instance__isnull=True) | Q(test_list_instance__all_reviewed=False)).exists():
                 #     choices.append((value, {'label': label, 'disabled': True, 'title': 'Cannot select status: %s RTS QA' % unreviewed_qa_status.name}))
                 else:
                     choices.append((value, label))
@@ -614,7 +614,7 @@ class ServiceEventForm(BetterModelForm):
         if self.cleaned_data['service_status'].rts_qa_must_be_reviewed:
             raize = False
             for k, v in self.data.items():
-                if k.startswith('followup-') and k.endswith('-id'):
+                if k.startswith('rtsqa-') and k.endswith('-id'):
                     prefix = k.replace('-id', '')
                     if prefix + '-unit_test_collection' in self.data and self.data[prefix + '-unit_test_collection'] != '':
                         if prefix + '-DELETE' not in self.data or self.data[prefix + '-DELETE'] != 'on':

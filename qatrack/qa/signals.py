@@ -209,7 +209,7 @@ def check_approved_statuses(*args, **kwargs):
         tli = models.TestListInstance.objects.get(pk=tli_id)
 
         default_status = sl_models.ServiceEventStatus.get_default()
-        for f in tli.qafollowup_for_tli.all():
+        for f in tli.rtsqa_for_tli.all():
             if not f.service_event.service_status.is_review_required:
                 f.service_event.service_status = default_status
                 f.service_event.datetime_status_changed = timezone.now()

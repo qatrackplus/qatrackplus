@@ -26,7 +26,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
             $parts_used_parts = $('.parts-used-part:visible'),
             $parts_used_from_storage = $('.parts-used-from_storage:visible'),
             $tli_instances = $('.tli-instance'),
-            $followup_rows = $('.followup-row'),
+            $rtsqa_rows = $('.rtsqa-row'),
             $service_event_form = $('#service-event-form'),
             $service_save = $('.service-save');
 
@@ -172,7 +172,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
                         $service_areas.prop('disabled', false);
                         $related_se.prop('disabled', false);
 
-                        var $utcs = $('.followup-utc');
+                        var $utcs = $('.rtsqa-utc');
                         $utc_initiated_by.find('option:not(:first)').remove();
                         $utc_initiated_by.val('').change();
                         $utcs.find('option:not(:first)').remove();
@@ -201,7 +201,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
             else {
                 $service_areas.prop('disabled', true).find('option:not(:first)').remove();
                 $related_se.prop('disabled', true).find('option').remove();
-                var $utcs = $('.followup-utc');
+                var $utcs = $('.rtsqa-utc');
                 $utcs.prop('disabled', true).find('option:not(:first)').remove();
                 $utc_initiated_by.prop('disabled', true).find('option:not(:first)').remove();
             }
@@ -225,7 +225,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
             $hours_index.val(parseInt(hours_index) + 1);
         });
 
-        // Qafollowup Formset --------------------------------------------------------------------------------
+        // RTS QA Formset --------------------------------------------------------------------------------
         function set_select_tli() {
             var $select_tli = $('.select-tli');
             $select_tli.click(function (event) {
@@ -234,8 +234,6 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
             });
         }
         displayTLI = function (prefix, data, returnValue) {
-            console.log(data);
-            console.log(returnValue);
             var $label_group = $('<span class="label-group ' + prefix + '-hider" style="display: none;"></span>');
             for (var status in data['pass_fail']) {
                 if (data['pass_fail'][status] > 0 && status != 'no_tol') {
@@ -315,30 +313,30 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
         };
 
         // set initial tli pass/fail and review statuses
-        $.each($('.followup-row'), function(i, v) {
+        $.each($('.rtsqa-row'), function(i, v) {
             var prefix = $(v).attr('id');
             var tli_id = $(v).find('.tli-instance').val();
             setSearchResult(prefix, tli_id);
         });
 
         set_select_tli();
-        $('#add-followup').click(function() {
+        $('#add-rtsqa').click(function() {
 
-            var empty_followup_form = $('#empty-followup-form').html(),
-                $followup_index = $('#id_followup-TOTAL_FORMS'),
-                followup_index = $followup_index.val();
+            var empty_rtsqa_form = $('#empty-rtsqa-form').html(),
+                $rtsqa_index = $('#id_rtsqa-TOTAL_FORMS'),
+                rtsqa_index = $rtsqa_index.val();
 
             $tli_instances = $('.tli-instance');
-            $followup_rows = $('.followup-row');
+            $rtsqa_rows = $('.rtsqa-row');
 
-            $('#followup-tbody').append(empty_followup_form.replace(/__prefix__/g, followup_index));
+            $('#rtsqa-tbody').append(empty_rtsqa_form.replace(/__prefix__/g, rtsqa_index));
 
-            $('#id_followup-' + followup_index + '-unit_test_collection').select2({
+            $('#id_rtsqa-' + rtsqa_index + '-unit_test_collection').select2({
                 minimumResultsForSearch: 10,
                 width: '100%'
             }).change(rtsqa_change);
 
-            $followup_index.val(parseInt(followup_index) + 1);
+            $rtsqa_index.val(parseInt(rtsqa_index) + 1);
         });
 
         function rtsqa_change() {
@@ -346,7 +344,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
             var prefix = $(this).attr('data-prefix'),
                 utc_id = $(this).val(),
                 tli_id = $('#id_' + prefix + '-test_list_instance').val(),
-                qaf_id = $('#id_' + prefix + '-id').val(),
+                rtsqa_id = $('#id_' + prefix + '-id').val(),
                 se_id = $('#instance-id').val();
 
             if (utc_id == '') {
@@ -363,7 +361,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
                         .replace(/__prefix__/g, prefix)
                         .replace(/__tli-id__/g, tli_id)
                         .replace(/__se-id__/g, se_id)
-                        .replace(/__qaf-id__/g, qaf_id)
+                        .replace(/__rtsqa-id__/g, rtsqa_id)
                 );
                 if (!tli_id) {
                     $('#utc-actions-' + prefix).find('.btn.review-btn').removeClass(prefix + '-hider');
@@ -373,14 +371,13 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
             }
         }
 
-        $('select.followup-utc').change(rtsqa_change);
-        $('select.followup-utc').change();
+        $('select.rtsqa-utc').change(rtsqa_change);
+        $('select.rtsqa-utc').change();
 
         // Parts formset --------------------------------------------------------------------------------------
         if (siteConfig.USE_PARTS == 'True') {
 
             function process_part_results(data, params) {
-                console.log(data);
                 var results = [];
                 for (var i in data.data) {
                     var p_id = data.data[i][0],
@@ -474,7 +471,6 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
                 $('#parts-used-tbody').append(empty_part_form.replace(/__prefix__/g, part_index));
 
                 var $parts_part = $('#id_parts-' + part_index + '-part');
-                console.log($parts_part);
                 $parts_part.select2(part_select2);
                 $parts_part.change(parts_used_changed);
                 $('#id_parts-' + part_index + '-from_storage').select2({

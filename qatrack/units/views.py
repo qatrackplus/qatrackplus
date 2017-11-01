@@ -92,7 +92,6 @@ class HandleUnitAvailableTimeChange(PermissionRequiredMixin, CreateView):
             print('not posting')
 
     def form_valid(self, form):
-        print('forms valid')
         for u in form.cleaned_data['units']:
             date_changed = form.cleaned_data['date_changed']
             try:
@@ -106,7 +105,6 @@ class HandleUnitAvailableTimeChange(PermissionRequiredMixin, CreateView):
                 uat.hours_saturday = form.cleaned_data['hours_saturday']
                 uat.hours_sunday = form.cleaned_data['hours_sunday']
                 uat.save()
-                print('Changed existing uat for %s' % u.name)
             except ObjectDoesNotExist:
                 u_models.UnitAvailableTime.objects.create(
                     date_changed=date_changed,

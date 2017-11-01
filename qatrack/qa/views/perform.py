@@ -483,7 +483,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         k = super(PerformQA, self).get_form_kwargs()
         self.set_unit_test_collection()
         k['unit'] = self.unit_test_col.unit
-        k['followup'] = self.request.GET.get('qaf', False)
+        k['rtsqa'] = self.request.GET.get('rtsqa', False)
         return k
 
     def set_test_lists(self):
@@ -680,23 +680,26 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         self.object.unit_test_collection.set_due_date()
 
         service_events = form.cleaned_data.get('service_events', False)
-        followup_id = self.request.GET.get('qaf', False)
+        rtsqa_id = self.request.GET.get('rtsqa', False)
         if len(service_events) > 0:
 
-            if followup_id:
-                followup = sl_models.QAFollowup.objects.get(pk=followup_id)
-                followup.test_list_instance = self.object
-                followup.save()
-            else:
-                for se in service_events:
-                    followup = sl_models.QAFollowup(
-                        service_event=se,
-                        unit_test_collection=self.object.unit_test_collection,
-                        user_assigned_by=self.request.user,
-                        datetime_assigned=timezone.now() - timezone.timedelta(seconds=1),
-                        test_list_instance=self.object
-                    )
-                    followup.save()
+            # is there an existing rtsqa being linked?
+            if rtsqa_id:
+                rtsqa = sl_models.ReturnToServiceQA.objects.get(pk=rtsqa_id)
+                rtsqa.test_list_instance = self.object
+                rtsqa.save()
+                service_events = service_events.exclude(pk=rtsqa.service_event_id)
+
+            # create new rtsqas for service events except for the one above if rtsqa_id was provided.
+            for se in service_events:
+                rtsqa = sl_models.ReturnToServiceQA(
+                    service_event=se,
+                    unit_test_collection=self.object.unit_test_collection,
+                    user_assigned_by=self.request.user,
+                    datetime_assigned=timezone.now() - timezone.timedelta(seconds=1),
+                    test_list_instance=self.object
+                )
+                rtsqa.save()
 
         changed_se = self.object.update_all_reviewed()
 
@@ -780,10 +783,10 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         context["unit_test_collection"] = self.unit_test_col
         context["contacts"] = list(Contact.objects.all().order_by("name"))
 
-        qa_followup_id = self.request.GET.get('qaf', None)
-        if qa_followup_id:
-            qa_followup = sl_models.QAFollowup.objects.get(pk=qa_followup_id)
-            context['se_statuses'] = {qa_followup.service_event.id: qa_followup.service_event.service_status.id}
+        rtsqa_id = self.request.GET.get('rtsqa', None)
+        if rtsqa_id:
+            rtsqa = sl_models.ReturnToServiceQA.objects.get(pk=rtsqa_id)
+            context['se_statuses'] = {rtsqa.service_event.id: rtsqa.service_event.service_status.id}
         else:
             context['se_statuses'] = {}
         context['status_tag_colours'] = sl_models.ServiceEventStatus.get_colour_dict()
@@ -863,24 +866,24 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
             self.object.unit_test_collection.set_due_date()
 
             service_events = form.cleaned_data.get('service_events', False)
-            followup_id = self.request.GET.get('qaf', False)
+            rtsqa_id = self.request.GET.get('rtsqa', False)
 
             if len(service_events) > 0:
 
-                if followup_id:
-                    followup = sl_models.QAFollowup.objects.get(pk=followup_id)
-                    followup.test_list_instance = self.object
-                    followup.save()
+                if rtsqa_id:
+                    rtsqa = sl_models.ReturnToServiceQA.objects.get(pk=rtsqa_id)
+                    rtsqa.test_list_instance = self.object
+                    rtsqa.save()
                 else:
                     for se in service_events:
-                        followup = sl_models.QAFollowup(
+                        rtsqa = sl_models.ReturnToServiceQA(
                             service_event=se,
                             unit_test_collection=self.object.unit_test_collection,
                             user_assigned_by=self.request.user,
                             datetime_assigned=timezone.now() - timezone.timedelta(seconds=1),
                             test_list_instance=self.object
                         )
-                        followup.save()
+                        rtsqa.save()
 
             changed_se = self.object.update_all_reviewed()
 
@@ -1006,12 +1009,12 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         self.unit_test_infos = [f.instance.unit_test_info for f in context["formset"]]
         context["unit_test_infos"] = json.dumps(self.template_unit_test_infos())
 
-        qa_followup_id = self.request.GET.get('qaf', None)
+        rtsqa_id = self.request.GET.get('rtsqa', None)
         if self.object.pk:
-            context['se_statuses'] = {qaf.service_event.id: qaf.service_event.service_status.id for qaf in self.object.qafollowup_for_tli.all()}
-        elif qa_followup_id:
-            qa_followup = sl_models.QAFollowup.objects.get(pk=qa_followup_id)
-            context['se_statuses'] = {qa_followup.service_event.id: qa_followup.service_event.service_status.id}
+            context['se_statuses'] = {rtsqa.service_event.id: rtsqa.service_event.service_status.id for rtsqa in self.object.rtsqa_for_tli.all()}
+        elif rtsqa_id:
+            rtsqa = sl_models.ReturnToServiceQA.objects.get(pk=rtsqa_id)
+            context['se_statuses'] = {rtsqa.service_event.id: rtsqa.service_event.service_status.id}
         else:
             context['se_statuses'] = {}
         context['status_tag_colours'] = sl_models.ServiceEventStatus.get_colour_dict()

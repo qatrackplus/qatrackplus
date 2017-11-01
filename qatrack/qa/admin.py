@@ -198,7 +198,6 @@ class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
     # list_select_related = ['reference', 'tolerance', 'test', 'unit']
 
     def get_queryset(self, *args, **kwargs):
-        print('<<< queryset >>>')
         """just display active ref/tols"""
         qs = models.UnitTestInfo.objects.select_related(
             "reference",

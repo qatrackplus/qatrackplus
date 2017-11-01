@@ -18,7 +18,7 @@ from .base import TestListInstanceMixin, BaseEditTestListInstance, TestListInsta
 from .perform import ChooseUnit
 
 from qatrack.units.models import Unit
-from qatrack.service_log.models import ServiceEvent, QAFollowup, ServiceEventStatus
+from qatrack.service_log.models import ServiceEvent, ReturnToServiceQA, ServiceEventStatus
 
 from braces.views import PermissionRequiredMixin, JSONResponseMixin
 
@@ -110,9 +110,9 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
     def get_context_data(self, **kwargs):
         context = super(ReviewTestListInstance, self).get_context_data(kwargs=kwargs)
 
-        followups = QAFollowup.objects.filter(test_list_instance=self.object)
+        rtsqas = ReturnToServiceQA.objects.filter(test_list_instance=self.object)
         se = []
-        for f in followups:
+        for f in rtsqas:
             if f.service_event not in se:
                 se.append(f.service_event)
 

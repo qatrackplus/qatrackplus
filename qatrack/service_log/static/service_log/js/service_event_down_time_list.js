@@ -13,10 +13,8 @@ require(['jquery', 'moment'], function ($, moment) {
             };
             var f = [];
             for (var filt in filters) {
-                console.log(filters[filt]);
                 if (!(typeof filters[filt] === 'undefined') && filters[filt] !== null && filters[filt] !== '') {
                     if (filt === 'datetime_service') {
-                        console.log(moment(filters[filt].split(' - ')[0]).format('DD-MM-YYYY'));
                         var date_from = moment(filters[filt].split(' - ')[0]);
                         var date_to = moment(filters[filt].split(' - ')[1]);
                         f.push(filt + '=' + date_from.format('DD-MM-YYYY') + '--' + date_to.format('DD-MM-YYYY'));
@@ -30,7 +28,6 @@ require(['jquery', 'moment'], function ($, moment) {
 
         $go_down_time.click(function () {
             var f = get_filters();
-            console.log(f);
             window.location = QAURLs.GO_SE_DOWN_TIMES + '?' + f + ';';
         });
 

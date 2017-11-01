@@ -26,16 +26,16 @@
             <a class="btn btn-info btn-xs btn-flat" title="View list of service events initiated by this list" href="{% url 'sl_list_all' %}?f=id-{% for se in initiated_se %}{{ se.id }}{% if not forloop.last %},{% endif %}{% endfor %}&next={{request.path|cut:"data/"}}" ><i class="fa fa-wrench fa-fw"></i></a>
         {% endif %}
     {% endif %}
-    {% if show_followup_se %}
-        {% if  num_followup_se == 1 and perms.service_log.view_serviceevent%}
-            <a class="btn btn-info btn-xs btn-flat hover-parent" title="View service event that this qa is a followup for" href="{% url 'sl_details' pk=followup_for_se.0.pk %}?next={{request.path|cut:"data/"}}" >
+    {% if show_rtsqa_se %}
+        {% if  num_rtsqa_se == 1 and perms.service_log.view_serviceevent%}
+            <a class="btn btn-info btn-xs btn-flat hover-parent" title="View service event that this qa is a return to service for" href="{% url 'sl_details' pk=rtsqa_for_se.0.pk %}?next={{request.path|cut:"data/"}}" >
                 <i class="fa fa-stack fa-fw">
                     <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
                     <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-left hover-sub-info"></i>
                 </i>
             </a>
-        {% elif num_followup_se > 1 %}
-            <a class="btn btn-info btn-xs btn-flat hover-parent" title="View list of service events that this qa is a followup for" href="{% url 'sl_list_all' %}?f=id-{% for se in followup_for_se %}{{ se.id }}{% if not forloop.last %},{% endif %}{% endfor %}&next={{request.path|cut:"data/"}}" >
+        {% elif num_rtsqa_se > 1 %}
+            <a class="btn btn-info btn-xs btn-flat hover-parent" title="View list of service events that this qa is a return to service for" href="{% url 'sl_list_all' %}?f=id-{% for se in rtsqa_for_se %}{{ se.id }}{% if not forloop.last %},{% endif %}{% endfor %}&next={{request.path|cut:"data/"}}" >
                 <i class="fa fa-stack fa-fw">
                     <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
                     <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-left hover-sub-primary"></i>
