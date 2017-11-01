@@ -509,7 +509,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
                         test_list_instance_id: val.test_list_instance.id
                     });
 
-                    if (val.reference) {
+                    if (val.reference !== null) {
                         line_data_reference.push({x: x, y: val.reference});
                         area_data_ok.push({x: x, y_high: val.tol_high, y_low: val.tol_low});
                         area_data_upper_tol.push({x: x, y_high: val.act_high, y_low: val.tol_high});
@@ -557,6 +557,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
             // if (allEmpty) {
             //     return;
             // }
+
             var range = $('#date-range');
             var from = range.val().split(' - ')[0];
             var to = range.val().split(' - ')[1];
@@ -570,8 +571,8 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
                 chart_width = $('#chart').width() - 15,
                 xAxisHeight = 20;
 
-            var circle_radius = 2,
-                circle_radius_highlight = 3,
+            var circle_radius = 3,
+                circle_radius_highlight = 4,
                 line_width = 1.5,
                 line_width_highlight = 2.5;
 
@@ -1774,7 +1775,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
             }
 
             brush_elem.transition()
-              .call(brush.move, [xScale2(minX), xScale2(maxX)]);
+              .call(brush.move, [Math.floor(xScale2(minX)), Math.ceil(xScale2(maxX))]);
 
             function findMaxX(data) {
                 var maxXValues = data.map(function(d) {

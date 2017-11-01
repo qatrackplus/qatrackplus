@@ -43,6 +43,7 @@ class SelectWithOptionTitles(Select):
         super(SelectWithOptionTitles, self).__init__(attrs=attrs, choices=choices)
         self.model = model
 
+    # TODO FIX: django 1.11 no longer calls this.
     def render_option(self, selected_choices, option_value, option_label):
         if option_value in [None, '']:
             option_value = ''
@@ -251,22 +252,24 @@ class ServiceEventMultipleField(forms.ModelMultipleChoiceField):
 
 class SelectWithDisabledWidget(forms.Select):
 
-    def render_option(self, selected_choices, option_value, option_label):
-        option_value = force_text(option_value)
-        if option_value in selected_choices:
-            selected_html = ' selected="selected"'
-        else:
-            selected_html = ''
-        disabled_html = ''
+    option_template_name = 'service_log/service_event_select_widget_option.html'
+
+    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+
+        to_return = super().create_option(name, value, label, selected, index, subindex=subindex, attrs=attrs)
         title_html = ''
-        if isinstance(option_label, dict):
-            if dict.get(option_label, 'disabled'):
-                disabled_html = ' disabled="disabled"'
-            if dict.get(option_label, 'title'):
-                title_html = ' title="%s"' % dict.get(option_label, 'title')
-            option_label = option_label['label']
-        return u'<option value="%s"%s%s%s>%s</option>' % (
-            escape(option_value), selected_html, disabled_html, title_html, conditional_escape(force_text(option_label)))
+        disabled = False
+
+        if isinstance(label, dict):
+            disabled = dict.get(label, 'disabled')
+            title_html = ' title="%s"' % dict.get(label, 'title') if dict.get(label, 'title') else ''
+            label = label['label']
+
+        # to_return['selected'] = selected
+        to_return['disabled'] = disabled
+        to_return['title_html'] = title_html
+        to_return['label'] = label
+        return to_return
 
 
 class ServiceEventStatusField(forms.ChoiceField):
@@ -284,6 +287,28 @@ class ServiceEventStatusField(forms.ChoiceField):
         if not isinstance(ses, models.ServiceEventStatus):
             return False
         return True
+
+    def has_changed(self, initial, data):
+        """
+        Return True if data differs from initial.
+        """
+        # Always return False if the field is disabled since self.bound_data
+        # always uses the initial value in this case.
+        if self.disabled:
+            return False
+        try:
+            data = self.to_python(data)
+            if hasattr(self, '_coerce'):
+                return self._coerce(data) != self._coerce(initial)
+        except ValidationError:
+            return True
+        # For purposes of seeing whether something has changed, None is
+        # the same as an empty string, if the data or initial value we get
+        # is None, replace it with ''.
+
+        initial_value = initial if initial is not None else ''
+        data_value = data.id if data is not None else ''
+        return initial_value != data_value
 
 
 class TLIInitiatedField(forms.IntegerField):
@@ -326,7 +351,7 @@ class ServiceEventForm(BetterModelForm):
         help_text=models.ServiceEvent._meta.get_field('duration_lost_time').help_text
     )
     service_event_related_field = ServiceEventMultipleField(
-        required=False, queryset=models.ServiceEvent.objects.none(),
+        required=False, queryset=models.ServiceEvent.objects.none(), label=_('Service Event Related'),
         help_text=models.ServiceEvent._meta.get_field('service_event_related').help_text
     )
     is_review_required = forms.BooleanField(required=False)
@@ -344,10 +369,10 @@ class ServiceEventForm(BetterModelForm):
     service_type = forms.ModelChoiceField(
         queryset=models.ServiceType.objects.all(), widget=SelectWithOptionTitles(model=models.ServiceType)
     )
-    # service_status = ServiceEventStatusField(
-    #     help_text=models.ServiceEvent._meta.get_field('service_status').help_text, widget=SelectWithDisabledWidget,
-    #     queryset=models.ServiceEventStatus.objects.all()
-    # )
+    service_status = ServiceEventStatusField(
+        help_text=models.ServiceEvent._meta.get_field('service_status').help_text, widget=SelectWithDisabledWidget,
+        # queryset=models.ServiceEventStatus.objects.all()
+    )
 
     _classes = ['form-control']
 
@@ -497,7 +522,7 @@ class ServiceEventForm(BetterModelForm):
         else:
             try:
                 unit = u_models.Unit.objects.get(pk=self.data['unit_field'])
-            except (ObjectDoesNotExist, KeyError):
+            except (ObjectDoesNotExist, ValueError, KeyError):
                 unit = self.instance.unit_service_area.unit
             self.initial['unit_field'] = unit
             self.initial['service_area_field'] = self.instance.unit_service_area.service_area

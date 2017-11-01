@@ -204,7 +204,7 @@ def test_list_added_to_cycle(*args, **kwargs):
 @receiver(comment_was_posted, sender=Comment)
 def check_approved_statuses(*args, **kwargs):
 
-    if kwargs['edit_tli']:
+    if 'edit_tli' in kwargs and kwargs['edit_tli']:
         tli_id = kwargs['comment'].object_pk
         tli = models.TestListInstance.objects.get(pk=tli_id)
 

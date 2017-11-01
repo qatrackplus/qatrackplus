@@ -327,6 +327,7 @@ class PartsList(BaseListableView):
         'description',
         'part_number',
         'quantity_current',
+        'quantity_min',
         'part_category__name'
     )
 
@@ -335,6 +336,7 @@ class PartsList(BaseListableView):
         'pk': _('ID'),
         'description': _('Description'),
         'part_number': _('Part Number'),
+        'quantity_min': _('Min Quantity'),
         'quantity_current': _('In Storage'),
         'part_category__name': _('Category')
     }
@@ -344,13 +346,15 @@ class PartsList(BaseListableView):
         'pk': TEXT,
         'description': TEXT,
         'part_number': TEXT,
+        'quantity_min': None,
         'quantity_current': None,
         'part_category__name': SELECT_MULTI
     }
 
     search_fields = {
         'actions': False,
-        'quantity_current': False
+        'quantity_current': False,
+        'quantity_min': False
     }
 
     order_fields = {

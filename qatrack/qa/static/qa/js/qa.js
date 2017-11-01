@@ -280,7 +280,8 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jqu
         this.show_comment.click(function(){
 
             self.comment.toggle('fast');
-            self.comment.find('.comment-bar').slideToggle('fast').toggleClass('in');
+            self.comment.find('.comment-bar').slideToggle('fast');
+            self.comment.find('.comment-bar').toggleClass('in');
             self.row.find('.comment-bar').toggleClass('in');
             return false;
         });
