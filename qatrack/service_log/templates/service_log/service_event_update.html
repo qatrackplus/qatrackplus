@@ -352,11 +352,13 @@
 
                                         </tbody>
 
-                                        <tfoot>
-                                            <tr><td>
-                                                <div id="add-rtsqa" class="btn btn-sm btn-flat btn-info" title="Add another RTS QA object.">Add</div>
-                                            </td></tr>
-                                        </tfoot>
+                                        {% if perms.service_log.add_returntoserviceqa %}
+                                            <tfoot>
+                                                <tr><td>
+                                                    <div id="add-rtsqa" class="btn btn-sm btn-flat btn-info" title="Add another RTS QA object.">Add</div>
+                                                </td></tr>
+                                            </tfoot>
+                                        {% endif %}
 
                                     </table>
                                 </div>

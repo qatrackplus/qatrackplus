@@ -170,6 +170,7 @@ class ReturnToServiceQAForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.service_event_instance = kwargs.pop('service_event_instance')
         self.unit_field = kwargs.pop('unit_field')
+        self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
 
         if 'unit_field' in self.data and self.data['unit_field']:
@@ -185,6 +186,9 @@ class ReturnToServiceQAForm(forms.ModelForm):
                 cache.set('active_unit_test_collections_for_unit_%s' % self.unit_field.id, uf_cache)
             self.fields['unit_test_collection'].queryset = uf_cache
 
+            self.fields['unit_test_collection'].widget.attrs.update({
+                'disabled': not self.user.has_perm('service_log.add_returntoserviceqa')
+            })
         else:
             self.fields['unit_test_collection'].widget.attrs.update({'disabled': True})
 
@@ -453,10 +457,10 @@ class ServiceEventForm(BetterModelForm):
             g_fields.append(field_name)
         self._fieldsets.append(('g_link_fields', {'fields': g_fields}))
 
-        # If there are no saved instance yet
+        # If this is a new ServiceEvent
         if is_new:
 
-            # if url param 'ib' is included
+            # if url param 'ib' is included. For prefilling initiated by field
             if self.initial_ib and 'test_list_instance_initiated_by' not in self.data:
                 initial_ib_tli = qa_models.TestListInstance.objects.get(id=self.initial_ib)
                 self.initial['test_list_instance_initiated_by'] = initial_ib_tli.id
@@ -466,15 +470,22 @@ class ServiceEventForm(BetterModelForm):
                 self.initial['initiated_utc_field'] = initial_ib_utc
                 self.fields['service_area_field'].queryset = models.ServiceArea.objects.filter(units=initial_ib_utc_u)
                 i_utc_f_qs = qa_models.UnitTestCollection.objects.filter(unit=initial_ib_utc_u, active=True).order_by('name')
-                self.fields['initiated_utc_field'].choices = (('', '---------'),) + tuple(((utc.id, '(%s) %s' % (utc.frequency if utc.frequency else 'Ad Hoc', utc.name)) for utc in i_utc_f_qs))
+                choices = (('', '---------'),) + tuple(
+                    ((utc.id, '(%s) %s' % (utc.frequency if utc.frequency else 'Ad Hoc', utc.name)) for utc in i_utc_f_qs)
+                )
+                self.fields['initiated_utc_field'].choices = choices
 
             if self.initial_u and 'unit_field' not in self.data:
                 try:
                     initial_unit = u_models.Unit.objects.get(pk=self.initial_u)
                     self.initial['unit_field'] = initial_unit
                     self.fields['service_area_field'].queryset = models.ServiceArea.objects.filter(units=initial_unit)
-                    i_utc_f_qs = qa_models.UnitTestCollection.objects.filter(unit=initial_unit, active=True).order_by('name')
-                    self.fields['initiated_utc_field'].choices = (('', '---------'),) + tuple(((utc.id, '(%s) %s' %(utc.frequency if utc.frequency else 'Ad Hoc', utc.name)) for utc in i_utc_f_qs))
+                    i_utc_f_qs = qa_models.UnitTestCollection.objects.filter(
+                        unit=initial_unit, active=True
+                    ).order_by('name')
+                    self.fields['initiated_utc_field'].choices = (('', '---------'),) + tuple(
+                        ((utc.id, '(%s) %s' %(utc.frequency if utc.frequency else 'Ad Hoc', utc.name)) for utc in i_utc_f_qs)
+                    )
                 except ObjectDoesNotExist:
                     pass
 
@@ -490,8 +501,12 @@ class ServiceEventForm(BetterModelForm):
 
             if 'unit_field' in self.data:
                 if self.data['unit_field']:
-                    self.fields['service_area_field'].queryset = models.ServiceArea.objects.filter(units=self.data['unit_field'])
-                    self.fields['initiated_utc_field'].queryset = qa_models.UnitTestCollection.objects.filter(unit=self.data['unit_field'])
+                    self.fields['service_area_field'].queryset = models.ServiceArea.objects.filter(
+                        units=self.data['unit_field']
+                    )
+                    self.fields['initiated_utc_field'].queryset = qa_models.UnitTestCollection.objects.filter(
+                        unit=self.data['unit_field']
+                    )
                 else:
                     self.fields['service_area_field'].widget.attrs.update({'disabled': True})
                     self.fields['service_event_related_field'].widget.attrs.update({'disabled': True})
@@ -505,10 +520,6 @@ class ServiceEventForm(BetterModelForm):
                     choices.append(
                         (value, {'label': label, 'disabled': True, 'title': _('Cannot select status: Permission denied')})
                     )
-                # elif ses.rts_qa_must_be_reviewed:
-                #     choices.append(
-                #         (value, {'label': label, 'disabled': True, 'title': _('Cannot select status: Unreviewed RTS QA')})
-                #     )
                 else:
                     choices.append((value, label))
             self.fields['service_status'] = ServiceEventStatusField(choices=choices, widget=SelectWithDisabledWidget)
@@ -543,10 +554,11 @@ class ServiceEventForm(BetterModelForm):
             for ses in models.ServiceEventStatus.objects.all():
                 value = ses.id
                 label = ses.name
-                if not self.user.has_perm('service_log.review_serviceevent') and not (ses.is_review_required or ses.pk == self.instance.service_status.id):
-                    choices.append((value, {'label': label, 'disabled': True, 'title': 'Cannot select status: Permission denied'}))
-                # elif ses.rts_qa_must_be_reviewed and self.instance.returntoserviceqa_set.filter(Q(test_list_instance__isnull=True) | Q(test_list_instance__all_reviewed=False)).exists():
-                #     choices.append((value, {'label': label, 'disabled': True, 'title': 'Cannot select status: %s RTS QA' % unreviewed_qa_status.name}))
+                review_or_initial_status = ses.is_review_required or ses.pk == self.instance.service_status.id
+                if not self.user.has_perm('service_log.review_serviceevent') and not review_or_initial_status:
+                    choices.append(
+                        (value, {'label': label, 'disabled': True, 'title': 'Cannot select status: Permission denied'})
+                    )
                 else:
                     choices.append((value, label))
             self.fields['service_status'] = ServiceEventStatusField(choices=choices, widget=SelectWithDisabledWidget)
@@ -555,8 +567,21 @@ class ServiceEventForm(BetterModelForm):
                 self.initial['initiated_utc_field'] = self.instance.test_list_instance_initiated_by.unit_test_collection
                 self.initial['test_list_instance_initiated_by'] = str(self.instance.test_list_instance_initiated_by.id)
 
-            i_utc_f_qs = qa_models.UnitTestCollection.objects.select_related('frequency').filter(unit=unit, active=True).order_by('name')
-            self.fields['initiated_utc_field'].choices = (('', '---------'),) + tuple(((utc.id, '(%s) %s' % (utc.frequency if utc.frequency else 'Ad Hoc', utc.name)) for utc in i_utc_f_qs))
+            # disable Unit field if service event has initiated by or any existing RTSQA
+            rtsqa_exisits = models.ReturnToServiceQA.objects.filter(service_event=self.instance).exists()
+            if self.instance.test_list_instance_initiated_by or rtsqa_exisits:
+                self.fields['unit_field'].widget.attrs.update({
+                    'disabled': True, 'title': 'Cannot change Unit once "Initiated By" or any "RTS QA" have been added',
+                })
+                self.fields['unit_field'].widget.option_inherits_attrs = True                                           # to show title on options as well
+                self.fields['unit_field'].required = False
+
+            i_utc_f_qs = qa_models.UnitTestCollection.objects.select_related('frequency').filter(
+                unit=unit, active=True
+            ).order_by('name')
+            self.fields['initiated_utc_field'].choices = (('', '---------'),) + tuple(
+                ((utc.id, '(%s) %s' % (utc.frequency if utc.frequency else 'Ad Hoc', utc.name)) for utc in i_utc_f_qs)
+            )
 
         for f in ['safety_precautions', 'problem_description', 'work_description', 'qafollowup_notes']:
             self.fields[f].widget.attrs.update({'rows': 3, 'class': 'autosize'})
@@ -632,6 +657,11 @@ class ServiceEventForm(BetterModelForm):
                         is_default=True
                     ).first().name
                 )
+
+        # If unit field was disabled due to initiated by or rtsqa existing for already saved service event,
+        #   add the initial unit back to cleaned data since django tries to set it to None and unit is of course requried.
+        if self.instance.pk and ('unit_field' not in self.cleaned_data or self.cleaned_data['unit_field'] is None):
+            self.cleaned_data['unit_field'] = self.initial['unit_field']
 
         return self.cleaned_data
         # TODO add message when service event status chages due to review

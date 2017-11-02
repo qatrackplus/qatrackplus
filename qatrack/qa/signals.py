@@ -1,5 +1,6 @@
+
 from django.dispatch import receiver, Signal
-from django.db.models.signals import pre_save, post_save, post_delete
+from django.db.models.signals import pre_save, post_save, pre_delete, post_delete
 
 from django.core.exceptions import ValidationError
 from django.contrib import messages
@@ -62,6 +63,18 @@ def update_last_instances(test_list_instance):
                 due_date=due_date,
                 last_instance=last_instance,
             )
+
+
+def handle_se_statuses_post_tli_delete(test_list_instance):
+
+    se_rtsqa_qs = sl_models.ServiceEvent.objects.filter(
+        returntoserviceqa__test_list_instance=test_list_instance, service_status__is_review_required=False
+    )
+    se_ib_qs = test_list_instance.serviceevents_initiated.filter(service_status__is_review_required=False)
+    default_ses = sl_models.ServiceEventStatus.get_default()
+
+    se_rtsqa_qs.update(service_status=default_ses)
+    se_ib_qs.update(service_status=default_ses)
 
 
 def get_or_create_unit_test_info(unit, test, assigned_to=None, active=True):
@@ -157,6 +170,12 @@ def on_test_list_instance_saved(*args, **kwargs):
 
     if not loaded_from_fixture(kwargs):
         update_last_instances(kwargs["instance"])
+
+
+@receiver(pre_delete, sender=models.TestListInstance)
+def pre_test_list_instance_deleted(*args, **kwargs):
+    """update last_instance if available"""
+    handle_se_statuses_post_tli_delete(kwargs["instance"])
 
 
 @receiver(post_delete, sender=models.TestListInstance)

@@ -122,7 +122,7 @@ class ServiceEvent(models.Model):
         TestListInstance,
         null=True,
         blank=True,
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
         related_name='serviceevents_initiated'
     )
 
@@ -219,7 +219,9 @@ class ReturnToServiceQA(models.Model):
     unit_test_collection = models.ForeignKey(
         UnitTestCollection, help_text=_('Select a TestList to perform'), on_delete=models.CASCADE
     )
-    test_list_instance = models.ForeignKey(TestListInstance, null=True, blank=True, on_delete=models.CASCADE, related_name='rtsqa_for_tli')
+    test_list_instance = models.ForeignKey(
+        TestListInstance, null=True, blank=True, on_delete=models.SET_NULL, related_name='rtsqa_for_tli'
+    )
     user_assigned_by = models.ForeignKey(User, related_name='+', on_delete=models.PROTECT)
     service_event = models.ForeignKey(ServiceEvent, on_delete=models.CASCADE)
 
@@ -230,8 +232,6 @@ class ReturnToServiceQA(models.Model):
             ('view_returntoserviceqa', 'Can view return vo service qa'),
             ('perform_returntoserviceqa', 'Can perform return to service qa')
         )
-
-
 
 
 class GroupLinker(models.Model):

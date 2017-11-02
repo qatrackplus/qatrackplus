@@ -382,7 +382,11 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseM
                 self.request.POST,
                 instance=self.object,
                 prefix='rtsqa',
-                form_kwargs={'service_event_instance': self.object, 'unit_field': unit_field},
+                form_kwargs={
+                    'service_event_instance': self.object,
+                    'unit_field': unit_field,
+                    'user': self.request.user
+                },
                 queryset=models.ReturnToServiceQA.objects.filter(service_event=self.object).select_related(
                     'test_list_instance',
                     'test_list_instance__test_list',
@@ -408,7 +412,8 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseM
                 prefix='rtsqa',
                 form_kwargs={
                     'service_event_instance': self.object,
-                    'unit_field': unit_field
+                    'unit_field': unit_field,
+                    'user': self.request.user
                 },
                 queryset=models.ReturnToServiceQA.objects.filter(service_event=self.object).select_related(
                     'test_list_instance',

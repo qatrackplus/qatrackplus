@@ -1,13 +1,17 @@
+
+from django.apps import apps
 from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin import widgets, options
 from django.contrib.admin.models import LogEntry, CHANGE
+from django.contrib.admin.options import IS_POPUP_VAR, TO_FIELD_VAR
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse_lazy
 import django.db
 from django.db.models import Count, Q
 import django.forms as forms
 from django.shortcuts import redirect, render, HttpResponseRedirect
+from django.template.response import TemplateResponse
 from django.utils import timezone
 from django.utils.html import escape
 from django.utils.text import Truncator
@@ -805,6 +809,26 @@ class TestListInstanceAdmin(SaveInlineAttachmentUserMixin, admin.ModelAdmin):
     list_display = ["__str__", utc_unit_name, "test_list", "work_completed", "created_by"]
     list_filter = ["unit_test_collection__unit", "test_list", ]
     inlines = [get_attachment_inline("testlistinstance")]
+
+    def render_delete_form(self, request, context):
+        opts = self.model._meta
+        app_label = opts.app_label
+        instance = context['object']
+
+        # Find related Service events with rtsqa and with initiated by
+        ServiceEvent = apps.get_model('service_log', 'ServiceEvent')
+        ServiceEventStatus = apps.get_model('service_log', 'ServiceEventStatus')
+        se_rtsqa_qs = ServiceEvent.objects.filter(
+            returntoserviceqa__test_list_instance=context['object']
+        )
+        se_ib_qs = instance.serviceevents_initiated.all()
+        default_ses = ServiceEventStatus.get_default()
+        context.update({
+            'se_rtsqa_qs': se_rtsqa_qs,
+            'se_ib_qs': se_ib_qs,
+            'default_ses': default_ses
+        })
+        return super().render_delete_form(request, context)
 
 
 class TestInstanceAdmin(SaveInlineAttachmentUserMixin, admin.ModelAdmin):
