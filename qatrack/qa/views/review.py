@@ -24,7 +24,18 @@ from braces.views import PermissionRequiredMixin, JSONResponseMixin
 
 
 class TestListInstanceDetails(TestListInstanceMixin, DetailView):
-    pass
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(kwargs=kwargs)
+
+        rtsqas = ReturnToServiceQA.objects.filter(test_list_instance=self.object)
+        se = []
+        for f in rtsqas:
+            if f.service_event not in se:
+                se.append(f.service_event)
+
+        context['service_events'] = se
+        return context
 
 
 class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
@@ -450,7 +461,7 @@ class OverviewObjects(JSONResponseMixin, View):
                             'due_status': ds
                         }
                         due_counts[ds] += 1
-            # print unit_freqs
+
             unit_lists[unit.name] = unit_freqs
 
         return self.render_json_response({'unit_lists': unit_lists, 'due_counts': due_counts, 'success': True})
@@ -462,7 +473,7 @@ class UTCInstances(TestListInstances):
     def get_page_title(self):
         try:
             utc = models.UnitTestCollection.objects.get(pk=self.kwargs["pk"])
-            return "History for %s" % utc.name
+            return "History for %s :: %s" % (utc.unit.name, utc.name)
         except:
             raise Http404
 

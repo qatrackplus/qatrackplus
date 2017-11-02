@@ -1,6 +1,6 @@
 from collections import OrderedDict
 
-from braces.views import LoginRequiredMixin
+from braces.views import LoginRequiredMixin, PermissionRequiredMixin
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.context_processors import PermWrapper
@@ -268,11 +268,12 @@ class ErrorView(TemplateView):
     template_name = 'service_log/error_base.html'
 
 
-class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, ModelFormMixin, ProcessFormView):
+class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, SingleObjectTemplateResponseMixin, ModelFormMixin, ProcessFormView):
     """
     CreateView and UpdateView functionality combined
     """
-
+    permission_required = 'service_log.add_serviceevent'
+    raise_exception = True
     model = models.ServiceEvent
     template_name = 'service_log/service_event_update.html'
     form_class = forms.ServiceEventForm

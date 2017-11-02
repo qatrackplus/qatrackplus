@@ -159,8 +159,8 @@ class ServiceEvent(models.Model):
         get_latest_by = "datetime_service"
 
         permissions = (
-            ('review_serviceevent', 'Can Review Service Event'),
-            ('view_serviceevent', 'Can View Service Event'),
+            ('review_serviceevent', 'Can review service event'),
+            ('view_serviceevent', 'Can view service event'),
         )
 
     def __str__(self):
