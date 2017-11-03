@@ -603,6 +603,10 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         context = self.get_context_data()
         formset = context["formset"]
 
+        in_progress = form.cleaned_data['in_progress']
+        for f in formset:
+            f.in_progress = in_progress
+
         if not formset.is_valid():
             context["form"] = form
             return self.render_to_response(context)

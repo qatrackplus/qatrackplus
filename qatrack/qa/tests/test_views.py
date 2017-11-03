@@ -828,6 +828,24 @@ class TestPerformQA(TestCase):
         # user is redirected if form submitted successfully
         self.assertEqual(response.status_code, 302)
 
+    def test_perform_in_progress_no_data(self):
+        """Test list should be allowed to be saved with no data if it is in progress"""
+        data = {
+            "work_started": "11-07-2012 00:09",
+            "status": self.status.pk,
+            "form-TOTAL_FORMS": len(self.tests),
+            "form-INITIAL_FORMS": len(self.tests),
+            "form-MAX_NUM_FORMS": "",
+            "in_progress": True,
+        }
+
+        response = self.client.post(self.url, data=data)
+
+        self.assertTrue(1, models.TestListInstance.objects.in_progress().count())
+        self.assertTrue(len(self.tests), models.TestInstance.objects.in_progress().count())
+        # user is redirected if form submitted successfully
+        self.assertEqual(response.status_code, 302)
+
     def set_form_data(self, data):
         for test_idx, uti in enumerate(self.unit_test_infos):
             if uti.test.type == models.UPLOAD:
@@ -1290,6 +1308,23 @@ class TestEditTestListInstance(TestCase):
         del self.base_data["in_progress"]
         self.client.post(self.url, data=self.base_data)
         self.assertEqual(models.TestInstance.objects.in_progress().count(), 0)
+
+    def test_in_progress_no_data(self):
+
+        data = {
+            "work_completed": "11-07-2012 00:10",
+            "work_started": "11-07-2012 00:09",
+            "status": self.status.pk,
+            "testinstance_set-TOTAL_FORMS": "2",
+            "testinstance_set-INITIAL_FORMS": "2",
+            "testinstance_set-MAX_NUM_FORMS": "",
+            "testinstance_set-0-id": self.ti.pk,
+            "testinstance_set-1-id": self.tib.pk,
+            "in_progress": True,
+        }
+        self.client.post(self.url, data=data)
+        ntests = models.Test.objects.count()
+        self.assertEqual(models.TestInstance.objects.in_progress().count(), ntests)
 
     def test_no_work_completed(self):
 
