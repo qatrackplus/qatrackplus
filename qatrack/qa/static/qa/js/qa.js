@@ -841,7 +841,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jqu
                     for (var i in data.colour_ids) {
                         var se_id = data.colour_ids[i][0],
                             s_id = data.colour_ids[i][1];
-                        results.push({id: se_id, text: 'id: ' + se_id});
+                        results.push({id: se_id, text: 'ServiceEvent ' + se_id});
                         se_statuses[se_id] = s_id;
                     }
                     params.page = params.page || 1;

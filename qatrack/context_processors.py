@@ -9,7 +9,7 @@ from django.dispatch import receiver
 from qatrack.qa.models import Frequency, TestListInstance, UnitTestCollection
 from qatrack.units.models import Unit
 from qatrack.parts.models import PartUsed, PartStorageCollection
-from qatrack.service_log.models import QAFollowup, ServiceEvent, ServiceEventStatus
+from qatrack.service_log.models import ReturnToServiceQA, ServiceEvent, ServiceEventStatus
 
 cache.delete(settings.CACHE_UNREVIEWED_COUNT)
 cache.delete(settings.CACHE_RTS_QA_COUNT)
@@ -57,8 +57,8 @@ def update_unreviewed_cache(*args, **kwargs):
     cache.delete(settings.CACHE_RTS_QA_COUNT)
 
 
-@receiver(post_save, sender=QAFollowup)
-@receiver(post_delete, sender=QAFollowup)
+@receiver(post_save, sender=ReturnToServiceQA)
+@receiver(post_delete, sender=ReturnToServiceQA)
 def update_unreviewed_cache(*args, **kwargs):
     """When a RTS is completed invalidate the unreviewed counts"""
     cache.delete(settings.CACHE_RTS_QA_COUNT)
@@ -104,7 +104,7 @@ def site(request):
 
     unreviewed_rts = cache.get(settings.CACHE_RTS_QA_COUNT)
     if unreviewed_rts is None:
-        unreviewed_rts = QAFollowup.objects.filter(test_list_instance__isnull=False, test_list_instance__all_reviewed=False).count()
+        unreviewed_rts = ReturnToServiceQA.objects.filter(test_list_instance__isnull=False, test_list_instance__all_reviewed=False).count()
         cache.set(settings.CACHE_RTS_QA_COUNT, unreviewed_rts)
 
     your_unreviewed = TestListInstance.objects.your_unreviewed_count(request.user)

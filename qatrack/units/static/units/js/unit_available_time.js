@@ -154,7 +154,6 @@ require(['jquery', 'moment', 'autosize', 'daterangepicker', 'select2', 'felter',
                 data: $avail_time_form.serialize(),
                 type: 'POST',
                 success: function(res) {
-                    console.log(res);
                     if (res.errors) {
                         place_errors(res.errors);
                     }
@@ -169,7 +168,6 @@ require(['jquery', 'moment', 'autosize', 'daterangepicker', 'select2', 'felter',
                 data: $avail_time_edit_form.serialize(),
                 type: 'POST',
                 success: function(res) {
-                    console.log(res);
                     if (res.errors) {
                         place_errors(res.errors);
                     }
@@ -204,10 +202,7 @@ require(['jquery', 'moment', 'autosize', 'daterangepicker', 'select2', 'felter',
                 } else {
 
                     var $err_div = $elem.parent().siblings('.ajax-errors');
-                    console.log('------------');
-                    console.log($err_div);
                     $.each(v, function(i, v) {
-                        console.log('appending ' + v + ' to ' + k);
                         $err_div.append('<div>- ' + v + '</div>');
                     });
                     $err_div.parent().addClass('has-error');

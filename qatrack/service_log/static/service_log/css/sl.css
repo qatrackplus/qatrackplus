@@ -36,15 +36,9 @@
 .box.box-bordered-default {
     border: 1.5px solid rgb(210, 214, 222);
 }
-
-/* Override width of pk column to something smaller */
-/*#listable-table-sl_list_all > thead > tr > th:nth-child(2) > span > input,*/
-/*#listable-table-qaf_list_all > thead > tr > th:nth-child(2) > span > input {*/
-    /*width: 45px;*/
-/*}*/
 #listable-table-sl_list_all > thead > tr > th:nth-child(2),
 #listable-table-sl_list_all > tbody > tr > td:nth-child(2),
-#listable-table-qaf_list_all > tbody > tr > td:nth-child(2) {
+#listable-table-rtsqa_list_all > tbody > tr > td:nth-child(2) {
     width: 50px;
 }
 #listable-table-sl_list_all > thead > tr:nth-child(2) > th:nth-child(10) > span > input {
@@ -78,12 +72,9 @@
 #listable-table-suppliers_list > thead > tr > th:nth-child(2) {
     width: 75px;
 }
-#listable-table-qaf_list_all > thead > tr > th:nth-child(1) {
+#listable-table-rtsqa_list_all > thead > tr > th:nth-child(1) {
     width: 150px;
 }
-/*#listable-table-qaf_list_all > tbody > tr > td:nth-child(1) {*/
-    /*width: 180px;*/
-/*}*/
 
 /*QA Status Spans                                 */
 .no_tol {

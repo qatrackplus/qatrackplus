@@ -16,7 +16,7 @@
 {% endblock %}
 
 {% block require_javascript %}
-    require(['qa'], function() {
+    require(['qareview'], function() {
         $('body').removeClass("loading");
     });
 {% endblock require_javascript %}
@@ -65,6 +65,9 @@
                                         {% elif perms.qa.change_testlistinstance %}
                                             <a class="btn btn-default btn-xs btn-flat" title="Edit this list" href="{%url 'edit_tli' pk=tli.pk%}?next={{request.get_full_path}}" >Edit</a>
                                         {% endif %}
+                                        {% if perms.qa.can_review %}
+                                            <a href="{% url 'review_test_list_instance' pk=tli.pk %}?next={{request.get_full_path}}" class="btn btn-xs btn-default btn-flat">Review</a>
+                                        {% endif %}
                                     </dd>
                                </dl>
                             </div>
@@ -103,16 +106,23 @@
                                     <dd>{{tli.reviewed_by}} @ {{tli.reviewed}}</dd>
                                </dl>
                             </div>
-                            <div class="col-md-4 actions review-buttons">
+                            <div class="col-md-4">
                                 <dl class="dl-horizontal">
 
-                                    <dt>Comment :</dt>
-                                    <dd>{% if tli.comment %}{{tli.comment}}{% else %}<em>No comment</em>{% endif %}</dd>
+                                    {% if service_events %}
+                                        <dt>RTS QA for Service Events:</dt>
+                                        <dd>
+                                            {% for se in service_events %}
+                                                {% if perms.service_log.view_serviceevent %}
+                                                    <a href="{% url 'sl_details' pk=se.id %}" class="btn btn-xs btn-flat service-event-btn margin-bottom-1" data-bgcolour="{{ se.service_status.colour }}">{{ se }}</a>
+                                                {% else %}
+                                                    <div>{{ se }}</div>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </dd>
+                                    {% endif %}
                                 </dl>
-
                             </div>
-
-
 
                         {% endwith %}
                     </div>

@@ -122,7 +122,7 @@ class ServiceEvent(models.Model):
         TestListInstance,
         null=True,
         blank=True,
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
         related_name='serviceevents_initiated'
     )
 
@@ -141,7 +141,7 @@ class ServiceEvent(models.Model):
         null=True, blank=True, help_text=_('Describe the work done during this service event')
     )
     qafollowup_notes = models.TextField(
-        null=True, blank=True, help_text=_('Provide any extra information regarding followups')
+        null=True, blank=True, help_text=_('Provide any extra information regarding return to services')
     )
     duration_service_time = models.DurationField(
         verbose_name=_('Service time'), null=True, blank=True,
@@ -159,8 +159,8 @@ class ServiceEvent(models.Model):
         get_latest_by = "datetime_service"
 
         permissions = (
-            ('review_serviceevent', 'Can Review Service Event'),
-            ('view_serviceevent', 'Can View Service Event'),
+            ('review_serviceevent', 'Can review service event'),
+            ('view_serviceevent', 'Can view service event'),
         )
 
     def __str__(self):
@@ -214,12 +214,14 @@ class Hours(models.Model):
         return self.user or self.third_party
 
 
-class QAFollowup(models.Model):
+class ReturnToServiceQA(models.Model):
 
     unit_test_collection = models.ForeignKey(
         UnitTestCollection, help_text=_('Select a TestList to perform'), on_delete=models.CASCADE
     )
-    test_list_instance = models.ForeignKey(TestListInstance, null=True, blank=True, on_delete=models.CASCADE, related_name='qafollowup_for_tli')
+    test_list_instance = models.ForeignKey(
+        TestListInstance, null=True, blank=True, on_delete=models.SET_NULL, related_name='rtsqa_for_tli'
+    )
     user_assigned_by = models.ForeignKey(User, related_name='+', on_delete=models.PROTECT)
     service_event = models.ForeignKey(ServiceEvent, on_delete=models.CASCADE)
 
@@ -227,8 +229,8 @@ class QAFollowup(models.Model):
 
     class Meta:
         permissions = (
-            ('view_qafollowup', 'Can view return vo service qa'),
-            ('perform_qafollowup', 'Can perform return to service qa')
+            ('view_returntoserviceqa', 'Can view return vo service qa'),
+            ('perform_returntoserviceqa', 'Can perform return to service qa')
         )
 
 

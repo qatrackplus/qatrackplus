@@ -182,10 +182,10 @@
                                     <div class="form-horizontal">
                                         <div class="row {% if form.work_started.errors %} has-error{% endif %}" {% comment %}id="work-started" data-date="{% now 'd-m-Y'%}" data-date-format="dd-mm-yyyy"{% endcomment %}>
         {#                                    {% spaceless %}#}
-                                                <label for="id_work_started" class="col-lg-6">
+                                                <label for="id_work_started" class="col-md-5">
                                                     {{form.work_started.label}}:
                                                 </label>
-                                                <div class="col-lg-6">
+                                                <div class="col-md-7">
                                                     {{form.work_started}}
         {#                                            <div id="clear-work_started" class="btn btn-flat btn-xs datetime-clear">X</div>#}
                                                     <i id="clear-work_started" class="fa fa-refresh fa-in-input datetime-clear"></i>
@@ -199,20 +199,20 @@
 
                                         {% if perms.qa.can_override_date %}
                                             <div class="row">
-                                                <label for="id_work_duration" class="col-lg-6">
+                                                <label for="id_work_duration" class="col-md-5">
                                                     Work duration:
                                                 </label>
-                                                <div class="col-lg-6">
+                                                <div class="col-md-7">
                                                     <input id="id_work_duration" name="work_duration" class="form-control">
                                                     <i class="fa fa-clock-o fa-in-input"></i>
                                                 </div>
                                             </div>
 
                                             <div class="row{% if form.work_completed.errors %} has-error{% endif %}">
-                                                <label for="id_work_completed" class="col-lg-6">
+                                                <label for="id_work_completed" class="col-md-5">
                                                     {{form.work_completed.label}}:
                                                 </label>
-                                                <div class="col-lg-6">
+                                                <div class="col-md-7">
                                                     {{form.work_completed}}
         {#                                            <i class="fa fa-calendar fa-in-input"></i>#}
                                                     <i id="clear-work_completed" class="fa {% if test_list_instance.work_started %}fa-refresh{% else %}fa-times{% endif %} fa-in-input datetime-clear"></i>
@@ -229,19 +229,19 @@
                             <div class="col-sm-6 {% comment %}left-border border-default{% endcomment %}">
                                 {% if perms.qa.can_review and perms.qa.can_review_own_tests %}
                                     <div class="input-prepend input-append row" id="status">
-                                        <label for="id_status" class="col-lg-6">
+                                        <label for="id_status" class="col-md-5">
                                             Set Status:
                                         </label>
-                                        <div class="col-lg-6">
+                                        <div class="col-md-7">
                                             {{ form.status }}
                                         </div>
                                     </div>
                                 {% endif %}
                                 <div class="input-prepend input-append row" id="status">
-                                    <label for="id_status" class="col-lg-6">
+                                    <label for="id_status" class="col-md-5">
                                         RTS for Service Event:
                                     </label>
-                                    <div class="col-lg-6">
+                                    <div class="col-md-7">
                                         {{ form.service_events }}
                                     </div>
                                 </div>

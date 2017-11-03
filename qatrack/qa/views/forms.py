@@ -259,8 +259,8 @@ class BaseTestListInstanceForm(forms.ModelForm):
     modified = forms.DateTimeField(required=False)
 
     service_events = ServiceEventMultipleField(queryset=sl_models.ServiceEvent.objects.none(), required=False)
-    followup_id = forms.IntegerField(required=False, widget=HiddenInput())
-    # now handle saving of qa or service event and link followup
+    rtsqa_id = forms.IntegerField(required=False, widget=HiddenInput())
+    # now handle saving of qa or service event and link rtsqa
 
     class Meta:
         model = models.TestListInstance
@@ -269,7 +269,7 @@ class BaseTestListInstanceForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
 
         self.unit = kwargs.pop('unit', None)
-        self.followup_id = kwargs.pop('followup', None)
+        self.rtsqa_id = kwargs.pop('rtsqa', None)
 
         super(BaseTestListInstanceForm, self).__init__(*args, **kwargs)
 
@@ -288,20 +288,20 @@ class BaseTestListInstanceForm(forms.ModelForm):
 
         if self.instance.pk:
             se_ids = []
-            qaf_ids = []
-            for qaf in self.instance.qafollowup_for_tli.all():
-                se_ids.append(qaf.service_event_id)
-                qaf_ids.append(qaf.id)
-            self.initial['followup_id'] = ','.join(str(x) for x in qaf_ids)
+            rtsqa_ids = []
+            for rtsqa in self.instance.rtsqa_for_tli.all():
+                se_ids.append(rtsqa.service_event_id)
+                rtsqa_ids.append(rtsqa.id)
+            self.initial['rtsqa_id'] = ','.join(str(x) for x in rtsqa_ids)
             se_qs = sl_models.ServiceEvent.objects.filter(pk__in=se_ids)
             self.fields['service_events'].queryset = se_qs
             self.initial['service_events'] = se_qs
 
-        elif self.followup_id:
-            followup = sl_models.QAFollowup.objects.get(pk=self.followup_id)
-            self.fields['service_events'].queryset = sl_models.ServiceEvent.objects.filter(pk=followup.service_event.id)
-            self.initial['service_events'] = sl_models.ServiceEvent.objects.filter(pk=followup.service_event.id)
-            self.initial['followup_id'] = sl_models.QAFollowup.objects.get(pk=self.followup_id).id
+        elif self.rtsqa_id:
+            rtsqa = sl_models.ReturnToServiceQA.objects.get(pk=self.rtsqa_id)
+            self.fields['service_events'].queryset = sl_models.ServiceEvent.objects.filter(pk=rtsqa.service_event.id)
+            self.initial['service_events'] = sl_models.ServiceEvent.objects.filter(pk=rtsqa.service_event.id)
+            self.initial['rtsqa_id'] = sl_models.ReturnToServiceQA.objects.get(pk=self.rtsqa_id).id
 
 
     def clean(self):

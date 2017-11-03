@@ -1,6 +1,6 @@
 from collections import OrderedDict
 
-from braces.views import LoginRequiredMixin
+from braces.views import LoginRequiredMixin, PermissionRequiredMixin
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.context_processors import PermWrapper
@@ -50,7 +50,7 @@ def populate_timeline_from_queryset(unsorted_dict, obj, datetime, obj_class, msg
     date = datetime.date()
     time = get_time_display(datetime)
 
-    if obj_class == 'qaf_complete':
+    if obj_class == 'rtsqa_complete':
         statuses_dict = generate_review_status_context(obj.test_list_instance)
     else:
         statuses_dict = {}
@@ -127,11 +127,11 @@ class SLDashboard(TemplateView):
     def get_counts(self):
 
         # TODO: Parts low
-        qaf_qs = models.QAFollowup.objects.prefetch_related().all()
+        rtsqa_qs = models.ReturnToServiceQA.objects.prefetch_related().all()
         default_status = models.ServiceEventStatus.objects.get(is_default=True)
         to_return = {
-            'qa_not_reviewed': qaf_qs.filter(test_list_instance__isnull=False, test_list_instance__all_reviewed=False).count(),
-            'qa_not_complete': qaf_qs.filter(test_list_instance__isnull=True).count(),
+            'qa_not_reviewed': rtsqa_qs.filter(test_list_instance__isnull=False, test_list_instance__all_reviewed=False).count(),
+            'qa_not_complete': rtsqa_qs.filter(test_list_instance__isnull=True).count(),
             'units_restricted': models.Unit.objects.filter(restricted=True).count(),
             'parts_low': 0,
             'se_statuses': {},
@@ -171,7 +171,7 @@ class SLDashboard(TemplateView):
             'service_status', 'unit_service_area__unit', 'user_status_changed_by'
         ).order_by('-datetime_status_changed')[:40]
 
-        qaf_new = models.QAFollowup.objects.filter(
+        rtsqa_new = models.ReturnToServiceQA.objects.filter(
             datetime_assigned__gt=timezone.now() - timezone.timedelta(days=14)
         ).select_related(
             'service_event',
@@ -186,7 +186,7 @@ class SLDashboard(TemplateView):
             'unit_test_collection__tests_object'
         ).order_by('-datetime_assigned')[:40]
 
-        qaf_complete = models.QAFollowup.objects.filter(
+        rtsqa_complete = models.ReturnToServiceQA.objects.filter(
             test_list_instance__isnull=False,
             test_list_instance__work_completed__gt=timezone.now() - timezone.timedelta(days=14)
         ).select_related(
@@ -220,27 +220,27 @@ class SLDashboard(TemplateView):
             msg = get_user_name(se.user_created_by) + ' created service event ' + str(se.id)
             populate_timeline_from_queryset(unsorted_dict, se, datetime, 'se_new', msg=msg)
 
-        for qaf in qaf_new:
-            datetime = timezone.localtime(qaf.datetime_assigned)
+        for rtsqa in rtsqa_new:
+            datetime = timezone.localtime(rtsqa.datetime_assigned)
             msg = (
-                get_user_name(qaf.user_assigned_by) +
+                get_user_name(rtsqa.user_assigned_by) +
                 ' assigned a new RTS QA (' +
-                qaf.unit_test_collection.tests_object.name +
+                rtsqa.unit_test_collection.tests_object.name +
                 ') for service event ' +
-                str(qaf.service_event.id)
+                str(rtsqa.service_event.id)
             )
-            populate_timeline_from_queryset(unsorted_dict, qaf, datetime, 'qaf_new', msg=msg)
+            populate_timeline_from_queryset(unsorted_dict, rtsqa, datetime, 'rtsqa_new', msg=msg)
 
-        for qaf in qaf_complete:
-            datetime = timezone.localtime(qaf.test_list_instance.created)
+        for rtsqa in rtsqa_complete:
+            datetime = timezone.localtime(rtsqa.test_list_instance.created)
             msg = (
-                get_user_name(qaf.test_list_instance.created_by) +
+                get_user_name(rtsqa.test_list_instance.created_by) +
                 ' performed a RTS QA (' +
-                qaf.unit_test_collection.tests_object.name +
+                rtsqa.unit_test_collection.tests_object.name +
                 ') for service event ' +
-                str(qaf.service_event.id)
+                str(rtsqa.service_event.id)
             )
-            populate_timeline_from_queryset(unsorted_dict, qaf, datetime, 'qaf_complete', msg=msg)
+            populate_timeline_from_queryset(unsorted_dict, rtsqa, datetime, 'rtsqa_complete', msg=msg)
 
         for ud in unsorted_dict:
             unsorted_dict[ud]['objs'] = sorted(unsorted_dict[ud]['objs'], key=lambda obj: obj['datetime'], reverse=True)
@@ -268,11 +268,12 @@ class ErrorView(TemplateView):
     template_name = 'service_log/error_base.html'
 
 
-class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, ModelFormMixin, ProcessFormView):
+class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, SingleObjectTemplateResponseMixin, ModelFormMixin, ProcessFormView):
     """
     CreateView and UpdateView functionality combined
     """
-
+    permission_required = 'service_log.add_serviceevent'
+    raise_exception = True
     model = models.ServiceEvent
     template_name = 'service_log/service_event_update.html'
     form_class = forms.ServiceEventForm
@@ -306,7 +307,7 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseM
             queryset = queryset.filter(pk=pk).select_related(
                 'test_list_instance_initiated_by',
             ).prefetch_related(
-                'qafollowup_set',
+                'returntoserviceqa_set',
                 'test_list_instance_initiated_by__testinstance_set',
                 'test_list_instance_initiated_by__testinstance_set__status',
                 'test_list_instance_initiated_by__unit_test_collection__tests_object'
@@ -378,12 +379,16 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseM
                 instance=self.object,
                 prefix='hours'
             )
-            context_data['followup_formset'] = forms.FollowupFormset(
+            context_data['rtsqa_formset'] = forms.ReturnToServiceQAFormset(
                 self.request.POST,
                 instance=self.object,
-                prefix='followup',
-                form_kwargs={'service_event_instance': self.object, 'unit_field': unit_field},
-                queryset=models.QAFollowup.objects.filter(service_event=self.object).select_related(
+                prefix='rtsqa',
+                form_kwargs={
+                    'service_event_instance': self.object,
+                    'unit_field': unit_field,
+                    'user': self.request.user
+                },
+                queryset=models.ReturnToServiceQA.objects.filter(service_event=self.object).select_related(
                     'test_list_instance',
                     'test_list_instance__test_list',
                     'unit_test_collection',
@@ -403,14 +408,15 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseM
         else:
 
             context_data['hours_formset'] = forms.HoursFormset(instance=self.object, prefix='hours')
-            context_data['followup_formset'] = forms.FollowupFormset(
+            context_data['rtsqa_formset'] = forms.ReturnToServiceQAFormset(
                 instance=self.object,
-                prefix='followup',
+                prefix='rtsqa',
                 form_kwargs={
                     'service_event_instance': self.object,
-                    'unit_field': unit_field
+                    'unit_field': unit_field,
+                    'user': self.request.user
                 },
-                queryset=models.QAFollowup.objects.filter(service_event=self.object).select_related(
+                queryset=models.ReturnToServiceQA.objects.filter(service_event=self.object).select_related(
                     'test_list_instance',
                     'test_list_instance__test_list',
                     'unit_test_collection',
@@ -430,14 +436,14 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseM
 
         context = self.get_context_data()
         hours_formset = context["hours_formset"]
-        followup_formset = context["followup_formset"]
+        rtsqa_formset = context["rtsqa_formset"]
 
         if settings.USE_PARTS:
             parts_formset = context['part_used_formset']
             if not parts_formset or not parts_formset.is_valid():
                 return self.render_to_response(context)
 
-        if not hours_formset.is_valid() or not followup_formset.is_valid():
+        if not hours_formset.is_valid() or not rtsqa_formset.is_valid():
             return self.render_to_response(context)
 
         service_event = form.save()
@@ -505,7 +511,7 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseM
 
                 h_instance.save()
 
-        for f_form in followup_formset:
+        for f_form in rtsqa_formset:
 
             delete = f_form.cleaned_data.get('DELETE')
             is_new = f_form.instance.id is None
@@ -713,7 +719,7 @@ class DetailsServiceEvent(DetailView):
         context_data = super(DetailsServiceEvent, self).get_context_data(**kwargs)
         # context_data['service_event_tag_colours'] = models.ServiceEvent.get_colour_dict()
         context_data['hours'] = models.Hours.objects.filter(service_event=self.object)
-        context_data['followups'] = models.QAFollowup.objects.filter(service_event=self.object).select_related(
+        context_data['rtsqas'] = models.ReturnToServiceQA.objects.filter(service_event=self.object).select_related(
             'test_list_instance',
             'test_list_instance__test_list',
             'unit_test_collection',
@@ -889,10 +895,10 @@ class ServiceEventsBaseList(BaseListableView):
         return template.render(c)
 
 
-class QAFollowupsBaseList(BaseListableView):
+class ReturnToServiceQABaseList(BaseListableView):
 
-    model = models.QAFollowup
-    template_name = 'service_log/qafollowup_list.html'
+    model = models.ReturnToServiceQA
+    template_name = 'service_log/rtsqa_list.html'
     paginate_by = 50
 
     order_by = ['-datetime_assigned']
@@ -903,7 +909,7 @@ class QAFollowupsBaseList(BaseListableView):
         'pk',
         'datetime_assigned',
         'service_event__unit_service_area__unit__name',
-        'unit_test_collection__tests_object__name',
+        'unit_test_collection__name',
         'test_list_instance_pass_fail',
         'test_list_instance_review_status',
         'service_event__service_status__name'
@@ -913,7 +919,7 @@ class QAFollowupsBaseList(BaseListableView):
         'pk': _('ID'),
         'datetime_assigned': _('Date Assigned'),
         'service_event__unit_service_area__unit__name': _('Unit'),
-        'unit_test_collection__tests_object__name': _('Test List'),
+        'unit_test_collection__name': _('Test List'),
         'test_list_instance_pass_fail': _('Pass/Fail'),
         'test_list_instance_review_status': _('Review Status'),
         'service_event__service_status__name': _('Service Event Status')
@@ -950,14 +956,14 @@ class QAFollowupsBaseList(BaseListableView):
     prefetch_related = (
         "test_list_instance__testinstance_set",
         "test_list_instance__testinstance_set__status",
-        'unit_test_collection__tests_object'
+        'unit_test_collection'
     )
 
     def __init__(self, *args, **kwargs):
 
-        super(QAFollowupsBaseList, self).__init__(*args, **kwargs)
+        super(ReturnToServiceQABaseList, self).__init__(*args, **kwargs)
         self.templates = {
-            'actions': get_template("service_log/table_context_qaf_actions.html"),
+            'actions': get_template("service_log/table_context_rtsqa_actions.html"),
             'datetime_assigned': get_template("service_log/table_context_datetime.html"),
             'test_list_instance_pass_fail': get_template("qa/pass_fail_status.html"),
             'test_list_instance_review_status': get_template("qa/review_status.html"),
@@ -996,10 +1002,10 @@ class QAFollowupsBaseList(BaseListableView):
     def get(self, request, *args, **kwargs):
         if self.kwarg_filters is None:
             self.kwarg_filters = kwargs.pop('f', None)
-        return super(QAFollowupsBaseList, self).get(request, *args, **kwargs)
+        return super(ReturnToServiceQABaseList, self).get(request, *args, **kwargs)
 
     def get_context_data(self, *args, **kwargs):
-        context = super(QAFollowupsBaseList, self).get_context_data(*args, **kwargs)
+        context = super(ReturnToServiceQABaseList, self).get_context_data(*args, **kwargs)
         current_url = resolve(self.request.path_info).url_name
         context['view_name'] = current_url
         context['icon'] = self.get_icon()
@@ -1009,7 +1015,7 @@ class QAFollowupsBaseList(BaseListableView):
         return context
 
     def get_queryset(self):
-        qs = super(QAFollowupsBaseList, self).get_queryset()
+        qs = super(ReturnToServiceQABaseList, self).get_queryset()
 
         if self.kwarg_filters is None:
             self.kwarg_filters = self.request.GET.get('f', None)
@@ -1030,48 +1036,48 @@ class QAFollowupsBaseList(BaseListableView):
 
         return qs
 
-    def actions(self, qaf):
+    def actions(self, rtsqa):
         template = self.templates['actions']
-        next = reverse('qaf_list_all') + (('?f=' + self.kwarg_filters) if self.kwarg_filters else '')
+        next = reverse('rtsqa_list_all') + (('?f=' + self.kwarg_filters) if self.kwarg_filters else '')
         perms = PermWrapper(self.request.user)
-        c = {'qaf': qaf, 'request': self.request, 'next': next, 'show_se_link': True, 'perms': perms}
+        c = {'rtsqa': rtsqa, 'request': self.request, 'next': next, 'show_se_link': True, 'perms': perms}
         return template.render(c)
 
-    def test_list_instance_pass_fail(self, qaf):
+    def test_list_instance_pass_fail(self, rtsqa):
         template = self.templates['test_list_instance_pass_fail']
         c = {
-            'instance': qaf.test_list_instance if qaf.test_list_instance else None,
+            'instance': rtsqa.test_list_instance if rtsqa.test_list_instance else None,
             'show_dash': True,
             'exclude': ['no_tol'],
             'show_icons': True
         }
         return template.render(c)
 
-    def test_list_instance_review_status(self, qaf):
+    def test_list_instance_review_status(self, rtsqa):
         template = self.templates['test_list_instance_review_status']
         c = {
-            'instance': qaf.test_list_instance if qaf.test_list_instance else None,
+            'instance': rtsqa.test_list_instance if rtsqa.test_list_instance else None,
             'perms': PermWrapper(self.request.user),
             'request': self.request,
             'show_dash': True,
         }
-        c.update(generate_review_status_context(qaf.test_list_instance))
+        c.update(generate_review_status_context(rtsqa.test_list_instance))
         return template.render(c)
 
-    def datetime_assigned(self, qaf):
+    def datetime_assigned(self, rtsqa):
         template = self.templates['datetime_assigned']
-        c = {'datetime': qaf.datetime_assigned}
+        c = {'datetime': rtsqa.datetime_assigned}
         return template.render(c)
 
-    def service_event__service_status__name(self, qaf):
+    def service_event__service_status__name(self, rtsqa):
         template = self.templates['service_event__service_status__name']
-        c = {'colour': qaf.service_event.service_status.colour, 'name': qaf.service_event.service_status.name, 'request': self.request}
+        c = {'colour': rtsqa.service_event.service_status.colour, 'name': rtsqa.service_event.service_status.name, 'request': self.request}
         return template.render(c)
 
 
 class TLISelect(UTCInstances):
 
-    qaf = None
+    rtsqa = None
 
     def get_page_title(self):
         try:

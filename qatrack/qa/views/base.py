@@ -375,7 +375,7 @@ class TestListInstances(BaseListableView):
     prefetch_related = (
         'testinstance_set',
         'testinstance_set__status',
-        'qafollowup_for_tli',
+        'rtsqa_for_tli',
         'serviceevents_initiated',
         'comments'
     )
@@ -420,7 +420,7 @@ class TestListInstances(BaseListableView):
     def actions(self, tli):
         template = self.templates['actions']
         initiated_se = tli.serviceevents_initiated.all()
-        followup_for_se = [qa.service_event for qa in tli.qafollowup_for_tli.all()]
+        rtsqa_for_se = [qa.service_event for qa in tli.rtsqa_for_tli.all()]
         c = {
             'instance': tli,
             'perms': PermWrapper(self.request.user),
@@ -428,9 +428,9 @@ class TestListInstances(BaseListableView):
             'show_initiate_se': True,
             'initiated_se': initiated_se,
             'num_initiated_se': len(initiated_se),
-            'show_followup_se': True,
-            'followup_for_se': followup_for_se,
-            'num_followup_se': len(followup_for_se)
+            'show_rtsqa_se': True,
+            'rtsqa_for_se': rtsqa_for_se,
+            'num_rtsqa_se': len(rtsqa_for_se)
         }
         return template.render(c)
 

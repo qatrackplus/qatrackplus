@@ -113,7 +113,7 @@
                                                             {% with rel.pk as rel_pk %}
 
                                                                 <li>
-                                                                    <a id="service-event" href="{% url 'sl_details' pk=rel.id %}" class="se_tag btn btn-xs btn-flat" data-bgcolour="{{ rel.service_status.colour }}">{{ rel }}</a>
+                                                                    <a id="service-event" href="{% url 'sl_details' pk=rel.id %}" class="se_tag btn btn-xs btn-flat margin-bottom-1" data-bgcolour="{{ rel.service_status.colour }}">{{ rel }}</a>
                                                                 </li>
                                                             {% endwith %}
                                                         {% endfor %}
@@ -126,10 +126,12 @@
                                                     <div class="row">
                                                         <div class="col-md-12">
                                                             <span class="margin-r-3">{{ serviceevent.test_list_instance_initiated_by.test_list.name }}</span>
+                                                        </div>
+                                                        <div class="col-md-12">
                                                             <span class="margin-r-3">{{ serviceevent.test_list_instance_initiated_by|as_pass_fail_status:False }}</span>
                                                             <span class="margin-r-3">{{ serviceevent.test_list_instance_initiated_by|as_review_status }}</span>
                                                             <a id="view-tli-btn" class="margin-r-3 btn btn-default btn-xs btn-flat" href="{% url 'view_test_list_instance' pk=serviceevent.test_list_instance_initiated_by.id %}">View</a>
-                                                            <span class="pull-right">{{ serviceevent.test_list_instance_initiated_by.created }}</span>
+                                                            <span>{{ serviceevent.test_list_instance_initiated_by.created }}</span>
                                                         </div>
                                                     </div>
                                                 </dd>
@@ -245,7 +247,7 @@
                                     </thead>
 
                                     <tbody>
-                                        {% for f in followups %}
+                                        {% for f in rtsqas %}
                                             <tr>
                                                 <td>{{ f.unit_test_collection.tests_object.name }}</td>
                                                 <td>{% if f.test_list_instance.pk %}{{ f.test_list_instance|as_pass_fail_status:False }}{% else %}----{% endif %}</td>
@@ -254,9 +256,9 @@
 {#                                                <td>{{ f.datetime_assigned }}</td>#}
                                                 <td>
                                                     {% if f.test_list_instance.pk %}
-                                                        <a href="{% url 'review_test_list_instance' pk=f.test_list_instance.pk %}?next={% url 'sl_details' pk=serviceevent.pk %}" class="btn btn-xs btn-default btn-flat">Review</a>
+                                                        {% if perms.qa.can_review %}<a href="{% url 'review_test_list_instance' pk=f.test_list_instance.pk %}?next={% url 'sl_details' pk=serviceevent.pk %}" class="btn btn-xs btn-default btn-flat">Review</a>{% endif %}
                                                     {% else %}
-                                                        <a href="{% url 'perform_qa' pk=f.unit_test_collection.pk %}?qaf={{ f.id }}&next={% url 'sl_details' pk=serviceevent.pk %}" class="btn btn-xs btn-default btn-flat">Perform</a>
+                                                        {% if perms.qa.add_testlistinstance %}<a href="{% url 'perform_qa' pk=f.unit_test_collection.pk %}?rtsqa={{ f.id }}&next={% url 'sl_details' pk=serviceevent.pk %}" class="btn btn-xs btn-default btn-flat">Perform</a>{% endif %}
                                                     {% endif %}
                                                 </td>
                                             </tr>

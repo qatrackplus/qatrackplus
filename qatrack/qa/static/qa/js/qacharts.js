@@ -910,7 +910,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
             var event_marker_points = '0,' + event_group_height + ' ' + event_group_height / 2 + ',0 ' + event_group_height + ',' + event_group_height;
             event.append('polygon')
                 .attr('stroke', function (d) {
-                    return d.followups.length == 0 ? 'grey' : '#00c0ef'
+                    return d.rtsqas.length == 0 ? 'grey' : '#00c0ef'
                 })
                 .attr('fill', function (d) {
                     return d.initiated_by == null ? 'none' : '#3c8dbc'
@@ -1533,7 +1533,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
                                 x_pos,
                                 y_pos = window.pageYOffset + this.getBoundingClientRect().top - height + event_group_height + y_buffer,
                                 x_buffer = 0,
-                                num_followups = event_data.followups.length,
+                                num_rtsqas = event_data.rtsqas.length,
                                 chart_div_offset = mouse_tracker.node().getBoundingClientRect().left;
 
                             var line_from_right = true;
@@ -1576,52 +1576,52 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
                     }
 
                     var _i = 0;
-                    for (var i in event_data.followups) {
-                        var f = event_data.followups[i];
+                    for (var i in event_data.rtsqas) {
+                        var f = event_data.rtsqas[i];
 
-                        var followup_circles = d3.selectAll('.tli_' + f.test_list_instance);
+                        var rtsqa_circles = d3.selectAll('.tli_' + f.test_list_instance);
 
-                        if (followup_circles.size() == 0) {
+                        if (rtsqa_circles.size() == 0) {
                             continue;
                         }
                         _i++;
 
-                        followup_circles
+                        rtsqa_circles
                             .attr('r', circle_radius_highlight)
                             .attr('stroke-width', 2);
 
-                        var followup_test_list_data, followup_x = 0;
-                        followup_circles.each(function (d, i, s) {
-                            followup_test_list_data = s[i].parentNode.__data__;
-                            followup_x = xScale(d.x);
+                        var rtsqa_test_list_data, rtsqa_x = 0;
+                        rtsqa_circles.each(function (d, i, s) {
+                            rtsqa_test_list_data = s[i].parentNode.__data__;
+                            rtsqa_x = xScale(d.x);
                             return false;
                         });
 
-                        var followup_name = followup_test_list_data.unit.name + ' - ' + followup_test_list_data.test_list.name;
+                        var rtsqa_name = rtsqa_test_list_data.unit.name + ' - ' + rtsqa_test_list_data.test_list.name;
 
-                        var followup_data = followup_circles.data(),
+                        var rtsqa_data = rtsqa_circles.data(),
                             x_pos,
                             y_pos = window.pageYOffset + this.getBoundingClientRect().top - height + event_group_height + y_buffer + _i * (y_buffer + tooltip_height),
                             x_buffer = 0,
-                            num_followups = event_data.followups.length,
+                            num_rtsqas = event_data.rtsqas.length,
                             chart_div_offset = mouse_tracker.node().getBoundingClientRect().left;
 
                         var line_from_right = true;
-                        if (followup_x < width - tooltip_width - 2 * x_buffer) {
+                        if (rtsqa_x < width - tooltip_width - 2 * x_buffer) {
 
-                            x_pos = followup_x + chart_div_offset + x_buffer;
+                            x_pos = rtsqa_x + chart_div_offset + x_buffer;
                             x_pos = d3.max([x_buffer + chart_div_offset, x_pos]);
                         } else {
-                            x_pos = followup_x + chart_div_offset - tooltip_width - x_buffer;
+                            x_pos = rtsqa_x + chart_div_offset - tooltip_width - x_buffer;
                             x_pos = d3.min([chart_div_offset + width - tooltip_width - x_buffer, x_pos]);
                             line_from_right = false;
                         }
 
-                        tli_coords.push({x: followup_x, color: 'rgba(0, 192, 239, 0.6)'});
+                        tli_coords.push({x: rtsqa_x, color: 'rgba(0, 192, 239, 0.6)'});
 
-                        var tli_followup_tooltip = d3.select("body")
+                        var tli_rtsqa_tooltip = d3.select("body")
                             .append("div")
-                            .attr('id', 'tli-' + followup_data[0].test_list_instance_id + '_tooltip')
+                            .attr('id', 'tli-' + rtsqa_data[0].test_list_instance_id + '_tooltip')
                             .attr('class', 'tli_tooltip tooltip')
                             .style("position", "absolute")
                             .style("z-index", "10")
@@ -1633,14 +1633,14 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
                             .style('left', x_pos + 'px')
                             .style('top', y_pos + 'px')
                             .html($('#tli-tooltip-template').html()
-                                .replace(/__tli-id__/g, followup_data[0].test_list_instance_id)
-                                .replace(/__tli-date__/g, moment(followup_data.x).format('ddd, MMM D, YYYY, k:mm'))
-                                .replace(/__tli-tl-name__/g, followup_name)
-                                .replace(/__tli-kind__/g, 'QA Followup')
+                                .replace(/__tli-id__/g, rtsqa_data[0].test_list_instance_id)
+                                .replace(/__tli-date__/g, moment(rtsqa_data.x).format('ddd, MMM D, YYYY, k:mm'))
+                                .replace(/__tli-tl-name__/g, rtsqa_name)
+                                .replace(/__tli-kind__/g, 'RTS QA')
                                 .replace(/__show-in__/g, 'style="display: none"')
                             );
 
-                        tli_followup_tooltip
+                        tli_rtsqa_tooltip
                             .transition()
                             .style('opacity', 1);
 

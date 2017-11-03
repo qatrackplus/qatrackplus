@@ -192,12 +192,12 @@ PERMISSIONS = (
         'Service Log',
         (
             (
-                'service_log.perform_qafollowup',
+                'service_log.perform_returntoserviceqa',
                 'Can perform return to service qa',
                 'Allow user to perform qa linked to service events.',
             ),
             (
-                'service_log.view_qafollowup',
+                'service_log.view_returntoserviceqa',
                 'Can view existing return to service qa',
                 'Allow user to view qa linked to service events.',
             ),
@@ -1498,11 +1498,11 @@ class TestListInstance(models.Model):
     def update_service_event_statuses(self):
         # set linked service events to default status if not all reviewed.
         changed_se = []
-        for qaf in self.qafollowup_for_tli.all():
-            if not self.all_reviewed and qaf.service_event.service_status.rts_qa_must_be_reviewed:
-                qaf.service_event.service_status = apps.get_model('service_log', 'ServiceEventStatus').get_default()
-                qaf.service_event.save()
-                changed_se.append(qaf.service_event_id)
+        for rtsqa in self.rtsqa_for_tli.all():
+            if not self.all_reviewed and rtsqa.service_event.service_status.rts_qa_must_be_reviewed:
+                rtsqa.service_event.service_status = apps.get_model('service_log', 'ServiceEventStatus').get_default()
+                rtsqa.service_event.save()
+                changed_se.append(rtsqa.service_event_id)
 
         return changed_se
 

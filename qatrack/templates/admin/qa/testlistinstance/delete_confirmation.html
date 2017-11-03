@@ -1,6 +1,7 @@
 {% extends "admin/base_site.html" %}
 {% load i18n %}
 {% load admin_urls %}
+{% load qa_tags %}
 
 {% block breadcrumbs %}
 <div class="breadcrumbs">
@@ -41,6 +42,32 @@
         <li><strong>Created by</strong> : {{object.created_by}}</li>
         <li><strong>Last modified by</strong> : {{object.modified_by}}</li>
     </ul>
+    {% if se_rtsqa_qs|length > 0 %}
+        <p>
+            Info: The following Service Events have this Test List Instance as Return To Service QA. They will not be deleted.
+        </p>
+        <ul>
+            {% for se in se_rtsqa_qs %}
+                <li>
+                    Service Event {{ se.id }}: {{ se.datetime_service }} - Current status: {% service_status_label se.service_status size="10" %}
+                    {% if not se.service_status.is_review_required %}. Will have new status: {% service_status_label default_ses size="10" %}{% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+    {% if se_ib_qs|length > 0 %}
+        <p>
+            Info: The following Service Events were Initiated By this Test List Instance. They will not be deleted.
+        </p>
+        <ul>
+            {% for se in se_ib_qs %}
+                <li>
+                    Service Event {{ se.id }}: {{ se.datetime_service }} - Current status: {% service_status_label se.service_status size="10" %}
+                    {% if not se.service_status.is_review_required %}. Will have new status: {% service_status_label default_ses size="10" %}{% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
     <p>
         The following test instances will also be deleted as a result:
     </p>

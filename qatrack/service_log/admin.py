@@ -17,7 +17,6 @@ from django.utils.translation import ugettext as _
 
 from .models import ServiceEventStatus, ServiceType, UnitServiceArea, ServiceArea, ServiceEvent, ThirdParty, Vendor, GroupLinker
 from qatrack.units.models import Unit, Modality, UnitAvailableTime
-from .forms import ServiceEventForm, HoursMinDurationField
 from qatrack.units.forms import UnitAvailableTimeForm
 
 
