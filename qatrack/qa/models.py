@@ -151,6 +151,11 @@ PERMISSIONS = (
                 'Can edit prior test results',
                 'Allow a user to edit already completed test results',
             ),
+            (
+                'qa.can_save_in_progress',
+                'Can save test lists in progress',
+                'Can save test lists with the "In Progress" flag set',
+            ),
         ),
     ),
     (
@@ -1445,6 +1450,7 @@ class TestListInstance(models.Model):
             ("can_override_date", "Can override date"),
             ("can_perform_subset", "Can perform subset of tests"),
             ("can_view_completed", "Can view previously completed instances"),
+            ("can_save_in_progress", "Can save test lists as 'In Progress'"),
         )
 
     def pass_fail_status(self):
