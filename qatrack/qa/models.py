@@ -540,7 +540,7 @@ class Test(models.Model):
     VARIABLE_RE = re.compile("^[a-zA-Z_]+[0-9a-zA-Z_]*$")
     RESULT_RE = re.compile("^\s*result\s*=.*$", re.MULTILINE)
 
-    name = models.CharField(max_length=255, help_text=_("Name for this test"), unique=True, db_index=True)
+    name = models.CharField(max_length=255, help_text=_("Name for this test"), db_index=True)
     slug = models.SlugField(
         verbose_name="Macro name", max_length=128,
         help_text=_("A short variable name consisting of alphanumeric characters and underscores for this test (to be used in composite calculations). "),

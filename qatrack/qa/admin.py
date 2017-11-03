@@ -4,14 +4,12 @@ from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin import widgets, options
 from django.contrib.admin.models import LogEntry, CHANGE
-from django.contrib.admin.options import IS_POPUP_VAR, TO_FIELD_VAR
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse_lazy
 import django.db
 from django.db.models import Count, Q
 import django.forms as forms
 from django.shortcuts import redirect, render, HttpResponseRedirect
-from django.template.response import TemplateResponse
 from django.utils import timezone
 from django.utils.html import escape
 from django.utils.text import Truncator
@@ -608,7 +606,7 @@ class TestListMembershipFilter(admin.SimpleListFilter):
 class TestAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, admin.ModelAdmin):
 
     inlines = [get_attachment_inline("test")]
-    list_display = ["name", "slug", "category", "type"]
+    list_display = ["name", "slug", "category", "type", 'obj_created', 'obj_modified']
     list_filter = ["category", "type", TestListMembershipFilter, "testlistmembership__test_list"]
     search_fields = ["name", "slug", "category__name"]
     save_as = True
@@ -639,6 +637,18 @@ class TestAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, admin.ModelAdmin):
                 messages.add_message(request, messages.WARNING, warning)
 
         super(TestAdmin, self).save_model(request, obj, form, change)
+
+    def obj_created(self, obj):
+        return '<abbr title="Created by %s">%s</abbr>' % (obj.created_by, obj.created.strftime(settings.INPUT_DATE_FORMATS[0]))
+    obj_created.admin_order_field = "created"
+    obj_created.allow_tags = True
+    obj_created.short_description = "Created"
+
+    def obj_modified(self, obj):
+        return '<abbr title="Modified by %s">%s</abbr>' % (obj.modified_by, obj.modified.strftime(settings.INPUT_DATE_FORMATS[0]))
+    obj_modified.admin_order_field = "modified"
+    obj_modified.allow_tags = True
+    obj_modified.short_description = "Modified"
 
 
 def unit_name(obj):
@@ -811,8 +821,6 @@ class TestListInstanceAdmin(SaveInlineAttachmentUserMixin, admin.ModelAdmin):
     inlines = [get_attachment_inline("testlistinstance")]
 
     def render_delete_form(self, request, context):
-        opts = self.model._meta
-        app_label = opts.app_label
         instance = context['object']
 
         # Find related Service events with rtsqa and with initiated by
