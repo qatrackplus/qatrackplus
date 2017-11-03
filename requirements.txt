@@ -19,7 +19,7 @@ django-tastypie==0.13.3
 django-widget-tweaks==1.4.1
 gunicorn==19.3.0; sys_platform=='linux'
 ipdb==0.10.3
-ipython==6.2.1
+ipython==5.5
 matplotlib==2.1.0
 numpy==1.13.3
 pep8==1.7.0
