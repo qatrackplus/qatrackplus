@@ -116,13 +116,21 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jqu
         };
 
         this.check_bool = function(value){
+            var status, message;
             if (_.isEmpty(self.reference)){
                 return NO_TOL;
-            }else if (QAUtils.almost_equal(value,self.reference.value)){
+            }else if (QAUtils.almost_equal(value, self.reference.value)){
                 return new Status(QAUtils.WITHIN_TOL,0,QAUtils.WITHIN_TOL_DISP);
             }
+            if (self.tolerance.bool_warning_only){
+                status = QAUtils.TOLERANCE;
+                message = QAUtils.TOLERANCE_DISP;
+            } else {
+                status = QAUtils.ACTION;
+                message = QAUtils.ACTION_DISP;
+            }
 
-            return new Status(QAUtils.ACTION,1,QAUtils.ACTION_DISP);
+            return new Status(status, 1, message);
         };
 
         this.check_multi = function(value){

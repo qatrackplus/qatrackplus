@@ -77,8 +77,12 @@ class TestInfoForm(forms.ModelForm):
 
             if tt == models.BOOLEAN:
                 self.fields["reference_value"].widget = forms.Select(choices=[("", "---"), (0, "No"), (1, "Yes")])
-                self.fields["tolerance"].widget = forms.HiddenInput()
-
+                tolf = self.fields['tolerance']
+                tolf.queryset = tolf.queryset.filter(type=models.BOOLEAN)
+                for p in ['add', 'change', 'delete']:
+                    setattr(tolf.widget, 'can_%s_related' % p, False)
+                if not self.instance.tolerance:
+                    self.initial["tolerance"] = models.Tolerance.objects.get(type=models.BOOLEAN, bool_warning_only=False)
             elif tt == models.MULTIPLE_CHOICE or self.instance.test.is_string_type():
                 self.fields["reference_value"].widget = forms.HiddenInput()
                 self.fields['tolerance'].queryset = self.fields['tolerance'].queryset.filter(type=models.MULTIPLE_CHOICE)
@@ -120,9 +124,6 @@ class TestInfoForm(forms.ModelForm):
                 if ref_value == 0 and tol.type == models.PERCENT:
                     raise forms.ValidationError(_("Percentage based tolerances can not be used with reference value of zero (0)"))
 
-            if self.instance.test.type == models.BOOLEAN:
-                if self.cleaned_data["tolerance"] is not None:
-                    raise forms.ValidationError(_("Please leave tolerance field blank for boolean and multiple choice test types"))
         return self.cleaned_data
 
 
@@ -294,10 +295,11 @@ class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
 
         # if selected tests are boolean select all the tolerances which are boolean
         elif has_bool:
+            tolerances = models.Tolerance.objects.filter(type="boolean")
             form.fields["contenttype"].initial = 'boolean'
             form.fields["reference"].widget = forms.NullBooleanSelect()
             form.fields["tolerance"].required = False
-            form.fields["tolerance"].widget = forms.HiddenInput()
+            form.fields["tolerance"].queryset = tolerances
 
         if 'apply' in request.POST and form.is_valid():
             return self.form_valid(request, queryset, form)
@@ -889,6 +891,23 @@ class ToleranceForm(forms.ModelForm):
 
 class ToleranceAdmin(BasicSaveUserAdmin):
     form = ToleranceForm
+    list_filter = ["type"]
+
+    class Media:
+        js = (
+            settings.STATIC_URL + "jquery/js/jquery.min.js",
+            settings.STATIC_URL + "js/tolerance_admin.js",
+        )
+
+    def get_queryset(self, *args, **kwargs):
+        qs = super(ToleranceAdmin, self).get_queryset(*args, **kwargs)
+        return qs.exclude(type=models.BOOLEAN)
+
+    def has_change_permission(self, request, obj=None):
+
+        if obj and obj.type == models.BOOLEAN:
+            return False
+        return super(ToleranceAdmin, self).has_change_permission(request, obj)
 
 
 class AutoReviewAdmin(admin.ModelAdmin):

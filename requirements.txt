@@ -1,7 +1,7 @@
 -e git+https://github.com/django/django-formtools.git@bb97a8abd374c50991c0a9ce144f17e7322a0c48#egg=django-formtools
 -e git+https://github.com/randlet/django-genericdropdown.git@56dbaf6b4f518a3946e5e253fec85ede175f3727#egg=django_genericdropdown-master
 -e git+https://github.com/randlet/django-listable.git@ff8f7c7ee2ac4a45fa490ed3fbb9481478a43402#egg=django_listable
-Django==1.11.6
+Django==1.11.7
 PyVirtualDisplay==0.2
 coverage==4.2
 django-admin-views==0.8.0
@@ -19,7 +19,7 @@ django-tastypie==0.13.3
 django-widget-tweaks==1.4.1
 gunicorn==19.3.0; sys_platform=='linux'
 ipdb==0.10.3
-ipython==5.5
+ipython==6.2.1
 matplotlib==2.1.0
 numpy==1.13.3
 pep8==1.7.0
@@ -32,7 +32,7 @@ pytest-django==3.1.2
 pytest-sugar==0.9.0
 pytest==3.2.3
 python-dateutil==2.6.1
-pytz==2017.2
+pytz==2017.3
 pywin32>=220; sys_platform=='win32'
 reportlab==3.4.0
 scipy==1.0.0
