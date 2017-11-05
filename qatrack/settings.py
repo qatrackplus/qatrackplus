@@ -241,6 +241,7 @@ INSTALLED_APPS = [
 CACHE_UNREVIEWED_COUNT = 'unreviewed-count'
 CACHE_QA_FREQUENCIES = 'qa-frequencies'
 CACHE_RTS_QA_COUNT = 'unreviewed-rts-qa'
+CACHE_IN_PROGRESS_COUNT = 'in-progress-count'
 
 MAX_CACHE_TIMEOUT = 24 * 60 * 60  # 24hours
 

@@ -782,7 +782,12 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         if ndays > 1:
             context['days'] = self.unit_test_col.tests_object.days_display()
 
+        in_progress = models.TestListInstance.objects.in_progress().filter(
+            unit_test_collection=self.unit_test_col,
+            test_list=self.test_list
+        )
         context["test_list"] = self.test_list
+        context["in_progress"] = in_progress
         context["unit_test_infos"] = json.dumps(self.template_unit_test_infos())
         context["unit_test_collection"] = self.unit_test_col
         context["contacts"] = list(Contact.objects.all().order_by("name"))

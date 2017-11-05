@@ -177,6 +177,9 @@
                                             <li>
                                                 <a href="{% url "in_progress" %}" title="Resume a QA session currently in progress">
                                                     <i class="fa fa-play fa-lg fa-fw" aria-hidden="true"></i>
+                                                    <span title="There are currently {{IN_PROGRESS}} QA Sessions saved in progress" class="label {% if IN_PROGRESS == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                                                        <span class="total-in-progress-count">{{ IN_PROGRESS }}</span>
+                                                    </span>
                                                     In Progress
                                                 </a>
                                             </li>

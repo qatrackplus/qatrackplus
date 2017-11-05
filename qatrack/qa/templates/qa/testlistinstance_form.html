@@ -615,10 +615,32 @@
                 {% endif %}
 
                 <li class="divider"></li>
-                <li class="info toggle-element" data-toggle="contacts"><a id="toggle-contacts" href="#!">
+                <li class="info toggle-element" data-toggle="contacts">
+                  <a id="toggle-contacts" href="#!">
                     <i class="fa fa-phone fa-fw" aria-hidden="true"></i>
                     <span>Contacts</span>
-                </a></li>
+                  </a>
+                </li>
+
+                {% if in_progress %}
+                  <li class="divider"></li>
+                  <li class="treeview">
+                    <a id="menu-days" href="#!">
+                      <i style="color: #f39c12;" class="fa fa-play fa-fw" aria-hidden="true"></i>
+                      <span>In Progress</span>
+                      <i class="fa fa-angle-left pull-right"></i>
+                    </a>
+                    <ul id="in-progress-list" class="treeview-menu" style="display: none;">
+                      {% for ip in in_progress %}
+                        <li>
+                          <a title="Resume session saved by {{ ip.created_by }}" class="row" href="{% url 'continue_tli' pk=ip.pk %}?{{ request.GET.urlencode }}">
+                            {{ ip.created }}
+                          </a>
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  </li>
+                {% endif %}
 
             </ul>
 
