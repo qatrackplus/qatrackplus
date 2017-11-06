@@ -22,6 +22,7 @@ from django_comments import get_form
 from django_comments import signals as dc_signals
 
 from qatrack.qa import models
+from qatrack.service_log import models as sl_models
 
 from braces.views import PrefetchRelatedMixin, SelectRelatedMixin
 from listable.views import (
@@ -121,6 +122,17 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
         context["current_day"] = self.object.day + 1
 
         context['attachments'] = self.object.unit_test_collection.tests_object.attachment_set.all()
+
+        rtsqas = sl_models.ReturnToServiceQA.objects.filter(test_list_instance=self.object)
+        se_rtsqa = []
+        for f in rtsqas:
+            if f.service_event not in se_rtsqa:
+                se_rtsqa.append(f.service_event)
+
+        context['service_events_rtsqa'] = se_rtsqa
+
+        se_ib = sl_models.ServiceEvent.objects.filter(test_list_instance_initiated_by=self.object)
+        context['service_events_ib'] = se_ib
 
         return context
 
@@ -375,7 +387,7 @@ class TestListInstances(BaseListableView):
     prefetch_related = (
         'testinstance_set',
         'testinstance_set__status',
-        'rtsqa_for_tli',
+        # 'rtsqa_for_tli',
         'serviceevents_initiated',
         'comments'
     )
@@ -419,18 +431,25 @@ class TestListInstances(BaseListableView):
 
     def actions(self, tli):
         template = self.templates['actions']
-        initiated_se = tli.serviceevents_initiated.all()
-        rtsqa_for_se = [qa.service_event for qa in tli.rtsqa_for_tli.all()]
+
+        rtsqas = sl_models.ReturnToServiceQA.objects.filter(test_list_instance=tli)
+        se_rtsqa = []
+        for f in rtsqas:
+            if f.service_event not in se_rtsqa:
+                se_rtsqa.append(f.service_event)
+
+        se_ib = sl_models.ServiceEvent.objects.filter(test_list_instance_initiated_by=tli)
+
         c = {
             'instance': tli,
             'perms': PermWrapper(self.request.user),
             'request': self.request,
             'show_initiate_se': True,
-            'initiated_se': initiated_se,
-            'num_initiated_se': len(initiated_se),
+            'initiated_se': se_ib,
+            'num_initiated_se': len(se_ib),
             'show_rtsqa_se': True,
-            'rtsqa_for_se': rtsqa_for_se,
-            'num_rtsqa_se': len(rtsqa_for_se)
+            'rtsqa_for_se': se_rtsqa,
+            'num_rtsqa_se': len(se_rtsqa)
         }
         return template.render(c)
 

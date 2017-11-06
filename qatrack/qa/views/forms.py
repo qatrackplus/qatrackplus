@@ -282,7 +282,7 @@ class BaseTestListInstanceForm(forms.ModelForm):
             self.fields[field].widget.attrs['class'] = 'form-control'
             self.fields[field].help_text = settings.DATETIME_HELP
 
-        self.fields["status"].widget.attrs["class"] = "input-medium select2"
+        self.fields["status"].widget.attrs["class"] = "form-control select2"
         self.fields["work_completed"].widget.attrs["placeholder"] = "optional"
         self.fields['service_events'].widget.attrs.update({'class': 'select2'})
 
@@ -303,7 +303,6 @@ class BaseTestListInstanceForm(forms.ModelForm):
             self.initial['service_events'] = sl_models.ServiceEvent.objects.filter(pk=rtsqa.service_event.id)
             self.initial['rtsqa_id'] = sl_models.ReturnToServiceQA.objects.get(pk=self.rtsqa_id).id
 
-
     def clean(self):
         """validate the work_completed & work_started values"""
 
@@ -317,8 +316,11 @@ class BaseTestListInstanceForm(forms.ModelForm):
         work_completed = cleaned_data.get("work_completed")
 
         # keep previous work completed date if present
-        if not work_completed and self.instance:
-            work_completed = self.instance.work_completed
+        if not work_completed:
+            if not self.instance.pk:
+                work_completed = timezone.now().astimezone(timezone.get_current_timezone())
+            else:
+                work_completed = self.instance.work_completed
             cleaned_data["work_completed"] = work_completed
 
         if work_started and work_completed:

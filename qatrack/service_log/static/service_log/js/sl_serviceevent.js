@@ -253,6 +253,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
             }
             $('#pass-fail-' + prefix).html($label_group);
             $label_group = $('<span class="label-group ' + prefix + '-hider" style="display: none;"></span>');
+
             for (status in data['review']) {
                 var label_class = 'label',
                     status_name = status,
@@ -271,7 +272,9 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
                     label_class += ' ok';
                 }
                 if (data['review'][status]['is_comments']) {
-                    $label_group.append('<span class="' + label_class + '">' + icon + ' ' + data["review"][status]["num"] + ' ' + status_name + '</span>');
+                    if (data['review'][status]['num'] > 0) {
+                        $label_group.append('<span class="' + label_class + '">' + icon + ' ' + data["review"][status]["num"] + ' ' + status_name + '</span>');
+                    }
                 } else {
                     $label_group.prepend('<span class="' + label_class + '">' + icon + ' ' + data["review"][status]["num"] + ' ' + status_name + '</span>');
                 }

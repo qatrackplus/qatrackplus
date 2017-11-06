@@ -1,6 +1,7 @@
 {% extends "site_base.html" %}
 {#{% load staticfiles %}#}
 {% load qa_tags %}
+{% load comments %}
 
 {% block head_title %}{{test_list_instance.work_completed|date}} {{test_list_instance.test_list.name}} Details{% endblock %}
 
@@ -107,21 +108,45 @@
                                </dl>
                             </div>
                             <div class="col-md-4">
-                                <dl class="dl-horizontal">
+                                <div class="row">
+                                    <label class="col-md-8">
+                                        {% if perms.service_log.add_serviceevent %}
+                                            <a class="btn btn-default btn-xs btn-flat hover-parent" title="Create new service event initiated by this list" href="{% url 'sl_new' %}?ib={{ tli.pk }}&next={{request.path|cut:"data/"}}" target="se_tab">
+                                                <i class="fa fa-stack fa-fw">
+                                                    <i class="fa fa-wrench fa-stack-custom-main"></i>
+                                                    <i class="fa fa-plus fa-stack-custom-sub upper-0 hover-sub-success"></i>
+                                                </i>
+                                            </a>
+                                        {% endif %}
+                                        Service events initiated
+                                    </label>
+                                    <div class="col-md-4">
+                                        {% for se in service_events_ib %}
+                                            {% if perms.service_log.view_serviceevent %}
+                                                <a href="{% url 'sl_details' pk=se.id %}" class="btn btn-xs btn-flat service-event-btn margin-bottom-1" data-bgcolour="{{ se.service_status.colour }}" target="se_tab">{{ se.id }}</a>
+                                            {% else %}
+                                                <div>{{ se.id }}</div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
 
-                                    {% if service_events %}
-                                        <dt>RTS QA for Service Events:</dt>
-                                        <dd>
-                                            {% for se in service_events %}
+                                {% if service_events_rtsqa|length > 0 %}
+                                    <div class="row margin-top-10">
+                                        <label class="col-md-8">
+                                            RTS QA for Service Events
+                                        </label>
+                                        <div class="col-md-4">
+                                            {% for se in service_events_rtsqa %}
                                                 {% if perms.service_log.view_serviceevent %}
-                                                    <a href="{% url 'sl_details' pk=se.id %}" class="btn btn-xs btn-flat service-event-btn margin-bottom-1" data-bgcolour="{{ se.service_status.colour }}">{{ se }}</a>
+                                                    <a href="{% url 'sl_details' pk=se.id %}" class="btn btn-xs btn-flat service-event-btn margin-bottom-1" data-bgcolour="{{ se.service_status.colour }}" target="se_tab">{{ se.id }}</a>
                                                 {% else %}
-                                                    <div>{{ se }}</div>
+                                                    <div>{{ se.id }}</div>
                                                 {% endif %}
                                             {% endfor %}
-                                        </dd>
-                                    {% endif %}
-                                </dl>
+                                        </div>
+                                    </div>
+                                {% endif %}
                             </div>
 
                         {% endwith %}
@@ -219,6 +244,47 @@
                             {% endwith %}
                         </div>
 
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="box-comments" class="row">
+        <div class="col-sm-12">
+            <div class="box">
+                <div class="box-header">
+                    <h3 class="box-title">
+                        <i class="fa fa-commenting-o fa-fw"></i>
+                        Comments
+                    </h3>
+                </div>
+                <div class="box-body">
+                    <div class="row">
+                        <div class="col-md-12">
+                            {% render_comment_list for test_list_instance %}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12 padding-top-20">
+                            {% get_comment_form for test_list_instance as form %}
+
+                                <form id="comment-form" method="post">
+                                    {% csrf_token %}
+                                    <input id="id_name" maxlength="50" name="name" type="hidden" required="" value="{{ user.username }}">
+                                    {{ form.object_pk }}
+                                    {{ form.content_type }}
+                                    {{ form.security_hash }}
+                                    {{ form.timestamp }}
+                                    <textarea cols="40" id="id_comment" maxlength="3000" name="comment" rows="3" required="" placeholder="Add comment" class="margin-bottom-20 form-control autosize"></textarea>
+
+                                </form>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <button id="post-comment" class="btn btn-flat btn-info btn-sm" disabled="disabled">Post Comment</button>
+                                    </div>
+                                </div>
+                        </div>
                     </div>
                 </div>
             </div>

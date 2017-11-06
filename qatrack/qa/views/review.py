@@ -29,12 +29,15 @@ class TestListInstanceDetails(TestListInstanceMixin, DetailView):
         context = super().get_context_data(kwargs=kwargs)
 
         rtsqas = ReturnToServiceQA.objects.filter(test_list_instance=self.object)
-        se = []
+        se_rtsqa = []
         for f in rtsqas:
-            if f.service_event not in se:
-                se.append(f.service_event)
+            if f.service_event not in se_rtsqa:
+                se_rtsqa.append(f.service_event)
 
-        context['service_events'] = se
+        context['service_events_rtsqa'] = se_rtsqa
+
+        se_ib = ServiceEvent.objects.filter(test_list_instance_initiated_by=self.object)
+        context['service_events_ib'] = se_ib
         return context
 
 

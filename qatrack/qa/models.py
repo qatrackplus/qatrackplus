@@ -1471,7 +1471,8 @@ class TestListInstance(models.Model):
     def review_summary(self, queryset=None):
         if queryset is None:
             queryset = self.testinstance_set.prefetch_related('status').all()
-        comment_count = queryset.filter(comment__isnull=False).count() + self.comments.count()
+        comment_count = queryset.exclude(comment='').count() + self.comments.count()
+
         to_return = {
             status[0].slug: {
                 'num': len(status[1]),

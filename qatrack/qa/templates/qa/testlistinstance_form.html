@@ -36,8 +36,8 @@
         {% if perms.qa.can_override_date %}
             override_date = true;
         {% endif %}
-        var status_colours_dict = {{ status_tag_colours|safe }};
-        var se_statuses = {{ se_statuses|safe }};
+{#        var status_colours_dict = {{ status_tag_colours|safe }};#}
+{#        var se_statuses = {{ se_statuses|safe }};#}
         var unit_id = {{ unit_test_collection.unit.id }};
         {% if test_list_instance.work_completed %}
             var work_completed_initial = "{{ test_list_instance.work_completed|safe }}";
@@ -166,92 +166,77 @@
         {% endif %}
 
         <div class="row" style="">
+            {{ form.errors }}
             {% if perms.qa.can_review and perms.qa.can_review_own_tests or perms.qa.can_override_date %}
-            <div class="col-sm-8">
-                <div id="box-admin" class="box">
-                    <div class="box-header">
-                        <h3 class="box-title">
-                            <i class="fa fa-wrench" aria-hidden="true"></i>
-                            Admin Options
-                        </h3>
-                    </div>
-                    <div class="box-body">
-                        <div class="row">
-                            <div class="col-sm-6 {% comment %}left-border border-default{% endcomment %}">
-                                <div class="row">
-                                    <div class="form-horizontal">
-                                        <div class="row {% if form.work_started.errors %} has-error{% endif %}" {% comment %}id="work-started" data-date="{% now 'd-m-Y'%}" data-date-format="dd-mm-yyyy"{% endcomment %}>
-        {#                                    {% spaceless %}#}
-                                                <label for="id_work_started" class="col-md-5">
-                                                    {{form.work_started.label}}:
-                                                </label>
-                                                <div class="col-md-7">
-                                                    {{form.work_started}}
-        {#                                            <div id="clear-work_started" class="btn btn-flat btn-xs datetime-clear">X</div>#}
-                                                    <i id="clear-work_started" class="fa fa-refresh fa-in-input datetime-clear"></i>
-        {#                                            <i class="fa fa-calendar fa-in-input"></i>#}
-                                                </div>
-                                                {% for e in form.work_started.errors %}
-                                                    <div class="col-sm-12 help-block text-center">{{ e }}</div>
-                                                {% endfor %}
-        {#                                    {% endspaceless %}#}
+                <div class="col-sm-4">
+                    <div id="box-admin" class="box">
+                        <div class="box-header">
+                            <h3 class="box-title">
+                                <i class="fa fa-unlock-alt" aria-hidden="true"></i>
+                                Admin Options
+                            </h3>
+                        </div>
+                        <div class="box-body">
+                            <div class="row">
+                                <div class="col-sm-12 form-horizontal">
+                                    <div class="row {% if form.work_started.errors %} has-error{% endif %}">
+                                            <label for="id_work_started" class="col-md-5">
+                                                {{form.work_started.label}}:
+                                            </label>
+                                            <div class="col-md-7">
+                                                {{form.work_started}}
+                                                <i id="clear-work_started" class="fa fa-refresh fa-in-input datetime-clear"></i>
+                                            </div>
+                                            {% for e in form.work_started.errors %}
+                                                <div class="col-sm-12 help-block text-center">{{ e }}</div>
+                                            {% endfor %}
+                                    </div>
+
+                                    {% if perms.qa.can_override_date %}
+                                        <div class="row">
+                                            <label for="id_work_duration" class="col-md-5">
+                                                Work duration:
+                                            </label>
+                                            <div class="col-md-7">
+                                                <input id="id_work_duration" name="work_duration" class="form-control">
+                                                <i class="fa fa-clock-o fa-in-input"></i>
+                                            </div>
                                         </div>
 
-                                        {% if perms.qa.can_override_date %}
-                                            <div class="row">
-                                                <label for="id_work_duration" class="col-md-5">
-                                                    Work duration:
-                                                </label>
-                                                <div class="col-md-7">
-                                                    <input id="id_work_duration" name="work_duration" class="form-control">
-                                                    <i class="fa fa-clock-o fa-in-input"></i>
-                                                </div>
+                                        <div class="row{% if form.work_completed.errors %} has-error{% endif %}">
+                                            <label for="id_work_completed" class="col-md-5">
+                                                {{form.work_completed.label}}:
+                                            </label>
+                                            <div class="col-md-7">
+                                                {{form.work_completed}}
+    {#                                            <i class="fa fa-calendar fa-in-input"></i>#}
+                                                <i id="clear-work_completed" class="fa fa-times fa-in-input datetime-clear"></i>
                                             </div>
-
-                                            <div class="row{% if form.work_completed.errors %} has-error{% endif %}">
-                                                <label for="id_work_completed" class="col-md-5">
-                                                    {{form.work_completed.label}}:
-                                                </label>
-                                                <div class="col-md-7">
-                                                    {{form.work_completed}}
-        {#                                            <i class="fa fa-calendar fa-in-input"></i>#}
-                                                    <i id="clear-work_completed" class="fa {% if test_list_instance.work_started %}fa-refresh{% else %}fa-times{% endif %} fa-in-input datetime-clear"></i>
-                                                </div>
-                                                {% for e in form.work_completed.errors %}
-                                                    <div class="col-sm-12 help-block text-center">{{ e }}</div>
-                                                {% endfor %}
-                                            </div>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-sm-6 {% comment %}left-border border-default{% endcomment %}">
-                                {% if perms.qa.can_review and perms.qa.can_review_own_tests %}
-                                    <div class="input-prepend input-append row" id="status">
-                                        <label for="id_status" class="col-md-5">
-                                            Set Status:
-                                        </label>
-                                        <div class="col-md-7">
-                                            {{ form.status }}
+                                            {% for e in form.work_completed.errors %}
+                                                <div class="col-sm-12 help-block text-center">{{ e }}</div>
+                                            {% endfor %}
                                         </div>
-                                    </div>
-                                {% endif %}
-                                <div class="input-prepend input-append row" id="status">
-                                    <label for="id_status" class="col-md-5">
-                                        RTS for Service Event:
-                                    </label>
-                                    <div class="col-md-7">
-                                        {{ form.service_events }}
-                                    </div>
+                                    {% endif %}
+                                    {% if perms.qa.can_review and perms.qa.can_review_own_tests %}
+                                        <div class="row" id="status">
+                                            <label for="id_status" class="col-md-5">
+                                                Set Status:
+                                            </label>
+                                            <div class="col-md-7">
+                                                {{ form.status }}
+                                            </div>
+                                        </div>
+                                    {% endif %}
                                 </div>
 
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            {% else %}
+                <div class="col-sm-4"><div class="display-none">{{ form.work_started }}</div></div>
             {% endif %}
+
             {% if attachments|length > 0 %}
                 <div id="box-attachments" class="col-sm-4">
                     <div class="box">
@@ -275,7 +260,72 @@
                         </div>
                     </div>
                 </div>
+            {% else %}
+                <div class="col-sm-4"></div>
             {% endif %}
+
+
+            {% if perms.service_log.add_serviceevent or perms.service_log.view_serviceevent %}
+                <div id="box-serviceevents" class="col-sm-4">
+                    <div class="box">
+                        <div class="box-header">
+                            <h5 class="box-title">
+                                <i class="fa fa-wrench" aria-hidden="true"></i>
+                                Service Events
+                            </h5>
+                        </div>
+                        <div class="box-body">
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="row">
+                                        <label class="col-md-8">
+                                            {% if perms.service_log.add_serviceevent and form.instance.pk %}
+                                                <a class="btn btn-default btn-xs btn-flat hover-parent" title="Create new service event initiated by this list" href="{% url 'sl_new' %}?ib={{ form.instance.pk }}&next={{request.path|cut:"data/"}}" target="se_tab">
+                                                    <i class="fa fa-stack fa-fw">
+                                                        <i class="fa fa-wrench fa-stack-custom-main"></i>
+                                                        <i class="fa fa-plus fa-stack-custom-sub upper-0 hover-sub-success"></i>
+                                                    </i>
+                                                </a>
+                                            {% endif %}
+                                            Service events initiated
+                                        </label>
+                                        <div class="col-md-4">
+                                            {% for se in service_events_ib %}
+                                                {% if perms.service_log.view_serviceevent %}
+                                                    <a href="{% url 'sl_details' pk=se.id %}" class="btn btn-xs btn-flat service-event-btn margin-bottom-1" data-bgcolour="{{ se.service_status.colour }}" target="se_tab">{{ se.id }}</a>
+                                                {% else %}
+                                                    <div>{{ se.id }}</div>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+
+                                    {% if service_events_rtsqa|length > 0 %}
+                                        <div class="row margin-top-10">
+                                            <label class="col-md-8">
+                                                RTS QA for Service Events
+                                            </label>
+                                            <div class="col-md-4">
+                                                {% for se in service_events_rtsqa %}
+                                                    {% if perms.service_log.view_serviceevent %}
+                                                        <a href="{% url 'sl_details' pk=se.id %}" class="btn btn-xs btn-flat service-event-btn margin-bottom-1" data-bgcolour="{{ se.service_status.colour }}" target="se_tab">{{ se.id }}</a>
+                                                    {% else %}
+                                                        <div>{{ se.id }}</div>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            {% else %}
+                <div class="col-sm-4"></div>
+            {% endif %}
+
         </div>
 
 
@@ -543,7 +593,7 @@
 
                 {% if perms.qa.can_review and perms.qa.can_review_own_tests or perms.qa.can_override_date %}
                     <li class="primary toggle-element active" data-toggle="admin"><a id="toggle-options" href="#!">
-                        <i class="fa fa-wrench fa-fw" aria-hidden="true"></i>
+                        <i class="fa fa-unlock-alt fa-fw" aria-hidden="true"></i>
                         <span>Admin Options</span>
                     </a></li>
                 {% endif %}
@@ -552,6 +602,13 @@
                     <li class="primary toggle-element active" data-toggle="attachments"><a id="toggle-options" href="#!">
                         <i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>
                         <span>Attachemnts</span>
+                    </a></li>
+                {% endif %}
+
+                {% if perms.service_log.view_serviceevent or perms.service_log.add_serviceevent %}
+                    <li class="primary toggle-element active" data-toggle="serviceevents"><a id="toggle-options" href="#!">
+                        <i class="fa fa-wrench fa-fw" aria-hidden="true"></i>
+                        <span>Service Events</span>
                     </a></li>
                 {% endif %}
 

@@ -829,7 +829,6 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jqu
                 dataType: 'json',
                 delay: '500',
                 data: function (params) {
-                    console.log(params);
                     return {
                         q: params.term, // search term
                         page: params.page,
@@ -928,21 +927,6 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jqu
             showall.iCheck('update');
         });
 
-        function apply_completed() {
-            if (duration_change) {
-                var start = $(start_picker).data('daterangepicker').startDate.clone(),
-                    end = $(completed_picker).data('daterangepicker').startDate.clone(),
-                    duration = moment.duration(end.diff(start)),
-                    hours = Math.min(Math.floor(duration.asHours()), 99);
-                hours = hours > 9 ? hours.toString() : '0' + hours;
-                var mins = duration.minutes() > 9 ? duration.minutes().toString() : '0' + duration.minutes();
-                $(duration_picker).val(hours + mins);
-                duration_change = false;
-            }
-
-            $.Topic("valueChanged").publish();
-        }
-
         ///////// Work time
         if (override_date) {
 
@@ -956,6 +940,10 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jqu
             work_started_initial = !work_started_initial ? moment().valueOf() : moment(work_started_initial).valueOf();
             work_completed_initial = !work_completed_initial ? false : moment(work_completed_initial).valueOf();
 
+            if (work_completed_initial) {
+                $complete_clear.show();
+            }
+
             var setDuration = function(start_date, complete_date) {
                 if (!start_date || !complete_date) {
                     $duration_picker.val('');
@@ -967,6 +955,8 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jqu
 
                 if (mins < 10) mins = '0' + mins; else mins = mins.toString();
                 $duration_picker.val(hours.toString() + mins);
+
+                $.Topic("valueChanged").publish();
             };
 
             var start_fp = $start_picker.flatpickr({
@@ -1007,9 +997,9 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jqu
                 },
                 onChange: function(selectedDates, dateStr, instance) {
 
-                    if (dateStr === '' && work_completed_initial) {
-                        instance.setDate(work_completed_initial);
-                        selectedDates = [work_completed_initial]
+                    if (dateStr === '') {
+                        instance.setDate(null);
+                        selectedDates = []
                     }
 
                     setDuration($start_picker[0]._flatpickr.selectedDates[0], selectedDates[0]);
@@ -1026,7 +1016,6 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jqu
             $complete_clear.click(function() {
                 complete_fp.clear();
                 $(this).fadeOut('fast');
-                // $duration_picker.val('');
             });
 
             $duration_picker.inputmask('9{1,4}hr:99min', {
@@ -1083,49 +1072,35 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jqu
             }();
         }
 
-        /////// Comments ////////////////////////
-        // var $comment = $('#id_comment'),
-        //     $comments = $('#comments'),
-        //     $comment_form = $('#comment-form'),
-        //     $post_comment = $('#post-comment');
-        //
-        // $comment.keyup(function() {
-        //     $post_comment.prop('disabled', $(this).val().trim() === '');
-        // });
-        //
-        // $post_comment.click(function () {
-        //     console.log('boop');
-        //     var data = $comment_form.serialize();
-        //     console.log(data);
-        //     $.ajax({
-        //         data: data,
-        //         url: QAURLs.AJAX_COMMENT,
-        //         type: 'POST',
-        //         success: function(res) {
-        //             $comment.val('');
-        //             display_comment(res);
-        //         },
-        //         error: function(res) {
-        //             console.log(res);
-        //             console.log(res.responseJSON.message);
-        //         }
-        //     })
-        // });
-        //
-        // function display_comment(res) {
-        //     var $dt = $('<dt id="' + res.c_id + '" style="display: none;">' + moment(res.submit_date).format('D MMM YYYY h:mm A') + ' - ' + res.user_name + '</dt>'),
-        //         $dd = $('<dd style="display: none;"><p>' + res.comment + '</p></dd>');
-        //
-        //     $comments.append($dt);
-        //     $comments.append($dd);
-        //
-        //     $dt.slideDown('fast', function() {
-        //         $dd.slideDown('fast');
-        //     })
-        //
-        // }
-
         set_tab_stops();
+
+        var $service_events = $('.service-event-btn');
+		$.each($service_events, function(i, v) {
+			var $service_event = $(this);
+            var colour = $service_event.attr('data-bgcolour');
+            $service_event.css('background-color', colour);
+            $service_event.css('border-color', colour);
+            if ($service_event.length > 0) {
+                if (isTooBright(rgbaStringToArray($service_event.css('background-color')))) {
+                    $service_event.css('color', 'black').children().css('color', 'black');
+                }
+                else {
+                    $service_event.css('color', 'white').children().css('color', 'white');
+                }
+            }
+
+            $service_event.hover(
+                function () {
+                    $(this).css(
+                        'background-color',
+                        lightenDarkenColor(rgbaStringToArray($(this).css('background-color')), -15)
+                    )
+                },
+                function () {
+                    $(this).css('background-color', $(this).attr('data-bgcolour'))
+                }
+            );
+        });
 
     });
 });
