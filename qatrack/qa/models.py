@@ -151,6 +151,11 @@ PERMISSIONS = (
                 'Can edit prior test results',
                 'Allow a user to edit already completed test results',
             ),
+            (
+                'qa.can_save_in_progress',
+                'Can save test lists in progress',
+                'Can save test lists with the "In Progress" flag set',
+            ),
         ),
     ),
     (
@@ -412,6 +417,12 @@ class Tolerance(models.Model):
         blank=True,
     )
 
+    bool_warning_only = models.BooleanField(
+        verbose_name=_("Boolean Warning Only"),
+        help_text=_("Boolean tests not matching references should be considered at tolerance rather than action"),
+        default=False,
+    )
+
     # who created this tolerance
     created_date = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, editable=False, related_name="tolerance_creators")
@@ -506,6 +517,10 @@ class Tolerance(models.Model):
             return "Percent(%s, %s, %s, %s)" % tuple(vals)
         elif self.type == MULTIPLE_CHOICE:
             return "M.C.(%s=%s, %s=%s)" % (OK_DISP, ":".join(self.pass_choices()), TOL_DISP, ":".join(self.tol_choices()))
+        elif self.type == BOOLEAN:
+            act = settings.TEST_STATUS_DISPLAY["action"]
+            tol = settings.TEST_STATUS_DISPLAY["tolerance"]
+            return "Boolean(%s on fail)" % (tol if self.bool_warning_only else act)
 
 
 class Category(models.Model):
@@ -535,7 +550,7 @@ class Test(models.Model):
     VARIABLE_RE = re.compile("^[a-zA-Z_]+[0-9a-zA-Z_]*$")
     RESULT_RE = re.compile("^\s*result\s*=.*$", re.MULTILINE)
 
-    name = models.CharField(max_length=255, help_text=_("Name for this test"), unique=True, db_index=True)
+    name = models.CharField(max_length=255, help_text=_("Name for this test"), db_index=True)
     slug = models.SlugField(
         verbose_name="Macro name", max_length=128,
         help_text=_("A short variable name consisting of alphanumeric characters and underscores for this test (to be used in composite calculations). "),
@@ -831,10 +846,6 @@ class UnitTestInfo(models.Model):
 
             if self.reference is not None and self.reference.value not in (0., 1.):
                 msg = _("Test type is BOOLEAN but reference value is not 0 or 1")
-                raise ValidationError(msg)
-
-            if self.tolerance is not None:
-                msg = _("Please leave tolerance blank for boolean tests")
                 raise ValidationError(msg)
 
     def get_history(self, number=5):
@@ -1250,7 +1261,10 @@ class TestInstance(models.Model):
     def bool_pass_fail(self):
         diff = abs(self.reference.value - self.value)
         if diff > EPSILON:
-            self.pass_fail = ACTION
+            if self.tolerance:
+                self.pass_fail = TOLERANCE if self.tolerance.bool_warning_only else ACTION
+            else:
+                self.pass_fail = ACTION
         else:
             self.pass_fail = OK
 
@@ -1445,6 +1459,7 @@ class TestListInstance(models.Model):
             ("can_override_date", "Can override date"),
             ("can_perform_subset", "Can perform subset of tests"),
             ("can_view_completed", "Can view previously completed instances"),
+            ("can_save_in_progress", "Can save test lists as 'In Progress'"),
         )
 
     def pass_fail_status(self):

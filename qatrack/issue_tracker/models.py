@@ -1,10 +1,9 @@
 
 import re
 
-from django.conf import settings
 from django.core.validators import RegexValidator
 from django.db import models
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User
 
 re_255 = '([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])'
 color_re = re.compile('^rgba\(' + re_255 + ',' + re_255 + ',' + re_255 + ',(0(\.[0-9][0-9]?)?|1)\)$')
@@ -64,7 +63,7 @@ class Issue(models.Model):
 
     issue_type = models.ForeignKey(IssueType, on_delete=models.PROTECT)
     issue_priority = models.ForeignKey(IssuePriority, null=True, on_delete=models.PROTECT)
-    issue_tags = models.ManyToManyField(IssueTag, blank=True, null=True, help_text='If desired, add multiple tags to this issue')
+    issue_tags = models.ManyToManyField(IssueTag, blank=True, help_text='If desired, add multiple tags to this issue')
     issue_status = models.ForeignKey(IssueStatus, null=True, help_text='Current status of this issue')
     user_submitted_by = models.ForeignKey(User, on_delete=models.PROTECT)
 
@@ -74,7 +73,3 @@ class Issue(models.Model):
         null=True, blank=True,
         help_text='Any error screen details. (Note the ability to click "Switch to copy-and-paste view" to copy Traceback)'
     )
-
-
-
-

@@ -6,7 +6,7 @@ from django.db.models import ObjectDoesNotExist
 from django.db.models.signals import post_save, post_delete, pre_delete
 from django.dispatch import receiver
 
-from qatrack.qa.models import Frequency, TestListInstance, UnitTestCollection
+from qatrack.qa.models import TestListInstance, UnitTestCollection
 from qatrack.units.models import Unit
 from qatrack.parts.models import PartUsed, PartStorageCollection
 from qatrack.service_log.models import ReturnToServiceQA, ServiceEvent, ServiceEventStatus
@@ -15,6 +15,7 @@ cache.delete(settings.CACHE_UNREVIEWED_COUNT)
 cache.delete(settings.CACHE_RTS_QA_COUNT)
 cache.delete('default-se-status')
 cache.delete('se_needing_review_count')
+cache.delete(settings.CACHE_IN_PROGRESS_COUNT)
 
 
 # for u in Unit.objects.filter(active=True):
@@ -55,18 +56,19 @@ def update_unreviewed_cache(*args, **kwargs):
     """When a test list is completed invalidate the unreviewed counts"""
     cache.delete(settings.CACHE_UNREVIEWED_COUNT)
     cache.delete(settings.CACHE_RTS_QA_COUNT)
+    cache.delete(settings.CACHE_IN_PROGRESS_COUNT)
 
 
 @receiver(post_save, sender=ReturnToServiceQA)
 @receiver(post_delete, sender=ReturnToServiceQA)
-def update_unreviewed_cache(*args, **kwargs):
+def update_rts_cache(*args, **kwargs):
     """When a RTS is completed invalidate the unreviewed counts"""
     cache.delete(settings.CACHE_RTS_QA_COUNT)
 
 
 @receiver(post_save, sender=ServiceEventStatus)
 @receiver(post_delete, sender=ServiceEventStatus)
-def update_unreviewed_cache(*args, **kwargs):
+def update_se_cache(*args, **kwargs):
     """When a service status is changed invalidate the default and review count"""
     cache.delete('default-se-status')
     cache.delete('se_needing_review_count')
@@ -74,7 +76,7 @@ def update_unreviewed_cache(*args, **kwargs):
 
 @receiver(post_save, sender=UnitTestCollection)
 @receiver(post_delete, sender=UnitTestCollection)
-def update_active_unit_test_collections_for_unit(*args, **kwargs):
+def update_active_unit_test_collections_for_unit_utc(*args, **kwargs):
     unit = kwargs['instance'].unit
     qs = UnitTestCollection.objects.filter(
         unit=unit,
@@ -119,6 +121,11 @@ def site(request):
         se_needing_review_count = ServiceEvent.objects.filter(service_status__in=ServiceEventStatus.objects.filter(is_review_required=True), is_review_required=True).count()
         cache.set('se_needing_review_count', se_needing_review_count)
 
+    in_progress_count = cache.get(settings.CACHE_IN_PROGRESS_COUNT)
+    if in_progress_count is None:
+        in_progress_count = TestListInstance.objects.in_progress().count()
+        cache.set(settings.CACHE_IN_PROGRESS_COUNT, in_progress_count)
+
     return {
         'SITE_NAME': cur_site.name,
         'SITE_URL': cur_site.domain,
@@ -136,4 +143,5 @@ def site(request):
         'USE_PARTS': settings.USE_PARTS,
         'DEFAULT_SE_STATUS': default_se_status,
         'SE_NEEDING_REVIEW_COUNT': se_needing_review_count,
+        'IN_PROGRESS': in_progress_count,
     }

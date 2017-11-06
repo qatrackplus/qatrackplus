@@ -1,8 +1,3 @@
-
-from django.conf import settings
-from django.contrib import messages
-from django.contrib.auth.models import User, Group
-from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import ugettext as _
 
@@ -91,7 +86,7 @@ class Part(models.Model):
 
     part_category = models.ForeignKey(PartCategory, blank=True, null=True, help_text=_('Category for this part'))
     suppliers = models.ManyToManyField(
-        Supplier, blank=True, null=True, help_text=_('Suppliers of this part'), related_name='parts',
+        Supplier, blank=True, help_text=_('Suppliers of this part'), related_name='parts',
         through='PartSupplierCollection'
     )
     storage = models.ManyToManyField(
@@ -189,4 +184,3 @@ class PartUsed(models.Model):
     from_storage = models.ForeignKey(Storage, null=True, blank=True, on_delete=models.SET_NULL)
 
     quantity = models.IntegerField()
-

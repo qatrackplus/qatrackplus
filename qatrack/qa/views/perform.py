@@ -603,6 +603,10 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         context = self.get_context_data()
         formset = context["formset"]
 
+        in_progress = form.cleaned_data['in_progress']
+        for f in formset:
+            f.in_progress = in_progress
+
         if not formset.is_valid():
             context["form"] = form
             return self.render_to_response(context)
@@ -778,7 +782,12 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         if ndays > 1:
             context['days'] = self.unit_test_col.tests_object.days_display()
 
+        in_progress = models.TestListInstance.objects.in_progress().filter(
+            unit_test_collection=self.unit_test_col,
+            test_list=self.test_list
+        )
         context["test_list"] = self.test_list
+        context["in_progress"] = in_progress
         context["unit_test_infos"] = json.dumps(self.template_unit_test_infos())
         context["unit_test_collection"] = self.unit_test_col
         context["contacts"] = list(Contact.objects.all().order_by("name"))

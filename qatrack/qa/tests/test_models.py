@@ -386,18 +386,6 @@ class TestUnitTestInfo(TestCase):
         self.uti.test.type = models.BOOLEAN
         self.assertRaises(ValidationError, self.uti.clean)
 
-    def test_boolean_with_tol(self):
-        self.uti.reference = utils.create_reference(value=0)
-        self.uti.tolerance = utils.create_tolerance()
-        self.uti.test.type = models.BOOLEAN
-        self.assertRaises(ValidationError, self.uti.clean)
-
-    def test_mult_choice_with_tol(self):
-        tol = models.Tolerance(type=models.MULTIPLE_CHOICE, mc_pass_choices="a")
-        self.uti.tolerance = tol
-        self.uti.test.type = models.BOOLEAN
-        self.assertRaises(ValidationError, self.uti.clean)
-
     def test_history(self):
         td = timezone.timedelta
         now = timezone.now()

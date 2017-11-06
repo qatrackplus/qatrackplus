@@ -4,14 +4,12 @@ from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin import widgets, options
 from django.contrib.admin.models import LogEntry, CHANGE
-from django.contrib.admin.options import IS_POPUP_VAR, TO_FIELD_VAR
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse_lazy
 import django.db
 from django.db.models import Count, Q
 import django.forms as forms
 from django.shortcuts import redirect, render, HttpResponseRedirect
-from django.template.response import TemplateResponse
 from django.utils import timezone
 from django.utils.html import escape
 from django.utils.text import Truncator
@@ -79,8 +77,12 @@ class TestInfoForm(forms.ModelForm):
 
             if tt == models.BOOLEAN:
                 self.fields["reference_value"].widget = forms.Select(choices=[("", "---"), (0, "No"), (1, "Yes")])
-                self.fields["tolerance"].widget = forms.HiddenInput()
-
+                tolf = self.fields['tolerance']
+                tolf.queryset = tolf.queryset.filter(type=models.BOOLEAN)
+                for p in ['add', 'change', 'delete']:
+                    setattr(tolf.widget, 'can_%s_related' % p, False)
+                if not self.instance.tolerance:
+                    self.initial["tolerance"] = models.Tolerance.objects.get(type=models.BOOLEAN, bool_warning_only=False)
             elif tt == models.MULTIPLE_CHOICE or self.instance.test.is_string_type():
                 self.fields["reference_value"].widget = forms.HiddenInput()
                 self.fields['tolerance'].queryset = self.fields['tolerance'].queryset.filter(type=models.MULTIPLE_CHOICE)
@@ -122,9 +124,6 @@ class TestInfoForm(forms.ModelForm):
                 if ref_value == 0 and tol.type == models.PERCENT:
                     raise forms.ValidationError(_("Percentage based tolerances can not be used with reference value of zero (0)"))
 
-            if self.instance.test.type == models.BOOLEAN:
-                if self.cleaned_data["tolerance"] is not None:
-                    raise forms.ValidationError(_("Please leave tolerance field blank for boolean and multiple choice test types"))
         return self.cleaned_data
 
 
@@ -296,10 +295,11 @@ class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
 
         # if selected tests are boolean select all the tolerances which are boolean
         elif has_bool:
+            tolerances = models.Tolerance.objects.filter(type="boolean")
             form.fields["contenttype"].initial = 'boolean'
             form.fields["reference"].widget = forms.NullBooleanSelect()
             form.fields["tolerance"].required = False
-            form.fields["tolerance"].widget = forms.HiddenInput()
+            form.fields["tolerance"].queryset = tolerances
 
         if 'apply' in request.POST and form.is_valid():
             return self.form_valid(request, queryset, form)
@@ -608,7 +608,7 @@ class TestListMembershipFilter(admin.SimpleListFilter):
 class TestAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, admin.ModelAdmin):
 
     inlines = [get_attachment_inline("test")]
-    list_display = ["name", "slug", "category", "type"]
+    list_display = ["name", "slug", "category", "type", 'obj_created', 'obj_modified']
     list_filter = ["category", "type", TestListMembershipFilter, "testlistmembership__test_list"]
     search_fields = ["name", "slug", "category__name"]
     save_as = True
@@ -639,6 +639,18 @@ class TestAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, admin.ModelAdmin):
                 messages.add_message(request, messages.WARNING, warning)
 
         super(TestAdmin, self).save_model(request, obj, form, change)
+
+    def obj_created(self, obj):
+        return '<abbr title="Created by %s">%s</abbr>' % (obj.created_by, obj.created.strftime(settings.INPUT_DATE_FORMATS[0]))
+    obj_created.admin_order_field = "created"
+    obj_created.allow_tags = True
+    obj_created.short_description = "Created"
+
+    def obj_modified(self, obj):
+        return '<abbr title="Modified by %s">%s</abbr>' % (obj.modified_by, obj.modified.strftime(settings.INPUT_DATE_FORMATS[0]))
+    obj_modified.admin_order_field = "modified"
+    obj_modified.allow_tags = True
+    obj_modified.short_description = "Modified"
 
 
 def unit_name(obj):
@@ -811,8 +823,6 @@ class TestListInstanceAdmin(SaveInlineAttachmentUserMixin, admin.ModelAdmin):
     inlines = [get_attachment_inline("testlistinstance")]
 
     def render_delete_form(self, request, context):
-        opts = self.model._meta
-        app_label = opts.app_label
         instance = context['object']
 
         # Find related Service events with rtsqa and with initiated by
@@ -881,6 +891,23 @@ class ToleranceForm(forms.ModelForm):
 
 class ToleranceAdmin(BasicSaveUserAdmin):
     form = ToleranceForm
+    list_filter = ["type"]
+
+    class Media:
+        js = (
+            settings.STATIC_URL + "jquery/js/jquery.min.js",
+            settings.STATIC_URL + "js/tolerance_admin.js",
+        )
+
+    def get_queryset(self, *args, **kwargs):
+        qs = super(ToleranceAdmin, self).get_queryset(*args, **kwargs)
+        return qs.exclude(type=models.BOOLEAN)
+
+    def has_change_permission(self, request, obj=None):
+
+        if obj and obj.type == models.BOOLEAN:
+            return False
+        return super(ToleranceAdmin, self).has_change_permission(request, obj)
 
 
 class AutoReviewAdmin(admin.ModelAdmin):
