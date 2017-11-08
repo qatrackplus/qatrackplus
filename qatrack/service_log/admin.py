@@ -26,6 +26,12 @@ class ServiceEventStatusFormAdmin(ModelForm):
         model = ServiceEventStatus
         fields = '__all__'
 
+    def clean_is_default(self):
+        is_default = self.cleaned_data['is_default']
+        if not is_default and self.initial['is_default']:
+            raise ValidationError('There must be one default status. Edit another status to be default first.')
+        return is_default
+
 
 class DeleteOnlyFromOwnFormAdmin(admin.ModelAdmin):
 
@@ -53,6 +59,13 @@ class ServiceEventStatusAdmin(DeleteOnlyFromOwnFormAdmin):
                 settings.STATIC_URL + "qatrack_core/css/admin.css",
             ),
         }
+
+    def delete_view(self, request, object_id, extra_context=None):
+
+        if ServiceEventStatus.objects.get(pk=object_id).is_default:
+            extra_context = extra_context or {'is_default': True}
+
+        return super().delete_view(request, object_id, extra_context)
 
 
 class ServiceTypeAdmin(DeleteOnlyFromOwnFormAdmin):

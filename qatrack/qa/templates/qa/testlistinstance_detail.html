@@ -47,7 +47,7 @@
                                     <dt>Test List :</dt>
                                     <dd>
                                         {% if tli.test_list.description%}
-                                        <a class="show-hide" id="test-list-info-toggle" title="Click to view description and general instructions for this test list">{{tli.test_list.name}} <i class="icon-info-sign" ></i></a></dd>
+                                        <a class="show-hide" id="test-list-info-toggle" title="Click to view description and general instructions for this test list">{{tli.test_list.name}} <i class="icon-info-sign" ></i></a>
                                         {% else %}
                                            {{tli.test_list.name}}
                                         {% endif %}
@@ -116,9 +116,10 @@
                                                     <i class="fa fa-wrench fa-stack-custom-main"></i>
                                                     <i class="fa fa-plus fa-stack-custom-sub upper-0 hover-sub-success"></i>
                                                 </i>
+                                                {% if service_events_ib|length == 0 %}Initiate Service Event{% endif %}
                                             </a>
                                         {% endif %}
-                                        Service events initiated
+                                        {% if service_events_ib|length > 0 %}Service events initiated:{% endif %}
                                     </label>
                                     <div class="col-md-4">
                                         {% for se in service_events_ib %}

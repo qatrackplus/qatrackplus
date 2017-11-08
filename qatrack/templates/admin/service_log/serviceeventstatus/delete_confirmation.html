@@ -1,0 +1,10 @@
+{% extends "admin/delete_confirmation.html" %}
+
+{% block content %}
+    {% if is_default %}
+        <p>Cannot delete the {{ object_name }} '{{ object.name }}' because it is the default service event status.</p>
+    {% else %}
+        {{ block.super }}
+    {% endif %}
+
+{% endblock content %}

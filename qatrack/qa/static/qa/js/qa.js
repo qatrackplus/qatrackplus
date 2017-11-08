@@ -945,8 +945,8 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jqu
                 $complete_clear = $('#clear-work_completed');
 
             var duration_change = true;
-            work_started_initial = !work_started_initial ? moment().valueOf() : moment(work_started_initial).valueOf();
-            work_completed_initial = !work_completed_initial ? false : moment(work_completed_initial).valueOf();
+            var work_started_initial = !work_started_initial ? moment().valueOf() : moment(work_started_initial).valueOf();
+            var work_completed_initial = !work_completed_initial ? false : moment(work_completed_initial).valueOf();
 
             if (work_completed_initial) {
                 $complete_clear.show();

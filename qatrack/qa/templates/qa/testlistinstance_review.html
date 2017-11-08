@@ -105,9 +105,10 @@
                                                             <i class="fa fa-wrench fa-stack-custom-main"></i>
                                                             <i class="fa fa-plus fa-stack-custom-sub upper-0 hover-sub-success"></i>
                                                         </i>
+                                                        {% if service_events_ib|length == 0 %}Initiate Service Event{% endif %}
                                                     </a>
                                                 {% endif %}
-                                                Service events initiated:
+                                                {% if service_events_ib|length > 0 %}Service events initiated:{% endif %}
                                             </label>
                                             <div class="col-md-4">
                                                 {% for se in service_events_ib %}
