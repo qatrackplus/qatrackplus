@@ -10,6 +10,7 @@ from django.forms.utils import timezone
 from django.http import JsonResponse, HttpResponseRedirect, HttpResponse
 from django.shortcuts import redirect
 from django.template.loader import get_template
+from django.utils.encoding import smart_str
 from django.utils.translation import ugettext as _
 from django.views.generic.edit import ModelFormMixin, ProcessFormView
 from django.views.generic.detail import SingleObjectTemplateResponseMixin
@@ -77,9 +78,9 @@ def room_location_searcher(request):
 def go_units_parts_cost(request):
 
     daterange = request.GET.get('date_range')
-    units = request.GET.get('units').split(',')
-    service_areas = request.GET.get('service_areas').split(',')
-    service_types = request.GET.get('service_types').split(',')
+    units = request.GET.getlist('units')
+    service_areas = request.GET.getlist('service_areas')
+    service_types = request.GET.getlist('service_types')
 
     date_from = timezone.datetime.strptime(daterange.split(' - ')[0], '%d %b %Y')
     date_to = timezone.datetime.strptime(daterange.split(' - ')[1], '%d %b %Y')
@@ -101,9 +102,9 @@ def go_units_parts_cost(request):
 
     total_parts_cost = qs_pu.aggregate(total_parts_cost=Sum('part__cost'))['total_parts_cost']
 
-    response = HttpResponse()
-    # response = HttpResponse(content_type='text/csv')
-    # response['Content-Disposition'] = 'attachment; filename="qatrack_parts_units_cost.csv"'
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="qatrack_parts_units_cost.csv"'
+    response['Content-Type'] = 'text/csv; charset=utf-8'
 
     writer = csv.writer(response)
     headers = [
