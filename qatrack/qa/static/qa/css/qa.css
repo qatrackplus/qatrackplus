@@ -35,6 +35,7 @@ tr.qa-valuerow td {
 .qa-name {
     min-width:300px;
     text-align:left;
+    vertical-align: middle !important;
 }
 th.qa-name div{
 /* hack to fix IE7 min-width*/
@@ -70,7 +71,7 @@ input[disabled].qa-input, input[readonly].qa-input {
 }
 .qa-table td.qa-value,
 .qa-table th.qa-value{
-    width:110px;
+    width: 110px;
     text-align:center;
     padding: 0;
     vertical-align: middle;
@@ -78,6 +79,7 @@ input[disabled].qa-input, input[readonly].qa-input {
 .qa-skip {
     width:34px;
     text-align: center;
+    vertical-align: middle !important;
 }
 .qa-status{
     /*width: 90px;*/
@@ -213,18 +215,39 @@ td.test-name {
     -webkit-transition: border-left 0.5s; /* Safari */
     transition: border-left 0.5s;
 }
-#perform-qa-table > tbody > tr > td.qa-category {
 
-    /*height: 100%;*/
+#perform-qa-table > thead > tr > th.qa-category {
     width: 120px;
+    vertical-align: middle !important;
 }
+#perform-qa-table > tbody > tr > td.qa-category {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 0;
+}
+#perform-qa-table > tbody > tr > td.qa-category div {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    /*max-width: 0;*/
+}
+#perform-qa-table > tbody > tr.control-group.qa-valuerow > td.qa-name.qa-showproc {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 0;
+}
+
+#perform-qa-table > thead > tr > th.qa-history {
+    width: 320px;
+}
+
+
 #perform-qa-table > tbody > tr > td.qa-category > .error-bar {
     height: 100%;
     top:0;
 }
-/*#perform-qa-table > tbody > tr > td.qa-category > .error-bar > .procedure-bar {*/
-    /*padding-bottom: 4px;*/
-/*}*/
 #perform-qa-table, #review-table {
     border-collapse: collapse;
     border-spacing: 0;

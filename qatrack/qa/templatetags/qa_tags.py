@@ -188,3 +188,13 @@ def service_status_label(status, size=None):
         'name': status.name,
         'size': '10.5' if size is None else size
     })
+
+
+@register.simple_tag
+def service_event_btn(event, size='xs'):
+    template = get_template('service_log/service_event_btn.html')
+    return template.render({
+        'colour': event.service_status.colour,
+        'id': event.id,
+        'size': size
+    })

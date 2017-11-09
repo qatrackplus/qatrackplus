@@ -15,19 +15,11 @@
             <link rel="shortcut icon" href="{% static "qatrack_core/img/favicon.ico" %}">
             <link rel="apple-touch-icon" href="{% static "qatrack_core/img/apple-touch-icon.png" %}">
         {% endblock favicon %}
-        {##}
-        {#{% block extra_style %}#}
-        {#    <link href="{% static "css/qa.css" %}?v={{VERSION}}" rel="stylesheet">#}
-        {#    <link href="{% static "css/site.css" %}?v={{VERSION}}" rel="stylesheet">#}
-        {#    {% block page_style %}{% endblock %}#}
-        {#{% endblock %}#}
+
         {% block style_base %}
-{#            <link href="{{ STATIC_URL }}qa/css/qa.css?v={{VERSION}}" rel="stylesheet">#}
-{#            <link href="{{ STATIC_URL }}qa/css/site.css?v={{VERSION}}" rel="stylesheet">#}
             <link href="{{ STATIC_URL }}fontawsome/css/font-awesome.min.css?v={{ VERSION }}" rel="stylesheet">
             <link href="{{ STATIC_URL }}bootstrap/css/bootstrap.css?v={{ VERSION }}" rel="stylesheet">
             <link href="{{ STATIC_URL }}adminlte/css/admin-lte.css?v={{ VERSION }}" rel="stylesheet">
-{#            <link href="{{ STATIC_URL }}adminlte/css/skins/skin-blue.min.css?v={{ VERSION }}" rel="stylesheet">#}
             <link href="{{ STATIC_URL }}adminlte/css/skins/skin-black-dark.css?v={{ VERSION }}" rel="stylesheet">
             <link href="{{ STATIC_URL }}qatrack_core/css/custom-adminlte.css?v={{ VERSION }}" rel="stylesheet">
             <link href="{{ STATIC_URL }}qatrack_core/css/custom-fontawesome.css?v={{ VERSION }}" rel="stylesheet">
@@ -119,7 +111,6 @@
 
     </head>
 
-{#    <body class="{% block body_class %}{% endblock %}" id="{% block body_id %}{% endblock %}">#}
     <body class="skin-black-dark fixed {% block body_class %}layout-top-nav{% endblock body_class %} preload">
         <div class="wrapper">
 
@@ -456,106 +447,12 @@
                                             <i class="fa fa-stack fa-fw fa-lg">
                                                 <i class="fa fa-plus fa-stack-custom-sub upper-left hover-sub-success"></i>
                                                 <i class="fa fa-bug fa-stack-custom-main"></i>
-{#                                                <i class="fa fa-cube fa-stack-custom-sub lower-right text-gray"></i>#}
                                             </i>
                                             Create Issue
                                         </a></li>
                                     </ul>
                                 </li>
-
-                                {% comment %}{% if perms.qa.can_view_charts or user.is_staff %}
-                                    <li class="dropdown">
-                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                            Tools
-                                            <b class="caret"></b>
-                                        </a>
-                                        <ul class="dropdown-menu" role="menu">
-
-                                            {% if user.is_staff %}
-                                                <li class="nav-header">Reports</li>
-
-                                                <li><a href="{% url 'unit_list' %}">
-                                                    <i class="fa fa-stack fa-fw fa-lg">
-    {#                                                    <i class="fa fa-list fa-stack-custom-sub upper-left info"></i>#}
-                                                        <i class="fa fa-cubes fa-stack-custom-main"></i>
-                                                    </i>
-                                                    Units
-                                                </a></li>
-                                                <li class="hover-parent"><a href="{% url 'se_down_time' %}">
-                                                    <i class="fa fa-stack fa-fw fa-lg">
-                                                        <i class="fa fa-clock-o fa-stack-custom-sub upper-left hover-sub-warning"></i>
-                                                        <i class="fa fa-wrench fa-stack-custom-main"></i>
-                                                    </i>
-                                                    Service and Lost Time
-                                                </a></li>
-                                                <li><a href="{% url 'vendor_list' %}">
-                                                    <i class="fa fa-stack fa-fw fa-lg">
-    {#                                                    <i class="fa fa-list fa-stack-custom-sub upper-left info"></i>#}
-                                                        <i class="fa fa-truck fa-flip-horizontal fa-stack-custom-main"></i>
-                                                    </i>
-                                                    Vendors
-                                                </a></li>
-                                                {% if USE_PARTS %}
-                                                    <li class="hover-parent"><a href="{% url "parts_list" %}?f=qcqm-lt" title="Enter new part">
-                                                        <i class="fa fa-stack fa-lg fa-fw">
-                                                            <i class="fa fa-cogs fa-flip-horizontal fa-stack-custom-main hover-sub-danger"></i>
-                                                        </i>
-                                                        Low Inventory Parts
-                                                    </a></li>
-                                                    <li><a href="{% url 'suppliers_list' %}">
-                                                        <i class="fa fa-stack fa-fw fa-lg">
-    {#                                                        <i class="fa fa-list fa-stack-custom-sub upper-left info"></i>#}
-                                                            <i class="fa fa-microchip fa-stack-custom-main"></i>
-                                                        </i>
-                                                        Suppliers
-                                                    </a></li>
-                                                {% endif %}
-                                                <li class="divider"></li>
-                                                <li><a href="{% url "qa_paper_forms_request" %}" title="Create a set of paper backup forms">
-                                                    <i class="fa fa-paper-plane-o fa-lg fa-fw" aria-hidden="true"></i>
-                                                    Paper Backup Forms
-                                                </a></li>
-                                            {% endif %}
-                                        </ul>
-                                    </li>
-                                {% endif %}{% endcomment %}
-
                             </ul>
-
-                            {% comment %}<ul class="nav navbar-nav navbar-right">
-
-                                <li class="dropdown margin-r-10">
-
-                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                        {% if user.is_superuser %}
-                                            Administrators ::
-                                        {% elif user.groups.count > 0 %}
-                                            {{user.groups.all.0.name}} ::
-                                        {% endif %}
-                                        <span id="username">{{ user }}</span>
-                                        <b class="caret"></b>
-                                    </a>
-
-                                    <ul class="dropdown-menu" role="menu">
-                                        <li><a href="{% url "account-details" %}">
-                                            <i class="fa fa-user fa-fw" aria-hidden="true"></i>
-                                            Account
-                                        </a></li>
-                                        {% if user.is_staff %}
-                                            <li><a href="{% url "admin:index" %}">
-                                                <i class="fa fa-cogs fa-fw" aria-hidden="true"></i>
-                                                Admin
-                                            </a></li>
-                                        {% endif %}
-                                        <li class="divider"></li>
-                                        <li><a href="{% url "auth_logout" %}">
-                                            <i class="fa fa-power-off fa-fw danger" aria-hidden="true"></i>
-                                             Log out
-                                        </a></li>
-                                    </ul>
-
-                                </li>
-                            </ul>{% endcomment %}
 
                             <ul class="nav navbar-nav navbar-right">
                                 <li class="margin-right-10">
@@ -564,12 +461,6 @@
                             </ul>
 
                         {% else %}
-{#                            <ul class="nav navbar-nav navbar-right">#}
-{#                                <li><a href="{% url "auth_login" %}">#}
-{#                                    <i class="fa fa-sign-in fa-fw" aria-hidden="true"></i>#}
-{#                                    Log in#}
-{#                                </a></li>#}
-{#                            </ul>#}
                             <ul class="nav navbar-nav navbar-right ">
                                 <li class="margin-right-10">
                                     <a id="control-sidebar-btn" href="#" data-toggle="control-sidebar"><i class="fa fa-gears fa-fw"></i></a>
@@ -597,6 +488,8 @@
                     {% block body %}
                     {% endblock %}
                 </div>
+
+                <div class="bottom-banner">QATrack+ v{{ VERSION }} | © 2011 The Ottawa Hospital Cancer Center</div>
             </div>
 
             <aside class="control-sidebar control-sidebar-dark">
@@ -692,18 +585,7 @@
             {% endblock %}
         </div>
         {% block loading_modal %}{% endblock loading_modal %}
+
     </body>
 
-{#    {% block footer %}#}
-{#        {% include "_footer.html" %}#}
-{#    {% endblock %}#}
-
-{#    {% block extra_body %}#}
-    {#    {% block end_body_script_base %}#}
-    {#        <script src="{% static "js/lodash.compat.min.js" %}?v={{VERSION}}"></script>#}
-    {#        <script src="{% static "js/qautils.js" %}?v={{VERSION}}"></script>#}
-    {#        <script src="{% static "js/base.js" %}?v={{VERSION}}"></script>#}
-    {#        {% block end_body_extra_script %}{%endblock%}#}
-    {#    {% endblock end_body_script_base%}#}
-{#    {% endblock %}#}
 </html>

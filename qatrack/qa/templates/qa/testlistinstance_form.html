@@ -307,7 +307,7 @@
                                             {% if service_events_rtsqa|length > 0 %}
                                                 <div class="row margin-top-10">
                                                     <label class="col-md-8">
-                                                        RTS QA for Service Events
+                                                        RTS QA for Service Events:
                                                     </label>
                                                     <div class="col-md-4">
                                                         {% for se in service_events_rtsqa %}
@@ -329,6 +329,27 @@
                 {% else %}
                     <div class="col-sm-4"></div>
                 {% endif %}
+            {% elif rtsqa_id %}
+                <div class="col-sm-4">
+                    <div id="box-serviceevents">
+                        <div class="box">
+                            <div class="box-header">
+                                <h5 class="box-title">
+                                    <i class="fa fa-wrench" aria-hidden="true"></i>
+                                    Service Events
+                                </h5>
+                            </div>
+                            <div class="box-body">
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        <input name="rtsqa_id" type="hidden" value={{ rtsqa_id }}>
+                                        Performing return to service qa for service event {% service_event_btn rtsqa_for_se %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             {% else %}
                 <div class="col-sm-4"></div>
             {% endif %}
@@ -614,7 +635,7 @@
                     </a></li>
                 {% endif %}
 
-                {% if form.instance.pk %}
+                {% if form.instance.pk or rtsqa_id %}
                     {% if perms.service_log.add_serviceevent or service_events_ib|length > 0 %}
                         <li class="primary toggle-element active" data-toggle="serviceevents"><a id="toggle-options" href="#!">
                             <i class="fa fa-wrench fa-fw" aria-hidden="true"></i>

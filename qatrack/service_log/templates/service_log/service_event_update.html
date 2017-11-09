@@ -539,11 +539,11 @@
                 <a id="select-tli-__prefix__" class="btn btn-default btn-xs btn-flat select-tli" data-link="{% url 'tli_select' %}/__utc-id__/__prefix__/">
                     Performed
                 </a>
-{#                {% if form.instance.pk %}#}
-{#                    <a href="{% url 'perform_qa' %}__utc-id__/?rtsqa=__rtsqa-id__&next={% url 'sl_edit' %}__se-id__/" class="btn btn-xs btn-default btn-flat perform-btn" target="Perform-__rtsqa-id__-__prefix__">#}
-{#                        Perform#}
-{#                    </a>#}
-{#                {% endif %}#}
+                {% if form.instance.pk %}
+                    <a href="{% url 'perform_qa' %}__utc-id__/?rtsqa=__rtsqa-id__&next={% url 'sl_edit' %}__se-id__/" class="btn btn-xs btn-default btn-flat perform-btn" target="Perform-__rtsqa-id__-__prefix__">
+                        Perform
+                    </a>
+                {% endif %}
             {% endif %}
             {% if perms.qa.can_review %}
                 <a id="__prefix__-review-btn" href="{% url 'review_test_list_instance' %}__tli-id__?next={% url 'sl_edit' %}__se-id__" class="btn btn-xs btn-default btn-flat review-btn __prefix__-hider" target="Review-__rtsqa-id__-__prefix__" style="display: none;">

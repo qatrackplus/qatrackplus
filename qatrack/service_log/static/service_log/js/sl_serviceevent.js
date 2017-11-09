@@ -366,6 +366,9 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
                         .replace(/__se-id__/g, se_id)
                         .replace(/__rtsqa-id__/g, rtsqa_id)
                 );
+                if (!rtsqa_id) {
+                    $('#utc-actions-' + prefix).find('.perform-btn').remove();
+                }
                 if (!tli_id) {
                     $('#utc-actions-' + prefix).find('.btn.review-btn').removeClass(prefix + '-hider');
                 }
