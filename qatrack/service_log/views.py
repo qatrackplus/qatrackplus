@@ -951,13 +951,15 @@ class ReturnToServiceQABaseList(BaseListableView):
 
     select_related = (
         'service_event__unit_service_area__unit',
-        'service_event__service_status'
+        'service_event__service_status',
+        'test_list_instance__reviewed_by'
     )
 
     prefetch_related = (
         "test_list_instance__testinstance_set",
         "test_list_instance__testinstance_set__status",
-        'unit_test_collection'
+        'unit_test_collection',
+        'test_list_instance__comments'
     )
 
     def __init__(self, *args, **kwargs):

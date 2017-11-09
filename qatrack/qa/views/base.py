@@ -387,7 +387,8 @@ class TestListInstances(BaseListableView):
     prefetch_related = (
         'testinstance_set',
         'testinstance_set__status',
-        # 'rtsqa_for_tli',
+        'rtsqa_for_tli',
+        'rtsqa_for_tli__service_event',
         'serviceevents_initiated',
         'comments'
     )
@@ -432,13 +433,13 @@ class TestListInstances(BaseListableView):
     def actions(self, tli):
         template = self.templates['actions']
 
-        rtsqas = sl_models.ReturnToServiceQA.objects.filter(test_list_instance=tli)
+        rtsqas = tli.rtsqa_for_tli.all()
         se_rtsqa = []
         for f in rtsqas:
             if f.service_event not in se_rtsqa:
                 se_rtsqa.append(f.service_event)
 
-        se_ib = sl_models.ServiceEvent.objects.filter(test_list_instance_initiated_by=tli)
+        se_ib = tli.serviceevents_initiated.all()
 
         c = {
             'instance': tli,
