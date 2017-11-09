@@ -372,6 +372,7 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
             except ObjectDoesNotExist:
                 pass
 
+        extra_rtsqa_forms = 2 if self.request.user.has_perm('service_log.add_returntoserviceqa') else 0
         if self.request.method == 'POST':
 
             context_data['hours_formset'] = forms.HoursFormset(
@@ -379,7 +380,7 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
                 instance=self.object,
                 prefix='hours'
             )
-            context_data['rtsqa_formset'] = forms.ReturnToServiceQAFormset(
+            context_data['rtsqa_formset'] = forms.get_rtsqa_formset(extra_rtsqa_forms)(
                 self.request.POST,
                 instance=self.object,
                 prefix='rtsqa',
@@ -408,7 +409,7 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
         else:
 
             context_data['hours_formset'] = forms.HoursFormset(instance=self.object, prefix='hours')
-            context_data['rtsqa_formset'] = forms.ReturnToServiceQAFormset(
+            context_data['rtsqa_formset'] = forms.get_rtsqa_formset(extra_rtsqa_forms)(
                 instance=self.object,
                 prefix='rtsqa',
                 form_kwargs={

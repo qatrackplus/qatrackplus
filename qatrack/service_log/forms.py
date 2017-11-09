@@ -215,7 +215,9 @@ class ReturnToServiceQAForm(forms.ModelForm):
         return None
 
 
-ReturnToServiceQAFormset = forms.inlineformset_factory(models.ServiceEvent, models.ReturnToServiceQA, form=ReturnToServiceQAForm, extra=2)
+# ReturnToServiceQAFormset = forms.inlineformset_factory(models.ServiceEvent, models.ReturnToServiceQA, form=ReturnToServiceQAForm, extra=0)
+def get_rtsqa_formset(extra):
+    return forms.inlineformset_factory(models.ServiceEvent, models.ReturnToServiceQA, form=ReturnToServiceQAForm, extra=extra)
 
 
 class ServiceEventMultipleField(forms.ModelMultipleChoiceField):

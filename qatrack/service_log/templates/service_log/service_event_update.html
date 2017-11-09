@@ -309,60 +309,61 @@
                                     {% endfor %}
                                 </div>
                             </div>
+                            {% if perms.service_log.add_returntoserviceqa or rtsqa_formset.forms|length > 0 %}
+                                <div class="row">
+                                    <div class="col-md-12">
 
-                            <div class="row">
-                                <div class="col-md-12">
-
-                                    <table class="table table-hover table-condensed table-valign-middle">
-                                        <thead>
-                                            {{ rtsqa_formset.management_form }}
-                                            <tr>
-                                                <th style="min-width: 200px;">Test List</th>
-                                                <th>Pass/Fail</th>
-                                                <th>Review Status</th>
-{#                                                <th>Assigned By</th>#}
-{#                                                <th>Assigned Date</th>#}
-                                                <th></th>
-                                                {% if perms.service_log.delete_returntoserviceqa %}
-                                                    <th>Delete?</th>
-                                                {% endif %}
-                                            </tr>
-                                        </thead>
-
-                                        <tbody id="rtsqa-tbody">
-
-                                            {% for f_form in rtsqa_formset.forms %}
-                                                <tr id="{{ f_form.prefix }}" class="rtsqa-row">
-                                                    {{ f_form.id }}
-                                                    {{ f_form.test_list_instance }}
-                                                    {{ f_form.all_reviewed }}
-                                                    <td  class="form-group{% if f_form.unit_test_collection.errors %} has-error{% endif %}">
-                                                        {{ f_form.unit_test_collection|add_class:form.classes }}
-                                                        {% for e in f_form.unit_test_collection.errors %}
-                                                            <div class="help-block">{{ e }}</div>
-                                                        {% endfor %}
-                                                    </td>
-                                                        <td id="pass-fail-{{ f_form.prefix }}"></td>
-                                                        <td id="review-{{ f_form.prefix }}"></td>
-                                                        <td id="utc-actions-{{ f_form.prefix }}"></td>
-                                                        <td align="center">{% if perms.service_log.delete_returntoserviceqa and f_form.instance.pk %}{{ f_form.DELETE }}{% endif %}</td>
-{#                                                    {% endif %}#}
+                                        <table class="table table-hover table-condensed table-valign-middle">
+                                            <thead>
+                                                {{ rtsqa_formset.management_form }}
+                                                <tr>
+                                                    <th style="min-width: 200px;">Test List</th>
+                                                    <th>Pass/Fail</th>
+                                                    <th>Review Status</th>
+    {#                                                <th>Assigned By</th>#}
+    {#                                                <th>Assigned Date</th>#}
+                                                    <th></th>
+                                                    {% if perms.service_log.delete_returntoserviceqa %}
+                                                        <th>Delete?</th>
+                                                    {% endif %}
                                                 </tr>
-                                            {% endfor %}
+                                            </thead>
 
-                                        </tbody>
+                                            <tbody id="rtsqa-tbody">
 
-                                        {% if perms.service_log.add_returntoserviceqa %}
-                                            <tfoot>
-                                                <tr><td>
-                                                    <div id="add-rtsqa" class="btn btn-sm btn-flat btn-info" title="Add another RTS QA object.">Add</div>
-                                                </td></tr>
-                                            </tfoot>
-                                        {% endif %}
+                                                {% for f_form in rtsqa_formset.forms %}
+                                                    <tr id="{{ f_form.prefix }}" class="rtsqa-row">
+                                                        {{ f_form.id }}
+                                                        {{ f_form.test_list_instance }}
+                                                        {{ f_form.all_reviewed }}
+                                                        <td  class="form-group{% if f_form.unit_test_collection.errors %} has-error{% endif %}">
+                                                            {{ f_form.unit_test_collection|add_class:form.classes }}
+                                                            {% for e in f_form.unit_test_collection.errors %}
+                                                                <div class="help-block">{{ e }}</div>
+                                                            {% endfor %}
+                                                        </td>
+                                                            <td id="pass-fail-{{ f_form.prefix }}"></td>
+                                                            <td id="review-{{ f_form.prefix }}"></td>
+                                                            <td id="utc-actions-{{ f_form.prefix }}"></td>
+                                                            <td align="center">{% if perms.service_log.delete_returntoserviceqa and f_form.instance.pk %}{{ f_form.DELETE }}{% endif %}</td>
+    {#                                                    {% endif %}#}
+                                                    </tr>
+                                                {% endfor %}
 
-                                    </table>
+                                            </tbody>
+
+                                            {% if perms.service_log.add_returntoserviceqa %}
+                                                <tfoot>
+                                                    <tr><td>
+                                                        <div id="add-rtsqa" class="btn btn-sm btn-flat btn-info" title="Add another RTS QA object.">Add</div>
+                                                    </td></tr>
+                                                </tfoot>
+                                            {% endif %}
+
+                                        </table>
+                                    </div>
                                 </div>
-                            </div>
+                            {% endif %}
 
                             <div class="row">
                                 <div class="col-md-12">
