@@ -737,6 +737,55 @@ class ActiveFilter(admin.SimpleListFilter):
         return queryset
 
 
+class UnitTestCollectionForm(forms.ModelForm):
+
+    def __init__(self, *args, **kwargs):
+
+        super(UnitTestCollectionForm, self).__init__(*args, **kwargs)
+
+        self.fields["object_id"].initial = 100
+
+    def _clean_readonly(self, f):
+        data = self.cleaned_data.get(f, None)
+
+        if self.instance.pk and f in self.changed_data:
+            if f == "object_id":
+                orig = str(self.instance.tests_object)
+            else:
+                orig = getattr(self.instance, f)
+            err_msg = (
+                "To prevent data loss, you can not change the Unit, TestList or TestListCycle "
+                "of a UnitTestCollection after it has been created. The original value was: %s"
+            ) % (orig)
+            self.add_error(f, err_msg)
+
+        return data
+
+    def clean_content_type(self):
+        return self._clean_readonly("content_type")
+
+    def clean_object_id(self):
+        return self._clean_readonly("object_id")
+
+    def clean_unit(self):
+        return self._clean_readonly("unit")
+
+    def _clean(self):
+
+        err_msg = (
+            "To prevent data loss, you can not change the Unit, TestList or TestListCycle "
+            "of a UnitTestCollection after it has been created."
+        )
+
+        if self.instance.pk:
+            readonly = ['content_type', 'object_id', 'unit']
+            for f in readonly:
+                if f in self.changed_data:
+                    self.add_error(f, err_msg)
+
+        return self.cleaned_data
+
+
 class UnitTestCollectionAdmin(admin.ModelAdmin):
     # readonly_fields = ("unit","frequency",)
     filter_horizontal = ("visible_to",)
@@ -746,6 +795,7 @@ class UnitTestCollectionAdmin(admin.ModelAdmin):
     change_form_template = "admin/treenav/menuitem/change_form.html"
     list_editable = ["active"]
     save_as = True
+    form = UnitTestCollectionForm
 
     class Media:
         js = (
