@@ -27,7 +27,6 @@ for resource in resources:
 
 
 urlpatterns = [
-
     # CUSTOM ADMIN PAGES
     # Copy references and tolerances between testlists
     url(r'^admin/copy_refs_and_tols/$',
@@ -60,6 +59,7 @@ urlpatterns = [
 
     # overall program status
     url(r"^review/$", review.Overview.as_view(), name="overview"),
+    url(r"^review/overview-user/$", review.Overview.as_view(), name="overview_user"),
     url(r"^review/overview-objects/$", review.OverviewObjects.as_view(), name="overview_objects"),
     url(r"^review/due-dates/$", review.DueDateOverview.as_view(), name="overview_due_dates"),
 
@@ -76,8 +76,8 @@ urlpatterns = [
 
     # test list instances
     url(r"^session/details/$", base.TestListInstances.as_view(), name="complete_instances"),
-    url(r"^session/details/(?P<pk>\d+)/$", review.TestListInstanceDetails.as_view(), name="view_test_list_instance"),
-    url(r"^session/review/(?P<pk>\d+)/$", review.ReviewTestListInstance.as_view(), name="review_test_list_instance"),
+    url(r"^session/details(?:/(?P<pk>\d+))?/$", review.TestListInstanceDetails.as_view(), name="view_test_list_instance"),
+    url(r"^session/review(?:/(?P<pk>\d+))?/$", review.ReviewTestListInstance.as_view(), name="review_test_list_instance"),
     url(r"^session/unreviewed/$", review.Unreviewed.as_view(), name="unreviewed"),
     url(r"^session/unreviewedvisible/$", review.UnreviewedVisibleTo.as_view(), name="unreviewed_visible_to"),
 
@@ -89,7 +89,7 @@ urlpatterns = [
     url(r"^session/edit/(?P<pk>\d+)/$", perform.EditTestListInstance.as_view(), name="edit_tli"),
 
     url(r"^unit/$", perform.ChooseUnit.as_view(), name="choose_unit"),
-    url(r"^utc/perform/(?P<pk>\d+)/$", perform.PerformQA.as_view(), name="perform_qa"),
+    url(r"^utc/perform(?:/(?P<pk>\d+))?/$", perform.PerformQA.as_view(), name="perform_qa"),
 
     url(r"^unit/(?P<unit_number>[/\d]+)/frequency/(?P<frequency>[/\w-]+?)/$", perform.UnitFrequencyList.as_view(), name="qa_by_frequency_unit"),
     url(r"^unit/(?P<unit_number>[/\d]+)/$", perform.UnitList.as_view(), name="qa_by_unit"),
@@ -101,4 +101,14 @@ urlpatterns = [
     url(r"^backup/$", backup.PaperFormRequest.as_view(), name="qa_paper_forms_request"),
     url(r"^backup/paper/$", backup.PaperForms.as_view(), name="qa_paper_forms"),
 
+    url(r"^searcher/test/$", api.test_searcher, name='test_searcher'),
+    url(r"^searcher/test_list/$", api.test_list_searcher, name='test_list_searcher'),
+    url(r"^searcher/test_list_cycle/$", api.test_list_cycle_searcher, name='test_list_cycle_searcher'),
+    url(r"^searcher/test_instance/$", api.test_instance_searcher, name='test_instance_searcher'),
+    url(r"^searcher/test_list_instance/$", api.test_list_instance_searcher, name='test_list_instance_searcher'),
+
+    url(r"^comment/ajax_comment/$", base.ajax_comment, name='ajax_comment'),
+
 ]
+
+

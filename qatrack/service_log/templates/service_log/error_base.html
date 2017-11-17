@@ -1,0 +1,20 @@
+{% extends "site_base.html" %}
+{% load i18n %}
+
+{% block head_title %}{% trans "Configuration Needed" %}{% endblock %}
+
+{#{% block body_class %}home{% endblock %}#}
+
+{% block body %}
+    <h1>{% trans "Welcome to QATrack+" %}</h1>
+    <p>Please make sure the following are configured in admin before using QaTrack+</p>
+
+    <ul>
+        <li>Add a default Service Event Status.</li>
+        <li>Add at least one Service Type.</li>
+        <li>Add at least one Service Area and configure Units with Service Areas.</li>
+        <li>Consider adding Problem Types.</li>
+        <li>Consider setting up Group Linkers.</li>
+    </ul>
+
+ {% endblock %}

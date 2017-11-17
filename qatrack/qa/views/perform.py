@@ -13,6 +13,7 @@ import scipy
 
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.sites.shortcuts import get_current_site
 from django.core.files.base import ContentFile
 from django.core.urlresolvers import reverse
 from django.db.models import Q
@@ -23,6 +24,7 @@ from django.template.defaultfilters import filesizeformat
 from django.views.generic import View, CreateView, TemplateView
 from django.utils import timezone
 from django.utils.translation import ugettext as _
+from django_comments.models import Comment
 
 from . import forms
 from .. import models, utils, signals
@@ -30,7 +32,8 @@ from .base import BaseEditTestListInstance, TestListInstances, UTCList, logger
 from qatrack.attachments.models import Attachment
 from qatrack.attachments.utils import to_bytes, imsave
 from qatrack.contacts.models import Contact
-from qatrack.units.models import Unit
+from qatrack.units.models import Unit, Site
+from qatrack.service_log import models as sl_models
 
 from braces.views import JSONResponseMixin, PermissionRequiredMixin
 from functools import reduce
@@ -390,8 +393,9 @@ class CompositeCalculation(JSONResponseMixin, AttachmentMixin, View):
 class ChooseUnit(TemplateView):
     """View for selecting a unit to perform QA on"""
 
-    template_name = "units/unittype_list.html"
+    template_name = 'units/unittype_list.html'
     active_only = True
+    split_sites = True
 
     def get_context_data(self, *args, **kwargs):
         """
@@ -409,29 +413,56 @@ class ChooseUnit(TemplateView):
         q = models.UnitTestCollection.objects.by_visibility(groups)
 
         if self.active_only:
-            q = q.filter(active=True)
+            q = q.filter(active=True, unit__active=True)
 
-        units_ordering = "unit__%s" % (settings.ORDER_UNITS_BY,)
-        q = q.values("unit", "unit__type__name", "unit__name", "unit__number").order_by(units_ordering).distinct()
+        units_ordering = 'unit__%s' % (settings.ORDER_UNITS_BY,)
 
-        unit_types = collections.defaultdict(list)
-        for unit in q:
-            unit['frequencies'] = models.UnitTestCollection.objects.filter(
-                unit_id=unit['unit'],
-                active=True
-            ).exclude(
-                frequency=None,
-            ).values_list(
-                "frequency__slug",
-                "frequency__name"
-            ).order_by(
-                "frequency__nominal_interval"
-            ).distinct()
-            unit_types[unit["unit__type__name"]].append(unit)
+        if Site.objects.all().exists() and self.split_sites:
 
-        ordered = sorted(list(unit_types.items()), key=lambda x: min([u[units_ordering] for u in x[1]]))
+            unit_site_types = {}
+            for s in Site.objects.all():
+                unit_site_types[s.name] = collections.defaultdict(list)
+            if q.filter(unit__site__isnull=True).exists():
+                unit_site_types['zzzNonezzz'] = collections.defaultdict(list)
 
-        context["unit_types"] = ordered
+            q = q.values('unit', 'unit__type__name', 'unit__name', 'unit__number', 'unit__id', 'unit__site__name').order_by(units_ordering).distinct()
+
+            freq_qs = models.Frequency.objects.prefetch_related('unittestcollections__unit').all()
+
+            for unit in q:
+                unit['frequencies'] = freq_qs.filter(unittestcollections__unit_id=unit['unit__id']).distinct().values('slug', 'name')
+
+                if unit['unit__site__name']:
+                    unit_site_types[unit['unit__site__name']][unit['unit__type__name']].append(unit)
+                else:
+                    unit_site_types['zzzNonezzz'][unit['unit__type__name']].append(unit)
+
+            ordered = {}
+            for s in unit_site_types:
+                ordered[s] = sorted(list(unit_site_types[s].items()), key=lambda x: min([u[units_ordering] for u in x[1]]))
+
+            ordered = collections.OrderedDict(sorted(ordered.items(), key=lambda s: s[0]))
+
+            context['split_sites'] = True
+
+            split_by = 12 / len(ordered)
+            if split_by < 3:
+                split_by = 3
+            context['split_by'] = int(split_by)
+
+        else:
+            q = q.values('unit', 'unit__type__name', 'unit__name', 'unit__number', 'unit__id').order_by(units_ordering).distinct()
+            freq_qs = models.Frequency.objects.prefetch_related('unittestcollections__unit').all()
+
+            unit_types = collections.defaultdict(list)
+            for unit in q:
+                unit['frequencies'] = freq_qs.filter(unittestcollections__unit_id=unit['unit__id']).distinct().values('slug', 'name')
+                unit_types[unit["unit__type__name"]].append(unit)
+
+            ordered = sorted(list(unit_types.items()), key=lambda x: min([u[units_ordering] for u in x[1]]))
+            context['split_sites'] = False
+
+        context['unit_types'] = ordered
 
         return context
 
@@ -447,6 +478,13 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
     form_class = forms.CreateTestListInstanceForm
     model = models.TestListInstance
+
+    def get_form_kwargs(self):
+        k = super(PerformQA, self).get_form_kwargs()
+        self.set_unit_test_collection()
+        k['unit'] = self.unit_test_col.unit
+        k['rtsqa'] = self.request.GET.get('rtsqa', False)
+        return k
 
     def set_test_lists(self):
         """
@@ -565,6 +603,10 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         context = self.get_context_data()
         formset = context["formset"]
 
+        in_progress = form.cleaned_data['in_progress']
+        for f in formset:
+            f.in_progress = in_progress
+
         if not formset.is_valid():
             context["form"] = form
             return self.render_to_response(context)
@@ -572,6 +614,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         status = self.get_test_status(form)
 
         self.object = form.save(commit=False)
+        self.object.due_date = self.unit_test_col.due_date
         self.object.test_list = self.test_list
         self.object.unit_test_collection = self.unit_test_col
         self.object.created_by = self.request.user
@@ -594,6 +637,16 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         to_save = []
 
         attachments = []
+
+        if form.cleaned_data['comment']:
+            comment = Comment(
+                submit_date=timezone.now(),
+                user=self.request.user,
+                content_object=self.object,
+                comment=form.cleaned_data['comment'],
+                site=get_current_site(self.request)
+            )
+            comment.save()
 
         for delta, ti_form in enumerate(formset):
 
@@ -630,12 +683,37 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         # set due date to account for any non default statuses
         self.object.unit_test_collection.set_due_date()
 
-        self.object.update_all_reviewed()
+        # service_events = form.cleaned_data.get('service_events', False)
+        rtsqa_id = form.cleaned_data['rtsqa_id']
+
+        # is there an existing rtsqa being linked?
+        if rtsqa_id:
+            rtsqa = sl_models.ReturnToServiceQA.objects.get(pk=rtsqa_id)
+            rtsqa.test_list_instance = self.object
+            rtsqa.save()
+
+        changed_se = self.object.update_all_reviewed()
+
+        if len(changed_se) > 0:
+            messages.add_message(
+                request=self.request,
+                level=messages.INFO,
+                message='Changed status of service event(s) %s to "%s".' % (
+                    ', '.join(str(x) for x in changed_se),
+                    sl_models.ServiceEventStatus.get_default().name
+                )
+            )
 
         if not self.object.in_progress:
             # TestListInstance & TestInstances have been successfully create, fire signal
             # to inform any listeners (e.g notifications.handlers.email_no_testlist_save)
-            signals.testlist_complete.send(sender=self, instance=self.object, created=False)
+            try:
+                signals.testlist_complete.send(sender=self, instance=self.object, created=False)
+            except:
+                messages.add_message(
+                    request=self.request,
+                    message='Error sending notification email.', level=messages.ERROR
+                )
 
         # let user know request succeeded and return to unit list
         messages.success(self.request, _("Successfully submitted %s " % self.object.test_list.name))
@@ -653,8 +731,9 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             )
 
     def get_context_data(self, **kwargs):
-
         context = super(PerformQA, self).get_context_data(**kwargs)
+
+        # context['service_event'] = self.request.GET.get('se', False)
 
         # explicity refresh session expiry to prevent situation where a session
         # expires in between the time a user requests a page and then submits the page
@@ -666,7 +745,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             return context
 
         # setup our test list, tests, current day etc
-        self.set_unit_test_collection()
+        # self.set_unit_test_collection()
         self.set_test_lists()
         self.set_last_day()
         self.set_all_tests()
@@ -690,10 +769,27 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         if ndays > 1:
             context['days'] = self.unit_test_col.tests_object.days_display()
 
+        in_progress = models.TestListInstance.objects.in_progress().filter(
+            unit_test_collection=self.unit_test_col,
+            test_list=self.test_list
+        )
         context["test_list"] = self.test_list
+        context["in_progress"] = in_progress
         context["unit_test_infos"] = json.dumps(self.template_unit_test_infos())
         context["unit_test_collection"] = self.unit_test_col
         context["contacts"] = list(Contact.objects.all().order_by("name"))
+
+        rtsqa_id = self.request.GET.get('rtsqa', None)
+        if rtsqa_id:
+            rtsqa = sl_models.ReturnToServiceQA.objects.get(pk=rtsqa_id)
+            context['se_statuses'] = {rtsqa.service_event.id: rtsqa.service_event.service_status.id}
+            context['rtsqa_id'] = rtsqa_id
+            context['rtsqa_for_se'] = rtsqa.service_event
+        # else:
+        #     context['se_statuses'] = {}
+        # context['status_tag_colours'] = sl_models.ServiceEventStatus.get_colour_dict()
+
+        context['attachments'] = context['test_list'].attachment_set.all() | self.unit_test_col.tests_object.attachment_set.all()
 
         return context
 
@@ -767,10 +863,34 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
             self.object.unit_test_collection.set_due_date()
 
-            self.object.update_all_reviewed()
+            # # service_events = form.cleaned_data.get('service_events', False)
+            # rtsqa_id = self.request.GET.get('rtsqa', False)
+            #
+            # if rtsqa_id:
+            #     rtsqa = sl_models.ReturnToServiceQA.objects.get(pk=rtsqa_id)
+            #     rtsqa.test_list_instance = self.object
+            #     rtsqa.save()
+
+            changed_se = self.object.update_all_reviewed()
+
+            if len(changed_se) > 0:
+                messages.add_message(
+                    request=self.request,
+                    level=messages.INFO,
+                    message='Changed status of service event(s) %s to "%s".' % (
+                        ', '.join(str(x) for x in changed_se),
+                        sl_models.ServiceEventStatus.get_default().name
+                    )
+                )
 
             if not self.object.in_progress:
-                signals.testlist_complete.send(sender=self, instance=self.object, created=False)
+                try:
+                    signals.testlist_complete.send(sender=self, instance=self.object, created=False)
+                except:
+                    messages.add_message(
+                        request=self.request,
+                        message='Error sending notification email.', level=messages.ERROR
+                    )
 
             # let user know request succeeded and return to unit list
             messages.success(self.request, _("Successfully submitted %s " % self.object.test_list.name))
@@ -874,6 +994,20 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         context = super(EditTestListInstance, self).get_context_data(**kwargs)
         self.unit_test_infos = [f.instance.unit_test_info for f in context["formset"]]
         context["unit_test_infos"] = json.dumps(self.template_unit_test_infos())
+
+        # rtsqa_id = self.request.GET.get('rtsqa', None)
+        # print(rtsqa_id)
+        # if rtsqa_id:
+        #     rtsqa = sl_models.ReturnToServiceQA.objects.get(pk=rtsqa_id)
+        #     context['se_statuses'] = {rtsqa.service_event.id: rtsqa.service_event.service_status.id}
+        #     context['is_rtsqa'] = True
+        #     context['rtsqa_for_se'] = rtsqa.service_event
+        # else:
+        #     context['se_statuses'] = {}
+        # context['status_tag_colours'] = sl_models.ServiceEventStatus.get_colour_dict()
+
+        context['attachments'] = context['test_list'].attachment_set.all() | self.object.unit_test_collection.tests_object.attachment_set.all()
+
         return context
 
 

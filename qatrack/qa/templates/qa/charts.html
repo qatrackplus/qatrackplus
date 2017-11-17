@@ -1,0 +1,317 @@
+{% extends "site_base.html" %}
+
+{% block head_title %}QA Data Charts{% endblock %}
+
+{% block extra_css %}
+    <link href="{{ STATIC_URL }}qa/css/qa.css?v={{ VERSION }}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}qa/css/charts.css?v={{ VERSION }}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}daterangepicker/css/daterangepicker.css?v={{ VERSION }}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}qatrack_core/css/custom-daterangepicker.css?v={{ VERSION }}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}felter/css/felter.css?v={{ VERSION }}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}select2/css/select2.min.css?v={{ VERSION }}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}qatrack_core/css/custom-select2.css?v={{ VERSION }}" rel="stylesheet">
+{% endblock %}
+
+{% block require_javascript %}
+    require(['qacharts']);
+{% endblock require_javascript %}
+
+{% block extra_js %}
+    <script>
+        var QACharts = {
+            unit_frequencies:{{unit_frequencies|safe}},
+            se_types: {{ service_types|safe }},
+{#            se_probs: {{ problem_types|safe }}#}
+            unit_testlist_active: {{ active_unit_test_list|safe }}
+        };
+    </script>
+{% endblock %}
+
+{% block body %}
+
+<div class="row">
+    <div class="col-sm-12">
+        <h3>Trending</h3>
+    </div>
+</div>
+<div id="test-filters" class="row">
+    <div class="col-sm-12">
+        <div class="box">
+            <div class="box-header">
+                <h3 class="box-title">Filters</h3>
+            </div>
+
+            <div id="filter-box" class="box-body padding-bottom-3">
+
+                <div class="row">
+                    <div class="col-sm-9">
+                        <select id="units" multiple class="form-control">
+                            {% for u in units %}
+                                <option data-active="{{ u.active }}" value="{{ u.pk }}" title="{{ u.name }}{% if not u.active %} (inactive){% endif %}">{{ u.name }}</option>
+                            {% endfor %}
+                        </select>
+
+                        <select id="frequencies" multiple class="form-control">
+                            {% for f in frequencies %}
+                                <option value="{{ f.pk }}" title="{{ f.name }}">{{ f.name }}</option>
+                            {% endfor %}
+                            <option value="0" title="Ad Hoc">Ad Hoc</option>
+                        </select>
+
+                        <select id="test-lists" multiple class="form-control">
+                            {% for tl in test_lists %}
+                                <option value="{{ tl.pk }}">{{ tl.name }}</option>
+                            {% endfor %}
+                        </select>
+
+                        <select id="tests" multiple class="form-control">
+                            {% for t in tests %}
+                                <option value="{{ t.pk }}">{{ t.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div id="chart-options" class="col-sm-3 form-horizontal">
+                        <div class="border-d2d6de padding-10">
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="row"><div class="col-sm-12"><h4>Chart Options</h4></div></div>
+                                    <div class="form-group margin-bottom-3">
+                                        <label class="control-label col-sm-3" for="chart-type">Type:</label>
+                                        <div class="col-sm-9">
+                                            <select id="chart-type" class="form-control">
+                                                <option value="basic">Basic</option>
+                                                <option value="control">Control Chart</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div id="cc-chart-options" class="row" style="display: none;">
+                                        <div class="col-sm-2"></div>
+                                        <div class="col-sm-10">
+                                            {% spaceless %}
+
+                                            <div class="form-group margin-bottom-3">
+                                                <label title="Set the subgroup size (Control Chart Only)" class="col-sm-6" for="subgroup-size">SG Size</label>
+                                                <div class="col-sm-6">
+                                                    <input type="number" min="1" step="1" value ="1" id="subgroup-size"  class="form-control"/>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group margin-bottom-3">
+                                                <label title="Set the number of subgroups for the baseline (Control Chart Only)" class="col-sm-6" for="n-baseline-subgroups"># SG's</label>
+                                                <div class="col-sm-6">
+                                                    <input type="number" min="2" step="1" value ="2" id="n-baseline-subgroups" class="form-control" />
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label title="Include a gaussian fit to histogrammed data (slow) (Control Chart Only)" class="col-sm-6" for="include-fit">Fit</label>
+                                                <div class="col-sm-6">
+                                                    <input type="checkbox" id="include-fit"/>
+                                                </div>
+                                            </div>
+
+                                            {% endspaceless %}
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group margin-0">
+                                        <label class="col-sm-10" for="combine-data" title="Combine Test data from multiple TestLists on a given Unit (e.g. from a TestListCycle)">
+                                            Combine test data for unit
+                                        </label>
+                                        <div class="col-sm-2">
+                                            <input type="checkbox" id="combine-data" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group margin-0">
+                                        <label class="col-sm-10" for="relative-diff" >
+                                            <abbr title="The absolute difference is plotted for tests with absolute tolerances set or with reference values of zero, otherwise the percent difference is plotted">Relative to reference</abbr>
+                                        </label>
+                                        <div class="col-sm-2">
+                                            <input type="checkbox" id="relative-diff" />
+                                        </div>
+
+                                    </div>
+
+                                    <div id="chart-date-wrapper" class="form-group">
+                                        <div class="col-sm-12">
+                                            <label for="date-range" id="from-date-label" class="control-label">Date Range</label>
+                                            <div class="input-group" id="date-wrapper" data-date-format="dd-mm-yyyy">
+                                                <div class="input-group-addon">
+                                                    <i class="fa fa-calendar fa-fw"></i>
+                                                </div>
+                                                <input type="text" id="date-range" class="form-control"/>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div id="status-container" class="form-group">
+                                        <label for="status-selector" class="col-sm-3">Review Statuses</label>
+                                        <div class="col-sm-9">
+                                            <select id="status-selector" multiple>
+                                                {% for status in statuses %}
+                                                    <option id="status-{{status.pk}}" value="{{status.pk}}" {% if status.export_by_default %}selected="selected"{% endif %}>
+                                                        {{status.name}}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <hr class="margin-10"/>
+
+                                    <div class="form-group margin-bottom-3">
+                                        <label for="show_events" class="col-sm-10" title="Display service event data with test results.">Show service events?</label>
+                                        <div class="col-sm-2">
+                                            <input id="show_events" type="checkbox">
+                                        </div>
+                                    </div>
+
+                                    <div id="service-event-container" style="display: none;">
+                                        <div id="review-container" class="form-group margin-bottom-3">
+                                            <label class="col-sm-10" for="review-required">Review required?</label>
+                                            <div class="col-sm-2">
+                                                <input type="checkbox" name="review-required" id="review-required" title="Show only service events that require review." checked="checked">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <hr class="margin-10"/>
+
+                                    <div class="form-group">
+                                        <label class="col-sm-2" for="chart-url">Link</label>
+                                        <div class="col-sm-10">
+                                            <input type="text" class="form-control" id="chart-url"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <button type="button" class="btn btn-info btn-flat pull-right" data-loading-text="Generating Chart..." id="gen-chart">Generate Chart</button>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="box-footer padding-bottom-3">
+                <div class="row">
+                    <div class="col-sm-12 text-align-center">
+                        <div id="filter-resizer"><i class="fa fa-lg fa-ellipsis-h"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="row">
+    <div class="col-sm-12">
+        <div class="box">
+            <div class="box-body">
+
+                <div id="chart-container" class="row">
+                    <div class="col-sm-12">
+                        <div id="chart">
+        {#                <svg id="canvas"></svg>#}
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12 text-align-center">
+                        <div id="chart-resizer"><i class="fa fa-lg fa-ellipsis-h"></i></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div id="control-chart-container" class="col-sm-12">
+                        <div class="col-sm-12 please-wait">Control Not Generated Yet</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-12">
+
+        <div class="box">
+
+            <div class="box-header">
+
+            </div>
+
+            <div class="box-body">
+                <div id="data-table-wrapper"></div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div id="se-tooltip-template" style="display: none;">
+    <div class="se-tooltip-main">
+        <div class="row">
+            <abbr class="col-sm-10 font-weight-bold cursor-default border-none" title="__se-pd__">
+                Service Event __se-id__
+            </abbr>
+            <div class="col-sm-2">
+                <a class="se-tooltip-description-toggle pull-right" title="__se-wd__"><i class="fa fa-question-circle fa-lg"></i></a>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="tooltip-se-unit text-overflow-ellipsis white-space-nowrap">__se-u__ | __se-sa__</div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="tooltip-se-date">__se-date__</div>
+
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="pull-left">__se-type__</div>
+                <a class="tooltip-se-btn btn btn-flat btn-xs btn-default pull-right" href="{% url 'sl_details' %}__se-id__" target="SE Details">View</a>
+            </div>
+        </div>
+{#        <div class="row">#}
+{#            <div class="col-sm-12">#}
+{#                <div class="pull-left">__se-prob__</div>#}
+{#            </div>#}
+{#        </div>#}
+    </div>
+</div>
+
+<div id="tli-tooltip-template" style="display: none;">
+    <div class="row">
+        <div class="col-sm-12">
+            <strong>__tli-kind__</strong>
+        </div>
+        <div class="col-sm-12" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+            <strong >__tli-tl-name__</strong>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12">
+            <div id="tooltip-se-date">__tli-date__</div>
+            <a id="tooltip-se-btn" class="btn btn-flat btn-xs btn-default pull-right" href="{% url 'view_test_list_instance' %}__tli-id__" target="View Test List">View</a>
+            <a id="tooltip-se-new-btn" class="btn btn-flat btn-xs btn-default pull-right margin-r-3" href="{% url 'sl_new' %}?ib=__tli-id__" __show-in__ target="Initiate SE">Initiate SE</a>
+        </div>
+    </div>
+    <div class="tli-se-links" style="display: none;">
+        
+    </div>
+</div>
+
+{% endblock %}
+
+
+

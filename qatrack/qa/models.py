@@ -1,3 +1,4 @@
+from django.apps import apps
 from django.conf import settings
 from django.db import models
 from django.db.models import Q, Count
@@ -5,9 +6,11 @@ from django.contrib.auth.models import User, Group
 from django.utils.translation import ugettext as _
 from django.core import urlresolvers
 from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation, GenericForeignKey
 from django.utils import timezone
+from django_comments.models import Comment
 
 from qatrack.units.models import Unit
 from qatrack.qa import utils
@@ -99,32 +102,137 @@ NEWLIST = NOT_DONE
 
 EPSILON = 1E-10
 
+re_255 = '([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])'
+color_re = re.compile('^rgba\(' + re_255 + ',' + re_255 + ',' + re_255 + ',(0(\.[0-9][0-9]?)?|1)\)$')
+validate_color = RegexValidator(color_re, _('Enter a valid color.'), 'invalid')
+
 #  A collection of the permissions most relevant to QATrack+
 PERMISSIONS = (
     (
-        "Performing",
+        'Performing',
         (
-            ("qa.add_testlistinstance", "Can add test list instance", "Allow user to perform test lists and continue in-progress lists"),
-            ("qa.can_choose_frequency", "Choose QA by frequency", "Allows user to pre-emptively filter test lists based on frequency."),
-            ("qa.can_view_ref_tol", "Can view refs and tols", "Makes reference and tolerance values visible when performing a test list."),
-            ("qa.can_view_history", "Can view test history", "Makes test history visible when performing a test list."),
-            ("qa.can_skip_without_comment", "Can skip without comment", "Allow a user to skip tests with adding a comment"),
-            ("qa.can_override_date", "Can override date", "Allow a user to override the work_completed data"),
-            ("qa.can_perform_subset", "Can perform subset of tests", "Allow a user to filter tests to perform  based on a tests category"),
-            ("qa.change_testlistinstance", "Can edit prior test results", "Allow a user to edit already completed test results"),
+            (
+                'qa.add_testlistinstance',
+                'Can add test list instance',
+                'Allow user to perform test lists and continue in-progress lists',
+            ),
+            (
+                'qa.can_choose_frequency',
+                'Choose QA by frequency',
+                'Allows user to pre-emptively filter test lists based on frequency.',
+            ),
+            (
+                'qa.can_view_ref_tol',
+                'Can view refs and tols',
+                'Makes reference and tolerance values visible when performing a test list.',
+            ),
+            (
+                'qa.can_view_history',
+                'Can view test history',
+                'Makes test history visible when performing a test list.',
+            ),
+            (
+                'qa.can_skip_without_comment',
+                'Can skip without comment',
+                'Allow a user to skip tests with adding a comment',
+            ),
+            (
+                'qa.can_override_date',
+                'Can override date',
+                'Allow a user to override the work_completed data',
+            ),
+            (
+                'qa.can_perform_subset',
+                'Can perform subset of tests',
+                'Allow a user to filter tests to perform  based on a tests category',
+            ),
+            (
+                'qa.change_testlistinstance',
+                'Can edit prior test results',
+                'Allow a user to edit already completed test results',
+            ),
+            (
+                'qa.can_save_in_progress',
+                'Can save test lists in progress',
+                'Can save test lists with the "In Progress" flag set',
+            ),
         ),
     ),
     (
-        "Reviewing",
+        'Reviewing',
         (
-            ("qa.can_view_completed", "Can view previously completed instances", "Allow a user to view previous test list results"),
-            ("qa.can_view_overview", "Can view program overview", "Allows a user to view the overall program status"),
-            ("qa.can_review", "Can review tests", "Allows a user to perform review & approval functions"),
-            ("qa.can_view_charts", "Can chart test history", "Gives user the ability to view and create charts of historical test results"),
-            ("qa.can_review_own_tests", "Can review self-performed tests", "Allows a user to perform review & approval functions on self-performed tests"),
-            ("qa.can_review_non_visible_tli", "Can review test list instances not visible to a user", "Allows a user to review test list instances that are not visible to any of their groups")
+            (
+                'qa.can_view_completed',
+                'Can view previously completed instances',
+                'Allow a user to view previous test list results',
+            ),
+            (
+                'qa.can_view_overview',
+                'Can view program overview',
+                'Allows a user to view the overall program status',
+            ),
+            (
+                'qa.can_review',
+                'Can review tests',
+                'Allows a user to perform review & approval functions',
+            ),
+            (
+                'qa.can_view_charts',
+                'Can chart test history',
+                'Gives user the ability to view and create charts of historical test results',
+            ),
+            (
+                'qa.can_review_own_tests',
+                'Can review self-performed tests',
+                'Allows a user to perform review & approval functions on self-performed tests',
+            ),
+            (
+                'qa.can_review_non_visible_tli',
+                'Can review non visible test list instances',
+                'Allows a user to review test list instances that are not visible to any of their groups',
+            )
         ),
     ),
+    (
+        'Service Log',
+        (
+            (
+                'service_log.perform_returntoserviceqa',
+                'Can perform return to service qa',
+                'Allow user to perform qa linked to service events.',
+            ),
+            (
+                'service_log.view_returntoserviceqa',
+                'Can view existing return to service qa',
+                'Allow user to view qa linked to service events.',
+            ),
+            (
+                'service_log.add_serviceevent',
+                'Can create service event',
+                'Allows user to create new service events.',
+            ),
+            (
+                'service_log.view_serviceevent',
+                'Can view service events',
+                'Allows user to view existing service events.',
+            ),
+            (
+                'service_log.review_serviceevent',
+                'Can review service events',
+                'Allows user to change status of service events to statuses with \'is review required = false\'.',
+            ),
+            (
+                'parts.add_part',
+                'Can add part',
+                'Allow user to enter new parts.',
+            ),
+            (
+                'parts.view_part',
+                'Can view parts',
+                'Allow user to view existing parts',
+            ),
+        )
+    )
 )
 
 
@@ -217,6 +325,8 @@ class TestInstanceStatus(models.Model):
         help_text=_("If unchecked, data with this status will not be exported and the TestInstance will not be considered a valid completed Test")
     )
 
+    # colour = models.CharField(default=settings.DEFAULT_COLOURS[0], max_length=22, validators=[validate_color])
+
     objects = StatusManager()
 
     class Meta:
@@ -305,6 +415,12 @@ class Tolerance(models.Model):
         help_text=_("Comma seperated list of choices that are considered at tolerance"),
         null=True,
         blank=True,
+    )
+
+    bool_warning_only = models.BooleanField(
+        verbose_name=_("Boolean Warning Only"),
+        help_text=_("Boolean tests not matching references should be considered at tolerance rather than action"),
+        default=False,
     )
 
     # who created this tolerance
@@ -401,6 +517,10 @@ class Tolerance(models.Model):
             return "Percent(%s, %s, %s, %s)" % tuple(vals)
         elif self.type == MULTIPLE_CHOICE:
             return "M.C.(%s=%s, %s=%s)" % (OK_DISP, ":".join(self.pass_choices()), TOL_DISP, ":".join(self.tol_choices()))
+        elif self.type == BOOLEAN:
+            act = settings.TEST_STATUS_DISPLAY["action"]
+            tol = settings.TEST_STATUS_DISPLAY["tolerance"]
+            return "Boolean(%s on fail)" % (tol if self.bool_warning_only else act)
 
 
 class CategoryManager(models.Manager):
@@ -451,7 +571,7 @@ class Test(models.Model):
     VARIABLE_RE = re.compile("^[a-zA-Z_]+[0-9a-zA-Z_]*$")
     RESULT_RE = re.compile("^\s*result\s*=.*$", re.MULTILINE)
 
-    name = models.CharField(max_length=255, help_text=_("Name for this test"), unique=True, db_index=True)
+    name = models.CharField(max_length=255, help_text=_("Name for this test"), db_index=True)
     slug = models.SlugField(
         verbose_name="Macro name", max_length=128,
         help_text=_("A short variable name consisting of alphanumeric characters and underscores for this test (to be used in composite calculations). "),
@@ -547,7 +667,10 @@ class Test(models.Model):
                 # don't require a user defined calc procedure for uploads
                 self.calculation_procedure = "%s = None" % (self.slug, )
             else:
-                errors.append(_('Snippet must set macro name to a value or contain a result line (e.g. %s = my_var/another_var*2 or result = my_var/another_var*2)' % self.slug))
+                errors.append(_(
+                    'Snippet must set macro name to a value or contain a result line '
+                    '(e.g. %s = my_var/another_var*2 or result = my_var/another_var*2)' % self.slug
+                ))
 
         try:
             utils.tokenize_composite_calc(self.calculation_procedure)
@@ -686,8 +809,8 @@ def get_utc_tl_ids(active=None, units=None, frequencies=None):
 
 class UnitTestInfoManager(models.Manager):
 
-    def get_query_set(self):
-        return super(UnitTestInfoManager, self).get_query_set()
+    # def get_queryset(self):
+    #     return super(UnitTestInfoManager, self).get_queryset()
 
     def active(self, queryset=None):
         """Only return UTI's who's tests belong to at least 1 test list that
@@ -695,8 +818,10 @@ class UnitTestInfoManager(models.Manager):
 
         qs = queryset or self.get_queryset()
 
+        tl_ids = get_utc_tl_ids(active=True)
         return qs.filter(
-            test__testlistmembership__test_list__in=get_utc_tl_ids(active=True)
+            Q(test__testlistmembership__test_list__in=tl_ids) |
+            Q(test__testlistmembership__test_list__testlist__in=tl_ids)
         ).distinct()
 
     def inactive(self, queryset=None):
@@ -705,8 +830,10 @@ class UnitTestInfoManager(models.Manager):
 
         qs = queryset or self.get_queryset()
 
+        tl_ids = get_utc_tl_ids(active=True)
         return qs.exclude(
-            test__testlistmembership__test_list__in=get_utc_tl_ids(active=True)
+            Q(test__testlistmembership__test_list__in=tl_ids) |
+            Q(test__testlistmembership__test_list__testlist__in=tl_ids)
         ).distinct()
 
 
@@ -720,7 +847,13 @@ class UnitTestInfo(models.Model):
 
     active = models.BooleanField(help_text=_("Uncheck to disable this test on this unit"), default=True, db_index=True)
 
-    assigned_to = models.ForeignKey(Group, help_text=_("QA group that this test list should nominally be performed by"), null=True, blank=True, on_delete=models.SET_NULL)
+    assigned_to = models.ForeignKey(
+        Group,
+        help_text=_("QA group that this test list should nominally be performed by"),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
 
     objects = UnitTestInfoManager()
 
@@ -745,10 +878,6 @@ class UnitTestInfo(models.Model):
 
             if self.reference is not None and self.reference.value not in (0., 1.):
                 msg = _("Test type is BOOLEAN but reference value is not 0 or 1")
-                raise ValidationError(msg)
-
-            if self.tolerance is not None:
-                msg = _("Please leave tolerance blank for boolean tests")
                 raise ValidationError(msg)
 
     def get_history(self, number=5):
@@ -801,6 +930,7 @@ class TestCollectionInterface(models.Model):
     name = models.CharField(max_length=255, db_index=True)
     slug = models.SlugField(unique=True, help_text=_("A short unique name for use in the URL of this list"), db_index=True)
     description = models.TextField(help_text=_("A concise description of this test checklist. (You may use HTML markup)"), null=True, blank=True)
+    javascript = models.TextField(help_text=_('Any extra javascript to run when loading perform page'), null=True, blank=True)
 
     assigned_to = GenericRelation(
         "UnitTestCollection",
@@ -855,16 +985,16 @@ class TestList(TestCollectionInterface):
 
     tests = models.ManyToManyField("Test", help_text=_("Which tests does this list contain"), through=TestListMembership)
 
-    sublists = models.ManyToManyField("self",
-                                      symmetrical=False, blank=True,
-                                      help_text=_("Choose any sublists that should be performed as part of this list.")
-                                      )
+    sublists = models.ManyToManyField(
+        "self", symmetrical=False, blank=True,
+        help_text=_("Choose any sublists that should be performed as part of this list.")
+    )
 
     warning_message = models.CharField(
-        max_length=255,
-        help_text=_("Message given when a test value is out of tolerance"),
+        max_length=255, help_text=_("Message given when a test value is out of tolerance"),
         default=settings.DEFAULT_WARNING_MESSAGE
     )
+    utcs = GenericRelation('UnitTestCollection', related_query_name='test_list')
 
     objects = TestListManager()
 
@@ -898,6 +1028,10 @@ class TestList(TestCollectionInterface):
         """return display representation of object"""
         return "(%s) %s" % (self.pk, self.name)
 
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        super(TestList, self).save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
+        self.utcs.update(name=self.name)
+
 
 class UnitTestListManager(models.Manager):
     def by_unit(self, unit):
@@ -923,12 +1057,22 @@ class UnitTestCollection(models.Model):
 
     unit = models.ForeignKey(Unit)
 
-    frequency = models.ForeignKey(Frequency, help_text=_("Frequency with which this test list is to be performed"), null=True, blank=True)
+    frequency = models.ForeignKey(
+        Frequency,
+        help_text=_("Frequency with which this test list is to be performed"),
+        null=True,
+        blank=True,
+        related_name='unittestcollections'
+    )
     due_date = models.DateTimeField(help_text=_("Next time this item is due"), null=True, blank=True)
     auto_schedule = models.BooleanField(help_text=_("If this is checked, due_date will be auto set based on the assigned frequency"), default=True)
 
     assigned_to = models.ForeignKey(Group, help_text=_("QA group that this test list should nominally be performed by"), null=True)
-    visible_to = models.ManyToManyField(Group, help_text=_("Select groups who will be able to see this test collection on this unit"), related_name="test_collection_visibility")
+    visible_to = models.ManyToManyField(
+        Group,
+        help_text=_("Select groups who will be able to see this test collection on this unit"),
+        related_name="test_collection_visibility",
+    )
 
     active = models.BooleanField(help_text=_("Uncheck to disable this test on this unit"), default=True, db_index=True)
 
@@ -937,6 +1081,7 @@ class UnitTestCollection(models.Model):
     object_id = models.PositiveIntegerField()
     tests_object = GenericForeignKey("content_type", "object_id")
     objects = UnitTestListManager()
+    name = models.CharField(max_length=255, db_index=True, default='', editable=False)
 
     last_instance = models.ForeignKey("TestListInstance", null=True, editable=False, on_delete=models.SET_NULL)
 
@@ -982,14 +1127,15 @@ class UnitTestCollection(models.Model):
         today = timezone.localtime(timezone.now()).date()
         due = timezone.localtime(self.due_date).date()
 
+        if today < due:
+            return NOT_DUE
+
         if self.frequency is not None:
             overdue = due + timezone.timedelta(days=self.frequency.overdue_interval - self.frequency.due_interval)
         else:
             overdue = due + timezone.timedelta(days=1)
 
-        if today < due:
-            return NOT_DUE
-        elif today < overdue:
+        if today < overdue:
             return DUE
         return OVERDUE
 
@@ -1073,12 +1219,6 @@ class UnitTestCollection(models.Model):
 
         return self.tests_object.get_list(day)
 
-    def name(self):
-        return self.__str__()
-
-    def test_objects_name(self):
-        return self.tests_object.name
-
     def get_absolute_url(self):
         return urlresolvers.reverse("perform_qa", kwargs={"pk": self.pk})
 
@@ -1100,7 +1240,11 @@ class UnitTestCollection(models.Model):
             )
 
     def __str__(self):
-        return "UnitTestCollection(%s)" % self.pk
+        return self.name
+
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        self.name = self.tests_object.name
+        super(UnitTestCollection, self).save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
 
 
 class TestInstanceManager(models.Manager):
@@ -1146,9 +1290,7 @@ class TestInstance(models.Model):
     work_started = models.DateTimeField(editable=False, db_index=True)
 
     # when was the work actually performed
-    work_completed = models.DateTimeField(default=timezone.now,
-                                          help_text=settings.DATETIME_HELP, db_index=True,
-                                          )
+    work_completed = models.DateTimeField(default=timezone.now, help_text=settings.DATETIME_HELP, db_index=True)
 
     # for keeping a very basic history
     created = models.DateTimeField(default=timezone.now)
@@ -1186,7 +1328,10 @@ class TestInstance(models.Model):
     def bool_pass_fail(self):
         diff = abs(self.reference.value - self.value)
         if diff > EPSILON:
-            self.pass_fail = ACTION
+            if self.tolerance:
+                self.pass_fail = TOLERANCE if self.tolerance.bool_warning_only else ACTION
+            else:
+                self.pass_fail = ACTION
         else:
             self.pass_fail = OK
 
@@ -1236,7 +1381,10 @@ class TestInstance(models.Model):
     def calculate_pass_fail(self):
         """set pass/fail status of the current value"""
 
-        if self.skipped or (self.value is None and self.test_list_instance.in_progress):
+        if (
+            (self.skipped and not self.unit_test_info.test.hidden) or
+            (self.value is None and self.test_list_instance.in_progress)
+        ):
             self.pass_fail = NOT_DONE
         elif self.unit_test_info.test.is_boolean() and self.reference:
             self.bool_pass_fail()
@@ -1250,7 +1398,7 @@ class TestInstance(models.Model):
 
     def auto_review(self):
         """set review status of the current value if allowed"""
-        has_comment = self.comment or self.test_list_instance.comment
+        has_comment = self.comment or self.test_list_instance.comments.all().exists()
         if has_comment and not self.skipped:
             return
 
@@ -1345,9 +1493,16 @@ class TestListInstance(models.Model):
     work_started = models.DateTimeField(db_index=True)
     work_completed = models.DateTimeField(default=timezone.now, db_index=True, null=True)
 
-    comment = models.TextField(help_text=_("Add a comment to this set of tests"), null=True, blank=True)
+    due_date = models.DateTimeField(null=True, blank=True, help_text=_('When was this session due when it was performed'))
 
-    in_progress = models.BooleanField(help_text=_("Mark this session as still in progress so you can complete later (will not be submitted for review)"), default=False, db_index=True)
+    # comment = models.TextField(help_text=_("Add a comment to this set of tests"), null=True, blank=True)
+    comments = GenericRelation(Comment, object_id_field='object_pk')
+
+    in_progress = models.BooleanField(
+        help_text=_("Mark this session as still in progress so you can complete later (will not be submitted for review)"),
+        default=False,
+        db_index=True,
+    )
 
     reviewed = models.DateTimeField(null=True, blank=True)
     reviewed_by = models.ForeignKey(User, editable=False, null=True, blank=True, related_name="test_list_instance_reviewer")
@@ -1371,6 +1526,7 @@ class TestListInstance(models.Model):
             ("can_override_date", "Can override date"),
             ("can_perform_subset", "Can perform subset of tests"),
             ("can_view_completed", "Can view previously completed instances"),
+            ("can_save_in_progress", "Can save test lists as 'In Progress'"),
         )
 
     def pass_fail_status(self):
@@ -1378,6 +1534,9 @@ class TestListInstance(models.Model):
         instances = list(self.testinstance_set.all())
         statuses = [(status, display, [x for x in instances if x.pass_fail == status]) for status, display in PASS_FAIL_CHOICES]
         return [x for x in statuses if len(x[2]) > 0]
+
+    def pass_fail_summary(self):
+        return {status[0]: len(status[2]) for status in self.pass_fail_status()}
 
     def duration(self):
         """return timedelta of time from start to completion"""
@@ -1391,6 +1550,22 @@ class TestListInstance(models.Model):
         statuses = [(status, [x for x in queryset if x.status == status]) for status in status_types]
         return [x for x in statuses if len(x[1]) > 0]
 
+    def review_summary(self, queryset=None):
+        if queryset is None:
+            queryset = self.testinstance_set.prefetch_related('status').all()
+        comment_count = queryset.exclude(comment='').count() + self.comments.count()
+
+        to_return = {
+            status[0].slug: {
+                'num': len(status[1]),
+                'valid': status[0].valid,
+                'reqs_review': status[0].requires_review,
+                'default': status[0].is_default
+            } for status in self.status(queryset)
+        }
+        to_return['Comments'] = {'num': comment_count, 'is_comments': 1}
+        return to_return
+
     def unreviewed_instances(self):
         return self.testinstance_set.filter(status__requires_review=True)
 
@@ -1400,6 +1575,19 @@ class TestListInstance(models.Model):
 
         # use update instead of save so we don't trigger save signal
         TestListInstance.objects.filter(pk=self.pk).update(all_reviewed=self.all_reviewed)
+
+        return self.update_service_event_statuses()
+
+    def update_service_event_statuses(self):
+        # set linked service events to default status if not all reviewed.
+        changed_se = []
+        for rtsqa in self.rtsqa_for_tli.all():
+            if not self.all_reviewed and rtsqa.service_event.service_status.rts_qa_must_be_reviewed:
+                rtsqa.service_event.service_status = apps.get_model('service_log', 'ServiceEventStatus').get_default()
+                rtsqa.service_event.save()
+                changed_se.append(rtsqa.service_event_id)
+
+        return changed_se
 
     def tolerance_tests(self):
         return self.testinstance_set.filter(pass_fail=TOLERANCE)
@@ -1486,6 +1674,7 @@ class TestListCycle(TestCollectionInterface):
     test_lists = models.ManyToManyField(TestList, through="TestListCycleMembership")
     drop_down_label = models.CharField(max_length=128, default="Choose Day")
     day_option_text = models.CharField(max_length=8, choices=DAY_OPTIONS_TEXT_CHOICES, default=DAY)
+    utcs = GenericRelation(UnitTestCollection, related_query_name='test_list_cycle')
 
     objects = TestListCycleManager()
 
@@ -1545,7 +1734,7 @@ class TestListCycle(TestCollectionInterface):
 
     def days_display(self):
         names = self.testlistcyclemembership_set.values_list("test_list__name", flat=True)
-        days = list(range(1, len(names)+1))
+        days = list(range(1, len(names) + 1))
         if self.day_option_text == self.TEST_LIST_NAME:
             return list(zip(days, names))
 
@@ -1561,6 +1750,10 @@ class TestListCycle(TestCollectionInterface):
 
     def __str__(self):
         return _(self.name)
+
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        super(TestListCycle, self).save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
+        self.utcs.update(name=self.name)
 
 
 class TestListCycleMembershipManager(models.Manager):

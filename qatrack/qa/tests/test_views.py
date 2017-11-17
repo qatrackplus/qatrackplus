@@ -364,6 +364,7 @@ class TestChartView(TestCase):
             tolerance=tol,
             value=100
         )
+        ti.test_list_instance = qatrack.qa.models.TestListInstance()
         ti.value_display = lambda: str(ti.value)
         view = views.charts.BaseChartView()
         point = view.test_instance_to_point(ti, relative=True)
@@ -437,7 +438,7 @@ class TestChartData(TestCase):
         resp = self.client.get(self.url, data=data)
         data = json.loads(resp.content.decode("UTF-8"))
         expected = [1.]*self.NPOINTS
-        actual = [x['value'] for x in data['data']['unit - tl1 :: test1']]
+        actual = [x['value'] for x in data['plot_data']['series']['unit - tl2 :: test1']['series_data']]
         self.assertListEqual(actual, expected)
 
     def test_basic_data_relative(self):
@@ -451,7 +452,7 @@ class TestChartData(TestCase):
         resp = self.client.get(self.url, data=data)
         data = json.loads(resp.content.decode("UTF-8"))
         expected = [50.]*(self.NPOINTS//2)
-        actual = [x['value'] for x in data['data']['unit - tl2 :: test2 (relative to ref)']]
+        actual = [x['value'] for x in data['plot_data']['series']['unit - tl2 :: test2 (relative to ref)']['series_data']]
         self.assertListEqual(actual, expected)
 
     def test_basic_data_combined(self):
@@ -465,7 +466,7 @@ class TestChartData(TestCase):
         resp = self.client.get(self.url, data=data)
         data = json.loads(resp.content.decode("UTF-8"))
         expected = [1.]*(2*self.NPOINTS)
-        actual = [x['value'] for x in data['data']['unit :: test1']]
+        actual = [x['value'] for x in data['plot_data']['series']['unit :: test1']['series_data']]
         self.assertListEqual(actual, expected)
 
     def test_export_csv_view(self):
@@ -819,6 +820,24 @@ class TestPerformQA(TestCase):
             "in_progress": True,
         }
         self.set_form_data(data)
+
+        response = self.client.post(self.url, data=data)
+
+        self.assertTrue(1, models.TestListInstance.objects.in_progress().count())
+        self.assertTrue(len(self.tests), models.TestInstance.objects.in_progress().count())
+        # user is redirected if form submitted successfully
+        self.assertEqual(response.status_code, 302)
+
+    def test_perform_in_progress_no_data(self):
+        """Test list should be allowed to be saved with no data if it is in progress"""
+        data = {
+            "work_started": "11-07-2012 00:09",
+            "status": self.status.pk,
+            "form-TOTAL_FORMS": len(self.tests),
+            "form-INITIAL_FORMS": len(self.tests),
+            "form-MAX_NUM_FORMS": "",
+            "in_progress": True,
+        }
 
         response = self.client.post(self.url, data=data)
 
@@ -1289,6 +1308,23 @@ class TestEditTestListInstance(TestCase):
         del self.base_data["in_progress"]
         self.client.post(self.url, data=self.base_data)
         self.assertEqual(models.TestInstance.objects.in_progress().count(), 0)
+
+    def test_in_progress_no_data(self):
+
+        data = {
+            "work_completed": "11-07-2012 00:10",
+            "work_started": "11-07-2012 00:09",
+            "status": self.status.pk,
+            "testinstance_set-TOTAL_FORMS": "2",
+            "testinstance_set-INITIAL_FORMS": "2",
+            "testinstance_set-MAX_NUM_FORMS": "",
+            "testinstance_set-0-id": self.ti.pk,
+            "testinstance_set-1-id": self.tib.pk,
+            "in_progress": True,
+        }
+        self.client.post(self.url, data=data)
+        ntests = models.Test.objects.count()
+        self.assertEqual(models.TestInstance.objects.in_progress().count(), ntests)
 
     def test_no_work_completed(self):
 

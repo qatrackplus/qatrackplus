@@ -1,6 +1,7 @@
+from unittest import mock
+
 from django.conf import settings
 from django.test import TestCase
-import mock
 import os
 
 from qatrack.attachments.models import Attachment

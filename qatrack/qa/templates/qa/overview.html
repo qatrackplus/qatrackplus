@@ -1,0 +1,159 @@
+{% extends "site_base.html" %}
+
+{% load qa_tags %}
+
+{% block head_title %}QA Program Overview{% endblock %}
+
+{% block extra_css %}
+    <link href="{{ STATIC_URL }}qa/css/qa.css?v={{ VERSION }}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}felter/css/felter.css?v={{ VERSION }}" rel="stylesheet">
+{% endblock extra_css %}
+
+{% block require_javascript %}
+    require(['qaoverview']);
+{% endblock require_javascript %}
+
+{% block body_class %}layout-top-nav loading{% endblock body_class %}
+
+{% block body %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box">
+
+                <div class="box-header">
+                    <h3 class="box-title">
+                        <i class="fa fa-globe" aria-hidden="true"></i>
+                        {{ title }}
+                    </h3>
+                    <p>{{ msg }}</p>
+                </div>
+
+                <div class="box-body">
+                    <div class="row">
+                        <div class="col-xs-3">
+{#                            <label class="pull-left" for="unit-filter"><strong><i class="fa fa-cubes fa-fw"></i>Visible Units:&nbsp;</strong></label>#}
+                            <select class="pull-left form-control" id="unit-filter" multiple="multiple">
+{#                                <option id="all-option" value="all" selected="selected">All</option>#}
+                                {% comment %}{% for unit, _ in unit_lists %}
+                                    <option class="unit-option" value="{{unit.number}}" selected="selected">{{unit.name}}</option>
+                                {% endfor %}{% endcomment %}
+                            </select>
+                        </div>
+                        <div class="col-xs-9 status-boxes">
+                            <div class="col-md-3">
+                                <div id="due-count-ndd" class="count-box small-box bg-aqua-gradient">
+                                    <div class="inner">
+                                        <h3></h3>
+                                        <p>No Due Date</p>
+                                    </div>
+                                    <div class="icon">
+                                        <i class="fa fa-calendar-o" aria-hidden="true"></i>
+                                    </div>
+                                    <a href="{% url 'overview_due_dates' %}" class="small-box-footer">More info <i class="fa fa-arrow-circle-right"></i></a>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div id="due-count-nd" class="count-box small-box bg-green-gradient">
+                                    <div class="inner">
+                                        <h3></h3>
+                                        <p>Not Due</p>
+                                    </div>
+                                    <div class="icon">
+                                        <i class="fa fa-calendar-check-o" aria-hidden="true"></i>
+                                    </div>
+                                    <a href="{% url 'overview_due_dates' %}" class="small-box-footer">More info <i class="fa fa-arrow-circle-right"></i></a>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div id="due-count-d" class="count-box small-box bg-yellow-gradient">
+                                    <div class="inner">
+                                        <h3></h3>
+                                        <p>Due</p>
+                                    </div>
+                                    <div class="icon">
+                                        <i class="fa fa-calendar-minus-o" aria-hidden="true"></i>
+                                    </div>
+                                    <a href="{% url 'overview_due_dates' %}" class="small-box-footer">More info <i class="fa fa-arrow-circle-right"></i></a>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div id="due-count-od" class="count-box small-box bg-red-gradient">
+                                    <div class="inner">
+                                        <h3></h3>
+                                        <p>Overdue</p>
+                                    </div>
+                                    <div class="icon">
+                                        <i class="fa fa-calendar-times-o" aria-hidden="true"></i>
+                                    </div>
+                                    <a href="{% url 'overview_due_dates' %}" class="small-box-footer">More info <i class="fa fa-arrow-circle-right"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+
+        <section id="section-0" class="unit-box-section col-md-4">
+
+        </section>
+
+        <section id="section-1" class="unit-box-section col-md-4">
+
+        </section>
+
+        <section id="section-2" class="unit-box-section col-md-4">
+
+        </section>
+    </div>
+
+
+    <div id="unit-template" style="display: none;">
+        <div id="box-__UNITNAME__" class="box">
+            <div class="box-header">
+                <i class="fa fa-cube fa-fw box-title" aria-hidden="true"></i>
+                <h3 class="box-title">__UNITDISPLAYNAME__</h3>
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+                    <button id="__UNITNAME__-close-button" type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+                </div>
+            </div>
+            <div class="box-body freq-container">
+                <table class="table-responsive table-hover {% comment %}table-condensed {% endcomment %}overview-table units">
+                    <thead>
+                        <tr>
+                            <th><b>Test List</b></th>
+                            <th><b>Due Date</b></th>
+                            <th><b>Last QA Status</b></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {% block loading_modal %}
+        <div class="loading-modal ">
+            <div class="center">
+                <div>
+                    <span class="loading-logo">QAT</span>
+                    <i class="fa fa-fw fa-plus fa-spin fa-2x info"></i>
+                </div>
+                <div>
+                    <b>
+                        Loading Overview
+                    </b>
+                </div>
+
+            </div>
+        </div>
+    {% endblock loading_modal %}
+
+{% endblock %}

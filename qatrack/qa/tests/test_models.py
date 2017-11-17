@@ -1,13 +1,14 @@
+from unittest import mock
+
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.conf import settings
 from django.test import TestCase
-from django.test.utils import setup_test_environment
 from django.utils import timezone
+from django_comments.models import Comment
 
 from qatrack.qa import models
 
-import mock
 from . import utils
 
 
@@ -382,18 +383,6 @@ class TestUnitTestInfo(TestCase):
     def test_boolean_ref(self):
 
         self.uti.reference = utils.create_reference(value=3)
-        self.uti.test.type = models.BOOLEAN
-        self.assertRaises(ValidationError, self.uti.clean)
-
-    def test_boolean_with_tol(self):
-        self.uti.reference = utils.create_reference(value=0)
-        self.uti.tolerance = utils.create_tolerance()
-        self.uti.test.type = models.BOOLEAN
-        self.assertRaises(ValidationError, self.uti.clean)
-
-    def test_mult_choice_with_tol(self):
-        tol = models.Tolerance(type=models.MULTIPLE_CHOICE, mc_pass_choices="a")
-        self.uti.tolerance = tol
         self.uti.test.type = models.BOOLEAN
         self.assertRaises(ValidationError, self.uti.clean)
 
@@ -874,7 +863,7 @@ class TestUnitTestCollection(TestCase):
         with timezone.override("America/Toronto"):
             weekly = utils.create_frequency(nom=7, due=7, overdue=9)
             utc = utils.create_unit_test_collection(frequency=weekly)
-            utc.set_due_date(utc_2am()+timezone.timedelta(hours=12))
+            utc.set_due_date(utc_2am() + timezone.timedelta(hours=12))
             utc = models.UnitTestCollection.objects.get(pk=utc.pk)
             self.assertEqual(utc.due_status(), models.NOT_DUE)
 
@@ -1091,8 +1080,8 @@ class TestUnitTestCollection(TestCase):
     def test_name(self):
         tl = utils.create_test_list("tl1")
         utc = utils.create_unit_test_collection(test_collection=tl)
-        self.assertEqual(utc.name(), str(utc))
-        self.assertEqual(tl.name, utc.test_objects_name())
+        self.assertEqual(utc.name, str(utc))
+        self.assertEqual(tl.name, utc.name)
 
     def test_delete_utc(self):
 
@@ -1406,6 +1395,8 @@ class TestTestInstance(TestCase):
 
     def test_skipped(self):
         ti = models.TestInstance(skipped=True)
+        ti.unit_test_info = models.UnitTestInfo()
+        ti.unit_test_info.test = models.Test(hidden=False)
         ti.calculate_pass_fail()
         self.assertEqual(models.NOT_DONE, ti.pass_fail)
 
@@ -1692,7 +1683,7 @@ class TestAutoReview(TestCase):
         for stat, tests in self.test_list_instance.status():
             self.assertEqual(len(tests), 1)
 
-    def test_review_status_with_coment(self):
+    def test_review_status_with_comment(self):
         """Each of the three tests should have a different status"""
 
         uti = models.UnitTestInfo.objects.get(test=self.tests[0], unit=self.unit_test_collection.unit)
@@ -1705,19 +1696,32 @@ class TestAutoReview(TestCase):
         ti.save()
         self.assertTrue(ti.status.requires_review)
 
-    def test_review_status_with_tli_coment(self):
+    def test_review_status_with_tli_comment(self):
         """Each of the three tests should have a different status"""
 
         uti = models.UnitTestInfo.objects.get(test=self.tests[0], unit=self.unit_test_collection.unit)
         ti = utils.create_test_instance(self.test_list_instance, unit_test_info=uti, value=self.ref.value, status=self.statuses[0])
         ti.reference = self.ref
         ti.tolerance = self.tol
-        self.test_list_instance.comment = "comment"
+        c = Comment.objects.create(comment="comment", content_type_id=999, site_id=1)
+        self.test_list_instance.comments.add(c)
+        # self.test_list_instance.save()
         ti.calculate_pass_fail()
         ti.auto_review()
         ti.save()
         self.assertTrue(ti.status.requires_review)
 
-if __name__ == "__main__":
-    setup_test_environment()
-    unittest.main()
+    def test_review_status_skipped_hidden(self):
+        """Skipped hidden tests should not block auto review"""
+
+        uti = models.UnitTestInfo.objects.get(test=self.tests[0], unit=self.unit_test_collection.unit)
+        uti.test.hidden = True
+        uti.test.save()
+        ti = utils.create_test_instance(self.test_list_instance, unit_test_info=uti, value=self.ref.value, status=self.statuses[0])
+        ti.skipped = True
+        ti.reference = self.ref
+        ti.tolerance = self.tol
+        ti.calculate_pass_fail()
+        ti.auto_review()
+        ti.save()
+        assert not ti.status.requires_review

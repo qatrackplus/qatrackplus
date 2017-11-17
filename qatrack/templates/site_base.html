@@ -1,4 +1,3 @@
-{#{% extends "theme_base.html" %}#}
 <!DOCTYPE html> <!-- html5 -->
 <html lang="{{ LANGUAGE_CODE }}" xmlns="http://www.w3.org/1999/html">
     <head>
@@ -16,21 +15,16 @@
             <link rel="shortcut icon" href="{% static "qatrack_core/img/favicon.ico" %}">
             <link rel="apple-touch-icon" href="{% static "qatrack_core/img/apple-touch-icon.png" %}">
         {% endblock favicon %}
-        {##}
-        {#{% block extra_style %}#}
-        {#    <link href="{% static "css/qa.css" %}?v={{VERSION}}" rel="stylesheet">#}
-        {#    <link href="{% static "css/site.css" %}?v={{VERSION}}" rel="stylesheet">#}
-        {#    {% block page_style %}{% endblock %}#}
-        {#{% endblock %}#}
+
         {% block style_base %}
-{#            <link href="{{ STATIC_URL }}qa/css/qa.css?v={{VERSION}}" rel="stylesheet">#}
-{#            <link href="{{ STATIC_URL }}qa/css/site.css?v={{VERSION}}" rel="stylesheet">#}
             <link href="{{ STATIC_URL }}fontawsome/css/font-awesome.min.css?v={{ VERSION }}" rel="stylesheet">
             <link href="{{ STATIC_URL }}bootstrap/css/bootstrap.css?v={{ VERSION }}" rel="stylesheet">
             <link href="{{ STATIC_URL }}adminlte/css/admin-lte.css?v={{ VERSION }}" rel="stylesheet">
-{#            <link href="{{ STATIC_URL }}adminlte/css/skins/skin-blue.min.css?v={{ VERSION }}" rel="stylesheet">#}
             <link href="{{ STATIC_URL }}adminlte/css/skins/skin-black-dark.css?v={{ VERSION }}" rel="stylesheet">
+            <link href="{{ STATIC_URL }}qatrack_core/css/custom-adminlte.css?v={{ VERSION }}" rel="stylesheet">
+            <link href="{{ STATIC_URL }}qatrack_core/css/custom-fontawesome.css?v={{ VERSION }}" rel="stylesheet">
             <link href="{{ STATIC_URL }}qatrack_core/css/base.css?v={{VERSION}}" rel="stylesheet">
+            <link href="{{ STATIC_URL }}qatrack_core/css/print.css?v={{VERSION}}" rel="stylesheet">
             {% block extra_css %}{% endblock extra_css %}
         {% endblock style_base %}
 
@@ -39,7 +33,8 @@
             var siteConfig = {
                 VERSION: '{{ VERSION }}',
                 STATIC_URL: '{{ STATIC_URL }}',
-                DEBUG: '{{ DEBUG }}'
+                DEBUG: '{{ DEBUG }}',
+                USE_PARTS: '{{ USE_PARTS }}'
             };
 
             var QAURLs = {
@@ -52,31 +47,50 @@
                 OPTION_DELIM: "=",
                 OPTION_SEP: "&",
                 OVERVIEW_OBJECTS: "{% url "overview_objects" %}",
+                UNIT_SA_UTC: "{% url "unit_sa_utc" %}",
+                SE_SEARCHER: "{% url "se_searcher" %}",
+                TLI_STATUSES: "{% url "tli_statuses" %}",
+                TLI_SELECT: "{% url "tli_select" %}",
+                TLI_VIEW: "{% url "view_test_list_instance" %}",
+                PARTS_SEARCHER: "{% url 'parts_searcher' %}",
+                PARTS_STORAGE_SEARCHER: "{% url 'parts_storage_searcher' %}",
+                ROOM_LOCATION_SEARCHER: "{% url 'room_location_searcher' %}",
+                PARTS_UNITS_COST: "{% url 'parts_units_cost' %}",
+                UNIT_AVAIL_TIME: "{% url 'unit_available_time' %}",
+                GO_UNITS_PARTS_COST: "{% url 'go_units_parts_cost' %}",
+                HANDLE_UNIT_AVAILABLE_TIME: "{% url 'handle_unit_available_time' %}",
+                HANDLE_UNIT_AVAILABLE_TIME_EDIT: "{% url 'handle_unit_available_time_edit' %}",
+                GO_SE_DOWN_TIMES: "{% url 'go_se_down_time' %}",
+                AJAX_COMMENT: "{% url 'ajax_comment' %}",
 
-                options_from_url_hash : function(hash){
+                options_from_url_hash: function(hash){
                     var options = [];
-                    if (hash.slice(0,1) === "#"){
+                    if (hash.slice(0, 1) === "#"){
                         hash = hash.slice(1);
                     }
                     var that = this;
-                    $.each(hash.split(this.OPTION_SEP),function(i,elem){
+                    $.each(hash.split(this.OPTION_SEP), function(i, elem){
                         var k_v = elem.split(that.OPTION_DELIM);
-                        options.push([k_v[0],k_v[1]]);
+                        options.push([k_v[0], k_v[1]]);
                     });
                     return options;
                 },
 
-                unit_test_chart_url : function(unit,test){
-                    var unit_option = 'unit'+this.OPTION_DELIM+unit.number;
-                    var test_option = 'slug'+this.OPTION_DELIM+test.slug;
-                    return this.CHARTS_URL+'#'+[unit_option,test_option].join(this.OPTION_SEP);
+                unit_test_chart_url: function(unit, test){
+                    var unit_option = 'unit' + this.OPTION_DELIM + unit.number;
+                    var test_option = 'slug' + this.OPTION_DELIM + test.slug;
+                    return this.CHARTS_URL + '#' + [unit_option, test_option].join(this.OPTION_SEP);
                 },
-                unit_test_chart_link : function(unit,test,text,title){
-                    var url = this.unit_test_chart_url(unit,test);
-                    if (title === undefined){
+                unit_test_chart_link: function(unit, test, text, title) {
+                    var url = this.unit_test_chart_url(unit, test);
+                    if (title === undefined) {
                         title = ["View Data for", unit.name, test.name, "data"].join(" ");
                     }
-                    return '<a href="'+url+'" title="'+title+'">'+text+'</a>';
+                    return '<a href="' + url + '" title="' + title + '">' + text + '</a>';
+                },
+                returnYourChoice: function(form, choice){
+                    opener.setSearchResult(form, choice);
+                    window.close();
                 }
             };
 
@@ -97,8 +111,7 @@
 
     </head>
 
-{#    <body class="{% block body_class %}{% endblock %}" id="{% block body_id %}{% endblock %}">#}
-    <body class="skin-black-dark fixed {% block body_class %}layout-top-nav{% endblock body_class %}">
+    <body class="skin-black-dark fixed {% block body_class %}layout-top-nav{% endblock body_class %} preload">
         <div class="wrapper">
 
             <header class="main-header">
@@ -107,7 +120,11 @@
                     <!-- mini logo for sidebar mini 50x50 pixels -->
                     <span class="logo-mini"><b>QAT+</b></span>
                     <!-- logo for regular state and mobile devices -->
-                    <span class="logo-lg"><b>Qa</b>Track<b>+</b></span>
+                    <span class="logo-lg">
+                      <b>
+                        {% firstof SITE_NAME "QA</b>Track<b>+" %}
+                      </b>
+                    </span>
                 </a>
 
                 <nav class="navbar navbar-static-top">
@@ -120,35 +137,52 @@
 
                             <ul class="nav navbar-nav">
 
-                                <li class="dropdown">
-                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                        Perform QA
-                                        <span class="caret"></span>
-                                    </a>
-                                    <ul class="dropdown-menu" role="menu">
-                                        <li>
-                                            <a href="{% url "choose_unit" %}" title="Choose a Unit To Perform QA On">
-                                                <i class="fa fa-cubes fa-fw" aria-hidden="true"></i>
-                                                Choose Unit
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a href="{% url "all_lists" %}" title="View all available QA Lists">
-                                                <i class="fa fa-pencil-square-o fa-fw" aria-hidden="true"></i>
-                                                All QA
-                                            </a>
-                                        </li>
-                                        <li class="divider"></li>
-                                        <li>
-                                            <a href="{% url "in_progress" %}" title="Resume a QA session currently in progress">
-                                                <i class="fa fa-play fa-fw" aria-hidden="true"></i>
-                                                In Progress
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </li>
+                                {% if perms.qa.add_testlistinstance %}
+                                    <li class="dropdown">
+                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                            Perform QA
+                                            <span class="caret"></span>
+                                        </a>
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li>
+                                                <a href="{% url "choose_unit" %}" title="Choose a Unit To Perform QA On">
+                                                    <i class="fa fa-cubes fa-lg fa-fw" aria-hidden="true"></i>
+                                                    Choose Unit
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a href="{% url "all_lists" %}" title="View all available QA Lists">
+                                                    <i class="fa fa-pencil-square-o fa-lg fa-fw" aria-hidden="true"></i>
+                                                    All QA
+                                                </a>
+                                            </li>
+                                            {% if perms.service_log.perform_returntoserviceqa %}
+                                                <li class="hover-parent">
+                                                    <a href="{% url 'rtsqa_list_all' %}?f=tli.in-1" title="View all incomplete RTS">
+                                                        <i class="fa fa-stack fa-lg fa-fw">
+                                                            <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
+            {#                                                <i class="fa fa-cube fa-stack-custom-sub lower-right text-gray"></i>#}
+                                                            <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-extra-left hover-sub-info"></i>
+                                                        </i>
+                                                        All Incomplete RTS QA
+                                                    </a>
+                                                </li>
+                                            {% endif %}
+                                            <li class="divider"></li>
+                                            <li>
+                                                <a href="{% url "in_progress" %}" title="Resume a QA session currently in progress">
+                                                    <i class="fa fa-play fa-lg fa-fw" aria-hidden="true"></i>
+                                                    <span title="There are currently {{IN_PROGRESS}} QA Sessions saved in progress" class="label {% if IN_PROGRESS == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                                                        <span class="total-in-progress-count">{{ IN_PROGRESS }}</span>
+                                                    </span>
+                                                    In Progress
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                {% endif %}
 
-                                {% if perms.qa.can_review or perms.qa.can_view_completed or perms.qa.can_view_charts or perms.qa.change_testlistinstance or perms.qa.can_view_overview %}
+                                {% if perms.qa.can_review or perms.qa.can_view_completed or perms.qa.can_view_overview %}
 
                                     <li class="dropdown">
                                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">
@@ -166,13 +200,17 @@
                                             <li class="nav-header">QA Program Status</li>
                                             <li>
                                                 <a href="{% url "overview" %}" title="View a summary of the status of the QA program">
-                                                    <i class="fa fa-globe fa-fw" aria-hidden="true"></i>
-                                                    Overview
+                                                    <i class="fa fa-globe fa-lg fa-fw" aria-hidden="true"></i>
+                                                    Overview - All
+                                                </a>
+                                                <a href="{% url "overview_user" %}" title="View a summary of the status of the QA program">
+                                                    <i class="fa fa-globe fa-lg fa-fw" aria-hidden="true"></i>
+                                                    Overview - Your Groups
                                                 </a>
                                             </li>
                                             <li>
                                                 <a href="{% url "overview_due_dates" %}" title="View a summary of the status of the QA program">
-                                                    <i class="fa fa-calendar-check-o fa-fw" aria-hidden="true"></i>
+                                                    <i class="fa fa-calendar-check-o fa-lg fa-fw" aria-hidden="true"></i>
                                                     By Due Status
                                                 </a>
                                             </li>
@@ -184,7 +222,7 @@
                                                 {% if perms.qa.can_review_non_visible_tli %}
                                                     <li>
                                                         <a href="{% url  "unreviewed" %}" title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed">
-                                                            <i class="fa fa-question-circle fa-fw" aria-hidden="true"></i>
+                                                            <i class="fa fa-question-circle fa-lg fa-fw" aria-hidden="true"></i>
                                                             <span title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
                                                                 <span class="total-unreviewed-count">{{UNREVIEWED}}</span>
                                                             </span>
@@ -194,7 +232,7 @@
                                                 {% else %}
                                                     <li class="disabled">
                                                         <div title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed">
-                                                            <i class="fa fa-question-circle fa-fw" aria-hidden="true"></i>
+                                                            <i class="fa fa-question-circle fa-lg fa-fw" aria-hidden="true"></i>
                                                             <span title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
                                                                 <span class="total-unreviewed-count">{{UNREVIEWED}}</span>
                                                             </span>
@@ -204,7 +242,7 @@
                                                 {% endif %}
                                                 <li>
                                                     <a href="{% url  "unreviewed_visible_to" %}" title="There are currently {{YOUR_UNREVIEWED}} QA Sessions visible to your groups waiting to be reviewed">
-                                                        <i class="fa fa-question-circle fa-fw" aria-hidden="true"></i>
+                                                        <i class="fa fa-question-circle fa-lg fa-fw" aria-hidden="true"></i>
                                                         <span title="There are currently {{YOUR_UNREVIEWED}} QA Sessions visible to your groups waiting to be reviewed" class="label {% if YOUR_UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
                                                             <span class="total-unreviewed-count">{{YOUR_UNREVIEWED}}</span>
                                                         </span>
@@ -212,8 +250,17 @@
                                                     </a>
                                                 </li>
                                                 <li>
+                                                    <a href="{% url 'rtsqa_list_all' %}?f=tli.in-0_tli.ar-0" title="">
+                                                        <i class="fa fa-question-circle fa-lg fa-fw" aria-hidden="true"></i>
+                                                        <span title="There are currently {{UNREVIEWED_RTS}} unreviewed RTS QA Sessions" class="label {% if UNREVIEWED_RTS == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                                                            <span class="total-unreviewed-count">{{UNREVIEWED_RTS}}</span>
+                                                        </span>
+                                                        Unreviewed RTS QA
+                                                    </a>
+                                                </li>
+                                                <li>
                                                     <a href="{% url  "choose_group_visible" %}" {% comment %}title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed"{% endcomment %}>
-                                                        <i class="fa fa-question-circle fa-fw" aria-hidden="true"></i>
+                                                        <i class="fa fa-question-circle fa-lg fa-fw" aria-hidden="true"></i>
                                                         Unreviewed By Visible To Group
                                                     </a>
                                                 </li>
@@ -222,108 +269,206 @@
                                                 <li class="divider"></li>
                                                 <li class="nav-header">Test Lists</li>
                                                 {% if perms.qa.can_review_non_visible_tli %}
-                                                    <li><a href="{% url "review_all" %}" title="View all test lists.">
-                                                        <i class="fa fa-users fa-fw" aria-hidden="true"></i>
+                                                    <li class="hover-parent"><a href="{% url "review_all" %}" title="View all test lists.">
+                                                        <i class="fa fa-users fa-lg fa-fw hover-sub-primary" aria-hidden="true"></i>
                                                         All Groups Test Lists
                                                     </a></li>
                                                 {% endif %}
-                                                <li><a href="{% url "review_your_all" %}" title="View all your groups test lists.">
-                                                    <i class="fa fa-users fa-fw" aria-hidden="true"></i>
+                                                <li class="hover-parent"><a href="{% url "review_your_all" %}" title="View all your groups test lists.">
+                                                    <i class="fa fa-stack fa-lg fa-fw">
+                                                        <i class="fa fa-users fa-stack-custom-main"></i>
+                                                        <i class="fa fa-user fa-stack-custom-main hover-sub-primary down-2"></i>
+                                                    </i>
                                                     Your Groups Test Lists
                                                 </a></li>
                                                 <li><a href="{% url "choose_review_unit" %}" title="Choose a unit to review qa lists for.">
-                                                    <i class="fa fa-cubes fa-fw" aria-hidden="true"></i>
+                                                    <i class="fa fa-cubes fa-lg fa-fw" aria-hidden="true"></i>
                                                     Your Test Lists By Unit
                                                 </a></li>
                                                 <li><a href="{% url "choose_review_frequency" %}" title="Choose a frequency to review qa lists for.">
-                                                    <i class="fa fa-clock-o fa-fw" aria-hidden="true"></i>
+                                                    <i class="fa fa-clock-o fa-lg fa-fw" aria-hidden="true"></i>
                                                     Your Test Lists By Frequency
                                                 </a></li>
                                                 {% if perms.qa.can_review_non_visible_tli %}
                                                     <li><a href="{% url "review_inactive" %}" title="View all inactive test lists.">
-                                                        <i class="fa fa-file fa-fw" aria-hidden="true"></i>
+                                                        <i class="fa fa-file fa-lg fa-fw" aria-hidden="true"></i>
                                                         All Groups Inactive Test Lists
                                                     </a></li>
                                                 {% else %}
                                                     <li><a href="{% url "review_your_inactive" %}" title="View all your inactive test lists.">
-                                                        <i class="fa fa-file fa-fw" aria-hidden="true"></i>
+                                                        <i class="fa fa-file fa-lg fa-fw" aria-hidden="true"></i>
                                                         Your Groups Inactive Test Lists
                                                     </a></li>
 
                                                 {% endif %}
                                             {% endif %}
+                                        </ul>
 
-                                            {% if perms.qa.can_view_charts %}
-                                                <li class="divider"></li>
-                                                <li class="nav-header">Trends and Analysis</li>
-                                                <li><a href="{% url "charts" %}">
-                                                    <i class="fa fa-line-chart fa-fw" aria-hidden="true"></i>
-                                                    Charts
+                                    </li>
+                                {% endif %}
+                                {% if perms.service_log.add_serviceevent or perms.service_log.view_serviceevent or perms.service_log.review_serviceevent or perms.qa.can_review or service_log.view_returntoserviceqa or perms.service_log.perform_returntoserviceqa or perms.parts.add_part or perms.parts.view_part %}
+                                <li class="dropdown">
+                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                        Service Log
+                                        <b class="caret"></b>
+                                    </a>
+                                    <ul class="dropdown-menu" role="menu">
+                                        <li><a href="{% url "sl_dash" %}" title="Service Log dashboard">
+                                            <i class="fa fa-th fa-lg fa-fw" aria-hidden="true"></i>
+                                            Service Log Dashboard
+                                        </a></li>
+                                        {% if perms.service_log.add_serviceevent or perms.service_log.view_serviceevent or perms.service_log.review_serviceevent %}
+                                            <li class="divider"></li>
+                                            <li class="nav-header">Service Events</li>
+                                            {% if perms.service_log.add_serviceevent %}
+                                                <li class="hover-parent"><a href="{% url "sl_new" %}" title="Create a new service event">
+                                                    <i class="fa fa-stack fa-lg fa-fw">
+                                                        <i class="fa fa-wrench fa-stack-custom-main"></i>
+                                                        <i class="fa fa-plus fa-stack-custom-sub upper-left hover-sub-success"></i>
+                                                    </i>
+                                                    Open New Service Event
+                                                </a></li>
+                                                <li><a href="{% url "sl_unit_new" %}" title="Create a new service event for a unit">
+                                                    <i class="fa fa-cubes fa-lg fa-fw" aria-hidden="true"></i>
+                                                    Choose Unit For New Service Event
                                                 </a></li>
                                             {% endif %}
-                                        </ul>
+                                            {% if perms.service_log.view_serviceevent %}
+                                                <li class="hover-parent"><a href="{% url "sl_list_all" %}" title="View service events for a unit">
+                                                    <i class="fa fa-stack fa-lg fa-fw">
+                                                        <i class="fa fa-wrench fa-stack-custom-main"></i>
+                                                        <i class="fa fa-wrench fa-flip-horizontal left--5 fa-stack-custom-main "></i>
+        {#                                                <i class="fa fa-list fa-stack-custom-sub upper-left hover-sub-info"></i>#}
+                                                    </i>
+                                                    View All Service Events
+                                                </a></li>
+                                                {% if DEFAULT_SE_STATUS %}
+                                                    <li class="hover-parent"><a href="{% url 'sl_list_all' %}?f=ss-{{ DEFAULT_SE_STATUS.id }}" title="View service events that are {{ DEFAULT_SE_STATUS.name }}">
+                                                        <i class="fa fa-stack fa-lg fa-fw">
+                                                            <i class="fa fa-wrench fa-stack-custom-main hover-sub-not" style="color: {{ DEFAULT_SE_STATUS.colour }};"></i>
+                                                            <i class="fa fa-wrench fa-flip-horizontal left--5 fa-stack-custom-main hover-sub-not" style="color: {{ DEFAULT_SE_STATUS.colour }};"></i>
+            {#                                                <i class="fa fa-list fa-stack-custom-sub upper-left hover-sub-info"></i>#}
+                                                        </i>
+                                                        View {{ DEFAULT_SE_STATUS.name }}
+                                                    </a></li>
+                                                {% endif %}
+                                            {% endif %}
+                                            {% if perms.service_log.review_serviceevent %}
+                                                <li class="hover-parent"><a href="{% url 'sl_list_all' %}?f=ar-1_ss.ar-1" title="View service events that are require review">
+                                                    <i class="fa fa-stack fa-lg fa-fw">
+                                                        <i class="fa fa-wrench fa-stack-custom-main"></i>
+                                                        <i class="fa fa-exclamation fa-stack-custom-sub upper-left hover-sub-info"></i>
+                                                    </i>
+                                                    <span title="There are currently {{SE_NEEDING_REVIEW_COUNT}} unreviewed RTS QA Sessions" class="label {% if SE_NEEDING_REVIEW_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                                                        <span class="total-unreviewed-count">{{SE_NEEDING_REVIEW_COUNT}}</span>
+                                                    </span>
+                                                    Service Events Needing Review
+                                                </a></li>
+                                            {% endif %}
+                                        {% endif %}
+                                        {% if perms.qa.can_review or service_log.view_returntoserviceqa or perms.service_log.perform_returntoserviceqa %}
+                                            <li class="divider"></li>
+                                            <li class="nav-header">RTS QA</li>
+                                            {% if perms.service_log.view_returntoserviceqa %}
+                                                <li class="hover-parent"><a href="{% url "rtsqa_list_all" %}" title="View all return to service qa">
+                                                    <i class="fa fa-stack fa-lg fa-fw">
+                                                        <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
+                                                        <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-extra-left hover-sub-info"></i>
+                                                    </i>
+                                                    View All RTS QA
+                                                </a></li>
+                                            {% endif %}
+                                            {% if perms.service_log.perform_returntoserviceqa %}
+                                                <li class="hover-parent"><a href="{% url 'rtsqa_list_all' %}?f=tli.in-1" title="View all incomplete return to service qa">
+                                                    <i class="fa fa-stack fa-lg fa-fw">
+                                                        <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
+                                                        <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-extra-left hover-sub-info"></i>
+                                                    </i>
+                                                    View All Incomplete RTS QA
+                                                </a></li>
+                                            {% endif %}
+                                            {% if perms.qa.can_review %}
+                                                <li>
+                                                    <a href="{% url 'rtsqa_list_all' %}?f=tli.in-0_tli.ar-0" title="">
+                                                        <i class="fa fa-question-circle fa-lg fa-fw" aria-hidden="true"></i>
+                                                        <span title="There are currently {{UNREVIEWED_RTS}} unreviewed RTS QA Sessions" class="label {% if UNREVIEWED_RTS == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                                                            <span class="total-unreviewed-count">{{UNREVIEWED_RTS}}</span>
+                                                        </span>
+                                                        Unreviewed RTS QA
+                                                    </a>
+                                                </li>
+                                            {% endif %}
+                                        {% endif %}
+                                        {% if USE_PARTS %}
+                                            {% if perms.parts.add_part or perms.view_part %}
+                                                <li class="divider"></li>
+                                                <li class="nav-header">Parts</li>
+                                                {% if perms.parts.add_part %}
+                                                    <li class="hover-parent"><a href="{% url "part_new" %}" title="Enter new part">
+                                                        <i class="fa fa-stack fa-lg fa-fw">
+                                                            <i class="fa fa-cog fa-stack-custom-main"></i>
+                                                            <i class="fa fa-plus fa-stack-custom-sub upper-left hover-sub-success"></i>
+                                                        </i>
+                                                        Enter New Part
+                                                    </a></li>
+                                                {% endif %}
+                                                {% if perms.parts.view_part %}
+                                                    <li><a href="{% url "parts_list" %}" title="Enter new part">
+                                                        <i class="fa fa-stack fa-lg fa-fw">
+                                                            <i class="fa fa-cogs fa-flip-horizontal fa-stack-custom-main"></i>
+                                                        </i>
+                                                        View All Parts
+                                                    </a></li>
+                                                    <li class="hover-parent"><a href="{% url "parts_list" %}?f=qcqm-lt" title="Enter new part">
+                                                        <i class="fa fa-stack fa-lg fa-fw">
+                                                            <i class="fa fa-cogs fa-flip-horizontal fa-stack-custom-main hover-sub-danger"></i>
+                                                        </i>
+                                                        View Low Inventory Parts
+                                                    </a></li>
+                                                {% endif %}
+                                            {% endif %}
+                                        {% endif %}
 
-                                    </li>
+                                    </ul>
+                                </li>
                                 {% endif %}
-
-                                {% if user.is_staff %}
-                                    <li class="dropdown">
-                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                            Tools
-                                            <b class="caret"></b>
-                                        </a>
-                                        <ul class="dropdown-menu" role="menu">
-                                            <li><a href="{% url "qa_paper_forms_request" %}" title="Create a set of paper backup forms">
-                                                <i class="fa fa-paper-plane-o fa-fw" aria-hidden="true"></i>
-                                                Paper Backup Forms
-                                            </a></li>
-                                        </ul>
-                                    </li>
-                                {% endif %}
-
+                                <li class="dropdown">
+                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                        Issue Tracker
+                                        <b class="caret"></b>
+                                    </a>
+                                    <ul class="dropdown-menu" role="menu">
+                                        <li><a href="{% url "issue_list" %}" title="All Issues">
+                                            <i class="fa fa-stack fa-fw fa-lg">
+                                                <i class="fa fa-bug fa-stack-custom-sub upper-left"></i>
+                                                <i class="fa fa-bug fa-stack-custom-main"></i>
+                                                <i class="fa fa-bug fa-stack-custom-sub fa-rotate-90 lower-xxleft"></i>
+                                            </i>
+                                            All Issues
+                                        </a></li>
+                                        <li class="divider"></li>
+                                        <li class="hover-parent"><a href="{% url "issue_new" %}" title="Create a new issue">
+                                            <i class="fa fa-stack fa-fw fa-lg">
+                                                <i class="fa fa-plus fa-stack-custom-sub upper-left hover-sub-success"></i>
+                                                <i class="fa fa-bug fa-stack-custom-main"></i>
+                                            </i>
+                                            Create Issue
+                                        </a></li>
+                                    </ul>
+                                </li>
                             </ul>
 
                             <ul class="nav navbar-nav navbar-right">
-
-                                <li class="dropdown">
-
-                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                        {% if user.is_superuser %}
-                                            Administrators ::
-                                        {% elif user.groups.count > 0 %}
-                                            {{user.groups.all.0.name}} ::
-                                        {% endif %}
-                                        <span id="username">{{ user }}</span>
-                                        <b class="caret"></b>
-                                    </a>
-
-                                    <ul class="dropdown-menu" role="menu">
-                                        <li><a href="{% url "account-details" %}">
-                                            <i class="fa fa-user fa-fw" aria-hidden="true"></i>
-                                            Account
-                                        </a></li>
-                                        {% if user.is_staff %}
-                                            <li><a href="{% url "admin:index" %}">
-                                                <i class="fa fa-cogs fa-fw" aria-hidden="true"></i>
-                                                Admin
-                                            </a></li>
-                                        {% endif %}
-                                        <li class="divider"></li>
-                                        <li><a href="{% url "auth_logout" %}">
-                                            <i class="fa fa-power-off fa-fw danger" aria-hidden="true"></i>
-                                             Log out
-                                        </a></li>
-                                    </ul>
-
+                                <li class="margin-right-10">
+                                    <a id="control-sidebar-btn" href="#" data-toggle="control-sidebar">{{ request.user.username }} :: <i class="fa fa-gears fa-fw"></i></a>
                                 </li>
                             </ul>
 
                         {% else %}
-                            <ul class="nav navbar-nav navbar-right">
-                                <li><a href="{% url "auth_login" %}">
-                                    <i class="fa fa-sign-in fa-fw" aria-hidden="true"></i>
-                                    Log in
-                                </a></li>
+                            <ul class="nav navbar-nav navbar-right ">
+                                <li class="margin-right-10">
+                                    <a id="control-sidebar-btn" href="#" data-toggle="control-sidebar"><i class="fa fa-gears fa-fw"></i></a>
+                                </li>
                             </ul>
                         {% endif %}
 
@@ -337,7 +482,7 @@
             <div class="content-wrapper">
                 <div class="content-header">
                 {% for message in messages %}
-                    <div class="alert fade in {% if message.tags %} alert-{{ message.tags }}{% endif %}">
+                    <div class="alert fade in{% if message.tags %} alert-{{ message.tags }}{% endif %}">
                         <a class="close" href="#" data-dismiss="alert">&times;</a>
                         {{ message }}
                     </div>
@@ -347,35 +492,104 @@
                     {% block body %}
                     {% endblock %}
                 </div>
+
+                <div class="bottom-banner">QATrack+ v{{ VERSION }} | © 2011 The Ottawa Hospital Cancer Center</div>
             </div>
 
-{#            {% block footer_base %}#}
-{#                <div id="footer">#}
-{#                    <div class="inner">#}
-{#                        <div class="container-fluid">#}
-{#                            {% block footer %}{% endblock %}#}
-{#                        </div>#}
-{#                    </div>#}
-{#                </div>#}
-{#            {% endblock %}#}
+            <aside class="control-sidebar control-sidebar-dark">
+
+                <div class="tab-content">
+                    {% if user.is_authenticated %}
+                        <ul class="control-sidebar-menu">
+                            <li><a href="{% url 'account-details' %}" class="margin-left-10 control-sidebar-subheading">
+                                <i class="fa fa-user-circle-o fa-fw"></i>
+                                {% trans "Account Details" %}
+                            </a></li>
+                            <li><a href="{% url 'auth_logout' %}" class="margin-left-10 control-sidebar-subheading">
+                                <i class="fa fa-sign-out fa-fw"></i>
+                                {% trans "Logout" %}
+                            </a></li>
+                        </ul>
+                        {% if perms.qa.can_view_charts %}
+                            <h4 class="control-sidebar-heading">Trends and Analysis</h4>
+                            <ul class="control-sidebar-menu">
+                                <li><a href="{% url "charts" %}" class="margin-left-10 control-sidebar-subheading">
+                                    <i class="fa fa-line-chart fa-fw" aria-hidden="true"></i>
+                                    Charts
+                                </a></li>
+                                <li class="divider"></li>
+                            </ul>
+                        {% endif %}
+                        {% if user.is_staff %}
+                            <h4 class="control-sidebar-heading">Admin Options</h4>
+                            <ul class="control-sidebar-menu">
+                                <li><a href="{% url 'admin:index' %}" class="margin-left-10 control-sidebar-subheading">
+                                    <i class="fa fa-cog fa-fw"></i> Admin
+                                </a></li>
+                                <li class="hover-parent"><a href="{% url 'unit_list' %}" class="margin-left-10 control-sidebar-subheading">
+                                    <i class="fa fa-stack fa-fw">
+                                        <i class="fa fa-cubes fa-stack-custom-main"></i>
+                                    </i>
+                                    Units
+                                </a></li>
+                                <li class="hover-parent"><a href="{% url 'se_down_time' %}" class="margin-left-10 control-sidebar-subheading">
+                                    <i class="fa fa-stack fa-fw">
+                                        <i class="fa fa-clock-o fa-stack-custom-sub upper-left hover-sub-warning"></i>
+                                        <i class="fa fa-wrench fa-stack-custom-main"></i>
+                                    </i>
+                                    Service and Lost Time
+                                </a></li>
+                                {% comment %}<li class="hover-parent"><a href="{% url 'vendor_list' %}" class="margin-left-10 control-sidebar-subheading">
+                                    <i class="fa fa-stack fa-fw">
+                                        <i class="fa fa-truck fa-flip-horizontal fa-stack-custom-main"></i>
+                                    </i>
+                                    Vendors
+                                </a></li>{% endcomment %}
+                                {% if USE_PARTS %}
+                                    <li class="hover-parent"><a href="{% url "parts_list" %}?f=qcqm-lt" class="margin-left-10 control-sidebar-subheading" title="Enter new part">
+                                        <i class="fa fa-stack fa-fw">
+                                            <i class="fa fa-cogs fa-flip-horizontal fa-stack-custom-main hover-sub-danger"></i>
+                                        </i>
+                                        Low Inventory Parts
+                                    </a></li>
+                                    {% comment %}<li class="hover-parent"><a href="{% url 'suppliers_list' %}" class="margin-left-10 control-sidebar-subheading">
+                                        <i class="fa fa-stack fa-fw">
+                                            <i class="fa fa-microchip fa-stack-custom-main"></i>
+                                        </i>
+                                        Suppliers
+                                    </a></li>{% endcomment %}
+                                {% endif %}
+                                <li class="divider"></li>
+                                <li><a href="{% url "qa_paper_forms_request" %}" class="margin-left-10 control-sidebar-subheading" title="Create a set of paper backup forms">
+                                    <i class="fa fa-paper-plane-o fa-fw" aria-hidden="true"></i>
+                                    Paper Backup Forms
+                                </a></li>
+
+                            </ul>
+                        {% endif %}
+
+
+                    {% else %}
+                        <ul class="control-sidebar-menu">
+                            <li><a href="{% url 'auth_login' %}" class="margin-left-10 control-sidebar-subheading">
+                                <i class="fa fa-sign-in fa-fw"></i>
+                                {% trans "Login" %}
+                            </a></li>
+                        </ul>
+                    {% endif %}
+                </div>
+
+            </aside>
+            <!-- The sidebar's background -->
+            <!-- This div must placed right after the sidebar for it to work-->
+            <div class="control-sidebar-bg"></div>
 
             {% block extra_body_base %}
                 {% block extra_body %}{% endblock %}
             {% endblock %}
         </div>
         {% block loading_modal %}{% endblock loading_modal %}
+
     </body>
 
-{#    {% block footer %}#}
-{#        {% include "_footer.html" %}#}
-{#    {% endblock %}#}
-
-{#    {% block extra_body %}#}
-    {#    {% block end_body_script_base %}#}
-    {#        <script src="{% static "js/lodash.compat.min.js" %}?v={{VERSION}}"></script>#}
-    {#        <script src="{% static "js/qautils.js" %}?v={{VERSION}}"></script>#}
-    {#        <script src="{% static "js/base.js" %}?v={{VERSION}}"></script>#}
-    {#        {% block end_body_extra_script %}{%endblock%}#}
-    {#    {% endblock end_body_script_base%}#}
-{#    {% endblock %}#}
 </html>

@@ -1,0 +1,116 @@
+{% extends "site_base.html" %}
+
+{% load widget_tweaks %}
+{% load qa_tags %}
+{% load comments %}
+
+{% block head_title %}Issue{% endblock %}
+
+{% block extra_css %}
+    {{ block.super }}
+    <link href="{{ STATIC_URL }}daterangepicker/css/daterangepicker.css?v={{ VERSION }}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}qatrack_core/css/custom-daterangepicker.css?v={{ VERSION }}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}select2/css/select2.min.css?v={{ VERSION }}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}qatrack_core/css/tables.css?v={{ VERSION }}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}qatrack_core/css/custom-select2.css?v={{ VERSION }}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}issue_tracker/css/issues.css?v={{ VERSION }}" rel="stylesheet">
+{% endblock extra_css %}
+
+{% block extra_js %}
+    <script type="text/javascript">
+
+    </script>
+{% endblock extra_js %}
+
+{% block require_javascript %}
+    require(['issues']);
+{% endblock require_javascript %}
+
+{% block body %}
+
+        <div class="max-width-lg">
+{#            <div class="row">#}
+{#                <div class="col-md-3">#}
+{#                    <h3 class="no-margin-top">Edit Issue {{ issue.id }}</h3>#}
+{#                </div>#}
+{#            </div>#}
+{#            <div class="col-md-12">#}
+{#                <dl class="pull-right">#}
+{#                    <dt>Submitted:</dt>#}
+{#                    <dd>#}
+{#                        <div>{{ issue.datetime_submitted }}</div>#}
+{#                        <div>by {{ issue.user_submitted_by }}</div>#}
+{#                    </dd>#}
+{#                </dl>#}
+{#            </div>#}
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="box">
+                        <div class="box-header">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <h3 class="no-margin-top">Issue {{ issue.id }} Details</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="box-body">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <dl class="dl-horizontal">
+                                        <dt class="margin-bottom-10">Status:</dt><dd><div class="label smooth-border" style="border-color: {{ issue.issue_status.colour }}">{{ issue.issue_status.name }}</div></dd>
+                                        <dt class="margin-bottom-10">Priority:</dt><dd><span>{{ issue.issue_priority.name }}</span><span><i class="fa fa-square fa-lg margin-left-10" style="color: {{ issue.issue_priority.colour }}; margin-top: 5px;"></i></span></dd>
+                                        <dt class="margin-bottom-10">Submitted:</dt><dd><div>{{ issue.datetime_submitted }}</div></dd>
+                                        <dt class="margin-bottom-10">Submitted By:</dt><dd><div>{{ issue.user_submitted_by }}</div></dd>
+                                        <dt class="margin-bottom-10">Type:</dt><dd><div>{{ issue.issue_type.name }}</div></dd>
+                                        <dt class="margin-bottom-10">Tags:</dt><dd><div>
+                                            <ul>
+                                                {% for it in issue.issue_tags.all %}
+                                                    <li>{{ it.name }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div></dd>
+                                        <dt class="margin-bottom-10">Description:</dt><dd><div class="white-space-pre">{{ issue.description }}</div></dd>
+                                        <dt class="margin-bottom-10">Error Screen:</dt><dd><div class="white-space-pre">{{ issue.error_screen }}</div></dd>
+                                    </dl>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <h4>Comments:</h4>
+                                    {% render_comment_list for issue %}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+{#                                    {% render_comment_form for issue %}#}
+                                    {% get_comment_form for issue as form %}
+
+                                    <form action="{% comment_form_target %}" method="post">
+                                        {% csrf_token %}
+                                        <input id="id_name" maxlength="50" name="name" type="hidden" required="" value="{{ user.username }}">
+                                        {{ form.object_pk }}
+                                        {{ form.content_type }}
+{#                                        {{ form.comment }}#}
+                                        {{ form.security_hash }}
+                                        {{ form.timestamp }}
+                                        <textarea cols="40" id="id_comment" maxlength="3000" name="comment" rows="4" required="" class="margin-bottom-20 form-control autosize"></textarea>
+                                        <input type="hidden" name="next" value="{% url 'issue_details' issue.id %}" />
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <input class="btn btn-flat btn-primary btn-sm" type="submit" name="submit" value="Post">
+{#                                                <input type="submit" name="preview" value="Preview">#}
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+
+{% endblock body %}

@@ -47,6 +47,7 @@ class ActiveDirectoryGroupMembershipSSLBackend:
         except User.DoesNotExist:
 
             try:
+                print('--- Creating user ' + username + ' ---')
                 debug = None
                 if settings.AD_DEBUG_FILE and settings.AD_DEBUG:
                     debug = open(settings.AD_DEBUG_FILE, 'a')

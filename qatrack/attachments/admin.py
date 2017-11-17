@@ -1,13 +1,82 @@
 from django import forms
+from django.conf import settings
 from django.contrib import admin
+from django.forms.utils import ErrorList, ValidationError
 from django.utils.translation import ugettext as _, ugettext_lazy as _l
 
 from .models import Attachment
+from qatrack.qa import models as qa_models
+
+
+class AjaxModelChoiceField(forms.ModelChoiceField):
+    def __init__(self, model_class, *args, **kwargs):
+        queryset = model_class.objects.none()
+        super(AjaxModelChoiceField, self).__init__(queryset, *args, **kwargs)
+        self.model_class = model_class
+
+    def to_python(self, value):
+        if value in self.empty_values:
+            return None
+        try:
+            key = self.to_field_name or 'pk'
+            value = self.model_class.objects.get(**{key: value})
+        except (ValueError, self.queryset.model.DoesNotExist):
+            raise ValidationError(self.error_messages['invalid_choice'], code='invalid_choice')
+        return value
+
+
+class AttachmentAdminForm(forms.ModelForm):
+
+    test = AjaxModelChoiceField(qa_models.Test, required=False)
+    testlist = AjaxModelChoiceField(qa_models.TestList, required=False)
+    testlistcycle = AjaxModelChoiceField(qa_models.TestListCycle, required=False)
+    testinstance = AjaxModelChoiceField(qa_models.TestInstance, required=False)
+    testlistinstance = AjaxModelChoiceField(qa_models.TestListInstance, required=False)
+
+    class Meta:
+        model = Attachment
+        fields = '__all__'
+
+    class Media:
+        js = (
+            settings.STATIC_URL + 'jquery/js/jquery.min.js',
+            settings.STATIC_URL + 'select2/js/select2.js',
+            settings.STATIC_URL + 'js/attachment_admin.js'
+        )
+        css = {
+            'all': (
+                settings.STATIC_URL + "qatrack_core/css/admin.css",
+                settings.STATIC_URL + "select2/css/select2.css",
+            ),
+        }
+
+    def __init__(self, data=None, files=None, auto_id='id_%s', prefix=None, initial=None, error_class=ErrorList,
+                 label_suffix=None, empty_permitted=False, instance=None, use_required_attribute=None):
+        super().__init__(data=data, files=files, auto_id=auto_id, prefix=prefix, initial=initial, error_class=error_class,
+                         label_suffix=label_suffix, empty_permitted=empty_permitted, instance=instance, use_required_attribute=use_required_attribute)
+
+        if self.instance.id:
+            if self.instance.test:
+                self.fields['test'].choices = (('', '--------'),) + tuple(((t.id, '(' + str(t.id) + ') ' + t.name) for t in qa_models.Test.objects.filter(pk=self.instance.test_id)))
+                self.initial['test'] = self.instance.test_id
+            if self.instance.testlist:
+                self.fields['testlist'].choices = (('', '--------'),) + tuple(((tl.id, '(' + str(tl.id) + ') ' + tl.name) for tl in qa_models.TestList.objects.filter(pk=self.instance.testlist_id)))
+                self.initial['testlist'] = self.instance.testlist_id
+            if self.instance.testlistcycle:
+                self.fields['testlistcycle'].choices = (('', '--------'),) + tuple(((tlc.id, '(' + str(tlc.id) + ') ' + tlc.name) for tlc in qa_models.TestListCycle.objects.filter(pk=self.instance.testlistcycle_id)))
+                self.initial['testlistcycle'] = self.instance.testlistcycle_id
+            if self.instance.testinstance:
+                self.fields['testinstance'].choices = (('', '--------'),) + tuple(((ti.id, '(' + str(ti.id) + ') ' + ti.unit_test_info.test.name) for ti in qa_models.TestInstance.objects.filter(pk=self.instance.testinstance_id)))
+                self.initial['testinstance'] = self.instance.testinstance_id
+            if self.instance.testlistinstance:
+                self.fields['testlistinstance'].choices = (('', '--------'),) + tuple(((tli.id, '(' + str(tli.id) + ') ' + tli.test_list.name) for tli in qa_models.TestListInstance.objects.filter(pk=self.instance.testlistinstance_id)))
+                self.initial['testlistinstance'] = self.instance.testlistinstance_id
 
 
 class AttachmentAdmin(admin.ModelAdmin):
 
     list_display = ("get_label", "owner", "type", "attachment", "comment",)
+    form = AttachmentAdminForm
 
     def save_model(self, request, obj, form, change):
         """set user and modified date time"""

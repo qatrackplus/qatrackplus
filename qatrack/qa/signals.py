@@ -1,10 +1,17 @@
+
 from django.dispatch import receiver, Signal
-from django.db.models.signals import pre_save, post_save, post_delete
+from django.db.models.signals import pre_save, post_save, pre_delete, post_delete
 
 from django.core.exceptions import ValidationError
+from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
+from django.utils import timezone
+
+from django_comments.models import Comment
+from django_comments.signals import comment_was_posted
 
 from . import models
+from qatrack.service_log import models as sl_models
 
 
 def loaded_from_fixture(kwargs):
@@ -56,6 +63,18 @@ def update_last_instances(test_list_instance):
                 due_date=due_date,
                 last_instance=last_instance,
             )
+
+
+def handle_se_statuses_post_tli_delete(test_list_instance):
+
+    se_rtsqa_qs = sl_models.ServiceEvent.objects.filter(
+        returntoserviceqa__test_list_instance=test_list_instance, service_status__is_review_required=False
+    )
+    se_ib_qs = test_list_instance.serviceevents_initiated.filter(service_status__is_review_required=False)
+    default_ses = sl_models.ServiceEventStatus.get_default()
+
+    se_rtsqa_qs.update(service_status=default_ses)
+    se_ib_qs.update(service_status=default_ses)
 
 
 def get_or_create_unit_test_info(unit, test, assigned_to=None, active=True):
@@ -153,6 +172,12 @@ def on_test_list_instance_saved(*args, **kwargs):
         update_last_instances(kwargs["instance"])
 
 
+@receiver(pre_delete, sender=models.TestListInstance)
+def pre_test_list_instance_deleted(*args, **kwargs):
+    """update last_instance if available"""
+    handle_se_statuses_post_tli_delete(kwargs["instance"])
+
+
 @receiver(post_delete, sender=models.TestListInstance)
 def on_test_list_instance_deleted(*args, **kwargs):
     """update last_instance if available"""
@@ -193,3 +218,19 @@ def test_list_added_to_cycle(*args, **kwargs):
     """
     if (not loaded_from_fixture(kwargs)):
         update_unit_test_infos(kwargs["instance"].test_list)
+
+
+@receiver(comment_was_posted, sender=Comment)
+def check_approved_statuses(*args, **kwargs):
+
+    if 'edit_tli' in kwargs and kwargs['edit_tli']:
+        tli_id = kwargs['comment'].object_pk
+        tli = models.TestListInstance.objects.get(pk=tli_id)
+
+        default_status = sl_models.ServiceEventStatus.get_default()
+        for f in tli.rtsqa_for_tli.all():
+            if not f.service_event.service_status.is_review_required:
+                f.service_event.service_status = default_status
+                f.service_event.datetime_status_changed = timezone.now()
+                f.service_event.user_status_changed_by = None
+                f.service_event.save()

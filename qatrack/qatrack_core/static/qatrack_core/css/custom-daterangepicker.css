@@ -1,0 +1,62 @@
+div.daterangepicker.dropdown-menu button {
+    border-radius: 0;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+    border-width: 1px;
+}
+div.daterangepicker.dropdown-menu li {
+    background-color: #f4f4f4;
+    color: #444;
+    border-color: #ddd;
+    border-radius: 0;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+    border-width: 1px;
+}
+div.daterangepicker.dropdown-menu li.active {
+    background-color: #627585;
+    border-color: #546777;
+    color: #fff;
+}
+div.daterangepicker.dropdown-menu li.active:hover {
+    background-color: #546777;
+    border-color: #3d4c5b;
+}
+div.daterangepicker.dropdown-menu li:hover {
+    background-color: #e7e7e7;
+    border-color: #adadad;
+}
+body > div.daterangepicker.dropdown-menu > div.calendar > div.calendar-table > table > tbody > tr > td.active {
+    background-color: #546777;
+}
+.suppress-active > div.ranges > ul > li.active {
+    border-color: #ddd !important;
+    background-color: #f4f4f4 !important;
+    color: #444 !important;
+}
+.suppress-active > div.ranges > ul > li.active:hover {
+    border-color: #adadad !important;
+    background-color: #e7e7e7 !important;
+    color: #444 !important;
+}
+.daterange-div {
+    position: relative;
+    width: 100%
+}
+.daterange-inner {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: auto;
+    overflow: auto;
+    /*vertical-align: middle;*/
+}
+/*.daterange-val-display {*/
+    /*!*display: inline-block !important;*!*/
+    /*vertical-align: middle;*/
+    /*height: 100%;*/
+    /*text-align: center;*/
+/*}*/

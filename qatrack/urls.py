@@ -17,6 +17,10 @@ urlpatterns = [
 
     url(r'^accounts/', include('qatrack.accounts.urls')),
     url(r'^qa/', include('qatrack.qa.urls')),
+    url(r'^servicelog/', include('qatrack.service_log.urls')),
+    url(r'^parts/', include('qatrack.parts.urls')),
+    url(r'^units/', include('qatrack.units.urls')),
+    url(r'^issues/', include('qatrack.issue_tracker.urls')),
 
     # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),
@@ -25,12 +29,12 @@ urlpatterns = [
     url(r'^apple-touch-icon\.png$', touch_view),
 
     url(r'^', include('genericdropdown.urls')),
-
+    url(r'^comments/', include('django_comments.urls'))
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
     import debug_toolbar
-    urlpatterns += [
+    urlpatterns = [
         url(r'^__debug__/', include(debug_toolbar.urls)),
-    ]
+    ] + urlpatterns

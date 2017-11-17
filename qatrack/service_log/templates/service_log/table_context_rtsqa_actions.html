@@ -1,0 +1,22 @@
+{% load qa_tags %}
+{% if show_se_link and perms.service_log.view_serviceevent %}
+    <a class="btn btn-default btn-xs btn-flat pull-right margin-left-2" href="{% url 'sl_details' pk=rtsqa.service_event.id %}">Service Event</a>
+{% endif %}
+{% if rtsqa.test_list_instance.pk %}
+    {% if perms.qa.can_review %}
+        <a class="btn btn-default btn-xs btn-flat pull-right margin-left-2" href="{% url 'review_test_list_instance' pk=rtsqa.test_list_instance.pk %}{% if next %}?next={{ next }}{% endif %}">
+            Review
+        </a>
+    {% endif %}
+{% else %}
+    {% if perms.qa.add_testlistinstance %}
+        <a class="btn btn-default btn-xs btn-flat pull-right margin-left-2" href="{% url 'perform_qa' pk=rtsqa.unit_test_collection.pk %}?rtsqa={{ rtsqa.id }}{% if next %}&next={{ next }}{% endif %}">
+            Perform
+        </a>
+        {% if show_performed %}
+            <a class="btn btn-default btn-xs btn-flat pull-right margin-left-2" href="{% url 'review_utc' pk=rtsqa.unit_test_collection.pk %}?rtsqa={{ rtsqa.id }}{% if next %}&next={{ next }}{% endif %}">
+                Performed
+            </a>
+        {% endif %}
+    {% endif %}
+{% endif %}

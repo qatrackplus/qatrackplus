@@ -2,37 +2,30 @@ table.table {
     width: 100%;
 }
 
-/*table.table > thead > tr > th,*/
-/*table.table > tbody > tr > td,*/
-/*table.table > tfoot > tr > th {*/
-    /*box-sizing: content-box;*/
-    /*clear: none;*/
+table.dataTable tr td.sorting_1 {
+    background-color: #d2d6de;
+    border-color: transparent;
+}
+table.dataTable tr td.sorting_2 {
+    background-color: #dde1e9;
+    border-color: transparent;
+}
+table.dataTable tr td.sorting_3 {
+    background-color: #e8ecf4;
+    border-color: transparent;
+}
+/*table.dataTable tr.even td.sorting_1 {*/
+    /*background-color: rgba(60, 141, 188, 0.14);*/
+    /*border-color: transparent;*/
 /*}*/
-
-table.dataTable tr.odd td.sorting_1 {
-    background-color: rgba(60, 141, 188, 0.16);
-    border-color: transparent;
-}
-table.dataTable tr.odd td.sorting_2 {
-    background-color: rgba(60, 141, 188, 0.12);
-    border-color: transparent;
-}
-table.dataTable tr.odd td.sorting_3 {
-    background-color: rgba(60, 141, 188, 0.08);
-    border-color: transparent;
-}
-table.dataTable tr.even td.sorting_1 {
-    background-color: rgba(60, 141, 188, 0.14);
-    border-color: transparent;
-}
-table.dataTable tr.even td.sorting_2 {
-    background-color: rgba(60, 141, 188, 0.10);
-    border-color: transparent;
-}
-table.dataTable tr.even td.sorting_3 {
-    background-color: rgba(60, 141, 188, 0.06);
-    border-color: transparent;
-}
+/*table.dataTable tr.even td.sorting_2 {*/
+    /*background-color: rgba(60, 141, 188, 0.10);*/
+    /*border-color: transparent;*/
+/*}*/
+/*table.dataTable tr.even td.sorting_3 {*/
+    /*background-color: rgba(60, 141, 188, 0.06);*/
+    /*border-color: transparent;*/
+/*}*/
 
 .table-condensed > thead > tr > th,
 .table-condensed > tbody > tr > th,
@@ -68,16 +61,27 @@ table.table thead .sorting_desc:before {
 
 table.table > thead > tr > th > span > div > ul > li.active > a,
 .dataTables_wrapper > div > div > div > ul > li.active > a {
-    background-color: #3c8dbc;
+    background-color: #4c5961;
 }
 table.table > thead > tr > th > span > div > ul > li.active > a:hover,
 .dataTables_wrapper > div > div > div > ul > li.active > a:hover {
-    background-color: #357ca5;
+    background-color: #424f57;
+}
+
+.pagination > .active > a,
+.pagination > .active > span,
+.pagination > .active > a:hover,
+.pagination > .active > span:hover,
+.pagination > .active > a:focus,
+.pagination > .active > span:focus {
+    /*background-color: #605ca8;*/
+    background-color: #424f57;
+    border-color: #313d45;
 }
 
 .full-width, .filter_column, .filter_column > div.btn-group {
     width: 100% !important;
-    min-width: 100px;
+    /*min-width: 100px;*/
     box-sizing: border-box;
     -webkit-box-sizing:border-box;
     -moz-box-sizing: border-box;
@@ -90,15 +94,11 @@ table.table > thead > tr > th > span > div > ul > li.active > a:hover,
 table.table-hover tr.no-hover:hover {
     background-color: inherit;
 }
-
-/*.dropdown-menu {*/
-    /*background-color: #0d6aad;*/
-/*}*/
-
-
-/*.table-block {*/
-    /*display: block;*/
-/*}*/
-/*.table-block thead, .table-block tbody, .table-block tfoot {*/
-    /*width: 100%;*/
-/*}*/
+table.table-valign-middle > tbody > tr > td,
+table.table-valign-middle > thead > tr > td,
+table.table-valign-middle > tfoot > tr > td {
+    vertical-align: middle;
+}
+.table > tbody > tr > td {
+    border-top-color: transparent;
+}

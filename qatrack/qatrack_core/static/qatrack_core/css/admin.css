@@ -1,0 +1,8 @@
+a.deletelink {
+    height: 35px !important;
+    display: inline-block;
+    box-sizing: border-box;
+}
+.select2 {
+    min-width: 200px;
+}

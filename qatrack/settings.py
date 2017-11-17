@@ -1,11 +1,9 @@
 # Django settings for qatrack project.
-import django.conf.global_settings as DEFAULT_SETTINGS
 import os
 import sys
 
 import matplotlib
 matplotlib.use("Agg")
-
 
 # -----------------------------------------------------------------------------
 DEBUG = False
@@ -130,7 +128,6 @@ STATICFILES_DIRS = (
     os.path.join(PROJECT_ROOT, "admin_media"),
     # os.path.join(PROJECT_ROOT, 'static/'),
 )
-
 # List of finder classes that know how to find static files in
 # various locations.
 STATICFILES_FINDERS = (
@@ -148,7 +145,8 @@ if not os.path.isfile(SITE_SPECIFIC_CSS_PATH):
 
 # ------------------------------------------------------------------------------
 # Middleware
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = [
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -157,10 +155,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'qatrack.middleware.login_required.LoginRequiredMiddleware',
     'qatrack.middleware.maintain_filters.FilterPersistMiddleware',
-)
-
-# for django-debug-toolbar
-INTERNAL_IPS = ('127.0.0.1',)
+]
 
 
 # login required middleware settings
@@ -168,10 +163,6 @@ LOGIN_EXEMPT_URLS = [r"^accounts/", ]
 ACCOUNT_ACTIVATION_DAYS = 7
 LOGIN_REDIRECT_URL = '/qa/unit/'
 LOGIN_URL = "/accounts/login/"
-
-
-# ------------------------------------------------------------------------------
-# Template settings
 
 TEMPLATES = [
     {
@@ -218,12 +209,16 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+    'django_extensions',
+    'debug_toolbar',
 
+    'django_comments',
     'formtools',
     'tastypie',
     'listable',
     'genericdropdown',
     'crispy_forms',
+    'widget_tweaks',
 
     'qatrack.cache',
     'qatrack.accounts',
@@ -233,6 +228,9 @@ INSTALLED_APPS = [
 
     'qatrack.notifications',
     'qatrack.contacts',
+    'qatrack.issue_tracker',
+    'qatrack.service_log',
+    'qatrack.parts',
     'qatrack.attachments',
 
     'admin_views',
@@ -241,6 +239,10 @@ INSTALLED_APPS = [
 # Cache settings
 
 CACHE_UNREVIEWED_COUNT = 'unreviewed-count'
+CACHE_QA_FREQUENCIES = 'qa-frequencies'
+CACHE_RTS_QA_COUNT = 'unreviewed-rts-qa'
+CACHE_IN_PROGRESS_COUNT = 'in-progress-count'
+
 MAX_CACHE_TIMEOUT = 24 * 60 * 60  # 24hours
 
 CACHE_LOCATION = os.path.join(PROJECT_ROOT, "cache", "cache_data")
@@ -259,6 +261,10 @@ CACHES = {
 # Session Settings
 SESSION_COOKIE_AGE = 14 * 24 * 60 * 60
 SESSION_SAVE_EVERY_REQUEST = True
+# SESSION_COOKIE_NAME = 'QaTrack'
+# SESSION_COOKIE_PATH = '/qatrack'
+# CSRF_COOKIE_PATH = '/qatrack'
+# CSRF_COOKIE_NAME = 'csrftoken-qatrack'
 
 # -----------------------------------------------------------------------------
 # Email and notification settings
@@ -377,6 +383,9 @@ ICON_SETTINGS = {
     'SHOW_STATUS_ICONS_REVIEW': True,
     'SHOW_STATUS_ICONS_HISTORY': False,
     'SHOW_REVIEW_ICONS': True,
+    'SHOW_REVIEW_LABELS_LISTING': True,
+    'SHOW_STATUS_LABELS_LISTING': True,
+    'SHOW_STATUS_LABELS_REVIEW': True,
     'SHOW_DUE_ICONS': True,
 }
 
@@ -409,6 +418,24 @@ TEST_STATUS_DISPLAY_SHORT = {
     'no_tol': "NO TOL",
 }
 
+DEFAULT_COLOURS = [
+    'rgba(60,141,188,1)',
+    'rgba(0,192,239,1)',
+    'rgba(0,166,90,1)',
+    'rgba(243,156,18,1)',
+    'rgba(245,105,84,1)',
+    'rgba(210,214,222,1)',
+    'rgba(0,31,63,1)',
+    'rgba(240,245,2,1)',
+    'rgba(57,204,204,1)',
+    'rgba(96,92,168,1)',
+    'rgba(216,27,96,1)',
+    'rgba(1,255,112,1)',
+    'rgba(17,17,17,1)',
+]
+
+USE_PARTS = False
+
 # ------------------------------------------------------------------------------
 # local_settings contains anything that should be overridden
 # based on site specific requirements (e.g. deployment, development etc)
@@ -425,11 +452,12 @@ if FORCE_SCRIPT_NAME:
 # ------------------------------------------------------------------------------
 # Testing settings
 
-SELENIUM_VIRTUAL_DISPLAY = False # Set to True to use headless browser for testing (requires xvfb)
-SELENIUM_USE_CHROME = False # Set to True to use Chrome instead of FF (requires ChromeDriver)
-SELENIUM_CHROME_PATH = '' # Set full path of Chromedriver binary if SELENIUM_USE_CHROME == True
+SELENIUM_VIRTUAL_DISPLAY = False  # Set to True to use headless browser for testing (requires xvfb)
+SELENIUM_USE_CHROME = False  # Set to True to use Chrome instead of FF (requires ChromeDriver)
+SELENIUM_CHROME_PATH = ''  # Set full path of Chromedriver binary if SELENIUM_USE_CHROME == True
+SELENIUM_VIRTUAL_DISPLAY = False  # Set to True to use headless browser for testing (requires xvfb)
 
 
-if 'test' in sys.argv:
+if any(['py.test' in v for v in sys.argv]):
 
     from .test_settings import * # noqa

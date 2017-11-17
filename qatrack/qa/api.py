@@ -1,18 +1,23 @@
+
 import csv
 import io
+import json
+import tastypie
+
 from django.conf import settings
 from django.contrib.auth.models import Group
-from qatrack.formats.en.formats import DATETIME_FORMAT
-import django.utils.dateformat as dateformat
-import tastypie
+from django.db.models import Q
+from django.http import JsonResponse
+from django.utils import dateformat
 from tastypie.resources import Resource, ModelResource, ALL, ALL_WITH_RELATIONS
 from tastypie.authentication import BasicAuthentication
 from tastypie.authorization import DjangoAuthorization
-from tastypie.utils import timezone
-import qatrack.qa.models as models
-from qatrack.units.models import Unit, Modality, UnitType
-
 from tastypie.serializers import Serializer
+from tastypie.utils import timezone
+
+from qatrack.qa import models
+from qatrack.units.models import Unit, Modality, UnitType
+from qatrack.formats.en.formats import DATETIME_FORMAT
 
 
 def csv_date(dt):
@@ -377,3 +382,33 @@ class TestListInstanceResource(ModelResource):
         else:
             review = ()
         return review
+
+
+def test_searcher(request):
+    q = request.GET.get('q')
+    tests = models.Test.objects.filter(Q(id__icontains=q) | Q(name__icontains=q)).values('id', 'name')[0:50]
+    return JsonResponse({'items': list(tests)})
+
+
+def test_list_searcher(request):
+    q = request.GET.get('q')
+    testlists = models.TestList.objects.filter(Q(id__icontains=q) | Q(name__icontains=q)).values('id', 'name')[0:50]
+    return JsonResponse({'items': list(testlists)})
+
+
+def test_list_cycle_searcher(request):
+    q = request.GET.get('q')
+    testlistcycles = models.TestListCycle.objects.filter(Q(id__icontains=q) | Q(name__icontains=q)).values('id', 'name')[0:50]
+    return JsonResponse({'items': list(testlistcycles)})
+
+
+def test_instance_searcher(request):
+    q = request.GET.get('q')
+    testinstance = models.TestInstance.objects.filter(Q(id__icontains=q) | Q(unit_test_info__test__name__icontains=q)).values('id', 'unit_test_info__test__name')[0:50]
+    return JsonResponse({'items': list(testinstance), 'name': 'unit_test_info__test__name'})
+
+
+def test_list_instance_searcher(request):
+    q = request.GET.get('q')
+    testlistinstance = models.TestListInstance.objects.filter(Q(id__icontains=q) | Q(test_list__name__icontains=q)).values('id', 'test_list__name')[0:50]
+    return JsonResponse({'items': list(testlistinstance), 'name': 'test_list__name'})

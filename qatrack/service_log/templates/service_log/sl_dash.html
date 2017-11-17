@@ -1,0 +1,254 @@
+{% extends "service_log/sl_base.html" %}
+
+{% load qa_tags %}
+
+{% block head_title %}Service Log Dashboard{% endblock %}
+
+{% block extra_css %}
+    {{ block.super }}
+{% endblock extra_css %}
+
+{% block require_javascript %}
+    require(['jquery', 'sl_dash', 'sidebar'], function($) {
+        $('body').removeClass("loading");
+    });
+{% endblock require_javascript %}
+
+{#{% block body_class %}sidebar-mini sidebar-collapse loading{% endblock body_class %}#}
+
+{% block body %}
+
+    <div class="max-width-lg">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="box">
+
+                    <div class="box-header">
+                        <h3 class="box-title">
+                            Return To Service QA
+                        </h3>
+                    </div>
+
+                    <div class="box-body">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <label class="pull-left">Incomplete RTS QA</label>
+                                <a href="{% url 'rtsqa_list_all' %}?f=tli.in-1" class="pull-right btn btn-flat btn-xs btn-info left-btns">{{ counts.qa_not_complete }}</a>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <label class="pull-left">Unreviewed RTS QA</label>
+                                <a href="{% url 'rtsqa_list_all' %}?f=tli.in-0_tli.ar-0" class="pull-right btn btn-flat btn-xs btn-info left-btns">{{ counts.qa_not_reviewed }}</a>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="box">
+
+                    <div class="box-header">
+                        <h3 class="box-title">
+                            Service Events
+                        </h3>
+                    </div>
+                    <div class="box-body">
+{#                        {% for key, val in counts.se_statuses.items %}#}
+{#                            <div class="row">#}
+{#                                <div class="col-md-12">#}
+{#                                    <label class="pull-left">{{ key }}</label>#}
+{#                                    <a href="{% url 'sl_list_all' %}?f=ss-{{ val.id }}" class="pull-right btn btn-flat btn-xs btn-primary left-btns">{{ val.num }}</a>#}
+{#                                </div>#}
+{#                            </div>#}
+{#                        {% endfor %}#}
+                        <div class="row">
+                            <div class="col-md-12">
+                                <label class="pull-left">{{ counts.se_default.status_name }}</label>
+                                <a href="{% url 'sl_list_all' %}?f=ss-{{ counts.se_default.id }}" class="pull-right btn btn-flat btn-xs btn-info left-btns">{{ counts.se_default.count }}</a>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <label class="pull-left">Needing Review</label>
+                                <a href="{% url 'sl_list_all' %}?f=ar-1_ss.ar-1" class="pull-right btn btn-flat btn-xs btn-info left-btns">{{ counts.se_needing_review }}</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+{#            <div class="col-md-4">#}
+{#                <div class="box box-primary">#}
+{##}
+{#                    <div class="box-header">#}
+{#                        <h3 class="box-title">#}
+{#                            Parts and Units#}
+{#                        </h3>#}
+{#                    </div>#}
+{##}
+{#                    <div class="box-body">#}
+{#                        <div class="row">#}
+{#                            <div class="col-md-12">#}
+{#                                <label class="pull-left">Parts running low</label>#}
+{#                                <div class="pull-right btn btn-flat btn-xs btn-primary left-btns">{{ counts.parts_low }}</div>#}
+{#                            </div>#}
+{#                        </div>#}
+{#                        <div class="row">#}
+{#                            <div class="col-md-12">#}
+{#                                <label class="pull-left">Units restricted</label>#}
+{#                                <div class="pull-right btn btn-flat btn-xs btn-primary left-btns">{{ counts.units_restricted }}</div>#}
+{#                            </div>#}
+{#                        </div>#}
+{#                    </div>#}
+{##}
+{#                </div>#}
+{#            </div>#}
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="box">
+
+                    <div class="box-header">
+                        <h3 class="box-title">
+                            <i class="fa fa-th fa-fw" aria-hidden="true"></i>
+                            Recent Service Log Activity
+                        </h3>
+                        <div class="box-tools pull-right">
+                            <i id="se_new_toggle" class="fa fa-stack bg-dark-gray on timeline-toggle">
+                                <i class="fa fa-wrench fa-stack-custom-main fa-lg"></i>
+                                <i class="fa fa-plus fa-stack-custom-sub success"></i>
+                            </i>
+                            <i id="se_edit_toggle" class="fa fa-stack bg-dark-gray on timeline-toggle">
+                                <i class="fa fa-wrench fa-stack-custom-main fa-lg"></i>
+                                <i class="fa fa-pencil fa-stack-custom-sub fa-flip-horizontal upper-left primary"></i>
+                            </i>
+                            <i id="se_status_toggle" class="fa fa-stack bg-dark-gray on timeline-toggle">
+                                <i class="fa fa-wrench fa-stack-custom-main fa-lg"></i>
+                                <i class="fa fa-exclamation fa-stack-custom-sub fa-fw"></i>
+                            </i>
+                            <i id="rtsqa_new_toggle" class="fa fa-stack bg-dark-gray on timeline-toggle">
+                                <i class="fa fa-pencil-square-o fa-stack-custom-main fa-lg"></i>
+                                <i class="fa fa-plus fa-stack-custom-sub success"></i>
+                            </i>
+                            <i id="rtsqa_complete_toggle" class="fa fa-stack bg-dark-gray on timeline-toggle">
+                                <i class="fa fa-pencil-square-o fa-stack-custom-main fa-lg"></i>
+                                <i class="fa fa-check fa-stack-custom-sub info"></i>
+                            </i>
+                        </div>
+                    </div>
+
+                    <div class="box-body">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <ul class="timeline timeline-custom">
+
+                                    {% for key, val in tl_dates.items %}
+
+                                        <li class="time-label">
+                                            <span class="bg-gray">
+                                                {{ val.display }}
+                                            </span>
+                                        </li>
+
+                                        {% for obj in val.objs %}
+                                            <li class="{{ obj.class }}">
+                                                {% if obj.class == 'se_new' %}
+                                                    <i class="fa fa-stack bg-dark-gray">
+                                                        <i class="fa fa-wrench fa-stack-custom-main fa-lg"></i>
+                                                        <i class="fa fa-plus fa-stack-custom-sub upper-left success"></i>
+                                                    </i>
+                                                {% elif obj.class == 'se_edit' %}
+                                                    <i class="fa fa-stack bg-dark-gray">
+                                                        <i class="fa fa-wrench fa-stack-custom-main fa-lg"></i>
+                                                        <i class="fa fa-pencil fa-stack-custom-sub fa-flip-horizontal upper-left primary"></i>
+                                                    </i>
+                                                {% elif obj.class == 'se_status' %}
+                                                    <i class="fa fa-stack bg-dark-gray">
+                                                        <i class="fa fa-wrench fa-stack-custom-main fa-lg"></i>
+                                                        <i class="fa fa-exclamation fa-stack-custom-sub upper-left status_colour" data-colour="{{ obj.instance.service_status.colour }}"></i>
+{#                                                        <i class="fa fa-wrench fa-lg status_colour" data-colour="{{ obj.instance.service_status.colour }}"></i>#}
+                                                    </i>
+                                                {% elif obj.class == 'rtsqa_new' %}
+                                                    <i class="fa fa-stack bg-dark-gray">
+                                                        <i class="fa fa-pencil-square-o fa-stack-custom-main fa-lg"></i>
+                                                        <i class="fa fa-plus fa-stack-custom-sub upper-left success"></i>
+                                                    </i>
+                                                {% elif obj.class == 'rtsqa_complete' %}
+                                                    <i class="fa fa-stack bg-dark-gray">
+                                                        <i class="fa fa-pencil-square-o fa-stack-custom-main fa-lg"></i>
+                                                        <i class="fa fa-check fa-stack-custom-sub upper-left info"></i>
+                                                    </i>
+                                                {% else %}
+                                                    <i class="fa fa-question bg-default"></i>
+                                                {% endif %}
+                                                <div class="timeline-item">
+                                                    <span class="time"><i class="fa fa-clock-o"></i> {{ obj.time }}</span>
+                                                    <h3 class="timeline-header header-{{ obj.class }}"
+                                                        {% if obj.class == 'rtsqa_new' or obj.class == 'rtsqa_complete' %}onclick="window.location='{% url 'sl_details' pk=obj.instance.service_event.id %}'"
+                                                        {% else %}onclick="window.location='{% url 'sl_details' pk=obj.instance.id %}'"
+                                                        {% endif %}>
+                                                        <div class="pull-right margin-right-20 label label-default">
+                                                            {% if obj.class == 'se_new' or obj.class == 'se_edit' or obj.class == 'se_status' %}
+                                                                {{ obj.instance.unit_service_area.unit }}
+                                                            {% else %}
+                                                                {{ obj.instance.service_event.unit_service_area.unit }}
+                                                            {% endif %}
+                                                        </div>
+                                                        {{ obj.msg }}
+                                                        {% if obj.class == 'se_status' %}
+                                                            {% service_status_label obj.instance.service_status %}
+{#                                                            <span class="label status_colour" data-bgcolour="{{ obj.instance.service_status.colour }}">{{ obj.instance.service_status }}</span>#}
+                                                        {% endif %}
+                                                    </h3>
+
+                                                    {% if obj.class == 'rtsqa_complete' %}
+                                                        <div class="timeline-body">
+                                                            <span>Pass/Fails: {% include "qa/pass_fail_status.html" with instance=obj.instance.test_list_instance show_icons=True %}</span>
+                                                            <span class="margin-l-20">Review Statuses: {% include "qa/review_status.html" with instance=obj.instance.test_list_instance show_icons=True statuses=obj.statuses_dict.statuses %}</span>
+                                                        </div>
+                                                    {% endif %}
+
+{#                                                    <div class="timeline-footer">#}
+{#                                                        #}
+{#                                                    </div>#}
+                                                </div>
+                                            </li>
+                                        {% endfor %}
+
+                                    {% endfor %}
+
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock body %}
+
+{% block loading_modal %}
+    <div class="loading-modal ">
+        <div class="center">
+            <div>
+                <span class="loading-logo">QAT</span>
+                <i class="fa fa-fw fa-plus fa-spin fa-2x info"></i>
+            </div>
+            <div>
+                <b>
+                {% if test_list_instance %}
+                    Loading {{test_list_instance.unit_test_collection.unit.name}} : {{test_list_instance.test_list.name}}
+                {% else %}
+                    Loading {{unit_test_collection.unit.name}} : {{test_list.name}}
+                {% endif %}
+                </b>
+            </div>
+
+        </div>
+    </div>
+{% endblock loading_modal %}

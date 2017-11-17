@@ -3,16 +3,26 @@ from .. import signals  # NOQA :signals import needs to be here so signals get r
 import logging
 import collections
 
+from django.apps import apps
 from django.conf import settings
-from django.core.urlresolvers import reverse, resolve
-from django.template import Context
 from django.contrib.auth.context_processors import PermWrapper
+from django.contrib.sites.shortcuts import get_current_site
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.urlresolvers import reverse, resolve
+from django.db.models import Q
+from django.http import JsonResponse
+from django.shortcuts import render
 from django.template.loader import get_template
+from django.utils.html import escape
 from django.utils.translation import ugettext as _
-
+from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.http import require_POST
 from django.views.generic import UpdateView
+from django_comments import get_form
+from django_comments import signals as dc_signals
 
-from qatrack.qa import models, utils
+from qatrack.qa import models
+from qatrack.service_log import models as sl_models
 
 from braces.views import PrefetchRelatedMixin, SelectRelatedMixin
 from listable.views import (
@@ -38,8 +48,7 @@ def generate_review_status_context(test_list_instance):
         statuses[ti.status.name]["reviewed"] = test_list_instance.reviewed
         if ti.comment:
             comment_count += 1
-    if test_list_instance.comment:
-        comment_count += 1
+    comment_count += test_list_instance.comments.all().count()
 
     c = {"statuses": dict(statuses), "comments": comment_count, "show_icons": settings.ICON_SETTINGS['SHOW_REVIEW_ICONS']}
 
@@ -111,6 +120,20 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
         context["test_list"] = self.object.test_list
         context["unit_test_collection"] = self.object.unit_test_collection
         context["current_day"] = self.object.day + 1
+
+        context['attachments'] = self.object.unit_test_collection.tests_object.attachment_set.all()
+
+        rtsqas = sl_models.ReturnToServiceQA.objects.filter(test_list_instance=self.object)
+        se_rtsqa = []
+        for f in rtsqas:
+            if f.service_event not in se_rtsqa:
+                se_rtsqa.append(f.service_event)
+
+        context['service_events_rtsqa'] = se_rtsqa
+
+        se_ib = sl_models.ServiceEvent.objects.filter(test_list_instance_initiated_by=self.object)
+        context['service_events_ib'] = se_ib
+
         return context
 
     def form_valid(self, form):
@@ -139,7 +162,7 @@ class UTCList(BaseListableView):
 
     fields = (
         "actions",
-        "utc_name",
+        "name",
         "due_date",
         "unit__name",
         "frequency__name",
@@ -151,7 +174,7 @@ class UTCList(BaseListableView):
 
     search_fields = {
         "actions": False,
-        "utc_name": "utc_name__icontains",
+        "name": "name",
         "assigned_to__name": "assigned_to__name",
         "last_instance_pass_fail": False,
         "last_instance_review_status": False,
@@ -163,6 +186,7 @@ class UTCList(BaseListableView):
         "unit__name": "unit__number",
         "last_instance_pass_fail": False,
         "last_instance_review_status": False,
+        "due_date": "due_date"
     }
 
     widgets = {
@@ -180,14 +204,13 @@ class UTCList(BaseListableView):
 
     select_related = (
         "last_instance",
-        "last_instance__created_by",
         "frequency",
         "unit",
         "assigned_to",
     )
 
     headers = {
-        "utc_name": _("Test List/Cycle"),
+        "name": _("Test List/Cycle"),
         "unit__name": _("Unit"),
         "frequency__name": _("Frequency"),
         "assigned_to__name": _("Assigned To"),
@@ -197,13 +220,15 @@ class UTCList(BaseListableView):
     }
 
     prefetch_related = (
-        "last_instance__testinstance_set",
-        "last_instance__testinstance_set__status",
-        "last_instance__reviewed_by",
-        "last_instance__modified_by",
+        'last_instance__testinstance_set',
+        'last_instance__testinstance_set__status',
+        'last_instance__reviewed_by',
+        'last_instance__modified_by',
+        'last_instance__created_by',
+        'last_instance__comments',
     )
 
-    order_by = ["unit__name", "frequency__name", "utc_name"]
+    order_by = ["unit__name", "frequency__name", "name"]
 
     def __init__(self, *args, **kwargs):
         super(UTCList, self).__init__(*args, **kwargs)
@@ -247,10 +272,10 @@ class UTCList(BaseListableView):
             ).distinct()
 
         if self.active_only:
-            qs = qs.filter(active=True)
+            qs = qs.filter(active=True, unit__active=True)
 
         if self.inactive_only:
-            qs = qs.filter(active=False)
+            qs = qs.filter(Q(active=False) | Q(unit__active=False))
 
         return qs
 
@@ -263,36 +288,39 @@ class UTCList(BaseListableView):
 
         return filters
 
-    def get_extra(self):
-        return utils.qs_extra_for_utc_name()
-
     def frequency__name(self, utc):
-        return utc.frequency.name if utc.frequency else "Ad Hoc"
+        return utc.frequency.name if utc.frequency else 'Ad Hoc'
 
     def actions(self, utc):
         template = self.templates['actions']
-        c = Context({"utc": utc, "request": self.request, "action": self.action})
+        perms = PermWrapper(self.request.user)
+        c = {'utc': utc, 'request': self.request, 'action': self.action, 'perms': perms}
         return template.render(c)
 
     def due_date(self, utc):
         template = self.templates['due_date']
-        c = Context({"unit_test_collection": utc, "show_icons": settings.ICON_SETTINGS["SHOW_DUE_ICONS"]})
+        c = {'unit_test_collection': utc, 'show_icons': settings.ICON_SETTINGS['SHOW_DUE_ICONS']}
         return template.render(c)
 
     def last_instance__work_completed(self, utc):
         template = self.templates['work_completed']
-        c = Context({"instance": utc.last_instance})
+        c = {"instance": utc.last_instance}
         return template.render(c)
 
     def last_instance_review_status(self, utc):
         template = self.templates['review_status']
-        c = Context({"instance": utc.last_instance, "perms": PermWrapper(self.request.user), "request": self.request})
+        c = {'instance': utc.last_instance, 'perms': PermWrapper(self.request.user), 'request': self.request}
         c.update(generate_review_status_context(utc.last_instance))
         return template.render(c)
 
     def last_instance_pass_fail(self, utc):
         template = self.templates['pass_fail']
-        c = Context({"instance": utc.last_instance, "exclude": [models.NO_TOL], "show_label": True, "show_icons": settings.ICON_SETTINGS['SHOW_STATUS_ICONS_LISTING']})
+        c = {
+            'instance': utc.last_instance,
+            'exclude': [models.NO_TOL],
+            'show_label': settings.ICON_SETTINGS['SHOW_STATUS_LABELS_LISTING'],
+            'show_icons': settings.ICON_SETTINGS['SHOW_STATUS_ICONS_LISTING']
+        }
         return template.render(c)
 
 
@@ -351,13 +379,19 @@ class TestListInstances(BaseListableView):
 
     select_related = (
         "test_list",
-        # "testinstance_set__status",
         "unit_test_collection__unit",
         "unit_test_collection__frequency",
         "created_by", "modified_by", "reviewed_by",
     )
 
-    prefetch_related = ("testinstance_set", "testinstance_set__status")
+    prefetch_related = (
+        'testinstance_set',
+        'testinstance_set__status',
+        'rtsqa_for_tli',
+        'rtsqa_for_tli__service_event',
+        'serviceevents_initiated',
+        'comments'
+    )
 
     def __init__(self, *args, **kwargs):
         super(TestListInstances, self).__init__(*args, **kwargs)
@@ -398,21 +432,165 @@ class TestListInstances(BaseListableView):
 
     def actions(self, tli):
         template = self.templates['actions']
-        c = Context({"instance": tli, "perms": PermWrapper(self.request.user), "request": self.request})
+
+        rtsqas = tli.rtsqa_for_tli.all()
+        se_rtsqa = []
+        for f in rtsqas:
+            if f.service_event not in se_rtsqa:
+                se_rtsqa.append(f.service_event)
+
+        se_ib = tli.serviceevents_initiated.all()
+
+        c = {
+            'instance': tli,
+            'perms': PermWrapper(self.request.user),
+            'request': self.request,
+            'show_initiate_se': True,
+            'initiated_se': se_ib,
+            'num_initiated_se': len(se_ib),
+            'show_rtsqa_se': True,
+            'rtsqa_for_se': se_rtsqa,
+            'num_rtsqa_se': len(se_rtsqa)
+        }
         return template.render(c)
 
     def work_completed(self, tli):
         template = self.templates['work_completed']
-        c = Context({"instance": tli})
-        return template.render(c)
+        return template.render({"instance": tli})
 
     def review_status(self, tli):
         template = self.templates['review_status']
-        c = Context({"instance": tli, "perms": PermWrapper(self.request.user), "request": self.request})
+        c = {
+            "instance": tli,
+            "perms": PermWrapper(self.request.user),
+            "request": self.request,
+            "show_label": settings.ICON_SETTINGS['SHOW_REVIEW_LABELS_LISTING'],
+            "show_icons": settings.ICON_SETTINGS['SHOW_STATUS_ICONS_REVIEW']
+        }
         c.update(generate_review_status_context(tli))
         return template.render(c)
 
     def pass_fail(self, tli):
         template = self.templates['pass_fail']
-        c = Context({"instance": tli, "exclude": [models.NO_TOL], "show_label": True, "show_icons": settings.ICON_SETTINGS['SHOW_STATUS_ICONS_LISTING']})
+        c = {
+            "instance": tli,
+            "exclude": [models.NO_TOL],
+            "show_label": settings.ICON_SETTINGS['SHOW_REVIEW_LABELS_LISTING'],
+            "show_icons": settings.ICON_SETTINGS['SHOW_STATUS_ICONS_LISTING']
+        }
         return template.render(c)
+
+
+@require_POST
+@csrf_protect
+def ajax_comment(request, next=None, using=None):
+    """
+    Post a comment.
+
+    Copied from django_comment comments.py > post_comment method. Adjusted for ajax response
+    """
+    # Fill out some initial data fields from an authenticated user, if present
+    data = request.POST.copy()
+
+    try:
+        user_is_authenticated = request.user.is_authenticated()
+    except TypeError:  # Django >= 1.11
+        user_is_authenticated = request.user.is_authenticated
+    if user_is_authenticated:
+        if not data.get('name', ''):
+            data["name"] = request.user.get_full_name() or request.user.get_username()
+        if not data.get('email', ''):
+            data["email"] = request.user.email
+
+    # Look up the object we're trying to comment about
+    ctype = data.get("content_type")
+    object_pk = data.get("object_pk")
+    if ctype is None or object_pk is None:
+        return JsonResponse({'error': True, 'message': 'Missing content_type or object_pk field.'}, status=500)
+    try:
+        model = apps.get_model(*ctype.split(".", 1))
+        target = model._default_manager.using(using).get(pk=object_pk)
+    except TypeError:
+        return JsonResponse({'error': True, 'message': 'Invalid content_type value: %r' % escape(ctype)}, status=500)
+    except AttributeError:
+        return JsonResponse({'error': True, 'message': 'The given content-type %r does not resolve to a valid model.' % escape(ctype)}, status=500)
+    except ObjectDoesNotExist:
+        return JsonResponse(
+            {
+                'error': True,
+                'message': 'No object matching content-type %r and object PK %r exists.' % (escape(ctype), escape(object_pk))
+            },
+            status=500,
+        )
+    except (ValueError, ValidationError) as e:
+        return JsonResponse(
+            {
+                'error': True,
+                'message': 'Attempting go get content-type %r and object PK %r exists raised %s' % (escape(ctype), escape(object_pk), e.__class__.__name__)
+            },
+            status=500,
+        )
+
+    # Do we want to preview the comment?
+    preview = "preview" in data
+
+    # Construct the comment form
+    form = get_form()(target, data=data)
+
+    # Check security information
+    if form.security_errors():
+        return JsonResponse({'error': True, 'message': 'The comment form failed security verification: %s' % escape(str(form.security_errors()))}, status=500)
+
+    # If there are errors or if we requested a preview show the comment
+    if form.errors or preview:
+        template_list = [
+            # These first two exist for purely historical reasons.
+            # Django v1.0 and v1.1 allowed the underscore format for
+            # preview templates, so we have to preserve that format.
+            "comments/%s_%s_preview.html" % (model._meta.app_label, model._meta.model_name),
+            "comments/%s_preview.html" % model._meta.app_label,
+            # Now the usual directory based template hierarchy.
+            "comments/%s/%s/preview.html" % (model._meta.app_label, model._meta.model_name),
+            "comments/%s/preview.html" % model._meta.app_label,
+            "comments/preview.html",
+        ]
+        return render(request, template_list, {
+            "comment": form.data.get("comment", ""),
+            "form": form,
+            "next": data.get("next", next),
+        })
+
+    # Otherwise create the comment
+    comment = form.get_comment_object(site_id=get_current_site(request).id)
+    comment.ip_address = request.META.get("REMOTE_ADDR", None)
+    if user_is_authenticated:
+        comment.user = request.user
+
+    # Signal that the comment is about to be saved
+    responses = dc_signals.comment_will_be_posted.send(
+        sender=comment.__class__,
+        comment=comment,
+        request=request
+    )
+
+    for (receiver, response) in responses:
+        if response is False:
+            return JsonResponse({'error': True, 'message': 'comment_will_be_posted receiver %r killed the comment' % receiver.__name__}, status=500)
+
+    edit_tli = 'edit-tli' in data and data['edit-tli'] == 'edit-tli'
+    # Save the comment and signal that it was saved
+    comment.save()
+    dc_signals.comment_was_posted.send(
+        sender=comment.__class__,
+        comment=comment,
+        request=request,
+        edit_tli=edit_tli
+    )
+
+    return JsonResponse({
+        'success': True,
+        'comment': comment.comment,
+        'c_id': comment.id,
+        'user_name': comment.user.get_full_name(),
+        'submit_date': comment.submit_date,
+    })

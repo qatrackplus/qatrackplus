@@ -1,0 +1,9 @@
+{% load qa_tags %}
+<div style="min-width: 85px;">
+    {% if perms.service_log.change_serviceevent %}
+        <a class="btn btn-default btn-xs btn-flat" href="{% url 'sl_edit' se.pk %}{% if next %}?next={{ next }}{% endif %}">Edit</a>
+    {% endif %}
+    {% if perms.service_log.view_serviceevent %}
+        <a class="btn btn-default btn-xs btn-flat" href="{% url 'sl_details' se.pk %}">Details</a>
+    {% endif %}
+</div>

@@ -1,5 +1,5 @@
 #chart {
-    height: 800px;
+    /*height: 800px;*/
     min-width: 300px;
 }
 
@@ -109,11 +109,11 @@ input.date-only-input{
     height:50px;
 }
 .test-filter{
-    height:235px;
+    height:262px;
     padding-top: 5px;
 }
 #test {
-    height: 206px;
+    height: 233px;
     padding-top: 5px;
 }
 /**********************************************/
@@ -160,6 +160,19 @@ table thead tr:first-child th {
 #csv-export {
     margin: 5px;
 }
+#filter-box {
+    position: relative;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+#filter-resizer,
+#chart-resizer {
+    cursor: ns-resize;
+}
+#filter-resizer:hover,
+#chart-resizer:hover {
+    background-color: #d9dadd;
+}
 
 
 /************************************************/
@@ -181,8 +194,9 @@ table thead tr:first-child th {
     stroke-width: 1px;
 }
 rect.handle {
-    width: 4px;
-    stroke: #888;
+    width: 6px;
+    /*stroke: #888;*/
+    visibility: hidden;
 }
 .hover-line {
     stroke: #E6E7E8;
@@ -206,6 +220,9 @@ rect.handle {
     stroke: #FFF;
     shape-rendering: crispEdges;
 }
+rect.selection {
+    stroke: #222222;
+}
 .hidden {
     display: none;
 }
@@ -221,17 +238,6 @@ line.horizontalGrid {
     /*stroke: #bbb;*/
     stroke-width: 1px;
 }
-
-
-/*.thing {*/
-/*color:*/
-    /*#001F3F,*/
-    /*#A47D7C,*/
-    /*#444444,*/
-    /*#ff851b,*/
-    /*#39CCCC,*/
-    /*#605ca8,*/
-    /*#00a65a,*/
-    /*#D81B60,*/
-    /*#3c8dbc*/
-/*}*/
+.se-tooltip-main {
+    width: 165px;
+}

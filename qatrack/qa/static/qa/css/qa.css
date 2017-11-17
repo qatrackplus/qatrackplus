@@ -35,6 +35,7 @@ tr.qa-valuerow td {
 .qa-name {
     min-width:300px;
     text-align:left;
+    vertical-align: middle !important;
 }
 th.qa-name div{
 /* hack to fix IE7 min-width*/
@@ -70,13 +71,15 @@ input[disabled].qa-input, input[readonly].qa-input {
 }
 .qa-table td.qa-value,
 .qa-table th.qa-value{
-    width:110px;
+    width: 110px;
     text-align:center;
     padding: 0;
+    vertical-align: middle;
 }
 .qa-skip {
     width:34px;
     text-align: center;
+    vertical-align: middle !important;
 }
 .qa-status{
     /*width: 90px;*/
@@ -114,16 +117,16 @@ th.qa-history div{
     height:1px;
 }
 .history-value,.history-label {
-    /*color: #fff;*/
-    display:inline-block;
+    display: inline-block;
     width: 56px;
-    text-align:right;
+    text-align: right;
     margin-right: 1px; /*fix ie inline block bug*/
-    text-overflow:ellipsis;
+    text-overflow: ellipsis;
     white-space: nowrap;
-    overflow:hidden;
+    overflow: hidden;
     padding: 3px 4px;
     vertical-align: middle;
+    font-size: 12px;
 }
 .history-value > i, .pass-fail > i {
     margin-top:2px;
@@ -137,31 +140,139 @@ th.qa-history div{
 tr .callout {
     margin: 10px 0;
 }
-tr.qa-comment .comment-div {
-    /*height:50px;*/
-    display:none;
-    padding: 0;
-    /*height: auto;*/
+tr.qa-comment div.comment-container {
+    display: none;
 }
-tr.qa-comment .comment-div textarea {
-    width:100%;
+tr.qa-comment div.comment-container div.comment-div {
+    padding: 10px;
+    width: 100%;
+    border-bottom: 1px solid #eeeeee;
+}
+tr.qa-comment div.comment-container div.comment-div textarea {
+    width: 100%;
     resize: none;
-    border: none;
     vertical-align: top;
     overflow: hidden !important;
 }
-tr.qa-procedure div.qa-procedure-text {
+tr.qa-procedure div.procedure-container {
     display:none;
-    width: 100%;
 }
-tr.qa-procedure,
+tr.qa-procedure div.procedure-container div.qa-procedure-text {
+    width: 100%;
+    padding: 10px;
+    border-top: 1px solid #eeeeee;
+}
+tr.qa-error div.error-container div.qa-error-text {
+    width: 100%;
+    padding: 10px;
+    border-top: 1px solid #eeeeee;
+    color: #dd4b39;
+}
+tr.qa-error > td {
+    padding-left: 0 !important;
+    padding-bottom: 0 !important;
+}
+#perform-qa-table > tbody > tr > td .null-bar {
+    border-left: 3px solid transparent;
+}
+#perform-qa-table > tbody > tr > td .procedure-bar {
+    border-left: 3px solid transparent;
+    -webkit-transition: border-color 0.5s; /* Safari */
+    transition: border-color 0.5s;
+}
+#perform-qa-table > tbody > tr > td .procedure-bar.in {
+    border-left: 3px solid #00c0ef;
+    -webkit-transition: border-color 0.5s; /* Safari */
+    transition: border-color 0.5s;
+}
+td .comment-bar {
+    border-left: 3px solid transparent;
+    -webkit-transition: border-color 0.5s; /* Safari */
+    transition: border-color 0.5s;
+    height: 100%;
+    top: 0;
+}
+td .comment-bar.in {
+    border-left: 3px solid #3c8dbc;
+    -webkit-transition: border-left 0.5s; /* Safari */
+    transition: border-left 0.5s;
+}
+td.test-name {
+    font-weight: 700;
+}
+.bar-container {
+    padding: 0 !important;
+    height: 100%;
+    top: 0;
+}
+#perform-qa-table > tbody > tr > td .error-bar {
+    border-left: 3px solid transparent;
+    -webkit-transition: border-color 0.5s; /* Safari */
+    transition: border-color 0.5s;
+}
+#perform-qa-table > tbody > tr > td .error-bar.in {
+    border-left: 3px solid #dd4b39;
+    -webkit-transition: border-left 0.5s; /* Safari */
+    transition: border-left 0.5s;
+}
+
+#perform-qa-table > thead > tr > th.qa-category {
+    width: 120px;
+    vertical-align: middle !important;
+}
+#perform-qa-table > tbody > tr > td.qa-category {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 0;
+}
+#perform-qa-table > tbody > tr > td.qa-category div {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    /*max-width: 0;*/
+}
+#perform-qa-table > tbody > tr.control-group.qa-valuerow > td.qa-name.qa-showproc {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 0;
+}
+
+#perform-qa-table > thead > tr > th.qa-history {
+    width: 320px;
+}
+
+
+#perform-qa-table > tbody > tr > td.qa-category > .error-bar {
+    height: 100%;
+    top:0;
+}
+#perform-qa-table, #review-table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+#perform-qa-table td, #review-table td {
+    border-image: none !important;
+    border: none !important;
+}
+/*#perform-qa-table .qa-valuerow td {*/
+    /*border-bottom: 1px solid #eeeeee !important;*/
+/*}*/
+#perform-qa-table > tbody > tr.hover {
+    background-color: #eeeeee;
+}
+#perform-qa-table > tbody > tr.qa-procedure {
+    /*display: none;*/
+    border-bottom: 1px solid #eeeeee !important;
+}
 tr.qa-comment {
     display: none;
 }
 tr.qa-procedure,
 tr.qa-procedure td,
 tr.qa-comment,
-tr.qa-comment td{
+tr.qa-comment td {
     padding: 0 !important;
     margin: 0 !important;
     overflow: hidden;
@@ -185,6 +296,13 @@ tr.qa-comment td{
     display: inline-block;
     vertical-align: top;
 }
+.datetime-clear {
+    cursor: pointer;
+    display: none;
+}
+.datetime-clear:hover {
+    color: #bb6666;
+}
 
 
 /* admin options */
@@ -193,10 +311,10 @@ tr.qa-comment td{
     display: table;
     width: 100%;
 }
-#box-admin div.left-border {
-    display: table-cell;
-    float: none;
-}
+/*#box-admin div.left-border {*/
+    /*display: table-cell;*/
+    /*float: none;*/
+/*}*/
 #box-admin .box-body > .row .row {
     margin-top: 4px;
 }
@@ -209,14 +327,18 @@ tr.qa-comment td{
 }
 #qa-tli-comment {
     padding: 0 !important;
-    display: none;
 }
 #qa-tli-comment textarea {
     width:100%;
     resize: none;
-    border: none;
     vertical-align: top;
     overflow: hidden !important;
+}
+#comments {
+    margin: 0;
+}
+#comments p {
+    padding-left: 10px;
 }
 #box-perform .box-footer {
     min-height: 40px;
@@ -292,4 +414,38 @@ th.review-ref {
 }
 .pad-r-10 {
     padding-right: 10px;
+}
+.status-boxes {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    vertical-align: bottom;
+}
+
+/* Remove spinners on number inputs */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+#listable-table-unreviewed > thead > tr > th:nth-child(1),
+#listable-table-unreviewed > tbody > tr > td:nth-child(1) {
+    min-width: 160px;
+}
+#listable-table-review_utc > tbody > tr > td:nth-child(1),
+#listable-table-unreviewed > tbody > tr > td:nth-child(1),
+#listable-table-unreviewed_visible_to > tbody > tr > td:nth-child(1),
+#listable-table-unreviewed_by_group > tbody > tr > td:nth-child(1),
+#listable-table-review_utc > tbody > tr > td:nth-child(5),
+#listable-table-unreviewed > tbody > tr > td:nth-child(5),
+#listable-table-unreviewed_visible_to > tbody > tr > td:nth-child(5),
+#listable-table-unreviewed_by_group > tbody > tr > td:nth-child(5) {
+    width: 160px !important;
+}
+row.procedure-open > td:nth-child(1) {
+    border-left: 3px solid #00ff00;
 }

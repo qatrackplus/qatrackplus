@@ -1,0 +1,115 @@
+
+.left-btns {
+    width: 90px;
+    margin: 4px 0;
+}
+.danger {
+    color: #b94a48;
+}
+.danger label div.label-text {
+    font-weight: bold;
+}
+/*label:not(.required) {*/
+    /*font-weight: normal;*/
+/*}*/
+.no-margin-bottom {
+    margin-bottom: 0 !important;
+}
+.italics {
+    font-style: italic;
+}
+.status-dates dl > dt {
+    width: 120px;
+}
+.status-dates dl > dd {
+    margin-left: 130px;
+    min-width: 130px;
+}
+
+.bordered {
+    border: 1px solid #ddd;
+}
+.small-pad {
+    padding: 4px;
+}
+
+.box.box-bordered-default {
+    border: 1.5px solid rgb(210, 214, 222);
+}
+#listable-table-sl_list_all > thead > tr > th:nth-child(2),
+#listable-table-sl_list_all > tbody > tr > td:nth-child(2),
+#listable-table-rtsqa_list_all > tbody > tr > td:nth-child(2) {
+    width: 50px;
+}
+#listable-table-sl_list_all > thead > tr:nth-child(2) > th:nth-child(10) > span > input {
+    min-width: 145px;
+}
+#listable-table-sl_list_all > tbody > tr > td:nth-child(10) {
+    width: 150px;
+}
+
+#listable-table-parts_list > thead > tr > th:nth-child(2),
+#listable-table-parts_list > tbody > tr > td:nth-child(2) {
+    width: 75px;
+    max-width: 75px;
+}
+#listable-table-parts_list > thead > tr > th:nth-child(1),
+#listable-table-parts_list > tbody > tr > td:nth-child(1) {
+    width: 100px;
+    max-width: 100px;
+}
+#listable-table-vendor_list > thead > tr > th:nth-child(2) {
+    width: 50px;
+    max-width: 50px;
+}
+#listable-table-vendor_list > thead > tr > th:nth-child(3) {
+    width: 150px;
+    max-width: 150px;
+}
+#listable-table-unit_list > thead > tr > th:nth-child(2) {
+    width: 50px;
+}
+#listable-table-suppliers_list > thead > tr > th:nth-child(2) {
+    width: 75px;
+}
+#listable-table-rtsqa_list_all > thead > tr > th:nth-child(1) {
+    width: 150px;
+}
+
+/*QA Status Spans                                 */
+.no_tol {
+    background-color:#00c0ef;
+}
+.ok {
+    background-color:#00a65a;
+}
+.action {
+    background-color:#dd4b39;
+}
+.tolerance {
+    background-color: #f39c12;
+}
+.not_done {
+    background-color: #b5bbc8;
+}
+#tli_initiated_display {
+    margin-top: 5px;
+}
+.autosize {
+    resize: none;
+}
+body.sidebar-mini.sidebar-collapse > div.wrapper > aside.main-sidebar > section.sidebar > ul.sidebar-menu > li.header {
+    display: list-item !important;
+}
+body.sidebar-mini.sidebar-collapse > div.wrapper > aside.main-sidebar > section.sidebar > ul.sidebar-menu > li.header > span {
+    opacity: 0;
+}
+.smooth-border {
+    border-width: 2px;
+    border-radius: 4px;
+    color: black;
+    border-style: solid;
+}
+.label.disabled {
+    opacity: 0.2;
+}

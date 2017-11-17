@@ -1,3 +1,4 @@
+
 from django import forms
 from django.core.validators import MaxLengthValidator
 from django.core.exceptions import ValidationError
@@ -10,8 +11,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.conf import settings
 
 from .. import models
-
-
+from qatrack.service_log import models as sl_models
+from qatrack.service_log.forms import ServiceEventMultipleField
 from qatrack.qa import utils
 
 BOOL_CHOICES = [(0, "No"), (1, "Yes")]
@@ -114,23 +115,12 @@ class TestInstanceWidgetsMixin(object):
 
         uti_pk = self.unit_test_info.pk
 
-        #sv = self.cleaned_data["string_value"].strip()
-
-        #upload = (
-        #    self.unit_test_info.test.is_upload()
-        #    and not self.cleaned_data["skipped"]
-        #    and sv
-        #)
-
-        #if upload:
-        #    import ipdb; ipdb.set_trace()
-        #    to_process.append((uti_pk, Attachment.objects.get(pk=sv)))
-
         user_attached = [x for x in self.cleaned_data.get("user_attached", "").split(",") if x]
         for aid in user_attached:
             to_process.append((uti_pk, Attachment.objects.get(pk=aid)))
 
         return to_process
+
 
 class CreateTestInstanceForm(TestInstanceWidgetsMixin, forms.Form):
 
@@ -253,33 +243,53 @@ class BaseTestListInstanceForm(forms.ModelForm):
     )
 
     work_completed = forms.DateTimeField(required=False)
-    # work_duration = forms.DurationField(required=False)
 
     modified = forms.DateTimeField(required=False)
+
+    service_events = ServiceEventMultipleField(queryset=sl_models.ServiceEvent.objects.none(), required=False)
+    rtsqa_id = forms.IntegerField(required=False, widget=HiddenInput())
+    # now handle saving of qa or service event and link rtsqa
 
     class Meta:
         model = models.TestListInstance
         exclude = ("day",)
 
     def __init__(self, *args, **kwargs):
+
+        self.unit = kwargs.pop('unit', None)
+        self.rtsqa_id = kwargs.pop('rtsqa', None)
+
         super(BaseTestListInstanceForm, self).__init__(*args, **kwargs)
 
-        for field in ("work_completed", "work_started"):
+        for field in ('work_completed', 'work_started'):
             self.fields[field].widget = forms.widgets.DateTimeInput()
 
             self.fields[field].widget.format = settings.INPUT_DATE_FORMATS[0]
             self.fields[field].input_formats = settings.INPUT_DATE_FORMATS
             self.fields[field].widget.attrs["title"] = settings.DATETIME_HELP
-            self.fields[field].widget.attrs["class"] = "input-medium"
+            self.fields[field].widget.attrs['class'] = 'form-control'
             self.fields[field].help_text = settings.DATETIME_HELP
 
-        self.fields["status"].widget.attrs["class"] = "input-medium"
-
+        self.fields["status"].widget.attrs["class"] = "form-control select2"
         self.fields["work_completed"].widget.attrs["placeholder"] = "optional"
+        self.fields['service_events'].widget.attrs.update({'class': 'select2'})
 
-        self.fields["comment"].widget.attrs["rows"] = "4"
-        self.fields["comment"].widget.attrs["placeholder"] = "Add comment about this set of tests"
-        # self.fields["comment"].widget.attrs.pop("cols")
+        if self.instance.pk:
+            se_ids = []
+            rtsqa_ids = []
+            for rtsqa in self.instance.rtsqa_for_tli.all():
+                se_ids.append(rtsqa.service_event_id)
+                rtsqa_ids.append(rtsqa.id)
+            self.initial['rtsqa_id'] = ','.join(str(x) for x in rtsqa_ids)
+            se_qs = sl_models.ServiceEvent.objects.filter(pk__in=se_ids)
+            self.fields['service_events'].queryset = se_qs
+            self.initial['service_events'] = se_qs
+
+        elif self.rtsqa_id:
+            rtsqa = sl_models.ReturnToServiceQA.objects.get(pk=self.rtsqa_id)
+            self.fields['service_events'].queryset = sl_models.ServiceEvent.objects.filter(pk=rtsqa.service_event.id)
+            self.initial['service_events'] = sl_models.ServiceEvent.objects.filter(pk=rtsqa.service_event.id)
+            self.initial['rtsqa_id'] = sl_models.ReturnToServiceQA.objects.get(pk=self.rtsqa_id).id
 
     def clean(self):
         """validate the work_completed & work_started values"""
@@ -294,8 +304,11 @@ class BaseTestListInstanceForm(forms.ModelForm):
         work_completed = cleaned_data.get("work_completed")
 
         # keep previous work completed date if present
-        if not work_completed and self.instance:
-            work_completed = self.instance.work_completed
+        if not work_completed:
+            if not self.instance.pk:
+                work_completed = timezone.now().astimezone(timezone.get_current_timezone())
+            else:
+                work_completed = self.instance.work_completed
             cleaned_data["work_completed"] = work_completed
 
         if work_started and work_completed:
@@ -317,9 +330,14 @@ class BaseTestListInstanceForm(forms.ModelForm):
 class CreateTestListInstanceForm(BaseTestListInstanceForm):
     """form for doing qa test list"""
 
+    comment = forms.CharField(widget=forms.Textarea, required=False)
+
     def __init__(self, *args, **kwargs):
         super(CreateTestListInstanceForm, self).__init__(*args, **kwargs)
-        self.fields["work_started"].initial = timezone.localtime(timezone.now()).strftime(settings.INPUT_DATE_FORMATS[0])
+        self.fields['work_started'].initial = timezone.localtime(timezone.now()).strftime(settings.INPUT_DATE_FORMATS[0])
+        self.fields['comment'].widget.attrs['rows'] = '3'
+        self.fields['comment'].widget.attrs['placeholder'] = 'Add comment about this set of tests'
+        self.fields['comment'].widget.attrs['class'] = 'autosize form-control'
 
 
 class UpdateTestListInstanceForm(BaseTestListInstanceForm):
