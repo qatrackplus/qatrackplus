@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections import defaultdict, Counter
 import io
 import json
 import math
@@ -196,14 +196,14 @@ def create_testpack(test_lists=None, cycles=None, extra_tests=None):
 
     tl_memberships = models.TestListMembership.objects.filter(
         pk__in=test_lists.values_list("testlistmembership")
-    )
+    ).select_related("test_list", "test")
 
     tests = models.Test.objects.filter(
         pk__in=tl_memberships.values_list("test")
     )
 
     tests |= (extra_tests or models.Test.objects.none())
-
+    tests = tests.select_related("category")
 
     categories = models.Category.objects.filter(
         pk__in=tests.values_list("category")
@@ -219,10 +219,11 @@ def create_testpack(test_lists=None, cycles=None, extra_tests=None):
     ]
 
     objects = []
+    indent = 2 if settings.DEBUG else None
     for qs in to_dump:
         fields = qs.model.get_test_pack_fields()
         objects.append(
-            serialize("json", qs, fields=fields, use_natural_foreign_keys=True, use_natural_primary_keys=True)
+            serialize("json", qs, fields=fields, use_natural_foreign_keys=True, use_natural_primary_keys=True, indent=indent)
         )
 
     meta = {
@@ -273,32 +274,137 @@ def deserialize_pack(serialized_pack):
 def add_test_pack(serialized_pack, user=None, test_names=None, test_list_names=None, cycle_names=None):
     """Takes a serialized data pack and saves the deserialized objects to the db"""
 
-    def include_test(obj):
-        if not test_names:
-            return True
-        return
+    created = timezone.now()
+    user = user or User.objects.earliest("pk")
+
+    added = {}
+    total = {}
+
+    data = json.loads(serialized_pack)
+
+    objects = defaultdict(list)
+    for obj_set_json in data['objects']:
+        objs = json.loads(obj_set_json)
+        if objs:
+            objects[objs[0]['model']] = objs
+
+    existing = {frozenset(x) for x in models.Category.objects.values_list(*models.Category.NK_FIELDS)}
+    categories_added = []
+    for cdat in objects['qa.category']:
+        fields = cdat['fields']
+        nkey = {fields[f] for f in models.Category.NK_FIELDS}
+        if nkey not in existing:
+            categories_added.append(models.Category(**fields))
+    models.Category.objects.bulk_create(categories_added)
+    categories = dict((f[1:], f[0]) for f in models.Category.objects.values_list(*(['id'] + models.Category.NK_FIELDS)))
+    added['Category'] = len(categories_added)
+    total['Category'] = len(objects['qa.category'])
+
+    existing = set(models.Test.objects.values_list('name', flat=True))
+    tests_added = []
+    for cdat in objects['qa.test']:
+        fields = cdat['fields']
+        filtered = test_names is not None and fields['name'] not in test_names
+        if not filtered and fields['name'] not in existing:
+            fields['category_id'] = categories[tuple(fields.pop("category"))]
+            fields['created'] = created
+            fields['created_by'] = user
+            fields['modified'] = created
+            fields['modified_by'] = user
+            tests_added.append(models.Test(**fields))
+    models.Test.objects.bulk_create(tests_added)
+    added['Test'] = len(tests_added)
+    total['Test'] = len(objects['qa.test'])
+
+    existing = set(models.TestList.objects.values_list("slug", flat=True))
+    test_lists_added = []
+    for cdat in objects['qa.testlist']:
+        fields = cdat['fields']
+        filtered = test_list_names is not None and fields['slug'] not in test_list_names
+        if not filtered and fields['slug'] not in existing:
+            fields['created'] = created
+            fields['created_by'] = user
+            fields['modified'] = created
+            fields['modified_by'] = user
+            test_lists_added.append(models.TestList(**fields))
+    models.TestList.objects.bulk_create(test_lists_added)
+    added['TestList'] = len(test_lists_added)
+    total['TestList'] = len(objects['qa.testlist'])
+
+    existing = set(models.TestListCycle.objects.values_list("slug", flat=True))
+    tlcs_added = []
+    for cdat in objects['qa.testlistcycle']:
+        fields = cdat['fields']
+        filtered = test_list_names is not None and fields['slug'] not in test_list_names
+        if not filtered and fields['slug'] not in existing:
+            fields['created'] = created
+            fields['created_by'] = user
+            fields['modified'] = created
+            fields['modified_by'] = user
+            tlcs_added.append(models.TestListCycle(**fields))
+    models.TestListCycle.objects.bulk_create(tlcs_added)
+    added['TestListCycle'] = len(tlcs_added)
+    total['TestListCycle'] = len(objects['qa.testlistcycle'])
+
+    tlms_added = []
+    tl_slugs = {tl.slug for tl in test_lists_added}
+    tl_pks = dict(models.TestList.objects.filter(slug__in=tl_slugs).values_list("slug", "pk"))
+    test_names_added = {t.name for t in tests_added}
+    test_pks = dict(models.Test.objects.filter(name__in=test_names_added).values_list("name", "pk"))
+
+    for tlm in objects['qa.testlistmembership']:
+        fields = tlm['fields']
+        if fields['test_list'][0] in tl_slugs:
+            fields['test_list_id'] = tl_pks[fields.pop('test_list')[0]]
+            fields['test_id'] = test_pks[fields.pop('test')[0]]
+            tlms_added.append(models.TestListMembership(**fields))
+    models.TestListMembership.objects.bulk_create(tlms_added)
+
+    tlcms_added = []
+    tlc_slugs = {tlc.slug for tlc in tlcs_added}
+
+    tlc_pks = dict(models.TestListCycle.objects.filter(slug__in=tlc_slugs).values_list("slug", "pk"))
+    for tlcm in objects['qa.testlistcyclemembership']:
+        fields = tlcm['fields']
+        if fields['cycle'][0] in tlc_slugs:
+            fields['test_list_id'] = tl_pks[fields.pop('test_list')[0]]
+            fields['cycle_id'] = tlc_pks[fields.pop('cycle')[0]]
+            tlcms_added.append(models.TestListCycleMembership(**fields))
+    models.TestListCycleMembership.objects.bulk_create(tlcms_added)
+
+    return added, total
+
+
+def add_test_pack_django(serialized_pack, user=None, test_names=None, test_list_names=None, cycle_names=None):
+    """
+    Takes a serialized data pack and saves the deserialized objects to the db
+
+    This is a much less efficient, but much simpler version of add_test_pack
+    """
 
     modified = created = timezone.now()
     user = user or User.objects.earliest("pk")
 
+    added = Counter()
+    total = Counter()
+
     data = json.loads(serialized_pack)
-    to_delete = []
+
     for qs in data['objects']:
+        to_add = []
+
         for obj in deserialize("json", qs):
-
-            exclude = (
-                (obj.object._meta.model_name == "test" and test_names is not None and obj.object.name not in test_names) or
-                (obj.object._meta.model_name == "testlist" and test_list_names is not None and obj.object.name not in test_list_names) or
-                (obj.object._meta.model_name == "testlistcycle" and cycle_names is not None and obj.object.name not in cycle_names)
+            total[obj.object._meta.model_name] += 1
+            if obj.object.pk:
+                continue
+            mname = obj.object._meta.model_name
+            filtered = (
+                (mname == "test" and test_names is not None and obj.object.name not in test_names) or
+                (mname == "testlist" and test_list_names is not None and obj.object.name not in test_list_names) or
+                (mname == "testlistcycle" and cycle_names is not None and obj.object.name not in cycle_names)
             )
-
-            try:
-                existing_obj = obj.object._meta.model.objects.get_by_natural_key(*obj.object.natural_key())
-            except obj.object._meta.model.DoesNotExist:
-                existing_obj = None
-
-            if exclude and not existing_obj:
-                to_delete.append(obj.object)
+            if filtered:
+                continue
 
             if hasattr(obj.object, "created"):
                 obj.object.created = created
@@ -308,11 +414,14 @@ def add_test_pack(serialized_pack, user=None, test_names=None, test_list_names=N
                 obj.object.modified = modified
                 obj.object.modified_by = user
 
-            if not existing_obj:
-                obj.save()
+            to_add.append(obj.object)
+            added[obj.object._meta.model_name] += 1
 
-    for obj in to_delete:
-        obj.delete()
+        if to_add:
+            Model = to_add[0]._meta.model
+            Model.objects.bulk_create(to_add)
+
+    return added, total
 
 
 def load_test_pack(fp, user=None, test_names=None, test_list_names=None, cycle_names=None):

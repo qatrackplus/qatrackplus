@@ -531,6 +531,8 @@ class CategoryManager(models.Manager):
 class Category(models.Model):
     """A model used for categorizing :model:`Test`s"""
 
+    NK_FIELDS = ['name']
+
     name = models.CharField(max_length=255, unique=True)
     slug = models.SlugField(
         max_length=255, unique=True,
@@ -568,10 +570,12 @@ class TestManager(models.Manager):
 class Test(models.Model):
     """Test to be completed as part of a QA :model:`TestList`"""
 
+    NK_FIELDS = ['name']
+
     VARIABLE_RE = re.compile("^[a-zA-Z_]+[0-9a-zA-Z_]*$")
     RESULT_RE = re.compile("^\s*result\s*=.*$", re.MULTILINE)
 
-    name = models.CharField(max_length=255, help_text=_("Name for this test"), db_index=True)
+    name = models.CharField(max_length=255, help_text=_("Name for this test"), db_index=True, unique=True)
     slug = models.SlugField(
         verbose_name="Macro name", max_length=128,
         help_text=_("A short variable name consisting of alphanumeric characters and underscores for this test (to be used in composite calculations). "),
@@ -895,12 +899,15 @@ class UnitTestInfo(models.Model):
 
 class TestListMembershipManager(models.Manager):
 
-    def get_by_natural_key(self, order, test_list_slug, test_name):
-        return self.get(order=order, test_list__slug=test_list_slug, test__name=test_name)
+    def get_by_natural_key(self, test_list_slug, test_name):
+        return self.get(test_list__slug=test_list_slug, test__name=test_name)
 
 
 class TestListMembership(models.Model):
     """Keep track of ordering for tests within a test list"""
+
+    NK_FIELDS = ['test_list', 'test']
+
     test_list = models.ForeignKey("TestList")
     test = models.ForeignKey(Test)
     order = models.IntegerField(db_index=True)
@@ -917,7 +924,7 @@ class TestListMembership(models.Model):
         return [f.name for f in cls._meta.concrete_fields if f.name not in exclude]
 
     def natural_key(self):
-        return (self.order,) + self.test_list.natural_key() + self.test.natural_key()
+        return self.test_list.natural_key() + self.test.natural_key()
     natural_key.dependencies = ["qa.testlist", "qa.test"]
 
     def __str__(self):
@@ -972,16 +979,16 @@ class TestCollectionInterface(models.Model):
         return ContentType.objects.get_for_model(self)
 
 
-
 class TestListManager(models.Manager):
 
     def get_by_natural_key(self, slug):
         return self.get(slug=slug)
 
 
-
 class TestList(TestCollectionInterface):
     """Container for a collection of QA :model:`Test`s"""
+
+    NK_FIELDS = ['slug']
 
     tests = models.ManyToManyField("Test", help_text=_("Which tests does this list contain"), through=TestListMembership)
 
@@ -1664,6 +1671,8 @@ class TestListCycle(TestCollectionInterface):
     based on the list that was last completed.
     """
 
+    NK_FIELDS = ['slug']
+
     DAY = "day"
     TEST_LIST_NAME = "tlname"
     DAY_OPTIONS_TEXT_CHOICES = (
@@ -1758,12 +1767,14 @@ class TestListCycle(TestCollectionInterface):
 
 class TestListCycleMembershipManager(models.Manager):
 
-    def get_by_natural_key(self, order, test_list_slug, cycle_slug):
-        return self.get(order=order, test_list__slug=test_list_slug, cycle__slug=cycle_slug)
+    def get_by_natural_key(self, test_list_slug, cycle_slug):
+        return self.get(test_list__slug=test_list_slug, cycle__slug=cycle_slug)
 
 
 class TestListCycleMembership(models.Model):
     """M2M model for ordering of test lists within cycle"""
+
+    NK_FIELDS = ['cycle', 'test_list']
 
     test_list = models.ForeignKey(TestList)
     cycle = models.ForeignKey(TestListCycle)
@@ -1784,8 +1795,8 @@ class TestListCycleMembership(models.Model):
         return [f.name for f in cls._meta.concrete_fields if f.name not in exclude]
 
     def natural_key(self):
-        return (self.order,) + self.test_list.natural_key() + self.cycle.natural_key()
-    natural_key.dependencies = ["qa.testlist", "qa.testlistcycle"]
+        return self.cycle.natural_key() + self.test_list.natural_key()
+    natural_key.dependencies = ["qa.testlistcycle", "qa.testlist"]
 
     def __str__(self):
         return "TestListCycleMembership(pk=%s)" % self.pk

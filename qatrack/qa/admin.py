@@ -351,6 +351,12 @@ class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
 class TestListAdminForm(forms.ModelForm):
     """Form for handling validation of TestList creation/editing"""
 
+    def __init__(self, *args, **kwargs):
+        super(TestListAdminForm, self).__init__(*args, **kwargs)
+        if self.instance.pk:
+            query = self.fields['sublists'].queryset
+            self.fields['sublists'].queryset = query.exclude(id=self.instance.id)
+
     def clean_sublists(self):
         """Make sure a user doesn't try to add itself as sublist"""
         sublists = self.cleaned_data["sublists"]
@@ -570,74 +576,8 @@ class TestListAdmin(AdminViews, SaveUserMixin, SaveInlineAttachmentUserMixin, ad
         return redirect(reverse("qa_export_test_pack"))
 
     def import_test_pack(self, *args, **kwargs):
-        return redirect(reverse(""))
+        return redirect(reverse("qa_import_test_pack"))
 
-    def export_test_lists(self, request, queryset):
-
-        qs = queryset.prefetch_selected(
-            "testlistmembership_set",
-            "testlistmembership_set__test"
-        )
-        meta = {
-            "version": settings.VERSION,
-
-
-        }
-        to_dump = {
-            "meta": meta,
-            "test_lists": [],
-            "tests": [],
-        }
-
-        for tl in qs:
-            pass
-
-        testtypes = set(queryset.values_list('test__type', flat=True).distinct())
-
-        # check if tests have the same type of tolerance, else return with error message
-        if (len(testtypes) > 1 and 'multchoice' in testtypes or
-                len(testtypes) > 1 and 'boolean' in testtypes):
-
-            messages.error(request, "Multiple choice and/or boolean references and tolerances can't be set"
-                                    " together with other test types")
-            return HttpResponseRedirect(request.get_full_path())
-
-        if 'apply' in request.POST:
-            form = SetMultipleReferencesAndTolerancesForm(request.POST)
-        else:
-            form = SetMultipleReferencesAndTolerancesForm(initial={'contenttype': None})
-
-        # if selected tests are NOT multiple choice or boolean, select all the tolerances which are NOT multiple choice or boolean
-        if 'boolean' not in testtypes and 'multchoice' not in testtypes:
-            tolerances = models.Tolerance.objects.exclude(type="multchoice").exclude(type="boolean")
-            form.fields["tolerance"].queryset = tolerances
-
-        # if selected tests are multiple choice select all the tolerances which are multiple choice
-        elif 'multchoice' in testtypes:
-            tolerances = models.Tolerance.objects.filter(type="multchoice")
-            form.fields["contenttype"].initial = 'multchoice'
-            form.fields["tolerance"].queryset = tolerances
-            form.fields["reference"].required = False
-            form.fields["reference"].widget = forms.HiddenInput()
-
-        # if selected tests are boolean select all the tolerances which are boolean
-        elif 'boolean' in testtypes:
-            form.fields["contenttype"].initial = 'boolean'
-            form.fields["reference"].widget = forms.NullBooleanSelect()
-            form.fields["tolerance"].required = False
-            form.fields["tolerance"].widget = forms.HiddenInput()
-
-        if 'apply' in request.POST and form.is_valid():
-            return self.form_valid(request, queryset, form)
-        else:
-            context = {
-                'queryset': queryset,
-                'form': form,
-                'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
-            }
-            return render(request, 'admin/qa/unittestinfo/set_multiple_refs_and_tols.html', context)
-
-    export_test_lists.short_description = "Export Test List Configurations"
 
 class TestForm(forms.ModelForm):
 

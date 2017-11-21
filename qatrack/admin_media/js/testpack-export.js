@@ -2,8 +2,15 @@ var tables = ["testlistcycles", "testlists", "tests"];
 var dataTables = {};
 
 function setSelected(type, selected){
-    $("#"+type + "-summary").html(selected.length + " Selected");
-    $("input[name="+type+"]").attr("value", selected.join(","));
+    var all = selected.length > 0 && dataTables[type].column(0).data().length === selected.length
+    $("#"+type + "-summary").html(all ? "All" : selected.length + " Selected");
+    var val;
+    if (all){
+      val = "all";
+    } else {
+      val = selected.join(",");
+    }
+    $("input[name="+type+"]").attr("value", val);
 }
 
 for (var i=0; i < tables.length; i++){
@@ -33,7 +40,7 @@ for (var i=0; i < tables.length; i++){
               $(this).parents(".tp-container").find(".loading").remove();
               $(".dt-button").removeClass("dt-button");
           }
-      }).show().DataTable().on('select', function ( e, dt, type, indexes ) {
+      }).show().DataTable().on('select deselect', function ( e, dt, type, indexes ) {
           if (type === 'row') {
             var data = dt.rows({selected: true}).data().pluck(0).toArray();
             var type = $(dt.table().container()).attr("id").split("-")[0];

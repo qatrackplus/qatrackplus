@@ -37,6 +37,8 @@ urlpatterns = [
 
     url(r'^admin/export_test_pack/$',
         admin.ExportTestPack.as_view(), name="qa_export_test_pack"),
+    url(r'^admin/import_test_pack/$',
+        admin.ImportTestPack.as_view(), name="qa_import_test_pack"),
 
     url(r"^$", base.UTCList.as_view(), name="all_lists"),
 
@@ -110,5 +112,3 @@ urlpatterns = [
     url(r"^comment/ajax_comment/$", base.ajax_comment, name='ajax_comment'),
 
 ]
-
-

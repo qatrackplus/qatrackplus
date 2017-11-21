@@ -2,19 +2,16 @@ import json
 
 from django import forms
 from django.contrib import messages
-from django.contrib.auth.models import Group
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
 from django.shortcuts import HttpResponse, HttpResponseRedirect
 from django.utils.translation import ugettext as _
-from django.views.decorators.gzip import gzip_page
 from django.views.generic import FormView
 from formtools.preview import FormPreview
 
 from qatrack.qa import models
-from qatrack.qa.utils import create_testpack
-from qatrack.units.models import Unit
+from qatrack.qa.utils import create_testpack, add_test_pack
 
 
 class SetReferencesAndTolerancesForm(forms.Form):
@@ -129,7 +126,6 @@ def testlist_json(request, source_unit, content_type):
 
 class ExportTestPackForm(forms.Form):
 
-
     name = forms.SlugField(label="Test Pack Name")
     testlists = forms.CharField(widget=forms.HiddenInput(), required=False)
     testlistcycles = forms.CharField(widget=forms.HiddenInput(), required=False)
@@ -137,19 +133,25 @@ class ExportTestPackForm(forms.Form):
 
     def clean_testlists(self):
         t = self.cleaned_data['testlists'].strip()
-        if t:
+        if t == "all":
+            return models.TestList.objects.all()
+        elif t:
             return models.TestList.objects.filter(id__in=t.split(","))
         return models.TestList.objects.none()
 
     def clean_testlistcycles(self):
         t = self.cleaned_data['testlistcycles'].strip()
-        if t:
+        if t == "all":
+            return models.TestListCycle.objects.all()
+        elif t:
             return models.TestListCycle.objects.filter(id__in=t.split(","))
         return models.TestListCycle.objects.none()
 
     def clean_tests(self):
         t = self.cleaned_data['tests'].strip()
-        if t:
+        if t == "all":
+            return models.Test.objects.all()
+        elif t:
             return models.Test.objects.filter(id__in=t.split(","))
         return models.Test.objects.none()
 
@@ -166,7 +168,11 @@ class ExportTestPack(FormView):
         context['title'] = "Export Test Pack"
 
         context['cycles'] = models.TestListCycle.objects.all()
-        context['testlists'] = models.TestList.objects.only("pk", "name", "description")
+        context['testlists'] = models.TestList.objects.only(
+            "pk",
+            "name",
+            "description"
+        )
         context['tests'] = models.Test.objects.select_related(
             "category"
         ).only(
@@ -190,3 +196,61 @@ class ExportTestPack(FormView):
         response['Content-Disposition'] = 'attachment; filename=%s' % name
         return response
 
+
+class ImportTestPackForm(forms.Form):
+
+    testpack_data = forms.CharField(widget=forms.HiddenInput())
+    testlists = forms.CharField(widget=forms.HiddenInput(), required=False)
+    testlistcycles = forms.CharField(widget=forms.HiddenInput(), required=False)
+    tests = forms.CharField(widget=forms.HiddenInput(), required=False)
+
+
+class ImportTestPack(FormView):
+    """View for exporting a QATrack+ test pack"""
+
+    form_class = ImportTestPackForm
+    template_name = "admin/qa/testpack/import.html"
+
+    def get_context_data(self, **kwargs):
+
+        context = super(ImportTestPack, self).get_context_data(**kwargs)
+        context['title'] = "Import Test Pack"
+        context['test_types'] = json.dumps(dict(models.TEST_TYPE_CHOICES))
+
+        return context
+
+    def get_success_url(self):
+        """Redirect user to previous page they were on if possible"""
+        next_ = self.request.GET.get("next", None)
+        if next_ is not None:
+            return next_
+        return reverse("qa_import_test_pack")
+
+    def form_valid(self, form):
+
+        tls = form.cleaned_data['testlists']
+        if tls == "all":
+            tls = None
+        cycles = form.cleaned_data['testlistcycles']
+        if cycles == "all":
+            cycles = None
+
+        extra_tests = form.cleaned_data['tests']
+        if extra_tests == "all":
+            extra_tests = None
+
+        test_pack = form.cleaned_data['testpack_data']
+        counts, totals = add_test_pack(
+            test_pack,
+            self.request.user,
+            test_names=extra_tests,
+            test_list_names=tls,
+            cycle_names=cycles,
+        )
+
+        count_msg = ", ".join("%d/%d %s's" % (counts[k], totals[k], k) for k in totals)
+        msg = "Test Pack import successfully: %s were imported." % count_msg
+
+        messages.success(self.request, msg)
+
+        return super(ImportTestPack, self).form_valid(form)

@@ -15,7 +15,7 @@
   <div class="breadcrumbs">
     <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a> &rsaquo;
     <a href="{% url 'admin:app_list' app_label='qa' %}">Qa</a> &rsaquo;
-    Export Test Pack
+    Import Test Pack
   </div>
 {% endblock %}
 
@@ -28,9 +28,8 @@
   <div class="row">
     <div class="col-sm-12">
       <p>
-        On this page you may create a Test Pack for sharing test lists,
-        tests, and other QATrack+ configuration data with other QATrack+
-        installations.
+        On this page you may import Test Lists, Test List Cycles, or individual
+        Tests from a Test Pack.
       </p>
     </div>
   </div>
@@ -41,7 +40,7 @@
       <div class="row">
         <div class="col-sm-12 tp-container">
           <hr/>
-          <h2>Test Lists To Export</h2>
+          <h2>Test Lists To Include</h2>
 
           <em class="loading">Loading Test List table...</em>
           <table id="testlists-table" style="display: none">
@@ -69,7 +68,7 @@
       <div class="row">
         <div class="col-sm-12 tp-container">
           <hr/>
-          <h2>Test List Cycles To Export</h2>
+          <h2>Test List Cycles To Include</h2>
 
           <em class="loading">Loading Test List Cycle table...</em>
           <table id="testlistcycles-table" style="display: none">
@@ -97,7 +96,7 @@
       <div class="row">
         <div class="col-sm-12 tp-container">
           <hr/>
-          <h2>Select Extra Tests To Export</h2>
+          <h2>Select Extra Tests To Include</h2>
 
           <p>
             <em>
@@ -135,45 +134,47 @@
     </div>
 
     <div class="col-sm-4">
-      <h2>Summary</h2>
-      <hr/>
-      <div id="summary">
-
-        <div class="row">
-          <div class="col-sm-6">Test Lists:</div>
-          <div class="col-sm-6" style="text-align: right" id="testlists-summary">0 Selected</div>
-        </div>
-
-        <div class="row">
-          <div class="col-sm-6">Test Lists Cycles:</div>
-          <div class="col-sm-6" style="text-align: right" id="testlistcycles-summary">0 Selected</div>
-        </div>
-
-        <div class="row">
-          <div class="col-sm-6">Tests:</div>
-          <div class="col-sm-6" style="text-align: right" id="tests-summary">0 Selected</div>
-        </div>
-
-      </div>
-      <hr/>
       <form method="post" action>
         {% csrf_token %}
+        <h2>Load Test Pack</h2>
+        <div class="row">
+          <div class="col-sm-6">
+            Test Pack File:
+          </div>
+          <div class="col-sm-6" style="text-align: right">
+            <input type="file" name="testpack" id="id_testpack" required="">
+            {{ form.testpack_data }}
+            {{ form.testpack_data.errors }}
+          </div>
+        </div>
         <div>
           {{ form.testlists }}
           {{ form.testlistcycles }}
           {{ form.tests }}
         </div>
-        <div class="row">
-          <div class="col-sm-6">
-            Test Pack Name:
+        <h2>Import Summary</h2>
+        <hr/>
+        <div id="summary">
+
+          <div class="row">
+            <div class="col-sm-6">Test Lists:</div>
+            <div class="col-sm-6" style="text-align: right" id="testlists-summary">0 Selected</div>
           </div>
-          <div class="col-sm-6" style="text-align: right">
-            {{ form.name }}
-            {{ form.name.errors }}
+
+          <div class="row">
+            <div class="col-sm-6">Test Lists Cycles:</div>
+            <div class="col-sm-6" style="text-align: right" id="testlistcycles-summary">0 Selected</div>
           </div>
+
+          <div class="row">
+            <div class="col-sm-6">Tests:</div>
+            <div class="col-sm-6" style="text-align: right" id="tests-summary">0 Selected</div>
+          </div>
+
         </div>
+        <hr/>
         <div class="submit-row">
-          <input type="submit" value="Download" class="default">
+          <input type="submit" value="Import" class="default">
         </div>
       </form>
     </div>
@@ -184,13 +185,22 @@
 {% endblock %}
 
 {% block footer %}
+<script src="{% static "lodash/js/lodash.js" %}"></script>
 <script type="text/javascript">
+    window.parseVersion = function(v){
+      return _.map(v.split("."), function(a){return parseInt(a, 10);});
+    };
+
+    window.VERSION = "{{ VERSION }}";
+    window.version = window.parseVersion(window.VERSION);
+
+    window.test_types = {{ test_types | safe }};
 </script>
 
 <script src="{% static "jquery/js/jquery.min.js" %}"></script>
 
 <script src="{% static "js/datatables.min.js" %}"></script>
-<script src="{% static "js/testpack-export.js" %}"></script>
+<script src="{% static "js/testpack-import.js" %}"></script>
 
 {% endblock %}
 
