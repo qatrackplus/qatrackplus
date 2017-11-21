@@ -127,6 +127,10 @@ def testlist_json(request, source_unit, content_type):
 class ExportTestPackForm(forms.Form):
 
     name = forms.SlugField(label="Test Pack Name")
+    description = forms.CharField(
+        widget=forms.Textarea(attrs={'rows': 4, 'cols': ""}),
+        required=False,
+    )
     testlists = forms.CharField(widget=forms.HiddenInput(), required=False)
     testlistcycles = forms.CharField(widget=forms.HiddenInput(), required=False)
     tests = forms.CharField(widget=forms.HiddenInput(), required=False)
@@ -189,11 +193,13 @@ class ExportTestPack(FormView):
         tls = form.cleaned_data['testlists']
         cycles = form.cleaned_data['testlistcycles']
         extra_tests = form.cleaned_data['tests']
-        tp = create_testpack(test_lists=tls, cycles=cycles, extra_tests=extra_tests)
+        desc = form.cleaned_data['description']
+        user = self.request.user
+        name = form.cleaned_data['name']
+        tp = create_testpack(test_lists=tls, cycles=cycles, extra_tests=extra_tests, description=desc, user=user, name=name)
 
         response = HttpResponse(json.dumps(tp), content_type='application/json')
-        name = form.cleaned_data['name'] + ".tpk"
-        response['Content-Disposition'] = 'attachment; filename=%s' % name
+        response['Content-Disposition'] = 'attachment; filename=%s' % (name + ".tpk")
         return response
 
 

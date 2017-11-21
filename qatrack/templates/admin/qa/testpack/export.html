@@ -1,5 +1,5 @@
 {% extends "admin/base_site.html" %}
-{% load i18n admin_urls static admin_list %}
+{% load i18n admin_urls static admin_list widget_tweaks %}
 
 {% block extrastyle %}
   {{ block.super }}
@@ -156,7 +156,7 @@
 
       </div>
       <hr/>
-      <form method="post" action>
+      <form method="post" action class="form-horizontal">
         {% csrf_token %}
         <div>
           {{ form.testlists }}
@@ -168,8 +168,17 @@
             Test Pack Name:
           </div>
           <div class="col-sm-6" style="text-align: right">
-            {{ form.name }}
+            {{ form.name|attr:"style:width: 100%" }}
             {{ form.name.errors }}
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-sm-6">
+            Description:
+          </div>
+          <div class="col-sm-6" style="">
+            {{ form.description|attr:"style:width: 100%" }}
+            {{ form.description.errors }}
           </div>
         </div>
         <div class="submit-row">

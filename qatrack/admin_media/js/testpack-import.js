@@ -83,6 +83,11 @@ var converters = {
 function loadTestPack(tpk){
   var meta = tpk.meta;
   var version = parseVersion(meta.version);
+
+  $("#version").text(meta.version);
+  $("#name").text(meta.name);
+  $("#created-by").text(meta.contact);
+  $("#description").text(meta.description);
   var objects = {};
   _.map(tpk.objects, function(o){
     var data = JSON.parse(o);

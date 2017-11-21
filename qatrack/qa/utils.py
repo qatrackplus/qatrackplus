@@ -179,7 +179,7 @@ def check_query_count():  # pragma: nocover
     return decorator
 
 
-def create_testpack(test_lists=None, cycles=None, extra_tests=None):
+def create_testpack(test_lists=None, cycles=None, extra_tests=None, description="", user=None, name=""):
     """
     Take input test lists queryset and cycles queryset and generate a test pack from them.  The
     test pack will includ all objects they depend on.
@@ -226,9 +226,21 @@ def create_testpack(test_lists=None, cycles=None, extra_tests=None):
             serialize("json", qs, fields=fields, use_natural_foreign_keys=True, use_natural_primary_keys=True, indent=indent)
         )
 
+    if user:
+        fname = user.get_full_name()
+        if fname and user.email:
+            user = "%s (%s)" % (fname, user.email)
+        elif fname:
+            user = fname
+        elif user.email:
+            user = user.email
+
     meta = {
         'version': settings.VERSION,
         'datetime': "%s" % timezone.now(),
+        'description': description,
+        'contact': user,
+        'name': name,
     }
 
     return {'meta': meta, 'objects': objects}
