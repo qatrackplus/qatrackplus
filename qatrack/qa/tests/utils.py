@@ -20,7 +20,7 @@ def create_user(is_staff=True, is_superuser=True, uname="user", pwd="password"):
         u = User.objects.get(username=uname)
     except:
         u = User(
-            username=uname, is_staff=is_staff, is_superuser=is_superuser
+            username=uname, is_staff=is_staff, is_superuser=is_superuser, email="test@example.com"
         )
         u.set_password(pwd)
         u.save()

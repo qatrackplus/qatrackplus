@@ -1,0 +1,230 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_list %}
+
+{% block extrastyle %}
+  {{ block.super }}
+
+  <link href="{% static "fontawsome/css/font-awesome.min.css" %}" rel="stylesheet">
+  <link href="{% static "css/bootstrap-grid.css" %}" rel="stylesheet">
+  <link href="{% static "css/datatables.min.css" %}" rel="stylesheet">
+{% endblock %}
+
+
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a> &rsaquo;
+    <a href="{% url 'admin:app_list' app_label='qa' %}">Qa</a> &rsaquo;
+    Import Test Pack
+  </div>
+{% endblock %}
+
+{% block coltype %}flex{% endblock %}
+
+
+{% block content %}
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-sm-12">
+      <p>
+        On this page you may import Test Lists, Test List Cycles, or individual
+        Tests from a Test Pack.
+      </p>
+    </div>
+  </div>
+
+  <div class="row">
+
+    <div class="col-sm-8">
+      <div class="row">
+        <div class="col-sm-12 tp-container">
+          <hr/>
+          <h2>Test Lists To Include</h2>
+
+          <em class="loading">Loading Test List table...</em>
+          <table id="testlists-table" style="display: none">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Test List</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for list in testlists %}
+                <tr>
+                  <td>{{ list.id }}</td>
+                  <td>{{ list.name }}</td>
+                  <td>{{ list.description }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+
+          </table>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-sm-12 tp-container">
+          <hr/>
+          <h2>Test List Cycles To Include</h2>
+
+          <em class="loading">Loading Test List Cycle table...</em>
+          <table id="testlistcycles-table" style="display: none">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Cycle</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for cycle in cycles %}
+                <tr>
+                  <td>{{ cycle.id }}</td>
+                  <td>{{ cycle.name }}</td>
+                  <td>{{ cycle.description }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+
+          </table>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-sm-12 tp-container">
+          <hr/>
+          <h2>Select Extra Tests To Include</h2>
+
+          <p>
+            <em>
+              Note that there is no need to select tests that are already
+              included as part of a test list
+            </em>
+          </p>
+
+          <em class="loading">Loading Test table...</em>
+          <table id="tests-table" style="display: none">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Test</th>
+                <th>Category</th>
+                <th>Type</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for test in tests %}
+                <tr>
+                  <td>{{ test.id }}</td>
+                  <td>{{ test }}</td>
+                  <td>{{ test.category.name }}</td>
+                  <td>{{ test.get_type_display }}</td>
+                  <td>{{ test.description }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-sm-4">
+      <form method="post" action>
+        {% csrf_token %}
+        <h2>Load Test Pack</h2>
+        <div class="row">
+          <div class="col-sm-6">
+            Test Pack File:
+          </div>
+          <div class="col-sm-6" style="text-align: right">
+            <input type="file" name="testpack" id="id_testpack" required="">
+            {{ form.testpack_data }}
+            {{ form.testpack_data.errors }}
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-sm-6">
+            Test Pack Name:
+          </div>
+          <div id="name" class="col-sm-6" style="text-align: right"></div>
+        </div>
+        <div class="row">
+          <div class="col-sm-6">
+            Test Pack Created By:
+          </div>
+          <div id="created-by" class="col-sm-6" style="text-align: right"></div>
+        </div>
+        <div class="row">
+          <div class="col-sm-6">
+            Test Pack Generator Version:
+          </div>
+          <div id="version" class="col-sm-6" style="text-align: right"></div>
+        </div>
+        <div class="row">
+          <div class="col-sm-6">
+            Test Pack Description:
+          </div>
+          <div id="description" class="col-sm-6" style="text-align: right"></div>
+        </div>
+        <div>
+          {{ form.testlists }}
+          {{ form.testlistcycles }}
+          {{ form.tests }}
+        </div>
+        <h2>Import Summary</h2>
+        <hr/>
+        <div id="summary">
+
+          <div class="row">
+            <div class="col-sm-6">Test Lists:</div>
+            <div class="col-sm-6" style="text-align: right" id="testlists-summary">0 Selected</div>
+          </div>
+
+          <div class="row">
+            <div class="col-sm-6">Test Lists Cycles:</div>
+            <div class="col-sm-6" style="text-align: right" id="testlistcycles-summary">0 Selected</div>
+          </div>
+
+          <div class="row">
+            <div class="col-sm-6">Tests:</div>
+            <div class="col-sm-6" style="text-align: right" id="tests-summary">0 Selected</div>
+          </div>
+
+        </div>
+        <hr/>
+        <div class="submit-row">
+          <input type="submit" value="Import" class="default">
+        </div>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}
+
+{% block footer %}
+<script src="{% static "lodash/js/lodash.js" %}"></script>
+<script type="text/javascript">
+    window.parseVersion = function(v){
+      return _.map(v.split("."), function(a){return parseInt(a, 10);});
+    };
+
+    window.VERSION = "{{ VERSION }}";
+    window.version = window.parseVersion(window.VERSION);
+
+    window.test_types = {{ test_types | safe }};
+</script>
+
+<script src="{% static "jquery/js/jquery.min.js" %}"></script>
+
+<script src="{% static "js/datatables.min.js" %}"></script>
+<script src="{% static "js/testpack-import.js" %}"></script>
+
+{% endblock %}
+

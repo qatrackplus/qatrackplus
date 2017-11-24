@@ -47,13 +47,13 @@
                                         {% trans "Change Password" %}
                                     </a></li>
                                 {% endif %}
-{#                                <li{% block reset_active %}{% endblock reset_active %}><a href="{% url "auth_password_reset" %}">#}
-{#                                    <span class="fa fa-stack fa-fw" aria-hidden="true">#}
-{#                                        <i class="fa fa-lock fa-stack-custom-main"></i>#}
-{#                                        <i class="fa fa-undo fa-stack-custom-sub primary"></i>#}
-{#                                    </span>#}
-{#                                    {% trans "Reset Password" %}#}
-{#                                </a></li>#}
+                                <li{% block reset_active %}{% endblock reset_active %}><a href="{% url "auth_password_reset" %}">
+                                    <span class="fa fa-stack fa-fw" aria-hidden="true">
+                                        <i class="fa fa-lock fa-stack-custom-main"></i>
+                                        <i class="fa fa-undo fa-stack-custom-sub primary"></i>
+                                    </span>
+                                    {% trans "Reset Password" %}
+                                </a></li>
                                 {% if user.is_authenticated %}
                                     <li><a href="{% url "auth_logout" %}">
                                         <i class="fa fa-power-off fa-fw danger" aria-hidden="true"></i>

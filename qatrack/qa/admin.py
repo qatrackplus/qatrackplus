@@ -5,7 +5,7 @@ from django.contrib import admin, messages
 from django.contrib.admin import widgets, options
 from django.contrib.admin.models import LogEntry, CHANGE
 from django.contrib.contenttypes.models import ContentType
-from django.core.urlresolvers import reverse_lazy
+from django.core.urlresolvers import reverse
 import django.db
 from django.db.models import Count, Q
 import django.forms as forms
@@ -183,9 +183,6 @@ class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
         ('Copy References & Tolerances', 'redirect_to'),
     )
 
-    def redirect_to(self, *args, **kwargs):
-        return redirect(reverse_lazy("qa_copy_refs_and_tols"))
-
     actions = ['set_multiple_references_and_tolerances']
     form = TestInfoForm
     # model = models.UnitTestInfo
@@ -199,6 +196,9 @@ class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
     readonly_fields = ("reference", "test", "unit",)
     search_fields = ("test__name", "test__slug", "unit__name",)
     # list_select_related = ['reference', 'tolerance', 'test', 'unit']
+
+    def redirect_to(self, *args, **kwargs):
+        return redirect(reverse("qa_copy_refs_and_tols"))
 
     def get_queryset(self, *args, **kwargs):
         """just display active ref/tols"""
@@ -350,6 +350,12 @@ class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
 
 class TestListAdminForm(forms.ModelForm):
     """Form for handling validation of TestList creation/editing"""
+
+    def __init__(self, *args, **kwargs):
+        super(TestListAdminForm, self).__init__(*args, **kwargs)
+        if self.instance.pk:
+            query = self.fields['sublists'].queryset
+            self.fields['sublists'].queryset = query.exclude(id=self.instance.id)
 
     def clean_sublists(self):
         """Make sure a user doesn't try to add itself as sublist"""
@@ -534,12 +540,18 @@ class FrequencyTestListFilter(admin.SimpleListFilter):
         return qs
 
 
-class TestListAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, admin.ModelAdmin):
+class TestListAdmin(AdminViews, SaveUserMixin, SaveInlineAttachmentUserMixin, admin.ModelAdmin):
+
+    admin_views = (
+        ('Export Test Pack', 'export_test_pack'),
+        ('Import Test Pack', 'import_test_pack'),
+    )
 
     prepopulated_fields = {'slug': ('name',)}
     search_fields = ("name", "description", "slug",)
     filter_horizontal = ("tests", "sublists", )
 
+    actions = ['export_test_lists']
     list_display = ("name", "slug", "modified", "modified_by",)
     list_filter = [ActiveTestListFilter, UnitTestListFilter, FrequencyTestListFilter]
 
@@ -559,6 +571,12 @@ class TestListAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, admin.ModelAdm
     def queryset(self, *args, **kwargs):
         qs = super(TestListAdmin, self).queryset(*args, **kwargs)
         return qs.select_related("modified_by")
+
+    def export_test_pack(self, *args, **kwargs):
+        return redirect(reverse("qa_export_test_pack"))
+
+    def import_test_pack(self, *args, **kwargs):
+        return redirect(reverse("qa_import_test_pack"))
 
 
 class TestForm(forms.ModelForm):
@@ -737,6 +755,55 @@ class ActiveFilter(admin.SimpleListFilter):
         return queryset
 
 
+class UnitTestCollectionForm(forms.ModelForm):
+
+    def __init__(self, *args, **kwargs):
+
+        super(UnitTestCollectionForm, self).__init__(*args, **kwargs)
+
+        self.fields["object_id"].initial = 100
+
+    def _clean_readonly(self, f):
+        data = self.cleaned_data.get(f, None)
+
+        if self.instance.pk and f in self.changed_data:
+            if f == "object_id":
+                orig = str(self.instance.tests_object)
+            else:
+                orig = getattr(self.instance, f)
+            err_msg = (
+                "To prevent data loss, you can not change the Unit, TestList or TestListCycle "
+                "of a UnitTestCollection after it has been created. The original value was: %s"
+            ) % (orig)
+            self.add_error(f, err_msg)
+
+        return data
+
+    def clean_content_type(self):
+        return self._clean_readonly("content_type")
+
+    def clean_object_id(self):
+        return self._clean_readonly("object_id")
+
+    def clean_unit(self):
+        return self._clean_readonly("unit")
+
+    def _clean(self):
+
+        err_msg = (
+            "To prevent data loss, you can not change the Unit, TestList or TestListCycle "
+            "of a UnitTestCollection after it has been created."
+        )
+
+        if self.instance.pk:
+            readonly = ['content_type', 'object_id', 'unit']
+            for f in readonly:
+                if f in self.changed_data:
+                    self.add_error(f, err_msg)
+
+        return self.cleaned_data
+
+
 class UnitTestCollectionAdmin(admin.ModelAdmin):
     # readonly_fields = ("unit","frequency",)
     filter_horizontal = ("visible_to",)
@@ -746,6 +813,7 @@ class UnitTestCollectionAdmin(admin.ModelAdmin):
     change_form_template = "admin/treenav/menuitem/change_form.html"
     list_editable = ["active"]
     save_as = True
+    form = UnitTestCollectionForm
 
     class Media:
         js = (
@@ -874,7 +942,6 @@ class TestInstanceAdmin(SaveInlineAttachmentUserMixin, admin.ModelAdmin):
     def has_add_permission(self, request):
         """testlistinstancess are created via front end only"""
         return False
-
 
 class ToleranceForm(forms.ModelForm):
 
