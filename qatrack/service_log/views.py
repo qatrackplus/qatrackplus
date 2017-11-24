@@ -108,11 +108,18 @@ def unit_sa_utc(request):
 def se_searcher(request):
     se_search = request.GET['q']
     unit_id = request.GET['unit_id']
+    omit_id = request.GET.get('self_id', 'false')
+    print(request.GET)
     service_events = models.ServiceEvent.objects \
-        .filter(id__icontains=se_search, unit_service_area__unit=unit_id) \
-        .order_by('-id') \
+        .filter(id__icontains=se_search, unit_service_area__unit=unit_id)
+
+    if omit_id != 'false':
+        service_events = service_events.exclude(id=omit_id)
+
+    service_events = service_events.order_by('-id') \
         .select_related('service_status')[0:50]\
         .values_list('id', 'service_status__id', 'problem_description')
+
     return JsonResponse({'colour_ids': list(service_events)})
 
 
@@ -907,7 +914,6 @@ class ReturnToServiceQABaseList(BaseListableView):
 
     fields = (
         'actions',
-        'pk',
         'datetime_assigned',
         'service_event__unit_service_area__unit__name',
         'unit_test_collection__name',
@@ -917,7 +923,6 @@ class ReturnToServiceQABaseList(BaseListableView):
     )
 
     headers = {
-        'pk': _('ID'),
         'datetime_assigned': _('Date Assigned'),
         'service_event__unit_service_area__unit__name': _('Unit'),
         'unit_test_collection__name': _('Test List'),

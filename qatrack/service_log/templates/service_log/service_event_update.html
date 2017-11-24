@@ -22,6 +22,7 @@
         var se_types_review = {{ se_types_review|safe }};
         var user_perm_can_approve_se = {{ perms.service_log.approve_serviceevent|yesno:'1,0' }};
         var default_qa_status_name = "{{ default_qa_status_name|safe }}";
+        var se_id = {% if form.instance.id %}{{ form.instance.id }}{% else %}false{% endif %};
     </script>
 {% endblock extra_js %}
 
@@ -284,7 +285,7 @@
                                     <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
                                     <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-extra-left info"></i>
                                 </i>
-                                Return To Service QA
+                                Return To Service QA and Involved Parties
                             </h3>
                             <div class="box-tools pull-right">
                                 <button type="button" class="btn btn-box-tool" data-widget="collapse">

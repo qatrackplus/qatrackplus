@@ -1,0 +1,41 @@
+svg {
+    border: solid 1px #bbbbbb;
+    background-color: white;
+}
+g.day_heading_container {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+text.day-heading {
+    stroke: none;
+    fill: #666666;
+    font-family: 'Source Sans Pro', sans-serif;
+}
+rect.day-rect {
+    stroke: #dddddd;
+    stroke-width: '1';
+    shape-rendering: 'crispEdges';
+    fill: white;
+}
+rect.bar-rect {
+    stroke: none;
+    pointer-events: none;
+}
+g.day-g.current-month > text {
+    font-weight: bold;
+}
+g.day-g.current-month > rect.day-rect {
+    fill: #e9eef4;
+}
+g.day-g.selected-day > rect.day-rect {
+    fill: #c1c6cc;
+}
+text.day-num {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    pointer-events: none;
+}

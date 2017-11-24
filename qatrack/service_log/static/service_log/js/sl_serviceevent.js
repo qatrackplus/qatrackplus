@@ -130,7 +130,8 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
                     return {
                         q: params.term, // search term
                         page: params.page,
-                        unit_id: $units.val()
+                        unit_id: $units.val(),
+                        self_id: se_id
                     }
                 },
                 processResults: process_related_results,

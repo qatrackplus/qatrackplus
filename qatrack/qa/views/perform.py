@@ -1,3 +1,4 @@
+
 import collections
 import json
 import math
@@ -14,6 +15,7 @@ import scipy
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.sites.shortcuts import get_current_site
+from django.core.cache import cache
 from django.core.files.base import ContentFile
 from django.core.urlresolvers import reverse
 from django.db.models import Q
@@ -691,6 +693,10 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             rtsqa = sl_models.ReturnToServiceQA.objects.get(pk=rtsqa_id)
             rtsqa.test_list_instance = self.object
             rtsqa.save()
+
+            # If tli needs review, update 'Unreviewed RTS QA' counter
+            if not self.object.all_reviewed:
+                cache.delete(settings.CACHE_RTS_QA_COUNT)
 
         changed_se = self.object.update_all_reviewed()
 

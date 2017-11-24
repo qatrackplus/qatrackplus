@@ -62,6 +62,7 @@
                 HANDLE_UNIT_AVAILABLE_TIME_EDIT: "{% url 'handle_unit_available_time_edit' %}",
                 GO_SE_DOWN_TIMES: "{% url 'go_se_down_time' %}",
                 AJAX_COMMENT: "{% url 'ajax_comment' %}",
+                UNIT_AT_DATA: "{% url 'get_unit_available_time_data' %}",
 
                 options_from_url_hash: function(hash){
                     var options = [];
@@ -522,11 +523,11 @@
                                 <li><a href="{% url 'admin:index' %}" class="margin-left-10 control-sidebar-subheading">
                                     <i class="fa fa-cog fa-fw"></i> Admin
                                 </a></li>
-                                <li class="hover-parent"><a href="{% url 'unit_list' %}" class="margin-left-10 control-sidebar-subheading">
+                                <li class="hover-parent"><a href="{% url 'unit_available_time' %}" class="margin-left-10 control-sidebar-subheading">
                                     <i class="fa fa-stack fa-fw">
                                         <i class="fa fa-cubes fa-stack-custom-main"></i>
                                     </i>
-                                    Units
+                                    Unit Available Times
                                 </a></li>
                                 <li class="hover-parent"><a href="{% url 'se_down_time' %}" class="margin-left-10 control-sidebar-subheading">
                                     <i class="fa fa-stack fa-fw">

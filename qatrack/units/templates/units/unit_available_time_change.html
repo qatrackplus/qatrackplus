@@ -12,6 +12,7 @@
     <link href="{{ STATIC_URL }}select2/css/select2.min.css?v={{ VERSION }}" rel="stylesheet">
     <link href="{{ STATIC_URL }}qatrack_core/css/custom-select2.css?v={{ VERSION }}" rel="stylesheet">
     <link href="{{ STATIC_URL }}felter/css/felter.css?v={{ VERSION }}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}units/css/unit_available_time.css?v={{ VERSION }}" rel="stylesheet">
 {% endblock extra_css %}
 
 {% block require_javascript %}
@@ -32,7 +33,7 @@
                 </div>
                 <div class="box-body">
                     <div class="row">
-                        <div class="col-md-3">
+                        <div class="col-md-2">
 {#                            <div class="form-group row">#}
 {#                                <label for="date_range_selector" class="col-md-2 control-label">Date Range:</label>#}
 {#                                <div class="col-md-10"><input id="date_range_selector" class="form-control"></div>#}
@@ -41,122 +42,148 @@
                                 <div class="col-sm-12">
                                     <select id="units" multiple class="form-control">
                                         {% for u in units %}
-                                            <option selected data-active="{{ u.active }}" value="{{ u.pk }}" title="{{ u.name }}{% if not u.active %} (inactive){% endif %}">{{ u.name }}</option>
+                                            <option data-active="{{ u.active }}" value="{{ u.pk }}" title="{{ u.name }}{% if not u.active %} (inactive){% endif %}">{{ u.name }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
                             </div>
                             <div class="row">
-                                <div id="units-errors" class="col-md-12 help-block text-center"></div>
-                            </div>
-
-                        </div>
-                        <div class="col-md-9">
-                                <div class="box-group" id="accordion">
-                                    <div class="panel box">
-                                        <div class="box-header with-border">
-                                            <h4 class="box-title">
-                                                <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne"
-                                                   aria-expanded="true" class="">
-                                                    Change Available Times
-                                                </a>
-                                            </h4>
-                                        </div>
-                                        <div id="collapseOne" class="panel-collapse collapse" aria-expanded="true">
-                                            <div class="box-body">
-                                                <form id="avail_time_form" class="row" method="POST" action="{% url 'handle_unit_available_time' %}" novalidate>
-                                                    {% csrf_token %}
-                                                    <div class="col-md-12 form-horizontal">
-
-                                                        <div class="form-group row" title="{{ unit_availble_time_form.date_changed.help_text }}">
-                                                            <label for="{{ unit_availble_time_form.date_changed.id_for_label }}" class="col-md-2 control-label" >{{ unit_availble_time_form.date_changed.label }}</label>
-                                                            <div class="col-md-8">
-                                                                {{ unit_availble_time_form.date_changed }}
-                                                            </div>
-                                                            <div id="date-errors" class="col-md-2 help-block text-center ajax-errors"></div>
-                                                        </div>
-
-                                                        <div class="form-group row">
-                                                            <label class="col-md-2 control-label" >Hours</label>
-                                                            <div class="col-md-8">
-                                                                <div class="row seven-cols no-gutters">
-                                                                    {% for field in unit_availble_time_form %}
-                                                                        {% if field.id_for_label != 'id_date_changed' and field.id_for_label != 'id_units' %}
-                                                                            <div class="col-md-1 {% comment %}padding-right-5 padding-left-5{% endcomment %}" title="{{ field.label }} hours">
-                                                                                {{ field|addplaceholder:field.label }}
-                                                                            </div>
-
-                                                                        {% endif %}
-                                                                    {% endfor %}
-                                                                </div>
-                                                            </div>
-                                                            <div id="hours-errors" class="col-md-2 help-block text-center ajax-errors"></div>
-                                                        </div>
-
-                                                        <div style="display: none;">{{ unit_availble_time_form.units }}</div>
-
-                                                    </div>
-                                                    <div class="row">
-                                                        <div class="col-md-10">
-                                                            <div id="unit_avail_time_go" class="btn btn-flat btn-primary pull-right">Change</div>
-                                                        </div>
-                                                    </div>
-                                                </form>
-                                            </div>
+                                <div class="col-md-12">
+                                    <label>For selected units and days:</label>
+                                    <div class="row">
+                                        <div class="col-sm-12">
+                                            <div>Edit avaiable times for these days.</div>
+                                            <div id="set_edits" class="btn btn-flat btn-sm btn-default">Edit</div>
                                         </div>
                                     </div>
-                                    <div class="panel box">
-                                        <div class="box-header with-border">
-                                            <h4 class="box-title">
-                                                <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" class="collapsed"
-                                                   aria-expanded="false">
-                                                    Add Available Time Single Day Edit (Holidays etc.)
-                                                </a>
-                                            </h4>
-                                        </div>
-                                        <div id="collapseTwo" class="panel-collapse collapse" aria-expanded="false">
-                                            <div class="box-body">
-                                                <form id="avail_time_edit_form" class="row" method="POST" {% comment %}action="{% url 'handle_unit_available_time' %}"{% endcomment %} novalidate>
-                                                    {% csrf_token %}
-                                                    <div class="col-md-12 form-horizontal">
-
-                                                        <div class="form-group row" title="{{ unit_availble_time_edit_form.date.help_text }}">
-                                                            <label for="{{ unit_availble_time_edit_form.date.id_for_label }}" class="col-md-2 control-label" >{{ unit_availble_time_edit_form.date.label }}</label>
-                                                            <div class="col-md-8">
-                                                                {{ unit_availble_time_edit_form.date }}
-                                                            </div>
-                                                            <div id="date-edit-errors" class="col-md-2 help-block text-center ajax-errors"></div>
-                                                        </div>
-
-                                                        <div class="form-group row" title="{{ unit_availble_time_edit_form.hours.help_text }}">
-                                                            <label for="{{ unit_availble_time_edit_form.hours.id_for_label }}" class="col-md-2 control-label" >{{ unit_availble_time_edit_form.hours.label }}</label>
-                                                            <div class="col-md-8">
-                                                                {{ unit_availble_time_edit_form.hours }}
-                                                            </div>
-                                                            <div id="hours-edit-errors" class="col-md-2 help-block text-center ajax-errors"></div>
-                                                        </div>
-
-                                                        <div class="form-group row" title="{{ unit_availble_time_edit_form.name.help_text }}">
-                                                            <label for="{{ unit_availble_time_edit_form.name.id_for_label }}" class="col-md-2 control-label" >{{ unit_availble_time_edit_form.name.label }}</label>
-                                                            <div class="col-md-8">
-                                                                {{ unit_availble_time_edit_form.name }}
-                                                            </div>
-                                                            <div id="name-edit-errors" class="col-md-2 help-block text-center ajax-errors"></div>
-                                                        </div>
-{##}
-                                                        <div style="display: none;">{{ unit_availble_time_edit_form.units }}</div>
-
-                                                    </div>
-                                                    <div class="row">
-                                                        <div class="col-md-10">
-                                                            <div id="unit_avail_time_edit_go" class="btn btn-flat btn-primary pull-right">Add</div>
-                                                        </div>
-                                                    </div>
-                                                </form>
-                                            </div>
+                                    <div class="row">
+                                        <div id="set_uat_div" class="col-sm-12">
+                                            <div>Insert default available time.</div>
+                                            <div id="set_uat" class="btn btn-flat btn-sm btn-default">Insert...</div>
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+
+                        </div>
+                        <div class="col-md-10">
+
+                            <div class="row margin-bottom-5">
+                                <div class="col-sm-12">
+                                    <div id="prev-month" class="btn btn-flat btn-default btn-sm"><i class="fa fa-chevron-left"></i></div>
+                                    <div class="display-inline-block">{{ unit_availble_time_form.month_select }}</div>
+                                    <div class="display-inline-block">{{ unit_availble_time_form.year_select }}</div>
+                                    <div id="next-month" class="btn btn-flat btn-default btn-sm"><i class="fa fa-chevron-right"></i></div>
+                                </div>
+                            </div>
+
+                            <div id="svg-container"></div>
+
+{#                                <div class="box-group" id="accordion">#}
+{#                                    <div class="panel box">#}
+{#                                        <div class="box-header with-border">#}
+{#                                            <h4 class="box-title">#}
+{#                                                <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne"#}
+{#                                                   aria-expanded="true" class="">#}
+{#                                                    Change Available Times#}
+{#                                                </a>#}
+{#                                            </h4>#}
+{#                                        </div>#}
+{#                                        <div id="collapseOne" class="panel-collapse collapse" aria-expanded="true">#}
+{#                                            <div class="box-body">#}
+{#                                                <form id="avail_time_form" class="row" method="POST" action="{% url 'handle_unit_available_time' %}" novalidate>#}
+{#                                                    {% csrf_token %}#}
+{#                                                    <div class="col-md-12 form-horizontal">#}
+{##}
+{#                                                        <div class="form-group row" title="{{ unit_availble_time_form.date_changed.help_text }}">#}
+{#                                                            <label for="{{ unit_availble_time_form.date_changed.id_for_label }}" class="col-md-2 control-label" >{{ unit_availble_time_form.date_changed.label }}</label>#}
+{#                                                            <div class="col-md-8">#}
+{#                                                                {{ unit_availble_time_form.date_changed }}#}
+{#                                                            </div>#}
+{#                                                            <div id="date-errors" class="col-md-2 help-block text-center ajax-errors"></div>#}
+{#                                                        </div>#}
+{##}
+{#                                                        <div class="form-group row">#}
+{#                                                            <label class="col-md-2 control-label" >Hours</label>#}
+{#                                                            <div class="col-md-8">#}
+{#                                                                <div class="row seven-cols no-gutters">#}
+{#                                                                    {% for field in unit_availble_time_form %}#}
+{#                                                                        {% if field.id_for_label != 'id_date_changed' and field.id_for_label != 'id_units' %}#}
+{#                                                                            <div class="col-md-1 {% comment %}padding-right-5 padding-left-5{% endcomment %}" title="{{ field.label }} hours">#}
+{#                                                                                {{ field|addplaceholder:field.label }}#}
+{#                                                                            </div>#}
+{##}
+{#                                                                        {% endif %}#}
+{#                                                                    {% endfor %}#}
+{#                                                                </div>#}
+{#                                                            </div>#}
+{#                                                            <div id="hours-errors" class="col-md-2 help-block text-center ajax-errors"></div>#}
+{#                                                        </div>#}
+{##}
+{#                                                        <div style="display: none;">{{ unit_availble_time_form.units }}</div>#}
+{##}
+{#                                                    </div>#}
+{#                                                    <div class="row">#}
+{#                                                        <div class="col-md-10">#}
+{#                                                            <div id="unit_avail_time_go" class="btn btn-flat btn-primary pull-right">Change</div>#}
+{#                                                        </div>#}
+{#                                                    </div>#}
+{#                                                </form>#}
+{#                                            </div>#}
+{#                                        </div>#}
+{#                                    </div>#}
+{#                                    <div class="panel box">#}
+{#                                        <div class="box-header with-border">#}
+{#                                            <h4 class="box-title">#}
+{#                                                <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" class="collapsed"#}
+{#                                                   aria-expanded="false">#}
+{#                                                    Add Available Time Single Day Edit (Holidays etc.)#}
+{#                                                </a>#}
+{#                                            </h4>#}
+{#                                        </div>#}
+{#                                        <div id="collapseTwo" class="panel-collapse collapse" aria-expanded="false">#}
+{#                                            <div class="box-body">#}
+{#                                                <form id="avail_time_edit_form" class="row" method="POST" {% comment %}action="{% url 'handle_unit_available_time' %}"{% endcomment %} novalidate>#}
+{#                                                    {% csrf_token %}#}
+{#                                                    <div class="col-md-12 form-horizontal">#}
+{##}
+{#                                                        <div class="form-group row" title="{{ unit_availble_time_edit_form.date.help_text }}">#}
+{#                                                            <label for="{{ unit_availble_time_edit_form.date.id_for_label }}" class="col-md-2 control-label" >{{ unit_availble_time_edit_form.date.label }}</label>#}
+{#                                                            <div class="col-md-8">#}
+{#                                                                {{ unit_availble_time_edit_form.date }}#}
+{#                                                            </div>#}
+{#                                                            <div id="date-edit-errors" class="col-md-2 help-block text-center ajax-errors"></div>#}
+{#                                                        </div>#}
+{##}
+{#                                                        <div class="form-group row" title="{{ unit_availble_time_edit_form.hours.help_text }}">#}
+{#                                                            <label for="{{ unit_availble_time_edit_form.hours.id_for_label }}" class="col-md-2 control-label" >{{ unit_availble_time_edit_form.hours.label }}</label>#}
+{#                                                            <div class="col-md-8">#}
+{#                                                                {{ unit_availble_time_edit_form.hours }}#}
+{#                                                            </div>#}
+{#                                                            <div id="hours-edit-errors" class="col-md-2 help-block text-center ajax-errors"></div>#}
+{#                                                        </div>#}
+{##}
+{#                                                        <div class="form-group row" title="{{ unit_availble_time_edit_form.name.help_text }}">#}
+{#                                                            <label for="{{ unit_availble_time_edit_form.name.id_for_label }}" class="col-md-2 control-label" >{{ unit_availble_time_edit_form.name.label }}</label>#}
+{#                                                            <div class="col-md-8">#}
+{#                                                                {{ unit_availble_time_edit_form.name }}#}
+{#                                                            </div>#}
+{#                                                            <div id="name-edit-errors" class="col-md-2 help-block text-center ajax-errors"></div>#}
+{#                                                        </div>#}
+{##}
+{#                                                        <div style="display: none;">{{ unit_availble_time_edit_form.units }}</div>#}
+{##}
+{#                                                    </div>#}
+{#                                                    <div class="row">#}
+{#                                                        <div class="col-md-10">#}
+{#                                                            <div id="unit_avail_time_edit_go" class="btn btn-flat btn-primary pull-right">Add</div>#}
+{#                                                        </div>#}
+{#                                                    </div>#}
+{#                                                </form>#}
+{#                                            </div>#}
+{#                                        </div>#}
+{#                                    </div>#}
+{#                                </div>#}
                         </div>
                     </div>
                 </div>

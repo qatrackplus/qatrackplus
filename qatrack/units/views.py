@@ -1,4 +1,6 @@
 
+import json
+
 from braces.views import PermissionRequiredMixin
 from django.conf import settings
 from django.core.urlresolvers import reverse, resolve
@@ -18,6 +20,19 @@ from listable.views import (
 
 from qatrack.units import models as u_models
 from qatrack.units import forms
+
+
+def get_unit_available_time_data(request):
+
+    unit_qs = u_models.Unit.objects.prefetch_related('unitavailabletime_set').all()
+    unit_available_time_data = {u.id: {
+        'number': u.number,
+        'name': u.name,
+        'active': u.active,
+        'available_times': list(u.unitavailabletime_set.all().values())
+    } for u in unit_qs}
+
+    return JsonResponse({'unit_available_time_data': unit_available_time_data})
 
 
 class UnitsFromKwargs(TemplateView):

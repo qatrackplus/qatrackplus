@@ -38,8 +38,6 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
                     refresh_on_dependent_changes: false
                 }
             }
-
-
         });
 
         $frequencies.felter({
@@ -1546,6 +1544,10 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
                                 x_pos = d3.max([x_buffer + chart_div_offset, x_pos]);
                             }
 
+                            if (x_pos > width - legend_expand_width + margin.right) {
+                                y_pos += legend_height + y_buffer;
+                            }
+
                             tli_coords.push({x: initiated_x, color: 'rgba(60, 141, 188, 0.6)'});
 
                             var tli_initiated_tooltip = d3.select("body")
@@ -1565,7 +1567,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
                                     .replace(/__tli-id__/g, initiated_data[0].test_list_instance_id)
                                     .replace(/__tli-date__/g, moment(initiated_data.x).format('ddd, MMM D, YYYY, k:mm'))
                                     .replace(/__tli-tl-name__/g, initiated_name)
-                                    .replace(/__tli-kind__/g, 'QA Event')
+                                    .replace(/__tli-kind__/g, 'Initiating QA')
                                     .replace(/__show-in__/g, 'style="display: none"')
                                 );
 
@@ -1643,7 +1645,6 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
                         tli_rtsqa_tooltip
                             .transition()
                             .style('opacity', 1);
-
                     }
 
                     var tli_lines = svg.selectAll('.tli_line')

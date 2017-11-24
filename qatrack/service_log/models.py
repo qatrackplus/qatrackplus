@@ -164,7 +164,7 @@ class ServiceEvent(models.Model):
         )
 
     def __str__(self):
-        return 'ServiceEvent %s' % self.id
+        return '%s' % self.id
 
 
 class ThirdPartyManager(models.Manager):

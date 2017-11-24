@@ -1219,11 +1219,42 @@
                     }
                     opt_data.$div = $div;
 
-                    $div.click(function() {
-                        if (!opt_data.selected) {
-                            self.selectOption(opt_data, true);
+                    $div.click(function(e) {
+
+                        if (e.shiftKey && self.previously_selected) {
+
+                            var $this = $(this);
+                            var $prev = $(self.previously_selected);
+                            var this_div_idx = $this.index();
+                            var prev_sel_idx = $prev.index();
+                            var $select_divs;
+
+                            if (this_div_idx < prev_sel_idx) {
+                                $select_divs = $this.nextUntil($prev);
+                            } else {
+                                $select_divs = $prev.nextUntil($this);
+                            }
+
+                            if ($prev[0].opt_data.selected) {
+                                $.each($select_divs, function (i, v) {
+                                    self.selectOption(v.opt_data, false);
+                                });
+                                self.selectOption(opt_data, true);
+                            } else {
+                                $.each($select_divs, function (i, v) {
+                                    self.deselectOption(v.opt_data, false);
+                                });
+                                self.deselectOption(opt_data, true);
+                            }
+
                         } else {
-                            self.deselectOption(opt_data, true);
+                            if (!opt_data.selected) {
+                                self.selectOption(opt_data, true);
+                                self.previously_selected = this;
+                            } else {
+                                self.deselectOption(opt_data, true);
+                                self.previously_selected = this;
+                            }
                         }
                     });
 

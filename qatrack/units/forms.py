@@ -1,6 +1,7 @@
 
 from django import forms
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 from django.utils.timezone import timedelta
 from django.utils.translation import ugettext as _
 
@@ -34,6 +35,28 @@ class UnitAvailableTimeForm(forms.ModelForm):
 
     units = forms.ModelMultipleChoiceField(queryset=u_models.Unit.objects.all(), required=False)
 
+    now = timezone.now()
+    year_select = forms.ChoiceField(
+        required=False, choices=[(y, y) for y in range(now.year - 20, now.year + 10)], initial=now.year
+    )
+    month_select = forms.ChoiceField(
+        required=False, choices=[
+            (0, 'January'),
+            (1, 'February'),
+            (2, 'March'),
+            (3, 'April'),
+            (4, 'May'),
+            (5, 'June'),
+            (6, 'July'),
+            (7, 'August'),
+            (8, 'September'),
+            (9, 'October'),
+            (10, 'November'),
+            (11, 'December'),
+        ],
+        initial=now.month - 1
+    )
+
     class Meta:
         model = u_models.UnitAvailableTime
         fields = (
@@ -48,6 +71,8 @@ class UnitAvailableTimeForm(forms.ModelForm):
             if f == 'date_changed':
                 self.fields[f].widget.attrs['class'] = 'form-control vDateField'
                 self.fields[f].input_formats = ['%d-%m-%Y', '%Y-%m-%d']
+            elif f in ['year_select', 'month_select']:
+                self.fields[f].widget.attrs['class'] = 'form-control'
             else:
                 self.fields[f].widget.attrs['class'] = 'form-control duration weekday-duration'
 

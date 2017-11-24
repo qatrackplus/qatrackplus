@@ -9,5 +9,6 @@ urlpatterns = [
     url(r"^unit_available_time(?:/(?P<pk>\d+))?/$", views.UnitAvailableTimeChange.as_view(), name="unit_available_time"),
     url(r'^handle_unit_available_time/$', views.HandleUnitAvailableTimeChange.as_view(), name='handle_unit_available_time'),
     url(r'^handle_unit_available_time_edit/$', views.HandleUnitAvailableTimeEditAdd.as_view(), name='handle_unit_available_time_edit'),
+    url(r'^get_unit_available_time_data/$', views.get_unit_available_time_data, name='get_unit_available_time_data'),
     # url(r'^unit_down_time/$', views.UnitDownTimes.as_view(), name='unit_down_time'),
 ]

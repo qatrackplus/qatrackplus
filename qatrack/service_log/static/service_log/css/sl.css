@@ -37,8 +37,8 @@
     border: 1.5px solid rgb(210, 214, 222);
 }
 #listable-table-sl_list_all > thead > tr > th:nth-child(2),
-#listable-table-sl_list_all > tbody > tr > td:nth-child(2),
-#listable-table-rtsqa_list_all > tbody > tr > td:nth-child(2) {
+#listable-table-sl_list_all > tbody > tr > td:nth-child(2)
+/*#listable-table-rtsqa_list_all > tbody > tr > td:nth-child(2)*/ {
     width: 50px;
 }
 #listable-table-sl_list_all > thead > tr:nth-child(2) > th:nth-child(10) > span > input {
@@ -73,7 +73,7 @@
     width: 75px;
 }
 #listable-table-rtsqa_list_all > thead > tr > th:nth-child(1) {
-    width: 150px;
+    width: 160px;
 }
 
 /*QA Status Spans                                 */
