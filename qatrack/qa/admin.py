@@ -351,12 +351,6 @@ class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
 class TestListAdminForm(forms.ModelForm):
     """Form for handling validation of TestList creation/editing"""
 
-    def __init__(self, *args, **kwargs):
-        super(TestListAdminForm, self).__init__(*args, **kwargs)
-        if self.instance.pk:
-            query = self.fields['sublists'].queryset
-            self.fields['sublists'].queryset = query.exclude(id=self.instance.id)
-
     def clean_sublists(self):
         """Make sure a user doesn't try to add itself as sublist"""
         sublists = self.cleaned_data["sublists"]
@@ -549,7 +543,7 @@ class TestListAdmin(AdminViews, SaveUserMixin, SaveInlineAttachmentUserMixin, ad
 
     prepopulated_fields = {'slug': ('name',)}
     search_fields = ("name", "description", "slug",)
-    filter_horizontal = ("tests", "sublists", )
+    filter_horizontal = ("tests", )
 
     actions = ['export_test_lists']
     list_display = ("name", "slug", "modified", "modified_by",)

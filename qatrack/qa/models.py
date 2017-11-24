@@ -992,11 +992,6 @@ class TestList(TestCollectionInterface):
 
     tests = models.ManyToManyField("Test", help_text=_("Which tests does this list contain"), through=TestListMembership)
 
-    sublists = models.ManyToManyField(
-        "self", symmetrical=False, blank=True,
-        help_text=_("Choose any sublists that should be performed as part of this list.")
-    )
-
     warning_message = models.CharField(
         max_length=255, help_text=_("Message given when a test value is out of tolerance"),
         default=settings.DEFAULT_WARNING_MESSAGE
@@ -1011,14 +1006,23 @@ class TestList(TestCollectionInterface):
 
     def all_lists(self):
         """return query for self and all sublists"""
-        return TestList.objects.filter(pk=self.pk) | self.sublists.order_by("name")
+        children = TestList.objects.filter(pk__in=self.children.values_list("child__pk", flat=True))
+        return TestList.objects.filter(pk=self.pk) | children
 
     def ordered_tests(self):
         """return list of all tests/sublist tests in order"""
-        tests = list(self.tests.all().order_by("testlistmembership__order").select_related("category"))
-        for sublist in self.sublists.order_by("name"):
-            tests.extend(sublist.ordered_tests())
-        return tests
+        tlms = self.testlistmembership_set.select_related("test", "test__category")
+        tests = []
+        for tlm in tlms:
+            tests.append((tlm.order, tlm.order, tlm.test))
+
+        for sublist in self.children.all():
+            order = sublist.order
+            ordered_tests = sublist.child.ordered_tests()
+            for i, test in enumerate(ordered_tests):
+                tests.append((order, i, test))
+
+        return [x[-1] for x in sorted(tests, key=lambda y: y[:-1])]
 
     @classmethod
     def get_test_pack_fields(cls):
@@ -1038,6 +1042,23 @@ class TestList(TestCollectionInterface):
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         super(TestList, self).save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
         self.utcs.update(name=self.name)
+
+
+class Sublist(models.Model):
+
+    NK_FIELDS = ['parent', 'child']
+
+    parent = models.ForeignKey(TestList, related_name="children")
+    child = models.ForeignKey(TestList)
+
+    order = models.IntegerField(db_index=True, default=999)
+
+    class Meta:
+        ordering = ("order",)
+        unique_together = ("parent", "child",)
+
+    def __str__(self):
+        return "%s -> %s" % (self.parent, self.child)
 
 
 class UnitTestListManager(models.Manager):
