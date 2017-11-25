@@ -1,9 +1,9 @@
+from collections import defaultdict
 
 from django.dispatch import receiver, Signal
 from django.db.models.signals import pre_save, post_save, pre_delete, post_delete
 
 from django.core.exceptions import ValidationError
-from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 
@@ -96,22 +96,20 @@ def find_assigned_unit_test_collections(collection):
     the units that it is a part of
     """
 
-    all_parents = {
-        ContentType.objects.get_for_model(collection): [collection],
-    }
+    all_parents = defaultdict(list)
+    all_parents[ContentType.objects.get_for_model(collection)] = [collection]
 
-    parent_types = [x._meta.model_name + "_set" for x in models.TestCollectionInterface.__subclasses__()]
+    parent_types = [x._meta.model_name + "_set" for x in models.TestCollectionInterface.__subclasses__() + [models.Sublist]]
 
     for parent_type in parent_types:
 
         if hasattr(collection, parent_type):
             parents = getattr(collection, parent_type).all()
             if parents.count() > 0:
+                if parents[0]._meta.model_name == "sublist":
+                    parents = [x.parent for x in parents]
                 ct = ContentType.objects.get_for_model(parents[0])
-                try:
-                    all_parents[ct].extend(list(parents))
-                except KeyError:
-                    all_parents[ct] = list(parents)
+                all_parents[ct].extend(list(parents))
 
     assigned_utcs = []
     for ct, objects in list(all_parents.items()):
@@ -201,6 +199,16 @@ def test_added_to_list(*args, **kwargs):
     """
     if (not loaded_from_fixture(kwargs)):
         update_unit_test_infos(kwargs["instance"].test_list)
+
+
+@receiver(post_save, sender=models.Sublist)
+def sublist_added_to_list(*args, **kwargs):
+    """
+    Sublist was added to a list. Find all units this list
+    is performed on and create UnitTestInfo for the Unit, Test pair.
+    """
+    if (not loaded_from_fixture(kwargs)):
+        update_unit_test_infos(kwargs["instance"].parent)
 
 
 @receiver(post_save, sender=models.TestList)
