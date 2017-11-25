@@ -1051,7 +1051,7 @@ class Sublist(models.Model):
     parent = models.ForeignKey(TestList, related_name="children")
     child = models.ForeignKey(TestList)
 
-    order = models.IntegerField(db_index=True, default=999)
+    order = models.IntegerField(db_index=True)
 
     class Meta:
         ordering = ("order",)

@@ -568,7 +568,6 @@ class TestTestList(TestCase):
 
         self.assertListEqual(list(tl1.ordered_tests()), [t1, t2])
 
-
     def test_ordered_tests_sublist(self):
         tl1 = utils.create_test_list(name="1")
         tl2 = utils.create_test_list(name="2")

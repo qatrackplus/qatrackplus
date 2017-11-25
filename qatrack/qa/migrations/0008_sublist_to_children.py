@@ -11,8 +11,8 @@ def sublists_to_children(apps, schema):
     Sublist = apps.get_model("qa", "Sublist")
 
     for tl in TestList.objects.filter(sublists__isnull=False):
-        for sublist in tl.sublists.order_by("name"):
-            Sublist.objects.create(parent=tl, child=sublist)
+        for i, sublist in enumerate(tl.sublists.order_by("name")):
+            Sublist.objects.create(parent=tl, child=sublist, order=1000+i)
             tl.sublists.remove(sublist)
 
 
