@@ -39,3 +39,6 @@ text.day-num {
     user-select: none;
     pointer-events: none;
 }
+text.day-label {
+    font-size: 10px;
+}

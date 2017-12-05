@@ -4,6 +4,7 @@ import json
 from braces.views import PermissionRequiredMixin
 from django.conf import settings
 from django.core.urlresolvers import reverse, resolve
+from django.utils import timezone
 from django.db.models import ObjectDoesNotExist
 from django.http import JsonResponse
 from django.template.loader import get_template
@@ -24,11 +25,17 @@ from qatrack.units import forms
 
 def get_unit_available_time_data(request):
 
-    unit_qs = u_models.Unit.objects.prefetch_related('unitavailabletime_set').all()
+    unit_qs = u_models.Unit.objects.prefetch_related('unitavailabletime_set', 'unitavailabletimeedit_set').all()
     unit_available_time_data = {u.id: {
         'number': u.number,
         'name': u.name,
         'active': u.active,
+        'available_time_edits': {
+            uate.date.strftime('%Y-%m-%d'): {
+                'name': uate.name,
+                'hours': uate.hours
+            } for uate in u.unitavailabletimeedit_set.all()
+        },
         'available_times': list(u.unitavailabletime_set.all().values())
     } for u in unit_qs}
 
@@ -85,87 +92,63 @@ class UnitAvailableTimeChange(PermissionRequiredMixin, UnitsFromKwargs):
         return context
 
 
-# class ServiceLogDownTimes(BaseListableView):
-#
-#     template_name = 'units/unit_down_time.html'
-#     model =
+def handle_unit_available_time(request):
+
+    day = timezone.datetime.fromtimestamp(int(request.POST.get('day'))/1000, timezone.utc).date()
+    hours = {'monday': ['0', '0'], 'tuesday': ['0', '0'], 'wednesday': ['0', '0'], 'thursday': ['0', '0'], 'friday': ['0', '0'], 'saturday': ['0', '0'], 'sunday': ['0', '0']}
+    for d in hours:
+        hours_min = request.POST.get('hours_' + d).replace('_', '0')
+        if hours_min != '':
+            hours_min = hours_min.split(':')
+            hours[d] = hours_min
+    units = [u_models.Unit.objects.get(id=u_id) for u_id in request.POST.getlist('units[]', [])]
+
+    for u in units:
+        try:
+            uat = u_models.UnitAvailableTime.objects.get(unit=u, date_changed=day)
+            for d in hours:
+                uat['hours' + d] = timezone.timedelta(hours=int(hours[d][0]), minutes=int(hours[d][1]))
+            uat.save()
+        except ObjectDoesNotExist:
+            uat = u_models.UnitAvailableTime.objects.create(
+                unit=u,
+                date_changed=day,
+                hours_monday=timezone.timedelta(hours=int(hours['monday'][0]), minutes=int(hours['monday'][1])),
+                hours_tuesday=timezone.timedelta(hours=int(hours['tuesday'][0]), minutes=int(hours['tuesday'][1])),
+                hours_wednesday=timezone.timedelta(hours=int(hours['wednesday'][0]), minutes=int(hours['wednesday'][1])),
+                hours_thursday=timezone.timedelta(hours=int(hours['thursday'][0]), minutes=int(hours['thursday'][1])),
+                hours_friday=timezone.timedelta(hours=int(hours['friday'][0]), minutes=int(hours['friday'][1])),
+                hours_saturday=timezone.timedelta(hours=int(hours['saturday'][0]), minutes=int(hours['saturday'][1])),
+                hours_sunday=timezone.timedelta(hours=int(hours['sunday'][0]), minutes=int(hours['sunday'][1])),
+            )
+
+    return get_unit_available_time_data(request)
 
 
-class HandleUnitAvailableTimeChange(PermissionRequiredMixin, CreateView):
+def handle_unit_available_time_edit(request):
 
-    permission_required = 'units.change_unitavailabletime'
-    raise_exception = True
-    model = u_models.UnitAvailableTime
-    form_class = forms.UnitAvailableTimeForm
-    template_name = 'units/unit_available_time_change.html'
+    hours_mins = request.POST.get('hours_mins', None)
+    if hours_mins:
+        hours_mins = hours_mins.replace('_', '0').split(':')
+        hours = int(hours_mins[0])
+        mins = int(hours_mins[1])
+        units = [u_models.Unit.objects.get(id=u_id) for u_id in request.POST.getlist('units[]', [])]
+        days = [timezone.datetime.fromtimestamp(int(d)/1000, timezone.utc).date() for d in request.POST.getlist('days[]', [])]
+        name = request.POST.get('name', None)
 
-    def get_context_data(self, **kwargs):
-        super(HandleUnitAvailableTimeChange, self).get_context_data(**kwargs)
-        if self.request.method == 'POST':
-            print('posting')
-        else:
-            print('not posting')
+        for d in days:
+            for u in units:
+                try:
+                    uate = u_models.UnitAvailableTimeEdit.objects.get(unit=u, date=d)
+                    uate.hours = timezone.timedelta(hours=hours, minutes=mins)
+                    uate.name = name
+                    uate.save()
+                except ObjectDoesNotExist:
+                    uate = u_models.UnitAvailableTimeEdit.objects.create(
+                        unit=u, date=d, hours=timezone.timedelta(hours=hours, minutes=mins), name=name
+                    )
 
-    def form_valid(self, form):
-        for u in form.cleaned_data['units']:
-            date_changed = form.cleaned_data['date_changed']
-            try:
-                uat = u_models.UnitAvailableTime.objects.get(date_changed=date_changed, unit=u)
-
-                uat.hours_monday = form.cleaned_data['hours_monday']
-                uat.hours_tuesday = form.cleaned_data['hours_tuesday']
-                uat.hours_wednesday = form.cleaned_data['hours_wednesday']
-                uat.hours_thursday = form.cleaned_data['hours_thursday']
-                uat.hours_friday = form.cleaned_data['hours_friday']
-                uat.hours_saturday = form.cleaned_data['hours_saturday']
-                uat.hours_sunday = form.cleaned_data['hours_sunday']
-                uat.save()
-            except ObjectDoesNotExist:
-                u_models.UnitAvailableTime.objects.create(
-                    date_changed=date_changed,
-                    unit=u,
-                    hours_monday=form.cleaned_data['hours_monday'],
-                    hours_tuesday=form.cleaned_data['hours_tuesday'],
-                    hours_wednesday=form.cleaned_data['hours_wednesday'],
-                    hours_thursday=form.cleaned_data['hours_thursday'],
-                    hours_friday=form.cleaned_data['hours_friday'],
-                    hours_saturday=form.cleaned_data['hours_saturday'],
-                    hours_sunday=form.cleaned_data['hours_sunday']
-                )
-
-        return JsonResponse({'message': 'Finsished'})
-
-    def form_invalid(self, form):
-        return JsonResponse({'errors': form.errors})
-
-
-class HandleUnitAvailableTimeEditAdd(PermissionRequiredMixin, CreateView):
-
-    permission_required = 'units.change_unitavailabletime'
-    raise_exception = True
-    model = u_models.UnitAvailableTimeEdit
-    form_class = forms.UnitAvailableTimeEditForm
-
-    def form_valid(self, form):
-        for u in form.cleaned_data['units']:
-            date = form.cleaned_data['date']
-            try:
-                uate = u_models.UnitAvailableTimeEdit.objects.get(date=date, unit=u)
-                uate.hours = form.cleaned_data['hours_monday']
-                uate.name = form.cleaned_data['name']
-                uate.save()
-            except ObjectDoesNotExist:
-                u_models.UnitAvailableTimeEdit.objects.create(
-                    date=date,
-                    unit=u,
-                    hours=form.cleaned_data['hours'],
-                    name=form.cleaned_data['name']
-                )
-
-        return JsonResponse({'message': 'Finsished'})
-
-    def form_invalid(self, form):
-        return JsonResponse({'errors': form.errors})
+    return get_unit_available_time_data(request)
 
 
 class VendorsList(BaseListableView):

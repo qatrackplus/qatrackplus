@@ -130,7 +130,7 @@ class UnitAvailableTimeEdit(models.Model):
     """
     unit = models.ForeignKey(Unit, on_delete=models.CASCADE)
 
-    name = models.CharField(max_length=64, help_text=_('A quick name or reason for the change'))
+    name = models.CharField(max_length=64, help_text=_('A quick name or reason for the change'), blank=True, null=True)
     date = models.DateField(help_text=_('Date of available time change'))
     hours = models.DurationField(help_text=_('New duration of availability'))
 

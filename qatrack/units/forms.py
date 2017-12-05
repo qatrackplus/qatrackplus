@@ -35,12 +35,14 @@ class UnitAvailableTimeForm(forms.ModelForm):
 
     units = forms.ModelMultipleChoiceField(queryset=u_models.Unit.objects.all(), required=False)
 
-    now = timezone.now()
     year_select = forms.ChoiceField(
-        required=False, choices=[(y, y) for y in range(now.year - 20, now.year + 10)], initial=now.year
+        required=False,
+        choices=[(y, y) for y in range(timezone.now().year - 20, timezone.now().year + 10)],
+        initial=timezone.now().year
     )
     month_select = forms.ChoiceField(
-        required=False, choices=[
+        required=False,
+        choices=[
             (0, 'January'),
             (1, 'February'),
             (2, 'March'),
@@ -54,7 +56,7 @@ class UnitAvailableTimeForm(forms.ModelForm):
             (10, 'November'),
             (11, 'December'),
         ],
-        initial=now.month - 1
+        initial=timezone.now().month - 1
     )
 
     class Meta:
@@ -75,6 +77,9 @@ class UnitAvailableTimeForm(forms.ModelForm):
                 self.fields[f].widget.attrs['class'] = 'form-control'
             else:
                 self.fields[f].widget.attrs['class'] = 'form-control duration weekday-duration'
+
+        for day in ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']:
+            self.fields['hours_' + day].widget.attrs['placeholder'] = day
 
 
 class UnitAvailableTimeEditForm(forms.ModelForm):

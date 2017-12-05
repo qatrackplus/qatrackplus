@@ -141,4 +141,5 @@ require(['jquery', 'bootstrap', 'admin_lte', 'json2', 'site_base'], function($) 
     $(document).ready(function() {
       $("body").removeClass("preload");
     });
+
 });

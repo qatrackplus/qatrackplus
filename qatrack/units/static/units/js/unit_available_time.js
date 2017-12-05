@@ -1,5 +1,19 @@
 require(['jquery', 'moment', 'd3', 'daterangepicker', 'select2', 'felter', 'sl_utils', 'inputmask', 'json2'], function ($, moment, d3) {
 
+    var csrftoken = $("[name=csrfmiddlewaretoken]").val();
+    function csrfSafeMethod(method) {
+        // these HTTP methods do not require CSRF protection
+        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+    }
+
+    $.ajaxSetup({
+        beforeSend: function (xhr, settings) {
+            if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            }
+        }
+    });
+
     var _ctrl_pressed = false,
         _shift_pressed = false;
 
@@ -99,7 +113,13 @@ require(['jquery', 'moment', 'd3', 'daterangepicker', 'select2', 'felter', 'sl_u
             $month = $('#id_month_select'),
             $next_month = $('#next-month'),
             $prev_month = $('#prev-month'),
-            $svg_container = $('#svg-container');
+            $svg_container = $('#svg-container'),
+            $set_edits = $('#set_edits'),
+            $set_uat = $('#set_uat'),
+            $submit_edit = $('#submit_edit'),
+            $submit_insert = $('#submit_insert'),
+            $name_input = $('#name_input'),
+            $edit_input = $('#edit_input');
 
         var unit_available_time_data = {},
             day_by_day_unit_hours,
@@ -161,6 +181,65 @@ require(['jquery', 'moment', 'd3', 'daterangepicker', 'select2', 'felter', 'sl_u
             }
         });
 
+        $submit_edit.click(function() {
+            var days = [];
+            $.each(selected_days, function(i, v) {
+                days.push(v.valueOf());
+            });
+            var data = {
+                units: selected_units,
+                days: days,
+                hours_mins: $edit_input.val(),
+                name: $name_input.val()
+            };
+
+            $.ajax({
+                type: 'POST',
+                data: data,
+                url: QAURLs.HANDLE_UNIT_AVAILABLE_TIME_EDIT,
+                success: function(res) {
+                    unit_available_time_data = res.unit_available_time_data;
+                    day_by_day_unit_hours = null;
+                    $('#available_edits_modal').modal('hide');
+                    update_calendar();
+                },
+                error: function(res) {
+                    console.log(res);
+                    $('#edit_error').html('Server error.')
+                }
+            })
+        });
+
+        $submit_insert.click(function() {
+            var day = selected_days[0].valueOf();
+
+            var data = {
+                units: selected_units,
+                day: day
+            };
+
+            $.each($('.duration.weekday-duration'), function(i, v) {
+                data[$(v).attr('name')] = $(v).val();
+            });
+
+            $.ajax({
+                type: 'POST',
+                data: data,
+                url: QAURLs.HANDLE_UNIT_AVAILABLE_TIME,
+                success: function(res) {
+                    unit_available_time_data = res.unit_available_time_data;
+                    day_by_day_unit_hours = null;
+                    $('#available_modal').modal('hide');
+                    update_calendar();
+                },
+                error: function(res) {
+                    console.log(res);
+                    $('#uat_error').html('Server error.')
+                }
+            })
+
+        });
+
         $units.felter({
             mainDivClass: 'col-md-12 form-control',
             selectAllClass: 'btn btn-flat btn-xs btn-default',
@@ -199,9 +278,11 @@ require(['jquery', 'moment', 'd3', 'daterangepicker', 'select2', 'felter', 'sl_u
         });
 
         $('.duration').inputmask('99:99', {numericInput: true, removeMaskOnSubmit: true});
+        $edit_input.inputmask('99:99', {numericInput: true, removeMaskOnSubmit: true});
 
         $units.change(function () {
             selected_units = $(this).val() || [];
+            disable_uat_btns();
             update_calendar();
         });
 
@@ -226,22 +307,31 @@ require(['jquery', 'moment', 'd3', 'daterangepicker', 'select2', 'felter', 'sl_u
 
                 day = first_day_displayed.clone();
                 while (day.isBefore(last_day_displayed)) {
+                    var labels = [];
                     var days_unit_hours = [];
                     $.each($units.find('option'), function (i, v) {
                         var unit_id = $(v).val();
 
                         var uat_data = unit_available_time_data[unit_id].available_times;
+                        var uate_data = unit_available_time_data[unit_id].available_time_edits;
                         var unit_avail_time_today = 0;
+                        var day_str = day.format('YYYY-MM-DD');
+                        if (day_str in uate_data) {
+                            var day_edit_name = uate_data[day_str].name;
+                            if (labels.indexOf(day_edit_name) === -1) {
+                                labels.push(uate_data[day_str].name);
+                            }
+                            unit_avail_time_today = duration_minutes(uate_data[day.format('YYYY-MM-DD')].hours);
+                        } else {
+                            // search through available time objects which should be ordered most recent to oldest
+                            for (var j = 0; j < uat_data.length; j++) {
 
-                        // search through available time objects which should be ordered most recent to oldest
-                        for (var j = 0; j < uat_data.length; j++) {
-
-                            if (moment(uat_data[j].date_changed, 'YYYY-MM-DD').subtract(1, 'days').isBefore(day)) {
-                                // TODO check edits here
-                                unit_avail_time_today = duration_minutes(
-                                    uat_data[j]['hours_' + day.format('dddd').toLocaleLowerCase()]
-                                );
-                                break;
+                                if (moment(uat_data[j].date_changed, 'YYYY-MM-DD').subtract(1, 'days').isBefore(day)) {
+                                    unit_avail_time_today = duration_minutes(
+                                        uat_data[j]['hours_' + day.format('dddd').toLocaleLowerCase()]
+                                    );
+                                    break;
+                                }
                             }
                         }
                         days_unit_hours.push({
@@ -257,7 +347,8 @@ require(['jquery', 'moment', 'd3', 'daterangepicker', 'select2', 'felter', 'sl_u
                         'day_moment': day.clone(),
                         'hours_data': days_unit_hours,
                         'x_inx': day_diff % 7,
-                        'y_inx': Math.floor(day_diff / 7)
+                        'y_inx': Math.floor(day_diff / 7),
+                        'labels': labels
                     });
 
                     day.add(1, 'days');
@@ -275,7 +366,8 @@ require(['jquery', 'moment', 'd3', 'daterangepicker', 'select2', 'felter', 'sl_u
             day_height = day_space_height / 6,
             day_bar_buffer = 10,
             day_bar_space = day_width - 2 * day_bar_buffer,
-            max_val = 1440;
+            max_val = 1440,
+            day_label_height = 12;
 
         var svg = d3.select('#svg-container').append('svg')
             .attr('width', chart_width)
@@ -334,6 +426,11 @@ require(['jquery', 'moment', 'd3', 'daterangepicker', 'select2', 'felter', 'sl_u
             return selected_days.some(function(m) {
                 return m.isSame(_moment, 'day')
             });
+        }
+
+        function disable_uat_btns() {
+            $set_edits.prop('disabled', selected_days.length === 0 || selected_units.length === 0);
+            $set_uat.prop('disabled', selected_units.length === 0 || selected_days.length !== 1);
         }
 
         function update_calendar() {
@@ -440,12 +537,16 @@ require(['jquery', 'moment', 'd3', 'daterangepicker', 'select2', 'felter', 'sl_u
                                 var m = recent_day_selected.clone();
 
                                 while (m.isBefore(day_data.day_moment)) {
-                                    selected_days.push(m.clone());
+                                    if (!is_selected_day(m)) {
+                                        selected_days.push(m.clone());
+                                    }
                                     m.add(1, 'days');
                                 }
 
                                 while (m.isAfter(day_data.day_moment)) {
-                                    selected_days.push(m.clone());
+                                    if (!is_selected_day(m)) {
+                                        selected_days.push(m.clone());
+                                    }
                                     m.subtract(1, 'days');
                                 }
                                 selected_days.push(day_data.day_moment);
@@ -455,6 +556,8 @@ require(['jquery', 'moment', 'd3', 'daterangepicker', 'select2', 'felter', 'sl_u
                             recent_day_selected = day_data.day_moment;
                         }
                     }
+
+                    disable_uat_btns();
 
                     d3.selectAll('g.day-g')
                         .attr('class', function(d) {
@@ -485,6 +588,28 @@ require(['jquery', 'moment', 'd3', 'daterangepicker', 'select2', 'felter', 'sl_u
                     .text(function(d) { return d; });
 
                 day_of_month.transition().text(function(d) { return d; });
+
+                var day_labels = day_selection.selectAll('.day-label')
+                    .data(function(d) { return d.labels; });
+
+                day_labels.enter().append('text')
+                        .attr('class', 'day-label')
+                        .attr('x', 25)
+                        .attr('y', day_label_height)
+                        .text(function(d) { return '- ' + d; })
+                        .attr('title', function(d) { return d; })
+                    .transition()
+                        .attr('y', function(d, i, s) { return day_label_height * (i + 1); });
+
+                day_labels.transition()
+                    .text(function(d) { return '- ' + d; })
+                    .attr('title', function(d) { return d; })
+                    .attr('y', function(d, i, s) { return day_label_height * (i + 1); });
+
+                day_labels.exit()
+                    .transition()
+                        .style('opacity', 1e-6)
+                        .remove();
 
                 var bar_rect_selection = bars_selection.selectAll('rect.bar-rect')
                     .data(function (d) {
