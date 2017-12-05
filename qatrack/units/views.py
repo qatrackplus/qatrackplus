@@ -107,7 +107,7 @@ def handle_unit_available_time(request):
         try:
             uat = u_models.UnitAvailableTime.objects.get(unit=u, date_changed=day)
             for d in hours:
-                uat['hours' + d] = timezone.timedelta(hours=int(hours[d][0]), minutes=int(hours[d][1]))
+                setattr(uat, 'hours_' + d, timezone.timedelta(hours=int(hours[d][0]), minutes=int(hours[d][1])))
             uat.save()
         except ObjectDoesNotExist:
             uat = u_models.UnitAvailableTime.objects.create(

@@ -133,6 +133,9 @@
                     <div class="row form-group">
                         <div class="col-sm-12">
                             <div class="row seven-cols no-gutters">
+                                <div class="col-md-1 {% comment %}padding-right-5 padding-left-5{% endcomment %}" title="{{ unit_availble_time_form.hours_sunday.label }} hours">
+                                    {{ unit_availble_time_form.hours_sunday }}
+                                </div>
                                 <div class="col-md-1 {% comment %}padding-right-5 padding-left-5{% endcomment %}" title="{{ unit_availble_time_form.hours_monday.label }} hours">
                                     {{ unit_availble_time_form.hours_monday }}
                                 </div>
@@ -151,9 +154,7 @@
                                 <div class="col-md-1 {% comment %}padding-right-5 padding-left-5{% endcomment %}" title="{{ unit_availble_time_form.hours_saturday.label }} hours">
                                     {{ unit_availble_time_form.hours_saturday }}
                                 </div>
-                                <div class="col-md-1 {% comment %}padding-right-5 padding-left-5{% endcomment %}" title="{{ unit_availble_time_form.hours_sunday.label }} hours">
-                                    {{ unit_availble_time_form.hours_sunday }}
-                                </div>
+
                             </div>
                         </div>
                     </div>
