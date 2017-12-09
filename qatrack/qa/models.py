@@ -1024,6 +1024,19 @@ class TestList(TestCollectionInterface):
 
         return [x[-1] for x in sorted(tests, key=lambda y: y[:-1])]
 
+    def sublist_borders(self):
+        """Return indexes where visible marks should be shown for sublists
+        with visibility enabled"""
+
+        borders = []
+        for sublist in self.children.select_related("child").prefetch_related("child__tests").filter(outline=True):
+            borders.append((
+                sublist.order,
+                sublist.order + len(sublist.child.ordered_tests()),
+                sublist.child.name,
+            ))
+        return borders
+
     @classmethod
     def get_test_pack_fields(cls):
         exclude = ["id", "created", "created_by", "modified", "modified_by"]
@@ -1050,6 +1063,11 @@ class Sublist(models.Model):
 
     parent = models.ForeignKey(TestList, related_name="children")
     child = models.ForeignKey(TestList)
+    outline = models.BooleanField(
+        default=False,
+        help_text=
+        "Check to indicate whether sublist tests should be distinguished visually from parent tests",
+    )
 
     order = models.IntegerField(db_index=True)
 

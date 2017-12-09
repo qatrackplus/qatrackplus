@@ -65,9 +65,10 @@ function move_rows(){
       var type;
       if ($(el).find('input[id^=id_testlistmem]').length > 0){
         type = "Test";
+        $(el).find("td").eq(4).before("<td>--</td>");
       }else{
         type = "Sublist";
-        $(el).find("td").eq(3).before("<td>--</td>");
+        $(el).find("td").eq(2).before("<td>--</td>");
       }
       $(el).find("td").eq(0).before("<td>" + type + "</td>");
       $(el).detach().appendTo(table);
@@ -98,7 +99,7 @@ $(document).ready(function() {
       '    <fieldset class="module">',
       '      <h2>Test List Members</h2>',
       '      <table>',
-      '        <thead><th>Type</th><th colspan="2">ID</th><th>Order</th><th>Macro Name</th><th>Delete</th></thead>',
+      '        <thead><th>Type</th><th colspan="2">ID</th><th>Order</th><th>Macro Name</th><th>Sublist Outlined</th><th>Delete</th></thead>',
       '        <tbody></tbody>',
       '      </table>',
       '    </fieldset>',
@@ -109,7 +110,7 @@ $(document).ready(function() {
     move_rows();
     var table = $("#member-container tbody");
     var addRows = $('#testlistmembership_set-group tr.add-row, #children-group tr.add-row').detach().appendTo(table);
-    addRows.children("td").attr("colspan", "6");
+    addRows.children("td").attr("colspan", "7");
     addRows.find("a").on("click", function(e){
       move_rows();
     })

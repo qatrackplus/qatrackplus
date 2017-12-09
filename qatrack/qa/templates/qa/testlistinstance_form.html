@@ -438,7 +438,37 @@
                                     </thead>
                                     <tbody>
                                         {% for test_form in formset %}
+                                            {% for start, stop, name in borders %}
+                                                {% if forloop.parentloop.counter == start %}
+                                                  <tr style="border-bottom: 1px solid #222d32;">
+                                                      <td
+                                                        {% if perms.qa.can_view_ref_tol and perms.qa.can_view_history %}
+                                                            colspan="8"
+                                                        {% elif perms.qa.can_view_ref_tol or perms.qa.can_view_history %}
+                                                            colspan="7"
+                                                        {% else %}
+                                                            colspan="6"
+                                                        {% endif %}
+                                                            >{{ name }}</td>
+                                                  </tr>
+                                                {% endif %}
+                                            {% endfor %}
                                             {% qa_value_form test_form test_list include_history=perms.qa.can_view_history include_ref_tols=perms.qa.can_view_ref_tol test_info=test_form.get_test_info  %}
+                                            {% for start, stop, name in borders %}
+                                                {% if forloop.parentloop.counter == stop %}
+                                                  <tr style="border-bottom: 1px solid #222d32;">
+                                                      <td
+                                                        {% if perms.qa.can_view_ref_tol and perms.qa.can_view_history %}
+                                                            colspan="8"
+                                                        {% elif perms.qa.can_view_ref_tol or perms.qa.can_view_history %}
+                                                            colspan="7"
+                                                        {% else %}
+                                                            colspan="6"
+                                                        {% endif %}
+                                                            >End {{ name }}</td>
+                                                  </tr>
+                                                {% endif %}
+                                            {% endfor %}
                                         {% endfor %}
 
                                     </tbody>

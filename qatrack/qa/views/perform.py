@@ -328,7 +328,7 @@ class CompositeCalculation(JSONResponseMixin, AttachmentMixin, View):
         for d in ("work_completed", "work_started",):
             try:
                 meta_data[d] = dateutil.parser.parse(meta_data[d])
-            except (KeyError, AttributeError):
+            except (TypeError, KeyError, AttributeError):
                 pass
 
         if values is None:
@@ -760,6 +760,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         context['current_day'] = self.actual_day + 1
         context["last_instance"] = self.unit_test_col.last_instance
         context['last_day'] = self.last_day
+        context['borders'] = self.test_list.sublist_borders()
 
         ndays = len(self.unit_test_col.tests_object)
         if ndays > 1:
