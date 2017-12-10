@@ -1011,12 +1011,15 @@ class TestList(TestCollectionInterface):
 
     def ordered_tests(self):
         """return list of all tests/sublist tests in order"""
-        tlms = self.testlistmembership_set.select_related("test", "test__category")
+        tlms = self.testlistmembership_set.select_related(
+            "test",
+            "test__category"
+        )
         tests = []
         for tlm in tlms:
             tests.append((tlm.order, tlm.order, tlm.test))
 
-        for sublist in self.children.all():
+        for sublist in self.children.select_related("child").prefetch_related("child__tests"):
             order = sublist.order
             ordered_tests = sublist.child.ordered_tests()
             for i, test in enumerate(ordered_tests):
@@ -1028,13 +1031,23 @@ class TestList(TestCollectionInterface):
         """Return indexes where visible marks should be shown for sublists
         with visibility enabled"""
 
-        borders = []
-        for sublist in self.children.select_related("child").prefetch_related("child__tests").filter(outline=True):
-            borders.append((
-                sublist.order,
-                sublist.order + len(sublist.child.ordered_tests()),
-                sublist.child.name,
-            ))
+        n_total_tests = len(self.ordered_tests())
+        borders = {
+            'starts': {
+                0: {'class' : 'first'},
+            },
+            'ends': {
+                (n_total_tests - 1): "__end__"
+            },
+        }
+        for sublist in self.children.filter(outline=True).select_related("child").prefetch_related("child__tests"):
+            ntests = len(sublist.child.ordered_tests())
+            borders['starts'][sublist.order] = {
+                'class' : 'sublist',
+                'name': sublist.child.name,
+            }
+            borders['ends'][sublist.order + ntests - 1] = True
+
         return borders
 
     @classmethod

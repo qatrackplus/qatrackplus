@@ -205,6 +205,24 @@ td.test-name {
     height: 100%;
     top: 0;
 }
+#perform-qa-table > tbody {
+  border: 0;
+}
+#perform-qa-table > tbody.sublist {
+  border-top: 2px solid #ddd;
+  border-bottom: 2px solid #ddd;
+}
+#perform-qa-table > tbody.first {
+  border-top: 2px solid #ddd;
+}
+#perform-qa-table > tbody.sublist::before {
+  content: attr(data-sublist);
+  position: relative;
+  left: 15px;
+  top: 0;
+  font-size: 12px;
+  font-weight: bold;
+}
 #perform-qa-table > tbody > tr > td .error-bar {
     border-left: 3px solid transparent;
     -webkit-transition: border-color 0.5s; /* Safari */
