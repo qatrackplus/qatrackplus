@@ -493,13 +493,11 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         :model:`qa.TestListCycle`'s (where N is number of lists in the cycle).
         """
 
+        from django.db.models import Prefetch
         requested_day = self.get_requested_day_to_perform()
         self.actual_day, self.test_list = self.unit_test_col.get_list(requested_day)
-
         if self.test_list is None:
             raise Http404
-
-        self.all_lists = self.test_list.all_lists()
 
     def set_all_tests(self):
         """Find all tests to be performed, including tests from sublists"""
@@ -760,7 +758,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         context['current_day'] = self.actual_day + 1
         context["last_instance"] = self.unit_test_col.last_instance
         context['last_day'] = self.last_day
-        context['borders'] = self.test_list.sublist_borders()
+        context['borders'] = self.test_list.sublist_borders(self.all_tests)
 
         ndays = len(self.unit_test_col.tests_object)
         if ndays > 1:

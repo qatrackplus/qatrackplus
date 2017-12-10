@@ -1,6 +1,7 @@
 {% extends "site_base.html" %}
 
 {% load qa_tags %}
+{% load qatrack_tags %}
 {% load attach_tags %}
 {% load comments %}
 
@@ -213,10 +214,15 @@
                                                     {% endif %}
                                                 </tr>
                                             </thead>
-                                            <tbody>
                                                 {{ formset.management_form }}
 
                                                 {% for ti_form in formset %}
+
+                                                    {% with borders.starts|lookup:forloop.counter0 as delim %}
+                                                        {% if delim  %}
+                                                          <tbody class="{{ delim.class }}" {% if delim.name %}data-sublist="{{ delim.name }}"{% endif %}>
+                                                        {% endif %}
+                                                    {% endwith %}
 
                                                     {% with ti=ti_form.instance test=ti_form.instance.unit_test_info.test %}
                                                     <tr class="qa-valuerow" data-prefix="{{ ti_form.prefix }}">
@@ -302,7 +308,11 @@
                                                         </tr>
                                                     {% endif %}
                                                     {%endwith%}
+                                                  {% if borders.ends|lookup:forloop.counter0 %}
+                                                      </tbody>
+                                                  {% endif %}
                                                 {% endfor %}
+                                            <tbody>
 
                                                 <tr>
                                                     <td><strong>Attachments</strong></td>

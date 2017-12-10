@@ -205,16 +205,20 @@ td.test-name {
     height: 100%;
     top: 0;
 }
+#review-table > tbody,
 #perform-qa-table > tbody {
   border: 0;
 }
+#review-table > tbody.sublist,
 #perform-qa-table > tbody.sublist {
   border-top: 2px solid #ddd;
   border-bottom: 2px solid #ddd;
 }
+#review-table > tbody.first,
 #perform-qa-table > tbody.first {
   border-top: 2px solid #ddd;
 }
+#review-table > tbody.sublist::before,
 #perform-qa-table > tbody.sublist::before {
   content: attr(data-sublist);
   position: relative;

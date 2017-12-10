@@ -131,6 +131,8 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
                 se.append(f.service_event)
 
         context['service_events'] = se
+        tests = [f.instance.unit_test_info.test for f in context['formset']]
+        context['borders'] = self.object.test_list.sublist_borders(tests)
         return context
 
 

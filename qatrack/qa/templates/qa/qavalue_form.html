@@ -47,7 +47,7 @@
             </div>
         </td>
         <td class="qa-name qa-showproc">
-            {%if test.procedure or test.description or test.attachment_set.exists %}
+          {%if test.procedure or test.description or test.attachment_set|length > 0 %}
                 <a href="#" class="revealprocedure" title="Show/hide procedure & attachments for this test">{{test.name}}</a>
             {% else %}
                 {{test.name}}

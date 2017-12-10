@@ -1009,44 +1009,69 @@ class TestList(TestCollectionInterface):
         children = TestList.objects.filter(pk__in=self.children.values_list("child__pk", flat=True))
         return TestList.objects.filter(pk=self.pk) | children
 
+    def get_children(self):
+        if not hasattr(self, "_children"):
+            self._children = list(self.children.select_related("child").prefetch_related("child__tests"))
+        return self._children
+
     def ordered_tests(self):
         """return list of all tests/sublist tests in order"""
-        tlms = self.testlistmembership_set.select_related(
-            "test",
-            "test__category"
-        )
-        tests = []
-        for tlm in tlms:
-            tests.append((tlm.order, tlm.order, tlm.test))
+        if not hasattr(self, "_ordered_tests"):
+            tlms = self.testlistmembership_set.select_related(
+                "test",
+                "test__category"
+            )
+            tests = []
+            for tlm in tlms:
+                tests.append((tlm.order, tlm.order, tlm.test))
 
-        for sublist in self.children.select_related("child").prefetch_related("child__tests"):
-            order = sublist.order
-            ordered_tests = sublist.child.ordered_tests()
-            for i, test in enumerate(ordered_tests):
-                tests.append((order, i, test))
+            for sublist in self.get_children():
+                order = sublist.order
+                ordered_tests = sublist.child.ordered_tests()
+                for i, test in enumerate(ordered_tests):
+                    tests.append((order, i, test))
 
-        return [x[-1] for x in sorted(tests, key=lambda y: y[:-1])]
+            self._ordered_tests = [x[-1] for x in sorted(tests, key=lambda y: y[:-1])]
+        return self._ordered_tests
 
-    def sublist_borders(self):
+    def sublist_borders(self, tests=None):
         """Return indexes where visible marks should be shown for sublists
         with visibility enabled"""
 
-        n_total_tests = len(self.ordered_tests())
+        if tests is None:
+            tests = self.ordered_tests()
+
+        n_total_tests = len(tests)
         borders = {
             'starts': {
-                0: {'class' : 'first'},
+                0: {'class': 'first'},
             },
             'ends': {
                 (n_total_tests - 1): "__end__"
             },
         }
-        for sublist in self.children.filter(outline=True).select_related("child").prefetch_related("child__tests"):
-            ntests = len(sublist.child.ordered_tests())
-            borders['starts'][sublist.order] = {
-                'class' : 'sublist',
-                'name': sublist.child.name,
-            }
-            borders['ends'][sublist.order + ntests - 1] = True
+        test_sub = {}
+        sub_test_count = {}
+        for sublist in self.get_children():
+            if not sublist.outline:
+                continue
+            stests = sublist.child.ordered_tests()
+            sub_test_count[sublist.pk] = len(stests)
+            for t in stests:
+                test_sub[t.pk] = sublist
+
+        processed_subs = set()
+        for i, test in enumerate(tests):
+            if test.pk in test_sub:
+                sublist = test_sub[test.pk]
+                if sublist.pk not in processed_subs:
+                    processed_subs.add(sublist.pk)
+                    borders['starts'][i] = {
+                        'class': 'sublist',
+                        'name': sublist.child.name,
+                    }
+                    ntests = sub_test_count[sublist.pk]
+                    borders['ends'][i + ntests - 1] = True
 
         return borders
 
@@ -1078,8 +1103,9 @@ class Sublist(models.Model):
     child = models.ForeignKey(TestList)
     outline = models.BooleanField(
         default=False,
-        help_text=
-        "Check to indicate whether sublist tests should be distinguished visually from parent tests",
+        help_text=(
+            "Check to indicate whether sublist tests should be distinguished visually from parent tests"
+        ),
     )
 
     order = models.IntegerField(db_index=True)
