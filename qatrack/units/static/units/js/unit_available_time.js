@@ -201,11 +201,12 @@ require(['jquery', 'moment', 'd3', 'daterangepicker', 'select2', 'felter', 'sl_u
                     unit_available_time_data = res.unit_available_time_data;
                     day_by_day_unit_hours = null;
                     $('#available_edits_modal').modal('hide');
+                    $('#edit_error').html('');
                     update_calendar();
                 },
                 error: function(res) {
                     console.log(res);
-                    $('#edit_error').html('Server error.')
+                    $('#edit_error').html('Server error.');
                 }
             })
         });
@@ -230,11 +231,12 @@ require(['jquery', 'moment', 'd3', 'daterangepicker', 'select2', 'felter', 'sl_u
                     unit_available_time_data = res.unit_available_time_data;
                     day_by_day_unit_hours = null;
                     $('#available_modal').modal('hide');
+                    $('#uat_error').html('');
                     update_calendar();
                 },
                 error: function(res) {
                     console.log(res);
-                    $('#uat_error').html('Server error.')
+                    $('#uat_error').html('Server error.');
                 }
             })
 
@@ -316,6 +318,8 @@ require(['jquery', 'moment', 'd3', 'daterangepicker', 'select2', 'felter', 'sl_u
                         var uate_data = unit_available_time_data[unit_id].available_time_edits;
                         var unit_avail_time_today = 0;
                         var day_str = day.format('YYYY-MM-DD');
+                        var unit_name = unit_available_time_data[unit_id].name;
+
                         if (day_str in uate_data) {
                             var day_edit_name = uate_data[day_str].name;
                             if (labels.indexOf(day_edit_name) === -1) {
@@ -336,7 +340,8 @@ require(['jquery', 'moment', 'd3', 'daterangepicker', 'select2', 'felter', 'sl_u
                         }
                         days_unit_hours.push({
                             'val': unit_avail_time_today,
-                            'id': unit_id
+                            'id': unit_id,
+                            'unit_name': unit_name
                         });
 
                     });
@@ -401,6 +406,10 @@ require(['jquery', 'moment', 'd3', 'daterangepicker', 'select2', 'felter', 'sl_u
             var min = split[1].substring(0, 2);
 
             return parseInt(hours) * 60 + parseInt(min);
+        }
+
+        function duration_readable(_int) {
+            return Math.floor(_int / 60).toString() + ':' + (_int % 60).toString();
         }
 
         function get_unit_at_data() {
@@ -618,6 +627,10 @@ require(['jquery', 'moment', 'd3', 'daterangepicker', 'select2', 'felter', 'sl_u
                         });
                     });
 
+                var div = d3.select('body').append('div')
+                    .attr('class', 'tooltip')
+                    .style('opacity', 0);
+
                 bar_rect_selection.enter().append('rect')
                         .attr('x', function (d, i, s) {
                             return day_bar_buffer + selected_units.indexOf(d.id) * day_bar_space / selected_units.length;
@@ -630,6 +643,22 @@ require(['jquery', 'moment', 'd3', 'daterangepicker', 'select2', 'felter', 'sl_u
                         })
                         .style('fill', function(d) { return unit_colours[d.id]})
                         .style('opacity', 1e-6)
+                        .on('mouseover', function(d, i, s) {
+                            div.transition()
+                                .duration(200)
+                                .style('opacity', .9);
+                            div	.html(d.unit_name + '<br/>'  + duration_readable(d.val))
+                                .style('left', function() {
+                                    var rect = $(s[s.length - 1]);
+                                    return rect[0].getBoundingClientRect().left + 'px';
+                                })
+                                .style('top', (d3.event.pageY - 50) + 'px');
+                            })
+                        .on('mouseout', function(d) {
+                            div.transition()
+                                .duration(200)
+                                .style('opacity', 0);
+                        })
                     .transition()
                         .attr('y', function (d) {
                             return day_height * (1 - d.val / max_val);

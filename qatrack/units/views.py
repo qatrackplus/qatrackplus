@@ -110,7 +110,7 @@ def handle_unit_available_time(request):
                 setattr(uat, 'hours_' + d, timezone.timedelta(hours=int(hours[d][0]), minutes=int(hours[d][1])))
             uat.save()
         except ObjectDoesNotExist:
-            uat = u_models.UnitAvailableTime.objects.create(
+            u_models.UnitAvailableTime.objects.create(
                 unit=u,
                 date_changed=day,
                 hours_monday=timezone.timedelta(hours=int(hours['monday'][0]), minutes=int(hours['monday'][1])),
@@ -144,7 +144,7 @@ def handle_unit_available_time_edit(request):
                     uate.name = name
                     uate.save()
                 except ObjectDoesNotExist:
-                    uate = u_models.UnitAvailableTimeEdit.objects.create(
+                    u_models.UnitAvailableTimeEdit.objects.create(
                         unit=u, date=d, hours=timezone.timedelta(hours=hours, minutes=mins), name=name
                     )
 

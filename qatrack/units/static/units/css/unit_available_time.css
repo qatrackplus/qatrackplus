@@ -21,7 +21,7 @@ rect.day-rect {
 }
 rect.bar-rect {
     stroke: none;
-    pointer-events: none;
+    /*pointer-events: none;*/
 }
 g.day-g.current-month > text {
     font-weight: bold;
@@ -46,4 +46,20 @@ text.day-label {
     -ms-user-select: none;
     user-select: none;
     pointer-events: none;
+}
+div.tooltip {
+    position: absolute;
+    text-align: center;
+    width: 60px;
+    height: 28px;
+    padding: 2px;
+    font: 12px sans-serif;
+    background: #d9dadd;
+    border: 0;
+    border-radius: 8px;
+    pointer-events: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
