@@ -1,8 +1,8 @@
 from unittest import mock
 
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
-from django.conf import settings
 from django.test import TestCase
 from django.utils import timezone
 from django_comments.models import Comment
@@ -554,7 +554,7 @@ class TestTestList(TestCase):
     def test_all_lists(self):
         tl1 = utils.create_test_list(name="1")
         tl2 = utils.create_test_list(name="2")
-        models.Sublist.objects.create(parent=tl1, child=tl2)
+        models.Sublist.objects.create(parent=tl1, child=tl2, order=0)
         self.assertSetEqual(set([tl1, tl2]), set(tl1.all_lists()))
 
     def test_ordered_tests(self):
@@ -564,7 +564,7 @@ class TestTestList(TestCase):
         t2 = utils.create_test("test2")
         utils.create_test_list_membership(test_list=tl1, test=t1)
         utils.create_test_list_membership(test_list=tl2, test=t2)
-        models.Sublist.objects.create(parent=tl1, child=tl2)
+        models.Sublist.objects.create(parent=tl1, child=tl2, order=0)
 
         self.assertListEqual(list(tl1.ordered_tests()), [t1, t2])
 
@@ -1145,7 +1145,7 @@ class TestSignals(TestCase):
         sub_test = utils.create_test(name="sub")
         sub_list = utils.create_test_list(name="sublist")
         utils.create_test_list_membership(sub_list, sub_test)
-        models.Sublist.objects.create(parent=test_list, child=sub_list)
+        models.Sublist.objects.create(parent=test_list, child=sub_list, order=0)
 
         utis = list(models.UnitTestInfo.objects.all())
         self.assertEqual(len(utis), 2)
@@ -1162,7 +1162,7 @@ class TestSignals(TestCase):
         sub_test = utils.create_test(name="sub")
         sub_list = utils.create_test_list(name="sublist")
         utils.create_test_list_membership(sub_list, sub_test)
-        models.Sublist.objects.create(parent=test_list, child=sub_list)
+        models.Sublist.objects.create(parent=test_list, child=sub_list, order=0)
 
         utis = list(models.UnitTestInfo.objects.all())
         self.assertEqual(len(utis), 2)

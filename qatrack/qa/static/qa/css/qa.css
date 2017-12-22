@@ -211,9 +211,22 @@ td.test-name {
 }
 #review-table > tbody.sublist,
 #perform-qa-table > tbody.sublist {
-  border-top: 2px solid #ddd;
-  border-bottom: 2px solid #ddd;
+  border-top: 3px solid #CCC;
+  border-bottom: 3px solid #CCC;
 }
+
+#review-table tr.sublist,
+#review-table tr.end-sublist,
+#perform-qa-table tr.sublist,
+#perform-qa-table tr.end-sublist {
+  border-top: 3px solid #ccc;
+  font-style: italic;
+}
+
+div.sublist-description {
+  display: none;
+}
+
 #review-table > tbody.first,
 #perform-qa-table > tbody.first {
   border-top: 2px solid #ddd;

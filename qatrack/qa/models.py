@@ -1,21 +1,24 @@
+import re
+
 from django.apps import apps
 from django.conf import settings
-from django.db import models
-from django.db.models import Q, Count
-from django.contrib.auth.models import User, Group
-from django.utils.translation import ugettext as _
+from django.contrib.auth.models import Group, User
+from django.contrib.contenttypes.fields import (
+    GenericForeignKey,
+    GenericRelation,
+)
+from django.contrib.contenttypes.models import ContentType
 from django.core import urlresolvers
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes.fields import GenericRelation, GenericForeignKey
+from django.db import models
+from django.db.models import Count, Q
 from django.utils import timezone
+from django.utils.translation import ugettext as _
 from django_comments.models import Comment
 
-from qatrack.units.models import Unit
 from qatrack.qa import utils
-
-import re
+from qatrack.units.models import Unit
 
 # All available test types
 BOOLEAN = "boolean"
@@ -1069,6 +1072,7 @@ class TestList(TestCollectionInterface):
                     borders['starts'][i] = {
                         'class': 'sublist',
                         'name': sublist.child.name,
+                        'description': sublist.child.description,
                     }
                     ntests = sub_test_count[sublist.pk]
                     borders['ends'][i + ntests - 1] = True
@@ -1089,6 +1093,7 @@ class TestList(TestCollectionInterface):
     def __str__(self):
         """return display representation of object"""
         return "(%s) %s" % (self.pk, self.name)
+
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         super(TestList, self).save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
@@ -1113,6 +1118,15 @@ class Sublist(models.Model):
     class Meta:
         ordering = ("order",)
         unique_together = ("parent", "child",)
+
+    @classmethod
+    def get_test_pack_fields(cls):
+        exclude = ["id"]
+        return [f.name for f in cls._meta.concrete_fields if f.name not in exclude]
+
+    def natural_key(self):
+        return self.parent.natural_key() + self.child.natural_key()
+    natural_key.dependencies = ["qa.testlist"]
 
     def __str__(self):
         return "%s -> %s" % (self.parent, self.child)

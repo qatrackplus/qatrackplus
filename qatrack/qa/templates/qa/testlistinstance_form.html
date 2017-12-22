@@ -438,13 +438,41 @@
                                     </thead>
                                     {% for test_form in formset %}
                                         {% with borders.starts|lookup:forloop.counter0 as delim %}
-                                            {% if delim  %}
-                                              <tbody class="{{ delim.class }}" {% if delim.name %}data-sublist="{{ delim.name }}"{% endif %}>
+                                            {% if delim and delim.class == "sublist" %}
+                                              <tr class="{{delim.class }}">
+                                                <td>Sublist</td>
+                                                <td>
+                                                  {% if delim.description %}
+                                                    <a class="show-sublist-details" href="#">
+                                                      {{ delim.name }}
+                                                    </a>
+                                                  {% else %}
+                                                      {{ delim.name }}
+                                                  {% endif %}
+                                                </td>
+                                                <td colspan="{% qa_table_colspan perms offset=2 %}">&nbsp;</td>
+                                              </tr>
+
+                                              <tr class="qa-procedure no-hover">
+                                                  <td colspan="{% qa_table_colspan perms %}">
+                                                      <div>
+                                                        <div class="procedure-container procedure-bar">
+                                                            <div class="qa-procedure-text">
+                                                                {% if delim.description %}
+                                                                    <div class="pre">{{ delim.description | safe }}</div>
+                                                                {% endif %}
+                                                            </div>
+                                                        </div>
+                                                      </div>
+                                                  </td>
+                                              </tr>
                                             {% endif %}
                                         {% endwith %}
-                                        {% qa_value_form test_form test_list include_history=perms.qa.can_view_history include_ref_tols=perms.qa.can_view_ref_tol test_info=test_form.get_test_info  %}
-                                        {% if borders.ends|lookup:forloop.counter0 %}
-                                            </tbody>
+                                        {% qa_value_form test_form test_list perms test_info=test_form.get_test_info  %}
+                                        {% if not forloop.last and borders.ends|lookup:forloop.counter0 %}
+                                          <tr class="end-sublist">
+                                              <td colspan="{% qa_table_colspan perms %}"></td>
+                                          </tr>
                                         {% endif %}
                                     {% endfor %}
                                 </table>
@@ -462,15 +490,7 @@
                                                         </label>
                                                     </td>
 
-                                                    <td id="tli-attachment-names"
-                                                        {% if perms.qa.can_view_ref_tol and perms.qa.can_view_history %}
-                                                            colspan="6"
-                                                        {% elif perms.qa.can_view_ref_tol or perms.qa.can_view_history %}
-                                                            colspan="5"
-                                                        {% else %}
-                                                            colspan="4"
-                                                        {% endif %}
-                                                    >
+                                                    <td id="tli-attachment-names" colspan="{% qa_table_colspan perms offset=2 %}">
 
                                                     {% if test_list_instance and test_list_instance.attachment_set|length > 0 %}
                                                         {% for attach in test_list_instance.attachment_set.all %}

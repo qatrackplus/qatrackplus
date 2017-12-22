@@ -23,22 +23,24 @@ function set_order(grouping){
 
 function sort_container(){
     var table = $("#member-container tbody");
-    var rows = table.children('tr');
+    var rows = table.children('tr').not(".add-row");
     rows.sort(function(a, b) {
         var ordera =  $(a).find('input[id$=order]').val();
         var orderb =  $(b).find('input[id$=order]').val();
+        var a_is_sublist = $(a).find('input[id^=id_testlistmem]').length === 0;
+        var b_is_sublist = $(b).find('input[id^=id_testlistmem]').length === 0;
         if (ordera === "") {
           ordera = 1000;
-          if ($(a).find('input[id^=id_testlistmem]').length === 0){
+          if (a_is_sublist){
             // push empty sublists to bottom
             ordera += 1;
           }
         }
         if (orderb === "") {
           orderb = 1000;
-          if ($(b).find('input[id^=id_testlistmem]').length === 0){
+          if (b_is_sublist){
             // push empty sublists to bottom
-            ordera += 1;
+            orderb += 1;
           }
         }
 
@@ -51,13 +53,13 @@ function sort_container(){
         return 0;
     });
     rows.detach().appendTo(table);
-    $(table.find(".add-row").get().reverse()).detach().appendTo(table);
+    $(table.find(".add-row").get()).detach().appendTo(table);
 
 }
 
 function move_rows(){
 
-    var item_sel = '#testlistmembership_set-group tr[class*=dynamic-], #children-group tr[class*=dynamic-]';
+    var item_sel = '#children-group tr[class*=dynamic-], #testlistmembership_set-group tr[class*=dynamic-]';
     var items = $(item_sel);
 
     var table = $("#member-container tbody");
@@ -83,12 +85,13 @@ $(document).ready(function() {
 
     /*set up dragabble membership list*/
     $('form').sortable({
-        containment: '#member-container tbody',
+        containment: '#member-container table',
         zindex: 10,
+        grid: [20, 10],
         items: item_sel,
         handle: 'td',
         update: function() {
-          set_order(this)
+          set_order(this);
         }
     });
 
@@ -113,7 +116,7 @@ $(document).ready(function() {
     addRows.children("td").attr("colspan", "7");
     addRows.find("a").on("click", function(e){
       move_rows();
-    })
+    });
 
     table.find("td.original p").text("");
     table.find("tr.has_original td").css("padding-top", "8px");

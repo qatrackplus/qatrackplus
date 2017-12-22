@@ -1,25 +1,23 @@
-
+from admin_views.admin import AdminViews
 from django.apps import apps
 from django.conf import settings
 from django.contrib import admin, messages
-from django.contrib.admin import widgets, options
-from django.contrib.admin.models import LogEntry, CHANGE
+from django.contrib.admin import options, widgets
+from django.contrib.admin.models import CHANGE, LogEntry
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 import django.db
 from django.db.models import Count, Q
 import django.forms as forms
-from django.shortcuts import redirect, render, HttpResponseRedirect
+from django.shortcuts import HttpResponseRedirect, redirect, render
 from django.utils import timezone
 from django.utils.html import escape
 from django.utils.text import Truncator
 from django.utils.translation import ugettext as _
 
-from admin_views.admin import AdminViews
-
 from qatrack.attachments.admin import (
-    get_attachment_inline,
     SaveInlineAttachmentUserMixin,
+    get_attachment_inline,
 )
 import qatrack.qa.models as models
 from qatrack.units.models import Unit
@@ -351,8 +349,10 @@ class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
 class TestListAdminForm(forms.ModelForm):
     """Form for handling validation of TestList creation/editing"""
 
-    def clean_sublists(self):
-        """Make sure a user doesn't try to add itself as sublist"""
+    def _clean(self):
+        """Make sure a user doesn't try to add itself as sublist or duplicate tests"""
+        import ipdb; ipdb.set_trace()  # yapf: disable  # noqa
+        cd = superjjjjjjjjjjjjjjjj
         sublists = self.cleaned_data["sublists"]
         if self.instance in sublists:
             raise django.forms.ValidationError("You can't add a list to its own sublists")
@@ -363,6 +363,21 @@ class TestListAdminForm(forms.ModelForm):
             msg += " can't have sublists of it's own."
             msg = msg % ", ".join([str(x) for x in self.instance.testlist_set.all()])
             raise django.forms.ValidationError(msg)
+
+        tests = set()
+        dups = []
+        for s in sublists:
+            for t in s.tests.all():
+                k = (t.pk, t.name)
+                if k in tests:
+                    dups.append(k)
+                tests.add(k)
+
+        if dups:
+            msg = "The following tests are duplicated: %s" % (', '.join(t for pk, t in dups))
+            raise django.forms.ValidationError(msg)
+
+
 
         return sublists
 
