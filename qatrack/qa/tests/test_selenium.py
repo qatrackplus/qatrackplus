@@ -4,7 +4,7 @@ from . import utils
 
 from django.conf import settings
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
-from django.test import TestCase, override_settings
+from django.test import TestCase
 import pytest
 from contextlib import contextmanager
 from selenium import webdriver
@@ -16,7 +16,6 @@ from selenium.webdriver.remote.command import Command
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as e_c
 from selenium.webdriver.support.expected_conditions import staleness_of
-from selenium.webdriver.support.select import Select
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.wait import WebDriverWait
 
@@ -161,7 +160,7 @@ def retry_if_exception(ex, max_retries, sleep_time=None, reraise=True):
             while x:
                 try:
                     return func(*args, **kwargs)
-                except ex as e:
+                except:
                     x -= 1
                     if x == 0 and reraise:
                         raise
@@ -193,7 +192,6 @@ WebElement.send_keys = WebElement_send_keys
 
 
 @pytest.mark.selenium
-@override_settings(DEBUG=True)
 class SeleniumTests(TestCase, StaticLiveServerTestCase):
 
     @classmethod
@@ -546,7 +544,7 @@ class SeleniumTests(TestCase, StaticLiveServerTestCase):
 
         self.load_admin()
         self.wait.until(e_c.presence_of_element_located((By.XPATH, "//a[contains(@href,'testinstancestatus')]")))
-        self.driver.find_element_by_xpath( "//a[contains(@href,'testinstancestatus')]").click()
+        self.driver.find_element_by_xpath("//a[contains(@href,'testinstancestatus')]").click()
         self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'ADD TEST INSTANCE STATUS')))
         self.driver.find_element_by_link_text('ADD TEST INSTANCE STATUS').click()
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
