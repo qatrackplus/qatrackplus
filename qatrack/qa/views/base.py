@@ -103,6 +103,7 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
             "status",
             "reference",
             "tolerance",
+            "unit_test_info__test",
             "unit_test_info__test__category",
             "unit_test_info__unit",
         )
@@ -120,6 +121,9 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
         context["test_list"] = self.object.test_list
         context["unit_test_collection"] = self.object.unit_test_collection
         context["current_day"] = self.object.day + 1
+
+        tests = [t.unit_test_info.test for t in test_instances]
+        context['borders'] = self.object.test_list.sublist_borders(tests)
 
         context['attachments'] = self.object.unit_test_collection.tests_object.attachment_set.all()
 

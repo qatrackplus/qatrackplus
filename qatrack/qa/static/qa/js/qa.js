@@ -1080,6 +1080,13 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jqu
             }();
         }
 
+        /// Sublist
+        $("a.show-sublist-details").click(function(){
+            var tr = $(this).parent().parent().next();
+            tr.find('.procedure-bar').slideToggle('fast').toggleClass('in');
+            return false;
+        });
+
         set_tab_stops();
 
         var $service_events = $('.service-event-btn');

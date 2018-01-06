@@ -1,25 +1,23 @@
-
+from admin_views.admin import AdminViews
 from django.apps import apps
 from django.conf import settings
 from django.contrib import admin, messages
-from django.contrib.admin import widgets, options
-from django.contrib.admin.models import LogEntry, CHANGE
+from django.contrib.admin import options, widgets
+from django.contrib.admin.models import CHANGE, LogEntry
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 import django.db
 from django.db.models import Count, Q
 import django.forms as forms
-from django.shortcuts import redirect, render, HttpResponseRedirect
+from django.shortcuts import HttpResponseRedirect, redirect, render
 from django.utils import timezone
 from django.utils.html import escape
 from django.utils.text import Truncator
 from django.utils.translation import ugettext as _
 
-from admin_views.admin import AdminViews
-
 from qatrack.attachments.admin import (
-    get_attachment_inline,
     SaveInlineAttachmentUserMixin,
+    get_attachment_inline,
 )
 import qatrack.qa.models as models
 from qatrack.units.models import Unit
@@ -351,14 +349,10 @@ class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
 class TestListAdminForm(forms.ModelForm):
     """Form for handling validation of TestList creation/editing"""
 
-    def __init__(self, *args, **kwargs):
-        super(TestListAdminForm, self).__init__(*args, **kwargs)
-        if self.instance.pk:
-            query = self.fields['sublists'].queryset
-            self.fields['sublists'].queryset = query.exclude(id=self.instance.id)
-
-    def clean_sublists(self):
-        """Make sure a user doesn't try to add itself as sublist"""
+    def _clean(self):
+        """Make sure a user doesn't try to add itself as sublist or duplicate tests"""
+        import ipdb; ipdb.set_trace()  # yapf: disable  # noqa
+        cd = superjjjjjjjjjjjjjjjj
         sublists = self.cleaned_data["sublists"]
         if self.instance in sublists:
             raise django.forms.ValidationError("You can't add a list to its own sublists")
@@ -369,6 +363,21 @@ class TestListAdminForm(forms.ModelForm):
             msg += " can't have sublists of it's own."
             msg = msg % ", ".join([str(x) for x in self.instance.testlist_set.all()])
             raise django.forms.ValidationError(msg)
+
+        tests = set()
+        dups = []
+        for s in sublists:
+            for t in s.tests.all():
+                k = (t.pk, t.name)
+                if k in tests:
+                    dups.append(k)
+                tests.add(k)
+
+        if dups:
+            msg = "The following tests are duplicated: %s" % (', '.join(t for pk, t in dups))
+            raise django.forms.ValidationError(msg)
+
+
 
         return sublists
 
@@ -398,6 +407,27 @@ class TestListMembershipInlineFormSet(forms.models.BaseInlineFormSet):
         return self.cleaned_data
 
 
+class SublistInlineFormSet(forms.models.BaseInlineFormSet):
+
+    def __init__(self, *args, **kwargs):
+        qs = kwargs["queryset"].filter(parent=kwargs["instance"])
+        kwargs["queryset"] = qs
+        super(SublistInlineFormSet, self).__init__(*args, **kwargs)
+
+    def clean(self):
+        """Make sure there are no duplicated slugs in a TestList"""
+        super(SublistInlineFormSet, self).clean()
+
+        if not hasattr(self, "cleaned_data"):
+            # something else went wrong already
+            return {}
+
+        children = [f.instance.child for f in self.forms if hasattr(f.instance, 'child') and not f.cleaned_data["DELETE"]]
+        if self.instance and self.instance in children:
+            raise forms.ValidationError("A test list can not be its own child. Please remove Sublist ID %d and try again" % (self.instance.pk))
+        return self.cleaned_data
+
+
 def test_name(obj):
     return obj.test.name
 
@@ -409,6 +439,21 @@ def macro_name(obj):
 class TestListMembershipForm(forms.ModelForm):
 
     model = models.TestListMembership
+
+    def validate_unique(self):
+        """skip unique validation.
+
+        The uniqueness of ('test_list','test',) is already independently checked
+        by the formset (looks for duplicate macro names).
+
+        By making validate_unique here a null function, we eliminate a DB call
+        per test list membership when saving test lists in the admin.
+        """
+
+
+class SublistForm(forms.ModelForm):
+
+    model = models.Sublist
 
     def validate_unique(self):
         """skip unique validation.
@@ -466,6 +511,53 @@ class TestListMembershipInline(admin.TabularInline):
         else:
             self.test_names = {}
         return super(TestListMembershipInline, self).get_formset(request, obj, **kwargs)
+
+
+class SublistInline(admin.TabularInline):
+
+    model = models.Sublist
+    fk_name = "parent"
+    formset = SublistInlineFormSet
+    form = SublistForm
+    extra = 1
+    template = "admin/qa/testlistmembership/edit_inline/tabular.html"
+    raw_id_fields = ("child",)
+
+    def label_for_value(self, value):
+        try:
+            name = self.test_list_names[value]
+            return '&nbsp;<strong>%s</strong>' % escape(Truncator(name).words(14, truncate='...'))
+        except (ValueError, KeyError):
+            return ''
+
+    def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
+        # copied from django.contrib.admin.wigets so we can override the label_for_value function
+        # for the test raw id widget
+        db = kwargs.get('using')
+        if db_field.name == "child":
+            widget = widgets.ForeignKeyRawIdWidget(db_field.rel,
+                                                   self.admin_site, using=db)
+            widget.label_for_value = self.label_for_value
+            kwargs['widget'] = widget
+
+        elif db_field.name in self.raw_id_fields:
+            kwargs['widget'] = widgets.ForeignKeyRawIdWidget(db_field.rel,
+                                                             self.admin_site, using=db)
+        elif db_field.name in self.radio_fields:
+            kwargs['widget'] = widgets.AdminRadioSelect(attrs={
+                'class': options.get_ul_class(self.radio_fields[db_field.name]),
+            })
+            kwargs['empty_label'] = db_field.blank and _('None') or None
+        return db_field.formfield(**kwargs)
+
+    def get_formset(self, request, obj=None, **kwargs):
+        # hacky method for getting test names so they don't need to be looked up again
+        # in the label_for_value in contrib/admin/widgets.py
+        if obj:
+            self.test_list_names = dict(obj.sublist_set.values_list("pk", "child__name"))
+        else:
+            self.test_list_names = {}
+        return super(SublistInline, self).get_formset(request, obj, **kwargs)
 
 
 class ActiveTestListFilter(admin.SimpleListFilter):
@@ -549,21 +641,21 @@ class TestListAdmin(AdminViews, SaveUserMixin, SaveInlineAttachmentUserMixin, ad
 
     prepopulated_fields = {'slug': ('name',)}
     search_fields = ("name", "description", "slug",)
-    filter_horizontal = ("tests", "sublists", )
+    filter_horizontal = ("tests", )
 
     actions = ['export_test_lists']
     list_display = ("name", "slug", "modified", "modified_by",)
     list_filter = [ActiveTestListFilter, UnitTestListFilter, FrequencyTestListFilter]
 
     form = TestListAdminForm
-    inlines = [TestListMembershipInline, get_attachment_inline("testlist")]
+    inlines = [TestListMembershipInline, SublistInline, get_attachment_inline("testlist")]
     save_as = True
 
     class Media:
         js = (
             settings.STATIC_URL + "js/jquery-1.7.1.min.js",
             settings.STATIC_URL + "js/jquery-ui.min.js",
-            settings.STATIC_URL + "js/m2m_drag_admin.js",
+            settings.STATIC_URL + "js/m2m_drag_admin_testlist.js",
             settings.STATIC_URL + "js/admin_description_editor.js",
             settings.STATIC_URL + "ace/ace.js",
         )
@@ -942,6 +1034,7 @@ class TestInstanceAdmin(SaveInlineAttachmentUserMixin, admin.ModelAdmin):
     def has_add_permission(self, request):
         """testlistinstancess are created via front end only"""
         return False
+
 
 class ToleranceForm(forms.ModelForm):
 

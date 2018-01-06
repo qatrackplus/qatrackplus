@@ -1,4 +1,4 @@
-from collections import defaultdict, Counter
+from collections import Counter, defaultdict
 import io
 import json
 import math
@@ -8,7 +8,7 @@ import tokenize
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
-from django.core.serializers import serialize, deserialize
+from django.core.serializers import deserialize, serialize
 from django.utils import timezone
 
 from qatrack.qa import models
@@ -24,12 +24,12 @@ class SetEncoder(json.JSONEncoder):
 
 def qs_extra_for_utc_name():
 
-        from qatrack.qa import models
+    from qatrack.qa import models
 
-        ct_tl = ContentType.objects.get_for_model(models.TestList)
-        ct_tlc = ContentType.objects.get_for_model(models.TestListCycle)
+    ct_tl = ContentType.objects.get_for_model(models.TestList)
+    ct_tlc = ContentType.objects.get_for_model(models.TestListCycle)
 
-        extraq = """
+    extraq = """
          CASE
             WHEN content_type_id = {0}
                 THEN (SELECT name AS utc_name from qa_testlist WHERE object_id = qa_testlist.id )
@@ -38,9 +38,9 @@ def qs_extra_for_utc_name():
          END
          """.format(ct_tl.pk, ct_tlc.pk)
 
-        return {
-            "select": {'utc_name': extraq}
-        }
+    return {
+        "select": {'utc_name': extraq}
+    }
 
 
 def to_precision(x, p):
@@ -192,6 +192,12 @@ def create_testpack(test_lists=None, cycles=None, extra_tests=None, description=
         pk__in=cycles.values_list("test_lists")
     ).order_by("pk")
 
+    sublists = models.Sublist.objects.filter(
+        parent_id__in=test_lists.values_list("id")
+    ).select_related("parent", "child")
+
+    test_lists |= models.TestList.objects.filter(pk__in=sublists.values_list("child_id"))
+
     tlc_memberships = models.TestListCycleMembership.objects.filter(cycle=cycles)
 
     tl_memberships = models.TestListMembership.objects.filter(
@@ -214,6 +220,7 @@ def create_testpack(test_lists=None, cycles=None, extra_tests=None, description=
         tests,
         test_lists,
         tl_memberships,
+        sublists,
         cycles,
         tlc_memberships
     ]
@@ -314,10 +321,20 @@ def add_test_pack(serialized_pack, user=None, test_names=None, test_list_names=N
 
     existing = set(models.Test.objects.values_list('name', flat=True))
     tests_added = []
+    test_name_map = {}
     for cdat in objects['qa.test']:
         fields = cdat['fields']
         filtered = test_names is not None and fields['name'] not in test_names
-        if not filtered and fields['name'] not in existing:
+
+        orig_name = fields['name']
+        if fields['name'] in existing:
+            valid_name = find_next_available(fields['name'], existing)
+        else:
+            valid_name = orig_name
+
+        if not filtered:
+            fields['name'] = valid_name
+            test_name_map[orig_name] = valid_name
             fields['category_id'] = categories[tuple(fields.pop("category"))]
             fields['created'] = created
             fields['created_by'] = user
@@ -330,10 +347,20 @@ def add_test_pack(serialized_pack, user=None, test_names=None, test_list_names=N
 
     existing = set(models.TestList.objects.values_list("slug", flat=True))
     test_lists_added = []
+    tl_name_map = {}
     for cdat in objects['qa.testlist']:
         fields = cdat['fields']
         filtered = test_list_names is not None and fields['slug'] not in test_list_names
-        if not filtered and fields['slug'] not in existing:
+
+        orig_name = fields['slug']
+        if fields['slug'] in existing:
+            valid_name = find_next_available(fields['slug'], existing)
+        else:
+            valid_name = orig_name
+
+        if not filtered:
+            fields['slug'] = valid_name
+            tl_name_map[orig_name] = valid_name
             fields['created'] = created
             fields['created_by'] = user
             fields['modified'] = created
@@ -345,32 +372,52 @@ def add_test_pack(serialized_pack, user=None, test_names=None, test_list_names=N
 
     existing = set(models.TestListCycle.objects.values_list("slug", flat=True))
     tlcs_added = []
+    tlc_name_map = {}
     for cdat in objects['qa.testlistcycle']:
         fields = cdat['fields']
         filtered = test_list_names is not None and fields['slug'] not in test_list_names
-        if not filtered and fields['slug'] not in existing:
+
+        orig_name = fields['slug']
+        if fields['slug'] in existing:
+            valid_name = find_next_available(fields['slug'], existing)
+        else:
+            valid_name = orig_name
+
+        if not filtered:
+            fields['slug'] = valid_name
+            tlc_name_map[orig_name] = valid_name
             fields['created'] = created
             fields['created_by'] = user
             fields['modified'] = created
             fields['modified_by'] = user
             tlcs_added.append(models.TestListCycle(**fields))
+
     models.TestListCycle.objects.bulk_create(tlcs_added)
     added['TestListCycle'] = len(tlcs_added)
     total['TestListCycle'] = len(objects['qa.testlistcycle'])
 
-    tlms_added = []
     tl_slugs = {tl.slug for tl in test_lists_added}
     tl_pks = dict(models.TestList.objects.filter(slug__in=tl_slugs).values_list("slug", "pk"))
     test_names_added = {t.name for t in tests_added}
     test_pks = dict(models.Test.objects.filter(name__in=test_names_added).values_list("name", "pk"))
 
+    tlms_added = []
     for tlm in objects['qa.testlistmembership']:
         fields = tlm['fields']
-        if fields['test_list'][0] in tl_slugs:
-            fields['test_list_id'] = tl_pks[fields.pop('test_list')[0]]
-            fields['test_id'] = test_pks[fields.pop('test')[0]]
+        if fields['test_list'][0] in tl_name_map:
+            fields['test_list_id'] = tl_pks[tl_name_map[fields.pop('test_list')[0]]]
+            fields['test_id'] = test_pks[test_name_map[fields.pop('test')[0]]]
             tlms_added.append(models.TestListMembership(**fields))
     models.TestListMembership.objects.bulk_create(tlms_added)
+
+    subs_added = []
+    for sub in objects['qa.sublist']:
+        fields = sub['fields']
+        if fields['parent'][0] in tl_name_map:
+            fields['parent_id'] = tl_pks[tl_name_map[fields.pop('parent')[0]]]
+            fields['child_id'] = tl_pks[tl_name_map[fields.pop('child')[0]]]
+            subs_added.append(models.Sublist(**fields))
+    models.Sublist.objects.bulk_create(subs_added)
 
     tlcms_added = []
     tlc_slugs = {tlc.slug for tlc in tlcs_added}
@@ -378,13 +425,21 @@ def add_test_pack(serialized_pack, user=None, test_names=None, test_list_names=N
     tlc_pks = dict(models.TestListCycle.objects.filter(slug__in=tlc_slugs).values_list("slug", "pk"))
     for tlcm in objects['qa.testlistcyclemembership']:
         fields = tlcm['fields']
-        if fields['cycle'][0] in tlc_slugs:
-            fields['test_list_id'] = tl_pks[fields.pop('test_list')[0]]
-            fields['cycle_id'] = tlc_pks[fields.pop('cycle')[0]]
+        if fields['cycle'][0] in tlc_name_map:
+            fields['test_list_id'] = tl_pks[tl_name_map[fields.pop('test_list')[0]]]
+            fields['cycle_id'] = tlc_pks[tlc_name_map[fields.pop('cycle')[0]]]
             tlcms_added.append(models.TestListCycleMembership(**fields))
     models.TestListCycleMembership.objects.bulk_create(tlcms_added)
 
     return added, total
+
+def find_next_available(name, existing):
+    i = 1
+    orig = name
+    while name in existing:
+        name = "%s-%d" % (orig, i)
+        i += 1
+    return name
 
 
 def add_test_pack_django(serialized_pack, user=None, test_names=None, test_list_names=None, cycle_names=None):

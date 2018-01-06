@@ -4,8 +4,8 @@ import json
 from django.core.serializers import deserialize
 from django.test import TestCase
 
-from qatrack.qa import utils as qautils
 from qatrack.qa import models
+from qatrack.qa import utils as qautils
 from qatrack.qa.tests import utils
 
 
@@ -76,7 +76,7 @@ class TestImportExport(TestCase):
 
         assert 'meta' in pack
         assert 'objects' in pack
-        assert len(pack['objects']) == 6
+        assert len(pack['objects']) == 7
 
         test_found = False
         list_found = False
@@ -106,8 +106,8 @@ class TestImportExport(TestCase):
         qautils.save_test_pack(pack, fp)
         fp.seek(0)
         qautils.load_test_pack(fp)
-        assert models.TestList.objects.count() == ntl
-        assert models.Test.objects.count() == nt
+        assert models.TestList.objects.count() == 2 * ntl
+        assert models.Test.objects.count() == 2 * nt
 
     def test_load(self):
         pack = qautils.create_testpack(self.tlqs, self.tlcqs)
@@ -162,7 +162,7 @@ class TestImportExport(TestCase):
         fp.seek(0)
         qautils.load_test_pack(fp, user2)
 
-        assert models.TestList.objects.get(name=self.tl1.name).created_by != user2
+        assert models.TestList.objects.get(slug=self.tl1.slug).created_by != user2
 
     def test_existing_objs_not_deleted(self):
         pack = qautils.create_testpack(self.tlqs, self.tlcqs)

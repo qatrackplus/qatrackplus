@@ -1,6 +1,7 @@
 {% extends "site_base.html" %}
 
 {% load qa_tags %}
+{% load qatrack_tags %}
 {% load attach_tags %}
 {% load comments %}
 
@@ -213,10 +214,15 @@
                                                     {% endif %}
                                                 </tr>
                                             </thead>
-                                            <tbody>
                                                 {{ formset.management_form }}
 
                                                 {% for ti_form in formset %}
+
+                                                    {% with borders.starts|lookup:forloop.counter0 as delim %}
+                                                        {% if delim  %}
+                                                          <tbody class="{{ delim.class }}" {% if delim.name %}data-sublist="{{ delim.name }}"{% endif %}>
+                                                        {% endif %}
+                                                    {% endwith %}
 
                                                     {% with ti=ti_form.instance test=ti_form.instance.unit_test_info.test %}
                                                     <tr class="qa-valuerow" data-prefix="{{ ti_form.prefix }}">
@@ -279,7 +285,7 @@
                                                     </tr>
                                                     {% if ti.comment %}
                                                         <tr class="qa-comment no-hover row-{{ ti_form.prefix }}">
-                                                            <td colspan="8"  class="">
+                                                            <td colspan="{% qa_table_colspan perms %}"  class="">
                                                                 <div class="comment-container comment-bar">
                                                                     <div class="comment-div">
                                                                         {{ ti.comment }}
@@ -292,7 +298,7 @@
                                                     {% if ti.attachment_set.exists %}
                                                         <tr class="qa-attach no-hover">
                                                             <td>{{ti.unit_test_info.test.name}} Attachments</td>
-                                                            <td colspan="7"  class="">
+                                                            <td colspan="{% qa_table_colspan perms offset=1 %}"  class="">
                                                                 <ul>
                                                                     {% for attach in ti.attachment_set.all %}
                                                                         <li>{{ attach | attachment_link }}</li>
@@ -302,20 +308,16 @@
                                                         </tr>
                                                     {% endif %}
                                                     {%endwith%}
+                                                  {% if borders.ends|lookup:forloop.counter0 %}
+                                                      </tbody>
+                                                  {% endif %}
                                                 {% endfor %}
+                                            <tbody>
 
                                                 <tr>
                                                     <td><strong>Attachments</strong></td>
 
-                                                    <td id="tli-attachment-names"
-                                                        {% if perms.qa.can_view_ref_tol and perms.qa.can_view_history %}
-                                                            colspan="6"
-                                                        {% elif perms.qa.can_view_ref_tol or perms.qa.can_view_history %}
-                                                            colspan="5"
-                                                        {% else %}
-                                                            colspan="4"
-                                                        {% endif %}
-                                                    >
+                                                    <td id="tli-attachment-names" colspan="{% qa_table_colspan perms offset=2 %}">
 
                                                         {% if test_list_instance and test_list_instance.attachment_set.exists %}
                                                             {% for attach in test_list_instance.attachment_set.all %}

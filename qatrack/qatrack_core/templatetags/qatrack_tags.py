@@ -1,7 +1,6 @@
 import re
 
 from django import template
-from django.utils.html import strip_tags
 
 register = template.Library()
 
@@ -42,4 +41,4 @@ def disableinput(field):
 
 @register.filter
 def lookup(d, key):
-    return d[key]
+    return d.get(key)

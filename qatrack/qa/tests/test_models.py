@@ -1,8 +1,8 @@
 from unittest import mock
 
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
-from django.conf import settings
 from django.test import TestCase
 from django.utils import timezone
 from django_comments.models import Comment
@@ -554,8 +554,7 @@ class TestTestList(TestCase):
     def test_all_lists(self):
         tl1 = utils.create_test_list(name="1")
         tl2 = utils.create_test_list(name="2")
-        tl1.sublists.add(tl2)
-        tl1.save()
+        models.Sublist.objects.create(parent=tl1, child=tl2, order=0)
         self.assertSetEqual(set([tl1, tl2]), set(tl1.all_lists()))
 
     def test_ordered_tests(self):
@@ -565,9 +564,32 @@ class TestTestList(TestCase):
         t2 = utils.create_test("test2")
         utils.create_test_list_membership(test_list=tl1, test=t1)
         utils.create_test_list_membership(test_list=tl2, test=t2)
-        tl1.sublists.add(tl2)
+        models.Sublist.objects.create(parent=tl1, child=tl2, order=0)
 
         self.assertListEqual(list(tl1.ordered_tests()), [t1, t2])
+
+    def test_ordered_tests_sublist(self):
+        tl1 = utils.create_test_list(name="1")
+        tl2 = utils.create_test_list(name="2")
+        tl3 = utils.create_test_list(name="3")
+        t1a = utils.create_test()
+        t1b = utils.create_test()
+        t2a = utils.create_test("test2a")
+        t2b = utils.create_test("test2b")
+        t3 = utils.create_test("test3")
+
+        utils.create_test_list_membership(test_list=tl1, test=t1a, order=0)  # 0
+        utils.create_test_list_membership(test_list=tl1, test=t1b, order=4)  # 4
+
+        utils.create_test_list_membership(test_list=tl2, test=t2a, order=1)  # 2
+        utils.create_test_list_membership(test_list=tl2, test=t2b, order=0)  # 1
+
+        utils.create_test_list_membership(test_list=tl3, test=t3, order=0)  # 3
+
+        models.Sublist.objects.create(parent=tl1, child=tl2, order=1)
+        models.Sublist.objects.create(parent=tl1, child=tl3, order=3)
+
+        self.assertListEqual(list(tl1.ordered_tests()), [t1a, t2b, t2a, t3, t1b])
 
     def test_len(self):
         self.assertEqual(1, len(utils.create_test_list()))
@@ -1123,8 +1145,7 @@ class TestSignals(TestCase):
         sub_test = utils.create_test(name="sub")
         sub_list = utils.create_test_list(name="sublist")
         utils.create_test_list_membership(sub_list, sub_test)
-        test_list.sublists.add(sub_list)
-        test_list.save()
+        models.Sublist.objects.create(parent=test_list, child=sub_list, order=0)
 
         utis = list(models.UnitTestInfo.objects.all())
         self.assertEqual(len(utis), 2)
@@ -1141,8 +1162,7 @@ class TestSignals(TestCase):
         sub_test = utils.create_test(name="sub")
         sub_list = utils.create_test_list(name="sublist")
         utils.create_test_list_membership(sub_list, sub_test)
-        test_list.sublists.add(sub_list)
-        test_list.save()
+        models.Sublist.objects.create(parent=test_list, child=sub_list, order=0)
 
         utis = list(models.UnitTestInfo.objects.all())
         self.assertEqual(len(utis), 2)

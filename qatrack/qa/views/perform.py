@@ -211,7 +211,7 @@ class Upload(JSONResponseMixin, AttachmentMixin, View):
         for d in ("work_completed", "work_started",):
             try:
                 meta_data[d] = dateutil.parser.parse(meta_data[d])
-            except (KeyError, AttributeError):
+            except (KeyError, AttributeError, TypeError):
                 pass
 
         refs = self.get_json_data("refs")
@@ -330,7 +330,7 @@ class CompositeCalculation(JSONResponseMixin, AttachmentMixin, View):
         for d in ("work_completed", "work_started",):
             try:
                 meta_data[d] = dateutil.parser.parse(meta_data[d])
-            except (KeyError, AttributeError):
+            except (TypeError, KeyError, AttributeError):
                 pass
 
         if values is None:
@@ -495,21 +495,15 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         :model:`qa.TestListCycle`'s (where N is number of lists in the cycle).
         """
 
+        from django.db.models import Prefetch
         requested_day = self.get_requested_day_to_perform()
         self.actual_day, self.test_list = self.unit_test_col.get_list(requested_day)
-
         if self.test_list is None:
             raise Http404
 
-        self.all_lists = [self.test_list] + list(self.test_list.sublists.order_by("name"))
-
     def set_all_tests(self):
         """Find all tests to be performed, including tests from sublists"""
-
-        self.all_tests = []
-        for test_list in self.all_lists:
-            tests = test_list.tests.all().order_by("testlistmembership__order")
-            self.all_tests.extend(tests)
+        self.all_tests = self.test_list.ordered_tests()
 
     def set_unit_test_collection(self):
         """Set the requested :model:`qa.UnitTestCollection` to be performed."""
@@ -770,6 +764,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         context['current_day'] = self.actual_day + 1
         context["last_instance"] = self.unit_test_col.last_instance
         context['last_day'] = self.last_day
+        context['borders'] = self.test_list.sublist_borders(self.all_tests)
 
         ndays = len(self.unit_test_col.tests_object)
         if ndays > 1:
