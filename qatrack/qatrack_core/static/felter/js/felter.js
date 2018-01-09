@@ -1237,7 +1237,9 @@
 
                             if ($prev[0].opt_data.selected) {
                                 $.each($select_divs, function (i, v) {
-                                    self.selectOption(v.opt_data, false);
+                                    if (v.opt_data.displayed) {
+                                        self.selectOption(v.opt_data, false);
+                                    }
                                 });
                                 self.selectOption(opt_data, true);
                             } else {

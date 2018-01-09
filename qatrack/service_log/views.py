@@ -1,6 +1,8 @@
-from collections import OrderedDict
+
+import csv
 
 from braces.views import LoginRequiredMixin, PermissionRequiredMixin
+from collections import OrderedDict
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.context_processors import PermWrapper
@@ -8,8 +10,9 @@ from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse, resolve
+from django.db.models import Sum
 from django.forms.utils import timezone
-from django.http import JsonResponse, HttpResponseRedirect, Http404
+from django.http import JsonResponse, HttpResponseRedirect, Http404, HttpResponse
 from django.shortcuts import redirect
 from django.template.loader import get_template
 from django.utils.translation import ugettext as _
@@ -19,7 +22,7 @@ from django.views.generic.edit import ModelFormMixin, ProcessFormView
 
 from listable.views import (
     BaseListableView, DATE_RANGE, SELECT_MULTI,
-    TODAY, YESTERDAY, LAST_WEEK, THIS_WEEK, LAST_MONTH, THIS_MONTH, THIS_YEAR
+    TODAY, YESTERDAY, LAST_WEEK, THIS_WEEK, LAST_MONTH, THIS_MONTH, LAST_YEAR, THIS_YEAR
 )
 
 if settings.USE_PARTS:
@@ -109,7 +112,6 @@ def se_searcher(request):
     se_search = request.GET['q']
     unit_id = request.GET['unit_id']
     omit_id = request.GET.get('self_id', 'false')
-    print(request.GET)
     service_events = models.ServiceEvent.objects \
         .filter(id__icontains=se_search, unit_service_area__unit=unit_id)
 
@@ -1163,7 +1165,7 @@ class ServiceEventDownTimesList(ServiceEventsBaseList):
     }
 
     date_ranges = {
-        'datetime_service': [TODAY, YESTERDAY, LAST_WEEK, THIS_WEEK, LAST_MONTH, THIS_MONTH, THIS_YEAR]
+        'datetime_service': [TODAY, YESTERDAY, LAST_WEEK, THIS_WEEK, LAST_MONTH, THIS_MONTH, LAST_YEAR, THIS_YEAR]
     }
 
     search_fields = {
@@ -1192,6 +1194,7 @@ class ServiceEventDownTimesList(ServiceEventsBaseList):
 
             return '{}:{}'.format(hours, minutes)
 
+
     def duration_service_time(self, se):
         duration = se.duration_service_time
         if duration:
@@ -1202,6 +1205,119 @@ class ServiceEventDownTimesList(ServiceEventsBaseList):
             return '{}:{:02}'.format(hours, minutes)
 
 
-class DownTimesSummary(TemplateView):
+def handle_unit_down_time(request):
 
-    template_name = 'service_log/service_event_down_time_summary.html'
+    se_qs = models.ServiceEvent.objects.select_related(
+        'service_type', 'unit_service_area__service_area', 'unit_service_area__unit'
+    ).all()
+
+    daterange = request.GET.get('daterange', False)
+    if daterange:
+        date_from = timezone.datetime.strptime(daterange.split(' - ')[0], '%d %b %Y').date()
+        date_to = timezone.datetime.strptime(daterange.split(' - ')[1], '%d %b %Y').date()
+
+        se_qs = se_qs.filter(
+            datetime_service__gte=date_from, datetime_service__lte=date_to
+        )
+    else:
+        date_from = None
+        date_to = timezone.datetime.now().date()
+
+    units = request.GET.getlist('unit', False)
+    if units:
+        se_qs = se_qs.filter(unit_service_area__unit__name__in=units)
+        units = u_models.Unit.objects.filter(name__in=units).prefetch_related(
+            'unitavailabletime_set', 'unitavailabletimeedit_set'
+        ).select_related('type')
+    else:
+        units = u_models.Unit.objects.all().prefetch_related(
+            'unitavailabletime_set', 'unitavailabletimeedit_set'
+        ).select_related('type')
+
+    service_areas = request.GET.getlist('service_area', False)
+    if service_areas:
+        se_qs = se_qs.filter(unit_service_area__service_area__name__in=service_areas)
+
+    service_types = request.GET.getlist('service_type', False)
+    if service_types:
+        se_qs = se_qs.filter(service_type__name__in=service_types)
+
+    problem_description = request.GET.get('problem_description', False)
+    if service_types:
+        se_qs = se_qs.filter(problem_description__icontains=problem_description)
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="qatrack_parts_units_cost.csv"'
+    response['Content-Type'] = 'text/csv; charset=utf-8'
+
+    totals = {'potential': 0, 'available': 0, 'total_service': 0, 'total_lost': 0}
+
+    writer = csv.writer(response)
+    rows = [
+        ['Machine Stats: ' + (date_from.strftime('%d %b %Y') + ' to ' + date_to.strftime('%d %b %Y')) if daterange else 'Machine Stats: All time until ' + timezone.datetime.now().strftime('%d %b %Y')],
+        [''],
+        ['Unit Name', 'Model', 'Potential Time'],
+    ]
+    all_service_types = models.ServiceType.objects.all()
+    for t in all_service_types:
+        rows[2].append('# Repairs ' + t.name)
+        rows[2].append('Service Hrs ' + t.name)
+        rows[2].append('Lost Hrs ' + t.name)
+        totals[t.name + '-repairs'] = 0
+        totals[t.name + '-service'] = 0
+        totals[t.name + '-lost'] = 0
+    rows[2] += ['Total Service Hrs', 'Total Lost Hrs', '% Available']
+
+    for u in units:
+
+        service_events_unit_qs = se_qs.filter(unit_service_area__unit=u)
+
+        potential_time = u.get_potential_time(date_from, date_to)
+        unit_vals = [
+            u.name,
+            u.type.model,
+            potential_time
+        ]
+        totals['potential'] += potential_time
+
+        for t in all_service_types:
+            seu_type_q = service_events_unit_qs.filter(service_type=t)
+            repairs = len(seu_type_q)
+            service = seu_type_q.aggregate(Sum('duration_service_time'))['duration_service_time__sum']
+            lost = seu_type_q.aggregate(Sum('duration_lost_time'))['duration_lost_time__sum']
+
+            service = service.total_seconds() / 3600 if service else 0
+            lost = lost.total_seconds() / 3600 if lost else 0
+
+            unit_vals.append(repairs)
+            unit_vals.append(service)
+            unit_vals.append(lost)
+
+            totals[t.name + '-repairs'] += repairs
+            totals[t.name + '-service'] += service
+            totals[t.name + '-lost'] += lost
+
+        total_lost_time = service_events_unit_qs.aggregate(Sum('duration_lost_time'))['duration_lost_time__sum']
+        total_lost_time = total_lost_time.total_seconds() / 3600 if total_lost_time else 0
+
+        total_service_time = service_events_unit_qs.aggregate(Sum('duration_service_time'))['duration_service_time__sum']
+        total_service_time = total_service_time.total_seconds() / 3600 if total_service_time else 0
+
+        available = ((potential_time - total_lost_time) / potential_time) * 100 if potential_time > 0 else 0
+        unit_vals += [total_service_time, total_lost_time, available]
+        totals['available'] += available
+        totals['total_service'] += total_service_time
+        totals['total_lost'] += total_lost_time
+
+        rows.append(unit_vals)
+
+    totals['available'] /= len(units)
+    rows += [[''], ['']]
+    rows.append(['', 'Totals:'] + [str(totals[t]) for t in totals])
+
+    for r in rows:
+        writer.writerow(r)
+
+    return response
+
+    # return JsonResponse({'success': True, 'data': {'se_count': len(se_qs)}})

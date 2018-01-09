@@ -10,5 +10,6 @@ urlpatterns = [
     url(r'^handle_unit_available_time/$', views.handle_unit_available_time, name='handle_unit_available_time'),
     url(r'^handle_unit_available_time_edit/$', views.handle_unit_available_time_edit, name='handle_unit_available_time_edit'),
     url(r'^get_unit_available_time_data/$', views.get_unit_available_time_data, name='get_unit_available_time_data'),
-    # url(r'^unit_down_time/$', views.UnitDownTimes.as_view(), name='unit_down_time'),
+    # url(r'^handle_unit_available_time_change/$', views.handle_unit_available_time_change, name='handle_unit_available_time_change'),
+
 ]

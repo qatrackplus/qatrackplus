@@ -19,7 +19,7 @@
     require(['unit_avail']);
 {% endblock require_javascript %}
 
-{% block body_class %}layout-top-nav{% endblock body_class %}
+{% block body_class %}layout-top-nav loading{% endblock body_class %}
 
 {% block body %}
 
@@ -54,16 +54,22 @@
                                     <label>For selected units and days:</label>
                                     <div class="row">
                                         <div class="col-sm-12">
-                                            <div>Edit avaiable times for these days.</div>
-                                            <button id="set_edits" class="btn btn-flat btn-sm btn-default uat_btn" disabled data-toggle="modal" data-target="#available_edits_modal">Edit</button>
+                                            <div>Edit times for single days.</div>
+                                            <button id="open_edit_modal" class="btn btn-flat btn-sm btn-default uat_btn" disabled data-toggle="modal" data-target="#available_edits_modal">Edit</button>
                                         </div>
                                     </div>
                                     <div class="row">
                                         <div id="set_uat_div" class="col-sm-12">
-                                            <div>Insert default available time.</div>
-                                            <button id="set_uat" class="btn btn-flat btn-sm btn-default uat_btn" disabled data-toggle="modal" data-target="#available_modal">Insert...</button>
+                                            <div>Insert or change default schedule.</div>
+                                            <button id="open_uat_modal" class="btn btn-flat btn-sm btn-default uat_btn" disabled data-toggle="modal" data-target="#available_modal">Insert/Change...</button>
                                         </div>
                                     </div>
+{#                                    <div class="row">#}
+{#                                        <div id="set_uat_div" class="col-sm-12">#}
+{#                                            <div>Delete or change default schedule.</div>#}
+{#                                            <button id="change_uat" class="btn btn-flat btn-sm btn-default uat_btn" disabled data-toggle="modal" data-target="#available_change_modal">Change...</button>#}
+{#                                        </div>#}
+{#                                    </div>#}
                                 </div>
                             </div>
 
@@ -114,7 +120,8 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button id="submit_edit" type="button" class="btn btn-default btn-flat" {% comment %}data-dismiss="modal"{% endcomment %}>Submit</button>
+                    <button id="delete_edit" type="button" class="btn btn-default btn-flat pull-left">Delete</button>
+                    <button id="insert_change_edit" type="button" class="btn btn-default btn-flat">Insert/Change</button>
                 </div>
             </div>
 
@@ -164,10 +171,82 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button id="submit_insert" type="button" class="btn btn-default btn-flat" {% comment %}data-dismiss="modal"{% endcomment %}>Submit</button>
+                    <button id="delete_uat" type="button" class="btn btn-default btn-flat pull-left" title="Delete schedule change">Delete</button>
+                    <button id="insert_change_uat" type="button" class="btn btn-default btn-flat" {% comment %}data-dismiss="modal"{% endcomment %}>Insert/Change</button>
                 </div>
             </div>
 
         </div>
     </div>
+
+    <div id="available_change_modal" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 id="change_uat_title" class="modal-title"></h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row form-group">
+                        <div class="col-sm-12">
+                            <div class="row seven-cols no-gutters">
+                                <div class="col-md-1" title="Sunday hours">
+                                    <input type="text" name="hours_sunday_change" required="" id="id_hours_sunday_change" class="form-control duration weekday-duration" placeholder="sunday">
+                                </div>
+                                <div class="col-md-1" title="Monday hours">
+                                    <input type="text" name="hours_monday_change" required="" id="id_hours_monday_change" class="form-control duration weekday-duration" placeholder="monday">
+                                </div>
+                                <div class="col-md-1" title="Tuesday hours">
+                                    <input type="text" name="hours_tuesday_change" required="" id="id_hours_tuesday_change" class="form-control duration weekday-duration" placeholder="tuesday">
+                                </div>
+                                <div class="col-md-1" title="Wednesday hours">
+                                    <input type="text" name="hours_wednesday_change" required="" id="id_hours_wednesday_change" class="form-control duration weekday-duration" placeholder="wednesday">
+                                </div>
+                                <div class="col-md-1" title="Thursday hours">
+                                    <input type="text" name="hours_thursday_change" required="" id="id_hours_thursday_change" class="form-control duration weekday-duration" placeholder="thursday">
+                                </div>
+                                <div class="col-md-1" title="Friday hours">
+                                    <input type="text" name="hours_friday_change" required="" id="id_hours_friday_change" class="form-control duration weekday-duration" placeholder="friday">
+                                </div>
+                                <div class="col-md-1" title="Saturday hours">
+                                    <input type="text" name="hours_saturday_change" required="" id="id_hours_saturday_change" class="form-control duration weekday-duration" placeholder="saturday">
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <input id="uat_id" type="hidden">
+
+                    <div class="row has-error">
+                        <div id="uat_error"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="delete_change" type="button" class="btn btn-default btn-flat pull-left" title="Delete schedule change">Delete</button>
+                    <button id="submit_change" type="button" class="btn btn-default btn-flat">Change</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    {% block loading_modal %}
+        <div class="loading-modal ">
+            <div class="center">
+                <div>
+                    <span class="loading-logo">QAT</span>
+                    <i class="fa fa-fw fa-plus fa-spin fa-2x info"></i>
+                </div>
+                <div>
+                    <b>
+                        Loading...
+                    </b>
+                </div>
+
+            </div>
+        </div>
+    {% endblock loading_modal %}
+
 {% endblock body %}

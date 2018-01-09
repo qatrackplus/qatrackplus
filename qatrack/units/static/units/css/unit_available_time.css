@@ -21,8 +21,14 @@ rect.day-rect {
 }
 rect.bar-rect {
     stroke: none;
-    /*pointer-events: none;*/
 }
+/*rect.bar-rect.changed {*/
+    /*stroke: #3b6884;*/
+    /*stroke-width: 2;*/
+/*}*/
+/*rect.bar-rect.changed:hover {*/
+    /*stroke: #000000;*/
+/*}*/
 g.day-g.current-month > text {
     font-weight: bold;
 }
@@ -50,16 +56,38 @@ text.day-label {
 div.tooltip {
     position: absolute;
     text-align: center;
-    width: 60px;
-    height: 28px;
-    padding: 2px;
-    font: 12px sans-serif;
-    background: #d9dadd;
     border: 0;
-    border-radius: 8px;
+    border-radius: 2px;
     pointer-events: none;
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
+    padding: 2px;
+    font: 12px sans-serif;
+    height: auto;
+}
+div.tooltip.hours-tooltip {
+    width: 60px;
+    background: #d9dadd;
+}
+text.icon-label {
+    stroke: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+text.icon-label.uat-change-icon {
+    font: 15px sans-serif;
+    font-weight: bolder;
+    pointer-events: none;
+}
+text.icon-label.acceptance-icon {
+    font: 12px sans-serif;
+}
+div.tooltip.acceptance-icon-tooltip {
+    width: 80px;
+    background: #bdd3dd;
+
 }

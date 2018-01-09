@@ -16,7 +16,7 @@ from django.utils.html import escape
 from django.utils.translation import ugettext as _
 
 from .models import ServiceEventStatus, ServiceType, UnitServiceArea, ServiceArea, ServiceEvent, ThirdParty, Vendor, GroupLinker
-from qatrack.units.models import Unit, Modality, UnitAvailableTime
+from qatrack.units.models import Unit, Modality, UnitAvailableTime, UnitAvailableTimeEdit
 from qatrack.units.forms import UnitAvailableTimeForm
 
 
@@ -239,7 +239,21 @@ class UnitAdmin(admin.ModelAdmin):
         if 'available_time_form' not in extra_context:
             extra_context['available_time_form'] = UnitAvailableTimeForm(**form_kwargs)
             if object_id:
+                da = Unit.objects.get(id=object_id).date_acceptance
+                try:
+                    uat_acceptance = UnitAvailableTime.objects.get(unit_id=object_id, date_changed=da)
+                    extra_context['available_time_form'].fields['hours_monday'].initial = uat_acceptance.hours_monday
+                    extra_context['available_time_form'].fields['hours_tuesday'].initial = uat_acceptance.hours_tuesday
+                    extra_context['available_time_form'].fields['hours_wednesday'].initial = uat_acceptance.hours_wednesday
+                    extra_context['available_time_form'].fields['hours_thursday'].initial = uat_acceptance.hours_thursday
+                    extra_context['available_time_form'].fields['hours_friday'].initial = uat_acceptance.hours_friday
+                    extra_context['available_time_form'].fields['hours_saturday'].initial = uat_acceptance.hours_saturday
+                    extra_context['available_time_form'].fields['hours_sunday'].initial = uat_acceptance.hours_sunday
+                except ObjectDoesNotExist:
+                    pass
                 extra_context['available_time_form'].fields['units'].initial = [object_id]
+
+                print(extra_context['available_time_form'].initial)
 
         to_field = request.POST.get(TO_FIELD_VAR, request.GET.get(TO_FIELD_VAR))
         if to_field and not self.to_field_allowed(request, to_field):
@@ -266,6 +280,7 @@ class UnitAdmin(admin.ModelAdmin):
                     'name': force_text(opts.verbose_name), 'key': escape(object_id)})
 
         UnitForm = self.get_form(request, obj)
+
         uatf = extra_context['available_time_form']
 
         if request.method == 'POST':
@@ -278,7 +293,7 @@ class UnitAdmin(admin.ModelAdmin):
                 new_object = form.instance
             formsets, inline_instances = self._create_formsets(request, new_object, change=not add)
 
-            if not uatf.is_valid():
+            if not uatf.is_valid(unit=new_object):
                 form_validated = False
                 # new_object = form.instance
 
@@ -297,7 +312,11 @@ class UnitAdmin(admin.ModelAdmin):
                 change_message = self.construct_change_message(request, form, formsets, add)
 
                 try:
-                    uat = UnitAvailableTime.objects.get(date_changed=uatf.cleaned_data['date_changed'], unit=new_object)
+                    if add:
+                        date_initial = form.initial['date_acceptance']
+                    else:
+                        date_initial = uatf.cleaned_data['date_changed']
+                    uat = UnitAvailableTime.objects.get(date_changed=date_initial, unit=new_object)
 
                     uat.hours_monday = uatf.cleaned_data['hours_monday']
                     uat.hours_tuesday = uatf.cleaned_data['hours_tuesday']
@@ -324,6 +343,13 @@ class UnitAdmin(admin.ModelAdmin):
                     self.log_addition(request, new_object, change_message)
                     return self.response_add(request, new_object)
                 else:
+                    # If editing unit, delete available times that occur before acceptance date
+
+                    bad_uats = UnitAvailableTime.objects.filter(unit=object_id, date_changed__lt=obj.date_acceptance)
+                    bad_uates = UnitAvailableTimeEdit.objects.filter(unit=object_id, date__lt=obj.date_acceptance)
+                    bad_uats.delete()
+                    bad_uates.delete()
+
                     self.log_change(request, new_object, change_message)
                     return self.response_change(request, new_object)
             else:
@@ -351,8 +377,9 @@ class UnitAdmin(admin.ModelAdmin):
             media = media + inline_formset.media
 
         err_list = helpers.AdminErrorList(form, formsets)
-        for el in helpers.AdminErrorList(uatf, []):
-            err_list.append(el)
+        if add:
+            for el in helpers.AdminErrorList(uatf, []):
+                err_list.append(el)
 
         context = dict(
             self.admin_site.each_context(request),

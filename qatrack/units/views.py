@@ -5,7 +5,7 @@ from braces.views import PermissionRequiredMixin
 from django.conf import settings
 from django.core.urlresolvers import reverse, resolve
 from django.utils import timezone
-from django.db.models import ObjectDoesNotExist
+from django.db.models import ObjectDoesNotExist, F
 from django.http import JsonResponse
 from django.template.loader import get_template
 from django.utils.translation import ugettext as _
@@ -30,6 +30,7 @@ def get_unit_available_time_data(request):
         'number': u.number,
         'name': u.name,
         'active': u.active,
+        'date_acceptance': u.date_acceptance.strftime('%Y-%m-%d') if u.date_acceptance else None,
         'available_time_edits': {
             uate.date.strftime('%Y-%m-%d'): {
                 'name': uate.name,
@@ -94,25 +95,35 @@ class UnitAvailableTimeChange(PermissionRequiredMixin, UnitsFromKwargs):
 
 def handle_unit_available_time(request):
 
-    day = timezone.datetime.fromtimestamp(int(request.POST.get('day'))/1000, timezone.utc).date()
-    hours = {'monday': ['0', '0'], 'tuesday': ['0', '0'], 'wednesday': ['0', '0'], 'thursday': ['0', '0'], 'friday': ['0', '0'], 'saturday': ['0', '0'], 'sunday': ['0', '0']}
-    for d in hours:
-        hours_min = request.POST.get('hours_' + d).replace('_', '0')
+    delete = request.POST.get('delete') == 'true'
+    units = request.POST.getlist('units[]')
+    days = [timezone.datetime.fromtimestamp(int(d) / 1000, timezone.utc).date() for d in request.POST.getlist('days[]', [])]
+
+    uats = u_models.UnitAvailableTime.objects.filter(unit__in=units, date_changed__in=days).select_related('unit')
+
+    if delete:
+        uats.exclude(date_changed=F('unit__date_acceptance')).delete()
+        return get_unit_available_time_data(request)
+
+    hours = {'monday': ['0', '0'], 'tuesday': ['0', '0'], 'wednesday': ['0', '0'], 'thursday': ['0', '0'],
+             'friday': ['0', '0'], 'saturday': ['0', '0'], 'sunday': ['0', '0']}
+
+    for h in hours:
+        hours_min = request.POST.get('hours_' + h).replace('_', '0')
         if hours_min != '':
             hours_min = hours_min.split(':')
-            hours[d] = hours_min
-    units = [u_models.Unit.objects.get(id=u_id) for u_id in request.POST.getlist('units[]', [])]
+            hours[h] = hours_min
 
-    for u in units:
-        try:
-            uat = u_models.UnitAvailableTime.objects.get(unit=u, date_changed=day)
-            for d in hours:
-                setattr(uat, 'hours_' + d, timezone.timedelta(hours=int(hours[d][0]), minutes=int(hours[d][1])))
-            uat.save()
-        except ObjectDoesNotExist:
+    for uat in uats:
+        for h in hours:
+            setattr(uat, 'hours_' + h, timezone.timedelta(hours=int(hours[h][0]), minutes=int(hours[h][1])))
+        uat.save()
+
+    for unit in u_models.Unit.objects.filter(id__in=units):
+        if days[0] > unit.date_acceptance and len(uats.filter(unit=unit, date_changed=days[0])) == 0:
             u_models.UnitAvailableTime.objects.create(
-                unit=u,
-                date_changed=day,
+                unit=unit,
+                date_changed=days[0],
                 hours_monday=timezone.timedelta(hours=int(hours['monday'][0]), minutes=int(hours['monday'][1])),
                 hours_tuesday=timezone.timedelta(hours=int(hours['tuesday'][0]), minutes=int(hours['tuesday'][1])),
                 hours_wednesday=timezone.timedelta(hours=int(hours['wednesday'][0]), minutes=int(hours['wednesday'][1])),
@@ -127,17 +138,26 @@ def handle_unit_available_time(request):
 
 def handle_unit_available_time_edit(request):
 
+    delete = request.POST.get('delete', False) == 'true'
+    units = [u_models.Unit.objects.get(id=u_id) for u_id in request.POST.getlist('units[]', [])]
+    days = [timezone.datetime.fromtimestamp(int(d) / 1000, timezone.utc).date() for d in request.POST.getlist('days[]', [])]
+
+    if delete:
+        uates = u_models.UnitAvailableTimeEdit.objects.filter(unit__in=units, date__in=days)
+        uates.delete()
+        return get_unit_available_time_data(request)
+
     hours_mins = request.POST.get('hours_mins', None)
     if hours_mins:
         hours_mins = hours_mins.replace('_', '0').split(':')
         hours = int(hours_mins[0])
         mins = int(hours_mins[1])
-        units = [u_models.Unit.objects.get(id=u_id) for u_id in request.POST.getlist('units[]', [])]
-        days = [timezone.datetime.fromtimestamp(int(d)/1000, timezone.utc).date() for d in request.POST.getlist('days[]', [])]
         name = request.POST.get('name', None)
 
         for d in days:
             for u in units:
+                if d < u.date_acceptance:
+                    continue
                 try:
                     uate = u_models.UnitAvailableTimeEdit.objects.get(unit=u, date=d)
                     uate.hours = timezone.timedelta(hours=hours, minutes=mins)
@@ -155,7 +175,7 @@ class VendorsList(BaseListableView):
     """
         This view provides a base for any sort of listing of
         :model:`units.Vendor`'s.
-        """
+    """
 
     model = u_models.Vendor
     template_name = 'units/vendors_list.html'
@@ -368,18 +388,4 @@ class UnitList(BaseListableView):
         return ', '.join([m.name if m.name else '' for m in u.modalities.all()])
 
 
-# def go_unit_down_time(request):
-#
-#     print(request.GET)
-#
-#     daterange = request.GET.get('date_range')
-#     date_from = timezone.datetime.strptime(daterange.split(' - ')[0], '%d %b %Y')
-#     date_to = timezone.datetime.strptime(daterange.split(' - ')[1], '%d %b %Y')
-#
-#     se_qs = sl_models.ServiceEvent.objects.filter(
-#         datetime_service__gte=date_from, datetime_service__lte=date_to, duration_lost_time__isnull=False
-#     )
-#
-#     units = None
-#     print([se.id for se in se_qs])
-#     return JsonResponse({'success': True, 'data': {'units': units}})
+

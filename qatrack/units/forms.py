@@ -81,6 +81,16 @@ class UnitAvailableTimeForm(forms.ModelForm):
         for day in ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']:
             self.fields['hours_' + day].widget.attrs['placeholder'] = day
 
+    def clean_date_changed(self):
+        if self._unit:
+            self.cleaned_data['date_changed'] = self._unit.date_acceptance
+        return self.cleaned_data['date_changed']
+
+    def is_valid(self, unit=None):
+        if unit:
+            self._unit = unit
+        return super().is_valid()
+
 
 class UnitAvailableTimeEditForm(forms.ModelForm):
 
@@ -104,3 +114,9 @@ class UnitAvailableTimeEditForm(forms.ModelForm):
                 self.fields[f].widget.attrs['id'] = 'id_edit_units'
             else:
                 self.fields[f].widget.attrs['class'] = 'form-control'
+
+    def clean_date(self):
+        cleaned = self.cleaned_data['date']
+        if cleaned < self.instance.unit.date_acceptance:
+            raise ValidationError('Unit cannot have available time edit before it\'s date of acceptance.')
+        return cleaned

@@ -1,6 +1,9 @@
 
+import calendar
+
 from django.conf import settings
 from django.db import models
+from django.utils.timezone import datetime, timedelta
 from django.utils.translation import ugettext as _
 
 from django.apps import apps
@@ -97,6 +100,16 @@ class Modality(models.Model):
         return self.name
 
 
+def weekday_count(start_date, end_date, uate_list):
+    week = {}
+    for i in range((end_date - start_date).days):
+        day = start_date + timedelta(days=i + 1)
+        if str(day) not in uate_list:
+            day_name = calendar.day_name[day.weekday()].lower()
+            week[day_name] = week[day_name] + 1 if day_name in week else 1
+    return week
+
+
 class Unit(models.Model):
     """Radiation devices
     Stores a single radiation device (e.g. Linac, Tomo unit, Cyberkinfe etc.)
@@ -109,7 +122,7 @@ class Unit(models.Model):
     serial_number = models.CharField(max_length=256, null=True, blank=True, help_text=_('Optional serial number'))
     location = models.CharField(max_length=256, null=True, blank=True, help_text=_('Optional location information'))
     install_date = models.DateField(null=True, blank=True, help_text=_('Optional install date'))
-    date_acceptance = models.DateField(null=True, blank=True, help_text=_('Optional date of acceptance'))
+    date_acceptance = models.DateField(help_text=_('Changing acceptance date will delete unit available times that occur before it'))
     active = models.BooleanField(default=True, help_text=_('Set to false if unit is no longer in use'))
     restricted = models.BooleanField(default=False, help_text=_('Set to false to restrict unit from operation'))
 
@@ -122,6 +135,43 @@ class Unit(models.Model):
 
     def __str__(self):
         return self.name
+
+    def get_potential_time(self, date_from, date_to):
+
+        if date_from is None or date_from > self.date_acceptance:
+            date_from = self.date_acceptance
+
+        self_uat_set = self.unitavailabletime_set.filter(
+            date_changed__range=[date_from, date_to]
+        ).order_by('date_changed')
+        self_uate_set = self.unitavailabletimeedit_set.filter(
+            date__range=[date_from, date_to]
+        ).order_by('date')
+
+        if self.unitavailabletime_set.filter(date_changed__lt=date_from).exists():
+            self_uat_set = self_uat_set | self.unitavailabletime_set.filter(date_changed__lt=date_from).order_by('-date_changed')[:1]
+
+        potential_time = 0
+
+        uate_list = {str(uate.date): uate.hours for uate in self_uate_set}
+
+        val_list = self_uat_set.values('date_changed', 'hours_sunday', 'hours_monday', 'hours_tuesday', 'hours_wednesday', 'hours_thursday', 'hours_friday', 'hours_saturday')
+        uat_len = len(val_list)
+        for i in range(uat_len):
+            next_date = val_list[i + 1]['date_changed'] if i < uat_len - 1 else date_to
+
+            if val_list[i]['date_changed'] < date_from:
+                days_nums = weekday_count(date_from, next_date, uate_list)
+            else:
+                days_nums = weekday_count(val_list[i]['date_changed'], next_date, uate_list)
+
+            for day in days_nums:
+                potential_time += days_nums[day] * val_list[i]['hours_' + day].total_seconds()
+
+        for uate in uate_list:
+            potential_time += uate_list[uate].total_seconds()
+
+        return potential_time / 3600
 
 
 class UnitAvailableTimeEdit(models.Model):
@@ -147,7 +197,7 @@ class UnitAvailableTime(models.Model):
 
     unit = models.ForeignKey(Unit, on_delete=models.CASCADE)
 
-    date_changed = models.DateField(help_text=_('Date the units available time changed or will change'))
+    date_changed = models.DateField(blank=True, help_text=_('Date the units available time changed or will change'))
     hours_monday = models.DurationField(help_text=_('Duration of available time on Mondays'))
     hours_tuesday = models.DurationField(help_text=_('Duration of available time on Tuesdays'))
     hours_wednesday = models.DurationField(help_text=_('Duration of available time on Wednesdays'))
