@@ -1,10 +1,9 @@
 from django.conf import settings
 from django.test import TestCase
+
 from qatrack.qa import models
-from qatrack.qa.views import forms
-
 from qatrack.qa.templatetags import qa_tags
-
+from qatrack.qa.views import forms
 
 from . import utils
 
@@ -20,7 +19,13 @@ class TestTags(TestCase):
 
     def test_qa_value_form(self):
         form = forms.CreateTestInstanceForm()
-        rendered = qa_tags.qa_value_form(form, self.unit_test_list.tests_object)
+        perms = {
+            'qa': {
+                'can_view_history': False,
+                'can_view_ref_tol': False,
+            }
+        }
+        rendered = qa_tags.qa_value_form(form, self.unit_test_list.tests_object, perms)
         self.assertIsInstance(rendered, str)
 
     def test_due_date(self):

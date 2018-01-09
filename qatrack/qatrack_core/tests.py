@@ -23,4 +23,4 @@ class TestLoginViews(TestCase):
             'new_password1': 'newpassword',
             'new_password2': 'newpassword',
         })
-        assert resp.url == "/accounts/reset/done"
+        assert resp.url == "/accounts/reset/done/"

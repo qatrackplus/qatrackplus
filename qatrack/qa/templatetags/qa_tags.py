@@ -1,25 +1,32 @@
 import collections
 
+from django import template
 from django.conf import settings
 from django.template.loader import get_template
-from django import template
 from django.utils.safestring import mark_safe
 
 import qatrack.qa.models as models
+
 register = template.Library()
 
 
 @register.simple_tag
-def qa_value_form(form, test_list, include_history=False, include_ref_tols=False, test_info=None):
+def qa_value_form(form, test_list, perms, test_info=None):
     template = get_template("qa/qavalue_form.html")
     c = {
         "form": form,
+        "perms": perms,
         "test_list": test_list,
         "test_info": test_info,
-        "include_history": include_history,
-        "include_ref_tols": include_ref_tols,
     }
     return template.render(c)
+
+
+@register.simple_tag
+def qa_table_colspan(perms, offset=0):
+    perms_to_check = ['can_view_ref_tol', 'can_view_history']
+    span = 6 - offset + sum(1 for p in perms_to_check if perms['qa'][p])
+    return "%d" % (span)
 
 
 @register.simple_tag
