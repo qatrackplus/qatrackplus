@@ -152,7 +152,7 @@ class ServiceEvent(models.Model):
         help_text=_('Enter the total clinical time lost for this service event (Hours : minutes)')
     )
     is_review_required = models.BooleanField(
-        default=False, help_text=_('Does this service event require review?'), blank=True
+        default=True, help_text=_('Does this service event require review?'), blank=True
     )
 
     class Meta:

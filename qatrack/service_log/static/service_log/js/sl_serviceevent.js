@@ -79,7 +79,10 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
 
         // Service Type and Review Required --------------------------------------------------------------
         $service_type.change(function() {
-            $review_required_fake.prop('disabled', se_types_review[$service_type.val()]).prop('checked', se_types_review[$service_type.val()]);
+            $review_required_fake.prop('disabled', se_types_review[$service_type.val()]);
+            if (se_types_review[$service_type.val()]) {
+                $review_required_fake.prop('checked', true);
+            }
             $review_required_fake.change();
         });
         $review_required_fake.change(function() {

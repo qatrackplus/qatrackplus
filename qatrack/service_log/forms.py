@@ -362,7 +362,7 @@ class ServiceEventForm(BetterModelForm):
     )
     is_review_required = forms.BooleanField(required=False)
     is_review_required_fake = forms.BooleanField(
-        required=False, widget=forms.CheckboxInput(), label=_('Review required'),
+        required=False, widget=forms.CheckboxInput(), label=_('Review required'), initial=True,
         help_text=models.ServiceEvent._meta.get_field('is_review_required').help_text
     )
 
