@@ -21,7 +21,7 @@ from django.views.generic.detail import SingleObjectTemplateResponseMixin
 from django.views.generic.edit import ModelFormMixin, ProcessFormView
 
 from listable.views import (
-    BaseListableView, DATE_RANGE, SELECT_MULTI,
+    BaseListableView, DATE_RANGE, SELECT_MULTI, SELECT,
     TODAY, YESTERDAY, LAST_WEEK, THIS_WEEK, LAST_MONTH, THIS_MONTH, LAST_YEAR, THIS_YEAR
 )
 
@@ -1140,8 +1140,10 @@ class ServiceEventDownTimesList(ServiceEventsBaseList):
         # 'pk',
         'datetime_service',
         'unit_service_area__unit__name',
+        'unit_service_area__unit__type__name',
+        'unit_service_area__unit__active',
         'unit_service_area__service_area__name',
-        'service_type__name',
+        # 'service_type__name',
         'problem_description',
         'duration_service_time',
         'duration_lost_time'
@@ -1151,8 +1153,10 @@ class ServiceEventDownTimesList(ServiceEventsBaseList):
         # 'pk': _('ID'),
         'datetime_service': _('Service Date'),
         'unit_service_area__unit__name': _('Unit'),
+        'unit_service_area__unit__type__name': _('Unit Type'),
+        'unit_service_area__unit__active': _('Active'),
         'unit_service_area__service_area__name': _('Service Area'),
-        'service_type__name': _('Service Type'),
+        # 'service_type__name': _('Service Type'),
         'duration_service_time': _('Service Time'),
         'duration_lost_time': _('Lost Time')
     }
@@ -1160,8 +1164,10 @@ class ServiceEventDownTimesList(ServiceEventsBaseList):
     widgets = {
         'datetime_service': DATE_RANGE,
         'unit_service_area__unit__name': SELECT_MULTI,
+        'unit_service_area__unit__type__name': SELECT_MULTI,
+        'unit_service_area__unit__active': SELECT,
         'unit_service_area__service_area__name': SELECT_MULTI,
-        'service_type__name': SELECT_MULTI
+        # 'service_type__name': SELECT_MULTI
     }
 
     date_ranges = {
@@ -1176,12 +1182,14 @@ class ServiceEventDownTimesList(ServiceEventsBaseList):
 
     order_fields = {
         'actions': False,
+        'unit_service_area__unit__active': False
     }
 
     select_related = (
         'unit_service_area__unit',
+        'unit_service_area__unit__type',
         'unit_service_area__service_area',
-        'service_type',
+        # 'service_type',
         'service_status'
     )
 
@@ -1192,7 +1200,7 @@ class ServiceEventDownTimesList(ServiceEventsBaseList):
             hours = total_seconds // 3600
             minutes = (total_seconds % 3600) // 60
 
-            return '{}:{}'.format(hours, minutes)
+            return '{}:{:02}'.format(hours, minutes)
 
 
     def duration_service_time(self, se):
@@ -1223,6 +1231,18 @@ def handle_unit_down_time(request):
         date_from = None
         date_to = timezone.datetime.now().date()
 
+    service_areas = request.GET.getlist('service_area', False)
+    if service_areas:
+        se_qs = se_qs.filter(unit_service_area__service_area__name__in=service_areas)
+
+    # service_types = request.GET.getlist('service_type', False)
+    # if service_types:
+    #     se_qs = se_qs.filter(service_type__name__in=service_types)
+
+    problem_description = request.GET.get('problem_description', False)
+    if problem_description:
+        se_qs = se_qs.filter(problem_description__icontains=problem_description)
+
     units = request.GET.getlist('unit', False)
     if units:
         se_qs = se_qs.filter(unit_service_area__unit__name__in=units)
@@ -1234,39 +1254,56 @@ def handle_unit_down_time(request):
             'unitavailabletime_set', 'unitavailabletimeedit_set'
         ).select_related('type')
 
-    service_areas = request.GET.getlist('service_area', False)
-    if service_areas:
-        se_qs = se_qs.filter(unit_service_area__service_area__name__in=service_areas)
+    units = units.filter(id__in=se_qs.values_list('unit_service_area__unit', flat=True).distinct())
 
-    service_types = request.GET.getlist('service_type', False)
-    if service_types:
-        se_qs = se_qs.filter(service_type__name__in=service_types)
+    unit_types = request.GET.getlist('unit__type', False)
+    if unit_types:
+        se_qs = se_qs.filter(unit_service_area__unit__type__name__in=unit_types)
+        units = units.filter(type__name__in=unit_types)
 
-    problem_description = request.GET.get('problem_description', False)
-    if service_types:
-        se_qs = se_qs.filter(problem_description__icontains=problem_description)
+    unit_active = request.GET.get('unit__active', None)
+    if unit_active is not None:
+        unit_active = unit_active == 'True'
+        se_qs = se_qs.filter(unit_service_area__unit__active=unit_active)
+        units = units.filter(active=unit_active)
 
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="qatrack_parts_units_cost.csv"'
     response['Content-Type'] = 'text/csv; charset=utf-8'
 
-    totals = {'potential': 0, 'available': 0, 'total_service': 0, 'total_lost': 0}
+    totals = OrderedDict({'potential': 0})
 
     writer = csv.writer(response)
     rows = [
         ['Machine Stats: ' + (date_from.strftime('%d %b %Y') + ' to ' + date_to.strftime('%d %b %Y')) if daterange else 'Machine Stats: All time until ' + timezone.datetime.now().strftime('%d %b %Y')],
         [''],
-        ['Unit Name', 'Model', 'Potential Time'],
+        [''],
+        [''],
+        ['Unit Name', 'Unit Type', 'Potential Time'],
     ]
+
     all_service_types = models.ServiceType.objects.all()
     for t in all_service_types:
-        rows[2].append('# Repairs ' + t.name)
-        rows[2].append('Service Hrs ' + t.name)
-        rows[2].append('Lost Hrs ' + t.name)
+        rows[4].append('# ' + t.name + ' Repairs')
+        rows[4].append(t.name + ' Service Hrs')
+        rows[4].append(t.name + ' Lost Hrs')
         totals[t.name + '-repairs'] = 0
         totals[t.name + '-service'] = 0
         totals[t.name + '-lost'] = 0
-    rows[2] += ['Total Service Hrs', 'Total Lost Hrs', '% Available']
+    rows[4] += ['Total Service Hrs', 'Total Lost Hrs', 'Total #']
+
+    totals['total_service'] = 0
+    totals['total_lost'] = 0
+    totals['total_num'] = 0
+
+    if not service_areas:
+        rows[4].append('% Available')
+        totals['available'] = 0
+    else:
+        rows[1] = ['For Service Areas: ', ''] + [sa for sa in service_areas]
+
+    if problem_description:
+        rows[2] = ['Service Events with Problem Description containing: ', '', '', '', '', '', problem_description]
 
     for u in units:
 
@@ -1275,7 +1312,7 @@ def handle_unit_down_time(request):
         potential_time = u.get_potential_time(date_from, date_to)
         unit_vals = [
             u.name,
-            u.type.model,
+            u.type.name,
             potential_time
         ]
         totals['potential'] += potential_time
@@ -1303,15 +1340,23 @@ def handle_unit_down_time(request):
         total_service_time = service_events_unit_qs.aggregate(Sum('duration_service_time'))['duration_service_time__sum']
         total_service_time = total_service_time.total_seconds() / 3600 if total_service_time else 0
 
-        available = ((potential_time - total_lost_time) / potential_time) * 100 if potential_time > 0 else 0
-        unit_vals += [total_service_time, total_lost_time, available]
-        totals['available'] += available
+        total_num = len(service_events_unit_qs)
+
+        unit_vals += [total_service_time, total_lost_time, total_num]
+
+        if not service_areas:
+            available = ((potential_time - total_lost_time) / potential_time) * 100 if potential_time > 0 else 0
+            totals['available'] += available
+            unit_vals.append(available)
+
         totals['total_service'] += total_service_time
         totals['total_lost'] += total_lost_time
+        totals['total_num'] += total_num
 
         rows.append(unit_vals)
 
-    totals['available'] /= len(units)
+    if not service_areas:
+        totals['available'] = (totals['available'] / len(units)) if len(units) is not 0 else 0
     rows += [[''], ['']]
     rows.append(['', 'Totals:'] + [str(totals[t]) for t in totals])
 

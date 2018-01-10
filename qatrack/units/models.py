@@ -138,7 +138,12 @@ class Unit(models.Model):
 
     def get_potential_time(self, date_from, date_to):
 
-        if date_from is None or date_from > self.date_acceptance:
+        if date_from is None:
+            date_from = self.date_acceptance
+
+        elif date_from < self.date_acceptance:
+            if date_to < self.date_acceptance:
+                return 0
             date_from = self.date_acceptance
 
         self_uat_set = self.unitavailabletime_set.filter(
