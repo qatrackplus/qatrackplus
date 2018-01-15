@@ -1723,8 +1723,8 @@ class TestAutoReview(TestCase):
         ti = utils.create_test_instance(self.test_list_instance, unit_test_info=uti, value=self.ref.value, status=self.statuses[0])
         ti.reference = self.ref
         ti.tolerance = self.tol
-        c = Comment.objects.create(comment="comment", content_type_id=999, site_id=1)
-        self.test_list_instance.comments.add(c)
+        c = Comment.objects.create(comment="comment", content_object=self.test_list_instance, site_id=1)
+        # self.test_list_instance.comments.add(c)
         # self.test_list_instance.save()
         ti.calculate_pass_fail()
         ti.auto_review()

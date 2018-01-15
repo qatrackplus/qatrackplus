@@ -438,7 +438,9 @@ class TestChartData(TestCase):
         resp = self.client.get(self.url, data=data)
         data = json.loads(resp.content.decode("UTF-8"))
         expected = [1.]*self.NPOINTS
-        actual = [x['value'] for x in data['plot_data']['series']['unit - tl2 :: test1']['series_data']]
+        unit_name = self.utc1.unit.name
+        tli_name = self.tl1.name
+        actual = [x['value'] for x in data['plot_data']['series']['%s - %s :: test1' % (unit_name, tli_name)]['series_data']]
         self.assertListEqual(actual, expected)
 
     def test_basic_data_relative(self):
@@ -452,7 +454,9 @@ class TestChartData(TestCase):
         resp = self.client.get(self.url, data=data)
         data = json.loads(resp.content.decode("UTF-8"))
         expected = [50.]*(self.NPOINTS//2)
-        actual = [x['value'] for x in data['plot_data']['series']['unit - tl2 :: test2 (relative to ref)']['series_data']]
+        unit_name = self.utc1.unit.name
+        tl2_name = self.tl2.name
+        actual = [x['value'] for x in data['plot_data']['series']['%s - %s :: test2 (relative to ref)' % (unit_name, tl2_name)]['series_data']]
         self.assertListEqual(actual, expected)
 
     def test_basic_data_combined(self):
@@ -466,7 +470,8 @@ class TestChartData(TestCase):
         resp = self.client.get(self.url, data=data)
         data = json.loads(resp.content.decode("UTF-8"))
         expected = [1.]*(2*self.NPOINTS)
-        actual = [x['value'] for x in data['plot_data']['series']['unit :: test1']['series_data']]
+        unit_name = self.utc1.unit.name
+        actual = [x['value'] for x in data['plot_data']['series']['%s :: test1' % unit_name]['series_data']]
         self.assertListEqual(actual, expected)
 
     def test_export_csv_view(self):
@@ -1170,7 +1175,10 @@ result = json.load(FILE)
     def tearDown(self):
         import glob
         for f in glob.glob(os.path.join(settings.TMP_UPLOAD_ROOT, "TESTRUNNER*")):
-            os.remove(f)
+            try:
+                os.remove(f)
+            except PermissionError as e:
+                print(">>> Could not delete %s because %s" % (f, e))
 
     def test_upload_fname_exists(self):
         response = self.client.post(self.url, {"test_id": self.test.pk, "upload": self.test_file, "meta": "{}"})

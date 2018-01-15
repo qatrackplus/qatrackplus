@@ -101,7 +101,6 @@ class ServiceEventStatus(models.Model):
 
     @staticmethod
     def get_colour_dict():
-        # return json.dumps({se.id: se.service_status.colour for se in ServiceEvent.objects.all()})
         return {ses.id: ses.colour for ses in ServiceEventStatus.objects.all()}
 
 
@@ -191,7 +190,7 @@ class ThirdParty(models.Model):
         return self.last_name + ', ' + self.first_name + ' (' + self.vendor.name + ')'
 
     def get_full_name(self):
-        return self.first_name + ' ' + self.last_name + ' (' + self.vendor.name + ')'
+        return str(self)
 
 
 class Hours(models.Model):
@@ -236,7 +235,7 @@ class ReturnToServiceQA(models.Model):
 
 class GroupLinker(models.Model):
 
-    group = models.ForeignKey(Group, help_text=_('Select the group.'))
+    group = models.ForeignKey(Group, help_text=_('Select the group.'), on_delete=models.CASCADE)
 
     name = models.CharField(
         max_length=64, help_text=_('Enter this group\'s display name (ie: "Physicist reported to")')

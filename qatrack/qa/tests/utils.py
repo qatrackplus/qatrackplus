@@ -7,6 +7,12 @@ from qatrack.qa import models
 from qatrack.units.models import Unit, UnitType, Modality, PHOTON, Vendor
 
 
+def get_next_id(obj):
+    if obj is None:
+        return 1
+    return obj.id + 1
+
+
 def exists(app, model, field, value):
     a_model = apps.get_model(app, model)
     results = a_model.objects.filter(**{field: value})
@@ -60,7 +66,10 @@ def create_test(name=None, test_type=models.SIMPLE, choices=None, procedure=None
     return test
 
 
-def create_test_list(name="test_list"):
+def create_test_list(name=None):
+
+    if name is None:
+        name = 'test_list_%04d' % get_next_id(models.TestList.objects.order_by('id').last())
     user = create_user()
     test_list = models.TestList(
         name=name,
@@ -168,15 +177,37 @@ def create_modality(energy=6, particle=PHOTON, name=None):
     return m
 
 
-def create_unit_type(name="utype", vendor="vendor", model="model"):
-    vendor, _ = Vendor.objects.get_or_create(name=vendor)
+def create_vendor(name=None):
+
+    if name is None:
+        name = 'vendor_%04d' % get_next_id(Vendor.objects.order_by('id').last())
+
+    v, _ = Vendor.objects.get_or_create(name=name)
+    if _:
+        print('>>> Created Vendor ' + str(v))
+    return v
+
+
+def create_unit_type(name=None, vendor=None, model="model"):
+
+    if name is None:
+        name = 'unit_type_%04d' % get_next_id(UnitType.objects.order_by('id').last())
+    if vendor is None:
+        vendor = create_vendor()
     ut, _ = UnitType.objects.get_or_create(name=name, vendor=vendor, model=model)
     ut.save()
     return ut
 
 
-def create_unit(name="unit", number=1):
-    u = Unit(name=name, number=number)
+def create_unit(name=None, number=None):
+
+    if name is None:
+        name = 'unit_%04d' % get_next_id(models.Unit.objects.order_by('id').last())
+    if number is None:
+        last = models.Unit.objects.order_by('number').last()
+        number = last.number + 1 if last else 0
+
+    u = Unit(name=name, number=number, date_acceptance=timezone.now())
     u.type = create_unit_type()
     u.save()
     u.modalities.add(create_modality())
@@ -223,14 +254,19 @@ def create_tolerance(tol_type=models.ABSOLUTE, act_low=-2, tol_low=-1, tol_high=
     return tol
 
 
-def create_group(name="group"):
+def create_group(name=None):
+    if name is None:
+        name = 'group_%04d' % get_next_id(Group.objects.order_by('id').last())
     g = Group(name=name)
     g.save()
     g.permissions.add(Permission.objects.get(codename="add_testlistinstance"))
     return g
 
 
-def create_frequency(name="freq", slug="freq", nom=1, due=1, overdue=1):
+def create_frequency(name=None, slug=None, nom=1, due=1, overdue=1):
+    if name is None or slug is None:
+        name = 'frequency_%04d' % get_next_id(models.Frequency.objects.order_by('id').last())
+        slug = name
     f = models.Frequency(
         name=name, slug=slug,
         nominal_interval=nom, due_interval=due, overdue_interval=overdue
