@@ -66,13 +66,13 @@
                 AJAX_COMMENT: "{% url 'ajax_comment' %}",
                 UNIT_AT_DATA: "{% url 'get_unit_available_time_data' %}",
 
-                options_from_url_hash: function(hash){
+                options_from_url_query: function(query){
                     var options = [];
-                    if (hash.slice(0, 1) === "#"){
-                        hash = hash.slice(1);
+                    if (query.slice(0, 1) === "?"){
+                        query = query.slice(1);
                     }
                     var that = this;
-                    $.each(hash.split(this.OPTION_SEP), function(i, elem){
+                    $.each(query.split(this.OPTION_SEP), function(i, elem){
                         var k_v = elem.split(that.OPTION_DELIM);
                         options.push([k_v[0], k_v[1]]);
                     });
@@ -82,7 +82,7 @@
                 unit_test_chart_url: function(unit, test){
                     var unit_option = 'unit' + this.OPTION_DELIM + unit.number;
                     var test_option = 'slug' + this.OPTION_DELIM + test.slug;
-                    return this.CHARTS_URL + '#' + [unit_option, test_option].join(this.OPTION_SEP);
+                    return this.CHARTS_URL + '?' + [unit_option, test_option].join(this.OPTION_SEP);
                 },
                 unit_test_chart_link: function(unit, test, text, title) {
                     var url = this.unit_test_chart_url(unit, test);

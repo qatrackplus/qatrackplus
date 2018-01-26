@@ -384,7 +384,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
 
             loc += window.location.pathname;
 
-            $("#chart-url").val(loc + "#" + options.join(QAUtils.OPTION_SEP));
+            $("#chart-url").val(loc + "?" + options.join(QAUtils.OPTION_SEP));
         }
 
         function get_data_filters() {
@@ -2054,7 +2054,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
         function set_options_from_url() {
             var unit_ids, test_ids, freq_ids, test_list_ids;
 
-            var options = QAURLs.options_from_url_hash(document.location.hash);
+            var options = QAURLs.options_from_url_query(document.location.search);
 
             var units = get_filtered_option_values("units", options);
             var tests = get_filtered_option_values("tests", options);
