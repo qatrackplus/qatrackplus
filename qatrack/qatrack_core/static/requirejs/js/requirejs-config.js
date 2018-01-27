@@ -40,6 +40,7 @@ require.config({
         sidebar: siteConfig.STATIC_URL + 'qatrack_core/js/sidebar',
         site_base: siteConfig.STATIC_URL + 'qatrack_core/js/base',
         comments: siteConfig.STATIC_URL + 'qatrack_core/js/comments',
+        listablestatic: siteConfig.STATIC_URL + 'qatrack_core/js/listableStatic',
 
         // qa module:
         qa: siteConfig.STATIC_URL + 'qa/js/qa',
@@ -124,12 +125,15 @@ require.config({
         site_base: {
             deps: ['jquery']
         },
-    
+
+        listablestatic: {
+            deps: ['jquery', 'datatables', 'datatables.columnFilter', 'datatables.searchPlugins', 'datatables.sort', 'datatables.bootstrap', 'multiselect', 'datepicker', 'daterangepicker']
+        },
         // qa module:
         qa: {
             deps: ['jquery', 'qautils', 'site_base', 'lodash', 'daterangepicker', 'sidebar', 'datatables', 'datatables.columnFilter', 'inputmask', 'select2', 'sl_utils']
         },
-        
+
         // service_log module
         sl_utils: {
             deps: ['jquery', 'site_base', 'bootstrap']

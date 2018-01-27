@@ -1,30 +1,79 @@
 {% extends "site_base.html" %}
 {% load qa_tags %}
+{% load listable %}
 
 {% block head_title %}QA Program Overview by Due Date{% endblock %}
 
 {% block extra_css %}
+    <link href="{{ STATIC_URL }}listable/css/jquery.dataTables.bootstrap.css?v={{ VERSION }}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}datepicker/css/bootstrap-datepicker.min.css?v={{VERSION}}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}multiselect/css/bootstrap.multiselect.css?v={{VERSION}}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}daterangepicker/css/daterangepicker.css?v={{VERSION}}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}qatrack_core/css/custom-daterangepicker.css?v={{ VERSION }}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}qatrack_core/css/tables.css?v={{VERSION}}" rel="stylesheet">
     <link href="{{ STATIC_URL }}qa/css/qa.css?v={{ VERSION }}" rel="stylesheet">
 {% endblock extra_css %}
 
+{% block extra_js %}
+    {% autoescape off %}
+    {% endautoescape %}
+{% endblock %}
+
 {% block require_javascript %}
+
+require(['moment', 'listablestatic'], function(moment, listable){
+$(document).ready(function(){
+  var filters = [
+    {type: "text"},
+    {
+      type: "select",
+      multiple: "multiple",
+      values: [
+        {% for unit in units %}
+        {value: "{{ unit }}", label: "{{ unit }}" }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+      ]
+    },
+    {type: "text"},
+    {
+      type: "select",
+      multiple: "multiple",
+      values: [
+        {% for freq in freqs %}
+        {value: "{{ freq }}", label: "{{ freq }}"}{% if not forloop.last %},{% endif %}
+        {% endfor %}
+      ]
+    }
+  ];
+  $(".overview-table").each(function(i, e){
+    var id = $(this).attr("id");
+    var Listable = {
+        "DOM": "<'row'<'col-sm-5'i><'col-sm-7'p>><'row'<'col-sm-12'tr>><'row'<'col-sm-5'><'col-sm-7'p>>",
+        "autoWidth": false,
+        "columnDefs": [null, null, {'sType': "span-timestamp"}, null],
+        "columnFilterDefs": filters,
+        "cookie": "dt-" + i +"_" + id + "_",
+        "cookiePrefix": "dt-" + i + "_",
+        "cssInputClass": "btn-flat btn-sm input-sm full-width",
+        "cssTableClass": "table table-hover table-condensed",
+        "displayLength": 10,
+        "order": [],
+        paginate: false,
+        "paginationType": "bootstrap3",
+        "stateSave": true,
+        "tableId": "#" + id
+    };
+
+    listableStatic(Listable, moment);
+
+  });
+
+  });
+
+});
 {% endblock require_javascript %}
 
 {% block body %}
-    {% comment %}<div class="row">
-        <div class="col-md-12">
-            <div class="box">
-                <div class="box-header">
-                    <i class="fa fa-calendar fa-fw box-title" aria-hidden="true"></i>
-                    <h3 class="box-title">QA Program Overview By Due Date</h3>
-                    <p>View which test lists are due or coming due soon</p>
-                </div>
-                <div class="box-body">
-
-                </div>
-            </div>
-        </div>
-    </div>{% endcomment %}
     <div class="row">
         <div class="col-md-12">
             <h4 class="box-title"><i class="fa fa-calendar fa-fw" aria-hidden="true"></i>QA Program Overview By Due Date</h4>
@@ -33,7 +82,7 @@
     </div>
 
     <div class="row">
-        {% for display,utcs in due %}
+        {% for key, display, utcs in due %}
             <div class="col-md-6">
                 <div class="box">
                     <div class="box-header">
@@ -44,8 +93,14 @@
                         <div class="col-md-12">
                             {% if utcs %}
                                 <div class="due-status-lists">
-                                    <table class="table-responsive table-hover overview-table">
+                                  <table id="table-{{ key }}" class="table-responsive table-hover overview-table">
                                         <thead>
+                                            <tr>
+                                                <th><b>Name</b></th>
+                                                <th><b>Unit</b></th>
+                                                <th><b>Due Date</b></th>
+                                                <th><b>Freq</b></th>
+                                            </tr>
                                             <tr>
                                                 <th><b>Name</b></th>
                                                 <th><b>Unit</b></th>
@@ -67,7 +122,7 @@
                                                         {{utc|as_due_date}}
                                                     </td>
                                                     <td >
-                                                        <abbr title="Assigned to {{utc.assigned_to.name}}">{{utc.frequency.name}}</abbr>
+                                                        <abbr title="Assigned to {{utc.assigned_to.name}}">{% firstof utc.frequency.name "Ad-Hoc" %}</abbr>
                                                     </td>
                                                 </tr>
                                             {% endfor %}

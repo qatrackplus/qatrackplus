@@ -1,26 +1,31 @@
-
 import calendar
 import collections
-import json
 
+from braces.views import JSONResponseMixin, PermissionRequiredMixin
 from django.contrib import messages
-from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
-from django.db.models import Q, ObjectDoesNotExist
-from django.http import HttpResponseRedirect, Http404
+from django.db.models import Q
+from django.http import Http404, HttpResponseRedirect
 from django.utils import timezone
 from django.utils.translation import ugettext as _
-from django.views.generic import ListView, TemplateView, DetailView, View
+from django.views.generic import DetailView, ListView, TemplateView, View
 
-from .. import models, utils
-from . import forms
-from .base import TestListInstanceMixin, BaseEditTestListInstance, TestListInstances, UTCList
-from .perform import ChooseUnit
-
+from qatrack.service_log.models import (
+    ReturnToServiceQA,
+    ServiceEvent,
+    ServiceEventStatus,
+)
 from qatrack.units.models import Unit
-from qatrack.service_log.models import ServiceEvent, ReturnToServiceQA, ServiceEventStatus
 
-from braces.views import PermissionRequiredMixin, JSONResponseMixin
+from . import forms
+from .. import models
+from .base import (
+    BaseEditTestListInstance,
+    TestListInstanceMixin,
+    TestListInstances,
+    UTCList,
+)
+from .perform import ChooseUnit
 
 
 class TestListInstanceDetails(TestListInstanceMixin, DetailView):
@@ -363,6 +368,9 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
 
         due = collections.defaultdict(list)
 
+        units = set()
+        freqs = set()
+
         for utc in qs:
             due_date = utc.due_date.date()
             if due_date <= today:
@@ -377,10 +385,15 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
             elif due_date <= next_month_end:
                 due["next_month"].append(utc)
 
+            units.add(str(utc.unit))
+            freqs.add(str(utc.frequency or "Ad-Hoc"))
+
         ordered_due_lists = []
         for key, display in self.DUE_DISPLAY_ORDER:
-            ordered_due_lists.append((display, due[key]))
+            ordered_due_lists.append((key, display, due[key]))
         context["due"] = ordered_due_lists
+        context["units"] = sorted(units)
+        context["freqs"] = sorted(freqs)
         return context
 
 
