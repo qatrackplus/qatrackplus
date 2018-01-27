@@ -2,6 +2,7 @@ import calendar
 import collections
 
 from braces.views import JSONResponseMixin, PermissionRequiredMixin
+from django.conf import settings
 from django.contrib import messages
 from django.core.urlresolvers import reverse
 from django.db.models import Q
@@ -9,6 +10,7 @@ from django.http import Http404, HttpResponseRedirect
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django.views.generic import DetailView, ListView, TemplateView, View
+import pytz
 
 from qatrack.service_log.models import (
     ReturnToServiceQA,
@@ -341,9 +343,7 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
             "last_instance__testinstance_set__status",
             "last_instance__modified_by",
             "tests_object",
-        ).exclude(
-            due_date=None
-        ).order_by(
+        ).exclude(due_date=None).order_by(
             "frequency__nominal_interval",
             "unit__number",
             "name",
@@ -358,13 +358,14 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
 
         qs = self.get_queryset()
 
-        now = timezone.now()
+        tz = pytz.timezone(settings.TIME_ZONE)
+        now = timezone.now().astimezone(tz)
         today = now.date()
         friday = today + timezone.timedelta(days=(4 - today.weekday()) % 7)
         next_friday = friday + timezone.timedelta(days=7)
-        month_end = timezone.datetime(now.year, now.month, calendar.mdays[now.month]).date()
+        month_end = tz.localize(timezone.datetime(now.year, now.month, calendar.mdays[now.month])).date()
         next_month_start = month_end + timezone.timedelta(days=1)
-        next_month_end = timezone.datetime(next_month_start.year, next_month_start.month, calendar.mdays[next_month_start.month]).date()
+        next_month_end = tz.localize(timezone.datetime(next_month_start.year, next_month_start.month, calendar.mdays[next_month_start.month])).date()
 
         due = collections.defaultdict(list)
 
@@ -372,11 +373,11 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
         freqs = set()
 
         for utc in qs:
-            due_date = utc.due_date.date()
+            due_date = utc.due_date.astimezone(tz).date()
             if due_date <= today:
                 due["overdue"].append(utc)
             elif due_date <= friday:
-                if utc.last_instance is None or utc.last_instance.work_completed.date() != today:
+                if utc.last_instance is None or utc.last_instance.work_completed.astimezone(tz).date() != today:
                     due["this_week"].append(utc)
             elif due_date <= next_friday:
                 due["next_week"].append(utc)

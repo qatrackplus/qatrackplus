@@ -351,8 +351,6 @@ class TestListAdminForm(forms.ModelForm):
 
     def _clean(self):
         """Make sure a user doesn't try to add itself as sublist or duplicate tests"""
-        import ipdb; ipdb.set_trace()  # yapf: disable  # noqa
-        cd = superjjjjjjjjjjjjjjjj
         sublists = self.cleaned_data["sublists"]
         if self.instance in sublists:
             raise django.forms.ValidationError("You can't add a list to its own sublists")

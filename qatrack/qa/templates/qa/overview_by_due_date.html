@@ -57,7 +57,7 @@ $(document).ready(function(){
         "cssInputClass": "btn-flat btn-sm input-sm full-width",
         "cssTableClass": "table table-hover table-condensed",
         "displayLength": 10,
-        "order": [],
+        "order": [[2, 'asc']],
         paginate: false,
         "paginationType": "bootstrap3",
         "stateSave": true,
@@ -89,7 +89,7 @@ $(document).ready(function(){
     {#                    <i class="fa fa-calendar fa-fw box-title" aria-hidden="true"></i>#}
                         <h3 class="box-title">{{display}} {% if utcs%}({{utcs|length}}){%endif%}</h3>
                     </div>
-                    <div class="box-body row">
+                    <div class="box-body row due-status-container">
                         <div class="col-md-12">
                             {% if utcs %}
                                 <div class="due-status-lists">

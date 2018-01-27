@@ -447,6 +447,10 @@ th.review-ref {
     overflow-x: hidden;
     height:300px;
 }
+.due-status-container {
+
+    height:380px;
+}
 .pad-r-10 {
     padding-right: 10px;
 }
