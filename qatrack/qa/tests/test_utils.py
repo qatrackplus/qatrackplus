@@ -5,6 +5,7 @@ from django.core.serializers import deserialize
 from django.test import TestCase
 
 from qatrack.qa import models
+from qatrack.qa import testpack
 from qatrack.qa import utils as qautils
 from qatrack.qa.tests import utils
 
@@ -72,7 +73,7 @@ class TestImportExport(TestCase):
 
     def test_create_pack(self):
 
-        pack = qautils.create_testpack(self.tlqs, self.tlcqs)
+        pack = testpack.create_testpack(self.tlqs, self.tlcqs)
 
         assert 'meta' in pack
         assert 'objects' in pack
@@ -91,9 +92,9 @@ class TestImportExport(TestCase):
         assert list_found and test_found
 
     def test_save_pack(self):
-        pack = qautils.create_testpack(self.tlqs, self.tlcqs)
+        pack = testpack.create_testpack(self.tlqs, self.tlcqs)
         fp = io.StringIO()
-        qautils.save_test_pack(pack, fp)
+        testpack.save_test_pack(pack, fp)
         fp.seek(0)
         # check the accented character in test list 1 name was written
         assert "\\u00e9" in fp.read()
@@ -101,24 +102,24 @@ class TestImportExport(TestCase):
     def test_non_destructive_load(self):
         ntl = models.TestList.objects.count()
         nt = models.Test.objects.count()
-        pack = qautils.create_testpack(self.tlqs, self.tlcqs)
+        pack = testpack.create_testpack(self.tlqs, self.tlcqs)
         fp = io.StringIO()
-        qautils.save_test_pack(pack, fp)
+        testpack.save_test_pack(pack, fp)
         fp.seek(0)
-        qautils.load_test_pack(fp)
+        testpack.load_test_pack(fp)
         assert models.TestList.objects.count() == 2 * ntl
         assert models.Test.objects.count() == 2 * nt
 
     def test_load(self):
-        pack = qautils.create_testpack(self.tlqs, self.tlcqs)
+        pack = testpack.create_testpack(self.tlqs, self.tlcqs)
         models.TestList.objects.all().delete()
         models.Test.objects.all().delete()
         models.TestListCycle.objects.all().delete()
 
         fp = io.StringIO()
-        qautils.save_test_pack(pack, fp)
+        testpack.save_test_pack(pack, fp)
         fp.seek(0)
-        qautils.load_test_pack(fp)
+        testpack.load_test_pack(fp)
 
         assert models.TestList.objects.filter(name=self.tl1.name).exists()
         assert models.Test.objects.filter(name=self.t1.name).exists()
@@ -126,11 +127,11 @@ class TestImportExport(TestCase):
         assert self.tl1.name in models.TestListCycle.objects.values_list("test_lists__name", flat=True)
 
     def test_object_names(self):
-        pack = qautils.create_testpack(self.tlqs, self.tlcqs)
+        pack = testpack.create_testpack(self.tlqs, self.tlcqs)
         fp = io.StringIO()
-        qautils.save_test_pack(pack, fp)
+        testpack.save_test_pack(pack, fp)
         fp.seek(0)
-        names = qautils.test_pack_object_names(fp.read())
+        names = testpack.test_pack_object_names(fp.read())
         expected = {
             'test': [self.t1.name, self.t2.name, self.t3.name],
             'testlist': [self.tl1.name, self.tl2.name, self.tl3.name],
@@ -139,15 +140,15 @@ class TestImportExport(TestCase):
         assert names == expected
 
     def test_selective_load(self):
-        pack = qautils.create_testpack(self.tlqs, self.tlcqs)
+        pack = testpack.create_testpack(self.tlqs, self.tlcqs)
         models.TestList.objects.all().delete()
         models.Test.objects.all().delete()
         models.TestListCycle.objects.all().delete()
 
         fp = io.StringIO()
-        qautils.save_test_pack(pack, fp)
+        testpack.save_test_pack(pack, fp)
         fp.seek(0)
-        qautils.load_test_pack(fp, test_names=[self.t1.name], test_list_names=[self.tl1.name], cycle_names=[])
+        testpack.load_test_pack(fp, test_names=[self.t1.name], test_list_names=[self.tl1.name], cycle_names=[])
 
         assert models.TestList.objects.count() == 1
         assert models.Test.objects.count() == 1
@@ -155,22 +156,22 @@ class TestImportExport(TestCase):
 
     def test_existing_created_user_not_overwritten(self):
         user2 = utils.create_user(uname="user2")
-        pack = qautils.create_testpack(self.tlqs, self.tlcqs)
+        pack = testpack.create_testpack(self.tlqs, self.tlcqs)
 
         fp = io.StringIO()
-        qautils.save_test_pack(pack, fp)
+        testpack.save_test_pack(pack, fp)
         fp.seek(0)
-        qautils.load_test_pack(fp, user2)
+        testpack.load_test_pack(fp, user2)
 
         assert models.TestList.objects.get(slug=self.tl1.slug).created_by != user2
 
     def test_existing_objs_not_deleted(self):
-        pack = qautils.create_testpack(self.tlqs, self.tlcqs)
+        pack = testpack.create_testpack(self.tlqs, self.tlcqs)
 
         fp = io.StringIO()
-        qautils.save_test_pack(pack, fp)
+        testpack.save_test_pack(pack, fp)
         fp.seek(0)
-        qautils.load_test_pack(fp, test_names=[self.t1.name], test_list_names=[self.tl1.name], cycle_names=[])
+        testpack.load_test_pack(fp, test_names=[self.t1.name], test_list_names=[self.tl1.name], cycle_names=[])
 
         assert models.TestList.objects.filter(name__in=[self.tl2.name, self.tl3.name]).count() == 2
         assert models.Test.objects.filter(name__in=[self.t2.name, self.t3.name]).count() == 2
@@ -179,19 +180,19 @@ class TestImportExport(TestCase):
     def test_extra_tests(self):
         extra = utils.create_test("extra test")
         extra_qs = models.Test.objects.filter(pk=extra.pk)
-        pack = qautils.create_testpack(self.tlqs, self.tlcqs, extra_tests=extra_qs)
+        pack = testpack.create_testpack(self.tlqs, self.tlcqs, extra_tests=extra_qs)
         fp = io.StringIO()
-        qautils.save_test_pack(pack, fp)
+        testpack.save_test_pack(pack, fp)
         fp.seek(0)
         assert "extra test" in fp.read()
 
     def test_extra_tests_loaded(self):
         extra = utils.create_test("extra test")
         extra_qs = models.Test.objects.filter(pk=extra.pk)
-        pack = qautils.create_testpack(self.tlqs, self.tlcqs, extra_tests=extra_qs)
+        pack = testpack.create_testpack(self.tlqs, self.tlcqs, extra_tests=extra_qs)
         fp = io.StringIO()
-        qautils.save_test_pack(pack, fp)
+        testpack.save_test_pack(pack, fp)
         fp.seek(0)
         models.Test.objects.all().delete()
-        qautils.load_test_pack(fp, test_names=[extra.name], test_list_names=[], cycle_names=[])
+        testpack.load_test_pack(fp, test_names=[extra.name], test_list_names=[], cycle_names=[])
         assert models.Test.objects.filter(name=extra.name).exists()
