@@ -11,7 +11,7 @@ from django.views.generic import FormView
 from formtools.preview import FormPreview
 
 from qatrack.qa import models
-from qatrack.qa.utils import create_testpack, add_test_pack
+from qatrack.qa.testpack import create_testpack, add_test_pack
 
 
 class SetReferencesAndTolerancesForm(forms.Form):
