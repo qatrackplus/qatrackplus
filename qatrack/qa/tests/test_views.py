@@ -13,6 +13,7 @@ from django.test import TestCase
 from django.test.client import RequestFactory
 from django.utils import timezone
 from freezegun import freeze_time
+import pytest
 
 from qatrack.qa import models, views
 from qatrack.qa.views import forms
@@ -61,52 +62,31 @@ class TestURLS(TestCase):
         tli = utils.create_test_list_instance(unit_test_collection=utc)
 
         url_names = (
-            ("home", {}),
-            ("all_lists", {}),
-            ("charts", {}),
-            ("chart_data", {}),
-            ("control_chart", {}),
-            ("overview", {}),
-            ("overview_due_dates", {}),
-            ("review_all", {}),
-            ("review_utc", {
-                "pk": "%d" % utc.pk
-            }),
-            ("choose_review_frequency", {}),
-            ("review_by_frequency", {
-                "frequency": "daily/monthly/ad-hoc"
-            }),
-            ("choose_review_unit", {}),
-            ("review_by_unit", {
-                "unit_number": "1"
-            }),
-            ("review_by_unit", {
-                "unit_number": "1/2"
-            }),
+##            ("home", {}),
+#            ("all_lists", {}),
+#            ("charts", {}),
+#            ("chart_data", {}),
+#            ("control_chart", {}),
+#            ("overview", {}),
+#            ("overview_due_dates", {}),
+#            ("review_all", {}),
+#            ("review_utc", {"pk": "%d" % utc.pk}),
+#            ("choose_review_frequency", {}),
+#            ("review_by_frequency", {"frequency": "daily/monthly/ad-hoc"}),
+#            ("choose_review_unit", {}),
+#            ("review_by_unit", {"unit_number": "1"}),
+#            ("review_by_unit", {"unit_number": "1/2"}),
             ("complete_instances", {}),
-            ("review_test_list_instance", {
-                "pk": "%d" % tli.pk
-            }),
+            ("review_test_list_instance", {"pk": "%d" % tli.pk}),
             ("unreviewed", {}),
             ("in_progress", {}),
-            ("edit_tli", {
-                "pk": "%d" % (tli.pk)
-            }),
-            ("choose_unit", {}),
-            ("perform_qa", {
-                "pk": "%d" % utc.pk
-            }),
-            ("qa_by_unit", {
-                "unit_number": "1"
-            }),
-            ("qa_by_frequency", {
-                "frequency": "daily/ad-hoc"
-            }),
-            ("qa_by_unit_frequency", {
-                "unit_number": "1",
-                "frequency": "daily/ad-hoc"
-            }),
-        )
+#            ("edit_tli", {"pk": "%d" % (tli.pk)}),
+#            ("choose_unit", {}),
+#            ("perform_qa", {"pk": "%d" % utc.pk}),
+#            ("qa_by_unit", {"unit_number": "1"}),
+#            ("qa_by_frequency", {"frequency": "daily/ad-hoc"}),
+#            ("qa_by_unit_frequency", {"unit_number": "1", "frequency": "daily/ad-hoc"}),
+        )  # YAPF:disable
 
         for url, kwargs in url_names:
             logger.info("\t > testing: " + url)

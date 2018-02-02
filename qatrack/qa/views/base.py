@@ -293,7 +293,7 @@ class UTCList(BaseListableView):
     def get_queryset(self):
         """filter queryset for visibility and fetch relevent related objects"""
 
-        qs = super(UTCList, self).get_queryset()
+        qs = super(UTCList, self).get_queryset().order_by("pk")
 
         if self.visible_only:
             qs = qs.filter(visible_to__in=self.request.user.groups.all(),).distinct()
@@ -453,6 +453,9 @@ class TestListInstances(BaseListableView):
 
         return filters
 
+    def get_queryset(self, *args, **kwargs):
+        return super(TestListInstances, self).get_queryset(*args, **kwargs).order_by("-work_completed")
+
     def unit_test_collection__frequency__name(self, tli):
         freq = tli.unit_test_collection.frequency
         return freq.name if freq else "Ad Hoc"
@@ -519,10 +522,7 @@ def ajax_comment(request, next=None, using=None):
     # Fill out some initial data fields from an authenticated user, if present
     data = request.POST.copy()
 
-    try:
-        user_is_authenticated = request.user.is_authenticated()
-    except TypeError:  # Django >= 1.11
-        user_is_authenticated = request.user.is_authenticated
+    user_is_authenticated = request.user.is_authenticated
     if user_is_authenticated:
         if not data.get('name', ''):
             data["name"] = request.user.get_full_name() or request.user.get_username()
