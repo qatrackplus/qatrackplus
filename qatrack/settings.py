@@ -271,7 +271,7 @@ SESSION_SAVE_EVERY_REQUEST = True
 # Email and notification settings
 EMAIL_NOTIFICATION_USER = None
 EMAIL_NOTIFICATION_PWD = None
-EMAIL_NOTIFICATION_TEMPLATE = "notification_email.txt"
+EMAIL_NOTIFICATION_TEMPLATE = "notification_email.html"
 EMAIL_NOTIFICATION_SENDER = "qatrack"
 # use either a static subject or a customizable template
 # EMAIL_NOTIFICATION_SUBJECT = "QATrack+ Test Status Notification"

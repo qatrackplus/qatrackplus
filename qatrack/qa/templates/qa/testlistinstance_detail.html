@@ -17,7 +17,7 @@
 {% endblock %}
 
 {% block require_javascript %}
-    require(['qareview'], function() {
+    require(['jquery', 'qareview'], function() {
         $('body').removeClass("loading");
     });
 {% endblock require_javascript %}

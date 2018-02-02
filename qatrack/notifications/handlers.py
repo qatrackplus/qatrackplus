@@ -1,8 +1,10 @@
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.contrib.sites.models import Site
 from django.core.mail import send_mail
 from django.dispatch import receiver
-from django.template.loader import get_template
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 
 from qatrack.qa.signals import testlist_complete
 
@@ -30,26 +32,35 @@ def email_on_testlist_save(*args, **kwargs):
     from_address = getattr(settings, "EMAIL_NOTIFICATION_SENDER", "QATrack+")
     subject = getattr(settings, "EMAIL_NOTIFICATION_SUBJECT", "QATrack+ Notification")
     subject_template = getattr(settings, "EMAIL_NOTIFICATION_SUBJECT_TEMPLATE", "notification_email_subject.txt")
-    template = getattr(settings, "EMAIL_NOTIFICATION_TEMPLATE", "notification_email.txt")
+    template = getattr(settings, "EMAIL_NOTIFICATION_TEMPLATE", "notification_email.html")
     user = getattr(settings, "EMAIL_NOTIFICATION_USER", None)
     pwd = getattr(settings, "EMAIL_NOTIFICATION_PWD", None)
     fail_silently = getattr(settings, "EMAIL_FAIL_SILENTLY", True)
+
+    current_site = Site.objects.get_current()
 
     context = {
         "failing_tests": failing,
         "tolerance_tests": tolerance,
         "test_list_instance": test_list_instance,
+        "domain": current_site.domain,
     }
 
     if subject_template is not None:
-        subject = get_template(subject_template).render(context).strip()
+        subject = render_to_string(subject_template, context).strip()
 
-    body = get_template(template).render(context)
+    html_body = render_to_string(template, context)
+    text_body = strip_tags(html_body)
 
     send_mail(
-        subject, body, from_address, recipient_emails,
-        auth_user=user, auth_password=pwd,
-        fail_silently=fail_silently
+        subject,
+        text_body,
+        from_address,
+        recipient_emails,
+        html_message=html_body,
+        auth_user=user,
+        auth_password=pwd,
+        fail_silently=fail_silently,
     )
 
 

@@ -10,6 +10,7 @@ from django.contrib.contenttypes.fields import (
 from django.contrib.contenttypes.models import ContentType
 from django.core import urlresolvers
 from django.core.exceptions import ValidationError
+from django.core.urlresolvers import reverse
 from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models import Count, Q
@@ -1094,7 +1095,6 @@ class TestList(TestCollectionInterface):
         """return display representation of object"""
         return "(%s) %s" % (self.pk, self.name)
 
-
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         super(TestList, self).save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
         self.utcs.update(name=self.name)
@@ -1749,6 +1749,9 @@ class TestListInstance(models.Model):
             instances.append((ti, test_history))
 
         return instances, dates
+
+    def get_absolute_url(self):
+        return reverse("view_test_list_instance", kwargs={"pk": self.pk})
 
     def __str__(self):
         return "TestListInstance(pk=%s)" % self.pk

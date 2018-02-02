@@ -13,7 +13,6 @@ from django.test import TestCase
 from django.test.client import RequestFactory
 from django.utils import timezone
 from freezegun import freeze_time
-import pytest
 
 from qatrack.qa import models, views
 from qatrack.qa.views import forms
