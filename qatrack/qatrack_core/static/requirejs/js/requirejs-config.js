@@ -14,6 +14,7 @@ require.config({
         autosize: siteConfig.STATIC_URL + 'autosize/js/autosize.min',
         bootstrap: siteConfig.STATIC_URL + 'bootstrap/js/bootstrap.min',
         d3: siteConfig.STATIC_URL + 'd3/js/d3',
+        saveSvgAsPng: siteConfig.STATIC_URL + 'd3/js/saveSvgAsPng',
         datatables: siteConfig.STATIC_URL + 'listable/js/jquery.dataTables.min',
         'datatables.bootstrap': siteConfig.STATIC_URL + 'listable/js/jquery.dataTables.bootstrap',
         'datatables.columnFilter': siteConfig.STATIC_URL + 'listable/js/jquery.dataTables.columnFilter',
