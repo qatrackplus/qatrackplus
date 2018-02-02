@@ -1,17 +1,13 @@
-
 import collections
+from functools import reduce
 import json
 import math
 import os
 import traceback
 
+from braces.views import JSONResponseMixin, PermissionRequiredMixin
 import dateutil
 import dicom
-import matplotlib
-import matplotlib.pyplot as plt
-import numpy
-import scipy
-
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.sites.shortcuts import get_current_site
@@ -20,26 +16,27 @@ from django.core.files.base import ContentFile
 from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.forms.models import model_to_dict
-from django.http import HttpResponseRedirect, Http404
+from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.template.defaultfilters import filesizeformat
-from django.views.generic import View, CreateView, TemplateView
 from django.utils import timezone
 from django.utils.translation import ugettext as _
+from django.views.generic import CreateView, TemplateView, View
 from django_comments.models import Comment
+import matplotlib
+import matplotlib.pyplot as plt
+import numpy
+import scipy
+
+from qatrack.attachments.models import Attachment
+from qatrack.attachments.utils import imsave, to_bytes
+from qatrack.contacts.models import Contact
+from qatrack.service_log import models as sl_models
+from qatrack.units.models import Site, Unit
 
 from . import forms
-from .. import models, utils, signals
+from .. import models, signals, utils
 from .base import BaseEditTestListInstance, TestListInstances, UTCList, logger
-from qatrack.attachments.models import Attachment
-from qatrack.attachments.utils import to_bytes, imsave
-from qatrack.contacts.models import Contact
-from qatrack.units.models import Unit, Site
-from qatrack.service_log import models as sl_models
-
-from braces.views import JSONResponseMixin, PermissionRequiredMixin
-from functools import reduce
-
 
 DEFAULT_CALCULATION_CONTEXT = {
     "dicom": dicom,
@@ -198,7 +195,7 @@ class Upload(JSONResponseMixin, AttachmentMixin, View):
             attachment=f,
             label=f.name,
             comment=comment,
-            created_by=self.request.user
+            created_by=self.request.user,
         )
 
     def set_calculation_context(self):
@@ -208,7 +205,7 @@ class Upload(JSONResponseMixin, AttachmentMixin, View):
 
         meta_data = self.get_json_data("meta")
 
-        for d in ("work_completed", "work_started",):
+        for d in ("work_completed", "work_started"):
             try:
                 meta_data[d] = dateutil.parser.parse(meta_data[d])
             except (KeyError, AttributeError, TypeError):
@@ -313,9 +310,7 @@ class CompositeCalculation(JSONResponseMixin, AttachmentMixin, View):
             self.composite_tests = {}
             return
 
-        composite_tests = models.Test.objects.filter(
-            pk__in=composite_ids
-        ).values_list("slug", "calculation_procedure")
+        composite_tests = models.Test.objects.filter(pk__in=composite_ids).values_list("slug", "calculation_procedure")
 
         self.composite_tests = dict(composite_tests)
 
@@ -327,7 +322,7 @@ class CompositeCalculation(JSONResponseMixin, AttachmentMixin, View):
         values = self.get_json_data("qavalues")
         meta_data = self.get_json_data("meta")
 
-        for d in ("work_completed", "work_started",):
+        for d in ("work_completed", "work_started"):
             try:
                 meta_data[d] = dateutil.parser.parse(meta_data[d])
             except (TypeError, KeyError, AttributeError):
@@ -427,12 +422,24 @@ class ChooseUnit(TemplateView):
             if q.filter(unit__site__isnull=True).exists():
                 unit_site_types['zzzNonezzz'] = collections.defaultdict(list)
 
-            q = q.values('unit', 'unit__type__name', 'unit__name', 'unit__number', 'unit__id', 'unit__site__name').order_by(units_ordering).distinct()
+            q = q.values(
+                'unit',
+                'unit__type__name',
+                'unit__name',
+                'unit__number',
+                'unit__id',
+                'unit__site__name',
+            ).order_by(units_ordering).distinct()
 
             freq_qs = models.Frequency.objects.prefetch_related('unittestcollections__unit').all()
 
             for unit in q:
-                unit['frequencies'] = freq_qs.filter(unittestcollections__unit_id=unit['unit__id']).distinct().values('slug', 'name')
+                unit['frequencies'] = freq_qs.filter(
+                    unittestcollections__unit_id=unit['unit__id'],
+                ).distinct().values(
+                    'slug',
+                    'name',
+                )
 
                 if unit['unit__site__name']:
                     unit_site_types[unit['unit__site__name']][unit['unit__type__name']].append(unit)
@@ -441,7 +448,9 @@ class ChooseUnit(TemplateView):
 
             ordered = {}
             for s in unit_site_types:
-                ordered[s] = sorted(list(unit_site_types[s].items()), key=lambda x: min([u[units_ordering] for u in x[1]]))
+                ordered[s] = sorted(
+                    list(unit_site_types[s].items()), key=lambda x: min([u[units_ordering] for u in x[1]])
+                )
 
             ordered = collections.OrderedDict(sorted(ordered.items(), key=lambda s: s[0]))
 
@@ -453,12 +462,15 @@ class ChooseUnit(TemplateView):
             context['split_by'] = int(split_by)
 
         else:
-            q = q.values('unit', 'unit__type__name', 'unit__name', 'unit__number', 'unit__id').order_by(units_ordering).distinct()
+            q = q.values('unit', 'unit__type__name', 'unit__name', 'unit__number',
+                         'unit__id').order_by(units_ordering).distinct()
             freq_qs = models.Frequency.objects.prefetch_related('unittestcollections__unit').all()
 
             unit_types = collections.defaultdict(list)
             for unit in q:
-                unit['frequencies'] = freq_qs.filter(unittestcollections__unit_id=unit['unit__id']).distinct().values('slug', 'name')
+                unit['frequencies'] = freq_qs.filter(unittestcollections__unit_id=unit['unit__id']).distinct().values(
+                    'slug', 'name'
+                )
                 unit_types[unit["unit__type__name"]].append(unit)
 
             ordered = sorted(list(unit_types.items()), key=lambda x: min([u[units_ordering] for u in x[1]]))
@@ -495,7 +507,6 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         :model:`qa.TestListCycle`'s (where N is number of lists in the cycle).
         """
 
-        from django.db.models import Prefetch
         requested_day = self.get_requested_day_to_perform()
         self.actual_day, self.test_list = self.unit_test_col.get_list(requested_day)
         if self.test_list is None:
@@ -510,7 +521,9 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
         self.unit_test_col = get_object_or_404(
             models.UnitTestCollection.objects.select_related(
-                "unit", "frequency", "last_instance"
+                "unit",
+                "frequency",
+                "last_instance",
             ).filter(
                 active=True,
                 visible_to__in=self.request.user.groups.all(),
@@ -550,7 +563,6 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         ).select_related(
             "reference",
             "test__category",
-            # "test__pk",
             "tolerance",
             "unit",
         )
@@ -698,10 +710,8 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             messages.add_message(
                 request=self.request,
                 level=messages.INFO,
-                message='Changed status of service event(s) %s to "%s".' % (
-                    ', '.join(str(x) for x in changed_se),
-                    sl_models.ServiceEventStatus.get_default().name
-                )
+                message='Changed status of service event(s) %s to "%s".' %
+                (', '.join(str(x) for x in changed_se), sl_models.ServiceEventStatus.get_default().name)
             )
 
         if not self.object.in_progress:
@@ -711,8 +721,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
                 signals.testlist_complete.send(sender=self, instance=self.object, created=False)
             except:
                 messages.add_message(
-                    request=self.request,
-                    message='Error sending notification email.', level=messages.ERROR
+                    request=self.request, message='Error sending notification email.', level=messages.ERROR
                 )
 
         # let user know request succeeded and return to unit list
@@ -752,7 +761,9 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         self.set_unit_test_infos()
 
         if self.request.method == "POST":
-            formset = forms.CreateTestInstanceFormSet(self.request.POST, self.request.FILES, unit_test_infos=self.unit_test_infos, user=self.request.user)
+            formset = forms.CreateTestInstanceFormSet(
+                self.request.POST, self.request.FILES, unit_test_infos=self.unit_test_infos, user=self.request.user
+            )
         else:
             formset = forms.CreateTestInstanceFormSet(unit_test_infos=self.unit_test_infos, user=self.request.user)
 
@@ -771,8 +782,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             context['days'] = self.unit_test_col.tests_object.days_display()
 
         in_progress = models.TestListInstance.objects.in_progress().filter(
-            unit_test_collection=self.unit_test_col,
-            test_list=self.test_list
+            unit_test_collection=self.unit_test_col, test_list=self.test_list
         )
         context["test_list"] = self.test_list
         context["in_progress"] = in_progress
@@ -786,11 +796,11 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             context['se_statuses'] = {rtsqa.service_event.id: rtsqa.service_event.service_status.id}
             context['rtsqa_id'] = rtsqa_id
             context['rtsqa_for_se'] = rtsqa.service_event
-        # else:
-        #     context['se_statuses'] = {}
-        # context['status_tag_colours'] = sl_models.ServiceEventStatus.get_colour_dict()
 
-        context['attachments'] = context['test_list'].attachment_set.all() | self.unit_test_col.tests_object.attachment_set.all()
+        context['attachments'] = (
+            context['test_list'].attachment_set.all() |
+            self.unit_test_col.tests_object.attachment_set.all()
+        )
 
         return context
 
@@ -878,10 +888,8 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
                 messages.add_message(
                     request=self.request,
                     level=messages.INFO,
-                    message='Changed status of service event(s) %s to "%s".' % (
-                        ', '.join(str(x) for x in changed_se),
-                        sl_models.ServiceEventStatus.get_default().name
-                    )
+                    message='Changed status of service event(s) %s to "%s".' %
+                    (', '.join(str(x) for x in changed_se), sl_models.ServiceEventStatus.get_default().name)
                 )
 
             if not self.object.in_progress:
@@ -890,7 +898,8 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
                 except:
                     messages.add_message(
                         request=self.request,
-                        message='Error sending notification email.', level=messages.ERROR
+                        message='Error sending notification email.',
+                        level=messages.ERROR,
                     )
 
             # let user know request succeeded and return to unit list
@@ -993,21 +1002,21 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
     def get_context_data(self, **kwargs):
 
         context = super(EditTestListInstance, self).get_context_data(**kwargs)
-        self.unit_test_infos = [f.instance.unit_test_info for f in context["formset"]]
+        uti_pks = [f.instance.unit_test_info.pk for f in context["formset"]]
+        utis = models.UnitTestInfo.objects.filter(pk__in=uti_pks).select_related(
+            "reference",
+            "tolerance",
+            "unit",
+            "test__category",
+        ).prefetch_related(
+            "test__attachment_set",
+        )
+        self.unit_test_infos = list(sorted(utis, key=lambda x: uti_pks.index(x.pk)))
+
         context["unit_test_infos"] = json.dumps(self.template_unit_test_infos())
 
-        # rtsqa_id = self.request.GET.get('rtsqa', None)
-        # print(rtsqa_id)
-        # if rtsqa_id:
-        #     rtsqa = sl_models.ReturnToServiceQA.objects.get(pk=rtsqa_id)
-        #     context['se_statuses'] = {rtsqa.service_event.id: rtsqa.service_event.service_status.id}
-        #     context['is_rtsqa'] = True
-        #     context['rtsqa_for_se'] = rtsqa.service_event
-        # else:
-        #     context['se_statuses'] = {}
-        # context['status_tag_colours'] = sl_models.ServiceEventStatus.get_colour_dict()
-
-        context['attachments'] = context['test_list'].attachment_set.all() | self.object.unit_test_collection.tests_object.attachment_set.all()
+        context['attachments'] = context['test_list'].attachment_set.all(
+        ) | self.object.unit_test_collection.tests_object.attachment_set.all()
 
         return context
 
@@ -1084,9 +1093,7 @@ class UnitList(UTCList):
     def get_queryset(self):
         """filter queryset by frequency"""
         qs = super(UnitList, self).get_queryset()
-        self.units = Unit.objects.filter(
-            number__in=self.kwargs["unit_number"].split("/")
-        )
+        self.units = Unit.objects.filter(number__in=self.kwargs["unit_number"].split("/"))
         return qs.filter(unit__in=self.units)
 
     def get_page_title(self):
