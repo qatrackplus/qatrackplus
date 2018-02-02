@@ -3,6 +3,7 @@ import os
 import sys
 
 import matplotlib
+
 matplotlib.use("Agg")
 
 # -----------------------------------------------------------------------------
@@ -326,7 +327,11 @@ AD_MEMBERSHIP_REQ = []  # eg ["*TOHCC - All Staff | Tout le personnel  - CCLHO"]
 AD_DEBUG_FILE = None
 AD_DEBUG = False
 
-CLEAN_USERNAME_STRING = ''
+CLEAN_USERNAME_STRING = AD_CLEAN_USERNAME_STRING = ''
+
+# define a function called AD_CLEAN_USERNAME in local_settings.py if you
+# wish to clean usernames before sending to ldap server
+AD_CLEAN_USERNAME = None
 
 # ------------------------------------------------------------------------------
 # Logging Settings
