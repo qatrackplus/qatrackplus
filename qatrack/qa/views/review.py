@@ -9,7 +9,13 @@ from django.db.models import Q
 from django.http import Http404, HttpResponseRedirect
 from django.utils import timezone
 from django.utils.translation import ugettext as _
-from django.views.generic import DetailView, ListView, TemplateView, View
+from django.views.generic import (
+    DeleteView,
+    DetailView,
+    ListView,
+    TemplateView,
+    View,
+)
 import pytz
 
 from qatrack.service_log.models import (
@@ -141,6 +147,20 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         tests = [f.instance.unit_test_info.test for f in context['formset']]
         context['borders'] = self.object.test_list.sublist_borders(tests)
         return context
+
+
+class TestListInstanceDelete(PermissionRequiredMixin, DeleteView):
+    """
+    This view is for deleting a :model:`qa.TestListInstance`
+    """
+
+    permission_required = "qa.delete_testlistinstance"
+    raise_exception = True
+
+    model = models.TestListInstance
+
+    def get_success_url(self):
+        return self.request.GET.get("next", reverse("home"))
 
 
 class UTCReview(PermissionRequiredMixin, UTCList):
@@ -365,7 +385,9 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
         next_friday = friday + timezone.timedelta(days=7)
         month_end = tz.localize(timezone.datetime(now.year, now.month, calendar.mdays[now.month])).date()
         next_month_start = month_end + timezone.timedelta(days=1)
-        next_month_end = tz.localize(timezone.datetime(next_month_start.year, next_month_start.month, calendar.mdays[next_month_start.month])).date()
+        next_month_end = tz.localize(
+            timezone.datetime(next_month_start.year, next_month_start.month, calendar.mdays[next_month_start.month])
+        ).date()
 
         due = collections.defaultdict(list)
 
@@ -471,11 +493,12 @@ class OverviewObjects(JSONResponseMixin, View):
                             last_instance_pfs = 'New List'
 
                         ds = utc.due_status()
+                        last_completed = utc.last_instance.work_completed if utc.last_instance else None
                         unit_freqs[freq_name][utc.name] = {
                             'id': utc.pk,
                             'url': reverse('review_utc', args=(utc.pk,)),
                             'last_instance_status': last_instance_pfs,
-                            'last_instance_work_completed': utc.last_instance.work_completed if utc.last_instance else None,
+                            'last_instance_work_completed': last_completed,
                             'due_date': utc.due_date,
                             'due_status': ds
                         }
