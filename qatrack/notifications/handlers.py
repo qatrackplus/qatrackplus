@@ -5,6 +5,7 @@ from django.core.mail import send_mail
 from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+import pynliner
 
 from qatrack.qa.signals import testlist_complete
 
@@ -49,7 +50,7 @@ def email_on_testlist_save(*args, **kwargs):
     if subject_template is not None:
         subject = render_to_string(subject_template, context).strip()
 
-    html_body = render_to_string(template, context)
+    html_body = pynliner.fromString(render_to_string(template, context))
     text_body = strip_tags(html_body)
 
     send_mail(
