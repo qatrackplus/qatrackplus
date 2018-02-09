@@ -295,8 +295,10 @@ class CompositeCalculation(JSONResponseMixin, AttachmentMixin, View):
                 }
             finally:
                 # clean up calculation context for next test
-                if "result" in self.calculation_context:
-                    del self.calculation_context["result"]
+                to_clean = ['result'] + [k for k in self.calculation_context.keys() if k not in self.context_keys]
+                to_clean = [k for k in to_clean if k in self.calculation_context]
+                for k in to_clean:
+                    del self.calculation_context[k]
                 del self.user_attached[:]
 
         return self.render_json_response({"success": True, "errors": [], "results": results})
@@ -342,7 +344,10 @@ class CompositeCalculation(JSONResponseMixin, AttachmentMixin, View):
 
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
 
+        self.context_keys = list(self.calculation_context.keys())
+
         for slug, val in values.items():
+            self.context_keys.append(slug)
             if slug not in self.composite_tests:
                 self.calculation_context[slug] = val
 
