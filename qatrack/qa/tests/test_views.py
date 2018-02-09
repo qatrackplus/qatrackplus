@@ -521,6 +521,7 @@ class TestComposite(TestCase):
                     "value": 3.0,
                     "error": None,
                     "user_attached": [],
+                    "comment": None,
                 }
             },
             "success": True
@@ -578,6 +579,7 @@ class TestComposite(TestCase):
                         "'dict' and 'dict'\n"
                     ),
                     'user_attached': [],
+                    "comment": "",
                     'value':
                         None
                 }
@@ -662,8 +664,8 @@ class TestComposite(TestCase):
                         "NameError: name 'foo' is not defined\n"
                     ),
                     'user_attached': [],
-                    'value':
-                        None
+                    "comment": "",
+                    'value': None,
                 }
             },
             'success': True
@@ -711,6 +713,7 @@ class TestComposite(TestCase):
                     'error': None,
                     'value': 3.0,
                     "user_attached": [],
+                    "comment": None,
                 }
             },
             'success': True,

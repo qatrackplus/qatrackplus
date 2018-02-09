@@ -66,62 +66,46 @@ def set_attachment_owners(test_list_instance, attachments):
                 attachment.testinstance = ti
                 attachment.save()
 
-
-class AttachmentMixin(object):
-
-    def get_write_file_func(self):
-
-        self.user_attached = []
-
-        def write(fname, obj):
-            fname = os.path.basename(fname)
-            data = imsave(obj, fname)
-            if data is None:
-                data = to_bytes(obj, fname)
-
-            f = ContentFile(data, fname)
-
-            attachment = Attachment(
-                attachment=f,
-                comment=_("Composite created file"),
-                created_by=self.request.user,
-            )
-            attachment.save()
-
-            self.user_attached.append(self.attachment_info(attachment))
-
-        return write
-
-    def attachment_info(self, attachment):
-        return {
-            'attachment_id': attachment.id,
-            'name': os.path.basename(attachment.attachment.name),
-            'size': filesizeformat(attachment.attachment.size),
-            'url': attachment.attachment.url,
-            'is_image': attachment.is_image,
-        }
-
-    def set_calculation_context(self):
-
-        return {
-            "write_file": self.get_write_file_func(),
-        }
-
-    def post(self, *args, **kwargs):
-        """
-        At the end of any view which may use mpl.pyplot to generate a plot
-        we need to clean the figure, to attempt to  prevent any crosstalk
-        between plots.
-
-        Generally people should use the OO interface to MPL rather than
-        pyplot, because pyplot is not threadsafe.
-        """
-        resp = super(AttachmentMixin, self).post(*args, **kwargs)
-        plt.clf()
-        return resp
+def attachment_info(attachment):
+    return {
+        'attachment_id': attachment.id,
+        'name': os.path.basename(attachment.attachment.name),
+        'size': filesizeformat(attachment.attachment.size),
+        'url': attachment.attachment.url,
+        'is_image': attachment.is_image,
+    }
 
 
-class Upload(JSONResponseMixin, AttachmentMixin, View):
+class CompositeUtils:
+
+    def __init__(self, request, context):
+        self.context = context
+        self.context['__user_attached__'] = []
+        self.request = request
+
+    def set_comment(self, comment):
+        self.context["__comment__"] = comment
+
+    def write_file(self, fname, obj):
+        fname = os.path.basename(fname)
+        data = imsave(obj, fname)
+        if data is None:
+            data = to_bytes(obj, fname)
+
+        f = ContentFile(data, fname)
+
+        attachment = Attachment(
+            attachment=f,
+            comment=_("Composite created file"),
+            created_by=self.request.user,
+        )
+        attachment.save()
+
+        self.context["__user_attached__"].append(attachment_info(attachment))
+
+
+
+class Upload(JSONResponseMixin, View):
     """View for handling AJAX upload requests when performing QA"""
 
     # use html for IE8's sake :(
@@ -135,7 +119,7 @@ class Upload(JSONResponseMixin, AttachmentMixin, View):
             else:
                 self.handle_upload()
 
-            return self.run_calc()
+            resp = self.run_calc()
         except Exception:
             msg = traceback.format_exc()
             results = {
@@ -144,7 +128,17 @@ class Upload(JSONResponseMixin, AttachmentMixin, View):
                 "result": None,
                 "user_attached": [],
             }
-            return self.render_json_response(results)
+            resp = self.render_json_response(results)
+        """
+        At the end of any view which may use mpl.pyplot to generate a plot
+        we need to clean the figure, to attempt to  prevent any crosstalk
+        between plots.
+
+        Generally people should use the OO interface to MPL rather than
+        pyplot, because pyplot is not threadsafe.
+        """
+        plt.clf()
+        return resp
 
     def reprocess(self):
         self.attach_id = self.request.POST.get("attachment_id")
@@ -159,10 +153,11 @@ class Upload(JSONResponseMixin, AttachmentMixin, View):
 
         results = {
             'attachment_id': self.attachment.id,
-            'attachment': self.attachment_info(self.attachment),
+            'attachment': attachment_info(self.attachment),
             'success': False,
             'errors': [],
             "result": None,
+            "comment": "",
             "user_attached": [],
         }
 
@@ -177,7 +172,8 @@ class Upload(JSONResponseMixin, AttachmentMixin, View):
             key = "result" if "result" in self.calculation_context else test.slug
             results["result"] = self.calculation_context[key]
             results["success"] = True
-            results["user_attached"] = self.user_attached
+            results["user_attached"] = list(self.calculation_context.get("__user_attached__", []))
+            results["comment"] = self.calculation_context.get("__comment__")
         except models.Test.DoesNotExist:
             results["errors"].append("Test with that ID does not exist")
         except Exception:
@@ -201,7 +197,7 @@ class Upload(JSONResponseMixin, AttachmentMixin, View):
     def set_calculation_context(self):
         """set up the environment that the composite test will be calculated in"""
 
-        self.calculation_context = super(Upload, self).set_calculation_context()
+        self.calculation_context = {}
 
         meta_data = self.get_json_data("meta")
 
@@ -211,15 +207,14 @@ class Upload(JSONResponseMixin, AttachmentMixin, View):
             except (KeyError, AttributeError, TypeError):
                 pass
 
-        refs = self.get_json_data("refs")
-        tols = self.get_json_data("tols")
-
         self.calculation_context.update({
             "FILE": open(self.attachment.attachment.path, "r"),
             "BIN_FILE": self.attachment.attachment,
             "META": meta_data,
-            "REFS": refs,
-            "TOLS": tols,
+            "REFS": self.get_json_data("refs"),
+            "TOLS": self.get_json_data("tols"),
+            "COMMENTS": self.get_json_data("comments"),
+            "UTILS": CompositeUtils(self.request, self.calculation_context),
         })
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
 
@@ -237,7 +232,7 @@ class Upload(JSONResponseMixin, AttachmentMixin, View):
             return
 
 
-class CompositeCalculation(JSONResponseMixin, AttachmentMixin, View):
+class CompositeCalculation(JSONResponseMixin, View):
     """validate all qa tests in the request for the :model:`TestList` with id test_list_id"""
 
     def get_json_data(self, name):
@@ -283,7 +278,8 @@ class CompositeCalculation(JSONResponseMixin, AttachmentMixin, View):
                 results[slug] = {
                     'value': result,
                     'error': None,
-                    'user_attached': list(self.user_attached),
+                    'user_attached': list(self.calculation_context.get("__user_attached__", [])),
+                    'comment': self.calculation_context.get("__comment__"),
                 }
                 self.calculation_context[slug] = result
             except Exception:
@@ -291,15 +287,27 @@ class CompositeCalculation(JSONResponseMixin, AttachmentMixin, View):
                 results[slug] = {
                     'value': None,
                     'error': "Invalid Test Procedure: %s" % msg,
+                    'comment': "",
                     'user_attached': [],
                 }
             finally:
                 # clean up calculation context for next test
                 to_clean = ['result'] + [k for k in self.calculation_context.keys() if k not in self.context_keys]
-                to_clean = [k for k in to_clean if k in self.calculation_context]
+                to_clean = set([k for k in to_clean if k in self.calculation_context])
                 for k in to_clean:
                     del self.calculation_context[k]
-                del self.user_attached[:]
+
+                del self.calculation_context['__user_attached__'][:]
+
+        """
+        At the end of any view which may use mpl.pyplot to generate a plot
+        we need to clean the figure, to attempt to  prevent any crosstalk
+        between plots.
+
+        Generally people should use the OO interface to MPL rather than
+        pyplot, because pyplot is not threadsafe.
+        """
+        plt.clf()
 
         return self.render_json_response({"success": True, "errors": [], "results": results})
 
@@ -319,8 +327,7 @@ class CompositeCalculation(JSONResponseMixin, AttachmentMixin, View):
     def set_calculation_context(self):
         """set up the environment that the composite test will be calculated in"""
 
-        self.calculation_context = super(CompositeCalculation, self).set_calculation_context()
-
+        self.calculation_context = {}
         values = self.get_json_data("qavalues")
         meta_data = self.get_json_data("meta")
 
@@ -333,13 +340,12 @@ class CompositeCalculation(JSONResponseMixin, AttachmentMixin, View):
         if values is None:
             return
 
-        refs = self.get_json_data("refs")
-        tols = self.get_json_data("tols")
-
         self.calculation_context.update({
             "META": meta_data,
-            "REFS": refs,
-            "TOLS": tols,
+            "REFS": self.get_json_data("refs"),
+            "TOLS": self.get_json_data("tols"),
+            "COMMENTS": self.get_json_data("comments"),
+            "UTILS": CompositeUtils(self.request, self.calculation_context),
         })
 
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)

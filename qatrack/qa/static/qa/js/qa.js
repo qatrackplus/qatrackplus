@@ -303,7 +303,10 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jqu
         };
         autosize(self.comment.find('textarea'));
         this.set_comment_icon(); //may already contain comment on initialization
-        this.comment_box.blur(this.set_comment_icon);
+        this.comment_box.blur(function(){
+            self.set_comment_icon();
+            $.Topic("valueChanged").publish();
+        });
 
         this.show_procedure = this.row.find("td.qa-showproc a");
         this.procedure = this.comment.next();
@@ -325,6 +328,10 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jqu
             $.Topic("valueChanged").publish();
             $.Topic("qaUpdated").publish();
         });
+
+        this.set_comment = function(comment){
+            self.comment_box.val(comment);
+        }
 
         this.set_value = function(value, user_attached){
             //set value manually and update inputs accordingly
@@ -404,7 +411,8 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jqu
                         test_list_instance: editing_tli,
                         meta: JSON.stringify(get_meta_data()),
                         refs: JSON.stringify(get_ref_data()),
-                        tols: JSON.stringify(get_tol_data())
+                        tols: JSON.stringify(get_tol_data()),
+                        comments: JSON.stringify(get_comments())
                     };
 
                     $.ajax({
@@ -531,7 +539,8 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jqu
                     "test_id": self.test_info.test.id,
                     "meta": JSON.stringify(get_meta_data()),
                     "refs": JSON.stringify(get_ref_data()),
-                    "tols": JSON.stringify(get_tol_data())
+                    "tols": JSON.stringify(get_tol_data()),
+                    "comments": JSON.stringify(get_comments())
                 }
 
             });
@@ -557,6 +566,10 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jqu
                     self.status.attr("title", response_data.errors[0]);
                 } else {
                     self.set_value(response_data);
+                    if (response_data.comment){
+                        self.set_comment(response_data.comment);
+                        self.set_comment_icon();
+                    }
                     self.status.addClass("btn-success").text("Success");
                     self.status.attr("title", response_data.url);
 
@@ -624,6 +637,15 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jqu
         return _.zipObject(tli.slugs, tol_values);
     }
 
+    function get_comments(){
+
+        var comments = _.map(tli.test_instances, function(ti){
+            var comment = ti.comment_box.val().trim();
+            return comment;
+        });
+        return _.zipObject(tli.slugs, comments);
+    }
+
     function TestListInstance(){
         var self = this;
 
@@ -669,13 +691,15 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jqu
             var meta = get_meta_data();
             var refs = get_ref_data();
             var tols = get_tol_data();
+            var comments = get_comments();
 
             var data = {
                 qavalues:qa_values,
                 composite_ids:self.composite_ids,
                 meta: meta,
                 refs: refs,
-                tols: tols
+                tols: tols,
+                comments: comments
             };
 
             var on_success = function(data, status, XHR){
@@ -690,6 +714,10 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jqu
                     _.each(data.results,function(result, name){
                         var ti = self.tests_by_slug[name];
                         if (!ti.skipped){
+                            if (result.comment){
+                                ti.set_comment(result.comment);
+                                ti.set_comment_icon();
+                            }
                             ti.set_value(result.value, result.user_attached);
 
                             if (result.error){
