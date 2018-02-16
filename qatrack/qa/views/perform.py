@@ -1,13 +1,17 @@
 import collections
-from functools import reduce
 import json
 import math
 import os
 import traceback
+from functools import reduce
 
-from braces.views import JSONResponseMixin, PermissionRequiredMixin
 import dateutil
 import dicom
+import matplotlib
+import matplotlib.pyplot as plt
+import numpy
+import scipy
+from braces.views import JSONResponseMixin, PermissionRequiredMixin
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.sites.shortcuts import get_current_site
@@ -23,10 +27,6 @@ from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django.views.generic import CreateView, TemplateView, View
 from django_comments.models import Comment
-import matplotlib
-import matplotlib.pyplot as plt
-import numpy
-import scipy
 
 from qatrack.attachments.models import Attachment
 from qatrack.attachments.utils import imsave, to_bytes
@@ -66,6 +66,7 @@ def set_attachment_owners(test_list_instance, attachments):
                 attachment.testinstance = ti
                 attachment.save()
 
+
 def attachment_info(attachment):
     return {
         'attachment_id': attachment.id,
@@ -78,13 +79,17 @@ def attachment_info(attachment):
 
 class CompositeUtils:
 
-    def __init__(self, request, context):
+    def __init__(self, request, context, comments):
         self.context = context
         self.context['__user_attached__'] = []
         self.request = request
+        self.comments = comments
 
     def set_comment(self, comment):
         self.context["__comment__"] = comment
+
+    def get_comment(self, slug):
+        return self.comments.get(slug, "")
 
     def write_file(self, fname, obj):
         fname = os.path.basename(fname)
@@ -102,7 +107,6 @@ class CompositeUtils:
         attachment.save()
 
         self.context["__user_attached__"].append(attachment_info(attachment))
-
 
 
 class Upload(JSONResponseMixin, View):
@@ -207,14 +211,14 @@ class Upload(JSONResponseMixin, View):
             except (KeyError, AttributeError, TypeError):
                 pass
 
+        comments = self.get_json_data("comments")
         self.calculation_context.update({
             "FILE": open(self.attachment.attachment.path, "r"),
             "BIN_FILE": self.attachment.attachment,
             "META": meta_data,
             "REFS": self.get_json_data("refs"),
             "TOLS": self.get_json_data("tols"),
-            "COMMENTS": self.get_json_data("comments"),
-            "UTILS": CompositeUtils(self.request, self.calculation_context),
+            "UTILS": CompositeUtils(self.request, self.calculation_context, comments),
         })
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
 
@@ -340,12 +344,12 @@ class CompositeCalculation(JSONResponseMixin, View):
         if values is None:
             return
 
+        comments = self.get_json_data("comments")
         self.calculation_context.update({
             "META": meta_data,
             "REFS": self.get_json_data("refs"),
             "TOLS": self.get_json_data("tols"),
-            "COMMENTS": self.get_json_data("comments"),
-            "UTILS": CompositeUtils(self.request, self.calculation_context),
+            "UTILS": CompositeUtils(self.request, self.calculation_context, comments),
         })
 
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
