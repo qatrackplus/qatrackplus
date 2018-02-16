@@ -27,6 +27,7 @@ class ServiceEventStatusFormAdmin(ModelForm):
         fields = '__all__'
 
     def clean_is_default(self):
+
         is_default = self.cleaned_data['is_default']
         if not is_default and self.initial['is_default']:
             raise ValidationError('There must be one default status. Edit another status to be default first.')
@@ -75,80 +76,6 @@ class ServiceTypeAdmin(DeleteOnlyFromOwnFormAdmin):
 class ServiceAreaAdmin(DeleteOnlyFromOwnFormAdmin):
     list_display = ['name']
     filter_horizontal = ("units",)
-
-
-# class ServiceEventAdminForm(ModelForm):
-#
-#     service_event_related = ModelMultipleChoiceField(
-#         queryset=ServiceEvent.objects.none(),
-#         required=False,
-#         widget=FilteredSelectMultiple(
-#             verbose_name=_('Related Service Events'),
-#             is_stacked=False
-#         )
-#     )
-#     duration_service_time = HoursMinDurationField(label=_('Service time'), required=False)
-#     duration_lost_time = HoursMinDurationField(label=_('Lost time'), required=False)
-#
-#     datetime_service = DateTimeField()
-#
-#     class Meta:
-#         model = ServiceEvent
-#
-#         fields = [
-#             'datetime_service',
-#             'unit_service_area',
-#             'service_type', 'service_status',
-#             'problem_description', 'service_event_related', 'work_description',
-#             'safety_precautions', 'duration_service_time', 'duration_lost_time'
-#         ]
-#
-#     def __init__(self, *args, **kwargs):
-#         super(ServiceEventAdminForm, self).__init__(*args, **kwargs)
-#
-#         self.fields['unit_service_area'].queryset = UnitServiceArea.objects.all().select_related('unit', 'service_area')
-#         if self.instance.pk:
-#             self.fields['service_event_related'].queryset = ServiceEvent.objects.filter(
-#                 unit_service_area__unit=self.instance.unit_service_area.unit
-#             ).select_related('unit_service_area__unit', 'unit_service_area__service_area')
-#
-#         datetime_service = self.fields['datetime_service']
-#         datetime_service.widget.attrs['class'] = 'daterangepicker-input'
-#         datetime_service.widget.format = settings.INPUT_DATE_FORMATS[0]
-#         datetime_service.input_formats = settings.INPUT_DATE_FORMATS
-#         datetime_service.widget.attrs["title"] = settings.DATETIME_HELP
-#         datetime_service.help_text = settings.DATETIME_HELP
-#
-#
-# class ServiceEventAdmin(DeleteOnlyFromOwnFormAdmin):
-#
-#     list_display = ['pk', 'datetime_service', 'unit_name', 'service_area_name']
-#     form = ServiceEventAdminForm
-#     list_select_related = ['unit_service_area__unit', 'unit_service_area__service_area']
-#
-#     def unit_name(self, obj):
-#         return obj.unit_service_area.unit.name
-#
-#     def service_area_name(self, obj):
-#         return obj.unit_service_area.service_area.name
-#
-#     class Media:
-#         js = (
-#             settings.STATIC_URL + "jquery/js/jquery.min.js",
-#             settings.STATIC_URL + 'moment/js/moment.min.js',
-#             settings.STATIC_URL + 'daterangepicker/js/daterangepicker.js',
-#             # settings.STATIC_URL + "inputmask/js/inputmask.js",
-#             settings.STATIC_URL + 'inputmask/js/jquery.inputmask.bundle.js',
-#             # settings.STATIC_URL + "inputmask/js/inputmask.dependencyLib.jquery.js",
-#             settings.STATIC_URL + 'service_log/js/sl_admin_serviceevent.js'
-#         )
-#         css = {
-#             'all': (
-#                 settings.STATIC_URL + "bootstrap/css/bootstrap.min.css",
-#                 settings.STATIC_URL + 'daterangepicker/css/daterangepicker.css',
-#                 settings.STATIC_URL + "qatrack_core/css/admin.css",
-#             ),
-#         }
 
 
 # Unit admin stuff here to avoid circular dependencies
@@ -252,8 +179,6 @@ class UnitAdmin(admin.ModelAdmin):
                 except ObjectDoesNotExist:
                     pass
                 extra_context['available_time_form'].fields['units'].initial = [object_id]
-
-                print(extra_context['available_time_form'].initial)
 
         to_field = request.POST.get(TO_FIELD_VAR, request.GET.get(TO_FIELD_VAR))
         if to_field and not self.to_field_allowed(request, to_field):

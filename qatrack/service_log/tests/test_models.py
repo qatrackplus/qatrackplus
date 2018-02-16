@@ -92,7 +92,7 @@ class TestServiceEventAndRelated(TransactionTestCase):
 
         h_01 = sl_utils.create_hours(service_event=se, third_party=tp)
 
-        # Test unique together
+        # Test unique together. Will not raise IntegrityError when using sqlite3
         with self.assertRaises(IntegrityError):
             sl_models.Hours.objects.create(service_event=se, third_party=tp, user=None, time=timezone.timedelta(hours=1))
 

@@ -93,10 +93,12 @@ def populate_timeline_from_queryset(unsorted_dict, obj, datetime, obj_class, msg
 
 def unit_sa_utc(request):
 
-    unit = models.Unit.objects.get(id=request.GET['unit_id'])
+    try:
+        unit = models.Unit.objects.get(id=request.GET['unit_id'])
+    except (KeyError, ObjectDoesNotExist):
+        raise Http404
     service_areas = list(models.ServiceArea.objects.filter(units=unit).values())
 
-    # testlist_ct = ContentType.objects.get(app_label="qa", model="testlist")
     utcs_tl_qs = models.UnitTestCollection.objects.select_related('frequency').filter(unit=unit, active=True)
     utcs_tl = sorted(
         [
@@ -109,8 +111,13 @@ def unit_sa_utc(request):
 
 
 def se_searcher(request):
-    se_search = request.GET['q']
-    unit_id = request.GET['unit_id']
+
+    try:
+        se_search = request.GET['q']
+        unit_id = request.GET['unit_id']
+    except KeyError:
+        return JsonResponse({'error': True}, status=404)
+
     omit_id = request.GET.get('self_id', 'false')
     service_events = models.ServiceEvent.objects \
         .filter(id__icontains=se_search, unit_service_area__unit=unit_id)
@@ -141,9 +148,9 @@ class SLDashboard(TemplateView):
         to_return = {
             'qa_not_reviewed': rtsqa_qs.filter(test_list_instance__isnull=False, test_list_instance__all_reviewed=False).count(),
             'qa_not_complete': rtsqa_qs.filter(test_list_instance__isnull=True).count(),
-            'units_restricted': models.Unit.objects.filter(restricted=True).count(),
-            'parts_low': 0,
-            'se_statuses': {},
+            # 'units_restricted': models.Unit.objects.filter(restricted=True).count(),
+            # 'parts_low': 0,
+            # 'se_statuses': {},
             'se_needing_review': models.ServiceEvent.objects.filter(
                 service_status__in=models.ServiceEventStatus.objects.filter(
                     is_review_required=True
@@ -266,7 +273,7 @@ class SLDashboard(TemplateView):
         return context
 
     def dispatch(self, request, *args, **kwargs):
-        if models.ServiceEventStatus.objects.all().exists():
+        if models.ServiceEventStatus.objects.filter(is_default=True).exists():
             return super(SLDashboard, self).dispatch(request, *args, **kwargs)
         else:
             return redirect(reverse('err'))
@@ -586,17 +593,9 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
                         current_psc.quantity += qty
 
                         if current_psc:
-                            # if current_psc.quantity <= 0:
-                            #     if current_psc.id:
-                            #         current_psc.delete()
-                            # else:
                             current_psc.save()
 
                         if initial_psc:
-                            # if initial_psc.quantity <= 0:
-                            #     if initial_psc.id:
-                            #         initial_psc.delete()
-                            # else:
                             initial_psc.save()
 
                     pu_instance.delete()
@@ -744,6 +743,12 @@ class DetailsServiceEvent(DetailView):
         context_data['g_links'] = models.GroupLinkerInstance.objects.filter(service_event=self.object)
 
         return context_data
+
+    def get_object(self, queryset=None):
+        try:
+            return super().get_object(queryset=queryset)
+        except AttributeError:
+            raise Http404
 
 
 class ServiceEventsBaseList(BaseListableView):
@@ -1103,7 +1108,12 @@ class TLISelect(UTCInstances):
 
 
 def tli_statuses(request):
-    tli = qa_models.TestListInstance.objects.get(pk=request.GET.get('tli_id'))
+
+    try:
+        tli = qa_models.TestListInstance.objects.get(pk=request.GET.get('tli_id'))
+    except ObjectDoesNotExist:
+        raise Http404
+
     return JsonResponse(
         {
             'pass_fail': tli.pass_fail_summary(),
@@ -1222,22 +1232,18 @@ def handle_unit_down_time(request):
     daterange = request.GET.get('daterange', False)
     if daterange:
         date_from = timezone.datetime.strptime(daterange.split(' - ')[0], '%d %b %Y').date()
-        date_to = timezone.datetime.strptime(daterange.split(' - ')[1], '%d %b %Y').date()
+        date_to = timezone.datetime.strptime(daterange.split(' - ')[1], '%d %b %Y').date() + timezone.timedelta(days=1)
 
         se_qs = se_qs.filter(
             datetime_service__gte=date_from, datetime_service__lte=date_to
         )
     else:
         date_from = None
-        date_to = timezone.datetime.now().date()
+        date_to = timezone.datetime.now().date() + timezone.timedelta(days=1)
 
     service_areas = request.GET.getlist('service_area', False)
     if service_areas:
         se_qs = se_qs.filter(unit_service_area__service_area__name__in=service_areas)
-
-    # service_types = request.GET.getlist('service_type', False)
-    # if service_types:
-    #     se_qs = se_qs.filter(service_type__name__in=service_types)
 
     problem_description = request.GET.get('problem_description', False)
     if problem_description:
@@ -1364,5 +1370,3 @@ def handle_unit_down_time(request):
         writer.writerow(r)
 
     return response
-
-    # return JsonResponse({'success': True, 'data': {'se_count': len(se_qs)}})

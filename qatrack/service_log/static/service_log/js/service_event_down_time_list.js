@@ -10,7 +10,6 @@ require(['jquery', 'moment'], function ($, moment) {
                 service_area = $('select.select_filter[rel=5]').val(),
                 unit_type = $('select.select_filter[rel=3]').val(),
                 active = $('select.select_filter[rel=4]').val(),
-                // service_type = $('select.select_filter[rel=4]').val(),
                 problem_description = $('input.text_filter[rel=6]:not(.search_init)').val();
 
             var inputs = [];
@@ -34,10 +33,6 @@ require(['jquery', 'moment'], function ($, moment) {
             if (active) {
                 inputs.push('unit__active=' + active)
             }
-
-            // $.each(service_type, function (i, v) {
-            //     inputs.push('service_type=' + v);
-            // });
 
             if (problem_description) {
                 inputs.push('problem_description=' + problem_description);

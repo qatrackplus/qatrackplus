@@ -75,7 +75,6 @@ class HoursMinDurationField(forms.DurationField):
         return value
 
     def to_python(self, value):
-        print(value)
         if value is not None:
             if value == '__:__':
                 return None
@@ -111,17 +110,25 @@ class HoursForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(HoursForm, self).__init__(*args, **kwargs)
 
-        choices = [(None, '---------')]
+        choices = [('', '---------')]
         perm = Permission.objects.get(codename='can_have_hours')
         if self.instance.user:
-            users = User.objects.filter(Q(groups__permissions=perm, is_active=True) | Q(user_permissions=perm, is_active=True) | Q(pk=self.instance.user.id)).distinct().order_by('last_name')
+            users = User.objects.filter(
+                Q(groups__permissions=perm, is_active=True) |
+                Q(user_permissions=perm, is_active=True) |
+                Q(pk=self.instance.user.id)
+            ).distinct().order_by('last_name')
         else:
-            users = User.objects.filter(Q(groups__permissions=perm, is_active=True) | Q(user_permissions=perm, is_active=True)).distinct().order_by('last_name')
+            users = User.objects.filter(
+                Q(groups__permissions=perm, is_active=True) |
+                Q(user_permissions=perm, is_active=True)
+            ).distinct().order_by('last_name')
         for user in users:
             name = user.username if not user.first_name or not user.last_name else user.last_name + ', ' + user.first_name
-            choices.append(('user-' + str(user.id), name))
+            choices.append(('user-%s' % user.id, name))
         for tp in models.ThirdParty.objects.all():
-            choices.append(('tp-' + str(tp.id), str(tp)))
+            choices.append(('tp-%s' % tp.id, tp.get_full_name()))
+
         self.fields['user_or_thirdparty'].choices = choices
 
         self.fields['user_or_thirdparty'].widget.attrs.update({'class': 'select2'})
@@ -143,15 +150,6 @@ class HoursForm(forms.ModelForm):
             raise ValidationError('Not a User or Third Party object.')
 
         return u_or_tp
-
-    # def clean_time(self):
-    #
-    #     time = self.cleaned_data['time']
-    #     print('------------------------')
-    #     print(self.data['service_time'])
-    #     print(time)
-    #     # service_time = self.cle
-    #     return time
 
 
 HoursFormset = forms.inlineformset_factory(models.ServiceEvent, models.Hours, form=HoursForm, extra=2)
@@ -200,8 +198,11 @@ class ReturnToServiceQAForm(forms.ModelForm):
         else:
             self.initial['all_reviewed'] = 0
 
-        self.fields['unit_test_collection'].widget.attrs.update({'class': 'rtsqa-utc select2', 'data-prefix': self.prefix})
-        self.fields['test_list_instance'].widget.attrs.update({'class': 'tli-instance'})
+        self.fields['unit_test_collection'].widget.attrs.update({
+            'class': 'rtsqa-utc select2', 'data-prefix': self.prefix,
+            'oldvalue': self.initial.get('unit_test_collection', '')
+        })
+        self.fields['test_list_instance'].widget.attrs.update({'class': 'tli-instance', 'data-prefix': self.prefix})
         self.fields['all_reviewed'].widget.attrs.update({'class': 'tli-all-reviewed'})
 
     def clean_unit_test_collection(self):
@@ -373,7 +374,7 @@ class ServiceEventForm(BetterModelForm):
         help_text=_('Test list instance that initiated this service event')
     )
     service_type = forms.ModelChoiceField(
-        queryset=models.ServiceType.objects.all(), widget=SelectWithOptionTitles(model=models.ServiceType)
+        queryset=models.ServiceType.objects.filter(is_active=True), widget=SelectWithOptionTitles(model=models.ServiceType)
     )
     service_status = ServiceEventStatusField(
         help_text=models.ServiceEvent._meta.get_field('service_status').help_text, widget=SelectWithDisabledWidget,
@@ -439,7 +440,6 @@ class ServiceEventForm(BetterModelForm):
 
             self.g_link_dict[field_name] = {
                 'g_link': g_link,
-                # 'instance': None
             }
             # if not is_new:
             try:
@@ -584,6 +584,8 @@ class ServiceEventForm(BetterModelForm):
             self.fields['initiated_utc_field'].choices = (('', '---------'),) + tuple(
                 ((utc.id, '(%s) %s' % (utc.frequency if utc.frequency else 'Ad Hoc', utc.name)) for utc in i_utc_f_qs)
             )
+            if not self.instance.service_type.is_active:
+                self.fields['service_type'].queryset |= models.ServiceType.objects.filter(id=self.instance.service_type.id)
 
         for f in ['safety_precautions', 'problem_description', 'work_description', 'qafollowup_notes']:
             self.fields[f].widget.attrs.update({'rows': 3, 'class': 'autosize'})
@@ -599,7 +601,7 @@ class ServiceEventForm(BetterModelForm):
             self.fields[f].widget.attrs['class'] = 'daterangepicker-input'
             self.fields[f].widget.format = settings.INPUT_DATE_FORMATS[0]
             self.fields[f].input_formats = settings.INPUT_DATE_FORMATS
-            self.fields[f].widget.attrs["title"] = settings.DATETIME_HELP
+            self.fields[f].widget.attrs['title'] = settings.DATETIME_HELP
             self.fields[f].help_text = settings.DATETIME_HELP
 
         for f in ['duration_service_time', 'duration_lost_time']:
@@ -638,6 +640,9 @@ class ServiceEventForm(BetterModelForm):
             del self._errors['initiated_utc_field']
 
         # Check for incomplete and unreviewed RTS QA if status.rts_qa_must_be_reviewed = True
+
+        if 'service_status' not in self.cleaned_data:
+            raise ValidationError(_('This field is required.'), code='required')
         if self.cleaned_data['service_status'].rts_qa_must_be_reviewed:
             raize = False
             for k, v in self.data.items():
@@ -648,11 +653,10 @@ class ServiceEventForm(BetterModelForm):
                             if self.data[prefix + '-test_list_instance'] == '':
                                 raize = True
                                 break
-                    else:
-                        tli_id = self.data[prefix + '-test_list_instance']
-                        if tli_id != '' and not qa_models.TestListInstance.objects.get(pk=tli_id).all_reviewed:
-                            raize = True
-                            break
+                    tli_id = self.data[prefix + '-test_list_instance']
+                    if tli_id != '' and not qa_models.TestListInstance.objects.get(pk=tli_id).all_reviewed:
+                        raize = True
+                        break
             if raize:
                 self._errors['service_status'] = ValidationError(
                     'Cannot select status: %s or incomplete RTS QA' % qa_models.TestInstanceStatus.objects.filter(

@@ -1,4 +1,4 @@
-
+// Regrets: Not using a more robust front end library here :(
 
 require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker', 'sl_utils', 'inputmask', 'site_base'], function ($, _, moment, autosize) {
     
@@ -18,7 +18,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
                 '    <div class="col-md-12">' +
                 '        <span id="pass-fail-utc_initiated"></span>' +
                 '        <span id="review-utc_initiated"></span>' +
-                '        <a id="view-tli-btn" class="btn btn-default btn-xs btn-flat margin-left-5" href="">View</a>' +
+                '        <a id="view-tli-btn" class="btn btn-default btn-xs btn-flat margin-left-5" href="" target="view-tli">View</a>' +
                 '        <span id="tli-date-utc_initiated" class="pull-right"></span>' +
                 '    </div>' +
                 '</div>'
@@ -295,6 +295,8 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
 
             $('#' + prefix + '-review-btn').addClass(prefix + '-hider');
             $('.' + prefix + '-hider').fadeIn('fast');
+            $('#id_' + prefix + '-unit_test_collection').change();
+
         };
         setSearchResult = function (form, returnValue) {
             window.focus();
@@ -346,21 +348,24 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
             $rtsqa_index.val(parseInt(rtsqa_index) + 1);
         });
 
-        function rtsqa_change() {
+        function rtsqa_change(e) {
 
-            var prefix = $(this).attr('data-prefix'),
-                utc_id = $(this).val(),
+            var prefix = $(this).attr('data-prefix');
+
+            var utc_id = $(this).val(),
+                utc_id_old = $(this).attr('oldvalue'),
                 tli_id = $('#id_' + prefix + '-test_list_instance').val(),
                 rtsqa_id = $('#id_' + prefix + '-id').val(),
                 se_id = $('#instance-id').val();
 
-            if (utc_id == '') {
+            $(this).attr('oldvalue', utc_id);
+
+            if (utc_id === '' || (utc_id_old !== '' && utc_id_old !== utc_id)) {
                 $('#utc-actions-' + prefix).html('');
                 $('#pass-fail-' + prefix).html('');
                 $('#review-' + prefix).html('');
                 $('#id_' + prefix + '-test_list_instance').val('');
             } else {
-
                 // add utc action btns
                 $('#utc-actions-' + prefix).html(
                     $('#utc-actions-template').html()

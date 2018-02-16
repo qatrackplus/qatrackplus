@@ -214,10 +214,7 @@ class PartStorageCollectionForm(forms.ModelForm):
 
         is_new = self.instance.id is None
 
-        if is_new:
-
-            print('======================== >> new:')
-        else:
+        if not is_new:
             self.initial['room'] = self.instance.storage.room
             self.initial['storage_field'] = self.instance.storage.id
             self.initial['location'] = self.instance.storage.id

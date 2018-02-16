@@ -148,7 +148,6 @@ def go_units_parts_cost(request):
 class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, ModelFormMixin, ProcessFormView):
 
     model = p_models.Part
-    # form_class = AuthorForm
     template_name = 'parts/part_update.html'
     form_class = p_forms.PartForm
 
@@ -201,10 +200,8 @@ class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, Mo
             return self.render_to_response(context)
 
         part = form.save(commit=False)
-        if not part.pk:
-            messages.add_message(request=self.request, level=messages.SUCCESS, message='New part %s added' % part.part_number)
-        else:
-            messages.add_message(request=self.request, level=messages.SUCCESS, message='Part %s updated' % part.part_number)
+        message = 'New part %s added' % part.part_number if not part.pk else 'Part %s updated' % part.part_number
+        messages.add_message(request=self.request, level=messages.SUCCESS, message=message)
         part.save()
 
         for sup_form in supplier_formset:

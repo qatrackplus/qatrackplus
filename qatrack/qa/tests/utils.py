@@ -21,12 +21,12 @@ def exists(app, model, field, value):
     return False
 
 
-def create_user(is_staff=True, is_superuser=True, uname="user", pwd="password"):
+def create_user(is_staff=True, is_superuser=True, uname="user", pwd="password", is_active=True):
     try:
         u = User.objects.get(username=uname)
     except:
         u = User(
-            username=uname, is_staff=is_staff, is_superuser=is_superuser, email="test@example.com"
+            username=uname, is_staff=is_staff, is_superuser=is_superuser, email="test@example.com", is_active=is_active
         )
         u.set_password(pwd)
         u.save()
@@ -40,7 +40,13 @@ def create_category(name="cat", slug="cat", description="cat"):
     return c
 
 
-def create_status(name="status", slug="status", is_default=True, requires_review=True):
+def create_status(name=None, slug=None, is_default=True, requires_review=True):
+
+    if name is None:
+        name = 'status_%04d' % get_next_id(models.TestInstanceStatus.objects.order_by('id').last())
+    if slug is None:
+        slug = 'status_%04d' % get_next_id(models.TestInstanceStatus.objects.order_by('id').last())
+
     status = models.TestInstanceStatus(name=name, slug=slug, is_default=is_default, requires_review=requires_review)
     status.save()
     return status
@@ -183,8 +189,7 @@ def create_vendor(name=None):
         name = 'vendor_%04d' % get_next_id(Vendor.objects.order_by('id').last())
 
     v, _ = Vendor.objects.get_or_create(name=name)
-    if _:
-        print('>>> Created Vendor ' + str(v))
+
     return v
 
 
@@ -199,16 +204,17 @@ def create_unit_type(name=None, vendor=None, model="model"):
     return ut
 
 
-def create_unit(name=None, number=None):
+def create_unit(name=None, number=None, tipe=None):
 
     if name is None:
         name = 'unit_%04d' % get_next_id(models.Unit.objects.order_by('id').last())
     if number is None:
         last = models.Unit.objects.order_by('number').last()
         number = last.number + 1 if last else 0
+    if tipe is None:
+        tipe = create_unit_type()
 
-    u = Unit(name=name, number=number, date_acceptance=timezone.now())
-    u.type = create_unit_type()
+    u = Unit(name=name, number=number, date_acceptance=timezone.now(), type=tipe)
     u.save()
     u.modalities.add(create_modality())
     u.save()
@@ -298,7 +304,7 @@ def create_unit_test_info(unit=None, test=None, assigned_to=None, ref=None, tol=
     return uti
 
 
-def create_unit_test_collection(unit=None, frequency=None, test_collection=None, assigned_to=None, null_frequency=False):
+def create_unit_test_collection(unit=None, frequency=None, test_collection=None, assigned_to=None, null_frequency=False, active=True):
 
     if unit is None:
         unit = create_unit()
@@ -317,7 +323,8 @@ def create_unit_test_collection(unit=None, frequency=None, test_collection=None,
         object_id=test_collection.pk,
         content_type=ContentType.objects.get_for_model(test_collection),
         frequency=frequency,
-        assigned_to=assigned_to
+        assigned_to=assigned_to,
+        active=active
     )
 
     utc.save()

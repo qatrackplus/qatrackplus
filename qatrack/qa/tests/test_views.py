@@ -22,6 +22,9 @@ import glob
 import random
 from . import utils
 
+from qatrack.units import views as u_views
+from qatrack.units import models as u_models
+
 
 logger = qatrack.qa.views.base.logger
 
@@ -1700,3 +1703,83 @@ class TestPaperForms(TestCase):
         pf.set_utc_all_lists(utcs)
         self.assertEqual(utcs[0].all_lists[0].utis[0].reference, ref1)
         self.assertEqual(utcs[1].all_lists[0].utis[0].reference, ref2)
+
+
+class TestUnitAvailableTime(TestCase):
+
+    def setUp(self):
+        utils.create_user(is_superuser=True, uname='user', pwd='pwd')
+        self.client.login(username='user', password='pwd')
+        self.get_url = reverse('unit_available_time')
+        self.post_url = reverse('handle_unit_available_time')
+        utils.create_unit()
+        utils.create_unit()
+        utils.create_unit()
+
+    def test_unit_available_time_change(self):
+
+        response = self.client.get(self.get_url)
+
+        timestamp = int((timezone.now() + timezone.timedelta(days=7)).timestamp() * 1000)
+        unit_ids = [u.id for u in response.context['units']]
+
+        data = {
+            'units[]': unit_ids,
+            'hours_monday': '08:00',
+            'hours_tuesday': '_8:00',
+            'hours_wednesday': '_8:00',
+            'hours_thursday': '08:00',
+            'hours_friday': '08:00',
+            'hours_saturday': '08:00',
+            'hours_sunday': '08:00',
+            'days[]': [timestamp]
+        }
+        date = timezone.datetime.fromtimestamp(timestamp / 1000, timezone.utc).date()
+        len_uat_before = len(u_models.UnitAvailableTime.objects.filter(unit_id__in=unit_ids, date_changed=date))
+
+        self.client.post(self.post_url, data=data)
+        len_uat_after = len(u_models.UnitAvailableTime.objects.filter(unit_id__in=unit_ids, date_changed=date))
+
+        self.assertEqual(len(unit_ids), len_uat_after - len_uat_before)
+
+        data['delete'] = 'true'
+        self.client.post(self.post_url, data=data)
+        len_uat_after = len(u_models.UnitAvailableTime.objects.filter(unit_id__in=unit_ids, date_changed=date))
+        self.assertEqual(0, len_uat_after)
+
+
+class TestUnitAvailableTimeEdit(TestCase):
+
+    def setUp(self):
+        utils.create_user(is_superuser=True, uname='user', pwd='pwd')
+        self.client.login(username='user', password='pwd')
+        self.get_url = reverse('unit_available_time')
+        self.post_url = reverse('handle_unit_available_time_edit')
+        utils.create_unit()
+        utils.create_unit()
+        utils.create_unit()
+
+    def test_handle_unit_available_time_edit(self):
+
+        response = self.client.get(self.get_url)
+
+        timestamp = int((timezone.now() + timezone.timedelta(days=7)).timestamp() * 1000)
+        unit_ids = [u.id for u in response.context['units']]
+
+        data = {
+            'units[]': unit_ids,
+            'hours_mins': '_8:00',
+            'days[]': [timestamp],
+            'name': 'uate_test'
+        }
+
+        date = timezone.datetime.fromtimestamp(timestamp / 1000, timezone.utc).date()
+        len_uate_before = len(u_models.UnitAvailableTimeEdit.objects.filter(unit_id__in=unit_ids, date=date))
+        self.client.post(self.post_url, data=data)
+        len_uate_after = len(u_models.UnitAvailableTimeEdit.objects.filter(unit_id__in=unit_ids, date=date))
+        self.assertEqual(len(unit_ids), len_uate_after - len_uate_before)
+
+        data['delete'] = 'true'
+        self.client.post(self.post_url, data=data)
+        len_uate_after = len(u_models.UnitAvailableTimeEdit.objects.filter(unit_id__in=unit_ids, date=date))
+        self.assertEqual(0, len_uate_after)

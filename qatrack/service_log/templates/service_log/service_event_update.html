@@ -546,7 +546,7 @@
                     </a>
                 {% endif %}
             {% endif %}
-            {% if perms.qa.can_review %}
+            {% if form.instance.pk and perms.qa.can_review %}
                 <a id="__prefix__-review-btn" href="{% url 'review_test_list_instance' %}__tli-id__?next={% url 'sl_edit' %}__se-id__" class="btn btn-xs btn-default btn-flat review-btn __prefix__-hider" target="Review-__rtsqa-id__-__prefix__" style="display: none;">
                     Review
                 </a>
