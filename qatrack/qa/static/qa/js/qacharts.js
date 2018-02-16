@@ -1,4 +1,4 @@
-require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterangepicker', 'felter', 'select2'], function ($, _, d3, moment) {
+require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qautils', 'daterangepicker', 'felter', 'select2'], function ($, _, d3, moment) {
 
     var waiting_timeout = null;
     // var test_list_names;
@@ -305,6 +305,15 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
 
         $("#gen-chart").click(update_chart);
 
+        $("#save-image").click(function(){
+            var svg = $("svg");
+            if (svg.length === 0){
+                return;
+            }
+            // Get the d3js SVG element and save using saveSvgAsPng.js
+            saveSvgAsPng(svg.get(0), "plot.png", {scale: 1, backgroundColor: "#FFFFFF"});
+        });
+
         $("#data-table-wrapper").on('click', "#csv-export", export_csv);
 
         $show_events.prop('checked') ? $service_event_container.show() : '';
@@ -358,7 +367,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
         }
 
         function finished_chart_update() {
-            $("#gen-chart").text("reset");
+            $("#gen-chart").text("Generate Chart");
         }
 
         function set_chart_url() {
@@ -384,7 +393,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
 
             loc += window.location.pathname;
 
-            $("#chart-url").val(loc + "#" + options.join(QAUtils.OPTION_SEP));
+            $("#chart-url").val(loc + "?" + options.join(QAUtils.OPTION_SEP));
         }
 
         function get_data_filters() {
@@ -423,7 +432,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
 
         function retrieve_data(callback, error) {
             var data_filters = get_data_filters();
-            if (data_filters.tests.length === 0) {
+            if (!data_filters.tests || data_filters.tests.length === 0) {
                 initialize_charts();
                 finished_chart_update();
                 return;
@@ -2054,7 +2063,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'qautils', 'daterange
         function set_options_from_url() {
             var unit_ids, test_ids, freq_ids, test_list_ids;
 
-            var options = QAURLs.options_from_url_hash(document.location.hash);
+            var options = QAURLs.options_from_url_query(document.location.search);
 
             var units = get_filtered_option_values("units", options);
             var tests = get_filtered_option_values("tests", options);

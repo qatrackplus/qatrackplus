@@ -1,8 +1,10 @@
-from django.test import TestCase
 from django.core import mail
+from django.test import TestCase
+
 from qatrack.qa import models, signals
 import qatrack.qa.tests.utils as utils
-from .models import NotificationSubscription, TOLERANCE
+
+from .models import TOLERANCE, NotificationSubscription
 
 
 class TestEmailSent(TestCase):

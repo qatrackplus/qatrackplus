@@ -17,7 +17,7 @@
 {% endblock %}
 
 {% block require_javascript %}
-    require(['qareview'], function() {
+    require(['jquery', 'qareview'], function() {
         $('body').removeClass("loading");
     });
 {% endblock require_javascript %}
@@ -59,7 +59,7 @@
                                     <dd>
 
                                         {% if perms.qa.delete_testlistinstance %}
-                                        <a class="btn btn-danger btn-xs btn-flat" title="This will redirect you to the admin site where you can permanently delete this qa session" href="{% url 'admin:qa_testlistinstance_delete' test_list_instance.pk%}">Delete</a>
+                                          <a class="btn btn-danger btn-xs btn-flat" title="This will redirect you to the admin site where you can permanently delete this qa session" href="{% url 'delete_test_list_instance' pk=test_list_instance.pk %}">Delete</a>
                                         {% endif %}
                                         {% if tli.in_progress %}
                                             <a class="btn btn-default btn-xs btn-flat" title="Continue this list" href="{%url 'continue_tli' pk=tli.pk%}?next={{request.get_full_path}}" >Continue</a>

@@ -1,14 +1,13 @@
-from .. import signals  # NOQA :signals import needs to be here so signals get registered
-
-import logging
 import collections
+import logging
 
+from braces.views import PrefetchRelatedMixin, SelectRelatedMixin
 from django.apps import apps
 from django.conf import settings
 from django.contrib.auth.context_processors import PermWrapper
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
-from django.core.urlresolvers import reverse, resolve
+from django.core.urlresolvers import resolve, reverse
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -20,15 +19,27 @@ from django.views.decorators.http import require_POST
 from django.views.generic import UpdateView
 from django_comments import get_form
 from django_comments import signals as dc_signals
+from listable.views import (
+    DATE_RANGE,
+    LAST_14_DAYS,
+    LAST_WEEK,
+    NEXT_WEEK,
+    NONEORNULL,
+    SELECT_MULTI,
+    THIS_MONTH,
+    THIS_WEEK,
+    THIS_YEAR,
+    TODAY,
+    TOMORROW,
+    YESTERDAY,
+    BaseListableView,
+)
 
 from qatrack.qa import models
 from qatrack.service_log import models as sl_models
 
-from braces.views import PrefetchRelatedMixin, SelectRelatedMixin
-from listable.views import (
-    BaseListableView, DATE_RANGE, SELECT_MULTI, NONEORNULL,
-    TODAY, YESTERDAY, TOMORROW, LAST_WEEK, THIS_WEEK, NEXT_WEEK, LAST_14_DAYS, THIS_MONTH, THIS_YEAR
-)
+# signals import  needs to be here so signals get registered
+from .. import signals  # NOQA
 
 logger = logging.getLogger('qatrack.console')
 
@@ -50,7 +61,11 @@ def generate_review_status_context(test_list_instance):
             comment_count += 1
     comment_count += test_list_instance.comments.all().count()
 
-    c = {"statuses": dict(statuses), "comments": comment_count, "show_icons": settings.ICON_SETTINGS['SHOW_REVIEW_ICONS']}
+    c = {
+        "statuses": dict(statuses),
+        "comments": comment_count,
+        "show_icons": settings.ICON_SETTINGS['SHOW_REVIEW_ICONS']
+    }
 
     return c
 
@@ -106,10 +121,18 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
             "unit_test_info__test",
             "unit_test_info__test__category",
             "unit_test_info__unit",
+        ).prefetch_related(
+            "unit_test_info__test__attachment_set",
         )
 
         if self.request.method == "POST":
-            formset = self.formset_class(self.request.POST, self.request.FILES, instance=self.object, queryset=test_instances, user=self.request.user)
+            formset = self.formset_class(
+                self.request.POST,
+                self.request.FILES,
+                instance=self.object,
+                queryset=test_instances,
+                user=self.request.user
+            )
         else:
             formset = self.formset_class(instance=self.object, queryset=test_instances, user=self.request.user)
 
@@ -238,7 +261,9 @@ class UTCList(BaseListableView):
         super(UTCList, self).__init__(*args, **kwargs)
 
         if self.active_only and self.inactive_only:
-            raise ValueError("Misconfigured View: %s. active_only and  inactive_only can't both be True" % self.__class__)
+            raise ValueError(
+                "Misconfigured View: %s. active_only and  inactive_only can't both be True" % self.__class__
+            )
 
         # Store templates on view initialization so we don't have to reload them for every row!
         self.templates = {
@@ -268,12 +293,10 @@ class UTCList(BaseListableView):
     def get_queryset(self):
         """filter queryset for visibility and fetch relevent related objects"""
 
-        qs = super(UTCList, self).get_queryset()
+        qs = super(UTCList, self).get_queryset().order_by("pk")
 
         if self.visible_only:
-            qs = qs.filter(
-                visible_to__in=self.request.user.groups.all(),
-            ).distinct()
+            qs = qs.filter(visible_to__in=self.request.user.groups.all(),).distinct()
 
         if self.active_only:
             qs = qs.filter(active=True, unit__active=True)
@@ -363,9 +386,7 @@ class TestListInstances(BaseListableView):
         "work_completed": DATE_RANGE
     }
 
-    date_ranges = {
-        "work_completed": [TODAY, YESTERDAY, THIS_WEEK, LAST_14_DAYS, THIS_MONTH, THIS_YEAR]
-    }
+    date_ranges = {"work_completed": [TODAY, YESTERDAY, THIS_WEEK, LAST_14_DAYS, THIS_MONTH, THIS_YEAR]}
 
     search_fields = {
         "actions": False,
@@ -385,7 +406,9 @@ class TestListInstances(BaseListableView):
         "test_list",
         "unit_test_collection__unit",
         "unit_test_collection__frequency",
-        "created_by", "modified_by", "reviewed_by",
+        "created_by",
+        "modified_by",
+        "reviewed_by",
     )
 
     prefetch_related = (
@@ -394,7 +417,7 @@ class TestListInstances(BaseListableView):
         'rtsqa_for_tli',
         'rtsqa_for_tli__service_event',
         'serviceevents_initiated',
-        'comments'
+        'comments',
     )
 
     def __init__(self, *args, **kwargs):
@@ -429,6 +452,9 @@ class TestListInstances(BaseListableView):
             filters = [(NONEORNULL, 'Ad Hoc') if f == (NONEORNULL, 'None') else f for f in filters]
 
         return filters
+
+    def get_queryset(self, *args, **kwargs):
+        return super(TestListInstances, self).get_queryset(*args, **kwargs).order_by("-work_completed")
 
     def unit_test_collection__frequency__name(self, tli):
         freq = tli.unit_test_collection.frequency
@@ -496,10 +522,7 @@ def ajax_comment(request, next=None, using=None):
     # Fill out some initial data fields from an authenticated user, if present
     data = request.POST.copy()
 
-    try:
-        user_is_authenticated = request.user.is_authenticated()
-    except TypeError:  # Django >= 1.11
-        user_is_authenticated = request.user.is_authenticated
+    user_is_authenticated = request.user.is_authenticated
     if user_is_authenticated:
         if not data.get('name', ''):
             data["name"] = request.user.get_full_name() or request.user.get_username()
@@ -517,20 +540,31 @@ def ajax_comment(request, next=None, using=None):
     except TypeError:
         return JsonResponse({'error': True, 'message': 'Invalid content_type value: %r' % escape(ctype)}, status=500)
     except AttributeError:
-        return JsonResponse({'error': True, 'message': 'The given content-type %r does not resolve to a valid model.' % escape(ctype)}, status=500)
-    except ObjectDoesNotExist:
         return JsonResponse(
             {
                 'error': True,
-                'message': 'No object matching content-type %r and object PK %r exists.' % (escape(ctype), escape(object_pk))
+                'message': 'The given content-type %r does not resolve to a valid model.' % escape(ctype)
+            },
+            status=500,
+        )
+    except ObjectDoesNotExist:
+        return JsonResponse(
+            {
+                'error':
+                    True,
+                'message':
+                    'No object matching content-type %r and object PK %r exists.' % (escape(ctype), escape(object_pk))
             },
             status=500,
         )
     except (ValueError, ValidationError) as e:
         return JsonResponse(
             {
-                'error': True,
-                'message': 'Attempting go get content-type %r and object PK %r exists raised %s' % (escape(ctype), escape(object_pk), e.__class__.__name__)
+                'error':
+                    True,
+                'message':
+                    'Attempting go get content-type %r and object PK %r exists raised %s' %
+                    (escape(ctype), escape(object_pk), e.__class__.__name__)
             },
             status=500,
         )
@@ -543,7 +577,13 @@ def ajax_comment(request, next=None, using=None):
 
     # Check security information
     if form.security_errors():
-        return JsonResponse({'error': True, 'message': 'The comment form failed security verification: %s' % escape(str(form.security_errors()))}, status=500)
+        return JsonResponse(
+            {
+                'error': True,
+                'message': 'The comment form failed security verification: %s' % escape(str(form.security_errors()))
+            },
+            status=500,
+        )
 
     # If there are errors or if we requested a preview show the comment
     if form.errors or preview:
@@ -558,11 +598,13 @@ def ajax_comment(request, next=None, using=None):
             "comments/%s/preview.html" % model._meta.app_label,
             "comments/preview.html",
         ]
-        return render(request, template_list, {
-            "comment": form.data.get("comment", ""),
-            "form": form,
-            "next": data.get("next", next),
-        })
+        return render(
+            request, template_list, {
+                "comment": form.data.get("comment", ""),
+                "form": form,
+                "next": data.get("next", next),
+            }
+        )
 
     # Otherwise create the comment
     comment = form.get_comment_object(site_id=get_current_site(request).id)
@@ -574,12 +616,18 @@ def ajax_comment(request, next=None, using=None):
     responses = dc_signals.comment_will_be_posted.send(
         sender=comment.__class__,
         comment=comment,
-        request=request
+        request=request,
     )
 
     for (receiver, response) in responses:
         if response is False:
-            return JsonResponse({'error': True, 'message': 'comment_will_be_posted receiver %r killed the comment' % receiver.__name__}, status=500)
+            return JsonResponse(
+                {
+                    'error': True,
+                    'message': 'comment_will_be_posted receiver %r killed the comment' % receiver.__name__
+                },
+                status=500,
+            )
 
     edit_tli = 'edit-tli' in data and data['edit-tli'] == 'edit-tli'
     # Save the comment and signal that it was saved
@@ -588,7 +636,7 @@ def ajax_comment(request, next=None, using=None):
         sender=comment.__class__,
         comment=comment,
         request=request,
-        edit_tli=edit_tli
+        edit_tli=edit_tli,
     )
 
     return JsonResponse({

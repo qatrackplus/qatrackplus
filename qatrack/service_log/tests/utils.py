@@ -26,9 +26,6 @@ def create_service_area(name=None):
 
     sa, _ = models.ServiceArea.objects.get_or_create(name=name)
 
-    if _ and settings.VERBOSE_TESTING:
-        print('>>> Created Service Area ' + str(sa))
-
     return sa
 
 
@@ -40,9 +37,6 @@ def create_unit_service_area(unit=None, service_area=None):
         service_area = create_service_area()
 
     usa, _ = models.UnitServiceArea.objects.get_or_create(unit=unit, service_area=service_area)
-
-    if _ and settings.VERBOSE_TESTING:
-        print('>>> Created Unit Service Area ' + str(usa))
 
     return usa
 
@@ -58,9 +52,6 @@ def create_service_event_status(name=None, is_default=False, is_review_required=
         rts_qa_must_be_reviewed=rts_qa_must_be_reviewed, colour=colour
     )
 
-    if _ and settings.VERBOSE_TESTING:
-        print('>>> Created Service Event Status ' + str(ses))
-
     return ses
 
 
@@ -72,9 +63,6 @@ def create_service_type(name=None, is_review_required=False, is_active=True):
     st, _ = models.ServiceType.objects.get_or_create(
         name=name, is_review_required=is_review_required, is_active=is_active
     )
-
-    if _ and settings.VERBOSE_TESTING:
-        print('>>> Created Service Type ' + str(st))
 
     return st
 
@@ -108,9 +96,6 @@ def create_service_event(unit_service_area=None, service_type=None, service_stat
             se.test_list_instance_initiated_by = qa_utils.create_test_list_instance(unit_test_collection=utc)
         se.save()
 
-    if _ and settings.VERBOSE_TESTING:
-        print('>>> Created Service Event ' + str(se))
-
     return se
 
 
@@ -125,9 +110,6 @@ def create_third_party(vendor=None, first_name=None, last_name=None):
 
     tp, _ = models.ThirdParty.objects.get_or_create(vendor=vendor, first_name=first_name, last_name=last_name)
 
-    if _ and settings.VERBOSE_TESTING:
-        print('>>> Created Third Party ' + tp.get_full_name())
-
     return tp
 
 
@@ -141,9 +123,6 @@ def create_hours(service_event=None, third_party=None, user=None, time=timezone.
     h, _ = models.Hours.objects.get_or_create(
         service_event=service_event, third_party=third_party, user=user, time=time
     )
-
-    if _ and settings.VERBOSE_TESTING:
-        print('>>> Created Hours ' + str(h))
 
     return h
 
@@ -171,9 +150,6 @@ def create_return_to_service_qa(service_event=None, unit_test_collection=None, u
         rtsqa.test_list_instance = tli
         rtsqa.save()
 
-    if _ and settings.VERBOSE_TESTING:
-        print('>>> Created Return To Service QA ' + str(rtsqa))
-
     return rtsqa
 
 
@@ -185,9 +161,6 @@ def create_group_linker(group=None, name=None):
         name = 'group_linker_%04d' % get_next_id(models.GroupLinker.objects.order_by('id').last())
 
     gl, _ = models.GroupLinker.objects.get_or_create(group=group, name=name)
-
-    if _ and settings.VERBOSE_TESTING:
-        print('>>> Created Group Linker ' + str(gl))
 
     return gl
 
@@ -205,9 +178,6 @@ def create_group_linker_instance(group_linker=None, user=None, service_event=Non
         group_linker=group_linker, user=user, service_event=service_event, datetime_linked=datetime_linked
     )
 
-    if _ and settings.VERBOSE_TESTING:
-        print('>>> Created Group Linker Instance ' + str(gli))
-
     return gli
 
 
@@ -217,9 +187,6 @@ def create_part_category(name=None):
         name = 'part_category_%04d' % get_next_id(p_models.PartCategory.objects.order_by('id').last())
 
     pc, _ = p_models.PartCategory.objects.get_or_create(name=name)
-
-    if _ and settings.VERBOSE_TESTING:
-        print('>>> Created Part Category %s' % pc)
 
     return pc
 
@@ -240,9 +207,6 @@ def create_part(part_category=None, part_number=None, description='description',
         create_part_storage_collection(part=p, storage=s, quantity=1)
         p.save()
 
-    if _ and settings.VERBOSE_TESTING:
-        print('>>> Created Part %s' % p)
-
     return p
 
 
@@ -252,9 +216,6 @@ def create_storage(room=None, location='shelf'):
         room = create_room()
 
     s, _ = p_models.Storage.objects.get_or_create(room=room, location=location)
-
-    if _ and settings.VERBOSE_TESTING:
-        print('>>> Created Storage %s' % s)
 
     return s
 
@@ -268,9 +229,6 @@ def create_room(site=None, name=None):
 
     r, _ = p_models.Room.objects.get_or_create(name=name, site=site)
 
-    if _ and settings.VERBOSE_TESTING:
-        print('>>> Created Room %s' % r)
-
     return r
 
 
@@ -281,9 +239,6 @@ def create_site(name=None):
 
     s, _ = u_models.Site.objects.get_or_create(name=name)
 
-    if _ and settings.VERBOSE_TESTING:
-        print('>>> Created Site %s' % s)
-
     return s
 
 
@@ -293,9 +248,6 @@ def create_supplier(name=None):
         name = 'supplier_%04d' % get_next_id(p_models.Supplier.objects.order_by('id').last())
 
     s, _ = p_models.Supplier.objects.get_or_create(name=name)
-
-    if _ and settings.VERBOSE_TESTING:
-        print('>>> Created Supplier %s' % s)
 
     return s
 
@@ -310,8 +262,5 @@ def create_part_storage_collection(part=None, storage=None, quantity=1):
     psc, _ = p_models.PartStorageCollection.objects.get_or_create(
         part=part, storage=storage, quantity=quantity
     )
-
-    if _ and settings.VERBOSE_TESTING:
-        print('>>> Created PartStorageCollection %s' % psc)
 
     return psc

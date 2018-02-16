@@ -9,6 +9,7 @@ eggs
 src/*.egg-info
 lib
 lib64
+mail/*
 *~
 *.debug
 *.log

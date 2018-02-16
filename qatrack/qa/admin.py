@@ -1,3 +1,5 @@
+import re
+
 from admin_views.admin import AdminViews
 from django.apps import apps
 from django.conf import settings
@@ -6,7 +8,6 @@ from django.contrib.admin import options, widgets
 from django.contrib.admin.models import CHANGE, LogEntry
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
-import django.db
 from django.db.models import Count, Q
 import django.forms as forms
 from django.shortcuts import HttpResponseRedirect, redirect, render
@@ -349,37 +350,30 @@ class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
 class TestListAdminForm(forms.ModelForm):
     """Form for handling validation of TestList creation/editing"""
 
-    def _clean(self):
-        """Make sure a user doesn't try to add itself as sublist or duplicate tests"""
-        import ipdb; ipdb.set_trace()  # yapf: disable  # noqa
-        cd = superjjjjjjjjjjjjjjjj
-        sublists = self.cleaned_data["sublists"]
-        if self.instance in sublists:
-            raise django.forms.ValidationError("You can't add a list to its own sublists")
+    def clean_slug(self):
+        slug = self.cleaned_data.get("slug")
+        dup = models.TestList.objects.exclude(pk=self.instance.pk).filter(slug=slug)
+        if dup:
+            raise forms.ValidationError("A test list with the slug '%s' already exists in the database" % slug)
+        return slug
 
-        if self.instance.pk and self.instance.testlist_set.count() > 0 and len(sublists) > 0:
-            msg = "Sublists can't be nested more than 1 level deep."
-            msg += " This list is already a member of %s and therefore"
-            msg += " can't have sublists of it's own."
-            msg = msg % ", ".join([str(x) for x in self.instance.testlist_set.all()])
-            raise django.forms.ValidationError(msg)
+    def clean(self):
+        retest = re.compile("testlistmembership_set-\d+-test")
+        test_ids = [x[1] for x in self.data.items() if retest.findall(x[0]) and x[1]]
+        slugs = list(models.Test.objects.filter(id__in=test_ids).values_list("slug", flat=True))
 
-        tests = set()
-        dups = []
-        for s in sublists:
-            for t in s.tests.all():
-                k = (t.pk, t.name)
-                if k in tests:
-                    dups.append(k)
-                tests.add(k)
+        rechild = re.compile("children-\d+-child")
+        child_ids = [x[1] for x in self.data.items() if rechild.findall(x[0]) and x[1]]
+        for tl in models.TestList.objects.filter(id__in=child_ids):
+            slugs.extend(tl.all_tests().values_list("slug", flat=True))
 
-        if dups:
-            msg = "The following tests are duplicated: %s" % (', '.join(t for pk, t in dups))
-            raise django.forms.ValidationError(msg)
+        duplicates = list(set([sn for sn in slugs if slugs.count(sn) > 1]))
+        if duplicates:
+            raise forms.ValidationError(
+                "The following test macro names are duplicated (either in this test list or one of its sublists) :: " + ",".join(duplicates)
+            )
 
-
-
-        return sublists
+        return self.cleaned_data
 
 
 class TestListMembershipInlineFormSet(forms.models.BaseInlineFormSet):
@@ -388,23 +382,6 @@ class TestListMembershipInlineFormSet(forms.models.BaseInlineFormSet):
         qs = kwargs["queryset"].filter(test_list=kwargs["instance"]).select_related("test")
         kwargs["queryset"] = qs
         super(TestListMembershipInlineFormSet, self).__init__(*args, **kwargs)
-
-    def clean(self):
-        """Make sure there are no duplicated slugs in a TestList"""
-        super(TestListMembershipInlineFormSet, self).clean()
-
-        if not hasattr(self, "cleaned_data"):
-            # something else went wrong already
-            return {}
-
-        slugs = [f.instance.test.slug for f in self.forms if (hasattr(f.instance, "test") and not f.cleaned_data["DELETE"])]
-        slugs = [x for x in slugs if x]
-        duplicates = list(set([sn for sn in slugs if slugs.count(sn) > 1]))
-        if duplicates:
-            raise forms.ValidationError(
-                "The following macro names are duplicated :: " + ",".join(duplicates)
-            )
-        return self.cleaned_data
 
 
 class SublistInlineFormSet(forms.models.BaseInlineFormSet):
@@ -425,6 +402,7 @@ class SublistInlineFormSet(forms.models.BaseInlineFormSet):
         children = [f.instance.child for f in self.forms if hasattr(f.instance, 'child') and not f.cleaned_data["DELETE"]]
         if self.instance and self.instance in children:
             raise forms.ValidationError("A test list can not be its own child. Please remove Sublist ID %d and try again" % (self.instance.pk))
+
         return self.cleaned_data
 
 

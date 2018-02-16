@@ -1,9 +1,9 @@
-
 import collections
 import json
 import math
 import os
 import traceback
+from functools import reduce
 
 import dateutil
 import dicom
@@ -11,7 +11,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy
 import scipy
-
+from braces.views import JSONResponseMixin, PermissionRequiredMixin
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.sites.shortcuts import get_current_site
@@ -20,26 +20,23 @@ from django.core.files.base import ContentFile
 from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.forms.models import model_to_dict
-from django.http import HttpResponseRedirect, Http404
+from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.template.defaultfilters import filesizeformat
-from django.views.generic import View, CreateView, TemplateView
 from django.utils import timezone
 from django.utils.translation import ugettext as _
+from django.views.generic import CreateView, TemplateView, View
 from django_comments.models import Comment
 
-from . import forms
-from .. import models, utils, signals
-from .base import BaseEditTestListInstance, TestListInstances, UTCList, logger
 from qatrack.attachments.models import Attachment
-from qatrack.attachments.utils import to_bytes, imsave
+from qatrack.attachments.utils import imsave, to_bytes
 from qatrack.contacts.models import Contact
-from qatrack.units.models import Unit, Site
 from qatrack.service_log import models as sl_models
+from qatrack.units.models import Site, Unit
 
-from braces.views import JSONResponseMixin, PermissionRequiredMixin
-from functools import reduce
-
+from . import forms
+from .. import models, signals, utils
+from .base import BaseEditTestListInstance, TestListInstances, UTCList, logger
 
 DEFAULT_CALCULATION_CONTEXT = {
     "dicom": dicom,
@@ -70,61 +67,49 @@ def set_attachment_owners(test_list_instance, attachments):
                 attachment.save()
 
 
-class AttachmentMixin(object):
-
-    def get_write_file_func(self):
-
-        self.user_attached = []
-
-        def write(fname, obj):
-            fname = os.path.basename(fname)
-            data = imsave(obj, fname)
-            if data is None:
-                data = to_bytes(obj, fname)
-
-            f = ContentFile(data, fname)
-
-            attachment = Attachment(
-                attachment=f,
-                comment=_("Composite created file"),
-                created_by=self.request.user,
-            )
-            attachment.save()
-
-            self.user_attached.append(self.attachment_info(attachment))
-
-        return write
-
-    def attachment_info(self, attachment):
-        return {
-            'attachment_id': attachment.id,
-            'name': os.path.basename(attachment.attachment.name),
-            'size': filesizeformat(attachment.attachment.size),
-            'url': attachment.attachment.url,
-            'is_image': attachment.is_image,
-        }
-
-    def set_calculation_context(self):
-
-        return {
-            "write_file": self.get_write_file_func(),
-        }
-
-    def post(self, *args, **kwargs):
-        """
-        At the end of any view which may use mpl.pyplot to generate a plot
-        we need to clean the figure, to attempt to  prevent any crosstalk
-        between plots.
-
-        Generally people should use the OO interface to MPL rather than
-        pyplot, because pyplot is not threadsafe.
-        """
-        resp = super(AttachmentMixin, self).post(*args, **kwargs)
-        plt.clf()
-        return resp
+def attachment_info(attachment):
+    return {
+        'attachment_id': attachment.id,
+        'name': os.path.basename(attachment.attachment.name),
+        'size': filesizeformat(attachment.attachment.size),
+        'url': attachment.attachment.url,
+        'is_image': attachment.is_image,
+    }
 
 
-class Upload(JSONResponseMixin, AttachmentMixin, View):
+class CompositeUtils:
+
+    def __init__(self, request, context, comments):
+        self.context = context
+        self.context['__user_attached__'] = []
+        self.request = request
+        self.comments = comments
+
+    def set_comment(self, comment):
+        self.context["__comment__"] = comment
+
+    def get_comment(self, slug):
+        return self.comments.get(slug, "")
+
+    def write_file(self, fname, obj):
+        fname = os.path.basename(fname)
+        data = imsave(obj, fname)
+        if data is None:
+            data = to_bytes(obj, fname)
+
+        f = ContentFile(data, fname)
+
+        attachment = Attachment(
+            attachment=f,
+            comment=_("Composite created file"),
+            created_by=self.request.user,
+        )
+        attachment.save()
+
+        self.context["__user_attached__"].append(attachment_info(attachment))
+
+
+class Upload(JSONResponseMixin, View):
     """View for handling AJAX upload requests when performing QA"""
 
     # use html for IE8's sake :(
@@ -138,7 +123,7 @@ class Upload(JSONResponseMixin, AttachmentMixin, View):
             else:
                 self.handle_upload()
 
-            return self.run_calc()
+            resp = self.run_calc()
         except Exception:
             msg = traceback.format_exc()
             results = {
@@ -147,7 +132,17 @@ class Upload(JSONResponseMixin, AttachmentMixin, View):
                 "result": None,
                 "user_attached": [],
             }
-            return self.render_json_response(results)
+            resp = self.render_json_response(results)
+        """
+        At the end of any view which may use mpl.pyplot to generate a plot
+        we need to clean the figure, to attempt to  prevent any crosstalk
+        between plots.
+
+        Generally people should use the OO interface to MPL rather than
+        pyplot, because pyplot is not threadsafe.
+        """
+        plt.clf()
+        return resp
 
     def reprocess(self):
         self.attach_id = self.request.POST.get("attachment_id")
@@ -162,10 +157,11 @@ class Upload(JSONResponseMixin, AttachmentMixin, View):
 
         results = {
             'attachment_id': self.attachment.id,
-            'attachment': self.attachment_info(self.attachment),
+            'attachment': attachment_info(self.attachment),
             'success': False,
             'errors': [],
             "result": None,
+            "comment": "",
             "user_attached": [],
         }
 
@@ -180,7 +176,8 @@ class Upload(JSONResponseMixin, AttachmentMixin, View):
             key = "result" if "result" in self.calculation_context else test.slug
             results["result"] = self.calculation_context[key]
             results["success"] = True
-            results["user_attached"] = self.user_attached
+            results["user_attached"] = list(self.calculation_context.get("__user_attached__", []))
+            results["comment"] = self.calculation_context.get("__comment__")
         except models.Test.DoesNotExist:
             results["errors"].append("Test with that ID does not exist")
         except Exception:
@@ -198,31 +195,30 @@ class Upload(JSONResponseMixin, AttachmentMixin, View):
             attachment=f,
             label=f.name,
             comment=comment,
-            created_by=self.request.user
+            created_by=self.request.user,
         )
 
     def set_calculation_context(self):
         """set up the environment that the composite test will be calculated in"""
 
-        self.calculation_context = super(Upload, self).set_calculation_context()
+        self.calculation_context = {}
 
         meta_data = self.get_json_data("meta")
 
-        for d in ("work_completed", "work_started",):
+        for d in ("work_completed", "work_started"):
             try:
                 meta_data[d] = dateutil.parser.parse(meta_data[d])
             except (KeyError, AttributeError, TypeError):
                 pass
 
-        refs = self.get_json_data("refs")
-        tols = self.get_json_data("tols")
-
+        comments = self.get_json_data("comments")
         self.calculation_context.update({
             "FILE": open(self.attachment.attachment.path, "r"),
             "BIN_FILE": self.attachment.attachment,
             "META": meta_data,
-            "REFS": refs,
-            "TOLS": tols,
+            "REFS": self.get_json_data("refs"),
+            "TOLS": self.get_json_data("tols"),
+            "UTILS": CompositeUtils(self.request, self.calculation_context, comments),
         })
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
 
@@ -240,7 +236,7 @@ class Upload(JSONResponseMixin, AttachmentMixin, View):
             return
 
 
-class CompositeCalculation(JSONResponseMixin, AttachmentMixin, View):
+class CompositeCalculation(JSONResponseMixin, View):
     """validate all qa tests in the request for the :model:`TestList` with id test_list_id"""
 
     def get_json_data(self, name):
@@ -286,7 +282,8 @@ class CompositeCalculation(JSONResponseMixin, AttachmentMixin, View):
                 results[slug] = {
                     'value': result,
                     'error': None,
-                    'user_attached': list(self.user_attached),
+                    'user_attached': list(self.calculation_context.get("__user_attached__", [])),
+                    'comment': self.calculation_context.get("__comment__"),
                 }
                 self.calculation_context[slug] = result
             except Exception:
@@ -294,13 +291,27 @@ class CompositeCalculation(JSONResponseMixin, AttachmentMixin, View):
                 results[slug] = {
                     'value': None,
                     'error': "Invalid Test Procedure: %s" % msg,
+                    'comment': "",
                     'user_attached': [],
                 }
             finally:
                 # clean up calculation context for next test
-                if "result" in self.calculation_context:
-                    del self.calculation_context["result"]
-                del self.user_attached[:]
+                to_clean = ['result'] + [k for k in self.calculation_context.keys() if k not in self.context_keys]
+                to_clean = set([k for k in to_clean if k in self.calculation_context])
+                for k in to_clean:
+                    del self.calculation_context[k]
+
+                del self.calculation_context['__user_attached__'][:]
+
+        """
+        At the end of any view which may use mpl.pyplot to generate a plot
+        we need to clean the figure, to attempt to  prevent any crosstalk
+        between plots.
+
+        Generally people should use the OO interface to MPL rather than
+        pyplot, because pyplot is not threadsafe.
+        """
+        plt.clf()
 
         return self.render_json_response({"success": True, "errors": [], "results": results})
 
@@ -313,21 +324,18 @@ class CompositeCalculation(JSONResponseMixin, AttachmentMixin, View):
             self.composite_tests = {}
             return
 
-        composite_tests = models.Test.objects.filter(
-            pk__in=composite_ids
-        ).values_list("slug", "calculation_procedure")
+        composite_tests = models.Test.objects.filter(pk__in=composite_ids).values_list("slug", "calculation_procedure")
 
         self.composite_tests = dict(composite_tests)
 
     def set_calculation_context(self):
         """set up the environment that the composite test will be calculated in"""
 
-        self.calculation_context = super(CompositeCalculation, self).set_calculation_context()
-
+        self.calculation_context = {}
         values = self.get_json_data("qavalues")
         meta_data = self.get_json_data("meta")
 
-        for d in ("work_completed", "work_started",):
+        for d in ("work_completed", "work_started"):
             try:
                 meta_data[d] = dateutil.parser.parse(meta_data[d])
             except (TypeError, KeyError, AttributeError):
@@ -336,18 +344,20 @@ class CompositeCalculation(JSONResponseMixin, AttachmentMixin, View):
         if values is None:
             return
 
-        refs = self.get_json_data("refs")
-        tols = self.get_json_data("tols")
-
+        comments = self.get_json_data("comments")
         self.calculation_context.update({
             "META": meta_data,
-            "REFS": refs,
-            "TOLS": tols,
+            "REFS": self.get_json_data("refs"),
+            "TOLS": self.get_json_data("tols"),
+            "UTILS": CompositeUtils(self.request, self.calculation_context, comments),
         })
 
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
 
+        self.context_keys = list(self.calculation_context.keys())
+
         for slug, val in values.items():
+            self.context_keys.append(slug)
             if slug not in self.composite_tests:
                 self.calculation_context[slug] = val
 
@@ -427,12 +437,24 @@ class ChooseUnit(TemplateView):
             if q.filter(unit__site__isnull=True).exists():
                 unit_site_types['zzzNonezzz'] = collections.defaultdict(list)
 
-            q = q.values('unit', 'unit__type__name', 'unit__name', 'unit__number', 'unit__id', 'unit__site__name').order_by(units_ordering).distinct()
+            q = q.values(
+                'unit',
+                'unit__type__name',
+                'unit__name',
+                'unit__number',
+                'unit__id',
+                'unit__site__name',
+            ).order_by(units_ordering).distinct()
 
             freq_qs = models.Frequency.objects.prefetch_related('unittestcollections__unit').all()
 
             for unit in q:
-                unit['frequencies'] = freq_qs.filter(unittestcollections__unit_id=unit['unit__id']).distinct().values('slug', 'name')
+                unit['frequencies'] = freq_qs.filter(
+                    unittestcollections__unit_id=unit['unit__id'],
+                ).distinct().values(
+                    'slug',
+                    'name',
+                )
 
                 if unit['unit__site__name']:
                     unit_site_types[unit['unit__site__name']][unit['unit__type__name']].append(unit)
@@ -441,7 +463,9 @@ class ChooseUnit(TemplateView):
 
             ordered = {}
             for s in unit_site_types:
-                ordered[s] = sorted(list(unit_site_types[s].items()), key=lambda x: min([u[units_ordering] for u in x[1]]))
+                ordered[s] = sorted(
+                    list(unit_site_types[s].items()), key=lambda x: min([u[units_ordering] for u in x[1]])
+                )
 
             ordered = collections.OrderedDict(sorted(ordered.items(), key=lambda s: s[0]))
 
@@ -453,12 +477,15 @@ class ChooseUnit(TemplateView):
             context['split_by'] = int(split_by)
 
         else:
-            q = q.values('unit', 'unit__type__name', 'unit__name', 'unit__number', 'unit__id').order_by(units_ordering).distinct()
+            q = q.values('unit', 'unit__type__name', 'unit__name', 'unit__number',
+                         'unit__id').order_by(units_ordering).distinct()
             freq_qs = models.Frequency.objects.prefetch_related('unittestcollections__unit').all()
 
             unit_types = collections.defaultdict(list)
             for unit in q:
-                unit['frequencies'] = freq_qs.filter(unittestcollections__unit_id=unit['unit__id']).distinct().values('slug', 'name')
+                unit['frequencies'] = freq_qs.filter(unittestcollections__unit_id=unit['unit__id']).distinct().values(
+                    'slug', 'name'
+                )
                 unit_types[unit["unit__type__name"]].append(unit)
 
             ordered = sorted(list(unit_types.items()), key=lambda x: min([u[units_ordering] for u in x[1]]))
@@ -495,7 +522,6 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         :model:`qa.TestListCycle`'s (where N is number of lists in the cycle).
         """
 
-        from django.db.models import Prefetch
         requested_day = self.get_requested_day_to_perform()
         self.actual_day, self.test_list = self.unit_test_col.get_list(requested_day)
         if self.test_list is None:
@@ -510,7 +536,9 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
         self.unit_test_col = get_object_or_404(
             models.UnitTestCollection.objects.select_related(
-                "unit", "frequency", "last_instance"
+                "unit",
+                "frequency",
+                "last_instance",
             ).filter(
                 active=True,
                 visible_to__in=self.request.user.groups.all(),
@@ -550,7 +578,6 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         ).select_related(
             "reference",
             "test__category",
-            # "test__pk",
             "tolerance",
             "unit",
         )
@@ -698,10 +725,8 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             messages.add_message(
                 request=self.request,
                 level=messages.INFO,
-                message='Changed status of service event(s) %s to "%s".' % (
-                    ', '.join(str(x) for x in changed_se),
-                    sl_models.ServiceEventStatus.get_default().name
-                )
+                message='Changed status of service event(s) %s to "%s".' %
+                (', '.join(str(x) for x in changed_se), sl_models.ServiceEventStatus.get_default().name)
             )
 
         if not self.object.in_progress:
@@ -711,8 +736,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
                 signals.testlist_complete.send(sender=self, instance=self.object, created=False)
             except:
                 messages.add_message(
-                    request=self.request,
-                    message='Error sending notification email.', level=messages.ERROR
+                    request=self.request, message='Error sending notification email.', level=messages.ERROR
                 )
 
         # let user know request succeeded and return to unit list
@@ -752,7 +776,9 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         self.set_unit_test_infos()
 
         if self.request.method == "POST":
-            formset = forms.CreateTestInstanceFormSet(self.request.POST, self.request.FILES, unit_test_infos=self.unit_test_infos, user=self.request.user)
+            formset = forms.CreateTestInstanceFormSet(
+                self.request.POST, self.request.FILES, unit_test_infos=self.unit_test_infos, user=self.request.user
+            )
         else:
             formset = forms.CreateTestInstanceFormSet(unit_test_infos=self.unit_test_infos, user=self.request.user)
 
@@ -771,8 +797,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             context['days'] = self.unit_test_col.tests_object.days_display()
 
         in_progress = models.TestListInstance.objects.in_progress().filter(
-            unit_test_collection=self.unit_test_col,
-            test_list=self.test_list
+            unit_test_collection=self.unit_test_col, test_list=self.test_list
         )
         context["test_list"] = self.test_list
         context["in_progress"] = in_progress
@@ -786,11 +811,11 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             context['se_statuses'] = {rtsqa.service_event.id: rtsqa.service_event.service_status.id}
             context['rtsqa_id'] = rtsqa_id
             context['rtsqa_for_se'] = rtsqa.service_event
-        # else:
-        #     context['se_statuses'] = {}
-        # context['status_tag_colours'] = sl_models.ServiceEventStatus.get_colour_dict()
 
-        context['attachments'] = context['test_list'].attachment_set.all() | self.unit_test_col.tests_object.attachment_set.all()
+        context['attachments'] = (
+            context['test_list'].attachment_set.all() |
+            self.unit_test_col.tests_object.attachment_set.all()
+        )
 
         return context
 
@@ -878,10 +903,8 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
                 messages.add_message(
                     request=self.request,
                     level=messages.INFO,
-                    message='Changed status of service event(s) %s to "%s".' % (
-                        ', '.join(str(x) for x in changed_se),
-                        sl_models.ServiceEventStatus.get_default().name
-                    )
+                    message='Changed status of service event(s) %s to "%s".' %
+                    (', '.join(str(x) for x in changed_se), sl_models.ServiceEventStatus.get_default().name)
                 )
 
             if not self.object.in_progress:
@@ -890,7 +913,8 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
                 except:
                     messages.add_message(
                         request=self.request,
-                        message='Error sending notification email.', level=messages.ERROR
+                        message='Error sending notification email.',
+                        level=messages.ERROR,
                     )
 
             # let user know request succeeded and return to unit list
@@ -993,21 +1017,21 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
     def get_context_data(self, **kwargs):
 
         context = super(EditTestListInstance, self).get_context_data(**kwargs)
-        self.unit_test_infos = [f.instance.unit_test_info for f in context["formset"]]
+        uti_pks = [f.instance.unit_test_info.pk for f in context["formset"]]
+        utis = models.UnitTestInfo.objects.filter(pk__in=uti_pks).select_related(
+            "reference",
+            "tolerance",
+            "unit",
+            "test__category",
+        ).prefetch_related(
+            "test__attachment_set",
+        )
+        self.unit_test_infos = list(sorted(utis, key=lambda x: uti_pks.index(x.pk)))
+
         context["unit_test_infos"] = json.dumps(self.template_unit_test_infos())
 
-        # rtsqa_id = self.request.GET.get('rtsqa', None)
-        # print(rtsqa_id)
-        # if rtsqa_id:
-        #     rtsqa = sl_models.ReturnToServiceQA.objects.get(pk=rtsqa_id)
-        #     context['se_statuses'] = {rtsqa.service_event.id: rtsqa.service_event.service_status.id}
-        #     context['is_rtsqa'] = True
-        #     context['rtsqa_for_se'] = rtsqa.service_event
-        # else:
-        #     context['se_statuses'] = {}
-        # context['status_tag_colours'] = sl_models.ServiceEventStatus.get_colour_dict()
-
-        context['attachments'] = context['test_list'].attachment_set.all() | self.object.unit_test_collection.tests_object.attachment_set.all()
+        context['attachments'] = context['test_list'].attachment_set.all(
+        ) | self.object.unit_test_collection.tests_object.attachment_set.all()
 
         return context
 
@@ -1084,9 +1108,7 @@ class UnitList(UTCList):
     def get_queryset(self):
         """filter queryset by frequency"""
         qs = super(UnitList, self).get_queryset()
-        self.units = Unit.objects.filter(
-            number__in=self.kwargs["unit_number"].split("/")
-        )
+        self.units = Unit.objects.filter(number__in=self.kwargs["unit_number"].split("/"))
         return qs.filter(unit__in=self.units)
 
     def get_page_title(self):

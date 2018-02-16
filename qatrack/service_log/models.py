@@ -1,14 +1,13 @@
 import re
 
 from django.conf import settings
+from django.contrib.auth.models import Group, User
 from django.core.validators import RegexValidator
 from django.db import models
-from django.contrib.auth.models import User, Group
 from django.utils.translation import ugettext as _
 
+from qatrack.qa.models import TestListInstance, UnitTestCollection
 from qatrack.units.models import Unit, Vendor
-from qatrack.qa.models import UnitTestCollection, TestListInstance
-
 
 re_255 = '([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])'
 color_re = re.compile('^rgba\(' + re_255 + ',' + re_255 + ',' + re_255 + ',(0(\.[0-9][0-9]?)?|1)\)$')
@@ -227,10 +226,8 @@ class ReturnToServiceQA(models.Model):
     datetime_assigned = models.DateTimeField()
 
     class Meta:
-        permissions = (
-            ('view_returntoserviceqa', 'Can view return vo service qa'),
-            ('perform_returntoserviceqa', 'Can perform return to service qa')
-        )
+        permissions = (('view_returntoserviceqa', 'Can view return to service qa'),
+                       ('perform_returntoserviceqa', 'Can perform return to service qa'))
 
 
 class GroupLinker(models.Model):

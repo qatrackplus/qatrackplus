@@ -10,6 +10,7 @@ from django.contrib.contenttypes.fields import (
 from django.contrib.contenttypes.models import ContentType
 from django.core import urlresolvers
 from django.core.exceptions import ValidationError
+from django.core.urlresolvers import reverse
 from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models import Count, Q
@@ -1094,7 +1095,6 @@ class TestList(TestCollectionInterface):
         """return display representation of object"""
         return "(%s) %s" % (self.pk, self.name)
 
-
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         super(TestList, self).save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
         self.utcs.update(name=self.name)
@@ -1559,22 +1559,25 @@ class TestInstance(models.Model):
 class TestListInstanceManager(models.Manager):
 
     def unreviewed(self):
-        return self.complete().filter(all_reviewed=False)
+        return self.complete().filter(all_reviewed=False).order_by("-work_completed")
 
     def unreviewed_count(self):
         return self.unreviewed().count()
 
     def your_unreviewed(self, user):
-        return self.complete().filter(all_reviewed=False, unit_test_collection__visible_to__in=user.groups.all()).distinct()
+        return self.complete().filter(
+            all_reviewed=False,
+            unit_test_collection__visible_to__in=user.groups.all(),
+        ).order_by("-work_completed").distinct()
 
     def your_unreviewed_count(self, user):
         return self.your_unreviewed(user).count()
 
     def in_progress(self):
-        return self.get_queryset().filter(in_progress=True)
+        return self.get_queryset().filter(in_progress=True).order_by("-work_completed")
 
     def complete(self):
-        return self.get_queryset().filter(in_progress=False)
+        return self.get_queryset().filter(in_progress=False).order_by("-work_completed")
 
 
 class TestListInstance(models.Model):
@@ -1746,6 +1749,9 @@ class TestListInstance(models.Model):
             instances.append((ti, test_history))
 
         return instances, dates
+
+    def get_absolute_url(self):
+        return reverse("view_test_list_instance", kwargs={"pk": self.pk})
 
     def __str__(self):
         return "TestListInstance(pk=%s)" % self.pk

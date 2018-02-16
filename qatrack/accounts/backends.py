@@ -4,14 +4,16 @@ except ImportError:
     pass
 
 from django.conf import settings
-from django.contrib.auth.models import User
 from django.contrib.auth.backends import ModelBackend
+from django.contrib.auth.models import User
 
 
 # stripped down version of http://djangosnippets.org/snippets/901/
 class ActiveDirectoryGroupMembershipSSLBackend:
 
     def authenticate(self, username=None, password=None):
+        username = self.clean_username(username)
+
         debug = None
         if settings.AD_DEBUG_FILE and settings.AD_DEBUG:
             debug = open(settings.AD_DEBUG_FILE, 'w')
@@ -71,7 +73,12 @@ class ActiveDirectoryGroupMembershipSSLBackend:
                 # search
                 if debug:
                     print("\tsearch...", file=debug)
-                result = l.search_ext_s(settings.AD_SEARCH_DN, ldap.SCOPE_SUBTREE, "%s=%s" % (settings.AD_LU_ACCOUNT_NAME, username), settings.AD_SEARCH_FIELDS)[0][1]
+                result = l.search_ext_s(
+                    settings.AD_SEARCH_DN,
+                    ldap.SCOPE_SUBTREE,
+                    "%s=%s" % (settings.AD_LU_ACCOUNT_NAME, username),
+                    settings.AD_SEARCH_FIELDS,
+                )[0][1]
 
                 # get personal info
                 mail = result.get(settings.AD_LU_MAIL, ["mail@example.com"])[0]
@@ -101,6 +108,21 @@ class ActiveDirectoryGroupMembershipSSLBackend:
             return User.objects.get(pk=user_id)
         except User.DoesNotExist:
             return None
+
+    def clean_username(self, username):
+        """
+        Performs any cleaning on the "username" prior to using it to get or
+        create the user object.  Returns the cleaned username.
+
+        By default, returns the username unchanged.
+        """
+        if settings.AD_CLEAN_USERNAME and callable(settings.AD_CLEAN_USERNAME):
+            return settings.AD_CLEAN_USERNAME(username)
+        return username.replace(
+            settings.CLEAN_USERNAME_STRING, ""
+        ).replace(
+            settings.AD_CLEAN_USERNAME_STRING, ""
+        )
 
 
 class WindowsIntegratedAuthenticationBackend(ModelBackend):
@@ -142,7 +164,9 @@ class WindowsIntegratedAuthenticationBackend(ModelBackend):
 
         By default, returns the username unchanged.
         """
-        return username.replace(settings.CLEAN_USERNAME_STRING, "")
+        if settings.AD_CLEAN_USERNAME and callable(settings.AD_CLEAN_USERNAME):
+            return settings.AD_CLEAN_USERNAME(username)
+        return username.replace(settings.CLEAN_USERNAME_STRING, "").replace(settings.AD_CLEAN_USERNAME_STRING, "")
 
     def configure_user(self, user):
         """
@@ -161,7 +185,12 @@ class WindowsIntegratedAuthenticationBackend(ModelBackend):
             l.bind_s(binddn, settings.AD_LDAP_PW)
 
             # search
-            result = l.search_ext_s(settings.AD_SEARCH_DN, ldap.SCOPE_SUBTREE, "%s=%s" % (settings.AD_LU_ACCOUNT_NAME, user), settings.AD_SEARCH_FIELDS)[0][1]
+            result = l.search_ext_s(
+                settings.AD_SEARCH_DN,
+                ldap.SCOPE_SUBTREE,
+                "%s=%s" % (settings.AD_LU_ACCOUNT_NAME, user),
+                settings.AD_SEARCH_FIELDS,
+            )[0][1]
             l.unbind_s()
 
             # get personal info

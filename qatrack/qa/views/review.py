@@ -1,26 +1,39 @@
-
 import calendar
 import collections
-import json
 
+from braces.views import JSONResponseMixin, PermissionRequiredMixin
+from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
-from django.db.models import Q, ObjectDoesNotExist
-from django.http import HttpResponseRedirect, Http404
+from django.db.models import Q
+from django.http import Http404, HttpResponseRedirect
 from django.utils import timezone
 from django.utils.translation import ugettext as _
-from django.views.generic import ListView, TemplateView, DetailView, View
+from django.views.generic import (
+    DeleteView,
+    DetailView,
+    ListView,
+    TemplateView,
+    View,
+)
+import pytz
 
-from .. import models, utils
-from . import forms
-from .base import TestListInstanceMixin, BaseEditTestListInstance, TestListInstances, UTCList
-from .perform import ChooseUnit
-
+from qatrack.service_log.models import (
+    ReturnToServiceQA,
+    ServiceEvent,
+    ServiceEventStatus,
+)
 from qatrack.units.models import Unit
-from qatrack.service_log.models import ServiceEvent, ReturnToServiceQA, ServiceEventStatus
 
-from braces.views import PermissionRequiredMixin, JSONResponseMixin
+from . import forms
+from .. import models
+from .base import (
+    BaseEditTestListInstance,
+    TestListInstanceMixin,
+    TestListInstances,
+    UTCList,
+)
+from .perform import ChooseUnit
 
 
 class TestListInstanceDetails(TestListInstanceMixin, DetailView):
@@ -134,6 +147,20 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         tests = [f.instance.unit_test_info.test for f in context['formset']]
         context['borders'] = self.object.test_list.sublist_borders(tests)
         return context
+
+
+class TestListInstanceDelete(PermissionRequiredMixin, DeleteView):
+    """
+    This view is for deleting a :model:`qa.TestListInstance`
+    """
+
+    permission_required = "qa.delete_testlistinstance"
+    raise_exception = True
+
+    model = models.TestListInstance
+
+    def get_success_url(self):
+        return self.request.GET.get("next", reverse("home"))
 
 
 class UTCReview(PermissionRequiredMixin, UTCList):
@@ -336,9 +363,7 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
             "last_instance__testinstance_set__status",
             "last_instance__modified_by",
             "tests_object",
-        ).exclude(
-            due_date=None
-        ).order_by(
+        ).exclude(due_date=None).order_by(
             "frequency__nominal_interval",
             "unit__number",
             "name",
@@ -353,22 +378,28 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
 
         qs = self.get_queryset()
 
-        now = timezone.now()
+        tz = pytz.timezone(settings.TIME_ZONE)
+        now = timezone.now().astimezone(tz)
         today = now.date()
         friday = today + timezone.timedelta(days=(4 - today.weekday()) % 7)
         next_friday = friday + timezone.timedelta(days=7)
-        month_end = timezone.datetime(now.year, now.month, calendar.mdays[now.month]).date()
+        month_end = tz.localize(timezone.datetime(now.year, now.month, calendar.mdays[now.month])).date()
         next_month_start = month_end + timezone.timedelta(days=1)
-        next_month_end = timezone.datetime(next_month_start.year, next_month_start.month, calendar.mdays[next_month_start.month]).date()
+        next_month_end = tz.localize(
+            timezone.datetime(next_month_start.year, next_month_start.month, calendar.mdays[next_month_start.month])
+        ).date()
 
         due = collections.defaultdict(list)
 
+        units = set()
+        freqs = set()
+
         for utc in qs:
-            due_date = utc.due_date.date()
+            due_date = utc.due_date.astimezone(tz).date()
             if due_date <= today:
                 due["overdue"].append(utc)
             elif due_date <= friday:
-                if utc.last_instance is None or utc.last_instance.work_completed.date() != today:
+                if utc.last_instance is None or utc.last_instance.work_completed.astimezone(tz).date() != today:
                     due["this_week"].append(utc)
             elif due_date <= next_friday:
                 due["next_week"].append(utc)
@@ -377,10 +408,15 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
             elif due_date <= next_month_end:
                 due["next_month"].append(utc)
 
+            units.add(str(utc.unit))
+            freqs.add(str(utc.frequency or "Ad-Hoc"))
+
         ordered_due_lists = []
         for key, display in self.DUE_DISPLAY_ORDER:
-            ordered_due_lists.append((display, due[key]))
+            ordered_due_lists.append((key, display, due[key]))
         context["due"] = ordered_due_lists
+        context["units"] = sorted(units)
+        context["freqs"] = sorted(freqs)
         return context
 
 
@@ -457,11 +493,12 @@ class OverviewObjects(JSONResponseMixin, View):
                             last_instance_pfs = 'New List'
 
                         ds = utc.due_status()
+                        last_completed = utc.last_instance.work_completed if utc.last_instance else None
                         unit_freqs[freq_name][utc.name] = {
                             'id': utc.pk,
                             'url': reverse('review_utc', args=(utc.pk,)),
                             'last_instance_status': last_instance_pfs,
-                            'last_instance_work_completed': utc.last_instance.work_completed if utc.last_instance else None,
+                            'last_instance_work_completed': last_completed,
                             'due_date': utc.due_date,
                             'due_status': ds
                         }
