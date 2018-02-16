@@ -216,6 +216,7 @@ INSTALLED_APPS = [
     'django_comments',
     'formtools',
     'tastypie',
+    'rest_framework',
     'listable',
     'genericdropdown',
     'crispy_forms',
@@ -236,6 +237,18 @@ INSTALLED_APPS = [
 
     'admin_views',
 ]
+
+# ----------------------------------------------------------------------------
+# API settings
+
+REST_FRAMEWORK = {
+    # Use Django's standard `django.contrib.auth` permissions
+    'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.DjangoModelPermissions'],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 100,
+}
+
+
 # -----------------------------------------------------------------------------
 # Cache settings
 

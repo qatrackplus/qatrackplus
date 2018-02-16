@@ -1,8 +1,8 @@
 from django.conf.urls import include, url
 from tastypie.api import Api
 
-from qatrack.qa import api
 import qatrack.qa.views.admin
+from qatrack.qa import api
 
 from .views import admin, backup, base, charts, perform, review
 

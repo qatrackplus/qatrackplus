@@ -11,16 +11,19 @@ django-coverage==1.2.4
 django-crispy-forms==1.6.0
 django-debug-toolbar==1.8
 django-extensions==1.7.4
+django-filter==1.1.0
 django-form-utils==1.0.3
 django-mssql; sys_platform=='win32'
 django-pyodbc-azure; sys_platform=='win32'
 django-registration==2.1.2
+djangorestframework==3.7.7
 django-tastypie==0.13.3
 django-widget-tweaks==1.4.1
 freezegun==0.3.9
 gunicorn==19.3.0; sys_platform=='linux'
 ipdb==0.10.3
 ipython==6.2.1
+markdown==2.6.11
 matplotlib==2.1.0
 numpy==1.13.3
 pep8==1.7.0
