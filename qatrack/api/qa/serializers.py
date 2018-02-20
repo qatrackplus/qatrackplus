@@ -45,6 +45,13 @@ class TestSerializer(serializers.HyperlinkedModelSerializer):
         fields = "__all__"
 
 
+class TestListSerializer(serializers.HyperlinkedModelSerializer):
+
+    class Meta:
+        model = models.TestList
+        fields = "__all__"
+
+
 class UnitTestInfoSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = models.UnitTestInfo
@@ -79,6 +86,13 @@ class TestInstanceSerializer(serializers.HyperlinkedModelSerializer):
 class TestListInstanceSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = models.TestListInstance
+        fields = "__all__"
+
+
+class TestListCycleSerializer(serializers.HyperlinkedModelSerializer):
+
+    class Meta:
+        model = models.TestListCycle
         fields = "__all__"
 
 

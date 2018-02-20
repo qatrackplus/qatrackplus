@@ -40,6 +40,11 @@ class TestViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = serializers.TestSerializer
 
 
+class TestListViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = models.TestList.objects.all()
+    serializer_class = serializers.TestListSerializer
+
+
 class UnitTestInfoViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.UnitTestInfo.objects.all()
     serializer_class = serializers.UnitTestInfoSerializer
@@ -68,6 +73,11 @@ class TestInstanceViewSet(viewsets.ReadOnlyModelViewSet):
 class TestListInstanceViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.TestListInstance.objects.all()
     serializer_class = serializers.TestListInstanceSerializer
+
+
+class TestListCycleViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = models.TestListCycle.objects.all()
+    serializer_class = serializers.TestListCycleSerializer
 
 
 class TestListCycleMembershipViewSet(viewsets.ReadOnlyModelViewSet):

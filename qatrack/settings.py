@@ -160,7 +160,7 @@ MIDDLEWARE = [
 
 
 # login required middleware settings
-LOGIN_EXEMPT_URLS = [r"^accounts/", ]
+LOGIN_EXEMPT_URLS = [r"^accounts/", r"api/*"]
 ACCOUNT_ACTIVATION_DAYS = 7
 LOGIN_REDIRECT_URL = '/qa/unit/'
 LOGIN_URL = "/accounts/login/"
@@ -212,29 +212,26 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     'django_extensions',
     'debug_toolbar',
-
     'django_comments',
     'formtools',
     'tastypie',
     'rest_framework',
+    'rest_framework.authtoken',
     'listable',
     'genericdropdown',
     'crispy_forms',
     'widget_tweaks',
-
     'qatrack.cache',
     'qatrack.accounts',
     'qatrack.units',
     'qatrack.qa',
     'qatrack.qatrack_core',
-
     'qatrack.notifications',
     'qatrack.contacts',
     'qatrack.issue_tracker',
     'qatrack.service_log',
     'qatrack.parts',
     'qatrack.attachments',
-
     'admin_views',
 ]
 
@@ -242,6 +239,7 @@ INSTALLED_APPS = [
 # API settings
 
 REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': ('rest_framework.authentication.TokenAuthentication',),
     # Use Django's standard `django.contrib.auth` permissions
     'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.DjangoModelPermissions'],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
