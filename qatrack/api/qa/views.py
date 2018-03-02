@@ -1,8 +1,23 @@
+from django.contrib.sites.shortcuts import get_current_site
+from django.utils import timezone
+from rest_framework import status
 from rest_framework import viewsets
+from rest_framework import views
+from rest_framework.response import Response
 
+from qatrack.api.viewsets import CreateListRetrieveViewSet
 from qatrack.api.qa import serializers
 from qatrack.api.serializers import MultiSerializerMixin
 from qatrack.qa import models
+from qatrack.qa.views import perform
+
+
+class CompositeCalculation(perform.CompositeCalculation, views.APIView):
+    permission_classes = []
+
+
+class Upload(perform.CompositeCalculation, views.APIView):
+    permission_classes = []
 
 
 class FrequencyViewSet(viewsets.ReadOnlyModelViewSet):
@@ -70,9 +85,39 @@ class TestInstanceViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = serializers.TestInstanceSerializer
 
 
-class TestListInstanceViewSet(viewsets.ReadOnlyModelViewSet):
+class TestListInstanceViewSet(MultiSerializerMixin, CreateListRetrieveViewSet):
     queryset = models.TestListInstance.objects.all()
     serializer_class = serializers.TestListInstanceSerializer
+    action_serializers = {'create': serializers.TestListInstanceCreator}
+
+    def create(self, request, *args, **kwargs):
+        data = dict(request.data.items())
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def perform_create(self, serializer):
+        # TODO : things to test
+        #   - sublists
+        #   - composite tests
+        #   - file uploads / processing
+        #   - attachments
+        utc = serializer.validated_data['unit_test_collection']
+        day = serializer.validated_data.get('day', 0)
+        day, tl = utc.get_list(day=day)
+
+        extra = {
+            'created_by': self.request.user,
+            'modified_by': self.request.user,
+            'modified': timezone.now(),
+            'due_date': utc.due_date,
+            'test_list': tl,
+            'site': get_current_site(self.request),
+            'day': day,
+        }
+        serializer.save(**extra)
 
 
 class TestListCycleViewSet(viewsets.ReadOnlyModelViewSet):

@@ -1,7 +1,9 @@
 from django.conf.urls import include, url
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework import routers
 
 from qatrack.api.qa import views
+from qatrack.qa.views import perform
 
 router = routers.DefaultRouter()
 
@@ -20,8 +22,14 @@ router.register(r'unittestcollections', views.UnitTestCollectionViewSet)
 router.register(r'testinstances', views.TestInstanceViewSet)
 router.register(r'testlistinstances', views.TestListInstanceViewSet)
 router.register(r'testlistcycles', views.TestListCycleViewSet)
-router.register(r'testlistcycleMemberships', views.TestListCycleMembershipViewSet)
+router.register(r'testlistcyclememberships', views.TestListCycleMembershipViewSet)
 
 urlpatterns = [
+    # view for composite calculations via api
+    url(r"^composite/$", views.CompositeCalculation.as_view(), name="api.composite"),
+
+    # view for uploads via api
+    url(r"^upload/$", views.Upload.as_view(), name="api.upload"),
+
     url(r'^', include(router.urls)),
 ]

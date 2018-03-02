@@ -109,6 +109,34 @@ class CompositeUtils:
         self.context["__user_attached__"].append(attachment_info(attachment))
 
 
+def get_context_refs_tols(unit, tests):
+
+    utis = models.UnitTestInfo.objects.filter(
+        unit=unit,
+        test_id__in=tests.values_list("id"),
+        active=True,
+    ).select_related("reference", "test", "tolerance",).values(
+        "test__slug",
+        "reference__value",
+        "tolerance__type",
+        "tolerance__mc_tol_choices",
+        "tolerance__mc_pass_choices",
+        "tolerance__act_high",
+        "tolerance__act_low",
+        "tolerance__tol_high",
+        "tolerance__tol_low",
+    )
+    refs = {}
+    tols = {}
+    tol_keys = ["act_high", "act_low", "tol_high", "tol_low", "mc_pass_choices", "mc_tol_choices", "type"]
+    for uti in utis:
+        slug = uti["test__slug"]
+        refs[slug] = uti['reference__value']
+        tols[slug] = {k: uti["tolerance__%s" % k] for k in tol_keys}
+
+    return refs, tols
+
+
 class Upload(JSONResponseMixin, View):
     """View for handling AJAX upload requests when performing QA"""
 
@@ -117,6 +145,11 @@ class Upload(JSONResponseMixin, View):
 
     def post(self, *args, **kwargs):
         """process file, apply calculation procedure and return results"""
+
+        self.test_list = models.TestList.objects.get(pk=self.get_json_data("test_list_id"))
+        self.all_tests = self.test_list.all_tests()
+        self.unit = Unit.objects.get(pk=self.get_json_data("unit_id"))
+
         try:
             if self.request.POST.get('attachment_id'):
                 self.reprocess()
@@ -204,6 +237,7 @@ class Upload(JSONResponseMixin, View):
         self.calculation_context = {}
 
         meta_data = self.get_json_data("meta")
+        refs, tols = get_context_refs_tols(self.unit, self.all_tests)
 
         for d in ("work_completed", "work_started"):
             try:
@@ -216,8 +250,8 @@ class Upload(JSONResponseMixin, View):
             "FILE": open(self.attachment.attachment.path, "r"),
             "BIN_FILE": self.attachment.attachment,
             "META": meta_data,
-            "REFS": self.get_json_data("refs"),
-            "TOLS": self.get_json_data("tols"),
+            "REFS": refs,
+            "TOLS": tols,
             "UTILS": CompositeUtils(self.request, self.calculation_context, comments),
         })
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
@@ -254,6 +288,9 @@ class CompositeCalculation(JSONResponseMixin, View):
     def post(self, *args, **kwargs):
         """calculate and return all composite values"""
 
+        self.test_list = models.TestList.objects.get(pk=self.get_json_data("test_list_id"))
+        self.all_tests = self.test_list.all_tests()
+        self.unit = Unit.objects.get(pk=self.get_json_data("unit_id"))
         self.set_composite_test_data()
         if not self.composite_tests:
             return self.render_json_response({"success": False, "errors": ["No Valid Composite ID's"]})
@@ -318,13 +355,9 @@ class CompositeCalculation(JSONResponseMixin, View):
     def set_composite_test_data(self):
         """retrieve calculation procs for all composite tests"""
 
-        composite_ids = self.get_json_data("composite_ids")
-
-        if composite_ids is None:
-            self.composite_tests = {}
-            return
-
-        composite_tests = models.Test.objects.filter(pk__in=composite_ids).values_list("slug", "calculation_procedure")
+        composite_tests = self.all_tests.filter(
+            type__in=models.COMPOSITE_TYPES,
+        ).values_list("slug", "calculation_procedure")
 
         self.composite_tests = dict(composite_tests)
 
@@ -332,7 +365,7 @@ class CompositeCalculation(JSONResponseMixin, View):
         """set up the environment that the composite test will be calculated in"""
 
         self.calculation_context = {}
-        values = self.get_json_data("qavalues")
+        values = self.get_json_data("tests")
         meta_data = self.get_json_data("meta")
 
         for d in ("work_completed", "work_started"):
@@ -344,11 +377,13 @@ class CompositeCalculation(JSONResponseMixin, View):
         if values is None:
             return
 
+        refs, tols = get_context_refs_tols(self.unit, self.all_tests)
+
         comments = self.get_json_data("comments")
         self.calculation_context.update({
             "META": meta_data,
-            "REFS": self.get_json_data("refs"),
-            "TOLS": self.get_json_data("tols"),
+            "REFS": refs,
+            "TOLS": tols,
             "UTILS": CompositeUtils(self.request, self.calculation_context, comments),
         })
 

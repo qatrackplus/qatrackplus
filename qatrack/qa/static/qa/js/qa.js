@@ -239,6 +239,8 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jqu
         this.prefix = this.row.attr('data-prefix');
         this.inputs = this.row.find("td.qa-value").find("input, textarea, select").not("[name$=user_attached]");
         this.user_attach_input = this.row.find("input[name$=user_attached]");
+        this.unit_id = $("#unit-id").val();
+        this.test_list_id = $("#test-list-id").val();
 
         this.comment = this.row.next();
 
@@ -410,8 +412,8 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jqu
                         test_id: self.test_info.test.id,
                         test_list_instance: editing_tli,
                         meta: JSON.stringify(get_meta_data()),
-                        refs: JSON.stringify(get_ref_data()),
-                        tols: JSON.stringify(get_tol_data()),
+                        test_list_id: self.test_list_id,
+                        unit_id: self.unit_id,
                         comments: JSON.stringify(get_comments())
                     };
 
@@ -538,8 +540,8 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jqu
                     'csrfmiddlewaretoken': csrf_token,
                     "test_id": self.test_info.test.id,
                     "meta": JSON.stringify(get_meta_data()),
-                    "refs": JSON.stringify(get_ref_data()),
-                    "tols": JSON.stringify(get_tol_data()),
+                    "test_list_id": self.test_list_id,
+                    "unit_id": self.unit_id,
                     "comments": JSON.stringify(get_comments())
                 }
 
@@ -618,25 +620,6 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jqu
 
     }
 
-    function get_ref_data(){
-        var ref_values = _.map(tli.test_instances, function(ti){
-            return ti.test_info.reference.value ? ti.test_info.reference.value : null;
-        });
-
-        return _.zipObject(tli.slugs, ref_values);
-    }
-
-    function get_tol_data(){
-
-        var tol_properties = ["act_high", "act_low", "tol_high", "tol_low", "mc_pass_choices", "mc_tol_choices", "type"];
-
-        var tol_values = _.map(tli.test_instances, function(ti){
-            var tol = ti.test_info.tolerance;
-            return !tol.id ? null : _.pick(tol, tol_properties);
-        });
-        return _.zipObject(tli.slugs, tol_values);
-    }
-
     function get_comments(){
 
         var comments = _.map(tli.test_instances, function(ti){
@@ -653,7 +636,6 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jqu
         this.tests_by_slug = {};
         this.slugs = [];
         this.composites = [];
-        this.composite_ids = [];
 
         this.submit = $("#submit-qa");
 
@@ -663,12 +645,12 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jqu
         //set the intitial values, tolerances & refs for all of our tests
         this.initialize = function(){
             var test_infos = _.map(window.unit_test_infos,function(e){ return new TestInfo(e)});
-
+            self.test_list_id = $("#test-list-id").val();
+            self.unit_id = $("#unit-id").val();
             self.test_instances = _.map(_.zip(test_infos, $("#perform-qa-table tr.qa-valuerow")), function(uti_row){return new TestInstance(uti_row[0], uti_row[1])});
             self.slugs = _.map(self.test_instances, function(ti){return ti.test_info.test.slug});
             self.tests_by_slug = _.zipObject(self.slugs,self.test_instances);
             self.composites = _.filter(self.test_instances,function(ti){return ti.test_info.test.type === QAUtils.COMPOSITE || ti.test_info.test.type === QAUtils.STRING_COMPOSITE;});
-            self.composite_ids = _.map(self.composites,function(ti){return ti.test_info.test.id;});
             self.attachInput.on("change", function(){
                 var fnames = _.map(this.files, function(f){
                     return '<i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>' + f.name +" ";
@@ -689,16 +671,13 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jqu
             var cur_values = _.map(self.test_instances,function(ti){return ti.value;});
             var qa_values = _.zipObject(self.slugs,cur_values);
             var meta = get_meta_data();
-            var refs = get_ref_data();
-            var tols = get_tol_data();
             var comments = get_comments();
 
             var data = {
-                qavalues:qa_values,
-                composite_ids:self.composite_ids,
+                tests: qa_values,
                 meta: meta,
-                refs: refs,
-                tols: tols,
+                test_list_id: self.test_list_id,
+                unit_id: self.unit_id,
                 comments: comments
             };
 
