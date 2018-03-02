@@ -55,7 +55,7 @@ def create_status(name=None, slug=None, is_default=True, requires_review=True):
 def create_test(name=None, test_type=models.SIMPLE, choices=None, procedure=None, constant_value=None):
     user = create_user()
     if name is None or models.Test.objects.filter(name=name).count() > 0:
-        name = "test%d" % models.Test.objects.count()
+        name = "test_%d" % models.Test.objects.count()
     test = models.Test(
         name=name,
         slug=name,
@@ -114,7 +114,11 @@ def create_test_list_instance(unit_test_collection=None, work_completed=None, cr
     return tli
 
 
-def create_cycle(test_lists=None, name="cycle"):
+def create_cycle(test_lists=None, name=None):
+
+    if name is None:
+        name = 'test_list_cycle_%04d' % get_next_id(models.TestListCycle.objects.order_by('id').last())
+
     user = create_user()
     cycle = models.TestListCycle(
         name=name,
@@ -141,7 +145,11 @@ def create_test_list_membership(test_list, test, order=0):
     return tlm
 
 
-def create_test_instance(test_list_instance, unit_test_info=None, value=1., created_by=None, work_completed=None, status=None):
+def create_test_instance(test_list_instance=None, unit_test_info=None, value=1., created_by=None, work_completed=None, status=None):
+
+    if test_list_instance is None:
+        test_list_instance = create_test_list_instance()
+
     if unit_test_info is None:
         unit_test_info = create_unit_test_info()
 
@@ -233,8 +241,9 @@ def create_reference(name="ref", ref_type=models.NUMERICAL, value=1, created_by=
     return r
 
 
-def create_tolerance(tol_type=models.ABSOLUTE, act_low=-2, tol_low=-1, tol_high=1, act_high=2,
-        created_by=None, mc_pass_choices=None, mc_tol_choices=None):
+def create_tolerance(tol_type=models.ABSOLUTE, act_low=-2, tol_low=-1, tol_high=1, act_high=2, created_by=None,
+                     mc_pass_choices=None, mc_tol_choices=None):
+
     if created_by is None:
         created_by = create_user()
 
@@ -336,3 +345,19 @@ def create_unit_test_collection(unit=None, frequency=None, test_collection=None,
 def datetimes_same(date1, date2, nminutes=1):
     """return whether date1 and date2 are the same within nminutes minutes"""
     return abs(date1 - date2) <= timezone.timedelta(minutes=nminutes)
+
+
+def create_sublist(parent_test_list=None, child_test_list=None, order=1):
+
+    if parent_test_list is None:
+        parent_test_list = create_test_list()
+    if child_test_list is None:
+        child_test_list = create_test_list()
+
+    s = models.Sublist(
+        parent=parent_test_list,
+        child=child_test_list,
+        order=order
+    )
+    s.save()
+    return s

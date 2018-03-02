@@ -1,24 +1,16 @@
 
-import calendar
-import django.forms
 import json
-import os
-import glob
-import random
 
 from django.conf import settings
-from django.contrib.auth.models import User, Group, Permission
+from django.contrib.auth.models import User, Permission
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.test import TestCase
-from django.test import Client
 from django.test.client import RequestFactory
 from django.utils import timezone
-from urllib.parse import urlencode
 
 from qatrack.service_log import models
-from qatrack.service_log import forms
 from qatrack.service_log import views
 from qatrack.qa.tests import utils as qa_utils
 from qatrack.qa import models as qa_models
@@ -38,7 +30,6 @@ class TestURLS(TestCase):
 
     def returns_code(self, url, method='get', code=200):
         response = getattr(self.client, method)(url)
-        print('>>> Testing url: %s\n\tReturns code %s' % (url, response.status_code))
         return getattr(self.client, method)(url).status_code == code
 
     def test_qa_urls(self):

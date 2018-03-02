@@ -34,6 +34,9 @@ ul.nav li.dropdown:hover ul.dropdown-menu{
     margin: 0;
     line-height: 1;
 }
+div.alert {
+    border-radius: 0;
+}
 .alert > a.close {
     text-decoration: none;
 }
@@ -159,6 +162,9 @@ i.timeline-toggle:hover {
 .nav-stacked > li.active > a,
 .nav-stacked > li.active > a:hover {
     border-left-color: #424f57;
+}
+div.box {
+    border-radius: 0;
 }
 .box.box-primary,
 .nav-tabs-custom > .nav-tabs > li.active {

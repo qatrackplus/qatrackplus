@@ -21,6 +21,7 @@
 .dropdown-menu, .select2-dropdown {
     box-shadow: 2px 6px 4px rgba(53, 124, 165, .25);
     border: 1px solid #bbb;
+    border-radius: 0;
 }
 li.disabled {
     opacity: 0.6;

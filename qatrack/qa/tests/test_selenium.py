@@ -4,6 +4,7 @@ from . import utils
 
 from django.conf import settings
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
+from django.utils import timezone
 from django.test import TestCase
 import pytest
 from contextlib import contextmanager
@@ -20,6 +21,7 @@ from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.wait import WebDriverWait
 
 from qatrack.qa import models
+from qatrack.service_log.tests import utils as sl_utils
 
 objects = {
     'Group': {
@@ -100,7 +102,8 @@ objects = {
     },
     'Unit': {
         'name': 'TestUnit',
-        'number': '1'
+        'number': '1',
+        'date_acceptance': timezone.now().strftime('%Y-%m-%d')
     },
     'Frequency': {
         'name': 'TestFrequency',
@@ -290,7 +293,7 @@ class SeleniumTests(TestCase, StaticLiveServerTestCase):
     def test_admin_category(self):
 
         self.load_admin()
-        self.driver.find_element_by_link_text('Categories').click()
+        self.driver.find_element_by_css_selector('#content-main > div:nth-child(8) > table > tbody > tr:nth-child(3) > th > a').click()
         self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'ADD CATEGORY')))
         self.driver.find_element_by_link_text('ADD CATEGORY').click()
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
@@ -389,10 +392,14 @@ class SeleniumTests(TestCase, StaticLiveServerTestCase):
     def test_admin_unit(self):
 
         if not utils.exists('units', 'UnitType', 'name', objects['UnitType']['name']):
-            utils.create_unit_type(name=objects['UnitType']['name'], vendor=objects['UnitType']['vendor'])
+            utils.create_unit_type(
+                name=objects['UnitType']['name'], vendor=utils.create_vendor(objects['UnitType']['vendor'])
+            )
 
         if not utils.exists('units', 'Modality', 'name', objects['Modality']['name']):
             utils.create_modality(name=objects['Modality']['name'])
+
+        sa = sl_utils.create_service_area()
 
         self.load_admin()
         self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Units')))
@@ -402,8 +409,17 @@ class SeleniumTests(TestCase, StaticLiveServerTestCase):
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
         self.driver.find_element_by_id('id_name').send_keys(objects['Unit']['name'])
         self.driver.find_element_by_id('id_number').send_keys(objects['Unit']['number'])
+        self.driver.find_element_by_id('id_date_acceptance').send_keys(objects['Unit']['date_acceptance'])
+        self.driver.find_element_by_css_selector('#id_service_areas_add_all_link').click()
         Select(self.driver.find_element_by_id("id_type")).select_by_index(1)
         self.driver.find_element_by_id('id_modalities_add_all_link').click()
+        self.driver.find_element_by_id('id_hours_monday').send_keys('800')
+        self.driver.find_element_by_id('id_hours_tuesday').send_keys('800')
+        self.driver.find_element_by_id('id_hours_wednesday').send_keys('800')
+        self.driver.find_element_by_id('id_hours_thursday').send_keys('800')
+        self.driver.find_element_by_id('id_hours_friday').send_keys('800')
+        self.driver.find_element_by_id('id_hours_saturday').send_keys('800')
+        self.driver.find_element_by_id('id_hours_sunday').send_keys('800')
         self.driver.find_element_by_name('_save').click()
         self.wait_for_success()
 

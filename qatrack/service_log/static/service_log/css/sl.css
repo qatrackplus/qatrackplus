@@ -106,7 +106,7 @@ body.sidebar-mini.sidebar-collapse > div.wrapper > aside.main-sidebar > section.
 }
 .smooth-border {
     border-width: 2px;
-    border-radius: 4px;
+    border-radius: 2px;
     color: black;
     border-style: solid;
 }

@@ -29,7 +29,7 @@ class ServiceEventStatusFormAdmin(ModelForm):
     def clean_is_default(self):
 
         is_default = self.cleaned_data['is_default']
-        if not is_default and self.initial['is_default']:
+        if not is_default and self.initial.get('is_default', False):
             raise ValidationError('There must be one default status. Edit another status to be default first.')
         return is_default
 
@@ -238,7 +238,7 @@ class UnitAdmin(admin.ModelAdmin):
 
                 try:
                     if add:
-                        date_initial = form.initial['date_acceptance']
+                        date_initial = form.cleaned_data['date_acceptance']
                     else:
                         date_initial = uatf.cleaned_data['date_changed']
                     uat = UnitAvailableTime.objects.get(date_changed=date_initial, unit=new_object)

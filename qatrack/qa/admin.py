@@ -66,6 +66,7 @@ class TestInfoForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(TestInfoForm, self).__init__(*args, **kwargs)
         readonly = ("test_type", "reference_set_by", "reference_set",)
+
         for f in readonly:
             self.fields[f].widget.attrs['readonly'] = "readonly"
 
@@ -108,7 +109,6 @@ class TestInfoForm(forms.ModelForm):
 
     def clean(self):
         """make sure valid numbers are entered for boolean data"""
-
         if (self.instance.test.type == models.MULTIPLE_CHOICE or self.instance.test.is_string_type()) and self.cleaned_data["tolerance"]:
             if self.cleaned_data["tolerance"].type != models.MULTIPLE_CHOICE:
                 raise forms.ValidationError(_("You can't use a non-multiple choice tolerance with a multiple choice or string test"))
@@ -167,7 +167,7 @@ class ActiveUnitTestInfoFilter(admin.SimpleListFilter):
                 }, []),
                 'display': title,
             }
-
+    # TODO fix this
     def queryset(self, request, qs):
         if self.value() in (self.NOTACTIVE,):
             return models.UnitTestInfo.objects.inactive(qs)
@@ -454,7 +454,7 @@ class TestListMembershipInline(admin.TabularInline):
     readonly_fields = (macro_name,)
     raw_id_fields = ("test",)
 
-    def label_for_value(self, value):
+    def label_for_value(self, value):  # TODO: is this called ever?
         try:
             name = self.test_names[value]
             return '&nbsp;<strong>%s</strong>' % escape(Truncator(name).words(14, truncate='...'))
@@ -501,7 +501,7 @@ class SublistInline(admin.TabularInline):
     template = "admin/qa/testlistmembership/edit_inline/tabular.html"
     raw_id_fields = ("child",)
 
-    def label_for_value(self, value):
+    def label_for_value(self, value):  # TODO: Is this called ever?
         try:
             name = self.test_list_names[value]
             return '&nbsp;<strong>%s</strong>' % escape(Truncator(name).words(14, truncate='...'))
@@ -556,16 +556,19 @@ class ActiveTestListFilter(admin.SimpleListFilter):
 
     def queryset(self, request, qs):
         active_tl_ids = models.get_utc_tl_ids(active=True)
+        active_sub_tl_ids = list(models.TestList.objects.filter(
+            id__in=active_tl_ids, children__isnull=False
+        ).values_list('children__child__id', flat=True).distinct())
 
         if self.value() == self.NOACTIVEUTCS:
             return qs.exclude(
                 Q(id__in=active_tl_ids) |
-                Q(testlist__id__in=active_tl_ids)
+                Q(id__in=active_sub_tl_ids)
             )
         elif self.value() == self.HASACTIVEUTCS:
             return qs.filter(
                 Q(id__in=active_tl_ids) |
-                Q(testlist__id__in=active_tl_ids)
+                Q(id__in=active_sub_tl_ids)
             )
         return qs
 
@@ -637,10 +640,6 @@ class TestListAdmin(AdminViews, SaveUserMixin, SaveInlineAttachmentUserMixin, ad
             settings.STATIC_URL + "js/admin_description_editor.js",
             settings.STATIC_URL + "ace/ace.js",
         )
-
-    def queryset(self, *args, **kwargs):
-        qs = super(TestListAdmin, self).queryset(*args, **kwargs)
-        return qs.select_related("modified_by")
 
     def export_test_pack(self, *args, **kwargs):
         return redirect(reverse("qa_export_test_pack"))
@@ -827,12 +826,6 @@ class ActiveFilter(admin.SimpleListFilter):
 
 class UnitTestCollectionForm(forms.ModelForm):
 
-    def __init__(self, *args, **kwargs):
-
-        super(UnitTestCollectionForm, self).__init__(*args, **kwargs)
-
-        self.fields["object_id"].initial = 100
-
     def _clean_readonly(self, f):
         data = self.cleaned_data.get(f, None)
 
@@ -844,7 +837,7 @@ class UnitTestCollectionForm(forms.ModelForm):
             err_msg = (
                 "To prevent data loss, you can not change the Unit, TestList or TestListCycle "
                 "of a UnitTestCollection after it has been created. The original value was: %s"
-            ) % (orig)
+            ) % orig
             self.add_error(f, err_msg)
 
         return data
@@ -857,21 +850,6 @@ class UnitTestCollectionForm(forms.ModelForm):
 
     def clean_unit(self):
         return self._clean_readonly("unit")
-
-    def _clean(self):
-
-        err_msg = (
-            "To prevent data loss, you can not change the Unit, TestList or TestListCycle "
-            "of a UnitTestCollection after it has been created."
-        )
-
-        if self.instance.pk:
-            readonly = ['content_type', 'object_id', 'unit']
-            for f in readonly:
-                if f in self.changed_data:
-                    self.add_error(f, err_msg)
-
-        return self.cleaned_data
 
 
 class UnitTestCollectionAdmin(admin.ModelAdmin):

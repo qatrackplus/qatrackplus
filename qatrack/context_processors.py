@@ -18,14 +18,6 @@ cache.delete('se_needing_review_count')
 cache.delete(settings.CACHE_IN_PROGRESS_COUNT)
 
 
-# for u in Unit.objects.filter(active=True):
-#     qs = UnitTestCollection.objects.filter(
-#         unit=u,
-#         active=True
-#     ).order_by('name')
-#     cache.delete('active_unit_test_collections_for_unit_%s' % u.id)
-#     print('%s utc cache deleted' % u.name)
-
 @receiver(pre_delete, sender=PartUsed)
 def update_part_storage_quantity(*args, **kwargs):
     pu = kwargs['instance']

@@ -38,3 +38,12 @@ class TestServiceEventStatusAdmin(TestCase):
         self.data['is_default'] = False
         response = self.client.post(url_change, data=self.data)
         self.assertTrue('is_default' in response.context_data['adminform'].form.errors)
+
+    def test_new_not_default(self):
+
+        data = self.data
+        data['is_default'] = False
+
+        self.client.post(self.url_add, data=data)
+
+
