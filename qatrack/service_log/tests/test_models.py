@@ -98,13 +98,15 @@ class TestServiceEventAndRelated(TransactionTestCase):
         self.se = sl_utils.create_service_event()
 
     def test_third_party_and_hours(self):
+        """
+        Note: with self.assertRaises(IntegrityError): will fail when testing with sqlite3 backend
+        """
 
         se = sl_models.ServiceEvent.objects.first()
         tp = sl_utils.create_third_party()
 
         h_01 = sl_utils.create_hours(service_event=se, third_party=tp)
 
-        # Test unique together. Will not raise IntegrityError when using sqlite3
         with self.assertRaises(IntegrityError):
             sl_models.Hours.objects.create(service_event=se, third_party=tp, user=None, time=timezone.timedelta(hours=1))
 
