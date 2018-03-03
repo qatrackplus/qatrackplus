@@ -146,9 +146,16 @@ class Upload(JSONResponseMixin, View):
     def post(self, *args, **kwargs):
         """process file, apply calculation procedure and return results"""
 
-        self.test_list = models.TestList.objects.get(pk=self.get_json_data("test_list_id"))
-        self.all_tests = self.test_list.all_tests()
-        self.unit = Unit.objects.get(pk=self.get_json_data("unit_id"))
+        try:
+            self.test_list = models.TestList.objects.get(pk=self.get_json_data("test_list_id"))
+            self.all_tests = self.test_list.all_tests()
+        except (models.TestList.DoesNotExist):
+            return self.render_json_response({"success": False, "errors": ["Invalid or missing test_list_id"]})
+
+        try:
+            self.unit = Unit.objects.get(pk=self.get_json_data("unit_id"))
+        except (Unit.DoesNotExist):
+            return self.render_json_response({"success": False, "errors": ["Invalid or missing unit_id"]})
 
         try:
             if self.request.POST.get('attachment_id'):
@@ -258,9 +265,7 @@ class Upload(JSONResponseMixin, View):
 
     def get_json_data(self, name):
         """return python data from GET json data"""
-        data = self.request.POST
-
-        json_string = data.get(name)
+        json_string = self.request.POST.get(name)
         if not json_string:
             return
 
@@ -276,21 +281,35 @@ class CompositeCalculation(JSONResponseMixin, View):
     def get_json_data(self, name):
         """return python data from GET json data"""
 
-        json_string = self.request.body.decode("UTF-8")
-        if not json_string:
-            return
+        if not hasattr(self, "_json"):
 
-        try:
-            return json.loads(json_string)[name]
-        except (KeyError, ValueError):
-            return
+            json_string = self.request.body.decode("UTF-8")
+            if not json_string:
+                self._json = None
+                return
+
+            try:
+                self._json = json.loads(json_string)
+            except (ValueError):
+                self._json = None
+                return
+
+        return self._json.get(name)
 
     def post(self, *args, **kwargs):
         """calculate and return all composite values"""
 
-        self.test_list = models.TestList.objects.get(pk=self.get_json_data("test_list_id"))
-        self.all_tests = self.test_list.all_tests()
-        self.unit = Unit.objects.get(pk=self.get_json_data("unit_id"))
+        try:
+            self.test_list = models.TestList.objects.get(pk=self.get_json_data("test_list_id"))
+            self.all_tests = self.test_list.all_tests()
+        except (models.TestList.DoesNotExist):
+            return self.render_json_response({"success": False, "errors": ["Invalid or missing test_list_id"]})
+
+        try:
+            self.unit = Unit.objects.get(pk=self.get_json_data("unit_id"))
+        except (Unit.DoesNotExist):
+            return self.render_json_response({"success": False, "errors": ["Invalid or missing unit_id"]})
+
         self.set_composite_test_data()
         if not self.composite_tests:
             return self.render_json_response({"success": False, "errors": ["No Valid Composite ID's"]})
