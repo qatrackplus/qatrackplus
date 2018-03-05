@@ -183,6 +183,8 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         # user set test instance status or default
         user_set_status = validated_data.pop('status', None)
         status = user_set_status or models.TestInstanceStatus.objects.default()
+        if status is None:
+            raise serializers.ValidationError("No test instance status available")
 
         # related return to service
         rtsqa = validated_data.pop('return_to_service_qa', None)
