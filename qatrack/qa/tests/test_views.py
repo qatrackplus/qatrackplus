@@ -488,6 +488,7 @@ class TestComposite(TestCase):
         self.view = views.perform.CompositeCalculation.as_view()
         self.url = reverse("composite")
 
+        self.user = utils.create_user()
         self.unit = utils.create_unit()
         self.test_list = utils.create_test_list()
         self.t1 = utils.create_test(name="test1")
@@ -512,6 +513,7 @@ class TestComposite(TestCase):
             'unit_id': self.unit.id,
         }
         request = self.factory.post(self.url, content_type='application/json', data=json.dumps(data))
+        request.user = self.user
         response = self.view(request)
         values = json.loads(response.content.decode("UTF-8"))
 
@@ -538,6 +540,7 @@ class TestComposite(TestCase):
         }
 
         request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
+        request.user = self.user
         response = self.view(request)
         values = json.loads(response.content.decode("UTF-8"))
 
@@ -567,6 +570,7 @@ class TestComposite(TestCase):
         }
 
         request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
+        request.user = self.user
         response = self.view(request)
 
         values = json.loads(response.content.decode("UTF-8"))
@@ -593,6 +597,7 @@ class TestComposite(TestCase):
 
     def test_missing_test_list_id(self):
         request = self.factory.post(self.url, content_type="application/json", data=json.dumps({}))
+        request.user = self.user
         response = self.view(request)
         values = json.loads(response.content.decode("UTF-8"))
         expected = {"errors": ["Invalid or missing test_list_id"], "success": False}
@@ -601,6 +606,7 @@ class TestComposite(TestCase):
     def test_missing_unit_id(self):
         data = {'test_list_id': self.test_list.id}
         request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
+        request.user = self.user
         response = self.view(request)
         values = json.loads(response.content.decode("UTF-8"))
         expected = {"errors": ["Invalid or missing unit_id"], "success": False}
@@ -620,6 +626,7 @@ class TestComposite(TestCase):
         }
 
         request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
+        request.user = self.user
         response = self.view(request)
         values = json.loads(response.content.decode("UTF-8"))
 
@@ -640,6 +647,7 @@ class TestComposite(TestCase):
         }
 
         request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
+        request.user = self.user
         response = self.view(request)
         values = json.loads(response.content.decode("UTF-8"))
 
@@ -651,6 +659,7 @@ class TestComposite(TestCase):
         data = '{"tests": {"testc"}, u"meta": {}, }'
 
         request = self.factory.post(self.url, content_type="application/json", data=data)
+        request.user = self.user
         response = self.view(request)
         values = json.loads(response.content.decode("UTF-8"))
 
@@ -673,6 +682,7 @@ class TestComposite(TestCase):
         }
 
         request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
+        request.user = self.user
         response = self.view(request)
         values = json.loads(response.content.decode("UTF-8"))
 
@@ -720,6 +730,7 @@ class TestComposite(TestCase):
         }
 
         request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
+        request.user = self.user
         response = self.view(request)
         values = json.loads(response.content.decode("UTF-8"))
 
