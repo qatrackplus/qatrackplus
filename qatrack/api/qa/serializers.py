@@ -7,6 +7,7 @@ from rest_framework import serializers
 from rest_framework.reverse import reverse
 
 from qatrack.qa import models, signals
+from qatrack.qa.views.perform import CompositePerformer
 from qatrack.service_log import models as sl_models
 
 
@@ -153,10 +154,12 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
     def validate(self, data):
         validated_data = super(TestListInstanceCreator, self).validate(data)
+        self.preprocess(validated_data)
         utc = validated_data['unit_test_collection']
         day = validated_data.get('day', 0)
         day, tl = utc.get_list(day=day)
-        slugs = tl.all_tests().values_list("slug", flat=True)
+        test_qs = tl.all_tests().values_list("slug", "type", "calculation_procedure")
+        slugs, types, procedures = zip(*test_qs)
         missing = ', '.join([s for s in slugs if s not in data['tests']])
         if missing:
             raise serializers.ValidationError("Missing data for tests: %s" % missing)
@@ -165,6 +168,56 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             raise serializers.ValidationError("work_completed date must be after work_started")
 
         return validated_data
+
+    def preprocess(self, validated_data):
+
+        utc = validated_data['unit_test_collection']
+        day = validated_data.get('day', 0)
+        day, tl = utc.get_list(day=day)
+        test_qs = tl.all_tests().values_list("slug", "type", "calculation_procedure")
+        slugs, types, procedures = zip(*test_qs)
+        has_calculated = set(models.CALCULATED_TYPES).intersection(types)
+
+        if not has_calculated:
+            return validated_data
+
+        comp_calc_data = self.data_to_composite(validated_data)
+        results = CompositePerformer(self.user, comp_calc_data).calculate()
+        if not results['success']:
+            raise serializers.ValidationError(', '.join(results.get("errors", [])))
+
+        for slug, test_data in results['results'].items():
+            if test_data['error']:
+                raise serializers.ValidationError("Error with %s test: %s" % (slug, test_data['error']))
+
+            # TODO: user_attached?
+            validated_data['tests'][slug] = {
+                'value': test_data['value'],
+                'comment': test_data['comment'],
+            }
+
+        return validated_data
+
+    def data_to_composite(self, validated_data):
+        utc = validated_data['unit_test_collection']
+        day = validated_data.get('day', 0)
+        day, tl = utc.get_list(day=day)
+
+        data = {
+            'tests': {k: v.get("value") for k, v in validated_data['tests'].items()},
+            'meta': {
+                'test_list_name': tl.name,
+                'unit_number': utc.unit.number,
+                'cycle_day': day,
+                'work_completed': validated_data['work_completed'],
+                'work_started': validated_data['work_started'],
+                'username': self.user.username,
+            },
+            'test_list_id': tl.id,
+            'unit_id': utc.unit.id,
+            'comments': {k: v.get("comment") for k, v in validated_data['tests'].items()}
+        }
+        return data
 
     @atomic
     def create(self, validated_data):

@@ -79,10 +79,10 @@ def attachment_info(attachment):
 
 class CompositeUtils:
 
-    def __init__(self, request, context, comments):
+    def __init__(self, user, context, comments):
         self.context = context
         self.context['__user_attached__'] = []
-        self.request = request
+        self.user = user
         self.comments = comments
 
     def set_comment(self, comment):
@@ -102,7 +102,7 @@ class CompositeUtils:
         attachment = Attachment(
             attachment=f,
             comment=_("Composite created file"),
-            created_by=self.request.user,
+            created_by=self.user,
         )
         attachment.save()
 
@@ -273,6 +273,162 @@ class Upload(JSONResponseMixin, View):
             return json.loads(json_string)
         except (KeyError, ValueError):
             return
+
+
+class CompositePerformer:
+
+    def __init__(self, user, data):
+        self.user = user
+        self.data = data
+
+    def calculate(self):
+        """calculate and return all composite values"""
+
+        try:
+            self.test_list = models.TestList.objects.get(pk=self.data["test_list_id"])
+            self.all_tests = self.test_list.all_tests()
+        except (models.TestList.DoesNotExist):
+            return {"success": False, "errors": ["Invalid or missing test_list_id"]}
+
+        try:
+            self.unit = Unit.objects.get(pk=self.data["unit_id"])
+        except (Unit.DoesNotExist):
+            return {"success": False, "errors": ["Invalid or missing unit_id"]}
+
+        self.set_composite_test_data()
+        if not self.composite_tests:
+            return {"success": False, "errors": ["No Valid Composite ID's"]}
+
+        self.set_calculation_context()
+        if not self.calculation_context or list(self.calculation_context.keys()) == ["write_file"]:
+            return {"success": False, "errors": ["Invalid QA Values"]}
+
+        self.set_dependencies()
+        self.resolve_dependency_order()
+
+        results = {}
+
+        for slug in self.cyclic_tests:
+            results[slug] = {'value': None, 'error': "Cyclic test dependency"}
+
+        for slug in self.calculation_order:
+            raw_procedure = self.composite_tests[slug]
+            procedure = process_procedure(raw_procedure)
+            try:
+                code = compile(procedure, "__QAT+COMP_%s" % slug, "exec")
+                exec(code, self.calculation_context)
+                key = "result" if "result" in self.calculation_context else slug
+                result = self.calculation_context[key]
+
+                results[slug] = {
+                    'value': result,
+                    'error': None,
+                    'user_attached': list(self.calculation_context.get("__user_attached__", [])),
+                    'comment': self.calculation_context.get("__comment__"),
+                }
+                self.calculation_context[slug] = result
+            except Exception:
+                msg = traceback.format_exc().split("__QAT+COMP_")[-1].replace("<module>", slug)
+                results[slug] = {
+                    'value': None,
+                    'error': "Invalid Test Procedure: %s" % msg,
+                    'comment': "",
+                    'user_attached': [],
+                }
+            finally:
+                # clean up calculation context for next test
+                to_clean = ['result'] + [k for k in self.calculation_context.keys() if k not in self.context_keys]
+                to_clean = set([k for k in to_clean if k in self.calculation_context])
+                for k in to_clean:
+                    del self.calculation_context[k]
+
+                del self.calculation_context['__user_attached__'][:]
+
+        return {"success": True, "errors": [], "results": results}
+
+    def set_composite_test_data(self):
+        """retrieve calculation procs for all composite tests"""
+
+        composite_tests = self.all_tests.filter(
+            type__in=models.COMPOSITE_TYPES,
+        ).values_list("slug", "calculation_procedure")
+
+        self.composite_tests = dict(composite_tests)
+
+    def set_calculation_context(self):
+        """set up the environment that the composite test will be calculated in"""
+
+        self.calculation_context = {}
+        values = self.data["tests"]
+        meta_data = self.data["meta"]
+
+        for d in ("work_completed", "work_started"):
+            try:
+                meta_data[d] = dateutil.parser.parse(meta_data[d])
+            except (TypeError, KeyError, AttributeError):
+                pass
+
+        if values is None:
+            return
+
+        refs, tols = get_context_refs_tols(self.unit, self.all_tests)
+
+        comments = self.data["comments"]
+        self.calculation_context.update({
+            "META": meta_data,
+            "REFS": refs,
+            "TOLS": tols,
+            "UTILS": CompositeUtils(self.user, self.calculation_context, comments),
+        })
+
+        self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
+
+        self.context_keys = list(self.calculation_context.keys())
+
+        for slug, val in values.items():
+            self.context_keys.append(slug)
+            if slug not in self.composite_tests:
+                self.calculation_context[slug] = val
+
+    def set_dependencies(self):
+        """figure out composite dependencies of composite tests"""
+
+        self.dependencies = {}
+        slugs = list(self.composite_tests.keys())
+        for slug in slugs:
+            tokens = utils.tokenize_composite_calc(self.composite_tests[slug])
+            dependencies = [s for s in slugs if s in tokens and s != slug]
+            self.dependencies[slug] = set(dependencies)
+
+    def resolve_dependency_order(self):
+        """
+        Resolve calculation order dependencies using topological sort.
+
+        This allows composite calculations to be calculated in the correct
+        order for situations where you have composites that depend on
+        other composites. For example, if A & B are both composite tests,
+        but A is a function of B, then B must be calculated before A.
+        Cyclical dependencies are also flagged.
+
+        See http://code.activestate.com/recipes/577413-topological-sort/
+        """
+
+        #
+        data = dict(self.dependencies)
+        for k, v in list(data.items()):
+            v.discard(k)  # Ignore self dependencies
+        extra_items_in_deps = reduce(set.union, list(data.values())) - set(data.keys())
+        data.update(dict((item, set()) for item in extra_items_in_deps))
+        deps = []
+        while True:
+            ordered = set(item for item, dep in list(data.items()) if not dep)
+            if not ordered:
+                break
+            deps.extend(list(sorted(ordered)))
+            data = dict((item, (dep - ordered)) for item, dep in list(data.items()) if item not in ordered)
+
+        self.calculation_order = deps
+        self.cyclic_tests = list(data.keys())
 
 
 class CompositeCalculation(JSONResponseMixin, View):

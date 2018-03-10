@@ -15,9 +15,9 @@ class TestTestListInstanceAPI(APITestCase):
         self.t1 = utils.create_test(name="test1")
         self.t2 = utils.create_test(name="test2")
 
-        # self.tc = utils.create_test(name="testc", test_type=models.COMPOSITE)
-        # self.tc.calculation_procedure = "result = test1 + test2"
-        # self.tc.save()
+        self.tc = utils.create_test(name="testc", test_type=models.COMPOSITE)
+        self.tc.calculation_procedure = "result = test1 + test2"
+        self.tc.save()
         for t in [self.t1, self.t2]:
             utils.create_test_list_membership(self.simple_test_list, t)
 
@@ -31,8 +31,12 @@ class TestTestListInstanceAPI(APITestCase):
             'work_completed': '2019-07-25 10:49:47',
             'work_started': '2019-07-25 10:49:00',
             'tests': {
-                'test1': {'value': 1},
-                'test2': {'value': 2},
+                'test1': {
+                    'value': 1
+                },
+                'test2': {
+                    'value': 2
+                },
             },
         }
 
@@ -49,3 +53,38 @@ class TestTestListInstanceAPI(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(models.TestListInstance.objects.count(), 1)
         self.assertEqual(models.TestInstance.objects.count(), 2)
+
+    def test_create_composite_no_data(self):
+        """
+        Add a composite test to our simple test list.  Submitting without data
+        included should result in it being calculated.
+        """
+
+        utils.create_test_list_membership(self.simple_test_list, self.tc)
+        response = self.client.post(self.create_url, self.simple_data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(models.TestListInstance.objects.count(), 1)
+        self.assertEqual(models.TestInstance.objects.count(), 3)
+        tic = models.TestInstance.objects.get(unit_test_info__test=self.tc)
+        assert tic.value == self.simple_data['tests']['test1']['value'] + self.simple_data['tests']['test2']['value']
+
+    def test_create_composite_invalid(self):
+        """
+        Add a composite test to our simple test list.  If composite can't be
+        calculated correctly, test list instance should not be created.
+        """
+        utils.create_test_list_membership(self.simple_test_list, self.tc)
+        data = self.simple_data.copy()
+        data['tests'].pop('test1')
+        response = self.client.post(self.create_url, self.simple_data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(models.TestListInstance.objects.count(), 0)
+
+    def test_todo(self):
+        """
+        Need to:
+            test composite string value calculations
+            implement processing of uploads
+            refactor CompositeCalculation to use CompositePerformer
+        """
+        assert False
