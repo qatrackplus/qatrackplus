@@ -455,8 +455,11 @@ input.search_init {
 }
 .bottom-banner {
     bottom: 0;
-    position: absolute;
     width: 100%;
     text-align: center;
     padding: 10px;
+}
+#control-sidebar-btn {
+    width: 230px;
+    text-align: center;
 }

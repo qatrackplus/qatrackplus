@@ -191,10 +191,32 @@ require(['jquery'], function ($) {
         };
     })(jQuery);
 
-    $('.control-sidebar').hover(
-        function() {},
+    var $tab_content = $('body > div.wrapper > aside > div.tab-content'),
+        $control_sidebar = $('body > div.wrapper > aside.control-sidebar'),
+        $sidebar_btn = $('#control-sidebar-btn');
+
+    $sidebar_btn.hover(
         function() {
-            $('#control-sidebar-btn').click();
+            $control_sidebar.addClass('control-sidebar-open');
+        },
+        function(e) {
+            var to = e.toElement;
+            if (to !== $control_sidebar[0] && to !== $tab_content[0]) {
+                $control_sidebar.removeClass('control-sidebar-open');
+            }
+        }
+    );
+
+    $control_sidebar.hover(
+        function(e) {
+
+        },
+        function(e) {
+            var to = e.toElement;
+            if (to !== $sidebar_btn[0]) {
+                $control_sidebar.removeClass('control-sidebar-open');
+            }
         }
     )
+
 });

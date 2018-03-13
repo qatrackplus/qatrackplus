@@ -1203,6 +1203,9 @@ class ServiceEventDownTimesList(ServiceEventsBaseList):
         'service_status'
     )
 
+    def get_page_title(self, f=None):
+        return 'Filter Service Events and View Down Time Summary'
+
     def duration_lost_time(self, se):
         duration = se.duration_lost_time
         if duration:
