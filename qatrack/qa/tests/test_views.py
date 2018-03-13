@@ -7,11 +7,13 @@ from urllib.parse import urlencode
 
 from django.conf import settings
 from django.contrib.auth.models import Group, User
+from django.contrib.sites.shortcuts import get_current_site
 from django.core.urlresolvers import reverse
 import django.forms
 from django.test import TestCase
 from django.test.client import RequestFactory
 from django.utils import timezone
+from django_comments.models import Comment
 from freezegun import freeze_time
 
 from qatrack.qa import models, views
@@ -1800,3 +1802,61 @@ class TestUnitAvailableTimeEdit(TestCase):
         self.client.post(self.post_url, data=data)
         len_uate_after = len(u_models.UnitAvailableTimeEdit.objects.filter(unit_id__in=unit_ids, date=date))
         self.assertEqual(0, len_uate_after)
+
+
+class TestReviewStatusContext(TestCase):
+
+    def setUp(self):
+
+        self.user = utils.create_user(is_superuser=True, uname='user', pwd='pwd')
+        self.client.login(username='user', password='pwd')
+        self.factory = RequestFactory()
+
+        self.u_1 = utils.create_unit()
+        self.tl_1 = utils.create_test_list()
+        self.t_1 = utils.create_test()
+        self.t_2 = utils.create_test()
+        self.t_3 = utils.create_test()
+        utils.create_test_list_membership(test_list=self.tl_1, test=self.t_1)
+        utils.create_test_list_membership(test_list=self.tl_1, test=self.t_2)
+        utils.create_test_list_membership(test_list=self.tl_1, test=self.t_3)
+        self.utc_1 = utils.create_unit_test_collection(test_collection=self.tl_1, unit=self.u_1)
+        self.tli_1 = utils.create_test_list_instance(test_list=self.tl_1)
+        self.uti_1 = models.UnitTestInfo.objects.get(unit=self.u_1, test=self.t_1)
+        self.uti_2 = models.UnitTestInfo.objects.get(unit=self.u_1, test=self.t_2)
+        self.uti_3 = models.UnitTestInfo.objects.get(unit=self.u_1, test=self.t_3)
+        utils.create_test_instance(test_list_instance=self.tli_1, unit_test_info=self.uti_1)
+        utils.create_test_instance(test_list_instance=self.tli_1, unit_test_info=self.uti_2)
+        utils.create_test_instance(test_list_instance=self.tli_1, unit_test_info=self.uti_3)
+
+        Comment(
+            submit_date=timezone.now(),
+            user=self.user,
+            content_object=self.tli_1,
+            comment='TestList comment',
+            site=get_current_site(self.factory.get(reverse('perform_qa')))
+        ).save()
+
+        Comment(
+            submit_date=timezone.now(),
+            user=self.user,
+            content_object=self.t_1,
+            comment='Test comment',
+            site=get_current_site(self.factory.get(reverse('perform_qa')))
+        ).save()
+
+    def test_none_tli(self):
+        self.assertEqual({}, views.base.generate_review_status_context(None))
+
+    def test_valid(self):
+        context = views.base.generate_review_status_context(self.tli_1)
+        self.assertEqual(1, context['comments'])
+        for ti in self.tli_1.testinstance_set.all():
+            self.assertEqual(
+                self.tli_1.testinstance_set.filter(status=ti.status).count(),
+                context['statuses'][ti.status.name]['count']
+            )
+            self.assertEqual(ti.status.valid, context['statuses'][ti.status.name]['valid'])
+            self.assertEqual(ti.status.requires_review, context['statuses'][ti.status.name]['requires_review'])
+
+

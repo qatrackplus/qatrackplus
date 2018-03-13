@@ -10,13 +10,22 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             $test_lists = $('#test-lists'),
             $tests = $('#tests'),
             $show_events = $('#show_events'),
-            $service_event_container = $('#service-event-container'),
+            $service_event_container = $('#b-chart-options'),
+            $review_req_container = $('#review-container'),
             $status_selector = $('#status-selector'),
             $gen_chart = $('#gen-chart'),
             $filter_box = d3.select('#filter-box'),
             $filter_resizer = d3.select('#filter-resizer'),
             $chart_options = $('#chart-options'),
-            d3chart_resizer = d3.select('#chart-resizer');
+            d3chart_resizer = d3.select('#chart-resizer'),
+            $date_range = $('#date-range'),
+            $chart_type = $('#chart-type'),
+            $subgroup_size = $('#subgroup-size'),
+            $n_baseline_subgroups = $('#n-baseline-subgroups'),
+            $include_fit = $('#include-fit'),
+            $combine_data = $('#combine-data'),
+            $relative_diff = $('#relative-diff'),
+            $review_required = $('#review-required');
 
         $units.felter({
             mainDivClass: 'col-sm-2',
@@ -103,7 +112,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                         }
 
                         var data_filters = {units: units, frequencies: frequencies};
-
+                        console.log(this.element);
                         $.ajax({
                             type: "get",
                             url: QAURLs.CHART_DATA_URL + "testlists/",
@@ -213,6 +222,10 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             $gen_chart.prop('disabled', !$(this).val());
         });
 
+        $show_events.change(function() {
+            $(this).is(':checked') ? $review_req_container.slideDown('fast') : $review_req_container.slideUp('fast')
+        });
+
         $status_selector.select2({
             minimumResultsForSearch: 10,
             width: '100%'
@@ -247,7 +260,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
          });*/
 
 
-        $("#date-range").daterangepicker({
+        $date_range.daterangepicker({
             ranges: {
                 "Last 7 Days": [
                     moment().subtract(7, 'days'),
@@ -301,7 +314,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
         $("#control-chart-container, #instructions").hide();
 
-        $("#chart-type").change(switch_chart_type);
+        $chart_type.change(switch_chart_type);
 
         $("#gen-chart").click(update_chart);
 
@@ -315,11 +328,6 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
         });
 
         $("#data-table-wrapper").on('click', "#csv-export", export_csv);
-
-        $show_events.prop('checked') ? $service_event_container.show() : '';
-        $show_events.change(function () {
-            $service_event_container.slideToggle('fast', set_filter_height);
-        });
 
         function set_filter_height() {
             max_y_resize = $chart_options.height() + 13;
@@ -340,6 +348,11 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
         function switch_chart_type() {
             set_chart_options();
+            if ($chart_type.val() === 'control') {
+                $service_event_container.slideUp('fast');
+            } else {
+                $service_event_container.slideDown('fast');
+            }
             $("#chart-container, #control-chart-container").toggle();
         }
 
@@ -348,7 +361,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 $("#cc-chart-options").slideUp('fast', set_filter_height);
             } else {
                 $("#cc-chart-options").slideDown('fast', set_filter_height);
-                $("#relative-diff").attr("checked", false)
+                $relative_diff.attr("checked", false)
             }
         }
 
@@ -381,7 +394,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     $.each(values, function (idx, value) {
                         options.push(key + QAUtils.OPTION_DELIM + value)
                     });
-                } else if (!_.isEmpty(values)) {
+                } else if (!_.isEmpty(values) || values === true) {
                     options.push(key + QAUtils.OPTION_DELIM + values)
                 }
             });
@@ -398,24 +411,24 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
         function get_data_filters() {
 
-            var filters = {
+            return {
                 units: $units.val(),
                 statuses: $status_selector.val(),
-                date_range: $('#date-range').val(),
+                date_range: $date_range.val(),
                 tests: $tests.val(),
                 test_lists: $test_lists.val(),
-                inactive: $("#include_inactive").is(":checked"),
                 frequencies: $frequencies.val(),
-                n_baseline_subgroups: $("#n-baseline-subgroups").val(),
-                subgroup_size: $("#subgroup-size").val(),
-                fit_data: $("#include-fit").is(":checked"),
-                combine_data: $("#combine-data").is(":checked"),
-                relative: $("#relative-diff").is(":checked"),
-                show_events: $('#show_events').is(':checked'),
-                review_required: $('#review-required').is(':checked')
+                n_baseline_subgroups: $n_baseline_subgroups.val(),
+                subgroup_size: $subgroup_size.val(),
+                fit_data: $include_fit.is(":checked"),
+                combine_data: $combine_data.is(":checked"),
+                relative: $relative_diff.is(":checked"),
+                show_events: $show_events.is(':checked'),
+                review_required: $review_required.is(':checked'),
+                chart_type: $chart_type.val(),
+                inactive_units: $units.data('felter').isFiltered('showInactiveUnits'),
+                inactive_test_lists: $test_lists.data('felter').isFiltered('showInactiveTestLists')
             };
-
-            return filters;
         }
 
         function get_date(date_id) {
@@ -423,7 +436,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
         }
 
         function basic_chart_selected() {
-            return $("#chart-type").val() === "basic";
+            return $chart_type.val() === "basic";
         }
 
         function create_basic_chart() {
@@ -565,9 +578,8 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             //     return;
             // }
 
-            var range = $('#date-range');
-            var from = range.val().split(' - ')[0];
-            var to = range.val().split(' - ')[1];
+            var from = $date_range.val().split(' - ')[0];
+            var to = $date_range.val().split(' - ')[1];
             var num_tests = _data._series.length;
 
             var tracker_locked = false;
@@ -1375,7 +1387,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     });
 
                 // service markers
-                if ($('#show_events').is(':checked')) {
+                if ($show_events.is(':checked')) {
                     event_group.selectAll('.service-marker')
                         .transition()
                         .attr('transform', function (d) {
@@ -1400,7 +1412,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     var x0 = xScale.invert(mouse_x),
                         x_closest;
 
-                    if ($('#show_events').is(':checked') && mouse_y > d3.select(this).attr('height') * .91) {
+                    if ($show_events.is(':checked') && mouse_y > d3.select(this).attr('height') * .91) {
 
                         x_closest = findClosestEvent(x0);
 
@@ -2061,42 +2073,60 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
         //set initial options based on url hash
         function set_options_from_url() {
-            var unit_ids, test_ids, freq_ids, test_list_ids;
 
             var options = QAURLs.options_from_url_query(document.location.search);
 
             var units = get_filtered_option_values("units", options);
+            var freqs = get_filtered_option_values("frequencies", options);
             var tests = get_filtered_option_values("tests", options);
             var test_lists = get_filtered_option_values("test_lists", options);
+            var date_range = get_filtered_option_values("date_range", options)[0];
+            var statuses = get_filtered_option_values("statuses", options);
+            var chart_type = get_filtered_option_values("chart_type", options)[0];
+            var subgroup_size = get_filtered_option_values("subgroup_size", options)[0];
+            var n_baseline_subgroups = get_filtered_option_values("n_baseline_subgroups", options)[0];
+            var include_fit = get_filtered_option_values("include_fit", options)[0];
+            var combine_data = get_filtered_option_values("combine_data", options)[0];
+            var relative_diff = get_filtered_option_values("relative_diff", options)[0];
+            var show_events = get_filtered_option_values("show_events", options)[0];
+            var review_required = get_filtered_option_values("review_required", options)[0];
+            var inactive_units = get_filtered_option_values('inactive_units', options)[0];
+            var inactive_test_lists = get_filtered_option_values('inactive_test_lists', options)[0];
 
             if ((units.length === 0) || (tests.length === 0)) {
                 return;
             }
 
-            unit_ids = _.map(units, function (pk) {
-                return "#unit-" + pk;
-            });
-            test_ids = _.map(tests, function (pk) {
-                return "#test-" + pk;
-            });
-            test_list_ids = _.map(test_lists, function (pk) {
-                return "#test-list-" + pk;
-            });
+            $units.data('felter').setFilter('showInactiveUnits', inactive_units);
+            $units.val(units).change();
+            $frequencies.val(freqs).change();
+            $test_lists.data('felter').setFilter('showInactiveTestLists', inactive_test_lists);
+            $test_lists.val(test_lists).change();
+            $tests.val(tests).change();
 
-            var filters = ["#unit-container", "#frequency-container", "#test-list-container .checkbox-container"];
+            $chart_type.val(chart_type);
+            if (chart_type === 'control') {
+                $chart_type.change();
+                $subgroup_size.val(subgroup_size);
+                $n_baseline_subgroups.val(n_baseline_subgroups);
+                $include_fit.prop('checked', include_fit)
+            } else {
+                $show_events.prop('checked', show_events);
+                $review_required.prop('checked', review_required);
+                if ($show_events.is(':checked')) {
+                    $review_req_container.show();
+                }
+            }
+            $combine_data.prop('checked', combine_data);
+            $relative_diff.prop('checked', relative_diff);
+            $date_range.data('daterangepicker').setStartDate(moment(date_range.split('%20-%20')[0], 'DD-MM-YYYY').format('DD-MM-YYYY'));
+            $date_range.data('daterangepicker').setEndDate(moment(date_range.split('%20-%20')[1], 'DD-MM-YYYY').format('DD-MM-YYYY'));
+            $status_selector.val(statuses).change();
+            $show_events.prop('checked', show_events);
+            $review_required.prop('checked', review_required);
 
-            _.map(filters, show_all_inputs);
+            update_chart();
 
-            QAUtils.set_checked_state(unit_ids, true);
-
-            set_frequencies();
-            set_test_lists(function () {
-                QAUtils.set_checked_state(test_list_ids, true);
-                set_tests(function () {
-                    QAUtils.set_checked_state(test_ids, true);
-                    update_chart();
-                });
-            });
         }
 
         function get_filtered_option_values(opt_type, options) {

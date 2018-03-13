@@ -1,5 +1,4 @@
 #chart {
-    /*height: 800px;*/
     min-width: 300px;
 }
 
@@ -12,26 +11,16 @@
 #chart-options hr{
     margin: 4px;
 }
+#chart-options .title {
+    font-weight: bold;
+}
+#chart-options .title > div {
+    margin-bottom: 5px;
+}
 
-/*#test-filters .span1,*/
-/*#test-filters .span2,*/
-/*#test-filters .span3,*/
-/*#test-filters .span4 {*/
-    /*margin-left:0.56%*/
-/*}*/
-
-/*#test-filters .span1{*/
-    /*width:12%;*/
-/*}*/
-/*#test-filters .span2{*/
-    /*width:18%;*/
-/*}*/
-/*#test-filters .span3{*/
-    /*width:24%;*/
-/*}*/
-/*#test-filters .span4{*/
-    /*width:30%;*/
-/*}*/
+div.chart-option-header {
+    background-color: #bebebe;
+}
 
 .control-container {
     position:relative;
@@ -76,6 +65,11 @@
     position: relative !important;
     top: -1px;
     *overflow: hidden;
+}
+#chart-type-container {
+    border: 1px solid #d2d6de;
+    margin-top: 5px;
+    padding: 5px 10px 0 10px;
 }
 #cc-chart-options input{
     max-width:35px;

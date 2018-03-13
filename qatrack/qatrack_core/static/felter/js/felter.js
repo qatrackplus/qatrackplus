@@ -1102,6 +1102,11 @@
                         opt_data.$div[0].opt_data = opt_data;
                     });
 
+                    self.$element.change(function() {
+                        var vals = self.$element.val();
+                        self.selectOptionsByVal(vals);
+                    });
+
                     var refresh_self_filters = false;
                     $.each(self.options.filters, function() {
                         if (this.refresh_on_dependent_changes) {
@@ -1336,6 +1341,23 @@
                     return false;
                 };
 
+                Felter.prototype.selectOptionsByVal = function(values) {
+
+                    var self = this;
+
+                    if (!$.isArray(values)) {
+                        return
+                    }
+                    $.each(self.data, function() {
+                        if ($.inArray(this.value, values) > -1) {
+                            self.showOption(this);
+                            self.selectOption(this, false);
+                        } else {
+                            self.deselectOption(this, false);
+                        }
+                    });
+                };
+
                 Felter.prototype.hideOption = function(opt_data, loop) {
                     var changed = this.deselectOption(opt_data, loop);
                     opt_data.displayed = false;
@@ -1366,8 +1388,20 @@
                     self.$element.trigger('change');
                 };
 
-                Felter.prototype.val = function() {
-                    return this.$element.val();
+                Felter.prototype.isFiltered = function(filter_name) {
+                    var self = this;
+                    return self.options.filters[filter_name].selected;
+                };
+
+                Felter.prototype.setFilter = function(filter_name, bool) {
+                    var self = this;
+                    var filt = self.options.filters[filter_name];
+                    filt.selected = bool;
+                    self.updateCustomFilter(filt);
+                };
+
+                Felter.prototype.val = function(value) {
+                    return this.$element.val(value);
                 };
 
                 Felter.prototype._bindAdapters = function () {

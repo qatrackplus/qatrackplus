@@ -44,7 +44,7 @@
             <div id="filter-box" class="box-body padding-bottom-3">
 
                 <div class="row">
-                    <div class="col-sm-9">
+                    <div class="col-sm-8 padding-right-0">
                         <select id="units" multiple class="form-control">
                             {% for u in units %}
                                 <option data-active="{{ u.active }}" value="{{ u.pk }}" title="{{ u.name }}{% if not u.active %} (inactive){% endif %}">{{ u.name }}</option>
@@ -71,24 +71,48 @@
                         </select>
                     </div>
 
-                    <div id="chart-options" class="col-sm-3 form-horizontal">
-                        <div class="border-d2d6de padding-10">
-                            <div class="row">
-                                <div class="col-sm-12">
-                                    <div class="row"><div class="col-sm-12"><h4>Chart Options</h4></div></div>
-                                    <div class="form-group margin-bottom-3">
-                                        <label class="control-label col-sm-3" for="chart-type">Type:</label>
-                                        <div class="col-sm-9">
+                    <div id="chart-options" class="col-sm-4 form-horizontal padding-left-0">
+                        <div class="border-d2d6de">
+                            <div class="col-sm-12">
+                                <div class="row">
+                                    <div class="col-sm-12 border-bottom-1 padding-right-0 padding-top-10">
+                                        <div class="title">
+                                            <div>Chart Options</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="chart-type-container" class="margin-bottom-10">
+                                    <div class="form-group">
+                                        <label class="col-sm-6" for="chart-type">Type</label>
+                                        <div class="col-sm-6">
                                             <select id="chart-type" class="form-control">
                                                 <option value="basic">Basic</option>
                                                 <option value="control">Control Chart</option>
                                             </select>
                                         </div>
+
                                     </div>
 
-                                    <div id="cc-chart-options" class="row" style="display: none;">
-                                        <div class="col-sm-2"></div>
-                                        <div class="col-sm-10">
+                                    <div id="chart-type-options">
+
+                                        <div id="b-chart-options">
+                                            <div class="form-group margin-bottom-3">
+                                                <label for="show_events" class="col-sm-10" title="Display service event data with test results.">Show service events?</label>
+                                                <div class="col-sm-2">
+                                                    <input id="show_events" type="checkbox">
+                                                </div>
+                                            </div>
+
+                                            <div id="review-container" class="form-group margin-bottom-3" style="display: none;">
+                                                <label class="col-sm-10" for="review-required">Review required?</label>
+                                                <div class="col-sm-2">
+                                                    <input type="checkbox" name="review-required" id="review-required" title="Show only service events that require review." checked="checked">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div id="cc-chart-options" style="display: none;">
                                             {% spaceless %}
 
                                             <div class="form-group margin-bottom-3">
@@ -105,7 +129,7 @@
                                                 </div>
                                             </div>
 
-                                            <div class="form-group">
+                                            <div class="form-group margin-bottom-3">
                                                 <label title="Include a gaussian fit to histogrammed data (slow) (Control Chart Only)" class="col-sm-6" for="include-fit">Fit</label>
                                                 <div class="col-sm-6">
                                                     <input type="checkbox" id="include-fit"/>
@@ -115,83 +139,64 @@
                                             {% endspaceless %}
                                         </div>
                                     </div>
+                                </div>
 
-                                    <div class="form-group margin-0">
-                                        <label class="col-sm-10" for="combine-data" title="Combine Test data from multiple TestLists on a given Unit (e.g. from a TestListCycle)">
-                                            Combine test data for unit
-                                        </label>
-                                        <div class="col-sm-2">
-                                            <input type="checkbox" id="combine-data" />
-                                        </div>
+                                <div class="form-group margin-0">
+                                    <label class="col-sm-10" for="combine-data" title="Combine Test data from multiple TestLists on a given Unit (e.g. from a TestListCycle)">
+                                        Combine test data for unit
+                                    </label>
+                                    <div class="col-sm-2">
+                                        <input type="checkbox" id="combine-data" />
                                     </div>
-                                    <div class="form-group margin-0">
-                                        <label class="col-sm-10" for="relative-diff" >
-                                            <abbr title="The absolute difference is plotted for tests with absolute tolerances set or with reference values of zero, otherwise the percent difference is plotted">Relative to reference</abbr>
-                                        </label>
-                                        <div class="col-sm-2">
-                                            <input type="checkbox" id="relative-diff" />
-                                        </div>
-
+                                </div>
+                                <div class="form-group margin-bottom-3S">
+                                    <label class="col-sm-10" for="relative-diff" >
+                                        <abbr title="The absolute difference is plotted for tests with absolute tolerances set or with reference values of zero, otherwise the percent difference is plotted">Relative to reference</abbr>
+                                    </label>
+                                    <div class="col-sm-2">
+                                        <input type="checkbox" id="relative-diff" />
                                     </div>
+                                </div>
 
-                                    <div id="chart-date-wrapper" class="form-group">
-                                        <div class="col-sm-12">
-                                            <label for="date-range" id="from-date-label" class="control-label">Date Range</label>
-                                            <div class="input-group" id="date-wrapper" data-date-format="dd-mm-yyyy">
-                                                <div class="input-group-addon">
-                                                    <i class="fa fa-calendar fa-fw"></i>
-                                                </div>
-                                                <input type="text" id="date-range" class="form-control"/>
+                                <div id="chart-date-wrapper" class="form-group margin-bottom-3">
+                                    <div class="col-sm-4">
+                                        <label for="date-range" id="from-date-label" class="control-label">Date Range</label>
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <div class="input-group" id="date-wrapper" data-date-format="dd-mm-yyyy">
+                                            <div class="input-group-addon">
+                                                <i class="fa fa-calendar fa-fw"></i>
                                             </div>
+                                            <input type="text" id="date-range" class="form-control"/>
                                         </div>
                                     </div>
+                                </div>
 
-                                    <div id="status-container" class="form-group">
-                                        <label for="status-selector" class="col-sm-3">Review Statuses</label>
-                                        <div class="col-sm-9">
-                                            <select id="status-selector" multiple>
-                                                {% for status in statuses %}
-                                                    <option id="status-{{status.pk}}" value="{{status.pk}}" {% if status.export_by_default %}selected="selected"{% endif %}>
-                                                        {{status.name}}
-                                                    </option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
+                                <div id="status-container" class="form-group">
+                                    <label for="status-selector" class="col-sm-4">Review Statuses</label>
+                                    <div class="col-sm-8">
+                                        <select id="status-selector" multiple>
+                                            {% for status in statuses %}
+                                                <option id="status-{{status.pk}}" value="{{status.pk}}" {% if status.export_by_default %}selected="selected"{% endif %}>
+                                                    {{status.name}}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
                                     </div>
+                                </div>
 
-                                    <hr class="margin-10"/>
-
-                                    <div class="form-group margin-bottom-3">
-                                        <label for="show_events" class="col-sm-10" title="Display service event data with test results.">Show service events?</label>
-                                        <div class="col-sm-2">
-                                            <input id="show_events" type="checkbox">
-                                        </div>
-                                    </div>
-
-                                    <div id="service-event-container" style="display: none;">
-                                        <div id="review-container" class="form-group margin-bottom-3">
-                                            <label class="col-sm-10" for="review-required">Review required?</label>
-                                            <div class="col-sm-2">
-                                                <input type="checkbox" name="review-required" id="review-required" title="Show only service events that require review." checked="checked">
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <hr class="margin-10"/>
-
-                                    <div class="form-group">
-                                        <label class="col-sm-2" for="chart-url">Link</label>
-                                        <div class="col-sm-10">
-                                            <input type="text" class="form-control" id="chart-url"/>
-                                        </div>
+                                <div class="form-group">
+                                    <label class="col-sm-2" for="chart-url">Link</label>
+                                    <div class="col-sm-10">
+                                        <input type="text" class="form-control" id="chart-url"/>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="row">
+                            <div class="form-group">
                                 <div class="col-sm-12">
-                                    <button type="button" class="btn btn-info btn-flat pull-left" id="save-image"><i class="fa fa-image"></i> Save Chart</button>
-                                    <button type="button" class="btn btn-info btn-flat pull-right" data-loading-text="Generating Chart..." id="gen-chart">Generate Chart</button>
+                                    <button type="button" class="btn btn-info btn-flat pull-left margin-left-10" id="save-image"><i class="fa fa-image"></i> Save Chart</button>
+                                    <button type="button" class="btn btn-info btn-flat pull-right margin-right-10" data-loading-text="Generating Chart..." id="gen-chart">Generate Chart</button>
                                 </div>
                             </div>
 

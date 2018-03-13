@@ -139,7 +139,13 @@ def create_cycle(test_lists=None, name=None):
     return cycle
 
 
-def create_test_list_membership(test_list, test, order=0):
+def create_test_list_membership(test_list=None, test=None, order=0):
+
+    if test_list is None:
+        test_list = create_test_list()
+    if test is None:
+        test = create_test()
+
     tlm = models.TestListMembership(test_list=test_list, test=test, order=order)
     tlm.save()
     return tlm

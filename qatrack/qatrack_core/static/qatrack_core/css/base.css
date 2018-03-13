@@ -190,6 +190,9 @@ input[type="number"] {
 .bottom-0 {
     bottom: 0;
 }
+.border-bottom-1 {
+    border-bottom: 1px solid #d2d6de;
+}
 .border-none {
     border: none !important;
 }
@@ -339,14 +342,26 @@ input[type="number"] {
 .padding-bottom-8 {
     padding-bottom: 8px;
 }
+.padding-left-0 {
+    padding-left: 0px;
+}
 .padding-left-5 {
     padding-left: 5px;
+}
+.padding-right-0 {
+    padding-right: 0px;
 }
 .padding-right-5 {
     padding-right: 5px;
 }
+.padding-right-10 {
+    padding-right: 10px;
+}
 .padding-top-3 {
     padding-top: 3px;
+}
+.padding-top-10 {
+    padding-top: 10px;
 }
 .padding-top-20 {
     padding-top: 20px;
