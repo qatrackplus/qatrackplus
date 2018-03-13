@@ -27,6 +27,8 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             $relative_diff = $('#relative-diff'),
             $review_required = $('#review-required');
 
+        var set_chart_height;
+
         $units.felter({
             mainDivClass: 'col-sm-2',
             selectAllClass: 'btn btn-flat btn-xs btn-default',
@@ -586,9 +588,13 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
             ///////////////////////// CHART
 
-            var chart_height = $(window).height() - 50,
-                chart_width = $('#chart').width() - 15,
+            var chart_width = $('#chart').width() - 15,
                 xAxisHeight = 20;
+
+            if (!set_chart_height) {
+                set_chart_height = $(window).height() - 50;
+            }
+            var chart_height = set_chart_height;
 
             var circle_radius = 3,
                 circle_radius_highlight = 4,
@@ -1237,6 +1243,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
                     // Avoid negative or really small widths
                     chart_height = d3.max([50, h + dy]);
+                    set_chart_height = chart_height;
 
                     xAxisHeight = 0.028 * chart_height;
                     margin2.top = chart_height - margin.bottom;
