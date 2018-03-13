@@ -901,6 +901,18 @@ class UnitTestInfo(models.Model):
         return "UnitTestInfo(%s)" % self.pk
 
 
+class UnitTestInfoChange(models.Model):
+
+    unit_test_info = models.ForeignKey(UnitTestInfo)
+    reference = models.ForeignKey(Reference, verbose_name=_("Old Reference"), null=True, blank=True, on_delete=models.SET_NULL)
+    reference_changed = models.BooleanField()
+    tolerance = models.ForeignKey(Tolerance, verbose_name=_("Old Tolerance"), null=True, blank=True, on_delete=models.SET_NULL)
+    tolerance_changed = models.BooleanField()
+    comment = models.TextField(help_text=_("Reason for the change"))
+    changed = models.DateTimeField(auto_now_add=True)
+    changed_by = models.ForeignKey(User, editable=False)
+
+
 class TestListMembershipManager(models.Manager):
 
     def get_by_natural_key(self, test_list_slug, test_name):
