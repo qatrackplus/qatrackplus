@@ -42,7 +42,7 @@ class UnitClass(models.Model):
 
     def __str__(self):
         """Display more descriptive name"""
-        return '<UnitClass(%s)>' % self.name
+        return self.name
 
 
 class Site(models.Model):

@@ -197,7 +197,10 @@ PERMISSIONS = (
             )
         ),
     ),
-    (
+)
+
+if settings.USE_SERVICE_LOG:
+    PERMISSIONS += (
         'Service Log',
         (
             (
@@ -237,7 +240,6 @@ PERMISSIONS = (
             ),
         )
     )
-)
 
 
 class FrequencyManager(models.Manager):

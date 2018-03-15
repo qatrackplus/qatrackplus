@@ -335,7 +335,7 @@ class BaseChartView(View):
         units = self.request.GET.getlist("units[]", [])
         statuses = self.request.GET.getlist("statuses[]", [])
 
-        show_events = self.request.GET.get('show_events') == 'true'
+        show_events = self.request.GET.get('show_events') == 'true' and settings.USE_SERVICE_LOG
         se_review_required = self.request.GET.get('review_required') == 'true'
         # se_types = self.request.GET.getlist('service_types[]', [])
 

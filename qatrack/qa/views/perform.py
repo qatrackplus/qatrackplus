@@ -706,28 +706,29 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         # set due date to account for any non default statuses
         self.object.unit_test_collection.set_due_date()
 
-        # service_events = form.cleaned_data.get('service_events', False)
-        rtsqa_id = form.cleaned_data['rtsqa_id']
+        if settings.USE_SERVICE_LOG:
+            # service_events = form.cleaned_data.get('service_events', False)
+            rtsqa_id = form.cleaned_data['rtsqa_id']
 
-        # is there an existing rtsqa being linked?
-        if rtsqa_id:
-            rtsqa = sl_models.ReturnToServiceQA.objects.get(pk=rtsqa_id)
-            rtsqa.test_list_instance = self.object
-            rtsqa.save()
+            # is there an existing rtsqa being linked?
+            if rtsqa_id:
+                rtsqa = sl_models.ReturnToServiceQA.objects.get(pk=rtsqa_id)
+                rtsqa.test_list_instance = self.object
+                rtsqa.save()
 
-            # If tli needs review, update 'Unreviewed RTS QA' counter
-            if not self.object.all_reviewed:
-                cache.delete(settings.CACHE_RTS_QA_COUNT)
+                # If tli needs review, update 'Unreviewed RTS QA' counter
+                if not self.object.all_reviewed:
+                    cache.delete(settings.CACHE_RTS_QA_COUNT)
 
-        changed_se = self.object.update_all_reviewed()
+            changed_se = self.object.update_all_reviewed()
 
-        if len(changed_se) > 0:
-            messages.add_message(
-                request=self.request,
-                level=messages.INFO,
-                message='Changed status of service event(s) %s to "%s".' %
-                (', '.join(str(x) for x in changed_se), sl_models.ServiceEventStatus.get_default().name)
-            )
+            if len(changed_se) > 0:
+                messages.add_message(
+                    request=self.request,
+                    level=messages.INFO,
+                    message='Changed status of service event(s) %s to "%s".' %
+                    (', '.join(str(x) for x in changed_se), sl_models.ServiceEventStatus.get_default().name)
+                )
 
         if not self.object.in_progress:
             # TestListInstance & TestInstances have been successfully create, fire signal
@@ -805,12 +806,13 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         context["unit_test_collection"] = self.unit_test_col
         context["contacts"] = list(Contact.objects.all().order_by("name"))
 
-        rtsqa_id = self.request.GET.get('rtsqa', None)
-        if rtsqa_id:
-            rtsqa = sl_models.ReturnToServiceQA.objects.get(pk=rtsqa_id)
-            context['se_statuses'] = {rtsqa.service_event.id: rtsqa.service_event.service_status.id}
-            context['rtsqa_id'] = rtsqa_id
-            context['rtsqa_for_se'] = rtsqa.service_event
+        if settings.USE_SERVICE_LOG:
+            rtsqa_id = self.request.GET.get('rtsqa', None)
+            if rtsqa_id:
+                rtsqa = sl_models.ReturnToServiceQA.objects.get(pk=rtsqa_id)
+                context['se_statuses'] = {rtsqa.service_event.id: rtsqa.service_event.service_status.id}
+                context['rtsqa_id'] = rtsqa_id
+                context['rtsqa_for_se'] = rtsqa.service_event
 
         context['attachments'] = (
             context['test_list'].attachment_set.all() |
@@ -896,16 +898,16 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
             #     rtsqa = sl_models.ReturnToServiceQA.objects.get(pk=rtsqa_id)
             #     rtsqa.test_list_instance = self.object
             #     rtsqa.save()
+            if settings.USE_SERVICE_LOG:
+                changed_se = self.object.update_all_reviewed()
 
-            changed_se = self.object.update_all_reviewed()
-
-            if len(changed_se) > 0:
-                messages.add_message(
-                    request=self.request,
-                    level=messages.INFO,
-                    message='Changed status of service event(s) %s to "%s".' %
-                    (', '.join(str(x) for x in changed_se), sl_models.ServiceEventStatus.get_default().name)
-                )
+                if len(changed_se) > 0:
+                    messages.add_message(
+                        request=self.request,
+                        level=messages.INFO,
+                        message='Changed status of service event(s) %s to "%s".' %
+                        (', '.join(str(x) for x in changed_se), sl_models.ServiceEventStatus.get_default().name)
+                    )
 
             if not self.object.in_progress:
                 try:

@@ -97,19 +97,21 @@
                                     <div id="chart-type-options">
 
                                         <div id="b-chart-options">
-                                            <div class="form-group margin-bottom-3">
-                                                <label for="show_events" class="col-sm-10" title="Display service event data with test results.">Show service events?</label>
-                                                <div class="col-sm-2">
-                                                    <input id="show_events" type="checkbox">
+                                            {% if USE_SERVICE_LOG %}
+                                                <div class="form-group margin-bottom-3">
+                                                    <label for="show_events" class="col-sm-10" title="Display service event data with test results.">Show service events?</label>
+                                                    <div class="col-sm-2">
+                                                        <input id="show_events" type="checkbox">
+                                                    </div>
                                                 </div>
-                                            </div>
 
-                                            <div id="review-container" class="form-group margin-bottom-3" style="display: none;">
-                                                <label class="col-sm-10" for="review-required">Review required?</label>
-                                                <div class="col-sm-2">
-                                                    <input type="checkbox" name="review-required" id="review-required" title="Show only service events that require review." checked="checked">
+                                                <div id="review-container" class="form-group margin-bottom-3" style="display: none;">
+                                                    <label class="col-sm-10" for="review-required">Review required?</label>
+                                                    <div class="col-sm-2">
+                                                        <input type="checkbox" name="review-required" id="review-required" title="Show only service events that require review." checked="checked">
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            {% endif %}
                                         </div>
 
                                         <div id="cc-chart-options" style="display: none;">
@@ -309,7 +311,9 @@
         <div class="col-sm-12">
             <div id="tooltip-se-date">__tli-date__</div>
             <a id="tooltip-se-btn" class="btn btn-flat btn-xs btn-default pull-right" href="{% url 'view_test_list_instance' %}__tli-id__" target="View Test List">View</a>
-            <a id="tooltip-se-new-btn" class="btn btn-flat btn-xs btn-default pull-right margin-r-3" href="{% url 'sl_new' %}?ib=__tli-id__" __show-in__ target="Initiate SE">Initiate SE</a>
+            {% if USE_SERVICE_LOG %}
+                <a id="tooltip-se-new-btn" class="btn btn-flat btn-xs btn-default pull-right margin-r-3" href="{% url 'sl_new' %}?ib=__tli-id__" __show-in__ target="Initiate SE">Initiate SE</a>
+            {% endif %}
         </div>
     </div>
     <div class="tli-se-links" style="display: none;">

@@ -12,7 +12,7 @@
     {% elif perms.qa.change_testlistinstance %}
         <a class="btn btn-default btn-xs btn-flat" title="Edit this list" href="{% url 'edit_tli' pk=instance.pk %}?next={{request.path|cut:"data/"}}" >Edit</a>
     {% endif %}
-    {% if perms.service_log.view_serviceevent %}
+    {% if USE_SERVICE_LOG and perms.service_log.view_serviceevent %}
         {% if show_initiate_se %}
             {% if num_initiated_se == 1 %}
                 <a class="btn btn-info btn-xs btn-flat" title="View service event initiated by this list" href="{% url 'sl_details' pk=initiated_se.first.pk %}?next={{request.path|cut:"data/"}}" ><i class="fa fa-wrench fa-fw"></i></a>
