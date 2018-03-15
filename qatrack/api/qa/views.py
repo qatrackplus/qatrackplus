@@ -1,6 +1,6 @@
 from django.contrib.sites.shortcuts import get_current_site
 from django.utils import timezone
-from rest_framework import status
+from rest_framework import status, parsers
 from rest_framework import viewsets
 from rest_framework import views
 from rest_framework.response import Response
@@ -94,7 +94,7 @@ class TestListInstanceViewSet(MultiSerializerMixin, CreateListRetrieveViewSet):
         data = dict(request.data.items())
         serializer = self.get_serializer(data=data)
         serializer.user = request.user
-        valid = serializer.is_valid(raise_exception=True)
+        serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)

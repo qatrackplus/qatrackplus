@@ -1,13 +1,19 @@
+import base64
+import copy
+import io
+from numbers import Number
+
 from django_comments.models import Comment
 from django.conf import settings
 from django.core.cache import cache
+from django.core.files.base import ContentFile
 from django.db.transaction import atomic
 from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.reverse import reverse
 
 from qatrack.qa import models, signals
-from qatrack.qa.views.perform import CompositePerformer
+from qatrack.qa.views.perform import CompositePerformer, UploadHandler
 from qatrack.service_log import models as sl_models
 
 
@@ -142,46 +148,126 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         err_fields = ['"%s"' % slug for slug, data in tests.items() if not self.valid_test(data)]
         if err_fields:
             fields = ', '.join(err_fields)
-            msg = '%s field(s) have errors. Each test must contain either a "value" or "string_value" field' % fields
+            msg = '%s field(s) have errors. Test data must be a dictionary ' % fields
             raise serializers.ValidationError(msg)
         return tests
 
     def valid_test(self, test_data):
-        return 'value' in test_data or 'string_value' in test_data
+        is_dict = isinstance(test_data, dict)
+        return is_dict
 
     def validate_work_completed(self, wc):
         return wc or timezone.now()
 
     def validate(self, data):
+        post_data = copy.deepcopy(data)
         validated_data = super(TestListInstanceCreator, self).validate(data)
-        self.preprocess(validated_data)
+        validated_data = self.preprocess(validated_data)
         utc = validated_data['unit_test_collection']
         day = validated_data.get('day', 0)
         day, tl = utc.get_list(day=day)
         test_qs = tl.all_tests().values_list("slug", "type", "calculation_procedure")
-        slugs, types, procedures = zip(*test_qs)
-        missing = ', '.join([s for s in slugs if s not in data['tests']])
+
+        missing = []
+        wrong_types = []
+        invalid_autos = []
+        auto_types = [models.CONSTANT] + list(models.CALCULATED_TYPES)
+
+        for slug, type_, procedure in test_qs:
+
+            if slug not in validated_data['tests']:
+                missing.append(slug)
+
+            provided_val = post_data['tests'].get(slug, {}).get("value")
+            validated_val = validated_data['tests'][slug].get("value")
+            if not self.type_okay(type_, validated_val):
+                wrong_types.append(slug)
+
+            if type_ in auto_types and not self.autovalue_ok(validated_val, provided_val):
+                invalid_autos.append(slug)
+
+            if type_ in models.STRING_TYPES and slug in validated_data['tests']:
+                d = validated_data['tests'][slug]
+                d['string_value'] = d.pop('value', "")
+                validated_data['tests'][slug] = d
+            elif type_ == models.UPLOAD and slug in validated_data['tests']:
+                d = validated_data['tests'][slug]
+                # remove base64 data
+                d.pop('value', "")
+                d['string_value'] = d.pop('filename', "")
+                validated_data['tests'][slug] = d
+
+        msgs = []
         if missing:
-            raise serializers.ValidationError("Missing data for tests: %s" % missing)
+            msgs.append("Missing data for tests: %s" % ', '.join(missing))
+
+        if wrong_types:
+            msgs.append("Wrong value type (number/string) for tests: %s" % ', '.join(wrong_types))
+
+        if invalid_autos:
+            msgs.append(
+                "The following tests are calculated automatically and should not have values "
+                "provided: %s" % ', '.join(invalid_autos)
+            )
 
         if validated_data['work_completed'] < validated_data['work_started']:
-            raise serializers.ValidationError("work_completed date must be after work_started")
+            msgs.append("work_completed date must be after work_started")
+
+        if msgs:
+            raise serializers.ValidationError('\n'.join(msgs))
 
         return validated_data
+
+    def type_okay(self, type_, val):
+        if type_ in models.STRING_TYPES and not isinstance(val, str):
+            return False
+        elif type_ in models.NUMERICAL_TYPES and not isinstance(val, Number):
+            return False
+        return True
+
+    def autovalue_ok(self, calculated, provided):
+        not_provided = provided in (None, "")
+        values_match = calculated == provided
+        return not_provided or values_match
 
     def preprocess(self, validated_data):
 
         utc = validated_data['unit_test_collection']
         day = validated_data.get('day', 0)
         day, tl = utc.get_list(day=day)
-        test_qs = tl.all_tests().values_list("slug", "type", "calculation_procedure")
-        slugs, types, procedures = zip(*test_qs)
-        has_calculated = set(models.CALCULATED_TYPES).intersection(types)
+        test_qs = tl.all_tests().values_list("id", "slug", "type", "constant_value")
+
+        has_calculated = False
+        uploads = []
+        for pk, slug, type_, cv in test_qs:
+
+            has_calculated = has_calculated or type_ in models.CALCULATED_TYPES
+
+            if type_ == models.CONSTANT:
+                d = validated_data['tests'].get(slug, {})
+                d['value'] = cv
+                validated_data['tests'][slug] = d
+            elif type_ == models.UPLOAD:
+                d = validated_data['tests'].get(slug, {})
+                uploads.append((pk, slug, d))
 
         if not has_calculated:
             return validated_data
 
         comp_calc_data = self.data_to_composite(validated_data)
+
+        for pk, slug, d in uploads:
+            comp_calc_data['test_id'] = pk
+            f = ContentFile(base64.b64decode(d['value']))
+            f.name = d['filename']
+            test_data = UploadHandler(self.user, comp_calc_data, f).process()
+            if test_data['errors']:
+                raise serializers.ValidationError("Error with %s test: %s" % (slug, '\n'.join(test_data['errors'])))
+            data = validated_data['tests'].get(slug, {})
+            comp_calc_data['comments'][slug] = '\n'.join(c for c in [data.get("comment", ""), test_data.get("comment")] if c)
+            comp_calc_data['tests'][slug] = test_data['result']
+            comp_calc_data.pop('test_id', None)
+
         results = CompositePerformer(self.user, comp_calc_data).calculate()
         if not results['success']:
             raise serializers.ValidationError(', '.join(results.get("errors", [])))
@@ -190,15 +276,15 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             if test_data['error']:
                 raise serializers.ValidationError("Error with %s test: %s" % (slug, test_data['error']))
 
-            # TODO: user_attached?
-            validated_data['tests'][slug] = {
-                'value': test_data['value'],
-                'comment': test_data['comment'],
-            }
+            data = validated_data['tests'].get(slug, {})
+            data['comment'] = '\n'.join(c for c in [data.get("comment", ""), test_data.get("comment")] if c)
+            data['value'] = test_data['value']
+            validated_data['tests'][slug] = data
 
         return validated_data
 
     def data_to_composite(self, validated_data):
+        """Convert API post data to format suitable for CompositePerformer"""
         utc = validated_data['unit_test_collection']
         day = validated_data.get('day', 0)
         day, tl = utc.get_list(day=day)

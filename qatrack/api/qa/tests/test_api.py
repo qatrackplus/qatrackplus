@@ -1,3 +1,7 @@
+import base64
+import os
+
+from django.conf import settings
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -14,11 +18,21 @@ class TestTestListInstanceAPI(APITestCase):
         self.simple_test_list = utils.create_test_list("simple")
         self.t1 = utils.create_test(name="test1")
         self.t2 = utils.create_test(name="test2")
+        self.t3 = utils.create_test(name="test3", test_type=models.STRING)
+        self.t4 = utils.create_test(name="test4", test_type=models.BOOLEAN)
+        self.t5 = utils.create_test(name="test5", test_type=models.MULTIPLE_CHOICE, choices="choice1,choice2,choice3")
 
         self.tc = utils.create_test(name="testc", test_type=models.COMPOSITE)
         self.tc.calculation_procedure = "result = test1 + test2"
         self.tc.save()
-        for t in [self.t1, self.t2]:
+
+        self.tsc = utils.create_test(name="testsc", test_type=models.STRING_COMPOSITE)
+        self.tsc.calculation_procedure = "result = 'hello %s' % test3"
+        self.tsc.save()
+        self.default_tests = [self.t1, self.t2, self.t3, self.t4, self.t5]
+        self.ntests = len(self.default_tests)
+
+        for t in self.default_tests:
             utils.create_test_list_membership(self.simple_test_list, t)
 
         self.unit_test_list = utils.create_unit_test_collection(test_collection=self.simple_test_list, unit=self.unit)
@@ -37,6 +51,15 @@ class TestTestListInstanceAPI(APITestCase):
                 'test2': {
                     'value': 2
                 },
+                'test3': {
+                    'value': "test three"
+                },
+                'test4': {
+                    'value': True
+                },
+                'test5': {
+                    'value': "choice2"
+                },
             },
         }
 
@@ -48,13 +71,27 @@ class TestTestListInstanceAPI(APITestCase):
         response = self.client.post(self.create_url, self.simple_data)
         assert response.data == ['No test instance status available']
 
+    def test_create_user_status(self):
+        s2 = utils.create_status(name="user status", slug="user_status", is_default=False, requires_review=False)
+        s2_url = reverse("testinstancestatus-detail", kwargs={'pk': s2.pk})
+        self.simple_data['status'] = s2_url
+        response = self.client.post(self.create_url, self.simple_data)
+        assert response.status_code == status.HTTP_201_CREATED
+        assert models.TestInstance.objects.filter(status=s2).count() == self.ntests
+        assert models.TestListInstance.objects.all().count() == 1
+        assert models.TestListInstance.objects.unreviewed().count() == 0
+
     def test_create_simple(self):
         response = self.client.post(self.create_url, self.simple_data)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(models.TestListInstance.objects.count(), 1)
-        self.assertEqual(models.TestInstance.objects.count(), 2)
+        assert response.status_code == status.HTTP_201_CREATED
+        assert models.TestListInstance.objects.unreviewed().count() == 1
+        assert models.TestInstance.objects.count() == self.ntests
+        for t in self.default_tests:
+            ti = models.TestInstance.objects.get(unit_test_info__test=t)
+            v = ti.value if t.type not in models.STRING_TYPES else ti.string_value
+            assert v == self.simple_data['tests'][t.slug]['value']
 
-    def test_create_composite_no_data(self):
+    def test_create_composite(self):
         """
         Add a composite test to our simple test list.  Submitting without data
         included should result in it being calculated.
@@ -62,11 +99,69 @@ class TestTestListInstanceAPI(APITestCase):
 
         utils.create_test_list_membership(self.simple_test_list, self.tc)
         response = self.client.post(self.create_url, self.simple_data)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(models.TestListInstance.objects.count(), 1)
-        self.assertEqual(models.TestInstance.objects.count(), 3)
+        assert response.status_code == status.HTTP_201_CREATED
+        assert models.TestListInstance.objects.count() == 1
+        assert models.TestInstance.objects.count() == self.ntests + 1
         tic = models.TestInstance.objects.get(unit_test_info__test=self.tc)
         assert tic.value == self.simple_data['tests']['test1']['value'] + self.simple_data['tests']['test2']['value']
+
+    def test_create_composite_with_data(self):
+        """
+        Add a composite test to our simple test list.  Submitting with data
+        that matches the calculated data should not result in error.
+        """
+
+        utils.create_test_list_membership(self.simple_test_list, self.tc)
+        data = self.simple_data.copy()
+        data['tests']['testc'] = {'value': 3}
+        response = self.client.post(self.create_url, data)
+        assert response.status_code == status.HTTP_201_CREATED
+        assert models.TestListInstance.objects.count() == 1
+        assert models.TestInstance.objects.count() == self.ntests + 1
+
+    def test_create_composite_with_null_data(self):
+        """
+        Add a composite test to our simple test list.  Submitting with null data
+        value should not result in error.
+        """
+
+        utils.create_test_list_membership(self.simple_test_list, self.tc)
+        data = self.simple_data.copy()
+        data['tests']['testc'] = {'value': ""}
+        response = self.client.post(self.create_url, data)
+        assert response.status_code == status.HTTP_201_CREATED
+        data['tests']['testc'] = {'value': None}
+        response = self.client.post(self.create_url, data)
+        assert response.status_code == status.HTTP_201_CREATED
+
+    def test_create_composite_with_comment(self):
+        """
+        Add a composite test to our simple test list.  Submitting with comment
+        form composite test should result in comment being saved with composite test.
+        """
+
+        utils.create_test_list_membership(self.simple_test_list, self.tc)
+        data = self.simple_data.copy()
+        data['tests']['testc'] = {'comment': "hello testc"}
+        response = self.client.post(self.create_url, data)
+        assert response.status_code == status.HTTP_201_CREATED
+        tic = models.TestInstance.objects.get(unit_test_info__test=self.tc)
+        assert tic.value == self.simple_data['tests']['test1']['value'] + self.simple_data['tests']['test2']['value']
+        assert tic.comment == "hello testc"
+
+    def test_create_composite_with_invalid_data(self):
+        """
+        Add a composite test to our simple test list.  Submitting with data
+        that does not match the calculated data should result in error.
+        """
+
+        utils.create_test_list_membership(self.simple_test_list, self.tc)
+        data = self.simple_data.copy()
+        data['tests']['testc'] = {'value': 999}
+        response = self.client.post(self.create_url, data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert models.TestListInstance.objects.count() == 0
+        assert models.TestInstance.objects.count() == 0
 
     def test_create_composite_invalid(self):
         """
@@ -77,14 +172,74 @@ class TestTestListInstanceAPI(APITestCase):
         data = self.simple_data.copy()
         data['tests'].pop('test1')
         response = self.client.post(self.create_url, self.simple_data)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(models.TestListInstance.objects.count(), 0)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert models.TestListInstance.objects.count() == 0
 
-    def test_todo(self):
+    def test_create_composite_with_constant(self):
         """
-        Need to:
-            test composite string value calculations
-            implement processing of uploads
-            refactor CompositeCalculation to use CompositePerformer
+        Add a composite test which depends on a constant value to our simple test list.
+        Test list instance should be created if constant value not provided.
         """
-        assert False
+        models.Test.objects.filter(pk=self.t2.pk).update(
+            type=models.CONSTANT,
+            constant_value=99
+        )
+
+        utils.create_test_list_membership(self.simple_test_list, self.tc)
+        self.simple_data['tests'].pop("test2")
+        response = self.client.post(self.create_url, self.simple_data)
+        assert response.status_code == status.HTTP_201_CREATED
+        tic = models.TestInstance.objects.get(unit_test_info__test=self.tc)
+        assert tic.value == 1 + 99
+
+    def test_create_composite_with_invalid_constant(self):
+        """
+        Add a composite test which depends on a constant value to our simple test list.
+        Test list instance should not be created if constant value provided doesn't match expected value.
+        """
+        models.Test.objects.filter(pk=self.t2.pk).update(
+            type=models.CONSTANT,
+            constant_value=99
+        )
+
+        utils.create_test_list_membership(self.simple_test_list, self.tc)
+        self.simple_data['tests']['test2'] = 100
+        response = self.client.post(self.create_url, self.simple_data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_create_with_string_composite(self):
+        """
+        Add a composite test which depends on a constant value to our simple test list.
+        Test list instance should be created if constant value not provided.
+        """
+        utils.create_test_list_membership(self.simple_test_list, self.tsc)
+        response = self.client.post(self.create_url, self.simple_data)
+        assert response.status_code == status.HTTP_201_CREATED
+        tic = models.TestInstance.objects.get(unit_test_info__test=self.tsc)
+        assert tic.string_value == "hello test three"
+
+    def test_file_upload(self):
+        """
+        Add a file upload test and ensure we can upload, process and have
+        composite tests depend on it being processed correctly.
+        """
+        self.tsc.calculation_procedure = "result = file_upload['baz']['baz1']"
+        self.tsc.save()
+        utils.create_test_list_membership(self.simple_test_list, self.tsc)
+
+        upload = utils.create_test(name="file_upload", test_type=models.UPLOAD)
+        upload.calculation_procedure = "import json; result=json.load(FILE)"
+        upload.save()
+        utils.create_test_list_membership(self.simple_test_list, upload)
+
+        filepath = os.path.join(settings.PROJECT_ROOT, "qa", "tests", "TESTRUNNER_test_file.json")
+        upload_data = open(filepath, 'rb').read()
+        self.simple_data['tests']['file_upload'] = {
+            'value': base64.b64encode(upload_data),
+            'filename': "tmp.json",
+        }
+        response = self.client.post(self.create_url, self.simple_data)
+        assert response.status_code == status.HTTP_201_CREATED
+        tic = models.TestInstance.objects.get(unit_test_info__test=self.tsc)
+        assert tic.string_value == "test"
+        tiu = models.TestInstance.objects.get(unit_test_info__test=upload)

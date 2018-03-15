@@ -137,6 +137,124 @@ def get_context_refs_tols(unit, tests):
     return refs, tols
 
 
+class UploadHandler:
+
+    def __init__(self, user, data, fp):
+        self.user = user
+        self.data = data
+        self.file = fp
+
+    def process(self):
+        """process file, apply calculation procedure and return results"""
+
+        try:
+            self.test_list = models.TestList.objects.get(pk=self.data["test_list_id"])
+            self.all_tests = self.test_list.all_tests()
+        except (KeyError, models.TestList.DoesNotExist):
+            return {"success": False, "errors": ["Invalid or missing test_list_id"]}
+
+        try:
+            self.unit = Unit.objects.get(pk=self.data["unit_id"])
+        except (KeyError, Unit.DoesNotExist):
+            return {"success": False, "errors": ["Invalid or missing unit_id"]}
+
+        try:
+            if self.data.get('attachment_id'):
+                self.reprocess()
+            else:
+                self.handle_upload()
+
+            results = self.run_calc()
+        except Exception:
+            msg = traceback.format_exc()
+            results = {
+                'success': False,
+                'errors': [msg],
+                "result": None,
+                "user_attached": [],
+            }
+
+        return results
+
+    def reprocess(self):
+        self.attach_id = self.data.get("attachment_id")
+        try:
+            self.attachment = Attachment.objects.get(pk=self.attach_id)
+        except Attachment.DoesNotExist:
+            self.attachment = None
+
+    def run_calc(self):
+
+        self.set_calculation_context()
+
+        results = {
+            'attachment_id': self.attachment.id,
+            'attachment': attachment_info(self.attachment),
+            'success': False,
+            'errors': [],
+            "result": None,
+            "comment": "",
+            "user_attached": [],
+        }
+
+        if self.attachment is None:
+            results["errors"] = ["Original file not found. Please re-upload."]
+            return results
+
+        try:
+            test = models.Test.objects.get(pk=self.data.get("test_id"))
+            code = compile(process_procedure(test.calculation_procedure), "__QAT+COMP_%s.py" % test.slug, "exec")
+            exec(code, self.calculation_context)
+            key = "result" if "result" in self.calculation_context else test.slug
+            results["result"] = self.calculation_context[key]
+            results["success"] = True
+            results["user_attached"] = list(self.calculation_context.get("__user_attached__", []))
+            results["comment"] = self.calculation_context.get("__comment__")
+        except models.Test.DoesNotExist:
+            results["errors"].append("Test with that ID does not exist")
+        except Exception:
+            msg = traceback.format_exc().split("__QAT+COMP_")[-1].replace("<module>", "Test: %s" % test.name)
+            results["errors"].append("Invalid Test Procedure: %s" % msg)
+
+        return results
+
+    def handle_upload(self):
+        """read incoming file and save tmp file to disk ready for processing"""
+
+        comment = "Uploaded %s by %s" % (timezone.now(), self.user.username)
+        self.attachment = Attachment.objects.create(
+            attachment=self.file,
+            label=self.file.name,
+            comment=comment,
+            created_by=self.user,
+        )
+
+    def set_calculation_context(self):
+        """set up the environment that the composite test will be calculated in"""
+
+        self.calculation_context = {}
+
+        meta_data = self.data["meta"]
+        refs, tols = get_context_refs_tols(self.unit, self.all_tests)
+
+        for d in ("work_completed", "work_started"):
+            try:
+                meta_data[d] = dateutil.parser.parse(meta_data[d])
+            except (KeyError, AttributeError, TypeError):
+                pass
+
+        comments = self.data["comments"]
+        self.calculation_context.update({
+            "FILE": open(self.attachment.attachment.path, "r"),
+            "BIN_FILE": self.attachment.attachment,
+            "META": meta_data,
+            "REFS": refs,
+            "TOLS": tols,
+            "UTILS": CompositeUtils(self.user, self.calculation_context, comments),
+        })
+        self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
+
+
 class Upload(JSONResponseMixin, View):
     """View for handling AJAX upload requests when performing QA"""
 
@@ -259,7 +377,7 @@ class Upload(JSONResponseMixin, View):
             "META": meta_data,
             "REFS": refs,
             "TOLS": tols,
-            "UTILS": CompositeUtils(self.request, self.calculation_context, comments),
+            "UTILS": CompositeUtils(self.user, self.calculation_context, comments),
         })
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
 
