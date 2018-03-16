@@ -300,11 +300,22 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
         for pk, slug, d in uploads:
             comp_calc_data['test_id'] = pk
-            f = ContentFile(base64.b64decode(d['value']))
             try:
-                f.name = d['filename']
+                fname = d['filename']
             except KeyError:
                 raise serializers.ValidationError("%s is missing the filename field" % slug)
+
+            content = d['value']
+
+            if d.get("encoding", "base64") == "base64":
+                if not BASE64_RE.match(content):
+                    raise serializers.ValidationError(
+                        "base64 encoding requested but content does not appear to be base64"
+                    )
+                content = base64.b64decode(content)
+
+            f = ContentFile(content, fname)
+
             test_data = UploadHandler(self.user, comp_calc_data, f).process()
             if test_data['errors']:
                 raise serializers.ValidationError("Error with %s test: %s" % (slug, '\n'.join(test_data['errors'])))

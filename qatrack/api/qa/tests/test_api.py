@@ -299,6 +299,37 @@ class TestTestListInstanceAPI(APITestCase):
         assert tiu.attachment_set.first().finalized
         assert tiu.comment == "test comment"
 
+    def test_file_upload_txt(self):
+        """
+        Add a file upload test and ensure we can upload raw text, process and have
+        composite tests depend on it being processed correctly.
+        """
+        self.tsc.calculation_procedure = "result = file_upload['baz']['baz1']"
+        self.tsc.save()
+        utils.create_test_list_membership(self.simple_test_list, self.tsc)
+
+        upload = utils.create_test(name="file_upload", test_type=models.UPLOAD)
+        upload.calculation_procedure = "import json; result=json.load(FILE)"
+        upload.save()
+        utils.create_test_list_membership(self.simple_test_list, upload)
+
+        filepath = os.path.join(settings.PROJECT_ROOT, "qa", "tests", "TESTRUNNER_test_file.json")
+        upload_data = open(filepath, 'r').read()
+        self.simple_data['tests']['file_upload'] = {
+            'value': upload_data,
+            'filename': "tmp.json",
+            'encoding': "text",
+            'comment': "test comment",
+        }
+        response = self.client.post(self.create_url, self.simple_data)
+        assert response.status_code == status.HTTP_201_CREATED
+        tic = models.TestInstance.objects.get(unit_test_info__test=self.tsc)
+        assert tic.string_value == "test"
+        tiu = models.TestInstance.objects.get(unit_test_info__test=upload)
+
+        assert tiu.attachment_set.count() == 1
+        assert tiu.attachment_set.first().finalized
+        assert tiu.comment == "test comment"
     def test_file_upload_no_filename(self):
         """
         Add a file upload test and ensure we can upload, process and have
