@@ -1,7 +1,8 @@
 import base64
+from collections import defaultdict
 import copy
-import io
 from numbers import Number
+import re
 
 from django_comments.models import Comment
 from django.conf import settings
@@ -12,9 +13,14 @@ from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.reverse import reverse
 
+from qatrack.api.attachments.serializers import AttachmentSerializer
+from qatrack.attachments.models import Attachment
 from qatrack.qa import models, signals
 from qatrack.qa.views.perform import CompositePerformer, UploadHandler
 from qatrack.service_log import models as sl_models
+
+
+BASE64_RE = re.compile("^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$")
 
 
 class FrequencySerializer(serializers.HyperlinkedModelSerializer):
@@ -104,6 +110,9 @@ class TestInstanceCreator(serializers.HyperlinkedModelSerializer):
 
 
 class TestListInstanceSerializer(serializers.HyperlinkedModelSerializer):
+
+    attachments = AttachmentSerializer(many=True, source="attachment_set", required=False)
+
     class Meta:
         model = models.TestListInstance
         fields = "__all__"
@@ -130,6 +139,8 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         queryset=models.UnitTestCollection.objects.all(),
     )
 
+    attachments = serializers.ListField(required=False)
+
     # made read_only since we get the test list from the UTC & day
     test_list = serializers.HyperlinkedRelatedField(
         view_name="testlist-detail",
@@ -152,6 +163,35 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             raise serializers.ValidationError(msg)
         return tests
 
+    def validate_attachments(self, attachments):
+        attach_objs = []
+        for attach in attachments:
+            is_dict = isinstance(attach, dict)
+            if not is_dict or 'filename' not in attach or 'value' not in attach:
+                msg = (
+                    '`attachments` field must be list of form '
+                    '[{"filename": "file_name.txt", "value": "<base64 encoded bytes|text>", '
+                    '"encoding": "<base64|text>], ...]'
+                )
+                raise serializers.ValidationError(msg)
+            attach_objs.append(self.make_attachment(attach))
+        return attach_objs
+
+    def make_attachment(self, data):
+        content = data['value']
+        if data.get("encoding", "base64") == "base64":
+            if not BASE64_RE.match(content):
+                raise serializers.ValidationError("base64 encoding requested but content does not appear to be base64")
+
+            content = base64.b64decode(content)
+
+        return Attachment(
+            attachment=ContentFile(content, data['filename']),
+            comment="Uploaded %s by %s" % (timezone.now(), self.user.username),
+            label=data['filename'],
+            created_by=self.user,
+        )
+
     def valid_test(self, test_data):
         is_dict = isinstance(test_data, dict)
         return is_dict
@@ -171,6 +211,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         missing = []
         wrong_types = []
         invalid_autos = []
+        msgs = []
         auto_types = [models.CONSTANT] + list(models.CALCULATED_TYPES)
 
         for slug, type_, procedure in test_qs:
@@ -194,10 +235,9 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
                 d = validated_data['tests'][slug]
                 # remove base64 data
                 d.pop('value', "")
-                d['string_value'] = d.pop('filename', "")
+                d['string_value'] = d.pop('filename')
                 validated_data['tests'][slug] = d
 
-        msgs = []
         if missing:
             msgs.append("Missing data for tests: %s" % ', '.join(missing))
 
@@ -251,6 +291,8 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
                 d = validated_data['tests'].get(slug, {})
                 uploads.append((pk, slug, d))
 
+        self.ti_attachments = defaultdict(list)
+
         if not has_calculated:
             return validated_data
 
@@ -259,12 +301,20 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         for pk, slug, d in uploads:
             comp_calc_data['test_id'] = pk
             f = ContentFile(base64.b64decode(d['value']))
-            f.name = d['filename']
+            try:
+                f.name = d['filename']
+            except KeyError:
+                raise serializers.ValidationError("%s is missing the filename field" % slug)
             test_data = UploadHandler(self.user, comp_calc_data, f).process()
             if test_data['errors']:
                 raise serializers.ValidationError("Error with %s test: %s" % (slug, '\n'.join(test_data['errors'])))
+
+            self.ti_attachments[slug].append(test_data['attachment_id'])
+            self.ti_attachments[slug].extend([a['attachment_id'] for a in test_data['user_attached']])
+
             data = validated_data['tests'].get(slug, {})
-            comp_calc_data['comments'][slug] = '\n'.join(c for c in [data.get("comment", ""), test_data.get("comment")] if c)
+            comment_sources = [data.get("comment", ""), test_data.get("comment")]
+            comp_calc_data['comments'][slug] = '\n'.join(c for c in comment_sources if c)
             comp_calc_data['tests'][slug] = test_data['result']
             comp_calc_data.pop('test_id', None)
 
@@ -280,6 +330,8 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             data['comment'] = '\n'.join(c for c in [data.get("comment", ""), test_data.get("comment")] if c)
             data['value'] = test_data['value']
             validated_data['tests'][slug] = data
+
+            self.ti_attachments[slug].extend([a['attachment_id'] for a in test_data['user_attached']])
 
         return validated_data
 
@@ -328,10 +380,17 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         # related return to service
         rtsqa = validated_data.pop('return_to_service_qa', None)
 
+        # attachments for test list instance
+        attachments = validated_data.pop('attachments', [])
+
         tli = models.TestListInstance(**validated_data)
         tli.reviewed = None if status.requires_review else tli.modified
         tli.reviewed_by = None if status.requires_review else user
         tli.save()
+
+        for attachment in attachments:
+            attachment.testlistinstance = tli
+            attachment.save()
 
         if self.comment:
             self.create_comment(self.comment, user, tli, site)
@@ -379,6 +438,11 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             to_save.append(ti)
 
         models.TestInstance.objects.bulk_create(to_save)
+
+        for slug, attachment_ids in self.ti_attachments.items():
+            for a in Attachment.objects.filter(id__in=attachment_ids):
+                a.testinstance = tli.testinstance_set.get(unit_test_info__test__slug=slug)
+                a.save()
 
         # set due date to account for any non default statuses
         tli.unit_test_collection.set_due_date()

@@ -6,6 +6,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from qatrack.attachments.models import Attachment
 from qatrack.qa import models
 from qatrack.qa.tests import utils
 
@@ -66,6 +67,11 @@ class TestTestListInstanceAPI(APITestCase):
         self.client.login(username="user", password="password")
         self.status = utils.create_status()
 
+    def tearDown(self):
+        for a in Attachment.objects.all():
+            if os.path.isfile(a.attachment.path):
+                os.remove(a.attachment.path)
+
     def test_create_no_status(self):
         models.TestInstanceStatus.objects.all().delete()
         response = self.client.post(self.create_url, self.simple_data)
@@ -91,6 +97,35 @@ class TestTestListInstanceAPI(APITestCase):
             v = ti.value if t.type not in models.STRING_TYPES else ti.string_value
             assert v == self.simple_data['tests'][t.slug]['value']
 
+    def test_create_simple_with_txt_attachments(self):
+        self.simple_data['attachments'] = [{'filename': 'test.txt', 'value': 'hello text', 'encoding': 'text'}]
+        response = self.client.post(self.create_url, self.simple_data)
+        assert response.status_code == status.HTTP_201_CREATED
+        tli = models.TestListInstance.objects.first()
+        assert tli.attachment_set.count() == 1
+        a = tli.attachment_set.first()
+        assert a.finalized
+        assert "uploads/testlistinstance" in a.attachment.path
+
+    def test_create_simple_with_b64_attachments(self):
+        f = open(os.path.join(settings.PROJECT_ROOT, "qa", "static", "qa", "img", "tux.png"), 'rb')
+        b64 = base64.b64encode(f.read()).decode()
+        self.simple_data['attachments'] = [{'filename': 'test.txt', 'value': b64, 'encoding': 'base64'}]
+        response = self.client.post(self.create_url, self.simple_data)
+        assert response.status_code == status.HTTP_201_CREATED
+        tli = models.TestListInstance.objects.first()
+        assert tli.attachment_set.count() == 1
+        a = tli.attachment_set.first()
+        assert a.finalized
+        assert "uploads/testlistinstance" in a.attachment.path
+
+    def test_create_simple_with_b64_attachments_invalid(self):
+        f = open(os.path.join(settings.PROJECT_ROOT, "qa", "static", "qa", "img", "tux.png"), 'rb')
+        b64 = str(base64.b64encode(f.read()))
+        self.simple_data['attachments'] = [{'filename': 'test.txt', 'value': b64, 'encoding': 'base64'}]
+        response = self.client.post(self.create_url, self.simple_data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
     def test_create_composite(self):
         """
         Add a composite test to our simple test list.  Submitting without data
@@ -104,6 +139,21 @@ class TestTestListInstanceAPI(APITestCase):
         assert models.TestInstance.objects.count() == self.ntests + 1
         tic = models.TestInstance.objects.get(unit_test_info__test=self.tc)
         assert tic.value == self.simple_data['tests']['test1']['value'] + self.simple_data['tests']['test2']['value']
+
+    def test_create_composite_with_user_attached(self):
+        """
+        Add a composite test to our simple test list.  Submitting without data
+        included should result in it being calculated.
+        """
+        self.tc.calculation_procedure += ";UTILS.write_file('test_user_attached.txt', 'hello user')"
+        self.tc.save()
+
+        utils.create_test_list_membership(self.simple_test_list, self.tc)
+        response = self.client.post(self.create_url, self.simple_data)
+        assert response.status_code == status.HTTP_201_CREATED
+        tic = models.TestInstance.objects.get(unit_test_info__test=self.tc)
+        assert tic.attachment_set.count() == 1
+        assert tic.attachment_set.first().finalized
 
     def test_create_composite_with_data(self):
         """
@@ -237,9 +287,72 @@ class TestTestListInstanceAPI(APITestCase):
         self.simple_data['tests']['file_upload'] = {
             'value': base64.b64encode(upload_data),
             'filename': "tmp.json",
+            'comment': "test comment",
         }
         response = self.client.post(self.create_url, self.simple_data)
         assert response.status_code == status.HTTP_201_CREATED
         tic = models.TestInstance.objects.get(unit_test_info__test=self.tsc)
         assert tic.string_value == "test"
         tiu = models.TestInstance.objects.get(unit_test_info__test=upload)
+
+        assert tiu.attachment_set.count() == 1
+        assert tiu.attachment_set.first().finalized
+        assert tiu.comment == "test comment"
+
+    def test_file_upload_no_filename(self):
+        """
+        Add a file upload test and ensure we can upload, process and have
+        composite tests depend on it being processed correctly.
+        """
+        upload = utils.create_test(name="file_upload", test_type=models.UPLOAD)
+        upload.calculation_procedure = "import json; result=json.load(FILE)"
+        upload.save()
+        utils.create_test_list_membership(self.simple_test_list, upload)
+
+        filepath = os.path.join(settings.PROJECT_ROOT, "qa", "tests", "TESTRUNNER_test_file.json")
+        upload_data = open(filepath, 'rb').read()
+        self.simple_data['tests']['file_upload'] = {
+            'value': base64.b64encode(upload_data),
+            'comment': "test comment",
+        }
+        response = self.client.post(self.create_url, self.simple_data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_file_upload_with_user_attached(self):
+        """
+        Add a file upload test and ensure we can upload, process and have
+        composite tests depend on it being processed correctly.
+        """
+        self.tsc.calculation_procedure = "result = file_upload['baz']['baz1']"
+        self.tsc.save()
+        utils.create_test_list_membership(self.simple_test_list, self.tsc)
+
+        upload = utils.create_test(name="file_upload", test_type=models.UPLOAD)
+        upload.calculation_procedure = "import json; result=json.load(FILE);"
+        upload.calculation_procedure += "UTILS.write_file('test_user_attached.txt', 'hello user')"
+        upload.save()
+        utils.create_test_list_membership(self.simple_test_list, upload)
+
+        filepath = os.path.join(settings.PROJECT_ROOT, "qa", "tests", "TESTRUNNER_test_file.json")
+        upload_data = open(filepath, 'rb').read()
+        self.simple_data['tests']['file_upload'] = {
+            'value': base64.b64encode(upload_data),
+            'filename': "tmp.json",
+        }
+        response = self.client.post(self.create_url, self.simple_data)
+        assert response.status_code == status.HTTP_201_CREATED
+        tic = models.TestInstance.objects.get(unit_test_info__test=self.tsc)
+        assert tic.string_value == "test"
+        tiu = models.TestInstance.objects.get(unit_test_info__test=upload)
+
+        assert tiu.attachment_set.count() == 2
+        for a in tiu.attachment_set.all():
+            assert a.finalized
+
+    def test_todo(self):
+        """
+        Need to:
+            test editing including uploads
+            refactor Upload to use Upload handler
+        """
+        assert False

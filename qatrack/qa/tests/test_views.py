@@ -14,6 +14,7 @@ from django.test.client import RequestFactory
 from django.utils import timezone
 from freezegun import freeze_time
 
+from qatrack.attachments.models import Attachment
 from qatrack.qa import models, views
 from qatrack.qa.views import forms
 import qatrack.qa.views.backup
@@ -1236,6 +1237,10 @@ result = json.load(FILE)
                 os.remove(f)
             except PermissionError as e:
                 print(">>> Could not delete %s because %s" % (f, e))
+
+        for a in Attachment.objects.all():
+            if os.path.isfile(a.attachment.path):
+                os.remove(a.attachment.path)
 
     def test_upload_fname_exists(self):
         response = self.client.post(

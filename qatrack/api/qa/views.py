@@ -86,7 +86,7 @@ class TestInstanceViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class TestListInstanceViewSet(MultiSerializerMixin, CreateListRetrieveViewSet):
-    queryset = models.TestListInstance.objects.all()
+    queryset = models.TestListInstance.objects.prefetch_related("attachment_set").all()
     serializer_class = serializers.TestListInstanceSerializer
     action_serializers = {'create': serializers.TestListInstanceCreator}
 
