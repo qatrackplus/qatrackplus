@@ -70,6 +70,9 @@ class UnitFormAdmin(ModelForm):
         if settings.USE_SERVICE_LOG and self.instance and self.instance.pk:
             self.fields['service_areas'].initial = self.instance.service_areas.all()
 
+        if Site.objects.count() == 1 and not self.instance.pk:
+            self.fields['site'].initial = Site.objects.first()
+
     def clean_service_areas(self):
         if self.instance:
             unit = self.instance
@@ -118,9 +121,7 @@ class UnitAdmin(admin.ModelAdmin):
 
         form_kwargs = {}
         if object_id:
-            form_kwargs['instance'] = UnitAvailableTime.objects.get(
-                unit=object_id, date_changed=Unit.objects.get(pk=object_id).date_acceptance
-            )
+            form_kwargs['instance'] = UnitAvailableTime.available_times_on_unit_acceptance(object_id)
         if request.method == 'POST':
             form_kwargs['data'] = request.POST
 

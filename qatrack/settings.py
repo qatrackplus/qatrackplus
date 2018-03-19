@@ -3,6 +3,7 @@ import os
 import sys
 
 import matplotlib
+import datetime
 
 matplotlib.use("Agg")
 
@@ -427,6 +428,7 @@ DEFAULT_COLOURS = [
     'rgba(60,141,188,1)',
     'rgba(0,192,239,1)',
     'rgba(0,166,90,1)',
+    'rgba(0,166,90,1)',
     'rgba(243,156,18,1)',
     'rgba(245,105,84,1)',
     'rgba(210,214,222,1)',
@@ -441,6 +443,16 @@ DEFAULT_COLOURS = [
 
 USE_SERVICE_LOG = False
 USE_PARTS = False
+
+DEFAULT_AVAILABLE_TIMES = {
+    'hours_sunday': datetime.timedelta(hours=0, minutes=0),
+    'hours_monday': datetime.timedelta(hours=8, minutes=0),
+    'hours_tuesday': datetime.timedelta(hours=8, minutes=0),
+    'hours_wednesday': datetime.timedelta(hours=8, minutes=0),
+    'hours_thursday': datetime.timedelta(hours=8, minutes=0),
+    'hours_friday': datetime.timedelta(hours=8, minutes=0),
+    'hours_saturday': datetime.timedelta(hours=0, minutes=0),
+}
 
 # ------------------------------------------------------------------------------
 # local_settings contains anything that should be overridden

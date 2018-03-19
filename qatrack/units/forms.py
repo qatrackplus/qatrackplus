@@ -1,6 +1,7 @@
 
 from django import forms
 from django.core.exceptions import ValidationError
+from django.conf import settings
 from django.utils import timezone
 from django.utils.timezone import timedelta
 from django.utils.translation import ugettext as _
@@ -80,6 +81,10 @@ class UnitAvailableTimeForm(forms.ModelForm):
 
         for day in ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']:
             self.fields['hours_' + day].widget.attrs['placeholder'] = day
+
+        if not self.instance.pk:
+            for d in settings.DEFAULT_AVAILABLE_TIMES:
+                self.fields[d].initial = settings.DEFAULT_AVAILABLE_TIMES[d]
 
     def clean_date_changed(self):
         if self._unit:
