@@ -331,6 +331,7 @@ class CreateTestListInstanceForm(BaseTestListInstanceForm):
     """form for doing qa test list"""
 
     comment = forms.CharField(widget=forms.Textarea, required=False)
+    initiate_service = forms.BooleanField(help_text=_('Initiate service event'), required=False)
 
     def __init__(self, *args, **kwargs):
         super(CreateTestListInstanceForm, self).__init__(*args, **kwargs)

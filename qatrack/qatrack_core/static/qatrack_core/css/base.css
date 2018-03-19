@@ -230,6 +230,9 @@ input[type="number"] {
 .margin-r-10 {
     margin-right: 10px;
 }
+.min-width-580 {
+    min-width: 580px;
+}
 .align-top {
     vertical-align: top !important;
 }

@@ -1,5 +1,5 @@
 "use strict";
-require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jquery-ui', 'comments', 'flatpickr'], function ($, _, moment, Dropzone, autosize) {
+require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'inputmask', 'jquery-ui', 'comments', 'flatpickr'], function ($, _, moment, Dropzone, autosize) {
     var csrf_token = $("input[name=csrfmiddlewaretoken]").val();
 
     function csrfSafeMethod(method) {
@@ -1147,6 +1147,18 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jqu
                     $(this).css('background-color', $(this).attr('data-bgcolour'))
                 }
             );
+        });
+
+		$('#id_in_progress').cheekycheck({
+            right: true,
+            check: '<i class="fa fa-check"></i>',
+            extra_class: 'warning'
+        });
+
+		$('#id_initiate_service').cheekycheck({
+            right: true,
+            check: '<i class="fa fa-check"></i>',
+            extra_class: 'warning'
         });
 
     });

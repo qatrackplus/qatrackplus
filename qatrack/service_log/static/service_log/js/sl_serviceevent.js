@@ -1,6 +1,6 @@
 // Regrets: Not using a more robust front end library here :(
 
-require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker', 'sl_utils', 'inputmask', 'site_base'], function ($, _, moment, autosize) {
+require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_utils', 'inputmask', 'site_base'], function ($, _, moment, autosize) {
     
     $(document).ready(function() {
 
@@ -28,7 +28,8 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
             $tli_instances = $('.tli-instance'),
             $rtsqa_rows = $('.rtsqa-row'),
             $service_event_form = $('#service-event-form'),
-            $service_save = $('.service-save');
+            $service_save = $('.service-save'),
+            $date_time = $('#id_datetime_service');
 
         var num_click = 0;
         $service_save.one('click', function (event) {
@@ -47,15 +48,13 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
             minimumResultsForSearch: 10,
             width: '100%'
         }).overrideSelect2Keys();
-        
-        $('.daterangepicker-input').daterangepicker({
-            singleDatePicker: true,
-            autoClose: true,
-            autoApply: true,
-            keyboardNavigation: false,
-            timePicker: true,
-            timePicker24Hour: true,
-            locale: {"format": "DD-MM-YYYY HH:mm"}
+
+        $date_time.flatpickr({
+            enableTime: true,
+            time_24hr: true,
+            minuteIncrement: 1,
+            dateFormat: 'd-m-Y H:i',
+            allowInput: true
         });
         
         $('.inputmask').inputmask('99:99', {numericInput: true, placeholder: "_", removeMaskOnSubmit: true});

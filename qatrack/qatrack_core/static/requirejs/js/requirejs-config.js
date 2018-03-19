@@ -13,6 +13,7 @@ require.config({
         admin_lte_config: siteConfig.STATIC_URL + 'adminlte/js/admin-lte-config',
         autosize: siteConfig.STATIC_URL + 'autosize/js/autosize.min',
         bootstrap: siteConfig.STATIC_URL + 'bootstrap/js/bootstrap.min',
+        cheekycheck: siteConfig.STATIC_URL + 'cheekycheck/js/cheekycheck',
         d3: siteConfig.STATIC_URL + 'd3/js/d3',
         saveSvgAsPng: siteConfig.STATIC_URL + 'd3/js/saveSvgAsPng',
         datatables: siteConfig.STATIC_URL + 'listable/js/jquery.dataTables.min',

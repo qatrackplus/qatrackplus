@@ -743,6 +743,9 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         # let user know request succeeded and return to unit list
         messages.success(self.request, _("Successfully submitted %s " % self.object.test_list.name))
 
+        if settings.USE_SERVICE_LOG and form.cleaned_data['initiate_service']:
+            return HttpResponseRedirect('%s?ib=%s' % (reverse('sl_new'), self.object.id))
+
         return HttpResponseRedirect(self.get_success_url())
 
     def create_tli_attachments(self):

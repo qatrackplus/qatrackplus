@@ -15,8 +15,8 @@
 
 {% block extra_css %}
 
-    <link href="{{ STATIC_URL }}daterangepicker/css/daterangepicker.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}qatrack_core/css/custom-daterangepicker.css?v={{ VERSION }}" rel="stylesheet">
+{#    <link href="{{ STATIC_URL }}daterangepicker/css/daterangepicker.css?v={{ VERSION }}" rel="stylesheet">#}
+{#    <link href="{{ STATIC_URL }}qatrack_core/css/custom-daterangepicker.css?v={{ VERSION }}" rel="stylesheet">#}
     <link href="{{ STATIC_URL }}qatrack_core/css/tables.css?v={{VERSION}}" rel="stylesheet">
     <link href="{{ STATIC_URL }}qa/css/qa.css?v={{VERSION}}" rel="stylesheet">
     <link href="{{ STATIC_URL }}icheck/css/blue.css?v={{VERSION}}" rel="stylesheet">
@@ -25,6 +25,7 @@
     <link href="{{ STATIC_URL }}qatrack_core/css/custom-select2.css?v={{ VERSION }}" rel="stylesheet">
     <link href="{{ STATIC_URL }}flatpickr/css/flatpickr.css?v={{ VERSION }}" rel="stylesheet">
     <link href="{{ STATIC_URL }}qatrack_core/css/flatpickr-custom.css?v={{ VERSION }}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}cheekycheck/css/cheekycheck.css?v={{ VERSION }}" rel="stylesheet">
 
 {% endblock extra_css %}
 
@@ -181,16 +182,16 @@
                             <div class="row">
                                 <div class="col-sm-12 form-horizontal">
                                     <div class="row {% if form.work_started.errors %} has-error{% endif %}">
-                                            <label for="id_work_started" class="col-md-5">
-                                                {{form.work_started.label}}:
-                                            </label>
-                                            <div class="col-md-7">
-                                                {{form.work_started}}
-                                                <i id="clear-work_started" class="fa fa-refresh fa-in-input datetime-clear"></i>
-                                            </div>
-                                            {% for e in form.work_started.errors %}
-                                                <div class="col-sm-12 help-block text-center">{{ e }}</div>
-                                            {% endfor %}
+                                        <label for="id_work_started" class="col-md-5">
+                                            {{form.work_started.label}}:
+                                        </label>
+                                        <div class="col-md-7">
+                                            {{form.work_started}}
+                                            <i id="clear-work_started" class="fa fa-refresh fa-in-input datetime-clear"></i>
+                                        </div>
+                                        {% for e in form.work_started.errors %}
+                                            <div class="col-sm-12 help-block text-center">{{ e }}</div>
+                                        {% endfor %}
                                     </div>
 
                                     {% if perms.qa.can_override_date %}
@@ -210,7 +211,6 @@
                                             </label>
                                             <div class="col-md-7">
                                                 {{form.work_completed}}
-    {#                                            <i class="fa fa-calendar fa-in-input"></i>#}
                                                 <i id="clear-work_completed" class="fa fa-times fa-in-input datetime-clear"></i>
                                             </div>
                                             {% for e in form.work_completed.errors %}
@@ -503,8 +503,9 @@
                                             </tbody>
                                         </table>
                                     </div>
-
-                                    <div class="col-sm-5">
+                                </div>
+                                <div clsas="row">
+                                    <div class="col-sm-12">
 
                                         <button id="submit-qa" type="submit" class="btn btn-primary btn-flat margin-r-5 pull-right">Submit QA Results</button>
 
@@ -512,10 +513,19 @@
 
                                         <div class="pull-right margin-r-5">
                                             {% if perms.qa.can_save_in_progress %}
-                                            <label title="{{form.in_progress.help_text}}" for="id_in_progress" class="add-on">
+                                            <label title="{{form.in_progress.help_text}}" for="id_in_progress" class="add-on" style="display: none;">
                                                 Mark this list as still in progress:
                                             </label>
                                             {{form.in_progress}}
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="pull-right margin-r-5">
+                                            {% if perms.service_log.add_serviceevent %}
+                                            <label title="{{form.initiate_service.help_text}}" for="id_initiate_service" class="add-on" style="display: none;">
+                                                Initiate service event:
+                                            </label>
+                                            {{ form.initiate_service }}
                                             {% endif %}
                                         </div>
 
