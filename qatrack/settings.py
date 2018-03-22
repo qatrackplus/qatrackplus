@@ -479,3 +479,5 @@ SELENIUM_VIRTUAL_DISPLAY = False  # Set to True to use headless browser for test
 
 if any(['test' in v for v in sys.argv]):
     from .test_settings import *  # noqa
+
+JQUERY_URL = STATIC_URL + 'jquery/js/jquery.min.js'

@@ -39,16 +39,23 @@ class Room(models.Model):
     def __str__(self):
         return '%s%s' % (self.name, ' (%s)' % self.site.name if self.site else '')
 
+    def save(self, *args, **kwargs):
+        new = self.pk is None
+        super().save(*args, **kwargs)
+        if new:
+            # Create generic storage (ie, no location)
+            Storage.objects.create(room=self)
+
 
 class StorageManager(models.Manager):
 
     def get_queryset(self):
-        return super(StorageManager, self).get_queryset().select_related('room')
+        return super(StorageManager, self).get_queryset().select_related('room', 'room__site')
 
 
 class Storage(models.Model):
 
-    room = models.ForeignKey(Room, blank=True, null=True, help_text=_('Room for part storage'))
+    room = models.ForeignKey(Room, blank=True, null=True, help_text=_('Room for part storage'), on_delete=models.CASCADE)
 
     location = models.CharField(max_length=32, blank=True, null=True)
     description = models.TextField(max_length=255, null=True, blank=True)
@@ -67,6 +74,8 @@ class Storage(models.Model):
             items.append(self.room.name)
         if self.location:
             items.append(self.location)
+        else:
+            items.append('<no location>')
 
         return ' - '.join(items)
 
@@ -126,7 +135,12 @@ class Part(models.Model):
 class PartStorageCollectionManager(models.Manager):
 
     def get_queryset(self):
-        return super(PartStorageCollectionManager, self).get_queryset().select_related('storage', 'part')
+        return super(PartStorageCollectionManager, self).get_queryset().select_related(
+            'storage', 'part'
+        ).order_by(
+            '-quantity',
+            'part__part_number'
+        )
 
 
 class PartStorageCollection(models.Model):
@@ -142,13 +156,6 @@ class PartStorageCollection(models.Model):
         unique_together = ('part', 'storage')
 
     def save(self, *args, **kwargs):
-        # if self.quantity > 0:
-        #     super(PartStorageCollection, self).save(*args, **kwargs)
-        #     self.part.set_quantity_current()
-        # elif self.id:
-        #     part = self.part
-        #     self.delete()
-        #     part.set_quantity_current()
         self.quantity = self.quantity if self.quantity >= 0 else 0
         super(PartStorageCollection, self).save(*args, **kwargs)
         self.part.set_quantity_current()
