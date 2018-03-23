@@ -1120,7 +1120,7 @@ class Command(BaseCommand):
                     shelf = row.shelf.strip()
                     cabinet = row.cabinet.strip()
                     location = ' '.join([cabinet, shelf])
-                    location = None if location.strip() == '' else location
+                    location = None if location.strip() == '' else location.strip()
                     storage, _ = p_models.Storage.objects.get_or_create(room=room, location=location)
                     storage.description = row.loc
                     storage.save()

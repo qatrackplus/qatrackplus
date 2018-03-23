@@ -111,3 +111,7 @@
 .select2-container--default .select2-selection--multiple:focus {
   border-color: #3c8dbc;
 }
+.required-option {
+  color: #bbb;
+  font-style: italic;
+}

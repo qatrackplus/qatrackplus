@@ -108,6 +108,10 @@ class CostInputField(forms.CharField):
 
     def to_python(self, value):
         value = value.replace('$', '').replace(',', '')
+        if value == '':
+            raise ValidationError(self.error_messages['required'], code='required')
+        if float(value) < 0:
+            raise ValidationError('Ensure this value is greater than or equal to 0.')
         return value
 
 
@@ -123,18 +127,25 @@ class PartForm(BetterModelForm):
             }),
             ('required_fields', {
                 'fields': [
-                    'part_number', 'cost', 'quantity_min', 'description'
+                    'part_number', 'cost', 'quantity_min'
                 ],
             }),
             ('optional_fields', {
                 'fields': [
-                    'alt_part_number', 'part_category', 'notes', 'is_obsolete'
+                    'alt_part_number', 'part_category', 'is_obsolete'
+                ]
+            }),
+            ('description_and_notes', {
+                'fields': [
+                    'description', 'notes'
                 ]
             })
         ]
 
     def __init__(self, *args, **kwargs):
         super(PartForm, self).__init__(*args, **kwargs)
+
+        self.fields['quantity_min'].widget.attrs.update({'min': 0, 'step': 1})
 
         for f in ['part_number', 'cost', 'quantity_min', 'alt_part_number', 'part_category']:
             self.fields[f].widget.attrs['class'] = 'form-control'
@@ -143,6 +154,9 @@ class PartForm(BetterModelForm):
             self.fields[f].widget.attrs['class'] = 'form-control autosize'
             self.fields[f].widget.attrs['rows'] = 3
             self.fields[f].widget.attrs['cols'] = 4
+
+        for f in ['part_number', 'cost', 'quantity_min', 'description']:
+            self.fields[f].widget.attrs['placeholder'] = 'required'
 
 
 class PartSupplierCollectionForm(forms.ModelForm):

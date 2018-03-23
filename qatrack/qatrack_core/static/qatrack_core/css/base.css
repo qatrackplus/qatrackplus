@@ -199,8 +199,14 @@ input[type="number"] {
 .border-d2d6de {
     border: 1px solid #d2d6de;
 }
+.border-f4f4f4 {
+    border: 1px solid #b0b0b0;
+}
 .cursor-default {
     cursor: default;
+}
+.display-flex {
+    display: flex;
 }
 .display-none {
     display: none;
@@ -214,6 +220,9 @@ input[type="number"] {
 }
 .font-weight-bold {
     font-weight: bold;
+}
+.height-100 {
+    height: 100%;
 }
 .left--5 {
     left: -5px;
@@ -372,6 +381,9 @@ input[type="number"] {
 .text-align-center {
     text-align: center;
 }
+.white-space-pre-wrap {
+    white-space: pre-wrap;
+}
 #listable-table-issue_list > thead > tr > th,
 #listable-table-issue_list > tbody > tr > td {
     width: 300px;
@@ -465,4 +477,20 @@ input.search_init {
 #control-sidebar-btn {
     width: 230px;
     text-align: right;
+}
+.text-display {
+    border: 1px solid #ddd;
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: #f4f4f4;
+}
+.height-100-40 {
+    height: calc(100% - 40px);
+}
+.field-group-title {
+    color: #777;
+    font-style: italic;
+    text-align: center;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #ddd;
 }

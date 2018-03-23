@@ -4,7 +4,8 @@ require(['jquery', 'moment', 'autosize', 'select2', 'sl_utils', 'inputmask'], fu
     $(document).ready(function () {
 
         var $part_category = $('#id_part_category'),
-            $cost = $('#id_cost');
+            $cost = $('#id_cost'),
+            $quantity_min = $('#id_quantity_min');
 
         autosize($('textarea.autosize'));
 
@@ -20,13 +21,14 @@ require(['jquery', 'moment', 'autosize', 'select2', 'sl_utils', 'inputmask'], fu
             autoGroup: true,
             prefix: '$', //No Space, this will truncate the first character
             rightAlign: false,
+            allowPlus: false,
+            allowMinus: false,
             oncleared: function () {
                 try {
                     self.Value('$0');
                 } catch(err) {
                 }
             }
-
         });
 
         // Suppliers

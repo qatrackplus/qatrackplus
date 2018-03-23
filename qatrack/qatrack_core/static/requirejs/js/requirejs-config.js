@@ -27,7 +27,7 @@ require.config({
         flatpickr: siteConfig.STATIC_URL + 'flatpickr/js/flatpickr',
         dropzone: siteConfig.STATIC_URL + 'dropzone/js/dropzone-amd-module',
         icheck: siteConfig.STATIC_URL + 'icheck/js/icheck.min',
-        inputmask: siteConfig.STATIC_URL + 'inputmask/js/jquery.inputmask.bundle',
+        inputmask: siteConfig.STATIC_URL + 'inputmask/js/jquery.inputmask.bundle.min',
         jquery: siteConfig.STATIC_URL + 'jquery/js/jquery.min',
         'jquery-ui': siteConfig.STATIC_URL + 'jqueryui/js/jquery-ui.min',
         json2: siteConfig.STATIC_URL + 'json2/js/json2',

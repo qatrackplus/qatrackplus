@@ -37,30 +37,30 @@ def duration_string_hours_mins(duration):
     return '{:02d}:{:02d}'.format(hours, minutes)
 
 
-class SelectWithOptionTitles(Select):
-
-    def __init__(self, attrs=None, choices=(), model=None):
-        super(SelectWithOptionTitles, self).__init__(attrs=attrs, choices=choices)
-        self.model = model
-
-    # TODO FIX: django 1.11 no longer calls this.
-    def render_option(self, selected_choices, option_value, option_label):
-        if option_value in [None, '']:
-            option_value = ''
-            title = '------'
-        else:
-            objekt = self.model.objects.get(pk=option_value)
-            title = objekt.description or ''
-        option_value = force_text(option_value)
-        if option_value in selected_choices:
-            selected_html = mark_safe(' selected="selected"')
-            if not self.allow_multiple_selected:
-                # Only allow for a single selection.
-                selected_choices.remove(option_value)
-        else:
-            selected_html = ''
-
-        return format_html('<option value="{}" title="{}" {}>{}</option>', option_value, title, selected_html, force_text(option_label))
+# class SelectWithOptionTitles(Select):
+#
+#     def __init__(self, attrs=None, choices=(), model=None):
+#         super(SelectWithOptionTitles, self).__init__(attrs=attrs, choices=choices)
+#         self.model = model
+#
+#     # TODO FIX: django 1.11 no longer calls this.
+#     def render_option(self, selected_choices, option_value, option_label):
+#         if option_value in [None, '']:
+#             option_value = ''
+#             title = '------'
+#         else:
+#             objekt = self.model.objects.get(pk=option_value)
+#             title = objekt.description or ''
+#         option_value = force_text(option_value)
+#         if option_value in selected_choices:
+#             selected_html = mark_safe(' selected="selected"')
+#             if not self.allow_multiple_selected:
+#                 # Only allow for a single selection.
+#                 selected_choices.remove(option_value)
+#         else:
+#             selected_html = ''
+#
+#         return format_html('<option value="{}" title="{}" {}>{}</option>', option_value, title, selected_html, force_text(option_label))
 
 
 class HoursMinDurationField(forms.DurationField):
@@ -374,7 +374,7 @@ class ServiceEventForm(BetterModelForm):
         help_text=_('Test list instance that initiated this service event')
     )
     service_type = forms.ModelChoiceField(
-        queryset=models.ServiceType.objects.filter(is_active=True), widget=SelectWithOptionTitles(model=models.ServiceType)
+        queryset=models.ServiceType.objects.filter(is_active=True)
     )
     service_status = ServiceEventStatusField(
         help_text=models.ServiceEvent._meta.get_field('service_status').help_text, widget=SelectWithDisabledWidget,
@@ -619,6 +619,7 @@ class ServiceEventForm(BetterModelForm):
             classes = classes.replace('form-control', '')
             self.fields[f].widget.attrs.update({'class': classes})
 
+        self.fields['problem_description'].widget.attrs['placeholder'] = 'required'
         self.fields['initiated_utc_field'].widget.attrs.update({'data-link': reverse('tli_select')})
 
     def save(self, *args, **kwargs):

@@ -68,7 +68,7 @@
             </div>
             <div class="col-md-1">
                 {% if perms.service_log.change_serviceevent %}
-                    <a class="btn btn-flat btn-primary pull-right" href="{% url "sl_edit" serviceevent.id %}">Edit</a>
+                    <a class="btn btn-flat btn-default pull-right" href="{% url "sl_edit" serviceevent.id %}">Edit</a>
                 {% endif %}
             </div>
         </div>
@@ -89,11 +89,6 @@
                                             <dt>Unit:</dt><dd><div>{{ serviceevent.unit_service_area.unit }}</div></dd>
                                             <dt>Service area:</dt><dd><div>{{ serviceevent.unit_service_area.service_area }}</div></dd>
                                             <dt>Service type:</dt><dd><div>{{ serviceevent.service_type }}</div></dd>
-{#                                            <dt>Status:</dt><dd><div>{{ serviceevent.service_status }}</div></dd>#}
-                                        </dl>
-                                        <dl>
-                                            <dt>Problem description:</dt>
-                                            <dd>{{ serviceevent.problem_description }}</dd>
                                         </dl>
                                     </div>
                                 </div>
@@ -102,9 +97,6 @@
                                 <div class="row">
                                     <div class="col-md-12">
                                         <dl class="dl-horizontal">
-{#                                            {% if serviceevent.problem_type %}#}
-{#                                                <dt>Problem type:</dt><dd><div>{{ serviceevent.problem_type }}</div></dd>#}
-{#                                            {% endif %}#}
                                             {% if serviceevent.service_event_related.all|length > 0 %}
                                                 <dt>Related service events:</dt>
                                                 <dd><div>
@@ -137,18 +129,34 @@
                                                 </dd>
                                             {% endif %}
                                         </dl>
-                                        <dl>
-                                            {% if serviceevent.work_description %}
-                                                <dt>Work description:</dt>
-                                                <dd><textarea class="autosize" style="width: 100%; resize: none;" readonly="readonly">{{ serviceevent.work_description }}</textarea></dd>
-                                            {% endif %}
-                                            {% if serviceevent.safety_precautions %}
-                                                <dt>Safety precautions:</dt>
-                                                <dd><textarea class="autosize" style="width: 100%; resize: none;" readonly="readonly">{{ serviceevent.safety_precautions }}</textarea></dd>
-                                            {% endif %}
-                                        </dl>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                        <div class="row display-flex">
+                            <div class="col-sm-6">{% spaceless %}
+                                <dl class="height-100 margin-0">
+                                    <dt>Problem description:</dt>
+                                    <dd class="text-display pre height-100-40">{{ serviceevent.problem_description }}</dd>
+                                </dl>{% endspaceless %}
+                            </div>
+                            <div class="col-sm-6">
+                                {% if serviceevent.safety_precautions %}{% spaceless %}
+                                    <dl class="height-100 margin-0">
+                                        <dt>Safety precautions:</dt>
+                                        <dd class="text-display pre height-100-40">{{ serviceevent.safety_precautions }}</dd>
+                                    </dl>{% endspaceless %}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-12">
+                                {% if serviceevent.work_description %}{% spaceless %}
+                                    <dl class="margin-0">
+                                        <dt>Work description:</dt>
+                                        <dd class="text-display pre">{{ serviceevent.work_description }}</dd>
+                                    </dl>{% endspaceless %}
+                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -327,7 +335,11 @@
         {% endif %}
 
         <div class="row">
-
+            <div class="col-sm-12">
+                {% if perms.service_log.change_serviceevent %}
+                    <a class="btn btn-flat btn-default pull-right" href="{% url "sl_edit" serviceevent.id %}">Edit</a>
+                {% endif %}
+            </div>
         </div>
     </div>
 
