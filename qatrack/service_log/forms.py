@@ -37,32 +37,6 @@ def duration_string_hours_mins(duration):
     return '{:02d}:{:02d}'.format(hours, minutes)
 
 
-# class SelectWithOptionTitles(Select):
-#
-#     def __init__(self, attrs=None, choices=(), model=None):
-#         super(SelectWithOptionTitles, self).__init__(attrs=attrs, choices=choices)
-#         self.model = model
-#
-#     # TODO FIX: django 1.11 no longer calls this.
-#     def render_option(self, selected_choices, option_value, option_label):
-#         if option_value in [None, '']:
-#             option_value = ''
-#             title = '------'
-#         else:
-#             objekt = self.model.objects.get(pk=option_value)
-#             title = objekt.description or ''
-#         option_value = force_text(option_value)
-#         if option_value in selected_choices:
-#             selected_html = mark_safe(' selected="selected"')
-#             if not self.allow_multiple_selected:
-#                 # Only allow for a single selection.
-#                 selected_choices.remove(option_value)
-#         else:
-#             selected_html = ''
-#
-#         return format_html('<option value="{}" title="{}" {}>{}</option>', option_value, title, selected_html, force_text(option_label))
-
-
 class HoursMinDurationField(forms.DurationField):
 
     def __init__(self, *args, **kwargs):

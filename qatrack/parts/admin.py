@@ -1,5 +1,6 @@
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 import django.forms as forms
 
 if settings.USE_PARTS:
@@ -33,6 +34,14 @@ if settings.USE_PARTS:
             if self.instance.pk and self.initial['location'] is None:
                 self.fields['location'].widget.attrs.update({'placeholder': '<no specific location>'})
                 self.fields['location'].disabled = 'disabled'
+
+        def clean(self):
+            cleaned = super().clean()
+            location = cleaned.get('location')
+            room = self.cleaned_data.get('room')
+            if self.instance.pk is None and p_models.Storage.objects.filter(room=room, location=location).exists():
+                self.add_error('location', ValidationError('Location already exists'))
+            return cleaned
 
 
     class StorageInline(admin.TabularInline):

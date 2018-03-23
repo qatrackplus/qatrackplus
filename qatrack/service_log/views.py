@@ -298,12 +298,6 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
         self.user = request.user
         return super(ServiceEventUpdateCreate, self).dispatch(request, *args, **kwargs)
 
-    # def get_object(self, queryset=None):
-    #     try:
-    #         return super(ServiceEventUpdateCreate, self).get_object(queryset)
-    #     except AttributeError:
-    #         return None
-
     def get_object(self, queryset=None):
         """
         Returns the object the view is displaying.
@@ -449,6 +443,10 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
 
         return context_data
 
+    def form_invalid(self, form):
+        messages.add_message(self.request, messages.ERROR, _('Please correct the error below.'))
+        return super().form_invalid(form)
+
     def form_valid(self, form):
 
         context = self.get_context_data()
@@ -458,9 +456,11 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
         if settings.USE_PARTS:
             parts_formset = context['part_used_formset']
             if not parts_formset or not parts_formset.is_valid():
+                messages.add_message(self.request, messages.ERROR, _('Please correct the error below.'))
                 return self.render_to_response(context)
 
         if not hours_formset.is_valid() or not rtsqa_formset.is_valid():
+            messages.add_message(self.request, messages.ERROR, _('Please correct the error below.'))
             return self.render_to_response(context)
 
         service_event = form.save()

@@ -44,26 +44,44 @@ require(['jquery', 'moment', 'autosize', 'select2', 'sl_utils', 'inputmask'], fu
         });
         $rooms.change(function(a, b, c) {
             var r_id = $(this).val();
-            var storage_location = $(this).closest('td').siblings().find('.location');
-            if ($(this).val()) {
+            var storage_location = $(this).closest('td').siblings().find('.location'),
+                storage_field = $(this).closest('td').siblings().find('.storage_field');
+            if (r_id) {
                 process_location_results(r_id, storage_location);
                 storage_location.prop('disabled', false);
+                storage_field.prop('disabled', false);
             } else {
-                storage_location.val('');
+                storage_location.find('option').remove();
+                storage_field.val('');
                 storage_location.prop('disabled', true);
+                storage_field.prop('disabled', true);
             }
         });
+        var $old_new_location = false;
         function process_location_results(r_id, location_select, initial_val) {
             $.ajax({
                 type: "GET",
                 url: QAURLs.ROOM_LOCATION_SEARCHER,
                 data: {r_id: r_id},
                 success: function (response) {
+                    var keep_new_val = false,
+                        $keep_new_opt
+                    ;
+                    if (initial_val && initial_val.indexOf('__new__') !== -1) {
+                        keep_new_val = true;
+                        $keep_new_opt = $('option[value=' + initial_val + ']');
+                        $old_new_location = $keep_new_opt;
+                    }
+
                     location_select.find('option').remove();
                     location_select.append('<option value="' + response.storage_no_location + '">----------</option>');
-                    for (var l in response.storage) {
-                        if (response.storage[l][1] && response.storage[l][1].replace(/ /g, '') !== '') {
-                            location_select.append('<option value="' + response.storage[l][0] + '">' + response.storage[l][1] + '</option>');
+                    if (keep_new_val) {
+                        location_select.append($keep_new_opt);
+                    } else {
+                        for (var l in response.storage) {
+                            if (response.storage[l][1] && response.storage[l][1].replace(/ /g, '') !== '') {
+                                location_select.append('<option value="' + response.storage[l][0] + '">' + response.storage[l][1] + '</option>');
+                            }
                         }
                     }
                     if (initial_val) {
@@ -79,9 +97,14 @@ require(['jquery', 'moment', 'autosize', 'select2', 'sl_utils', 'inputmask'], fu
         function template_location(data) {
             var $result = $("<span></span>");
             $result.text(data.text);
-            if (data.newOption) {
+
+            if (data.id && data.id.indexOf('__new__') !== -1) {
                 $result.append("<em> (new)</em>");
+                if ($old_new_location && data.id !== $old_new_location.val()) {
+                    $old_new_location.remove();
+                }
             }
+
             return $result;
         }
         var $locations = $('.location').select2({
@@ -90,7 +113,6 @@ require(['jquery', 'moment', 'autosize', 'select2', 'sl_utils', 'inputmask'], fu
             // templateResult: generate_related_result,
             templateSelection: template_location,
             createTag: function (params) {
-                console.log(params);
                 return {
                     id: '__new__' + params.term,
                     text: params.term,

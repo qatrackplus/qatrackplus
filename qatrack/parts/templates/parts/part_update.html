@@ -174,11 +174,18 @@
                                     {% for sto_form in storage_formset %}
                                         {{ sto_form.part }}
                                         {{ sto_form.id }}
-                                        <tr>
+                                        {% for e in sto_form.non_field_errors %}
+                                            <tr>
+                                                <td colspan="5" class="has-error">
+                                                    <div class="help-block text-center">{{ e }}</div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                        <tr class="{% if sto_form.non_field_errors %}border-error{% endif %}">
                                             <td style="display: none;">
                                                 {{ sto_form.storage_field }}
                                             </td>
-                                            <td class="min-width-150 room-td{% if sto_form.room.errors %}has-error{% endif %}">
+                                            <td class="min-width-150 room-td{% if sto_form.room.errors %} has-error{% endif %}">
                                                 {{ sto_form.room }}
                                                 {% for e in sto_form.room.errors %}
                                                     <div class="help-block text-center">{{ e }}</div>

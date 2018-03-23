@@ -121,6 +121,10 @@ class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, Mo
 
         return context_data
 
+    def form_invalid(self, form):
+        messages.add_message(self.request, messages.ERROR, _('Please correct the error below.'))
+        return super().form_invalid(form)
+
     def form_valid(self, form):
 
         context = self.get_context_data()
@@ -128,6 +132,7 @@ class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, Mo
         storage_formset = context['storage_formset']
 
         if not supplier_formset.is_valid() or not storage_formset.is_valid():
+            messages.add_message(self.request, messages.ERROR, _('Please correct the error below.'))
             return self.render_to_response(context)
 
         part = form.save(commit=False)
@@ -163,13 +168,14 @@ class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, Mo
             elif sto_form.has_changed():
                 psc_instance.part = part
                 storage_field = sto_form.cleaned_data['storage_field']
-                if storage_field[0]:
+
+                if isinstance(storage_field, str):
                     psc_instance.storage = p_models.Storage.objects.create(
                         room=sto_form.cleaned_data['room'],
-                        location=storage_field[1]
+                        location=storage_field
                     )
                 else:
-                    psc_instance.storage = storage_field[1]
+                    psc_instance.storage = storage_field
 
                 psc_instance.save()
                 part.set_quantity_current()

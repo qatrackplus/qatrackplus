@@ -66,6 +66,9 @@
             display: none;
             text-align: right;
         }
+        td.has-error input {
+            border-color: #ba2121;
+        }
     </style>
 {% endblock %}
 
@@ -142,12 +145,12 @@
                             {% for line in fieldset %}
                                 {% for field in line %}
                                     {% if not field.field.is_hidden %}
-                                        <td{% if field.field.name %} class="field-{{ field.field.name }}"{% endif %}>
+                                        <td{% if field.field.name %} class="field-{{ field.field.name }}{% if field.field.errors %} has-error{% endif %}"{% endif %}>
                                             {% if field.is_readonly %}
                                                 <p>{{ field.contents }}</p>
                                             {% else %}
-                                                {{ field.field.errors.as_ul }}
                                                 {{ field.field }}
+                                                {{ field.field.errors.as_ul }}
                                             {% endif %}
                                         </td>
                                     {% endif %}

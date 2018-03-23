@@ -47,17 +47,6 @@
 #listable-table-sl_list_all > tbody > tr > td:nth-child(10) {
     width: 150px;
 }
-
-#listable-table-parts_list > thead > tr > th:nth-child(2),
-#listable-table-parts_list > tbody > tr > td:nth-child(2) {
-    width: 75px;
-    max-width: 75px;
-}
-#listable-table-parts_list > thead > tr > th:nth-child(1),
-#listable-table-parts_list > tbody > tr > td:nth-child(1) {
-    width: 100px;
-    max-width: 100px;
-}
 #listable-table-vendor_list > thead > tr > th:nth-child(2) {
     width: 50px;
     max-width: 50px;
