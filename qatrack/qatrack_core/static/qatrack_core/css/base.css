@@ -306,6 +306,9 @@ input[type="number"] {
 .margin-right-5 {
     margin-right: 5px;
 }
+.margin-bottom-0 {
+    margin-bottom: 0;
+}
 .margin-bottom-1 {
     margin-bottom: 1px;
 }

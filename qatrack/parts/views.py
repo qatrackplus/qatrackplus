@@ -122,7 +122,7 @@ class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, Mo
         return context_data
 
     def form_invalid(self, form):
-        messages.add_message(self.request, messages.ERROR, _('Please correct the error below.'))
+        messages.add_message(self.request, messages.ERROR, _('Please correct the errors below.'))
         return super().form_invalid(form)
 
     def form_valid(self, form):
@@ -132,7 +132,7 @@ class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, Mo
         storage_formset = context['storage_formset']
 
         if not supplier_formset.is_valid() or not storage_formset.is_valid():
-            messages.add_message(self.request, messages.ERROR, _('Please correct the error below.'))
+            messages.add_message(self.request, messages.ERROR, _('Please correct the errors below.'))
             return self.render_to_response(context)
 
         part = form.save(commit=False)
@@ -180,6 +180,8 @@ class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, Mo
                 psc_instance.save()
                 part.set_quantity_current()
 
+        if 'submit_add_another' in self.request.POST:
+            return HttpResponseRedirect(reverse('part_new'))
         return HttpResponseRedirect(reverse('parts_list'))
 
 

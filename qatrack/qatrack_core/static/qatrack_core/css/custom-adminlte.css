@@ -34,8 +34,10 @@ ul.nav li.dropdown:hover ul.dropdown-menu{
     margin: 0;
     line-height: 1;
 }
-div.alert {
+.alert {
     border-radius: 0;
+    padding: 8px 20px;
+    margin: 0;
 }
 .alert > a.close {
     text-decoration: none;
@@ -194,4 +196,11 @@ div.box {
 .pagination > li:first-child > span {
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
+}
+.content-header {
+    padding: 0;
+}
+.help-block {
+    /*text-align: center;*/
+    font-style: italic;
 }

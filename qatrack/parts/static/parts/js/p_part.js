@@ -74,7 +74,7 @@ require(['jquery', 'moment', 'autosize', 'select2', 'sl_utils', 'inputmask'], fu
                     }
 
                     location_select.find('option').remove();
-                    location_select.append('<option value="' + response.storage_no_location + '">----------</option>');
+                    location_select.append('<option value="' + response.storage_no_location + '">&lt;no specific location&gt;</option>');
                     if (keep_new_val) {
                         location_select.append($keep_new_opt);
                     } else {
@@ -108,9 +108,6 @@ require(['jquery', 'moment', 'autosize', 'select2', 'sl_utils', 'inputmask'], fu
             return $result;
         }
         var $locations = $('.location').select2({
-            // escapeMarkup: function (markup) { return markup; },
-            // minimumResultsForSearch: 10,
-            // templateResult: generate_related_result,
             templateSelection: template_location,
             createTag: function (params) {
                 return {

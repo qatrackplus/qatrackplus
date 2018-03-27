@@ -93,7 +93,7 @@ class PartCategory(models.Model):
 
 class Part(models.Model):
 
-    part_category = models.ForeignKey(PartCategory, blank=True, null=True, help_text=_('Category for this part'))
+    part_category = models.ForeignKey(PartCategory, blank=True, null=True)
     suppliers = models.ManyToManyField(
         Supplier, blank=True, help_text=_('Suppliers of this part'), related_name='parts',
         through='PartSupplierCollection'
@@ -102,18 +102,18 @@ class Part(models.Model):
         Storage, through='PartStorageCollection', related_name='parts', help_text=_('Storage locations for this part')
     )
 
-    part_number = models.CharField(max_length=32, help_text=_('Part number'), unique=True)
+    part_number = models.CharField(max_length=32, unique=True)
     alt_part_number = models.CharField(
-        max_length=32, help_text=_('Alternate part number'), blank=True, null=True
+        max_length=32, blank=True, null=True
     )
     description = models.TextField(help_text=_('Brief description of this part'))
     quantity_min = models.PositiveIntegerField(
-        default=0, help_text=_('Notify when the number parts falls below this number in storage'),
+        default=0, help_text=_('Notify when the quantity of this part in storage falls below this number'),
     )
     quantity_current = models.PositiveIntegerField(help_text=_('The number of parts in storage currently'), default=0, editable=False)
     cost = models.DecimalField(default=0, decimal_places=2, max_digits=10, help_text=_('Cost of this part'), null=True, blank=True)
     notes = models.TextField(max_length=255, blank=True, null=True, help_text=_('Additional comments about this part'))
-    is_obsolete = models.BooleanField(default=False, help_text=_('Is this part now obsolete'), verbose_name=_('Obsolete'))
+    is_obsolete = models.BooleanField(default=False, help_text=_('Is this part now obsolete?'))
 
     class Meta:
         permissions = (('view_part', 'Can View Part'),)

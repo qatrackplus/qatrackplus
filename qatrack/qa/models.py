@@ -201,44 +201,46 @@ PERMISSIONS = (
 
 if settings.USE_SERVICE_LOG:
     PERMISSIONS += (
-        'Service Log',
         (
+            'Service Log',
             (
-                'service_log.perform_returntoserviceqa',
-                'Can perform return to service qa',
-                'Allow user to perform qa linked to service events.',
-            ),
-            (
-                'service_log.view_returntoserviceqa',
-                'Can view existing return to service qa',
-                'Allow user to view qa linked to service events.',
-            ),
-            (
-                'service_log.add_serviceevent',
-                'Can create service event',
-                'Allows user to create new service events.',
-            ),
-            (
-                'service_log.view_serviceevent',
-                'Can view service events',
-                'Allows user to view existing service events.',
-            ),
-            (
-                'service_log.review_serviceevent',
-                'Can review service events',
-                'Allows user to change status of service events to statuses with \'is review required = false\'.',
-            ),
-            (
-                'parts.add_part',
-                'Can add part',
-                'Allow user to enter new parts.',
-            ),
-            (
-                'parts.view_part',
-                'Can view parts',
-                'Allow user to view existing parts',
-            ),
-        )
+                (
+                    'service_log.perform_returntoserviceqa',
+                    'Can perform return to service qa',
+                    'Allow user to perform qa linked to service events.',
+                ),
+                (
+                    'service_log.view_returntoserviceqa',
+                    'Can view existing return to service qa',
+                    'Allow user to view qa linked to service events.',
+                ),
+                (
+                    'service_log.add_serviceevent',
+                    'Can create service event',
+                    'Allows user to create new service events.',
+                ),
+                (
+                    'service_log.view_serviceevent',
+                    'Can view service events',
+                    'Allows user to view existing service events.',
+                ),
+                (
+                    'service_log.review_serviceevent',
+                    'Can review service events',
+                    'Allows user to change status of service events to statuses with \'is review required = false\'.',
+                ),
+                (
+                    'parts.add_part',
+                    'Can add part',
+                    'Allow user to enter new parts.',
+                ),
+                (
+                    'parts.view_part',
+                    'Can view parts',
+                    'Allow user to view existing parts',
+                ),
+            )
+        ),
     )
 
 

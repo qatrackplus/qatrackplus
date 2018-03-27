@@ -117,7 +117,7 @@ class CostInputField(forms.CharField):
 
 class PartForm(BetterModelForm):
 
-    cost = CostInputField()
+    cost = CostInputField(help_text=p_models.Part._meta.get_field('cost').help_text)
 
     class Meta:
         model = p_models.Part
@@ -146,6 +146,7 @@ class PartForm(BetterModelForm):
         super(PartForm, self).__init__(*args, **kwargs)
 
         self.fields['quantity_min'].widget.attrs.update({'min': 0, 'step': 1})
+        self.fields['quantity_min'].label = 'Low inventory count'
 
         for f in ['part_number', 'cost', 'quantity_min', 'alt_part_number', 'part_category']:
             self.fields[f].widget.attrs['class'] = 'form-control'
