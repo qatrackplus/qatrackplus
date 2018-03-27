@@ -245,6 +245,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
         displayTLI = function (prefix, data, returnValue) {
             var $label_group = $('<span class="label-group ' + prefix + '-hider" style="display: none;"></span>');
             for (var status in data['pass_fail']) {
+
                 if (data['pass_fail'][status] > 0 && status != 'no_tol') {
                     var $label = $('<span class="label ' + status + '" title="' + data['pass_fail'][status] + ' ' + status + '"></span>');
                     if (status == 'ok') {
@@ -264,28 +265,26 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
             $label_group = $('<span class="label-group ' + prefix + '-hider" style="display: none;"></span>');
 
             for (status in data['review']) {
+
                 var label_class = 'label',
                     status_name = status,
-                    icon = '';
+                    icon = '',
+                    colour = '';
                 if (data['review'][status]['is_comments']) {
-                    label_class += ' label-info';
                     status_name = '';
                     icon = '<i class="fa fa-commenting"></i>';
                 } else if (!data['review'][status]['valid']) {
-                    label_class += ' action';
-                    icon = '<i class="icon-minus-sign"></i>';
+                    icon = '<i class="fa fa-minus"></i>';
                 } else if (data['review'][status]['reqs_review']) {
-                    label_class += ' tolerance';
-                    icon = '<i class="icon-question-sign"></i>';
-                } else {
-                    label_class += ' ok';
+                    icon = '<i class="fa fa-question"></i>';
                 }
+                colour = data['review'][status]['colour'];
                 if (data['review'][status]['is_comments']) {
                     if (data['review'][status]['num'] > 0) {
                         $label_group.append('<span class="' + label_class + '">' + icon + ' ' + data["review"][status]["num"] + ' ' + status_name + '</span>');
                     }
                 } else {
-                    $label_group.prepend('<span class="' + label_class + '">' + icon + ' ' + data["review"][status]["num"] + ' ' + status_name + '</span>');
+                    $label_group.prepend('<span class="' + label_class + '" style="background-color: ' + colour + '">' + icon + ' ' + data["review"][status]["num"] + ' ' + status_name + '</span>');
                 }
             }
             $('#review-' + prefix).html($label_group);
@@ -370,7 +369,8 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
                 $('#pass-fail-' + prefix).html('');
                 $('#review-' + prefix).html('');
                 $('#id_' + prefix + '-test_list_instance').val('');
-            } else {
+            }
+            if (utc_id !== '') {
                 // add utc action btns
                 $('#utc-actions-' + prefix).html(
                     $('#utc-actions-template').html()

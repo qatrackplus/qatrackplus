@@ -1074,7 +1074,9 @@ class ReturnToServiceQABaseList(BaseListableView):
             'instance': rtsqa.test_list_instance if rtsqa.test_list_instance else None,
             'perms': PermWrapper(self.request.user),
             'request': self.request,
+            'show_labels': False,
             'show_dash': True,
+            'show_icons': True,
         }
         c.update(generate_review_status_context(rtsqa.test_list_instance))
         return template.render(c)

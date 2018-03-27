@@ -440,6 +440,7 @@ DEFAULT_COLOURS = [
     'rgba(1,255,112,1)',
     'rgba(17,17,17,1)',
 ]
+DEFAULT_TEST_STATUS_COLOUR = 'rgba(243,156,18,1)'
 
 USE_SERVICE_LOG = False
 USE_PARTS = False

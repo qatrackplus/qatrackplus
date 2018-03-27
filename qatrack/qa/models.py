@@ -333,7 +333,7 @@ class TestInstanceStatus(models.Model):
         help_text=_("If unchecked, data with this status will not be exported and the TestInstance will not be considered a valid completed Test")
     )
 
-    # colour = models.CharField(default=settings.DEFAULT_COLOURS[0], max_length=22, validators=[validate_color])
+    colour = models.CharField(default=settings.DEFAULT_TEST_STATUS_COLOUR, max_length=22, validators=[validate_color])
 
     objects = StatusManager()
 
@@ -1678,7 +1678,8 @@ class TestListInstance(models.Model):
                 'num': len(status[1]),
                 'valid': status[0].valid,
                 'reqs_review': status[0].requires_review,
-                'default': status[0].is_default
+                'default': status[0].is_default,
+                'colour': status[0].colour
             } for status in self.status(queryset)
         }
         to_return['Comments'] = {'num': comment_count, 'is_comments': 1}

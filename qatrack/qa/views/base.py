@@ -57,6 +57,7 @@ def generate_review_status_context(test_list_instance):
         statuses[ti.status.name]["requires_review"] = ti.status.requires_review
         statuses[ti.status.name]["reviewed_by"] = test_list_instance.reviewed_by
         statuses[ti.status.name]["reviewed"] = test_list_instance.reviewed
+        statuses[ti.status.name]["colour"] = ti.status.colour
         if ti.comment:
             comment_count += 1
     comment_count += test_list_instance.comments.all().count()
