@@ -270,14 +270,14 @@
                                                 <li class="nav-header">Test Lists</li>
                                                 {% if perms.qa.can_review_non_visible_tli %}
                                                     <li class="hover-parent"><a href="{% url "review_all" %}" title="View all test lists.">
-                                                        <i class="fa fa-users fa-lg fa-fw hover-sub-primary" aria-hidden="true"></i>
+                                                        <i class="fa fa-users fa-lg fa-fw hover-sub-info" aria-hidden="true"></i>
                                                         All Groups Test Lists
                                                     </a></li>
                                                 {% endif %}
                                                 <li class="hover-parent"><a href="{% url "review_your_all" %}" title="View all your groups test lists.">
                                                     <i class="fa fa-stack fa-lg fa-fw">
                                                         <i class="fa fa-users fa-stack-custom-main"></i>
-                                                        <i class="fa fa-user fa-stack-custom-main hover-sub-primary down-2"></i>
+                                                        <i class="fa fa-user fa-stack-custom-main hover-sub-info down-2"></i>
                                                     </i>
                                                     Your Groups Test Lists
                                                 </a></li>

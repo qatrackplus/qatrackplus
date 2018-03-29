@@ -63,15 +63,22 @@
                                     {% for field in form.fieldsets.required_fields %}
                                         <div class="form-group{% if field.errors %} has-error{% endif %}" title="{{ field.help_text }}">
 
-                                            <label for="{{ field.id_for_label }}" class="col-sm-4">{{ field.label }}</label>
+                                            <label for="{{ field.id_for_label }}" class="col-sm-4">
+                                                {{ field.label }}
+                                                {% if field.help_text %}
+                                                    <div class="help-block margin-0">{{ field.help_text }}</div>
+                                                {% endif %}
+                                            </label>
                                             <div class="col-sm-8">
                                                 {{ field }}
                                             </div>
-                                            {% if field.help_text %}
-                                                <div class="col-md-12 help-block margin-bottom-0">{{ field.help_text }}</div>
-                                            {% endif %}
+{#                                            {% if field.help_text %}#}
+{#                                                <div class="col-sm-4"></div>#}
+{#                                                <div class="col-md-8 help-block margin-bottom-0">{{ field.help_text }}</div>#}
+{#                                            {% endif %}#}
                                             {% for e in field.errors %}
-                                                <div class="col-sm-12 help-block text-center">{{ e }}</div>
+                                                <div class="col-sm-4"></div>
+                                                <div class="col-sm-8 help-block text-center">{{ e }}</div>
                                             {% endfor %}
                                         </div>
                                     {% endfor %}
@@ -81,13 +88,15 @@
                                     {% for field in form.fieldsets.optional_fields %}
                                         <div class="form-group {% if field.errors %}has-error{% endif %}" title="{{ field.help_text }}">
 
-                                            <label for="{{ field.id_for_label }}" class="col-sm-4">{{ field.label }}</label>
+                                            <label for="{{ field.id_for_label }}" class="col-sm-4">
+                                                {{ field.label }}
+                                                {% if field.help_text %}
+                                                    <div class="help-block margin-0">{{ field.help_text }}</div>
+                                                {% endif %}
+                                            </label>
                                             <div class="col-sm-8">
                                                 {{ field }}
                                             </div>
-                                            {% if field.help_text %}
-                                                <div class="col-md-12 help-block margin-bottom-0">{{ field.help_text }}</div>
-                                            {% endif %}
                                             {% for e in field.errors %}
                                                 <div class="col-sm-12 help-block text-center">{{ e }}</div>
                                             {% endfor %}
@@ -100,7 +109,10 @@
                                     <div class="col-sm-6 form-horizontal">
                                         <div class="form-group {% if field.errors %}has-error{% endif %}" title="{{ field.help_text }}">
                                             <div class="col-sm-12">
-                                                <label for="{{ field.id_for_label }}" class="">{{ field.label }}</label>
+                                                <label for="{{ field.id_for_label }}" class="">
+                                                    <span>{{ field.label }}</span>
+                                                    {% if field.help_text %} - <span class="help-block margin-bottom-0 display-inline-block">{{ field.help_text }}</span>{% endif %}
+                                                </label>
                                                 {{ field }}
                                                 {% for e in field.errors %}
                                                     <div class="col-sm-12 help-block text-center">{{ e }}</div>

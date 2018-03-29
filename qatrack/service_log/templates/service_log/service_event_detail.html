@@ -2,6 +2,7 @@
 
 {% load widget_tweaks %}
 {% load qa_tags %}
+{% load comments %}
 
 {% block head_title %}Service Event{% endblock %}
 
@@ -166,53 +167,77 @@
 
         <div class="row">
             <div class="col-md-4">
-                <div class="box">
-                    <div class="box-header">
-                        <h3 class="box-title">
-                            <i class="fa fa-clock-o fa-fw" aria-hidden="true"></i>
-                            Service and User Times
-                        </h3>
-                    </div>
-                    <div class="box-body">
-                        <div class="row">
-                            <div class="col-md-12">
-                                <dl class="dl-horizontal">
-                                    {% if serviceevent.duration_service_time %}
-                                        <dt>Service time (hh:mm):</dt><dd><div>{{ serviceevent.duration_service_time|hour_min }}</div></dd>
-                                    {% endif %}
-                                    {% if serviceevent.duration_lost_time %}
-                                        <dt>Lost time (hh:mm):</dt><dd><div>{{ serviceevent.duration_lost_time|hour_min }}</div></dd>
-                                    {% endif %}
-                                </dl>
-                            </div>
-                            <div class="col-md-12">
-                                <table class="table table-hover table-condensed table-valign-middle">
-                                    <thead>
-                                        <tr>
-                                            <th>User or Third Party</th>
-                                            <th>Time (hh:mm)</th>
-                                        </tr>
-                                    </thead>
+                {% if hours|length > 0 or g_links|length > 0 or serviceevent.duration_service_time or serviceevent.duration_lost_time %}
+                    <div class="box">
+                        <div class="box-header">
+                            <h3 class="box-title">
+                                <i class="fa fa-clock-o fa-fw" aria-hidden="true"></i>
+                                Involved Parties and Durations
+                            </h3>
+                        </div>
+                        <div class="box-body">
 
-                                    <tbody id="hours-tbody">
+                            {% if serviceevent.duration_service_time or serviceevent.duration_lost_time %}
+                                <div class="subheading-divider">Service Event Durations</div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <dl class="dl-horizontal">
+                                            {% if serviceevent.duration_service_time %}
+                                                <dt>Service time (hh:mm):</dt><dd><div>{{ serviceevent.duration_service_time|hour_min }}</div></dd>
+                                            {% endif %}
+                                            {% if serviceevent.duration_lost_time %}
+                                                <dt>Lost time (hh:mm):</dt><dd><div>{{ serviceevent.duration_lost_time|hour_min }}</div></dd>
+                                            {% endif %}
+                                        </dl>
+                                    </div>
+                                </div>
+                            {% endif %}
 
-                                        {% for h in hours %}
-                                            <tr>
-                                                <td>{% if h.user_or_thirdparty.get_full_name %}{{ h.user_or_thirdparty.get_full_name }}{% else %} {{ h.user_or_thirdparty.username }}{% endif %}</td>
-                                                <td>{{ h.time|hour_min }}</td>
-                                            </tr>
-                                        {% endfor %}
+                            {% if g_links|length > 0 %}
+                                <div class="subheading-divider">Group Members Involved</div>
+                                <div class="row">
+                                    <div id="g-link-fields" class="col-md-8">
+                                        <dl class="dl-horizontal">
+                                            {% for gli in g_links %}
+                                                <dt>{{ gli.group_linker.name }}:</dt>
+                                                <dd>{% if gli.user.get_full_name %}{{gli.user.get_full_name}}{% else %} {{gli.user.username}}{% endif %}</dd>
+                                            {% endfor %}
+                                        </dl>
+                                    </div>
+                                </div>
+                            {% endif %}
 
-                                    </tbody>
+                            {% if hours|length > 0 %}
+                                <div class="subheading-divider">User and Third Party Work Durations</div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <table class="table table-hover table-condensed table-valign-middle">
+                                            <thead>
+                                                <tr>
+                                                    <th>User or Third Party</th>
+                                                    <th>Time (hh:mm)</th>
+                                                </tr>
+                                            </thead>
 
-                                </table>
-                            </div>
-                            <div class="col-md-6">
+                                            <tbody id="hours-tbody">
 
-                            </div>
+                                                {% for h in hours %}
+                                                    <tr>
+                                                        <td>{% if h.user_or_thirdparty.get_full_name %}{{ h.user_or_thirdparty.get_full_name }}{% else %} {{ h.user_or_thirdparty.username }}{% endif %}</td>
+                                                        <td>{{ h.time|hour_min }}</td>
+                                                    </tr>
+                                                {% endfor %}
+
+                                            </tbody>
+
+                                        </table>
+                                    </div>
+                                </div>
+                            {% endif %}
+
                         </div>
                     </div>
-                </div>
+                {% endif %}
             </div>
 
             <div class="col-md-8">
@@ -227,56 +252,75 @@
                         </h3>
                     </div>
                     <div class="box-body">
+                        {% if rtsqas|length > 0 %}
+                            <div class="subheading-divider">Return To Service QA Required</div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <table class="table table-hover table-condensed table-valign-middle">
 
-                        <div class="row">
-                            <div id="g-link-fields" class="col-md-8">
-                                <dl class="dl-horizontal">
-                                    {% for gli in g_links %}
-                                        <dt>{{ gli.group_linker.name }}:</dt>
-                                        <dd>{% if gli.user.get_full_name %}{{gli.user.get_full_name}}{% else %} {{gli.user.username}}{% endif %}</dd>
-                                    {% endfor %}
-                                </dl>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-12">
-                                <table class="table table-hover table-condensed table-valign-middle">
-
-                                    <thead>
-                                        <tr>
-                                            <th style="min-width: 200px;">Test List</th>
-                                            <th>Pass/Fail</th>
-                                            <th>Review Status</th>
-{#                                            <th>Assigned By</th>#}
-{#                                            <th>Assigned Date</th>#}
-                                            <th></th>
-                                        </tr>
-                                    </thead>
-
-                                    <tbody>
-                                        {% for f in rtsqas %}
+                                        <thead>
                                             <tr>
-                                                <td>{{ f.unit_test_collection.tests_object.name }}</td>
-                                                <td>{% if f.test_list_instance.pk %}{{ f.test_list_instance|as_pass_fail_status:False }}{% else %}----{% endif %}</td>
-                                                <td>{% if f.test_list_instance.pk %}{{ f.test_list_instance|as_review_status }}{% else %}----{% endif %}</td>
-{#                                                <td>{{ f.user_assigned_by }}</td>#}
-{#                                                <td>{{ f.datetime_assigned }}</td>#}
-                                                <td>
-                                                    {% if f.test_list_instance.pk %}
-                                                        {% if perms.qa.can_review %}<a href="{% url 'review_test_list_instance' pk=f.test_list_instance.pk %}?next={% url 'sl_details' pk=serviceevent.pk %}" class="btn btn-xs btn-default btn-flat">Review</a>{% endif %}
-                                                    {% else %}
-                                                        {% if perms.qa.add_testlistinstance %}<a href="{% url 'perform_qa' pk=f.unit_test_collection.pk %}?rtsqa={{ f.id }}&next={% url 'sl_details' pk=serviceevent.pk %}" class="btn btn-xs btn-default btn-flat">Perform</a>{% endif %}
-                                                    {% endif %}
-                                                </td>
+                                                <th style="min-width: 200px;">Test List</th>
+                                                <th>Pass/Fail</th>
+                                                <th>Review Status</th>
+                                                <th></th>
                                             </tr>
-                                        {% endfor %}
+                                        </thead>
 
-                                    </tbody>
+                                        <tbody>
+                                            {% for f in rtsqas %}
+                                                <tr>
+                                                    <td>{{ f.unit_test_collection.tests_object.name }}</td>
+                                                    <td>{% if f.test_list_instance.pk %}{{ f.test_list_instance|as_pass_fail_status:False }}{% else %}----{% endif %}</td>
+                                                    <td>{% if f.test_list_instance.pk %}{{ f.test_list_instance|as_review_status }}{% else %}----{% endif %}</td>
+                                                    <td>
+                                                        {% if f.test_list_instance.pk %}
+                                                            {% if perms.qa.can_review %}<a href="{% url 'review_test_list_instance' pk=f.test_list_instance.pk %}?next={% url 'sl_details' pk=serviceevent.pk %}" class="btn btn-xs btn-default btn-flat">Review</a>{% endif %}
+                                                        {% else %}
+                                                            {% if perms.qa.add_testlistinstance %}<a href="{% url 'perform_qa' pk=f.unit_test_collection.pk %}?rtsqa={{ f.id }}&next={% url 'sl_details' pk=serviceevent.pk %}" class="btn btn-xs btn-default btn-flat">Perform</a>{% endif %}
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
 
-                                    <tfoot></tfoot>
+                                        </tbody>
 
-                                </table>
+                                        <tfoot></tfoot>
+
+                                    </table>
+                                </div>
+                            </div>
+                        {% endif %}
+                        <div class="row">
+                            <div class="col-sm-12">
+
+                                <div class="subheading-divider">Comments</div>
+
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        {% render_comment_list for serviceevent %}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        {% get_comment_form for serviceevent as c_form %}
+
+                                        <div id="comment-form">
+                                            {% csrf_token %}
+                                            <input id="id_name" maxlength="50" name="name" type="hidden" required="" value="{{ user.username }}">
+                                            {{ c_form.object_pk }}
+                                            {{ c_form.content_type }}
+                                            {{ c_form.security_hash }}
+                                            {{ c_form.timestamp }}
+                                            <textarea cols="40" id="id_comment" maxlength="3000" name="comment" rows="2" required="" placeholder="Add comment" class="margin-bottom-20 form-control autosize"></textarea>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div id="post-comment" class="btn btn-flat btn-info btn-sm pull-right disabled">Post Comment</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -284,7 +328,7 @@
             </div>
         </div>
 
-        {% if USE_PARTS %}
+        {% if USE_PARTS and parts_used|length > 0 %}
             <div class="row">
                 <div class="col-md-12">
                     <div class="box">

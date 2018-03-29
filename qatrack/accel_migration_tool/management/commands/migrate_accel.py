@@ -4,8 +4,10 @@ import pyodbc
 import re
 import warnings
 
+from django_comments.models import Comment
 from django.conf import settings as qat_settings
 from django.contrib.auth.models import User, Group
+from django.contrib.sites.models import Site
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.management.base import BaseCommand
 from django.db import IntegrityError
@@ -868,10 +870,20 @@ class Command(BaseCommand):
                     user_created_by=created_by,
                     user_modified_by=modified_by,
                     user_status_changed_by=status_changed_by,
-                    qafollowup_notes=qa_followup,
                     is_review_required=is_review_required
                 )
                 service_event.save()
+
+                site = Site.objects.exclude(domain='QATrack+TestDomain').first()
+                comment = Comment(
+                    submit_date=timezone.now(),
+                    user=User.objects.get(username='QATrack+ Internal'),
+                    content_object=service_event,
+                    comment=qa_followup,
+                    site=site
+                )
+                comment.save()
+
                 self.updating_cursor.execute('update service set service_event_id = ? where srn = ?', str(service_event.id), str(row.srn))
 
                 # Search through problem in service event and create related events from description.

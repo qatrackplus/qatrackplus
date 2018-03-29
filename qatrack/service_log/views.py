@@ -3,10 +3,12 @@ import csv
 
 from braces.views import LoginRequiredMixin, PermissionRequiredMixin
 from collections import OrderedDict
+from django_comments.models import Comment
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.context_processors import PermWrapper
 from django.contrib.auth.models import User
+from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse, resolve
@@ -127,9 +129,9 @@ def se_searcher(request):
 
     service_events = service_events.order_by('-id') \
         .select_related('service_status')[0:50]\
-        .values_list('id', 'service_status__id', 'problem_description')
+        .values_list('id', 'service_status__id', 'problem_description', 'datetime_service', 'service_status__name')
 
-    return JsonResponse({'colour_ids': list(service_events)})
+    return JsonResponse({'service_events': list(service_events)})
 
 
 def get_user_name(user):
@@ -148,9 +150,6 @@ class SLDashboard(TemplateView):
         to_return = {
             'qa_not_reviewed': rtsqa_qs.filter(test_list_instance__isnull=False, test_list_instance__all_reviewed=False).count(),
             'qa_not_complete': rtsqa_qs.filter(test_list_instance__isnull=True).count(),
-            # 'units_restricted': models.Unit.objects.filter(restricted=True).count(),
-            # 'parts_low': 0,
-            # 'se_statuses': {},
             'se_needing_review': models.ServiceEvent.objects.filter(
                 service_status__in=models.ServiceEventStatus.objects.filter(
                     is_review_required=True
@@ -163,12 +162,6 @@ class SLDashboard(TemplateView):
                 'count': models.ServiceEvent.objects.filter(service_status=default_status).count()
             }
         }
-        # qs = models.ServiceEventStatus.objects.filter(is_active=True).order_by('pk')
-        # for s in qs:
-        #     to_return['se_statuses'][s.name] = {
-        #         'num': models.ServiceEvent.objects.filter(service_status=s).count(),
-        #         'id': s.id
-        #     }
         return to_return
 
     def get_timeline(self):
@@ -477,6 +470,17 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
                 is_review_required=True
             ).count()
             cache.set('se_needing_review_count', se_needing_review_count)
+
+        comment = form.cleaned_data['qafollowup_comments']
+        if comment:
+            comment = Comment(
+                submit_date=timezone.now(),
+                user=self.request.user,
+                content_object=service_event,
+                comment=comment,
+                site=get_current_site(self.request)
+            )
+            comment.save()
 
         for g_link in form.g_link_dict:
             if g_link in form.changed_data:

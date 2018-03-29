@@ -822,6 +822,15 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             self.unit_test_col.tests_object.attachment_set.all()
         )
 
+        context['top_divs_span'] = 0
+        if self.request.user.has_perm('qa.can_review') or self.request.user.has_perm('qa.can_review_own_tests') or self.request.user.has_perm('qa.can_override_date'):
+            context['top_divs_span'] += 1
+        if len(context['attachments']) > 0:
+            context['top_divs_span'] += 1
+        if settings.USE_SERVICE_LOG and context['rtsqa_id'] is not None:
+            context['top_divs_span'] += 1
+        context['top_divs_span'] = int(12 / context['top_divs_span']) if context['top_divs_span'] > 0 else 12
+
         return context
 
     def get_requested_day_to_perform(self):
@@ -1037,6 +1046,16 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
         context['attachments'] = context['test_list'].attachment_set.all(
         ) | self.object.unit_test_collection.tests_object.attachment_set.all()
+
+        context['top_divs_span'] = 0
+        if self.request.user.has_perm('qa.can_review') or self.request.user.has_perm(
+                'qa.can_review_own_tests') or self.request.user.has_perm('qa.can_override_date'):
+            context['top_divs_span'] += 1
+        if len(context['attachments']) > 0:
+            context['top_divs_span'] += 1
+        if settings.USE_SERVICE_LOG and (context['form'].instance.pk or context['rtsqa_id'] is not None):
+            context['top_divs_span'] += 1
+        context['top_divs_span'] = int(12 / context['top_divs_span']) if context['top_divs_span'] > 0 else 12
 
         return context
 

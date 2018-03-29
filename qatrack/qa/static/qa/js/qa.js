@@ -877,9 +877,9 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 },
                 processResults: function (data, params) {
                     var results = [];
-                    for (var i in data.colour_ids) {
-                        var se_id = data.colour_ids[i][0],
-                            s_id = data.colour_ids[i][1];
+                    for (var i in data.service_events) {
+                        var se_id = data.service_events[i][0],
+                            s_id = data.service_events[i][1];
                         results.push({id: se_id, text: 'ServiceEvent ' + se_id});
                         se_statuses[se_id] = s_id;
                     }

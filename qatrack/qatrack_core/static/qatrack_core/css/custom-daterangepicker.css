@@ -31,6 +31,9 @@ div.daterangepicker.dropdown-menu li:hover {
     background-color: #e7e7e7;
     border-color: #adadad;
 }
+body > div.daterangepicker.dropdown-menu > div.calendar > div.calendar-table > table > tbody > tr > td {
+    border-radius: 0;
+}
 body > div.daterangepicker.dropdown-menu > div.calendar > div.calendar-table > table > tbody > tr > td.active {
     background-color: #546777;
 }
@@ -57,9 +60,9 @@ body > div.daterangepicker.dropdown-menu > div.calendar > div.calendar-table > t
     overflow: auto;
     /*vertical-align: middle;*/
 }
-/*.daterange-val-display {*/
-    /*!*display: inline-block !important;*!*/
-    /*vertical-align: middle;*/
-    /*height: 100%;*/
-    /*text-align: center;*/
-/*}*/
+div.daterangepicker.dropdown-menu > div.calendar > div.daterangepicker_input > input {
+    border-radius: 0;
+}
+div.daterangepicker.dropdown-menu > div.calendar > div.calendar-table > table > thead th {
+    border-radius: 0;
+}

@@ -707,7 +707,7 @@ class TestServiceLogViews(TestCase):
         data = {'q': q, 'unit_id': self.usa3.unit.id}
         response = self.client.get(reverse('se_searcher'), data=data)
 
-        self.assertEqual(len(se_to_find), len(response.json()['colour_ids']))
+        self.assertEqual(len(se_to_find), len(response.json()['service_events']))
 
     def test_tli_statuses(self):
 

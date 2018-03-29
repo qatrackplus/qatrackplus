@@ -67,15 +67,16 @@ class HoursMinDurationField(forms.DurationField):
 
 class UserModelChoiceField(forms.ModelChoiceField):
 
+    title = ''
+
     def label_from_instance(self, user):
         return user.username if not user.first_name or not user.last_name else user.last_name + ', ' + user.first_name
-        # return user.get_full_name()
 
 
 class HoursForm(forms.ModelForm):
 
     user_or_thirdparty = forms.ChoiceField(label='User or third party')
-    time = HoursMinDurationField(help_text='Hours : Minutes')
+    time = HoursMinDurationField(help_text='hh:mm')
 
     class Meta:
         model = models.Hours
@@ -107,7 +108,7 @@ class HoursForm(forms.ModelForm):
 
         self.fields['user_or_thirdparty'].widget.attrs.update({'class': 'select2'})
         time_classes = self.fields['time'].widget.attrs.get('class', '')
-        time_classes += ' max-width-100'
+        time_classes += ' max-width-100 form-control'
         self.fields['time'].widget.attrs.update({'class': time_classes})
 
         if self.instance.user:
@@ -320,15 +321,14 @@ class ServiceEventForm(BetterModelForm):
 
     unit_field = forms.ModelChoiceField(queryset=models.Unit.objects.all(), label='Unit')
     service_area_field = forms.ModelChoiceField(
-        queryset=models.ServiceArea.objects.all(), label='Service area',
-        help_text=_('Select service area (must select unit first)')
+        queryset=models.ServiceArea.objects.all(), label='Service area'
     )
     duration_service_time = HoursMinDurationField(
-        label=_('Service time (hh:mm)'), required=False,
+        label=_('Service time'), required=False,
         help_text=models.ServiceEvent._meta.get_field('duration_service_time').help_text
     )
     duration_lost_time = HoursMinDurationField(
-        label=_('Lost time (hh:mm)'), required=False,
+        label=_('Lost time'), required=False,
         help_text=models.ServiceEvent._meta.get_field('duration_lost_time').help_text
     )
     service_event_related_field = ServiceEventMultipleField(
@@ -345,7 +345,7 @@ class ServiceEventForm(BetterModelForm):
 
     initiated_utc_field = forms.ModelChoiceField(
         required=False, queryset=qa_models.UnitTestCollection.objects.none(), label='Initiated by',
-        help_text=_('Test list instance that initiated this service event')
+        help_text=_('Was there a QA session that initiated this service event?')
     )
     service_type = forms.ModelChoiceField(
         queryset=models.ServiceType.objects.filter(is_active=True)
@@ -354,8 +354,10 @@ class ServiceEventForm(BetterModelForm):
         help_text=models.ServiceEvent._meta.get_field('service_status').help_text, widget=SelectWithDisabledWidget,
         # queryset=models.ServiceEventStatus.objects.all()
     )
-
-    _classes = ['form-control']
+    qafollowup_comments = forms.CharField(
+        widget=forms.Textarea(attrs={'rows': 3}), required=False, label=_('Add Comment'),
+        help_text=_('Comments related to return to service')
+    )
 
     class Meta:
 
@@ -371,12 +373,12 @@ class ServiceEventForm(BetterModelForm):
             }),
             ('left_fields', {
                 'fields': [
-                    'unit_field', 'service_area_field', 'service_type', 'is_review_required_fake',
+                    'datetime_service', 'unit_field', 'service_area_field', 'service_type', 'is_review_required_fake',
                 ],
             }),
             ('right_fields', {
                 'fields': [
-                    'datetime_service', 'service_event_related_field', 'initiated_utc_field',
+                    'service_event_related_field', 'initiated_utc_field',
                 ],
             }),
             ('problem_and_safety', {
@@ -392,8 +394,8 @@ class ServiceEventForm(BetterModelForm):
             ('time_fields', {
                 'fields': ['duration_service_time', 'duration_lost_time'],
             }),
-            ('rtsqa_fields', {
-                'fields': ['qafollowup_notes'],
+            ('qafollowup_comments', {
+                'fields': ['qafollowup_comments'],
             })
         ]
 
@@ -419,16 +421,17 @@ class ServiceEventForm(BetterModelForm):
             try:
                 g_link_instance = models.GroupLinkerInstance.objects.get(group_linker=g_link, service_event=self.instance)
                 self.initial[field_name] = g_link_instance.user
-                queryset = User.objects.filter(Q(groups=g_link.group, is_active=True) | Q(pk=g_link_instance.user.id)).distinct().order_by('last_name')
-                # self.g_link_dict[field_name]['instance'] = g_link_instance
+                queryset = User.objects.filter(
+                    Q(groups=g_link.group, is_active=True) | Q(pk=g_link_instance.user.id)
+                ).distinct().order_by('last_name')
             except ObjectDoesNotExist:
                 queryset = User.objects.filter(groups=g_link.group, is_active=True).order_by('last_name')
 
             self.fields[field_name] = UserModelChoiceField(
-                queryset=queryset,
-                help_text=g_link.help_text, label=g_link.name, required=False
+                queryset=queryset, help_text=g_link.help_text, label=g_link.name, required=False
             )
             self.fields[field_name].widget.attrs.update({'class': 'select2'})
+            self.fields[field_name].title = g_link.description
 
             g_fields.append(field_name)
         self._fieldsets.append(('g_link_fields', {'fields': g_fields}))
@@ -561,7 +564,7 @@ class ServiceEventForm(BetterModelForm):
             if not self.instance.service_type.is_active:
                 self.fields['service_type'].queryset |= models.ServiceType.objects.filter(id=self.instance.service_type.id)
 
-        for f in ['safety_precautions', 'problem_description', 'work_description', 'qafollowup_notes']:
+        for f in ['safety_precautions', 'problem_description', 'work_description', 'qafollowup_comments']:
             self.fields[f].widget.attrs.update({'rows': 3, 'class': 'autosize'})
 
         select2_fields = [
@@ -576,7 +579,7 @@ class ServiceEventForm(BetterModelForm):
             self.fields[f].widget.format = settings.INPUT_DATE_FORMATS[0]
             self.fields[f].input_formats = settings.INPUT_DATE_FORMATS
             self.fields[f].widget.attrs['title'] = settings.DATETIME_HELP
-            self.fields[f].help_text = settings.DATETIME_HELP
+            # self.fields[f].help_text = settings.DATETIME_HELP
 
         for f in ['duration_service_time', 'duration_lost_time']:
             classes = self.fields[f].widget.attrs.get('class', '')
@@ -585,7 +588,7 @@ class ServiceEventForm(BetterModelForm):
 
         for f in self.fields:
             classes = self.fields[f].widget.attrs.get('class', '')
-            classes += ' %s' % self.classes
+            classes += ' form-control'
             self.fields[f].widget.attrs.update({'class': classes})
 
         for f in ['is_review_required_fake', 'is_review_required']:
@@ -646,7 +649,3 @@ class ServiceEventForm(BetterModelForm):
 
         return self.cleaned_data
         # TODO add message when service event status chages due to review
-
-    @property
-    def classes(self):
-        return ' '.join(self._classes)

@@ -127,20 +127,20 @@ class ServiceEvent(models.Model):
     datetime_status_changed = models.DateTimeField(null=True, blank=True)
     datetime_created = models.DateTimeField()
     datetime_service = models.DateTimeField(
-        verbose_name=_('Date and time'), help_text=_('Date and time this event took place')
+        verbose_name=_('Date and time'), help_text=_('Date and time this event started')
     )
     datetime_modified = models.DateTimeField(null=True, blank=True)
 
     safety_precautions = models.TextField(
-        null=True, blank=True, help_text=_('Were any special safety precautions taken?')
+        null=True, blank=True, help_text=_('Describe any safety precautions taken')
     )
     problem_description = models.TextField(help_text=_('Describe the problem leading to this service event'))
     work_description = models.TextField(
         null=True, blank=True, help_text=_('Describe the work done during this service event')
     )
-    qafollowup_notes = models.TextField(
-        null=True, blank=True, help_text=_('Provide any extra information regarding return to services')
-    )
+    # qafollowup_notes = models.TextField(
+    #     null=True, blank=True, help_text=_('Provide any extra information regarding return to services')
+    # )
     duration_service_time = models.DurationField(
         verbose_name=_('Service time'), null=True, blank=True,
         help_text=_('Enter the total time duration of this service event (Hours : minutes)')
@@ -150,7 +150,7 @@ class ServiceEvent(models.Model):
         help_text=_('Enter the total clinical time lost for this service event (Hours : minutes)')
     )
     is_review_required = models.BooleanField(
-        default=True, help_text=_('Does this service event require review?'), blank=True
+        default=True, blank=True
     )
 
     class Meta:

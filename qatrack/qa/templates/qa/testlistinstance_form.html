@@ -87,7 +87,6 @@
 
 {% block sidebar_toggle %}
     <a href="#" class="sidebar-toggle" data-toggle="offcanvas" role="button">
-{#        <span class="sr-only">Toggle navigation</span>#}
         <i id="toggle-icon" class="fa fa-chevron-left fa-lg" aria-hidden="true"></i>
     </a>
 {% endblock sidebar_toggle %}
@@ -170,7 +169,7 @@
         <div class="row" style="">
             {{ form.errors }}
             {% if perms.qa.can_review and perms.qa.can_review_own_tests or perms.qa.can_override_date %}
-                <div class="col-sm-4">
+                <div class="col-sm-{{ top_divs_span }}">
                     <div id="box-admin" class="box">
                         <div class="box-header">
                             <h3 class="box-title">
@@ -235,11 +234,11 @@
                     </div>
                 </div>
             {% else %}
-                <div class="col-sm-4"><div class="display-none">{{ form.work_started }}</div></div>
+                <div class="display-none">{{ form.work_started }}</div>
             {% endif %}
 
             {% if attachments|length > 0 %}
-                <div class="col-sm-4">
+                <div class="col-sm-{{ top_divs_span }}">
                     <div id="box-attachments">
                         <div class="box">
                             <div class="box-header">
@@ -263,13 +262,11 @@
                         </div>
                     </div>
                 </div>
-            {% else %}
-                <div class="col-sm-4"></div>
             {% endif %}
 
             {% if USE_SERVICE_LOG and form.instance.pk %}
                 {% if perms.service_log.add_serviceevent or service_events_ib|length > 0 %}
-                    <div class="col-sm-4">
+                    <div class="col-sm-{{ top_divs_span }}">
                         <div id="box-serviceevents">
                             <div class="box">
                                 <div class="box-header">
@@ -327,11 +324,9 @@
                             </div>
                         </div>
                     </div>
-                {% else %}
-                    <div class="col-sm-4"></div>
                 {% endif %}
             {% elif USE_SERVICE_LOG and rtsqa_id %}
-                <div class="col-sm-4">
+                <div class="col-sm-{{ top_divs_span }}">
                     <div id="box-serviceevents">
                         <div class="box">
                             <div class="box-header">
@@ -351,8 +346,6 @@
                         </div>
                     </div>
                 </div>
-            {% else %}
-                <div class="col-sm-4"></div>
             {% endif %}
 
         </div>
@@ -479,7 +472,6 @@
                                 </table>
 
                                 <div class="row">
-{#                                    <div class="col-sm-6"></div>#}
                                     <div class="col-sm-7">
                                         <table class="table table-responsive table-condensed">
                                             <tbody>
@@ -493,7 +485,7 @@
 
                                                     <td id="tli-attachment-names" colspan="{% qa_table_colspan perms offset=2 %}">
 
-                                                    {% if test_list_instance and test_list_instance.attachment_set|length > 0 %}
+                                                    {% if test_list_instance and test_list_instance.attachment_set.all|length > 0 %}
                                                         {% for attach in test_list_instance.attachment_set.all %}
                                                             <i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>{{ attach | attachment_link }}
                                                         {% endfor %}
@@ -504,7 +496,7 @@
                                         </table>
                                     </div>
                                 </div>
-                                <div clsas="row">
+                                <div class="row">
                                     <div class="col-sm-12">
 
                                         <button id="submit-qa" type="submit" class="btn btn-primary btn-flat margin-r-5 pull-right">Submit QA Results</button>

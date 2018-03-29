@@ -1,6 +1,6 @@
 // Regrets: Not using a more robust front end library here :(
 
-require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_utils', 'inputmask', 'site_base'], function ($, _, moment, autosize) {
+require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_utils', 'inputmask', 'site_base', 'comments'], function ($, _, moment, autosize) {
     
     $(document).ready(function() {
 
@@ -98,7 +98,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
         function generate_related_result(res) {
             if (res.loading) { return res.text; }
             var colour = status_colours_dict[se_statuses[res.id]];
-            var $div = $('<div class="select2-result-repository clearfix">' + res.text + '<div class="label pull-right" style="background-color: ' + colour + ';">&nbsp;</div></div>');
+            var $div = $('<div class="select2-result-repository clearfix"><span>' + res.text + '  (' + res.date + ') </span><span class="label smooth-border pull-right" style="border-color: ' + colour + ';">' + res.status + '</span></div>');
             return $div;
         }
         function generate_related_selection(res, container) {
@@ -113,12 +113,14 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
         }
         function process_related_results(data, params) {
             var results = [];
-            for (var i in data.colour_ids) {
-                var se_id = data.colour_ids[i][0],
-                    s_id = data.colour_ids[i][1],
-                    s_pd = data.colour_ids[i][2];
-                results.push({id: se_id, text: 'id: ' + se_id, title: s_pd});
-                se_statuses[se_id] = s_id;
+            for (var i in data.service_events) {
+                var se_id = data.service_events[i][0],
+                    se_status_id = data.service_events[i][1],
+                    se_problem_description = data.service_events[i][2],
+                    se_date = moment(data.service_events[i][3]).format('MMM D, YYYY HH:mm'),
+                    se_status_name = data.service_events[i][4];
+                results.push({id: se_id, text: se_id, title: se_problem_description, date: se_date, status: se_status_name});
+                se_statuses[se_id] = se_status_id;
             }
             params.page = params.page || 1;
             return {
