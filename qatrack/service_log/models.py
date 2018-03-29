@@ -138,9 +138,6 @@ class ServiceEvent(models.Model):
     work_description = models.TextField(
         null=True, blank=True, help_text=_('Describe the work done during this service event')
     )
-    # qafollowup_notes = models.TextField(
-    #     null=True, blank=True, help_text=_('Provide any extra information regarding return to services')
-    # )
     duration_service_time = models.DurationField(
         verbose_name=_('Service time'), null=True, blank=True,
         help_text=_('Enter the total time duration of this service event (Hours : minutes)')

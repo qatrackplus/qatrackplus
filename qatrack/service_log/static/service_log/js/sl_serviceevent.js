@@ -5,6 +5,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
     $(document).ready(function() {
 
         var $units = $('#id_unit_field'),
+            $units_fake = $('#id_unit_field_fake'),
             $service_areas = $('#id_service_area_field'),
             $related_se = $('#id_service_event_related_field'),
             $service_status = $('#id_service_status'),
@@ -30,6 +31,8 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
             $service_event_form = $('#service-event-form'),
             $service_save = $('.service-save'),
             $date_time = $('#id_datetime_service');
+
+        $units_fake.val($units.val());
 
         var num_click = 0;
         $service_save.one('click', function (event) {
@@ -155,9 +158,10 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
         });
         
         // Unit -----------------------------------------------------------------------------------------------
-        $units.change(function() {
-            var unit_id = $('#id_unit_field').val();
+        $units_fake.change(function() {
+            var unit_id = $units_fake.val();
 
+            $units.val(unit_id);
             if (unit_id) {
                 var data = {
                     'unit_id': unit_id
@@ -239,7 +243,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
         // RTS QA Formset --------------------------------------------------------------------------------
         function set_select_tli() {
             var $select_tli = $('.select-tli');
-            $select_tli.click(function (event) {
+            $select_tli.off('click').click(function (event) {
                 var w = window.open($(this).attr('data-link'), '_blank', 'scrollbars=no,menubar=no,height=900,width=1200,resizable=yes,toolbar=yes,status=no');
                 w.focus();
             });
@@ -326,6 +330,24 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
                 })
             }
         };
+        disable_units = function(force) {
+
+            var disable = false;
+            if (force) {
+                disable = true;
+            } else {
+                $('select.rtsqa-utc').each(function () {
+                    if ($(this).val()) {
+                        disable = true;
+                        return false;
+                    }
+                });
+                if ($tli_initiated_by.val()) {
+                    disable = true;
+                }
+            }
+            $units_fake.prop('disabled', disable);
+        };
 
         // set initial tli pass/fail and review statuses
         $.each($('.rtsqa-row'), function(i, v) {
@@ -391,6 +413,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
                 $('.' + prefix + '-hider').fadeIn('fast');
                 set_select_tli();
             }
+            disable_units();
         }
 
         $('select.rtsqa-utc').change(rtsqa_change);
@@ -517,16 +540,20 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
         $utc_initiated_by.change(function() {
             $tli_initiated_display.slideUp('fast', function() {
                 $tli_initiated_by.val('');
+                disable_units();
             });
             if ($(this).val() != '') {
                 var w = window.open($(this).attr('data-link') + '/' + $(this).val() + '/utc_initiated', '_blank', 'scrollbars=no,menubar=no,height=900,width=1200,resizable=yes,toolbar=no,location=no,status=no');
                 w.focus();
                 w.onbeforeunload = function() {
                     setSearchResult('utc_initiated', $tli_initiated_by.val());
+                    disable_units();
                     return null;
                 }
             }
         });
+        disable_units();
+
 
     });
 
