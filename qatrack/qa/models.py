@@ -1496,6 +1496,13 @@ class TestInstance(models.Model):
             # no tolerance and/or reference set
             self.pass_fail = NO_TOL
 
+    def get_value(self):
+        if self.unit_test_info.test.is_string_type():
+            return self.string_value
+        if self.unit_test_info.test.is_boolean():
+            return bool(self.value)
+        return self.value
+
     def auto_review(self):
         """set review status of the current value if allowed"""
         has_comment = self.comment or self.test_list_instance.comments.all().exists()

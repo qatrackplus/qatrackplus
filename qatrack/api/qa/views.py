@@ -1,11 +1,8 @@
 from django.contrib.sites.shortcuts import get_current_site
 from django.utils import timezone
-from rest_framework import status, parsers
-from rest_framework import viewsets
-from rest_framework import views
+from rest_framework import status, views, viewsets
 from rest_framework.response import Response
 
-from qatrack.api.viewsets import CreateListRetrieveViewSet
 from qatrack.api.qa import serializers
 from qatrack.api.serializers import MultiSerializerMixin
 from qatrack.qa import models
@@ -124,9 +121,24 @@ class TestListInstanceViewSet(MultiSerializerMixin, viewsets.ModelViewSet):
         }
         serializer.save(**extra)
 
-    def partial_update(self, request, *args, **kwargs):
-        import ipdb; ipdb.set_trace()  # yapf: disable  # noqa
-        return super(TestListInstanceViewSet, self).partial_update(request, *args, **kwargs)
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.user = request.user
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        comment = serializer.comment
+
+        if getattr(instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # refresh the instance from the database.
+            instance = self.get_object()
+            serializer = self.get_serializer(instance)
+            serializer.comment = comment
+            serializer.user = request.user
+
+        return Response(serializer.data)
 
 
 class TestListCycleViewSet(viewsets.ReadOnlyModelViewSet):

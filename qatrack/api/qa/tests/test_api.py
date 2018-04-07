@@ -386,6 +386,14 @@ class TestTestListInstanceAPI(APITestCase):
         Need to:
             test editing including uploads
                 - check permissions for editing
+                - check modified_by if user who modifies is different than creator
+                - check modified_date if user who modifies is different than creator
+                - add new comments
+                - work started & work completed both modified and unmodified by user
+                - attachments, uploads
+                - composite calcs updated correctly
+                - due date set correctly
+                - in progress
             refactor Upload to use Upload handler
         """
         assert False

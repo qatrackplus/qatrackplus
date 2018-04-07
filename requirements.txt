@@ -3,6 +3,7 @@
 -e git+https://github.com/randlet/django-listable.git@9c73781928fc8b5887061f98e517359464973980#egg=django_listable
 Django==1.11.9
 PyVirtualDisplay==0.2
+coreapi==2.3.3
 coverage==4.2
 django-admin-views==0.8.0
 django-braces==1.9.0

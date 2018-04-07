@@ -4,12 +4,12 @@ import copy
 from numbers import Number
 import re
 
-from django_comments.models import Comment
 from django.conf import settings
 from django.core.cache import cache
 from django.core.files.base import ContentFile
 from django.db.transaction import atomic
 from django.utils import timezone
+from django_comments.models import Comment
 from rest_framework import serializers
 from rest_framework.reverse import reverse
 
@@ -18,7 +18,6 @@ from qatrack.attachments.models import Attachment
 from qatrack.qa import models, signals
 from qatrack.qa.views.perform import CompositePerformer, UploadHandler
 from qatrack.service_log import models as sl_models
-
 
 BASE64_RE = re.compile("^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$")
 
@@ -199,13 +198,34 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
     def validate_work_completed(self, wc):
         return wc or timezone.now()
 
+    def add_data_from_instance(self, data):
+
+        tis = self.instance.testinstance_set.select_related(
+            "unit_test_info",
+            "unit_test_info__test",
+        )
+        for ti in tis:
+            slug = ti.unit_test_info.test.slug
+            if slug not in data['tests']:
+                print("TODO NEED TO HANDLE ATTACHMENTS & UPLOADS HERE")
+                data['tests'][slug] = {
+                    'value': ti.get_value(),
+                    'comment': ti.comment,
+                }
+
+        for key in ["work_completed", "work_started"]:
+            data[key] = data.get(key, getattr(self.instance, key))
+
     def validate(self, data):
         post_data = copy.deepcopy(data)
+
         validated_data = super(TestListInstanceCreator, self).validate(data)
-        validated_data = self.preprocess(validated_data)
-        utc = validated_data['unit_test_collection']
-        day = validated_data.get('day', 0)
-        day, tl = utc.get_list(day=day)
+
+        if self.instance:
+            self.add_data_from_instance(validated_data)
+
+        validated_data, utc, tl, day = self.preprocess(validated_data)
+
         test_qs = tl.all_tests().values_list("slug", "type", "calculation_procedure")
 
         missing = []
@@ -272,9 +292,15 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
     def preprocess(self, validated_data):
 
-        utc = validated_data['unit_test_collection']
-        day = validated_data.get('day', 0)
-        day, tl = utc.get_list(day=day)
+        if self.instance:
+            utc = self.instance.unit_test_collection
+            day = self.instance.day
+            tl = self.instance.test_list
+        else:
+            utc = validated_data['unit_test_collection']
+            day = validated_data.get('day', 0)
+            day, tl = utc.get_list(day=day)
+
         test_qs = tl.all_tests().values_list("id", "slug", "type", "constant_value")
 
         has_calculated = False
@@ -284,7 +310,12 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             has_calculated = has_calculated or type_ in models.CALCULATED_TYPES
 
             if type_ == models.CONSTANT:
+                # here we get data for the test (comments etc) and make sure the constant value
+                # is set correctly (so the user can't send an incorrect value for the constant value)
                 d = validated_data['tests'].get(slug, {})
+                v = d.get("value")
+                if v not in ("", None) and v != cv:
+                    raise serializers.ValidationError("Incorrect constant value passed for %s" % slug)
                 d['value'] = cv
                 validated_data['tests'][slug] = d
             elif type_ == models.UPLOAD:
@@ -293,58 +324,57 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
         self.ti_attachments = defaultdict(list)
 
-        if not has_calculated:
-            return validated_data
+        if has_calculated:
 
-        comp_calc_data = self.data_to_composite(validated_data)
+            comp_calc_data = self.data_to_composite(validated_data)
 
-        for pk, slug, d in uploads:
-            comp_calc_data['test_id'] = pk
-            try:
-                fname = d['filename']
-            except KeyError:
-                raise serializers.ValidationError("%s is missing the filename field" % slug)
+            for pk, slug, d in uploads:
+                comp_calc_data['test_id'] = pk
+                try:
+                    fname = d['filename']
+                except KeyError:
+                    raise serializers.ValidationError("%s is missing the filename field" % slug)
 
-            content = d['value']
+                content = d['value']
 
-            if d.get("encoding", "base64") == "base64":
-                if not BASE64_RE.match(content):
-                    raise serializers.ValidationError(
-                        "base64 encoding requested but content does not appear to be base64"
-                    )
-                content = base64.b64decode(content)
+                if d.get("encoding", "base64") == "base64":
+                    if not BASE64_RE.match(content):
+                        raise serializers.ValidationError(
+                            "base64 encoding requested but content does not appear to be base64"
+                        )
+                    content = base64.b64decode(content)
 
-            f = ContentFile(content, fname)
+                f = ContentFile(content, fname)
 
-            test_data = UploadHandler(self.user, comp_calc_data, f).process()
-            if test_data['errors']:
-                raise serializers.ValidationError("Error with %s test: %s" % (slug, '\n'.join(test_data['errors'])))
+                test_data = UploadHandler(self.user, comp_calc_data, f).process()
+                if test_data['errors']:
+                    raise serializers.ValidationError("Error with %s test: %s" % (slug, '\n'.join(test_data['errors'])))
 
-            self.ti_attachments[slug].append(test_data['attachment_id'])
-            self.ti_attachments[slug].extend([a['attachment_id'] for a in test_data['user_attached']])
+                self.ti_attachments[slug].append(test_data['attachment_id'])
+                self.ti_attachments[slug].extend([a['attachment_id'] for a in test_data['user_attached']])
 
-            data = validated_data['tests'].get(slug, {})
-            comment_sources = [data.get("comment", ""), test_data.get("comment")]
-            comp_calc_data['comments'][slug] = '\n'.join(c for c in comment_sources if c)
-            comp_calc_data['tests'][slug] = test_data['result']
-            comp_calc_data.pop('test_id', None)
+                data = validated_data['tests'].get(slug, {})
+                comment_sources = [data.get("comment", ""), test_data.get("comment")]
+                comp_calc_data['comments'][slug] = '\n'.join(c for c in comment_sources if c)
+                comp_calc_data['tests'][slug] = test_data['result']
+                comp_calc_data.pop('test_id', None)
 
-        results = CompositePerformer(self.user, comp_calc_data).calculate()
-        if not results['success']:
-            raise serializers.ValidationError(', '.join(results.get("errors", [])))
+            results = CompositePerformer(self.user, comp_calc_data).calculate()
+            if not results['success']:
+                raise serializers.ValidationError(', '.join(results.get("errors", [])))
 
-        for slug, test_data in results['results'].items():
-            if test_data['error']:
-                raise serializers.ValidationError("Error with %s test: %s" % (slug, test_data['error']))
+            for slug, test_data in results['results'].items():
+                if test_data['error']:
+                    raise serializers.ValidationError("Error with %s test: %s" % (slug, test_data['error']))
 
-            data = validated_data['tests'].get(slug, {})
-            data['comment'] = '\n'.join(c for c in [data.get("comment", ""), test_data.get("comment")] if c)
-            data['value'] = test_data['value']
-            validated_data['tests'][slug] = data
+                data = validated_data['tests'].get(slug, {})
+                data['comment'] = '\n'.join(c for c in [data.get("comment", ""), test_data.get("comment")] if c)
+                data['value'] = test_data['value']
+                validated_data['tests'][slug] = data
 
-            self.ti_attachments[slug].extend([a['attachment_id'] for a in test_data['user_attached']])
+                self.ti_attachments[slug].extend([a['attachment_id'] for a in test_data['user_attached']])
 
-        return validated_data
+        return validated_data, utc, tl, day
 
     def data_to_composite(self, validated_data):
         """Convert API post data to format suitable for CompositePerformer"""
@@ -478,6 +508,91 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
                 pass
 
         return tli
+
+    @atomic
+    def update(self, instance, validated_data):
+
+        now = timezone.now()
+        utc = instance.unit_test_collection
+
+        # data for creating all test instances
+        test_instance_data = validated_data.pop('tests')
+
+        # fields for creating test list instance comment
+        self.comment = validated_data.pop("comment", "")
+        site = validated_data.pop("site", "")
+
+        # user set test instance status or default
+        user_set_status = validated_data.pop('status', None)
+        status = user_set_status or models.TestInstanceStatus.objects.default()
+
+        # related return to service
+        rtsqa = validated_data.pop('return_to_service_qa', None)
+
+        # new attachments for test list instance
+        attachments = validated_data.pop('attachments', [])
+
+        instance.work_completed = validated_data['work_completed']
+        instance.work_started = validated_data['work_started']
+
+        instance.modified_by = self.user
+        instance.modified = timezone.now()
+        if status.requires_review:
+            instance.reviewed = None
+            instance.reviewed_by = None
+            instance.all_reviewed = False
+        else:
+            instance.reviewed = now
+            instance.reviewed_by = self.user
+            instance.all_reviewed = True
+
+        if instance.work_completed is None:
+            instance.work_completed = now
+
+        instance.save()
+
+        #for attachment in attachments:
+        #    attachment.testlistinstance = tli
+        #    attachment.save()
+
+        if self.comment:
+            self.create_comment(self.comment, self.user, instance, site)
+
+        tis = instance.testinstance_set.select_related(
+            "unit_test_info",
+            "unit_test_info__test",
+            "unit_test_info__reference",
+            "unit_test_info__tolerance",
+        )
+        for ti in tis:
+            tid = test_instance_data[ti.unit_test_info.test.slug]
+            ti.status = status
+            ti.modified_by = self.user
+            ti.work_started = instance.work_started
+            ti.work_completed = instance.work_completed
+            ti.skipped = tid.get("skipped", ti.skipped)
+            ti.value = tid.get("value", ti.value)
+            ti.string_value = tid.get("string_value", ti.string_value)
+            ti.skipped = tid.get("skipped", False)
+            ti.comment = tid.get("comment", ti.comment)
+
+            ti.calculate_pass_fail()
+            if not user_set_status:
+                ti.auto_review()
+
+            ti.save()
+
+        utc.set_due_date()
+
+        changed_se = instance.update_all_reviewed()
+
+        if not instance.in_progress:
+            try:
+                signals.testlist_complete.send(sender=self, instance=instance, created=False)
+            except:
+                pass
+
+        return instance
 
     def create_comment(self, comment, user, tli, site):
         Comment.objects.create(
