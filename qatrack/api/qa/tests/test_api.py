@@ -381,7 +381,7 @@ class TestTestListInstanceAPI(APITestCase):
         for a in tiu.attachment_set.all():
             assert a.finalized
 
-    def test_todo(self):
+    def _test_todo(self):
         """
         Need to:
             test editing including uploads
@@ -393,7 +393,6 @@ class TestTestListInstanceAPI(APITestCase):
                 - attachments, uploads
                 - composite calcs updated correctly
                 - due date set correctly
-                - in progress
             refactor Upload to use Upload handler
         """
         assert False
@@ -405,6 +404,55 @@ class TestTestListInstanceAPI(APITestCase):
         assert edit_resp.status_code == 200
         assert models.TestInstance.objects.get(unit_test_info__test__slug="test1").value == 99
 
+    def test_comment_preserved(self):
+        self.simple_data['tests']['test1']['comment'] = 'original comment'
+        resp = self.client.post(self.create_url, self.simple_data)
+        new_data = {'tests': {'test1': {'value': 99}}}
+        edit_resp = self.client.patch(resp.data['url'], new_data)
+        assert edit_resp.status_code == 200
+        assert models.TestInstance.objects.get(unit_test_info__test__slug="test1").comment == "original comment"
+
+    def test_comment_updated(self):
+        self.simple_data['tests']['test1']['comment'] = 'original comment'
+        resp = self.client.post(self.create_url, self.simple_data)
+        new_data = {'tests': {'test1': {'value': 99, 'comment': 'new comment'}}}
+        edit_resp = self.client.patch(resp.data['url'], new_data)
+        assert edit_resp.status_code == 200
+        assert models.TestInstance.objects.get(unit_test_info__test__slug="test1").comment == "new comment"
+
+    def test_skip_preserved(self):
+        self.simple_data['tests']['test1'] = {'skipped': True}
+        resp = self.client.post(self.create_url, self.simple_data)
+        new_data = {'tests': {'test2': {'value': 99}}}
+        edit_resp = self.client.patch(resp.data['url'], new_data)
+        assert models.TestInstance.objects.get(unit_test_info__test__slug="test1").skipped
+
+    def test_unskip(self):
+        self.simple_data['tests']['test1'] = {'skipped': True}
+        resp = self.client.post(self.create_url, self.simple_data)
+        new_data = {'tests': {'test1': {'value': 99}}}
+        edit_resp = self.client.patch(resp.data['url'], new_data)
+        ti = models.TestInstance.objects.get(unit_test_info__test__slug="test1")
+        assert not ti.skipped
+        assert ti.value == 99
+
+    def test_new_skip(self):
+        resp = self.client.post(self.create_url, self.simple_data)
+        new_data = {'tests': {'test1': {'skipped': True}}}
+        edit_resp = self.client.patch(resp.data['url'], new_data)
+        ti = models.TestInstance.objects.get(unit_test_info__test__slug="test1")
+        assert ti.skipped
+        assert ti.value is None
+
+    def test_complete_in_progress(self):
+        self.simple_data['in_progress'] = True
+        resp = self.client.post(self.create_url, self.simple_data)
+        assert models.TestListInstance.objects.all().first().in_progress
+        new_data = {'in_progress': False}
+        edit_resp = self.client.patch(resp.data['url'], new_data)
+        assert not models.TestListInstance.objects.all().first().in_progress
+
+
     def test_no_put(self):
         """All updates should be via patch"""
         resp = self.client.post(self.create_url, self.simple_data)
@@ -412,8 +460,8 @@ class TestTestListInstanceAPI(APITestCase):
         edit_resp = self.client.put(resp.data['url'], new_data)
         assert edit_resp.status_code == 405
 
-    def test_utc_due_date_updated_on_edit(self):
+    def _test_utc_due_date_updated_on_edit(self):
         assert False
 
-    def test_review_status_updated(self):
+    def _test_review_status_updated(self):
         assert False

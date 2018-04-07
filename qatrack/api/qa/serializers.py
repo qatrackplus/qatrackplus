@@ -204,6 +204,8 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             "unit_test_info",
             "unit_test_info__test",
         )
+        if "tests" not in data:
+            data['tests'] = {}
         for ti in tis:
             slug = ti.unit_test_info.test.slug
             if slug not in data['tests']:
@@ -212,8 +214,14 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
                     'value': ti.get_value(),
                     'comment': ti.comment,
                 }
+            elif slug in data['tests'] and data['tests'][slug].get('skipped'):
+                data['tests'][slug] = {
+                    'value': None,
+                    'comment': data['tests'][slug].get("comment", ti.comment),
+                    'skipped': True,
+                }
 
-        for key in ["work_completed", "work_started"]:
+        for key in ["work_completed", "work_started", "in_progress"]:
             data[key] = data.get(key, getattr(self.instance, key))
 
     def validate(self, data):
@@ -239,9 +247,10 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             if slug not in validated_data['tests']:
                 missing.append(slug)
 
-            provided_val = post_data['tests'].get(slug, {}).get("value")
+            skipped = validated_data['tests'][slug].get("skipped")
+            provided_val = post_data.get('tests', {}).get(slug, {}).get("value")
             validated_val = validated_data['tests'][slug].get("value")
-            if not self.type_okay(type_, validated_val):
+            if not skipped and not self.type_okay(type_, validated_val):
                 wrong_types.append(slug)
 
             if type_ in auto_types and not self.autovalue_ok(validated_val, provided_val):
@@ -534,6 +543,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
         instance.work_completed = validated_data['work_completed']
         instance.work_started = validated_data['work_started']
+        instance.in_progress = validated_data['in_progress']
 
         instance.modified_by = self.user
         instance.modified = timezone.now()
