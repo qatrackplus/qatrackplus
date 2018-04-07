@@ -330,6 +330,7 @@ class TestTestListInstanceAPI(APITestCase):
         assert tiu.attachment_set.count() == 1
         assert tiu.attachment_set.first().finalized
         assert tiu.comment == "test comment"
+
     def test_file_upload_no_filename(self):
         """
         Add a file upload test and ensure we can upload, process and have
@@ -384,6 +385,27 @@ class TestTestListInstanceAPI(APITestCase):
         """
         Need to:
             test editing including uploads
+                - check permissions for editing
             refactor Upload to use Upload handler
         """
+        assert False
+
+    def test_basic_edit(self):
+        resp = self.client.post(self.create_url, self.simple_data)
+        new_data = {'tests': {'test1': {'value': 99}}}
+        edit_resp = self.client.patch(resp.data['url'], new_data)
+        assert edit_resp.status_code == 200
+        assert models.TestInstance.objects.get(unit_test_info__test__slug="test1").value == 99
+
+    def test_no_put(self):
+        """All updates should be via patch"""
+        resp = self.client.post(self.create_url, self.simple_data)
+        new_data = {'tests': {'test1': {'value': 1}}}
+        edit_resp = self.client.put(resp.data['url'], new_data)
+        assert edit_resp.status_code == 405
+
+    def test_utc_due_date_updated_on_edit(self):
+        assert False
+
+    def test_review_status_updated(self):
         assert False

@@ -85,10 +85,14 @@ class TestInstanceViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = serializers.TestInstanceSerializer
 
 
-class TestListInstanceViewSet(MultiSerializerMixin, CreateListRetrieveViewSet):
+class TestListInstanceViewSet(MultiSerializerMixin, viewsets.ModelViewSet):
     queryset = models.TestListInstance.objects.prefetch_related("attachment_set").all()
     serializer_class = serializers.TestListInstanceSerializer
-    action_serializers = {'create': serializers.TestListInstanceCreator}
+    action_serializers = {
+        'create': serializers.TestListInstanceCreator,
+        'partial_update': serializers.TestListInstanceCreator,
+    }
+    http_method_names = ['get', 'post', 'patch']
 
     def create(self, request, *args, **kwargs):
         data = dict(request.data.items())
@@ -119,6 +123,10 @@ class TestListInstanceViewSet(MultiSerializerMixin, CreateListRetrieveViewSet):
             'day': day,
         }
         serializer.save(**extra)
+
+    def partial_update(self, request, *args, **kwargs):
+        import ipdb; ipdb.set_trace()  # yapf: disable  # noqa
+        return super(TestListInstanceViewSet, self).partial_update(request, *args, **kwargs)
 
 
 class TestListCycleViewSet(viewsets.ReadOnlyModelViewSet):
