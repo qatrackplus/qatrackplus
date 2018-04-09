@@ -2,6 +2,7 @@ import base64
 import os
 
 from django.conf import settings
+from django.contrib.auth.models import Permission
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -36,10 +37,10 @@ class TestTestListInstanceAPI(APITestCase):
         for t in self.default_tests:
             utils.create_test_list_membership(self.simple_test_list, t)
 
-        self.unit_test_list = utils.create_unit_test_collection(test_collection=self.simple_test_list, unit=self.unit)
+        self.utc = utils.create_unit_test_collection(test_collection=self.simple_test_list, unit=self.unit)
 
         self.create_url = reverse('testlistinstance-list')
-        self.utc_url = reverse("unittestcollection-detail", kwargs={'pk': self.unit_test_list.pk})
+        self.utc_url = reverse("unittestcollection-detail", kwargs={'pk': self.utc.pk})
 
         self.simple_data = {
             'unit_test_collection': self.utc_url,
@@ -385,14 +386,8 @@ class TestTestListInstanceAPI(APITestCase):
         """
         Need to:
             test editing including uploads
-                - check permissions for editing
-                - check modified_by if user who modifies is different than creator
-                - check modified_date if user who modifies is different than creator
                 - add new comments
-                - work started & work completed both modified and unmodified by user
                 - attachments, uploads
-                - composite calcs updated correctly
-                - due date set correctly
             refactor Upload to use Upload handler
         """
         assert False
@@ -403,6 +398,89 @@ class TestTestListInstanceAPI(APITestCase):
         edit_resp = self.client.patch(resp.data['url'], new_data)
         assert edit_resp.status_code == 200
         assert models.TestInstance.objects.get(unit_test_info__test__slug="test1").value == 99
+
+    def test_composite_edit(self):
+        utils.create_test_list_membership(self.simple_test_list, self.tc)
+        resp = self.client.post(self.create_url, self.simple_data)
+        assert models.TestInstance.objects.get(unit_test_info__test__slug="testc").value == 3
+        new_data = {'tests': {'test1': {'value': 99}, 'test2': {'value': 101}}}
+        edit_resp = self.client.patch(resp.data['url'], new_data)
+        assert models.TestInstance.objects.get(unit_test_info__test__slug="testc").value == 200
+
+    def test_edit_work_completed(self):
+        resp = self.client.post(self.create_url, self.simple_data)
+        new_data = {'work_completed': '2020-07-25 10:49:47'}
+        edit_resp = self.client.patch(resp.data['url'], new_data)
+        assert edit_resp.status_code == 200
+        assert models.TestListInstance.objects.first().work_completed.year == 2020
+
+    def test_edit_wc_ws_error(self):
+        resp = self.client.post(self.create_url, self.simple_data)
+        new_data = {
+            'work_completed': '2020-07-25 10:49:47',
+            'work_started': '2021-07-25 10:49:47',
+        }
+        edit_resp = self.client.patch(resp.data['url'], new_data)
+        assert edit_resp.status_code == 400
+
+    def test_different_editor(self):
+        """
+        If a test list is created, and then modified by a different user, the
+        modified_by user should be set correctly.
+        """
+
+        resp = self.client.post(self.create_url, self.simple_data)
+        new_data = {'tests': {'test1': {'value': 99}}}
+        self.client.logout()
+        user = utils.create_user(uname="user2")
+        self.client.force_authenticate(user=user)
+        edit_resp = self.client.patch(resp.data['url'], new_data)
+        assert edit_resp.status_code == 200
+        tli = models.TestListInstance.objects.first()
+        assert tli.created_by.username == "user"
+        assert tli.modified_by.username == "user2"
+
+    def test_edit_perms(self):
+        """
+        Check user with editing perms can edit tl
+        If user has no edit perms, attempting to edit should return a 403.
+        """
+
+        resp = self.client.post(self.create_url, self.simple_data)
+        self.client.logout()
+        user = utils.create_user(uname="user2", is_staff=False, is_superuser=False)
+        user.user_permissions.add(Permission.objects.get(codename="change_testlistinstance"))
+        self.client.force_authenticate(user=user)
+        new_data = {'tests': {'test1': {'value': 99}}}
+        edit_resp = self.client.patch(resp.data['url'], new_data)
+        assert edit_resp.status_code == 200
+
+    def test_no_edit_perms(self):
+        """
+        Check user without editing perms can not edit tl
+        """
+
+        resp = self.client.post(self.create_url, self.simple_data)
+        self.client.logout()
+        user = utils.create_user(uname="user2", is_staff=False, is_superuser=False)
+        self.client.force_authenticate(user=user)
+        new_data = {'tests': {'test1': {'value': 99}}}
+        edit_resp = self.client.patch(resp.data['url'], new_data)
+        assert edit_resp.status_code == 403
+
+    def test_tl_comments(self):
+        self.simple_data['comment'] = "test list comment"
+
+        # origial comment
+        resp = self.client.post(self.create_url, self.simple_data)
+        tli = models.TestListInstance.objects.first()
+        assert tli.comments.first().comment == "test list comment"
+
+        # add a comment with the edit and preserve  original
+        new_data = {'comment': 'edit comment'}
+        self.client.patch(resp.data['url'], new_data)
+        assert tli.comments.count() == 2
+        assert 'edit comment' in tli.comments.values_list("comment", flat=True)
 
     def test_comment_preserved(self):
         self.simple_data['tests']['test1']['comment'] = 'original comment'
@@ -424,14 +502,14 @@ class TestTestListInstanceAPI(APITestCase):
         self.simple_data['tests']['test1'] = {'skipped': True}
         resp = self.client.post(self.create_url, self.simple_data)
         new_data = {'tests': {'test2': {'value': 99}}}
-        edit_resp = self.client.patch(resp.data['url'], new_data)
+        self.client.patch(resp.data['url'], new_data)
         assert models.TestInstance.objects.get(unit_test_info__test__slug="test1").skipped
 
     def test_unskip(self):
         self.simple_data['tests']['test1'] = {'skipped': True}
         resp = self.client.post(self.create_url, self.simple_data)
         new_data = {'tests': {'test1': {'value': 99}}}
-        edit_resp = self.client.patch(resp.data['url'], new_data)
+        self.client.patch(resp.data['url'], new_data)
         ti = models.TestInstance.objects.get(unit_test_info__test__slug="test1")
         assert not ti.skipped
         assert ti.value == 99
@@ -439,7 +517,7 @@ class TestTestListInstanceAPI(APITestCase):
     def test_new_skip(self):
         resp = self.client.post(self.create_url, self.simple_data)
         new_data = {'tests': {'test1': {'skipped': True}}}
-        edit_resp = self.client.patch(resp.data['url'], new_data)
+        self.client.patch(resp.data['url'], new_data)
         ti = models.TestInstance.objects.get(unit_test_info__test__slug="test1")
         assert ti.skipped
         assert ti.value is None
@@ -449,9 +527,8 @@ class TestTestListInstanceAPI(APITestCase):
         resp = self.client.post(self.create_url, self.simple_data)
         assert models.TestListInstance.objects.all().first().in_progress
         new_data = {'in_progress': False}
-        edit_resp = self.client.patch(resp.data['url'], new_data)
+        self.client.patch(resp.data['url'], new_data)
         assert not models.TestListInstance.objects.all().first().in_progress
-
 
     def test_no_put(self):
         """All updates should be via patch"""
@@ -460,8 +537,22 @@ class TestTestListInstanceAPI(APITestCase):
         edit_resp = self.client.put(resp.data['url'], new_data)
         assert edit_resp.status_code == 405
 
-    def _test_utc_due_date_updated_on_edit(self):
-        assert False
+    def test_utc_due_date_updated_on_create(self):
+        assert self.utc.due_date is None
+        resp = self.client.post(self.create_url, self.simple_data)
+        self.utc.refresh_from_db()
+        assert self.utc.due_date is not None
+
+    def test_utc_due_date_updated_on_edit(self):
+        self.simple_data['work_completed'] = '2019-07-25 10:49:47'
+        resp = self.client.post(self.create_url, self.simple_data)
+        self.utc.refresh_from_db()
+        orig_due_date = self.utc.due_date
+        new_data = {'work_completed': '2020-07-25 10:49:47'}
+        edit_resp = self.client.patch(resp.data['url'], new_data)
+        assert edit_resp.status_code == 200
+        self.utc.refresh_from_db()
+        assert self.utc.due_date.year == 2020
 
     def _test_review_status_updated(self):
         assert False

@@ -232,9 +232,9 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         if self.instance:
             self.add_data_from_instance(validated_data)
 
-        validated_data, utc, tl, day = self.preprocess(validated_data)
+        validated_data = self.preprocess(validated_data)
 
-        test_qs = tl.all_tests().values_list("slug", "type", "calculation_procedure")
+        test_qs = self.tl.all_tests().values_list("slug", "type", "calculation_procedure")
 
         missing = []
         wrong_types = []
@@ -302,15 +302,15 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
     def preprocess(self, validated_data):
 
         if self.instance:
-            utc = self.instance.unit_test_collection
-            day = self.instance.day
-            tl = self.instance.test_list
+            self.utc = self.instance.unit_test_collection
+            self.day = self.instance.day
+            self.tl = self.instance.test_list
         else:
-            utc = validated_data['unit_test_collection']
-            day = validated_data.get('day', 0)
-            day, tl = utc.get_list(day=day)
+            self.utc = validated_data['unit_test_collection']
+            self.day = validated_data.get('day', 0)
+            self.day, self.tl = self.utc.get_list(day=self.day)
 
-        test_qs = tl.all_tests().values_list("id", "slug", "type", "constant_value")
+        test_qs = self.tl.all_tests().values_list("id", "slug", "type", "constant_value")
 
         has_calculated = False
         uploads = []
@@ -383,26 +383,23 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
                 self.ti_attachments[slug].extend([a['attachment_id'] for a in test_data['user_attached']])
 
-        return validated_data, utc, tl, day
+        return validated_data
 
     def data_to_composite(self, validated_data):
         """Convert API post data to format suitable for CompositePerformer"""
-        utc = validated_data['unit_test_collection']
-        day = validated_data.get('day', 0)
-        day, tl = utc.get_list(day=day)
 
         data = {
             'tests': {k: v.get("value") for k, v in validated_data['tests'].items()},
             'meta': {
-                'test_list_name': tl.name,
-                'unit_number': utc.unit.number,
-                'cycle_day': day,
+                'test_list_name': self.tl.name,
+                'unit_number': self.utc.unit.number,
+                'cycle_day': self.day,
                 'work_completed': validated_data['work_completed'],
                 'work_started': validated_data['work_started'],
                 'username': self.user.username,
             },
-            'test_list_id': tl.id,
-            'unit_id': utc.unit.id,
+            'test_list_id': self.tl.id,
+            'unit_id': self.utc.unit.id,
             'comments': {k: v.get("comment") for k, v in validated_data['tests'].items()}
         }
         return data
@@ -419,7 +416,6 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
         # fields for creating test list instance comment
         self.comment = validated_data.pop("comment", "")
-        site = validated_data.pop("site", "")
 
         # user set test instance status or default
         user_set_status = validated_data.pop('status', None)
@@ -443,7 +439,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             attachment.save()
 
         if self.comment:
-            self.create_comment(self.comment, user, tli, site)
+            self.create_comment(self.comment, user, tli)
 
         tests = tl.ordered_tests()
         utis = models.UnitTestInfo.objects.filter(
@@ -529,7 +525,6 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
         # fields for creating test list instance comment
         self.comment = validated_data.pop("comment", "")
-        site = validated_data.pop("site", "")
 
         # user set test instance status or default
         user_set_status = validated_data.pop('status', None)
@@ -566,7 +561,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         #    attachment.save()
 
         if self.comment:
-            self.create_comment(self.comment, self.user, instance, site)
+            self.create_comment(self.comment, self.user, instance)
 
         tis = instance.testinstance_set.select_related(
             "unit_test_info",
@@ -604,13 +599,13 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
         return instance
 
-    def create_comment(self, comment, user, tli, site):
+    def create_comment(self, comment, user, tli):
         Comment.objects.create(
             submit_date=timezone.now(),
             user=user,
             content_object=tli,
             comment=comment,
-            site=site,
+            site=self.site,
         )
 
     def to_representation(self, obj):

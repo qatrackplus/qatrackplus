@@ -91,10 +91,15 @@ class TestListInstanceViewSet(MultiSerializerMixin, viewsets.ModelViewSet):
     }
     http_method_names = ['get', 'post', 'patch']
 
+    def get_serializer(self, *args, **kwargs):
+        ser = super(TestListInstanceViewSet, self).get_serializer(*args, **kwargs)
+        ser.site = get_current_site(self.request)
+        ser.user = self.request.user
+        return ser
+
     def create(self, request, *args, **kwargs):
         data = dict(request.data.items())
         serializer = self.get_serializer(data=data)
-        serializer.user = request.user
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
@@ -103,7 +108,6 @@ class TestListInstanceViewSet(MultiSerializerMixin, viewsets.ModelViewSet):
     def perform_create(self, serializer):
         # TODO : things to test
         #   - sublists
-        #   - composite tests
         #   - file uploads / processing
         #   - attachments
         utc = serializer.validated_data['unit_test_collection']
@@ -116,7 +120,6 @@ class TestListInstanceViewSet(MultiSerializerMixin, viewsets.ModelViewSet):
             'modified': timezone.now(),
             'due_date': utc.due_date,
             'test_list': tl,
-            'site': get_current_site(self.request),
             'day': day,
         }
         serializer.save(**extra)
@@ -125,7 +128,6 @@ class TestListInstanceViewSet(MultiSerializerMixin, viewsets.ModelViewSet):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.user = request.user
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         comment = serializer.comment
