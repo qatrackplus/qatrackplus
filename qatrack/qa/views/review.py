@@ -23,6 +23,7 @@ from qatrack.service_log.models import (
     ReturnToServiceQA,
     ServiceEvent,
     ServiceEventStatus,
+    ServiceLog
 )
 from qatrack.units.models import Unit
 
@@ -87,6 +88,7 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         review_user = self.request.user
 
         test_list_instance = form.save(commit=False)
+        initially_requires_reviewed = not test_list_instance.all_reviewed
         test_list_instance.reviewed = review_time
         test_list_instance.reviewed_by = review_user
         test_list_instance.all_reviewed = True
@@ -113,19 +115,32 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
                 still_requires_review = True
             models.TestInstance.objects.filter(pk__in=test_instance_pks).update(status=status)
 
+        # Handle Service Log items:
+        #
+        #    Change status of service events with status__requires_review = False to have default status if this
+        #    test_list still requires approval.
+        #
+        #    Log changes to this test_list_instance review status if linked to service_events via rtsqa.
+
         if still_requires_review:
             test_list_instance.all_reviewed = False
             test_list_instance.save()
-            changed_se = test_list_instance.update_service_event_statuses()
-            if len(changed_se) > 0:
-                messages.add_message(
-                    request=self.request, level=messages.INFO,
-                    message='Changed status of service event(s) %s to "%s".' % (
-                        ', '.join(str(x) for x in changed_se),
-                        ServiceEventStatus.get_default().name
-                    )
-                )
 
+            if settings.USE_SERVICE_LOG:
+                changed_se = test_list_instance.update_service_event_statuses()
+                if len(changed_se) > 0:
+                    messages.add_message(
+                        request=self.request, level=messages.INFO,
+                        message='Changed status of service event(s) %s to "%s".' % (
+                            ', '.join(str(x) for x in changed_se),
+                            ServiceEventStatus.get_default().name
+                        )
+                    )
+        if settings.USE_SERVICE_LOG and initially_requires_reviewed != still_requires_review:
+            for se in ServiceEvent.objects.filter(returntoserviceqa__test_list_instance=test_list_instance):
+                ServiceLog.objects.log_rtsqa_changes(self.request.user, se)
+
+        # Set utc due dates
         test_list_instance.unit_test_collection.set_due_date()
 
         # let user know request succeeded and return to unit list
@@ -163,6 +178,13 @@ class TestListInstanceDelete(PermissionRequiredMixin, DeleteView):
 
     def get_success_url(self):
         return self.request.GET.get("next", reverse("home"))
+
+    def delete(self, request, *args, **kwargs):
+        service_events = ServiceEvent.objects.filter(returntoserviceqa__test_list_instance_id=kwargs['pk'])
+        delete = super().delete(request, *args, **kwargs)
+        for se in service_events:
+            ServiceLog.objects.log_rtsqa_changes(request.user, se)
+        return delete
 
 
 class UTCReview(PermissionRequiredMixin, UTCList):

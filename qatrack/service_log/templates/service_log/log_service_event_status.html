@@ -1,0 +1,38 @@
+<li class="se_log" style="display: list-item;">
+
+    <i class="fa fa-stack">
+{#        <i class="fa fa-wrench fa-stack-custom-main fa-lg"></i>#}
+        <i class="fa fa-exclamation fa-stack-custom-sub upper-left" style="color: {{ new_status_colour }}"></i>
+        <i class="fa fa-wrench fa-lg status_colour"></i>
+    </i>
+
+    <div class="timeline-item{% if can_view %} can-view{% endif %}">
+        <span class="time"><i class="fa fa-clock-o"></i>&nbsp;{{ datetime_display }}</span>
+        <h3 class="timeline-header header-se_new"{% if can_view %} onclick="window.location='{% url 'sl_details' pk=instance.service_event.id %}'"{% endif %}>
+            <div class="pull-right margin-right-20 label label-default">
+                {{ instance.service_event.unit_service_area.unit.name }}
+            </div>
+            <div class="margin-bottom-10">{{ user }} changed status of service event {{ instance.service_event.id }} from {{ old_status_tag|safe }} to {{ new_status_tag|safe }}</div>
+
+            {% if extra_info.other_changes.items|length > 0 %}
+                <div class="dash-change title row margin-bottom-10">
+                    <div class="col-sm-12">Other changes made:</div>
+                </div>
+                <div class="padding-left-10">
+                    <div class="dash-change title row">
+                        <div class="col-sm-2">Field Changed</div>
+                        <div class="col-sm-4">Old Value</div>
+                        <div class="col-sm-4">New Value</div>
+                    </div>
+                    {% for key, val in extra_info.other_changes.items %}
+                        <div class="dash-change item row{% if extra_info.other_changes.items|length > 1 %} hover{% endif %}">
+                            <div class="col-sm-2">{{ key }}</div>
+                            <div class="col-sm-4">{{ val.old }}</div>
+                            <div class="col-sm-4">{{ val.new }}</div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </h3>
+    </div>
+</li>

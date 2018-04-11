@@ -716,6 +716,8 @@ class PerformQA(PermissionRequiredMixin, CreateView):
                 rtsqa.test_list_instance = self.object
                 rtsqa.save()
 
+                sl_models.ServiceLog.objects.log_rtsqa_changes(self.request.user, rtsqa.service_event)
+
                 # If tli needs review, update 'Unreviewed RTS QA' counter
                 if not self.object.all_reviewed:
                     cache.delete(settings.CACHE_RTS_QA_COUNT)
@@ -809,6 +811,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         context["unit_test_collection"] = self.unit_test_col
         context["contacts"] = list(Contact.objects.all().order_by("name"))
 
+        rtsqa_id = None
         if settings.USE_SERVICE_LOG:
             rtsqa_id = self.request.GET.get('rtsqa', None)
             if rtsqa_id:
@@ -827,7 +830,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             context['top_divs_span'] += 1
         if len(context['attachments']) > 0:
             context['top_divs_span'] += 1
-        if settings.USE_SERVICE_LOG and context['rtsqa_id'] is not None:
+        if settings.USE_SERVICE_LOG and rtsqa_id is not None:
             context['top_divs_span'] += 1
         context['top_divs_span'] = int(12 / context['top_divs_span']) if context['top_divs_span'] > 0 else 12
 
@@ -882,6 +885,8 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         if formset.is_valid():
             self.object = form.save(commit=False)
 
+            initially_requires_reviewed = not self.object.all_reviewed
+
             status_pk = None
             if "status" in form.fields:
                 status_pk = form["status"].value()
@@ -920,6 +925,9 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
                         message='Changed status of service event(s) %s to "%s".' %
                         (', '.join(str(x) for x in changed_se), sl_models.ServiceEventStatus.get_default().name)
                     )
+                if initially_requires_reviewed != self.object.all_reviewed:
+                    for se in sl_models.ServiceEvent.objects.filter(returntoserviceqa__test_list_instance=self.object):
+                        sl_models.ServiceLog.objects.log_rtsqa_changes(self.request.user, se)
 
             if not self.object.in_progress:
                 try:

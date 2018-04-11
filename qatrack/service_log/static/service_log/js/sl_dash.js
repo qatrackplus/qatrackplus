@@ -1,21 +1,28 @@
-require(['jquery', 'sl_utils'], function($) {
+require(['jquery', 'cheekycheck', 'sl_utils'], function($) {
 
     $(document).ready(function() {
 
-        // $('.status_colour').each(function() {
-        //     apply_data_colour($(this));
-        // });
+        var $se_toggle = $('#se_toggle'),
+            $rts_toggle = $('#rts_toggle');
 
-        $('.timeline-toggle').click(function() {
-            $(this).toggleClass('off');
-            var t_class = $(this).attr('id').split('_toggle')[0];
-            $('.' + t_class).slideToggle('fast');
+        $se_toggle.cheekycheck({
+            right: true,
+            check: '<i class="fa fa-check"></i>',
+            extra_class: 'info'
         });
 
-        $('.header-se_new').click(function() {
-            
+        $rts_toggle.cheekycheck({
+            right: true,
+            check: '<i class="fa fa-check"></i>',
+            extra_class: 'info'
         });
 
+        $rts_toggle.change(function() {
+            $('.rtsqa_log').slideToggle('fast');
+        });
+        $se_toggle.change(function() {
+            $('.se_log').slideToggle('fast');
+        });
 
     })
 

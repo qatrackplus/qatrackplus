@@ -1773,6 +1773,18 @@ class TestListInstance(models.Model):
     def __str__(self):
         return "TestListInstance(pk=%s)" % self.pk
 
+    def str_verbose(self):
+        return '%s (%s - %s)' % (
+            self.pk, self.test_list.name, timezone.localtime(self.created).strftime('%b %m, %I:%M %p')
+        )
+
+    def str_summary(self):
+        return '%s (%s%s)' % (
+            self.pk,
+            timezone.localtime(self.created).strftime('%b %m, %I:%M %p'),
+            ' - All reviewed' if self.all_reviewed else ''
+        )
+
 
 class TestListCycleManager(models.Manager):
 

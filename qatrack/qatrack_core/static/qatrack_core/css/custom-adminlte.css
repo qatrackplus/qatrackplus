@@ -15,14 +15,23 @@ body {
     text-transform: uppercase;
 }
 
+
 /* Keep navbar margin, even with top-nav */
-.layout-top-nav .main-header > .navbar {
-  margin-left: 230px;
-}
+/*.layout-top-nav .main-header > .navbar {*/
+  /*margin-left: 230px;*/
+/*}*/
 
 /*dropdown on hover rather than click */
-ul.nav li.dropdown:hover ul.dropdown-menu{
-    display: block;
+/*ul.nav li.dropdown:hover ul.dropdown-menu{*/
+    /*display: block;*/
+/*}*/
+@media (min-width: 768px) {
+    ul.nav li.dropdown:hover ul.dropdown-menu{
+        display: block;
+    }
+    .layout-top-nav .main-header > .navbar {
+      margin-left: 230px;
+    }
 }
 
 .form-control {
@@ -66,33 +75,15 @@ ul.nav li.dropdown:hover ul.dropdown-menu{
     border-top-right-radius: 0.4em;
     border-bottom-right-radius: 0.4em;
 }
+.timeline.timeline-custom > li > i {
+    background-color: #fff;
+    border: 1px solid #ddd;
+}
+.timeline-custom:before {
+    width: 2px;
+}
 
 /* Timeline stuff */
-.timeline-toggle {
-    border-radius: 50%;
-}
-.timeline-toggle > i.fa-stack-custom-main {
-    left: 3px;
-    top: 9px;
-}
-.timeline-toggle > i.fa-stack-custom-sub {
-    left: 3px;
-    top: 5px;
-}
-i.timeline-toggle:hover {
-    background-color: rgb(0, 0, 0) !important;
-    /*background-color: #00ff00 !important;*/
-}
-.timeline-toggle:hover > i.fa-stack-custom-main {
-    color: white;
-    /*background-color: #00ff00 !important;*/
-}
-.timeline-toggle.off {
-    background-color: #b5bbc8 !important;
-}
-.timeline-toggle.off > i.fa {
-    color: white;
-}
 
 .timeline-custom > li {
     margin-bottom: 0;
@@ -108,20 +99,18 @@ i.timeline-toggle:hover {
 }
 .timeline-custom > li > .timeline-item {
     box-shadow: none;
-    /*background-color: rgba(60,141,188,0.2);*/
     border-radius: 0;
-    cursor: pointer;
-}
-.timeline-custom > li > .timeline-item:hover {
-    background-color: rgba(207, 213, 221, 0.6);
 }
 .timeline-custom > li > .timeline-item > .time {
-    width: 120px;
+    width: 140px;
     padding-top: 15px;
 }
 .timeline-custom > li > .timeline-item > h3.timeline-header {
     padding: 15px;
     border: 0;
+}
+.timeline i.fa.fa-lg {
+    font-size: 20px;
 }
 .btn.btn-primary {
     background-color: #424f57;
@@ -223,3 +212,4 @@ div.box {
 .box-comments .comment-text .comment{
     white-space: pre-line;
 }
+

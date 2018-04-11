@@ -1,5 +1,6 @@
 
 import csv
+import json
 
 from braces.views import LoginRequiredMixin, PermissionRequiredMixin
 from collections import OrderedDict
@@ -134,10 +135,6 @@ def se_searcher(request):
     return JsonResponse({'service_events': list(service_events)})
 
 
-def get_user_name(user):
-    return user.username if not user.first_name or not user.last_name else user.first_name + ' ' + user.last_name
-
-
 class SLDashboard(TemplateView):
 
     template_name = "service_log/sl_dash.html"
@@ -164,104 +161,107 @@ class SLDashboard(TemplateView):
         }
         return to_return
 
-    def get_timeline(self):
+    # def get_recent_logs(self):
 
-        se_new = models.ServiceEvent.objects.filter(
-            datetime_created__gt=timezone.now() - timezone.timedelta(days=14)
-        ).select_related('unit_service_area__unit', 'user_created_by').order_by('-datetime_created')[:40]
+        # se_new = models.ServiceEvent.objects.filter(
+        #     datetime_created__gt=timezone.now() - timezone.timedelta(days=14)
+        # ).select_related('unit_service_area__unit', 'user_created_by').order_by('-datetime_created')[:40]
+        #
+        # se_edited = models.ServiceEvent.objects.filter(
+        #     datetime_modified__gt=timezone.now() - timezone.timedelta(days=14)
+        # ).select_related('unit_service_area__unit', 'user_modified_by').order_by('-datetime_modified')[:40]
+        #
+        # se_status = models.ServiceEvent.objects.filter(
+        #     datetime_status_changed__gt=timezone.now() - timezone.timedelta(days=14)
+        # ).select_related(
+        #     'service_status', 'unit_service_area__unit', 'user_status_changed_by'
+        # ).order_by('-datetime_status_changed')[:40]
+        #
+        # rtsqa_new = models.ReturnToServiceQA.objects.filter(
+        #     datetime_assigned__gt=timezone.now() - timezone.timedelta(days=14)
+        # ).select_related(
+        #     'service_event',
+        #     'test_list_instance',
+        #     'unit_test_collection',
+        #     'service_event__unit_service_area__unit',
+        #     'user_assigned_by'
+        # ).prefetch_related(
+        #     'test_list_instance__comments',
+        #     'test_list_instance__testinstance_set',
+        #     'test_list_instance__testinstance_set__status',
+        #     'unit_test_collection__tests_object'
+        # ).order_by('-datetime_assigned')[:40]
+        #
+        # rtsqa_complete = models.ReturnToServiceQA.objects.filter(
+        #     test_list_instance__isnull=False,
+        #     test_list_instance__work_completed__gt=timezone.now() - timezone.timedelta(days=14)
+        # ).select_related(
+        #     'service_event',
+        #     'test_list_instance',
+        #     'unit_test_collection',
+        #     'service_event__unit_service_area__unit',
+        #     'test_list_instance__created_by',
+        #     'test_list_instance__reviewed_by',
+        # ).prefetch_related(
+        #     'test_list_instance__comments',
+        #     'test_list_instance__testinstance_set',
+        #     'test_list_instance__testinstance_set__status',
+        #     'unit_test_collection__tests_object'
+        # ).order_by('-test_list_instance__created')[:40]
+        #
+        # unsorted_dict = {}
+        #
+        # for se in se_edited:
+        #     datetime = timezone.localtime(se.datetime_modified)
+        #     msg = get_user_name(se.user_modified_by) + ' modified service event ' + str(se.id)
+        #     populate_timeline_from_queryset(unsorted_dict, se, datetime, 'se_edit', msg=msg)
+        #
+        # for se in se_status:
+        #     datetime = timezone.localtime(se.datetime_status_changed)
+        #     msg = get_user_name(se.user_status_changed_by) + ' changed status of service event ' + str(se.id) + ' to '
+        #     populate_timeline_from_queryset(unsorted_dict, se, datetime, 'se_status', msg=msg)
+        #
+        # for se in se_new:
+        #     datetime = timezone.localtime(se.datetime_created)
+        #     msg = get_user_name(se.user_created_by) + ' created service event ' + str(se.id)
+        #     populate_timeline_from_queryset(unsorted_dict, se, datetime, 'se_new', msg=msg)
+        #
+        # for rtsqa in rtsqa_new:
+        #     datetime = timezone.localtime(rtsqa.datetime_assigned)
+        #     msg = (
+        #         get_user_name(rtsqa.user_assigned_by) +
+        #         ' assigned a new RTS QA (' +
+        #         rtsqa.unit_test_collection.tests_object.name +
+        #         ') for service event ' +
+        #         str(rtsqa.service_event.id)
+        #     )
+        #     populate_timeline_from_queryset(unsorted_dict, rtsqa, datetime, 'rtsqa_new', msg=msg)
+        #
+        # for rtsqa in rtsqa_complete:
+        #     datetime = timezone.localtime(rtsqa.test_list_instance.created)
+        #     msg = (
+        #         get_user_name(rtsqa.test_list_instance.created_by) +
+        #         ' performed a RTS QA (' +
+        #         rtsqa.unit_test_collection.tests_object.name +
+        #         ') for service event ' +
+        #         str(rtsqa.service_event.id)
+        #     )
+        #     populate_timeline_from_queryset(unsorted_dict, rtsqa, datetime, 'rtsqa_complete', msg=msg)
+        #
+        # for ud in unsorted_dict:
+        #     unsorted_dict[ud]['objs'] = sorted(unsorted_dict[ud]['objs'], key=lambda obj: obj['datetime'], reverse=True)
+        # ordered_dict = OrderedDict(sorted(unsorted_dict.items(), reverse=True))
+        #
+        # return ordered_dict
 
-        se_edited = models.ServiceEvent.objects.filter(
-            datetime_modified__gt=timezone.now() - timezone.timedelta(days=14)
-        ).select_related('unit_service_area__unit', 'user_modified_by').order_by('-datetime_modified')[:40]
-
-        se_status = models.ServiceEvent.objects.filter(
-            datetime_status_changed__gt=timezone.now() - timezone.timedelta(days=14)
-        ).select_related(
-            'service_status', 'unit_service_area__unit', 'user_status_changed_by'
-        ).order_by('-datetime_status_changed')[:40]
-
-        rtsqa_new = models.ReturnToServiceQA.objects.filter(
-            datetime_assigned__gt=timezone.now() - timezone.timedelta(days=14)
-        ).select_related(
-            'service_event',
-            'test_list_instance',
-            'unit_test_collection',
-            'service_event__unit_service_area__unit',
-            'user_assigned_by'
-        ).prefetch_related(
-            'test_list_instance__comments',
-            'test_list_instance__testinstance_set',
-            'test_list_instance__testinstance_set__status',
-            'unit_test_collection__tests_object'
-        ).order_by('-datetime_assigned')[:40]
-
-        rtsqa_complete = models.ReturnToServiceQA.objects.filter(
-            test_list_instance__isnull=False,
-            test_list_instance__work_completed__gt=timezone.now() - timezone.timedelta(days=14)
-        ).select_related(
-            'service_event',
-            'test_list_instance',
-            'unit_test_collection',
-            'service_event__unit_service_area__unit',
-            'test_list_instance__created_by',
-            'test_list_instance__reviewed_by',
-        ).prefetch_related(
-            'test_list_instance__comments',
-            'test_list_instance__testinstance_set',
-            'test_list_instance__testinstance_set__status',
-            'unit_test_collection__tests_object'
-        ).order_by('-test_list_instance__created')[:40]
-
-        unsorted_dict = {}
-
-        for se in se_edited:
-            datetime = timezone.localtime(se.datetime_modified)
-            msg = get_user_name(se.user_modified_by) + ' modified service event ' + str(se.id)
-            populate_timeline_from_queryset(unsorted_dict, se, datetime, 'se_edit', msg=msg)
-
-        for se in se_status:
-            datetime = timezone.localtime(se.datetime_status_changed)
-            msg = get_user_name(se.user_status_changed_by) + ' changed status of service event ' + str(se.id) + ' to '
-            populate_timeline_from_queryset(unsorted_dict, se, datetime, 'se_status', msg=msg)
-
-        for se in se_new:
-            datetime = timezone.localtime(se.datetime_created)
-            msg = get_user_name(se.user_created_by) + ' created service event ' + str(se.id)
-            populate_timeline_from_queryset(unsorted_dict, se, datetime, 'se_new', msg=msg)
-
-        for rtsqa in rtsqa_new:
-            datetime = timezone.localtime(rtsqa.datetime_assigned)
-            msg = (
-                get_user_name(rtsqa.user_assigned_by) +
-                ' assigned a new RTS QA (' +
-                rtsqa.unit_test_collection.tests_object.name +
-                ') for service event ' +
-                str(rtsqa.service_event.id)
-            )
-            populate_timeline_from_queryset(unsorted_dict, rtsqa, datetime, 'rtsqa_new', msg=msg)
-
-        for rtsqa in rtsqa_complete:
-            datetime = timezone.localtime(rtsqa.test_list_instance.created)
-            msg = (
-                get_user_name(rtsqa.test_list_instance.created_by) +
-                ' performed a RTS QA (' +
-                rtsqa.unit_test_collection.tests_object.name +
-                ') for service event ' +
-                str(rtsqa.service_event.id)
-            )
-            populate_timeline_from_queryset(unsorted_dict, rtsqa, datetime, 'rtsqa_complete', msg=msg)
-
-        for ud in unsorted_dict:
-            unsorted_dict[ud]['objs'] = sorted(unsorted_dict[ud]['objs'], key=lambda obj: obj['datetime'], reverse=True)
-        ordered_dict = OrderedDict(sorted(unsorted_dict.items(), reverse=True))
-
-        return ordered_dict
 
     def get_context_data(self, **kwargs):
 
         context = super(SLDashboard, self).get_context_data()
         context['counts'] = self.get_counts()
-        context['tl_dates'] = self.get_timeline()
+        context['recent_logs'] = models.ServiceLog.objects.select_related(
+            'user', 'service_event', 'service_event__unit_service_area__unit'
+        )[:40]
 
         return context
 
@@ -451,10 +451,14 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
             if not parts_formset or not parts_formset.is_valid():
                 messages.add_message(self.request, messages.ERROR, _('Please correct the error below.'))
                 return self.render_to_response(context)
+        else:
+            parts_formset = None
 
         if not hours_formset.is_valid() or not rtsqa_formset.is_valid():
             messages.add_message(self.request, messages.ERROR, _('Please correct the error below.'))
             return self.render_to_response(context)
+
+        new = form.instance.pk is None
 
         service_event = form.save()
         service_event_related = form.cleaned_data.get('service_event_related_field')
@@ -517,13 +521,12 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
 
             elif h_form.has_changed():
 
-                obj_type, obj_id = user_or_thirdparty.split('-')
-                user = None
-                third_party = None
-                if obj_type == 'user':
-                    user = User.objects.get(id=obj_id)
-                elif obj_type == 'tp':
-                    third_party = models.ThirdParty.objects.get(id=obj_id)
+                if isinstance(user_or_thirdparty, User):
+                    user = user_or_thirdparty
+                    third_party = None
+                else:
+                    third_party = user_or_thirdparty
+                    user = None
 
                 h_instance.service_event = service_event
                 h_instance.user = user
@@ -663,6 +666,7 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
                     if initial_p:
                         initial_p.set_quantity_current()
 
+        self.generate_logs(new, form, rtsqa_formset)
         return HttpResponseRedirect(self.get_success_url())
 
     def get_success_url(self):
@@ -671,6 +675,24 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
             return next_
 
         return reverse("sl_dash")
+
+    def generate_logs(self, is_new, form, rtsqa_formset):
+
+        if is_new:
+            models.ServiceLog.objects.log_new_service_event(self.request.user, form.instance)
+        elif 'service_status' in form.changed_data:
+            models.ServiceLog.objects.log_service_event_status(
+                self.request.user, form.instance, form.stringify_form_changes(), form.stringify_status_change()
+            )
+        elif form.has_changed():
+            models.ServiceLog.objects.log_changed_service_event(
+                self.request.user, form.instance, form.stringify_form_changes()
+            )
+
+        if rtsqa_formset.has_changed():
+            models.ServiceLog.objects.log_rtsqa_changes(
+                self.request.user, models.ServiceEvent.objects.get(pk=form.instance.pk)
+            )
 
 
 class CreateServiceEvent(ServiceEventUpdateCreate):
@@ -691,7 +713,9 @@ class CreateServiceEvent(ServiceEventUpdateCreate):
             form.instance.datetime_status_changed = timezone.now()
             form.instance.user_status_changed_by = self.request.user
 
-        return super(CreateServiceEvent, self).form_valid(form)
+        form_valid = super(CreateServiceEvent, self).form_valid(form)
+
+        return form_valid
 
 
 class UpdateServiceEvent(ServiceEventUpdateCreate):
@@ -702,6 +726,9 @@ class UpdateServiceEvent(ServiceEventUpdateCreate):
 
         if 'is_review_required_fake' in form.changed_data:
             form.changed_data.remove('is_review_required_fake')
+
+        if 'unit_field_fake' in form.changed_data:
+            form.changed_data.remove('unit_field_fake')
 
         if 'service_status' in form.changed_data:
             form.instance.datetime_status_changed = timezone.now()
@@ -718,7 +745,13 @@ class UpdateServiceEvent(ServiceEventUpdateCreate):
 
             # If service status was not changed explicitly, but needs to be reset to default status due to other changes.
             if not form.instance.service_status.is_review_required:
-                form.instance.service_status = models.ServiceEventStatus.get_default()
+                default = models.ServiceEventStatus.get_default()
+                form.instance.service_status = default
+                messages.add_message(self.request, messages.WARNING, _(
+                    'Due to changes detected, service event %s status has been reset to %s' % (
+                        form.instance.id, default.name
+                    )
+                ))
 
         return super(UpdateServiceEvent, self).form_valid(form)
 

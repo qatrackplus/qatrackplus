@@ -325,6 +325,7 @@
                             </h3>
                         </div>
                         <div class="box-body">
+                            {{ rtsqa_formset.management_form }}
                             {% if perms.service_log.add_returntoserviceqa or rtsqa_formset.forms|length > 0 %}
                                 <div class="subheading-divider">Return To Service QA Required</div>
                                 <div class="row">
@@ -332,7 +333,6 @@
 
                                         <table class="table table-hover table-condensed">
                                             <thead>
-                                                {{ rtsqa_formset.management_form }}
                                                 <tr>
                                                     <th style="min-width: 200px;">Test List</th>
                                                     <th>Pass/Fail</th>
@@ -556,7 +556,6 @@
         </tbody>
     </table>
 
-
     <div id="utc-actions-template" style="display: none;">
         <div class="__prefix__-hider" style="display: none;">
             {% if perms.qa.add_testlistinstance %}
@@ -564,13 +563,13 @@
                     Performed
                 </a>
                 {% if form.instance.pk %}
-                    <a title="Click to perform this test list" href="{% url 'perform_qa' %}__utc-id__/?rtsqa=__rtsqa-id__&next={% url 'sl_edit' %}__se-id__/" class="btn btn-xs btn-default btn-flat perform-btn" target="Perform-__rtsqa-id__-__prefix__">
+                    <a title="Click to perform this test list" href="{% url 'perform_qa' %}__utc-id__/?rtsqa=__rtsqa-id__&next={% url 'sl_edit' %}__se-id__/" class="btn btn-xs btn-default btn-flat perform-btn" {% comment %}target="Perform-__rtsqa-id__-__prefix__"{% endcomment %}>
                         Perform
                     </a>
                 {% endif %}
             {% endif %}
             {% if perms.qa.can_review %}
-                <a  title="Click to review this test list" id="__prefix__-review-btn" href="{% url 'review_test_list_instance' %}__tli-id__?next={% url 'sl_edit' %}__se-id__" class="btn btn-xs btn-default btn-flat review-btn __prefix__-hider" target="Review-__rtsqa-id__-__prefix__" style="display: none;">
+                <a  title="Click to review this test list" id="__prefix__-review-btn" href="{% url 'review_test_list_instance' %}__tli-id__?next={% url 'sl_edit' %}__se-id__" class="btn btn-xs btn-default btn-flat review-btn __prefix__-hider" {% comment %}target="Review-__rtsqa-id__-__prefix__" {% endcomment %}style="display: none;">
                     Review
                 </a>
             {% endif %}

@@ -62,6 +62,7 @@
             self.checked = !self.checked;
             self.cheeky.toggleClass('checked');
             self.element.prop('checked', self.checked);
+            self.element.change();
         });
 
     };

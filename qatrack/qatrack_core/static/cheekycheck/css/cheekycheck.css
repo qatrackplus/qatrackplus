@@ -65,3 +65,11 @@ div.cheeky.checked.warning:hover {
     background-color: #e08e0b;
     border-color: #d58512;
 }
+div.cheeky.checked.info {
+    background-color: #627585;
+    border-color: #45454e;
+}
+div.cheeky.checked.warning:hover {
+    background-color: #4e6070;
+    border-color: #45454e;
+}

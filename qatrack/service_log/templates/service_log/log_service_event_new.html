@@ -1,0 +1,18 @@
+
+<li class="se_log" style="display: list-item;">
+
+    <i class="fa fa-stack">
+        <i class="fa fa-wrench fa-stack-custom-main fa-lg"></i>
+        <i class="fa fa-plus fa-stack-custom-sub upper-left success"></i>
+    </i>
+
+    <div class="timeline-item{% if can_view %} can-view{% endif %}">
+        <span class="time"><i class="fa fa-clock-o"></i>&nbsp;{{ datetime_display }}</span>
+        <h3 class="timeline-header header-se_new"{% if can_view %} onclick="window.location='{% url 'sl_details' pk=instance.service_event.id %}'"{% endif %}>
+            <div class="pull-right margin-right-20 label label-default">
+                {{ instance.service_event.unit_service_area.unit.name }}
+            </div>
+            {{ user }} created service event {{ instance.service_event_id }}
+        </h3>
+    </div>
+</li>

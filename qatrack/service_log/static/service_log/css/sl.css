@@ -70,10 +70,10 @@
     background-color:#00c0ef;
 }
 .ok {
-    background-color:#00a65a;
+    background-color: #00a65a;
 }
 .action {
-    background-color:#dd4b39;
+    background-color: #dd4b39;
 }
 .tolerance {
     background-color: #f39c12;
@@ -101,4 +101,51 @@ body.sidebar-mini.sidebar-collapse > div.wrapper > aside.main-sidebar > section.
 }
 .label.disabled {
     opacity: 0.2;
+}
+.dash-change {
+    font-size: small;
+    font-style: italic;
+    margin-left: 20px;
+}
+
+.timeline-custom > li > .timeline-item.can-view {
+    cursor: pointer;
+}
+.timeline-custom > li > .timeline-item.can-view:hover {
+    background-color: rgba(207, 213, 221, 0.6);
+}
+.dash-change > div {
+    display: inline-block;
+}
+.dash-change.title > div {
+    font-weight: 600;
+    font-style: normal;
+}
+.dash-change.item {
+    border-bottom: 1px solid transparent;
+}
+.dash-change.item.hover:hover {
+    border-bottom: 1px solid rgba(192, 198, 206, 0.6);
+}
+.timeline-header span.label.smooth-border {
+    font-size: 10px;
+    padding: 2px 6px 2px 6px;
+}
+.timeline-header .deleted .tli-name {
+    text-decoration: line-through;
+}
+.timeline-filters i {
+    background-color: #fff;
+    border: 1px solid #ddd;
+}
+.timeline .complete,
+.timeline .incomplete,
+.timeline .del {
+    width: 90px;
+    display: inline-block;
+    padding: 0 5px;
+}
+.timeline .complete {
+    color: #00a65a;
+    font-weight: 700;
 }
