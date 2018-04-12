@@ -202,7 +202,9 @@ require(['jquery'], function ($) {
         function(e) {
             var to = e.toElement;
             if (to !== $control_sidebar[0] && to !== $tab_content[0]) {
-                $control_sidebar.removeClass('control-sidebar-open');
+                if (!$(to).parents('.control-sidebar').length) {
+                    $control_sidebar.removeClass('control-sidebar-open');
+                }
             }
         }
     );

@@ -14,7 +14,7 @@ require.config({
         autosize: siteConfig.STATIC_URL + 'autosize/js/autosize.min',
         bootstrap: siteConfig.STATIC_URL + 'bootstrap/js/bootstrap.min',
         cheekycheck: siteConfig.STATIC_URL + 'cheekycheck/js/cheekycheck',
-        d3: siteConfig.STATIC_URL + 'd3/js/d3',
+        d3: siteConfig.STATIC_URL + 'd3/js/d3.min',
         saveSvgAsPng: siteConfig.STATIC_URL + 'd3/js/saveSvgAsPng',
         datatables: siteConfig.STATIC_URL + 'listable/js/jquery.dataTables.min',
         'datatables.bootstrap': siteConfig.STATIC_URL + 'listable/js/jquery.dataTables.bootstrap',
@@ -24,7 +24,7 @@ require.config({
         datepicker: siteConfig.STATIC_URL + 'datepicker/js/bootstrap-datepicker.min',
         daterangepicker: siteConfig.STATIC_URL + 'daterangepicker/js/daterangepicker',
         felter: siteConfig.STATIC_URL + 'felter/js/felter',
-        flatpickr: siteConfig.STATIC_URL + 'flatpickr/js/flatpickr',
+        flatpickr: siteConfig.STATIC_URL + 'flatpickr/js/flatpickr.min',
         dropzone: siteConfig.STATIC_URL + 'dropzone/js/dropzone-amd-module',
         icheck: siteConfig.STATIC_URL + 'icheck/js/icheck.min',
         inputmask: siteConfig.STATIC_URL + 'inputmask/js/jquery.inputmask.bundle.min',
@@ -35,7 +35,7 @@ require.config({
         lodash: siteConfig.STATIC_URL + 'lodash/js/lodash',
         moment: siteConfig.STATIC_URL + 'moment/js/moment.min',
         multiselect: siteConfig.STATIC_URL + 'multiselect/js/bootstrap.multiselect',
-        select2: siteConfig.STATIC_URL + 'select2/js/select2',
+        select2: siteConfig.STATIC_URL + 'select2/js/select2.min',
         slimscroll: siteConfig.STATIC_URL + 'slimscroll/js/jquery.slimscroll.min',
 
         // Site wide:

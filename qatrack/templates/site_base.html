@@ -126,9 +126,12 @@
                         {% firstof SITE_NAME "QA</b>Track<b>+" %}
                       </b>
                     </span>
+{#                    <span>#}
+
+{#                    </span>#}
                 </a>
 
-                <nav class="navbar navbar-static-top">
+                <nav class="navbar-static-top navbar-collapse collapse">
 
                     {% block sidebar_toggle %}
                     {% endblock sidebar_toggle %}
@@ -136,7 +139,7 @@
                     <div class="navbar-menu">
                         {% if user.is_authenticated %}
 
-                            <ul class="nav navbar-nav">
+                            <ul class="nav navbar-nav main-nav">
 
                                 {% if perms.qa.add_testlistinstance %}
                                     <li class="dropdown">
@@ -489,22 +492,26 @@
                                 </li>
                             </ul>
 
-                            <ul class="nav navbar-nav navbar-right">
-                                <li class="margin-right-10">
-                                    <a id="control-sidebar-btn" href="#">{{ request.user.username }} :: <i class="fa fa-gears fa-fw"></i></a>
-                                </li>
-                            </ul>
 
-                        {% else %}
-                            <ul class="nav navbar-nav navbar-right ">
-                                <li class="margin-right-10">
-                                    <a id="control-sidebar-btn" href="#"><i class="fa fa-gears fa-fw"></i></a>
-                                </li>
-                            </ul>
                         {% endif %}
 
                     </div>
                 </nav>
+
+                <div class="custom-nav">
+
+
+                    {% if user.is_authenticated %}
+                        <div id="control-sidebar-btn" class="nav-button" href="#">{{ request.user.username }} :: <i class="fa fa-gears fa-fw"></i></div>
+                    {% else %}
+                        <div id="control-sidebar-btn" class="nav-button" href="#"><i class="fa fa-gears fa-fw"></i></div>
+                    {% endif %}
+
+                    <div class="nav-button navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse" aria-expanded="false">
+                        <i class="fa fa-bars"></i>
+                    </div>
+
+                </div>
             </header>
 
             {% block main_sidebar %}

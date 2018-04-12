@@ -69,7 +69,7 @@ div.cheeky.checked.info {
     background-color: #627585;
     border-color: #45454e;
 }
-div.cheeky.checked.warning:hover {
+div.cheeky.checked.info:hover {
     background-color: #4e6070;
     border-color: #45454e;
 }

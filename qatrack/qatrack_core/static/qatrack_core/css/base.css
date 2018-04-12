@@ -540,3 +540,6 @@ dt {
 .label {
     border-radius: 2px;
 }
+.control-sidebar-heading {
+    pointer-events: none;
+}

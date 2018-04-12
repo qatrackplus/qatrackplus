@@ -1,4 +1,4 @@
-require(['jquery', 'cheekycheck', 'sl_utils'], function($) {
+require(['jquery', 'cheekycheck'], function($) {
 
     $(document).ready(function() {
 

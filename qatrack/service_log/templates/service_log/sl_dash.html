@@ -11,7 +11,7 @@
 {% endblock extra_css %}
 
 {% block require_javascript %}
-    require(['jquery', 'sl_dash', 'sidebar'], function($) {
+    require(['sl_dash'], function($) {
         $('body').removeClass("loading");
     });
 {% endblock require_javascript %}
@@ -34,13 +34,13 @@
                     <div class="box-body">
                         <div class="row">
                             <div class="col-md-12">
-                                <label class="pull-left">Incomplete RTS QA</label>
+                                <label class="pull-left">Incomplete</label>
                                 <a href="{% url 'rtsqa_list_all' %}?f=tli.in-1" class="pull-right btn btn-flat btn-xs btn-info left-btns">{{ counts.qa_not_complete }}</a>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-12">
-                                <label class="pull-left">Unreviewed RTS QA</label>
+                                <label class="pull-left">Unreviewed</label>
                                 <a href="{% url 'rtsqa_list_all' %}?f=tli.in-0_tli.ar-0" class="pull-right btn btn-flat btn-xs btn-info left-btns">{{ counts.qa_not_reviewed }}</a>
                             </div>
                         </div>
@@ -58,14 +58,6 @@
                         </h3>
                     </div>
                     <div class="box-body">
-{#                        {% for key, val in counts.se_statuses.items %}#}
-{#                            <div class="row">#}
-{#                                <div class="col-md-12">#}
-{#                                    <label class="pull-left">{{ key }}</label>#}
-{#                                    <a href="{% url 'sl_list_all' %}?f=ss-{{ val.id }}" class="pull-right btn btn-flat btn-xs btn-primary left-btns">{{ val.num }}</a>#}
-{#                                </div>#}
-{#                            </div>#}
-{#                        {% endfor %}#}
                         <div class="row">
                             <div class="col-md-12">
                                 <label class="pull-left">{{ counts.se_default.status_name }}</label>
@@ -81,33 +73,6 @@
                     </div>
                 </div>
             </div>
-
-{#            <div class="col-md-4">#}
-{#                <div class="box box-primary">#}
-{##}
-{#                    <div class="box-header">#}
-{#                        <h3 class="box-title">#}
-{#                            Parts and Units#}
-{#                        </h3>#}
-{#                    </div>#}
-{##}
-{#                    <div class="box-body">#}
-{#                        <div class="row">#}
-{#                            <div class="col-md-12">#}
-{#                                <label class="pull-left">Parts running low</label>#}
-{#                                <div class="pull-right btn btn-flat btn-xs btn-primary left-btns">{{ counts.parts_low }}</div>#}
-{#                            </div>#}
-{#                        </div>#}
-{#                        <div class="row">#}
-{#                            <div class="col-md-12">#}
-{#                                <label class="pull-left">Units restricted</label>#}
-{#                                <div class="pull-right btn btn-flat btn-xs btn-primary left-btns">{{ counts.units_restricted }}</div>#}
-{#                            </div>#}
-{#                        </div>#}
-{#                    </div>#}
-{##}
-{#                </div>#}
-{#            </div>#}
         </div>
 
         <div class="row">
