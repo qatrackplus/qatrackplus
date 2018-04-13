@@ -206,13 +206,22 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         if "tests" not in data:
             data['tests'] = {}
         for ti in tis:
-            slug = ti.unit_test_info.test.slug
+            test = ti.unit_test_info.test
+            slug = test.slug
             if slug not in data['tests']:
-                print("TODO NEED TO HANDLE ATTACHMENTS & UPLOADS HERE")
-                data['tests'][slug] = {
-                    'value': ti.get_value(),
-                    'comment': ti.comment,
-                }
+                if test.is_upload():
+                    upload = ti.get_value()
+                    data['tests'][slug] = {
+                        'value': base64.b64encode(upload.attachment.read()).decode(),
+                        'encoding': 'base64',
+                        'filename': ti.string_value,
+                        'comment': ti.comment,
+                    }
+                else:
+                    data['tests'][slug] = {
+                        'value': ti.get_value(),
+                        'comment': ti.comment,
+                    }
             elif slug in data['tests'] and data['tests'][slug].get('skipped'):
                 data['tests'][slug] = {
                     'value': None,
@@ -555,9 +564,9 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
         instance.save()
 
-        #for attachment in attachments:
-        #    attachment.testlistinstance = tli
-        #    attachment.save()
+        for attachment in attachments:
+            attachment.testlistinstance = instance
+            attachment.save()
 
         if self.comment:
             self.create_comment(self.comment, self.user, instance)
@@ -588,7 +597,16 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
         utc.set_due_date()
 
-        changed_se = instance.update_all_reviewed()
+        # is there an existing rtsqa being linked?
+        if rtsqa:
+            rtsqa.test_list_instance = instance
+            rtsqa.save()
+
+            # If tli needs review, update 'Unreviewed RTS QA' counter
+            if not instance.all_reviewed:
+                cache.delete(settings.CACHE_RTS_QA_COUNT)
+
+        instance.update_all_reviewed()
 
         if not instance.in_progress:
             try:
