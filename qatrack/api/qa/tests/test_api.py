@@ -486,16 +486,6 @@ class TestTestListInstanceAPI(APITestCase):
         for a in tiu.attachment_set.all():
             assert a.finalized
 
-    def _test_todo(self):
-        """
-        Need to:
-            test editing including uploads
-                - add new comments
-                - attachments, uploads
-            refactor Upload to use Upload handler
-        """
-        assert False
-
     def test_basic_edit(self):
         resp = self.client.post(self.create_url, self.data)
         new_data = {'tests': {'test1': {'value': 99}}}

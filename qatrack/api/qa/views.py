@@ -106,10 +106,6 @@ class TestListInstanceViewSet(MultiSerializerMixin, viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def perform_create(self, serializer):
-        # TODO : things to test
-        #   - sublists
-        #   - file uploads / processing
-        #   - attachments
         utc = serializer.validated_data['unit_test_collection']
         day = serializer.validated_data.get('day', 0)
         day, tl = utc.get_list(day=day)
