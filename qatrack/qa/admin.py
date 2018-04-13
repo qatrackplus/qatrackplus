@@ -111,7 +111,9 @@ class TestInfoForm(forms.ModelForm):
 
     def clean(self):
         """make sure valid numbers are entered for boolean data"""
-        if (self.instance.test.type == models.MULTIPLE_CHOICE or self.instance.test.is_string_type()) and self.cleaned_data["tolerance"]:
+
+        if (self.instance.test.type == models.MULTIPLE_CHOICE or
+            self.instance.test.is_string_type()) and self.cleaned_data.get("tolerance"):
             if self.cleaned_data["tolerance"].type != models.MULTIPLE_CHOICE:
                 raise forms.ValidationError(_("You can't use a non-multiple choice tolerance with a multiple choice or string test"))
         else:
@@ -120,7 +122,7 @@ class TestInfoForm(forms.ModelForm):
 
             ref_value = self.cleaned_data["reference_value"]
 
-            tol = self.cleaned_data["tolerance"]
+            tol = self.cleaned_data.get("tolerance")
             if tol is not None:
                 if ref_value == 0 and tol.type == models.PERCENT:
                     raise forms.ValidationError(_("Percentage based tolerances can not be used with reference value of zero (0)"))

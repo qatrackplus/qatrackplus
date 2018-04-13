@@ -1,21 +1,20 @@
-
 import json
 
-from django.contrib.contenttypes.models import ContentType
 from django.contrib import admin
 from django.contrib.admin.sites import AdminSite
-from django.contrib.messages import get_messages, constants
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.messages import constants, get_messages
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
 from django.db.models import Count, Q
-from django.forms import modelform_factory, inlineformset_factory, HiddenInput
+from django.forms import HiddenInput, inlineformset_factory, modelform_factory
 from django.http import QueryDict
-from django.test import TestCase, TransactionTestCase, RequestFactory
+from django.test import RequestFactory, TestCase, TransactionTestCase
 
 from qatrack.attachments import models as at_models
-from qatrack.qa.tests import utils as qa_utils
-from qatrack.qa import models as qa_models
 from qatrack.qa import admin as qa_admin
+from qatrack.qa import models as qa_models
+from qatrack.qa.tests import utils as qa_utils
 from qatrack.service_log.tests import utils as sl_utils
 
 
@@ -97,73 +96,73 @@ class TestSetReferencesAndTolerancesForm(TransactionTestCase):
 
 class TestTestlistjson(TestCase):
 
-        def setUp(self):
+    def setUp(self):
 
-            qa_utils.create_user(is_superuser=True, uname='user', pwd='pwd')
-            self.client.login(username='user', password='pwd')
+        qa_utils.create_user(is_superuser=True, uname='user', pwd='pwd')
+        self.client.login(username='user', password='pwd')
 
-            self.u = qa_utils.create_unit()
+        self.u = qa_utils.create_unit()
 
-            tl1 = qa_utils.create_test_list()
-            tl2 = qa_utils.create_test_list()
-            tl3 = qa_utils.create_test_list()
+        tl1 = qa_utils.create_test_list()
+        tl2 = qa_utils.create_test_list()
+        tl3 = qa_utils.create_test_list()
 
-            qa_utils.create_unit_test_collection(unit=self.u, test_collection=tl1)
-            qa_utils.create_unit_test_collection(unit=self.u, test_collection=tl2)
-            qa_utils.create_unit_test_collection(unit=self.u, test_collection=tl3)
+        qa_utils.create_unit_test_collection(unit=self.u, test_collection=tl1)
+        qa_utils.create_unit_test_collection(unit=self.u, test_collection=tl2)
+        qa_utils.create_unit_test_collection(unit=self.u, test_collection=tl3)
 
-            tlc1 = qa_utils.create_cycle(test_lists=[tl1, tl2, tl3])
+        tlc1 = qa_utils.create_cycle(test_lists=[tl1, tl2, tl3])
 
-            qa_utils.create_unit_test_collection(unit=self.u, test_collection=tlc1)
+        qa_utils.create_unit_test_collection(unit=self.u, test_collection=tlc1)
 
-            self.url_tl = reverse(
-                'qa_copy_refs_and_tols_testlist_json', kwargs={
-                    'source_unit': self.u.id, 'content_type': qa_models.TestList.__name__.lower()
-                }
-            )
-            self.url_tlc = reverse(
-                'qa_copy_refs_and_tols_testlist_json', kwargs={
-                    'source_unit': self.u.id, 'content_type': qa_models.TestListCycle.__name__.lower()
-                })
-            self.url_bad = reverse(
-                'qa_copy_refs_and_tols_testlist_json', kwargs={
-                    'source_unit': self.u.id, 'content_type': qa_models.Test.__name__.lower()
-                }
-            )
+        self.url_tl = reverse(
+            'qa_copy_refs_and_tols_testlist_json', kwargs={
+                'source_unit': self.u.id, 'content_type': qa_models.TestList.__name__.lower()
+            }
+        )
+        self.url_tlc = reverse(
+            'qa_copy_refs_and_tols_testlist_json', kwargs={
+                'source_unit': self.u.id, 'content_type': qa_models.TestListCycle.__name__.lower()
+            })
+        self.url_bad = reverse(
+            'qa_copy_refs_and_tols_testlist_json', kwargs={
+                'source_unit': self.u.id, 'content_type': qa_models.Test.__name__.lower()
+            }
+        )
 
-            self.tl_ct = ContentType.objects.get(model='testlist')
-            self.tlc_ct = ContentType.objects.get(model='testlistcycle')
+        self.tl_ct = ContentType.objects.get(model='testlist')
+        self.tlc_ct = ContentType.objects.get(model='testlistcycle')
 
-        def test_test_list(self):
+    def test_test_list(self):
 
-            utcs = qa_models.UnitTestCollection.objects.filter(
-                unit=self.u, content_type=self.tl_ct
-            ).values_list('object_id', flat=True)
-            tl_to_find = list(qa_models.TestList.objects.filter(pk__in=utcs).values_list('pk', 'name'))
+        utcs = qa_models.UnitTestCollection.objects.filter(
+            unit=self.u, content_type=self.tl_ct
+        ).values_list('object_id', flat=True)
+        tl_to_find = list(qa_models.TestList.objects.filter(pk__in=utcs).values_list('pk', 'name'))
 
-            response = self.client.get(self.url_tl)
-            self.assertJSONEqual(
-                json.dumps(tl_to_find),
-                response.json()
-            )
+        response = self.client.get(self.url_tl)
+        self.assertJSONEqual(
+            json.dumps(tl_to_find),
+            response.json()
+        )
 
-        def test_test_list_cycle(self):
+    def test_test_list_cycle(self):
 
-            utcs = qa_models.UnitTestCollection.objects.filter(
-                unit=self.u, content_type=self.tlc_ct
-            ).values_list('object_id', flat=True)
-            tlc_to_find = list(qa_models.TestListCycle.objects.filter(pk__in=utcs).values_list('pk', 'name'))
+        utcs = qa_models.UnitTestCollection.objects.filter(
+            unit=self.u, content_type=self.tlc_ct
+        ).values_list('object_id', flat=True)
+        tlc_to_find = list(qa_models.TestListCycle.objects.filter(pk__in=utcs).values_list('pk', 'name'))
 
-            response = self.client.get(self.url_tlc)
-            self.assertJSONEqual(
-                json.dumps(tlc_to_find),
-                response.json()
-            )
+        response = self.client.get(self.url_tlc)
+        self.assertJSONEqual(
+            json.dumps(tlc_to_find),
+            response.json()
+        )
 
-        def test_bad_ctype(self):
+    def test_bad_ctype(self):
 
-            with self.assertRaises(ValidationError):
-                self.client.get(self.url_bad)
+        with self.assertRaises(ValidationError):
+            self.client.get(self.url_bad)
 
 
 class TestToleranceAdmin(TestCase):
@@ -920,20 +919,11 @@ class TestUnitTestInfoAdmin(TestCase):
         self.assertTrue(constants.ERROR in [m.level for m in messages])
 
     def test_bad_multiple(self):
-        """
-        Throws error.
-
-        TestInfoForm.clean(): When trying to save a UnitTestInfo that is MULTIPLE_CHOICE with a tolerance that is not,
-        tolerance is missing from cleaned data.
-
-        This can be replicated through normal use by creating a new tolerance
-        on this page (/admin/qa/unittestinfo/<id>/change/ -> 'Add another tolerance'), creating a tolerance that is
-        not MULTIPLE_CHOICE and trying to save.
-
-        """
         form = modelform_factory(
             qa_models.UnitTestInfo, form=qa_admin.TestInfoForm, fields='__all__'
-        )(instance=self.tli_3)
+        )(
+            instance=self.tli_3
+        )
         data = form.initial
         data['tolerance'] = self.tol_1.id
         form = modelform_factory(
