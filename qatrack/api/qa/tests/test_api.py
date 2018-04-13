@@ -10,6 +10,7 @@ from rest_framework.test import APITestCase
 from qatrack.attachments.models import Attachment
 from qatrack.qa import models
 from qatrack.qa.tests import utils
+from qatrack.service_log.tests import utils as sl_utils
 
 
 class TestTestListInstanceAPI(APITestCase):
@@ -98,6 +99,47 @@ class TestTestListInstanceAPI(APITestCase):
             v = ti.value if t.type not in models.STRING_TYPES else ti.string_value
             assert v == self.simple_data['tests'][t.slug]['value']
 
+    def test_create_no_work_completed(self):
+        self.simple_data['work_started'] = '2018-01-01 10:49:00'
+        self.simple_data.pop("work_completed")
+        response = self.client.post(self.create_url, self.simple_data)
+        assert response.status_code == status.HTTP_201_CREATED
+
+    def test_create_no_work_started(self):
+        self.simple_data.pop("work_started")
+        response = self.client.post(self.create_url, self.simple_data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_create_with_rtsqa(self):
+
+        sl_utils.create_service_event_status(is_default=True)
+        rtsqa = sl_utils.create_return_to_service_qa(unit_test_collection=self.utc)
+        rtsqa_url = reverse("returntoserviceqa-detail", kwargs={'pk': rtsqa.pk})
+        self.simple_data['return_to_service_qa'] = rtsqa_url
+        assert rtsqa.test_list_instance is None
+        self.client.post(self.create_url, self.simple_data)
+        rtsqa.refresh_from_db()
+        assert rtsqa.test_list_instance is not None
+
+    def test_create_simple_missing_test(self):
+        self.simple_data['tests'].pop("test1")
+        response = self.client.post(self.create_url, self.simple_data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_invalid_string_value(self):
+        self.simple_data['tests']['test3']['value'] = 3
+        response = self.client.post(self.create_url, self.simple_data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_invalid_constant_value(self):
+        models.Test.objects.filter(pk=self.t2.pk).update(
+            type=models.CONSTANT,
+            constant_value=99
+        )
+        self.simple_data['tests']['test2']['value'] = 100
+        response = self.client.post(self.create_url, self.simple_data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
     def test_create_simple_with_txt_attachments(self):
         self.simple_data['attachments'] = [{'filename': 'test.txt', 'value': 'hello text', 'encoding': 'text'}]
         response = self.client.post(self.create_url, self.simple_data)
@@ -127,6 +169,11 @@ class TestTestListInstanceAPI(APITestCase):
         response = self.client.post(self.create_url, self.simple_data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
+    def test_create_with_missing_attach_value(self):
+        self.simple_data['attachments'] = [{'filename': 'test.txt', 'encoding': 'base64'}]
+        response = self.client.post(self.create_url, self.simple_data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
     def test_create_composite(self):
         """
         Add a composite test to our simple test list.  Submitting without data
@@ -140,6 +187,17 @@ class TestTestListInstanceAPI(APITestCase):
         assert models.TestInstance.objects.count() == self.ntests + 1
         tic = models.TestInstance.objects.get(unit_test_info__test=self.tc)
         assert tic.value == self.simple_data['tests']['test1']['value'] + self.simple_data['tests']['test2']['value']
+
+    def test_create_composite_invalid_proc(self):
+        """
+        An invalid calculation procedure should result in an error
+        """
+
+        self.tc.calculation_procedure = "1/0"
+        self.tc.save()
+        utils.create_test_list_membership(self.simple_test_list, self.tc)
+        response = self.client.post(self.create_url, self.simple_data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_create_composite_with_user_attached(self):
         """
@@ -351,6 +409,39 @@ class TestTestListInstanceAPI(APITestCase):
         response = self.client.post(self.create_url, self.simple_data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
+    def test_file_upload_not_b64(self):
+        """
+        A text upload without specifying text encoding should raise an error.
+        """
+        upload = utils.create_test(name="file_upload", test_type=models.UPLOAD)
+        upload.calculation_procedure = "import json; result=json.load(FILE)"
+        upload.save()
+        utils.create_test_list_membership(self.simple_test_list, upload)
+
+        self.simple_data['tests']['file_upload'] = {
+            'filename': "tmp.txt",
+            'value': 'not b64 encoded',
+        }
+        response = self.client.post(self.create_url, self.simple_data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_file_upload_invalid_proc(self):
+        """
+        A text upload without specifying text encoding should raise an error.
+        """
+        upload = utils.create_test(name="file_upload", test_type=models.UPLOAD)
+        upload.calculation_procedure = "1/0"
+        upload.save()
+        utils.create_test_list_membership(self.simple_test_list, upload)
+
+        self.simple_data['tests']['file_upload'] = {
+            'filename': "tmp.txt",
+            'encoding': 'text',
+            'value': 'text',
+        }
+        response = self.client.post(self.create_url, self.simple_data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
     def test_file_upload_with_user_attached(self):
         """
         Add a file upload test and ensure we can upload, process and have
@@ -404,7 +495,7 @@ class TestTestListInstanceAPI(APITestCase):
         resp = self.client.post(self.create_url, self.simple_data)
         assert models.TestInstance.objects.get(unit_test_info__test__slug="testc").value == 3
         new_data = {'tests': {'test1': {'value': 99}, 'test2': {'value': 101}}}
-        edit_resp = self.client.patch(resp.data['url'], new_data)
+        self.client.patch(resp.data['url'], new_data)
         assert models.TestInstance.objects.get(unit_test_info__test__slug="testc").value == 200
 
     def test_edit_work_completed(self):
@@ -413,6 +504,17 @@ class TestTestListInstanceAPI(APITestCase):
         edit_resp = self.client.patch(resp.data['url'], new_data)
         assert edit_resp.status_code == 200
         assert models.TestListInstance.objects.first().work_completed.year == 2020
+
+    def test_edit_user_status(self):
+        s2 = utils.create_status(name="user status", slug="user_status", is_default=False, requires_review=False)
+        s2_url = reverse("testinstancestatus-detail", kwargs={'pk': s2.pk})
+        resp = self.client.post(self.create_url, self.simple_data)
+        new_data = {'status': s2_url}
+        edit_resp = self.client.patch(resp.data['url'], new_data)
+        assert edit_resp.status_code == 200
+        assert models.TestInstance.objects.filter(status=s2).count() == self.ntests
+        assert models.TestListInstance.objects.all().count() == 1
+        assert models.TestListInstance.objects.unreviewed().count() == 0
 
     def test_edit_wc_ws_error(self):
         resp = self.client.post(self.create_url, self.simple_data)
@@ -539,7 +641,7 @@ class TestTestListInstanceAPI(APITestCase):
 
     def test_utc_due_date_updated_on_create(self):
         assert self.utc.due_date is None
-        resp = self.client.post(self.create_url, self.simple_data)
+        self.client.post(self.create_url, self.simple_data)
         self.utc.refresh_from_db()
         assert self.utc.due_date is not None
 
@@ -547,7 +649,6 @@ class TestTestListInstanceAPI(APITestCase):
         self.simple_data['work_completed'] = '2019-07-25 10:49:47'
         resp = self.client.post(self.create_url, self.simple_data)
         self.utc.refresh_from_db()
-        orig_due_date = self.utc.due_date
         new_data = {'work_completed': '2020-07-25 10:49:47'}
         edit_resp = self.client.patch(resp.data['url'], new_data)
         assert edit_resp.status_code == 200

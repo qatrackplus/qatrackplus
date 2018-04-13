@@ -1,17 +1,13 @@
 import collections
+from functools import reduce
 import json
 import math
 import os
 import traceback
-from functools import reduce
 
+from braces.views import JSONResponseMixin, PermissionRequiredMixin
 import dateutil
 import dicom
-import matplotlib
-import matplotlib.pyplot as plt
-import numpy
-import scipy
-from braces.views import JSONResponseMixin, PermissionRequiredMixin
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.sites.shortcuts import get_current_site
@@ -27,6 +23,10 @@ from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django.views.generic import CreateView, TemplateView, View
 from django_comments.models import Comment
+import matplotlib
+import matplotlib.pyplot as plt
+import numpy
+import scipy
 
 from qatrack.attachments.models import Attachment
 from qatrack.attachments.utils import imsave, to_bytes
@@ -1103,8 +1103,8 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
             self.object.reviewed_by = None
             self.object.all_reviewed = False
         else:
-            self.reviewed = now
-            self.reviewed_by = self.request.user
+            self.object.reviewed = now
+            self.object.reviewed_by = self.request.user
             self.object.all_reviewed = True
 
         if self.object.work_completed is None:

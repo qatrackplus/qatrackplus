@@ -119,6 +119,8 @@ class TestListInstanceSerializer(serializers.HyperlinkedModelSerializer):
 
 class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
+    work_completed = serializers.DateTimeField(default=lambda: timezone.now())
+
     comment = serializers.CharField(required=False)
     tests = serializers.DictField()
     status = serializers.HyperlinkedRelatedField(
@@ -195,9 +197,6 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         is_dict = isinstance(test_data, dict)
         return is_dict
 
-    def validate_work_completed(self, wc):
-        return wc or timezone.now()
-
     def add_data_from_instance(self, data):
 
         tis = self.instance.testinstance_set.select_related(
@@ -246,6 +245,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
             if slug not in validated_data['tests']:
                 missing.append(slug)
+                continue
 
             skipped = validated_data['tests'][slug].get("skipped")
             provided_val = post_data.get('tests', {}).get(slug, {}).get("value")
@@ -369,7 +369,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
                 comp_calc_data.pop('test_id', None)
 
             results = CompositePerformer(self.user, comp_calc_data).calculate()
-            if not results['success']:
+            if not results['success']:  # pragma: no cover
                 raise serializers.ValidationError(', '.join(results.get("errors", [])))
 
             for slug, test_data in results['results'].items():
@@ -509,7 +509,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             # to inform any listeners (e.g notifications.handlers.email_no_testlist_save)
             try:
                 signals.testlist_complete.send(sender=self, instance=tli, created=False)
-            except:
+            except:  # pragma: no cover
                 pass
 
         return tli
@@ -542,17 +542,16 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
         instance.modified_by = self.user
         instance.modified = timezone.now()
-        if status.requires_review:
-            instance.reviewed = None
-            instance.reviewed_by = None
-            instance.all_reviewed = False
-        else:
+        instance.reviewed = None
+        instance.reviewed_by = None
+        instance.all_reviewed = False
+
+        if not status.requires_review:
             instance.reviewed = now
             instance.reviewed_by = self.user
             instance.all_reviewed = True
 
-        if instance.work_completed is None:
-            instance.work_completed = now
+        instance.work_complete = instance.work_completed or now
 
         instance.save()
 
@@ -594,7 +593,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         if not instance.in_progress:
             try:
                 signals.testlist_complete.send(sender=self, instance=instance, created=False)
-            except:
+            except:  # pragma: no cover
                 pass
 
         return instance
