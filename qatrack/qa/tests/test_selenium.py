@@ -1,15 +1,20 @@
+from contextlib import contextmanager
 from functools import wraps
 import time
-from . import utils
 
 from django.conf import settings
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
-from django.utils import timezone
 from django.test import TestCase
+from django.utils import timezone
 import pytest
-from contextlib import contextmanager
+
+from qatrack.qa import models
+from qatrack.service_log.tests import utils as sl_utils
 from selenium import webdriver
-from selenium.common.exceptions import NoSuchElementException, WebDriverException
+from selenium.common.exceptions import (
+    NoSuchElementException,
+    WebDriverException,
+)
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
@@ -20,8 +25,7 @@ from selenium.webdriver.support.expected_conditions import staleness_of
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.wait import WebDriverWait
 
-from qatrack.qa import models
-from qatrack.service_log.tests import utils as sl_utils
+from . import utils
 
 objects = {
     'Group': {
@@ -218,6 +222,7 @@ class SeleniumTests(TestCase, StaticLiveServerTestCase):
             cls.driver = webdriver.Firefox(ff_profile)
 
         orig_find_element = cls.driver.find_element
+
         @retry_if_exception(WebDriverException, 5, sleep_time=1)
         def WebElement_find_element(*args, **kwargs):
             """Monky patch find element to allow retries"""
@@ -288,12 +293,16 @@ class SeleniumTests(TestCase, StaticLiveServerTestCase):
         self.user = utils.create_user(pwd=self.password)
 
     def wait_for_success(self):
-        self.wait.until(e_c.presence_of_element_located((By.XPATH, '//ul[@class = "messagelist"]/li[@class = "success"]')))
+        self.wait.until(
+            e_c.presence_of_element_located(
+                (By.XPATH, '//ul[@class = "messagelist"]/li[@class = "success"]')
+            )
+        )
 
     def test_admin_category(self):
 
         self.load_admin()
-        self.driver.find_element_by_css_selector('#content-main > div:nth-child(8) > table > tbody > tr:nth-child(3) > th > a').click()
+        self.driver.find_element_by_xpath('//a[@href="/admin/qa/category/"]').click()
         self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'ADD CATEGORY')))
         self.driver.find_element_by_link_text('ADD CATEGORY').click()
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
@@ -399,7 +408,7 @@ class SeleniumTests(TestCase, StaticLiveServerTestCase):
         if not utils.exists('units', 'Modality', 'name', objects['Modality']['name']):
             utils.create_modality(name=objects['Modality']['name'])
 
-        sa = sl_utils.create_service_area()
+        sl_utils.create_service_area()
 
         self.load_admin()
         self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Units')))
@@ -410,16 +419,16 @@ class SeleniumTests(TestCase, StaticLiveServerTestCase):
         self.driver.find_element_by_id('id_name').send_keys(objects['Unit']['name'])
         self.driver.find_element_by_id('id_number').send_keys(objects['Unit']['number'])
         self.driver.find_element_by_id('id_date_acceptance').send_keys(objects['Unit']['date_acceptance'])
-        self.driver.find_element_by_css_selector('#id_service_areas_add_all_link').click()
+        # self.driver.find_element_by_css_selector('#id_service_areas_add_all_link').click()
         Select(self.driver.find_element_by_id("id_type")).select_by_index(1)
-        self.driver.find_element_by_id('id_modalities_add_all_link').click()
-        self.driver.find_element_by_id('id_hours_monday').send_keys('800')
-        self.driver.find_element_by_id('id_hours_tuesday').send_keys('800')
-        self.driver.find_element_by_id('id_hours_wednesday').send_keys('800')
-        self.driver.find_element_by_id('id_hours_thursday').send_keys('800')
-        self.driver.find_element_by_id('id_hours_friday').send_keys('800')
-        self.driver.find_element_by_id('id_hours_saturday').send_keys('800')
-        self.driver.find_element_by_id('id_hours_sunday').send_keys('800')
+        # self.driver.find_element_by_id('id_modalities_add_all_link').click()
+        # self.driver.find_element_by_id('id_hours_monday').send_keys('800')
+        # self.driver.find_element_by_id('id_hours_tuesday').send_keys('800')
+        # self.driver.find_element_by_id('id_hours_wednesday').send_keys('800')
+        # self.driver.find_element_by_id('id_hours_thursday').send_keys('800')
+        # self.driver.find_element_by_id('id_hours_friday').send_keys('800')
+        # self.driver.find_element_by_id('id_hours_saturday').send_keys('800')
+        # self.driver.find_element_by_id('id_hours_sunday').send_keys('800')
         self.driver.find_element_by_name('_save').click()
         self.wait_for_success()
 
@@ -609,7 +618,11 @@ class SeleniumTests(TestCase, StaticLiveServerTestCase):
         # self.assertTrue(self.driver.find_element_by_xpath('//*[@id="perform-qa-table"]/tbody/tr[13]/td[5]').text == 'ACT(6.0%)')
         basic.send_keys(Keys.BACKSPACE, '5')
         boolean.click()
-        self.wait.until(e_c.presence_of_element_located((By.XPATH, '//*[@id="perform-qa-table"]/tbody/tr[13]/td[5][contains(text(), "TOL(5.0%)")]')))
+        self.wait.until(
+            e_c.presence_of_element_located(
+                (By.XPATH, '//*[@id="perform-qa-table"]/tbody/tr[13]/td[5][contains(text(), "TOL(5.0%)")]')
+            )
+        )
         # self.assertTrue(self.driver.find_element_by_xpath('//*[@id="perform-qa-table"]/tbody/tr[13]/td[5]').text == 'TOL(5.0%)')
         basic.send_keys(Keys.BACKSPACE, Keys.BACKSPACE, Keys.BACKSPACE)
         boolean.click()
@@ -618,17 +631,23 @@ class SeleniumTests(TestCase, StaticLiveServerTestCase):
         multi = self.driver.find_element_by_id('id_form-2-string_value')
         multi.click()
         multi.send_keys(Keys.ARROW_DOWN, Keys.ENTER)
-        self.assertTrue(self.driver.find_element_by_xpath('//*[@id="perform-qa-table"]/tbody/tr[7]/td[5]').text == 'ACT')
+        self.assertTrue(
+            self.driver.find_element_by_xpath('//*[@id="perform-qa-table"]/tbody/tr[7]/td[5]').text == 'ACT'
+        )
         multi.click()
         multi.send_keys(Keys.ARROW_DOWN, Keys.ENTER)
-        self.assertTrue(self.driver.find_element_by_xpath('//*[@id="perform-qa-table"]/tbody/tr[7]/td[5]').text == 'TOL')
+        self.assertTrue(
+            self.driver.find_element_by_xpath('//*[@id="perform-qa-table"]/tbody/tr[7]/td[5]').text == 'TOL'
+        )
         multi.click()
         multi.send_keys(Keys.ARROW_DOWN, Keys.ENTER)
         self.assertTrue(self.driver.find_element_by_xpath('//*[@id="perform-qa-table"]/tbody/tr[7]/td[5]').text == 'OK')
 
         self.driver.find_element_by_id('id_form-5-string_value').send_keys('a string')
         boolean.click()
-        self.wait.until(e_c.text_to_be_present_in_element_value((By.ID, 'id_form-6-string_value'), 'a string composite'))
+        self.wait.until(
+            e_c.text_to_be_present_in_element_value((By.ID, 'id_form-6-string_value'), 'a string composite')
+        )
 
         self.driver.find_element_by_id('id_form-7-skipped').click()
 
@@ -646,4 +665,8 @@ class SeleniumTests(TestCase, StaticLiveServerTestCase):
 
         self.driver.find_element_by_xpath('//button[@type = "submit"]').click()
 
-        self.wait.until(e_c.presence_of_element_located((By.XPATH, '//td[contains(text(), "No data available in table")]')))
+        self.wait.until(
+            e_c.presence_of_element_located(
+                (By.XPATH, '//td[contains(text(), "No data available in table")]')
+            )
+        )

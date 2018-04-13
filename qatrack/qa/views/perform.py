@@ -377,7 +377,7 @@ class Upload(JSONResponseMixin, View):
             "META": meta_data,
             "REFS": refs,
             "TOLS": tols,
-            "UTILS": CompositeUtils(self.user, self.calculation_context, comments),
+            "UTILS": CompositeUtils(self.request.user, self.calculation_context, comments),
         })
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
 

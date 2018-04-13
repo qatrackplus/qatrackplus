@@ -24,8 +24,6 @@ import qatrack.qa.views.base
 import qatrack.qa.views.charts
 import qatrack.qa.views.perform
 import qatrack.qa.views.review
-
-from qatrack.units import views as u_views
 from qatrack.units import models as u_models
 
 from . import utils
@@ -1931,5 +1929,3 @@ class TestReviewStatusContext(TestCase):
             )
             self.assertEqual(ti.status.valid, context['statuses'][ti.status.name]['valid'])
             self.assertEqual(ti.status.requires_review, context['statuses'][ti.status.name]['requires_review'])
-
-
