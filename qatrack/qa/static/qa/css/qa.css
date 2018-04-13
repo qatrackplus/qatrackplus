@@ -369,12 +369,6 @@ tr.qa-comment td {
     vertical-align: top;
     overflow: hidden !important;
 }
-#comments {
-    margin: 0;
-}
-#comments p {
-    padding-left: 10px;
-}
 #box-perform .box-footer {
     min-height: 40px;
 }

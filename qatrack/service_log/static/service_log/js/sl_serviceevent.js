@@ -1,10 +1,11 @@
+// Regrets: Not using a more robust front end library here :(
 
-
-require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker', 'sl_utils', 'inputmask', 'site_base'], function ($, _, moment, autosize) {
+require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_utils', 'inputmask', 'site_base', 'comments'], function ($, _, moment, autosize) {
     
     $(document).ready(function() {
 
         var $units = $('#id_unit_field'),
+            $units_fake = $('#id_unit_field_fake'),
             $service_areas = $('#id_service_area_field'),
             $related_se = $('#id_service_event_related_field'),
             $service_status = $('#id_service_status'),
@@ -18,7 +19,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
                 '    <div class="col-md-12">' +
                 '        <span id="pass-fail-utc_initiated"></span>' +
                 '        <span id="review-utc_initiated"></span>' +
-                '        <a id="view-tli-btn" class="btn btn-default btn-xs btn-flat margin-left-5" href="">View</a>' +
+                '        <a id="view-tli-btn" class="btn btn-default btn-xs btn-flat margin-left-5" href="" target="view-tli">View</a>' +
                 '        <span id="tli-date-utc_initiated" class="pull-right"></span>' +
                 '    </div>' +
                 '</div>'
@@ -28,7 +29,10 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
             $tli_instances = $('.tli-instance'),
             $rtsqa_rows = $('.rtsqa-row'),
             $service_event_form = $('#service-event-form'),
-            $service_save = $('.service-save');
+            $service_save = $('.service-save'),
+            $date_time = $('#id_datetime_service');
+
+        $units_fake.val($units.val());
 
         var num_click = 0;
         $service_save.one('click', function (event) {
@@ -45,17 +49,21 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
 
         $('.select2:visible').select2({
             minimumResultsForSearch: 10,
-            width: '100%'
+            width: '100%',
+            templateSelection: function(a) {
+                if ($(a.element).parent().prop('required') && a.id === '') {
+                    return $('<span class="required-option">required</span>');
+                }
+                return a.text;
+            }
         }).overrideSelect2Keys();
-        
-        $('.daterangepicker-input').daterangepicker({
-            singleDatePicker: true,
-            autoClose: true,
-            autoApply: true,
-            keyboardNavigation: false,
-            timePicker: true,
-            timePicker24Hour: true,
-            locale: {"format": "DD-MM-YYYY HH:mm"}
+
+        $date_time.flatpickr({
+            enableTime: true,
+            time_24hr: true,
+            minuteIncrement: 1,
+            dateFormat: 'd-m-Y H:i',
+            allowInput: true
         });
         
         $('.inputmask').inputmask('99:99', {numericInput: true, placeholder: "_", removeMaskOnSubmit: true});
@@ -93,7 +101,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
         function generate_related_result(res) {
             if (res.loading) { return res.text; }
             var colour = status_colours_dict[se_statuses[res.id]];
-            var $div = $('<div class="select2-result-repository clearfix">' + res.text + '<div class="label pull-right" style="background-color: ' + colour + ';">&nbsp;</div></div>');
+            var $div = $('<div class="select2-result-repository clearfix"><span>' + res.text + '  (' + res.date + ') </span><span class="label smooth-border pull-right" style="border-color: ' + colour + ';">' + res.status + '</span></div>');
             return $div;
         }
         function generate_related_selection(res, container) {
@@ -108,12 +116,14 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
         }
         function process_related_results(data, params) {
             var results = [];
-            for (var i in data.colour_ids) {
-                var se_id = data.colour_ids[i][0],
-                    s_id = data.colour_ids[i][1],
-                    s_pd = data.colour_ids[i][2];
-                results.push({id: se_id, text: 'id: ' + se_id, title: s_pd});
-                se_statuses[se_id] = s_id;
+            for (var i in data.service_events) {
+                var se_id = data.service_events[i][0],
+                    se_status_id = data.service_events[i][1],
+                    se_problem_description = data.service_events[i][2],
+                    se_date = moment(data.service_events[i][3]).format('MMM D, YYYY HH:mm'),
+                    se_status_name = data.service_events[i][4];
+                results.push({id: se_id, text: se_id, title: se_problem_description, date: se_date, status: se_status_name});
+                se_statuses[se_id] = se_status_id;
             }
             params.page = params.page || 1;
             return {
@@ -148,9 +158,10 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
         });
         
         // Unit -----------------------------------------------------------------------------------------------
-        $units.change(function() {
-            var unit_id = $('#id_unit_field').val();
+        $units_fake.change(function() {
+            var unit_id = $units_fake.val();
 
+            $units.val(unit_id);
             if (unit_id) {
                 var data = {
                     'unit_id': unit_id
@@ -232,7 +243,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
         // RTS QA Formset --------------------------------------------------------------------------------
         function set_select_tli() {
             var $select_tli = $('.select-tli');
-            $select_tli.click(function (event) {
+            $select_tli.off('click').click(function (event) {
                 var w = window.open($(this).attr('data-link'), '_blank', 'scrollbars=no,menubar=no,height=900,width=1200,resizable=yes,toolbar=yes,status=no');
                 w.focus();
             });
@@ -240,6 +251,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
         displayTLI = function (prefix, data, returnValue) {
             var $label_group = $('<span class="label-group ' + prefix + '-hider" style="display: none;"></span>');
             for (var status in data['pass_fail']) {
+
                 if (data['pass_fail'][status] > 0 && status != 'no_tol') {
                     var $label = $('<span class="label ' + status + '" title="' + data['pass_fail'][status] + ' ' + status + '"></span>');
                     if (status == 'ok') {
@@ -259,28 +271,26 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
             $label_group = $('<span class="label-group ' + prefix + '-hider" style="display: none;"></span>');
 
             for (status in data['review']) {
+
                 var label_class = 'label',
                     status_name = status,
-                    icon = '';
+                    icon = '',
+                    colour = '';
                 if (data['review'][status]['is_comments']) {
-                    label_class += ' label-info';
                     status_name = '';
                     icon = '<i class="fa fa-commenting"></i>';
                 } else if (!data['review'][status]['valid']) {
-                    label_class += ' action';
-                    icon = '<i class="icon-minus-sign"></i>';
+                    icon = '<i class="fa fa-minus"></i>';
                 } else if (data['review'][status]['reqs_review']) {
-                    label_class += ' tolerance';
-                    icon = '<i class="icon-question-sign"></i>';
-                } else {
-                    label_class += ' ok';
+                    icon = '<i class="fa fa-question"></i>';
                 }
+                colour = data['review'][status]['colour'];
                 if (data['review'][status]['is_comments']) {
                     if (data['review'][status]['num'] > 0) {
                         $label_group.append('<span class="' + label_class + '">' + icon + ' ' + data["review"][status]["num"] + ' ' + status_name + '</span>');
                     }
                 } else {
-                    $label_group.prepend('<span class="' + label_class + '">' + icon + ' ' + data["review"][status]["num"] + ' ' + status_name + '</span>');
+                    $label_group.prepend('<span class="' + label_class + '" style="background-color: ' + colour + '">' + icon + ' ' + data["review"][status]["num"] + ' ' + status_name + '</span>');
                 }
             }
             $('#review-' + prefix).html($label_group);
@@ -295,6 +305,8 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
 
             $('#' + prefix + '-review-btn').addClass(prefix + '-hider');
             $('.' + prefix + '-hider').fadeIn('fast');
+            $('#id_' + prefix + '-unit_test_collection').change();
+
         };
         setSearchResult = function (form, returnValue) {
             window.focus();
@@ -317,6 +329,24 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
                     }
                 })
             }
+        };
+        disable_units = function(force) {
+
+            var disable = false;
+            if (force) {
+                disable = true;
+            } else {
+                $('select.rtsqa-utc').each(function () {
+                    if ($(this).val()) {
+                        disable = true;
+                        return false;
+                    }
+                });
+                if ($tli_initiated_by.val()) {
+                    disable = true;
+                }
+            }
+            $units_fake.prop('disabled', disable);
         };
 
         // set initial tli pass/fail and review statuses
@@ -346,21 +376,25 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
             $rtsqa_index.val(parseInt(rtsqa_index) + 1);
         });
 
-        function rtsqa_change() {
+        function rtsqa_change(e) {
 
-            var prefix = $(this).attr('data-prefix'),
-                utc_id = $(this).val(),
+            var prefix = $(this).attr('data-prefix');
+
+            var utc_id = $(this).val(),
+                utc_id_old = $(this).attr('oldvalue'),
                 tli_id = $('#id_' + prefix + '-test_list_instance').val(),
                 rtsqa_id = $('#id_' + prefix + '-id').val(),
                 se_id = $('#instance-id').val();
 
-            if (utc_id == '') {
+            $(this).attr('oldvalue', utc_id);
+
+            if (utc_id === '' || (utc_id_old !== '' && utc_id_old !== utc_id)) {
                 $('#utc-actions-' + prefix).html('');
                 $('#pass-fail-' + prefix).html('');
                 $('#review-' + prefix).html('');
                 $('#id_' + prefix + '-test_list_instance').val('');
-            } else {
-
+            }
+            if (utc_id !== '') {
                 // add utc action btns
                 $('#utc-actions-' + prefix).html(
                     $('#utc-actions-template').html()
@@ -379,6 +413,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
                 $('.' + prefix + '-hider').fadeIn('fast');
                 set_select_tli();
             }
+            disable_units();
         }
 
         $('select.rtsqa-utc').change(rtsqa_change);
@@ -505,16 +540,20 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'daterangepicker',
         $utc_initiated_by.change(function() {
             $tli_initiated_display.slideUp('fast', function() {
                 $tli_initiated_by.val('');
+                disable_units();
             });
             if ($(this).val() != '') {
                 var w = window.open($(this).attr('data-link') + '/' + $(this).val() + '/utc_initiated', '_blank', 'scrollbars=no,menubar=no,height=900,width=1200,resizable=yes,toolbar=no,location=no,status=no');
                 w.focus();
                 w.onbeforeunload = function() {
                     setSearchResult('utc_initiated', $tli_initiated_by.val());
+                    disable_units();
                     return null;
                 }
             }
         });
+        disable_units();
+
 
     });
 

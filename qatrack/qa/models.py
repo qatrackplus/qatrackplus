@@ -198,47 +198,51 @@ PERMISSIONS = (
             )
         ),
     ),
-    (
-        'Service Log',
-        (
-            (
-                'service_log.perform_returntoserviceqa',
-                'Can perform return to service qa',
-                'Allow user to perform qa linked to service events.',
-            ),
-            (
-                'service_log.view_returntoserviceqa',
-                'Can view existing return to service qa',
-                'Allow user to view qa linked to service events.',
-            ),
-            (
-                'service_log.add_serviceevent',
-                'Can create service event',
-                'Allows user to create new service events.',
-            ),
-            (
-                'service_log.view_serviceevent',
-                'Can view service events',
-                'Allows user to view existing service events.',
-            ),
-            (
-                'service_log.review_serviceevent',
-                'Can review service events',
-                'Allows user to change status of service events to statuses with \'is review required = false\'.',
-            ),
-            (
-                'parts.add_part',
-                'Can add part',
-                'Allow user to enter new parts.',
-            ),
-            (
-                'parts.view_part',
-                'Can view parts',
-                'Allow user to view existing parts',
-            ),
-        )
-    )
 )
+
+if settings.USE_SERVICE_LOG:
+    PERMISSIONS += (
+        (
+            'Service Log',
+            (
+                (
+                    'service_log.perform_returntoserviceqa',
+                    'Can perform return to service qa',
+                    'Allow user to perform qa linked to service events.',
+                ),
+                (
+                    'service_log.view_returntoserviceqa',
+                    'Can view existing return to service qa',
+                    'Allow user to view qa linked to service events.',
+                ),
+                (
+                    'service_log.add_serviceevent',
+                    'Can create service event',
+                    'Allows user to create new service events.',
+                ),
+                (
+                    'service_log.view_serviceevent',
+                    'Can view service events',
+                    'Allows user to view existing service events.',
+                ),
+                (
+                    'service_log.review_serviceevent',
+                    'Can review service events',
+                    'Allows user to change status of service events to statuses with \'is review required = false\'.',
+                ),
+                (
+                    'parts.add_part',
+                    'Can add part',
+                    'Allow user to enter new parts.',
+                ),
+                (
+                    'parts.view_part',
+                    'Can view parts',
+                    'Allow user to view existing parts',
+                ),
+            )
+        ),
+    )
 
 
 class FrequencyManager(models.Manager):
@@ -330,7 +334,7 @@ class TestInstanceStatus(models.Model):
         help_text=_("If unchecked, data with this status will not be exported and the TestInstance will not be considered a valid completed Test")
     )
 
-    # colour = models.CharField(default=settings.DEFAULT_COLOURS[0], max_length=22, validators=[validate_color])
+    colour = models.CharField(default=settings.DEFAULT_TEST_STATUS_COLOUR, max_length=22, validators=[validate_color])
 
     objects = StatusManager()
 
@@ -900,6 +904,18 @@ class UnitTestInfo(models.Model):
 
     def __str__(self):
         return "UnitTestInfo(%s)" % self.pk
+
+
+class UnitTestInfoChange(models.Model):
+
+    unit_test_info = models.ForeignKey(UnitTestInfo)
+    reference = models.ForeignKey(Reference, verbose_name=_("Old Reference"), null=True, blank=True, on_delete=models.SET_NULL)
+    reference_changed = models.BooleanField()
+    tolerance = models.ForeignKey(Tolerance, verbose_name=_("Old Tolerance"), null=True, blank=True, on_delete=models.SET_NULL)
+    tolerance_changed = models.BooleanField()
+    comment = models.TextField(help_text=_("Reason for the change"))
+    changed = models.DateTimeField(auto_now_add=True)
+    changed_by = models.ForeignKey(User, editable=False)
 
 
 class TestListMembershipManager(models.Manager):
@@ -1673,7 +1689,8 @@ class TestListInstance(models.Model):
                 'num': len(status[1]),
                 'valid': status[0].valid,
                 'reqs_review': status[0].requires_review,
-                'default': status[0].is_default
+                'default': status[0].is_default,
+                'colour': status[0].colour
             } for status in self.status(queryset)
         }
         to_return['Comments'] = {'num': comment_count, 'is_comments': 1}
@@ -1766,6 +1783,18 @@ class TestListInstance(models.Model):
 
     def __str__(self):
         return "TestListInstance(pk=%s)" % self.pk
+
+    def str_verbose(self):
+        return '%s (%s - %s)' % (
+            self.pk, self.test_list.name, timezone.localtime(self.created).strftime('%b %m, %I:%M %p')
+        )
+
+    def str_summary(self):
+        return '%s (%s%s)' % (
+            self.pk,
+            timezone.localtime(self.created).strftime('%b %m, %I:%M %p'),
+            ' - All reviewed' if self.all_reviewed else ''
+        )
 
 
 class TestListCycleManager(models.Manager):

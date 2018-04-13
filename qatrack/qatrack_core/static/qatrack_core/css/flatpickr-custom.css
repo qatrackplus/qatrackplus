@@ -1,6 +1,6 @@
 
 .flatpickr-day {
-    border-radius: 3px !important;
+    border-radius: 0 !important;
 }
 .flatpickr-day.selected {
     background-color: #627585 !important;
@@ -15,4 +15,9 @@ span.flatpickr-day.disabled {
 }
 .flatpickr-day {
     font-weight: bold;
+}
+div.flatpickr-calendar {
+    box-shadow: 2px 6px 4px rgba(53, 124, 165, .25);
+    border: 1px solid #bbb;
+    border-radius: 0;
 }

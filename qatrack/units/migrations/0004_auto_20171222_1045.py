@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='unit',
             name='date_acceptance',
-            field=models.DateField(default=datetime.datetime(2017, 12, 22, 15, 45, 4, 931551, tzinfo=utc), help_text='Optional date of acceptance'),
+            field=models.DateField(default=datetime.datetime(2018, 1, 1, 12, 0, 0, 0, tzinfo=utc), help_text='Optional date of acceptance'),
             preserve_default=False,
         ),
     ]

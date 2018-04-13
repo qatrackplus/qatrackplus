@@ -76,79 +76,9 @@ def room_location_searcher(request):
     return JsonResponse({'storage': list(storage), 'storage_no_location': storage_no_location.id}, safe=False)
 
 
-def go_units_parts_cost(request):
-
-    daterange = request.GET.get('date_range')
-    units = request.GET.getlist('units')
-    service_areas = request.GET.getlist('service_areas')
-    service_types = request.GET.getlist('service_types')
-
-    date_from = timezone.datetime.strptime(daterange.split(' - ')[0], '%d %b %Y')
-    date_to = timezone.datetime.strptime(daterange.split(' - ')[1], '%d %b %Y')
-
-    qs_pu = p_models.PartUsed.objects.select_related(
-        'service_event',
-        'service_event__unit_service_area',
-        'service_event__unit_service_area__unit',
-        'service_event__unit_service_area__service_area',
-        'service_event__service_type',
-        'part'
-    ).filter(
-        service_event__datetime_service__gte=date_from,
-        service_event__datetime_service__lte=date_to,
-        service_event__unit_service_area__unit_id__in=units,
-        service_event__unit_service_area__service_area_id__in=service_areas,
-        service_event__service_type_id__in=service_types
-    )
-
-    total_parts_cost = qs_pu.aggregate(total_parts_cost=Sum('part__cost'))['total_parts_cost']
-
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="qatrack_parts_units_cost.csv"'
-    response['Content-Type'] = 'text/csv; charset=utf-8'
-
-    writer = csv.writer(response)
-    headers = [
-        ['Parts Cost for Units:', '', date_from.strftime('%d %b %Y'), ' to ', date_to.strftime('%d %b %Y')],
-        ['Total Parts Cost: ', '', float(total_parts_cost) if total_parts_cost else 0],
-        ['Service Types:', ''] + [st.name for st in s_models.ServiceType.objects.filter(pk__in=service_types)],
-        [''],
-        ['', 'Service Areas'],
-        ['Units', ''] + [u.name for u in u_models.Unit.objects.filter(pk__in=units)] + ['Totals'],
-    ]
-
-    for sa in s_models.ServiceArea.objects.filter(pk__in=service_areas):
-        row = ['', sa.name]
-        for u in u_models.Unit.objects.filter(pk__in=units):
-            try:
-                usa = s_models.UnitServiceArea.objects.get(unit=u, service_area=sa)
-                row.append(qs_pu.filter(service_event__unit_service_area=usa).aggregate(parts_cost=Sum('part__cost'))['parts_cost'] or 0)
-            except s_models.UnitServiceArea.DoesNotExist:
-                row.append('---')
-        row.append(sum([r for r in row if type(r) in [int, Decimal]]))
-        headers.append(row)
-
-    headers.append(
-        ['', 'Totals'] +
-        [
-            qs_pu.filter(
-                service_event__unit_service_area__unit=u
-            ).aggregate(
-                parts_cost=Sum('part__cost')
-            )['parts_cost'] or 0 for u in u_models.Unit.objects.filter(pk__in=units)
-        ]
-    )
-
-    for h in headers:
-        writer.writerow(h)
-
-    return response
-
-
 class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, ModelFormMixin, ProcessFormView):
 
     model = p_models.Part
-    # form_class = AuthorForm
     template_name = 'parts/part_update.html'
     form_class = p_forms.PartForm
 
@@ -191,6 +121,10 @@ class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, Mo
 
         return context_data
 
+    def form_invalid(self, form):
+        messages.add_message(self.request, messages.ERROR, _('Please correct the errors below.'))
+        return super().form_invalid(form)
+
     def form_valid(self, form):
 
         context = self.get_context_data()
@@ -198,13 +132,12 @@ class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, Mo
         storage_formset = context['storage_formset']
 
         if not supplier_formset.is_valid() or not storage_formset.is_valid():
+            messages.add_message(self.request, messages.ERROR, _('Please correct the errors below.'))
             return self.render_to_response(context)
 
         part = form.save(commit=False)
-        if not part.pk:
-            messages.add_message(request=self.request, level=messages.SUCCESS, message='New part %s added' % part.part_number)
-        else:
-            messages.add_message(request=self.request, level=messages.SUCCESS, message='Part %s updated' % part.part_number)
+        message = 'New part %s added' % part.part_number if not part.pk else 'Part %s updated' % part.part_number
+        messages.add_message(request=self.request, level=messages.SUCCESS, message=message)
         part.save()
 
         for sup_form in supplier_formset:
@@ -235,17 +168,20 @@ class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, Mo
             elif sto_form.has_changed():
                 psc_instance.part = part
                 storage_field = sto_form.cleaned_data['storage_field']
-                if storage_field[0]:
+
+                if isinstance(storage_field, str):
                     psc_instance.storage = p_models.Storage.objects.create(
                         room=sto_form.cleaned_data['room'],
-                        location=storage_field[1]
+                        location=storage_field
                     )
                 else:
-                    psc_instance.storage = storage_field[1]
+                    psc_instance.storage = storage_field
 
                 psc_instance.save()
                 part.set_quantity_current()
 
+        if 'submit_add_another' in self.request.POST:
+            return HttpResponseRedirect(reverse('part_new'))
         return HttpResponseRedirect(reverse('parts_list'))
 
 
@@ -253,65 +189,6 @@ class PartDetails(DetailView):
 
     model = p_models.Part
     template_name = 'parts/part_details.html'
-
-
-class PartsUnitsCost(TemplateView):
-    template_name = 'parts/parts_units_cost.html'
-    queryset = u_models.Unit.objects.none()
-
-    def get(self, request, *args, **kwargs):
-
-        filters = request.GET
-        self.queryset = self.get_queryset(filters, pk=kwargs.get('pk', None))
-        return super(PartsUnitsCost, self).get(request, *args, **kwargs)
-
-    def get_queryset(self, filters, pk=None):
-        """K, I guess this works :/ """
-        if pk is None:
-            qs = u_models.Unit.objects.prefetch_related('service_areas').all()
-            for filt in filters:
-                if filt in ['site', 'type', 'type__vendor', 'type__unit_class']:
-                    filt_multi = filters[filt].split(',')
-                    if NONEORNULL in filt_multi:
-                        qs = qs.filter(**{'%s__name__in' % filt: filt_multi}) | qs.filter(**{filt: None})
-                    else:
-                        qs = qs.filter(**{'%s__name__in' % filt: filt_multi})
-                # elif filt == 'klass':
-                #     filt_multi = filters[filt].split(',')
-                #     if NONEORNULL in filt_multi:
-                #         qs = qs.filter(class__name__in=filt_multi) | qs.filter(**{filt: None})
-                #     else:
-                #         qs = qs.filter(class__name__in=filt_multi)
-                elif filt in ['active', 'restricted']:
-                    qs = qs.filter(**{filt: filters[filt]})
-                else:
-                    qs = qs.filter(**{'%s__icontains' % filt: filters[filt]})
-        else:
-            qs = u_models.Unit.objects.filter(pk=pk)
-
-        return qs
-
-    def get_context_data(self, **kwargs):
-        context = super(PartsUnitsCost, self).get_context_data(**kwargs)
-        context['names'] = [q.name for q in self.queryset]
-        context['units'] = self.queryset.exclude(service_areas=None)
-        context['service_areas'] = self.get_service_areas(self.queryset)
-        context['service_types'] = self.get_service_types()
-        return context
-
-    def get_service_areas(self, queryset):
-        sas = set()
-        for u in queryset:
-            sas.update(u.service_areas.all())
-        return sas
-
-    def get_service_types(self):
-        return s_models.ServiceType.objects.all()
-
-    def dispatch(self, request, *args, **kwargs):
-        if s_models.ServiceType.objects.all().exists() and u_models.Unit.objects.all().exists() and s_models.ServiceArea.objects.all().exists():
-            return super().dispatch(request, *args, **kwargs)
-        return redirect(reverse('err'))
 
 
 class PartsList(BaseListableView):
@@ -496,55 +373,3 @@ class SuppliersList(BaseListableView):
         c = {'p': p, 'request': self.request, 'next': mext}
         return template.render(c)
 
-
-def low_parts_pdf(request):
-
-    low_parts_qs = p_models.Part.objects.filter(quantity_current__lt=F('quantity_min')).prefetch_related('suppliers')
-    response = HttpResponse(content_type='application/pdf')
-    date = timezone.now().strftime('%Y-%m-%d')
-    filename = 'low-parts_%s' % date
-    response['Content-Disposition'] = 'attachement; filename={0}.pdf'.format(filename)
-    buffer = BytesIO()
-    report = canvas.Canvas(buffer, bottomup=False)
-
-    report.setFont('Helvetica-Bold', 10)
-
-    report.drawString(80, 40, 'Low Parts (%s)' % date)
-
-    report.drawString(30, 80, 'ID')
-    report.drawString(70, 80, 'Description')
-    report.drawString(270, 80, 'Part Number')
-    report.drawString(360, 80, 'Quantity')
-    report.drawString(420, 80, 'Suppliers')
-
-    report.setFont('Helvetica', 8)
-    page = 1
-    report.drawString(500, 40, 'Page %s' % page)
-    count = 1
-    for lp in low_parts_qs:
-        report.drawString(30, count * 10 + 90, str(lp.id))
-        report.drawString(70, count * 10 + 90, str(lp.description))
-        report.drawString(270, count * 10 + 90, str(lp.part_number))
-        report.drawString(360, count * 10 + 90, str(lp.quantity_current))
-        report.drawString(420, count * 10 + 90, str(' | '.join([s.name for s in lp.suppliers.all()])))
-        count += 1
-        if count > 70:
-
-            page += 1
-            report.showPage()
-            report.setFont('Helvetica-Bold', 10)
-            report.drawString(30, 80, 'ID')
-            report.drawString(70, 80, 'Description')
-            report.drawString(270, 80, 'Part Number')
-            report.drawString(360, 80, 'Quantity')
-            report.drawString(420, 80, 'Suppliers')
-            report.setFont('Helvetica', 8)
-            report.drawString(500, 40, 'Page %s' % page)
-            count = 1
-
-    report.showPage()
-    report.save()
-    pdf = buffer.getvalue()
-    buffer.close()
-    response.write(pdf)
-    return response

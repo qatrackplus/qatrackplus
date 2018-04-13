@@ -1,4 +1,4 @@
-require(['jquery', 'autosize', 'sl_utils'], function ($, autosize) {
+require(['jquery', 'autosize', 'sl_utils', 'comments'], function ($, autosize) {
     
     $(document).ready(function() {
 

@@ -1,10 +1,14 @@
+
+import json
 import re
 
 from django.conf import settings
 from django.contrib.auth.models import Group, User
+from django.core.serializers.json import DjangoJSONEncoder
 from django.core.validators import RegexValidator
 from django.db import models
 from django.utils.translation import ugettext as _
+from django.utils import timezone
 
 from qatrack.qa.models import TestListInstance, UnitTestCollection
 from qatrack.units.models import Unit, Vendor
@@ -12,6 +16,22 @@ from qatrack.units.models import Unit, Vendor
 re_255 = '([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])'
 color_re = re.compile('^rgba\(' + re_255 + ',' + re_255 + ',' + re_255 + ',(0(\.[0-9][0-9]?)?|1)\)$')
 validate_color = RegexValidator(color_re, _('Enter a valid color.'), 'invalid')
+
+NEW_SERVICE_EVENT = 'new_se'
+MODIFIED_SERVICE_EVENT = 'mod_se'
+STATUS_SERVICE_EVENT = 'stat_se'
+CHANGED_RTSQA = 'rtsqa'
+PERFORMED_RTS = 'perf_rts'
+APPROVED_RTS = 'app_rts'
+
+LOG_TYPES = (
+    (NEW_SERVICE_EVENT, 'New Service Event'),
+    (MODIFIED_SERVICE_EVENT, 'Modified Servicew Event'),
+    (STATUS_SERVICE_EVENT, 'Service Event Status Changed'),
+    (CHANGED_RTSQA, 'Changed Return To Service'),
+    (PERFORMED_RTS, 'Performed Return To Service'),
+    (APPROVED_RTS, 'Approved Return To Service')
+)
 
 
 class ServiceArea(models.Model):
@@ -127,19 +147,16 @@ class ServiceEvent(models.Model):
     datetime_status_changed = models.DateTimeField(null=True, blank=True)
     datetime_created = models.DateTimeField()
     datetime_service = models.DateTimeField(
-        verbose_name=_('Date and time'), help_text=_('Date and time this event took place')
+        verbose_name=_('Date and time'), help_text=_('Date and time this event started')
     )
     datetime_modified = models.DateTimeField(null=True, blank=True)
 
     safety_precautions = models.TextField(
-        null=True, blank=True, help_text=_('Were any special safety precautions taken?')
+        null=True, blank=True, help_text=_('Describe any safety precautions taken')
     )
     problem_description = models.TextField(help_text=_('Describe the problem leading to this service event'))
     work_description = models.TextField(
         null=True, blank=True, help_text=_('Describe the work done during this service event')
-    )
-    qafollowup_notes = models.TextField(
-        null=True, blank=True, help_text=_('Provide any extra information regarding return to services')
     )
     duration_service_time = models.DurationField(
         verbose_name=_('Service time'), null=True, blank=True,
@@ -150,7 +167,7 @@ class ServiceEvent(models.Model):
         help_text=_('Enter the total clinical time lost for this service event (Hours : minutes)')
     )
     is_review_required = models.BooleanField(
-        default=True, help_text=_('Does this service event require review?'), blank=True
+        default=True, blank=True
     )
 
     class Meta:
@@ -162,7 +179,25 @@ class ServiceEvent(models.Model):
         )
 
     def __str__(self):
-        return '%s' % self.id
+        return str(self.id)
+
+    def create_rts_log_details(self):
+        rts_states = []
+        for r in self.returntoserviceqa_set.all():
+
+            utc = r.unit_test_collection
+            if not r.test_list_instance:
+                state = 'tli_incomplete'
+                details = utc.name
+            elif not r.test_list_instance.all_reviewed:
+                state = 'tli_req_review'
+                details = r.test_list_instance.test_list.name
+            else:
+                state = 'tli_reviewed'
+                details = r.test_list_instance.test_list.name
+
+            rts_states.append({'state': state, 'details': details})
+        return rts_states
 
 
 class ThirdPartyManager(models.Manager):
@@ -229,6 +264,12 @@ class ReturnToServiceQA(models.Model):
         permissions = (('view_returntoserviceqa', 'Can view return to service qa'),
                        ('perform_returntoserviceqa', 'Can perform return to service qa'))
 
+    # def str_verbose(self):
+    #     if self.test_list_instance:
+    #         return '%s' % self.test_list_instance.str_verbose()
+    #     else:
+    #         return '%s - Incomplete' % self.unit_test_collection.name
+
 
 class GroupLinker(models.Model):
 
@@ -262,3 +303,79 @@ class GroupLinkerInstance(models.Model):
 
     class Meta:
         unique_together = ('service_event', 'group_linker')
+
+
+class JSONField(models.TextField):
+
+    def to_python(self, value):
+        if value == "":
+            return None
+
+        try:
+            if isinstance(value, str):
+                return json.loads(value)
+        except ValueError:
+            pass
+        return value
+
+    def from_db_value(self, value, *args):
+        return self.to_python(value)
+
+    def get_db_prep_save(self, value, *args, **kwargs):
+        if value == "":
+            return None
+        if isinstance(value, dict):
+            value = json.dumps(value, cls=DjangoJSONEncoder)
+        return value
+
+
+class ServiceLogManager(models.Manager):
+
+    def log_new_service_event(self, user, instance):
+        self.create(
+            user=user,
+            service_event=instance,
+            log_type=NEW_SERVICE_EVENT,
+        )
+
+    def log_changed_service_event(self, user, instance, extra_info):
+        self.create(
+            user=user,
+            service_event=instance,
+            log_type=MODIFIED_SERVICE_EVENT,
+            extra_info=json.dumps(extra_info)
+        )
+
+    def log_service_event_status(self, user, instance, extra_info, status_change):
+
+        self.create(
+            user=user,
+            service_event=instance,
+            log_type=STATUS_SERVICE_EVENT,
+            extra_info=json.dumps({'status_change': status_change, 'other_changes': extra_info})
+        )
+
+    def log_rtsqa_changes(self, user, instance):
+
+        self.create(
+            user=user,
+            service_event=instance,
+            log_type=CHANGED_RTSQA,
+            extra_info=json.dumps(instance.create_rts_log_details())
+        )
+
+
+class ServiceLog(models.Model):
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    service_event = models.ForeignKey(ServiceEvent, on_delete=models.CASCADE)
+
+    log_type = models.CharField(choices=LOG_TYPES, max_length=10)
+
+    extra_info = JSONField(blank=True, null=True)
+    datetime = models.DateTimeField(default=timezone.now, editable=False)
+
+    objects = ServiceLogManager()
+
+    class Meta:
+        ordering = ('-datetime',)

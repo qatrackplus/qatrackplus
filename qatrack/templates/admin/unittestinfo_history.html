@@ -1,0 +1,30 @@
+<div class="module">
+
+    <table id="change-history">
+        <thead>
+        <tr>
+            <th scope="col">Date/time</th>
+            <th scope="col">User</th>
+            <th scope="col">Old Reference</th>
+            <th scope="col">New Reference</th>
+            <th scope="col">Old Tolerance</th>
+            <th scope="col">New Tolerance</th>
+            <th style="max-width: 300px" scope="col">Comment</th>
+        </tr>
+        </thead>
+        <tbody>
+          {% for old, new in history %}
+            <tr>
+              <th scope="row">{{ new.changed }}</th>
+              <td>{{ new.changed_by.username }}</td>
+              <td>{{ new.reference }}</td>
+              <td>{{ old.reference }}</td>
+              <td>{{ new.tolerance }}</td>
+              <td>{{ old.tolerance }}</td>
+              <td style="max-width: 300px" >{{ new.comment}}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+    </table>
+
+</div>

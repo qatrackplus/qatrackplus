@@ -19,8 +19,8 @@
 {% endblock extrahead %}
 
 {% block after_field_sets %}{{ block.super }}
-
-    <fieldset class="module aligned" >
+    {% if USE_SERVICE_LOG %}
+        <fieldset class="module aligned" >
         <h2>Available Time on date of acceptance</h2>
 
         <div class="form-row field-changed_date">
@@ -104,5 +104,6 @@
 {#            {{ field }}#}
 {#        {% endfor %}#}
     </fieldset>
+    {% endif %}
 
 {% endblock %}

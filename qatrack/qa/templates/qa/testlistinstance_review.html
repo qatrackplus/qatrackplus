@@ -40,16 +40,14 @@
                                             <dt>Unit :</dt>
                                             <dd>{{tli.unit_test_collection.unit.name}}</dd>
 
-                                            <dt>Collection :</dt>
-                                            <dd>{{tli.unit_test_collection.tests_object.name}}</dd>
+                                            {% if tli.unit_test_collection.content_type.id == cycle_ct %}
+                                                <dt>Test List Cycle :</dt>
+                                                <dd>{{tli.unit_test_collection.tests_object.name}}</dd>
+                                            {% endif %}
 
                                             <dt>Test List :</dt>
                                             <dd>
-                                                {% if tli.test_list.description%}
-                                                    <a class="show-hide" id="test-list-info-toggle" title="Click to view description and general instructions for this test list">{{tli.test_list.name}} <i class="icon-info-sign" ></i></a>
-                                                {% else %}
-                                                   {{tli.test_list.name}}
-                                                {% endif %}
+                                                {{tli.test_list.name}}
                                             </dd>
 
                                             <dt>Performed By :</dt>
@@ -98,37 +96,22 @@
                                        </dl>
                                     </div>
                                     <div class="col-md-4">
-                                        <div class="row">
-                                            <label class="col-md-8">
-                                                {% if perms.service_log.add_serviceevent %}
-                                                    <a class="btn btn-default btn-xs btn-flat hover-parent" title="Create new service event initiated by this list" href="{% url 'sl_new' %}?ib={{ tli.pk }}&next={{request.path|cut:"data/"}}" target="se_tab">
-                                                        <i class="fa fa-stack fa-fw">
-                                                            <i class="fa fa-wrench fa-stack-custom-main"></i>
-                                                            <i class="fa fa-plus fa-stack-custom-sub upper-0 hover-sub-success"></i>
-                                                        </i>
-                                                        {% if service_events_ib|length == 0 %}Initiate Service Event{% endif %}
-                                                    </a>
-                                                {% endif %}
-                                                {% if service_events_ib|length > 0 %}Service events initiated:{% endif %}
-                                            </label>
-                                            <div class="col-md-4">
-                                                {% for se in service_events_ib %}
-                                                    {% if perms.service_log.view_serviceevent %}
-                                                        <a href="{% url 'sl_details' pk=se.id %}" class="btn btn-xs btn-flat service-event-btn margin-bottom-1" data-bgcolour="{{ se.service_status.colour }}" target="se_tab">{{ se.id }}</a>
-                                                    {% else %}
-                                                        <div>{{ se.id }}</div>
-                                                    {% endif %}
-                                                {% endfor %}
-                                            </div>
-                                        </div>
-
-                                        {% if service_events_rtsqa|length > 0 %}
-                                            <div class="row margin-top-10">
+                                        {% if USE_SERVICE_LOG %}
+                                            <div class="row">
                                                 <label class="col-md-8">
-                                                    RTS QA for Service Events:
+                                                    {% if perms.service_log.add_serviceevent %}
+                                                        <a class="btn btn-default btn-xs btn-flat hover-parent" title="Create new service event initiated by this test list" href="{% url 'sl_new' %}?ib={{ tli.pk }}&next={{request.path|cut:"data/"}}" target="se_tab">
+                                                            <i class="fa fa-stack fa-fw">
+                                                                <i class="fa fa-wrench fa-stack-custom-main"></i>
+                                                                <i class="fa fa-plus fa-stack-custom-sub upper-0 hover-sub-success"></i>
+                                                            </i>
+                                                            {% if service_events_ib|length == 0 %}Initiate Service Event{% endif %}
+                                                        </a>
+                                                    {% endif %}
+                                                    {% if service_events_ib|length > 0 %}Service events initiated:{% endif %}
                                                 </label>
                                                 <div class="col-md-4">
-                                                    {% for se in service_events_rtsqa %}
+                                                    {% for se in service_events_ib %}
                                                         {% if perms.service_log.view_serviceevent %}
                                                             <a href="{% url 'sl_details' pk=se.id %}" class="btn btn-xs btn-flat service-event-btn margin-bottom-1" data-bgcolour="{{ se.service_status.colour }}" target="se_tab">{{ se.id }}</a>
                                                         {% else %}
@@ -137,6 +120,23 @@
                                                     {% endfor %}
                                                 </div>
                                             </div>
+
+                                            {% if service_events_rtsqa|length > 0 %}
+                                                <div class="row margin-top-10">
+                                                    <label class="col-md-8">
+                                                        RTS QA for Service Events:
+                                                    </label>
+                                                    <div class="col-md-4">
+                                                        {% for se in service_events_rtsqa %}
+                                                            {% if perms.service_log.view_serviceevent %}
+                                                                <a href="{% url 'sl_details' pk=se.id %}" class="btn btn-xs btn-flat service-event-btn margin-bottom-1" data-bgcolour="{{ se.service_status.colour }}" target="se_tab">{{ se.id }}</a>
+                                                            {% else %}
+                                                                <div>{{ se.id }}</div>
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+                                            {% endif %}
                                         {% endif %}
 
                                     </div>
@@ -152,8 +152,8 @@
                                     <div class="row">
                                         <div class="col-md-12">
                                             {% spaceless %}
-                                                <div class="col-lg-12 pre left-border border-default">
-                                                    <div>{{tli.test_list.description.strip|safe}}</div>
+                                                <div class="col-lg-12">
+                                                    <div class="text-display pre">{{tli.test_list.description.strip|safe}}</div>
                                                 </div>
                                             {% endspaceless %}
                                         </div>
@@ -349,15 +349,21 @@
                                               Continue
                                             </a>
                                         {% elif perms.qa.change_testlistinstance %}
-                                            <a class="btn btn-primary btn-flat pull-right margin-r-5"
+                                            <a class="btn btn-default btn-flat pull-right margin-r-5"
                                               title="Edit this list"
                                               href="{%url 'edit_tli' pk=test_list_instance.pk%}?next={{request.get_full_path}}" >
                                               <i class="fa fa-edit"></i>
                                               Edit
                                             </a>
                                         {% endif %}
+                                        {% if perms.qa.can_view_history %}
+                                            <a class="btn btn-default btn-flat margin-r-5 pull-right" href="{% url 'review_utc' test_list_instance.unit_test_collection_id %}">
+                                              <i class="fa fa-list"></i>
+                                              History
+                                            </a>
+                                        {% endif %}
                                         {% if perms.qa.delete_testlistinstance %}
-                                          <a class="btn btn-danger btn-flat pull-right margin-r-5"
+                                          <a class="btn btn-danger btn-flat margin-r-5"
                                             title="This will redirect you to the admin site where you can permanently delete this qa session"
                                             href="{% url 'delete_test_list_instance' pk=test_list_instance.pk %}?next={{ request.META.HTTP_REFERER }}">
                                             <i class="fa fa-trash-o"></i>
@@ -365,12 +371,7 @@
                                           </a>
                                         {% endif %}
 
-                                        {% if perms.qa.can_view_history %}
-                                            <a class="btn btn-default btn-flat" href="{% url 'review_utc' test_list_instance.unit_test_collection_id %}">
-                                              <i class="fa fa-list"></i>
-                                              History
-                                            </a>
-                                        {% endif %}
+
                                     </div>
                                 </div>
                             </div>
@@ -420,7 +421,7 @@
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-md-12 padding-top-20">
+                            <div class="col-md-12">
                                 {% get_comment_form for tli as form %}
 
                                     <form id="comment-form" method="post">
@@ -435,7 +436,7 @@
                                     </form>
                                     <div class="row">
                                         <div class="col-md-12">
-                                            <button id="post-comment" class="btn btn-flat btn-info btn-sm" disabled="disabled">Post Comment</button>
+                                            <button id="post-comment" class="btn btn-flat btn-info btn-sm pull-right" disabled="disabled">Post Comment</button>
                                         </div>
                                     </div>
                             </div>

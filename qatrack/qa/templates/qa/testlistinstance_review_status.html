@@ -9,7 +9,7 @@
 
         <span class="label-group">
             {% for display,status in statuses.items %}
-                <span {% if not status.requires_review %} title="{% if status.reviewed %}Reviewed {{ status.reviewed }} by {{ status.reviewed_by }}.{% else %}Auto reviewed{% endif %}"{% endif %} class="label {% if not status.valid %} label-danger {% elif status.requires_review %} label-warning {% else %} label-success{% endif %}">
+                <span {% if not status.requires_review %} title="{% if status.reviewed %}Reviewed {{ status.reviewed }} by {{ status.reviewed_by }}.{% else %}Auto reviewed{% endif %}"{% endif %} class="label" style="background-color: {{ status.colour }}">
                     {% if show_icons %}
                         {% if status.requires_review %}
                             <i class="fa fa-question-circle" aria-hidden="true"></i>

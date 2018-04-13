@@ -31,23 +31,25 @@
 
     {% endif %}
 
-    {% if perms.service_log.view_serviceevent or perms.service_log.add_serviceevent or perms.service_log.perform_returntoserviceqa or perms.qa.can_review %}
-        <h3>Service Log</h3>
+    {% if USE_SERVICE_LOG %}
+        {% if perms.service_log.view_serviceevent or perms.service_log.add_serviceevent or perms.service_log.perform_returntoserviceqa or perms.qa.can_review %}
+            <h3>Service Log</h3>
 
-        <ul>
-            {% if perms.service_log.view_serviceevent %}
-                <li><a title="View all service events" href="{% url 'sl_list_all' %}">View all service events</a></li>
-            {% endif %}
-            {% if perms.service_log.add_serviceevent %}
-                <li><a title="Open new service event" href="{% url 'sl_new' %}">Open new service event</a></li>
-            {% endif %}
-            {% if perms.service_log.perform_returntoserviceqa %}
-                <li><a title="View all incomplete RTS QA" href="{% url 'rtsqa_list_all' %}?f=tli.in-1">View all incomplete RTS QA</a></li>
-            {% endif %}
-            {% if perms.qa.can_review %}
-                <li><a title="View unreviewed RTS QA" href="{% url 'rtsqa_list_all' %}?f=tli.in-0_tli.ar-0">View unreviewed RTS QA</a></li>
-            {% endif %}
-        </ul>
+            <ul>
+                {% if perms.service_log.view_serviceevent %}
+                    <li><a title="View all service events" href="{% url 'sl_list_all' %}">View all service events</a></li>
+                {% endif %}
+                {% if perms.service_log.add_serviceevent %}
+                    <li><a title="Open new service event" href="{% url 'sl_new' %}">Open new service event</a></li>
+                {% endif %}
+                {% if perms.service_log.perform_returntoserviceqa %}
+                    <li><a title="View all incomplete RTS QA" href="{% url 'rtsqa_list_all' %}?f=tli.in-1">View all incomplete RTS QA</a></li>
+                {% endif %}
+                {% if perms.qa.can_review %}
+                    <li><a title="View unreviewed RTS QA" href="{% url 'rtsqa_list_all' %}?f=tli.in-0_tli.ar-0">View unreviewed RTS QA</a></li>
+                {% endif %}
+            </ul>
+        {% endif %}
     {% endif %}
 
  {% endblock %}

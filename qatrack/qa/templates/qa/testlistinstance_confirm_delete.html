@@ -64,20 +64,22 @@
                               <td>A total of {{ object.testinstance_set.count }} Test Instances</td>
                               <td><strong>Yes</strong></td>
                             </tr>
-                            {% for rts in object.rtsqa_for_tli.all %}
-                              <tr class="warning">
-                                <td>Return To Service QA Assignment</td>
-                                <td>{{ rts.unit_test_collection.name }} assigned by {{ rts.user_assigned_by }} on {{ rts.datetime_assigned }}</td>
-                                <td>No</td>
-                              </tr>
-                            {% endfor %}
-                            {% for se in object.serviceevents_initiated.all %}
-                              <tr class="warning">
-                                <td>Service Event</td>
-                                <td>Area: {{ se.unit_service_area }}, Type: {{ se.service_type.name }}, Service Date {{ se.datetime_service |date }}</td>
-                                <td>No</td>
-                              </tr>
-                            {% endfor %}
+                            {% if USE_SERVICE_LOG %}
+                                {% for rts in object.rtsqa_for_tli.all %}
+                                  <tr class="warning">
+                                    <td>Return To Service QA Assignment</td>
+                                    <td>{{ rts.unit_test_collection.name }} assigned by {{ rts.user_assigned_by }} on {{ rts.datetime_assigned }}</td>
+                                    <td>No</td>
+                                  </tr>
+                                {% endfor %}
+                                {% for se in object.serviceevents_initiated.all %}
+                                  <tr class="warning">
+                                    <td>Service Event</td>
+                                    <td>Area: {{ se.unit_service_area }}, Type: {{ se.service_type.name }}, Service Date {{ se.datetime_service |date }}</td>
+                                    <td>No</td>
+                                  </tr>
+                                {% endfor %}
+                            {% endif %}
                           </tbody>
                         </table>
                         <form class="form form-horizontal text-right" action="" method="post">{% csrf_token %}
@@ -86,8 +88,8 @@
                             <strong>permanently</strong> delete {{ object.test_list.name }} from
                             {{ object.work_completed|date }}?
                           </p>
-                          <button class="btn btn-danger" type="submit"><i class="fa fa-trash-o"></i> Delete</button>
-                          <a href="{{ request.META.HTTP_REFERER }}" class="btn btn-default">
+                          <button class="btn btn-danger btn-flat" type="submit"><i class="fa fa-trash-o"></i> Delete</button>
+                          <a href="{{ request.META.HTTP_REFERER }}" class="btn btn-default btn-flat">
                             <i class="fa fa-ban"></i> Cancel
                           </a>
                         </form>

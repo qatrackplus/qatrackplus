@@ -39,16 +39,23 @@ class Room(models.Model):
     def __str__(self):
         return '%s%s' % (self.name, ' (%s)' % self.site.name if self.site else '')
 
+    def save(self, *args, **kwargs):
+        new = self.pk is None
+        super().save(*args, **kwargs)
+        if new:
+            # Create generic storage (ie, no location)
+            Storage.objects.create(room=self)
+
 
 class StorageManager(models.Manager):
 
     def get_queryset(self):
-        return super(StorageManager, self).get_queryset().select_related('room')
+        return super(StorageManager, self).get_queryset().select_related('room', 'room__site')
 
 
 class Storage(models.Model):
 
-    room = models.ForeignKey(Room, blank=True, null=True, help_text=_('Room for part storage'))
+    room = models.ForeignKey(Room, blank=True, null=True, help_text=_('Room for part storage'), on_delete=models.CASCADE)
 
     location = models.CharField(max_length=32, blank=True, null=True)
     description = models.TextField(max_length=255, null=True, blank=True)
@@ -67,6 +74,8 @@ class Storage(models.Model):
             items.append(self.room.name)
         if self.location:
             items.append(self.location)
+        else:
+            items.append('<no location>')
 
         return ' - '.join(items)
 
@@ -84,7 +93,7 @@ class PartCategory(models.Model):
 
 class Part(models.Model):
 
-    part_category = models.ForeignKey(PartCategory, blank=True, null=True, help_text=_('Category for this part'))
+    part_category = models.ForeignKey(PartCategory, blank=True, null=True)
     suppliers = models.ManyToManyField(
         Supplier, blank=True, help_text=_('Suppliers of this part'), related_name='parts',
         through='PartSupplierCollection'
@@ -93,18 +102,18 @@ class Part(models.Model):
         Storage, through='PartStorageCollection', related_name='parts', help_text=_('Storage locations for this part')
     )
 
-    part_number = models.CharField(max_length=32, help_text=_('Part number'), unique=True)
+    part_number = models.CharField(max_length=32, unique=True)
     alt_part_number = models.CharField(
-        max_length=32, help_text=_('Alternate part number'), blank=True, null=True
+        max_length=32, blank=True, null=True
     )
     description = models.TextField(help_text=_('Brief description of this part'))
     quantity_min = models.PositiveIntegerField(
-        default=0, help_text=_('Notify when the number parts falls below this number in storage'),
+        default=0, help_text=_('Notify when the quantity of this part in storage falls below this number'),
     )
     quantity_current = models.PositiveIntegerField(help_text=_('The number of parts in storage currently'), default=0, editable=False)
     cost = models.DecimalField(default=0, decimal_places=2, max_digits=10, help_text=_('Cost of this part'), null=True, blank=True)
     notes = models.TextField(max_length=255, blank=True, null=True, help_text=_('Additional comments about this part'))
-    is_obsolete = models.BooleanField(default=False, help_text=_('Is this part now obsolete'), verbose_name=_('Obsolete'))
+    is_obsolete = models.BooleanField(default=False, help_text=_('Is this part now obsolete?'))
 
     class Meta:
         permissions = (('view_part', 'Can View Part'),)
@@ -126,7 +135,12 @@ class Part(models.Model):
 class PartStorageCollectionManager(models.Manager):
 
     def get_queryset(self):
-        return super(PartStorageCollectionManager, self).get_queryset().select_related('storage', 'part')
+        return super(PartStorageCollectionManager, self).get_queryset().select_related(
+            'storage', 'part'
+        ).order_by(
+            '-quantity',
+            'part__part_number'
+        )
 
 
 class PartStorageCollection(models.Model):
@@ -142,13 +156,6 @@ class PartStorageCollection(models.Model):
         unique_together = ('part', 'storage')
 
     def save(self, *args, **kwargs):
-        # if self.quantity > 0:
-        #     super(PartStorageCollection, self).save(*args, **kwargs)
-        #     self.part.set_quantity_current()
-        # elif self.id:
-        #     part = self.part
-        #     self.delete()
-        #     part.set_quantity_current()
         self.quantity = self.quantity if self.quantity >= 0 else 0
         super(PartStorageCollection, self).save(*args, **kwargs)
         self.part.set_quantity_current()

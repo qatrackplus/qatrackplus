@@ -15,8 +15,8 @@
 
 {% block extra_css %}
 
-    <link href="{{ STATIC_URL }}daterangepicker/css/daterangepicker.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}qatrack_core/css/custom-daterangepicker.css?v={{ VERSION }}" rel="stylesheet">
+{#    <link href="{{ STATIC_URL }}daterangepicker/css/daterangepicker.css?v={{ VERSION }}" rel="stylesheet">#}
+{#    <link href="{{ STATIC_URL }}qatrack_core/css/custom-daterangepicker.css?v={{ VERSION }}" rel="stylesheet">#}
     <link href="{{ STATIC_URL }}qatrack_core/css/tables.css?v={{VERSION}}" rel="stylesheet">
     <link href="{{ STATIC_URL }}qa/css/qa.css?v={{VERSION}}" rel="stylesheet">
     <link href="{{ STATIC_URL }}icheck/css/blue.css?v={{VERSION}}" rel="stylesheet">
@@ -25,6 +25,7 @@
     <link href="{{ STATIC_URL }}qatrack_core/css/custom-select2.css?v={{ VERSION }}" rel="stylesheet">
     <link href="{{ STATIC_URL }}flatpickr/css/flatpickr.css?v={{ VERSION }}" rel="stylesheet">
     <link href="{{ STATIC_URL }}qatrack_core/css/flatpickr-custom.css?v={{ VERSION }}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}cheekycheck/css/cheekycheck.css?v={{ VERSION }}" rel="stylesheet">
 
 {% endblock extra_css %}
 
@@ -86,7 +87,6 @@
 
 {% block sidebar_toggle %}
     <a href="#" class="sidebar-toggle" data-toggle="offcanvas" role="button">
-{#        <span class="sr-only">Toggle navigation</span>#}
         <i id="toggle-icon" class="fa fa-chevron-left fa-lg" aria-hidden="true"></i>
     </a>
 {% endblock sidebar_toggle %}
@@ -95,6 +95,7 @@
 
     <form class="nosubmit form-inline" id="qa-form" method="POST" action="" autocomplete="off" enctype="multipart/form-data" >
         {% csrf_token %}
+
         <div id="box-contacts" class="row" style="display: none;">
             <div class="col-lg-12">
                 <div class="box">
@@ -144,14 +145,14 @@
                         </div>
                         <div class="box-body">
                             {% spaceless %}
-                                <div class="col-sm-12 pre left-border border-default">
+                                <div class="col-sm-12 pre text-display">
                                     {% if days and unit_test_collection.tests_object.description %}
                                         {% for day, display in days %}
                                             {% if day == current_day %}
                                                     <h5><b>Cycle Description: </b></h5>
                                                     <div>{{unit_test_collection.tests_object.description|safe}}</div>
                                                 </div>
-                                                <div class="col-sm-12 pre left-border border-default">
+                                                <div class="col-sm-12 pre text-display">
                                                     <h5><b>Test List Description - {{ display }}: </b></h5>
                                             {% endif %}
                                         {% endfor %}
@@ -168,7 +169,7 @@
         <div class="row" style="">
             {{ form.errors }}
             {% if perms.qa.can_review and perms.qa.can_review_own_tests or perms.qa.can_override_date %}
-                <div class="col-sm-4">
+                <div class="col-sm-{{ top_divs_span }}">
                     <div id="box-admin" class="box">
                         <div class="box-header">
                             <h3 class="box-title">
@@ -180,16 +181,16 @@
                             <div class="row">
                                 <div class="col-sm-12 form-horizontal">
                                     <div class="row {% if form.work_started.errors %} has-error{% endif %}">
-                                            <label for="id_work_started" class="col-md-5">
-                                                {{form.work_started.label}}:
-                                            </label>
-                                            <div class="col-md-7">
-                                                {{form.work_started}}
-                                                <i id="clear-work_started" class="fa fa-refresh fa-in-input datetime-clear"></i>
-                                            </div>
-                                            {% for e in form.work_started.errors %}
-                                                <div class="col-sm-12 help-block text-center">{{ e }}</div>
-                                            {% endfor %}
+                                        <label for="id_work_started" class="col-md-5">
+                                            {{form.work_started.label}}:
+                                        </label>
+                                        <div class="col-md-7">
+                                            {{form.work_started}}
+                                            <i id="clear-work_started" class="fa fa-refresh fa-in-input datetime-clear"></i>
+                                        </div>
+                                        {% for e in form.work_started.errors %}
+                                            <div class="col-sm-12 help-block text-center">{{ e }}</div>
+                                        {% endfor %}
                                     </div>
 
                                     {% if perms.qa.can_override_date %}
@@ -209,7 +210,6 @@
                                             </label>
                                             <div class="col-md-7">
                                                 {{form.work_completed}}
-    {#                                            <i class="fa fa-calendar fa-in-input"></i>#}
                                                 <i id="clear-work_completed" class="fa fa-times fa-in-input datetime-clear"></i>
                                             </div>
                                             {% for e in form.work_completed.errors %}
@@ -234,11 +234,11 @@
                     </div>
                 </div>
             {% else %}
-                <div class="col-sm-4"><div class="display-none">{{ form.work_started }}</div></div>
+                <div class="display-none">{{ form.work_started }}</div>
             {% endif %}
 
             {% if attachments|length > 0 %}
-                <div class="col-sm-4">
+                <div class="col-sm-{{ top_divs_span }}">
                     <div id="box-attachments">
                         <div class="box">
                             <div class="box-header">
@@ -262,13 +262,11 @@
                         </div>
                     </div>
                 </div>
-            {% else %}
-                <div class="col-sm-4"></div>
             {% endif %}
 
-            {% if form.instance.pk %}
+            {% if USE_SERVICE_LOG and form.instance.pk %}
                 {% if perms.service_log.add_serviceevent or service_events_ib|length > 0 %}
-                    <div class="col-sm-4">
+                    <div class="col-sm-{{ top_divs_span }}">
                         <div id="box-serviceevents">
                             <div class="box">
                                 <div class="box-header">
@@ -326,11 +324,9 @@
                             </div>
                         </div>
                     </div>
-                {% else %}
-                    <div class="col-sm-4"></div>
                 {% endif %}
-            {% elif rtsqa_id %}
-                <div class="col-sm-4">
+            {% elif USE_SERVICE_LOG and rtsqa_id %}
+                <div class="col-sm-{{ top_divs_span }}">
                     <div id="box-serviceevents">
                         <div class="box">
                             <div class="box-header">
@@ -350,8 +346,6 @@
                         </div>
                     </div>
                 </div>
-            {% else %}
-                <div class="col-sm-4"></div>
             {% endif %}
 
         </div>
@@ -478,7 +472,6 @@
                                 </table>
 
                                 <div class="row">
-{#                                    <div class="col-sm-6"></div>#}
                                     <div class="col-sm-7">
                                         <table class="table table-responsive table-condensed">
                                             <tbody>
@@ -492,7 +485,7 @@
 
                                                     <td id="tli-attachment-names" colspan="{% qa_table_colspan perms offset=2 %}">
 
-                                                    {% if test_list_instance and test_list_instance.attachment_set|length > 0 %}
+                                                    {% if test_list_instance and test_list_instance.attachment_set.all|length > 0 %}
                                                         {% for attach in test_list_instance.attachment_set.all %}
                                                             <i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>{{ attach | attachment_link }}
                                                         {% endfor %}
@@ -502,8 +495,9 @@
                                             </tbody>
                                         </table>
                                     </div>
-
-                                    <div class="col-sm-5">
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-12">
 
                                         <button id="submit-qa" type="submit" class="btn btn-primary btn-flat margin-r-5 pull-right">Submit QA Results</button>
 
@@ -511,10 +505,19 @@
 
                                         <div class="pull-right margin-r-5">
                                             {% if perms.qa.can_save_in_progress %}
-                                            <label title="{{form.in_progress.help_text}}" for="id_in_progress" class="add-on">
+                                            <label title="{{form.in_progress.help_text}}" for="id_in_progress" class="add-on" style="display: none;">
                                                 Mark this list as still in progress:
                                             </label>
                                             {{form.in_progress}}
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="pull-right margin-r-5">
+                                            {% if perms.service_log.add_serviceevent %}
+                                            <label title="{{form.initiate_service.help_text}}" for="id_initiate_service" class="add-on" style="display: none;">
+                                                Initiate service event:
+                                            </label>
+                                            {{ form.initiate_service }}
                                             {% endif %}
                                         </div>
 
@@ -592,7 +595,7 @@
                                     </form>
                                     <div class="row">
                                         <div class="col-md-12">
-                                            <button id="post-comment" class="btn btn-flat btn-info btn-sm" disabled="disabled">Post Comment</button>
+                                            <button id="post-comment" class="btn btn-flat btn-info btn-sm pull-right" disabled="disabled">Post Comment</button>
                                         </div>
                                     </div>
                             </div>
@@ -637,7 +640,7 @@
                 <li class="header">Test List Menu</li>
 
                 {% if test_list.description or unit_test_collection.tests_object.description %}
-                    <li class="info toggle-element" data-toggle="description"><a id="toggle-description" href="#!">
+                    <li class="primary toggle-element" data-toggle="description"><a id="toggle-description" href="#!">
                         <i class="fa fa-stack fa-fw" aria-hidden="true">
                             <i class="fa fa-file-text-o fa-stack-custom-main"></i>
                             <i class="fa fa-info fa-stack-custom-sub info"></i>
@@ -727,7 +730,7 @@
                 {% endif %}
 
                 <li class="divider"></li>
-                <li class="info toggle-element" data-toggle="contacts">
+                <li class="primary toggle-element" data-toggle="contacts">
                   <a id="toggle-contacts" href="#!">
                     <i class="fa fa-phone fa-fw" aria-hidden="true"></i>
                     <span>Contacts</span>

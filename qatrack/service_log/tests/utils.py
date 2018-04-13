@@ -8,6 +8,8 @@ from django.utils import timezone
 from qatrack.service_log import models
 from qatrack.qa.tests import utils as qa_utils
 from qatrack.qa import models as qa_models
+from qatrack.parts import models as p_models
+from qatrack.units import models as u_models
 
 
 def get_next_id(obj):
@@ -24,9 +26,6 @@ def create_service_area(name=None):
 
     sa, _ = models.ServiceArea.objects.get_or_create(name=name)
 
-    if _:
-        print('>>> Created Service Area ' + str(sa))
-
     return sa
 
 
@@ -39,13 +38,10 @@ def create_unit_service_area(unit=None, service_area=None):
 
     usa, _ = models.UnitServiceArea.objects.get_or_create(unit=unit, service_area=service_area)
 
-    if _:
-        print('>>> Created Unit Service Area ' + str(usa))
-
     return usa
 
 
-def create_service_event_status(name=None, is_default=False, is_review_required=False,
+def create_service_event_status(name=None, is_default=False, is_review_required=True,
                                 rts_qa_must_be_reviewed=False, colour=settings.DEFAULT_COLOURS[0]):
 
     if name is None:
@@ -55,9 +51,6 @@ def create_service_event_status(name=None, is_default=False, is_review_required=
         name=name, is_default=is_default, is_review_required=is_review_required,
         rts_qa_must_be_reviewed=rts_qa_must_be_reviewed, colour=colour
     )
-
-    if _:
-        print('>>> Created Service Event Status ' + str(ses))
 
     return ses
 
@@ -71,16 +64,13 @@ def create_service_type(name=None, is_review_required=False, is_active=True):
         name=name, is_review_required=is_review_required, is_active=is_active
     )
 
-    if _:
-        print('>>> Created Service Type ' + str(st))
-
     return st
 
 
 def create_service_event(unit_service_area=None, service_type=None, service_status=None, user_created_by=None,
                          datetime_service=timezone.now(), problem_description='problem_description',
-                         is_review_required=False, datetime_created=timezone.now(), add_test_list_instance_initiated_by=False
-                         ):
+                         is_review_required=False, datetime_created=timezone.now(),
+                         add_test_list_instance_initiated_by=False, service_time=None, lost_time=None):
 
     if unit_service_area is None:
         unit_service_area = create_unit_service_area()
@@ -94,7 +84,8 @@ def create_service_event(unit_service_area=None, service_type=None, service_stat
     se, _ = models.ServiceEvent.objects.get_or_create(
         unit_service_area=unit_service_area, service_type=service_type, service_status=service_status,
         user_created_by=user_created_by, datetime_service=datetime_service, problem_description=problem_description,
-        is_review_required=is_review_required, datetime_created=datetime_created
+        is_review_required=is_review_required, datetime_created=datetime_created, duration_service_time=service_time,
+        duration_lost_time=lost_time
     )
 
     if add_test_list_instance_initiated_by:
@@ -104,9 +95,6 @@ def create_service_event(unit_service_area=None, service_type=None, service_stat
             utc = qa_utils.create_unit_test_collection(unit=unit_service_area.unit)
             se.test_list_instance_initiated_by = qa_utils.create_test_list_instance(unit_test_collection=utc)
         se.save()
-
-    if _:
-        print('>>> Created Service Event ' + str(se))
 
     return se
 
@@ -122,9 +110,6 @@ def create_third_party(vendor=None, first_name=None, last_name=None):
 
     tp, _ = models.ThirdParty.objects.get_or_create(vendor=vendor, first_name=first_name, last_name=last_name)
 
-    if _:
-        print('>>> Created Third Party ' + tp.get_full_name())
-
     return tp
 
 
@@ -138,9 +123,6 @@ def create_hours(service_event=None, third_party=None, user=None, time=timezone.
     h, _ = models.Hours.objects.get_or_create(
         service_event=service_event, third_party=third_party, user=user, time=time
     )
-
-    if _:
-        print('>>> Created Hours ' + str(h))
 
     return h
 
@@ -168,23 +150,17 @@ def create_return_to_service_qa(service_event=None, unit_test_collection=None, u
         rtsqa.test_list_instance = tli
         rtsqa.save()
 
-    if _:
-        print('>>> Created Return To Service QA ' + str(rtsqa))
-
     return rtsqa
 
 
 def create_group_linker(group=None, name=None):
 
     if group is None:
-        group = qa_utils.create_group(name='group')
+        group = qa_utils.create_group()
     if name is None:
         name = 'group_linker_%04d' % get_next_id(models.GroupLinker.objects.order_by('id').last())
 
     gl, _ = models.GroupLinker.objects.get_or_create(group=group, name=name)
-
-    if _:
-        print('>>> Created Group Linker ' + str(gl))
 
     return gl
 
@@ -202,8 +178,91 @@ def create_group_linker_instance(group_linker=None, user=None, service_event=Non
         group_linker=group_linker, user=user, service_event=service_event, datetime_linked=datetime_linked
     )
 
-    if _:
-        print('>>> Created Group Linker Instance ' + str(gli))
-
     return gli
 
+
+def create_part_category(name=None):
+
+    if name is None:
+        name = 'part_category_%04d' % get_next_id(p_models.PartCategory.objects.order_by('id').last())
+
+    pc, _ = p_models.PartCategory.objects.get_or_create(name=name)
+
+    return pc
+
+
+def create_part(part_category=None, part_number=None, description='description', add_storage=False, quantity_min=0,
+                quantity_current=1, alt_part_number=None):
+
+    if part_category is None:
+        part_category = create_part_category()
+    if part_number is None:
+        part_number = get_next_id(p_models.PartCategory.objects.order_by('id').last())
+
+    p, _ = p_models.Part.objects.get_or_create(
+        part_category=part_category, part_number=part_number, description=description, quantity_min=quantity_min,
+        quantity_current=quantity_current, alt_part_number=alt_part_number
+    )
+
+    if add_storage:
+        s = create_storage()
+        create_part_storage_collection(part=p, storage=s, quantity=quantity_current)
+        p.save()
+
+    return p
+
+
+def create_storage(room=None, location='shelf', quantity=1):
+
+    if room is None:
+        room = create_room()
+
+    s, _ = p_models.Storage.objects.get_or_create(room=room, location=location)
+
+    return s
+
+
+def create_room(site=None, name=None):
+
+    if name is None:
+        name = 'room_%04d' % get_next_id(p_models.Room.objects.order_by('id').last())
+    if site is None:
+        site = create_site()
+
+    r, _ = p_models.Room.objects.get_or_create(name=name, site=site)
+
+    return r
+
+
+def create_site(name=None):
+
+    if name is None:
+        name = 'site_%04d' % get_next_id(u_models.Site.objects.order_by('id').last())
+
+    s, _ = u_models.Site.objects.get_or_create(name=name)
+
+    return s
+
+
+def create_supplier(name=None):
+
+    if name is None:
+        name = 'supplier_%04d' % get_next_id(p_models.Supplier.objects.order_by('id').last())
+
+    s, _ = p_models.Supplier.objects.get_or_create(name=name)
+
+    return s
+
+
+def create_part_storage_collection(part=None, storage=None, quantity=1):
+
+    if part is None:
+        part = create_part()
+    if storage is None:
+        storage = create_storage()
+
+    psc, _ = p_models.PartStorageCollection.objects.get_or_create(
+        part=part, storage=storage, quantity=quantity
+    )
+
+    return psc

@@ -1,0 +1,10 @@
+<div class="box-comment" id="c{{ comment.id }}"{% if hidden %} style="display: none;{% endif %}">
+    {% spaceless %}
+        <div class="comment-text">
+            <span class="username">{{ comment.name }}
+                <span class="text-muted pull-right">{{ comment.submit_date }}</span>
+            </span>
+            <span class="comment">{{ comment.comment }}</span>
+        </div>
+    {% endspaceless %}
+</div>

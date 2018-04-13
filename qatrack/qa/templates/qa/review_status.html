@@ -3,19 +3,19 @@
 {% else %}
     <span class="label-group">
         {% for display, status in statuses.items %}
-            <span {% if not status.requires_review %} title="Reviewed {{ status.reviewed }} by {{ status.reviewed_by }}."{% endif %} class="label {% if not status.valid %} action {% elif status.requires_review %} tolerance {% else %} ok{% endif %}">
+            <span {% if not status.requires_review %} title="Reviewed {{ status.reviewed }} by {{ status.reviewed_by }}."{% endif %} class="label" style="background-color: {{ status.colour }};">
                 {% if show_icons %}
                     {% if status.requires_review %}
-                        <i class="icon-question-sign"></i>
+                        <i class="fa fa-question-circle"></i>
                     {% elif not status.valid %}
-                        <i class="icon-minus-sign"></i>
+                        <i class="fa fa-minus-circle"></i>
                     {% endif %}
                 {% endif %}
-                {{ status.count }} {{ display }}
+                {{ status.count }} {% if show_labels %}{{ display }} {% endif %}
             </span>
         {% endfor %}
         {% if comments %}
-            <span class="label label-info">{{ comments }} <i class="icon-comment"></i></span>
+            <span class="label label-info">{{ comments }} <i class="fa fa-comment"></i></span>
         {% endif %}
     </span>
 {% endif %}

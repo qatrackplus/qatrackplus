@@ -1,5 +1,5 @@
 "use strict";
-require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jquery-ui', 'comments', 'flatpickr'], function ($, _, moment, Dropzone, autosize) {
+require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'inputmask', 'jquery-ui', 'comments', 'flatpickr'], function ($, _, moment, Dropzone, autosize) {
     var csrf_token = $("input[name=csrfmiddlewaretoken]").val();
 
     function csrfSafeMethod(method) {
@@ -243,8 +243,11 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jqu
         this.test_list_id = $("#test-list-id").val();
 
         this.comment = this.row.next();
+        this.error = $('.qa-error.row-' + this.prefix);
 
         this.visible = true;
+        this.showing_comment = false;
+        this.showing_procedure = false;
 
         this.hover = false;
 
@@ -288,7 +291,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jqu
         this.comment_icon = this.row.find(".qa-showcmt i");
 
         this.show_comment.click(function(){
-
+            self.showing_comment = !self.showing_comment;
             self.comment.toggle('fast');
             self.comment.find('.comment-bar').slideToggle('fast');
             self.comment.find('.comment-bar').toggleClass('in');
@@ -314,6 +317,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jqu
         this.procedure = this.comment.next();
         this.show_procedure.click(function(){
             // self.procedure.toggle('fast');
+            self.showing_procedure = !self.showing_procedure;
             self.procedure.find('.procedure-bar').slideToggle('fast').toggleClass('in');
             self.comment.find('.procedure-bar').toggleClass('in');
             self.row.find('.procedure-bar').toggleClass('in');
@@ -492,10 +496,11 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jqu
 
         this.show = function(){
             self.row.show();
-            self.comment.hide();
-            self.comment.find('.comment-div').hide();
-            self.procedure.hide('fast');
-            self.procedure.find('.procedure-container').hide();
+            self.comment.find('.comment-div').show();
+            if (self.showing_procedure) {
+                self.procedure.find('.procedure-container').show();
+            }
+            this.error.show();
             self.set_skip(false);
             self.visible = true;
             self.comment_box.val(self.comment_box.val().replace(self.NOT_PERFORMED,""));
@@ -506,11 +511,10 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jqu
 
         this.hide = function(){
             self.row.hide();
-            self.comment.hide();
             self.comment.find('.comment-div').hide();
-            self.procedure.hide('fast');
             self.procedure.find('.procedure-container').hide();
             self.visible = false;
+            this.error.hide();
 
             // skipping sets value to null but we want to presever value in case it
             // is unfiltered later. Filtered values will be nulled on submitt
@@ -736,9 +740,9 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jqu
                 }).length > 0;
         };
 
-        $.Topic("categoryFilter").subscribe(function(categories){
-            _.each(self.test_instances,function(ti){
-                if (categories === "all" || _.includes(categories,ti.test_info.test.category.toString())){
+        $.Topic("categoryFilter").subscribe(function(categories) {
+            _.each(self.test_instances, function(ti){
+                if (categories === "all" || _.includes(categories, ti.test_info.test.category.toString())){
                     ti.show();
                 }else{
                     ti.hide();
@@ -852,9 +856,9 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jqu
                 },
                 processResults: function (data, params) {
                     var results = [];
-                    for (var i in data.colour_ids) {
-                        var se_id = data.colour_ids[i][0],
-                            s_id = data.colour_ids[i][1];
+                    for (var i in data.service_events) {
+                        var se_id = data.service_events[i][0],
+                            s_id = data.service_events[i][1];
                         results.push({id: se_id, text: 'ServiceEvent ' + se_id});
                         se_statuses[se_id] = s_id;
                     }
@@ -1122,6 +1126,18 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'inputmask', 'jqu
                     $(this).css('background-color', $(this).attr('data-bgcolour'))
                 }
             );
+        });
+
+		$('#id_in_progress').cheekycheck({
+            right: true,
+            check: '<i class="fa fa-check"></i>',
+            extra_class: 'warning'
+        });
+
+		$('#id_initiate_service').cheekycheck({
+            right: true,
+            check: '<i class="fa fa-check"></i>',
+            extra_class: 'warning'
         });
 
     });

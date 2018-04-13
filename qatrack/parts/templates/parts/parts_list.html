@@ -12,6 +12,7 @@
     <link href="{{ STATIC_URL }}daterangepicker/css/daterangepicker.css?v={{VERSION}}" rel="stylesheet">
     <link href="{{ STATIC_URL }}qatrack_core/css/tables.css?v={{VERSION}}" rel="stylesheet">
     <link href="{{ STATIC_URL }}qatrack_core/css/custom-daterangepicker.css?v={{VERSION}}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}parts/css/parts.css?v={{VERSION}}" rel="stylesheet">
 {% endblock extra_css %}
 
 {% block extra_js %}
@@ -35,14 +36,6 @@
 
                 </div>
                 <div class="box-body pad">
-{#                    {% if print_parts %}#}
-{#                        <div class="row noprint">#}
-{#                            <div class="col-sm-12">#}
-{#                                <a href="javascript:window.print()" class="btn btn-flat btn-info">Print</a>#}
-{#                                <a href="{% url 'low_parts_pdf' %}" class="btn btn-flat btn-info">PDF</a>#}
-{#                            </div>#}
-{#                        </div>#}
-{#                    {% endif %}#}
                     {{ listable_table }}
                 </div>
             </div>

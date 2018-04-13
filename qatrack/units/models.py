@@ -42,7 +42,7 @@ class UnitClass(models.Model):
 
     def __str__(self):
         """Display more descriptive name"""
-        return '<UnitClass(%s)>' % self.name
+        return self.name
 
 
 class Site(models.Model):
@@ -219,3 +219,19 @@ class UnitAvailableTime(models.Model):
 
     def __str__(self):
         return 'Available time for %s' % self.unit.name
+
+    @staticmethod
+    def available_times_on_unit_acceptance(unit_id):
+        unit = Unit.objects.get(pk=unit_id)
+        try:
+            uat = UnitAvailableTime.objects.get(unit=unit, date_changed=unit.date_acceptance)
+        except models.ObjectDoesNotExist:
+            kwargs = {'unit': unit, 'date_changed': unit.date_acceptance}
+            for d in settings.DEFAULT_AVAILABLE_TIMES:
+                kwargs[d] = settings.DEFAULT_AVAILABLE_TIMES[d]
+            uat = UnitAvailableTime(**kwargs)
+
+        return uat
+
+
+

@@ -48,10 +48,8 @@
                                         <dt>Quantity min:</dt><dd><div>{{ part.quantity_min }}</div></dd>
                                         <dt>Quantity current:</dt><dd><div>{{ part.quantity_current }}</div></dd>
                                     </dl>
-                                    <dl>
-                                        <dt>Description:</dt>
-                                        <dd>{{ part.description }}</dd>
-                                    </dl>
+
+
                                 </div>
                                 <div class="col-sm-6">
                                     <dl class="dl-horizontal">
@@ -59,12 +57,26 @@
                                         <dt>Part category:</dt><dd><div>{% if part.part_category %}{{ part.part_category }}{% endif %}</div></dd>
                                         <dt>Obsolete:</dt><dd><div>{{ part.is_obsolete }}</div></dd>
                                     </dl>
-                                    <dl>
-                                        <dt>Notes:</dt>
-                                        <dd>{{ part.notes }}</dd>
-                                    </dl>
+
                                 </div>
 
+                            </div>
+                            <div class="row display-flex">
+                                <div class="col-md-6">
+                                    {% spaceless %}
+                                    <dl class="height-100 margin-0">
+                                        <dt>Description:</dt>
+                                        <dd class="text-display pre height-100-40">{{ part.description }}</dd>
+                                    </dl>{% endspaceless %}
+                                </div>
+                                <div class="col-md-6">
+                                    {% if part.notes %}{% spaceless %}
+                                    <dl class="height-100 margin-0">
+                                        <dt>Notes:</dt>
+                                        <dd class="text-display pre height-100-40">{{ part.notes }}</dd>
+                                    </dl>{% endspaceless %}
+                                    {% endif %}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -142,12 +154,10 @@
                 </div>
             </div>
 
-
-
             <div class="row">
                 <div class="col-md-12">
                     {% if perms.parts.change_part %}
-                        <a href="{% url 'part_edit' part.id %}" class="btn btn-flat btn-primary">Edit</a>
+                        <a href="{% url 'part_edit' part.id %}" class="btn btn-flat btn-default pull-right">Edit</a>
                     {% endif %}
                 </div>
             </div>

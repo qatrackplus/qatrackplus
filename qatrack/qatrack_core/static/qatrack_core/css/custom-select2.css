@@ -90,6 +90,7 @@
   border-color: #3d4d5e;
   padding: 1px 10px;
   color: #fff;
+  border-radius: 2px;
 }
 .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
   margin-right: 5px;
@@ -110,4 +111,8 @@
 
 .select2-container--default .select2-selection--multiple:focus {
   border-color: #3c8dbc;
+}
+.required-option {
+  color: #bbb;
+  font-style: italic;
 }

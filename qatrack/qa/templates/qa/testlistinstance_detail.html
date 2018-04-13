@@ -55,21 +55,7 @@
 
                                     <dt>Performed By :</dt>
                                     <dd>{{tli.created_by}}</dd>
-                                    <dt>Actions:</dt>
-                                    <dd>
 
-                                        {% if perms.qa.delete_testlistinstance %}
-                                          <a class="btn btn-danger btn-xs btn-flat" title="This will redirect you to the admin site where you can permanently delete this qa session" href="{% url 'delete_test_list_instance' pk=test_list_instance.pk %}">Delete</a>
-                                        {% endif %}
-                                        {% if tli.in_progress %}
-                                            <a class="btn btn-default btn-xs btn-flat" title="Continue this list" href="{%url 'continue_tli' pk=tli.pk%}?next={{request.get_full_path}}" >Continue</a>
-                                        {% elif perms.qa.change_testlistinstance %}
-                                            <a class="btn btn-default btn-xs btn-flat" title="Edit this list" href="{%url 'edit_tli' pk=tli.pk%}?next={{request.get_full_path}}" >Edit</a>
-                                        {% endif %}
-                                        {% if perms.qa.can_review %}
-                                            <a href="{% url 'review_test_list_instance' pk=tli.pk %}?next={{request.get_full_path}}" class="btn btn-xs btn-default btn-flat">Review</a>
-                                        {% endif %}
-                                    </dd>
                                </dl>
                             </div>
                             <div class="col-md-4">
@@ -108,37 +94,22 @@
                                </dl>
                             </div>
                             <div class="col-md-4">
-                                <div class="row">
-                                    <label class="col-md-8">
-                                        {% if perms.service_log.add_serviceevent %}
-                                            <a class="btn btn-default btn-xs btn-flat hover-parent" title="Create new service event initiated by this list" href="{% url 'sl_new' %}?ib={{ tli.pk }}&next={{request.path|cut:"data/"}}" target="se_tab">
-                                                <i class="fa fa-stack fa-fw">
-                                                    <i class="fa fa-wrench fa-stack-custom-main"></i>
-                                                    <i class="fa fa-plus fa-stack-custom-sub upper-0 hover-sub-success"></i>
-                                                </i>
-                                                {% if service_events_ib|length == 0 %}Initiate Service Event{% endif %}
-                                            </a>
-                                        {% endif %}
-                                        {% if service_events_ib|length > 0 %}Service events initiated:{% endif %}
-                                    </label>
-                                    <div class="col-md-4">
-                                        {% for se in service_events_ib %}
-                                            {% if perms.service_log.view_serviceevent %}
-                                                <a href="{% url 'sl_details' pk=se.id %}" class="btn btn-xs btn-flat service-event-btn margin-bottom-1" data-bgcolour="{{ se.service_status.colour }}" target="se_tab">{{ se.id }}</a>
-                                            {% else %}
-                                                <div>{{ se.id }}</div>
-                                            {% endif %}
-                                        {% endfor %}
-                                    </div>
-                                </div>
-
-                                {% if service_events_rtsqa|length > 0 %}
-                                    <div class="row margin-top-10">
+                                {% if USE_SERVICE_LOG %}
+                                    <div class="row">
                                         <label class="col-md-8">
-                                            RTS QA for Service Events:
+                                            {% if perms.service_log.add_serviceevent %}
+                                                <a class="btn btn-default btn-xs btn-flat hover-parent" title="Create new service event initiated by this list" href="{% url 'sl_new' %}?ib={{ tli.pk }}&next={{request.path|cut:"data/"}}" target="se_tab">
+                                                    <i class="fa fa-stack fa-fw">
+                                                        <i class="fa fa-wrench fa-stack-custom-main"></i>
+                                                        <i class="fa fa-plus fa-stack-custom-sub upper-0 hover-sub-success"></i>
+                                                    </i>
+                                                    {% if service_events_ib|length == 0 %}Initiate Service Event{% endif %}
+                                                </a>
+                                            {% endif %}
+                                            {% if service_events_ib|length > 0 %}Service events initiated:{% endif %}
                                         </label>
                                         <div class="col-md-4">
-                                            {% for se in service_events_rtsqa %}
+                                            {% for se in service_events_ib %}
                                                 {% if perms.service_log.view_serviceevent %}
                                                     <a href="{% url 'sl_details' pk=se.id %}" class="btn btn-xs btn-flat service-event-btn margin-bottom-1" data-bgcolour="{{ se.service_status.colour }}" target="se_tab">{{ se.id }}</a>
                                                 {% else %}
@@ -147,11 +118,47 @@
                                             {% endfor %}
                                         </div>
                                     </div>
+
+                                    {% if service_events_rtsqa|length > 0 %}
+                                        <div class="row margin-top-10">
+                                            <label class="col-md-8">
+                                                RTS QA for Service Events:
+                                            </label>
+                                            <div class="col-md-4">
+                                                {% for se in service_events_rtsqa %}
+                                                    {% if perms.service_log.view_serviceevent %}
+                                                        <a href="{% url 'sl_details' pk=se.id %}" class="btn btn-xs btn-flat service-event-btn margin-bottom-1" data-bgcolour="{{ se.service_status.colour }}" target="se_tab">{{ se.id }}</a>
+                                                    {% else %}
+                                                        <div>{{ se.id }}</div>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    {% endif %}
                                 {% endif %}
                             </div>
 
-                        {% endwith %}
-                    </div>
+                        </div>
+                        {% if tli.test_list.description %}
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <dl class="dl-horizontal">
+                                        <dt>Description:</dt>
+                                    </dl>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    {% spaceless %}
+                                        <div class="col-lg-12">
+                                            <div class="text-display pre">{{tli.test_list.description.strip|safe}}</div>
+                                        </div>
+                                    {% endspaceless %}
+                                </div>
+                            </div>
+                        {% endif %}
+
+                    {% endwith %}
 
                 </div>
             </div>
@@ -247,6 +254,19 @@
 
                     </div>
                 </div>
+                <div class="box-footer">
+                    {% if perms.qa.delete_testlistinstance %}
+                      <a class="btn btn-danger btn-flat" title="This will redirect you to the admin site where you can permanently delete this qa session" href="{% url 'delete_test_list_instance' pk=test_list_instance.pk %}">Delete</a>
+                    {% endif %}
+                    {% if test_list_instance.in_progress %}
+                        <a class="btn btn-default pull-right btn-flat margin-r-5" title="Continue this list" href="{%url 'continue_tli' pk=test_list_instance.pk%}?next={{request.get_full_path}}" >Continue</a>
+                    {% elif perms.qa.change_testlistinstance %}
+                        <a class="btn btn-default pull-right btn-flat margin-r-5" title="Edit this list" href="{%url 'edit_tli' pk=test_list_instance.pk%}?next={{request.get_full_path}}" >Edit</a>
+                    {% endif %}
+                    {% if perms.qa.can_review %}
+                        <a href="{% url 'review_test_list_instance' pk=test_list_instance.pk %}?next={{request.get_full_path}}" class="btn pull-right btn-default btn-flat margin-r-5">Review</a>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
@@ -282,7 +302,7 @@
                                 </form>
                                 <div class="row">
                                     <div class="col-md-12">
-                                        <button id="post-comment" class="btn btn-flat btn-info btn-sm" disabled="disabled">Post Comment</button>
+                                        <button id="post-comment" class="btn btn-flat btn-info btn-sm pull-right" disabled="disabled">Post Comment</button>
                                     </div>
                                 </div>
                         </div>

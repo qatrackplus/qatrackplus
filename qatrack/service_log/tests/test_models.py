@@ -7,10 +7,8 @@ from django.db.utils import IntegrityError
 from django.db.models import ProtectedError, ObjectDoesNotExist
 from django.test import TestCase, TransactionTestCase
 from django.utils import timezone
-from django_comments.models import Comment
 
 from qatrack.service_log import models as sl_models
-from qatrack.units import models as u_models
 
 from qatrack.qa.tests import utils as qa_utils
 from qatrack.service_log.tests import utils as sl_utils
@@ -18,21 +16,27 @@ from qatrack.service_log.tests import utils as sl_utils
 
 class TestUnitServiceArea(TestCase):
 
+    def setUp(self):
+
+        self.u = qa_utils.create_unit()
+        self.sa = sl_utils.create_service_area()
+
     def test_unique_together(self):
 
-        u = qa_utils.create_unit()
-        sa = sl_utils.create_service_area()
-
-        sl_utils.create_unit_service_area(unit=u, service_area=sa)
+        sl_utils.create_unit_service_area(unit=self.u, service_area=self.sa)
 
         with self.assertRaises(IntegrityError):
-            sl_models.UnitServiceArea.objects.create(unit=u, service_area=sa)
+            sl_models.UnitServiceArea.objects.create(unit=self.u, service_area=self.sa)
+
+    def test_str(self):
+        usa = sl_utils.create_unit_service_area(unit=self.u, service_area=self.sa)
+        self.assertTrue(self.u.name in str(usa) and self.sa.name in str(usa))
 
 
 class TestServiceEventStatus(TestCase):
 
     def setUp(self):
-        sl_utils.create_service_event_status()
+        self.ses = sl_utils.create_service_event_status()
 
     def test_name_unique(self):
 
@@ -66,6 +70,9 @@ class TestServiceEventStatus(TestCase):
         self.assertEqual(colours[ses_01.id], settings.DEFAULT_COLOURS[1])
         self.assertEqual(colours[ses_02.id], settings.DEFAULT_COLOURS[2])
 
+    def test_str(self):
+        self.assertTrue(self.ses.name in str(self.ses))
+
 
 class TestThirdParty(TestCase):
 
@@ -79,20 +86,27 @@ class TestThirdParty(TestCase):
         with self.assertRaises(IntegrityError):
             sl_models.ThirdParty.objects.create(vendor=v_01, first_name=tp_01_first_name, last_name=tp_01_last_name)
 
+    def test_get_full_name(self):
+        tp = sl_utils.create_third_party()
+        self.assertTrue(tp.first_name in tp.get_full_name() and tp.last_name in tp.get_full_name())
+        self.assertTrue(tp.vendor.name in tp.get_full_name())
+
 
 class TestServiceEventAndRelated(TransactionTestCase):
 
     def setUp(self):
-        sl_utils.create_service_event()
+        self.se = sl_utils.create_service_event()
 
     def test_third_party_and_hours(self):
+        """
+        Note: with self.assertRaises(IntegrityError): will fail when testing with sqlite3 backend
+        """
 
         se = sl_models.ServiceEvent.objects.first()
         tp = sl_utils.create_third_party()
 
         h_01 = sl_utils.create_hours(service_event=se, third_party=tp)
 
-        # Test unique together
         with self.assertRaises(IntegrityError):
             sl_models.Hours.objects.create(service_event=se, third_party=tp, user=None, time=timezone.timedelta(hours=1))
 
@@ -125,13 +139,18 @@ class TestServiceEventAndRelated(TransactionTestCase):
 
         self.assertEqual(2, len(se.grouplinkerinstance_set.all()))
 
+        self.assertTrue(gl_01_name in str(gl_01))
+
+    def test_str(self):
+        self.assertTrue(str(self.se.id) in str(self.se))
+
 
 class TestDeletions(TransactionTestCase):
 
     def test_delete_grouplinkerinstance_variables(self):
 
         # group_linker  > Protect
-        # user          > Prtect
+        # user          > Protect
         # service_event > Cascade
 
         gli = sl_utils.create_group_linker_instance()
@@ -289,4 +308,3 @@ class TestDeletions(TransactionTestCase):
 
         sa.delete()
         self.assertFalse(sl_models.UnitServiceArea.objects.filter(id=usa_id).exists())
-

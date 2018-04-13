@@ -108,12 +108,16 @@ class CostInputField(forms.CharField):
 
     def to_python(self, value):
         value = value.replace('$', '').replace(',', '')
+        if value == '':
+            raise ValidationError(self.error_messages['required'], code='required')
+        if float(value) < 0:
+            raise ValidationError('Ensure this value is greater than or equal to 0.')
         return value
 
 
 class PartForm(BetterModelForm):
 
-    cost = CostInputField()
+    cost = CostInputField(help_text=p_models.Part._meta.get_field('cost').help_text)
 
     class Meta:
         model = p_models.Part
@@ -123,18 +127,26 @@ class PartForm(BetterModelForm):
             }),
             ('required_fields', {
                 'fields': [
-                    'part_number', 'cost', 'quantity_min', 'description'
+                    'part_number', 'cost', 'quantity_min'
                 ],
             }),
             ('optional_fields', {
                 'fields': [
-                    'alt_part_number', 'part_category', 'notes', 'is_obsolete'
+                    'alt_part_number', 'part_category', 'is_obsolete'
+                ]
+            }),
+            ('description_and_notes', {
+                'fields': [
+                    'description', 'notes'
                 ]
             })
         ]
 
     def __init__(self, *args, **kwargs):
         super(PartForm, self).__init__(*args, **kwargs)
+
+        self.fields['quantity_min'].widget.attrs.update({'min': 0, 'step': 1})
+        self.fields['quantity_min'].label = 'Low inventory count'
 
         for f in ['part_number', 'cost', 'quantity_min', 'alt_part_number', 'part_category']:
             self.fields[f].widget.attrs['class'] = 'form-control'
@@ -143,6 +155,9 @@ class PartForm(BetterModelForm):
             self.fields[f].widget.attrs['class'] = 'form-control autosize'
             self.fields[f].widget.attrs['rows'] = 3
             self.fields[f].widget.attrs['cols'] = 4
+
+        for f in ['part_number', 'cost', 'quantity_min', 'description']:
+            self.fields[f].widget.attrs['placeholder'] = 'required'
 
 
 class PartSupplierCollectionForm(forms.ModelForm):
@@ -177,14 +192,30 @@ class LocationField(forms.ChoiceField):
 class StorageField(forms.ChoiceField):
 
     def clean(self, value):
-        if '__new__' in value:
-            return [True, value.replace('__new__', '')]
+        """
+
+        Args:
+            value: Either the pk of the storage as selected by room and location, or a string in the format
+            of '__new__<name>'.
+
+        Returns:
+            String: if new storage is to be created. Returned value is location of new storage.
+            None: if field was empty. Form will raise Validation error on room field instead since this field is hidden.
+            Storage: if value was given as existing storage id.
+            (field_name, ValidationError):  To raise ValidationError on releated field in form.
+        """
+        if value in [None, '']:
+            return None
+        elif '__new__' in value:
+            value = value.replace('__new__', '')
+            if value.strip() == '':
+                return 'location', ValidationError('Invalid location')
         else:
             try:
                 storage = p_models.Storage.objects.get(pk=value)
-                return [False, storage]
-            except ValueError:
-                raise ValidationError("Incorrect Storage value")
+                return storage
+            except ObjectDoesNotExist:
+                return 'room', ValidationError("Incorrect Storage value")
 
     def has_changed(self, initial, data, tliib=False):
         if initial is None:
@@ -214,10 +245,7 @@ class PartStorageCollectionForm(forms.ModelForm):
 
         is_new = self.instance.id is None
 
-        if is_new:
-
-            print('======================== >> new:')
-        else:
+        if not is_new:
             self.initial['room'] = self.instance.storage.room
             self.initial['storage_field'] = self.instance.storage.id
             self.initial['location'] = self.instance.storage.id
@@ -229,13 +257,30 @@ class PartStorageCollectionForm(forms.ModelForm):
         self.fields['storage_field'].widget.attrs['class'] = 'storage_field'
         self.fields['location'].widget.attrs.update({'disabled': True})
 
+        location_data = self.data.get('%s-location' % self.prefix, [])
+        if '__new__' in location_data:
+            self.fields['location'].widget.choices.append(
+                (location_data, location_data.replace('__new__', ''))
+             )
+            self.initial['location'] = location_data
+
     def clean(self):
         cleaned_data = super(PartStorageCollectionForm, self).clean()
-        if 'storage_field' in cleaned_data and not cleaned_data['storage_field'][0]:
-            room = cleaned_data['room']
-            if not p_models.Storage.objects.filter(pk=cleaned_data['storage_field'][1].id, room=room).exists():
-                raise ValidationError("Incorrect Storage/Room combination")
-            return cleaned_data
+        storage_field_value = cleaned_data.get('storage_field')
+        room = cleaned_data.get('room')
+
+        if storage_field_value is None:
+            self.add_error('room', 'This field is required')
+        elif isinstance(storage_field_value, str):
+            if p_models.Storage.objects.filter(location=storage_field_value, room=room).exists():
+                self.add_error(None, 'New room/location combination already exists.')
+        elif isinstance(storage_field_value, p_models.Storage):
+            if storage_field_value.room_id != room.id:
+                self.add_error(None, 'Incorrect room/storage combination.')
+        elif isinstance(storage_field_value, tuple):
+            self.add_error(storage_field_value[0], storage_field_value[1])
+
+        return cleaned_data
 
 
 PartStorageCollectionFormset = forms.inlineformset_factory(

@@ -4,22 +4,41 @@ from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
 from django.conf import settings
-from django.contrib.auth.models import User, Permission, Group
-from django.contrib.contenttypes.models import ContentType
-from django.db.models import Field, ObjectDoesNotExist, Q
-from django.forms.utils import flatatt
-from django.forms.widgets import Select
+from django.contrib.auth.models import User, Permission
+from django.db.models import Field, ObjectDoesNotExist, Q, QuerySet
 from django.utils import timezone
 from django.utils.dateparse import parse_duration
 from django.utils.encoding import force_text
-from django.utils.html import conditional_escape, format_html, escape
-from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext as _
 from form_utils.forms import BetterModelForm
 
 from qatrack.service_log import models
 from qatrack.qa import models as qa_models
 from qatrack.units import models as u_models
+
+
+def get_user_name(user):
+    return user.username if not user.first_name or not user.last_name else user.first_name + ' ' + user.last_name
+
+
+def item_val_to_string(item):
+    if item is None:
+        return ''
+    elif isinstance(item, str):
+        return item
+    elif isinstance(item, User):
+        return get_user_name(item)
+    elif isinstance(item, timezone.datetime):
+        return timezone.localtime(item).strftime('%b %m, %I:%M %p')
+    elif isinstance(item, timezone.timedelta):
+        total_seconds = int(item.total_seconds())
+        hours = total_seconds // 3600
+        minutes = (total_seconds % 3600) // 60
+        return '{}:{:02}'.format(hours, minutes)
+    elif isinstance(item, QuerySet):
+        return ', '.join([str(i) for i in item])
+    else:
+        return str(item)
 
 
 def duration_string_hours_mins(duration):
@@ -37,32 +56,6 @@ def duration_string_hours_mins(duration):
     return '{:02d}:{:02d}'.format(hours, minutes)
 
 
-class SelectWithOptionTitles(Select):
-
-    def __init__(self, attrs=None, choices=(), model=None):
-        super(SelectWithOptionTitles, self).__init__(attrs=attrs, choices=choices)
-        self.model = model
-
-    # TODO FIX: django 1.11 no longer calls this.
-    def render_option(self, selected_choices, option_value, option_label):
-        if option_value in [None, '']:
-            option_value = ''
-            title = '------'
-        else:
-            objekt = self.model.objects.get(pk=option_value)
-            title = objekt.description or ''
-        option_value = force_text(option_value)
-        if option_value in selected_choices:
-            selected_html = mark_safe(' selected="selected"')
-            if not self.allow_multiple_selected:
-                # Only allow for a single selection.
-                selected_choices.remove(option_value)
-        else:
-            selected_html = ''
-
-        return format_html('<option value="{}" title="{}" {}>{}</option>', option_value, title, selected_html, force_text(option_label))
-
-
 class HoursMinDurationField(forms.DurationField):
 
     def __init__(self, *args, **kwargs):
@@ -75,7 +68,6 @@ class HoursMinDurationField(forms.DurationField):
         return value
 
     def to_python(self, value):
-        print(value)
         if value is not None:
             if value == '__:__':
                 return None
@@ -94,15 +86,16 @@ class HoursMinDurationField(forms.DurationField):
 
 class UserModelChoiceField(forms.ModelChoiceField):
 
+    title = ''
+
     def label_from_instance(self, user):
         return user.username if not user.first_name or not user.last_name else user.last_name + ', ' + user.first_name
-        # return user.get_full_name()
 
 
 class HoursForm(forms.ModelForm):
 
     user_or_thirdparty = forms.ChoiceField(label='User or third party')
-    time = HoursMinDurationField(help_text='Hours : Minutes')
+    time = HoursMinDurationField(help_text='hh:mm')
 
     class Meta:
         model = models.Hours
@@ -111,22 +104,30 @@ class HoursForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(HoursForm, self).__init__(*args, **kwargs)
 
-        choices = [(None, '---------')]
+        choices = [('', '---------')]
         perm = Permission.objects.get(codename='can_have_hours')
         if self.instance.user:
-            users = User.objects.filter(Q(groups__permissions=perm, is_active=True) | Q(user_permissions=perm, is_active=True) | Q(pk=self.instance.user.id)).distinct().order_by('last_name')
+            users = User.objects.filter(
+                Q(groups__permissions=perm, is_active=True) |
+                Q(user_permissions=perm, is_active=True) |
+                Q(pk=self.instance.user.id)
+            ).distinct().order_by('last_name')
         else:
-            users = User.objects.filter(Q(groups__permissions=perm, is_active=True) | Q(user_permissions=perm, is_active=True)).distinct().order_by('last_name')
+            users = User.objects.filter(
+                Q(groups__permissions=perm, is_active=True) |
+                Q(user_permissions=perm, is_active=True)
+            ).distinct().order_by('last_name')
         for user in users:
             name = user.username if not user.first_name or not user.last_name else user.last_name + ', ' + user.first_name
-            choices.append(('user-' + str(user.id), name))
+            choices.append(('user-%s' % user.id, name))
         for tp in models.ThirdParty.objects.all():
-            choices.append(('tp-' + str(tp.id), str(tp)))
+            choices.append(('tp-%s' % tp.id, tp.get_full_name()))
+
         self.fields['user_or_thirdparty'].choices = choices
 
         self.fields['user_or_thirdparty'].widget.attrs.update({'class': 'select2'})
         time_classes = self.fields['time'].widget.attrs.get('class', '')
-        time_classes += ' max-width-100'
+        time_classes += ' max-width-100 form-control'
         self.fields['time'].widget.attrs.update({'class': time_classes})
 
         if self.instance.user:
@@ -136,22 +137,14 @@ class HoursForm(forms.ModelForm):
 
     def clean_user_or_thirdparty(self):
 
-        u_or_tp = self.cleaned_data['user_or_thirdparty']
-        obj_type, obj_id = u_or_tp.split('-')
+        obj_type, obj_id = self.cleaned_data['user_or_thirdparty'].split('-')
 
-        if not obj_type == 'user' and not obj_type == 'tp':
-            raise ValidationError('Not a User or Third Party object.')
+        if obj_type == 'user':
+            return User.objects.get(id=obj_id)
+        elif obj_type == 'tp':
+            return models.ThirdParty.objects.get(id=obj_id)
 
-        return u_or_tp
-
-    # def clean_time(self):
-    #
-    #     time = self.cleaned_data['time']
-    #     print('------------------------')
-    #     print(self.data['service_time'])
-    #     print(time)
-    #     # service_time = self.cle
-    #     return time
+        raise ValidationError('Not a User or Third Party object.')
 
 
 HoursFormset = forms.inlineformset_factory(models.ServiceEvent, models.Hours, form=HoursForm, extra=2)
@@ -162,6 +155,10 @@ class ReturnToServiceQAForm(forms.ModelForm):
     unit_test_collection = forms.ModelChoiceField(queryset=qa_models.UnitTestCollection.objects.none())
     test_list_instance = forms.IntegerField(widget=forms.HiddenInput(), required=False)
     all_reviewed = forms.BooleanField(widget=forms.HiddenInput(), required=False)
+
+    log_change_fields = (
+        'unit_test_collection', 'test_list_instance'
+    )
 
     class Meta:
         model = models.ReturnToServiceQA
@@ -200,9 +197,13 @@ class ReturnToServiceQAForm(forms.ModelForm):
         else:
             self.initial['all_reviewed'] = 0
 
-        self.fields['unit_test_collection'].widget.attrs.update({'class': 'rtsqa-utc select2', 'data-prefix': self.prefix})
-        self.fields['test_list_instance'].widget.attrs.update({'class': 'tli-instance'})
+        self.fields['unit_test_collection'].widget.attrs.update({
+            'class': 'rtsqa-utc select2', 'data-prefix': self.prefix,
+            'oldvalue': self.initial.get('unit_test_collection', '')
+        })
+        self.fields['test_list_instance'].widget.attrs.update({'class': 'tli-instance', 'data-prefix': self.prefix})
         self.fields['all_reviewed'].widget.attrs.update({'class': 'tli-all-reviewed'})
+
 
     def clean_unit_test_collection(self):
         utc = self.cleaned_data['unit_test_collection']
@@ -278,46 +279,7 @@ class SelectWithDisabledWidget(forms.Select):
         return to_return
 
 
-class ServiceEventStatusField(forms.ChoiceField):
-
-    def to_python(self, value):
-        if value in self.empty_values:
-            return None
-        try:
-            return models.ServiceEventStatus.objects.get(pk=value)
-        except (ValueError, TypeError, ObjectDoesNotExist) as e:
-            raise ValidationError(self.error_messages['invalid_choice'], code='invalid_choice')
-
-    def valid_value(self, ses):
-        "Check to see if the provided value is a valid choice"
-        if not isinstance(ses, models.ServiceEventStatus):
-            return False
-        return True
-
-    def has_changed(self, initial, data):
-        """
-        Return True if data differs from initial.
-        """
-        # Always return False if the field is disabled since self.bound_data
-        # always uses the initial value in this case.
-        if self.disabled:
-            return False
-        try:
-            data = self.to_python(data)
-            if hasattr(self, '_coerce'):
-                return self._coerce(data) != self._coerce(initial)
-        except ValidationError:
-            return True
-        # For purposes of seeing whether something has changed, None is
-        # the same as an empty string, if the data or initial value we get
-        # is None, replace it with ''.
-
-        initial_value = initial if initial is not None else ''
-        data_value = data.id if data is not None else ''
-        return initial_value != data_value
-
-
-class TLIInitiatedField(forms.IntegerField):
+class TLIInitiatedField(forms.ModelChoiceField):
 
     label = ''
     required = False
@@ -343,51 +305,61 @@ class TLIInitiatedField(forms.IntegerField):
 
 class ServiceEventForm(BetterModelForm):
 
-    unit_field = forms.ModelChoiceField(queryset=models.Unit.objects.all(), label='Unit')
+    unit_field_fake = forms.ModelChoiceField(queryset=models.Unit.objects.all(), label='Unit', required=False)
+    unit_field = forms.ModelChoiceField(queryset=models.Unit.objects.all())
     service_area_field = forms.ModelChoiceField(
-        queryset=models.ServiceArea.objects.all(), label='Service area',
-        help_text=_('Select service area (must select unit first)')
+        queryset=models.ServiceArea.objects.all(), label='Service area'
     )
     duration_service_time = HoursMinDurationField(
-        label=_('Service time (hh:mm)'), required=False,
+        label=_('Service time'), required=False,
         help_text=models.ServiceEvent._meta.get_field('duration_service_time').help_text
     )
     duration_lost_time = HoursMinDurationField(
-        label=_('Lost time (hh:mm)'), required=False,
+        label=_('Lost time'), required=False,
         help_text=models.ServiceEvent._meta.get_field('duration_lost_time').help_text
     )
     service_event_related_field = ServiceEventMultipleField(
         required=False, queryset=models.ServiceEvent.objects.none(), label=_('Service Event Related'),
         help_text=models.ServiceEvent._meta.get_field('service_event_related').help_text
     )
-    is_review_required = forms.BooleanField(required=False)
+    is_review_required = forms.BooleanField(required=False, label=_('Review required'))
     is_review_required_fake = forms.BooleanField(
         required=False, widget=forms.CheckboxInput(), label=_('Review required'), initial=True,
         help_text=models.ServiceEvent._meta.get_field('is_review_required').help_text
     )
 
-    test_list_instance_initiated_by = TLIInitiatedField(required=False)
+    test_list_instance_initiated_by = TLIInitiatedField(
+        required=False, label=_('Initiated By'), queryset=qa_models.TestListInstance.objects.none()
+    )
 
     initiated_utc_field = forms.ModelChoiceField(
-        required=False, queryset=qa_models.UnitTestCollection.objects.none(), label='Initiated by',
-        help_text=_('Test list instance that initiated this service event')
+        required=False, queryset=qa_models.UnitTestCollection.objects.none(), label='Initiated By',
+        help_text=_('Was there a QA session that initiated this service event?')
     )
     service_type = forms.ModelChoiceField(
-        queryset=models.ServiceType.objects.all(), widget=SelectWithOptionTitles(model=models.ServiceType)
+        queryset=models.ServiceType.objects.filter(is_active=True), label=_('Service type'),
     )
-    service_status = ServiceEventStatusField(
-        help_text=models.ServiceEvent._meta.get_field('service_status').help_text, widget=SelectWithDisabledWidget,
-        # queryset=models.ServiceEventStatus.objects.all()
+    service_status = forms.ModelChoiceField(
+        help_text=models.ServiceEvent._meta.get_field('service_status').help_text,
+        queryset=models.ServiceEventStatus.objects.none()
+    )
+    qafollowup_comments = forms.CharField(
+        widget=forms.Textarea(attrs={'rows': 3}), required=False, label=_('Add Comment'),
+        help_text=_('Comments related to return to service')
     )
 
-    _classes = ['form-control']
+    log_change_fields = (
+        'test_list_instance_initiated_by', 'is_review_required', 'datetime_service', 'service_area_field',
+        'service_type', 'service_event_related_field', 'problem_description', 'safety_precautions',
+        'work_description', 'duration_service_time', 'duration_lost_time'
+    )
 
     class Meta:
 
         model = models.ServiceEvent
         fieldsets = [
             ('hidden_fields', {
-                'fields': ['test_list_instance_initiated_by', 'is_review_required'],
+                'fields': ['test_list_instance_initiated_by', 'is_review_required', 'unit_field'],
             }),
             ('service_status', {
                'fields': [
@@ -396,12 +368,12 @@ class ServiceEventForm(BetterModelForm):
             }),
             ('left_fields', {
                 'fields': [
-                    'unit_field', 'service_area_field', 'service_type', 'is_review_required_fake',
+                    'datetime_service', 'unit_field_fake', 'service_area_field', 'service_type', 'is_review_required_fake',
                 ],
             }),
             ('right_fields', {
                 'fields': [
-                    'datetime_service', 'service_event_related_field', 'initiated_utc_field',
+                    'service_event_related_field', 'initiated_utc_field',
                 ],
             }),
             ('problem_and_safety', {
@@ -417,8 +389,8 @@ class ServiceEventForm(BetterModelForm):
             ('time_fields', {
                 'fields': ['duration_service_time', 'duration_lost_time'],
             }),
-            ('rtsqa_fields', {
-                'fields': ['qafollowup_notes'],
+            ('qafollowup_comments', {
+                'fields': ['qafollowup_comments'],
             })
         ]
 
@@ -439,22 +411,24 @@ class ServiceEventForm(BetterModelForm):
 
             self.g_link_dict[field_name] = {
                 'g_link': g_link,
-                # 'instance': None
             }
             # if not is_new:
             try:
-                g_link_instance = models.GroupLinkerInstance.objects.get(group_linker=g_link, service_event=self.instance)
+                g_link_instance = models.GroupLinkerInstance.objects.get(
+                    group_linker=g_link, service_event=self.instance
+                )
                 self.initial[field_name] = g_link_instance.user
-                queryset = User.objects.filter(Q(groups=g_link.group, is_active=True) | Q(pk=g_link_instance.user.id)).distinct().order_by('last_name')
-                # self.g_link_dict[field_name]['instance'] = g_link_instance
+                queryset = User.objects.filter(
+                    Q(groups=g_link.group, is_active=True) | Q(pk=g_link_instance.user.id)
+                ).distinct().order_by('last_name')
             except ObjectDoesNotExist:
                 queryset = User.objects.filter(groups=g_link.group, is_active=True).order_by('last_name')
 
             self.fields[field_name] = UserModelChoiceField(
-                queryset=queryset,
-                help_text=g_link.help_text, label=g_link.name, required=False
+                queryset=queryset, help_text=g_link.help_text, label=g_link.name, required=False
             )
             self.fields[field_name].widget.attrs.update({'class': 'select2'})
+            self.fields[field_name].title = g_link.description
 
             g_fields.append(field_name)
         self._fieldsets.append(('g_link_fields', {'fields': g_fields}))
@@ -465,7 +439,7 @@ class ServiceEventForm(BetterModelForm):
             # if url param 'ib' is included. For prefilling initiated by field
             if self.initial_ib and 'test_list_instance_initiated_by' not in self.data:
                 initial_ib_tli = qa_models.TestListInstance.objects.get(id=self.initial_ib)
-                self.initial['test_list_instance_initiated_by'] = initial_ib_tli.id
+                self.initial['test_list_instance_initiated_by'] = initial_ib_tli
                 initial_ib_utc = initial_ib_tli.unit_test_collection
                 initial_ib_utc_u = initial_ib_utc.unit
                 self.initial['unit_field'] = initial_ib_utc_u
@@ -486,7 +460,7 @@ class ServiceEventForm(BetterModelForm):
                         unit=initial_unit, active=True
                     ).order_by('name')
                     self.fields['initiated_utc_field'].choices = (('', '---------'),) + tuple(
-                        ((utc.id, '(%s) %s' %(utc.frequency if utc.frequency else 'Ad Hoc', utc.name)) for utc in i_utc_f_qs)
+                        ((utc.id, '(%s) %s' % (utc.frequency if utc.frequency else 'Ad Hoc', utc.name)) for utc in i_utc_f_qs)
                     )
                 except ObjectDoesNotExist:
                     pass
@@ -514,69 +488,54 @@ class ServiceEventForm(BetterModelForm):
                     self.fields['service_event_related_field'].widget.attrs.update({'disabled': True})
                     self.fields['initiated_utc_field'].widget.attrs.update({'disabled': True})
 
-            choices = []
-            for ses in models.ServiceEventStatus.objects.all():
-                value = ses.id
-                label = ses.name
-                if not self.user.has_perm('service_log.review_serviceevent') and not ses.is_review_required:
-                    choices.append(
-                        (value, {'label': label, 'disabled': True, 'title': _('Cannot select status: Permission denied')})
-                    )
-                else:
-                    choices.append((value, label))
-            self.fields['service_status'] = ServiceEventStatusField(choices=choices, widget=SelectWithDisabledWidget)
+            if self.user.has_perm('service_log.review_serviceevent'):
+                self.fields['service_status'].queryset = models.ServiceEventStatus.objects.all()
+            else:
+                self.fields['service_status'].queryset = models.ServiceEventStatus.objects.filter(
+                    is_review_required=True
+                )
 
             # some data wasn't attempted to be submitted already
             if not is_bound:
-                self.initial['service_status'] = models.ServiceEventStatus.get_default().id
+                self.initial['service_status'] = models.ServiceEventStatus.get_default()
                 self.initial['datetime_service'] = timezone.now()
 
         # if we are editing a saved instance
         else:
+
             try:
                 unit = u_models.Unit.objects.get(pk=self.data['unit_field'])
             except (ObjectDoesNotExist, ValueError, KeyError):
                 unit = self.instance.unit_service_area.unit
+
             self.initial['unit_field'] = unit
             self.initial['service_area_field'] = self.instance.unit_service_area.service_area
             self.initial['service_event_related_field'] = self.instance.service_event_related.all()
             self.fields['service_event_related_field'].queryset = self.initial['service_event_related_field']
             self.fields['service_area_field'].queryset = models.ServiceArea.objects.filter(units=unit)
 
+            # disable Unit field if service event has initiated by or any existing RTSQA
+            rtsqa_exisits = models.ReturnToServiceQA.objects.filter(service_event=self.instance).exists()
+            if self.instance.test_list_instance_initiated_by or rtsqa_exisits:
+                self.fields['unit_field_fake'].widget.attrs.update({
+                   'title': 'Cannot change Unit once "Initiated By" or any "RTS QA" have been added',
+                })
+
             if self.instance.service_type.is_review_required:
                 self.fields['is_review_required_fake'].widget.attrs.update({'disabled': True})
 
             self.initial['is_review_required_fake'] = self.instance.is_review_required
 
-            # if not self.user.has_perm('service_log.change_serviceeventstatus'):
-            #     self.fields['service_status'].widget.attrs.update({'disabled': True})
-
-            choices = []
-            unreviewed_qa_status = qa_models.TestInstanceStatus.objects.filter(is_default=True).first()
-            for ses in models.ServiceEventStatus.objects.all():
-                value = ses.id
-                label = ses.name
-                review_or_initial_status = ses.is_review_required or ses.pk == self.instance.service_status.id
-                if not self.user.has_perm('service_log.review_serviceevent') and not review_or_initial_status:
-                    choices.append(
-                        (value, {'label': label, 'disabled': True, 'title': 'Cannot select status: Permission denied'})
-                    )
-                else:
-                    choices.append((value, label))
-            self.fields['service_status'] = ServiceEventStatusField(choices=choices, widget=SelectWithDisabledWidget)
+            if self.user.has_perm('service_log.review_serviceevent'):
+                self.fields['service_status'].queryset = models.ServiceEventStatus.objects.all()
+            else:
+                self.fields['service_status'].queryset = models.ServiceEventStatus.objects.filter(
+                    Q(is_review_required=True) | Q(pk=self.instance.service_status.id)
+                )
 
             if self.instance.test_list_instance_initiated_by:
                 self.initial['initiated_utc_field'] = self.instance.test_list_instance_initiated_by.unit_test_collection
-                self.initial['test_list_instance_initiated_by'] = str(self.instance.test_list_instance_initiated_by.id)
-
-            # disable Unit field if service event has initiated by or any existing RTSQA
-            rtsqa_exisits = models.ReturnToServiceQA.objects.filter(service_event=self.instance).exists()
-            if self.instance.test_list_instance_initiated_by or rtsqa_exisits:
-                self.fields['unit_field'].widget.attrs.update({
-                    'disabled': True, 'title': 'Cannot change Unit once "Initiated By" or any "RTS QA" have been added',
-                })
-                self.fields['unit_field'].widget.option_inherits_attrs = True                                           # to show title on options as well
-                self.fields['unit_field'].required = False
+                self.initial['test_list_instance_initiated_by'] = self.instance.test_list_instance_initiated_by
 
             i_utc_f_qs = qa_models.UnitTestCollection.objects.select_related('frequency').filter(
                 unit=unit, active=True
@@ -584,12 +543,14 @@ class ServiceEventForm(BetterModelForm):
             self.fields['initiated_utc_field'].choices = (('', '---------'),) + tuple(
                 ((utc.id, '(%s) %s' % (utc.frequency if utc.frequency else 'Ad Hoc', utc.name)) for utc in i_utc_f_qs)
             )
+            if not self.instance.service_type.is_active:
+                self.fields['service_type'].queryset |= models.ServiceType.objects.filter(id=self.instance.service_type.id)
 
-        for f in ['safety_precautions', 'problem_description', 'work_description', 'qafollowup_notes']:
+        for f in ['safety_precautions', 'problem_description', 'work_description', 'qafollowup_comments']:
             self.fields[f].widget.attrs.update({'rows': 3, 'class': 'autosize'})
 
         select2_fields = [
-            'unit_field', 'service_area_field', 'service_type', 'service_status',
+            'unit_field_fake', 'service_area_field', 'service_type', 'service_status',
             'initiated_utc_field'
         ]
         for f in select2_fields:
@@ -599,8 +560,8 @@ class ServiceEventForm(BetterModelForm):
             self.fields[f].widget.attrs['class'] = 'daterangepicker-input'
             self.fields[f].widget.format = settings.INPUT_DATE_FORMATS[0]
             self.fields[f].input_formats = settings.INPUT_DATE_FORMATS
-            self.fields[f].widget.attrs["title"] = settings.DATETIME_HELP
-            self.fields[f].help_text = settings.DATETIME_HELP
+            self.fields[f].widget.attrs['title'] = settings.DATETIME_HELP
+            # self.fields[f].help_text = settings.DATETIME_HELP
 
         for f in ['duration_service_time', 'duration_lost_time']:
             classes = self.fields[f].widget.attrs.get('class', '')
@@ -609,7 +570,7 @@ class ServiceEventForm(BetterModelForm):
 
         for f in self.fields:
             classes = self.fields[f].widget.attrs.get('class', '')
-            classes += ' %s' % self.classes
+            classes += ' form-control'
             self.fields[f].widget.attrs.update({'class': classes})
 
         for f in ['is_review_required_fake', 'is_review_required']:
@@ -617,7 +578,41 @@ class ServiceEventForm(BetterModelForm):
             classes = classes.replace('form-control', '')
             self.fields[f].widget.attrs.update({'class': classes})
 
+        self.fields['problem_description'].widget.attrs['placeholder'] = 'required'
         self.fields['initiated_utc_field'].widget.attrs.update({'data-link': reverse('tli_select')})
+
+    def strigify_form_item(self, item):
+
+        new = self.cleaned_data.get(item)
+        old = self.initial.get(item)
+
+        if item == 'test_list_instance_initiated_by':
+            if new is not None:
+                new = new.str_verbose()
+            if old is not None:
+                old = old.str_verbose()
+        elif isinstance(old, int) and issubclass(type(self.fields.get(item)), forms.ModelChoiceField):
+            old = self.fields[item].queryset.model.objects.get(pk=old)
+
+        new = item_val_to_string(new)
+        old = item_val_to_string(old)
+        name = self.fields[item].label
+
+        return name, new, old
+
+    def stringify_form_changes(self):
+
+        form_strings = {}
+        for ch in self.changed_data:
+            if ch in self.log_change_fields or 'group_linker' in ch:
+                name, new, old = self.strigify_form_item(ch)
+                form_strings[name] = {'new': new, 'old': old}
+
+        return form_strings
+
+    def stringify_status_change(self):
+        name, new, old = self.strigify_form_item('service_status')
+        return {'new': new, 'old': old}
 
     def save(self, *args, **kwargs):
         unit = self.cleaned_data.get('unit_field')
@@ -637,7 +632,12 @@ class ServiceEventForm(BetterModelForm):
         if 'initiated_utc_field' in self._errors:
             del self._errors['initiated_utc_field']
 
+        # if 'unit_field_fake' in self.changed_data:
+        #     self.changed_data.remove('unit_field_fake')
+
         # Check for incomplete and unreviewed RTS QA if status.rts_qa_must_be_reviewed = True
+        if 'service_status' not in self.cleaned_data:
+            raise ValidationError(_('This field is required.'), code='required')
         if self.cleaned_data['service_status'].rts_qa_must_be_reviewed:
             raize = False
             for k, v in self.data.items():
@@ -648,26 +648,27 @@ class ServiceEventForm(BetterModelForm):
                             if self.data[prefix + '-test_list_instance'] == '':
                                 raize = True
                                 break
-                    else:
-                        tli_id = self.data[prefix + '-test_list_instance']
-                        if tli_id != '' and not qa_models.TestListInstance.objects.get(pk=tli_id).all_reviewed:
-                            raize = True
-                            break
+                    tli_id = self.data[prefix + '-test_list_instance']
+                    if tli_id != '' and not qa_models.TestListInstance.objects.get(pk=tli_id).all_reviewed:
+                        raize = True
+                        break
             if raize:
                 self._errors['service_status'] = ValidationError(
-                    'Cannot select status: %s or incomplete RTS QA' % qa_models.TestInstanceStatus.objects.filter(
-                        is_default=True
-                    ).first().name
+                    'Cannot select status: Return to service qa must be performed and then reviewed.'
                 )
 
         # If unit field was disabled due to initiated by or rtsqa existing for already saved service event,
         #   add the initial unit back to cleaned data since django tries to set it to None and unit is of course requried.
         if self.instance.pk and ('unit_field' not in self.cleaned_data or self.cleaned_data['unit_field'] is None):
-            self.cleaned_data['unit_field'] = self.initial['unit_field']
+            self.cleaned_data['unit_field'] = self.instance.unit_service_area.unit
 
         return self.cleaned_data
-        # TODO add message when service event status chages due to review
 
-    @property
-    def classes(self):
-        return ' '.join(self._classes)
+    def clean_unit_field(self):
+        unit = self.cleaned_data['unit_field']
+        if not unit:
+            self.add_error('unit_field_fake', ValidationError('This field is required'))
+        return unit
+
+    def clean_unit_field_fake(self):
+        return self.cleaned_data.get('unit_field')

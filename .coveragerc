@@ -1,7 +1,20 @@
 [run]
 omit =
-    *south_migrations*
+    *migrations*
     qatrack/wsgi.py
     qatrack/middleware/profiler.py
     qatrack/**/tests/*
+source =
+    qatrack.accounts
+    qatrack.attachments
+    qatrack.api
+    qatrack.contacts
+    qatrack.notifications
+    qatrack.parts
+    qatrack.qa
+    qatrack.qatrack_core
+    qatrack.service_log
+    qatrack.units
 
+[html]
+directory = cover

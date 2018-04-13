@@ -9,22 +9,15 @@ from django.dispatch import receiver
 from qatrack.qa.models import TestListInstance, UnitTestCollection
 from qatrack.units.models import Unit
 from qatrack.parts.models import PartUsed, PartStorageCollection
-from qatrack.service_log.models import ReturnToServiceQA, ServiceEvent, ServiceEventStatus
+from qatrack.service_log.models import ReturnToServiceQA, ServiceEvent, ServiceEventStatus, ServiceLog
 
 cache.delete(settings.CACHE_UNREVIEWED_COUNT)
 cache.delete(settings.CACHE_RTS_QA_COUNT)
 cache.delete('default-se-status')
 cache.delete('se_needing_review_count')
 cache.delete(settings.CACHE_IN_PROGRESS_COUNT)
+cache.delete('service-status-colours')
 
-
-# for u in Unit.objects.filter(active=True):
-#     qs = UnitTestCollection.objects.filter(
-#         unit=u,
-#         active=True
-#     ).order_by('name')
-#     cache.delete('active_unit_test_collections_for_unit_%s' % u.id)
-#     print('%s utc cache deleted' % u.name)
 
 @receiver(pre_delete, sender=PartUsed)
 def update_part_storage_quantity(*args, **kwargs):
@@ -96,6 +89,13 @@ def update_active_unit_test_collections_for_unit(*args, **kwargs):
     cache.set('active_unit_test_collections_for_unit_%s' % unit.id, qs)
 
 
+@receiver(post_save, sender=ServiceEventStatus)
+@receiver(post_delete, sender=ServiceEventStatus)
+def update_colours(*args, **kwargs):
+    service_status_colours = {ses.name: ses.colour for ses in ServiceEventStatus.objects.all()}
+    cache.set('service-status-colours', service_status_colours)
+
+
 def site(request):
     cur_site = Site.objects.get_current()
 
@@ -115,6 +115,11 @@ def site(request):
     if default_se_status is None:
         default_se_status = ServiceEventStatus.get_default()
         cache.set('default-se-status', default_se_status)
+
+    service_status_colours = cache.get('service-status-colours')
+    if service_status_colours is None:
+        service_status_colours = {ses.name: ses.colour for ses in ServiceEventStatus.objects.all()}
+        cache.set('service-status-colours', service_status_colours)
 
     se_needing_review_count = cache.get('se_needing_review_count')
     if se_needing_review_count is None:
@@ -140,6 +145,7 @@ def site(request):
         'TEST_STATUS_SHORT_JSON': json.dumps(settings.TEST_STATUS_DISPLAY_SHORT),
         'REVIEW_DIFF_COL': settings.REVIEW_DIFF_COL,
         'DEBUG': settings.DEBUG,
+        'USE_SERVICE_LOG': settings.USE_SERVICE_LOG,
         'USE_PARTS': settings.USE_PARTS,
         'DEFAULT_SE_STATUS': default_se_status,
         'SE_NEEDING_REVIEW_COUNT': se_needing_review_count,

@@ -17,7 +17,7 @@
 
         <div class="box-body">
             {% if user.is_authenticated %}
-                <div class="alert alert-info">
+                <div class="alert alert-info margin-bottom-10">
                     <strong>{% trans "Note" %}</strong>:
                     {% blocktrans %}you are already logged in as {{ user }}.{% endblocktrans %}
                 </div>
@@ -27,7 +27,7 @@
         {#                        <fieldset>#}
                 {% csrf_token %}
                 {% if form.non_field_errors %}
-                    <div class="alert alert-error">
+                    <div class="alert alert-error margin-bottom-10">
                         {% if form_error_title %}
                             <strong>{{ form_error_title }}</strong>
                         {% endif %}

@@ -8,17 +8,31 @@ require(['jquery', 'moment', 'autosize'], function($, moment, autosize) {
     autosize($comment);
 
     $comment.keyup(function () {
-        $post_comment.prop('disabled', $(this).val().trim() === '');
+        if ($(this).val().trim() === '') {
+            $post_comment.prop('disabled', true).addClass('disabled');
+        } else {
+            $post_comment.prop('disabled', false).removeClass('disabled');
+        }
     });
 
     $post_comment.click(function () {
-        var data = $comment_form.serialize();
+
+        if ($(this).hasClass('disabled')) {
+            return false;
+        }
+        var data;
+        if ($comment_form.is('form')) {
+            data = $comment_form.serialize();
+        } else {
+            data = $comment_form.find('select, textarea, input').serialize();
+        }
+
         $.ajax({
             data: data,
             url: QAURLs.AJAX_COMMENT,
             type: 'POST',
             success: function (res) {
-                $comment.val('');
+                $comment.val('').trigger('keyup');
                 display_comment(res);
             },
             error: function (res) {
@@ -29,15 +43,9 @@ require(['jquery', 'moment', 'autosize'], function($, moment, autosize) {
     });
 
     function display_comment(res) {
-        var $dt = $('<dt id="' + res.c_id + '" style="display: none;">' + moment(res.submit_date).format('D MMM YYYY h:mm A') + ' - ' + res.user_name + '</dt>'),
-            $dd = $('<dd style="display: none;"><p>' + res.comment + '</p></dd>');
 
-        $comments.append($dt);
-        $comments.append($dd);
-
-        $dt.slideDown('fast', function () {
-            $dd.slideDown('fast');
-        })
+        $comments.append(res.template);
+        $($comments).find('#c' + res.c_id).slideDown('fast');
     }
 
 });

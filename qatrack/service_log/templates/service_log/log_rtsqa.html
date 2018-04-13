@@ -1,0 +1,55 @@
+
+<li class="rtsqa_log" style="display: list-item;">
+
+{#    <i class="fa fa-stack">#}
+        <i class="fa fa-pencil-square-o fa-lg"></i>
+{#        <i class="fa fa-pencil fa-stack-custom-sub fa-flip-horizontal upper-left primary"></i>#}
+{#    </i>#}
+
+    <div class="timeline-item{% if can_view %} can-view{% endif %}">
+        <span class="time"><i class="fa fa-clock-o"></i>&nbsp;{{ datetime_display }}</span>
+        <h3 class="timeline-header header-se_new"{% if can_view %} onclick="window.location='{% url 'sl_details' pk=instance.service_event.id %}'"{% endif %}>
+            <div class="pull-right margin-right-20 label label-default">
+                {{ instance.service_event.unit_service_area.unit.name }}
+            </div>
+            <div class="margin-bottom-10">{{ user }} changed return to service required for service event {{ instance.service_event_id }}</div>
+            <div>
+                <div class="padding-left-10">
+                    {% if extra_info|length > 0 %}
+                        <div class="dash-change title row">
+                            <div class="col-xs-4">Test List Name</div>
+                            <div class="col-xs-4">Session Details</div>
+                        </div>
+                        {% for changed in extra_info %}
+                            <div class="dash-change item rtsqa-row row{% if extra_info|length > 1 %} hover{% endif %} {{ changed.state }}">
+                                <div class="col-sm-4 tli-name">{{ changed.details }}</div>
+                                {% if changed.state == 'tli_req_review' %}
+                                    <div class="col-sm-4">
+                                        <div class="complete">Performed</div>
+                                        <div class="incomplete">-----</div>
+                                    </div>
+                                {% elif changed.state == 'tli_incomplete' %}
+                                    <div class="col-sm-4">
+                                        <div class="incomplete">-----</div>
+                                        <div class="incomplete">-----</div>
+                                    </div>
+                                {% elif changed.state == 'tli_reviewed' %}
+                                    <div class="col-sm-4">
+                                        <div class="complete">Performed</div>
+                                        <div class="complete">Reviewed</div>
+                                    </div>
+                                {% elif changed.state == 'deleted' %}
+                                    <div class="col-sm-4"><div class="del">Deleted</div></div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="dash-change title row">
+                            <div class="col-xs-4">All Deleted</div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </h3>
+    </div>
+</li>

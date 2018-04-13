@@ -2,16 +2,17 @@
 
 {% load widget_tweaks %}
 {% load qa_tags %}
+{% load comments %}
 
 {% block head_title %}Service Event{% endblock %}
 
 {% block extra_css %}
     {{ block.super }}
-    <link href="{{ STATIC_URL }}daterangepicker/css/daterangepicker.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}qatrack_core/css/custom-daterangepicker.css?v={{ VERSION }}" rel="stylesheet">
     <link href="{{ STATIC_URL }}select2/css/select2.min.css?v={{ VERSION }}" rel="stylesheet">
     <link href="{{ STATIC_URL }}qatrack_core/css/tables.css?v={{ VERSION }}" rel="stylesheet">
     <link href="{{ STATIC_URL }}qatrack_core/css/custom-select2.css?v={{ VERSION }}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}flatpickr/css/flatpickr.css?v={{ VERSION }}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}qatrack_core/css/flatpickr-custom.css?v={{ VERSION }}" rel="stylesheet">
 {% endblock extra_css %}
 
 {% block extra_js %}
@@ -31,10 +32,6 @@
 {% endblock require_javascript %}
 
 {% block body %}
-
-    <div>
-
-    </div>
 
     <form id="service-event-form" action="" method="post" novalidate>
         {% csrf_token %}
@@ -102,7 +99,7 @@
                     {% endif %}
                 </div>
                 <div class="col-sm-1">
-                    <button class="btn btn-flat btn-primary service-save">Save</button>
+                    <button class="btn btn-flat btn-primary service-save pull-right">Save</button>
                 </div>
             </div>
 
@@ -128,12 +125,18 @@
 
                                     {% for field in form.fieldsets.left_fields %}
                                         <div class="form-group {% if field.errors %}has-error{% endif %}" title="{{ field.help_text }}">
-                                            <label for="{{ field.id_for_label }}" class="col-sm-4">{{ field.label }}</label>
+                                            <label for="{{ field.id_for_label }}" class="col-sm-4">
+                                                {{ field.label }}
+                                                {% if field.help_text %}
+                                                    <div class="help-block margin-0">{{ field.help_text }}</div>
+                                                {% endif %}
+                                            </label>
                                             <div class="col-sm-8">
                                                 {{ field }}
                                             </div>
                                             {% for e in field.errors %}
-                                                <div class="col-sm-12 help-block text-center">{{ e }}</div>
+                                                <div class="col-sm-4"></div>
+                                                <div class="col-sm-8 help-block text-center">{{ e }}</div>
                                             {% endfor %}
                                         </div>
                                     {% endfor %}
@@ -143,15 +146,18 @@
 
                                     {% for field in form.fieldsets.right_fields %}
                                         <div class="form-group {% if field.errors %}has-error{% endif %}" title="{{ field.help_text }}">
-
-                                            <label for="{{ field.id_for_label }}" class="col-sm-4{% if field.field.required %} required{% endif %}">{{ field.label }}</label>
-
+                                            <label for="{{ field.id_for_label }}" class="col-sm-4">
+                                                {{ field.label }}
+                                                {% if field.help_text %}
+                                                    <div class="help-block margin-0">{{ field.help_text }}</div>
+                                                {% endif %}
+                                            </label>
                                             <div class="col-sm-8">
                                                 {{ field }}
                                             </div>
                                             {% for e in field.errors %}
-                                                <div class="col-sm-12 help-block text-center">{{ e }}</div>
-                                                {{ field.id_for_label }}
+                                                <div class="col-sm-4"></div>
+                                                <div class="col-sm-8 help-block text-center">{{ e }}</div>
                                             {% endfor %}
                                         </div>
                                     {% endfor %}
@@ -162,7 +168,10 @@
                                     <div class="col-sm-6 form-horizontal">
                                         <div class="form-group {% if field.errors %}has-error{% endif %}" title="{{ field.help_text }}">
                                             <div class="col-sm-12">
-                                                <label for="{{ field.id_for_label }}" class="{% if field.field.required %} required{% endif %}">{{ field.label }}</label>
+                                                <label for="{{ field.id_for_label }}" class="">
+                                                    <span>{{ field.label }}</span>
+                                                    {% if field.help_text %} - <span class="help-block margin-bottom-0 display-inline-block">{{ field.help_text }}</span>{% endif %}
+                                                </label>
                                                 {{ field }}
                                                 {% for e in field.errors %}
                                                     <div class="col-sm-12 help-block text-center">{{ e }}</div>
@@ -177,7 +186,10 @@
                                     {% for field in form.fieldsets.work_description %}
                                         <div class="form-group {% if field.errors %}has-error{% endif %}" title="{{ field.help_text }}">
                                             <div class="col-sm-12">
-                                                <label for="{{ field.id_for_label }}" class="{% if field.field.required %} required{% endif %}">{{ field.label }}</label>
+                                                <label for="{{ field.id_for_label }}" class="">
+                                                    <span>{{ field.label }}</span>
+                                                    {% if field.help_text %} - <span class="help-block margin-bottom-0 display-inline-block">{{ field.help_text }}</span>{% endif %}
+                                                </label>
                                                 {{ field }}
                                                 {% for e in field.errors %}
                                                     <div class="col-sm-12 help-block text-center">{{ e }}</div>
@@ -199,33 +211,57 @@
                         <div class="box-header">
                             <h3 class="box-title">
                                 <i class="fa fa-clock-o fa-fw" aria-hidden="true"></i>
-                                Service and User Times
+                                Involved Parties and Durations
                             </h3>
-                            <div class="box-tools pull-right">
-                                <button type="button" class="btn btn-box-tool" data-widget="collapse">
-                                    <i class="fa fa-minus"></i>
-                                </button>
-                            </div>
                         </div>
                         <div class="box-body">
-                            <div class="row">
+                            <div class="subheading-divider">Service Event Durations</div>
+                            <div class="row margin-bottom-15">
                                 <div class="col-md-12 form-horizontal">
                                     {% for field in form.fieldsets.time_fields %}
-                                        <div class="form-group {% if field.errors %}has-error{% endif %}" title="{{ field.help_text }}">
-                                            <label class="col-md-6" for="TODO">{{ field.label }}</label>
+                                        <div class="form-group margin-bottom-5{% if field.errors %}has-error{% endif %}" title="{{ field.help_text }}">
+                                            <label class="col-md-6" for="TODO">
+                                                <span>{{ field.label }}</span>
+                                                 - <span class="help-block margin-bottom-0 display-inline-block">(hh:mm)</span>
+                                            </label>
                                             <div class="col-md-6">
-                                                {{ field|add_class:form.classes }}
+                                                {{ field }}
                                             </div>
-                                            <div class="col-md-12">
-                                                {{ field.errors }}
-                                            </div>
+                                            {% if field.errors %}
+                                                <div class="col-md-6"></div>
+                                                <div class="col-md-6">{{ field.errors }}</div>
+                                            {% endif %}
                                         </div>
                                     {% endfor %}
                                 </div>
+                            </div>
 
+                            {% if form.fieldsets.g_link_fields.boundfields|length > 0 %}
+                                <div class="subheading-divider">Group Members Involved</div>
+                                <div class="row margin-bottom-15">
+                                    <div id="g-link-fields" class="col-md-12 form-horizontal">
+                                        {% for field in form.fieldsets.g_link_fields %}
+                                            <div class="form-group margin-bottom-5{% if field.errors %}has-error{% endif %}" title="{{ field.field.title }}">
+                                                <label for="{{ field.id_for_label }}" class="col-sm-6{% if field.field.required %} required{% endif %}">
+                                                    <div>{{ field.label }}</div>
+                                                    {% if field.help_text %}<div class="help-block margin-0 display-inline-block">{{ field.help_text }}</div>{% endif %}
+                                                </label>
+                                                <div class="col-sm-6">
+                                                    {{ field }}
+                                                </div>
+                                                {% for e in field.errors %}
+                                                    <div class="col-sm-6"></div>
+                                                    <div class="col-sm-6 help-block text-center">{{ e }}</div>
+                                                {% endfor %}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endif %}
+                            <div class="subheading-divider">User and Third Party Work Durations</div>
+                            <div class="row">
                                 <div class="col-md-12">
-
-                                    <table class="table table-hover table-condensed table-valign-middle">
+                                    <table class="table table-hover table-condensed">
                                         <thead>
                                             {{ hours_formset.management_form }}
                                             <tr>
@@ -242,14 +278,14 @@
                                                     <tr id="{{ h_form.prefix }}">
                                                         {{ h_form.id }}
                                                         <td class="form-group{% if h_form.user_or_thirdparty.errors %} has-error{% endif %}" >
-                                                            {{ h_form.user_or_thirdparty|add_class:form.classes }}
+                                                            {{ h_form.user_or_thirdparty }}
                                                             {% for e in h_form.user_or_thirdparty.errors %}
                                                                 <div class="help-block">{{ e }}</div>
                                                             {% endfor %}
 
                                                         </td>
                                                         <td class="{% if h_form.time.errors %} has-error{% endif %}" title="{{ h_form.time.help_text }}">
-                                                            {{ h_form.time|add_class:form.classes }}
+                                                            {{ h_form.time }}
                                                             {% for e in h_form.time.errors %}
                                                                 <div class="help-block">{{ e }}</div>
                                                             {% endfor %}
@@ -264,15 +300,15 @@
                                         </tbody>
 
                                         <tfoot>
-                                            <tr><td>
-                                                <div id="add-hours" class="btn btn-sm btn-flat btn-info" title="Add another hours object.">Add</div>
-                                            </td></tr>
+                                            <tr>
+                                                <td colspan="3"><div id="add-hours" class="btn btn-sm btn-flat btn-default pull-right" title="Add another hours object.">Add</div></td>
+                                            </tr>
                                         </tfoot>
 
                                     </table>
                                 </div>
-
                             </div>
+
                         </div>
                     </div>
                 </div>
@@ -285,48 +321,24 @@
                                     <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
                                     <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-extra-left info"></i>
                                 </i>
-                                Return To Service QA and Involved Parties
+                                Return To Service QA
                             </h3>
-                            <div class="box-tools pull-right">
-                                <button type="button" class="btn btn-box-tool" data-widget="collapse">
-                                    <i class="fa fa-minus"></i>
-                                </button>
-                            </div>
                         </div>
                         <div class="box-body">
-
-                            <div class="row">
-                                <div id="g-link-fields" class="col-md-8 form-horizontal">
-                                    {% for field in form.fieldsets.g_link_fields %}
-                                        <div class="form-group {% if field.errors %}has-error{% endif %}" title="{{ field.help_text }}">
-                                            <label for="{{ field.id_for_label }}" class="col-sm-6{% if field.field.required %} required{% endif %}">{{ field.label }}</label>
-                                            <div class="col-sm-6">
-                                                {{ field|add_class:form.classes }}
-                                            </div>
-                                            {% for e in field.errors %}
-                                                <div class="col-sm-12 help-block text-center">{{ e }}</div>
-                                            {% endfor %}
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                            </div>
+                            {{ rtsqa_formset.management_form }}
                             {% if perms.service_log.add_returntoserviceqa or rtsqa_formset.forms|length > 0 %}
+                                <div class="subheading-divider">Return To Service QA Required</div>
                                 <div class="row">
                                     <div class="col-md-12">
 
-                                        <table class="table table-hover table-condensed table-valign-middle">
+                                        <table class="table table-hover table-condensed">
                                             <thead>
-                                                {{ rtsqa_formset.management_form }}
                                                 <tr>
                                                     <th style="min-width: 200px;">Test List</th>
                                                     <th>Pass/Fail</th>
                                                     <th>Review Status</th>
-    {#                                                <th>Assigned By</th>#}
-    {#                                                <th>Assigned Date</th>#}
                                                     <th></th>
-                                                    {% if perms.service_log.delete_returntoserviceqa %}
-                                                        <th>Delete?</th>
-                                                    {% endif %}
+                                                    <th>{% if perms.service_log.delete_returntoserviceqa %}Delete?{% endif %}</th>
                                                 </tr>
                                             </thead>
 
@@ -338,7 +350,7 @@
                                                         {{ f_form.test_list_instance }}
                                                         {{ f_form.all_reviewed }}
                                                         <td  class="form-group{% if f_form.unit_test_collection.errors %} has-error{% endif %}">
-                                                            {{ f_form.unit_test_collection|add_class:form.classes }}
+                                                            {{ f_form.unit_test_collection }}
                                                             {% for e in f_form.unit_test_collection.errors %}
                                                                 <div class="help-block">{{ e }}</div>
                                                             {% endfor %}
@@ -347,7 +359,6 @@
                                                             <td id="review-{{ f_form.prefix }}"></td>
                                                             <td id="utc-actions-{{ f_form.prefix }}"></td>
                                                             <td align="center">{% if perms.service_log.delete_returntoserviceqa and f_form.instance.pk %}{{ f_form.DELETE }}{% endif %}</td>
-    {#                                                    {% endif %}#}
                                                     </tr>
                                                 {% endfor %}
 
@@ -355,8 +366,8 @@
 
                                             {% if perms.service_log.add_returntoserviceqa %}
                                                 <tfoot>
-                                                    <tr><td>
-                                                        <div id="add-rtsqa" class="btn btn-sm btn-flat btn-info" title="Add another RTS QA object.">Add</div>
+                                                    <tr><td colspan="5">
+                                                        <div id="add-rtsqa" class="btn btn-sm btn-flat btn-default pull-right" title="Add another RTS QA object.">Add</div>
                                                     </td></tr>
                                                 </tfoot>
                                             {% endif %}
@@ -366,32 +377,52 @@
                                 </div>
                             {% endif %}
 
-                            <div class="row">
-                                <div class="col-md-12">
-                                    {% for field in form.fieldsets.rtsqa_fields %}
-                                        <div class="form-group {% if field.errors %}has-error{% endif %}">
-                                            {% if 'autosize' in field.field.widget.attrs.class %}
-                                                <div class="col-sm-12">
-                                                    <label for="{{ field.id_for_label }}" class="{% if field.field.required %} required{% endif %}">{{ field.label }}</label>
-                                                    {{ field }}
-                                                    {% for e in field.errors %}
-                                                        <div class="col-sm-12 help-block text-center">{{ e }}</div>
-                                                    {% endfor %}
-                                                </div>
-                                            {% else %}
-                                                <label for="{{ field.id_for_label }}" class="col-sm-4{% if field.field.required %} required{% endif %}">{{ field.label }}</label>
 
-                                                <div class="col-sm-8">
-                                                    {{ field }}
-                                                </div>
-                                                {% for e in field.errors %}
-                                                    <div class="col-sm-12 help-block text-center">{{ e }}</div>
-                                                {% endfor %}
-                                            {% endif %}
-                                        </div>
-                                    {% endfor %}
+                            <div class="subheading-divider">Comments</div>
+                            {% if form.instance.pk %}
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        {% render_comment_list for form.instance %}
+                                    </div>
                                 </div>
-                            </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        {% get_comment_form for form.instance as c_form %}
+
+                                        <div id="comment-form">
+                                            {% csrf_token %}
+                                            <input id="id_name" maxlength="50" name="name" type="hidden" required="" value="{{ user.username }}">
+                                            {{ c_form.object_pk }}
+                                            {{ c_form.content_type }}
+                                            {{ c_form.security_hash }}
+                                            {{ c_form.timestamp }}
+                                            <textarea cols="40" id="id_comment" maxlength="3000" name="comment" rows="2" required="" placeholder="Add comment" class="margin-bottom-20 form-control autosize"></textarea>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div id="post-comment" class="btn btn-flat btn-info btn-sm pull-right disabled">Post Comment</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% else %}
+                                {% with form.qafollowup_comments as field %}
+                                    <div class="form-group {% if field.errors %}has-error{% endif %}" title="{{ field.help_text }}">
+                                        <div class="col-sm-12">
+                                            <label for="{{ field.id_for_label }}" class="">
+                                                <span>{{ field.label }}</span>
+                                                {% if field.help_text %} - <span class="help-block margin-bottom-0 display-inline-block">{{ field.help_text }}</span>{% endif %}
+                                            </label>
+                                            {{ field }}
+                                            {% for e in field.errors %}
+                                                <div class="col-sm-12 help-block text-center">{{ e }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                {% endwith %}
+                            {% endif %}
+
+
 
                         </div>
                     </div>
@@ -405,21 +436,13 @@
                             <div class="box-header">
                                 <h3 class="box-title">
                                     <i class="fa fa-cog fa-fw" aria-hidden="true"></i>
-                                    Parts
+                                    Parts Used
                                 </h3>
                             </div>
                             <div class="box-body">
                                 <div class="row">
-                                    <div class="col-md-6">
-                                        <h4>Parts Used</h4>
-                                    </div>
-{#                                    <div class="col-lg-6">#}
-{#                                        <h4>Parts Removed</h4>#}
-{#                                    </div>#}
-                                </div>
-                                <div class="row">
                                     <div class="col-md-12">
-                                        <table class="table table-striped table-hover table-condensed table-valign-middle">
+                                        <table class="table table-striped table-hover table-condensed">
 
                                             <thead>
                                                 {{ part_used_formset.management_form }}
@@ -464,7 +487,7 @@
 
                                             <tfoot>
                                                 <tr>
-                                                    <td><div id="add-part" class="btn btn-info btn-flat btn-sm">Add</div></td>
+                                                    <td colspan="4"><div id="add-part" class="btn btn-default btn-flat btn-sm pull-right">Add</div></td>
                                                 </tr>
                                             </tfoot>
 
@@ -483,7 +506,7 @@
 
             <div class="row">
                 <div class="col-md-12">
-                    <button class="btn btn-flat btn-primary service-save">Save</button>
+                    <button class="btn btn-flat btn-primary service-save pull-right">Save</button>
                 </div>
             </div>
         </div>
@@ -495,7 +518,7 @@
                 <tr id="hours-__prefix__">
                     {{ h_form.id }}
                     <td>{{ h_form.user_or_thirdparty }}</td>
-                    <td>{{ h_form.time|add_class:form.classes }}</td>
+                    <td>{{ h_form.time }}</td>
                     <td></td>
                 </tr>
             {% endwith %}
@@ -533,7 +556,6 @@
         </tbody>
     </table>
 
-
     <div id="utc-actions-template" style="display: none;">
         <div class="__prefix__-hider" style="display: none;">
             {% if perms.qa.add_testlistinstance %}
@@ -541,13 +563,13 @@
                     Performed
                 </a>
                 {% if form.instance.pk %}
-                    <a title="Click to perform this test list" href="{% url 'perform_qa' %}__utc-id__/?rtsqa=__rtsqa-id__&next={% url 'sl_edit' %}__se-id__/" class="btn btn-xs btn-default btn-flat perform-btn" target="Perform-__rtsqa-id__-__prefix__">
+                    <a title="Click to perform this test list" href="{% url 'perform_qa' %}__utc-id__/?rtsqa=__rtsqa-id__&next={% url 'sl_edit' %}__se-id__/" class="btn btn-xs btn-default btn-flat perform-btn" {% comment %}target="Perform-__rtsqa-id__-__prefix__"{% endcomment %}>
                         Perform
                     </a>
                 {% endif %}
             {% endif %}
             {% if perms.qa.can_review %}
-                <a  title="Click to review this test list" id="__prefix__-review-btn" href="{% url 'review_test_list_instance' %}__tli-id__?next={% url 'sl_edit' %}__se-id__" class="btn btn-xs btn-default btn-flat review-btn __prefix__-hider" target="Review-__rtsqa-id__-__prefix__" style="display: none;">
+                <a  title="Click to review this test list" id="__prefix__-review-btn" href="{% url 'review_test_list_instance' %}__tli-id__?next={% url 'sl_edit' %}__se-id__" class="btn btn-xs btn-default btn-flat review-btn __prefix__-hider" {% comment %}target="Review-__rtsqa-id__-__prefix__" {% endcomment %}style="display: none;">
                     Review
                 </a>
             {% endif %}

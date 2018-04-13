@@ -160,31 +160,6 @@ require(['jquery', 'moment', 'autosize', 'daterangepicker', 'select2', 'felter',
             slimscroll: true
         });
 
-        // $go_units_parts.click(function() {
-            // $go_units_parts.prop('disabled', true).text('Working...');
-            // $.ajax({
-            //     data: {
-            //         date_range: $daterange.val(),
-            //         units: $units.val().join(','),
-            //         service_areas: $service_areas.val().join(','),
-            //         service_types: $service_types.val().join(',')
-            //     },
-            //     url: QAURLs.GO_UNITS_PARTS_COST,
-            //     success: function(res) {
-            //         var name = 'qatrack_parts_units_cost.csv';
-            //         var csvContent = "data:text/csv;charset=utf-8,";
-            //         csvContent += res;
-            //         var encodedUri = encodeURI(csvContent);
-            //         var link = document.createElement("a");
-            //         link.setAttribute("href", encodedUri);
-            //         link.setAttribute("download", name);
-            //         document.body.appendChild(link); // Required for FF
-            //         link.click();
-            //         $go_units_parts.prop('disabled', false).text('Generate Summary Report');
-            //     }
-            // })
-        // });
-
     });
 
 });
