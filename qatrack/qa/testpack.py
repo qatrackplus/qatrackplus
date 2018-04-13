@@ -5,8 +5,11 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.serializers import deserialize, serialize
 from django.utils import timezone
+import pytest
 
 from qatrack.qa import models
+
+pytestmark = pytest.mark.skip('all tests still WIP')
 
 
 def create_testpack(test_lists=None, cycles=None, extra_tests=None, description="", user=None, name=""):
@@ -60,7 +63,14 @@ def create_testpack(test_lists=None, cycles=None, extra_tests=None, description=
     for qs in to_dump:
         fields = qs.model.get_test_pack_fields()
         objects.append(
-            serialize("json", qs, fields=fields, use_natural_foreign_keys=True, use_natural_primary_keys=True, indent=indent)
+            serialize(
+                "json",
+                qs,
+                fields=fields,
+                use_natural_foreign_keys=True,
+                use_natural_primary_keys=True,
+                indent=indent,
+            )
         )
 
     if user:
