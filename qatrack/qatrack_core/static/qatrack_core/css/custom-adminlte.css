@@ -26,7 +26,6 @@ body {
     background-color: #222d32;
     box-shadow: 2px 6px 4px rgba(50, 62, 70, .25);
 }
-.nav.navbar-nav.main-nav
 .navbar-static-top .navbar-nav .dropdown:focus .dropdown-toggle,
 .navbar-static-top .navbar-nav .dropdown:hover .dropdown-toggle,
 .navbar-static-top .navbar-nav .dropdown:active .dropdown-toggle,
@@ -96,6 +95,7 @@ body {
     .collapse {
         display: block;
     }
+
 }
 @media (max-width: 768px) {
     .content-wrapper {
@@ -127,6 +127,24 @@ body {
     .control-sidebar {
         padding-top: 50px;
     }
+    .navbar-static-top .navbar-nav .dropdown:focus .dropdown-toggle,
+    .skin-black-dark .main-header .navbar-static-top .nav > li > a:focus,
+    .skin-black-dark .main-header .navbar-static-top .nav .open > a:focus,
+    .navbar-static-top .navbar-nav .dropdown:active .dropdown-toggle,
+    .skin-black-dark .main-header .navbar-static-top .nav > li > a:active,
+    .skin-black-dark .main-header .navbar-static-top .nav .open > a,
+    .skin-black-dark .main-header .navbar-static-top .nav > .active > a {
+        background-color: #222d32;
+        color: #fff;
+    }
+    .navbar-static-top .navbar-nav .dropdown:hover .dropdown-toggle,
+    .skin-black-dark .main-header .navbar-static-top .nav > li > a:hover,
+    .skin-black-dark .main-header .navbar-static-top .nav .open > a:hover,
+    .control-sidebar-dark .control-sidebar-menu > li > a:hover {
+        background-color: #e1e3e9;
+        color: #000;
+    }
+
 }
 
 .form-control {

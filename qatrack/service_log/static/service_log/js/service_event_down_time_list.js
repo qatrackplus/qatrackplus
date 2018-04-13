@@ -6,7 +6,7 @@ require(['jquery', 'moment'], function ($, moment) {
         function get_filters() {
 
             var units = $('select.select_filter[rel=2]').val(),
-                daterange = $('input.text_filter[rel=1]:not(.search_init)').val(),
+                daterange = $('input.text_filter[rel=1]').val(),
                 service_area = $('select.select_filter[rel=5]').val(),
                 unit_type = $('select.select_filter[rel=3]').val(),
                 active = $('select.select_filter[rel=4]').val(),

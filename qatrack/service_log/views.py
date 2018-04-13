@@ -1327,7 +1327,7 @@ def handle_unit_down_time(request):
         [''],
         [''],
         [''],
-        ['Unit Name', 'Unit Type', 'Potential Time'],
+        ['Unit Name', 'Unit Type', 'Potential Time (h)'],
     ]
 
     all_service_types = models.ServiceType.objects.all()
