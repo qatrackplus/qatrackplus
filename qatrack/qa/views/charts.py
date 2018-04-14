@@ -1,8 +1,10 @@
 import collections
+import io
 import itertools
 import json
 import textwrap
 
+from braces.views import JSONResponseMixin, PermissionRequiredMixin
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Count
@@ -10,18 +12,19 @@ from django.http import HttpResponse
 from django.template.loader import get_template
 from django.utils import timezone
 from django.views.generic import TemplateView, View
-
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 import numpy
-numpy.seterr(all='raise')
+
+from qatrack.qa.control_chart import control_chart
+from qatrack.qa.utils import SetEncoder
+from qatrack.service_log import models as sl_models
+from qatrack.units.models import Unit
 
 from .. import models
-from qatrack.service_log import models as sl_models
-from qatrack.qa.control_chart import control_chart
-from qatrack.units.models import Unit
-from qatrack.qa.utils import SetEncoder
-from braces.views import JSONResponseMixin, PermissionRequiredMixin
+
+numpy.seterr(all='raise')
+
 
 
 JSON_CONTENT_TYPE = "application/json"
@@ -505,23 +508,22 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
 
         include_fit = self.request.GET.get("fit_data", "") == "true"
 
-        response = HttpResponse(content_type="image/png")
-
+        buf = io.BytesIO()
         if n_baseline_subgroups < 1 or n_baseline_subgroups > len(data) / subgroup_size:
             fig.text(0.1, 0.9, "Not enough data for control chart", fontsize=20)
-            canvas.print_png(response)
+            fig.savefig(buf, format="png")
         else:
             try:
                 control_chart.display(fig, numpy.array(data), subgroup_size, n_baseline_subgroups, fit=include_fit, dates=dates)
                 fig.autofmt_xdate()
-                canvas.print_png(response)
+                fig.savefig(buf, format="png")
             except (RuntimeError, OverflowError, TypeError) as e:  # pragma: nocover
                 fig.clf()
                 msg = "There was a problem generating your control chart:\n%s" % str(e)
                 fig.text(0.1, 0.9, "\n".join(textwrap.wrap(msg, 40)), fontsize=12)
-                canvas.print_png(response)
+                fig.savefig(buf, format="png")
 
-        return response
+        return HttpResponse(buf.getvalue(), content_type="image/png")
 
 
 class ExportCSVView(PermissionRequiredMixin, JSONResponseMixin, BaseChartView):
