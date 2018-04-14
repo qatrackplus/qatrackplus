@@ -945,6 +945,14 @@ class StatusAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
     model = models.TestInstanceStatus
 
+    list_display = (
+        'name',
+        'is_default',
+        'requires_review',
+        'valid',
+        'get_colour',
+    )
+
     class Media:
         js = (
             settings.STATIC_URL + "jquery/js/jquery.min.js",
@@ -959,6 +967,11 @@ class StatusAdmin(admin.ModelAdmin):
                 settings.STATIC_URL + "qatrack_core/css/admin.css",
             ),
         }
+
+    def get_colour(self, obj):
+        return '<div style="display: inline-block; width: 20px; height:20px; background-color: %s;"></div>' % obj.colour
+    get_colour.short_description = "Color"
+    get_colour.allow_tags = True
 
 
 def utc_unit_name(obj):
