@@ -1,10 +1,10 @@
 -e git+https://github.com/django/django-formtools.git@bb97a8abd374c50991c0a9ce144f17e7322a0c48#egg=django-formtools
 -e git+https://github.com/randlet/django-genericdropdown.git@56dbaf6b4f518a3946e5e253fec85ede175f3727#egg=django_genericdropdown-master
 -e git+https://github.com/randlet/django-listable.git@9c73781928fc8b5887061f98e517359464973980#egg=django_listable
-Django==1.11.9
+Django==1.11.12
 PyVirtualDisplay==0.2
 coreapi==2.3.3
-coverage==4.2
+coverage==4.5.1
 django-admin-views==0.8.0
 django-braces==1.9.0
 django-contrib-comments==1.8.0
@@ -23,23 +23,24 @@ django-widget-tweaks==1.4.1
 freezegun==0.3.9
 gunicorn==19.3.0; sys_platform=='linux'
 ipdb==0.10.3
-ipython==6.2.1
+ipython==6.3.1
 markdown==2.6.11
-matplotlib==2.1.0
-numpy==1.13.3
+matplotlib==2.2.2
+numpy==1.14.2
 pep8==1.7.0
 psycopg2==2.6; sys_platform=='linux'
-pydicom==0.9.9
+pydicom==1.0.2
 pylinac==2.0.1
 pylint==1.6.4
 pynliner==0.8.0
 pytest-cov==2.5.1
 pytest-django==3.1.2
-pytest-sugar==0.9.0
-pytest==3.2.3
+pytest-sugar==0.9.1
+pytest==3.5.0
 python-dateutil==2.6.1
-pytz==2017.3
+pytz==2018.4
 pywin32>=220; sys_platform=='win32'
 reportlab==3.4.0
-scipy==1.0.0
-selenium==3.6.0
+requests==2.18.4
+scipy==1.0.1
+selenium==3.11.0
