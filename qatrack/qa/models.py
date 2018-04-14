@@ -1497,10 +1497,13 @@ class TestInstance(models.Model):
             self.pass_fail = NO_TOL
 
     def get_value(self):
+        if self.unit_test_info.test.is_upload():
+            return self.attachment_set.first()
         if self.unit_test_info.test.is_string_type():
             return self.string_value
-        if self.unit_test_info.test.is_boolean():
+        elif self.unit_test_info.test.is_boolean():
             return bool(self.value)
+
         return self.value
 
     def auto_review(self):
