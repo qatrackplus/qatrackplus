@@ -36,10 +36,6 @@
                 <div class="box-body">
                     <div class="row">
                         <div class="col-md-2">
-{#                            <div class="form-group row">#}
-{#                                <label for="date_range_selector" class="col-md-2 control-label">Date Range:</label>#}
-{#                                <div class="col-md-10"><input id="date_range_selector" class="form-control"></div>#}
-{#                            </div>#}
                             <div class="row">
                                 <div class="col-sm-12">
                                     <select id="units" multiple class="form-control">
@@ -114,8 +110,8 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button id="delete_edit" type="button" class="btn btn-primary btn-flat pull-left">Delete</button>
-                    <button id="insert_change_edit" type="button" class="btn btn-primary btn-flat">Insert/Change</button>
+                    <button id="delete_edit" type="button" class="btn btn-primary btn-flat pull-left" title="Delete all available time edits for selected days and units.">Delete</button>
+                    <button id="insert_change_edit" type="button" class="btn btn-primary btn-flat" title="Insert or change avaialble time edit for selected days and units.">Insert/Change</button>
                 </div>
             </div>
 
@@ -165,8 +161,8 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button id="delete_uat" type="button" class="btn btn-primary btn-flat pull-left" title="Delete schedule change">Delete</button>
-                    <button id="insert_change_uat" type="button" class="btn btn-primary btn-flat" {% comment %}data-dismiss="modal"{% endcomment %}>Insert/Change</button>
+                    <button id="delete_uat" type="button" class="btn btn-primary btn-flat pull-left" title="Delete changes to default schedules for selected days and units.">Delete</button>
+                    <button id="insert_change_uat" type="button" class="btn btn-primary btn-flat" title="Insert or change default schedules for selected days and units.">Insert/Change</button>
                 </div>
             </div>
 

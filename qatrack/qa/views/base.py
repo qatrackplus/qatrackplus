@@ -2,23 +2,13 @@ import collections
 import logging
 
 from braces.views import PrefetchRelatedMixin, SelectRelatedMixin
-from django.apps import apps
 from django.conf import settings
 from django.contrib.auth.context_processors import PermWrapper
-from django.contrib.sites.shortcuts import get_current_site
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core.urlresolvers import resolve, reverse
 from django.db.models import Q
-from django.http import JsonResponse
-from django.shortcuts import render
 from django.template.loader import get_template
-from django.utils.html import escape
 from django.utils.translation import ugettext as _
-from django.views.decorators.csrf import csrf_protect
-from django.views.decorators.http import require_POST
 from django.views.generic import UpdateView
-from django_comments import get_form
-from django_comments import signals as dc_signals
 from listable.views import (
     DATE_RANGE,
     LAST_14_DAYS,
