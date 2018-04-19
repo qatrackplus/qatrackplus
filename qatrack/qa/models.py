@@ -34,6 +34,7 @@ STRING_COMPOSITE = "scomposite"
 
 NUMERICAL_TYPES = (COMPOSITE, CONSTANT, SIMPLE, )
 STRING_TYPES = (STRING, STRING_COMPOSITE, MULTIPLE_CHOICE, )
+COMPOSITE_TYPES = (COMPOSITE, STRING_COMPOSITE,)
 CALCULATED_TYPES = (UPLOAD, COMPOSITE, STRING_COMPOSITE, )
 NO_SKIP_REQUIRED_TYPES = (COMPOSITE, CONSTANT, STRING_COMPOSITE, )
 
@@ -1510,6 +1511,16 @@ class TestInstance(models.Model):
         else:
             # no tolerance and/or reference set
             self.pass_fail = NO_TOL
+
+    def get_value(self):
+        if self.unit_test_info.test.is_upload():
+            return self.attachment_set.first()
+        if self.unit_test_info.test.is_string_type():
+            return self.string_value
+        elif self.unit_test_info.test.is_boolean():
+            return bool(self.value)
+
+        return self.value
 
     def auto_review(self):
         """set review status of the current value if allowed"""

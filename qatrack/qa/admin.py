@@ -111,7 +111,9 @@ class TestInfoForm(forms.ModelForm):
 
     def clean(self):
         """make sure valid numbers are entered for boolean data"""
-        if (self.instance.test.type == models.MULTIPLE_CHOICE or self.instance.test.is_string_type()) and self.cleaned_data["tolerance"]:
+
+        if (self.instance.test.type == models.MULTIPLE_CHOICE or
+            self.instance.test.is_string_type()) and self.cleaned_data.get("tolerance"):
             if self.cleaned_data["tolerance"].type != models.MULTIPLE_CHOICE:
                 raise forms.ValidationError(_("You can't use a non-multiple choice tolerance with a multiple choice or string test"))
         else:
@@ -120,7 +122,7 @@ class TestInfoForm(forms.ModelForm):
 
             ref_value = self.cleaned_data["reference_value"]
 
-            tol = self.cleaned_data["tolerance"]
+            tol = self.cleaned_data.get("tolerance")
             if tol is not None:
                 if ref_value == 0 and tol.type == models.PERCENT:
                     raise forms.ValidationError(_("Percentage based tolerances can not be used with reference value of zero (0)"))
@@ -943,6 +945,14 @@ class StatusAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
     model = models.TestInstanceStatus
 
+    list_display = (
+        'name',
+        'is_default',
+        'requires_review',
+        'valid',
+        'get_colour',
+    )
+
     class Media:
         js = (
             settings.STATIC_URL + "jquery/js/jquery.min.js",
@@ -957,6 +967,11 @@ class StatusAdmin(admin.ModelAdmin):
                 settings.STATIC_URL + "qatrack_core/css/admin.css",
             ),
         }
+
+    def get_colour(self, obj):
+        return '<div style="display: inline-block; width: 20px; height:20px; background-color: %s;"></div>' % obj.colour
+    get_colour.short_description = "Color"
+    get_colour.allow_tags = True
 
 
 def utc_unit_name(obj):

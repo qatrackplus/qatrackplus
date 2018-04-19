@@ -16,6 +16,7 @@ from django.utils import timezone
 from django_comments.models import Comment
 from freezegun import freeze_time
 
+from qatrack.attachments.models import Attachment
 from qatrack.qa import models, views
 from qatrack.qa.views import forms
 import qatrack.qa.views.backup
@@ -23,8 +24,6 @@ import qatrack.qa.views.base
 import qatrack.qa.views.charts
 import qatrack.qa.views.perform
 import qatrack.qa.views.review
-
-from qatrack.units import views as u_views
 from qatrack.units import models as u_models
 
 from . import utils
@@ -102,11 +101,6 @@ class TestURLS(TestCase):
 
     def test_login_redirect(self):
         self.assertTrue(self.returns_200(settings.LOGIN_REDIRECT_URL))
-
-    def test_composite(self):
-        url = reverse("composite")
-
-        self.assertTrue(self.returns_200(url, method="post"))
 
     def test_perform(self):
         utils.create_status()
@@ -498,24 +492,32 @@ class TestComposite(TestCase):
         self.view = views.perform.CompositeCalculation.as_view()
         self.url = reverse("composite")
 
+        self.user = utils.create_user()
+        self.unit = utils.create_unit()
+        self.test_list = utils.create_test_list()
         self.t1 = utils.create_test(name="test1")
         self.t2 = utils.create_test(name="test2")
         self.tc = utils.create_test(name="testc", test_type=models.COMPOSITE)
         self.tc.calculation_procedure = "result = test1 + test2"
         self.tc.save()
+        for t in [self.t1, self.t2, self.tc]:
+            utils.create_test_list_membership(self.test_list, t)
+            utils.create_unit_test_info(test=t, unit=self.unit)
 
     def test_composite(self):
 
         data = {
-            'qavalues': {
+            'tests': {
                 "testc": "",
                 "test1": 1,
                 "test2": 2
             },
-            'composite_ids': ['%d' % self.tc.pk],
             'meta': {},
+            'test_list_id': self.test_list.id,
+            'unit_id': self.unit.id,
         }
         request = self.factory.post(self.url, content_type='application/json', data=json.dumps(data))
+        request.user = self.user
         response = self.view(request)
         values = json.loads(response.content.decode("UTF-8"))
 
@@ -536,11 +538,13 @@ class TestComposite(TestCase):
     def test_invalid_values(self):
 
         data = {
-            'composite_ids': ['%d' % self.tc.pk],
+            'test_list_id': self.test_list.id,
+            'unit_id': self.unit.id,
             'meta': {},
         }
 
         request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
+        request.user = self.user
         response = self.view(request)
         values = json.loads(response.content.decode("UTF-8"))
 
@@ -550,7 +554,7 @@ class TestComposite(TestCase):
     def test_invalid_number(self):
 
         data = {
-            'qavalues': {
+            'tests': {
                 "testc": {
                     "name": "testc",
                     "current_value": ""
@@ -564,11 +568,13 @@ class TestComposite(TestCase):
                     "current_value": "abc"
                 }
             },
-            'composite_ids': ['%d' % self.tc.pk],
+            'test_list_id': self.test_list.id,
+            'unit_id': self.unit.id,
             'meta': {},
         }
 
         request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
+        request.user = self.user
         response = self.view(request)
 
         values = json.loads(response.content.decode("UTF-8"))
@@ -593,19 +599,38 @@ class TestComposite(TestCase):
         }
         self.assertDictEqual(values, expected)
 
+    def test_missing_test_list_id(self):
+        request = self.factory.post(self.url, content_type="application/json", data=json.dumps({}))
+        request.user = self.user
+        response = self.view(request)
+        values = json.loads(response.content.decode("UTF-8"))
+        expected = {"errors": ["Invalid or missing test_list_id"], "success": False}
+        self.assertDictEqual(values, expected)
+
+    def test_missing_unit_id(self):
+        data = {'test_list_id': self.test_list.id}
+        request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
+        request.user = self.user
+        response = self.view(request)
+        values = json.loads(response.content.decode("UTF-8"))
+        expected = {"errors": ["Invalid or missing unit_id"], "success": False}
+        self.assertDictEqual(values, expected)
+
     def test_invalid_composite(self):
 
+        self.tc.delete()
         data = {
-            'qavalues': {
-                "testc": "",
+            'tests': {
                 "test1": 1,
                 "test2": "abc"
             },
-            'composite_ids': [],
             'meta': '{}',
+            'test_list_id': self.test_list.id,
+            'unit_id': self.unit.id,
         }
 
         request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
+        request.user = self.user
         response = self.view(request)
         values = json.loads(response.content.decode("UTF-8"))
 
@@ -614,16 +639,19 @@ class TestComposite(TestCase):
 
     def test_no_composite(self):
 
+        self.tc.delete()
         data = {
-            'qavalues': {
-                "testc": "",
+            'tests': {
                 "test1": 1,
                 "test2": 2
             },
+            'test_list_id': self.test_list.id,
+            'unit_id': self.unit.id,
             'meta': '{}',
         }
 
         request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
+        request.user = self.user
         response = self.view(request)
         values = json.loads(response.content.decode("UTF-8"))
 
@@ -632,9 +660,10 @@ class TestComposite(TestCase):
 
     def test_invalid_json(self):
 
-        data = '{"qavalues": {"testc"}, u"meta": {}, }'
+        data = '{"tests": {"testc"}, u"meta": {}, }'
 
         request = self.factory.post(self.url, content_type="application/json", data=data)
+        request.user = self.user
         response = self.view(request)
         values = json.loads(response.content.decode("UTF-8"))
 
@@ -646,16 +675,18 @@ class TestComposite(TestCase):
         self.tc.save()
 
         data = {
-            'qavalues': {
+            'tests': {
                 "testc": "",
                 "test1": 1,
                 "test2": 2
             },
-            'composite_ids': ['%d' % self.tc.pk],
+            'test_list_id': self.test_list.id,
+            'unit_id': self.unit.id,
             'meta': {},
         }
 
         request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
+        request.user = self.user
         response = self.view(request)
         values = json.loads(response.content.decode("UTF-8"))
 
@@ -686,20 +717,24 @@ class TestComposite(TestCase):
         self.cyclic2 = utils.create_test(name="cyclic2", test_type=models.COMPOSITE)
         self.cyclic2.calculation_procedure = "result = cyclic1 + test1"
         self.cyclic2.save()
+        utils.create_test_list_membership(self.test_list, self.cyclic1)
+        utils.create_test_list_membership(self.test_list, self.cyclic2)
 
         data = {
-            'qavalues': {
+            'tests': {
                 "testc": "",
                 "cyclic1": "",
                 "cyclic2": "",
                 "test1": 1,
                 "test2": 2
             },
-            'composite_ids': ['%d' % t for t in (self.tc.pk, self.cyclic1.pk, self.cyclic2.pk)],
+            'test_list_id': self.test_list.id,
+            'unit_id': self.unit.id,
             'meta': {},
         }
 
         request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
+        request.user = self.user
         response = self.view(request)
         values = json.loads(response.content.decode("UTF-8"))
 
@@ -1184,10 +1219,14 @@ class TestAJAXUpload(TestCase):
         self.test = utils.create_test('test upload')
         self.test.type = models.UPLOAD
         self.test.calculation_procedure = """
+
 import json
 result = json.load(FILE)
 """
         self.test.save()
+
+        self.test_list = utils.create_test_list()
+        utils.create_test_list_membership(self.test_list, self.test)
 
         fname = os.path.join(os.path.dirname(__file__), "TESTRUNNER_test_file.json")
         self.test_file = open(fname, "r")
@@ -1202,25 +1241,57 @@ result = json.load(FILE)
             except PermissionError as e:
                 print(">>> Could not delete %s because %s" % (f, e))
 
+        for a in Attachment.objects.all():
+            if os.path.isfile(a.attachment.path):
+                os.remove(a.attachment.path)
+
     def test_upload_fname_exists(self):
-        response = self.client.post(self.url, {"test_id": self.test.pk, "upload": self.test_file, "meta": "{}"})
+        response = self.client.post(
+            self.url, {
+                "test_id": self.test.pk,
+                "upload": self.test_file,
+                "unit_id": self.unit_test_info.unit.id,
+                "test_list_id": self.test_list.id,
+                "meta": "{}",
+            }
+        )
         data = json.loads(response.content.decode("UTF-8"))
         self.assertTrue(os.path.exists(os.path.join(settings.TMP_UPLOAD_ROOT)), data['attachment']["name"])
 
     def test_invalid_test_id(self):
-        response = self.client.post(self.url, {"test_id": 200, "upload": self.test_file, "meta": "{}"})
+        response = self.client.post(self.url, {
+            "test_id": 200,
+            "upload": self.test_file,
+            "unit_id": self.unit_test_info.unit.id,
+            "test_list_id": self.test_list.id,
+            "meta": "{}"
+        })
         data = json.loads(response.content.decode("UTF-8"))
         self.assertEqual(data["errors"][0], "Test with that ID does not exist")
 
     def test_invalid_test(self):
         self.test.calculation_procedure = "result = 1/0"
         self.test.save()
-        response = self.client.post(self.url, {"test_id": self.test.pk, "upload": self.test_file, "meta": "{}"})
+        response = self.client.post(
+            self.url, {
+                "test_id": self.test.pk,
+                "upload": self.test_file,
+                "meta": "{}",
+                "unit_id": self.unit_test_info.unit.id,
+                "test_list_id": self.test_list.id,
+            }
+        )
         data = json.loads(response.content.decode("UTF-8"))
         self.assertIn("Invalid Test", data["errors"][0])
 
     def test_upload_results(self):
-        response = self.client.post(self.url, {"test_id": self.test.pk, "upload": self.test_file, "meta": "{}"})
+        response = self.client.post(self.url, {
+            "test_id": self.test.pk,
+            "upload": self.test_file,
+            "meta": "{}",
+            "unit_id": self.unit_test_info.unit.id,
+            "test_list_id": self.test_list.id,
+        })
         data = json.loads(response.content.decode("UTF-8"))
         self.assertEqual(data["result"]["baz"]["baz1"], "test")
 
@@ -1858,5 +1929,3 @@ class TestReviewStatusContext(TestCase):
             )
             self.assertEqual(ti.status.valid, context['statuses'][ti.status.name]['valid'])
             self.assertEqual(ti.status.requires_review, context['statuses'][ti.status.name]['requires_review'])
-
-

@@ -1,17 +1,13 @@
 import collections
+from functools import reduce
 import json
 import math
 import os
 import traceback
-from functools import reduce
 
-import dateutil
-import dicom
-import matplotlib
-import matplotlib.pyplot as plt
-import numpy
-import scipy
 from braces.views import JSONResponseMixin, PermissionRequiredMixin
+import dateutil
+import pydicom
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.sites.shortcuts import get_current_site
@@ -27,6 +23,10 @@ from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django.views.generic import CreateView, TemplateView, View
 from django_comments.models import Comment
+import matplotlib
+import matplotlib.pyplot as plt
+import numpy
+import scipy
 
 from qatrack.attachments.models import Attachment
 from qatrack.attachments.utils import imsave, to_bytes
@@ -39,7 +39,8 @@ from .. import models, signals, utils
 from .base import BaseEditTestListInstance, TestListInstances, UTCList, logger
 
 DEFAULT_CALCULATION_CONTEXT = {
-    "dicom": dicom,
+    "dicom": pydicom,
+    "pydicom": pydicom,
     "math": math,
     "numpy": numpy,
     "matplotlib": matplotlib,
@@ -79,10 +80,10 @@ def attachment_info(attachment):
 
 class CompositeUtils:
 
-    def __init__(self, request, context, comments):
+    def __init__(self, user, context, comments):
         self.context = context
         self.context['__user_attached__'] = []
-        self.request = request
+        self.user = user
         self.comments = comments
 
     def set_comment(self, comment):
@@ -102,11 +103,157 @@ class CompositeUtils:
         attachment = Attachment(
             attachment=f,
             comment=_("Composite created file"),
-            created_by=self.request.user,
+            created_by=self.user,
         )
         attachment.save()
 
         self.context["__user_attached__"].append(attachment_info(attachment))
+
+
+def get_context_refs_tols(unit, tests):
+
+    utis = models.UnitTestInfo.objects.filter(
+        unit=unit,
+        test_id__in=tests.values_list("id"),
+        active=True,
+    ).select_related("reference", "test", "tolerance",).values(
+        "test__slug",
+        "reference__value",
+        "tolerance__type",
+        "tolerance__mc_tol_choices",
+        "tolerance__mc_pass_choices",
+        "tolerance__act_high",
+        "tolerance__act_low",
+        "tolerance__tol_high",
+        "tolerance__tol_low",
+    )
+    refs = {}
+    tols = {}
+    tol_keys = ["act_high", "act_low", "tol_high", "tol_low", "mc_pass_choices", "mc_tol_choices", "type"]
+    for uti in utis:
+        slug = uti["test__slug"]
+        refs[slug] = uti['reference__value']
+        tols[slug] = {k: uti["tolerance__%s" % k] for k in tol_keys}
+
+    return refs, tols
+
+
+class UploadHandler:
+
+    def __init__(self, user, data, fp):
+        self.user = user
+        self.data = data
+        self.file = fp
+
+    def process(self):
+        """process file, apply calculation procedure and return results"""
+
+        try:
+            self.test_list = models.TestList.objects.get(pk=self.data["test_list_id"])
+            self.all_tests = self.test_list.all_tests()
+        except (KeyError, models.TestList.DoesNotExist):
+            return {"success": False, "errors": ["Invalid or missing test_list_id"]}
+
+        try:
+            self.unit = Unit.objects.get(pk=self.data["unit_id"])
+        except (KeyError, Unit.DoesNotExist):
+            return {"success": False, "errors": ["Invalid or missing unit_id"]}
+
+        try:
+            if self.data.get('attachment_id'):
+                self.reprocess()
+            else:
+                self.handle_upload()
+
+            results = self.run_calc()
+        except Exception:
+            msg = traceback.format_exc()
+            results = {
+                'success': False,
+                'errors': [msg],
+                "result": None,
+                "user_attached": [],
+            }
+
+        return results
+
+    def reprocess(self):
+        self.attach_id = self.data.get("attachment_id")
+        try:
+            self.attachment = Attachment.objects.get(pk=self.attach_id)
+        except Attachment.DoesNotExist:
+            self.attachment = None
+
+    def run_calc(self):
+
+        self.set_calculation_context()
+
+        results = {
+            'attachment_id': self.attachment.id,
+            'attachment': attachment_info(self.attachment),
+            'success': False,
+            'errors': [],
+            "result": None,
+            "comment": "",
+            "user_attached": [],
+        }
+
+        if self.attachment is None:
+            results["errors"] = ["Original file not found. Please re-upload."]
+            return results
+
+        try:
+            test = models.Test.objects.get(pk=self.data.get("test_id"))
+            code = compile(process_procedure(test.calculation_procedure), "__QAT+COMP_%s.py" % test.slug, "exec")
+            exec(code, self.calculation_context)
+            key = "result" if "result" in self.calculation_context else test.slug
+            results["result"] = self.calculation_context[key]
+            results["success"] = True
+            results["user_attached"] = list(self.calculation_context.get("__user_attached__", []))
+            results["comment"] = self.calculation_context.get("__comment__")
+        except models.Test.DoesNotExist:
+            results["errors"].append("Test with that ID does not exist")
+        except Exception:
+            msg = traceback.format_exc().split("__QAT+COMP_")[-1].replace("<module>", "Test: %s" % test.name)
+            results["errors"].append("Invalid Test Procedure: %s" % msg)
+
+        return results
+
+    def handle_upload(self):
+        """read incoming file and save tmp file to disk ready for processing"""
+
+        comment = "Uploaded %s by %s" % (timezone.now(), self.user.username)
+        self.attachment = Attachment.objects.create(
+            attachment=self.file,
+            label=self.file.name,
+            comment=comment,
+            created_by=self.user,
+        )
+
+    def set_calculation_context(self):
+        """set up the environment that the composite test will be calculated in"""
+
+        self.calculation_context = {}
+
+        meta_data = self.data["meta"]
+        refs, tols = get_context_refs_tols(self.unit, self.all_tests)
+
+        for d in ("work_completed", "work_started"):
+            try:
+                meta_data[d] = dateutil.parser.parse(meta_data[d])
+            except (KeyError, AttributeError, TypeError):
+                pass
+
+        comments = self.data["comments"]
+        self.calculation_context.update({
+            "FILE": open(self.attachment.attachment.path, "r"),
+            "BIN_FILE": self.attachment.attachment,
+            "META": meta_data,
+            "REFS": refs,
+            "TOLS": tols,
+            "UTILS": CompositeUtils(self.user, self.calculation_context, comments),
+        })
+        self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
 
 
 class Upload(JSONResponseMixin, View):
@@ -117,6 +264,18 @@ class Upload(JSONResponseMixin, View):
 
     def post(self, *args, **kwargs):
         """process file, apply calculation procedure and return results"""
+
+        try:
+            self.test_list = models.TestList.objects.get(pk=self.get_json_data("test_list_id"))
+            self.all_tests = self.test_list.all_tests()
+        except (models.TestList.DoesNotExist):
+            return self.render_json_response({"success": False, "errors": ["Invalid or missing test_list_id"]})
+
+        try:
+            self.unit = Unit.objects.get(pk=self.get_json_data("unit_id"))
+        except (Unit.DoesNotExist):
+            return self.render_json_response({"success": False, "errors": ["Invalid or missing unit_id"]})
+
         try:
             if self.request.POST.get('attachment_id'):
                 self.reprocess()
@@ -204,6 +363,7 @@ class Upload(JSONResponseMixin, View):
         self.calculation_context = {}
 
         meta_data = self.get_json_data("meta")
+        refs, tols = get_context_refs_tols(self.unit, self.all_tests)
 
         for d in ("work_completed", "work_started"):
             try:
@@ -216,17 +376,15 @@ class Upload(JSONResponseMixin, View):
             "FILE": open(self.attachment.attachment.path, "r"),
             "BIN_FILE": self.attachment.attachment,
             "META": meta_data,
-            "REFS": self.get_json_data("refs"),
-            "TOLS": self.get_json_data("tols"),
-            "UTILS": CompositeUtils(self.request, self.calculation_context, comments),
+            "REFS": refs,
+            "TOLS": tols,
+            "UTILS": CompositeUtils(self.request.user, self.calculation_context, comments),
         })
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
 
     def get_json_data(self, name):
         """return python data from GET json data"""
-        data = self.request.POST
-
-        json_string = data.get(name)
+        json_string = self.request.POST.get(name)
         if not json_string:
             return
 
@@ -236,31 +394,33 @@ class Upload(JSONResponseMixin, View):
             return
 
 
-class CompositeCalculation(JSONResponseMixin, View):
-    """validate all qa tests in the request for the :model:`TestList` with id test_list_id"""
+class CompositePerformer:
 
-    def get_json_data(self, name):
-        """return python data from GET json data"""
+    def __init__(self, user, data):
+        self.user = user
+        self.data = data
 
-        json_string = self.request.body.decode("UTF-8")
-        if not json_string:
-            return
+    def calculate(self):
+        """calculate and return all composite values"""
 
         try:
-            return json.loads(json_string)[name]
-        except (KeyError, ValueError):
-            return
+            self.test_list = models.TestList.objects.get(pk=self.data["test_list_id"])
+            self.all_tests = self.test_list.all_tests()
+        except (KeyError, models.TestList.DoesNotExist):
+            return {"success": False, "errors": ["Invalid or missing test_list_id"]}
 
-    def post(self, *args, **kwargs):
-        """calculate and return all composite values"""
+        try:
+            self.unit = Unit.objects.get(pk=self.data["unit_id"])
+        except (KeyError, Unit.DoesNotExist):
+            return {"success": False, "errors": ["Invalid or missing unit_id"]}
 
         self.set_composite_test_data()
         if not self.composite_tests:
-            return self.render_json_response({"success": False, "errors": ["No Valid Composite ID's"]})
+            return {"success": False, "errors": ["No Valid Composite ID's"]}
 
         self.set_calculation_context()
         if not self.calculation_context or list(self.calculation_context.keys()) == ["write_file"]:
-            return self.render_json_response({"success": False, "errors": ["Invalid QA Values"]})
+            return {"success": False, "errors": ["Invalid QA Values"]}
 
         self.set_dependencies()
         self.resolve_dependency_order()
@@ -303,28 +463,14 @@ class CompositeCalculation(JSONResponseMixin, View):
 
                 del self.calculation_context['__user_attached__'][:]
 
-        """
-        At the end of any view which may use mpl.pyplot to generate a plot
-        we need to clean the figure, to attempt to  prevent any crosstalk
-        between plots.
-
-        Generally people should use the OO interface to MPL rather than
-        pyplot, because pyplot is not threadsafe.
-        """
-        plt.clf()
-
-        return self.render_json_response({"success": True, "errors": [], "results": results})
+        return {"success": True, "errors": [], "results": results}
 
     def set_composite_test_data(self):
         """retrieve calculation procs for all composite tests"""
 
-        composite_ids = self.get_json_data("composite_ids")
-
-        if composite_ids is None:
-            self.composite_tests = {}
-            return
-
-        composite_tests = models.Test.objects.filter(pk__in=composite_ids).values_list("slug", "calculation_procedure")
+        composite_tests = self.all_tests.filter(
+            type__in=models.COMPOSITE_TYPES,
+        ).values_list("slug", "calculation_procedure")
 
         self.composite_tests = dict(composite_tests)
 
@@ -332,8 +478,8 @@ class CompositeCalculation(JSONResponseMixin, View):
         """set up the environment that the composite test will be calculated in"""
 
         self.calculation_context = {}
-        values = self.get_json_data("qavalues")
-        meta_data = self.get_json_data("meta")
+        values = self.data.get("tests")
+        meta_data = self.data.get("meta")
 
         for d in ("work_completed", "work_started"):
             try:
@@ -344,12 +490,14 @@ class CompositeCalculation(JSONResponseMixin, View):
         if values is None:
             return
 
-        comments = self.get_json_data("comments")
+        refs, tols = get_context_refs_tols(self.unit, self.all_tests)
+
+        comments = self.data.get("comments", {})
         self.calculation_context.update({
             "META": meta_data,
-            "REFS": self.get_json_data("refs"),
-            "TOLS": self.get_json_data("tols"),
-            "UTILS": CompositeUtils(self.request, self.calculation_context, comments),
+            "REFS": refs,
+            "TOLS": tols,
+            "UTILS": CompositeUtils(self.user, self.calculation_context, comments),
         })
 
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
@@ -400,6 +548,24 @@ class CompositeCalculation(JSONResponseMixin, View):
 
         self.calculation_order = deps
         self.cyclic_tests = list(data.keys())
+
+
+class CompositeCalculation(JSONResponseMixin, View):
+    """validate all qa tests in the request for the :model:`TestList` with id test_list_id"""
+
+    def post(self, *args, **kwargs):
+        """calculate and return all composite values"""
+
+        json_string = self.request.body.decode("UTF-8")
+        if not json_string:
+            data = {}
+        try:
+            data = json.loads(json_string)
+        except (ValueError):
+            data = {}
+
+        result = CompositePerformer(self.request.user, data).calculate()
+        return self.render_json_response(result)
 
 
 class ChooseUnit(TemplateView):
@@ -960,8 +1126,8 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
             self.object.reviewed_by = None
             self.object.all_reviewed = False
         else:
-            self.reviewed = now
-            self.reviewed_by = self.request.user
+            self.object.reviewed = now
+            self.object.reviewed_by = self.request.user
             self.object.all_reviewed = True
 
         if self.object.work_completed is None:
