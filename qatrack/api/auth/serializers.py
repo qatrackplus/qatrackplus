@@ -1,4 +1,4 @@
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import Group, Permission, User
 from rest_framework import serializers
 
 
@@ -62,3 +62,15 @@ class GroupSerializer(serializers.HyperlinkedModelSerializer):
                 "codename",
             )
         ] if obj else []
+
+
+class PermissionSerializer(serializers.HyperlinkedModelSerializer):
+
+    class Meta:
+        model = Permission
+        fields = (
+            'url',
+            'name',
+            'codename',
+            'content_type',
+        )
