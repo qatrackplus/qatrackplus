@@ -1,9 +1,8 @@
-from django.contrib.sites.shortcuts import get_current_site
 from django.utils import timezone
 from rest_framework import status, views, viewsets
 from rest_framework.response import Response
 
-from qatrack.api.qa import serializers, filters
+from qatrack.api.qa import filters, serializers
 from qatrack.api.serializers import MultiSerializerMixin
 from qatrack.qa import models
 from qatrack.qa.views import perform
@@ -104,12 +103,6 @@ class TestListInstanceViewSet(MultiSerializerMixin, viewsets.ModelViewSet):
         'partial_update': serializers.TestListInstanceCreator,
     }
     http_method_names = ['get', 'post', 'patch']
-
-    def get_serializer(self, *args, **kwargs):
-        ser = super(TestListInstanceViewSet, self).get_serializer(*args, **kwargs)
-        ser.site = get_current_site(self.request)
-        ser.user = self.request.user
-        return ser
 
     def create(self, request, *args, **kwargs):
         data = dict(request.data.items())

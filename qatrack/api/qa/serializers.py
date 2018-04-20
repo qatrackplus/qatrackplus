@@ -5,6 +5,7 @@ from numbers import Number
 import re
 
 from django.conf import settings
+from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
 from django.core.files.base import ContentFile
 from django.db.transaction import atomic
@@ -95,13 +96,10 @@ class UTCTestsObjectRelatedField(serializers.RelatedField):
     A custom field to use for the `tests_object` generic relationship.
     """
 
-    def to_representation(self, value):
-        """
-        Serialize tagged objects to a simple textual representation.
-        """
-        # Need to add reverse api urls here for TL/TLC
-        import ipdb; ipdb.set_trace()  # yapf: disable  # noqa
-        return value.url
+    def to_representation(self, obj):
+        if isinstance(obj, models.TestList):
+            return reverse("testlist-detail", kwargs={'pk': obj.pk}, request=self.context['request'])
+        return reverse("testlistcycle-detail", kwargs={'pk': obj.pk}, request=self.context['request'])
 
 
 class UnitTestCollectionSerializer(serializers.HyperlinkedModelSerializer):
@@ -111,6 +109,11 @@ class UnitTestCollectionSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = models.UnitTestCollection
         fields = "__all__"
+
+    def get_tests_object(self, obj):
+        if isinstance(obj, models.TestList):
+            return reverse("testlist-detail", kwargs={'pk': obj.pk}, request=self.context['request'])
+        return reverse("testlistcycle-detail", kwargs={'pk': obj.pk}, request=self.context['request'])
 
 
 class TestInstanceSerializer(serializers.HyperlinkedModelSerializer):
@@ -203,11 +206,13 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
             content = base64.b64decode(content)
 
+        user = self.context['request'].user
+
         return Attachment(
             attachment=ContentFile(content, data['filename']),
-            comment="Uploaded %s by %s" % (timezone.now(), self.user.username),
+            comment="Uploaded %s by %s" % (timezone.now(), user.username),
             label=data['filename'],
-            created_by=self.user,
+            created_by=user,
         )
 
     def valid_test(self, test_data):
@@ -359,6 +364,8 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
         self.ti_attachments = defaultdict(list)
 
+        user = self.context['request'].user
+
         if has_calculated:
 
             comp_calc_data = self.data_to_composite(validated_data)
@@ -380,8 +387,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
                     content = base64.b64decode(content)
 
                 f = ContentFile(content, fname)
-
-                test_data = UploadHandler(self.user, comp_calc_data, f).process()
+                test_data = UploadHandler(user, comp_calc_data, f).process()
                 if test_data['errors']:
                     raise serializers.ValidationError("Error with %s test: %s" % (slug, '\n'.join(test_data['errors'])))
 
@@ -394,7 +400,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
                 comp_calc_data['tests'][slug] = test_data['result']
                 comp_calc_data.pop('test_id', None)
 
-            results = CompositePerformer(self.user, comp_calc_data).calculate()
+            results = CompositePerformer(user, comp_calc_data).calculate()
             if not results['success']:  # pragma: no cover
                 raise serializers.ValidationError(', '.join(results.get("errors", [])))
 
@@ -422,7 +428,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
                 'cycle_day': self.day,
                 'work_completed': validated_data['work_completed'],
                 'work_started': validated_data['work_started'],
-                'username': self.user.username,
+                'username': self.context['request'].user.username,
             },
             'test_list_id': self.tl.id,
             'unit_id': self.utc.unit.id,
@@ -465,7 +471,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             attachment.save()
 
         if self.comment:
-            self.create_comment(self.comment, user, tli)
+            self.create_comment(self.comment, tli)
 
         tests = tl.ordered_tests()
         utis = models.UnitTestInfo.objects.filter(
@@ -545,6 +551,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
         now = timezone.now()
         utc = instance.unit_test_collection
+        user = self.context['request'].user
 
         # data for creating all test instances
         test_instance_data = validated_data.pop('tests')
@@ -566,7 +573,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         instance.work_started = validated_data['work_started']
         instance.in_progress = validated_data['in_progress']
 
-        instance.modified_by = self.user
+        instance.modified_by = user
         instance.modified = timezone.now()
         instance.reviewed = None
         instance.reviewed_by = None
@@ -574,7 +581,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
         if not status.requires_review:
             instance.reviewed = now
-            instance.reviewed_by = self.user
+            instance.reviewed_by = user
             instance.all_reviewed = True
 
         instance.work_complete = instance.work_completed or now
@@ -586,7 +593,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             attachment.save()
 
         if self.comment:
-            self.create_comment(self.comment, self.user, instance)
+            self.create_comment(self.comment, instance)
 
         tis = instance.testinstance_set.select_related(
             "unit_test_info",
@@ -597,7 +604,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         for ti in tis:
             tid = test_instance_data[ti.unit_test_info.test.slug]
             ti.status = status
-            ti.modified_by = self.user
+            ti.modified_by = user
             ti.work_started = instance.work_started
             ti.work_completed = instance.work_completed
             ti.skipped = tid.get("skipped", ti.skipped)
@@ -633,13 +640,15 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
         return instance
 
-    def create_comment(self, comment, user, tli):
+    def create_comment(self, comment, tli):
+        site = get_current_site(self.context['request'])
+        user = self.context['request'].user
         Comment.objects.create(
             submit_date=timezone.now(),
             user=user,
             content_object=tli,
             comment=comment,
-            site=self.site,
+            site=site,
         )
 
     def to_representation(self, obj):
