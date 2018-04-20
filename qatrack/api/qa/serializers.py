@@ -90,7 +90,24 @@ class SublistSerializer(serializers.HyperlinkedModelSerializer):
         fields = "__all__"
 
 
+class UTCTestsObjectRelatedField(serializers.RelatedField):
+    """
+    A custom field to use for the `tests_object` generic relationship.
+    """
+
+    def to_representation(self, value):
+        """
+        Serialize tagged objects to a simple textual representation.
+        """
+        # Need to add reverse api urls here for TL/TLC
+        import ipdb; ipdb.set_trace()  # yapf: disable  # noqa
+        return value.url
+
+
 class UnitTestCollectionSerializer(serializers.HyperlinkedModelSerializer):
+
+    tests_object = UTCTestsObjectRelatedField(read_only=True)
+
     class Meta:
         model = models.UnitTestCollection
         fields = "__all__"
