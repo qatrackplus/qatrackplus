@@ -220,7 +220,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'listable',
     'genericdropdown',
-    'crispy_forms',
+    # 'crispy_forms',
     'widget_tweaks',
     'qatrack.cache',
     'qatrack.accounts',

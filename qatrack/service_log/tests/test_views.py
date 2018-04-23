@@ -122,16 +122,10 @@ class TestDashboard(TestCase):
         request.user = self.user
         response = self.view(request)
 
-        objs = response.context_data['tl_dates'][timezone.now().date()]['objs']
+        objs = response.context_data['recent_logs']
 
         for o in objs:
-
-            self.assertTrue(isinstance(o['msg'], str))
-            self.assertTrue(isinstance(o['datetime'], timezone.datetime))
-            self.assertTrue(isinstance(o['statuses_dict'], dict))
-            self.assertTrue(o['time'] == '0 minutes ago')
-            self.assertTrue(o['class'] in ['se_new', 'rtsqa_new', 'rtsqa_complete'])
-            self.assertTrue(o['instance'].__class__ in [models.ServiceEvent, models.ReturnToServiceQA])
+            self.assertTrue(isinstance(o, models.ServiceLog))
 
         self.delete_objects()
 
@@ -207,7 +201,7 @@ class TestCreateServiceEvent(TestCase):
     def test_initial_options(self):
         response = self.client.get(self.url)
 
-        self.assertEqual(self.default_ses.id, response.context_data['form'].initial['service_status'])
+        self.assertEqual(self.default_ses, response.context_data['form'].initial['service_status'])
         self.assertTrue(response.context_data['form'].fields['service_area_field'].widget.attrs['disabled'])
         self.assertTrue(response.context_data['form'].fields['service_event_related_field'].widget.attrs['disabled'])
         self.assertTrue(response.context_data['form'].fields['initiated_utc_field'].widget.attrs['disabled'])
@@ -282,7 +276,7 @@ class TestCreateServiceEvent(TestCase):
         )
 
         self.assertEqual(
-            response.context_data['form'].initial['test_list_instance_initiated_by'],
+            response.context_data['form'].initial['test_list_instance_initiated_by'].id,
             tli_ib.id
         )
 
@@ -301,6 +295,7 @@ class TestCreateServiceEvent(TestCase):
         data = {
             'datetime_service': timezone.now().strftime(settings.INPUT_DATE_FORMATS[0]),
             'unit_field': self.u_1.id,
+            'unit_field_fake': self.u_1.id,
             'service_area_field': self.usa_1.service_area.id,
             'service_type': st.id,
             'problem_description': 'uhhhhh ohhhh',
@@ -356,6 +351,7 @@ class TestCreateServiceEvent(TestCase):
 
             'datetime_service': '',
             'unit_field': '',
+            'unit_field_fake': '',
             'service_area_field': '',
             'service_type': '',
             'problem_description': '',
@@ -563,6 +559,7 @@ class TestEditServiceEvent(TestCase):
             'problem_description': 'problem_description',
             'service_area_field': self.se.unit_service_area.service_area.id,
             'unit_field': self.se.unit_service_area.unit.id,
+            'unit_field_fake': self.se.unit_service_area.unit.id,
             'qafollowup_notes': 'qafollowup_notes',
             'test_list_instance_initiated_by': self.tli_1_1.id,
             'duration_lost_time': '0100',

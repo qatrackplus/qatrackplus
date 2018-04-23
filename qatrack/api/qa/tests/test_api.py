@@ -217,6 +217,12 @@ class TestTestListInstanceAPI(APITestCase):
         Add a composite test to our test list.  Submitting without data
         included should result in it being calculated.
         """
+        # FAILS on windows:
+        #
+        #   File "C:\home\code\qatrackplus\qatrack\attachments\models.py", line 50, in move_tmp_file
+        #     os.rename(start_path, new_path)
+        # PermissionError: [WinError 32] The process cannot access the file because it is being used by another process
+
         self.tc.calculation_procedure += ";UTILS.write_file('test_user_attached.txt', 'hello user')"
         self.tc.save()
 
@@ -345,6 +351,12 @@ class TestTestListInstanceAPI(APITestCase):
         Add a file upload test and ensure we can upload, process and have
         composite tests depend on it being processed correctly.
         """
+        # FAILS on windows:
+        #
+        #   File "C:\home\code\qatrackplus\qatrack\attachments\models.py", line 50, in move_tmp_file
+        #     os.rename(start_path, new_path)
+        # PermissionError: [WinError 32] The process cannot access the file because it is being used by another process
+
         self.tsc.calculation_procedure = "result = file_upload['baz']['baz1']"
         self.tsc.save()
         utils.create_test_list_membership(self.test_list, self.tsc)
@@ -460,6 +472,12 @@ class TestTestListInstanceAPI(APITestCase):
         Add a file upload test and ensure we can upload, process and have
         composite tests depend on it being processed correctly.
         """
+        # FAILS on windows:
+        #
+        #   File "C:\home\code\qatrackplus\qatrack\attachments\models.py", line 50, in move_tmp_file
+        #     os.rename(start_path, new_path)
+        # PermissionError: [WinError 32] The process cannot access the file because it is being used by another process
+
         self.tsc.calculation_procedure = "result = file_upload['baz']['baz1']"
         self.tsc.save()
         utils.create_test_list_membership(self.test_list, self.tsc)
@@ -662,6 +680,11 @@ class TestTestListInstanceAPI(APITestCase):
         """
         Ensure making a simple edit to a tli with an text upload test succeeds.
         """
+        # FAILS on windows:
+        #
+        #   File "C:\home\code\qatrackplus\qatrack\attachments\models.py", line 50, in move_tmp_file
+        #     os.rename(start_path, new_path)
+        # PermissionError: [WinError 32] The process cannot access the file because it is being used by another process
 
         self.tsc.calculation_procedure = "result = file_upload['baz']['baz1']"
         self.tsc.save()
@@ -690,6 +713,11 @@ class TestTestListInstanceAPI(APITestCase):
         """
         Ensure making a simple edit to a tli with an upload test succeeds.
         """
+        # FAILS on windows:
+        #
+        #   File "C:\home\code\qatrackplus\qatrack\attachments\models.py", line 52, in move_tmp_file
+        #     os.rename(start_path, new_path)
+        # PermissionError: [WinError 32] The process cannot access the file because it is being used by another process
 
         self.tsc.calculation_procedure = "result = file_upload['baz']['baz1']"
         self.tsc.save()
@@ -724,6 +752,11 @@ class TestTestListInstanceAPI(APITestCase):
         """
         Ensure making a simple edit to a tli with an upload test succeeds.
         """
+        # FAILS on windows:
+        #
+        #   File "C:\home\code\qatrackplus\qatrack\attachments\models.py", line 50, in move_tmp_file
+        #     os.rename(start_path, new_path)
+        # PermissionError: [WinError 32] The process cannot access the file because it is being used by another process
 
         self.tsc.calculation_procedure = "result = file_upload['baz']['baz1']"
         self.tsc.save()

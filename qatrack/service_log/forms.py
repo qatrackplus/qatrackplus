@@ -305,7 +305,7 @@ class TLIInitiatedField(forms.ModelChoiceField):
 
 class ServiceEventForm(BetterModelForm):
 
-    unit_field_fake = forms.ModelChoiceField(queryset=models.Unit.objects.all(), label='Unit', required=False)
+    unit_field_fake = forms.ModelChoiceField(queryset=models.Unit.objects.all(), label='Unit')
     unit_field = forms.ModelChoiceField(queryset=models.Unit.objects.all())
     service_area_field = forms.ModelChoiceField(
         queryset=models.ServiceArea.objects.all(), label='Service area'

@@ -51,49 +51,6 @@ def get_time_display(dt):
         return dt.strftime('%I:%M %p')
 
 
-def populate_timeline_from_queryset(unsorted_dict, obj, datetime, obj_class, msg=''):
-
-    date = datetime.date()
-    time = get_time_display(datetime)
-
-    if obj_class == 'rtsqa_complete':
-        statuses_dict = generate_review_status_context(obj.test_list_instance)
-    else:
-        statuses_dict = {}
-
-    if date not in unsorted_dict:
-
-        if date == timezone.now().date():
-            display = _('Today')
-        elif date == (timezone.now() - timezone.timedelta(days=1)).date():
-            display = _('Yesterday')
-        else:
-            display = date
-
-        unsorted_dict.update({date: {
-            'objs': [{
-                'class': obj_class,
-                'instance': obj,
-                'time': time,
-                'datetime': datetime,
-                'msg': msg,
-                'statuses_dict': statuses_dict
-            }],
-            'display': display,
-        }})
-    else:
-        unsorted_dict[date]['objs'].append({
-            'class': obj_class,
-            'instance': obj,
-            'time': time,
-            'datetime': datetime,
-            'msg': msg,
-            'statuses_dict': statuses_dict
-        })
-
-    return unsorted_dict
-
-
 def unit_sa_utc(request):
 
     try:
@@ -141,7 +98,6 @@ class SLDashboard(TemplateView):
 
     def get_counts(self):
 
-        # TODO: Parts low
         rtsqa_qs = models.ReturnToServiceQA.objects.prefetch_related().all()
         default_status = models.ServiceEventStatus.objects.get(is_default=True)
         to_return = {
@@ -160,100 +116,6 @@ class SLDashboard(TemplateView):
             }
         }
         return to_return
-
-    # def get_recent_logs(self):
-
-        # se_new = models.ServiceEvent.objects.filter(
-        #     datetime_created__gt=timezone.now() - timezone.timedelta(days=14)
-        # ).select_related('unit_service_area__unit', 'user_created_by').order_by('-datetime_created')[:40]
-        #
-        # se_edited = models.ServiceEvent.objects.filter(
-        #     datetime_modified__gt=timezone.now() - timezone.timedelta(days=14)
-        # ).select_related('unit_service_area__unit', 'user_modified_by').order_by('-datetime_modified')[:40]
-        #
-        # se_status = models.ServiceEvent.objects.filter(
-        #     datetime_status_changed__gt=timezone.now() - timezone.timedelta(days=14)
-        # ).select_related(
-        #     'service_status', 'unit_service_area__unit', 'user_status_changed_by'
-        # ).order_by('-datetime_status_changed')[:40]
-        #
-        # rtsqa_new = models.ReturnToServiceQA.objects.filter(
-        #     datetime_assigned__gt=timezone.now() - timezone.timedelta(days=14)
-        # ).select_related(
-        #     'service_event',
-        #     'test_list_instance',
-        #     'unit_test_collection',
-        #     'service_event__unit_service_area__unit',
-        #     'user_assigned_by'
-        # ).prefetch_related(
-        #     'test_list_instance__comments',
-        #     'test_list_instance__testinstance_set',
-        #     'test_list_instance__testinstance_set__status',
-        #     'unit_test_collection__tests_object'
-        # ).order_by('-datetime_assigned')[:40]
-        #
-        # rtsqa_complete = models.ReturnToServiceQA.objects.filter(
-        #     test_list_instance__isnull=False,
-        #     test_list_instance__work_completed__gt=timezone.now() - timezone.timedelta(days=14)
-        # ).select_related(
-        #     'service_event',
-        #     'test_list_instance',
-        #     'unit_test_collection',
-        #     'service_event__unit_service_area__unit',
-        #     'test_list_instance__created_by',
-        #     'test_list_instance__reviewed_by',
-        # ).prefetch_related(
-        #     'test_list_instance__comments',
-        #     'test_list_instance__testinstance_set',
-        #     'test_list_instance__testinstance_set__status',
-        #     'unit_test_collection__tests_object'
-        # ).order_by('-test_list_instance__created')[:40]
-        #
-        # unsorted_dict = {}
-        #
-        # for se in se_edited:
-        #     datetime = timezone.localtime(se.datetime_modified)
-        #     msg = get_user_name(se.user_modified_by) + ' modified service event ' + str(se.id)
-        #     populate_timeline_from_queryset(unsorted_dict, se, datetime, 'se_edit', msg=msg)
-        #
-        # for se in se_status:
-        #     datetime = timezone.localtime(se.datetime_status_changed)
-        #     msg = get_user_name(se.user_status_changed_by) + ' changed status of service event ' + str(se.id) + ' to '
-        #     populate_timeline_from_queryset(unsorted_dict, se, datetime, 'se_status', msg=msg)
-        #
-        # for se in se_new:
-        #     datetime = timezone.localtime(se.datetime_created)
-        #     msg = get_user_name(se.user_created_by) + ' created service event ' + str(se.id)
-        #     populate_timeline_from_queryset(unsorted_dict, se, datetime, 'se_new', msg=msg)
-        #
-        # for rtsqa in rtsqa_new:
-        #     datetime = timezone.localtime(rtsqa.datetime_assigned)
-        #     msg = (
-        #         get_user_name(rtsqa.user_assigned_by) +
-        #         ' assigned a new RTS QA (' +
-        #         rtsqa.unit_test_collection.tests_object.name +
-        #         ') for service event ' +
-        #         str(rtsqa.service_event.id)
-        #     )
-        #     populate_timeline_from_queryset(unsorted_dict, rtsqa, datetime, 'rtsqa_new', msg=msg)
-        #
-        # for rtsqa in rtsqa_complete:
-        #     datetime = timezone.localtime(rtsqa.test_list_instance.created)
-        #     msg = (
-        #         get_user_name(rtsqa.test_list_instance.created_by) +
-        #         ' performed a RTS QA (' +
-        #         rtsqa.unit_test_collection.tests_object.name +
-        #         ') for service event ' +
-        #         str(rtsqa.service_event.id)
-        #     )
-        #     populate_timeline_from_queryset(unsorted_dict, rtsqa, datetime, 'rtsqa_complete', msg=msg)
-        #
-        # for ud in unsorted_dict:
-        #     unsorted_dict[ud]['objs'] = sorted(unsorted_dict[ud]['objs'], key=lambda obj: obj['datetime'], reverse=True)
-        # ordered_dict = OrderedDict(sorted(unsorted_dict.items(), reverse=True))
-        #
-        # return ordered_dict
-
 
     def get_context_data(self, **kwargs):
 

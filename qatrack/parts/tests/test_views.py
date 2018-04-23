@@ -120,7 +120,7 @@ class TestCreatePart(TestCase):
 
         response = self.client.post(self.url, data=data)
 
-        self.assertTrue('__all__' in response.context_data['storage_formset'].forms[0].errors)
+        self.assertTrue('__all__' in response.context['storage_formset'].forms[0].errors)
 
 
 class TestEditPart(TestCase):
@@ -185,6 +185,7 @@ class TestEditPart(TestCase):
 
         data['storage-TOTAL_FORMS'] = 1
         data['storage-0-quantity'] = 1
+        data['storage-0-location'] = '__new__new_storage'
         data['storage-0-storage_field'] = '__new__new_storage'
         data['storage-0-room'] = self.sto.room.id
 

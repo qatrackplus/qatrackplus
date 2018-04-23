@@ -1243,7 +1243,10 @@ result = json.load(FILE)
 
         for a in Attachment.objects.all():
             if os.path.isfile(a.attachment.path):
-                os.remove(a.attachment.path)
+                try:
+                    os.remove(a.attachment.path)
+                except PermissionError as e:
+                    print(">>> Could not delete %s because %s" % (a, e))
 
     def test_upload_fname_exists(self):
         response = self.client.post(

@@ -419,7 +419,8 @@ class SeleniumTests(TestCase, StaticLiveServerTestCase):
         self.driver.find_element_by_id('id_name').send_keys(objects['Unit']['name'])
         self.driver.find_element_by_id('id_number').send_keys(objects['Unit']['number'])
         self.driver.find_element_by_id('id_date_acceptance').send_keys(objects['Unit']['date_acceptance'])
-        # self.driver.find_element_by_css_selector('#id_service_areas_add_all_link').click()
+        if settings.USE_SERVICE_LOG:
+            self.driver.find_element_by_css_selector('#id_service_areas_add_all_link').click()
         Select(self.driver.find_element_by_id("id_type")).select_by_index(1)
         # self.driver.find_element_by_id('id_modalities_add_all_link').click()
         # self.driver.find_element_by_id('id_hours_monday').send_keys('800')

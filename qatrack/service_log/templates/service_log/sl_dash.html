@@ -11,7 +11,7 @@
 {% endblock extra_css %}
 
 {% block require_javascript %}
-    require(['sl_dash'], function($) {
+    require(['jquery', 'sl_dash'], function($) {
         $('body').removeClass("loading");
     });
 {% endblock require_javascript %}
