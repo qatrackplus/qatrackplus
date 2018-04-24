@@ -155,7 +155,7 @@
 
                                             </td>
                                             <td class="{% if sup_form.part_number.errors %}has-error{% endif %}">{{ sup_form.part_number }}</td>
-                                            <td align="center">{{ sup_form.DELETE }}</td>
+                                            <td align="center">{% if sup_form.instance.id %}{{ sup_form.DELETE }}{% endif %}</td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>
@@ -221,7 +221,7 @@
                                                     <div class="help-block text-center">{{ e }}</div>
                                                 {% endfor %}
                                             </td>
-                                            <td align="center">{{ sto_form.DELETE }}</td>
+                                            <td align="center">{% if sto_form.instance.id %}{{ sto_form.DELETE }}{% endif %}</td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>

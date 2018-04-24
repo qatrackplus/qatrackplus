@@ -159,13 +159,13 @@
                                             </li>
                                             {% if USE_SERVICE_LOG and perms.service_log.perform_returntoserviceqa %}
                                                 <li class="hover-parent">
-                                                    <a href="{% url 'rtsqa_list_all' %}?f=tli.in-1" title="View all incomplete RTS">
+                                                    <a href="{% url 'rtsqa_list_all' %}?f=tli.in-1" title="View all incomplete return to service QA">
                                                         <i class="fa fa-stack fa-lg fa-fw">
                                                             <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
             {#                                                <i class="fa fa-cube fa-stack-custom-sub lower-right text-gray"></i>#}
                                                             <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-extra-left hover-sub-info"></i>
                                                         </i>
-                                                        All Incomplete RTS QA
+                                                        All Incomplete Return To Service
                                                     </a>
                                                 </li>
                                             {% endif %}
@@ -252,10 +252,10 @@
                                                 <li>
                                                     <a href="{% url 'rtsqa_list_all' %}?f=tli.in-0_tli.ar-0" title="">
                                                         <i class="fa fa-question-circle fa-lg fa-fw" aria-hidden="true"></i>
-                                                        <span title="There are currently {{UNREVIEWED_RTS}} unreviewed RTS QA Sessions" class="label {% if UNREVIEWED_RTS == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                                                        <span title="There are currently {{UNREVIEWED_RTS}} unreviewed return to service sessions" class="label {% if UNREVIEWED_RTS == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
                                                             <span class="total-unreviewed-count">{{UNREVIEWED_RTS}}</span>
                                                         </span>
-                                                        Unreviewed RTS QA
+                                                        Unreviewed Return To Service
                                                     </a>
                                                 </li>
                                                 <li>
@@ -360,7 +360,7 @@
                                                             <i class="fa fa-wrench fa-stack-custom-main"></i>
                                                             <i class="fa fa-exclamation fa-stack-custom-sub upper-left hover-sub-info"></i>
                                                         </i>
-                                                        <span title="There are currently {{SE_NEEDING_REVIEW_COUNT}} unreviewed RTS QA Sessions" class="label {% if SE_NEEDING_REVIEW_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                                                        <span title="There are currently {{SE_NEEDING_REVIEW_COUNT}} service events needing review" class="label {% if SE_NEEDING_REVIEW_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
                                                             <span class="total-unreviewed-count">{{SE_NEEDING_REVIEW_COUNT}}</span>
                                                         </span>
                                                         Service Events Needing Review
@@ -369,14 +369,14 @@
                                             {% endif %}
                                             {% if perms.qa.can_review or service_log.view_returntoserviceqa or perms.service_log.perform_returntoserviceqa %}
                                                 <li class="divider"></li>
-                                                <li class="nav-header">RTS QA</li>
+                                                <li class="nav-header">Return To Service QA</li>
                                                 {% if perms.service_log.view_returntoserviceqa %}
                                                     <li class="hover-parent"><a href="{% url "rtsqa_list_all" %}" title="View all return to service qa">
                                                         <i class="fa fa-stack fa-lg fa-fw">
                                                             <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
                                                             <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-extra-left hover-sub-info"></i>
                                                         </i>
-                                                        View All RTS QA
+                                                        View All Return To Service
                                                     </a></li>
                                                 {% endif %}
                                                 {% if perms.service_log.perform_returntoserviceqa %}
@@ -385,17 +385,17 @@
                                                             <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
                                                             <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-extra-left hover-sub-info"></i>
                                                         </i>
-                                                        View All Incomplete RTS QA
+                                                        View All Incomplete Return To Service
                                                     </a></li>
                                                 {% endif %}
                                                 {% if perms.qa.can_review %}
                                                     <li>
                                                         <a href="{% url 'rtsqa_list_all' %}?f=tli.in-0_tli.ar-0" title="">
                                                             <i class="fa fa-question-circle fa-lg fa-fw" aria-hidden="true"></i>
-                                                            <span title="There are currently {{UNREVIEWED_RTS}} unreviewed RTS QA Sessions" class="label {% if UNREVIEWED_RTS == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                                                            <span title="There are currently {{UNREVIEWED_RTS}} unreviewed return to service sessions" class="label {% if UNREVIEWED_RTS == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
                                                                 <span class="total-unreviewed-count">{{UNREVIEWED_RTS}}</span>
                                                             </span>
-                                                            Unreviewed RTS QA
+                                                            Unreviewed Return To Service
                                                         </a>
                                                     </li>
                                                 {% endif %}

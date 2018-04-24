@@ -200,12 +200,11 @@ class StorageField(forms.ChoiceField):
 
         Returns:
             String: if new storage is to be created. Returned value is location of new storage.
-            None: if field was empty. Form will raise Validation error on room field instead since this field is hidden.
             Storage: if value was given as existing storage id.
             (field_name, ValidationError):  To raise ValidationError on related field in form.
         """
         if value in [None, '']:
-            return None
+            return 'room', ValidationError('This field is required')
         elif '__new__' in value:
             value = value.replace('__new__', '')
             if value.strip() == '':
@@ -270,9 +269,7 @@ class PartStorageCollectionForm(forms.ModelForm):
         storage_field_value = cleaned_data.get('storage_field')
         room = cleaned_data.get('room')
 
-        if storage_field_value is None:
-            self.add_error('room', 'This field is required')
-        elif isinstance(storage_field_value, str):
+        if isinstance(storage_field_value, str):
             if p_models.Storage.objects.filter(location=storage_field_value, room=room).exists():
                 self.add_error(None, 'New room/location combination already exists.')
         elif isinstance(storage_field_value, p_models.Storage):

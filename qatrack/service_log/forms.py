@@ -305,7 +305,7 @@ class TLIInitiatedField(forms.ModelChoiceField):
 
 class ServiceEventForm(BetterModelForm):
 
-    unit_field_fake = forms.ModelChoiceField(queryset=models.Unit.objects.all(), label='Unit')
+    unit_field_fake = forms.ModelChoiceField(queryset=models.Unit.objects.all(), label='Unit', required=False)
     unit_field = forms.ModelChoiceField(queryset=models.Unit.objects.all())
     service_area_field = forms.ModelChoiceField(
         queryset=models.ServiceArea.objects.all(), label='Service area'
@@ -632,9 +632,6 @@ class ServiceEventForm(BetterModelForm):
         if 'initiated_utc_field' in self._errors:
             del self._errors['initiated_utc_field']
 
-        # if 'unit_field_fake' in self.changed_data:
-        #     self.changed_data.remove('unit_field_fake')
-
         # Check for incomplete and unreviewed RTS QA if status.rts_qa_must_be_reviewed = True
         if 'service_status' not in self.cleaned_data:
             raise ValidationError(_('This field is required.'), code='required')
@@ -654,7 +651,7 @@ class ServiceEventForm(BetterModelForm):
                         break
             if raize:
                 self._errors['service_status'] = ValidationError(
-                    'Cannot select status: Return to service qa must be performed and then reviewed.'
+                    'Cannot select status: Return to service qa must be performed and reviewed.'
                 )
 
         # If unit field was disabled due to initiated by or rtsqa existing for already saved service event,

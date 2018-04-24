@@ -84,74 +84,78 @@
             </div>
 
             <div class="row">
-                <div class="col-md-5">
+                {% with part.partsuppliercollection_set.all as psc_set %}
+                    <div class="col-md-5">
+                        {% if psc_set|length > 0 %}
+                            <div class="box">
+                                <div class="box-header">
+                                    <h4 class="box-title">Suppliers</h4>
+                                </div>
 
-                    <div class="box">
-                        <div class="box-header">
-                            <h4 class="box-title">Suppliers</h4>
-                        </div>
+                                <div class="box-body">
+                                    <table class="table table-condensed table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Supplier</th>
+                                                <th>Supplier Specific Part #</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for psc in psc_set %}
+                                                <tr>
+                                                    <td class="min-width-200">{{ psc.supplier.name }}</td>
+                                                    <td>{% if psc.part_number %}{{ psc.part_number }}{% endif %}</td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                        <tfoot>
 
-                        <div class="box-body">
-                            <table class="table table-condensed table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Supplier</th>
-                                        <th>Supplier Specific Part #</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for psc in part.partsuppliercollection_set.all %}
-                                        <tr>
-                                            <td class="min-width-200">{{ psc.supplier.name }}</td>
-                                            <td>{% if psc.part_number %}{{ psc.part_number }}{% endif %}</td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                                <tfoot>
+                                        </tfoot>
+                                    </table>
+                                </div>
 
-                                </tfoot>
-                            </table>
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <div class="col-md-7">
-
-                    <div class="box">
-                        <div class="box-header">
-                            <h4 class="box-title">Storage</h4>
-                        </div>
-
-                        <div class="box-body">
-                            <table class="table table-condensed table-hover">
-                                <thead>
-                                    <tr>
-{#                                        <th></th>#}
-                                        <th>Room</th>
-                                        <th>Location</th>
-                                        <th class="max-width-75">Quantity</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for psc in part.partstoragecollection_set.all %}
-                                        <tr>
-                                            <td class="min-width-150 room-td">{{ psc.storage.room }}</td>
-                                            <td class="min-width-100">{{ psc.storage.location }}</td>
-                                            <td class="max-width-75">{{ psc.quantity }}</td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                                <tfoot>
-
-                                </tfoot>
-                            </table>
-                        </div>
+                            </div>
+                        {% endif %}
 
                     </div>
+                {% endwith %}
+                {% with part.partstoragecollection_set.all as psc_set %}
+                    <div class="col-md-7">
+                        {% if psc_set|length > 0 %}
+                            <div class="box">
+                                <div class="box-header">
+                                    <h4 class="box-title">Storage</h4>
+                                </div>
 
-                </div>
+                                <div class="box-body">
+                                    <table class="table table-condensed table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Room</th>
+                                                <th>Location</th>
+                                                <th class="max-width-75">Quantity</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for psc in psc_set %}
+                                                <tr>
+                                                    <td class="min-width-150 room-td">{{ psc.storage.room }}</td>
+                                                    <td class="min-width-100">{{ psc.storage.location }}</td>
+                                                    <td class="max-width-75">{{ psc.quantity }}</td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                        <tfoot>
+
+                                        </tfoot>
+                                    </table>
+                                </div>
+
+                            </div>
+                        {% endif %}
+
+                    </div>
+                {% endwith %}
             </div>
 
             <div class="row">

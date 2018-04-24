@@ -51,7 +51,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
             minimumResultsForSearch: 10,
             width: '100%',
             templateSelection: function(a) {
-                if ($(a.element).parent().prop('required') && a.id === '') {
+                if (($(a.element).parent().prop('required') && a.id === '') || ($(a.element).parent().attr('id') === 'id_unit_field_fake' && a.id === '')) {
                     return $('<span class="required-option">required</span>');
                 }
                 return a.text;
