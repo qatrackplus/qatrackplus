@@ -614,6 +614,8 @@ class UpdateServiceEvent(ServiceEventUpdateCreate):
                         form.instance.id, default.name
                     )
                 ))
+                form.changed_data.append('service_status')
+                form.cleaned_data['service_status'] = default
 
         return super(UpdateServiceEvent, self).form_valid(form)
 

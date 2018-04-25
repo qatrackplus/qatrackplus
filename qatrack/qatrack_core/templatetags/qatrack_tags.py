@@ -59,8 +59,12 @@ def render_status_tag(status_name):
     )
 
 
+@register.filter(name='get_user_name')
 def get_user_name(user):
-    return user.username if not user.first_name or not user.last_name else user.first_name + ' ' + user.last_name
+    if user is not None:
+        return user.username if not user.first_name or not user.last_name else user.first_name + ' ' + user.last_name
+    else:
+        return ''
 
 
 @register.simple_tag(name='render_log')

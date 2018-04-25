@@ -2,6 +2,7 @@
 
 {% load widget_tweaks %}
 {% load qa_tags %}
+{% load qatrack_tags %}
 {% load comments %}
 
 {% block head_title %}Service Event{% endblock %}
@@ -34,7 +35,7 @@
                         <dt>Created:</dt>
                         <dd>
                             <div>{{ serviceevent.datetime_created }}</div>
-                            <div>by {{ serviceevent.user_created_by }}</div>
+                            <div>by {{ serviceevent.user_created_by|get_user_name }}</div>
                         </dd>
                     </dl>
                 </div>
@@ -44,7 +45,7 @@
                             <dt>Modified:</dt>
                             <dd>
                                 <div>{{ serviceevent.datetime_modified }}</div>
-                                <div>by {{ serviceevent.user_modified_by }}</div>
+                                <div>by {{ serviceevent.user_modified_by|get_user_name }}</div>
                             </dd>
                         </dl>
                     </div>
@@ -57,7 +58,7 @@
                                 <div>{{ serviceevent.datetime_status_changed }}</div>
                                 <div>by
                                     {% if serviceevent.user_status_changed_by %}
-                                        {{ serviceevent.user_status_changed_by }}
+                                        {{ serviceevent.user_status_changed_by|get_user_name }}
                                     {% else %}
                                         System
                                     {% endif %}
@@ -197,7 +198,7 @@
                             {% if g_links|length > 0 %}
                                 <div class="subheading-divider">Group Members Involved</div>
                                 <div class="row">
-                                    <div id="g-link-fields" class="col-md-8">
+                                    <div id="g-link-fields" class="col-md-12">
                                         <dl class="dl-horizontal">
                                             {% for gli in g_links %}
                                                 <dt>{{ gli.group_linker.name }}:</dt>

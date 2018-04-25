@@ -416,7 +416,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             return {
                 units: $units.val(),
                 statuses: $status_selector.val(),
-                date_range: $date_range.val(),
+                date_range: $date_range.val().replace(/ /g, '%20'),
                 tests: $tests.val(),
                 test_lists: $test_lists.val(),
                 frequencies: $frequencies.val(),
@@ -1666,7 +1666,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                                 .replace(/__tli-id__/g, rtsqa_data[0].test_list_instance_id)
                                 .replace(/__tli-date__/g, moment(rtsqa_data.x).format('ddd, MMM D, YYYY, k:mm'))
                                 .replace(/__tli-tl-name__/g, rtsqa_name)
-                                .replace(/__tli-kind__/g, 'RTS QA')
+                                .replace(/__tli-kind__/g, 'Return To Service QA')
                                 .replace(/__show-in__/g, 'style="display: none"')
                             );
 

@@ -319,7 +319,7 @@ class ServiceEventForm(BetterModelForm):
         help_text=models.ServiceEvent._meta.get_field('duration_lost_time').help_text
     )
     service_event_related_field = ServiceEventMultipleField(
-        required=False, queryset=models.ServiceEvent.objects.none(), label=_('Service Event Related'),
+        required=False, queryset=models.ServiceEvent.objects.none(), label=_('Service Events Related'),
         help_text=models.ServiceEvent._meta.get_field('service_event_related').help_text
     )
     is_review_required = forms.BooleanField(required=False, label=_('Review required'))
@@ -647,8 +647,9 @@ class ServiceEventForm(BetterModelForm):
                                 break
                     tli_id = self.data[prefix + '-test_list_instance']
                     if tli_id != '' and not qa_models.TestListInstance.objects.get(pk=tli_id).all_reviewed:
-                        raize = True
-                        break
+                        if prefix + '-DELETE' not in self.data or self.data[prefix + '-DELETE'] != 'on':
+                            raize = True
+                            break
             if raize:
                 self._errors['service_status'] = ValidationError(
                     'Cannot select status: Return to service qa must be performed and reviewed.'

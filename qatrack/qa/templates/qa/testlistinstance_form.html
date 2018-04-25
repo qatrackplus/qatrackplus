@@ -473,27 +473,29 @@
 
                                 <div class="row">
                                     <div class="col-sm-7">
-                                        <table class="table table-responsive table-condensed">
-                                            <tbody>
-                                                <tr>
-                                                    <td class="width-"><strong>Attachments</strong></td>
-                                                    <td>
-                                                        <label class="qa-input btn btn-default btn-sm btn-flat" title="Click to add attachments. (Hold Ctrl or Cmd in the dialog to include multiple attachments)">
-                                                            Browse <input id="tli-attachments" class="file-upload" type="file" name="tli-attachments" multiple style="display:none"/>
-                                                        </label>
-                                                    </td>
+                                        {% if perms.qa.add_attachment %}
+                                            <table class="table table-responsive table-condensed">
+                                                <tbody>
+                                                    <tr>
+                                                        <td class="width-"><strong>Attachments</strong></td>
+                                                        <td>
+                                                            <label class="qa-input btn btn-default btn-sm btn-flat" title="Click to add attachments. (Hold Ctrl or Cmd in the dialog to include multiple attachments)">
+                                                                Browse <input id="tli-attachments" class="file-upload" type="file" name="tli-attachments" multiple style="display:none"/>
+                                                            </label>
+                                                        </td>
 
-                                                    <td id="tli-attachment-names" colspan="{% qa_table_colspan perms offset=2 %}">
+                                                        <td id="tli-attachment-names" colspan="{% qa_table_colspan perms offset=2 %}">
 
-                                                    {% if test_list_instance and test_list_instance.attachment_set.all|length > 0 %}
-                                                        {% for attach in test_list_instance.attachment_set.all %}
-                                                            <i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>{{ attach | attachment_link }}
-                                                        {% endfor %}
-                                                    {% endif %}
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
+                                                        {% if test_list_instance and test_list_instance.attachment_set.all|length > 0 %}
+                                                            {% for attach in test_list_instance.attachment_set.all %}
+                                                                <i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>{{ attach | attachment_link }}
+                                                            {% endfor %}
+                                                        {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        {% endif %}
                                     </div>
                                 </div>
                                 <div class="row">

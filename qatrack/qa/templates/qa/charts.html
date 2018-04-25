@@ -265,11 +265,11 @@
 <div id="se-tooltip-template" style="display: none;">
     <div class="se-tooltip-main">
         <div class="row">
-            <abbr class="col-sm-10 font-weight-bold cursor-default border-none" title="__se-pd__">
+            <abbr class="col-sm-10 font-weight-bold cursor-default border-none" title="Problem description: __se-pd__">
                 Service Event __se-id__
             </abbr>
             <div class="col-sm-2">
-                <a class="se-tooltip-description-toggle pull-right" title="__se-wd__"><i class="fa fa-question-circle fa-lg"></i></a>
+                <a class="se-tooltip-description-toggle pull-right" title="Work description: __se-wd__"><i class="fa fa-question-circle fa-lg"></i></a>
             </div>
         </div>
         <div class="row">
@@ -311,7 +311,7 @@
         <div class="col-sm-12">
             <div id="tooltip-se-date">__tli-date__</div>
             <a id="tooltip-se-btn" class="btn btn-flat btn-xs btn-default pull-right" href="{% url 'view_test_list_instance' %}__tli-id__" target="View Test List">View</a>
-            {% if USE_SERVICE_LOG %}
+            {% if USE_SERVICE_LOG and perms.service_log.add_serviceevent %}
                 <a id="tooltip-se-new-btn" class="btn btn-flat btn-xs btn-default pull-right margin-r-3" href="{% url 'sl_new' %}?ib=__tli-id__" __show-in__ target="Initiate SE">Initiate SE</a>
             {% endif %}
         </div>

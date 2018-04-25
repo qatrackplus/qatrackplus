@@ -250,12 +250,12 @@ class BaseChartView(View):
         # converted to utc
 
         try:
-            d_from = timezone.datetime.strptime(self.request.GET.get('date_range').split(' - ')[0], settings.SIMPLE_DATE_FORMAT)
+            d_from = timezone.datetime.strptime(self.request.GET.get('date_range').split('%20-%20')[0], settings.SIMPLE_DATE_FORMAT)
         except Exception:
             d_from = default_from
 
         try:
-            d_to = timezone.datetime.strptime(self.request.GET.get('date_range').split(' - ')[1], settings.SIMPLE_DATE_FORMAT)
+            d_to = timezone.datetime.strptime(self.request.GET.get('date_range').split('%20-%20')[1], settings.SIMPLE_DATE_FORMAT)
         except:
             d_to = default_to
 

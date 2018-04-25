@@ -432,109 +432,27 @@ class Command(BaseCommand):
             if not row:
                 break
 
-            done_with_service_type = False
-            while not done_with_service_type:
-                qa_service_area = None
+            service_area_name = str(row.headings)
 
-                print('\n---\tAccel service type entry: ')
-                print('\t> Service Type:\t' + str(row.headings))
+            if sl_models.ServiceArea.objects.filter(name=service_area_name).exists():
+                print('\n---\tFound service area from QaTrack database: {}. Skipping'.format(service_area_name))
+                break
+            else:
+                sa = sl_models.ServiceArea.objects.create(name=service_area_name)
 
-                try:
-                    suggested = sl_models.ServiceArea.objects.get(name=row.headings)
-                    print('\n---\tFound service area from QaTrack database: ')
-                    print('\t> Service area:\t' + suggested.name)
-
-                    if user_select_yes_no('Is this the correct match'):
-                        done_with_service_type = True
-
-                        self.updating_cursor.execute(
-                            """
-                            UPDATE service_types
-                            SET service_area = ?
-                            WHERE headings = ?
-                            """,
-                            str(suggested.id),
-                            row.headings
-                        )
-
-                        continue
-
-                except ObjectDoesNotExist:
-                    pass
-
-                print('\n---\tWould you like to select qatrack service area, or create a new one?')
-                print('\t1: Select another service area')
-                print('\t2: Create new service area')
-                print('\t3: Skip this service type')
-                print('\t9: Return ')
-
-                select_or_new = user_select_from_list_of_numbers('Select option', [1, 2, 3, 9])
-
-                if select_or_new == 1:
-
-                    print('\n---\tChoose the service area from the list:')
-                    service_areas = sl_models.ServiceArea.objects.all().order_by('name')
-                    for sa in service_areas:
-                        print('\t' + str(sa.id) + ':\t' + str(sa.name))
-                    print('\n\t0: Return')
-
-                    service_area_list = list(service_areas.values_list('id', flat=True))
-                    service_area_list.append(0)
-                    service_area_id = user_select_from_list_of_numbers('Select problem type number', service_area_list)
-                    if service_area_id == 0:
-                        continue
-                    qa_service_area = sl_models.ServiceArea.objects.get(id=service_area_id)
-
-                    self.updating_cursor.execute(
-                        """
-                        UPDATE service_types
-                        SET service_area = ?
-                        WHERE headings = ?
-                        """,
-                        str(qa_service_area.id),
-                        row.headings
-                    )
-                    done_with_service_type = True
-
-                elif select_or_new == 2:
-
-                    sa_name = ''
-                    while sa_name == '':
-                        if row.headings is not None and row.headings.strip() != '':
-                            sa_name = input('\n>>> Enter problem type name (leave blank to use ' + row.headings + '): ')
-                            if sa_name == '':
-                                sa_name = row.headings
-                        else:
-                            sa_name = input('\n>>> Enter problem type name: ')
-
-                    qa_service_area, qa_sa_is_new = sl_models.ServiceArea.objects.get_or_create(name=sa_name)
-
-                    self.updating_cursor.execute(
-                        """
-                        UPDATE service_types
-                        SET service_area = ?
-                        WHERE headings = ?
-                        """,
-                        str(qa_service_area.id),
-                        row.headings
-                    )
-                    done_with_service_type = True
-
-                elif select_or_new == 3:
-                    print(
-                        '\n---\tService types should only be skipped if they are not linked to any existing service events.\n'
-                        '\tskipped service types in service events will be set to None during service event migration.')
-                    if user_select_yes_no('Skip anyways?'):
-                        done_with_service_type = True
-
-                elif select_or_new == 9:
-                    return False
+                self.updating_cursor.execute(
+                    """
+                    UPDATE service_types
+                    SET service_area = ?
+                    WHERE headings = ?
+                    """,
+                    str(sa.id),
+                    row.headings
+                )
 
         return False
 
     def migrate_equipment(self):
-
-        # TODO: If unit not in QaTrack and
 
         print('\n---\tMigrating equipment. This will iterate through equipment in Accel database and\n'
               '\tadd new units and models in the QaTrack database as needed.\n')
@@ -554,7 +472,7 @@ class Command(BaseCommand):
             done_with_unit = False
             while not done_with_unit:
                 u_unit = None
-                tz_date_acceptance = None
+                tz_date_acceptance = timezone.now()
                 if row.acceptancedate:
                     tz_date_acceptance = row.acceptancedate.date()
 
@@ -666,11 +584,12 @@ class Command(BaseCommand):
                         u_unit_type = u_models.UnitType(name=unit_type_name, model=unit_type_model, vendor=ut_vendor)
                         u_unit_type.save()
 
-                    u_unit = u_models.Unit.objects.create(number=u_number, name=u_name, type=u_unit_type)
+                    u_unit = u_models.Unit.objects.create(
+                        number=u_number, name=u_name, type=u_unit_type, date_acceptance=tz_date_acceptance
+                    )
                     u_unit.serial_number = row.serial_no
                     u_unit.active = row.active
                     u_unit.location = ''
-                    u_unit.date_acceptance = tz_date_acceptance
                     u_unit.save()
 
                     u_class, uc_is_new = u_models.UnitClass.objects.get_or_create(name=row.type_of_eq)
@@ -786,7 +705,8 @@ class Command(BaseCommand):
             ORDER BY srn
             """
         )
-
+        comment_site = Site.objects.exclude(domain='QATrack+TestDomain').first()
+        user_comments = User.objects.get(username='QATrack+ Internal')
         while 1:
             row = self.iterating_cursor.fetchone()
             if not row:
@@ -833,7 +753,7 @@ class Command(BaseCommand):
                     service_type = sl_models.ServiceType.objects.get(pk=other_service_type_id)
 
                 # is_approval_required = service_type.is_approval_required
-                    is_review_required = False
+                is_review_required = False
 
                 if row.edited_by:
                     modified_by_row = self.updating_cursor.execute('select winlogon, third_party, PASSWORD from employees where staff_name = ?', row.edited_by.strip()).fetchone()
@@ -874,15 +794,15 @@ class Command(BaseCommand):
                 )
                 service_event.save()
 
-                site = Site.objects.exclude(domain='QATrack+TestDomain').first()
-                comment = Comment(
-                    submit_date=timezone.now(),
-                    user=User.objects.get(username='QATrack+ Internal'),
-                    content_object=service_event,
-                    comment=qa_followup,
-                    site=site
-                )
-                comment.save()
+                if qa_followup is not None:
+                    comment = Comment(
+                        submit_date=timezone.now(),
+                        user=user_comments,
+                        content_object=service_event,
+                        comment=qa_followup,
+                        site=comment_site
+                    )
+                    comment.save()
 
                 self.updating_cursor.execute('update service set service_event_id = ? where srn = ?', str(service_event.id), str(row.srn))
 

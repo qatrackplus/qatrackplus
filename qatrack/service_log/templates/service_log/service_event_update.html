@@ -2,6 +2,7 @@
 
 {% load widget_tweaks %}
 {% load qa_tags %}
+{% load qatrack_tags %}
 {% load comments %}
 
 {% block head_title %}Service Event{% endblock %}
@@ -64,7 +65,7 @@
                                 <dt>Created:</dt>
                                 <dd>
                                     <div>{{ form.instance.datetime_created }}</div>
-                                    <div>by {{ form.instance.user_created_by }}</div>
+                                    <div>by {{ form.instance.user_created_by|get_user_name }}</div>
                                 </dd>
                             </dl>
                         </div>
@@ -74,7 +75,7 @@
                                     <dt>Modified:</dt>
                                     <dd>
                                         <div>{{ form.instance.datetime_modified }}</div>
-                                        <div>by {{ form.instance.user_modified_by }}</div>
+                                        <div>by {{ form.instance.user_modified_by|get_user_name }}</div>
                                     </dd>
                                 </dl>
                             </div>
@@ -87,7 +88,7 @@
                                         <div>{{ form.instance.datetime_status_changed }}</div>
                                         <div>by
                                             {% if form.instance.user_status_changed_by %}
-                                                {{ form.instance.user_status_changed_by }}
+                                                {{ form.instance.user_status_changed_by|get_user_name }}
                                             {% else %}
                                                 System
                                             {% endif %}
