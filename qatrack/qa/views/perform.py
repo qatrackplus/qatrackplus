@@ -7,7 +7,11 @@ import traceback
 
 from braces.views import JSONResponseMixin, PermissionRequiredMixin
 import dateutil
-import dicom
+try:
+    import pydicom as dicom
+except:
+    import dicom
+
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.sites.shortcuts import get_current_site
@@ -40,6 +44,7 @@ from .base import BaseEditTestListInstance, TestListInstances, UTCList, logger
 
 DEFAULT_CALCULATION_CONTEXT = {
     "dicom": dicom,
+    "pydicom": dicom,
     "math": math,
     "numpy": numpy,
     "matplotlib": matplotlib,
@@ -991,7 +996,12 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         )
 
         context['top_divs_span'] = 0
-        if self.request.user.has_perm('qa.can_review') or self.request.user.has_perm('qa.can_review_own_tests') or self.request.user.has_perm('qa.can_override_date'):
+        has_perms = (
+            self.request.user.has_perm('qa.can_review') or
+            self.request.user.has_perm('qa.can_review_own_tests') or
+            self.request.user.has_perm('qa.can_override_date')
+        )
+        if has_perms:
             context['top_divs_span'] += 1
         if len(context['attachments']) > 0:
             context['top_divs_span'] += 1
