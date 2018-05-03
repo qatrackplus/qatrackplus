@@ -1,9 +1,8 @@
-from django.contrib.sites.shortcuts import get_current_site
 from django.utils import timezone
 from rest_framework import status, views, viewsets
 from rest_framework.response import Response
 
-from qatrack.api.qa import serializers
+from qatrack.api.qa import filters, serializers
 from qatrack.api.serializers import MultiSerializerMixin
 from qatrack.qa import models
 from qatrack.qa.views import perform
@@ -20,82 +19,90 @@ class Upload(perform.CompositeCalculation, views.APIView):
 class FrequencyViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.Frequency.objects.all()
     serializer_class = serializers.FrequencySerializer
+    filter_class = filters.FrequencyFilter
 
 
 class TestInstanceStatusViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.TestInstanceStatus.objects.all()
     serializer_class = serializers.TestInstanceStatusSerializer
+    filter_class = filters.TestInstanceStatusFilter
 
 
 class AutoReviewRuleViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.AutoReviewRule.objects.all()
     serializer_class = serializers.AutoReviewRuleSerializer
+    filter_class = filters.AutoReviewRuleFilter
 
 
 class ReferenceViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.Reference.objects.all()
     serializer_class = serializers.ReferenceSerializer
+    filter_class = filters.ReferenceFilter
 
 
 class ToleranceViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.Tolerance.objects.all()
     serializer_class = serializers.ToleranceSerializer
+    filter_class = filters.ToleranceFilter
 
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.Category.objects.all()
     serializer_class = serializers.CategorySerializer
+    filter_class = filters.CategoryFilter
 
 
 class TestViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.Test.objects.all()
     serializer_class = serializers.TestSerializer
+    filter_class = filters.TestFilter
 
 
 class TestListViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.TestList.objects.all()
     serializer_class = serializers.TestListSerializer
+    filter_class = filters.TestListFilter
 
 
 class UnitTestInfoViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.UnitTestInfo.objects.all()
     serializer_class = serializers.UnitTestInfoSerializer
+    filter_class = filters.UnitTestInfoFilter
 
 
 class TestListMembershipViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.TestListMembership.objects.all()
     serializer_class = serializers.TestListMembershipSerializer
+    filter_class = filters.TestListMembershipFilter
 
 
 class SublistViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.Sublist.objects.all()
     serializer_class = serializers.SublistSerializer
+    filter_class = filters.SublistFilter
 
 
 class UnitTestCollectionViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.UnitTestCollection.objects.all()
     serializer_class = serializers.UnitTestCollectionSerializer
+    filter_class = filters.UnitTestCollectionFilter
 
 
 class TestInstanceViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.TestInstance.objects.all()
     serializer_class = serializers.TestInstanceSerializer
+    filter_class = filters.TestInstanceFilter
 
 
 class TestListInstanceViewSet(MultiSerializerMixin, viewsets.ModelViewSet):
     queryset = models.TestListInstance.objects.prefetch_related("attachment_set").all()
     serializer_class = serializers.TestListInstanceSerializer
+    filter_class = filters.TestListInstanceFilter
     action_serializers = {
         'create': serializers.TestListInstanceCreator,
         'partial_update': serializers.TestListInstanceCreator,
     }
     http_method_names = ['get', 'post', 'patch']
-
-    def get_serializer(self, *args, **kwargs):
-        ser = super(TestListInstanceViewSet, self).get_serializer(*args, **kwargs)
-        ser.site = get_current_site(self.request)
-        ser.user = self.request.user
-        return ser
 
     def create(self, request, *args, **kwargs):
         data = dict(request.data.items())
@@ -142,8 +149,10 @@ class TestListInstanceViewSet(MultiSerializerMixin, viewsets.ModelViewSet):
 class TestListCycleViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.TestListCycle.objects.all()
     serializer_class = serializers.TestListCycleSerializer
+    filter_class = filters.TestListCycleFilter
 
 
 class TestListCycleMembershipViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.TestListCycleMembership.objects.all()
     serializer_class = serializers.TestListCycleMembershipSerializer
+    filter_class = filters.TestListCycleMembershipFilter

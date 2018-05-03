@@ -358,6 +358,7 @@ class TestInstanceStatus(models.Model):
 
 
 class AutoReviewRule(models.Model):
+
     pass_fail = models.CharField(max_length=15, choices=PASS_FAIL_CHOICES, unique=True)
     status = models.ForeignKey(TestInstanceStatus)
 
