@@ -5,11 +5,6 @@ from qatrack.api.units.filters import UnitFilter
 from qatrack.qa import models
 from qatrack.units.models import Unit
 
-# TODO
-# write filter classes for all qa
-# write filter clasess for service log
-# Test filtering on all api endpoints
-
 
 class FrequencyFilter(filters.FilterSet):
 
