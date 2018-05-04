@@ -1,4 +1,3 @@
-
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.test import TestCase
@@ -14,7 +13,7 @@ class TestServiceEventStatusAdmin(TestCase):
         self.client.login(username='user', password='password')
 
         self.url_add = reverse(
-            'admin:%s_%s_add' % (models.ServiceEventStatus._meta.app_label,  models.ServiceEventStatus._meta.model_name)
+            'admin:%s_%s_add' % (models.ServiceEventStatus._meta.app_label, models.ServiceEventStatus._meta.model_name)
         )
         self.data = {
             'name': 'status_name',
@@ -45,5 +44,3 @@ class TestServiceEventStatusAdmin(TestCase):
         data['is_default'] = False
 
         self.client.post(self.url_add, data=data)
-
-
