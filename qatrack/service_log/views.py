@@ -1,6 +1,4 @@
-
 import csv
-import json
 
 from braces.views import LoginRequiredMixin, PermissionRequiredMixin
 from collections import OrderedDict
@@ -31,6 +29,7 @@ from listable.views import (
 if settings.USE_PARTS:
     from qatrack.parts import forms as p_forms
     from qatrack.parts import models as p_models
+
 from qatrack.service_log import models, forms
 from qatrack.qa import models as qa_models
 from qatrack.qa.views.base import generate_review_status_context
@@ -1118,7 +1117,6 @@ class ServiceEventDownTimesList(ServiceEventsBaseList):
 
             return '{}:{:02}'.format(hours, minutes)
 
-
     def duration_service_time(self, se):
         duration = se.duration_service_time
         if duration:
@@ -1136,9 +1134,13 @@ def handle_unit_down_time(request):
     ).all()
 
     daterange = request.GET.get('daterange', False)
+
     if daterange:
-        date_from = timezone.datetime.strptime(daterange.split(' - ')[0], '%d %b %Y').date()
-        date_to = timezone.datetime.strptime(daterange.split(' - ')[1], '%d %b %Y').date() + timezone.timedelta(days=1)
+        tz = timezone.get_current_timezone()
+        date_from = timezone.datetime.strptime(daterange.split(' - ')[0], '%d %b %Y')
+        date_to = timezone.datetime.strptime(daterange.split(' - ')[1], '%d %b %Y') + timezone.timedelta(days=1)
+        date_from = tz.localize(date_from)
+        date_to = tz.localize(date_to)
 
         se_qs = se_qs.filter(
             datetime_service__gte=date_from, datetime_service__lte=date_to
@@ -1221,7 +1223,7 @@ def handle_unit_down_time(request):
 
         service_events_unit_qs = se_qs.filter(unit_service_area__unit=u)
 
-        potential_time = u.get_potential_time(date_from, date_to)
+        potential_time = u.get_potential_time(date_from.date(), date_to.date())
         unit_vals = [
             u.name,
             u.type.name,

@@ -117,6 +117,7 @@ class Part(models.Model):
 
     class Meta:
         permissions = (('view_part', 'Can View Part'),)
+        ordering = ['part_number']
 
     def __str__(self):
         return '%s%s - %s' % (self.part_number, ' (%s)' % self.alt_part_number if self.alt_part_number else '', self.description)
