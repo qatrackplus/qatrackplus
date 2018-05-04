@@ -93,7 +93,6 @@ class TestURLS(TestCase):
 
         for url, kwargs in url_names:
             logger.info("\t > testing: " + url)
-
             self.assertTrue(self.returns_200(reverse(url, kwargs=kwargs)))
 
     def test_login(self):

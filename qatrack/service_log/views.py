@@ -1141,10 +1141,9 @@ def handle_unit_down_time(request):
         date_to = timezone.datetime.strptime(daterange.split(' - ')[1], '%d %b %Y') + timezone.timedelta(days=1)
         date_from = tz.localize(date_from)
         date_to = tz.localize(date_to)
-
-        se_qs = se_qs.filter(
-            datetime_service__gte=date_from, datetime_service__lte=date_to
-        )
+        se_qs = se_qs.filter(datetime_service__gte=date_from, datetime_service__lte=date_to)
+        date_to = date_to.date()
+        date_from = date_from.date()
     else:
         date_from = None
         date_to = timezone.datetime.now().date() + timezone.timedelta(days=1)
@@ -1223,7 +1222,7 @@ def handle_unit_down_time(request):
 
         service_events_unit_qs = se_qs.filter(unit_service_area__unit=u)
 
-        potential_time = u.get_potential_time(date_from.date(), date_to.date())
+        potential_time = u.get_potential_time(date_from, date_to)
         unit_vals = [
             u.name,
             u.type.name,
