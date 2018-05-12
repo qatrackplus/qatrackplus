@@ -1,12 +1,9 @@
-from unittest import mock
-
 from django.conf import settings
-from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
-from django.db.models import ProtectedError, ObjectDoesNotExist
+from django.db.models import ProtectedError
 from django.test import TestCase, TransactionTestCase
 from django.utils import timezone
+import pytest
 
 from qatrack.service_log import models as sl_models
 
@@ -97,6 +94,9 @@ class TestServiceEventAndRelated(TransactionTestCase):
     def setUp(self):
         self.se = sl_utils.create_service_event()
 
+    @pytest.mark.skipif(
+        'sqlite' in settings.DATABASES['default']['ENGINE'], reason="SQLite doesn't throw IntegrityError"
+    )
     def test_third_party_and_hours(self):
         """
         Note: with self.assertRaises(IntegrityError): will fail when testing with sqlite3 backend

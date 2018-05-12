@@ -1,4 +1,3 @@
-
 import json
 import re
 
@@ -178,6 +177,8 @@ class ServiceEvent(models.Model):
             ('view_serviceevent', 'Can view service event'),
         )
 
+        ordering = ["-datetime_service"]
+
     def __str__(self):
         return str(self.id)
 
@@ -263,6 +264,7 @@ class ReturnToServiceQA(models.Model):
     class Meta:
         permissions = (('view_returntoserviceqa', 'Can view return to service qa'),
                        ('perform_returntoserviceqa', 'Can perform return to service qa'))
+        ordering = ['-datetime_assigned']
 
     # def str_verbose(self):
     #     if self.test_list_instance:

@@ -368,8 +368,8 @@ class SeleniumTests(TestCase, StaticLiveServerTestCase):
         self.driver.find_element_by_link_text('Add another Test List Membership').click()
         self.driver.find_element_by_link_text('Add another Test List Membership').click()
         self.driver.find_element_by_link_text('Add another Test List Membership').click()
-        for i in range(0, 8):
-            self.driver.find_element_by_id('id_testlistmembership_set-' + str(i) + '-test').send_keys(str(i + 1))
+        for i, pk in enumerate(models.Test.objects.values_list("pk", flat=True)):
+            self.driver.find_element_by_id('id_testlistmembership_set-' + str(i) + '-test').send_keys(str(pk))
         self.driver.find_element_by_name('_save').click()
         self.wait_for_success()
 
