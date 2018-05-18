@@ -281,7 +281,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             skipped = validated_data['tests'][slug].get("skipped")
             provided_val = post_data.get('tests', {}).get(slug, {}).get("value")
             validated_val = validated_data['tests'][slug].get("value")
-            if not skipped and not self.type_okay(type_, validated_val):
+            if not skipped and type_ not in auto_types and not self.type_okay(type_, validated_val):
                 wrong_types.append(slug)
 
             if type_ in auto_types and not self.autovalue_ok(validated_val, provided_val):
