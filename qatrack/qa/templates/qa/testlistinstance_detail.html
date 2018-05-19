@@ -1,6 +1,7 @@
 {% extends "site_base.html" %}
 {#{% load staticfiles %}#}
 {% load qa_tags %}
+{% load attach_tags %}
 {% load comments %}
 
 {% block head_title %}{{test_list_instance.work_completed|date}} {{test_list_instance.test_list.name}} Details{% endblock %}
@@ -245,6 +246,19 @@
                                                 {{ti.status.name}}
                                             </td>
                                         </tr>
+
+                                        {% if ti.attachment_set.exists %}
+                                            <tr class="qa-attach no-hover">
+                                                <td>{{ti.unit_test_info.test.name}} Attachments</td>
+                                                <td colspan="{% qa_table_colspan perms offset=1 %}"  class="">
+                                                    <ul>
+                                                        {% for attach in ti.attachment_set.all %}
+                                                            <li>{{ attach | attachment_link }}</li>
+                                                        {% endfor %}
+                                                    </ul>
+                                                </td>
+                                            </tr>
+                                        {% endif %}
                                         {%endwith%}
                                     {% endfor %}
                                 </tbody>
@@ -266,6 +280,29 @@
                     {% if perms.qa.can_review %}
                         <a href="{% url 'review_test_list_instance' pk=test_list_instance.pk %}?next={{request.get_full_path}}" class="btn pull-right btn-default btn-flat margin-r-5">Review</a>
                     {% endif %}
+                </div>
+
+                <div id="qa-images" class="box-footer">
+                    {% for ti, history in test_list_instance.history.0 %}
+                        {% with test=ti.unit_test_info.test %}
+                            {% if test.display_image %}
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        <strong><p>Images for {{ test }} Test: </p></strong>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div id="{{ test.slug }}">
+                                        {% for attach in ti.attachment_set.all %}
+                                            {% if attach.is_image %}
+                                                {{ attach | ti_attachment_img }}
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endwith %}
+                    {% endfor %}
                 </div>
             </div>
         </div>
