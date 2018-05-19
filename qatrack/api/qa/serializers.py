@@ -309,7 +309,8 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
                 d = validated_data['tests'][slug]
                 # remove base64 data
                 d.pop('value', "")
-                d['string_value'] = d.pop('filename')
+                # string value needs to be set to attachment id for later editing
+                d['string_value'] = self.ti_attachments[slug][0]
                 validated_data['tests'][slug] = d
 
         if missing:
