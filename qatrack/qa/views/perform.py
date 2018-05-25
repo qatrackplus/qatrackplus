@@ -750,7 +750,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             "test__category",
             "tolerance",
             "unit",
-        )
+        ).prefetch_related("test__attachment_set")
 
         # make sure utis are correctly ordered
         uti_tests = [x.test for x in utis]
