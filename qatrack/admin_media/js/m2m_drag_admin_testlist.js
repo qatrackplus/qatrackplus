@@ -25,23 +25,31 @@ function sort_container(){
     var table = $("#member-container tbody");
     var rows = table.children('tr').not(".add-row");
     rows.sort(function(a, b) {
-        var ordera =  $(a).find('input[id$=order]').val();
-        var orderb =  $(b).find('input[id$=order]').val();
+        var ordera = $(a).find('input[id$=order]').val();
+        var orderb = $(b).find('input[id$=order]').val();
         var a_is_sublist = $(a).find('input[id^=id_testlistmem]').length === 0;
         var b_is_sublist = $(b).find('input[id^=id_testlistmem]').length === 0;
+
         if (ordera === "") {
+            /* if this is an empty row, give a large order number to push to bottom */
           ordera = 1000;
           if (a_is_sublist){
-            // push empty sublists to bottom
+            // push empty sublists below empty tests
             ordera += 1;
           }
+        }else{
+            ordera = parseInt(ordera, 10);
         }
+
         if (orderb === "") {
+            /* if this is an empty row, give a large order number to push to bottom */
           orderb = 1000;
           if (b_is_sublist){
-            // push empty sublists to bottom
+            // push empty sublists below empty tests
             orderb += 1;
           }
+        }else{
+            orderb = parseInt(orderb, 10);
         }
 
         if(ordera > orderb) {
