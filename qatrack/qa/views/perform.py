@@ -84,10 +84,13 @@ def attachment_info(attachment):
 
 class CompositeUtils:
 
-    def __init__(self, user, context, comments):
+    def __init__(self, user, unit, test_list, meta, context, comments):
         self.context = context
         self.context['__user_attached__'] = []
         self.user = user
+        self.unit = unit
+        self.meta = meta
+        self.test_list = test_list
         self.comments = comments
 
     def set_comment(self, comment):
@@ -112,6 +115,43 @@ class CompositeUtils:
         attachment.save()
 
         self.context["__user_attached__"].append(attachment_info(attachment))
+
+    def previous_test_list_instance(self, include_in_progress=False):
+        before = self.meta.get("work_started", self.meta.get("work_completed")) or timezone.now()
+        qs = models.TestListInstance.objects.filter(
+            test_list=self.test_list,
+            unit_test_collection__unit=self.unit,
+            work_completed__lt=before,
+        )
+        if not include_in_progress:
+            qs = qs.exclude(in_progress=True)
+
+        try:
+            return qs.latest("work_completed")
+        except models.TestListInstance.DoesNotExist:
+            return None
+
+    def previous_test_instance(self, test, same_list_only=True, include_in_progress=False):
+        try:
+            slug = test.slug
+        except AttributeError:
+            slug = test
+
+        before = self.meta.get("work_started", self.meta.get("work_completed")) or timezone.now()
+        qs = models.TestInstance.objects.filter(
+            unit_test_info__test__slug=slug,
+            unit_test_info__unit=self.unit,
+            work_completed__lt=before,
+        )
+        if same_list_only:
+            qs = qs.filter(test_list_instance__test_list=self.test_list)
+        if not include_in_progress:
+            qs = qs.exclude(test_list_instance__in_progress=True)
+
+        try:
+            return qs.latest("work_completed")
+        except models.TestInstance.DoesNotExist:
+            return None
 
 
 def get_context_refs_tols(unit, tests):
@@ -257,7 +297,14 @@ class UploadHandler:
             "META": meta_data,
             "REFS": refs,
             "TOLS": tols,
-            "UTILS": CompositeUtils(self.user, self.calculation_context, comments),
+            "UTILS": CompositeUtils(
+                self.user,
+                self.unit,
+                self.test_list,
+                meta_data,
+                self.calculation_context,
+                comments,
+            ),
         })
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
 
@@ -386,7 +433,14 @@ class Upload(JSONResponseMixin, View):
             "META": meta_data,
             "REFS": refs,
             "TOLS": tols,
-            "UTILS": CompositeUtils(self.request.user, self.calculation_context, comments),
+            "UTILS": CompositeUtils(
+                self.request.user,
+                self.unit,
+                self.test_list,
+                meta_data,
+                self.calculation_context,
+                comments,
+            ),
         })
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
 
@@ -505,7 +559,14 @@ class CompositePerformer:
             "META": meta_data,
             "REFS": refs,
             "TOLS": tols,
-            "UTILS": CompositeUtils(self.user, self.calculation_context, comments),
+            "UTILS": CompositeUtils(
+                self.user,
+                self.unit,
+                self.test_list,
+                meta_data,
+                self.calculation_context,
+                comments,
+            ),
         })
 
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
