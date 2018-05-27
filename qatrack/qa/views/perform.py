@@ -171,7 +171,7 @@ class UploadHandler:
 
             results = self.run_calc()
         except Exception:
-            msg = traceback.format_exc()
+            msg = traceback.format_exc(limit=5, chain=True)
             results = {
                 'success': False,
                 'errors': [msg],
@@ -218,7 +218,9 @@ class UploadHandler:
         except models.Test.DoesNotExist:
             results["errors"].append("Test with that ID does not exist")
         except Exception:
-            msg = traceback.format_exc().split("__QAT+COMP_")[-1].replace("<module>", "Test: %s" % test.name)
+            msg = traceback.format_exc(
+                limit=5, chain=True
+            ).split("__QAT+COMP_")[-1].replace("<module>", "Test: %s" % test.name)
             results["errors"].append("Invalid Test Procedure: %s" % msg)
 
         return results
@@ -288,7 +290,7 @@ class Upload(JSONResponseMixin, View):
 
             resp = self.run_calc()
         except Exception:
-            msg = traceback.format_exc()
+            msg = traceback.format_exc(limit=5, chain=True)
             results = {
                 'success': False,
                 'errors': [msg],
@@ -344,7 +346,9 @@ class Upload(JSONResponseMixin, View):
         except models.Test.DoesNotExist:
             results["errors"].append("Test with that ID does not exist")
         except Exception:
-            msg = traceback.format_exc().split("__QAT+COMP_")[-1].replace("<module>", "Test: %s" % test.name)
+            msg = traceback.format_exc(
+                limit=5, chain=True
+            ).split("__QAT+COMP_")[-1].replace("<module>", "Test: %s" % test.name)
             results["errors"].append("Invalid Test Procedure: %s" % msg)
 
         return self.render_json_response(results)
@@ -451,7 +455,7 @@ class CompositePerformer:
                 }
                 self.calculation_context[slug] = result
             except Exception:
-                msg = traceback.format_exc().split("__QAT+COMP_")[-1].replace("<module>", slug)
+                msg = traceback.format_exc(limit=5, chain=True).split("__QAT+COMP_")[-1].replace("<module>", slug)
                 results[slug] = {
                     'value': None,
                     'error': "Invalid Test Procedure: %s" % msg,
