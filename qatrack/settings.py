@@ -216,6 +216,7 @@ INSTALLED_APPS = [
     'django_comments',
     'formtools',
     'tastypie',
+    'django_filters',
     'rest_framework',
     'rest_framework.authtoken',
     'listable',

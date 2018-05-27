@@ -214,14 +214,25 @@
                                                     {% endif %}
                                                 </tr>
                                             </thead>
+                                            <tbody>
                                                 {{ formset.management_form }}
 
                                                 {% for ti_form in formset %}
-
                                                     {% with borders.starts|lookup:forloop.counter0 as delim %}
-                                                        {% if delim  %}
-                                                          <tbody class="{{ delim.class }}" {% if delim.name %}data-sublist="{{ delim.name }}"{% endif %}>
-                                                        {% endif %}
+                                                      {% if delim and delim.class == "sublist" %}
+                                                        <tr class="{{delim.class }}">
+                                                          <td colspan="2">
+                                                            {% if delim.description %}
+                                                              <a class="show-sublist-details" href="#">
+                                                                {{ delim.name }}
+                                                              </a>
+                                                            {% else %}
+                                                                {{ delim.name }}
+                                                            {% endif %}
+                                                        </td>
+                                                        <td colspan="{% qa_table_colspan perms offset=2 %}">&nbsp;</td>
+                                                      </tr>
+                                                      {% endif %}
                                                     {% endwith %}
 
                                                     {% with ti=ti_form.instance test=ti_form.instance.unit_test_info.test %}
@@ -308,9 +319,16 @@
                                                         </tr>
                                                     {% endif %}
                                                     {%endwith%}
-                                                  {% if borders.ends|lookup:forloop.counter0 %}
-                                                      </tbody>
-                                                  {% endif %}
+
+                                                    {% if not forloop.last and borders.ends|lookup:forloop.counter0 %}
+                                                      {% with borders.starts|lookup:forloop.counter as delim %}
+                                                        {% if not delim or delim.class != "sublist" %}
+                                                        <tr class="end-sublist">
+                                                            <td colspan="{% qa_table_colspan perms %}"></td>
+                                                        </tr>
+                                                        {% endif %}
+                                                      {% endwith %}
+                                                    {% endif %}
                                                 {% endfor %}
                                             <tbody>
 

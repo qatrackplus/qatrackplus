@@ -434,8 +434,7 @@
                                         {% with borders.starts|lookup:forloop.counter0 as delim %}
                                             {% if delim and delim.class == "sublist" %}
                                               <tr class="{{delim.class }}">
-                                                <td>Sublist</td>
-                                                <td>
+                                                <td colspan="2">
                                                   {% if delim.description %}
                                                     <a class="show-sublist-details" href="#">
                                                       {{ delim.name }}
@@ -463,11 +462,18 @@
                                             {% endif %}
                                         {% endwith %}
                                         {% qa_value_form test_form test_list perms test_info=test_form.get_test_info  %}
+
                                         {% if not forloop.last and borders.ends|lookup:forloop.counter0 %}
-                                          <tr class="end-sublist">
-                                              <td colspan="{% qa_table_colspan perms %}"></td>
-                                          </tr>
+                                          {% with borders.starts|lookup:forloop.counter as delim %}
+                                            {% if not delim or delim.class != "sublist" %}
+                                            <tr class="end-sublist">
+                                                <td colspan="{% qa_table_colspan perms %}"></td>
+                                            </tr>
+                                            {% endif %}
+                                          {% endwith %}
+
                                         {% endif %}
+
                                     {% endfor %}
                                 </table>
 
@@ -609,6 +615,7 @@
 
     {% else %}
         <div id="box-comments" class="row">
+          <a id="comments-anchor"><a/>
             <div class="col-sm-12">
                 <div class="box">
                     <div class="box-header">
@@ -652,7 +659,7 @@
                 {% endif %}
 
                 {% if perms.qa.can_review and perms.qa.can_review_own_tests or perms.qa.can_override_date %}
-                    <li class="primary toggle-element active" data-toggle="admin"><a id="toggle-options" href="#!">
+                    <li title="Toggle admin options visibility" class="primary toggle-element active" data-toggle="admin"><a id="toggle-options" href="#!">
                         <i class="fa fa-unlock-alt fa-fw" aria-hidden="true"></i>
                         <span>Admin Options</span>
                     </a></li>
@@ -674,7 +681,7 @@
                     {% endif %}
                 {% endif %}
 
-                <li class="primary toggle-element active" data-toggle="comments"><a id="toggle-options" href="#!">
+                <li title="Toggle comments visibility" class="primary toggle-element active" data-toggle="comments"><a id="toggle-options" href="#!">
                     <i class="fa fa-commenting-o fa-fw" aria-hidden="true"></i>
                     <span>Comments</span>
                 </a></li>
@@ -732,7 +739,7 @@
                 {% endif %}
 
                 <li class="divider"></li>
-                <li class="primary toggle-element" data-toggle="contacts">
+                <li title="Click to toggle contacts visibility" class="primary toggle-element" data-toggle="contacts">
                   <a id="toggle-contacts" href="#!">
                     <i class="fa fa-phone fa-fw" aria-hidden="true"></i>
                     <span>Contacts</span>

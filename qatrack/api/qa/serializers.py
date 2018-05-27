@@ -132,9 +132,16 @@ class TestListInstanceSerializer(serializers.HyperlinkedModelSerializer):
 
     attachments = AttachmentSerializer(many=True, source="attachment_set", required=False)
 
+    site_url = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = models.TestListInstance
         fields = "__all__"
+
+    def get_site_url(self, obj):
+        if obj:
+            return reverse("view_test_list_instance", kwargs={'pk': obj.pk}, request=self.context['request'])
+        return ""
 
 
 class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
@@ -168,6 +175,8 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         read_only=True,
     )
 
+    site_url = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = models.TestListInstance
         exclude = [
@@ -175,6 +184,11 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             "modified_by",
             "created",
         ]
+
+    def get_site_url(self, obj):
+        if obj:
+            return reverse("view_test_list_instance", kwargs={'pk': obj.pk}, request=self.context['request'])
+        return ""
 
     def validate_tests(self, tests):
         err_fields = ['"%s"' % slug for slug, data in tests.items() if not self.valid_test(data)]
@@ -281,7 +295,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             skipped = validated_data['tests'][slug].get("skipped")
             provided_val = post_data.get('tests', {}).get(slug, {}).get("value")
             validated_val = validated_data['tests'][slug].get("value")
-            if not skipped and not self.type_okay(type_, validated_val):
+            if not skipped and type_ not in auto_types and not self.type_okay(type_, validated_val):
                 wrong_types.append(slug)
 
             if type_ in auto_types and not self.autovalue_ok(validated_val, provided_val):
@@ -295,7 +309,8 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
                 d = validated_data['tests'][slug]
                 # remove base64 data
                 d.pop('value', "")
-                d['string_value'] = d.pop('filename')
+                # string value needs to be set to attachment id for later editing
+                d['string_value'] = self.ti_attachments[slug][0]
                 validated_data['tests'][slug] = d
 
         if missing:
@@ -687,6 +702,14 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             }
 
         rep = super(TestListInstanceCreator, self).to_representation(obj)
+
+        if not hasattr(self, "comment"):
+            self.comment = ''
+            if self.instance:
+                self.comment = '\n'.join(
+                    '%s:%s:%s' % (c.user.username, c.submit_date, c.comment) for c in self.instance.comments.all()
+                )
+
         if self.comment:
             rep['comment'] = self.comment
 
