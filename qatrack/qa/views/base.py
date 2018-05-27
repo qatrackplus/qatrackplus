@@ -31,7 +31,7 @@ from qatrack.service_log import models as sl_models
 # signals import  needs to be here so signals get registered
 from .. import signals  # NOQA
 
-logger = logging.getLogger('qatrack.console')
+logger = logging.getLogger('qatrack')
 
 
 def generate_review_status_context(test_list_instance):
