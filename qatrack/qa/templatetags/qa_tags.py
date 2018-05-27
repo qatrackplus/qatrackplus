@@ -53,7 +53,7 @@ def reference_tolerance_span(test, ref, tol):
         )
         return mark_safe((
             '<span><abbr title="%s Values: %s;  %s Values: %s; All other choices are failing">'
-            '<em>Mult. Choice</em></abbr></span>'
+            '<em>Choice</em></abbr></span>'
         ) % params)
 
     tsds = settings.TEST_STATUS_DISPLAY_SHORT

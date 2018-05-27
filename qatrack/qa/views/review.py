@@ -55,6 +55,8 @@ class TestListInstanceDetails(PermissionRequiredMixin, TestListInstanceMixin, De
 
         se_ib = ServiceEvent.objects.filter(test_list_instance_initiated_by=self.object)
         context['service_events_ib'] = se_ib
+        self.all_tests = self.object.test_list.ordered_tests()
+        context['borders'] = self.object.test_list.sublist_borders(self.all_tests)
         return context
 
 
