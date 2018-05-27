@@ -110,7 +110,7 @@ $(document).ready(function() {
       '    <fieldset class="module">',
       '      <h2>Test List Members</h2>',
       '      <table>',
-      '        <thead><th>Type</th><th colspan="2">ID</th><th>Order</th><th>Macro Name</th><th>Sublist Outlined</th><th>Delete</th></thead>',
+      '        <thead><th>Type</th><th colspan="2">ID</th><th>Order</th><th>Macro Name</th><th>Show outline<br/>around sublist</th><th>Delete</th></thead>',
       '        <tbody></tbody>',
       '      </table>',
       '    </fieldset>',
