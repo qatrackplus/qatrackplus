@@ -708,7 +708,9 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
 
                             if (result.error){
                                 ti.status.attr("title", result.error);
+                                ti.status.addClass("btn-danger").text("Failed");
                             }else{
+                                ti.status.removeClass("btn-danger");
                                 ti.status.attr("title", "");
                             }
                         }
