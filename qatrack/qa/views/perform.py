@@ -7,7 +7,11 @@ import traceback
 
 from braces.views import JSONResponseMixin, PermissionRequiredMixin
 import dateutil
-import pydicom
+try:
+    import pydicom as dicom
+except:
+    import dicom
+
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.sites.shortcuts import get_current_site
@@ -39,8 +43,8 @@ from .. import models, signals, utils
 from .base import BaseEditTestListInstance, TestListInstances, UTCList, logger
 
 DEFAULT_CALCULATION_CONTEXT = {
-    "dicom": pydicom,
-    "pydicom": pydicom,
+    "dicom": dicom,
+    "pydicom": dicom,
     "math": math,
     "numpy": numpy,
     "matplotlib": matplotlib,
@@ -80,10 +84,13 @@ def attachment_info(attachment):
 
 class CompositeUtils:
 
-    def __init__(self, user, context, comments):
+    def __init__(self, user, unit, test_list, meta, context, comments):
         self.context = context
         self.context['__user_attached__'] = []
         self.user = user
+        self.unit = unit
+        self.meta = meta
+        self.test_list = test_list
         self.comments = comments
 
     def set_comment(self, comment):
@@ -108,6 +115,43 @@ class CompositeUtils:
         attachment.save()
 
         self.context["__user_attached__"].append(attachment_info(attachment))
+
+    def previous_test_list_instance(self, include_in_progress=False):
+        before = self.meta.get("work_started", self.meta.get("work_completed")) or timezone.now()
+        qs = models.TestListInstance.objects.filter(
+            test_list=self.test_list,
+            unit_test_collection__unit=self.unit,
+            work_completed__lt=before,
+        )
+        if not include_in_progress:
+            qs = qs.exclude(in_progress=True)
+
+        try:
+            return qs.latest("work_completed")
+        except models.TestListInstance.DoesNotExist:
+            return None
+
+    def previous_test_instance(self, test, same_list_only=True, include_in_progress=False):
+        try:
+            slug = test.slug
+        except AttributeError:
+            slug = test
+
+        before = self.meta.get("work_started", self.meta.get("work_completed")) or timezone.now()
+        qs = models.TestInstance.objects.filter(
+            unit_test_info__test__slug=slug,
+            unit_test_info__unit=self.unit,
+            work_completed__lt=before,
+        )
+        if same_list_only:
+            qs = qs.filter(test_list_instance__test_list=self.test_list)
+        if not include_in_progress:
+            qs = qs.exclude(test_list_instance__in_progress=True)
+
+        try:
+            return qs.latest("work_completed")
+        except models.TestInstance.DoesNotExist:
+            return None
 
 
 def get_context_refs_tols(unit, tests):
@@ -167,7 +211,7 @@ class UploadHandler:
 
             results = self.run_calc()
         except Exception:
-            msg = traceback.format_exc()
+            msg = traceback.format_exc(limit=5, chain=True)
             results = {
                 'success': False,
                 'errors': [msg],
@@ -214,7 +258,9 @@ class UploadHandler:
         except models.Test.DoesNotExist:
             results["errors"].append("Test with that ID does not exist")
         except Exception:
-            msg = traceback.format_exc().split("__QAT+COMP_")[-1].replace("<module>", "Test: %s" % test.name)
+            msg = traceback.format_exc(
+                limit=5, chain=True
+            ).split("__QAT+COMP_")[-1].replace("<module>", "Test: %s" % test.name)
             results["errors"].append("Invalid Test Procedure: %s" % msg)
 
         return results
@@ -251,7 +297,14 @@ class UploadHandler:
             "META": meta_data,
             "REFS": refs,
             "TOLS": tols,
-            "UTILS": CompositeUtils(self.user, self.calculation_context, comments),
+            "UTILS": CompositeUtils(
+                self.user,
+                self.unit,
+                self.test_list,
+                meta_data,
+                self.calculation_context,
+                comments,
+            ),
         })
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
 
@@ -284,7 +337,7 @@ class Upload(JSONResponseMixin, View):
 
             resp = self.run_calc()
         except Exception:
-            msg = traceback.format_exc()
+            msg = traceback.format_exc(limit=5, chain=True)
             results = {
                 'success': False,
                 'errors': [msg],
@@ -340,7 +393,9 @@ class Upload(JSONResponseMixin, View):
         except models.Test.DoesNotExist:
             results["errors"].append("Test with that ID does not exist")
         except Exception:
-            msg = traceback.format_exc().split("__QAT+COMP_")[-1].replace("<module>", "Test: %s" % test.name)
+            msg = traceback.format_exc(
+                limit=5, chain=True
+            ).split("__QAT+COMP_")[-1].replace("<module>", "Test: %s" % test.name)
             results["errors"].append("Invalid Test Procedure: %s" % msg)
 
         return self.render_json_response(results)
@@ -378,7 +433,14 @@ class Upload(JSONResponseMixin, View):
             "META": meta_data,
             "REFS": refs,
             "TOLS": tols,
-            "UTILS": CompositeUtils(self.request.user, self.calculation_context, comments),
+            "UTILS": CompositeUtils(
+                self.request.user,
+                self.unit,
+                self.test_list,
+                meta_data,
+                self.calculation_context,
+                comments,
+            ),
         })
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
 
@@ -447,7 +509,7 @@ class CompositePerformer:
                 }
                 self.calculation_context[slug] = result
             except Exception:
-                msg = traceback.format_exc().split("__QAT+COMP_")[-1].replace("<module>", slug)
+                msg = traceback.format_exc(limit=5, chain=True).split("__QAT+COMP_")[-1].replace("<module>", slug)
                 results[slug] = {
                     'value': None,
                     'error': "Invalid Test Procedure: %s" % msg,
@@ -497,7 +559,14 @@ class CompositePerformer:
             "META": meta_data,
             "REFS": refs,
             "TOLS": tols,
-            "UTILS": CompositeUtils(self.user, self.calculation_context, comments),
+            "UTILS": CompositeUtils(
+                self.user,
+                self.unit,
+                self.test_list,
+                meta_data,
+                self.calculation_context,
+                comments,
+            ),
         })
 
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
@@ -749,7 +818,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             "test__category",
             "tolerance",
             "unit",
-        )
+        ).prefetch_related("test__attachment_set")
 
         # make sure utis are correctly ordered
         uti_tests = [x.test for x in utis]
@@ -995,7 +1064,12 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         )
 
         context['top_divs_span'] = 0
-        if self.request.user.has_perm('qa.can_review') or self.request.user.has_perm('qa.can_review_own_tests') or self.request.user.has_perm('qa.can_override_date'):
+        has_perms = (
+            self.request.user.has_perm('qa.can_review') or
+            self.request.user.has_perm('qa.can_review_own_tests') or
+            self.request.user.has_perm('qa.can_override_date')
+        )
+        if has_perms:
             context['top_divs_span'] += 1
         if len(context['attachments']) > 0:
             context['top_divs_span'] += 1

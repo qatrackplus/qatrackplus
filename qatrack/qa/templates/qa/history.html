@@ -1,6 +1,7 @@
 {% load qa_tags %}
 {% if history %}
     {% for hist in history %}
+        <a target="_blank" href="{{ hist.test_list_instance.get_absolute_url }}" class="label {{hist.pass_fail}} history-value" title="Diff from ref={% if hist.diff_display %}{{hist.diff_display}}{%else%}N/A{%endif%};  {{hist.created_by}} on {{hist.work_completed}}; {{hist.status}}">
         {% if test.is_string or test.is_string_composite %}
             <span class="history-value label {{hist.pass_fail}} text-black" title="{{hist.value_display|safe}}">
                 {{hist.value_display|safe}}
@@ -11,19 +12,18 @@
             </span>
         {% elif hist.work_completed and hist.pass_fail != "not_done" %}
 
-            <span class="label {{hist.pass_fail}} history-value" title="Diff from ref={% if hist.diff_display %}{{hist.diff_display}}{%else%}N/A{%endif%};  {{hist.created_by}} on {{hist.work_completed}}; {{hist.status}}">
-                    {% if show_icons %}
-                        {% if hist.pass_fail == 'tolerance' %}
-                            <i class="pull-left icon-warning-sign"></i>
-                        {% elif hist.pass_fail == 'action' %}
-                            <i class="pull-left icon-minus-sign"></i>
-                        {% endif %}
-                    {% endif %}
-                    {{hist.value_display|safe}}
-            </span>
+          {% if show_icons %}
+          {% if hist.pass_fail == 'tolerance' %}
+          <i class="pull-left icon-warning-sign"></i>
+          {% elif hist.pass_fail == 'action' %}
+          <i class="pull-left icon-minus-sign"></i>
+          {% endif %}
+          {% endif %}
+          {{hist.value_display|safe}}
         {% else %}
             <span class="label not_done history-value" title="N/A">N/A</span>
         {% endif %}
+        </a>
     {% endfor %}
     {% if test.is_upload or test.is_string_type or not test.chart_visibility %}
         <i class="icon-picture" title="This test is not plottable"></i>

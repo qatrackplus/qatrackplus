@@ -107,6 +107,9 @@ require.config({
         icheck: {
             deps: ['jquery']
         },
+        inputmask: {
+            deps: ['jquery']
+        },
         jquery: {
             exports: '$'
         },

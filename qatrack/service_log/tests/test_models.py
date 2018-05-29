@@ -1,10 +1,6 @@
-from unittest import mock
-
 from django.conf import settings
-from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
-from django.db.models import ProtectedError, ObjectDoesNotExist
+from django.db.models import ProtectedError
 from django.test import TestCase, TransactionTestCase
 from django.utils import timezone
 
@@ -98,9 +94,6 @@ class TestServiceEventAndRelated(TransactionTestCase):
         self.se = sl_utils.create_service_event()
 
     def test_third_party_and_hours(self):
-        """
-        Note: with self.assertRaises(IntegrityError): will fail when testing with sqlite3 backend
-        """
 
         se = sl_models.ServiceEvent.objects.first()
         tp = sl_utils.create_third_party()

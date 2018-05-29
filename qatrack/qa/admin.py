@@ -51,6 +51,10 @@ class BasicSaveUserAdmin(SaveUserMixin, admin.ModelAdmin):
 class CategoryAdmin(admin.ModelAdmin):
     """QA categories admin"""
     prepopulated_fields = {'slug': ('name',)}
+    list_display = (
+        "name",
+        "description",
+    )
 
 
 class TestInfoForm(forms.ModelForm):
@@ -171,6 +175,7 @@ class ActiveUnitTestInfoFilter(admin.SimpleListFilter):
                 }, []),
                 'display': title,
             }
+
     # TODO fix this
     def queryset(self, request, qs):
         if self.value() in (self.NOTACTIVE,):
@@ -201,7 +206,7 @@ class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
         "comment",
         "history",
     )
-    list_display = ["test", test_type, "unit", "reference", "tolerance"]
+    list_display = ["test", "unit", test_type, "reference", "tolerance"]
     list_filter = [ActiveUnitTestInfoFilter, "unit", "test__category", "test__testlistmembership__test_list"]
     readonly_fields = ("reference", "test", "unit", "history")
     search_fields = ("test__name", "test__slug", "unit__name",)
@@ -329,7 +334,7 @@ class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
         if any(k in form.changed_data for k in ['comment', 'reference_value', 'tolerance']):
             if form.instance and form.instance.pk:
                 old = models.UnitTestInfo.objects.get(pk=form.instance.pk)
-                utic = models.UnitTestInfoChange.objects.create(
+                models.UnitTestInfoChange.objects.create(
                     unit_test_info=old,
                     comment=form.cleaned_data["comment"],
                     reference=old.reference,
@@ -924,6 +929,7 @@ class TestListCycleAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, admin.Mod
     inlines = [TestListCycleMembershipInline, get_attachment_inline("testlistcycle")]
     prepopulated_fields = {'slug': ('name',)}
     search_fields = ("name", "slug",)
+    list_display = ["name", "all_lists"]
 
     class Media:
         js = (
@@ -935,10 +941,25 @@ class TestListCycleAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, admin.Mod
             settings.STATIC_URL + "ace/ace.js",
         )
 
+    def all_lists(self, obj):
+        return ', '.join("%s: %s" % x for x in enumerate(obj.all_lists().values_list("name", flat=True)))
+
+    def get_queryset(self, request):
+        qs =  super(TestListCycleAdmin, self).get_queryset(request)
+        return qs.prefetch_related("test_lists")
+
+
 
 class FrequencyAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
     model = models.Frequency
+
+    list_display = (
+        "name",
+        "nominal_interval",
+        "due_interval",
+        "overdue_interval",
+    )
 
 
 class StatusAdmin(admin.ModelAdmin):

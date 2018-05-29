@@ -1,6 +1,7 @@
 {% extends "site_base.html" %}
-{#{% load staticfiles %}#}
 {% load qa_tags %}
+{% load qatrack_tags %}
+{% load attach_tags %}
 {% load comments %}
 
 {% block head_title %}{{test_list_instance.work_completed|date}} {{test_list_instance.test_list.name}} Details{% endblock %}
@@ -192,7 +193,7 @@
                     <div class="row">
                         <div class="col-md-12">
                             {% with test_list_instance.history as instances_and_dates  %}
-                            <table class="table table-bordered table-striped table-condensed" >
+                            <table id="review-table" class="table table-bordered table-striped table-condensed" >
                                 <thead>
                                     <tr>
                                         <th>Test<div></div></th>
@@ -212,40 +213,90 @@
                                     {% for ti, history in instances_and_dates.0 %}
 
                                         {% with test=ti.unit_test_info.test %}
-                                        <tr>
-                                            <td><strong>{{test.name}}</strong></td>
-                                            <td class="review-value">
-                                                <span class="label pass-fail {{ti.pass_fail}}" title="{% if ti.string_value %}{{ti.value_display}}{% else %}{{ti.diff_display}}{% endif %}">
-                                                    {% with ti.pass_fail as status %}
-                                                        {% if ICON_SETTINGS.SHOW_STATUS_ICONS_REVIEW %}
-                                                            {% if status == 'tolerance' %}
-                                                                <i class="pull-left icon-warning-sign"></i>
-                                                            {% elif status == 'action' %}
-                                                                <i class="pull-left icon-minus-sign"></i>
-                                                            {% endif %}
-                                                        {% endif %}
-                                                    {% endwith %}
-                                                    {{ti.value_display|safe}}
-                                                </span>
-                                            </td>
-                                            <td class="review-ref">
-                                                {% reference_tolerance_span test ti.reference ti.tolerance%}
-                                            </td>
-                                            <td>
-                                                {% if ti.comment %}
-                                                    <a title="{{ti.comment}}">Hover for Comment</a>
-                                                {% else %}
-                                                    <em>No comment</em>
-                                                {% endif %}
-                                            </td>
-                                            <td class="qa-history">
-                                                {% history_display history test_list_instance.unit_test_collection.unit test_list_instance.test_list test %}
-                                            </td>
-                                            <td class="review-status">
-                                                {{ti.status.name}}
-                                            </td>
-                                        </tr>
+                                            {% with borders.starts|lookup:forloop.counter0 as delim %}
+                                              {% if delim and delim.class == "sublist" %}
+                                                <tr class="{{delim.class }}">
+                                                  <td colspan="2">
+                                                    {% if delim.description %}
+                                                      <a class="show-sublist-details" href="#">
+                                                        {{ delim.name }}
+                                                      </a>
+                                                    {% else %}
+                                                        {{ delim.name }}
+                                                    {% endif %}
+                                                </td>
+                                                <td colspan="{% qa_table_colspan perms offset=2 %}">&nbsp;</td>
+                                              </tr>
+                                              {% endif %}
+                                            {% endwith %}
+                                          <tr>
+                                              <td><strong>{{test.name}}</strong></td>
+                                              <td class="review-value">
+                                                  <span class="label pass-fail {{ti.pass_fail}}" title="{% if ti.string_value %}{{ti.value_display}}{% else %}{{ti.diff_display}}{% endif %}">
+                                                      {% with ti.pass_fail as status %}
+                                                          {% if ICON_SETTINGS.SHOW_STATUS_ICONS_REVIEW %}
+                                                              {% if status == 'tolerance' %}
+                                                                  <i class="pull-left icon-warning-sign"></i>
+                                                              {% elif status == 'action' %}
+                                                                  <i class="pull-left icon-minus-sign"></i>
+                                                              {% endif %}
+                                                          {% endif %}
+                                                      {% endwith %}
+                                                      {{ti.value_display|safe}}
+                                                  </span>
+                                              </td>
+                                              <td class="review-ref">
+                                                  {% reference_tolerance_span test ti.reference ti.tolerance%}
+                                              </td>
+                                              <td class="qa-showcmt">
+                                                  {% if ti.comment %}
+                                                      <a href="#!" class="revealcomment" title="{{ ti.comment }}"><i class="fa fa-commenting"></i></a>
+                                                  {% endif %}
+                                              </td>
+                                              <td class="qa-history">
+                                                  {% history_display history test_list_instance.unit_test_collection.unit test_list_instance.test_list test %}
+                                              </td>
+                                              <td class="review-status">
+                                                  {{ti.status.name}}
+                                              </td>
+                                          </tr>
+
+                                          {% if ti.comment %}
+                                              <tr class="qa-comment no-hover row-{{ ti_form.prefix }}">
+                                                  <td colspan="{% qa_table_colspan perms %}"  class="">
+                                                      <div class="comment-container comment-bar">
+                                                          <div class="comment-div">
+                                                              {{ ti.comment }}
+                                                          </div>
+                                                      </div>
+                                                  </td>
+                                              </tr>
+                                          {% endif %}
+
+                                          {% if ti.attachment_set.exists %}
+                                              <tr class="qa-attach no-hover">
+                                                  <td>{{ti.unit_test_info.test.name}} Attachments</td>
+                                                  <td colspan="{% qa_table_colspan perms offset=1 %}"  class="">
+                                                      <ul>
+                                                          {% for attach in ti.attachment_set.all %}
+                                                              <li>{{ attach | attachment_link }}</li>
+                                                          {% endfor %}
+                                                      </ul>
+                                                  </td>
+                                              </tr>
+                                          {% endif %}
                                         {%endwith%}
+
+                                        {% if not forloop.last and borders.ends|lookup:forloop.counter0 %}
+                                          {% with borders.starts|lookup:forloop.counter as delim %}
+                                            {% if not delim or delim.class != "sublist" %}
+                                            <tr class="end-sublist">
+                                                <td colspan="{% qa_table_colspan perms %}"></td>
+                                            </tr>
+                                            {% endif %}
+                                          {% endwith %}
+                                        {% endif %}
+
                                     {% endfor %}
                                 </tbody>
                             </table>
@@ -266,6 +317,29 @@
                     {% if perms.qa.can_review %}
                         <a href="{% url 'review_test_list_instance' pk=test_list_instance.pk %}?next={{request.get_full_path}}" class="btn pull-right btn-default btn-flat margin-r-5">Review</a>
                     {% endif %}
+                </div>
+
+                <div id="qa-images" class="box-footer">
+                    {% for ti, history in test_list_instance.history.0 %}
+                        {% with test=ti.unit_test_info.test %}
+                            {% if test.display_image %}
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        <strong><p>Images for {{ test }} Test: </p></strong>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div id="{{ test.slug }}">
+                                        {% for attach in ti.attachment_set.all %}
+                                            {% if attach.is_image %}
+                                                {{ attach | ti_attachment_img }}
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endwith %}
+                    {% endfor %}
                 </div>
             </div>
         </div>

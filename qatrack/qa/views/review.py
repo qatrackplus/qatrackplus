@@ -38,7 +38,9 @@ from .base import (
 from .perform import ChooseUnit
 
 
-class TestListInstanceDetails(TestListInstanceMixin, DetailView):
+class TestListInstanceDetails(PermissionRequiredMixin, TestListInstanceMixin, DetailView):
+
+    permission_required = "qa.can_view_completed"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(kwargs=kwargs)
@@ -53,6 +55,8 @@ class TestListInstanceDetails(TestListInstanceMixin, DetailView):
 
         se_ib = ServiceEvent.objects.filter(test_list_instance_initiated_by=self.object)
         context['service_events_ib'] = se_ib
+        self.all_tests = self.object.test_list.ordered_tests()
+        context['borders'] = self.object.test_list.sublist_borders(self.all_tests)
         return context
 
 
@@ -190,7 +194,7 @@ class TestListInstanceDelete(PermissionRequiredMixin, DeleteView):
 class UTCReview(PermissionRequiredMixin, UTCList):
     """A simple :view:`qa.base.UTCList` wrapper to check required review permissions"""
 
-    permission_required = "qa.can_view_completed"
+    permission_required = "qa.can_review"
     raise_exception = True
 
     action = "review"
@@ -533,8 +537,10 @@ class OverviewObjects(JSONResponseMixin, View):
         return self.render_json_response({'unit_lists': unit_lists, 'due_counts': due_counts, 'success': True})
 
 
-class UTCInstances(TestListInstances):
+class UTCInstances(PermissionRequiredMixin, TestListInstances):
     """Show all :model:`qa.TestListInstance`s for a given :model:`qa.UnitTestCollection`"""
+
+    permission_required = "qa.can_view_completed"
 
     def get_page_title(self):
         try:

@@ -1191,7 +1191,7 @@ class TestSignals(TestCase):
         utc.tests_object = cycle2
         utc.save()
 
-        utis = list(models.UnitTestInfo.objects.all())
+        utis = list(models.UnitTestInfo.objects.order_by("test_id"))
 
         # test list on its own
         self.assertEqual(len(utis), 4)

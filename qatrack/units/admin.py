@@ -1,4 +1,3 @@
-
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin import helpers
@@ -90,9 +89,11 @@ class UnitFormAdmin(ModelForm):
 
 
 class UnitAdmin(admin.ModelAdmin):
+
     form = UnitFormAdmin
     list_display = ['name', 'number', 'active', 'type', 'site']
     list_filter = ['active', 'site', 'modalities', 'type__unit_class']
+    list_editable = ['site']
 
     class Media:
         js = (

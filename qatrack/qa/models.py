@@ -358,8 +358,17 @@ class TestInstanceStatus(models.Model):
 
 
 class AutoReviewRule(models.Model):
-    pass_fail = models.CharField(max_length=15, choices=PASS_FAIL_CHOICES, unique=True)
-    status = models.ForeignKey(TestInstanceStatus)
+
+    pass_fail = models.CharField(
+        help_text="Pass fail state of test instances to apply this rule to.",
+        max_length=15,
+        choices=PASS_FAIL_CHOICES,
+        unique=True,
+    )
+    status = models.ForeignKey(
+        TestInstanceStatus,
+        help_text="Status to assign test instance based on its pass/fail state",
+    )
 
     def __str__(self):
         return "%s => %s" % (PASS_FAIL_CHOICES_DISPLAY[self.pass_fail], self.status)
@@ -1823,8 +1832,17 @@ class TestListCycle(TestCollectionInterface):
     )
 
     test_lists = models.ManyToManyField(TestList, through="TestListCycleMembership")
-    drop_down_label = models.CharField(max_length=128, default="Choose Day")
-    day_option_text = models.CharField(max_length=8, choices=DAY_OPTIONS_TEXT_CHOICES, default=DAY)
+    drop_down_label = models.CharField(
+        max_length=128,
+        default="Choose Day",
+        help_text="Text to be shown alongside the drop down list for selecting the cycle day to perform.",
+    )
+    day_option_text = models.CharField(
+        max_length=8,
+        choices=DAY_OPTIONS_TEXT_CHOICES,
+        default=DAY,
+        help_text="Should the drop down show the day number or test list name?",
+    )
     utcs = GenericRelation(UnitTestCollection, related_query_name='test_list_cycle')
 
     objects = TestListCycleManager()

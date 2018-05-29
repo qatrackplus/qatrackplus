@@ -31,7 +31,7 @@ def create_testpack(test_lists=None, cycles=None, extra_tests=None, description=
 
     test_lists |= models.TestList.objects.filter(pk__in=sublists.values_list("child_id"))
 
-    tlc_memberships = models.TestListCycleMembership.objects.filter(cycle=cycles)
+    tlc_memberships = models.TestListCycleMembership.objects.filter(cycle__in=cycles)
 
     tl_memberships = models.TestListMembership.objects.filter(
         pk__in=test_lists.values_list("testlistmembership")

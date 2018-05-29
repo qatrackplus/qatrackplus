@@ -20,6 +20,9 @@ SEND_BROKEN_LINK_EMAILS = True
 # -----------------------------------------------------------------------------
 # misc settings
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
+LOG_ROOT = os.path.join(PROJECT_ROOT, "..", "logs")
+if not os.path.isdir(LOG_ROOT):
+    os.mkdir(LOG_ROOT)
 
 VERSION = "0.3.0"
 BUG_REPORT_URL = "https://bitbucket.org/tohccmedphys/qatrackplus/issues/new"
@@ -216,6 +219,7 @@ INSTALLED_APPS = [
     'django_comments',
     'formtools',
     'tastypie',
+    'django_filters',
     'rest_framework',
     'rest_framework.authtoken',
     'listable',
@@ -249,6 +253,9 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 100,
     'DATETIME_INPUT_FORMATS': ["%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M"],
     'TEST_REQUEST_DEFAULT_FORMAT': 'json',
+    'DEFAULT_FILTER_BACKENDS': (
+        'rest_framework_filters.backends.DjangoFilterBackend',
+    ),
 }
 
 
@@ -364,6 +371,15 @@ LOGGING = {
             '()': 'django.utils.log.RequireDebugFalse'
         }
     },
+    'formatters': {
+        'verbose': {
+            'format': "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
+            'datefmt': "%d/%b/%Y %H:%M:%S"
+        },
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        },
+    },
     'handlers': {
         'mail_admins': {
             'level': 'ERROR',
@@ -374,16 +390,34 @@ LOGGING = {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',
         },
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': os.path.join(LOG_ROOT, "debug.log"),
+            'when': 'D',  # this specifies the interval
+            'interval': 7,  # defaults to 1, only necessary for other values
+            'backupCount': 26,  # how many backup file to keep, 10 days
+            'formatter': 'verbose',
+        },
     },
     'loggers': {
-
+        'django': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
         'django.request': {
-            'handlers': ['mail_admins'],
+            'handlers': ['mail_admins', 'file'],
             'level': 'ERROR',
             'propagate': True,
         },
-        'qatrack.console': {
-            'handlers': ['console'],
+        'qatrack': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'qatrack.migrations': {
+            'handlers': ['console', 'file'],
             'level': 'DEBUG',
             'propagate': True,
         },

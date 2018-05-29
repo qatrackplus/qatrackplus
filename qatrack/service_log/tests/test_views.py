@@ -1,4 +1,3 @@
-
 import json
 
 from django.conf import settings
@@ -15,7 +14,6 @@ from qatrack.qa.tests import utils as qa_utils
 from qatrack.qa import models as qa_models
 from qatrack.service_log.tests import utils as sl_utils
 from qatrack.parts import models as p_models
-from qatrack.parts import views as p_views
 
 
 class TestURLS(TestCase):
@@ -28,7 +26,6 @@ class TestURLS(TestCase):
         self.client.login(username='user', password='pwd')
 
     def returns_code(self, url, method='get', code=200):
-        response = getattr(self.client, method)(url)
         return getattr(self.client, method)(url).status_code == code
 
     def test_qa_urls(self):
@@ -49,7 +46,7 @@ class TestURLS(TestCase):
             ('sl_list_all', {'f': 'id-%d' % se.id}, ''),
             ('rtsqa_list_all', {'f': 'id-%d' % se.id}, ''),
             ('se_searcher', {}, '?q=%d&unit_id=%d' % (se.id, u.id)),
-            ('tli_select', {'pk': se.id, 'form': 'a_form'}, ''),
+            ('tli_select', {'pk': utc.id, 'form': 'a_form'}, ''),
             ('tli_statuses', {}, '?tli_id=%d' % tli.id),
             ('unit_sa_utc', {}, '?unit_id=%d' % u.id),
             ('err', {}, ''),
@@ -69,7 +66,10 @@ class TestURLS(TestCase):
         )
 
         for url, kwargs, q in url_names_200:
-            self.assertTrue(self.returns_code(reverse(url, kwargs=kwargs) + q))
+            try:
+                self.assertTrue(self.returns_code(reverse(url, kwargs=kwargs) + q))
+            except:
+                import ipdb; ipdb.set_trace()  # yapf: disable  # noqa
 
         for url, kwargs, q in url_names_404:
             self.assertTrue(self.returns_code(reverse(url, kwargs=kwargs) + q, code=404))
@@ -199,6 +199,7 @@ class TestCreateServiceEvent(TestCase):
         self.st = sl_utils.create_service_type()
 
     def test_initial_options(self):
+
         response = self.client.get(self.url)
 
         self.assertEqual(self.default_ses, response.context_data['form'].initial['service_status'])
@@ -233,25 +234,24 @@ class TestCreateServiceEvent(TestCase):
             set(response.context_data['hours_formset'].forms[0].fields['user_or_thirdparty'].widget.choices)
         )
 
-        gl = models.GroupLinker.objects.get(id=1)
+        gl = models.GroupLinker.objects.all().first()
         users_in_gl = User.objects.filter(groups=gl.group, is_active=True)
         self.assertEqual(
-            list(users_in_gl),
-            list(response.context_data['form'].fields['group_linker_1'].queryset)
+            list(users_in_gl), list(response.context_data['form'].fields['group_linker_%s' % gl.pk].queryset)
         )
 
         # Unit pre selected ----------------------------------------------------
-        response = self.client.get(self.url + '?u=1')
+        unit = qa_models.Unit.objects.all().first()
+        response = self.client.get(self.url + '?u=%d' % unit.pk)
 
-        unit = qa_models.Unit.objects.get(id=1)
 
-        service_areas = models.UnitServiceArea.objects.filter(unit_id=1).values_list('service_area_id', 'service_area__name')
+        service_areas = models.UnitServiceArea.objects.filter(unit_id=unit.pk).values_list('service_area_id', 'service_area__name')
         self.assertEqual(
             list(service_areas),
             list(response.context_data['form'].fields['service_area_field'].queryset.values_list('id', 'name'))
         )
 
-        utc_initialed_by = qa_models.UnitTestCollection.objects.filter(unit_id=1, active=True)
+        utc_initialed_by = qa_models.UnitTestCollection.objects.filter(unit_id=unit.pk, active=True)
         utc_ib_list = (('', '---------'),)
         for utc_ib in utc_initialed_by:
             utc_ib_list += ((utc_ib.id, '(%s) %s' % (utc_ib.frequency, utc_ib.name)),)
@@ -280,10 +280,7 @@ class TestCreateServiceEvent(TestCase):
             tli_ib.id
         )
 
-        self.assertEqual(
-            response.context_data['form'].initial['unit_field'],
-            unit
-        )
+        self.assertEqual(response.context_data['form'].initial['unit_field'], unit)
 
     def test_submit_valid(self):
 
@@ -750,7 +747,3 @@ class TestServiceLogViews(TestCase):
         self.assertTrue('%s,%s,0.0,1,1.0,0,1.0,0,1' % (self.usa2.unit.name, self.usa2.unit.type.name) in csv)
         self.assertTrue('%s,%s,0.0,2,2.0,0,2.0,0,2' % (self.usa3.unit.name, self.usa3.unit.type.name) in csv)
         self.assertTrue('Totals:,0.0,3,3.0,0,3.0,0,3' in csv)
-
-
-
-

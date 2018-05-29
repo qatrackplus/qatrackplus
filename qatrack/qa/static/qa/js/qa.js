@@ -421,12 +421,14 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                         comments: JSON.stringify(get_comments())
                     };
 
+                    $('body').addClass("loading");
                     $.ajax({
                         type:"POST",
                         url: QAURLs.UPLOAD_URL,
                         data: $.param(data),
                         dataType:"json",
                         success: function (result) {
+                            $('body').removeClass("loading");
                             self.status.removeClass("btn-info btn-primary btn-danger btn-success");
                             if (result.errors.length > 0){
                                 self.set_value(null);
@@ -441,6 +443,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                         },
                         traditional:true,
                         error: function(e,data){
+                            $('body').removeClass("loading");
                             self.set_value(null);
                             self.status.removeClass("btn-primary btn-danger btn-success");
                             self.status.addClass("btn-danger").text("Server Error");
@@ -705,7 +708,9 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
 
                             if (result.error){
                                 ti.status.attr("title", result.error);
+                                ti.status.addClass("btn-danger").text("Failed");
                             }else{
+                                ti.status.removeClass("btn-danger");
                                 ti.status.attr("title", "");
                             }
                         }
