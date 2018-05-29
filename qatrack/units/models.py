@@ -122,13 +122,16 @@ class Unit(models.Model):
     serial_number = models.CharField(max_length=256, null=True, blank=True, help_text=_('Optional serial number'))
     location = models.CharField(max_length=256, null=True, blank=True, help_text=_('Optional location information'))
     install_date = models.DateField(null=True, blank=True, help_text=_('Optional install date'))
-    date_acceptance = models.DateField(help_text=_('Changing acceptance date will delete unit available times that occur before it'))
+    date_acceptance = models.DateField(
+        help_text=_('Changing acceptance date will delete unit available times that occur before it'),
+    )
     active = models.BooleanField(default=True, help_text=_('Set to false if unit is no longer in use'))
     restricted = models.BooleanField(default=False, help_text=_('Set to false to restrict unit from operation'))
+    is_serviceable = models.BooleanField(
+        default=False, help_text=_('Set to true to enable this unit to be selectable in service events')
+    )
 
     modalities = models.ManyToManyField(Modality)
-
-    # objects = UnitManager()
 
     class Meta:
         ordering = [settings.ORDER_UNITS_BY]
@@ -193,6 +196,7 @@ class UnitAvailableTimeEdit(models.Model):
         ordering = ['-date']
         get_latest_by = 'date'
         unique_together = [('unit', 'date')]
+        default_permissions = ()
 
     def __str__(self):
         return '%s (%s)' % (self.name, self.date.strftime('%b %d, %Y'))

@@ -303,9 +303,34 @@ class TLIInitiatedField(forms.ModelChoiceField):
             return data
 
 
+class ModelSelectWithOptionTitles(forms.Select):
+
+    option_inherits_attrs = True
+
+    def __init__(self, attrs=None, choices=(), model=None, title_variable=None):
+        super().__init__(attrs=attrs, choices=choices)
+        self.model = model
+        self.title_variable = title_variable
+
+    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+        if value in [None, '']:
+            title = '-----'
+        elif self.title_variable is not None and self.model is not None:
+            title = getattr(self.model.objects.get(pk=value), self.title_variable)
+        else:
+            title = ''
+        if attrs is None:
+            attrs = {'title': title}
+        else:
+            attrs.update({'title': title})
+        option = super().create_option(name, value, label, selected, index, subindex=None, attrs=attrs)
+        return option
+
+
 class ServiceEventForm(BetterModelForm):
 
-    unit_field_fake = forms.ModelChoiceField(queryset=models.Unit.objects.all(), label='Unit', required=False)
+    serviceable_units = models.Unit.objects.filter(is_serviceable=True)
+    unit_field_fake = forms.ModelChoiceField(queryset=serviceable_units, label='Unit', required=False)
     unit_field = forms.ModelChoiceField(queryset=models.Unit.objects.all())
     service_area_field = forms.ModelChoiceField(
         queryset=models.ServiceArea.objects.all(), label='Service area'
@@ -338,6 +363,7 @@ class ServiceEventForm(BetterModelForm):
     )
     service_type = forms.ModelChoiceField(
         queryset=models.ServiceType.objects.filter(is_active=True), label=_('Service type'),
+        widget=ModelSelectWithOptionTitles(model=models.ServiceType, title_variable='description')
     )
     service_status = forms.ModelChoiceField(
         help_text=models.ServiceEvent._meta.get_field('service_status').help_text,
@@ -508,6 +534,7 @@ class ServiceEventForm(BetterModelForm):
             except (ObjectDoesNotExist, ValueError, KeyError):
                 unit = self.instance.unit_service_area.unit
 
+            self.fields['unit_field_fake'].queryset = self.serviceable_units | models.Unit.objects.filter(pk=unit.id)
             self.initial['unit_field'] = unit
             self.initial['service_area_field'] = self.instance.unit_service_area.service_area
             self.initial['service_event_related_field'] = self.instance.service_event_related.all()

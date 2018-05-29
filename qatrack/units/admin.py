@@ -20,11 +20,6 @@ from .models import Modality, Site, Unit, UnitAvailableTime, UnitAvailableTimeEd
 from qatrack.service_log.models import UnitServiceArea, ServiceArea, ServiceEvent
 
 
-class NoDeleteAdmin(admin.ModelAdmin):
-    def has_delete_permission(self, request, obj=None):
-        return False
-
-
 class UnitFormAdmin(ModelForm):
 
     if settings.USE_SERVICE_LOG:
@@ -63,6 +58,7 @@ class UnitFormAdmin(ModelForm):
         ]
         if settings.USE_SERVICE_LOG:
             fields.append('service_areas')
+            fields.insert(8, 'is_serviceable')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -101,7 +97,7 @@ class UnitAdmin(admin.ModelAdmin):
     class Media:
         js = (
             settings.STATIC_URL + 'jquery/js/jquery.min.js',
-            settings.STATIC_URL + 'inputmask/js/jquery.inputmask.bundle.js',
+            settings.STATIC_URL + 'inputmask/js/jquery.inputmask.bundle.min.js',
         )
         css = {
             'all': (
@@ -293,4 +289,4 @@ class UnitAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Unit, UnitAdmin)
-admin.site.register([Modality, UnitType, Site, UnitClass, Vendor], NoDeleteAdmin)
+admin.site.register([Modality, UnitType, Site, UnitClass, Vendor], admin.ModelAdmin)

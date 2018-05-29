@@ -65,7 +65,7 @@ class ServiceType(models.Model):
     is_review_required = models.BooleanField(default=False, help_text=_('Does this service type require review'))
     is_active = models.BooleanField(default=True, help_text=_('Set to false if service type is no longer used'))
     description = models.TextField(
-        max_length=64, help_text=_('Give a brief description of this service type'), null=True, blank=True
+        max_length=512, help_text=_('Give a brief description of this service type'), null=True, blank=True
     )
 
     def __str__(self):
@@ -89,7 +89,7 @@ class ServiceEventStatus(models.Model):
         default=True, help_text=_('Service events with rts that has not been reviewed can not have this status selected if set to true.')
     )
     description = models.TextField(
-        max_length=64, help_text=_('Give a brief description of this service event status'), null=True, blank=True
+        max_length=512, help_text=_('Give a brief description of this service event status'), null=True, blank=True
     )
     colour = models.CharField(default=settings.DEFAULT_COLOURS[0], max_length=22, validators=[validate_color])
 
@@ -239,6 +239,7 @@ class Hours(models.Model):
         verbose_name_plural = _("Hours")
         unique_together = ('service_event', 'third_party', 'user',)
 
+        default_permissions = ()
         permissions = (
             ("can_have_hours", "Can have hours"),
         )
@@ -302,6 +303,7 @@ class GroupLinkerInstance(models.Model):
     datetime_linked = models.DateTimeField()
 
     class Meta:
+        default_permissions = ()
         unique_together = ('service_event', 'group_linker')
 
 
@@ -379,3 +381,4 @@ class ServiceLog(models.Model):
 
     class Meta:
         ordering = ('-datetime',)
+        default_permissions = ()

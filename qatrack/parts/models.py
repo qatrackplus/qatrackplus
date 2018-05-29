@@ -154,6 +154,7 @@ class PartStorageCollection(models.Model):
 
     class Meta:
         unique_together = ('part', 'storage')
+        default_permissions = ()
 
     def save(self, *args, **kwargs):
         self.quantity = self.quantity if self.quantity >= 0 else 0
@@ -182,6 +183,7 @@ class PartSupplierCollection(models.Model):
 
     class Meta:
         unique_together = ('part', 'supplier')
+        default_permissions = ()
 
 
 class PartUsed(models.Model):

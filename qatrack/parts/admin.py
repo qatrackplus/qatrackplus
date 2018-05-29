@@ -15,13 +15,6 @@ if settings.USE_PARTS:
         search_fields = ['part_number', 'description']
 
 
-    class PartStorageCollectionAdmin(admin.ModelAdmin):
-        list_display = ['id', 'part', 'storage', 'quantity']
-
-        def get_queryset(self, request):
-            return super(PartStorageCollectionAdmin, self).get_queryset(request).select_related('storage__room', 'storage__room__site')
-
-
     class StorageInlineForm(forms.ModelForm):
 
         class Meta:
@@ -79,6 +72,5 @@ if settings.USE_PARTS:
 
     admin.site.register([p_models.Part], PartAdmin)
     admin.site.register([p_models.PartCategory], admin.ModelAdmin)
-    admin.site.register([p_models.PartStorageCollection], PartStorageCollectionAdmin)
     admin.site.register([p_models.Supplier], admin.ModelAdmin)
     admin.site.register([p_models.Room], RoomAdmin)

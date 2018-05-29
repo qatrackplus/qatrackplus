@@ -66,3 +66,12 @@ div.daterangepicker.dropdown-menu > div.calendar > div.daterangepicker_input > i
 div.daterangepicker.dropdown-menu > div.calendar > div.calendar-table > table > thead th {
     border-radius: 0;
 }
+div.daterangepicker.dropdown-menu .btn-success {
+    background-color: #f4f4f4;
+    border-color: #ddd;
+    color: #444;
+}
+div.daterangepicker.dropdown-menu .btn-success:hover {
+    background-color: #e7e7e7;
+    border-color: #adadad;
+}

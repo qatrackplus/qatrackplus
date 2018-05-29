@@ -1031,6 +1031,7 @@ def tli_statuses(request):
 class ChooseUnitForNewSE(ChooseUnit):
     template_name = 'units/unittype_choose_for_service_event.html'
     split_sites = True
+    unit_serviceable_only = True
 
     def get_context_data(self, *args, **kwargs):
         context = super(ChooseUnitForNewSE, self).get_context_data(*args, **kwargs)
@@ -1117,7 +1118,6 @@ class ServiceEventDownTimesList(ServiceEventsBaseList):
             minutes = (total_seconds % 3600) // 60
 
             return '{}:{:02}'.format(hours, minutes)
-
 
     def duration_service_time(self, se):
         duration = se.duration_service_time

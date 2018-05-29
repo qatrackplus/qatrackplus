@@ -380,6 +380,9 @@ class Reference(models.Model):
     modified = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(User, editable=False, related_name="reference_modifiers")
 
+    class Meta:
+        default_permissions = ()
+
     def clean_fields(self):
         if self.type == BOOLEAN and self.value not in (0, 1):
             raise ValidationError({"value": ["Boolean values must be 0 or 1"]})
@@ -938,6 +941,7 @@ class TestListMembership(models.Model):
     class Meta:
         ordering = ("order",)
         unique_together = ("test_list", "test",)
+        default_permissions = ()
 
     @classmethod
     def get_test_pack_fields(cls):

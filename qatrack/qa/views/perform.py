@@ -574,6 +574,7 @@ class ChooseUnit(TemplateView):
     template_name = 'units/unittype_list.html'
     active_only = True
     split_sites = True
+    unit_serviceable_only = False
 
     def get_context_data(self, *args, **kwargs):
         """
@@ -592,6 +593,8 @@ class ChooseUnit(TemplateView):
 
         if self.active_only:
             q = q.filter(active=True, unit__active=True)
+        if self.unit_serviceable_only:
+            q = q.filter(unit__is_serviceable=True)
 
         units_ordering = 'unit__%s' % (settings.ORDER_UNITS_BY,)
 
