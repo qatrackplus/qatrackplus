@@ -228,7 +228,7 @@ def create_unit(name=None, number=None, tipe=None):
     if tipe is None:
         tipe = create_unit_type()
 
-    u = Unit(name=name, number=number, date_acceptance=timezone.now(), type=tipe)
+    u = Unit(name=name, number=number, date_acceptance=timezone.now(), type=tipe, is_serviceable=True)
     u.save()
     u.modalities.add(create_modality())
     u.save()

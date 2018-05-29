@@ -696,15 +696,17 @@ class TestForm(forms.ModelForm):
     def clean(self):
         """if test already has some history don't allow for the test type to be changed"""
 
-        user_changing_type = self.instance.type != self.cleaned_data.get("type")
+        cleaned_data = super().clean()
+
+        user_changing_type = self.instance.type != cleaned_data.get("type")
         has_history = models.TestInstance.objects.filter(unit_test_info__test=self.instance).exists()
         if user_changing_type and has_history:
             msg = "You can't change the test type of a test that has already been performed. Revert to '%s' before saving."
             ttype_index = [ttype for ttype, label in models.TEST_TYPE_CHOICES].index(self.instance.type)
             ttype_label = models.TEST_TYPE_CHOICES[ttype_index][1]
-            raise forms.ValidationError(msg % ttype_label)
+            self.add_error('type', forms.ValidationError(msg % ttype_label))
 
-        return self.cleaned_data
+        return cleaned_data
 
 
 class TestListMembershipFilter(admin.SimpleListFilter):
