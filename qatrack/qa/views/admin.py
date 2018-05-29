@@ -11,7 +11,7 @@ from django.views.generic import FormView
 from formtools.preview import FormPreview
 
 from qatrack.qa import models
-from qatrack.qa.testpack import create_testpack, add_test_pack
+from qatrack.qa.testpack import add_test_pack, create_testpack
 
 
 class SetReferencesAndTolerancesForm(forms.Form):
@@ -196,7 +196,9 @@ class ExportTestPack(FormView):
         desc = form.cleaned_data['description']
         user = self.request.user
         name = form.cleaned_data['name']
-        tp = create_testpack(test_lists=tls, cycles=cycles, extra_tests=extra_tests, description=desc, user=user, name=name)
+        tp = create_testpack(
+            test_lists=tls, cycles=cycles, extra_tests=extra_tests, description=desc, user=user, name=name
+        )
 
         response = HttpResponse(json.dumps(tp), content_type='application/json')
         response['Content-Disposition'] = 'attachment; filename=%s' % (name + ".tpk")
