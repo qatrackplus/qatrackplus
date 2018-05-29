@@ -32,7 +32,7 @@ if settings.USE_PARTS:
             cleaned = super().clean()
             location = cleaned.get('location')
             room = self.cleaned_data.get('room')
-            if self.instance.pk is None and p_models.Storage.objects.filter(room=room, location=location).exists():
+            if p_models.Storage.objects.exclude(id=self.instance.id).filter(room=room, location=location).exists():
                 self.add_error('location', ValidationError('Location already exists'))
             return cleaned
 
