@@ -2,50 +2,6 @@
 {
     "model": "qa.tolerance",
     "fields": {
-        "name": "Boolean(Tolerance on fail)",
-        "type": "boolean",
-        "act_low": null,
-        "tol_low": null,
-        "tol_high": null,
-        "act_high": null,
-        "mc_pass_choices": null,
-        "mc_tol_choices": null,
-        "bool_warning_only": true,
-        "created_date": "2018-06-01T16:26:14.489Z",
-        "created_by": [
-            "QATrack+ Internal"
-        ],
-        "modified_date": "2018-06-01T17:56:11.936Z",
-        "modified_by": [
-            "QATrack+ Internal"
-        ]
-    }
-},
-{
-    "model": "qa.tolerance",
-    "fields": {
-        "name": "Boolean(Action on fail)",
-        "type": "boolean",
-        "act_low": null,
-        "tol_low": null,
-        "tol_high": null,
-        "act_high": null,
-        "mc_pass_choices": null,
-        "mc_tol_choices": null,
-        "bool_warning_only": false,
-        "created_date": "2018-06-01T16:26:14.492Z",
-        "created_by": [
-            "QATrack+ Internal"
-        ],
-        "modified_date": "2018-06-01T17:56:11.937Z",
-        "modified_by": [
-            "QATrack+ Internal"
-        ]
-    }
-},
-{
-    "model": "qa.tolerance",
-    "fields": {
         "name": "Absolute(-3.000, -2.000, 2.000, 3.000)",
         "type": "absolute",
         "act_low": -3.0,

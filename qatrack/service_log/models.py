@@ -10,7 +10,7 @@ from django.utils.translation import ugettext as _
 from django.utils import timezone
 
 from qatrack.qa.models import TestListInstance, UnitTestCollection
-from qatrack.units.models import Unit, Vendor
+from qatrack.units.models import Unit, Vendor, NameNaturalKeyManager
 
 re_255 = '([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])'
 color_re = re.compile('^rgba\(' + re_255 + ',' + re_255 + ',' + re_255 + ',(0(\.[0-9][0-9]?)?|1)\)$')
@@ -37,6 +37,11 @@ class ServiceArea(models.Model):
 
     name = models.CharField(max_length=32, unique=True, help_text=_('Enter a short name for this service area'))
     units = models.ManyToManyField(Unit, through='UnitServiceArea', related_name='service_areas')
+
+    objects = NameNaturalKeyManager()
+
+    def natural_key(self):
+        return (self.name,)
 
     def __str__(self):
         return self.name
@@ -67,6 +72,11 @@ class ServiceType(models.Model):
         max_length=512, help_text=_('Give a brief description of this service type'), null=True, blank=True
     )
 
+    objects = NameNaturalKeyManager()
+
+    def natural_key(self):
+        return (self.name,)
+
     def __str__(self):
         return self.name
 
@@ -85,12 +95,17 @@ class ServiceEventStatus(models.Model):
         default=True, help_text=_('Do service events with this status require review?')
     )
     rts_qa_must_be_reviewed = models.BooleanField(
-        default=True, help_text=_('Service events with rts that has not been reviewed can not have this status selected if set to true.')
+        default=True,
+        help_text=_(
+            'Service events with rts that has not been reviewed can not have this status selected if set to true.'
+        ),
     )
     description = models.TextField(
         max_length=512, help_text=_('Give a brief description of this service event status'), null=True, blank=True
     )
     colour = models.CharField(default=settings.DEFAULT_COLOURS[0], max_length=22, validators=[validate_color])
+
+    objects = NameNaturalKeyManager()
 
     class Meta:
         verbose_name_plural = _('Service event statuses')
@@ -105,6 +120,9 @@ class ServiceEventStatus(models.Model):
             except ServiceEventStatus.DoesNotExist:
                 pass
         super(ServiceEventStatus, self).save(*args, **kwargs)
+
+    def natural_key(self):
+        return (self.name,)
 
     def __str__(self):
         return self.name

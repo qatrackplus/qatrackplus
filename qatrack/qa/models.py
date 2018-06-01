@@ -544,7 +544,7 @@ class Tolerance(models.Model):
         return tols
 
     def save(self, *args, **kwargs):
-        self.name = str(self)
+        self.name = get_tolerance_name(self)
         super(Tolerance, self).save(*args, **kwargs)
 
     def natural_key(self):
@@ -552,7 +552,7 @@ class Tolerance(models.Model):
 
     def __str__(self):
         """more helpful interactive display name"""
-        return get_tolerance_name(self)
+        return self.name
 
 
 def get_tolerance_name(tol):

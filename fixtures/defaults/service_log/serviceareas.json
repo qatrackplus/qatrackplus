@@ -1,0 +1,86 @@
+[
+{
+    "model": "service_log.servicearea",
+    "fields": {
+        "name": "Accelerator"
+    }
+},
+{
+    "model": "service_log.servicearea",
+    "fields": {
+        "name": "iView"
+    }
+},
+{
+    "model": "service_log.servicearea",
+    "fields": {
+        "name": "XVI"
+    }
+},
+{
+    "model": "service_log.servicearea",
+    "fields": {
+        "name": "Treatment Table"
+    }
+},
+{
+    "model": "service_log.servicearea",
+    "fields": {
+        "name": "Lasers"
+    }
+},
+{
+    "model": "service_log.servicearea",
+    "fields": {
+        "name": "CTSim"
+    }
+},
+{
+    "model": "service_log.servicearea",
+    "fields": {
+        "name": "Orthovoltage"
+    }
+},
+{
+    "model": "service_log.servicearea",
+    "fields": {
+        "name": "TBI"
+    }
+},
+{
+    "model": "service_log.servicearea",
+    "fields": {
+        "name": "Misc."
+    }
+},
+{
+    "model": "service_log.servicearea",
+    "fields": {
+        "name": "TLS"
+    }
+},
+{
+    "model": "service_log.servicearea",
+    "fields": {
+        "name": "HDR"
+    }
+},
+{
+    "model": "service_log.servicearea",
+    "fields": {
+        "name": "Injector"
+    }
+},
+{
+    "model": "service_log.servicearea",
+    "fields": {
+        "name": "iGuide/HexaPOD"
+    }
+},
+{
+    "model": "service_log.servicearea",
+    "fields": {
+        "name": "C-Arm"
+    }
+}
+]
