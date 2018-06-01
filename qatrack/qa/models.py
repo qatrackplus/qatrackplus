@@ -251,6 +251,9 @@ class FrequencyManager(models.Manager):
     def frequency_choices(self):
         return self.get_queryset().values_list("slug", "name")
 
+    def get_by_natural_key(self, slug):
+        return self.get(slug=slug)
+
 
 class Frequency(models.Model):
     """Frequencies for performing QA tasks with configurable due dates"""
@@ -285,6 +288,9 @@ class Frequency(models.Model):
         if self.due_interval is not None:
             return timezone.timedelta(days=self.due_interval)
 
+    def natural_key(self):
+        return (self.slug,)
+
     def __str__(self):
         return self.name
 
@@ -298,6 +304,9 @@ class StatusManager(models.Manager):
             return self.get_queryset().get(is_default=True)
         except TestInstanceStatus.DoesNotExist:
             return
+
+    def get_by_natural_key(self, slug):
+        return self.get(slug=slug)
 
 
 class TestInstanceStatus(models.Model):
@@ -352,6 +361,9 @@ class TestInstanceStatus(models.Model):
             cur_default.save()
 
         super(TestInstanceStatus, self).save(*args, **kwargs)
+
+    def natural_key(self):
+        return (self.slug,)
 
     def __str__(self):
         return self.name
@@ -410,11 +422,19 @@ class Reference(models.Model):
         return self.value_display()
 
 
+class ToleranceManager(models.Manager):
+
+    def get_by_natural_key(self, name):
+        return (self.name,)
+
+
 class Tolerance(models.Model):
     """
     Model for storing tolerance/action levels and tolerance/action choices
     for multiple choice type tests
     """
+
+    name = models.CharField(max_length=255, unique=True, editable=False)
 
     type = models.CharField(max_length=20, help_text=_("Select whether this will be an absolute or relative tolerance criteria"), choices=TOL_TYPE_CHOICES)
     act_low = models.FloatField(verbose_name=_("%s Low" % ACT_DISP), help_text=_("Value of lower %s level" % ACT_DISP), null=True, blank=True)
@@ -523,25 +543,35 @@ class Tolerance(models.Model):
                 tols[attr] = value * (1. + tv / 100.) if tv is not None else None
         return tols
 
-    @property
-    def name(self):
-        return self.__str__()
+    def save(self, *args, **kwargs):
+        self.name = str(self)
+        super(Tolerance, self).save(*args, **kwargs)
+
+    def natural_key(self):
+        return (self.name,)
 
     def __str__(self):
         """more helpful interactive display name"""
-        vals = (self.act_low, self.tol_low, self.tol_high, self.act_high)
-        if self.type == ABSOLUTE:
-            vals = ["%.3f" % v if v is not None else '--' for v in vals]
-            return "Absolute(%s, %s, %s, %s)" % tuple(vals)
-        elif self.type == PERCENT:
-            vals = ["%.2f%%" % v if v is not None else '--' for v in vals]
-            return "Percent(%s, %s, %s, %s)" % tuple(vals)
-        elif self.type == MULTIPLE_CHOICE:
-            return "M.C.(%s=%s, %s=%s)" % (OK_DISP, ":".join(self.pass_choices()), TOL_DISP, ":".join(self.tol_choices()))
-        elif self.type == BOOLEAN:
-            act = settings.TEST_STATUS_DISPLAY["action"]
-            tol = settings.TEST_STATUS_DISPLAY["tolerance"]
-            return "Boolean(%s on fail)" % (tol if self.bool_warning_only else act)
+        return get_tolerance_name(self)
+
+
+def get_tolerance_name(tol):
+    """Note use an external function here rather than Tolerance method since we also use it
+    in a migration where model methods can't be called"""
+
+    vals = (tol.act_low, tol.tol_low, tol.tol_high, tol.act_high)
+    if tol.type == ABSOLUTE:
+        vals = ["%.3f" % v if v is not None else '--' for v in vals]
+        return "Absolute(%s, %s, %s, %s)" % tuple(vals)
+    elif tol.type == PERCENT:
+        vals = ["%.2f%%" % v if v is not None else '--' for v in vals]
+        return "Percent(%s, %s, %s, %s)" % tuple(vals)
+    elif tol.type == MULTIPLE_CHOICE:
+        return "M.C.(%s=%s, %s=%s)" % (OK_DISP, ":".join(tol.pass_choices()), TOL_DISP, ":".join(tol.tol_choices()))
+    elif tol.type == BOOLEAN:
+        act = settings.TEST_STATUS_DISPLAY["action"]
+        tol_ = settings.TEST_STATUS_DISPLAY["tolerance"]
+        return "Boolean(%s on fail)" % (tol_ if tol.bool_warning_only else act)
 
 
 class CategoryManager(models.Manager):
