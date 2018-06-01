@@ -289,5 +289,22 @@ class UnitAdmin(admin.ModelAdmin):
         return self.render_change_form(request, context, add=add, change=not add, obj=obj, form_url=form_url)
 
 
+class UnitTypeAdmin(admin.ModelAdmin):
+
+    list_display = ['model_name', 'vendor', 'unit_class']
+    list_filter = ['unit_class', 'vendor']
+
+    def get_queryset(self, request):
+        return super(UnitTypeAdmin, self).get_queryset(request).select_related(
+            "vendor",
+            "unit_class",
+        )
+
+    def model_name(self, obj):
+        m = "" if not obj.model else " - %s" % obj.model
+        return "%s: %s%s" % (obj.vendor.name, obj.name, m)
+
+
 admin.site.register(Unit, UnitAdmin)
-admin.site.register([Modality, UnitType, Site, UnitClass, Vendor], admin.ModelAdmin)
+admin.site.register(UnitType, UnitTypeAdmin)
+admin.site.register([Modality, Site, UnitClass, Vendor], admin.ModelAdmin)

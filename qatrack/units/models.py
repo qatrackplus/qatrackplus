@@ -1,4 +1,3 @@
-
 import calendar
 
 from django.conf import settings
@@ -18,6 +17,12 @@ PHOTON = 'photon'
 ELECTRON = 'electron'
 
 
+class NameNaturalKeyManager(models.Manager):
+
+    def get_by_natural_key(self, name):
+        return self.get(name=name)
+
+
 class Vendor(models.Model):
     """ Vendor of Unit
 
@@ -26,6 +31,14 @@ class Vendor(models.Model):
 
     name = models.CharField(max_length=64, unique=True, help_text=_('Name of this vendor'))
     notes = models.TextField(max_length=255, blank=True, null=True, help_text=_('Additional notes about this vendor'))
+
+    objects = NameNaturalKeyManager()
+
+    class Meta:
+        ordering = ("name",)
+
+    def natural_key(self):
+        return (self.name,)
 
     def __str__(self):
         """Display more descriptive name"""
@@ -40,6 +53,15 @@ class UnitClass(models.Model):
 
     name = models.CharField(max_length=64, unique=True, help_text=_('Name of this unit class'))
 
+    objects = NameNaturalKeyManager()
+
+    class Meta:
+        verbose_name_plural = "Unit classes"
+        ordering = ("name",)
+
+    def natural_key(self):
+        return (self.name,)
+
     def __str__(self):
         """Display more descriptive name"""
         return self.name
@@ -52,8 +74,17 @@ class Site(models.Model):
     """
     name = models.CharField(max_length=64, unique=True, help_text=_('Name of this site'))
 
+    class Meta:
+        ordering = ("name",)
+
     def __str__(self):
         return self.name
+
+
+class UnitTypeManager(models.Manager):
+
+    def get_by_natural_key(self, name, model, vendor_name, unitclass_name):
+        return self.get(name=name, model=model, vendor__name=vendor_name, unit_class__name=unitclass_name)
 
 
 class UnitType(models.Model):
@@ -63,7 +94,6 @@ class UnitType(models.Model):
     For example, your Elekta Linacs might form one group, and your Tomo's
     another.
 
-    TODO: improve model types
     """
     vendor = models.ForeignKey(Vendor, null=True, blank=True, on_delete=models.PROTECT)
     unit_class = models.ForeignKey(UnitClass, null=True, blank=True, on_delete=models.PROTECT)
@@ -71,8 +101,15 @@ class UnitType(models.Model):
     name = models.CharField(max_length=50, help_text=_('Name for this unit type'))
     model = models.CharField(max_length=50, null=True, blank=True, help_text=_('Optional model name for this group'))
 
+    objects = UnitTypeManager()
+
     class Meta:
-        unique_together = [('name', 'model')]
+        unique_together = [('name', 'model', 'vendor', 'unit_class',)]
+        ordering = ("vendor__name", "name",)
+
+    def natural_key(self):
+        return (self.name, self.model) + self.vendor.natural_key() + self.unit_class.natural_key()
+    natural_key.dependencies = ["units.vendor", "units.unitclass"]
 
     def __str__(self):
         """Display more descriptive name"""
@@ -93,8 +130,13 @@ class Modality(models.Model):
         unique=True
     )
 
+    objects = NameNaturalKeyManager()
+
     class Meta:
         verbose_name_plural = _('Modalities')
+
+    def natural_key(self):
+        return (self.name,)
 
     def __str__(self):
         return self.name
@@ -236,6 +278,3 @@ class UnitAvailableTime(models.Model):
             uat = UnitAvailableTime(**kwargs)
 
         return uat
-
-
-

@@ -1,0 +1,100 @@
+[
+{
+    "model": "units.vendor",
+    "fields": {
+        "name": "Accuray",
+        "notes": ""
+    }
+},
+{
+    "model": "units.vendor",
+    "fields": {
+        "name": "Best Medical",
+        "notes": ""
+    }
+},
+{
+    "model": "units.vendor",
+    "fields": {
+        "name": "Elekta",
+        "notes": ""
+    }
+},
+{
+    "model": "units.vendor",
+    "fields": {
+        "name": "Fluke Biomedical",
+        "notes": ""
+    }
+},
+{
+    "model": "units.vendor",
+    "fields": {
+        "name": "GE Healthcare",
+        "notes": ""
+    }
+},
+{
+    "model": "units.vendor",
+    "fields": {
+        "name": "IBA",
+        "notes": ""
+    }
+},
+{
+    "model": "units.vendor",
+    "fields": {
+        "name": "Nucletron",
+        "notes": ""
+    }
+},
+{
+    "model": "units.vendor",
+    "fields": {
+        "name": "Philips",
+        "notes": ""
+    }
+},
+{
+    "model": "units.vendor",
+    "fields": {
+        "name": "Standard Imaging",
+        "notes": ""
+    }
+},
+{
+    "model": "units.vendor",
+    "fields": {
+        "name": "Sun Nuclear",
+        "notes": ""
+    }
+},
+{
+    "model": "units.vendor",
+    "fields": {
+        "name": "ScandiDos",
+        "notes": ""
+    }
+},
+{
+    "model": "units.vendor",
+    "fields": {
+        "name": "Siemens",
+        "notes": ""
+    }
+},
+{
+    "model": "units.vendor",
+    "fields": {
+        "name": "Varian",
+        "notes": ""
+    }
+},
+{
+    "model": "units.vendor",
+    "fields": {
+        "name": "Pantak",
+        "notes": ""
+    }
+}
+]

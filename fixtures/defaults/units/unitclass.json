@@ -1,0 +1,62 @@
+[
+{
+    "model": "units.unitclass",
+    "fields": {
+        "name": "Linac"
+    }
+},
+{
+    "model": "units.unitclass",
+    "fields": {
+        "name": "MRI"
+    }
+},
+{
+    "model": "units.unitclass",
+    "fields": {
+        "name": "Orthovoltage"
+    }
+},
+{
+    "model": "units.unitclass",
+    "fields": {
+        "name": "CT"
+    }
+},
+{
+    "model": "units.unitclass",
+    "fields": {
+        "name": "PET"
+    }
+},
+{
+    "model": "units.unitclass",
+    "fields": {
+        "name": "PET-CT"
+    }
+},
+{
+    "model": "units.unitclass",
+    "fields": {
+        "name": "X-Ray"
+    }
+},
+{
+    "model": "units.unitclass",
+    "fields": {
+        "name": "MRI Linac"
+    }
+},
+{
+    "model": "units.unitclass",
+    "fields": {
+        "name": "HDR Brachytherapy"
+    }
+},
+{
+    "model": "units.unitclass",
+    "fields": {
+        "name": "Cobalt"
+    }
+}
+]
