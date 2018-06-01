@@ -4,12 +4,14 @@ from __future__ import unicode_literals
 
 from django.db import migrations
 
-from qatrack.qa.models import get_tolerance_name
+from qatrack.qa.models import get_tolerance_name, Tolerance as Tolerance_
 
 
 def set_name(apps, schema_migrations):
 
     Tolerance = apps.get_model("qa", "Tolerance")
+    Tolerance.pass_choices = Tolerance_.pass_choices
+    Tolerance.tol_choices = Tolerance_.tol_choices
     for t in Tolerance.objects.all():
         t.name = get_tolerance_name(t)
         t.save()
