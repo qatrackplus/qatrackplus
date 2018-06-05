@@ -116,7 +116,8 @@ th.qa-history div{
     width:310px;
     height:1px;
 }
-.history-value,.history-label {
+.history-value,
+.history-label {
     display: inline-block;
     width: 56px;
     text-align: right;
@@ -481,4 +482,15 @@ input[type="number"] {
 }
 row.procedure-open > td:nth-child(1) {
     border-left: 3px solid #00ff00;
+}
+td.qa-category.bar-container {
+    height: inherit;
+}
+td.qa-category .error-bar,
+td.qa-category .procedure-bar,
+td.qa-category .comment-bar {
+    height: inherit;
+}
+#perform-qa-table tr {
+    height: 1px;
 }
