@@ -4,6 +4,7 @@ develop-eggs
 build
 dist
 db/*
+docs/_build
 downloads
 eggs
 src/*.egg-info
