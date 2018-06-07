@@ -63,16 +63,10 @@ require(['jquery', 'icheck'], function($) {
             radioClass: 'iradio_minimal-blue'
         });
 
-        var icon = $('#toggle-icon');
-
-        $('body.sidebar-mini').on('cssClassChanged', function () {
-            var body_class = $(this).attr('class');
-            if (body_class.indexOf('sidebar-collapse') > -1) {
-                $(icon).animateRotate(0, 180, 'slow', 'swing');
-            } else if ($(icon).css('transform') != 'none') {
-                $(icon).animateRotate(180, 0, 'slow', 'swing');
-            }
+        $('#toggle-icon').click(function() {
+            $(this).toggleClass('rotate');
         });
+
 
         $('.toggle-element').each(function () {
             var self = this;

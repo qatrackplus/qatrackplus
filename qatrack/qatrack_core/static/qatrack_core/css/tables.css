@@ -14,18 +14,15 @@ table.dataTable tr td.sorting_3 {
     background-color: #e8ecf4;
     border-color: transparent;
 }
-/*table.dataTable tr.even td.sorting_1 {*/
-    /*background-color: rgba(60, 141, 188, 0.14);*/
-    /*border-color: transparent;*/
-/*}*/
-/*table.dataTable tr.even td.sorting_2 {*/
-    /*background-color: rgba(60, 141, 188, 0.10);*/
-    /*border-color: transparent;*/
-/*}*/
-/*table.dataTable tr.even td.sorting_3 {*/
-    /*background-color: rgba(60, 141, 188, 0.06);*/
-    /*border-color: transparent;*/
-/*}*/
+table.dataTable.table-hover > tbody > tr:hover > td.sorting_1 {
+    background-color: #cdd1d9;
+}
+table.dataTable.table-hover > tbody > tr:hover > td.sorting_2 {
+    background-color: #d6dae2;
+}
+table.dataTable.table-hover > tbody > tr:hover > td.sorting_3 {
+    background-color: #e0e4ec;
+}
 
 .table-condensed > thead > tr > th,
 .table-condensed > tbody > tr > th,

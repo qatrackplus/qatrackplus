@@ -547,3 +547,17 @@ table ul.multiselect-container.dropdown-menu {
     max-height: 500px;
     overflow-y: auto;
 }
+.rotate {
+    -webkit-transform: rotate(180deg);
+       -moz-transform: rotate(180deg);
+        -ms-transform: rotate(180deg);
+         -o-transform: rotate(180deg);
+            transform: rotate(180deg);
+}
+.rotates {
+    -webkit-transition: -webkit-transform 0.5s ease-in-out;
+       -moz-transition:    -moz-transform 0.5s ease-in-out;
+        -ms-transition:     -ms-transform 0.5s ease-in-out;
+         -o-transition:      -o-transform 0.5s ease-in-out;
+            transition:         transform 0.5s ease-in-out;
+}
