@@ -40,6 +40,7 @@ release = 'v0.3.0 beta'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.extlinks',
     'sphinx.ext.todo',
     'sphinx.ext.viewcode',
 ]
@@ -160,6 +161,18 @@ texinfo_documents = [
      author, 'QATrack', 'One line description of project.',
      'Miscellaneous'),
 ]
+
+extlinks = {
+    'mailinglist': ("https://groups.google.com/forum/#!forum/qatrack/%s", ''),
+}
+
+rst_prolog = """
+
+
+.. |maillist| replace:: https://groups.google.com/forum/#!forum/qatrack
+
+
+"""
 
 
 # -- Extension configuration -------------------------------------------------
