@@ -728,14 +728,14 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             self.submit.attr("disabled", true);
 
             latest_composite_call = $.ajax({
-                type:"POST",
-                url:QAURLs.COMPOSITE_URL,
-                data:JSON.stringify(data),
-                contentType:"application/json",
-                dataType:"json",
+                type: "POST",
+                url: QAURLs.COMPOSITE_URL,
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                dataType: "json",
                 success: on_success,
-                traditional:true,
-                error:on_error
+                traditional: true,
+                error: on_error
             });
         };
 
