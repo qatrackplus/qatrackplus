@@ -1,4 +1,6 @@
-import os
+import sys
+
+print(sys.path)
 
 ALLOWED_HOSTS = ['localhost']
 

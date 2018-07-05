@@ -32,7 +32,7 @@ To retrieve files from bitbucket you will need git installed. Follow the relevan
 
 ### Downloading
 
-    git clone https://bitbucket.org/tohccmedphys/qatrackplus.git
+    git clone https://bitbucket.org/SimonGBiggs/qatrackplus.git
     cd qatrackplus
     git checkout py34
     cd deploy/docker

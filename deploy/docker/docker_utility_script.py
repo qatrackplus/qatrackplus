@@ -25,9 +25,6 @@ call_command('migrate', interactive=False)
 
 all_users = User.objects.all()
 if len(all_users) == 0:
-    with open("settings.yml", 'r') as stream:
-        settings = yaml.load(stream)
-
     admin_user = 'admin'
     admin_password = 'admin'
     admin_email = 'admin@example.com'

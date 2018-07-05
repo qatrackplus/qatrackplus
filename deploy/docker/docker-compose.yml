@@ -20,7 +20,6 @@ services:
       - qatrack-postgres:qatrack-postgres
     volumes:
       - ../../.:/usr/src/app:rw
-    env_file: .env
     command: /bin/bash -c 'deploy/docker/init_script.sh'
 
   qatrack-postgres:
