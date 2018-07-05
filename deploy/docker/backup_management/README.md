@@ -1,0 +1,1 @@
+Time stamped backup zip files are made to the backups directory each time the server starts. By copying a backup zip file into the restore directory that when the server boots it will backup its current state and then replace the database and media uploads with the contents of the restore file.

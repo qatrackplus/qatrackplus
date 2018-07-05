@@ -1,0 +1,5 @@
+#!/bin/bash
+
+/bin/bash -c 'echo "import runpy; runpy.run_path(\"/usr/src/app/deploy/docker/docker_utility_script.py\")" | python /usr/src/app/manage.py shell'
+/usr/bin/crontab deploy/docker/crontab
+/usr/src/app/env/bin/gunicorn qatrack.wsgi:application -w 2 -b :8000

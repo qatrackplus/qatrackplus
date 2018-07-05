@@ -1,27 +1,27 @@
+import sys
 import socket
 import os
+import io
+import zipfile
 import time
+import datetime
+import shutil
+
+import numpy as np
 
 from glob import glob
 
 from django.contrib.auth.models import User
 from django.core.management import call_command
 
-
-port = int(os.environ["DB_PORT"]) # 5432
-database_name = os.environ["DB_NAME"]
-
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-while True:
-    try:
-        s.connect((database_name, port))
-        s.close()
-        break
-    except socket.error as ex:
-        time.sleep(0.1)
+sys.path.append('/usr/src/app/deploy/docker')
+from docker_functions import wait_for_postrgres, run_backup, run_restore
 
 
-call_command('migrate')
+wait_for_postrgres()
+
+
+call_command('migrate', interactive=False)
 
 all_users = User.objects.all()
 if len(all_users) == 0:
@@ -36,4 +36,11 @@ if len(all_users) == 0:
         call_command('loaddata', fixture)
 
 
-call_command('collectstatic', '--noinput')
+call_command('collectstatic', interactive=False)
+
+
+run_backup()
+run_restore()
+
+
+
