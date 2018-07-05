@@ -26,7 +26,7 @@ def wait_for_postrgres():
             s.close()
             break
         except socket.error as _:
-            time.sleep(0.1)
+            time.sleep(1)
 
 
 def run_backup(backup_directory='/usr/src/qatrackplus/deploy/docker/backup_management/backups'):    

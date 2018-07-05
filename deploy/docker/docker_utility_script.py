@@ -24,7 +24,9 @@ print('Connected to postgres')
 call_command('migrate', interactive=False)
 
 all_users = User.objects.all()
-if len(all_users) == 0:
+print(len(all_users))
+
+if len(all_users) <= 1:
     admin_user = 'admin'
     admin_password = 'admin'
     admin_email = 'admin@example.com'
