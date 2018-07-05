@@ -14,7 +14,7 @@ from glob import glob
 from django.contrib.auth.models import User
 from django.core.management import call_command
 
-sys.path.append('/usr/src/app/deploy/docker')
+sys.path.append('/usr/src/qatrackplus/deploy/docker')
 from docker_functions import wait_for_postrgres, run_backup, run_restore
 
 print('Waiting for postgres...')
@@ -31,7 +31,7 @@ if len(all_users) == 0:
 
     User.objects.create_superuser(admin_user, admin_email, admin_password)
 
-    fixtures = glob('/usr/src/app/fixtures/defaults/*/*')
+    fixtures = glob('/usr/src/qatrackplus/fixtures/defaults/*/*')
     for fixture in fixtures:
         call_command('loaddata', fixture)
 

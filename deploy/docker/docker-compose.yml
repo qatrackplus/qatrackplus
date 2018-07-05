@@ -6,7 +6,7 @@ services:
     image: nginx:1.15
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ../../qatrack/static:/usr/src/app/qatrack/static:ro
+      - ../../qatrack/static:/usr/src/qatrackplus/qatrack/static:ro
     links:
       - qatrack-django:qatrack-django
     ports:
@@ -19,7 +19,7 @@ services:
     links:
       - qatrack-postgres:qatrack-postgres
     volumes:
-      - ../../.:/usr/src/app:rw
+      - ../../.:/usr/src/qatrackplus:rw
     command: /bin/bash -c 'deploy/docker/init_script.sh'
 
   qatrack-postgres:

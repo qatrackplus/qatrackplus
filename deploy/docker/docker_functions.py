@@ -29,7 +29,7 @@ def wait_for_postrgres():
             time.sleep(0.1)
 
 
-def run_backup(backup_directory='/usr/src/app/deploy/docker/backup_management/backups'):    
+def run_backup(backup_directory='/usr/src/qatrackplus/deploy/docker/backup_management/backups'):    
     if not os.path.exists(backup_directory):
         os.makedirs(backup_directory)
 
@@ -43,7 +43,7 @@ def run_backup(backup_directory='/usr/src/app/deploy/docker/backup_management/ba
     backup_filepath = os.path.join(backup_directory, 'UTC_{}.zip'.format(timestamp))
 
     cwd = os.getcwd()
-    os.chdir('/usr/src/app/qatrack/media')
+    os.chdir('/usr/src/qatrackplus/qatrack/media')
 
     with zipfile.ZipFile(backup_filepath, 'w') as backup_zip:
         backup_zip.writestr('database_dump.json', database_dump.getvalue())
@@ -56,7 +56,7 @@ def run_backup(backup_directory='/usr/src/app/deploy/docker/backup_management/ba
     os.chdir(cwd)
     
     
-def run_restore(restore_directory='/usr/src/app/deploy/docker/backup_management/restore'):        
+def run_restore(restore_directory='/usr/src/qatrackplus/deploy/docker/backup_management/restore'):        
     if not os.path.exists(restore_directory):
         os.makedirs(restore_directory)
         
@@ -69,11 +69,11 @@ def run_restore(restore_directory='/usr/src/app/deploy/docker/backup_management/
         
         call_command('flush', interactive=False)
         
-        for root, _, files in os.walk('/usr/src/app/qatrack/media/uploads'):
+        for root, _, files in os.walk('/usr/src/qatrackplus/qatrack/media/uploads'):
             for f in files:
                 os.unlink(os.path.join(root, f))
                 
-        dirs_to_remove = glob('/usr/src/app/qatrack/media/uploads/*')
+        dirs_to_remove = glob('/usr/src/qatrackplus/qatrack/media/uploads/*')
         for directory in dirs_to_remove:
             shutil.rmtree(directory)
         
@@ -82,7 +82,7 @@ def run_restore(restore_directory='/usr/src/app/deploy/docker/backup_management/
             
             for file in restore_zip.namelist():
                 if file.startswith('uploads/'):
-                    restore_zip.extract(file, '/usr/src/app/qatrack/media/')
+                    restore_zip.extract(file, '/usr/src/qatrackplus/qatrack/media/')
 
                 
         call_command('loaddata', 'database_dump.json', interactive=False)

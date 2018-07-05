@@ -14,16 +14,6 @@ framework.
 
 """
 import os
-import sys
-
-# Not sure why these weren't being added to the path for gunicorn
-add_to_path = [
-    '/usr/src/app/src/django-formtools', 
-    '/usr/src/app/src/django-genericdropdown-master', 
-    '/usr/src/app/src/django-listable']
-
-for path in add_to_path:
-    sys.path.append(path)
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "qatrack.settings")
 
