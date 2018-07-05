@@ -6,7 +6,7 @@ services:
     image: nginx:1.15
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ../../qatrack/static:/usr/src/qatrackplus/qatrack/static:ro
+      - ../../qatrack/static:/usr/src/qatrackplus/qatrack/static:rw
     links:
       - qatrack-django:qatrack-django
     ports:
