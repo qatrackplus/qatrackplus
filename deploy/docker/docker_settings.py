@@ -1,10 +1,8 @@
 import sys
 
-print(sys.path)
-
 ALLOWED_HOSTS = ['localhost']
 
-DEBUG = True
+DEBUG = False
 
 SECRET_FILEPATH = 'deploy/docker/secret_key.txt'
 
