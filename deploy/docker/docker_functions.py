@@ -15,18 +15,17 @@ from django.contrib.auth.models import User
 from django.core.management import call_command
 
 
+DB_HOST = "qatrack-postgres"
+DB_PORT = 5432
 
 def wait_for_postrgres():
-    port = int(os.environ['DB_PORT'])
-    database_host = os.environ['DB_HOST']
-
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     while True:
         try:
-            s.connect((database_host, port))
+            s.connect((DB_HOST, DB_PORT))
             s.close()
             break
-        except socket.error as ex:
+        except socket.error as _:
             time.sleep(0.1)
 
 
@@ -49,7 +48,7 @@ def run_backup(backup_directory='/usr/src/app/deploy/docker/backup_management/ba
     with zipfile.ZipFile(backup_filepath, 'w') as backup_zip:
         backup_zip.writestr('database_dump.json', database_dump.getvalue())
         
-        for dirname, subdirs, files in os.walk('uploads'):
+        for dirname, _, files in os.walk('uploads'):
             backup_zip.write(dirname)
             for filename in files:
                 backup_zip.write(os.path.join(dirname, filename))
@@ -70,7 +69,7 @@ def run_restore(restore_directory='/usr/src/app/deploy/docker/backup_management/
         
         call_command('flush', interactive=False)
         
-        for root, dirs, files in os.walk('/usr/src/app/qatrack/media/uploads'):
+        for root, _, files in os.walk('/usr/src/app/qatrack/media/uploads'):
             for f in files:
                 os.unlink(os.path.join(root, f))
                 

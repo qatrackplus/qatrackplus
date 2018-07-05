@@ -6,33 +6,35 @@ This is a development version of QATrack+. It has not undergone sufficient testi
 
 ## Prerequisites
 
+This has been tested with Ubuntu 18.04
+
 ### Docker and Docker-Compose
 
-This installation method requires docker-compose and docker. Go to the following web address and follow all the relevant instructions to install docker and docker-compose on your system.
+Go to the following web address and follow all the relevant instructions to install docker-ce and docker-compose on your system.
 
- * https://docs.docker.com/compose/install/
- * docker-compose can be as simple as `pip install docker-compose`
+* docker-ce -- <https://docs.docker.com/install/>
+  * On Ubuntu 18.04 this can be achieved with `sudo snap install docker`
+* docker-compose -- `pip install docker-compose`
 
 If you have issues using docker you may have to reboot your computer. If you are running linux it may also help to follow the post install instructions:
 
- * https://docs.docker.com/engine/installation/linux/linux-postinstall/
+* <https://docs.docker.com/engine/installation/linux/linux-postinstall/>
+
+Before continuing please verify that you can run `docker run hello-world` in a terminal.
 
 ### Git
 
-To easily retrieve files from bitbucket you will need git installed. Follow the relevant instructions at the following web address for your operating system:
+To retrieve files from bitbucket you will need git installed. Follow the relevant instructions at the following web address for your operating system:
 
- * https://www.atlassian.com/git/tutorials/install-git
+* <https://www.atlassian.com/git/tutorials/install-git>
 
 ## Docker QATrack+ (0.3.0-dev version) usage
 
 ### Downloading
 
-    git clone https://bitbucket.org/SimonGBiggs/qatrackplus.git
-
+    git clone https://bitbucket.org/tohccmedphys/qatrackplus.git
     cd qatrackplus
-
     git checkout py34
-
     cd deploy/docker
 
 ### Installing
@@ -43,13 +45,27 @@ To run any docker-compose commands you need to be within the `qatrackplus/deploy
 
 To start the server once it has been built run:
 
-    docker-compose up -d
-    
-This will start the server in such a way that it will automatically turn on when you boot your computer/server.
+    docker-compose up
 
-Go to http://localhost in browser to see the server.
-If you get a `bad gateway` page please just refresh the page until the server has completed its start up procedure (approximately 10 seconds depending on your hardware). 
+Go to <http://localhost> in browser to see the server.
+If you get a `bad gateway` page please just refresh the page until the server has completed its start up procedure (approximately 10 seconds depending on your hardware).
 Default login is username admin, password admin.
+
+### Troubleshooting
+
+To troubleshoot any issues at this stage you can call the following:
+
+```bash
+docker run -ti --entrypoint=bash docker_qatrack-django
+```
+
+### Making QATrack+ start on boot
+
+```bash
+docker-compose up -d
+```
+
+This will start the server in such a way that it will automatically turn on when you boot your computer/server.
 
 ### Customising your installation
 
@@ -57,7 +73,7 @@ All edits that normally would have gone within a custom `local_settings.py` file
 
 There are also a range of environment variables that can be edited to suit your needs within `qatrackplus/deploy/docker/.env`.
 
-If you wish to add extra python packages to your setup add them within `qatrackplus/deploy/docker/user_requirements.txt`. Follow the standard requirement file conventions explained at https://pip.pypa.io/en/stable/user_guide/.
+If you wish to add extra python packages to your setup add them within `qatrackplus/deploy/docker/user_requirements.txt`. Follow the standard requirement file conventions explained at <https://pip.pypa.io/en/stable/user_guide/>.
 
 After changing any files within qatrackplus you need to run the following to make the updates active.
 
@@ -91,6 +107,14 @@ This restore method will also successfully restore backup files created on a dif
 
 ### Delete all docker data
 
-If for some reason you need it, the following command will delete all docker data from all docker projects:
+If for some reason you need it, the following command will delete all docker data from all docker projects (WARNING, IRREVERSABLE):
 
-    docker stop $(docker ps -a -q) && docker rm $(docker ps -a -q) && echo 'y' | docker volume prune
+```bash
+docker stop $(docker ps -a -q) && docker rm $(docker ps -a -q)
+```
+
+And this will delete all of the cache:
+
+```bash
+echo 'y' | docker volume prune
+```

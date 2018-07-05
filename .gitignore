@@ -34,6 +34,8 @@ deployLocal.py
 *.db
 coverage.xml
 .noseids
+deploy/docker/backup_management/*/*.zip
+deploy/docker/secret_key.txt
 logs/
 qatrack/accel_migration_tool/db/
 qatrack/accel_migration_tool/local_accel_settings.py

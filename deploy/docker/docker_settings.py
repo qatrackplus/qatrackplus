@@ -1,19 +1,30 @@
 import os
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['localhost']
 
-DEBUG = os.getenv('DEBUG', 'NO').lower() in ('on', 'true', 'y', 'yes')
+DEBUG = True
 
-SECRET_KEY = os.environ['SECRET_KEY']
+SECRET_FILEPATH = 'deploy/docker/secret_key.txt'
+
+try:
+    with open(SECRET_FILEPATH, 'r') as f:
+        SECRET_KEY = f.read()
+except IOError:
+    import secrets
+
+    SECRET_KEY = secrets.token_urlsafe(64)
+
+    with open(SECRET_FILEPATH, 'w') as f:
+        f.write(SECRET_KEY)
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.environ['DB_NAME'],
-        'USER': os.environ['DB_USER'],
-        'PASSWORD': os.environ['DB_PASS'],
-        'HOST': os.environ['DB_HOST'],
-        'PORT': os.environ['DB_PORT']
+        'NAME': "postgres",
+        'USER': "postgres",
+        'PASSWORD': "postgres",
+        'HOST': "qatrack-postgres",
+        'PORT': 5432
     }
 }
 

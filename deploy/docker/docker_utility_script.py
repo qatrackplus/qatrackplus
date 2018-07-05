@@ -17,17 +17,20 @@ from django.core.management import call_command
 sys.path.append('/usr/src/app/deploy/docker')
 from docker_functions import wait_for_postrgres, run_backup, run_restore
 
-
+print('Waiting for postgres...')
 wait_for_postrgres()
-
+print('Connected to postgres')
 
 call_command('migrate', interactive=False)
 
 all_users = User.objects.all()
 if len(all_users) == 0:
-    admin_user = os.getenv('ADMIN_USER', 'admin')
-    admin_password = os.getenv('ADMIN_PASSWORD', 'admin')
-    admin_email = os.getenv('ADMIN_EMAIL', 'admin@example.com')
+    with open("settings.yml", 'r') as stream:
+        settings = yaml.load(stream)
+
+    admin_user = 'admin'
+    admin_password = 'admin'
+    admin_email = 'admin@example.com'
 
     User.objects.create_superuser(admin_user, admin_email, admin_password)
 
