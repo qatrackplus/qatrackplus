@@ -25,8 +25,4 @@ services:
     restart: always
     image: postgres:10.4
     volumes:
-      - qatrack-db:/var/lib/postgresql/data/
-
-
-volumes:
-  qatrack-db:
+      - ./postgres-data:/var/lib/postgresql/data:rw
