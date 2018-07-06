@@ -20,7 +20,10 @@ flake8:
 docs:
 	cd docs && make html
 
-autobuild:
+docs-autobuild:
 	sphinx-autobuild docs docs/_build/html
 
-.PHONY: test test_simple test_broker yapf flake8 help autobuild docs
+qatrack_daemon.conf:
+	sed 's/YOURUSERNAMEHERE/$(USER)/' deploy/apache24_daemon.conf > qatrack.conf
+
+.PHONY: test test_simple test_broker yapf flake8 help autobuild docs qatrack_daemon.conf

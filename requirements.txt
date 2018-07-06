@@ -31,7 +31,6 @@ matplotlib==2.2.2
 numpy==1.14.2
 pandas==0.23.0
 pep8==1.7.0
-psycopg2==2.6; sys_platform=='linux'
 pydicom==1.0.2
 pylinac==2.0.1
 pylint==1.6.4

@@ -39,3 +39,4 @@ logs/
 qatrack/accel_migration_tool/db/
 qatrack/accel_migration_tool/local_accel_settings.py
 cover/
+qatrack*.conf
