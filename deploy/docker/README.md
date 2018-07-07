@@ -84,19 +84,12 @@ docker-compose up -d
 
 This will start the server in such a way that it will automatically turn on when you boot your computer/server.
 
-### Customising your installation
+### Changing from port 80 to a different port
 
-All edits that normally would have gone within a custom `local_settings.py` file need to now go within `qatrackplus/deploy/docker/user_settings.py`.
-
-There are also a range of environment variables that can be edited to suit your needs within `qatrackplus/deploy/docker/.env`.
-
-If you wish to add extra python packages to your setup add them within `qatrackplus/deploy/docker/user_requirements.txt`. Follow the standard requirement file conventions explained at <https://pip.pypa.io/en/stable/user_guide/>.
-
-After changing any files within qatrackplus you need to run the following to make the updates active.
-
-    docker-compose stop
-    docker-compose build
-    docker-compose up -d
+The first number of the `ports` item within `docker-compose.yml` can be changed
+to use a port that is different to port 80. For example, if `80:80` was changed
+to `8080:80` then you would need to type <http://localhost:8080> within your
+browser to see QATrack+.
 
 ### Shutdown the server
 
