@@ -42,8 +42,6 @@ DATA_DIRECTORY = os.path.join(QATRACK_DIRECTORY, "deploy/docker/user-data")
 BACKUP_DIRECTORY = os.path.join(DATA_DIRECTORY, "backup-management/backups")
 RESTORE_DIRECTORY = os.path.join(DATA_DIRECTORY, "backup-management/restore")
 
-sys.path.append
-
 
 def wait_for_postrgres():
     """Use this to wait for postgres to be ready
@@ -143,10 +141,9 @@ def initialisation():
     call_command('migrate', interactive=False)
 
     all_users = User.objects.all()
-    # breakpoint here after upgraded to python 3.7
-    print(len(all_users))
+    is_superuser = [user.is_superuser for user in all_users]
 
-    if len(all_users) <= 1:
+    if not np.any(is_superuser):
         admin_user = 'admin'
         admin_password = 'admin'
         admin_email = 'admin@example.com'
