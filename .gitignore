@@ -42,4 +42,5 @@ cover/
 deploy/docker/backup_management/*/*.zip
 deploy/docker/secret_key.txt
 deploy/docker/user-data
+.vscode
 qatrack*.conf
