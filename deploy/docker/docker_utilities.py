@@ -15,32 +15,36 @@
 """A set of utilities to manage the docker instance of qatrack
 """
 
-import sys
 import socket
 import os
-import io
 import zipfile
 import time
 import datetime
 import shutil
 import pathlib
+import subprocess
 from glob import glob
 
-import numpy as np
+import psycopg2
 
-from django.contrib.auth.models import User
-from django.core.management import call_command
 
+DB_NAME = "postgres"
+DB_USER = "postgres"
+DB_PASSWORD = "postgres"
 DB_HOST = "qatrack-postgres"
 DB_PORT = 5432
 
 QATRACK_DIRECTORY = "/usr/src/qatrackplus"
-MEDIA_DIRECTORY = os.path.join(QATRACK_DIRECTORY, "qatrack/media")
-FIXTURES_GLOB = os.path.join(QATRACK_DIRECTORY, "fixtures/defaults/*/*")
+MEDIA_DIRECTORY: str = os.path.join(QATRACK_DIRECTORY, "qatrack/media")
 
-DATA_DIRECTORY = os.path.join(QATRACK_DIRECTORY, "deploy/docker/user-data")
-BACKUP_DIRECTORY = os.path.join(DATA_DIRECTORY, "backup-management/backups")
-RESTORE_DIRECTORY = os.path.join(DATA_DIRECTORY, "backup-management/restore")
+DATA_DIRECTORY: str = os.path.join(
+    QATRACK_DIRECTORY, "deploy/docker/user-data")
+BACKUP_DIRECTORY: str = os.path.join(
+    DATA_DIRECTORY, "backup-management/backups")
+RESTORE_DIRECTORY: str = os.path.join(
+    DATA_DIRECTORY, "backup-management/restore")
+
+DATABASE_DUMP_FILE: str = 'database_dump.sql'
 
 
 def wait_for_postrgres():
@@ -57,19 +61,14 @@ def wait_for_postrgres():
 
 
 def run_backup():
-    """A method to backup qatrackplus, this needs to be rewritten to directly use postgres
+    """A method to backup qatrackplus, this needs to be rewritten to directly
+    use postgres
     """
 
     pathlib.Path(BACKUP_DIRECTORY).mkdir(parents=True, exist_ok=True)
 
     timestamp = datetime.datetime.fromtimestamp(
         time.time()).strftime('%Y%m%d%H%M%S')
-    database_dump = io.StringIO()
-
-    wait_for_postrgres()
-
-    call_command('dumpdata', '--indent=2', '--exclude', 'auth.permission',
-                 '--exclude', 'contenttypes', stdout=database_dump)
 
     backup_filepath = os.path.join(
         BACKUP_DIRECTORY, 'UTC_{}.zip'.format(timestamp))
@@ -77,8 +76,15 @@ def run_backup():
     cwd = os.getcwd()
     os.chdir(MEDIA_DIRECTORY)
 
+    wait_for_postrgres()
+
+    popen = subprocess.Popen(
+        ['pg_dump', '-h', DB_HOST, '-U', DB_USER],
+        stdout=subprocess.PIPE)
+
     with zipfile.ZipFile(backup_filepath, 'w') as backup_zip:
-        backup_zip.writestr('database_dump.json', database_dump.getvalue())
+        backup_zip.writestr(DATABASE_DUMP_FILE, popen.stdout.read())
+        popen.wait()
 
         for dirname, _, files in os.walk('uploads'):
             backup_zip.write(dirname)
@@ -89,7 +95,8 @@ def run_backup():
 
 
 def run_restore():
-    """A method to restore a qatrackplus backup, this needs to be rewritten to directly use postgres
+    """A method to restore a qatrackplus backup, this needs to be rewritten to
+    directly use postgres
     """
 
     pathlib.Path(RESTORE_DIRECTORY).mkdir(parents=True, exist_ok=True)
@@ -98,63 +105,54 @@ def run_restore():
 
     if len(restore_filelist) == 1:
         restore_filepath = restore_filelist[0]
+        print('Restoring database from {}'.format(
+            os.path.basename(restore_filepath)))
 
-        call_command('flush', interactive=False)
-
-        for root, _, files in os.walk(os.path.join(MEDIA_DIRECTORY, 'uploads')):
+        for root, _, files in os.walk(
+            os.path.join(MEDIA_DIRECTORY, 'uploads')
+        ):
             for f in files:
                 os.unlink(os.path.join(root, f))
 
-        dirs_to_remove = glob(os.walk(os.path.join(MEDIA_DIRECTORY, 'uploads/*')))
-        for directory in dirs_to_remove:
-            shutil.rmtree(directory)
+        shutil.rmtree(os.path.join(MEDIA_DIRECTORY, 'uploads/'))
 
         with zipfile.ZipFile(restore_filepath, 'r') as restore_zip:
-            restore_zip.extract('database_dump.json')
+            restore_zip.extract(DATABASE_DUMP_FILE)
 
             for file in restore_zip.namelist():
                 if file.startswith('uploads/'):
                     restore_zip.extract(
                         file, MEDIA_DIRECTORY)
 
-        call_command('loaddata', 'database_dump.json', interactive=False)
+        with open(DATABASE_DUMP_FILE, 'r') as database_dump:
 
-        os.unlink('database_dump.json')
+            with psycopg2.connect(database='template1', user=DB_USER,
+                                  password=DB_PASSWORD, host=DB_HOST) as conn:
+                with conn.cursor() as cur:
+                    conn.autocommit = True
+                    cur.execute("""
+                        UPDATE pg_database
+                        SET datallowconn = 'false'
+                        WHERE datname = %s;""", (DB_NAME,))
+                    cur.execute("""
+                        SELECT pg_terminate_backend(pid)
+                        FROM pg_stat_activity
+                        WHERE datname = %s;""", (DB_NAME,))
+                    cur.execute("DROP DATABASE {};".format(DB_NAME))
+                    cur.execute("CREATE DATABASE {};".format(DB_NAME))
+                    cur.execute("""
+                        UPDATE pg_database
+                        SET datallowconn = 'true'
+                        WHERE datname = %s;""", (DB_NAME,))
 
-        call_command('migrate', interactive=False)
+            subprocess.run(
+                ['psql', '-h', DB_HOST, '-U', DB_USER, DB_NAME],
+                stdin=database_dump)
 
+        os.unlink(DATABASE_DUMP_FILE)
         os.unlink(restore_filepath)
 
     if len(restore_filelist) > 1:
         raise ValueError(
-            'Only one restoration file should be placed within the restore directory')
-
-
-def initialisation():
-    """This function is passed to the django manage.py when the docker image boots
-    """
-
-    print('Waiting for postgres...')
-    wait_for_postrgres()
-    print('Connected to postgres')
-
-    call_command('migrate', interactive=False)
-
-    all_users = User.objects.all()
-    is_superuser = [user.is_superuser for user in all_users]
-
-    if not np.any(is_superuser):
-        admin_user = 'admin'
-        admin_password = 'admin'
-        admin_email = 'admin@example.com'
-
-        User.objects.create_superuser(admin_user, admin_email, admin_password)
-
-        fixtures = glob(FIXTURES_GLOB)
-        for fixture in fixtures:
-            call_command('loaddata', fixture)
-
-    call_command('collectstatic', interactive=False)
-
-    run_backup()
-    run_restore()
+            'Only one restoration file should be placed within the restore '
+            'directory')
