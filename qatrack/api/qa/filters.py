@@ -118,33 +118,13 @@ class TestFilter(filters.FilterSet):
         }
 
 
-class UnitTestCollectionFilter(filters.FilterSet):
-
-    unit = filters.RelatedFilter(UnitFilter, name="unit", queryset=Unit.objects.all())
-    frequency = filters.RelatedFilter(FrequencyFilter, name="frequency", queryset=models.Frequency.objects.all())
-    assigned_to = filters.RelatedFilter(GroupFilter, name="assigned_to", queryset=Group.objects.all())
-    visible_to = filters.RelatedFilter(GroupFilter, name="visible_to", queryset=Group.objects.all())
-    last_instance = filters.RelatedFilter(
-        "TestListInstanceFilter", name="last_instance", queryset=models.TestListInstance.objects.all()
-    )
-
-    class Meta:
-        model = models.UnitTestCollection
-        fields = {
-            "due_date": "__all__",
-            "auto_schedule": "__all__",
-            "active": "__all__",
-            "name": "__all__",
-        }
-
-
 class TestListFilter(filters.FilterSet):
 
     created_by = filters.RelatedFilter(UserFilter, name="created_by", queryset=User.objects.all())
     modified_by = filters.RelatedFilter(UserFilter, name="modified_by", queryset=User.objects.all())
     tests = filters.RelatedFilter(TestFilter, name="tests", queryset=models.Test.objects.all())
     utcs = filters.RelatedFilter(
-        UnitTestCollectionFilter,
+        "qatrack.api.qa.filters.UnitTestCollectionFilter",
         name="utcs",
         queryset=models.UnitTestCollection.objects.all(),
     )
@@ -158,6 +138,54 @@ class TestListFilter(filters.FilterSet):
             "warning_message": "__all__",
             "created": "__all__",
             "modified": "__all__",
+        }
+
+
+class TestListCycleFilter(filters.FilterSet):
+
+    created_by = filters.RelatedFilter(UserFilter, name="created_by", queryset=User.objects.all())
+    modified_by = filters.RelatedFilter(UserFilter, name="modified_by", queryset=User.objects.all())
+    test_lists = filters.RelatedFilter(TestListFilter, name="test_lists", queryset=models.TestList.objects.all())
+    utcs = filters.RelatedFilter(
+        "api.qa.filters.UnitTestCollectionFilter",
+        name="utcs",
+        queryset=models.UnitTestCollection.objects.all(),
+    )
+
+    class Meta:
+        model = models.TestListCycle
+        fields = {
+            "name": "__all__",
+            "slug": "__all__",
+            "description": "__all__",
+            "drop_down_label": "__all__",
+            "day_option_text": "__all__",
+            "created": "__all__",
+            "modified": "__all__",
+        }
+
+
+class UnitTestCollectionFilter(filters.FilterSet):
+
+    unit = filters.RelatedFilter(UnitFilter, name="unit", queryset=Unit.objects.all())
+    frequency = filters.RelatedFilter(FrequencyFilter, name="frequency", queryset=models.Frequency.objects.all())
+    assigned_to = filters.RelatedFilter(GroupFilter, name="assigned_to", queryset=Group.objects.all())
+    visible_to = filters.RelatedFilter(GroupFilter, name="visible_to", queryset=Group.objects.all())
+    last_instance = filters.RelatedFilter(
+        "TestListInstanceFilter", name="last_instance", queryset=models.TestListInstance.objects.all()
+    )
+
+    test_list = filters.RelatedFilter(TestListFilter, field_name="test_list")
+    test_list_cycle = filters.RelatedFilter(TestListCycleFilter, field_name="test_list_cycle")
+
+    class Meta:
+        model = models.UnitTestCollection
+        fields = {
+            "due_date": "__all__",
+            "auto_schedule": "__all__",
+            "active": "__all__",
+            "name": "__all__",
+            "content_type": "__all__",
         }
 
 
@@ -262,30 +290,6 @@ class TestInstanceFilter(filters.FilterSet):
             "comment": "__all__",
             "work_started": "__all__",
             "work_completed": "__all__",
-            "created": "__all__",
-            "modified": "__all__",
-        }
-
-
-class TestListCycleFilter(filters.FilterSet):
-
-    created_by = filters.RelatedFilter(UserFilter, name="created_by", queryset=User.objects.all())
-    modified_by = filters.RelatedFilter(UserFilter, name="modified_by", queryset=User.objects.all())
-    test_lists = filters.RelatedFilter(TestListFilter, name="test_lists", queryset=models.TestList.objects.all())
-    utcs = filters.RelatedFilter(
-        UnitTestCollectionFilter,
-        name="utcs",
-        queryset=models.UnitTestCollection.objects.all(),
-    )
-
-    class Meta:
-        model = models.TestListCycle
-        fields = {
-            "name": "__all__",
-            "slug": "__all__",
-            "description": "__all__",
-            "drop_down_label": "__all__",
-            "day_option_text": "__all__",
             "created": "__all__",
             "modified": "__all__",
         }

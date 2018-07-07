@@ -4,6 +4,7 @@ develop-eggs
 build
 dist
 db/*
+docs/_build
 downloads
 eggs
 src/*.egg-info
@@ -41,3 +42,4 @@ cover/
 deploy/docker/backup_management/*/*.zip
 deploy/docker/secret_key.txt
 deploy/docker/postgres-data
+qatrack*.conf
