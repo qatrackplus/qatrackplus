@@ -41,5 +41,6 @@ qatrack/accel_migration_tool/local_accel_settings.py
 cover/
 deploy/docker/backup_management/*/*.zip
 deploy/docker/secret_key.txt
-deploy/docker/postgres-data
+deploy/docker/user-data
+Pipfile
 qatrack*.conf

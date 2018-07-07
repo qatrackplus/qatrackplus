@@ -28,15 +28,16 @@ services:
 
   qatrack-django:
     restart: always
-    build: ../../.
+    image: python:3.7
     links:
       - qatrack-postgres:qatrack-postgres
     volumes:
       - ../../.:/usr/src/qatrackplus:rw
-    command: /bin/bash -c 'deploy/docker/init_script.sh'
+      - ./user-data/pip-cache:/root/.cache/pip:rw
+    command: /bin/bash -c 'cd /usr/src/qatrackplus; deploy/docker/init.sh'
 
   qatrack-postgres:
     restart: always
     image: postgres:10.4
     volumes:
-      - ./postgres-data:/var/lib/postgresql/data:rw
+      - ./user-data/postgres:/var/lib/postgresql/data:rw

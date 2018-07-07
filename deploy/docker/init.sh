@@ -15,8 +15,23 @@
 #    limitations under the License.
 
 echo "Running Docker Init Script"
-cp /usr/src/qatrackplus/deploy/docker/docker_settings.py /usr/src/qatrackplus/qatrack/local_settings.py
-echo "import runpy; runpy.run_path(\"/usr/src/qatrackplus/deploy/docker/docker_utility_script.py\")" | python /usr/src/qatrackplus/manage.py shell
+
+pip install virtualenv
+mkdir -p deploy/docker/user-data/python-virtualenv
+virtualenv deploy/docker/user-data/python-virtualenv
+source deploy/docker/user-data/python-virtualenv/bin/activate
+
+pip install -r requirements.txt
+pip install -r requirements.postgres.txt
+
+initialisation="
+import sys
+sys.path.append('/usr/src/qatrackplus/deploy/docker')
+import docker_utilities
+docker_utilities.initialisation()
+"
+
+echo "$initialisation" | python /usr/src/qatrackplus/manage.py shell
 
 # /usr/bin/crontab deploy/docker/crontab
 gunicorn qatrack.wsgi:application -w 2 -b :8000
