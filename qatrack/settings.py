@@ -514,6 +514,9 @@ DEFAULT_AVAILABLE_TIMES = {
     'hours_saturday': datetime.timedelta(hours=0, minutes=0),
 }
 
+if os.path.exists('/root/.is_inside_docker'):
+    from .docker_settings import *  # NOQA
+
 # ------------------------------------------------------------------------------
 # local_settings contains anything that should be overridden
 # based on site specific requirements (e.g. deployment, development etc)

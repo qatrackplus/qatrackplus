@@ -16,6 +16,8 @@
 
 echo "Running Docker Init Script"
 
+touch /root/.is_inside_docker
+
 pip install virtualenv
 mkdir -p deploy/docker/user-data/python-virtualenv
 virtualenv deploy/docker/user-data/python-virtualenv
