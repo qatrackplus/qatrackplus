@@ -21,7 +21,6 @@ mkdir -p deploy/docker/user-data/python-virtualenv
 virtualenv deploy/docker/user-data/python-virtualenv
 source deploy/docker/user-data/python-virtualenv/bin/activate
 
-pip install -r requirements.txt
 pip install -r requirements.postgres.txt
 
 initialisation="
