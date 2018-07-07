@@ -39,17 +39,29 @@ To retrieve files from bitbucket you will need git installed. Follow the relevan
 
 ### Installing
 
-To run any docker-compose commands you need to be within the `qatrackplus/deploy/docker` directory. To build the server run the following:
-
-    docker-compose build
-
-To start the server once it has been built run:
+To run any docker-compose commands you need to be within the
+`qatrackplus/deploy/docker` directory. To build and start the server run the
+following:
 
     docker-compose up
 
-Go to <http://localhost> in browser to see the server.
-If you get a `bad gateway` page please just refresh the page until the server has completed its start up procedure (approximately 10 seconds depending on your hardware).
-Default login is username admin, password admin.
+On initial run this will take quite some time to load.
+
+Wait until you see something like the following within your terminal:
+
+```bash
+qatrack-django_1    | [2018-07-07 15:31:44 +0000] [509] [INFO] Starting gunicorn 19.3.0
+qatrack-django_1    | [2018-07-07 15:31:44 +0000] [509] [INFO] Listening at: http://0.0.0.0:8000 (509)
+qatrack-django_1    | [2018-07-07 15:31:44 +0000] [509] [INFO] Using worker: sync
+qatrack-django_1    | [2018-07-07 15:31:44 +0000] [512] [INFO] Booting worker with pid: 512
+qatrack-django_1    | [2018-07-07 15:31:44 +0000] [514] [INFO] Booting worker with pid: 514
+```
+
+Once the `Listening at: http://0.0.0.0:8000` line is visible go to
+<http://localhost> in your computer's browser to see the server.
+
+Default login is username admin, password admin. You should change this through
+the admin interface once you have first logged in.
 
 ### Troubleshooting
 
