@@ -89,7 +89,8 @@ This will start the server in such a way that it will automatically turn on when
 The first number of the `ports` item within `docker-compose.yml` can be changed
 to use a port that is different to port 80. For example, if `80:80` was changed
 to `8080:80` then you would need to type <http://localhost:8080> within your
-browser to see QATrack+.
+browser to see QATrack+. After editing `docker-compose.yml` you need to rerun
+`docker-compose up`.
 
 ### Shutdown the server
 
