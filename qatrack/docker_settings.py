@@ -42,8 +42,3 @@ DATABASES = {
         'PORT': 5432
     }
 }
-
-try:
-    from .user_settings import *
-except ImportError:
-    pass
