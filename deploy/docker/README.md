@@ -43,6 +43,7 @@ To run any docker-compose commands you need to be within the
 `qatrackplus/deploy/docker` directory. To build and start the server run the
 following:
 
+    docker-compose build
     docker-compose up
 
 On initial run this will take quite some time to load.
@@ -63,13 +64,17 @@ Once the `Listening at: http://0.0.0.0:8000` line is visible go to
 Default login is username admin, password admin. You should change this through
 the admin interface once you have first logged in.
 
-### Troubleshooting
+### Accessing the Django shell
 
-To troubleshoot any issues at this stage you can call the following:
+If you need to access the Django shell run the following in another terminal:
 
 ```bash
-docker run -ti --entrypoint=bash docker_qatrack-django
+docker exec -ti docker_qatrack-django_1 /bin/bash
+source deploy/docker/user-data/python-virtualenv/bin/activate
+python manage.py shell
 ```
+
+This requires that the containers are already running.
 
 ### Making QATrack+ start on boot
 

@@ -28,7 +28,7 @@ services:
 
   qatrack-django:
     restart: always
-    image: python:3.6
+    build: ./django
     links:
       - qatrack-postgres:qatrack-postgres
     volumes:

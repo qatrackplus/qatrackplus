@@ -14,18 +14,8 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-echo "Running Docker Init Script"
+echo "init.sh"
 
-echo 'deb http://apt.postgresql.org/pub/repos/apt/ stretch-pgdg main' > /etc/apt/sources.list.d/pgdg.list
-wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
-apt-get update
-apt-get install -y postgresql-client-10
-
-PGPASSWORD=postgres
-
-touch /root/.is_inside_docker
-
-pip install virtualenv
 mkdir -p deploy/docker/user-data/python-virtualenv
 virtualenv deploy/docker/user-data/python-virtualenv
 source deploy/docker/user-data/python-virtualenv/bin/activate
@@ -44,6 +34,7 @@ docker_utilities.run_backup()
 docker_utilities.run_restore()
 "
 
+PGPASSWORD=postgres
 echo "$backup_restore" | python
 
 initialisation="
