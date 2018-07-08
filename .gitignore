@@ -39,9 +39,6 @@ logs/
 qatrack/accel_migration_tool/db/
 qatrack/accel_migration_tool/local_accel_settings.py
 cover/
-deploy/docker/backup_management/*/*.zip
-deploy/docker/secret_key.txt
 deploy/docker/user-data
-deploy/docker/nginx.conf
 .vscode
 qatrack*.conf

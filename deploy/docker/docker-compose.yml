@@ -17,15 +17,14 @@ version: "3.6"
 services:
   qatrack-nginx:
     restart: always
-    build: ./nginx
+    build: nginx:1.15
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf:rw
       - ../../qatrack/static:/usr/src/qatrackplus/qatrack/static:ro
     links:
       - qatrack-django:qatrack-django
     ports:
       - "80:80"
-      - "443:443"
 
   qatrack-django:
     restart: always
