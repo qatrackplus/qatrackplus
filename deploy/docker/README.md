@@ -183,15 +183,22 @@ Once any files have changed in the qatrackplus directory you need to run the fol
 
 ### Backup management
 
-Everytime `docker-compose up` is run a timestamped backup zip file of both the database and uploaded files is created. These backups are stored within `qatrackplus/deploy/docker/user-data/backup-management/backups`. To restore a backup zip file copy it to the restore directory found at `qatrackplus/deploy/docker/user-data/backup-management/restore`. The restoration will occur next time `docker-compose up` is called. After successful restoration the zip file within the restore directory is deleted.
+Everytime `docker-compose up` is run a timestamped backup zip file of the
+database, uploaded files, and your site specific css is created. These backups
+are stored within `qatrackplus/deploy/docker/user-data/backup-management/backups`.
+To restore a backup zip file copy it to the restore directory found at
+`qatrackplus/deploy/docker/user-data/backup-management/restore`.
+The restoration will occur next time `docker-compose up` is called. After
+successful restoration the zip file within the restore directory is deleted.
 
-This restore method will also successfully restore backup files created on a different machine.
-However it will only successfully restore a like for like QATrack+ version.
-This cannot be used when upgrading between versions.
+This restore method will also successfully restore backup files created on a
+different machine. However it will only successfully restore a like for like
+QATrack+ version. This cannot be used when upgrading between versions.
 
 ### Delete all docker data
 
-If for some reason you need it, the following command will delete all docker data from all docker projects (WARNING, IRREVERSABLE):
+If for some reason you need it, the following command will delete all docker
+data from all docker projects (WARNING, IRREVERSABLE):
 
 ```bash
 docker stop $(docker ps -a -q) && docker rm $(docker ps -a -q)
