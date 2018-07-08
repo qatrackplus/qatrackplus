@@ -6,6 +6,8 @@ This is a development version of QATrack+. It has not undergone sufficient testi
 
 ## Prerequisites
 
+## Ubuntu vs Windows
+
 This has been tested with Ubuntu 18.04. The method explained here uses docker
 local volume mounting which isn't as consistent between Linux and Windows
 machines. It has the benefit of being simpler to understand what is going on
