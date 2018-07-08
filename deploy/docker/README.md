@@ -6,7 +6,16 @@ This is a development version of QATrack+. It has not undergone sufficient testi
 
 ## Prerequisites
 
-This has been tested with Ubuntu 18.04
+This has been tested with Ubuntu 18.04. The method explained here uses docker
+local volume mounting which isn't as consistent between Linux and Windows
+machines. It has the benefit of being simpler to understand what is going on
+and having all of the qatrack live data be saved within this repository.
+
+Of course a second, less simple and less transparent method can be implemented
+for Windows support if the demand is there. But arguably it might be better to
+install [ubuntu server](https://www.ubuntu.com/download/server) within
+[virtual box](https://www.virtualbox.org/) port forward [port 80](https://www.howtogeek.com/122641/how-to-forward-ports-to-a-virtual-machine-and-use-it-as-a-server/)
+and then follow these instructions as is.
 
 ### Docker and Docker-Compose
 
