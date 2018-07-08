@@ -128,6 +128,29 @@ docker-compose up -d
 
 This will start the server in such a way that it will automatically turn on when you boot your computer/server.
 
+### Setting up SSL
+
+To set up SSL I highly recommending using cloudflare's free 'one-click ssl':
+
+> <https://www.cloudflare.com/ssl/>
+
+Once you have set up your dns to point to cloudflare you can follow the
+following steps to create a secure path between your users and your server:
+
+> <https://support.cloudflare.com/hc/en-us/articles/217471977>
+
+The `nginx.conf` file referred to by that guide is contained within this
+directory. Place the certificate files within `user-data/ssl` then
+they will be available at `/root/ssl/your_certificate.pem` and
+`/root/ssl/your_key.key` on the server.
+
+To reset the server and user your updated `nginx.cong` file run:
+
+```bash
+docker-compose stop
+docker-compose up
+```
+
 ### Changing from port 80 to a different port
 
 The first number of the `ports` item within `docker-compose.yml` can be changed

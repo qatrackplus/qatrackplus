@@ -19,8 +19,9 @@ services:
     restart: always
     image: nginx:1.15
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:rw
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ../../qatrack/static:/usr/src/qatrackplus/qatrack/static:ro
+      - ./user-data/ssl:/root/ssl
     links:
       - qatrack-django:qatrack-django
     ports:
