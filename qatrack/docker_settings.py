@@ -13,11 +13,9 @@
 #    limitations under the License.
 
 
-import sys
-
 print('Running docker settings')
 
-ALLOWED_HOSTS = ['localhost']
+ALLOWED_HOSTS = ['*']
 
 SECRET_FILEPATH = 'deploy/docker/user-data/secret_key.txt'
 
