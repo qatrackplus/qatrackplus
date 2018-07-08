@@ -16,7 +16,6 @@
 """
 
 import sys
-import socket
 import os
 import zipfile
 import time
@@ -54,13 +53,14 @@ DATABASE_DUMP_FILE: str = 'database_dump.sql'
 def wait_for_postrgres():
     """Use this to wait for postgres to be ready
     """
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     while True:
         try:
-            s.connect((DB_HOST, DB_PORT))
-            s.close()
-            break
-        except socket.error as _:
+            with psycopg2.connect(database='template1', user=DB_USER,
+                                  password=DB_PASSWORD, host=DB_HOST) as conn:
+                conn
+                break
+
+        except psycopg2.OperationalError:
             time.sleep(1)
 
 

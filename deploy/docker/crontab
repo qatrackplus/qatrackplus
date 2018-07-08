@@ -1,2 +1,1 @@
-0 */6 * * * /bin/bash -c 'echo "import sys; sys.path.append(\"/usr/src/app/deploy/docker\"); import docker_utilities; docker_utilities.run_backup()" | python'
-# Need an empty line
+* * * * * /bin/bash -c '/usr/src/qatrackplus/deploy/docker/cron_backup.sh'
