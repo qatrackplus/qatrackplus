@@ -78,8 +78,8 @@ qatrack-django_1    | [2018-07-07 15:31:44 +0000] [514] [INFO] Booting worker wi
 Once the `Listening at: http://0.0.0.0:8000` line is visible go to
 <http://localhost> in your computer's browser to see the server.
 
-Default login is username admin, password admin. You should change this through
-the admin interface once you have first logged in.
+Default login is username `admin`, password `admin`. You should change this
+through the QATrack+ admin interface once you have first logged in.
 
 ### Accessing the Django shell
 
