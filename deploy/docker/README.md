@@ -21,10 +21,29 @@ and then follow these instructions as is.
 
 ### Docker and Docker-Compose
 
-Go to the following web address and follow all the relevant instructions to install docker-ce and docker-compose on your system.
+To run this installation method you will need both docker-ce and docker-compose
+on your system. When running Ubuntu 18.04 do this by running the following
+commands:
 
-* docker-ce -- `sudo snap install docker` or see <https://docs.docker.com/install/> for other install methods
-* docker-compose -- `pip install docker-compose`
+```bash
+sudo snap install docker
+
+sudo apt install virtualenv
+virtualenv -p python3 ~/.docker-compose
+source ~/.docker-compose/bin/activate
+pip install docker-compose
+```
+
+Each time before using the docker-compose command you will need to repeat the
+above command of `source ~/.docker-compose/bin/activate`.
+
+On other systems you can follow the instructions found at the following
+locations:
+
+* [docker-ce](https://docs.docker.com/install/)
+* [docker-compose](https://docs.docker.com/compose/install/#install-compose)
+
+#### Make docker work without sudo
 
 You will also need to implement the following to be able to run docker without
 sudo:
