@@ -17,7 +17,7 @@ local volume mounting which isn't supported in a consistent manner by
 
 Note that `Docker for Windows` will only run on at least
 Windows 10 or
-[Windows Server 2016](https://www.docker.com/docker-windows-server). 
+[Windows Server 2016](https://www.docker.com/docker-windows-server).
 If you wish to use this on a version of
 Winodws prior to these I recommend
 installing [ubuntu server](https://www.ubuntu.com/download/server) within
