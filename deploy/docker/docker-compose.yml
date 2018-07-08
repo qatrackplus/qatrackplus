@@ -26,6 +26,7 @@ services:
       - qatrack-django:qatrack-django
     ports:
       - "80:80"
+      - "443:443"
 
   qatrack-django:
     restart: always
