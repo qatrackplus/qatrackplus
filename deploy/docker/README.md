@@ -130,11 +130,12 @@ This will start the server in such a way that it will automatically turn on when
 
 ### Setting up SSL
 
-To set up SSL I highly recommending using CloudFlare's free 'one-click ssl':
+To set up SSL I highly recommending using CloudFlare's free 'one-click ssl'
+which will set up SSL security between your users and CloudFlare:
 
 > <https://www.cloudflare.com/ssl/>
 
-This will set up SSL security between your users and CloudFlare. To also secure
+To also secure
 the path between CloudFlare and your server you will need to follow the
 following steps:
 
