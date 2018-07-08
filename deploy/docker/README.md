@@ -128,6 +128,15 @@ docker-compose up -d
 
 This will start the server in such a way that it will automatically turn on when you boot your computer/server.
 
+### Setting up SSL
+
+Given that you already have your server accessible from a web address, you can
+follow these steps here to set up a certificate and default to an SSL
+connection.
+
+Within `nginx.conf` replace `example.com` and `www.example.com` with your
+website name.
+
 ### Changing from port 80 to a different port
 
 The first number of the `ports` item within `docker-compose.yml` can be changed

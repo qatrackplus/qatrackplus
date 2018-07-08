@@ -124,6 +124,8 @@ def run_restore():
                     restore_zip.extract(
                         file, MEDIA_DIRECTORY)
 
+        wait_for_postrgres()
+
         with open(DATABASE_DUMP_FILE, 'r') as database_dump:
 
             with psycopg2.connect(database='template1', user=DB_USER,
