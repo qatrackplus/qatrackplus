@@ -39,7 +39,7 @@ source ~/.docker-compose/bin/activate
 pip install docker-compose
 ```
 
-Each time before using the docker-compose command you will need to repeat the
+Each time before using the `docker-compose` command you will need to repeat the
 above command of `source ~/.docker-compose/bin/activate`.
 
 On other systems you can follow the instructions found at the following
@@ -83,7 +83,7 @@ On other systems follow the instructions at
 
 ### Installing
 
-To run any docker-compose commands you need to be within the
+To run any `docker-compose` commands you need to be within the
 `qatrackplus/deploy/docker` directory. To build and start the server run the
 following:
 
