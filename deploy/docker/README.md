@@ -23,21 +23,27 @@ and then follow these instructions as is.
 
 Go to the following web address and follow all the relevant instructions to install docker-ce and docker-compose on your system.
 
-* docker-ce -- <https://docs.docker.com/install/>
-  * On Ubuntu 18.04 this can be achieved with `sudo snap install docker`
+* docker-ce -- `sudo snap install docker` or see <https://docs.docker.com/install/> for other install methods
 * docker-compose -- `pip install docker-compose`
 
-If you have issues using docker you may have to reboot your computer. If you are running linux it may also help to follow the post install instructions:
+You will also need to implement the following to be able to run docker without
+sudo:
 
 * <https://docs.docker.com/engine/installation/linux/linux-postinstall/>
 
-Before continuing please verify that you can run `docker run hello-world` in a terminal.
+After completing these post install tasks please reset your computer.
+
+Before continuing please verify that you can run `docker run hello-world` in a
+terminal.
 
 ### Git
 
-To retrieve files from bitbucket you will need git installed. Follow the relevant instructions at the following web address for your operating system:
+To retrieve files from bitbucket you will need git installed by running the
+following:
 
-* <https://www.atlassian.com/git/tutorials/install-git>
+```bash
+sudo apt install git
+```
 
 ## Docker QATrack+ (0.3.0-dev version) usage
 
