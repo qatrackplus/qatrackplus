@@ -6,17 +6,18 @@ This is a development version of QATrack+. It has not undergone sufficient testi
 
 ## Prerequisites
 
-## Ubuntu vs Windows
+## OS requirements
 
-This has been tested with Ubuntu 18.04. The method explained here uses docker
-local volume mounting which isn't as consistent between Linux and Windows
-machines. It has the benefit of being simpler to understand what is going on
-and having all of the qatrack live data be saved within this repository.
+This has been tested with Ubuntu 18.04 and currently this guide has some Ubuntu
+specific instructions. However this should work on Windows or Mac, just make
+sure that `Docker for Windows` or `Docker for Mac` is used, not
+the legacy `docker-toolbox` software. This docker installation method uses
+local volume mounting which isn't supported in a consistent manner by
+`docker-toolbox`. Note that `Docker for Windows` will only run on Windows 10.
 
-Of course a second, less simple and less transparent method can be implemented
-for Windows support if the demand is there. But arguably it might be better to
-install [ubuntu server](https://www.ubuntu.com/download/server) within
-[virtual box](https://www.virtualbox.org/) port forward [port 80](https://www.howtogeek.com/122641/how-to-forward-ports-to-a-virtual-machine-and-use-it-as-a-server/)
+If you wish to use this on a version of Winodws prior to version 10 I recommend
+installing [ubuntu server](https://www.ubuntu.com/download/server) within
+[virtual box](https://www.virtualbox.org/) then port forwarding [port 80](https://www.howtogeek.com/122641/how-to-forward-ports-to-a-virtual-machine-and-use-it-as-a-server/)
 and then follow these instructions as is.
 
 ### Docker and Docker-Compose
@@ -43,7 +44,7 @@ locations:
 * [docker-ce](https://docs.docker.com/install/)
 * [docker-compose](https://docs.docker.com/compose/install/#install-compose)
 
-#### Make docker work without sudo
+#### Make docker work without sudo on Linux
 
 You will also need to implement the following to be able to run docker without
 sudo:
@@ -63,6 +64,9 @@ following:
 ```bash
 sudo apt install git
 ```
+
+On other systems follow the instructions at
+<https://www.atlassian.com/git/tutorials/install-git>.
 
 ## Docker QATrack+ (0.3.0-dev version) usage
 
