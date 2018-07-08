@@ -18,7 +18,7 @@ local volume mounting which isn't supported in a consistent manner by
 If you wish to use this on a version of Winodws prior to version 10 I recommend
 installing [ubuntu server](https://www.ubuntu.com/download/server) within
 [virtual box](https://www.virtualbox.org/) then port forwarding [port 80](https://www.howtogeek.com/122641/how-to-forward-ports-to-a-virtual-machine-and-use-it-as-a-server/)
-and then follow these instructions as is.
+and then following these instructions as is.
 
 ### Docker and Docker-Compose
 
