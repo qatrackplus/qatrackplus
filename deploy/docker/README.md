@@ -13,12 +13,16 @@ specific instructions. However this should work on Windows or Mac, just make
 sure that `Docker for Windows` or `Docker for Mac` is used, not
 the legacy `docker-toolbox` software. This docker installation method uses
 local volume mounting which isn't supported in a consistent manner by
-`docker-toolbox`. Note that `Docker for Windows` will only run on Windows 10.
+`docker-toolbox`.
 
-If you wish to use this on a version of Winodws prior to version 10 I recommend
+Note that `Docker for Windows` will only run on at least
+Windows 10 or
+[Windows Server 2016](https://www.docker.com/docker-windows-server). 
+If you wish to use this on a version of
+Winodws prior to these I recommend
 installing [ubuntu server](https://www.ubuntu.com/download/server) within
 [virtual box](https://www.virtualbox.org/) then port forwarding [port 80](https://www.howtogeek.com/122641/how-to-forward-ports-to-a-virtual-machine-and-use-it-as-a-server/)
-and then following these instructions as is.
+and following these instructions within that virtual machine.
 
 ### Docker and Docker-Compose
 
