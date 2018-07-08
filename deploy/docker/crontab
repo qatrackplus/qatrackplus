@@ -1,1 +1,1 @@
-* * * * * /bin/bash -c '/usr/src/qatrackplus/deploy/docker/cron_backup.sh'
+0 */6 * * * /usr/src/qatrackplus/deploy/docker/cron_backup.sh >> /usr/src/qatrackplus/deploy/docker/user-data/cron.log 2>&1

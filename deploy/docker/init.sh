@@ -16,6 +16,8 @@
 
 echo "init.sh"
 
+/etc/init.d/cron start
+
 mkdir -p deploy/docker/user-data/python-virtualenv
 virtualenv deploy/docker/user-data/python-virtualenv
 source deploy/docker/user-data/python-virtualenv/bin/activate
@@ -45,5 +47,8 @@ docker_initialisation.initialisation()
 
 echo "$initialisation" | python /usr/src/qatrackplus/manage.py shell
 
+chmod a+x deploy/docker/cron_backup.sh
 /usr/bin/crontab deploy/docker/crontab
+/etc/init.d/cron status
+
 gunicorn qatrack.wsgi:application -w 2 -b :8000
