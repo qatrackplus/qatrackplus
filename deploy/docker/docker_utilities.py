@@ -94,6 +94,13 @@ def run_backup():
 
         backup_zip.write(SITE_CSS)
 
+    popen = subprocess.Popen(
+        ['stat', '-c', '%u:%g', '/usr/src/qatrackplus'],
+        stdout=subprocess.PIPE)
+    subprocess.run(
+        ['chown', '-R', popen.stdout.read().rstrip(), backup_filepath])
+    popen.wait()
+
 
 def run_restore():
     """A method to restore a qatrackplus backup, this needs to be rewritten to

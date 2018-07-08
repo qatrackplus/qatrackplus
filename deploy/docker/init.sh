@@ -45,7 +45,5 @@ docker_initialisation.initialisation()
 
 echo "$initialisation" | python /usr/src/qatrackplus/manage.py shell
 
-chown -R `stat -c "%u:%g" /usr/src/qatrackplus` /usr/src/qatrackplus/deploy/docker/user-data/backup-management
-
-# /usr/bin/crontab deploy/docker/crontab
+/usr/bin/crontab deploy/docker/crontab
 gunicorn qatrack.wsgi:application -w 2 -b :8000

@@ -1,3 +1,2 @@
-0 */6 * * * /bin/bash -c 'echo "import sys; sys.path.append(\"/usr/src/app/deploy/docker\"); import docker_functions; docker_functions.run_backup()" | python /usr/src/app/manage.py shell'
+0 */6 * * * /bin/bash -c 'echo "import sys; sys.path.append(\"/usr/src/app/deploy/docker\"); import docker_utilities; docker_utilities.run_backup()" | python'
 # Need an empty line
-
