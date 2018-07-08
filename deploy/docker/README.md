@@ -145,7 +145,7 @@ directory. Place the certificate files within `user-data/ssl` then
 they will be available at `/root/ssl/your_certificate.pem` and
 `/root/ssl/your_key.key` on the server.
 
-To reset the server and user your updated `nginx.cong` file run:
+To reset the server and use your updated `nginx.cong` file run:
 
 ```bash
 docker-compose stop
