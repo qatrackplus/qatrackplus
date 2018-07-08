@@ -34,7 +34,7 @@ To retrieve files from bitbucket you will need git installed. Follow the relevan
 
     git clone https://bitbucket.org/SimonGBiggs/qatrackplus.git
     cd qatrackplus
-    git checkout py34
+    git checkout simon-docker
     cd deploy/docker
 
 ### Installing
@@ -76,7 +76,7 @@ python manage.py shell
 
 This requires that the containers are already running.
 
-### Making QATrack+ start on boot
+### Making QATrack+ start on boot and run in the background
 
 ```bash
 docker-compose up -d
