@@ -15,6 +15,7 @@
 """A set of utilities to manage the docker instance of qatrack
 """
 
+import sys
 import socket
 import os
 import zipfile
@@ -35,7 +36,10 @@ DB_HOST = "qatrack-postgres"
 DB_PORT = 5432
 
 QATRACK_DIRECTORY = "/usr/src/qatrackplus"
-MEDIA_DIRECTORY: str = os.path.join(QATRACK_DIRECTORY, "qatrack/media")
+UPLOADS_DIRECTORY: str = os.path.join(
+    QATRACK_DIRECTORY, "qatrack/media/uploads")
+SITE_CSS: str = os.path.join(
+    QATRACK_DIRECTORY, "qatrack/static/qatrack_core/css/site.css")
 
 DATA_DIRECTORY: str = os.path.join(
     QATRACK_DIRECTORY, "deploy/docker/user-data")
@@ -73,9 +77,6 @@ def run_backup():
     backup_filepath = os.path.join(
         BACKUP_DIRECTORY, 'UTC_{}.zip'.format(timestamp))
 
-    cwd = os.getcwd()
-    os.chdir(MEDIA_DIRECTORY)
-
     wait_for_postrgres()
 
     popen = subprocess.Popen(
@@ -86,12 +87,12 @@ def run_backup():
         backup_zip.writestr(DATABASE_DUMP_FILE, popen.stdout.read())
         popen.wait()
 
-        for dirname, _, files in os.walk('uploads'):
+        for dirname, _, files in os.walk(UPLOADS_DIRECTORY):
             backup_zip.write(dirname)
             for filename in files:
                 backup_zip.write(os.path.join(dirname, filename))
 
-    os.chdir(cwd)
+        backup_zip.write(SITE_CSS)
 
 
 def run_restore():
@@ -105,25 +106,22 @@ def run_restore():
 
     if len(restore_filelist) == 1:
         restore_filepath = restore_filelist[0]
-        print('Restoring database from {}'.format(
+        print('Restoring QATrack+ from {}'.format(
             os.path.basename(restore_filepath)))
 
-        for root, _, files in os.walk(
-            os.path.join(MEDIA_DIRECTORY, 'uploads')
-        ):
-            for f in files:
-                os.unlink(os.path.join(root, f))
+        shutil.rmtree(UPLOADS_DIRECTORY)
 
-        shutil.rmtree(os.path.join(MEDIA_DIRECTORY, 'uploads/'))
-
+        print('Files restored:')
         with zipfile.ZipFile(restore_filepath, 'r') as restore_zip:
             restore_zip.extract(DATABASE_DUMP_FILE)
 
-            for file in restore_zip.namelist():
-                if file.startswith('uploads/'):
-                    restore_zip.extract(
-                        file, MEDIA_DIRECTORY)
+            for filename in restore_zip.namelist():
+                if filename.startswith('usr/src/qatrackplus/'):
+                    print(filename)
+                    restore_zip.extract(filename, '/')
 
+        print('Restoring database:')
+        sys.stdout.flush()
         wait_for_postrgres()
 
         with open(DATABASE_DUMP_FILE, 'r') as database_dump:
