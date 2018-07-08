@@ -112,7 +112,7 @@ Once any files have changed in the qatrackplus directory you need to run the fol
 
 ### Backup management
 
-Everytime `docker-compose up -d` is run a timestamped backup zip file of both the database and uploaded files is created. These backups are stored within `qatrackplus/deploy/docker/user-data/backup-management/backups`. To restore a backup zip file copy it to the restore directory found at `qatrackplus/deploy/docker/user-data/backup-management/restore`. The restoration will occur next time `docker-compose up` is called. After successful restoration the zip file within the restore directory is deleted.
+Everytime `docker-compose up` is run a timestamped backup zip file of both the database and uploaded files is created. These backups are stored within `qatrackplus/deploy/docker/user-data/backup-management/backups`. To restore a backup zip file copy it to the restore directory found at `qatrackplus/deploy/docker/user-data/backup-management/restore`. The restoration will occur next time `docker-compose up` is called. After successful restoration the zip file within the restore directory is deleted.
 
 This restore method will also successfully restore backup files created on a different machine.
 However it will only successfully restore a like for like QATrack+ version.
