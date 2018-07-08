@@ -115,6 +115,9 @@ To shutdown the server run:
 
     docker-compose stop
 
+You can also single press `Ctrl + C` within the server terminal that you ran
+`docker-compose up` to gracefully shutdown the server.
+
 ### Update server
 
 To update the server from bitbucket run:
