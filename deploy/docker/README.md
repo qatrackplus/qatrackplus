@@ -172,6 +172,25 @@ run `docker-compose up`. This will now also download the django portion of
 QATrack+ from Docker Hub with the pip dependencies already included within the
 image.
 
+### Making the backup management store its files on a network share
+
+Within the docker image all backup data is placed at
+`/usr/src/qatrackplus/deploy/docker/user-data/backup-management`.
+If during the initial boot of the docker image a network drive is mounted to
+that directory theoretically all backups should be managed on that network
+drive instead. To achieve this, at the start of `init.sh` write the following
+line:
+
+```bash
+mount -t cifs -o username=your_user_name -o password=your_password //host_name/share_name /usr/src/qatrackplus/deploy/docker/user-data/backup-management
+```
+
+See [cifs man page](https://www.systutorials.com/docs/linux/man/8-mount.cifs/)
+for more help if needed.
+
+This has not been tested yet, please inform me if you have
+issues / if you get it working.
+
 ### Shutdown the server
 
 To shutdown the server run:
