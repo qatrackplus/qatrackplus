@@ -17,17 +17,17 @@ FROM python:3.6
 RUN echo 'deb http://apt.postgresql.org/pub/repos/apt/ stretch-pgdg main' > /etc/apt/sources.list.d/pgdg.list
 RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
 RUN apt-get update && apt-get install -y \
-    cron postgresql-client-10 git \
+    cron postgresql-client-10 wget \
     && rm -rf /var/lib/apt/lists/*
 
 RUN touch /root/.is_inside_docker
 RUN touch /root/.is_hub_image
 
-WORKDIR /usr/src
-RUN git clone https://bitbucket.org/SimonGBiggs/qatrackplus.git
-
+RUN mkdir /usr/src/qatrackplus
 WORKDIR /usr/src/qatrackplus
-RUN git checkout simon-docker
+
+RUN wget https://bitbucket.org/SimonGBiggs/qatrackplus/raw/simon-docker/requirements.postgres.txt
+RUN wget https://bitbucket.org/SimonGBiggs/qatrackplus/raw/simon-docker/requirements.txt
 
 RUN pip install --no-cache-dir virtualenv
 
