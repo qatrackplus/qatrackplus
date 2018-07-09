@@ -29,7 +29,7 @@ RUN git clone https://bitbucket.org/SimonGBiggs/qatrackplus.git
 WORKDIR /usr/src/qatrackplus
 RUN git checkout simon-docker
 
-RUN pip install virtualenv
+RUN pip install --no-cache-dir virtualenv
 
 RUN mkdir /root/virtualenv \
     && virtualenv  /root/virtualenv \
