@@ -18,11 +18,14 @@ echo "init.sh"
 
 /etc/init.d/cron start
 
-mkdir -p deploy/docker/user-data/python-virtualenv
-virtualenv deploy/docker/user-data/python-virtualenv
-source deploy/docker/user-data/python-virtualenv/bin/activate
+# If using an image from docker-hub don't reinstall the pip requirements
+if [ ! -f /root/.is_hub_image ]; then
+    mkdir -p deploy/docker/user-data/python-virtualenv
+    virtualenv deploy/docker/user-data/python-virtualenv
+    source deploy/docker/user-data/python-virtualenv/bin/activate
 
-pip install -r requirements.postgres.txt
+    pip install -r requirements.postgres.txt
+fi
 
 path_append="
 import sys
