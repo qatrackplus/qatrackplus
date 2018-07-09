@@ -161,6 +161,17 @@ to `8080:80` then you would need to type <http://localhost:8080> within your
 browser to see QATrack+. After editing `docker-compose.yml` you need to rerun
 `docker-compose up`.
 
+### Using a docker-hub image instead of building your own
+
+If you don't wish to customise the python-virtual environment being used by
+the server, and if you want to not have to build your own docker image you may
+use the prebuilt automated builds off of [Docker Hub](https://hub.docker.com/r/simonbiggs/qatrack/builds/).
+
+To do this change your directory to the subdirectory `hub/0.3.0.dev` and then
+run `docker-compose up`. This will now also download the django portion of
+QATrack+ from Docker Hub with the pip dependencies already included within the
+image.
+
 ### Shutdown the server
 
 To shutdown the server run:
