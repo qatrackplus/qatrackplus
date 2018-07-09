@@ -188,8 +188,8 @@ mount -t cifs -o username=your_user_name -o password=your_password //host_name/s
 See [cifs man page](https://www.systutorials.com/docs/linux/man/8-mount.cifs/)
 for more help if needed.
 
-This has not been tested yet, please inform me if you have
-issues / if you get it working.
+This has not been tested yet, please inform me if you have issues / if you get
+it working.
 
 ### Shutdown the server
 
