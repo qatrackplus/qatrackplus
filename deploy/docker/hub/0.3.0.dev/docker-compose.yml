@@ -30,7 +30,7 @@ services:
 
   qatrack-django:
     restart: always
-    image: simonbiggs/qatrack:0.3.0.dev
+    build: .
     links:
       - qatrack-postgres:qatrack-postgres
     volumes:

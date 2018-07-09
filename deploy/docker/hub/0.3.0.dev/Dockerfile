@@ -28,4 +28,10 @@ RUN git clone https://bitbucket.org/SimonGBiggs/qatrackplus.git
 
 WORKDIR /usr/src/qatrackplus
 RUN git checkout simon-docker
-RUN pip install --no-cache-dir -r requirements.postgres.txt
+
+RUN pip install virtualenv
+
+RUN mkdir /root/virtualenv \
+    && virtualenv  /root/virtualenv \
+    && . /root/virtualenv/bin/activate \
+    && pip install --no-cache-dir -r requirements.postgres.txt
