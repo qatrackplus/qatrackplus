@@ -166,8 +166,26 @@
             </div>
         {% endif %}
 
+          {% if form.errors %}
+          <div class="row">
+            <div class="col-sm-12">
+              <ul class="alert alert-error">
+              {% for field in form %}
+                  {% for error in field.errors %}
+                      <li>
+                        {% if field != '__all__' %}
+                          <strong>{{ field.label }}:</strong>
+                        {% endif %}
+                        {{ error }}
+                      </li>
+                  {% endfor %}
+              {% endfor %}
+              </ul>
+            </div>
+          </div>
+        {% endif %}
         <div class="row" style="">
-            {{ form.errors }}
+
             {% if perms.qa.can_review and perms.qa.can_review_own_tests or perms.qa.can_override_date %}
                 <div class="col-sm-{{ top_divs_span }}">
                     <div id="box-admin" class="box">
@@ -486,7 +504,7 @@
                                                         <td class="width-"><strong>Attachments</strong></td>
                                                         <td>
                                                             <label class="qa-input btn btn-default btn-sm btn-flat" title="Click to add attachments. (Hold Ctrl or Cmd in the dialog to include multiple attachments)">
-                                                                Browse <input id="tli-attachments" class="file-upload" type="file" name="tli-attachments" multiple style="display:none"/>
+                                                                Browse {{ form.tli_attachments }}
                                                             </label>
                                                         </td>
 

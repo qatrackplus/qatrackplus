@@ -657,7 +657,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
 
         this.submit = $("#submit-qa");
 
-        this.attachInput = $("#tli-attachments");
+        this.attachInput = $("#id_tli_attachments");
 
         /***************************************************************/
         //set the intitial values, tolerances & refs for all of our tests
