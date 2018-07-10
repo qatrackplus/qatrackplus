@@ -410,7 +410,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 var value = $.trim(self.inputs.find(":selected").text());
                 self.value = value !== "" ? value : null;
             }else if (tt === QAUtils.UPLOAD){
-                if (editing_tli && !this.initialized){
+                if (self.inputs.val() && !this.initialized){
                     var data = {
                         attachment_id: self.inputs.val(),
                         test_id: self.test_info.test.id,
