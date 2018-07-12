@@ -3,7 +3,7 @@
 WARNING
 
 This is a development version of QATrack+ and a developmental install method.
-It is undergoing iterative development, is not currentl stable, and has not
+It is undergoing iterative development, is not currently stable, and has not
 been sufficiently tested.
 
 ## Prerequisites
