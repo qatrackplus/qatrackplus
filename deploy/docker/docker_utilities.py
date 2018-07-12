@@ -55,7 +55,7 @@ def wait_for_postrgres():
     """
     while True:
         try:
-            with psycopg2.connect(database='template1', user=DB_USER,
+            with psycopg2.connect(database=DB_NAME, user=DB_USER,
                                   password=DB_PASSWORD, host=DB_HOST) as conn:
                 conn
                 break

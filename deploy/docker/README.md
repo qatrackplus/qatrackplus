@@ -228,7 +228,7 @@ This restore method will also successfully restore backup files created on a
 different machine. However it will only successfully restore a like for like
 QATrack+ version. This cannot be used when upgrading between versions.
 
-### Delete all docker data
+### Delete docker data
 
 If for some reason you need it, the following command will delete all docker
 data from all docker projects (WARNING, IRREVERSABLE):
@@ -241,4 +241,10 @@ And this will delete all of the cache:
 
 ```bash
 echo 'y' | docker volume prune
+```
+
+To just delete all postgres database data do the following:
+
+```bash
+docker stop docker_qatrack-postgres_1 && docker rm docker_qatrack-postgres_1 && docker volume rm docker_qatrack-postgres-volume
 ```
