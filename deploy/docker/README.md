@@ -10,12 +10,12 @@ been sufficiently tested.
 
 ## OS requirements
 
-This has been tested with Ubuntu 18.04 and currently this guide has some Ubuntu
-specific instructions. However this should work on Windows or Mac, just make
+This guide has been tested with Ubuntu 18.04 and currently this guide has some
+Ubuntu specific instructions. However this should work on Windows or Mac, just make
 sure that `Docker for Windows` or `Docker for Mac` is used, not
-the legacy `docker-toolbox` software. This docker installation method uses
-local volume mounting which isn't supported in a consistent manner by
-`docker-toolbox`.
+the legacy `docker-toolbox` software. If you are using Windows 7 and need to
+use `docker-toolbox` see the [windows-7-installation.md](./windows-7-installation.md)
+guide to achieve that.
 
 Note that `Docker for Windows` will only run on at least
 Windows 10 or
