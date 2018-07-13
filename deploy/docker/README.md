@@ -210,6 +210,18 @@ through the QATrack+ admin interface once you have first logged in.
 With all default settings within Docker left as is, this will now automatically
 start the server each time the computer is turned on.
 
+### Setting up copying backups from local machine to remote server on Windows
+
+Create the following bat file:
+
+```batch
+NET USE V: "\\pdc\OneDrive$\QATrack+"
+
+xcopy D:\QATrack+\qatrackplus\deploy\docker\user-data\backup-management V:\ /E /G /H /D /Y
+```
+
+Then using Windows Task scheduler to set that bat file to run daily.
+
 ## Advanced usage tips 
 
 ### Accessing the Django shell
@@ -229,8 +241,6 @@ This requires that the containers are already running.
 ```bash
 docker-compose up -d
 ```
-
-This will start the server in such a way that it will automatically turn on when you boot your computer/server.
 
 ### Setting up SSL
 
