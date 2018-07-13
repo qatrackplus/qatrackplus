@@ -6,27 +6,86 @@ This is a development version of QATrack+ and a developmental install method.
 It is undergoing iterative development, is not currently stable, and has not
 been sufficiently tested.
 
-## Prerequisites
+## Prerequisites by OS
 
-## OS requirements
+This has been tested under two setups, Ubuntu 18.04, or Windows 10.
+Depending on which system you are using there are different ways to install
+the required dependencies. Follow the section that applies to your specific
+machine.
 
-This guide has been tested with Ubuntu 18.04 and currently this guide has some
-Ubuntu specific instructions. However this should work on Windows or Mac, just make
-sure that `Docker for Windows` or `Docker for Mac` is used, not
-the legacy `docker-toolbox` software. If you are using Windows 7 and need to
-use `docker-toolbox` see the [windows-7-installation.md](./windows-7-installation.md)
-guide to achieve that.
+### Windows 10 Professional or Enterprise with Hyper-V
 
-Note that `Docker for Windows` will only run on at least
-Windows 10 or
-[Windows Server 2016](https://www.docker.com/docker-windows-server).
-If you wish to use this on a version of
-Winodws prior to these I recommend
-installing [ubuntu server](https://www.ubuntu.com/download/server) within
-[virtual box](https://www.virtualbox.org/) then port forwarding [port 80](https://www.howtogeek.com/122641/how-to-forward-ports-to-a-virtual-machine-and-use-it-as-a-server/)
-and following these instructions within that virtual machine.
+The aim of this setup is to have a complete installation of QATrack+ on a
+Windows 10 Professional or Enterprise machine with all of the server files
+and database backups stored within a OneDrive directory.
 
-### Docker and Docker-Compose
+#### Ensure Virtualisation is enabled
+
+This setup uses Hyper-V. To use Hyper-V you need Windows 10 Professional or
+Enterprise with virtualisation enabled. To verify that virtualisation
+is enabled open the task manager, select `More details`, click on the `Performance`
+tab and verify that in the bottom right it states `Virtualisation: Enabled` as
+in the following screenshot:
+
+![Virtualisation enabled](https://docs.docker.com/docker-for-windows/images/virtualization-enabled.png)
+
+If this says disabled then this will need to be enabled within your machines
+BIOS before continuing.
+
+See <https://docs.docker.com/docker-for-windows/troubleshoot/#virtualization>
+for further troubleshooting if required.
+
+#### Chocolatey
+
+To simplify this guide all installation will be done via the chocolatey package
+manager. To install chocoletey run the following in a command prompt with
+administrative privlages:
+
+```cmd
+@"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))" && SET "PATH=%PATH%;%ALLUSERSPROFILE%\chocolatey\bin"
+```
+
+For more information on chocolatey see <https://chocolatey.org/>
+
+#### Docker for Windows, and Git
+
+To install Docker for Windows, Docker Compose and Git run the following
+within and administrative command prompt:
+
+```cmd
+choco install git docker-for-windows -y
+```
+
+Reboot your machine.
+
+Run the newly created `Docker for Windows` icon that has appeared
+on the desktop. If prompted to approve the request to enable Hyper-V. Thise will
+once again reboot your computer.
+
+You should not need to click this icon again.
+
+After multiple reboots Docker will begin downloading and setting up its virtual machine.
+This will take some time and you may notice the PC running slow while it is working
+on this.
+
+Specifically you are waiting until the following popup is displayed:
+
+![Docker Welcome](https://docs.docker.com/docker-for-windows/images/docker-app-welcome.png)
+
+On my machine this docker initialisation process took a little over 15 minutes.
+
+To test that docker is working as expected run the following in a command prompt:
+
+```cmd
+docker run hello-world
+```
+
+### Ubuntu 18.04
+
+If your PC is running Ubuntu 18.04 follow these steps to install the required
+prerequisites.
+
+#### Docker and Docker-Compose
 
 To run this installation method you will need both docker-ce and docker-compose
 on your system. When running Ubuntu 18.04 do this by running the following
@@ -50,7 +109,7 @@ locations:
 * [docker-ce](https://docs.docker.com/install/)
 * [docker-compose](https://docs.docker.com/compose/install/#install-compose)
 
-#### Make docker work without sudo on Linux
+##### Make docker work without sudo on Linux
 
 You will also need to implement the following to be able to run docker without
 sudo:
@@ -62,7 +121,7 @@ After completing these post install tasks please reset your computer.
 Before continuing please verify that you can run `docker run hello-world` in a
 terminal.
 
-### Git
+#### Git
 
 To retrieve files from bitbucket you will need git installed by running the
 following:
@@ -74,19 +133,44 @@ sudo apt install git
 On other systems follow the instructions at
 <https://www.atlassian.com/git/tutorials/install-git>.
 
-## Docker QATrack+ (0.3.0-dev version) usage
+## Installing QATrack+
+
+This part is OS independent. The language used will be tuned for a Windows 10
+user, but equivalent steps can be followed on Ubuntu.
+
+### Changing to the directory where all server files will be stored
+
+Open a command prompt and change your directory to a file within your OneDrive.
+Lets say for example your OneDrive is located on a network drive mounted to `S:`
+at `S:\Physics` and we want to place all our files within `S:\Physics\QATrack+`
+then you would do the following:
+
+```cmd
+S:
+cd Physics\QATrack+
+```
 
 ### Downloading
 
-    git clone https://bitbucket.org/SimonGBiggs/qatrackplus.git
-    cd qatrackplus
-    git checkout simon-docker
-    cd deploy/docker
+At this point QATrack plus files need to be pulled from the git repository.
+Do the following:
+
+```cmd
+git clone https://bitbucket.org/SimonGBiggs/qatrackplus.git
+cd qatrackplus
+git checkout simon-docker
+```
 
 ### Installing
 
 To run any `docker-compose` commands you need to be within the
-`qatrackplus/deploy/docker` directory. To build and start the server run the
+`qatrackplus\deploy\docker` directory. So lets change to there now:
+
+```cmd
+cd deploy\docker
+```
+
+To build and start the server run the
 following:
 
     docker-compose build
