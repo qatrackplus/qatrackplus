@@ -16,8 +16,8 @@ machine.
 ### Windows 10 Professional or Enterprise with Hyper-V
 
 The aim of this setup is to have a complete installation of QATrack+ on a
-Windows 10 Professional or Enterprise machine with all of the server files
-and database backups stored within a OneDrive directory.
+Windows 10 Professional or Enterprise machine with the backups being
+scheduled to be periodically copied to a OneDrive directory.
 
 #### Ensure Virtualisation is enabled
 
