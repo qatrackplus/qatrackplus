@@ -23,7 +23,7 @@ for (var i=0; i < tables.length; i++){
               text: 'Select Filtered',
               className: "button",
               action: function () {
-                $(this).DataTable().rows( {search:'applied'} ).select();
+                this.rows( {search:'applied'} ).select();
               }
             }
         ],
