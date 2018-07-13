@@ -36,7 +36,7 @@ services:
     volumes:
       - ../../../../.:/usr/src/qatrackplus:rw
       - ../../user-data/pip-cache:/root/.cache/pip:rw
-    command: /bin/bash -c 'cd /usr/src/qatrackplus; deploy/docker/init.sh'
+    command: /bin/bash -c 'cd /usr/src/qatrackplus; dos2unix deploy/docker/init.sh; deploy/docker/init.sh'
 
   qatrack-postgres:
     restart: always

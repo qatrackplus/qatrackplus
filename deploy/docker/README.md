@@ -39,7 +39,9 @@ for further troubleshooting if required.
 
 To simplify this guide all installation will be done via the chocolatey package
 manager. To install chocoletey run the following in a command prompt with
-administrative privlages:
+administrative privileges.
+
+!(Administrator Privileges)[https://www.howtogeek.com/wp-content/uploads/2016/12/ximg_585a0e5711605.png.pagespeed.gp+jp+jw+pj+ws+js+rj+rp+rw+ri+cp+md.ic.3-azGXR2bH.png]
 
 ```cmd
 @"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))" && SET "PATH=%PATH%;%ALLUSERSPROFILE%\chocolatey\bin"
@@ -79,6 +81,16 @@ To test that docker is working as expected run the following in a command prompt
 ```cmd
 docker run hello-world
 ```
+
+#### Enable shared drives within Docker for Windows
+
+Right click on the whale in the notification panel, then click `Settings`.
+Within settings select `Shared Drives` and then tick all of the drives you wish
+to be able to use within Docker containers. For this guide to work you will
+at least need to share the drive where you will be keeping the QATrack+ server
+files.
+
+Docker for Windows does not support network drives.
 
 ### Ubuntu 18.04
 
@@ -140,14 +152,15 @@ user, but equivalent steps can be followed on Ubuntu.
 
 ### Changing to the directory where all server files will be stored
 
-Open a command prompt and change your directory to a file within your OneDrive.
-Lets say for example your OneDrive is located on a network drive mounted to `S:`
-at `S:\Physics` and we want to place all our files within `S:\Physics\QATrack+`
-then you would do the following:
+Open a command prompt with just user priveledges and change your directory to the directory where
+all of the QATrack+ server files will be stored.
+
+Lets say, for example, all our files are going to be located within the
+`D:` drive at `D:\QATrack+` then we would want to do the following:
 
 ```cmd
-S:
-cd Physics\QATrack+
+D:
+cd QATrack+
 ```
 
 ### Downloading
@@ -161,7 +174,7 @@ cd qatrackplus
 git checkout simon-docker
 ```
 
-### Installing
+### Installation
 
 To run any `docker-compose` commands you need to be within the
 `qatrackplus\deploy\docker` directory. So lets change to there now:
@@ -193,6 +206,11 @@ Once the `Listening at: http://0.0.0.0:8000` line is visible go to
 
 Default login is username `admin`, password `admin`. You should change this
 through the QATrack+ admin interface once you have first logged in.
+
+With all default settings within Docker left as is, this will now automatically
+start the server each time the computer is turned on.
+
+## Advanced usage tips 
 
 ### Accessing the Django shell
 
