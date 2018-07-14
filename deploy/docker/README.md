@@ -41,7 +41,7 @@ To simplify this guide all installation will be done via the chocolatey package
 manager. To install chocoletey run the following in a command prompt with
 administrative privileges.
 
-!(Administrator Privileges)[https://www.howtogeek.com/wp-content/uploads/2016/12/ximg_585a0e5711605.png.pagespeed.gp+jp+jw+pj+ws+js+rj+rp+rw+ri+cp+md.ic.3-azGXR2bH.png]
+![Administrator Privileges](https://www.howtogeek.com/wp-content/uploads/2016/12/ximg_585a0e5711605.png)
 
 ```cmd
 @"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))" && SET "PATH=%PATH%;%ALLUSERSPROFILE%\chocolatey\bin"
