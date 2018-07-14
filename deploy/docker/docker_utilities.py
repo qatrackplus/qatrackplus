@@ -20,7 +20,7 @@ import os
 import zipfile
 import time
 import datetime
-import shutil
+# import shutil
 import pathlib
 import subprocess
 from glob import glob
@@ -116,7 +116,9 @@ def run_restore():
         print('Restoring QATrack+ from {}'.format(
             os.path.basename(restore_filepath)))
 
-        shutil.rmtree(UPLOADS_DIRECTORY)
+        # Don't remove previous uploads, they will get overwritten if they
+        # have the same name
+        # shutil.rmtree(UPLOADS_DIRECTORY)
 
         print('Files restored:')
         with zipfile.ZipFile(restore_filepath, 'r') as restore_zip:
