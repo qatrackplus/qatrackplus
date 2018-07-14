@@ -217,12 +217,12 @@ Create the following bat file:
 ```batch
 NET USE V: "\\pdc\OneDrive$\QATrack+"
 
-xcopy D:\QATrack+\qatrackplus\deploy\docker\user-data\backup-management V:\ /E /G /H /D /Y
+xcopy D:\QATrack+\qatrackplus\deploy\docker\user-data\backup-management\backups V:\backups /E /G /H /D /Y
 ```
 
 Then using Windows Task scheduler to set that bat file to run daily.
 
-## Advanced usage tips 
+## Advanced usage tips
 
 ### Accessing the Django shell
 
