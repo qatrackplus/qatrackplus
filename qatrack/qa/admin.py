@@ -655,8 +655,8 @@ class FrequencyTestListFilter(admin.SimpleListFilter):
 class TestListAdmin(AdminViews, SaveUserMixin, SaveInlineAttachmentUserMixin, admin.ModelAdmin):
 
     admin_views = (
-        ('Export Test Pack', 'export_test_pack'),
-        ('Import Test Pack', 'import_test_pack'),
+        ('Export Test Pack', 'export_testpack'),
+        ('Import Test Pack', 'import_testpack'),
     )
 
     prepopulated_fields = {'slug': ('name',)}
@@ -680,11 +680,11 @@ class TestListAdmin(AdminViews, SaveUserMixin, SaveInlineAttachmentUserMixin, ad
             settings.STATIC_URL + "ace/ace.js",
         )
 
-    def export_test_pack(self, *args, **kwargs):
-        return redirect(reverse("qa_export_test_pack"))
+    def export_testpack(self, *args, **kwargs):
+        return redirect(reverse("qa_export_testpack"))
 
-    def import_test_pack(self, *args, **kwargs):
-        return redirect(reverse("qa_import_test_pack"))
+    def import_testpack(self, *args, **kwargs):
+        return redirect(reverse("qa_import_testpack"))
 
 
 class TestForm(forms.ModelForm):

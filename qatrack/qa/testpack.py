@@ -61,7 +61,7 @@ def create_testpack(test_lists=None, cycles=None, extra_tests=None, description=
     objects = []
     indent = 2 if settings.DEBUG else None
     for qs in to_dump:
-        fields = qs.model.get_test_pack_fields()
+        fields = qs.model.get_testpack_fields()
         objects.append(
             serialize(
                 "json",
@@ -93,7 +93,7 @@ def create_testpack(test_lists=None, cycles=None, extra_tests=None, description=
     return {'meta': meta, 'objects': objects}
 
 
-def save_test_pack(pack, fp):
+def save_testpack(pack, fp):
     """
     Write input test pack to file like object fp. If fp is a string it
     will be written to a new file with the name/path given by fp.
@@ -105,7 +105,7 @@ def save_test_pack(pack, fp):
     json.dump(pack, fp, indent=2)
 
 
-def test_pack_object_names(serialized_pack):
+def testpack_object_names(serialized_pack):
     """Look in test pack and return names of test lists & test list cycles"""
 
     pack = deserialize_pack(serialized_pack)
@@ -130,7 +130,7 @@ def deserialize_pack(serialized_pack):
     return pack
 
 
-def add_test_pack(serialized_pack, user=None, test_names=None, test_list_names=None, cycle_names=None):
+def add_testpack(serialized_pack, user=None, test_names=None, test_list_names=None, cycle_names=None):
     """
     Takes a serialized data pack and saves the deserialized objects to the db.
 
@@ -301,11 +301,11 @@ def find_next_available(name, existing):
     return name
 
 
-def add_test_pack_django(serialized_pack, user=None, test_names=None, test_list_names=None, cycle_names=None):
+def add_testpack_django(serialized_pack, user=None, test_names=None, test_list_names=None, cycle_names=None):
     """
     Takes a serialized data pack and saves the deserialized objects to the db
 
-    This is a much less efficient, but much simpler version of add_test_pack
+    This is a much less efficient, but much simpler version of add_testpack
     """
 
     modified = created = timezone.now()
@@ -350,10 +350,10 @@ def add_test_pack_django(serialized_pack, user=None, test_names=None, test_list_
     return added, total
 
 
-def load_test_pack(fp, user=None, test_names=None, test_list_names=None, cycle_names=None):
+def load_testpack(fp, user=None, test_names=None, test_list_names=None, cycle_names=None):
     """Takes a file like object or path and loads the test pack into the database."""
 
     if isinstance(fp, str):
         fp = open(fp, 'r', encoding="utf-8")
 
-    add_test_pack(fp.read(), user, test_names, test_list_names, cycle_names)
+    add_testpack(fp.read(), user, test_names, test_list_names, cycle_names)
