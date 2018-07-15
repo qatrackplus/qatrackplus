@@ -137,10 +137,10 @@ $(document).ready(function() {
     $('div.inline-related td').css('cursor', 'move');
 
     /*hides the ordering header*/
-    //$('div.inline-related').find('th:contains("Order")').hide();
+    $('div.inline-related').find('th:contains("Order")').hide();
 
     /*hides the ordering inputs*/
-    //$('div.inline-related').find('input[id$=order]').parent('td').hide();
+    $('div.inline-related').find('input[id$=order]').parent('td').hide();
 
     /*need to reset the order on submit otherwise an inline that was created
     may not have it's order value set*/

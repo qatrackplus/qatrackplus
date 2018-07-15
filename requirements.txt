@@ -12,6 +12,7 @@ django-contrib-comments==1.8.0
 django-coverage==1.2.4
 django-crispy-forms==1.6.0
 django-debug-toolbar==1.8
+django-dynamic-raw-id==2.4
 django-extensions==1.7.4
 django-filter==1.1.0
 django-form-utils==1.0.3

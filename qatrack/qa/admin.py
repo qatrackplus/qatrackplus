@@ -1,6 +1,7 @@
 import re
 
 from admin_views.admin import AdminViews
+from django import VERSION
 from django.apps import apps
 from django.conf import settings
 from django.contrib import admin, messages
@@ -16,6 +17,9 @@ from django.utils import timezone
 from django.utils.html import escape
 from django.utils.text import Truncator
 from django.utils.translation import ugettext as _
+
+from dynamic_raw_id.admin import DynamicRawIDMixin
+from dynamic_raw_id.widgets import DynamicRawIDWidget
 
 from qatrack.attachments.admin import (
     SaveInlineAttachmentUserMixin,
@@ -117,7 +121,7 @@ class TestInfoForm(forms.ModelForm):
         """make sure valid numbers are entered for boolean data"""
 
         if (self.instance.test.type == models.MULTIPLE_CHOICE or
-            self.instance.test.is_string_type()) and self.cleaned_data.get("tolerance"):
+                self.instance.test.is_string_type()) and self.cleaned_data.get("tolerance"):
             if self.cleaned_data["tolerance"].type != models.MULTIPLE_CHOICE:
                 raise forms.ValidationError(_("You can't use a non-multiple choice tolerance with a multiple choice or string test"))
         else:
@@ -483,7 +487,7 @@ class SublistForm(forms.ModelForm):
         """
 
 
-class TestListMembershipInline(admin.TabularInline):
+class TestListMembershipInline(DynamicRawIDMixin, admin.TabularInline):
 
     model = models.TestListMembership
     formset = TestListMembershipInlineFormSet
@@ -491,7 +495,7 @@ class TestListMembershipInline(admin.TabularInline):
     extra = 5
     template = "admin/qa/testlistmembership/edit_inline/tabular.html"
     readonly_fields = (macro_name,)
-    raw_id_fields = ("test",)
+    dynamic_raw_id_fields = ("test",)
 
     def label_for_value(self, value):  # TODO: is this called ever?
         try:
@@ -501,15 +505,19 @@ class TestListMembershipInline(admin.TabularInline):
             return ''
 
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
-        # copied from django.contrib.admin.wigets so we can override the label_for_value function
+        # copied from django.contrib.admin.wigets (and dynamic_raw_id admin.py) so we can override the label_for_value function
         # for the test raw id widget
         db = kwargs.get('using')
         if db_field.name == "test":
-            widget = widgets.ForeignKeyRawIdWidget(db_field.rel,
-                                                   self.admin_site, using=db)
+            rel = db_field.remote_field if VERSION[0] == 2 else db_field.rel
+            widget = DynamicRawIDWidget(rel, self.admin_site)
             widget.label_for_value = self.label_for_value
             kwargs['widget'] = widget
-
+            return db_field.formfield(**kwargs)
+        elif db_field.name in self.dynamic_raw_id_fields:
+            rel = db_field.remote_field if VERSION[0] == 2 else db_field.rel
+            kwargs['widget'] = DynamicRawIDWidget(rel, self.admin_site)
+            return db_field.formfield(**kwargs)
         elif db_field.name in self.raw_id_fields:
             kwargs['widget'] = widgets.ForeignKeyRawIdWidget(db_field.rel,
                                                              self.admin_site, using=db)
@@ -530,7 +538,7 @@ class TestListMembershipInline(admin.TabularInline):
         return super(TestListMembershipInline, self).get_formset(request, obj, **kwargs)
 
 
-class SublistInline(admin.TabularInline):
+class SublistInline(DynamicRawIDMixin, admin.TabularInline):
 
     model = models.Sublist
     fk_name = "parent"
@@ -538,7 +546,7 @@ class SublistInline(admin.TabularInline):
     form = SublistForm
     extra = 1
     template = "admin/qa/testlistmembership/edit_inline/tabular.html"
-    raw_id_fields = ("child",)
+    dynamic_raw_id_fields = ("child",)
 
     def label_for_value(self, value):  # TODO: Is this called ever?
         try:
@@ -552,10 +560,16 @@ class SublistInline(admin.TabularInline):
         # for the test raw id widget
         db = kwargs.get('using')
         if db_field.name == "child":
-            widget = widgets.ForeignKeyRawIdWidget(db_field.rel,
-                                                   self.admin_site, using=db)
+            rel = db_field.remote_field if VERSION[0] == 2 else db_field.rel
+            widget = DynamicRawIDWidget(rel, self.admin_site)
             widget.label_for_value = self.label_for_value
             kwargs['widget'] = widget
+            return db_field.formfield(**kwargs)
+
+        elif db_field.name in self.dynamic_raw_id_fields:
+            rel = db_field.remote_field if VERSION[0] == 2 else db_field.rel
+            kwargs['widget'] = DynamicRawIDWidget(rel, self.admin_site)
+            return db_field.formfield(**kwargs)
 
         elif db_field.name in self.raw_id_fields:
             kwargs['widget'] = widgets.ForeignKeyRawIdWidget(db_field.rel,
@@ -920,10 +934,10 @@ class UnitTestCollectionAdmin(admin.ModelAdmin):
         )
 
 
-class TestListCycleMembershipInline(admin.TabularInline):
+class TestListCycleMembershipInline(DynamicRawIDMixin, admin.TabularInline):
 
     model = models.TestListCycleMembership
-    raw_id_fields = ("test_list",)
+    dynamic_raw_id_fields = ("test_list",)
 
 
 class TestListCycleAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, admin.ModelAdmin):
@@ -947,9 +961,8 @@ class TestListCycleAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, admin.Mod
         return ', '.join("%s: %s" % x for x in enumerate(obj.all_lists().values_list("name", flat=True)))
 
     def get_queryset(self, request):
-        qs =  super(TestListCycleAdmin, self).get_queryset(request)
+        qs = super(TestListCycleAdmin, self).get_queryset(request)
         return qs.prefetch_related("test_lists")
-
 
 
 class FrequencyAdmin(admin.ModelAdmin):

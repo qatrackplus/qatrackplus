@@ -13,9 +13,9 @@ favicon_view = RedirectView.as_view(url=static_url("qatrack_core/img/favicon.ico
 touch_view = RedirectView.as_view(url=static_url("qatrack_core/img/apple-touch-icon.png"), permanent=True)
 
 urlpatterns = [
-
-    url(r'^$', TemplateView.as_view(template_name="homepage.html"), name="home"),
-
+    url(r'^$',
+        TemplateView.as_view(template_name="homepage.html"),
+        name="home"),
     url(r'^accounts/', include('qatrack.accounts.urls')),
     url(r'^qa/', include('qatrack.qa.urls')),
     url(r'^servicelog/', include('qatrack.service_log.urls')),
@@ -26,16 +26,16 @@ urlpatterns = [
 
     # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),
-
     url(r'^favicon\.ico$', favicon_view),
     url(r'^apple-touch-icon\.png$', touch_view),
 
+    # third party
     url(r'^', include('genericdropdown.urls')),
     url(r'^comments/', include('django_comments.urls')),
-
+    url(r'^admin/dynamic_raw_id/', include('dynamic_raw_id.urls')),
     url(r'^api/', include('qatrack.api.urls')),
-
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+] + static(
+    settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
     import debug_toolbar
