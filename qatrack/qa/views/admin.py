@@ -239,13 +239,20 @@ class ImportTestPack(FormView):
         tls = form.cleaned_data['testlists']
         if tls == "all":
             tls = None
+        else:
+            tls = tls.split(",")
+
         cycles = form.cleaned_data['testlistcycles']
         if cycles == "all":
             cycles = None
+        else:
+            cycles = cycles.split(",")
 
         extra_tests = form.cleaned_data['tests']
         if extra_tests == "all":
             extra_tests = None
+        else:
+            extra_tests = extra_tests.split(",")
 
         test_pack = form.cleaned_data['testpack_data']
         counts, totals = add_test_pack(
