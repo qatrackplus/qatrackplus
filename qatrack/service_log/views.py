@@ -1,3 +1,4 @@
+
 import csv
 
 from braces.views import LoginRequiredMixin, PermissionRequiredMixin
@@ -1107,7 +1108,7 @@ class ServiceEventDownTimesList(ServiceEventsBaseList):
     )
 
     def get_page_title(self, f=None):
-        return 'Filter Service Events and View Down Time Summary'
+        return 'Filter Service Events and Up Time Summary'
 
     def duration_lost_time(self, se):
         duration = se.duration_lost_time
@@ -1139,7 +1140,8 @@ def handle_unit_down_time(request):
     if daterange:
         tz = timezone.get_current_timezone()
         date_from = timezone.datetime.strptime(daterange.split(' - ')[0], '%d %b %Y')
-        date_to = timezone.datetime.strptime(daterange.split(' - ')[1], '%d %b %Y') + timezone.timedelta(days=1)
+        date_to = timezone.datetime.strptime(daterange.split(' - ')[1], '%d %b %Y')
+        date_to = timezone.datetime(year=date_to.year, month=date_to.month, day=date_to.day, hour=23, minute=59, second=59)
         date_from = tz.localize(date_from)
         date_to = tz.localize(date_to)
         se_qs = se_qs.filter(datetime_service__gte=date_from, datetime_service__lte=date_to)
@@ -1147,7 +1149,9 @@ def handle_unit_down_time(request):
         date_from = date_from.date()
     else:
         date_from = None
-        date_to = timezone.datetime.now().date() + timezone.timedelta(days=1)
+        date_to = timezone.datetime.now().date()
+        date_to = timezone.datetime(year=date_to.year, month=date_to.month, day=date_to.day, hour=23, minute=59, second=59)
+        se_qs = se_qs.filter(datetime_service__gte=date_from, datetime_service__lte=date_to)
 
     service_areas = request.GET.getlist('service_area', False)
     if service_areas:
@@ -1189,7 +1193,7 @@ def handle_unit_down_time(request):
 
     writer = csv.writer(response)
     rows = [
-        ['Machine Stats: ' + (date_from.strftime('%d %b %Y') + ' to ' + date_to.strftime('%d %b %Y')) if daterange else 'Machine Stats: All time until ' + timezone.datetime.now().strftime('%d %b %Y')],
+        ['Up Time Report: ' + (date_from.strftime('%d %b %Y') + ' to ' + date_to.strftime('%d %b %Y')) if daterange else 'Up Time Report: All time until ' + timezone.datetime.now().strftime('%d %b %Y')],
         [''],
         [''],
         [''],
@@ -1222,12 +1226,11 @@ def handle_unit_down_time(request):
     for u in units:
 
         service_events_unit_qs = se_qs.filter(unit_service_area__unit=u)
-
         potential_time = u.get_potential_time(date_from, date_to)
         unit_vals = [
             u.name,
             u.type.name,
-            potential_time
+            '{:.2f}'.format(potential_time) if potential_time > 0 else '0'
         ]
         totals['potential'] += potential_time
 
@@ -1241,8 +1244,8 @@ def handle_unit_down_time(request):
             lost = lost.total_seconds() / 3600 if lost else 0
 
             unit_vals.append(repairs)
-            unit_vals.append(service)
-            unit_vals.append(lost)
+            unit_vals.append('{:.2f}'.format(service))
+            unit_vals.append('{:.2f}'.format(lost))
 
             totals[t.name + '-repairs'] += repairs
             totals[t.name + '-service'] += service
@@ -1256,12 +1259,12 @@ def handle_unit_down_time(request):
 
         total_num = len(service_events_unit_qs)
 
-        unit_vals += [total_service_time, total_lost_time, total_num]
+        unit_vals += ['{:.2f}'.format(total_service_time), '{:.2f}'.format(total_lost_time), total_num]
 
         if not service_areas:
             available = ((potential_time - total_lost_time) / potential_time) * 100 if potential_time > 0 else 0
             totals['available'] += available
-            unit_vals.append(available)
+            unit_vals.append('{:.2f}'.format(available))
 
         totals['total_service'] += total_service_time
         totals['total_lost'] += total_lost_time
@@ -1269,8 +1272,14 @@ def handle_unit_down_time(request):
 
         rows.append(unit_vals)
 
+    for t in all_service_types:
+        totals[t.name + '-service'] = '{:.2f}'.format(totals[t.name + '-service'])
+        totals[t.name + '-lost'] = '{:.2f}'.format(totals[t.name + '-lost'])
+    totals['total_service'] = '{:.2f}'.format(totals['total_service'])
+    totals['total_lost'] = '{:.2f}'.format(totals['total_lost'])
+
     if not service_areas:
-        totals['available'] = (totals['available'] / len(units)) if len(units) is not 0 else 0
+        totals['available'] = '{:.2f}'.format(totals['available'] / len(units)) if len(units) is not 0 else 0
     rows += [[''], ['']]
     rows.append(['', 'Totals:'] + [str(totals[t]) for t in totals])
 

@@ -50,7 +50,7 @@ require(['jquery', 'moment'], function ($, moment) {
                 url: QAURLs.HANDLE_UNIT_DOWN_TIME,
                 success: function(res) {
                     $('body').removeClass('loading');
-                    var name = 'qatrack_unit_down_time-' + $('input.text_filter[rel=1]:not(.search_init)').val() + '.csv';
+                    var name = 'qatrack_unit_up_time -' + $('input.text_filter[rel=1]:not(.search_init)').val() + '.csv';
                     var csvContent = "data:text/csv;charset=utf-8,";
                     csvContent += res;
                     var encodedUri = encodeURI(csvContent);

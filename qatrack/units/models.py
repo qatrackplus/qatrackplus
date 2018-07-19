@@ -144,8 +144,8 @@ class Modality(models.Model):
 
 def weekday_count(start_date, end_date, uate_list):
     week = {}
-    for i in range((end_date - start_date).days):
-        day = start_date + timedelta(days=i + 1)
+    for i in range((end_date - start_date).days + 1):
+        day = start_date + timedelta(days=i)
         if str(day) not in uate_list:
             day_name = calendar.day_name[day.weekday()].lower()
             week[day_name] = week[day_name] + 1 if day_name in week else 1
@@ -198,22 +198,22 @@ class Unit(models.Model):
             date__range=[date_from, date_to]
         ).order_by('date')
 
-        if self.unitavailabletime_set.filter(date_changed__lt=date_from).exists():
-            self_uat_set = self_uat_set | self.unitavailabletime_set.filter(date_changed__lt=date_from).order_by('-date_changed')[:1]
+        latest_uat = self.unitavailabletime_set.filter(date_changed__lte=date_from).order_by('-date_changed').latest()
+
+        if self.unitavailabletime_set.filter(date_changed__lte=date_from).exists():
+            self_uat_set = self_uat_set | self.unitavailabletime_set.filter(id=latest_uat.id)
 
         potential_time = 0
 
         uate_list = {str(uate.date): uate.hours for uate in self_uate_set}
 
         val_list = self_uat_set.values('date_changed', 'hours_sunday', 'hours_monday', 'hours_tuesday', 'hours_wednesday', 'hours_thursday', 'hours_friday', 'hours_saturday')
-        uat_len = len(val_list)
-        for i in range(uat_len):
-            next_date = val_list[i + 1]['date_changed'] if i < uat_len - 1 else date_to
+        val_list_len = len(val_list)
+        for i in range(val_list_len):
+            next_date = val_list[i + 1]['date_changed'] - timedelta(days=1) if i < val_list_len - 1 else date_to
+            this_date = date_from if val_list[i]['date_changed'] < date_from else val_list[i]['date_changed']
 
-            if val_list[i]['date_changed'] < date_from:
-                days_nums = weekday_count(date_from, next_date, uate_list)
-            else:
-                days_nums = weekday_count(val_list[i]['date_changed'], next_date, uate_list)
+            days_nums = weekday_count(this_date, next_date, uate_list)
 
             for day in days_nums:
                 potential_time += days_nums[day] * val_list[i]['hours_' + day].total_seconds()
