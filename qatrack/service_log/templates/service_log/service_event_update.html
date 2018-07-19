@@ -119,7 +119,7 @@
                                         {{ field.errors }}
                                     {% endif %}
                                 {% endfor %}
-                                <input id="instance-id" type="hidden" readonly="readonly" value="{{ form.instance.pk }}">
+                                <input id="instance-id" type="hidden" readonly="readonly" value="{% if form.instance.pk %}{{ form.instance.pk }}{% endif %}">
                             </div>
                             <div class="row">
                                 <div id="required-fields" class="col-md-6 form-horizontal">

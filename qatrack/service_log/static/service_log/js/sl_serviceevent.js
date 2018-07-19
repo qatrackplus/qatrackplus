@@ -404,6 +404,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
                         .replace(/__se-id__/g, se_id)
                         .replace(/__rtsqa-id__/g, rtsqa_id)
                 );
+                console.log($('#utc-actions-' + prefix).html());
                 if (!rtsqa_id) {
                     $('#utc-actions-' + prefix).find('.perform-btn').remove();
                 }

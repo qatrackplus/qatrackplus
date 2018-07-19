@@ -309,6 +309,16 @@ div.box {
     background-color: #f7f7f7;
     padding: 8px;
 }
+.box-comments .box-comment.err-comment {
+    background-color: #e76167;
+}
+.box-comments .box-comment.err-comment:hover {
+    background-color: #d86268;
+}
+.box-comments .box-comment.err-comment .comment-text .username,
+.box-comments .box-comment.err-comment .comment-text .comment {
+    color: #fff;
+}
 .box-comments .box-comment:hover {
     background-color: #f2f2f2;
 }
