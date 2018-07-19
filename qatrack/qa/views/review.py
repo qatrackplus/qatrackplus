@@ -532,7 +532,7 @@ class OverviewObjects(JSONResponseMixin, View):
                         }
                         due_counts[ds] += 1
 
-            unit_lists[unit.name] = unit_freqs
+            unit_lists[unit.number] = {'unit_freqs': unit_freqs, 'unit_name': unit.name, 'unit_id': unit.id}
 
         return self.render_json_response({'unit_lists': unit_lists, 'due_counts': due_counts, 'success': True})
 
