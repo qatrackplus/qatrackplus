@@ -226,6 +226,7 @@ INSTALLED_APPS = [
     'genericdropdown',
     # 'crispy_forms',
     'widget_tweaks',
+    'dynamic_raw_id',
     'qatrack.cache',
     'qatrack.accounts',
     'qatrack.units',
