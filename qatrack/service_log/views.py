@@ -817,12 +817,12 @@ class ReturnToServiceQABaseList(BaseListableView):
     template_name = 'service_log/rtsqa_list.html'
     paginate_by = 50
 
-    order_by = ['-datetime_assigned']
+    order_by = ['-service_event__datetime_service']
     kwarg_filters = None
 
     fields = (
         'actions',
-        'datetime_assigned',
+        'service_event__datetime_service',
         'service_event__unit_service_area__unit__name',
         'unit_test_collection__name',
         'test_list_instance_pass_fail',
@@ -831,7 +831,7 @@ class ReturnToServiceQABaseList(BaseListableView):
     )
 
     headers = {
-        'datetime_assigned': _('Date Assigned'),
+        'service_event__datetime_service': _('Service Date'),
         'service_event__unit_service_area__unit__name': _('Unit'),
         'unit_test_collection__name': _('Test List'),
         'test_list_instance_pass_fail': _('Pass/Fail'),
@@ -840,7 +840,7 @@ class ReturnToServiceQABaseList(BaseListableView):
     }
 
     widgets = {
-        'datetime_assigned': DATE_RANGE,
+        'service_event__datetime_service': DATE_RANGE,
         'service_event__unit_service_area__unit__name': SELECT_MULTI,
         'service_event__service_status__name': SELECT_MULTI
     }
@@ -869,8 +869,8 @@ class ReturnToServiceQABaseList(BaseListableView):
     )
 
     prefetch_related = (
-        "test_list_instance__testinstance_set",
-        "test_list_instance__testinstance_set__status",
+        'test_list_instance__testinstance_set',
+        'test_list_instance__testinstance_set__status',
         'unit_test_collection',
         'test_list_instance__comments'
     )
@@ -880,7 +880,7 @@ class ReturnToServiceQABaseList(BaseListableView):
         super(ReturnToServiceQABaseList, self).__init__(*args, **kwargs)
         self.templates = {
             'actions': get_template("service_log/table_context_rtsqa_actions.html"),
-            'datetime_assigned': get_template("service_log/table_context_datetime.html"),
+            'service_event__datetime_service': get_template("service_log/table_context_datetime.html"),
             'test_list_instance_pass_fail': get_template("qa/pass_fail_status.html"),
             'test_list_instance_review_status': get_template("qa/review_status.html"),
             'service_event__service_status__name': get_template("service_log/service_event_status_label.html"),
@@ -982,9 +982,9 @@ class ReturnToServiceQABaseList(BaseListableView):
         c.update(generate_review_status_context(rtsqa.test_list_instance))
         return template.render(c)
 
-    def datetime_assigned(self, rtsqa):
-        template = self.templates['datetime_assigned']
-        c = {'datetime': rtsqa.datetime_assigned}
+    def service_event__datetime_service(self, rtsqa):
+        template = self.templates['service_event__datetime_service']
+        c = {'datetime': rtsqa.service_event.datetime_service}
         return template.render(c)
 
     def service_event__service_status__name(self, rtsqa):

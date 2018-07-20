@@ -30,7 +30,7 @@
 <div class="breadcrumbs">
 <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
 &rsaquo; <a href="{% url 'admin:app_list' app_label=cl.opts.app_label %}">{% if cl.opts.app_config.verbose_name == 'Sites' %}Websites{% else %}{{ cl.opts.app_config.verbose_name }}{% endif %}</a>
-&rsaquo; {% if cl.opts.verbose_name_plural == 'sites' %}Websites{% else %}{{ cl.opts.verbose_name_plural|capfirst }}{% endif %}
+&rsaquo; {% if cl.opts.app_config.verbose_name == 'Sites' and cl.opts.verbose_name_plural == 'sites' %}Websites{% else %}{{ cl.opts.verbose_name_plural|capfirst }}{% endif %}
 </div>
 {% endblock %}
 {% endif %}

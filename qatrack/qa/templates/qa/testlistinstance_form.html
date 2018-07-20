@@ -461,7 +461,7 @@
                                               </tr>
                                             {% endif %}
                                         {% endwith %}
-                                        {% qa_value_form test_form test_list perms test_info=test_form.get_test_info  %}
+                                        {% qa_value_form test_form test_list perms test_info=test_form.get_test_info unit_test_collection=unit_test_collection %}
 
                                         {% if not forloop.last and borders.ends|lookup:forloop.counter0 %}
                                           {% with borders.starts|lookup:forloop.counter as delim %}

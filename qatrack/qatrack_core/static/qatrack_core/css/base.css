@@ -561,3 +561,11 @@ table ul.multiselect-container.dropdown-menu {
          -o-transition:      -o-transform 0.5s ease-in-out;
             transition:         transform 0.5s ease-in-out;
 }
+.table-custom-listable > thead > tr:nth-child(2) > th {
+    color: transparent;
+}
+.table-custom-listable > thead > tr:nth-child(1) > th.sorting:hover,
+.table-custom-listable > thead > tr:nth-child(1) > th.sorting_desc:hover,
+.table-custom-listable > thead > tr:nth-child(1) > th.sorting_asc:hover {
+    background-color: #e7e7e7;
+}

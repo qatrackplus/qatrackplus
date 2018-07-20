@@ -2111,7 +2111,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             $test_lists.val(test_lists).change();
             $tests.val(tests).change();
 
-            $chart_type.val(chart_type);
+            $chart_type.val(chart_type ? chart_type : 'basic');
             if (chart_type === 'control') {
                 $chart_type.change();
                 $subgroup_size.val(subgroup_size);
@@ -2126,9 +2126,14 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             }
             $combine_data.prop('checked', combine_data);
             $relative_diff.prop('checked', relative_diff);
-            $date_range.data('daterangepicker').setStartDate(moment(date_range.split('%20-%20')[0], 'DD-MM-YYYY').format('DD-MM-YYYY'));
-            $date_range.data('daterangepicker').setEndDate(moment(date_range.split('%20-%20')[1], 'DD-MM-YYYY').format('DD-MM-YYYY'));
-            $status_selector.val(statuses).change();
+            if (!date_range) {
+                $date_range.data('daterangepicker').setStartDate(moment().subtract(1, 'years').format('DD-MM-YYYY'));
+                $date_range.data('daterangepicker').setEndDate(moment().format('DD-MM-YYYY'));
+            } else {
+                $date_range.data('daterangepicker').setStartDate(moment(date_range.split('%20-%20')[0], 'DD-MM-YYYY').format('DD-MM-YYYY'));
+                $date_range.data('daterangepicker').setEndDate(moment(date_range.split('%20-%20')[1], 'DD-MM-YYYY').format('DD-MM-YYYY'));
+            }
+            $status_selector.val(statuses.length === 0 ? [1, 2] : statuses).change();
             $show_events.prop('checked', show_events);
             $review_required.prop('checked', review_required);
 
@@ -2161,6 +2166,9 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
         function export_csv() {
             downloadURL("./export/csv/?" + $.param(get_data_filters()));
         }
+
+        $('#filter-box').fadeTo(1500, 1);
+
     });
 
 });

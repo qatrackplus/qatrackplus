@@ -7,6 +7,13 @@
 /*.select2-selection:active {*/
   /*outline: none;*/
 /*}*/
+/*.select2-search.select2-search--inline input.select2-search__field {*/
+  /*margin-top: 0;*/
+/*}*/
+.select2-container--default .select2-results__option[aria-selected=true] {
+  background-color: #627585 !important;
+  color: #fff !important;
+}
 .select2-container--default.select2-container--focus .select2-selection,
 .select2-selection.select2-container--focus .select2-selection,
 .select2-container--default:focus .select2-selection,
@@ -17,11 +24,25 @@
   outline: none;
 }
 .select2-container--default .select2-selection--single,
-.select2-selection .select2-selection--single {
+.select2-selection .select2-selection--single,
+.select2-container:not(.select2-container--disabled) .select2-selection--multiple {
   border: 1px solid #d2d6de;
+  box-shadow: 2px 2px 2px #ddd;
+}
+.select2-container--default .select2-selection--single,
+.select2-selection .select2-selection--single {
   border-radius: 0;
   padding: 4px 12px;
   height: 30px;
+}
+/*.select2-container--default .select2-selection--multiple .select2-selection__choice {*/
+  /*margin-top: 0;*/
+/*}*/
+.select2-container--default.select2-container--disabled .select2-selection--single {
+  box-shadow: none;
+}
+.select2-container--default.select2-container--disabled .select2-selection__rendered  {
+  color: #bbb;
 }
 .select2-container--default.select2-container--open {
   border-color: #3c8dbc;
@@ -31,8 +52,8 @@
   border-radius: 0;
 }
 .select2-container--default .select2-results__option--highlighted[aria-selected] {
-  background-color: #627585;
-  color: white;
+  background-color: #ddd;
+  color: #000;
 }
 .select2-results__option {
   padding: 4px 12px;
@@ -67,9 +88,7 @@
 }
 .select2-container--default .select2-results__option[aria-disabled=true] {
   color: #999;
-}
-.select2-container--default .select2-results__option[aria-selected=true] {
-  background-color: #ddd;
+  background-color: #627585;
 }
 .select2-container--default .select2-results__option[aria-selected=true],
 .select2-container--default .select2-results__option[aria-selected=true]:hover {
@@ -115,4 +134,7 @@
 .required-option {
   color: #bbb;
   font-style: italic;
+}
+.select2-container--default li.select2-results__option.loading-results {
+  background-color: #fff;
 }

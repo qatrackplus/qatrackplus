@@ -339,3 +339,44 @@ aside.main-sidebar {
     background-color: #fff;
     color: #000;
 }
+.btn {
+    border-color: transparent !important;
+    box-shadow: 2px 2px 2px #ddd !important;
+    -moz-box-shadow: 2px 2px 2px #ddd !important;
+    -webkit-box-shadow: 2px 2px 2px #ddd !important;
+}
+.btn:focus {
+    border-color: #3c8dbc !important;
+}
+input.form-control:not([type='checkbox']):not([type='radio']):not([disabled]):not(.disabled),
+select.form-control:not([disabled]):not(.disabled),
+textarea.form-control:not([disabled]):not(.disabled) {
+    /*border: none !important;*/
+    box-shadow: 2px 2px 2px #ddd !important;
+    -moz-box-shadow: 2px 2px 2px #ddd !important;
+    -webkit-box-shadow: 2px 2px 2px #ddd !important;
+}
+.btn.btn-primary, .btn.btn-info {
+    box-shadow: 3px 3px 2px #c2c2c2 !important;
+    -moz-box-shadow: 3px 3px 2px #c2c2c2 !important;
+    -webkit-box-shadow: 3px 3px 2px #c2c2c2 !important;
+}
+.btn-group .btn {
+    box-shadow: none !important;
+    -moz-box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+}
+.btn-group .pull-right {
+    height: 100%;
+}
+.btn-group .pull-left {
+    overflow-x: hidden;
+    max-width: calc(100% - 25px);
+}
+.btn-group {
+    max-width: 100%;
+    white-space: nowrap;
+    box-shadow: 2px 2px 2px #ddd !important;
+    -moz-box-shadow: 2px 2px 2px #ddd !important;
+    -webkit-box-shadow: 2px 2px 2px #ddd !important;
+}
