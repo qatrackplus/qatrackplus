@@ -416,7 +416,7 @@ input[type="number"] {
 }
 .hide-extra-text {
     text-overflow: ellipsis;
-    text-wrap: none;
+    word-wrap: none;
     overflow: hidden;
     white-space: nowrap;
 }
@@ -485,6 +485,7 @@ input[type="number"] {
     -moz-appearance: textfield;
 }
 .preload * {
+  transition: none !important;
   -webkit-transition: none !important;
   -moz-transition: none !important;
   -ms-transition: none !important;

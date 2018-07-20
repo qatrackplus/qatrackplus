@@ -1,0 +1,48 @@
+#    Copyright 2018 Simon Biggs
+
+#    Licensed under the Apache License, Version 2.0 (the "License");
+#    you may not use this file except in compliance with the License.
+#    You may obtain a copy of the License at
+
+#        http://www.apache.org/licenses/LICENSE-2.0
+
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS,
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    See the License for the specific language governing permissions and
+#    limitations under the License.
+
+version: "3.6"
+
+services:
+  qatrack-nginx:
+    restart: always
+    image: nginx:1.15
+    volumes:
+      - ../../nginx.conf:/etc/nginx/nginx.conf:ro
+      - ../../../../qatrack/static:/usr/src/qatrackplus/qatrack/static:ro
+      - ../../user-data/ssl:/root/ssl:ro
+    links:
+      - qatrack-django:qatrack-django
+    ports:
+      - "80:80"
+      - "443:443"
+
+  qatrack-django:
+    restart: always
+    image: simonbiggs/qatrack:0.3.0.dev
+    links:
+      - qatrack-postgres:qatrack-postgres
+    volumes:
+      - ../../../../.:/usr/src/qatrackplus:rw
+      - ../../user-data/pip-cache:/root/.cache/pip:rw
+    command: /bin/bash -c 'cd /usr/src/qatrackplus; dos2unix deploy/docker/init.sh; deploy/docker/init.sh'
+
+  qatrack-postgres:
+    restart: always
+    image: postgres:10.4
+    volumes:
+      - qatrack-postgres-volume:/var/lib/postgresql/data:rw
+
+volumes:
+  qatrack-postgres-volume:
