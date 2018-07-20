@@ -67,6 +67,7 @@ body.sidebar-collapse > div.wrapper > aside.main-sidebar > section.sidebar > ul 
 }
 .sidebar-mini.sidebar-collapse .sidebar-menu > li > a > div {
     display: none !important;
+    transform: translateZ(0);
     -webkit-transform: translateZ(0);
 }
 
