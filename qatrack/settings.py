@@ -227,6 +227,7 @@ INSTALLED_APPS = [
     'genericdropdown',
     # 'crispy_forms',
     'widget_tweaks',
+    'dynamic_raw_id',
     'qatrack.cache',
     'qatrack.accounts',
     'qatrack.units',
@@ -513,6 +514,9 @@ DEFAULT_AVAILABLE_TIMES = {
     'hours_friday': datetime.timedelta(hours=8, minutes=0),
     'hours_saturday': datetime.timedelta(hours=0, minutes=0),
 }
+
+if os.path.exists('/root/.is_inside_docker'):
+    from .docker_settings import *  # NOQA
 
 # ------------------------------------------------------------------------------
 # local_settings contains anything that should be overridden

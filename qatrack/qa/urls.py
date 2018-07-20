@@ -40,8 +40,8 @@ urlpatterns = [
         qatrack.qa.views.admin.testlist_json,
         name='qa_copy_refs_and_tols_testlist_json'
     ),
-    url(r'^admin/export_test_pack/$', admin.ExportTestPack.as_view(), name="qa_export_test_pack"),
-    url(r'^admin/import_test_pack/$', admin.ImportTestPack.as_view(), name="qa_import_test_pack"),
+    url(r'^admin/export_testpack/$', admin.ExportTestPack.as_view(), name="qa_export_testpack"),
+    url(r'^admin/import_testpack/$', admin.ImportTestPack.as_view(), name="qa_import_testpack"),
     url(r"^$", base.UTCList.as_view(), name="all_lists"),
 
     # view for composite calculations via ajax

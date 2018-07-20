@@ -11,7 +11,7 @@ from django.views.generic import FormView
 from formtools.preview import FormPreview
 
 from qatrack.qa import models
-from qatrack.qa.testpack import add_test_pack, create_testpack
+from qatrack.qa.testpack import add_testpack, create_testpack
 
 
 class SetReferencesAndTolerancesForm(forms.Form):
@@ -232,24 +232,31 @@ class ImportTestPack(FormView):
         next_ = self.request.GET.get("next", None)
         if next_ is not None:
             return next_
-        return reverse("qa_import_test_pack")
+        return reverse("qa_import_testpack")
 
     def form_valid(self, form):
 
         tls = form.cleaned_data['testlists']
         if tls == "all":
             tls = None
+        else:
+            tls = tls.split(",")
+
         cycles = form.cleaned_data['testlistcycles']
         if cycles == "all":
             cycles = None
+        else:
+            cycles = cycles.split(",")
 
         extra_tests = form.cleaned_data['tests']
         if extra_tests == "all":
             extra_tests = None
+        else:
+            extra_tests = extra_tests.split(",")
 
-        test_pack = form.cleaned_data['testpack_data']
-        counts, totals = add_test_pack(
-            test_pack,
+        testpack = form.cleaned_data['testpack_data']
+        counts, totals = add_testpack(
+            testpack,
             self.request.user,
             test_names=extra_tests,
             test_list_names=tls,
