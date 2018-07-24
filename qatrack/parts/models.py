@@ -104,7 +104,7 @@ class Part(models.Model):
 
     part_number = models.CharField(max_length=32, unique=True)
     alt_part_number = models.CharField(
-        max_length=32, blank=True, null=True
+        max_length=32, blank=True, null=True, verbose_name=_('Alternate part number')
     )
     description = models.TextField(help_text=_('Brief description of this part'))
     quantity_min = models.PositiveIntegerField(

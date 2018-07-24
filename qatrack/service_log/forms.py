@@ -650,6 +650,13 @@ class ServiceEventForm(BetterModelForm):
             self.instance.is_review_required = True
 
         self.instance.unit_service_area = usa
+
+        # print('---------------------------------------------')
+        # print(self.changed_data)
+        # for k, v in self.data.items():
+        #     if k.startswith('rtsqa-'):
+        #         print('{} - {}'.format(k, v))
+
         super(ServiceEventForm, self).save(*args, **kwargs)
 
         return self.instance

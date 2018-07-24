@@ -166,6 +166,7 @@ class Unit(models.Model):
     install_date = models.DateField(null=True, blank=True, help_text=_('Optional install date'))
     date_acceptance = models.DateField(
         help_text=_('Changing acceptance date will delete unit available times that occur before it'),
+        verbose_name=('Acceptance date')
     )
     active = models.BooleanField(default=True, help_text=_('Set to false if unit is no longer in use'))
     restricted = models.BooleanField(default=False, help_text=_('Set to false to restrict unit from operation'))

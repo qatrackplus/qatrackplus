@@ -354,11 +354,6 @@ textarea.form-control:not([disabled]):not(.disabled) {
     -moz-box-shadow: 2px 2px 2px #ddd !important;
     -webkit-box-shadow: 2px 2px 2px #ddd !important;
 }
-.btn.btn-primary, .btn.btn-info {
-    box-shadow: 3px 3px 2px #c2c2c2 !important;
-    -moz-box-shadow: 3px 3px 2px #c2c2c2 !important;
-    -webkit-box-shadow: 3px 3px 2px #c2c2c2 !important;
-}
 .btn-group .btn {
     box-shadow: none !important;
     -moz-box-shadow: none !important;

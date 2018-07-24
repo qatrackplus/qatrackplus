@@ -145,8 +145,8 @@ class ServiceEvent(models.Model):
     unit_service_area = models.ForeignKey(UnitServiceArea, on_delete=models.PROTECT)
     service_type = models.ForeignKey(ServiceType, on_delete=models.PROTECT)
     service_event_related = models.ManyToManyField(
-        'self', symmetrical=True, blank=True, verbose_name=_('Service events related'),
-        help_text=_('Was there a previous service event that might be related to this event?')
+        'self', symmetrical=True, blank=True, verbose_name=_('Related service events'),
+        help_text=_('Enter the service event IDs of any related service events.')
     )
     service_status = models.ForeignKey(ServiceEventStatus, verbose_name=_('Status'), on_delete=models.PROTECT)
 

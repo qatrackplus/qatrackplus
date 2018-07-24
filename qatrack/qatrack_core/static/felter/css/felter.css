@@ -24,6 +24,11 @@
     font-style: italic;
     padding: 0 5px;
 }
+.felter .felter-top-option.felter-selected,
+.felter .felter-top-option.felter-selected:hover {
+    background-color: #627585;
+    color: #fff;
+}
 .felter .felter-option:hover,
 .felter .felter-top-option:hover {
     background-color: #ddd;

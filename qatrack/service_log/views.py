@@ -24,7 +24,8 @@ from django.views.generic.edit import ModelFormMixin, ProcessFormView
 
 from listable.views import (
     BaseListableView, DATE_RANGE, SELECT_MULTI, SELECT,
-    TODAY, YESTERDAY, LAST_WEEK, THIS_WEEK, LAST_MONTH, THIS_MONTH, LAST_YEAR, THIS_YEAR
+    TODAY, YESTERDAY, LAST_WEEK, THIS_WEEK, LAST_7_DAYS, LAST_MONTH, THIS_MONTH, LAST_30_DAYS, LAST_YEAR, THIS_YEAR,
+    LAST_365_DAYS, YEAR_TO_DATE,
 )
 
 if settings.USE_PARTS:
@@ -302,6 +303,19 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
         messages.add_message(self.request, messages.ERROR, _('Please correct the error below.'))
         return super().form_invalid(form)
 
+    def reset_status(self, form):
+
+        if not form.instance.service_status.is_review_required:
+            default = models.ServiceEventStatus.get_default()
+            form.instance.service_status = default
+            messages.add_message(self.request, messages.WARNING, _(
+                'Due to changes detected, service event %s status has been reset to %s' % (
+                    form.instance.id, default.name.lower()
+                )
+            ))
+            form.changed_data.append('service_status')
+            form.cleaned_data['service_status'] = default
+
     def form_valid(self, form):
 
         context = self.get_context_data()
@@ -321,6 +335,9 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
             return self.render_to_response(context)
 
         new = form.instance.pk is None
+
+        if rtsqa_formset.has_changed():
+            self.reset_status(form)
 
         service_event = form.save()
         service_event_related = form.cleaned_data.get('service_event_related_field')
@@ -605,17 +622,8 @@ class UpdateServiceEvent(ServiceEventUpdateCreate):
             form.instance.user_modified_by = self.request.user
             form.instance.datetime_modified = timezone.now()
 
-            # If service status was not changed explicitly, but needs to be reset to default status due to other changes.
-            if not form.instance.service_status.is_review_required:
-                default = models.ServiceEventStatus.get_default()
-                form.instance.service_status = default
-                messages.add_message(self.request, messages.WARNING, _(
-                    'Due to changes detected, service event %s status has been reset to %s' % (
-                        form.instance.id, default.name
-                    )
-                ))
-                form.changed_data.append('service_status')
-                form.cleaned_data['service_status'] = default
+            # Check if service status was not changed explicitly, but needs to be reset to default status due to other changes.
+            self.reset_status(form)
 
         return super(UpdateServiceEvent, self).form_valid(form)
 
@@ -697,7 +705,9 @@ class ServiceEventsBaseList(BaseListableView):
     }
 
     date_ranges = {
-        'datetime_service': [TODAY, YESTERDAY, LAST_WEEK, THIS_WEEK, LAST_MONTH, THIS_MONTH, THIS_YEAR]
+        'datetime_service': [
+            YESTERDAY, LAST_WEEK, LAST_7_DAYS, LAST_MONTH, LAST_30_DAYS, LAST_YEAR, LAST_365_DAYS, YEAR_TO_DATE
+        ]
     }
 
     search_fields = {
@@ -1085,7 +1095,9 @@ class ServiceEventDownTimesList(ServiceEventsBaseList):
     }
 
     date_ranges = {
-        'datetime_service': [TODAY, YESTERDAY, LAST_WEEK, THIS_WEEK, LAST_MONTH, THIS_MONTH, LAST_YEAR, THIS_YEAR]
+        'datetime_service': [
+            YESTERDAY, LAST_WEEK, LAST_7_DAYS, LAST_MONTH, LAST_30_DAYS, LAST_YEAR, LAST_365_DAYS, YEAR_TO_DATE
+        ]
     }
 
     search_fields = {
@@ -1197,7 +1209,7 @@ def handle_unit_down_time(request):
         [''],
         [''],
         [''],
-        ['Unit Name', 'Unit Type', 'Potential Time (h)'],
+        ['Unit Name', 'Unit Type', 'Available Time Hrs'],
     ]
 
     all_service_types = models.ServiceType.objects.all()
@@ -1215,7 +1227,7 @@ def handle_unit_down_time(request):
     totals['total_num'] = 0
 
     if not service_areas:
-        rows[4].append('% Available')
+        rows[4].append('% Up Time')
         totals['available'] = 0
     else:
         rows[1] = ['For Service Areas: ', ''] + [sa for sa in service_areas]
