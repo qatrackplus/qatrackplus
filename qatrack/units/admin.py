@@ -50,7 +50,6 @@ class UnitFormAdmin(ModelForm):
             'install_date',
             'date_acceptance',
             'active',
-            'restricted',
             'type',
             'site',
             'modalities',

@@ -169,7 +169,7 @@ class Unit(models.Model):
         verbose_name=('Acceptance date')
     )
     active = models.BooleanField(default=True, help_text=_('Set to false if unit is no longer in use'))
-    restricted = models.BooleanField(default=False, help_text=_('Set to false to restrict unit from operation'))
+    # restricted = models.BooleanField(default=False, help_text=_('Set to false to restrict unit from operation'))
     is_serviceable = models.BooleanField(
         default=False, help_text=_('Set to true to enable this unit to be selectable in service events')
     )
