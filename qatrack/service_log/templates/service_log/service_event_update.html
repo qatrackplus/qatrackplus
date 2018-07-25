@@ -509,6 +509,9 @@
             <div class="row">
                 <div class="col-md-12">
                     <button class="btn btn-flat btn-primary service-save pull-right">Save</button>
+                    {% if perms.service_log.delete_service_event and form.instance.id %}
+                        <div href="#" class="btn btn-flat btn-default service-delete pull-left" data-toggle="modal" data-target="#delete-modal">Delete</div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -577,6 +580,31 @@
             {% endif %}
         </div>
     </div>
+
+    {% if perms.service_log.delete_service_event and form.instance.id %}
+        <div class="modal fade" id="delete-modal" tabindex="-1" role="dialog" aria-labelledby="delete-modal-label" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title pull-left" id="delete-modal-label">Delete Service Event {{ form.instance.id }}?</h4>
+                        <button type="button" class="close pull-right" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+
+                    </div>
+                    <div class="modal-footer">
+                        <form method="post" action="{% url 'sl_delete' pk=form.instance.id %}{% if next_url %}?next={{ next_url }}{% endif %}">
+                            {% csrf_token %}
+                            <button type="button" class="btn btn-flat btn-default" data-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-flat btn-danger pull-left">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
 
 
 {% endblock body %}

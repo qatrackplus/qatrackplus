@@ -110,7 +110,7 @@ class PartUsedForm(forms.ModelForm):
 
         if quantity < 1:
             self.add_error('quantity', 'Quantity must be greater than 0')
-            
+
         return quantity
 
 

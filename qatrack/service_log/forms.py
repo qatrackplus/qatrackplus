@@ -664,6 +664,10 @@ class ServiceEventForm(BetterModelForm):
 
     def clean(self):
         super(ServiceEventForm, self).clean()
+
+        if not self.cleaned_data.get('unit_field'):
+            self.add_error('unit_field_fake', ValidationError('This field is required'))
+
         if 'initiated_utc_field' in self._errors:
             del self._errors['initiated_utc_field']
 
@@ -696,12 +700,6 @@ class ServiceEventForm(BetterModelForm):
             self.cleaned_data['unit_field'] = self.instance.unit_service_area.unit
 
         return self.cleaned_data
-
-    def clean_unit_field(self):
-        unit = self.cleaned_data['unit_field']
-        if not unit:
-            self.add_error('unit_field_fake', ValidationError('This field is required'))
-        return unit
 
     def clean_unit_field_fake(self):
         return self.cleaned_data.get('unit_field')

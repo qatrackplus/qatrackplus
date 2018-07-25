@@ -1,3 +1,6 @@
+
+from decimal import Decimal
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils.translation import ugettext as _
 
@@ -111,7 +114,10 @@ class Part(models.Model):
         default=0, help_text=_('Notify when the quantity of this part in storage falls below this number'),
     )
     quantity_current = models.PositiveIntegerField(help_text=_('The number of parts in storage currently'), default=0, editable=False)
-    cost = models.DecimalField(default=0, decimal_places=2, max_digits=10, help_text=_('Cost of this part'), null=True, blank=True)
+    cost = models.DecimalField(
+        default=0, decimal_places=2, max_digits=10, help_text=_('Cost of this part'), null=True, blank=True,
+        validators=[MinValueValidator(Decimal('0.00'))]
+    )
     notes = models.TextField(max_length=255, blank=True, null=True, help_text=_('Additional comments about this part'))
     is_obsolete = models.BooleanField(default=False, help_text=_('Is this part now obsolete?'))
 

@@ -301,8 +301,9 @@ class UnitTypeAdmin(admin.ModelAdmin):
         )
 
     def model_name(self, obj):
-        m = "" if not obj.model else " - %s" % obj.model
-        return "%s: %s%s" % (obj.vendor.name, obj.name, m)
+        model = ' - {}'.format(obj.model) if obj.model else ''
+        vendor_name = '{}: '.format(obj.vendor.name) if obj.vendor else ''
+        return "{}{}{}".format(vendor_name, obj.name, model)
 
 
 admin.site.register(Unit, UnitAdmin)

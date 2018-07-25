@@ -7,7 +7,8 @@ from django_comments.models import Comment
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.context_processors import PermWrapper
-from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.models import User, Permission
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
@@ -18,7 +19,8 @@ from django.http import JsonResponse, HttpResponseRedirect, Http404, HttpRespons
 from django.shortcuts import redirect
 from django.template.loader import get_template
 from django.utils.translation import ugettext as _
-from django.views.generic import TemplateView, DetailView
+from django.views.decorators.csrf import csrf_protect
+from django.views.generic import TemplateView, DetailView, DeleteView
 from django.views.generic.detail import SingleObjectTemplateResponseMixin
 from django.views.generic.edit import ModelFormMixin, ProcessFormView
 
@@ -297,6 +299,8 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
             if settings.USE_PARTS:
                 context_data['part_used_formset'] = p_forms.PartUsedFormset(instance=self.object, prefix='parts')
 
+        if self.request.GET.get('next'):
+            context_data['next_url'] = self.request.GET.get('next')
         return context_data
 
     def form_invalid(self, form):
@@ -660,6 +664,21 @@ class DetailsServiceEvent(DetailView):
             raise Http404
 
 
+@permission_required(Permission.objects.filter(codename='delete_serviceevent'))
+@csrf_protect
+def delete_service_event(request, pk):
+
+    next_ = request.GET.get("next", None)
+
+    try:
+        models.ServiceEvent.objects.get(pk=pk).delete()
+        messages.add_message(request, messages.WARNING, 'Service event {} has been deleted'.format(pk))
+    except ObjectDoesNotExist:
+        messages.add_message(request, messages.ERROR, 'Service event {} could not be deleted'.format(pk))
+
+    return HttpResponseRedirect(reverse('sl_list_all') if next_ is None else next_)
+
+
 class ServiceEventsBaseList(BaseListableView):
     """
     This view provides a base for any sort of listing of
@@ -1020,6 +1039,7 @@ class TLISelect(UTCInstances):
         return template.render(c)
 
 
+@login_required
 def tli_statuses(request):
 
     try:
@@ -1141,6 +1161,7 @@ class ServiceEventDownTimesList(ServiceEventsBaseList):
             return '{}:{:02}'.format(hours, minutes)
 
 
+@login_required
 def handle_unit_down_time(request):
 
     se_qs = models.ServiceEvent.objects.select_related(
