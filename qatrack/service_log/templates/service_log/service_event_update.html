@@ -458,6 +458,7 @@
                                             <tbody id="parts-used-tbody">
 
                                                 {% for pu_form in part_used_formset.forms %}
+
                                                     <tr id="{{ pu_form.prefix }}">
                                                         {{ pu_form.id }}
                                                         <td id="part-{{ pu_form.prefix }}" class="form-group align-top{% if pu_form.part.errors %} has-error{% endif %}" title="{{ pu_form.part.help_text }}">

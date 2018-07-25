@@ -98,6 +98,21 @@ class PartUsedForm(forms.ModelForm):
         self.fields['part'].widget.attrs['class'] += ' parts-used-part'
         self.fields['from_storage'].widget.attrs['class'] += ' parts-used-from_storage'
 
+    def clean_quantity(self):
+
+        quantity = self.cleaned_data['quantity']
+        from_storage = self.cleaned_data['from_storage']
+        if from_storage and quantity > p_models.PartStorageCollection.objects.get(
+            part=self.cleaned_data['part'], storage=from_storage
+        ).quantity:
+            self.add_error('quantity', 'Quantity used greater than quantity in storage')
+            self.add_error('from_storage', 'Quantity used greater than quantity in storage')
+
+        if quantity < 1:
+            self.add_error('quantity', 'Quantity must be greater than 0')
+            
+        return quantity
+
 
 PartUsedFormset = forms.inlineformset_factory(sl_models.ServiceEvent, p_models.PartUsed, form=PartUsedForm, extra=2)
 

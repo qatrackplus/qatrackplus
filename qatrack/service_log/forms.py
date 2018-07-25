@@ -606,7 +606,7 @@ class ServiceEventForm(BetterModelForm):
         for f in self.fields:
             classes = self.fields[f].widget.attrs.get('class', '')
             classes += ' form-control'
-            self.fields[f].widget.attrs.update({'class': classes})
+            self.fields[f].widget.attrs.update({'class': classes, 'autocomplete': 'off'})
 
         for f in ['is_review_required_fake', 'is_review_required']:
             classes = self.fields[f].widget.attrs.get('class', '')
@@ -658,13 +658,6 @@ class ServiceEventForm(BetterModelForm):
             self.instance.is_review_required = True
 
         self.instance.unit_service_area = usa
-
-        # print('---------------------------------------------')
-        # print(self.changed_data)
-        # for k, v in self.data.items():
-        #     if k.startswith('rtsqa-'):
-        #         print('{} - {}'.format(k, v))
-
         super(ServiceEventForm, self).save(*args, **kwargs)
 
         return self.instance

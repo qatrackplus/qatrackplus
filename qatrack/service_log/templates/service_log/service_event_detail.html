@@ -363,7 +363,7 @@
                                                 <tr>
                                                     <td>{{ pu.part }}</td>
                                                     <td>{{ pu.quantity }}</td>
-                                                    <td>{{ pu.from_storage }}</td>
+                                                    <td>{% if pu.from_storage %}{{ pu.from_storage }}{% endif %}</td>
                                                 </tr>
                                             {% endfor %}
 

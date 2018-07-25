@@ -445,14 +445,14 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
 
                 pu_instance = p_form.instance
 
-                initial_p = None if is_new else p_form.initial['part']
+                initial_p = p_form.initial.get('part', None)
                 if delete:
                     current_p = p_form.initial['part']
                 else:
                     current_p = p_form.cleaned_data['part']
 
-                initial_s = p_form.initial['from_storage'] if 'from_storage' in p_form.initial else None
-                current_s = p_form.cleaned_data['from_storage'] if 'from_storage' in p_form.cleaned_data else None
+                initial_s = p_form.initial.get('from_storage', None)
+                current_s = p_form.cleaned_data.get('from_storage', None)
 
                 try:
                     current_psc = p_models.PartStorageCollection.objects.get(
@@ -470,7 +470,7 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
                     initial_psc = None
 
                 initial_qty = 0 if is_new else p_form.initial['quantity']
-                current_qty = p_form.cleaned_data['quantity'] if 'quantity' in p_form.cleaned_data else initial_qty
+                current_qty = p_form.cleaned_data.get('quantity', initial_qty)
                 change = current_qty - initial_qty
 
                 if delete and not is_new:
@@ -1163,7 +1163,8 @@ def handle_unit_down_time(request):
         date_from = None
         date_to = timezone.datetime.now().date()
         date_to = timezone.datetime(year=date_to.year, month=date_to.month, day=date_to.day, hour=23, minute=59, second=59)
-        se_qs = se_qs.filter(datetime_service__gte=date_from, datetime_service__lte=date_to)
+        se_qs = se_qs.filter(datetime_service__lte=date_to)
+        date_to = date_to.date()
 
     service_areas = request.GET.getlist('service_area', False)
     if service_areas:

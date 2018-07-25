@@ -401,7 +401,9 @@ require(['jquery', 'moment', 'd3', 'daterangepicker', 'select2', 'felter', 'sl_u
                             available_time_changed,
                             unit_name = unit_available_time_data[unit_id].name;
 
-                        if (uat_data.map(v => v.date_changed).indexOf(day_str) !== -1) {
+                        console.log(uat_data);
+                        console.log(uat_data.map(function(v) {return v.date_changed}));
+                        if (uat_data.map(function(v) {return v.date_changed}).indexOf(day_str) !== -1) {
                             available_time_changed = true;
                             var uat_details = $.grep(uat_data, function(v){ return v.date_changed === day_str; })[0];
                         } else {
@@ -714,9 +716,7 @@ require(['jquery', 'moment', 'd3', 'daterangepicker', 'select2', 'felter', 'sl_u
                     .data(function(d) {
                         return d.hours_data.filter(function(v) {
                             return v.day_edit_name && selected_units.indexOf(v.id) !== -1;
-                        }).map(
-                            v => v.day_edit_name
-                        ).filter(function(v, i, self) {
+                        }).map(function(v) {return v.day_edit_name; }).filter(function(v, i, self) {
                             return self.indexOf(v) === i;
                         });
                     });
