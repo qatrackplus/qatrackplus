@@ -127,7 +127,8 @@
                                     {% for field in form.fieldsets.left_fields %}
                                         <div class="form-group {% if field.errors %}has-error{% endif %}" title="{{ field.help_text }}">
                                             <label for="{{ field.id_for_label }}" class="col-sm-4">
-                                                {{ field.label }}
+                                            {{ field.required }}
+                                                {{ field.label }}{% if field.field.required %} *{% endif %}
                                                 {% if field.help_text %}
                                                     <div class="help-block margin-0">{{ field.help_text }}</div>
                                                 {% endif %}
@@ -148,7 +149,7 @@
                                     {% for field in form.fieldsets.right_fields %}
                                         <div class="form-group {% if field.errors %}has-error{% endif %}" title="{{ field.help_text }}">
                                             <label for="{{ field.id_for_label }}" class="col-sm-4">
-                                                {{ field.label }}
+                                                {{ field.label }}{% if field.field.required %} *{% endif %}
                                                 {% if field.help_text %}
                                                     <div class="help-block margin-0">{{ field.help_text }}</div>
                                                 {% endif %}
@@ -170,7 +171,7 @@
                                         <div class="form-group {% if field.errors %}has-error{% endif %}" title="{{ field.help_text }}">
                                             <div class="col-sm-12">
                                                 <label for="{{ field.id_for_label }}" class="">
-                                                    <span>{{ field.label }}</span>
+                                                    <span>{{ field.label }}{% if field.field.required %} *{% endif %}</span>
                                                     {% if field.help_text %} - <span class="help-block margin-bottom-0 display-inline-block">{{ field.help_text }}</span>{% endif %}
                                                 </label>
                                                 {{ field }}
@@ -188,7 +189,7 @@
                                         <div class="form-group {% if field.errors %}has-error{% endif %}" title="{{ field.help_text }}">
                                             <div class="col-sm-12">
                                                 <label for="{{ field.id_for_label }}" class="">
-                                                    <span>{{ field.label }}</span>
+                                                    <span>{{ field.label }}{% if field.field.required %} *{% endif %}</span>
                                                     {% if field.help_text %} - <span class="help-block margin-bottom-0 display-inline-block">{{ field.help_text }}</span>{% endif %}
                                                 </label>
                                                 {{ field }}
