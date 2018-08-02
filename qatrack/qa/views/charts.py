@@ -412,7 +412,7 @@ class BaseChartView(View):
                 datetime_service__lte=to_date,
                 service_type__in=service_types
             ).select_related(
-                'unit_service_area__unit', 'unit_service_area__service_area', 'service_type'
+                'unit_service_area__unit', 'unit_service_area__service_area', 'service_type', 'test_list_instance_initiated_by'
             ).prefetch_related(
                 'returntoserviceqa_set',
                 'returntoserviceqa_set__test_list_instance'
@@ -426,7 +426,10 @@ class BaseChartView(View):
                     'id': se.id,
                     'type': {'id': se.service_type_id, 'name': se.service_type.name},
                     'is_review_required': se.is_review_required,
-                    'initiated_by': se.test_list_instance_initiated_by_id,
+                    'initiated_by': {
+                        'id': se.test_list_instance_initiated_by_id,
+                        'test_list_id': se.test_list_instance_initiated_by.test_list_id
+                    } if se.test_list_instance_initiated_by_id else '',
                     'rtsqas': [
                         {
                             'id': rtsqa.id,

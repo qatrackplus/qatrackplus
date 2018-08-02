@@ -106,10 +106,10 @@
 }
 .select2-container--default .select2-selection--multiple .select2-selection__choice {
   background-color: #627585;
-  border-color: #3d4d5e;
+  border: none;
   padding: 1px 10px;
   color: #fff;
-  border-radius: 2px;
+  border-radius: 15px;
 }
 .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
   margin-right: 5px;

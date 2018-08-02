@@ -118,7 +118,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'saveSvgAsPng', 'qaut
                         }
 
                         var data_filters = {units: units, frequencies: frequencies};
-                        console.log(this.element);
+
                         $.ajax({
                             type: "get",
                             url: QAURLs.CHART_DATA_URL + "testlists/",
@@ -942,10 +942,21 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'saveSvgAsPng', 'qaut
             var event_marker_points = '0,' + event_group_height + ' ' + event_group_height / 2 + ',0 ' + event_group_height + ',' + event_group_height;
             event.append('polygon')
                 .attr('stroke', function (d) {
-                    return d.rtsqas.length == 0 ? 'grey' : '#00c0ef'
+                    // return d.rtsqas.length === 0 ? 'grey' : '#00c0ef'
+                    return d.rtsqas.some(function(d2) {
+                        return _data._series.some(function(d3) {
+                            return d3.test_list.id === d2.test_list;
+                        });
+                    }) ? '#00c0ef' : 'grey';
                 })
                 .attr('fill', function (d) {
-                    return d.initiated_by == null ? 'none' : '#3c8dbc'
+
+                    if (d.initiated_by === '') {
+                        return 'none';
+                    } else if (_data._series.some(function(d2) { return d2.test_list.id === d.initiated_by.test_list_id; })) {
+                        return '#3c8dbc';
+                    }
+                    return 'none';
                 })
                 .attr('stroke-width', 1)
                 .attr('class', 'service-marker-icon')
@@ -971,7 +982,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'saveSvgAsPng', 'qaut
                 .attr('class', 'legend');
 
             legend.append('rect')
-                .attr("height", legendRowHeight * num_tests + 35)
+                .attr("height", legendRowHeight * num_tests + (_data._events.length > 0 ? legendRowHeight * 3 : 0) + 35)
                 .attr('width', 10)
                 .attr('id', 'legend-rect')
                 .style('fill', 'rgba(244, 244, 244, 0.8)')
@@ -986,6 +997,48 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'saveSvgAsPng', 'qaut
                     return 'translate(0,' + ((i + 1) * legendRowHeight - 8) + ')';
                 })
                 .attr('class', 'legend-row');
+            if (_data._events.length > 0) {
+                var legend_se_types = legend.selectAll('.legend-set-row')
+                    .data([
+                        {'name': 'Service Event', 'id': 0},
+                        {'name': 'Service Event with Initiating QA', 'id': 1},
+                        {'name': 'Service Event with Return To Service', 'id': 2}
+                    ])
+                    .enter().append('g')
+                    .attr('transform', function (d, i) {
+                        return 'translate(0,' + ((_data._series.length + i + 1) * legendRowHeight - 8) + ')';
+                    })
+                    .attr('class', 'legend-set-row');
+
+                legend_se_types.append('polygon')
+                    .attr('stroke', function (d) {
+                        return d.id === 2 ? '#00c0ef' : 'grey';
+                    })
+                    .attr('fill', function (d) {
+                        return d.id === 1 ? '#3c8dbc' : 'transparent';
+                    })
+                    .attr('stroke-width', 1)
+                    .attr('class', 'service-marker-icon')
+                    .attr('transform', 'translate(30, 0)')
+                    .attr('points', event_marker_points);
+
+                legend_se_types.append('text')
+                    .attr('x', 50)
+                    .attr('y', 12)
+                    // .attr('clip-path', 'url(#clip)')
+                    .text(function (d) {
+                        return d.name;
+                    })
+                    .style('font-size', 12);
+
+                legend_se_types.append('title').text(function(d) {
+                    switch(d.id) {
+                        case 0: return 'Service Event';
+                        case 1: return 'Service Event with Initiating QA';
+                        case 2: return 'Service Event with Return To Service';
+                    }
+                })
+            }
 
             // Legend series toggle
             var legend_entry_toggle = legend_entry.append('rect')
@@ -1142,7 +1195,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'saveSvgAsPng', 'qaut
                 .attr('width', 40)
                 .attr('height', 14)
                 .attr('x', 5)
-                .attr('y', legendRowHeight * num_tests + 15)
+                .attr('y', legendRowHeight * (num_tests + (_data._events.length > 0 ? 3 : 0)) + 15)
                 .style('fill', '#3c8dbc')
                 .style('cursor', 'pointer')
                 .style('stroke', '#367fa9')
@@ -1163,12 +1216,12 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'saveSvgAsPng', 'qaut
                 .attr('width', 30)
                 .attr('height', 10)
                 .attr("x", 8)
-                .attr("y", legendRowHeight * num_tests + 25)
+                .attr("y", legendRowHeight * (num_tests + (_data._events.length > 0 ? 3 : 0)) + 25)
                 .style("pointer-events", "none")
                 .style('font', '10px sans-serif')
                 .style('fill', '#fff')
                 .text('\u25C0 show');
-            var legend_height = legendRowHeight * num_tests + 35;
+            var legend_height = legendRowHeight * (num_tests + (_data._events.length > 0 ? 3 : 0)) + 35;
             var cheatLine = svg.append('line')
                 .attr('x2', width + legend_collapse_width)
                 .attr('y2', 0)
@@ -1508,9 +1561,10 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'saveSvgAsPng', 'qaut
 
                     var tli_coords = [],
                         y_buffer = 20;
-                    if (event_data.initiated_by) {
 
-                        var initiated_circles = d3.selectAll('.tli_' + event_data.initiated_by);
+                    if (event_data.initiated_by !== '') {
+
+                        var initiated_circles = d3.selectAll('.tli_' + event_data.initiated_by.id);
 
                         if (initiated_circles.size() > 0) {
                             initiated_circles
@@ -1547,10 +1601,6 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'saveSvgAsPng', 'qaut
                             }
 
                             tli_coords.push({x: initiated_x, color: 'rgba(60, 141, 188, 0.6)'});
-
-                            console.log(moment(initiated_data.x).format('ddd, MMM D, YYYY, k:mm'));
-                            console.log(initiated_data.x);
-                            console.log(initiated_data);
 
                             var tli_initiated_tooltip = d3.select("body")
                                 .append("div")
