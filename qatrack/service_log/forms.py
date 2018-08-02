@@ -146,9 +146,7 @@ class HoursForm(forms.ModelForm):
                         raise ValidationError('Duplicate hours user or third party')
 
         if obj_type == 'user':
-            user = User.objects.get(id=obj_id)
-            # if models.Hours.objects.filter(user=user, service_event=)
-            return user
+            return User.objects.get(id=obj_id)
         elif obj_type == 'tp':
             return models.ThirdParty.objects.get(id=obj_id)
 

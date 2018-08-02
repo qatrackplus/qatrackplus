@@ -1493,7 +1493,8 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'saveSvgAsPng', 'qaut
                     event_tooltip
                         .style('left', left + 'px')
                         .style('top', top + 'px')
-                        .html($('#se-tooltip-template').html()
+                        .html(
+                            $('#se-tooltip-template').html()
                                 .replace(/__se-id__/g, event_data.id)
                                 .replace(/__se-date__/g, format(event_data.x))
                                 .replace(/__se-wd__/g, event_data.work_description.replace(/"/g, "'"))

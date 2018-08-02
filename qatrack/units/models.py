@@ -265,7 +265,7 @@ class UnitAvailableTime(models.Model):
         unique_together = [('unit', 'date_changed')]
 
     def __str__(self):
-        return 'Available time for %s' % self.unit.name
+        return 'Available time schedule change'
 
     @staticmethod
     def available_times_on_unit_acceptance(unit_id):

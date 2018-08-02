@@ -171,7 +171,13 @@ input[type="number"]::-webkit-inner-spin-button {
 input[type="number"] {
     -moz-appearance: textfield;
 }
-
+.parent-align-bottom {
+    position: relative;
+}
+.align-bottom {
+    position: absolute;
+    bottom: 0;
+}
 .no-margin-top {
     margin-top: 0 !important;
 }

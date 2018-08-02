@@ -4,9 +4,6 @@
 
     {{ block.super }}
 
-    {#<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}h/admin/css/tree.css"/>#}
-
-{#    {% compressed_js "jquery" %}#}
     <script>
         (function($) {
 
@@ -18,92 +15,3 @@
     </script>
 {% endblock extrahead %}
 
-{% block after_field_sets %}{{ block.super }}
-    {% if USE_SERVICE_LOG %}
-        <fieldset class="module aligned" >
-        <h2>Available Time on date of acceptance</h2>
-
-        <div class="form-row field-changed_date">
-            <div>
-                <label>Hours: </label>
-                <div class="hours-container{% if available_time_form.hours_monday.errors %} has-error{% endif %}">
-                    <div class="">
-                        <label for="{{ available_time_form.hours_monday.id_for_label }}">{{ available_time_form.hours_monday.label }}</label>
-                    </div>
-                    <div class="">
-                        {{ available_time_form.hours_monday }}
-                    </div>
-                    {% for e in available_time_form.hours_monday.errors %}<div class="hours-error">{{ e }}</div>{% endfor %}
-                </div>
-
-                <div class="hours-container{% if available_time_form.hours_tuesday.errors %} has-error{% endif %}">
-                    <div class="">
-                        <label for="{{ available_time_form.hours_tuesday.id_for_label }}">{{ available_time_form.hours_tuesday.label }}</label>
-                    </div>
-                    <div class="">
-                        {{ available_time_form.hours_tuesday }}
-                    </div>
-                    {% for e in available_time_form.hours_tuesday.errors %}<div class="hours-error">{{ e }}</div>{% endfor %}
-                </div>
-
-                <div class="hours-container{% if available_time_form.hours_wednesday.errors %} has-error{% endif %}">
-                    <div class="">
-                        <label for="{{ available_time_form.hours_wednesday.id_for_label }}">{{ available_time_form.hours_wednesday.label }}</label>
-                    </div>
-                    <div class="">
-                        {{ available_time_form.hours_wednesday }}
-                    </div>
-                    {% for e in available_time_form.hours_wednesday.errors %}<div class="hours-error">{{ e }}</div>{% endfor %}
-                </div>
-
-                <div class="hours-container{% if available_time_form.hours_thursday.errors %} has-error{% endif %}">
-                    <div class="">
-                        <label for="{{ available_time_form.hours_thursday.id_for_label }}">{{ available_time_form.hours_thursday.label }}</label>
-                    </div>
-                    <div class="">
-                        {{ available_time_form.hours_thursday }}
-                    </div>
-                    {% for e in available_time_form.hours_thursday.errors %}<div class="hours-error">{{ e }}</div>{% endfor %}
-                </div>
-
-                <div class="hours-container{% if available_time_form.hours_friday.errors %} has-error{% endif %}">
-                    <div class="">
-                        <label for="{{ available_time_form.hours_friday.id_for_label }}">{{ available_time_form.hours_friday.label }}</label>
-                    </div>
-                    <div class="">
-                        {{ available_time_form.hours_friday }}
-                    </div>
-                    {% for e in available_time_form.hours_friday.errors %}<div class="hours-error">{{ e }}</div>{% endfor %}
-                </div>
-
-                <div class="hours-container{% if available_time_form.hours_saturday.errors %} has-error{% endif %}">
-                    <div class="">
-                        <label for="{{ available_time_form.hours_saturday.id_for_label }}">{{ available_time_form.hours_saturday.label }}</label>
-                    </div>
-                    <div class="">
-                        {{ available_time_form.hours_saturday }}
-                    </div>
-                    {% for e in available_time_form.hours_saturday.errors %}<div class="hours-error">{{ e }}</div>{% endfor %}
-                </div>
-
-                <div class="hours-container{% if available_time_form.hours_sunday.errors %} has-error{% endif %}">
-                    <div class="">
-                        <label for="{{ available_time_form.hours_sunday.id_for_label }}">{{ available_time_form.hours_sunday.label }}</label>
-                    </div>
-                    <div class="">
-                        {{ available_time_form.hours_sunday }}
-                    </div>
-                    {% for e in available_time_form.hours_sunday.errors %}<div class="hours-error">{{ e }}</div>{% endfor %}
-                </div>
-            </div>
-        </div>
-        <div style="display: none;">{{ available_time_form.units }}</div>
-
-
-{#        {% for field in available_time_form %}#}
-{#            {{ field }}#}
-{#        {% endfor %}#}
-    </fieldset>
-    {% endif %}
-
-{% endblock %}
