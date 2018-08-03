@@ -594,3 +594,11 @@ table ul.multiselect-container.dropdown-menu {
 .table-custom-listable > thead > tr:nth-child(1) > th.sorting_asc:hover {
     background-color: #e7e7e7;
 }
+.new-tab-link {
+    padding-right: 0;
+    vertical-align: top;
+}
+.new-tab-link i {
+    vertical-align: top;
+    transform: rotate(315deg);
+}

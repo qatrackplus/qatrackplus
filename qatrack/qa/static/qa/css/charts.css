@@ -161,19 +161,22 @@ tr.col-group th{
 table.data-table{
     width:auto;
 }
+.table > tbody > tr > td {
+    border: none;
+}
 table tr td.border-right-primary,
 table tr th.border-right-primary {
-    border-right: 1px solid #3c8dbc;
+    border-right: 1px solid #ddd;
 }
 table tr td.border-left-primary,
 table tr th.border-left-primary {
-    border-left: 1px solid #3c8dbc;
+    border-left: 1px solid #ddd;
 }
 table tr:last-child td {
-    border-bottom: 1px solid #3c8dbc;
+    border-bottom: 1px solid #ddd;
 }
 table thead tr:first-child th {
-    border-top: 1px solid #3c8dbc !important;
+    border-top: 1px solid #ddd !important;
 }
 .data-table th{
     text-align:center;
@@ -285,4 +288,10 @@ rect.toggle-ref-tol-box:hover {
 rect.toggle-ref-tol-box.hidden-toggle {
     fill: #ddd !important;
     stroke: #ccc !important;
+}
+.se-type {
+    max-width: 100px;
+    overflow-x: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }

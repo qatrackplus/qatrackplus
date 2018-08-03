@@ -125,7 +125,20 @@
                                                         <div class="col-md-12">
                                                             <span class="margin-r-3">{{ serviceevent.test_list_instance_initiated_by|as_pass_fail_status:False }}</span>
                                                             <span class="margin-r-3">{{ serviceevent.test_list_instance_initiated_by|as_review_status }}</span>
-                                                            <a id="view-tli-btn" class="margin-r-3 btn btn-default btn-xs btn-flat" href="{% url 'view_test_list_instance' pk=serviceevent.test_list_instance_initiated_by.id %}">View</a>
+                                                            <div class="btn-group margin-r-3">
+                                                                <a id="view-tli-btn"
+                                                                   class="btn btn-default btn-xs btn-flat"
+                                                                   href="{% url 'view_test_list_instance' pk=serviceevent.test_list_instance_initiated_by.id %}"
+                                                                   title="View test list instance"
+                                                                >View</a>
+                                                                <a class="btn btn-default btn-xs btn-flat new-tab-link"
+                                                                   href="{% url 'view_test_list_instance' pk=serviceevent.test_list_instance_initiated_by.id %}"
+                                                                   target="_blank"
+                                                                   title="New tab: view test list instance"
+                                                                >
+                                                                    <i class="fa fa-chevron-right" aria-hidden="true"></i>
+                                                                </a>
+                                                            </div>
                                                             <span>{{ serviceevent.test_list_instance_initiated_by.created }}</span>
                                                         </div>
                                                     </div>
@@ -277,9 +290,37 @@
                                                     <td>{% if f.test_list_instance.pk %}{{ f.test_list_instance|as_review_status }}{% else %}----{% endif %}</td>
                                                     <td>
                                                         {% if f.test_list_instance.pk %}
-                                                            {% if perms.qa.can_review %}<a href="{% url 'review_test_list_instance' pk=f.test_list_instance.pk %}?next={% url 'sl_details' pk=serviceevent.pk %}" class="btn btn-xs btn-default btn-flat">Review</a>{% endif %}
+                                                            {% if perms.qa.can_review %}
+                                                                <div class="btn-group">
+                                                                    <a href="{% url 'review_test_list_instance' pk=f.test_list_instance.pk %}?next={% url 'sl_details' pk=serviceevent.pk %}"
+                                                                       class="btn btn-xs btn-default btn-flat"
+                                                                       title="Review test list instance"
+                                                                    >Review</a>
+                                                                    <a class="btn btn-default btn-xs btn-flat new-tab-link"
+                                                                       href="{% url 'review_test_list_instance' pk=f.test_list_instance.pk %}"
+                                                                       target="_blank"
+                                                                       title="New tab: review test list instance"
+                                                                    >
+                                                                        <i class="fa fa-chevron-right" aria-hidden="true"></i>
+                                                                    </a>
+                                                                </div>
+                                                            {% endif %}
                                                         {% else %}
-                                                            {% if perms.qa.add_testlistinstance %}<a href="{% url 'perform_qa' pk=f.unit_test_collection.pk %}?rtsqa={{ f.id }}&next={% url 'sl_details' pk=serviceevent.pk %}" class="btn btn-xs btn-default btn-flat">Perform</a>{% endif %}
+                                                            {% if perms.qa.add_testlistinstance %}
+                                                                <div class="btn-group">
+                                                                    <a href="{% url 'perform_qa' pk=f.unit_test_collection.pk %}?rtsqa={{ f.id }}&next={% url 'sl_details' pk=serviceevent.pk %}"
+                                                                       class="btn btn-xs btn-default btn-flat"
+                                                                       title="Perform test list"
+                                                                    >Perform</a>
+                                                                    <a class="btn btn-default btn-xs btn-flat new-tab-link"
+                                                                       href="{% url 'perform_qa' pk=f.unit_test_collection.pk %}?rtsqa={{ f.id }}"
+                                                                       target="_blank"
+                                                                       title="New tab: perform test list"
+                                                                    >
+                                                                        <i class="fa fa-chevron-right" aria-hidden="true"></i>
+                                                                    </a>
+                                                                </div>
+                                                            {% endif %}
                                                         {% endif %}
                                                     </td>
                                                 </tr>

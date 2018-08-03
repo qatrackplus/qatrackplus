@@ -14,24 +14,17 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
             $review_required_fake = $('#id_is_review_required_fake'),
             $utc_initiated_by = $('#id_initiated_utc_field'),
             $tli_initiated_by = $('#id_test_list_instance_initiated_by'),
-            $tli_initiated_display = $(
-                '<div id="tli_initiated_display" class="row">' +
-                '    <div class="col-md-12">' +
-                '        <span id="pass-fail-utc_initiated"></span>' +
-                '        <span id="review-utc_initiated"></span>' +
-                '        <a id="view-tli-btn" class="btn btn-default btn-xs btn-flat margin-left-5" href="" target="view-tli">View</a>' +
-                '        <span id="tli-date-utc_initiated" class="pull-right"></span>' +
-                '    </div>' +
-                '</div>'
-            ),
+            $tli_initiated_display_template = $('#tli_initiated_display_template'),
             $parts_used_parts = $('.parts-used-part:visible'),
             $parts_used_from_storage = $('.parts-used-from_storage:visible'),
             $tli_instances = $('.tli-instance'),
             $rtsqa_rows = $('.rtsqa-row'),
             $service_event_form = $('#service-event-form'),
             $service_save = $('.service-save'),
+            $tli_display = $('<div class="row" style="display: none;"></div>'),
             $date_time = $('#id_datetime_service');
 
+        $utc_initiated_by.parent().append($tli_display);
         $units_fake.val($units.val());
 
         var num_click = 0;
@@ -42,7 +35,6 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
             num_click += 1;
         });
 
-        $utc_initiated_by.parent().append($tli_initiated_display);
 
         // General fields ------------------------------------------------------------------------------
         autosize($('textarea.autosize'));
@@ -111,7 +103,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
             if (isTooBright(rgbaStringToArray(colour))) {
                 $(container).css('color', 'black').children().css('color', 'black');
             }
-            var $label = $('<span>' + res.text + '<i class="fa fa-square fa-lg pull-right" style="color: ' + colour + ';"></i></span>');
+            var $label = $('<span>' + res.text + '</span>');
             return $label;
         }
         function process_related_results(data, params) {
@@ -249,7 +241,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
             });
         }
         displayTLI = function (prefix, data, returnValue) {
-            var $label_group = $('<span class="label-group ' + prefix + '-hider" style="display: none;"></span>');
+            var $pass_fail_label_group = $('<span class="label-group ' + prefix + '-hider" style="display: none;"></span>');
             for (var status in data['pass_fail']) {
 
                 if (data['pass_fail'][status] > 0 && status != 'no_tol') {
@@ -264,11 +256,11 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
                         $label.append('<i class="fa fa-circle-o" aria-hidden="true"></i>');
                     }
                     $label.append(' ' + data['pass_fail'][status]);
-                    $label_group.append($label);
+                    $pass_fail_label_group.append($label);
                 }
             }
-            $('#pass-fail-' + prefix).html($label_group);
-            $label_group = $('<span class="label-group ' + prefix + '-hider" style="display: none;"></span>');
+            $('#pass-fail-' + prefix).html($pass_fail_label_group);
+            var $review_label_group = $('<span class="label-group ' + prefix + '-hider" style="display: none;"></span>');
 
             for (status in data['review']) {
 
@@ -287,25 +279,32 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
                 colour = data['review'][status]['colour'];
                 if (data['review'][status]['is_comments']) {
                     if (data['review'][status]['num'] > 0) {
-                        $label_group.append('<span class="' + label_class + '">' + icon + ' ' + data["review"][status]["num"] + ' ' + status_name + '</span>');
+                        $review_label_group.append('<span class="' + label_class + '">' + icon + ' ' + data["review"][status]["num"] + ' ' + status_name + '</span>');
                     }
                 } else {
-                    $label_group.prepend('<span class="' + label_class + '" style="background-color: ' + colour + '">' + icon + ' ' + data["review"][status]["num"] + ' ' + status_name + '</span>');
+                    $review_label_group.prepend('<span class="' + label_class + '" style="background-color: ' + colour + '">' + icon + ' ' + data["review"][status]["num"] + ' ' + status_name + '</span>');
                 }
             }
-            $('#review-' + prefix).html($label_group);
+            $('#review-' + prefix).html($review_label_group);
 
-            if (prefix == 'utc_initiated') {
-                $('#tli-date-utc_initiated').html(moment(data['datetime']).format('D MMM YYYY h:mm A'));
-                $('#view-tli-btn').attr('href', QAURLs.TLI_VIEW + returnValue);
-                $tli_initiated_display.slideDown('fast');
+            if (prefix === 'utc_initiated') {
+
+                var new_html = $tli_initiated_display_template.html()
+                    .replace(/__utc-date__/g, moment(data['datetime']).format('D MMM YYYY h:mm A'))
+                    .replace(/__tli-id__/g, returnValue)
+                    .replace(/__pass-fail__/g, $pass_fail_label_group.html())
+                    .replace(/__utc-rev__/g, $review_label_group.html());
+
+                $tli_display.html(new_html);
+                $tli_display.slideDown('fast');
+            } else {
+
+                $('#id_' + prefix + '-all_reviewed').val(data.all_reviewed);
+
+                $('#' + prefix + '-review-btn').addClass(prefix + '-hider');
+                $('.' + prefix + '-hider').fadeIn('fast');
+                $('#id_' + prefix + '-unit_test_collection').change();
             }
-
-            $('#id_' + prefix + '-all_reviewed').val(data.all_reviewed);
-
-            $('#' + prefix + '-review-btn').addClass(prefix + '-hider');
-            $('.' + prefix + '-hider').fadeIn('fast');
-            $('#id_' + prefix + '-unit_test_collection').change();
 
         };
         setSearchResult = function (form, returnValue) {
@@ -532,13 +531,13 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
 
         // // initiated by -------------------------------------------------------------------------------------
         if ($tli_initiated_by.val() === '') {
-            $tli_initiated_display.hide();
+            $tli_display.hide();
         } else {
             setSearchResult('utc_initiated', $tli_initiated_by.val());
         }
 
         $utc_initiated_by.change(function() {
-            $tli_initiated_display.slideUp('fast', function() {
+            $tli_display.slideUp('fast', function() {
                 $tli_initiated_by.val('');
                 disable_units();
             });

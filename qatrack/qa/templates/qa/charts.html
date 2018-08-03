@@ -324,8 +324,13 @@
 
         <div class="row">
             <div class="col-sm-12">
-                <div class="pull-left">__se-type__</div>
-                <a class="tooltip-se-btn btn btn-flat btn-xs btn-default pull-right" href="{% url 'sl_details' %}__se-id__" target="SE Details">View</a>
+                <div class="pull-left se-type" title="__se-type__">__se-type__</div>
+                <div class="btn-group pull-right">
+                    <a class="tooltip-se-btn btn btn-flat btn-xs btn-default" href="{% url 'sl_details' %}__se-id__">View</a>
+                    <a class="tooltip-se-btn btn btn-flat btn-xs btn-default new-tab-link" href="{% url 'sl_details' %}__se-id__" target="_blank">
+                        <i class="fa fa-chevron-right" aria-hidden="true"></i>
+                    </a>
+                </div>
             </div>
         </div>
 
@@ -343,10 +348,20 @@
     </div>
     <div class="row">
         <div class="col-sm-12">
-            <div id="tooltip-se-date">__tli-date__</div>
-            <a id="tooltip-se-btn" class="btn btn-flat btn-xs btn-default pull-right" href="{% url 'view_test_list_instance' %}__tli-id__" target="View Test List">View</a>
+            <div>__tli-date__</div>
+            <div class="btn-group pull-right">
+                <a class="btn btn-flat btn-xs btn-default" href="{% url 'view_test_list_instance' %}__tli-id__">View</a>
+                <a class="tooltip-se-btn btn btn-flat btn-xs btn-default new-tab-link" href="{% url 'view_test_list_instance' %}__tli-id__" target="_blank">
+                    <i class="fa fa-chevron-right" aria-hidden="true"></i>
+                </a>
+            </div>
             {% if USE_SERVICE_LOG and perms.service_log.add_serviceevent %}
-                <a id="tooltip-se-new-btn" class="btn btn-flat btn-xs btn-default pull-right margin-r-3" href="{% url 'sl_new' %}?ib=__tli-id__" __show-in__ target="Initiate SE">Initiate SE</a>
+                <div class="btn-group pull-right margin-right-5">
+                    <a class="btn btn-flat btn-xs btn-default" href="{% url 'sl_new' %}?ib=__tli-id__" __show-in__>Initiate SE</a>
+                    <a class="tooltip-se-btn btn btn-flat btn-xs btn-default new-tab-link" href="{% url 'sl_new' %}?ib=__tli-id__" target="_blank">
+                        <i class="fa fa-chevron-right" aria-hidden="true"></i>
+                    </a>
+                </div>
             {% endif %}
         </div>
     </div>
