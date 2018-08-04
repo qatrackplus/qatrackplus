@@ -22,6 +22,7 @@ be expensive!).
    :maxdepth: 2
    :caption: Officially Supported Platforms
 
+   upgrade
    linux
    win
 

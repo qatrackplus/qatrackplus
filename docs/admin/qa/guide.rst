@@ -21,6 +21,7 @@ Tests and Other QA
    auto_review
    email
    auto_schedule
+   testpack
 
 
 

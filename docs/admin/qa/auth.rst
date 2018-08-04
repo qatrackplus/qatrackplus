@@ -56,6 +56,8 @@ granted to them without needing to explicitly specified.
 Permissions
 -----------
 
+.. _permissions_admin:
+
 The easiest method of managing permissions is to grant specific
 permissions to a group and then make users part of that group. The user
 will inherit all the permissions of their groups and as such do not need

@@ -31,6 +31,8 @@ A concise description of what this test list is for.
 Sublists
 --------
 
+.. _sublists_admin:
+
 *Optional*
 
 Test lists can be composed of both individual `tests <tests.md>`__ as

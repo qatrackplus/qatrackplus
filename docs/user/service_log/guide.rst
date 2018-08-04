@@ -1,3 +1,5 @@
+.. _service_log_user:
+
 Using the Service Log and Parts Apps
 ====================================
 
