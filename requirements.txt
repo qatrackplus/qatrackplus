@@ -1,7 +1,7 @@
 -e git+https://github.com/django/django-formtools.git@bb97a8abd374c50991c0a9ce144f17e7322a0c48#egg=django-formtools
 -e git+https://github.com/randlet/django-genericdropdown.git@56dbaf6b4f518a3946e5e253fec85ede175f3727#egg=django_genericdropdown-master
 -e git+https://github.com/randlet/django-listable.git@9c73781928fc8b5887061f98e517359464973980#egg=django_listable
-Django==1.11.12
+Django==1.11.13
 PyVirtualDisplay==0.2
 coreapi==2.3.3
 coverage==4.5.1
@@ -12,11 +12,12 @@ django-contrib-comments==1.8.0
 django-coverage==1.2.4
 django-crispy-forms==1.6.0
 django-debug-toolbar==1.8
+django-dynamic-raw-id==2.4
 django-extensions==1.7.4
 django-filter==1.1.0
 django-form-utils==1.0.3
 django-mssql; sys_platform=='win32'
-django-pyodbc-azure; sys_platform=='win32'
+django-pyodbc-azure==1.11.13.1; sys_platform=='win32'
 django-registration==2.1.2
 djangorestframework==3.7.7
 djangorestframework-filters==0.10.2
@@ -31,7 +32,6 @@ matplotlib==2.2.2
 numpy==1.14.2
 pandas==0.23.0
 pep8==1.7.0
-psycopg2==2.6; sys_platform=='linux'
 pydicom==1.0.2
 pylinac==2.0.1
 pylint==1.6.4

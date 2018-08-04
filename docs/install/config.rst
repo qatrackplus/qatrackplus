@@ -1,3 +1,5 @@
+.. _qatrack-config:
+
 Configuring a QATrack+ Installation
 ===================================
 

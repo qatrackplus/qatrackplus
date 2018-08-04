@@ -18,6 +18,7 @@ CREATE_PARTIAL_INDEX = """
     WHERE third_party_id IS NULL AND user_id IS NULL;
 """
 
+
 DROP_PARTIAL_INDEX = """
     DROP INDEX hours_notnull_uni_idx;
     DROP INDEX hours_usernull_uni_idx;
@@ -25,6 +26,17 @@ DROP_PARTIAL_INDEX = """
     DROP INDEX hours_bothnull_uni_idx;
 """
 
+def forward(apps, schema_editor):
+    if schema_editor.connection.vendor == 'mysql':
+        return
+    migrations.RunSQL(CREATE_PARTIAL_INDEX)
+
+def reverse(apps, schema_editor):
+
+    if schema_editor.connection.vendor == 'mysql':
+        return
+
+    migrations.RunSQL(DROP_PARTIAL_INDEX)
 
 class Migration(migrations.Migration):
 
@@ -32,4 +44,4 @@ class Migration(migrations.Migration):
         ('service_log', '0009_auto_20180411_1644'),
     ]
 
-    operations = [migrations.RunSQL(CREATE_PARTIAL_INDEX, DROP_PARTIAL_INDEX)]
+    operations = [migrations.RunPython(forward, reverse)]

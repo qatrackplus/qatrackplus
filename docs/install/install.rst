@@ -19,7 +19,7 @@ your clinic has the most expertise in and / or your budget (Microsoft tools can
 be expensive!).
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Officially Supported Platforms
 
    upgrade
