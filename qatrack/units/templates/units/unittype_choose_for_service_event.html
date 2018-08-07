@@ -19,11 +19,11 @@
                             <h3 class="box-title">Choose a Unit to Create a New Service Event for</h3>
                             <p>Click a button to create a service event for one of the units below.</p>
                         </div>
-                        <div class="box-body pad">
+                        <div class="box-body unit-btns">
                             {% for unit_type, units in unit_types%}
 
-                                <div class="row margin">
-                                    <div class="span12">
+                                <div class="row">
+                                    <div class="col-sm-12">
 
                                         <h4 class="header-spacer">{{unit_type}}</h4>
                                         {% for unit in units %}
@@ -52,11 +52,11 @@
                             <div class="box-header">
                                 <h3 class="box-title">{% if site == 'zzzNonezzz' %}Other{% else %}{{ site }}{% endif %}</h3>
                             </div>
-                            <div class="box-body pad">
+                            <div class="box-body unit-btns">
                                 {% for type, units in types %}
 
-                                    <div class="row margin">
-                                        <div class="span12">
+                                    <div class="row">
+                                        <div class="col-sm-12">
 
                                             <h4 class="header-spacer">{{ type }}</h4>
                                             {% for unit in units %}

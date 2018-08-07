@@ -356,8 +356,8 @@
                 </a>
             </div>
             {% if USE_SERVICE_LOG and perms.service_log.add_serviceevent %}
-                <div class="btn-group pull-right margin-right-5">
-                    <a class="btn btn-flat btn-xs btn-default" href="{% url 'sl_new' %}?ib=__tli-id__" __show-in__>Initiate SE</a>
+                <div class="btn-group pull-right margin-right-5" __show-in__>
+                    <a class="btn btn-flat btn-xs btn-default" href="{% url 'sl_new' %}?ib=__tli-id__">Initiate SE</a>
                     <a class="tooltip-se-btn btn btn-flat btn-xs btn-default new-tab-link" href="{% url 'sl_new' %}?ib=__tli-id__" target="_blank">
                         <i class="fa fa-chevron-right" aria-hidden="true"></i>
                     </a>

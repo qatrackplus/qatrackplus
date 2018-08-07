@@ -316,7 +316,7 @@
                                                             {% endif %}
                                                         </td>
                                                         <td class="qa-history">
-                                                            {% history_display ti_form.history test_list_instance.unit_test_collection.unit test_list_instance.test_list ti.unit_test_info.test %}
+                                                            {% history_display ti_form.history test_list_instance.unit_test_collection.unit test_list_instance.test_list ti.unit_test_info.test unit_test_collection.frequency %}
                                                         </td>
                                                         {% if perms.qa.can_review %}
                                                         {# note we render this manually to prevent the Django ORM from running a query for every form #}

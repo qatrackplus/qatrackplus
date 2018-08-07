@@ -84,7 +84,7 @@
             {% endif %}
             {% if perms.qa.can_view_history %}
                 <td class="qa-history">
-                    {% history_display form.history uti.unit test_list test unit_test_collection %}
+                    {% history_display form.history uti.unit test_list test unit_test_collection.frequency %}
                 </td>
             {% endif %}
         {% else %}

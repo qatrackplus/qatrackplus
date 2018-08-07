@@ -102,7 +102,7 @@ def tolerance_for_reference(tol, ref):
 
 
 @register.simple_tag
-def history_display(history, unit, test_list, test, unit_test_collection=None):
+def history_display(history, unit, test_list, test, frequency=None):
     template = get_template("qa/history.html")
     c = {
         "history": history,
@@ -110,7 +110,7 @@ def history_display(history, unit, test_list, test, unit_test_collection=None):
         "test_list": test_list,
         "test": test,
         "show_icons": settings.ICON_SETTINGS['SHOW_STATUS_ICONS_HISTORY'],
-        'unit_test_collection': unit_test_collection
+        'frequency': frequency
     }
     return template.render(c)
 
