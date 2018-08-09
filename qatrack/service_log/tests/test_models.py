@@ -98,10 +98,10 @@ class TestServiceEventAndRelated(TransactionTestCase):
         se = sl_models.ServiceEvent.objects.first()
         tp = sl_utils.create_third_party()
 
-        h_01 = sl_utils.create_hours(service_event=se, third_party=tp)
+        h_01 = sl_utils.create_hours(service_event=se, third_party=tp, user=None)
 
         with self.assertRaises(IntegrityError):
-            sl_models.Hours.objects.create(service_event=se, third_party=tp, user=None, time=timezone.timedelta(hours=1))
+            h_03 = sl_models.Hours.objects.create(service_event=se, third_party=tp, user=None, time=timezone.timedelta(hours=1))
 
         u_02 = qa_utils.create_user(is_superuser=False, uname='user_02')
         h_02 = sl_utils.create_hours(service_event=se, user=u_02)

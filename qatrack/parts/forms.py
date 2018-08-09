@@ -101,10 +101,10 @@ class PartUsedForm(forms.ModelForm):
     def clean_quantity(self):
 
         quantity = self.cleaned_data['quantity']
-        from_storage = self.cleaned_data['from_storage']
+        from_storage = self.cleaned_data.get('from_storage')
         initial_quantity = self.initial.get('quantity', 0)
 
-        if 'quantity' in self.changed_data or 'from_storage' in self.changed_data:
+        if from_storage is not None and ('quantity' in self.changed_data or 'from_storage' in self.changed_data):
 
             quantity_changed = quantity - initial_quantity
             quantity_storage = p_models.PartStorageCollection.objects.get(
@@ -115,9 +115,7 @@ class PartUsedForm(forms.ModelForm):
                 self.add_error('quantity', 'Quantity used greater than quantity in storage. {}'.format(
                     '' if initial_quantity == 0 else '(Originally used {})'.format(initial_quantity)
                 ))
-                self.add_error('from_storage', 'Quantity used greater than quantity in storage. {}'.format(
-                    '' if initial_quantity == 0 else '(Originally used {})'.format(initial_quantity)
-                ))
+                self.add_error('from_storage', '')
 
         if quantity < 1:
             self.add_error('quantity', 'Quantity must be greater than 0')

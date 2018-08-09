@@ -199,9 +199,10 @@ class Unit(models.Model):
             date__range=[date_from, date_to]
         ).order_by('date')
 
-        latest_uat = self.unitavailabletime_set.filter(date_changed__lte=date_from).order_by('-date_changed').latest()
-
         if self.unitavailabletime_set.filter(date_changed__lte=date_from).exists():
+            latest_uat = self.unitavailabletime_set.filter(
+                date_changed__lte=date_from
+            ).order_by('-date_changed').latest()
             self_uat_set = self_uat_set | self.unitavailabletime_set.filter(id=latest_uat.id)
 
         potential_time = 0

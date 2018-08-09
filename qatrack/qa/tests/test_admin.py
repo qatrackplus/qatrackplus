@@ -204,9 +204,8 @@ class TestToleranceAdmin(TestCase):
         self.assertFalse(form.is_valid())
 
     def test_list(self):
-        qa_utils.create_tolerance(tol_type=qa_models.BOOLEAN)
-        qa_utils.create_tolerance()
-        qa_utils.create_tolerance()
+        qa_utils.create_tolerance(act_high=3)
+        qa_utils.create_tolerance(act_high=4)
         self.client.get(self.url_list)
 
 
@@ -485,7 +484,7 @@ class TestTestAdmin(TestCase):
         )(data=data, instance=self.t_1)
 
         self.assertFalse(form.is_valid())
-        self.assertTrue('__all__' in form.errors)
+        self.assertTrue('type' in form.errors)
 
 
 class TestTestListAdmin(TestCase):
@@ -695,7 +694,6 @@ class TestUnitTestInfoAdmin(TestCase):
         self.client.login(username='user', password='pwd')
 
         self.site = AdminSite()
-
         self.u_1 = qa_utils.create_unit()
         self.t_1 = qa_utils.create_test(test_type=qa_models.SIMPLE)
         self.t_2 = qa_utils.create_test(test_type=qa_models.BOOLEAN)
@@ -705,9 +703,10 @@ class TestUnitTestInfoAdmin(TestCase):
         self.t_6 = qa_utils.create_test(test_type=qa_models.MULTIPLE_CHOICE)
         self.tol_1 = qa_utils.create_tolerance()
         self.tol_2 = qa_utils.create_tolerance(act_low=-10, act_high=10)
-        self.tol_3 = qa_utils.create_tolerance(tol_type=qa_models.BOOLEAN)
+
+        self.tol_3 = qa_models.Tolerance.objects.filter(type=qa_models.BOOLEAN).first()
         self.tol_4 = qa_utils.create_tolerance(
-            tol_type=qa_models.MULTIPLE_CHOICE, mc_pass_choices='2,4,6', mc_tol_choices=['1,3,5']
+            tol_type=qa_models.MULTIPLE_CHOICE, mc_pass_choices='2,4,6', mc_tol_choices='1,3,5'
         )
         self.tol_5 = qa_utils.create_tolerance(tol_type=qa_models.PERCENT)
         self.r_1 = qa_utils.create_reference()

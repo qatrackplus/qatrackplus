@@ -66,10 +66,10 @@ class TestURLS(TestCase):
         )
 
         for url, kwargs, q in url_names_200:
-            try:
-                self.assertTrue(self.returns_code(reverse(url, kwargs=kwargs) + q))
-            except:
-                import ipdb; ipdb.set_trace()  # yapf: disable  # noqa
+            # try:
+            self.assertTrue(self.returns_code(reverse(url, kwargs=kwargs) + q))
+            # except:
+                # import ipdb; ipdb.set_trace()  # yapf: disable  # noqa
 
         for url, kwargs, q in url_names_404:
             self.assertTrue(self.returns_code(reverse(url, kwargs=kwargs) + q, code=404))
@@ -744,6 +744,6 @@ class TestServiceLogViews(TestCase):
         self.assertTrue('problem on unit 3 or 2' in csv)
         self.assertTrue(self.usa3.service_area.name in csv)
         self.assertTrue(self.usa2.service_area.name in csv)
-        self.assertTrue('%s,%s,0.0,1,1.0,0,1.0,0,1' % (self.usa2.unit.name, self.usa2.unit.type.name) in csv)
-        self.assertTrue('%s,%s,0.0,2,2.0,0,2.0,0,2' % (self.usa3.unit.name, self.usa3.unit.type.name) in csv)
-        self.assertTrue('Totals:,0.0,3,3.0,0,3.0,0,3' in csv)
+        self.assertTrue('%s,%s,0,1,1.00,0.00,1.00,0.00,1' % (self.usa2.unit.name, self.usa2.unit.type.name) in csv)
+        self.assertTrue('%s,%s,0,2,2.00,0.00,2.00,0.00,2' % (self.usa3.unit.name, self.usa3.unit.type.name) in csv)
+        self.assertTrue('Totals:,0.0,3,3.00,0.00,3.00,0.00,3' in csv)

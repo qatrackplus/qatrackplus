@@ -1783,7 +1783,7 @@ class TestPaperForms(TestCase):
             unit=unit, test_collection=self.test_list, frequency=self.frequencies['daily']
         )
         ref2 = utils.create_reference(value=2)
-        tol2 = utils.create_tolerance()
+        tol2 = tol1
         uti2 = models.UnitTestInfo.objects.get(test=self.test, unit=unit)
         uti2.reference = ref2
         uti2.tolerance = tol2
@@ -1804,6 +1804,7 @@ class TestUnitAvailableTime(TestCase):
         self.client.login(username='user', password='pwd')
         self.get_url = reverse('unit_available_time')
         self.post_url = reverse('handle_unit_available_time')
+        self.delete_url = reverse('delete_schedules')
         utils.create_unit()
         utils.create_unit()
         utils.create_unit()
@@ -1824,6 +1825,7 @@ class TestUnitAvailableTime(TestCase):
             'hours_friday': '08:00',
             'hours_saturday': '08:00',
             'hours_sunday': '08:00',
+            'day': timestamp,
             'days[]': [timestamp]
         }
         date = timezone.datetime.fromtimestamp(timestamp / 1000, timezone.utc).date()
@@ -1831,11 +1833,9 @@ class TestUnitAvailableTime(TestCase):
 
         self.client.post(self.post_url, data=data)
         len_uat_after = len(u_models.UnitAvailableTime.objects.filter(unit_id__in=unit_ids, date_changed=date))
-
         self.assertEqual(len(unit_ids), len_uat_after - len_uat_before)
 
-        data['delete'] = 'true'
-        self.client.post(self.post_url, data=data)
+        self.client.post(self.delete_url, data=data)
         len_uat_after = len(u_models.UnitAvailableTime.objects.filter(unit_id__in=unit_ids, date_changed=date))
         self.assertEqual(0, len_uat_after)
 
@@ -1847,6 +1847,7 @@ class TestUnitAvailableTimeEdit(TestCase):
         self.client.login(username='user', password='pwd')
         self.get_url = reverse('unit_available_time')
         self.post_url = reverse('handle_unit_available_time_edit')
+        self.delete_url = reverse('delete_schedules')
         utils.create_unit()
         utils.create_unit()
         utils.create_unit()
@@ -1871,8 +1872,7 @@ class TestUnitAvailableTimeEdit(TestCase):
         len_uate_after = len(u_models.UnitAvailableTimeEdit.objects.filter(unit_id__in=unit_ids, date=date))
         self.assertEqual(len(unit_ids), len_uate_after - len_uate_before)
 
-        data['delete'] = 'true'
-        self.client.post(self.post_url, data=data)
+        self.client.post(self.delete_url, data=data)
         len_uate_after = len(u_models.UnitAvailableTimeEdit.objects.filter(unit_id__in=unit_ids, date=date))
         self.assertEqual(0, len_uate_after)
 

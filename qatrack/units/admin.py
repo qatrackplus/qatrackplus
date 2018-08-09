@@ -93,6 +93,7 @@ class UnitFormAdmin(ModelForm):
     def save(self, commit=True):
 
         unit = super().save(commit=commit)
+        unit.save()
 
         if settings.USE_SERVICE_LOG:
             service_areas = self.cleaned_data['service_areas']
