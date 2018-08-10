@@ -404,8 +404,6 @@ class BaseChartView(View):
 
         if show_events:
 
-            print(service_types)
-
             ses = sl_models.ServiceEvent.objects.filter(
                 unit_service_area__unit__in=units,
                 datetime_service__gte=from_date,
