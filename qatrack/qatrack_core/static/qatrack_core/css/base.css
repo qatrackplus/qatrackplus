@@ -598,7 +598,8 @@ table ul.multiselect-container.dropdown-menu {
     padding-right: 0;
     vertical-align: top;
 }
-.new-tab-link i {
+.new-tab-link i,
+.new-tab-icon {
     vertical-align: top;
     transform: rotate(315deg);
 }

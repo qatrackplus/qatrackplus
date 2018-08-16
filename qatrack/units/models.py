@@ -251,13 +251,13 @@ class UnitAvailableTime(models.Model):
     unit = models.ForeignKey(Unit, on_delete=models.CASCADE)
 
     date_changed = models.DateField(blank=True, help_text=_('Date the units available time changed or will change'))
+    hours_sunday = models.DurationField(help_text=_('Duration of available time on Sundays'))
     hours_monday = models.DurationField(help_text=_('Duration of available time on Mondays'))
     hours_tuesday = models.DurationField(help_text=_('Duration of available time on Tuesdays'))
     hours_wednesday = models.DurationField(help_text=_('Duration of available time on Wednesdays'))
     hours_thursday = models.DurationField(help_text=_('Duration of available time on Thursdays'))
     hours_friday = models.DurationField(help_text=_('Duration of available time on Fridays'))
     hours_saturday = models.DurationField(help_text=_('Duration of available time on Saturdays'))
-    hours_sunday = models.DurationField(help_text=_('Duration of available time on Sundays'))
 
     class Meta:
         ordering = ['-date_changed']

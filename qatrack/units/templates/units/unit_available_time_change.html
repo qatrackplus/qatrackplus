@@ -111,6 +111,7 @@
                     <h4 class="modal-title">Edit available time for selected units and selected days.​</h4>
                 </div>
                 <div class="modal-body">
+
                     <div class="row form-group">
                         <label class="col-sm-6" for="edit_input">Avaiable time (hh:mm)</label>
                         <div class="col-sm-6">
@@ -128,6 +129,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
+                    <div class="num-days-selected pull-left"></div>
                     <button id="insert_change_edit" type="button" class="btn btn-primary btn-flat" title="Insert or change avaialble times for selected days and units.">Update Available Time</button>
                 </div>
             </div>
@@ -156,7 +158,7 @@
 
                     <div class="row form-group">
                         <div class="col-sm-3">
-                            <label>Hours</label>
+                            <label>Hours (hh:mm)</label>
                         </div>
                         <div class="col-sm-9 weekday-row">
                             <div class="row seven-cols no-gutters">
@@ -218,6 +220,7 @@
                 <div class="modal-body">
                     <div id="delete_error" class="alert alert-danger" style="display: none;"></div>
                     <button class="btn btn-danger btn-flat" id="delete_go">Delete</button>
+                    <span class="num-days-selected margin-left-15"></span>
                     <button class="btn btn-default btn-flat pull-right" id="delete_cancel">Cancel</button>
                 </div>
             </div>

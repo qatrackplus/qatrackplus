@@ -337,6 +337,7 @@
                                             <thead>
                                                 <tr>
                                                     <th style="min-width: 200px;">Test List</th>
+                                                    <th>Completed</th>
                                                     <th>Pass/Fail</th>
                                                     <th>Review Status</th>
                                                     <th></th>
@@ -357,10 +358,11 @@
                                                                 <div class="help-block">{{ e }}</div>
                                                             {% endfor %}
                                                         </td>
-                                                            <td id="pass-fail-{{ f_form.prefix }}"></td>
-                                                            <td id="review-{{ f_form.prefix }}"></td>
-                                                            <td id="utc-actions-{{ f_form.prefix }}"></td>
-                                                            <td align="center">{% if perms.service_log.delete_returntoserviceqa and f_form.instance.pk %}{{ f_form.DELETE }}{% endif %}</td>
+                                                        <td id="work-completed-{{ f_form.prefix }}"></td>
+                                                        <td id="pass-fail-{{ f_form.prefix }}"></td>
+                                                        <td id="review-{{ f_form.prefix }}"></td>
+                                                        <td id="utc-actions-{{ f_form.prefix }}"></td>
+                                                        <td align="center">{% if perms.service_log.delete_returntoserviceqa and f_form.instance.pk %}{{ f_form.DELETE }}{% endif %}</td>
                                                     </tr>
                                                 {% endfor %}
 
@@ -511,7 +513,8 @@
                 <div class="col-md-12">
                     <button class="btn btn-flat btn-primary service-save pull-right">Save</button>
                     {% if perms.service_log.delete_service_event and form.instance.id %}
-                        <div href="#" class="btn btn-flat btn-default service-delete pull-left" data-toggle="modal" data-target="#delete-modal">Delete</div>
+{#                        <div href="#" class="btn btn-flat btn-default service-delete pull-left" data-toggle="modal" data-target="#delete-modal">Delete</div>#}
+                        <a href="{% url 'se_delete' pk=form.instance.id %}" class="btn btn-flat btn-default service-delete pull-left">Delete</a>
                     {% endif %}
                 </div>
             </div>
@@ -520,8 +523,8 @@
 
     <div id="tli_initiated_display_template" style="display: none;">
         <div id="tli_initiated_display" class="col-md-12">
-            <span>__pass-fail__</span>
-            <span>__utc-rev__</span>
+            <span class="label-group">__pass-fail__</span>
+            <span class="label-group">__utc-rev__</span>
             <div class="btn-group margin-left-5">
                 <a id="view-tli-btn"
                    class="btn btn-default btn-xs btn-flat"
@@ -561,6 +564,7 @@
                     {{ f_form.test_list_instance }}
                     {{ f_form.all_reviewed }}
                     <td class="form-group">{{ f_form.unit_test_collection }}</td>
+                    <td id="work-completed-rtsqa-__prefix__"></td>
                     <td id="pass-fail-rtsqa-__prefix__"></td>
                     <td id="review-rtsqa-__prefix__"></td>
                     <td id="utc-actions-rtsqa-__prefix__"></td>
@@ -596,28 +600,27 @@
                     Performed
                     <i class="fa fa-chevron-right margin-left-5" aria-hidden="true"></i>
                 </a>
-                {% if form.instance.pk %}
-                    <div class="btn-group perform-btn">
-                        <a title="Click to perform this test list"
-                           href="{% url 'perform_qa' %}__utc-id__/?rtsqa=__rtsqa-id__&next={% url 'sl_edit' %}__se-id__/"
-                           class="btn btn-xs btn-default btn-flat"
-                        >
-                            Perform
-                        </a>
-                        <a class="btn btn-default btn-xs btn-flat new-tab-link"
-                           href="{% url 'perform_qa' %}__utc-id__/?rtsqa=__rtsqa-id__&next={% url 'sl_edit' %}__se-id__/"
-                           target="_blank"
-                           title="New tab: click to perform this test list"
-                        >
-                            <i class="fa fa-chevron-right" aria-hidden="true"></i>
-                        </a>
-                    </div>
-                {% endif %}
+{#                {% if form.instance.pk %}#}
+{#                    <div class="btn-group perform-btn">#}
+{#                        <a title="Click to perform this test list"#}
+{#                           href="{% url 'perform_qa' %}__utc-id__/?rtsqa=__rtsqa-id__&next={% url 'sl_edit' %}__se-id__/"#}
+{#                           class="btn btn-xs btn-default btn-flat"#}
+{#                        >#}
+{#                            Perform#}
+{#                        </a>#}
+{#                        <a class="btn btn-default btn-xs btn-flat new-tab-link"#}
+{#                           href="{% url 'perform_qa' %}__utc-id__/?rtsqa=__rtsqa-id__&next={% url 'sl_edit' %}__se-id__/"#}
+{#                           target="_blank"#}
+{#                           title="New tab: click to perform this test list"#}
+{#                        >#}
+{#                            <i class="fa fa-chevron-right" aria-hidden="true"></i>#}
+{#                        </a>#}
+{#                    </div>#}
+{#                {% endif %}#}
             {% endif %}
             {% if perms.qa.can_review %}
-                <div class="btn-group review-btn __prefix__-hider" style="display: none;">
-                    <a id="__prefix__-review-btn"
-                       title="Click to review this test list"
+                <div id="__prefix__-review-btn" class="btn-group review-btn __prefix__-hider" style="display: none;">
+                    <a title="Click to review this test list"
                        href="{% url 'review_test_list_instance' %}__tli-id__?next={% url 'sl_edit' %}__se-id__"
                        class="btn btn-xs btn-default btn-flat"
                     >
@@ -634,31 +637,5 @@
             {% endif %}
         </div>
     </div>
-
-    {% if perms.service_log.delete_service_event and form.instance.id %}
-        <div class="modal fade" id="delete-modal" tabindex="-1" role="dialog" aria-labelledby="delete-modal-label" aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h4 class="modal-title pull-left" id="delete-modal-label">Delete Service Event {{ form.instance.id }}?</h4>
-                        <button type="button" class="close pull-right" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-
-                    </div>
-                    <div class="modal-footer">
-                        <form method="post" action="{% url 'sl_delete' pk=form.instance.id %}{% if next_url %}?next={{ next_url }}{% endif %}">
-                            {% csrf_token %}
-                            <button type="button" class="btn btn-flat btn-default" data-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-flat btn-danger pull-left">Delete</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    {% endif %}
-
 
 {% endblock body %}

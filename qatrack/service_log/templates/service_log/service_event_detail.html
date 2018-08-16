@@ -276,6 +276,7 @@
                                         <thead>
                                             <tr>
                                                 <th style="min-width: 200px;">Test List</th>
+                                                <th>Completed</th>
                                                 <th>Pass/Fail</th>
                                                 <th>Review Status</th>
                                                 <th></th>
@@ -286,6 +287,7 @@
                                             {% for f in rtsqas %}
                                                 <tr>
                                                     <td>{{ f.unit_test_collection.tests_object.name }}</td>
+                                                    <td>{% if f.test_list_instance.pk %}{{ f.test_list_instance.work_completed }}{% else %}----{% endif %}</td>
                                                     <td>{% if f.test_list_instance.pk %}{{ f.test_list_instance|as_pass_fail_status:False }}{% else %}----{% endif %}</td>
                                                     <td>{% if f.test_list_instance.pk %}{{ f.test_list_instance|as_review_status }}{% else %}----{% endif %}</td>
                                                     <td>

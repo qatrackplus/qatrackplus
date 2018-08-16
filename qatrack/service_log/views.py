@@ -20,7 +20,7 @@ from django.shortcuts import redirect
 from django.template.loader import get_template
 from django.utils.translation import ugettext as _
 from django.views.decorators.csrf import csrf_protect
-from django.views.generic import TemplateView, DetailView, DeleteView
+from django.views.generic import TemplateView, DetailView, DeleteView, FormView
 from django.views.generic.detail import SingleObjectTemplateResponseMixin
 from django.views.generic.edit import ModelFormMixin, ProcessFormView
 
@@ -664,19 +664,55 @@ class DetailsServiceEvent(DetailView):
             raise Http404
 
 
-@permission_required(Permission.objects.filter(codename='delete_serviceevent'))
-@csrf_protect
-def delete_service_event(request, pk):
+class DeleteServiceEvent(DeleteView, FormView, PermissionRequiredMixin):
 
-    next_ = request.GET.get("next", None)
+    permission_required = 'service_log.delete_serviceevent'
+    raise_exception = True
+    model = models.ServiceEvent
+    template_name = 'service_log/service_event_delete.html'
+    form_class = forms.ServiceEventDeleteForm
 
-    try:
-        models.ServiceEvent.objects.get(pk=pk).delete()
-        messages.add_message(request, messages.WARNING, 'Service event {} has been deleted'.format(pk))
-    except ObjectDoesNotExist:
-        messages.add_message(request, messages.ERROR, 'Service event {} could not be deleted'.format(pk))
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = self.form_class(pk=self.object.id)
+        return context
 
-    return HttpResponseRedirect(reverse('sl_list_all') if next_ is None else next_)
+    def post(self, request, *args, **kwargs):
+        """
+        Handles POST requests, instantiating a form instance with the passed
+        POST variables and then checked for validity.
+        """
+        form = self.get_form()
+        if form.is_valid():
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
+
+    def form_valid(self, form):
+
+        self.object = self.get_object()
+
+        models.ServiceLog.objects.log_service_event_delete(
+            self.request.user,
+            self.object,
+            {'reason': form.cleaned_data['reason'], 'comment': form.cleaned_data['comment']}
+        )
+
+        success_url = self.get_success_url()
+        self.object.set_inactive()
+
+        messages.add_message(self.request, messages.INFO, 'Service event {} deleted'.format(self.object.id))
+
+        return HttpResponseRedirect(success_url)
+
+    def form_invalid(self, form):
+        messages.add_message(
+            self.request, messages.WARNING, 'Could not delete service event {}'.format(form.instance.id)
+        )
+        return reverse('sl_dash')
+
+    def get_success_url(self):
+        return reverse('sl_dash')
 
 
 class ServiceEventsBaseList(BaseListableView):
@@ -854,6 +890,7 @@ class ReturnToServiceQABaseList(BaseListableView):
         'service_event__datetime_service',
         'service_event__unit_service_area__unit__name',
         'unit_test_collection__name',
+        'test_list_instance__work_completed',
         'test_list_instance_pass_fail',
         'test_list_instance_review_status',
         'service_event__service_status__name'
@@ -863,6 +900,7 @@ class ReturnToServiceQABaseList(BaseListableView):
         'service_event__datetime_service': _('Service Date'),
         'service_event__unit_service_area__unit__name': _('Unit'),
         'unit_test_collection__name': _('Test List'),
+        'test_list_instance__work_completed': _('Test List Completed'),
         'test_list_instance_pass_fail': _('Pass/Fail'),
         'test_list_instance_review_status': _('Review Status'),
         'service_event__service_status__name': _('Service Event Status')
@@ -871,11 +909,13 @@ class ReturnToServiceQABaseList(BaseListableView):
     widgets = {
         'service_event__datetime_service': DATE_RANGE,
         'service_event__unit_service_area__unit__name': SELECT_MULTI,
-        'service_event__service_status__name': SELECT_MULTI
+        'service_event__service_status__name': SELECT_MULTI,
+        'test_list_instance__work_completed': DATE_RANGE
     }
 
     date_ranges = {
-        'datetime_assigned': [TODAY, YESTERDAY, LAST_WEEK, THIS_WEEK, LAST_MONTH, THIS_MONTH, THIS_YEAR]
+        'service_event__datetime_service': [TODAY, YESTERDAY, LAST_WEEK, THIS_WEEK, LAST_MONTH, THIS_MONTH, THIS_YEAR],
+        'test_list_instance__work_completed': [TODAY, YESTERDAY, LAST_WEEK, THIS_WEEK, LAST_MONTH, THIS_MONTH, THIS_YEAR]
     }
 
     search_fields = {
@@ -894,7 +934,8 @@ class ReturnToServiceQABaseList(BaseListableView):
     select_related = (
         'service_event__unit_service_area__unit',
         'service_event__service_status',
-        'test_list_instance__reviewed_by'
+        'test_list_instance__reviewed_by',
+        'test_list_instance'
     )
 
     prefetch_related = (
@@ -910,6 +951,7 @@ class ReturnToServiceQABaseList(BaseListableView):
         self.templates = {
             'actions': get_template("service_log/table_context_rtsqa_actions.html"),
             'service_event__datetime_service': get_template("service_log/table_context_datetime.html"),
+            'test_list_instance__work_completed': get_template("service_log/table_context_tli_work_completed.html"),
             'test_list_instance_pass_fail': get_template("qa/pass_fail_status.html"),
             'test_list_instance_review_status': get_template("qa/review_status.html"),
             'service_event__service_status__name': get_template("service_log/service_event_status_label.html"),
@@ -920,8 +962,8 @@ class ReturnToServiceQABaseList(BaseListableView):
 
     def get_page_title(self, f=None):
         if not f:
-            return 'All RTS QA'
-        to_return = 'RTS QA'
+            return 'All Return To Service QA'
+        to_return = 'Return To Service QA'
         filters = f.split('_')
         for filt in filters:
             [key, val] = filt.split('-')
@@ -1016,6 +1058,17 @@ class ReturnToServiceQABaseList(BaseListableView):
         c = {'datetime': rtsqa.service_event.datetime_service}
         return template.render(c)
 
+    def test_list_instance__work_completed(self, rtsqa):
+        template = self.templates['test_list_instance__work_completed']
+        if rtsqa.test_list_instance:
+            c = {
+                'datetime_completed': rtsqa.test_list_instance.work_completed,
+                'datetime_started': rtsqa.test_list_instance.work_started,
+                'in_progress': rtsqa.test_list_instance.in_progress
+            }
+            return template.render(c)
+        return '----'
+
     def service_event__service_status__name(self, rtsqa):
         template = self.templates['service_event__service_status__name']
         c = {'colour': rtsqa.service_event.service_status.colour, 'name': rtsqa.service_event.service_status.name, 'request': self.request}
@@ -1052,7 +1105,9 @@ def tli_statuses(request):
             'pass_fail': tli.pass_fail_summary(),
             'review': tli.review_summary(),
             'datetime': timezone.localtime(tli.created),
-            'all_reviewed': int(tli.all_reviewed)
+            'all_reviewed': int(tli.all_reviewed),
+            'work_completed': timezone.localtime(tli.work_completed),
+            'in_progress': tli.in_progress
         },
         safe=False
     )
@@ -1101,8 +1156,8 @@ class ServiceEventDownTimesList(ServiceEventsBaseList):
         'unit_service_area__unit__active': _('Active'),
         'unit_service_area__service_area__name': _('Service Area'),
         # 'service_type__name': _('Service Type'),
-        'duration_service_time': _('Service Time'),
-        'duration_lost_time': _('Lost Time')
+        'duration_service_time': _('Service Time (hh:mm)'),
+        'duration_lost_time': _('Lost Time (hh:mm)')
     }
 
     widgets = {
@@ -1220,7 +1275,7 @@ def handle_unit_down_time(request):
         units = units.filter(active=unit_active)
 
     response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="qatrack_parts_units_cost.csv"'
+    response['Content-Disposition'] = 'attachment; filename="qatrack_unit_uptime.csv"'
     response['Content-Type'] = 'text/csv; charset=utf-8'
 
     totals = OrderedDict({'potential': 0})

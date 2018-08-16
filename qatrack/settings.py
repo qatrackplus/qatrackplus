@@ -158,8 +158,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     # 'django.contrib.auth.middleware.RemoteUserMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'qatrack.middleware.login_required.LoginRequiredMiddleware',
-    'qatrack.middleware.maintain_filters.FilterPersistMiddleware',
+    # 'qatrack.middleware.login_required.LoginRequiredMiddleware',
+    # 'qatrack.middleware.maintain_filters.FilterPersistMiddleware',
 ]
 
 
@@ -216,7 +216,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.humanize',
     'django_extensions',
-    'debug_toolbar',
     'django_comments',
     'formtools',
     'tastypie',
@@ -240,6 +239,7 @@ INSTALLED_APPS = [
     'qatrack.parts',
     'qatrack.attachments',
     'admin_views',
+    'debug_toolbar',
 ]
 
 # ----------------------------------------------------------------------------
@@ -528,6 +528,11 @@ except ImportError:
 
 # Parts must be used with service log
 USE_PARTS = USE_PARTS or USE_SERVICE_LOG
+
+DELETE_REASONS = (
+    ('Duplicate', 'Duplicate'),
+    ('Invalid', 'Invalid')
+)
 
 if FORCE_SCRIPT_NAME:
     # Fix URL for Admin Views if FORCE_SCRIPT_NAME_SET in local_settings

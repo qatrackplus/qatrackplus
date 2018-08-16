@@ -129,7 +129,8 @@ require(['jquery', 'moment', 'd3', 'flatpickr', 'daterangepicker', 'select2', 'f
             $hours_wednesday = $('#id_hours_wednesday'),
             $hours_thursday = $('#id_hours_thursday'),
             $hours_friday = $('#id_hours_friday'),
-            $hours_saturday = $('#id_hours_saturday');
+            $hours_saturday = $('#id_hours_saturday'),
+            $num_days_selected = $('.num-days-selected');
 
         var unit_available_time_data = {},
             day_by_day_unit_hours,
@@ -534,6 +535,14 @@ require(['jquery', 'moment', 'd3', 'flatpickr', 'daterangepicker', 'select2', 'f
                 return m.isSame(_moment, 'day')
             });
         }
+
+        function display_num_selected_days() {
+            $num_days_selected.html(
+                'Currently ' + selected_days.length + ' day' + (selected_days.length === 1 ? '' : 's') + ' selected for ' + selected_units.length + ' unit' + (selected_units.length === 1 ? '' : 's')
+            );
+        }
+        $open_edit_modal.click(display_num_selected_days);
+        $open_delete_modal.click(display_num_selected_days);
 
         function disable_uat_btns() {
             $open_edit_modal.prop('disabled', selected_days.length === 0 || selected_units.length === 0);

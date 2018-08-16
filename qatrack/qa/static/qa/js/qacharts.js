@@ -29,6 +29,8 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'saveSvgAsPng', 'qaut
             $relative_diff = $('#relative-diff'),
             $review_required = $('#review-required');
 
+        var date_format = 'DD MMM YYYY';
+
         var default_service_type_ids = $service_type_selector.val();
 
         var set_chart_height;
@@ -314,7 +316,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'saveSvgAsPng', 'qaut
             linkedCalendars: false,
             opens: 'left',
             locale: {
-                format: 'DD-MM-YYYY'
+                format: date_format
             }
         });
 
@@ -709,7 +711,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'saveSvgAsPng', 'qaut
                 .attr("height", height);
 
             // find min and max X within date range
-            xScale.domain([moment(from, "DD-MM-YYYY").valueOf(), moment(to, "DD-MM-YYYY").endOf('day').valueOf()]);
+            xScale.domain([moment(from, date_format).valueOf(), moment(to, date_format).endOf('day').valueOf()]);
             var maxY = findMaxY(_data._series, xScale.domain());
             var minY = findMinY(_data._series, xScale.domain());
 
@@ -2148,11 +2150,11 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'saveSvgAsPng', 'qaut
             $combine_data.prop('checked', combine_data);
             $relative_diff.prop('checked', relative_diff);
             if (!date_range) {
-                $date_range.data('daterangepicker').setStartDate(moment().subtract(1, 'years').format('DD-MM-YYYY'));
-                $date_range.data('daterangepicker').setEndDate(moment().format('DD-MM-YYYY'));
+                $date_range.data('daterangepicker').setStartDate(moment().subtract(1, 'years').format(date_format));
+                $date_range.data('daterangepicker').setEndDate(moment().format(date_format));
             } else {
-                $date_range.data('daterangepicker').setStartDate(moment(date_range.split('%20-%20')[0], 'DD-MM-YYYY').format('DD-MM-YYYY'));
-                $date_range.data('daterangepicker').setEndDate(moment(date_range.split('%20-%20')[1], 'DD-MM-YYYY').format('DD-MM-YYYY'));
+                $date_range.data('daterangepicker').setStartDate(moment(date_range.split('%20-%20')[0], date_format).format(date_format));
+                $date_range.data('daterangepicker').setEndDate(moment(date_range.split('%20-%20')[1], date_format).format(date_format));
             }
             $status_selector.val(statuses.length === 0 ? [1, 2] : statuses).change();
             $show_events.prop('checked', show_events);

@@ -43,12 +43,9 @@ def item_val_to_string(item):
 
 def duration_string_hours_mins(duration):
 
-    seconds = duration.seconds
-    minutes = seconds // 60
-
-    hours = minutes // 60
-    minutes %= 60
-    hours %= 60
+    seconds = int(duration.total_seconds())
+    hours = seconds // 3600
+    minutes = (seconds - hours * 3600) // 60
 
     if seconds > 0 and minutes < 1 and hours == 0:
         return '00:01'
@@ -350,7 +347,7 @@ class ServiceEventForm(BetterModelForm):
         help_text=models.ServiceEvent._meta.get_field('duration_lost_time').help_text
     )
     service_event_related_field = ServiceEventMultipleField(
-        required=False, queryset=models.ServiceEvent.objects.none(), label=_('Service Events Related'),
+        required=False, queryset=models.ServiceEvent.objects.none(), label=_('Related Service Events'),
         help_text=models.ServiceEvent._meta.get_field('service_event_related').help_text
     )
     is_review_required = forms.BooleanField(required=False, label=_('Review required'))
@@ -701,3 +698,21 @@ class ServiceEventForm(BetterModelForm):
 
     def clean_unit_field_fake(self):
         return self.cleaned_data.get('unit_field')
+
+
+class ServiceEventDeleteForm(forms.ModelForm):
+
+    reason = forms.ChoiceField(choices=settings.DELETE_REASONS)
+    comment = forms.CharField(max_length=255, widget=forms.Textarea(), required=False)
+
+    class Meta:
+
+        model = models.ServiceEvent
+        fields = ('id',)
+
+    def __init__(self, *args, **kwargs):
+        pk = kwargs.pop('pk', None)
+        super().__init__(*args, **kwargs)
+
+        self.fields['comment'].widget.attrs.update({'rows': 3, 'class': 'autosize form-control'})
+        self.fields['reason'].widget.attrs.update({'class': 'form-control'})

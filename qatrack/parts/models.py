@@ -53,7 +53,10 @@ class Room(models.Model):
 class StorageManager(models.Manager):
 
     def get_queryset(self):
-        return super(StorageManager, self).get_queryset().select_related('room', 'room__site')
+        return super(StorageManager, self).get_queryset().select_related('room', 'room__site').order_by('location')
+
+    def get_queryset_for_room(self, room):
+        return super().get_queryset().filter(room=room).order_by('location')
 
 
 class Storage(models.Model):
@@ -143,7 +146,7 @@ class PartStorageCollectionManager(models.Manager):
 
     def get_queryset(self):
         return super(PartStorageCollectionManager, self).get_queryset().select_related(
-            'storage', 'part'
+            'storage', 'part', 'storage__room', 'storage__room__site'
         ).order_by(
             '-quantity',
             'part__part_number'
@@ -200,3 +203,13 @@ class PartUsed(models.Model):
     from_storage = models.ForeignKey(Storage, null=True, blank=True, on_delete=models.SET_NULL)
 
     quantity = models.IntegerField()
+
+    def add_back_to_storage(self):
+
+        if self.from_storage:
+            try:
+                psc = PartStorageCollection.objects.get(part=self.part, storage=self.from_storage)
+                psc.quantity = self.quantity
+                psc.save()
+            except PartStorageCollection.DoesNotExist:
+                PartStorageCollection.objects.create(part=self.part, storage=self.from_storage, quantity=self.quantity)

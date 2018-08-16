@@ -52,13 +52,27 @@ month_select = forms.ChoiceField(
 
 class UnitAvailableTimeForm(forms.ModelForm):
 
-    hours_monday = HoursMinDurationField(help_text='Hours available on mondays (hh:mm)', label='Monday', validators=[max_24hr])
-    hours_tuesday = HoursMinDurationField(help_text='Hours available on tuesdays (hh:mm)', label='Tuesday', validators=[max_24hr])
-    hours_wednesday = HoursMinDurationField(help_text='Hours available on wednesdays (hh:mm)', label='Wednesday', validators=[max_24hr])
-    hours_thursday = HoursMinDurationField(help_text='Hours available on thursdays (hh:mm)', label='Thursday', validators=[max_24hr])
-    hours_friday = HoursMinDurationField(help_text='Hours available on fridays (hh:mm)', label='Friday', validators=[max_24hr])
-    hours_saturday = HoursMinDurationField(help_text='Hours available on saturdays (hh:mm)', label='Saturday', validators=[max_24hr])
-    hours_sunday = HoursMinDurationField(help_text='Hours available on sundays (hh:mm)', label='Sunday', validators=[max_24hr])
+    hours_sunday = HoursMinDurationField(
+        help_text='Hours available on sundays (hh:mm)', label='Sunday', validators=[max_24hr]
+    )
+    hours_monday = HoursMinDurationField(
+        help_text='Hours available on mondays (hh:mm)', label='Monday', validators=[max_24hr]
+    )
+    hours_tuesday = HoursMinDurationField(
+        help_text='Hours available on tuesdays (hh:mm)', label='Tuesday', validators=[max_24hr]
+    )
+    hours_wednesday = HoursMinDurationField(
+        help_text='Hours available on wednesdays (hh:mm)', label='Wednesday', validators=[max_24hr]
+    )
+    hours_thursday = HoursMinDurationField(
+        help_text='Hours available on thursdays (hh:mm)', label='Thursday', validators=[max_24hr]
+    )
+    hours_friday = HoursMinDurationField(
+        help_text='Hours available on fridays (hh:mm)', label='Friday', validators=[max_24hr]
+    )
+    hours_saturday = HoursMinDurationField(
+        help_text='Hours available on saturdays (hh:mm)', label='Saturday', validators=[max_24hr]
+    )
 
     unit = forms.ModelChoiceField(widget=forms.HiddenInput(), queryset=u_models.Unit.objects.all())
 

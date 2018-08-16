@@ -27,12 +27,10 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
         $utc_initiated_by.parent().append($tli_display);
         $units_fake.val($units.val());
 
-        var num_click = 0;
         $service_save.one('click', function (event) {
             event.preventDefault();
             $service_event_form.submit();
             $(this).prop('disabled', true);
-            num_click += 1;
         });
 
 
@@ -47,6 +45,14 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
                     return $('<span class="required-option">required</span>');
                 }
                 return a.text;
+            },
+            templateResult: function(a) {
+                console.log(a);
+                if ($(a.element).parent().attr('id') === 'id_initiated_utc_field') {
+                    return $('<span>' + a.text + '<span class="pull-right"><i class="fa fa-chevron-right new-tab-icon" aria-hidden="true"></i></span></span>')
+                } else {
+                    return a.text;
+                }
             }
         }).overrideSelect2Keys();
 
@@ -298,7 +304,8 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
                 $tli_display.html(new_html);
                 $tli_display.slideDown('fast');
             } else {
-
+                var completed_hrml = data['in_progress'] ? 'In progress' : moment(data['work_completed']).format('D MMM YYYY h:mm A');
+                $('#work-completed-' + prefix).html(completed_hrml);
                 $('#id_' + prefix + '-all_reviewed').val(data.all_reviewed);
 
                 $('#' + prefix + '-review-btn').addClass(prefix + '-hider');
@@ -403,11 +410,11 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
                         .replace(/__se-id__/g, se_id)
                         .replace(/__rtsqa-id__/g, rtsqa_id)
                 );
-                if (!rtsqa_id) {
-                    $('#utc-actions-' + prefix).find('.perform-btn').remove();
-                }
+                // if (!rtsqa_id) {
+                //     $('#utc-actions-' + prefix).find('.perform-btn').remove();
+                // }
                 if (!tli_id) {
-                    $('#utc-actions-' + prefix).find('.btn.review-btn').removeClass(prefix + '-hider');
+                    $('#utc-actions-' + prefix).find('div.btn-group.review-btn').removeClass(prefix + '-hider');
                 }
                 $('.' + prefix + '-hider').fadeIn('fast');
                 set_select_tli();

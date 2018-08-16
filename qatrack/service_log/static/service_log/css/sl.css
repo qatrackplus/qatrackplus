@@ -108,6 +108,12 @@ body.sidebar-mini.sidebar-collapse > div.wrapper > aside.main-sidebar > section.
     margin-left: 20px;
 }
 
+.timeline-custom > li > .timeline-item.deleted * {
+    color: #bbb;
+}
+.timeline-custom > li > .timeline-item.deleted .label {
+    background-color: #edf1f9;
+}
 .timeline-custom > li > .timeline-item.can-view {
     cursor: pointer;
 }

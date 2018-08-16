@@ -114,6 +114,7 @@ class UnitAvailableTimeInline(admin.TabularInline):
     form = UnitAvailableTimeForm
     extra = 2
     ordering = ['date_changed']
+    verbose_name_plural = 'Unit Schedule'
 
 
 class UnitAdmin(admin.ModelAdmin):

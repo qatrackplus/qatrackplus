@@ -22,6 +22,7 @@ STATUS_SERVICE_EVENT = 'stat_se'
 CHANGED_RTSQA = 'rtsqa'
 PERFORMED_RTS = 'perf_rts'
 APPROVED_RTS = 'app_rts'
+DELETED_SERVICE_EVENT = 'del_se'
 
 LOG_TYPES = (
     (NEW_SERVICE_EVENT, 'New Service Event'),
@@ -29,7 +30,8 @@ LOG_TYPES = (
     (STATUS_SERVICE_EVENT, 'Service Event Status Changed'),
     (CHANGED_RTSQA, 'Changed Return To Service'),
     (PERFORMED_RTS, 'Performed Return To Service'),
-    (APPROVED_RTS, 'Approved Return To Service')
+    (APPROVED_RTS, 'Approved Return To Service'),
+    (DELETED_SERVICE_EVENT, 'Deleted Service Event')
 )
 
 
@@ -140,6 +142,15 @@ class ServiceEventStatus(models.Model):
         return {ses.id: ses.colour for ses in ServiceEventStatus.objects.all()}
 
 
+class ServiceEventManager(models.Manager):
+
+    def get_queryset(self, *args, **kwargs):
+        return super().get_queryset(*args, **kwargs).filter(is_active=True)
+
+    def get_deleted(self):
+        return super().get_queryset().filter(is_active=False)
+
+
 class ServiceEvent(models.Model):
 
     unit_service_area = models.ForeignKey(UnitServiceArea, on_delete=models.PROTECT)
@@ -164,7 +175,7 @@ class ServiceEvent(models.Model):
     datetime_status_changed = models.DateTimeField(null=True, blank=True)
     datetime_created = models.DateTimeField()
     datetime_service = models.DateTimeField(
-        verbose_name=_('Date and time'), help_text=_('Date and time this event started')
+        verbose_name=_('Date and time'), help_text=_('Date and time service performed')
     )
     datetime_modified = models.DateTimeField(null=True, blank=True)
 
@@ -186,6 +197,9 @@ class ServiceEvent(models.Model):
     is_review_required = models.BooleanField(
         default=True, blank=True
     )
+    is_active = models.BooleanField(default=True, blank=True)
+
+    objects = ServiceEventManager()
 
     class Meta:
         get_latest_by = "datetime_service"
@@ -217,6 +231,14 @@ class ServiceEvent(models.Model):
 
             rts_states.append({'state': state, 'details': details})
         return rts_states
+
+    def set_inactive(self):
+        self.is_active = False
+        self.save()
+
+        parts_used = self.partused_set.all()
+        for pu in parts_used:
+            pu.add_back_to_storage()
 
 
 class ThirdPartyManager(models.Manager):
@@ -267,6 +289,12 @@ class Hours(models.Model):
         return self.user or self.third_party
 
 
+class ReturnToServiceQAManager(models.Manager):
+
+    def get_queryset(self, *args, **kwargs):
+        return super().get_queryset(*args, **kwargs).filter(service_event__is_active=True)
+
+
 class ReturnToServiceQA(models.Model):
 
     unit_test_collection = models.ForeignKey(
@@ -280,16 +308,12 @@ class ReturnToServiceQA(models.Model):
 
     datetime_assigned = models.DateTimeField()
 
+    objects = ReturnToServiceQAManager()
+
     class Meta:
         permissions = (('view_returntoserviceqa', 'Can view return to service qa'),
                        ('perform_returntoserviceqa', 'Can perform return to service qa'))
         ordering = ['-datetime_assigned']
-
-    # def str_verbose(self):
-    #     if self.test_list_instance:
-    #         return '%s' % self.test_list_instance.str_verbose()
-    #     else:
-    #         return '%s - Incomplete' % self.unit_test_collection.name
 
 
 class GroupLinker(models.Model):
@@ -384,6 +408,15 @@ class ServiceLogManager(models.Manager):
             service_event=instance,
             log_type=CHANGED_RTSQA,
             extra_info=json.dumps(instance.create_rts_log_details())
+        )
+
+    def log_service_event_delete(self, user, instance, extra_info):
+
+        self.create(
+            user=user,
+            service_event=instance,
+            log_type=DELETED_SERVICE_EVENT,
+            extra_info=json.dumps(extra_info)
         )
 
 
