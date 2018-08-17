@@ -209,7 +209,17 @@ class PartUsed(models.Model):
         if self.from_storage:
             try:
                 psc = PartStorageCollection.objects.get(part=self.part, storage=self.from_storage)
-                psc.quantity = self.quantity
+                psc.quantity += self.quantity
                 psc.save()
             except PartStorageCollection.DoesNotExist:
                 PartStorageCollection.objects.create(part=self.part, storage=self.from_storage, quantity=self.quantity)
+
+    def remove_from_storage(self):
+
+        if self.from_storage:
+            try:
+                psc = PartStorageCollection.objects.get(part=self.part, storage=self.from_storage)
+                psc.quantity -= self.quantity
+                psc.save()
+            except PartStorageCollection.DoesNotExist:
+                pass

@@ -240,6 +240,14 @@ class ServiceEvent(models.Model):
         for pu in parts_used:
             pu.add_back_to_storage()
 
+    def set_active(self):
+        self.is_active = True
+        self.save()
+
+        parts_used = self.partused_set.all()
+        for pu in parts_used:
+            pu.remove_from_storage()
+
 
 class ThirdPartyManager(models.Manager):
 
