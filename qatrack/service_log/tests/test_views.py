@@ -176,6 +176,7 @@ class TestCreateServiceEvent(TestCase):
         self.se_2 = sl_utils.create_service_event(unit_service_area=self.usa_2)
 
         self.url = reverse('sl_new')
+        self.url_delete = reverse('se_delete')
         self.user = qa_utils.create_user(is_superuser=True)
 
         self.client.login(username='user', password='password')
@@ -197,6 +198,8 @@ class TestCreateServiceEvent(TestCase):
         self.part = sl_utils.create_part(add_storage=True)
 
         self.st = sl_utils.create_service_type()
+
+        self.sto = sl_utils.create_storage(quantity=2)
 
     def test_initial_options(self):
 
@@ -466,6 +469,22 @@ class TestCreateServiceEvent(TestCase):
         response = self.client.post(self.url, data=data)
         self.assertTrue('part' in response.context_data['part_used_formset'].errors[0])
         self.assertTrue('user_or_thirdparty' in response.context_data['hours_formset'].errors[0])
+
+    def test_delete_service_event(self):
+
+        psc = p_models.PartStorageCollection.objects.first()
+        pu = p_models.PartUsed.objects.create(
+            part=psc.part, from_storage=psc.storage, quantity=1, service_event=self.se_1
+        )
+        initial_quantity = pu.quantity
+
+        self.se_1.set_inactive()
+        psc.refresh_from_db()
+        self.assertEqual(initial_quantity + 1, psc.quantity)
+
+        self.se_1.set_active()
+        psc.refresh_from_db()
+        self.assertEqual(initial_quantity, psc.quantity)
 
 
 class TestEditServiceEvent(TestCase):
@@ -747,3 +766,5 @@ class TestServiceLogViews(TestCase):
         self.assertTrue('%s,%s,0,1,1.00,0.00,1.00,0.00,1' % (self.usa2.unit.name, self.usa2.unit.type.name) in csv)
         self.assertTrue('%s,%s,0,2,2.00,0.00,2.00,0.00,2' % (self.usa3.unit.name, self.usa3.unit.type.name) in csv)
         self.assertTrue('Totals:,0.0,3,3.00,0.00,3.00,0.00,3' in csv)
+
+
