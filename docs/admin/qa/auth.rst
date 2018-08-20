@@ -104,7 +104,7 @@ sets for groups are given below:.
    user to view the program overview page*
 -  **qa \| unit test collection \| Can view TLI and UTC not visible to
    user's groups** *Allows a user to view all Test Lists regardless of
-   their groups *
+   their groups*
 
 Minimal set of permissions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
