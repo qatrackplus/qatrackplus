@@ -10,12 +10,11 @@ configuring a tests are described below.
 
 ### Name ###
 
-A name that describes what the test is (e.g. something like
-*Temperature (°C)* or *0° Gantry - Field Size 10.0x10.0cm - X1 (cm)*).
+A name that describes what the test is (e.g. something like *Temperature (deg C)* or *0 deg Gantry - Field Size 10.0x10.0cm - X1 (cm)*).
 
 ### Macro Name ###
 
-_**Macro name tl;dr**: give your test a short variable name like_ ion\_chamber\_reading _or_ temperature _._
+_**Macro name tl;dr**: give your test a short variable name like *ion\_chamber\_reading* or *temperature*.
 
 Every test must be given a macro name which will be used to refer to
 this test in composite tests.  The macro name must be a
