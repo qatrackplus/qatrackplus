@@ -24,6 +24,12 @@ Glossary
     Test Instance Status
         todo
 
+    Service Area
+        todo
+
+    Site
+        todo
+
     Status
         See :term:`Test Instance Status`
 

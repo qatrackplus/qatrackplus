@@ -53,7 +53,7 @@ The main features include:
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Contents:
 
    self
@@ -64,6 +64,7 @@ The main features include:
    admin/guide
    api/guide
    developer/guide
+   tutorials/index
    screenshots
 
 
