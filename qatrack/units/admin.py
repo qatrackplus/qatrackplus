@@ -2,21 +2,35 @@ from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin import helpers
 from django.contrib.admin.exceptions import DisallowedModelAdminToField
-from django.contrib.admin.options import TO_FIELD_VAR, IS_POPUP_VAR
+from django.contrib.admin.options import IS_POPUP_VAR, TO_FIELD_VAR
 from django.contrib.admin.utils import unquote
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.core.exceptions import PermissionDenied
 from django.db.models import ObjectDoesNotExist
-from django.forms import ModelMultipleChoiceField, ModelForm, ValidationError
+from django.forms import ModelForm, ModelMultipleChoiceField, ValidationError
 from django.forms.formsets import all_valid
 from django.http import Http404
 from django.utils.encoding import force_text
 from django.utils.html import escape
 from django.utils.translation import ugettext as _
 
+from qatrack.service_log.models import (
+    ServiceArea,
+    ServiceEvent,
+    UnitServiceArea,
+)
+
 from .forms import UnitAvailableTimeForm
-from .models import Modality, Site, Unit, UnitAvailableTime, UnitAvailableTimeEdit, UnitClass, UnitType, Vendor
-from qatrack.service_log.models import UnitServiceArea, ServiceArea, ServiceEvent
+from .models import (
+    Modality,
+    Site,
+    Unit,
+    UnitAvailableTime,
+    UnitAvailableTimeEdit,
+    UnitClass,
+    UnitType,
+    Vendor,
+)
 
 
 class UnitFormAdmin(ModelForm):
@@ -305,6 +319,13 @@ class UnitTypeAdmin(admin.ModelAdmin):
         return "%s: %s%s" % (obj.vendor.name, obj.name, m)
 
 
+class ModalityAdmin(admin.ModelAdmin):
+
+    list_display = ["name"]
+
+
+
 admin.site.register(Unit, UnitAdmin)
 admin.site.register(UnitType, UnitTypeAdmin)
-admin.site.register([Modality, Site, UnitClass, Vendor], admin.ModelAdmin)
+admin.site.register(Modality, ModalityAdmin)
+admin.site.register([Site, UnitClass, Vendor], admin.ModelAdmin)

@@ -8,6 +8,8 @@ results using snippets of Python code. These tests include *Composite*,
 Composite Tests
 ===============
 
+.. _composite_tests:
+
 Composite tests allow you to do calculations to produce a numberical
 test result based on other test values ( e.g. to calculate a dose based
 on a raw electrometer reading and temperature & pressure ). When you

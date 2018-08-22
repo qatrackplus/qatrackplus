@@ -1,8 +1,9 @@
 Users Guide
 ====================
 
-*For documentation on configuring tests, users and other administrative
-tasks, please see the `Administrators Guide <../admin/guide.md>`__.*
+.. note:: For documentation on configuring tests, users and other
+    administrative tasks, please see the `Administrators Guide
+    <../admin/guide.md>`__.
 
 .. toctree::
    :maxdepth: 2

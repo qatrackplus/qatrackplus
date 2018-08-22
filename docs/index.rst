@@ -7,10 +7,6 @@ Welcome to QATrack+'s documentation!
 ====================================
 
 
-
-
-
-
 About QATrack+
 --------------
 
@@ -57,10 +53,11 @@ The main features include:
 
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: Contents:
 
    self
+   glossary
    release_notes
    install/install
    user/guide

@@ -4,17 +4,12 @@ Units
 Creating A New Unit
 -------------------
 
-Before you can create a new unit you have to define some modalities and
-unit types. This can either be done on beforehand or "inline" when
-defining a new unit. The former is described below.
+Before you can create a new unit you have to define some modalities and unit
+types. This can either be done beforehand or "inline" when defining a new unit.
+The former is described below.
 
 Defining a modality
 -------------------
-
-*Note that in the future the modality types will be replaced by a simple
-text input field so modalities will no longer be confined to only those
-associated with radiation therapy machines (i.e. so we can have
-modalities like ultrasound or pet).*
 
 From the main administrators page click the **Modalities** link from the
 **Units** section.
@@ -32,9 +27,8 @@ modality click the **Add modality** button at the top right.
 
    Add Modality
 
-From here choose whether you want to define a photon or electron
-modality and the energy of the beam. The definition of a 6MV photon beam
-is illustrated below.
+From here just enter the name of the modality type you want to define.  The
+definition of a 6MV photon beam is illustrated below.
 
 .. figure:: images/modality.png
    :alt: Defining a 6MV Photon Modality
@@ -43,6 +37,23 @@ is illustrated below.
 
 Click **Save** when you are finished.
 
+Defining a new unit class
+-------------------------
+
+From the main administrators page click the **Unit classes** link from the
+**Units** section and then on the next page click the **Add unit class**
+link in the top right hand corner.
+
+Add the name of the unit class (e.g. Linac, Tomotherapy, Cyberknife, CT, MRI
+etc).
+
+
+.. figure:: images/add_unit_class.png
+   :alt: Defining a new unit class
+
+   Defining a new unit class
+
+
 Defining a new unit type
 ------------------------
 
@@ -50,8 +61,8 @@ From the main administrators page click the **Unit Types** link from the
 **Units** section and then on the next page click the **Add unit type**
 link in the top right hand corner.
 
-Fill in the **Name**, **Vendor** and optional **Model** fields and click
-**Save** when you are finished.
+Fill in the **Name**, **Vendor**, and optionally **Unit class* and **Model**
+fields and click **Save** when you are finished.
 
 .. figure:: images/unit_type.png
    :alt: Defining a new unit type
@@ -65,20 +76,17 @@ From the main administrators page click the **Units** link from the
 **Units** section and then on the next page click the **Add unit** link
 in the top right hand corner.
 
-Fill in the **Number**, **Name**, and optional **Serial number**,
-**Location** and **Install date** fields. Note that the **Number** must
-be a uniquely identifying integer number for this unit. The unit
-**Number** will effect the order that treatment units are displayed on
-certain pages.
+On the Add Unit page you will need to fill in all the relevant fields, some
+of which are described below:
 
-Next select the unit type from the dropdown list. You can use a
-previously defined unit type or add a new type by clicking the green
-cross located next to the dropdown.
+* Number - *A uniquely identifying integer number for this unit.  The unit Number will effect the order that treatment units are displayed on certain pages.*
+* Acceptance Date - *Date that the unit was approved for treatment*
+* Active - *Uncheck this field when a unit is decomissioned. This will hide the unit from many parts of the user interface to reduce clutter and confusion*
+* Restricted - *This field is checked when a unit is temporarily restricted from clinical service*
+* Site - *If you have multiple sites configured, choose the site this unit is located at*
+* Service Areas - *Select all the service areas available for this unit (e.g. Linac, kv Imaging, MV Imaging etc)*
+* Available Time on date of acceptance - *The number of clinical hours that the unit is available on a day to day basis*
 
-Finally, choose the modalities available on this unit by selecting the
-desired modalities and moving them from the *Available modalities* to
-the *Chosen modalities* box by selecting them and using the right and
-left arrows between the two boxes.
 
 Example input for an Elekta Synergy unit is shown below.
 

@@ -1,3 +1,7 @@
+Release Notes
+=============
+
+
 QATrack+ v0.3.0 Release Notes
 -----------------------------
 
