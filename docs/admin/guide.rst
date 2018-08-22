@@ -11,6 +11,8 @@ users and user permissions.  Typically this would be limited to a small group
 of users within the clinic.
 
 
+.. _access_admin_site:
+
 Accessing the admin site
 ------------------------
 
@@ -30,11 +32,11 @@ Initial Configuration
 Before you start defining tests and test lists for the first time it is a good
 idea to begin by doing some initial configuration.
 
-#. `Change the name of your website <qa/change_site_name.rst>`__
-#. `Configure the Service Log app <service_log/guide.rst>`__
-#. `Configure the Units app <units/guide.rst>`__
-#. `Define some user groups <qa/auth.rst>`__
-#. `Configure the QA app <qa/guide.rst>`__
+#. `Change the name of your website <qa/change_site_name.html>`__
+#. `Configure the Service Log app <service_log/guide.html>`__
+#. `Configure the Units app <units/guide.html>`__
+#. `Define some user groups <qa/auth.html>`__
+#. :ref:`Configure the QA app <initial_qa_config>`
 
 
 Admin Guide Contents

@@ -99,6 +99,8 @@ comment (required unless the user has the `Can skip without comment
    Skipping a single test
 
 
+.. _qa_perform_subset:
+
 Performing a subset of a test list
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

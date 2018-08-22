@@ -24,29 +24,7 @@ Tests and Other QA
    testpack
 
 
-
-Who is this document for
-------------------------
-
-The admin guide is intended for use by anyone who will be responsible for
-configuring tests and test lists, modifying references & tolerances or managing
-users and user permissions.  Typically this would be limited to a small group
-of users within the clinic.
-
-
-Accessing the admin site
-------------------------
-
-To access the admin site, log into QATrack+ and then choose the
-**Admin** option from the dropdown at the top right hand corner of the
-page (where your username is displayed).
-
-A walk through tutorial (with screenshots) on going from a blank
-QATrack+ install to a fully configured, performable test list is
-available on the [tutorials page](tutorials/tutorials.md).  Reading
-through this tutorial is a great way to familiarize yourself with
-QATrack+ configuration.
-
+.. _initial_qa_config:
 
 Initial Configuration
 ---------------------
@@ -54,12 +32,8 @@ Initial Configuration
 Before you start defining tests and test lists for the first time it is a good
 idea to begin by doing some initial configuration.
 
-1. [Change the name of your website](change_site_name.md)
-1. [Create at least one Unit](units.md)
-2. [Define some user groups](auth.md)
-3. [Create a couple of test statuses](statuses.md)
-4. [Create some test categories](categories.md)
-5. [Set up some test frequencies](frequencies.md)
+#. :ref:`Create some Test Categories <qa_categories>`
+#. :ref:`Create some Test List Frequencies <qa_frequencies>`
 
 
 

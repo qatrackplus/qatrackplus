@@ -3,6 +3,75 @@ Glossary
 
 .. glossary::
 
+    Admin Site
+        todo
+
+    API
+        todo
+
+    Auth Token
+        todo
+
+    Auto Review
+        todo
+
+    Auto Review Rule
+        todo
+
+    Category
+        todo
+
+    Contacts
+        todo
+
+    Frequency
+        todo
+
+    Groups
+        todo
+
+    Modality
+        todo
+
+    Notification Subscriptions
+        todo
+
+    Parts
+        todo
+
+    Parts Categories
+        todo
+
+    Reference
+        todo
+
+    Rooms
+        todo
+
+    Service Area
+        todo
+
+    Service Event Status
+        todo
+
+    Service Type
+        todo
+
+    Site
+        todo
+
+    Staff User
+        todo
+
+    Status
+        See :term:`Test Instance Status`
+
+    Superuser
+        todo
+
+    Suppliers
+        todo
+
     Test
         A Test is any individual measurement to be entered into QATrack+. Tests may be
         a numerical value to be entered, a true or false checkmark, text entry etc.
@@ -24,22 +93,37 @@ Glossary
     Test Instance Status
         todo
 
-    Service Area
+    Test Pack
         todo
 
-    Site
+    Third Parties
         todo
 
-    Status
-        See :term:`Test Instance Status`
+    Tolerance
+        todo
 
     Unit
         A piece of equipment e.g. a linac, brachy suite, tomotherapy unit etc
+
+    Unit Class
+        todo
+
+    Unit Type
+        todo
+
+    Unit Service Area Memberships
+        todo
 
     Unit Test Collection
         todo
 
     Unreviewed Queue
         The set of :term:`Test List Instance`'s that require manual review.
+
+    User
+        todo
+
+    Vendor
+        todo
 
 
