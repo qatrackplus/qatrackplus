@@ -766,5 +766,3 @@ class TestServiceLogViews(TestCase):
         self.assertTrue('%s,%s,0,1,1.00,0.00,1.00,0.00,1' % (self.usa2.unit.name, self.usa2.unit.type.name) in csv)
         self.assertTrue('%s,%s,0,2,2.00,0.00,2.00,0.00,2' % (self.usa3.unit.name, self.usa3.unit.type.name) in csv)
         self.assertTrue('Totals:,0.0,3,3.00,0.00,3.00,0.00,3' in csv)
-
-

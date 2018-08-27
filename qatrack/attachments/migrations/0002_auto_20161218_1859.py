@@ -58,7 +58,8 @@ def uploads_to_attachments(apps, schema_editor):
             TestInstance.objects.filter(pk=ti.pk).update(
                 string_value=attachment.pk
             )
-        except IOError:
+        except IOError as e:
+            print(e)
             errors.append(ti)
 
     for error in errors:

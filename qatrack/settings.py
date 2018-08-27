@@ -151,7 +151,6 @@ if not os.path.isfile(SITE_SPECIFIC_CSS_PATH):
 # ------------------------------------------------------------------------------
 # Middleware
 MIDDLEWARE = [
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -239,7 +238,6 @@ INSTALLED_APPS = [
     'qatrack.parts',
     'qatrack.attachments',
     'admin_views',
-    'debug_toolbar',
 ]
 
 # ----------------------------------------------------------------------------
@@ -548,3 +546,7 @@ SELENIUM_VIRTUAL_DISPLAY = False  # Set to True to use headless browser for test
 
 if any(['test' in v for v in sys.argv]):
     from .test_settings import *  # noqa
+
+if DEBUG:
+    INSTALLED_APPS.append('debug_toolbar')
+    MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
