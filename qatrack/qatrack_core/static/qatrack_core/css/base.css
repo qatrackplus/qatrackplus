@@ -525,7 +525,8 @@ input.search_init {
     padding: 10px;
 }
 #control-sidebar-btn {
-    text-align: right;
+    text-align: center;
+    min-width: 75px;
 }
 .text-display {
     border: 1px solid #ddd;

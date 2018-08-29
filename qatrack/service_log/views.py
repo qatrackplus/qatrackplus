@@ -737,6 +737,7 @@ class ServiceEventsBaseList(BaseListableView):
         'service_type__name',
         # 'problem_type__name',
         'problem_description',
+        'work_description',
         'service_status__name'
     )
 
@@ -788,6 +789,7 @@ class ServiceEventsBaseList(BaseListableView):
             'datetime_service': get_template('service_log/table_context_datetime.html'),
             'service_status__name': get_template('service_log/service_event_status_label.html'),
             'problem_description': get_template('service_log/table_context_problem_description.html'),
+            'work_description': get_template('service_log/table_context_work_description.html'),
         }
 
     def get_icon(self):
@@ -873,6 +875,11 @@ class ServiceEventsBaseList(BaseListableView):
     def problem_description(self, se):
         template = self.templates['problem_description']
         c = {'problem_description': se.problem_description, 'request': self.request}
+        return template.render(c)
+
+    def work_description(self, se):
+        template = self.templates['work_description']
+        c = {'work_description': se.work_description, 'request': self.request}
         return template.render(c)
 
 

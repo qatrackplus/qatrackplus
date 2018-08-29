@@ -1,17 +1,8 @@
+
 from django.conf import settings
 from django.contrib import admin
-from django.contrib.admin import helpers
-from django.contrib.admin.exceptions import DisallowedModelAdminToField
-from django.contrib.admin.options import TO_FIELD_VAR, IS_POPUP_VAR
-from django.contrib.admin.utils import unquote
 from django.contrib.admin.widgets import FilteredSelectMultiple
-from django.core.exceptions import PermissionDenied
-from django.db.models import ObjectDoesNotExist
-from django.forms import ModelMultipleChoiceField, ModelForm, ValidationError
-from django.forms.formsets import all_valid
-from django.http import Http404
-from django.utils.encoding import force_text
-from django.utils.html import escape
+from django.forms import ModelMultipleChoiceField, ModelForm
 from django.utils.translation import ugettext as _
 
 from .forms import UnitAvailableTimeForm
@@ -24,7 +15,7 @@ class UnitFormAdmin(ModelForm):
     if settings.USE_SERVICE_LOG:
         service_areas = ModelMultipleChoiceField(
             queryset=ServiceArea.objects.all(),
-            required=True,
+            required=False,
             widget=FilteredSelectMultiple(
                 verbose_name=_('Service areas'),
                 is_stacked=False

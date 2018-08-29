@@ -45,3 +45,8 @@ body > div.daterangepicker.ltr.show-ranges.show-calendar > div.drp-buttons > spa
 span.drp-selected {
     direction: ltr;
 }
+select.monthselect, select.yearselect {
+    border-color: #d2d6de;
+    font-weight: normal;
+    padding: 5px !important;
+}
