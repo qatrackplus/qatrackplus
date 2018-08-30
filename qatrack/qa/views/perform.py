@@ -7,11 +7,6 @@ import traceback
 
 from braces.views import JSONResponseMixin, PermissionRequiredMixin
 import dateutil
-try:
-    import pydicom as dicom
-except:
-    import dicom
-
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.sites.shortcuts import get_current_site
@@ -41,6 +36,14 @@ from qatrack.units.models import Site, Unit
 from . import forms
 from .. import models, signals, utils
 from .base import BaseEditTestListInstance, TestListInstances, UTCList, logger
+
+try:
+    import pydicom as dicom
+except:
+    import dicom
+
+
+
 
 DEFAULT_CALCULATION_CONTEXT = {
     "dicom": dicom,

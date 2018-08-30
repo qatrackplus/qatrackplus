@@ -20,13 +20,18 @@ the next page. Give your group a name and then choose the permissions
 available to that group (permissions are described in more detail
 below). Once you are finished, click **Save**.
 
+.. figure:: images/create_group.png
+   :alt: Creating a new group
+
+   Creating a new group
+
 Users
 -----
 
-If you are using Active Directory for user authentication then new users
-will be automatically created the first time they log in. Otherwise if
-you are using the built in authentication system you will need to create
-users manually.
+If you are using :ref:`Active Directory <active_directory>` for user
+authentication then new users will be automatically created the first time they
+log in. Otherwise if you are using the built in authentication system you will
+need to create users manually.
 
 Creating a new user
 ~~~~~~~~~~~~~~~~~~~
@@ -46,6 +51,11 @@ On the next page you can fill out more details about the users including
 proper names, which groups the user belongs to and any permissions
 specific to that person (i.e. that are not already covered by the groups
 they are members of).
+
+.. figure:: images/create_user_2nd.png
+   :alt: Creating a new user - selecting permissions
+
+   Creating a new user and setting permissions
 
 Any user that has **Staff Status** checked on their user profile page
 will have access to the admin site.

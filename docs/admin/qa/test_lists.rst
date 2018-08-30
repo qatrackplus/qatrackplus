@@ -1,3 +1,5 @@
+.. _qa_test_lists:
+
 Configuring Test Lists
 ======================
 

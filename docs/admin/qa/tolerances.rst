@@ -1,3 +1,5 @@
+.. _qa_tolerances:
+
 Test Tolerances
 ===============
 
@@ -41,7 +43,7 @@ and values less than 48.5 or greater than 51.5 will be considered
 failing.
 
 .. figure:: images/tolerances/numerical_a.png
-   :alt: 
+   :alt:
 
 Note that you are free to leave one or more of the tolerance and action
 levels empty. This allows you to create tolerances which are pass/fail
@@ -61,10 +63,10 @@ values between 78 & 79 or 81 & 82 will be considered at tolerance and
 values less than 78 or greater than 82 will be considered failing.
 
 .. figure:: images/tolerances/numerical_b.png
-   :alt: 
+   :alt:
 
 .. figure:: images/tolerances/numerical_c.png
-   :alt: 
+   :alt:
 
 Multiple Choice Tolerances
 --------------------------
@@ -79,14 +81,14 @@ considered tolerance values.
 For example if your multiple choice test had choices like below:
 
 .. figure:: images/mult_choice.png
-   :alt: 
+   :alt:
 
 and you wanted ``Choice A`` to be passing, ``Choice B`` to be failing
 and ``Choice C`` to be failing then you would set up your tolerance like
 the following:
 
 .. figure:: images/tolerances/mult_choice_a.png
-   :alt: 
+   :alt:
 
 if you wanted ``Choice A`` and ``Choice B`` to be passing and
 ``Choice C`` to be failing then you would set up your tolerance like the

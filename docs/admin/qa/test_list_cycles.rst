@@ -1,3 +1,5 @@
+.. _qa_test_list_cycles:
+
 Configuring Test List Cycles
 ============================
 

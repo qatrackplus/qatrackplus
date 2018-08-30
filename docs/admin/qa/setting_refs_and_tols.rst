@@ -1,3 +1,5 @@
+.. _qa_ref_tols:
+
 Setting Reference & Tolerance Values
 ====================================
 

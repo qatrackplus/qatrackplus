@@ -33,9 +33,9 @@ Before you start defining tests and test lists for the first time it is a good
 idea to begin by doing some initial configuration.
 
 #. `Change the name of your website <qa/change_site_name.html>`__
-#. `Configure the Service Log app <service_log/guide.html>`__
+#. `Configure the Service Log app <service_log/guide.html>`__ (optional)
 #. `Configure the Units app <units/guide.html>`__
-#. `Define some user groups <qa/auth.html>`__
+#. `Define some Groups and Users <qa/auth.html>`__
 #. :ref:`Configure the QA app <initial_qa_config>`
 
 
@@ -45,6 +45,7 @@ Admin Guide Contents
 .. toctree::
    :maxdepth: 2
 
+   qa/change_site_name
    units/guide
    qa/guide
    service_log/guide

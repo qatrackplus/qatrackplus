@@ -50,7 +50,8 @@ described here:
 .. toctree::
    :maxdepth: 2
 
-   config.rst
+   config
+   active_directory
 
 
 

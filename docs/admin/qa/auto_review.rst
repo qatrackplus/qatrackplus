@@ -1,3 +1,5 @@
+.. _qa_auto_review:
+
 Auto Review
 ===========
 

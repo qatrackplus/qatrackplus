@@ -1,5 +1,7 @@
-Configuring Test Statuses
-=========================
+.. _qa_statuses:
+
+Test Statuses
+=============
 
 Every test instance that is created has a status assigned to it (and
 hence there must be at least one status defined before doing QA).
