@@ -79,6 +79,7 @@ close the dialogue box and add the test to your test list.
 
    Test added to list
 
+.. _qa_sublists:
 
 Likewise, you can select another Test List to include by using the Sublist entry field:
 

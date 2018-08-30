@@ -1,3 +1,5 @@
+.. _qa_emails:
+
 Email notifications
 ===================
 

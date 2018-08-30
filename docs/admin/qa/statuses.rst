@@ -29,8 +29,8 @@ explained below.
    unless explicitly overridden by the user.
 
 -  If a test instance has a status with **Requires review** checked its
-   parent test list instance will appear in the `**Unreviewed**
-   queue <../users/review_qa_data.md>`__.
+   parent test list instance will appear in the :ref:`**Unreviewed**
+   queue <qa_review>`.
 
 -  **Export by default** indicates whether test instances with this
    status should be included by default in data plots. In the figure

@@ -1,15 +1,14 @@
 Configuring Auto-Schedule for all currently assigned test lists
 ===============================================================
 
-As of version 0.2.6 of QATrack+ there is a `Django management
-command <https://docs.djangoproject.com/en/dev/howto/custom-management-commands/>`__
-``auto_schedule`` that allows you to enable or disable
-`auto-scheduling <assign_to_unit.md>`__ for all test lists currently
-assigned to a unit. It will also allow you to update the due dates for
-all tests lists assigned to a unit based on their last performed date
-and assigned frequency. This is usually not necessary but might be
-useful if you have manually overriden many due dates and want to "reset"
-all of them.
+As of version 0.2.6 of QATrack+ there is a `Django management command
+<https://docs.djangoproject.com/en/dev/howto/custom-management-commands/>`__
+``auto_schedule`` that allows you to enable or disable :ref:`auto-scheduling
+<qa_assign_to_unit>` for all test lists currently assigned to a unit. It will
+also allow you to update the due dates for all tests lists assigned to a unit
+based on their last performed date and assigned frequency. This is usually not
+necessary but might be useful if you have manually overriden many due dates and
+want to "reset" all of them.
 
 All of these commands must be run from the git bash shell from the root
 of your QATrack+ directory (with your virtualenv activated).

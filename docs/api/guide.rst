@@ -1,3 +1,5 @@
+.. _qatrack_api:
+
 Using the QATrack+ API
 ======================
 
@@ -7,7 +9,7 @@ allow users to write their own applications for automating the completion of
 test lists. For example, you may want to write a script that runs every day
 (via a cron job or Windows Task Scheduler) which retrieves data from a hardware
 device used for daily output measurements and then uploads that data to
-QATrack+.  
+QATrack+.
 
 You are free to use any language which is capable of parsing/serializing JSON
 and making requests via http(s) but the examples below will use Python 3.x and
@@ -240,7 +242,7 @@ UnitTestCollections whose Unit name is "Unit 1":
     resp = requests.get(root + '/qa/unittestcollections/?unit__name=Unit 1', headers=headers)
 
 
-QATrack+ uses Django-Rest-Framework-Filters for it's filtering so more information about the 
+QATrack+ uses Django-Rest-Framework-Filters for it's filtering so more information about the
 filtering tools available an be found in  `DRFF's documentation <https://github.com/philipn/django-rest-framework-filters>`_.
 
 
@@ -346,7 +348,7 @@ A script that will find the above test list, and submit the data is shown here:
             }
         },
     }
-    
+
 
 A few things to note:
 
@@ -355,7 +357,7 @@ A few things to note:
 
   .. code-block:: python
 
-    { 
+    {
         'macro_name_1': {'value': <value>, 'skipped': True|False, 'comment': 'comment'},
         'macro_name_2': {...}
     }
@@ -390,7 +392,7 @@ test values should be a dictionary of the form `{'filename': 'some-file.name',
         }
     }
 
-Note that binary files must be base64 encoded!  
+Note that binary files must be base64 encoded!
 
 
 Attachments
@@ -419,7 +421,7 @@ FAQ
 ---
 
 - My site is using https and Apache and token authentication is not working:
-  You need to add 
+  You need to add
 
   ::
 

@@ -1,3 +1,6 @@
+.. _service_log:
+.. _parts:
+
 Service Log & Parts
 ===================
 

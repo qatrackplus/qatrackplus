@@ -2,8 +2,8 @@ Users Guide
 ====================
 
 .. note:: For documentation on configuring tests, users and other
-    administrative tasks, please see the `Administrators Guide
-    <../admin/guide.md>`__.
+    administrative tasks, please see the :ref:`Administrators Guide
+    <admin_guide>`.
 
 .. toctree::
    :maxdepth: 2

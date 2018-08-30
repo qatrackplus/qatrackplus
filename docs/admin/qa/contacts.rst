@@ -1,3 +1,5 @@
+.. _qa_contacts:
+
 Adding Contacts
 ===============
 

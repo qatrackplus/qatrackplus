@@ -1,3 +1,5 @@
+.. _admin_guide:
+
 Administrators Guide
 ====================
 
@@ -40,7 +42,7 @@ idea to begin by doing some initial configuration.
 
 
 Admin Guide Contents
-~~~~~~~~~~~~~~~~~~~~
+--------------------
 
 .. toctree::
    :maxdepth: 2

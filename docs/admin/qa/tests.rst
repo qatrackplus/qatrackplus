@@ -110,18 +110,18 @@ QATrack+ currently supports 8 different test types as outlined below.
 #. **Composite** A value calculated based on other test values (e.g. a
    temperature pressure correction, or a calculated dose).  Composite tests are
    easy to define but allow users to do define complex calculations with the
-   Python programming language.  Please see the [Calculated Test
-   Page](calculated.md) for more information on defining this type of test.
+   Python programming language.  Please see the :ref:`Composite Test section
+   <composite_tests>` for more information on defining this type of test.
 
 #. **String** Allows the user to enter a short piece of text (e.g. a user ID)
 
 #. **String Composite** A *Composite* test that stores a string (text) rather
-   than a numerical value. Please see the [Calculated Test Page](calculated.md)
-   for more information on defining this type of test.
+   than a numerical value. Please see the :ref:`Composite Test section
+   <composite_tests>` for more information on defining this type of test.
 
 #. **Upload** A test that allows you to upload an arbitrary file and process it
-   with a Python snippet.  Please see the [Calculated Test Page](calculated.md)
-   for more information on defining this type of test.
+   with a Python snippet.  Please see the :ref:`Composite Test section
+   <composite_tests>` for more information on defining this type of test.
 
 
 Choices (multiple choice test type only)

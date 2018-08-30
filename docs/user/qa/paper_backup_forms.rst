@@ -5,8 +5,8 @@ As of version 0.2.7 QATrack+ has a tool for generating (primitive) paper
 based forms to be used as backup in the event that your QATrack+ server
 is unavailable for some reason.
 
-Currently, to access this tool a user must have the `"staff" or
-"superuser" <../../admin/qa/auth.md>`__ flags set on their account.
+Currently, to access this tool a user must have the :ref:`"staff" or
+"superuser" <qa_auth>` flags set on their account.
 
 To access the tool, select the **Paper Backup Forms** option from the
 admin menu.

@@ -1,3 +1,5 @@
+.. _qa_auth:
+
 Managing Users and Groups
 =========================
 
@@ -27,6 +29,8 @@ below). Once you are finished, click **Save**.
    :alt: Creating a new group
 
    Creating a new group
+
+.. _auth_users:
 
 Users
 -----
