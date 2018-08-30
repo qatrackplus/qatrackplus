@@ -3,12 +3,11 @@
 Test Tolerances
 ===============
 
-Test tolerances (along with `reference
-values <settting_refs_and_tols.md>`__ are used to determine whether a
-test is passing, at tolerance or failing. Configuring the different
-kinds of tolerance values are described below while the procedure for
-setting reference and tolerance values for a given test on a unit is
-described `elsewhere <setting_refs_and_tols.md>`__.
+Test tolerances (along with :ref:`Reference values <qa_ref_tols>` are used to
+determine whether a test is passing, at tolerance or failing.  Configuring the
+different kinds of tolerance values are described below while the procedure for
+setting reference and tolerance values for a given test on a unit is described
+:ref:`elsewhere <qa_ref_tols>`.
 
 Creating a new tolerance
 ------------------------
@@ -21,14 +20,16 @@ to create and fill in the appropriate values (described below).
 Editing a tolerance after it has been created
 ---------------------------------------------
 
-A tolerance object should *very rarely* need to be edited and should
-only be done if you understand the implications of doing so.
+.. danger::
 
-When test values are stored, it keeps a reference to the tolerance that
-was set at the time the test was performed. If this tolerance object is
-later edited it will appear that the tolerance level for those test
-instances was different than it actually was at the time the test was
-performed.
+    A tolerance object should *very rarely* need to be edited and should
+    only be done if you understand the implications of doing so.
+
+    When test values are stored, it keeps a reference to the tolerance that
+    was set at the time the test was performed. If this tolerance object is
+    later edited it will appear that the tolerance level for those test
+    instances was different than it actually was at the time the test was
+    performed.
 
 Numerical Tolerances
 --------------------

@@ -5,6 +5,9 @@ Access to various QATrack+ features for users is defined based on which
 groups a user belongs to and which permissions have been assigned to
 their groups, or them specifically.
 
+
+.. _auth_groups:
+
 User Groups
 -----------
 

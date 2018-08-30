@@ -66,6 +66,9 @@ Glossary
     Status
         See :term:`Test Instance Status`
 
+    Sublist
+        todo
+
     Superuser
         todo
 

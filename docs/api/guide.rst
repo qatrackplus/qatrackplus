@@ -352,7 +352,8 @@ A few things to note:
 
 * Some fields like `comment`, `in_progress`, and `attachments` are optional
 * The `tests` key is a dictionary of the form (`skipped` and `comment` keys are optional):
-.. code-block:: python
+
+  .. code-block:: python
 
     { 
         'macro_name_1': {'value': <value>, 'skipped': True|False, 'comment': 'comment'},
@@ -417,13 +418,29 @@ Similar to File Upload test types, you can add arbitrary attachments to your Tes
 FAQ
 ---
 
-:The API returned status 403 with {'detail'\: 'You do not have permission to perform this action'}:
-    The user you are submitting your data with does not have permission to perform QA.  Add the user to a group
-    with the required permissions.
+- My site is using https and Apache and token authentication is not working:
+  You need to add 
 
-:The API returned status 401 with {'detail'\: 'Authentication credentials not provided'}:
-    You forgot to include the authorization token http header with your request.
+  ::
 
-:The API returned status 401 with {'detail'\: 'Invalid token'}:
-    You included an invalid authorization token http header with your request. Check to ensure your auth token 
-    is set correctly.
+        # this can go in either server config, virtual host, directory or .htaccess
+        WSGIPassAuthorization On
+
+  to your Apache config. See:
+  http://www.django-rest-framework.org/api-guide/authentication/#apache-mod_wsgi-specific-configuration
+  for more details.
+
+- The API returned status 403 with {'detail'\: 'You do not have permission to
+  perform this action'}: The user you are submitting your data with does not
+  have permission to perform QA.  Add the user to a group with the required
+  permissions.
+
+- The API returned status 401 with {'detail'\: 'Authentication credentials not
+  provided'}: You forgot to include the authorization token http header with
+  your request.
+
+- The API returned status 401 with {'detail'\: 'Invalid token'}: You included
+  an invalid authorization token http header with your request. Check to ensure
+  your auth token is set correctly.
+
+

@@ -123,3 +123,11 @@ then save the cycle.
    :alt: Removing a test list from a cycle
 
    Removing a test list from a cycle
+
+
+Attachments
+-----------
+
+You can add arbitrary attachments to a Test List Cycle (e.g. a PDF procedure
+for performing the Test Lists which make up the Cycle) by uploading them using
+the `Attachments` section at the bottom of the Test List Cycle configuration page.
