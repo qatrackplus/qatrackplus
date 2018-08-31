@@ -127,4 +127,5 @@ urlpatterns = [
     url(r"^searcher/test_list_cycle/$", api.test_list_cycle_searcher, name='test_list_cycle_searcher'),
     url(r"^searcher/test_instance/$", api.test_instance_searcher, name='test_instance_searcher'),
     url(r"^searcher/test_list_instance/$", api.test_list_instance_searcher, name='test_list_instance_searcher'),
+    url(r"^searcher/service_event/$", api.service_event_searcher, name='service_event_searcher'),
 ]

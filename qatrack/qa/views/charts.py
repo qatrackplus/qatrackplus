@@ -110,10 +110,9 @@ class ChartView(PermissionRequiredMixin, TemplateView):
             'test_lists': self.test_lists,
             'categories': models.Category.objects.all(),
             'statuses': models.TestInstanceStatus.objects.all(),
+            'service_types': sl_models.ServiceType.objects.all(),
             'units': Unit.objects.values('pk', 'name', 'active'),
             'unit_frequencies': json.dumps(self.unit_frequencies, cls=SetEncoder),
-            # 'service_types': sl_models.ServiceType.objects.all(),
-            'service_types': {st.id: st.name for st in sl_models.ServiceType.objects.all()},
             'active_unit_test_list': self.get_active_test_lists()
         }
         context.update(c)
@@ -337,9 +336,9 @@ class BaseChartView(View):
         test_lists = self.request.GET.getlist("test_lists[]", [])
         units = self.request.GET.getlist("units[]", [])
         statuses = self.request.GET.getlist("statuses[]", [])
+        service_types = self.request.GET.getlist("service_types[]", [])
 
         show_events = self.request.GET.get('show_events') == 'true' and settings.USE_SERVICE_LOG
-        se_review_required = self.request.GET.get('review_required') == 'true'
         # se_types = self.request.GET.getlist('service_types[]', [])
 
         if not (tests and test_lists and units and statuses):
@@ -349,6 +348,7 @@ class BaseChartView(View):
         test_lists = models.TestList.objects.filter(pk__in=test_lists)
         units = Unit.objects.filter(pk__in=units)
         statuses = models.TestInstanceStatus.objects.filter(pk__in=statuses)
+        service_types = sl_models.ServiceType.objects.filter(pk__in=service_types)
 
         # test_list_names = {tl.id: tl.name for tl in test_lists}
 
@@ -407,16 +407,14 @@ class BaseChartView(View):
             ses = sl_models.ServiceEvent.objects.filter(
                 unit_service_area__unit__in=units,
                 datetime_service__gte=from_date,
-                datetime_service__lte=to_date
+                datetime_service__lte=to_date,
+                service_type__in=service_types
             ).select_related(
-                'unit_service_area__unit', 'unit_service_area__service_area'
+                'unit_service_area__unit', 'unit_service_area__service_area', 'service_type', 'test_list_instance_initiated_by'
             ).prefetch_related(
                 'returntoserviceqa_set',
                 'returntoserviceqa_set__test_list_instance'
             ).order_by('datetime_service')
-
-            if se_review_required:
-                ses = ses.filter(is_review_required=True)
 
             for se in ses:
                 rtsqas = se.returntoserviceqa_set.all()
@@ -424,9 +422,12 @@ class BaseChartView(View):
                 self.plot_data['events'].append({
                     'date': timezone.localtime(se.datetime_service),
                     'id': se.id,
-                    'type': se.service_type_id,
+                    'type': {'id': se.service_type_id, 'name': se.service_type.name},
                     'is_review_required': se.is_review_required,
-                    'initiated_by': se.test_list_instance_initiated_by_id,
+                    'initiated_by': {
+                        'id': se.test_list_instance_initiated_by_id,
+                        'test_list_id': se.test_list_instance_initiated_by.test_list_id
+                    } if se.test_list_instance_initiated_by_id else '',
                     'rtsqas': [
                         {
                             'id': rtsqa.id,

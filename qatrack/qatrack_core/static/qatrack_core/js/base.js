@@ -200,7 +200,7 @@ require(['jquery'], function ($) {
             $control_sidebar.addClass('control-sidebar-open');
         },
         function(e) {
-            var to = e.toElement;
+            var to = e.relatedTarget;
             if (to !== $control_sidebar[0] && to !== $tab_content[0]) {
                 if (!$(to).parents('.control-sidebar').length) {
                     $control_sidebar.removeClass('control-sidebar-open');
@@ -214,7 +214,7 @@ require(['jquery'], function ($) {
 
         },
         function(e) {
-            var to = e.toElement;
+            var to = e.relatedTarget;
             if (to !== $sidebar_btn[0]) {
                 $control_sidebar.removeClass('control-sidebar-open');
             }

@@ -53,7 +53,7 @@
                                 </div>
                                 <div class="col-sm-6">
                                     <dl class="dl-horizontal">
-                                        <dt>Alt part number:</dt><dd><div>{{ part.alt_part_number }}</div></dd>
+                                        <dt>Alternate Part number:</dt><dd><div>{{ part.alt_part_number }}</div></dd>
                                         <dt>Part category:</dt><dd><div>{% if part.part_category %}{{ part.part_category }}{% endif %}</div></dd>
                                         <dt>Obsolete:</dt><dd><div>{{ part.is_obsolete }}</div></dd>
                                     </dl>
@@ -138,7 +138,7 @@
                                         </thead>
                                         <tbody>
                                             {% for psc in psc_set %}
-                                                <tr>
+                                                <tr title="{{ psc.storage.description }}">
                                                     <td class="min-width-150 room-td">{{ psc.storage.room }}</td>
                                                     <td class="min-width-100">{{ psc.storage.location }}</td>
                                                     <td class="max-width-75">{{ psc.quantity }}</td>

@@ -7,7 +7,7 @@
         <i class="fa fa-pencil fa-stack-custom-sub fa-flip-horizontal upper-left primary"></i>
     </i>
 
-    <div class="timeline-item{% if can_view %} can-view{% endif %}">
+    <div class="timeline-item{% if can_view %} can-view{% elif not instance.service_event.is_active %} deleted{% endif %}">
         <span class="time"><i class="fa fa-clock-o"></i>&nbsp;{{ datetime_display }}</span>
         <h3 class="timeline-header header-se_new"{% if can_view %} onclick="window.location='{% url 'sl_details' pk=instance.service_event.id %}'"{% endif %}>
             <div class="pull-right margin-right-20 label label-default">

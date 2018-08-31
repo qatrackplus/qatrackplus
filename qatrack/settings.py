@@ -151,15 +151,14 @@ if not os.path.isfile(SITE_SPECIFIC_CSS_PATH):
 # ------------------------------------------------------------------------------
 # Middleware
 MIDDLEWARE = [
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     # 'django.contrib.auth.middleware.RemoteUserMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'qatrack.middleware.login_required.LoginRequiredMiddleware',
-    'qatrack.middleware.maintain_filters.FilterPersistMiddleware',
+    # 'qatrack.middleware.login_required.LoginRequiredMiddleware',
+    # 'qatrack.middleware.maintain_filters.FilterPersistMiddleware',
 ]
 
 
@@ -216,7 +215,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.humanize',
     'django_extensions',
-    'debug_toolbar',
     'django_comments',
     'formtools',
     'tastypie',
@@ -529,6 +527,11 @@ except ImportError:
 # Parts must be used with service log
 USE_PARTS = USE_PARTS or USE_SERVICE_LOG
 
+DELETE_REASONS = (
+    ('Duplicate', 'Duplicate'),
+    ('Invalid', 'Invalid')
+)
+
 if FORCE_SCRIPT_NAME:
     # Fix URL for Admin Views if FORCE_SCRIPT_NAME_SET in local_settings
     ADMIN_VIEWS_URL_PREFIX = FORCE_SCRIPT_NAME + "/admin"
@@ -543,3 +546,7 @@ SELENIUM_VIRTUAL_DISPLAY = False  # Set to True to use headless browser for test
 
 if any(['test' in v for v in sys.argv]):
     from .test_settings import *  # noqa
+
+if DEBUG:
+    INSTALLED_APPS.append('debug_toolbar')
+    MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')

@@ -433,16 +433,18 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                             if (result.errors.length > 0){
                                 self.set_value(null);
                                 self.status.addClass("btn-danger").text("Failed");
-                                self.status.attr("title",result.errors[0]);
+                                self.status.attr("title", result.errors[0]);
+                                console.log(result.errors);
                             }else{
                                 self.set_value(result);
                                 self.status.addClass("btn-success").text("Success");
-                                self.status.attr("title",result['url']);
+                                self.status.attr("title", result['url']);
+                                console.log(result);
                                 $.Topic("valueChanged").publish();
                             }
                         },
                         traditional:true,
-                        error: function(e,data){
+                        error: function(e, data){
                             $('body').removeClass("loading");
                             self.set_value(null);
                             self.status.removeClass("btn-primary btn-danger btn-success");
@@ -573,6 +575,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                     self.set_value(null);
                     self.status.addClass("btn-danger").text("Failed");
                     self.status.attr("title", response_data.errors[0]);
+                    console.log(response_data.errors);
                 } else {
                     self.set_value(response_data);
                     if (response_data.comment){
@@ -709,6 +712,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                             if (result.error){
                                 ti.status.attr("title", result.error);
                                 ti.status.addClass("btn-danger").text("Failed");
+                                console.log(result.error);
                             }else{
                                 ti.status.removeClass("btn-danger");
                                 ti.status.attr("title", "");
@@ -728,14 +732,14 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             self.submit.attr("disabled", true);
 
             latest_composite_call = $.ajax({
-                type:"POST",
-                url:QAURLs.COMPOSITE_URL,
-                data:JSON.stringify(data),
-                contentType:"application/json",
-                dataType:"json",
+                type: "POST",
+                url: QAURLs.COMPOSITE_URL,
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                dataType: "json",
                 success: on_success,
-                traditional:true,
-                error:on_error
+                traditional: true,
+                error: on_error
             });
         };
 

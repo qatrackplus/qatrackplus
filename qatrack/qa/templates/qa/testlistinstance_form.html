@@ -281,20 +281,46 @@
                                             <div class="row">
                                                 <label class="col-md-8">
                                                     {% if perms.service_log.add_serviceevent %}
-                                                        <a class="btn btn-default btn-xs btn-flat hover-parent" title="Create new service event initiated by this list" href="{% url 'sl_new' %}?ib={{ form.instance.pk }}&next={{request.path|cut:"data/"}}" target="se_tab">
-                                                            <i class="fa fa-stack fa-fw">
-                                                                <i class="fa fa-wrench fa-stack-custom-main"></i>
-                                                                <i class="fa fa-plus fa-stack-custom-sub upper-0 hover-sub-success"></i>
-                                                            </i>
-                                                        {% if service_events_ib|length == 0 %}Initiate Service Event{% endif %}
-                                                        </a>
+                                                        <div class="btn-group">
+                                                            <a class="btn btn-default btn-xs btn-flat hover-parent"
+                                                               title="Create new service event initiated by this list"
+                                                               href="{% url 'sl_new' %}?ib={{ form.instance.pk }}&next={{request.path|cut:"data/"}}"
+                                                            >
+                                                                <i class="fa fa-stack fa-fw">
+                                                                    <i class="fa fa-wrench fa-stack-custom-main"></i>
+                                                                    <i class="fa fa-plus fa-stack-custom-sub upper-0 hover-sub-success"></i>
+                                                                </i>
+                                                                {% if service_events_ib|length == 0 %}Initiate Service Event{% endif %}
+                                                            </a>
+                                                            <a class="btn btn-flat btn-xs btn-default new-tab-link"
+                                                               href="{% url 'sl_new' %}?ib={{ form.instance.pk }}"
+                                                               target="_blank"
+                                                               title="New tab: Create new service event initiated by this list"
+                                                            >
+                                                                <i class="fa fa-chevron-right" aria-hidden="true"></i>
+                                                            </a>
+                                                        </div>
                                                         {% if service_events_ib|length > 0 %}Service events initiated:{% endif %}
                                                     {% endif %}
                                                 </label>
                                                 <div class="col-md-4">
                                                     {% for se in service_events_ib %}
                                                         {% if perms.service_log.view_serviceevent %}
-                                                            <a href="{% url 'sl_details' pk=se.id %}" class="btn btn-xs btn-flat service-event-btn margin-bottom-1" data-bgcolour="{{ se.service_status.colour }}" target="se_tab">{{ se.id }}</a>
+                                                            <div class="btn-group">
+                                                                <a href="{% url 'sl_details' pk=se.id %}"
+                                                                   class="btn btn-xs btn-flat service-event-btn"
+                                                                   data-bgcolour="{{ se.service_status.colour }}"
+                                                                   title="View service event"
+                                                                >{{ se.id }}</a>
+                                                                <a class="btn btn-flat btn-xs btn-default new-tab-link service-event-btn"
+                                                                   href="{% url 'sl_details' pk=se.id %}"
+                                                                   target="_blank"
+                                                                   title="New tab: view service event"
+                                                                   data-bgcolour="{{ se.service_status.colour }}"
+                                                                >
+                                                                    <i class="fa fa-chevron-right" aria-hidden="true"></i>
+                                                                </a>
+                                                            </div>
                                                         {% else %}
                                                             <div>{{ se.id }}</div>
                                                         {% endif %}
@@ -310,7 +336,21 @@
                                                     <div class="col-md-4">
                                                         {% for se in service_events_rtsqa %}
                                                             {% if perms.service_log.view_serviceevent %}
-                                                                <a href="{% url 'sl_details' pk=se.id %}" class="btn btn-xs btn-flat service-event-btn margin-bottom-1" data-bgcolour="{{ se.service_status.colour }}" target="se_tab">{{ se.id }}</a>
+                                                                <div class="btn-group">
+                                                                    <a href="{% url 'sl_details' pk=se.id %}"
+                                                                       class="btn btn-xs btn-flat service-event-btn"
+                                                                       data-bgcolour="{{ se.service_status.colour }}"
+                                                                       title="View service event"
+                                                                    >{{ se.id }}</a>
+                                                                    <a class="btn btn-flat btn-xs btn-default new-tab-link service-event-btn"
+                                                                       href="{% url 'sl_details' pk=se.id %}"
+                                                                       target="_blank"
+                                                                       title="New tab: view service event"
+                                                                       data-bgcolour="{{ se.service_status.colour }}"
+                                                                    >
+                                                                        <i class="fa fa-chevron-right" aria-hidden="true"></i>
+                                                                    </a>
+                                                                </div>
                                                             {% else %}
                                                                 <div>{{ se.id }}</div>
                                                             {% endif %}
@@ -461,7 +501,7 @@
                                               </tr>
                                             {% endif %}
                                         {% endwith %}
-                                        {% qa_value_form test_form test_list perms test_info=test_form.get_test_info  %}
+                                        {% qa_value_form test_form test_list perms test_info=test_form.get_test_info unit_test_collection=unit_test_collection %}
 
                                         {% if not forloop.last and borders.ends|lookup:forloop.counter0 %}
                                           {% with borders.starts|lookup:forloop.counter as delim %}
@@ -479,7 +519,7 @@
 
                                 <div class="row">
                                     <div class="col-sm-7">
-                                        {% if perms.qa.add_attachment %}
+                                        {% if perms.attachments.add_attachment %}
                                             <table class="table table-responsive table-condensed">
                                                 <tbody>
                                                     <tr>

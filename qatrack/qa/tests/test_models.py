@@ -147,24 +147,24 @@ class TestTolerance(TestCase):
 
     def test_tolerances_for_value_absolute(self):
         expected = {models.ACT_HIGH: 55, models.ACT_LOW: 51, models.TOL_LOW: 52, models.TOL_HIGH: 54}
-        t = models.Tolerance(act_high=2, act_low=-2, tol_high=1, tol_low=-1, type=models.ABSOLUTE)
+        t = utils.create_tolerance(act_high=2, act_low=-2, tol_high=1, tol_low=-1, tol_type=models.ABSOLUTE)
         self.assertDictEqual(expected, t.tolerances_for_value(53))
 
     def test_tolerances_for_value_percent(self):
         expected = {models.ACT_HIGH: 1.02, models.ACT_LOW: 0.98, models.TOL_LOW: 0.99, models.TOL_HIGH: 1.01}
-        t = models.Tolerance(act_high=2, act_low=-2, tol_high=1, tol_low=-1, type=models.PERCENT)
+        t = utils.create_tolerance(act_high=2, act_low=-2, tol_high=1, tol_low=-1, tol_type=models.PERCENT)
         self.assertDictEqual(expected, t.tolerances_for_value(1))
 
     def test_percent_string_rep(self):
-        t = models.Tolerance(act_high=None, act_low=-2, tol_high=1, tol_low=None, type=models.PERCENT)
+        t = utils.create_tolerance(act_high=None, act_low=-2, tol_high=1, tol_low=None, tol_type=models.PERCENT)
         self.assertEqual(t.name, "Percent(-2.00%, --, 1.00%, --)")
 
     def test_absolute_string_rep(self):
-        t = models.Tolerance(act_high=None, act_low=-2, tol_high=1, tol_low=None, type=models.ABSOLUTE)
+        t = utils.create_tolerance(act_high=None, act_low=-2, tol_high=1, tol_low=None, tol_type=models.ABSOLUTE)
         self.assertEqual(t.name, "Absolute(-2.000, --, 1.000, --)")
 
     def test_mc_string_rep(self):
-        t = models.Tolerance(mc_pass_choices="a,b,c", mc_tol_choices="d,e", type=models.MULTIPLE_CHOICE)
+        t = utils.create_tolerance(mc_pass_choices="a,b,c", mc_tol_choices="d,e", tol_type=models.MULTIPLE_CHOICE)
         self.assertEqual(t.name, "M.C.(%s=a:b:c, %s=d:e)" % (settings.TEST_STATUS_DISPLAY['ok'], settings.TEST_STATUS_DISPLAY['tolerance']))
 
 

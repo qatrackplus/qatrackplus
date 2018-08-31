@@ -24,9 +24,14 @@
     font-style: italic;
     padding: 0 5px;
 }
-.felter .felter-option:hover, .felter .felter-top-option:hover {
-    background-color: #3c8dbc;
-    color: #ffffff;
+.felter .felter-top-option.felter-selected,
+.felter .felter-top-option.felter-selected:hover {
+    background-color: #627585;
+    color: #fff;
+}
+.felter .felter-option:hover,
+.felter .felter-top-option:hover {
+    background-color: #ddd;
     cursor: pointer;
 }
 .felter .hide {
@@ -41,10 +46,11 @@
     width: 100%;
     overflow-x: hidden;
 }
-.felter .felter-selected {
-    background-color: #d9dadd;
+.felter div.felter-option.felter-selected {
+    background-color: #627585;
+    color: #fff;
 }
-.felter .felter-option {
+.felter div.option-container > .felter-option {
     padding-left: 5px;
     -webkit-user-select: none;
     -moz-user-select: none;

@@ -42,29 +42,10 @@ require(['jquery', 'moment'], function ($, moment) {
         }
 
         $go_down_time.click(function () {
-            $('body').addClass('loading');
 
             var f = get_filters();
-            $.ajax({
-                data: f,
-                url: QAURLs.HANDLE_UNIT_DOWN_TIME,
-                success: function(res) {
-                    $('body').removeClass('loading');
-                    var name = 'qatrack_unit_down_time-' + $('input.text_filter[rel=1]:not(.search_init)').val() + '.csv';
-                    var csvContent = "data:text/csv;charset=utf-8,";
-                    csvContent += res;
-                    var encodedUri = encodeURI(csvContent);
-                    var link = document.createElement("a");
-                    link.setAttribute("href", encodedUri);
-                    link.setAttribute("download", name);
-                    document.body.appendChild(link); // Required for FF
-                    link.click();
-                },
-                error: function(res) {
-                    console.log(res);
-                    $('body').removeClass('loading');
-                }
-            });
+            window.location = QAURLs.HANDLE_UNIT_DOWN_TIME + '?' + f;
+
         });
 
     });

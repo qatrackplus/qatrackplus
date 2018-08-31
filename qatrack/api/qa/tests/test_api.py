@@ -161,7 +161,7 @@ class TestTestListInstanceAPI(APITestCase):
         assert tli.attachment_set.count() == 1
         a = tli.attachment_set.first()
         assert a.finalized
-        assert "uploads/testlistinstance" in a.attachment.path
+        assert "uploads/testlistinstance" in a.attachment.path or "uploads\\testlistinstance" in a.attachment.path
 
     def test_create_with_b64_attachments(self):
         f = open(os.path.join(settings.PROJECT_ROOT, "qa", "static", "qa", "img", "tux.png"), 'rb')
@@ -173,7 +173,7 @@ class TestTestListInstanceAPI(APITestCase):
         assert tli.attachment_set.count() == 1
         a = tli.attachment_set.first()
         assert a.finalized
-        assert "uploads/testlistinstance" in a.attachment.path
+        assert "uploads/testlistinstance" in a.attachment.path or "uploads\\testlistinstance" in a.attachment.path
 
     def test_create_with_b64_attachments_invalid(self):
         f = open(os.path.join(settings.PROJECT_ROOT, "qa", "static", "qa", "img", "tux.png"), 'rb')

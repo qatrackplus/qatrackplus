@@ -1,16 +1,21 @@
 
 from django.apps import apps
-from django.conf import settings
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.http import JsonResponse
-from django.shortcuts import render
 from django.template.loader import render_to_string
 from django.utils.html import escape
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_POST
-from django_comments import get_form
 from django_comments import signals as dc_signals
+from django_comments.forms import CommentForm
+
+
+class CustomCommentForm(CommentForm):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["email"].required = False
 
 
 @require_POST
@@ -75,7 +80,7 @@ def ajax_comment(request, next=None, using=None):
     preview = "preview" in data
 
     # Construct the comment form
-    form = get_form()(target, data=data)
+    form = CustomCommentForm(target, data=data)
 
     # Check security information
     if form.security_errors():
@@ -88,24 +93,14 @@ def ajax_comment(request, next=None, using=None):
         )
 
     # If there are errors or if we requested a preview show the comment
-    if form.errors or preview:
-        template_list = [
-            # These first two exist for purely historical reasons.
-            # Django v1.0 and v1.1 allowed the underscore format for
-            # preview templates, so we have to preserve that format.
-            "comments/%s_%s_preview.html" % (model._meta.app_label, model._meta.model_name),
-            "comments/%s_preview.html" % model._meta.app_label,
-            # Now the usual directory based template hierarchy.
-            "comments/%s/%s/preview.html" % (model._meta.app_label, model._meta.model_name),
-            "comments/%s/preview.html" % model._meta.app_label,
-            "comments/preview.html",
-        ]
-        return render(
-            request, template_list, {
-                "comment": form.data.get("comment", ""),
-                "form": form,
-                "next": data.get("next", next),
-            }
+    if form.errors:
+        return JsonResponse(
+            {
+                'error': True,
+                'message': 'The comment submission failed',
+                'extra': form.errors
+            },
+            status=400,
         )
 
     # Otherwise create the comment

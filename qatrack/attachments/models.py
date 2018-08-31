@@ -12,6 +12,7 @@ from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 
 import qatrack.qa.models as qam
+import qatrack.service_log.models as slm
 
 
 def get_upload_path(instance, name):
@@ -67,6 +68,7 @@ class Attachment(models.Model):
     testlistcycle = models.ForeignKey(qam.TestListCycle, null=True, blank=True)
     testinstance = models.ForeignKey(qam.TestInstance, null=True, blank=True)
     testlistinstance = models.ForeignKey(qam.TestListInstance, null=True, blank=True)
+    serviceevent = models.ForeignKey(slm.ServiceEvent, null=True, blank=True)
 
     created = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, editable=False)
@@ -77,6 +79,7 @@ class Attachment(models.Model):
         "testlistcycle",
         "testinstance",
         "testlistinstance",
+        "serviceevent",
     ]
 
     @property

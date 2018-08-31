@@ -24,24 +24,13 @@ def max_24hr(value):
         )
 
 
-class UnitAvailableTimeForm(forms.ModelForm):
+year_select = forms.ChoiceField(
+    required=False,
+    choices=[(y, y) for y in range(timezone.now().year - 20, timezone.now().year + 10)],
+    initial=timezone.now().year
+).widget.render('year_select', timezone.now().year, attrs={'id': 'id_year_select'})
 
-    hours_monday = HoursMinDurationField(help_text='Hours available on mondays (hh:mm)', label='Monday', validators=[max_24hr])
-    hours_tuesday = HoursMinDurationField(help_text='Hours available on tuesdays (hh:mm)', label='Tuesday', validators=[max_24hr])
-    hours_wednesday = HoursMinDurationField(help_text='Hours available on wednesdays (hh:mm)', label='Wednesday', validators=[max_24hr])
-    hours_thursday = HoursMinDurationField(help_text='Hours available on thursdays (hh:mm)', label='Thursday', validators=[max_24hr])
-    hours_friday = HoursMinDurationField(help_text='Hours available on fridays (hh:mm)', label='Friday', validators=[max_24hr])
-    hours_saturday = HoursMinDurationField(help_text='Hours available on saturdays (hh:mm)', label='Saturday', validators=[max_24hr])
-    hours_sunday = HoursMinDurationField(help_text='Hours available on sundays (hh:mm)', label='Sunday', validators=[max_24hr])
-
-    units = forms.ModelMultipleChoiceField(queryset=u_models.Unit.objects.all(), required=False)
-
-    year_select = forms.ChoiceField(
-        required=False,
-        choices=[(y, y) for y in range(timezone.now().year - 20, timezone.now().year + 10)],
-        initial=timezone.now().year
-    )
-    month_select = forms.ChoiceField(
+month_select = forms.ChoiceField(
         required=False,
         choices=[
             (0, 'January'),
@@ -58,14 +47,38 @@ class UnitAvailableTimeForm(forms.ModelForm):
             (11, 'December'),
         ],
         initial=timezone.now().month - 1
+    ).widget.render('month_select', timezone.now().month - 1, attrs={'id': 'id_month_select'})
+
+
+class UnitAvailableTimeForm(forms.ModelForm):
+
+    hours_sunday = HoursMinDurationField(
+        help_text='Hours available on sundays (hh:mm)', label='Sunday', validators=[max_24hr]
     )
+    hours_monday = HoursMinDurationField(
+        help_text='Hours available on mondays (hh:mm)', label='Monday', validators=[max_24hr]
+    )
+    hours_tuesday = HoursMinDurationField(
+        help_text='Hours available on tuesdays (hh:mm)', label='Tuesday', validators=[max_24hr]
+    )
+    hours_wednesday = HoursMinDurationField(
+        help_text='Hours available on wednesdays (hh:mm)', label='Wednesday', validators=[max_24hr]
+    )
+    hours_thursday = HoursMinDurationField(
+        help_text='Hours available on thursdays (hh:mm)', label='Thursday', validators=[max_24hr]
+    )
+    hours_friday = HoursMinDurationField(
+        help_text='Hours available on fridays (hh:mm)', label='Friday', validators=[max_24hr]
+    )
+    hours_saturday = HoursMinDurationField(
+        help_text='Hours available on saturdays (hh:mm)', label='Saturday', validators=[max_24hr]
+    )
+
+    unit = forms.ModelChoiceField(widget=forms.HiddenInput(), queryset=u_models.Unit.objects.all())
 
     class Meta:
         model = u_models.UnitAvailableTime
-        fields = (
-            'date_changed', 'hours_monday', 'hours_tuesday', 'hours_wednesday', 'hours_thursday', 'hours_friday',
-            'hours_saturday', 'hours_sunday', 'units'
-        )
+        fields = '__all__'
 
     def __init__(self, *args, **kwargs):
         super(UnitAvailableTimeForm, self).__init__(*args, **kwargs)
@@ -82,19 +95,15 @@ class UnitAvailableTimeForm(forms.ModelForm):
         for day in ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']:
             self.fields['hours_' + day].widget.attrs['placeholder'] = day
 
-        if not self.instance.pk:
-            for d in settings.DEFAULT_AVAILABLE_TIMES:
-                self.fields[d].initial = settings.DEFAULT_AVAILABLE_TIMES[d]
+            if not self.instance.pk:
+                self.fields['hours_' + day].initial = settings.DEFAULT_AVAILABLE_TIMES['hours_' + day]
 
     def clean_date_changed(self):
-        if self._unit:
-            self.cleaned_data['date_changed'] = self._unit.date_acceptance
-        return self.cleaned_data['date_changed']
-
-    def is_valid(self, unit=None):
-        if unit:
-            self._unit = unit
-        return super().is_valid()
+        date_changed = self.cleaned_data['date_changed']
+        unit = self.cleaned_data.get('unit')
+        if unit and date_changed < unit.date_acceptance:
+            self.add_error('date_changed', 'Date changed cannot be before units acceptance date')
+        return date_changed
 
 
 class UnitAvailableTimeEditForm(forms.ModelForm):

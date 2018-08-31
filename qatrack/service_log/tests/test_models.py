@@ -98,8 +98,9 @@ class TestServiceEventAndRelated(TransactionTestCase):
         se = sl_models.ServiceEvent.objects.first()
         tp = sl_utils.create_third_party()
 
-        h_01 = sl_utils.create_hours(service_event=se, third_party=tp)
+        h_01 = sl_utils.create_hours(service_event=se, third_party=tp, user=None)
 
+        # Note: will not raise IntegrityError when using Sqlite
         with self.assertRaises(IntegrityError):
             sl_models.Hours.objects.create(service_event=se, third_party=tp, user=None, time=timezone.timedelta(hours=1))
 

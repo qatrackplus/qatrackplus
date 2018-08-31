@@ -8,33 +8,28 @@ require(['jquery', 'moment', 'lodash', 'felter'], function ($, moment, _) {
     function filter_units() {
         var units_to_show;
 
-        if ($("#all-option").is(":selected")) {
-            units_to_show = _.map($(".unit-option"), unit_container_id);
-        } else {
-            units_to_show = _.map($("#unit-filter option:selected"), unit_container_id);
-        }
+        units_to_show = _.map($("#unit-filter option:selected"), unit_container_id);
 
-        for (var aub in all_unit_boxes) {
-            all_unit_boxes[aub]['show'] = _.includes(units_to_show, aub);
-        }
+        $.each(all_unit_boxes, function(k, v) {
+            v['show'] = _.includes(units_to_show, k);
+        });
         add_unit_boxes();
     }
 
     function add_unit_boxes() {
         var sections = $('.unit-box-section');
-        // $('.unit-box-section').html('');
         var counters = [0, 0, 0];
 
-        for (var ub in all_unit_boxes) {
-            if (all_unit_boxes[ub]['show']) {
+        $.each(all_unit_boxes, function(k, v) {
+            if (v['show']) {
                 var add_to = _.indexOf(counters, _.min(counters));
-                $(sections[add_to]).append(all_unit_boxes[ub]['box']);
-                counters[add_to] += $(all_unit_boxes[ub]['box']).height();
+                $(sections[add_to]).append(v['box']);
+                counters[add_to] += $(v['box']).height();
             }
             else {
-                $('#box-' + ub).remove();
+                $('#box-' + k).remove();
             }
-        }
+        });
     }
 
     function create_utc_link(ti_name, ti) {
@@ -74,49 +69,47 @@ require(['jquery', 'moment', 'lodash', 'felter'], function ($, moment, _) {
     function setup_units(unit_lists) {
 
         var unit_filter = $('#unit-filter');
-        // var added_boxes = [];
-        // var counters = [0, 0, 0];
-        for (var unit in unit_lists) {
+        $.each(unit_lists, function(k1, unit) {
             
-            var unit_slug = unit.replace(/ /g, '_');
-            // var rows_added = 3;
-            var unit_div = $($('#unit-template').html().replace(/__UNITDISPLAYNAME__/g, unit).replace(/__UNITNAME__/g, unit_slug));
+            var unit_slug = unit.unit_name.replace(/ /g, '_');
+            var unit_name = unit.unit_name;
+
+            var unit_div = $($('#unit-template').html().replace(/__UNITNAME__/g, unit_name).replace(/__UNITNUMBER__/g, k1));
             var freq_container = unit_div.find('tbody');
             var add_it = false;
 
-            for (var freq in unit_lists[unit]) {
+            $.each(unit.unit_freqs, function(k2, freq) {
 
-                if (!_.isEmpty(unit_lists[unit][freq])) {
-                    freq_container.append($('<tr>').append($('<td colspan="3"><b>' + freq + '</b></td>')));
+                if (!_.isEmpty(freq)) {
+                    freq_container.append($('<tr>').append($('<td colspan="3"><b>' + k2 + '</b></td>')));
                     // rows_added++;
 
-                    for (var ti in unit_lists[unit][freq]) {
+                    $.each(freq, function(k3, ti) {
                         freq_container.append($('<tr class="testlist-row"></tr>')
-                            .append($('<td>', {class: 'testlist-link'}).append(create_utc_link(ti, unit_lists[unit][freq][ti])))
-                            .append($('<td>', {class: 'testlist-due-date'}).append(create_due_date(unit_lists[unit][freq][ti])))
-                            .append($('<td>', {class: 'testlist-last-status'}).append(create_status(unit_lists[unit][freq][ti].last_instance_status)))
+                            .append($('<td>', {class: 'testlist-link'}).append(create_utc_link(k3, ti)))
+                            .append($('<td>', {class: 'testlist-due-date'}).append(create_due_date(ti)))
+                            .append($('<td>', {class: 'testlist-last-status'}).append(create_status(ti.last_instance_status)))
                         );
-                        // rows_added++;
-                    }
+                    });
                     add_it = true;
                 }
-            }
+            });
 
             if (add_it) {
 
                 unit_filter.append($('<option>', {
-                    value: unit_slug,
-                    text: unit,
+                    value: k1,
+                    text: unit_name,
                     selected: 'selected',
                     class: 'unit-option'
                 }));
 
-                all_unit_boxes[unit_slug] = {
+                all_unit_boxes[k1] = {
                     'show': true,
                     'box': unit_div[0]
                 }
             }
-        }
+        });
 
         add_unit_boxes();
         unit_filter.felter({
@@ -128,17 +121,7 @@ require(['jquery', 'moment', 'lodash', 'felter'], function ($, moment, _) {
             selectAll: true,
             selectNone: true,
             height: 250,
-            slimscroll: true,
-            // filters: {
-            //     showInactiveUnits: {
-            //         selected: false,
-            //         run_filter_when_selected: false,   // No, run filter when not selected
-            //         label: 'Show Inactive Units',
-            //         filter: function(obj_data) {
-            //             return $(obj_data.$option).attr('data-active') === 'True';
-            //         }
-            //     }
-            // }
+            slimscroll: true
         })
     }
 

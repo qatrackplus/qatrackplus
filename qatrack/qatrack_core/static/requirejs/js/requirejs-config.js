@@ -14,7 +14,7 @@ require.config({
         autosize: siteConfig.STATIC_URL + 'autosize/js/autosize.min',
         bootstrap: siteConfig.STATIC_URL + 'bootstrap/js/bootstrap.min',
         cheekycheck: siteConfig.STATIC_URL + 'cheekycheck/js/cheekycheck',
-        d3: siteConfig.STATIC_URL + 'd3/js/d3.min',
+        d3: siteConfig.STATIC_URL + 'd3/js/d3',
         saveSvgAsPng: siteConfig.STATIC_URL + 'd3/js/saveSvgAsPng',
         datatables: siteConfig.STATIC_URL + 'listable/js/jquery.dataTables.min',
         'datatables.bootstrap': siteConfig.STATIC_URL + 'listable/js/jquery.dataTables.bootstrap',
@@ -58,6 +58,7 @@ require.config({
         // service log module
         sl_dash: siteConfig.STATIC_URL + 'service_log/js/sl_dash',
         sl_se: siteConfig.STATIC_URL + 'service_log/js/sl_serviceevent',
+        sl_se_delete: siteConfig.STATIC_URL + 'service_log/js/sl_se_delete',
         sl_se_details:siteConfig.STATIC_URL + 'service_log/js/sl_serviceevent_details',
         sl_utils: siteConfig.STATIC_URL + 'service_log/js/sl_utils',
         service_event_down_time_list: siteConfig.STATIC_URL + 'service_log/js/service_event_down_time_list',
