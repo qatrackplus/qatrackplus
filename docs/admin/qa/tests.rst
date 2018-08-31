@@ -294,6 +294,17 @@ When your script (calculation procedure) is executed, it has access to
       `In Progress` will be included, otherwise they will be excluded. If no
       previous Test Instance is found, `None` will be returned.
 
+    - **UTILS.get_figure()** will get you a `matplotlib Figure instance
+      <https://matplotlib.org/api/_as_gen/matplotlib.figure.Figure.html>`__
+      suitable for creating and displaying plots e.g.:
+
+        ::
+
+            fig = UTILS.get_figure()
+            axes = fig.gca()
+            axes.plot(range(10), range(10))
+            UTILS.write_file("line.png", fig)
+
 
 The snippet below shows a composite calculation which takes advantage of
 the SciPy stats library to perform a linear regression and return the

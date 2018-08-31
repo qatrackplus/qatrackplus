@@ -8,7 +8,7 @@ Tutorials
    :caption: Contents:
 
    step_by_step/index
-   plots
+   plots/index
 
 
 .. todo:: Write tutorials

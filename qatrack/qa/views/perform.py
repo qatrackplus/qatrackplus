@@ -23,6 +23,8 @@ from django.utils.translation import ugettext as _
 from django.views.generic import CreateView, TemplateView, View
 from django_comments.models import Comment
 import matplotlib
+from matplotlib.backends.backend_agg import FigureCanvasAgg
+from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import numpy
 import scipy
@@ -155,6 +157,11 @@ class CompositeUtils:
             return qs.latest("work_completed")
         except models.TestInstance.DoesNotExist:
             return None
+
+    def get_figure(self):
+        fig = Figure()
+        canvas = FigureCanvasAgg(fig)
+        return fig
 
 
 def get_context_refs_tols(unit, tests):
