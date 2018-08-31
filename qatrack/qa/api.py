@@ -18,6 +18,7 @@ from tastypie.utils import timezone
 from qatrack.qa import models
 from qatrack.units.models import Unit, Modality, UnitType
 from qatrack.formats.en.formats import DATETIME_FORMAT
+from qatrack.service_log.models import ServiceEvent
 
 
 def csv_date(dt):
@@ -412,3 +413,17 @@ def test_list_instance_searcher(request):
     q = request.GET.get('q')
     testlistinstance = models.TestListInstance.objects.filter(Q(id__icontains=q) | Q(test_list__name__icontains=q)).values('id', 'test_list__name')[0:50]
     return JsonResponse({'items': list(testlistinstance), 'name': 'test_list__name'})
+
+
+def service_event_searcher(request):
+    q = request.GET.get('q')
+    serviceevent = ServiceEvent.objects.filter(Q(id__icontains=q))[0:50]
+    return JsonResponse({
+        'items': [
+            {
+                'id': se.id,
+                'display': '{} - Created on {}'.format(se.service_status.name, se.datetime_service.strftime('%b %d, %Y'))
+            } for se in serviceevent
+        ],
+        'name': 'display'
+    })

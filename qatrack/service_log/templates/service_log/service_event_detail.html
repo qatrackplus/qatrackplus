@@ -3,6 +3,7 @@
 {% load widget_tweaks %}
 {% load qa_tags %}
 {% load qatrack_tags %}
+{% load attach_tags %}
 {% load comments %}
 
 {% block head_title %}Service Event{% endblock %}
@@ -373,9 +374,39 @@
             </div>
         </div>
 
-        {% if USE_PARTS and parts_used|length > 0 %}
-            <div class="row">
-                <div class="col-md-12">
+        <div class="row">
+            <div class="col-md-4">
+                {% if serviceevent.attachment_set.all|length > 0 %}
+                    <div class="box">
+                        <div class="box-header">
+                            <h3 class="box-title">
+                                <i class="fa fa-cog fa-fw" aria-hidden="true"></i>
+                                Attachments
+                            </h3>
+                        </div>
+                        <div class="box-body">
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    {% if perms.attachments.add_attachment %}
+                                        <table id="attach-table" class="table table-responsive table-condensed">
+                                            <tbody>
+
+                                                {% for attach in serviceevent.attachment_set.all %}
+                                                    <tr><td><i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>{{ attach | attachment_link }}</td></tr>
+                                                {% endfor %}
+                                            </tbody>
+                                            <tfoot id="se-attachment-names"></tfoot>
+                                        </table>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+            {% if USE_PARTS and parts_used|length > 0 %}
+                <div class="col-md-8">
                     <div class="box">
                         <div class="box-header">
                             <h3 class="box-title">
@@ -420,8 +451,8 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        {% endif %}
+            {% endif %}
+        </div>
 
         <div class="row">
             <div class="col-sm-12">

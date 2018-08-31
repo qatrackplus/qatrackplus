@@ -155,3 +155,7 @@ body.sidebar-mini.sidebar-collapse > div.wrapper > aside.main-sidebar > section.
     color: #00a65a;
     font-weight: 700;
 }
+
+#attach-table {
+    margin-bottom: 0;
+}

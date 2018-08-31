@@ -890,7 +890,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         self.object.day = self.actual_day
 
         # save here so pk is set when saving test instances
-        # and save below to get due deate set ocrrectly
+        # and save below to get due date set correctly
         self.object.save()
 
         self.create_tli_attachments()
@@ -1000,8 +1000,6 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         context = super(PerformQA, self).get_context_data(**kwargs)
-
-        # context['service_event'] = self.request.GET.get('se', False)
 
         # explicity refresh session expiry to prevent situation where a session
         # expires in between the time a user requests a page and then submits the page

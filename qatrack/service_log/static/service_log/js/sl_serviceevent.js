@@ -22,7 +22,11 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
             $service_event_form = $('#service-event-form'),
             $service_save = $('.service-save'),
             $tli_display = $('<div class="row" style="display: none;"></div>'),
-            $date_time = $('#id_datetime_service');
+            $date_time = $('#id_datetime_service'),
+            $attachInput = $('#se-attachments'),
+            $attach_deletes = $('.attach-delete'),
+            $attach_delete_ids = $('#attach-delete-ids'),
+            $attach_names = $('#se-attachment-names');
 
         $utc_initiated_by.parent().append($tli_display);
         $units_fake.val($units.val());
@@ -47,7 +51,6 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
                 return a.text;
             },
             templateResult: function(a) {
-                console.log(a);
                 if ($(a.element).parent().attr('id') === 'id_initiated_utc_field') {
                     return $('<span>' + a.text + '<span class="pull-right"><i class="fa fa-chevron-right new-tab-icon" aria-hidden="true"></i></span></span>')
                 } else {
@@ -559,6 +562,24 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
             }
         });
         disable_units();
+
+        $attachInput.on("change", function(){
+            var fnames = _.map(this.files, function(f){
+                return '<tr><td><i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>' + f.name + '</td></tr>';
+            }).join("");
+            $attach_names.html(fnames);
+        });
+
+        $attach_deletes.change(function() {
+            var deletes = [];
+            $.each($attach_deletes, function(i, v) {
+                var el = $(v);
+                if (el.prop('checked')) {
+                    deletes.push(el.val());
+                }
+            });
+            $attach_delete_ids.val(deletes.join(','));
+        })
 
 
     });

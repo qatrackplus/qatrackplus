@@ -3,6 +3,7 @@
 {% load widget_tweaks %}
 {% load qa_tags %}
 {% load qatrack_tags %}
+{% load attach_tags %}
 {% load comments %}
 
 {% block head_title %}Service Event{% endblock %}
@@ -34,7 +35,7 @@
 
 {% block body %}
 
-    <form id="service-event-form" action="" method="post" novalidate>
+    <form id="service-event-form" action="" method="post" novalidate enctype="multipart/form-data">
         {% csrf_token %}
         <div class="max-width-lg">
             <div class="row">
@@ -341,7 +342,7 @@
                                                     <th>Pass/Fail</th>
                                                     <th>Review Status</th>
                                                     <th></th>
-                                                    <th>{% if perms.service_log.delete_returntoserviceqa %}Delete?{% endif %}</th>
+                                                    <th>{% if perms.service_log.delete_returntoserviceqa %}Delete{% endif %}</th>
                                                 </tr>
                                             </thead>
 
@@ -433,9 +434,53 @@
                 </div>
             </div>
 
-            {% if USE_PARTS %}
-                <div class="row">
-                    <div class="col-md-12">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="box">
+                        <div class="box-header">
+                            <h3 class="box-title">
+                                <i class="fa fa-cog fa-fw" aria-hidden="true"></i>
+                                Attachments
+                            </h3>
+                        </div>
+                        <div class="box-body">
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    {% if perms.attachments.add_attachment %}
+                                        <table id="attach-table" class="table table-responsive table-condensed">
+                                            <thead>
+                                                <tr>
+                                                    <th>Filename</th>
+                                                    <th>Delete</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <input id="attach-delete-ids" name="attach-delete-ids" type="hidden">
+                                                {% if form.instance.id %}
+                                                    {% for attach in form.instance.attachment_set.all %}
+                                                        <tr>
+                                                            <td><i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>{{ attach | attachment_link }}</td>
+                                                            <td align="center"><input type="checkbox" name="attach-{{ attach.id }}-DELETE" id="attach-{{ attach.id }}-DELETE" class="attach-delete" value="{{ attach.id }}"></td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                {% endif %}
+                                            </tbody>
+                                            <tfoot id="se-attachment-names"></tfoot>
+                                        </table>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="box-footer">
+                            <label class="qa-input btn btn-default btn-sm btn-flat pull-right" title="Click to add attachments. (Hold Ctrl or Cmd in the dialog to include multiple attachments)">
+                                Browse <input id="se-attachments" class="file-upload" type="file" name="se-attachments" multiple style="display: none;"/>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                {% if USE_PARTS %}
+                    <div class="col-md-8">
                         <div class="box">
                             <div class="box-header">
                                 <h3 class="box-title">
@@ -502,11 +547,7 @@
                             </div>
                         </div>
                     </div>
-                </div>
-            {% endif %}
-
-            <div class="row">
-
+                {% endif %}
             </div>
 
             <div class="row">
@@ -637,5 +678,28 @@
             {% endif %}
         </div>
     </div>
+
+    <script id="attach-template" type="text/template">
+        <div class="col-sm-6">
+            <div class="row">
+                <div class="col-sm-6">
+                    <a target="_blank" href="<%= a.url %>">
+                        <img class="img-responsive" src="<%= a.url %>" alt="<%= a.name %>"/>
+                    </a>
+                </div>
+                <div class="col-sm-6">
+                    <dl>
+                        <dt>File</dt>
+                        <dd>
+                            <a target="_blank" href="<%= a.url %>"><%= a.name %></a>
+                        </dd>
+
+                        <dt>Size</dt>
+                        <dd><%= a.size %></dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </script>
 
 {% endblock body %}

@@ -40,6 +40,7 @@ from qatrack.qa.views.base import generate_review_status_context
 from qatrack.qa.views.review import UTCInstances
 from qatrack.qa.views.perform import ChooseUnit
 from qatrack.units import models as u_models
+from qatrack.attachments.models import Attachment
 
 
 def get_time_display(dt):
@@ -210,6 +211,9 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
 
     def get_context_data(self, *args, **kwargs):
         context_data = super(ServiceEventUpdateCreate, self).get_context_data(**kwargs)
+
+        self.request.session.set_expiry(settings.SESSION_COOKIE_AGE)
+
         if self.request.method == 'POST':
             qs = models.ServiceEvent.objects.filter(pk__in=self.request.POST.getlist('service_event_related_field'))
             context_data['se_statuses'] = {se.id: se.service_status.id for se in qs}
@@ -299,6 +303,8 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
             if settings.USE_PARTS:
                 context_data['part_used_formset'] = p_forms.PartUsedFormset(instance=self.object, prefix='parts')
 
+        context_data['attachments'] = self.object.attachment_set.all() if self.object else []
+
         if self.request.GET.get('next'):
             context_data['next_url'] = self.request.GET.get('next')
         return context_data
@@ -319,6 +325,20 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
             ))
             form.changed_data.append('service_status')
             form.cleaned_data['service_status'] = default
+
+    def edit_se_attachments(self, service_event):
+        for idx, f in enumerate(self.request.FILES.getlist('se-attachments')):
+            Attachment.objects.create(
+                attachment=f,
+                comment="Uploaded %s by %s" % (timezone.now(), self.request.user.username),
+                label=f.name,
+                serviceevent=service_event,
+                created_by=self.request.user
+            )
+
+        a_ids = self.request.POST.get('attach-delete-ids').split(',')
+        if a_ids != ['']:
+            Attachment.objects.filter(id__in=self.request.POST.get('attach-delete-ids').split(',')).delete()
 
     def form_valid(self, form):
 
@@ -368,6 +388,8 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
                 site=get_current_site(self.request)
             )
             comment.save()
+
+        self.edit_se_attachments(service_event)
 
         for g_link in form.g_link_dict:
             if g_link in form.changed_data:
