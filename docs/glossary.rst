@@ -103,6 +103,19 @@ Glossary
         Rooms are used in the :term:`Parts` app for keeping track of where
         spare parts are located.
 
+    Return To Service QA
+
+        Test Lists that must be performed after a :term:`Service Event` before
+        a :term:`Unit` can be released for clinical service.
+
+    RTS
+
+       See :term:`Return to Service QA`
+
+    RTS QA
+
+       See :term:`Return to Service QA`
+
     Service Area
 
         Service Area's are different sub systems of a treatment unit & bunker.

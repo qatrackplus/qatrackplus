@@ -1,3 +1,5 @@
+.. _units_admin:
+
 Units
 =====
 
@@ -84,10 +86,12 @@ of which are described below:
 * Number - *A uniquely identifying integer number for this unit.  The unit Number will effect the order that treatment units are displayed on certain pages.*
 * Acceptance Date - *Date that the unit was approved for treatment*
 * Active - *Uncheck this field when a unit is decomissioned. This will hide the unit from many parts of the user interface to reduce clutter and confusion*
-* Restricted - *This field is checked when a unit is temporarily restricted from clinical service*
+* Unit Type - *Select the type of unit this is*
+* Is serviceable - *Set to true to make this unit selectable in Service Events*
 * Site - *If you have multiple sites configured, choose the site this unit is located at*
 * Service Areas - *Select all the service areas available for this unit (e.g. Linac, kv Imaging, MV Imaging etc)*
 * Available Time on date of acceptance - *The number of clinical hours that the unit is available on a day to day basis*
+* Unit Schedule - *Set the number of hours this unit is available and the effective date. See below for an example*
 
 
 Example input for an Elekta Synergy unit is shown below.
@@ -96,3 +100,14 @@ Example input for an Elekta Synergy unit is shown below.
    :alt: Defining a new unit type
 
    Defining a new unit type
+
+
+Example Unit Schedule showing a unit that is being restricted completely for a
+week (from June 24-30th) for service, after which it returns to it's normal
+schedule on July 1st:
+
+.. figure:: images/schedule.png
+   :alt: Defining a unit schedule
+
+   Defining a unit schedule
+

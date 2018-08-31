@@ -1,46 +1,64 @@
 
+from collections import OrderedDict
 import csv
 
 from braces.views import LoginRequiredMixin, PermissionRequiredMixin
-from collections import OrderedDict
-from django_comments.models import Comment
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.context_processors import PermWrapper
 from django.contrib.auth.decorators import login_required, permission_required
-from django.contrib.auth.models import User, Permission
+from django.contrib.auth.models import Permission, User
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.urlresolvers import reverse, resolve
+from django.core.urlresolvers import resolve, reverse
 from django.db.models import Sum
 from django.forms.utils import timezone
-from django.http import JsonResponse, HttpResponseRedirect, Http404, HttpResponse
+from django.http import (
+    Http404,
+    HttpResponse,
+    HttpResponseRedirect,
+    JsonResponse,
+)
 from django.shortcuts import redirect
 from django.template.loader import get_template
 from django.utils.translation import ugettext as _
 from django.views.decorators.csrf import csrf_protect
-from django.views.generic import TemplateView, DetailView, DeleteView, FormView
+from django.views.generic import DeleteView, DetailView, FormView, TemplateView
 from django.views.generic.detail import SingleObjectTemplateResponseMixin
 from django.views.generic.edit import ModelFormMixin, ProcessFormView
-
+from django_comments.models import Comment
 from listable.views import (
-    BaseListableView, DATE_RANGE, SELECT_MULTI, SELECT,
-    TODAY, YESTERDAY, LAST_WEEK, THIS_WEEK, LAST_7_DAYS, LAST_MONTH, THIS_MONTH, LAST_30_DAYS, LAST_YEAR, THIS_YEAR,
-    LAST_365_DAYS, YEAR_TO_DATE,
+    DATE_RANGE,
+    LAST_7_DAYS,
+    LAST_30_DAYS,
+    LAST_365_DAYS,
+    LAST_MONTH,
+    LAST_WEEK,
+    LAST_YEAR,
+    SELECT,
+    SELECT_MULTI,
+    THIS_MONTH,
+    THIS_WEEK,
+    THIS_YEAR,
+    TODAY,
+    YEAR_TO_DATE,
+    YESTERDAY,
+    BaseListableView,
 )
+
+from qatrack.attachments.models import Attachment
+from qatrack.qa import models as qa_models
+from qatrack.qa.views.base import generate_review_status_context
+from qatrack.qa.views.perform import ChooseUnit
+from qatrack.qa.views.review import UTCInstances
+from qatrack.service_log import forms, models
+from qatrack.units import models as u_models
 
 if settings.USE_PARTS:
     from qatrack.parts import forms as p_forms
     from qatrack.parts import models as p_models
 
-from qatrack.service_log import models, forms
-from qatrack.qa import models as qa_models
-from qatrack.qa.views.base import generate_review_status_context
-from qatrack.qa.views.review import UTCInstances
-from qatrack.qa.views.perform import ChooseUnit
-from qatrack.units import models as u_models
-from qatrack.attachments.models import Attachment
 
 
 def get_time_display(dt):
