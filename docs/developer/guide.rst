@@ -6,7 +6,6 @@ Developers Guide
    :maxdepth: 3
    :caption: Contents:
 
-   api
    schema
 
 

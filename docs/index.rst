@@ -60,8 +60,8 @@ The main features include:
    glossary
    release_notes
    install/install
-   user/guide
    admin/guide
+   user/guide
    api/guide
    developer/guide
    tutorials/index

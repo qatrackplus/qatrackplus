@@ -12,6 +12,7 @@ Before you can create a new unit you have to define some modalities and unit
 types. This can either be done beforehand or "inline" when defining a new unit.
 The former is described below.
 
+
 Defining a modality
 -------------------
 
@@ -72,6 +73,26 @@ fields and click **Save** when you are finished.
    :alt: Defining a new unit type
 
    Defining a new unit type
+
+
+.. _unit_site:
+
+Defining a Site
+---------------
+
+For clinics with multiple sites, or satellite clinics, you can define separate
+`Sites` to assign `Units` to.
+
+From the main administrators page click the **Sites** link in the **Units**
+section and then click the `Add Site` button.  Give your site a name (e.g.
+`Main Site`, `Satellite Site`) and click `Save`. Repeat for other Sites as
+required.
+
+.. figure:: images/units_site.png
+   :alt: Defining new Sites
+
+   Defining new Sites
+
 
 Defining a new unit
 -------------------

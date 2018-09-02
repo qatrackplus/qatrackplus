@@ -118,6 +118,15 @@ For instructions on upgrading to QATrack+ 0.3.0 please see the :ref:`Upgrading
 to QATrack+ 0.3.0 page <upgrade_029_030>`.
 
 
+Things we're still working on
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. todo:
+
+    Add things we're still working on section including tracking measurement
+    equipment and calibration factors etc.
+
+
 QATrack+ v0.2.9 Release Notes
 -----------------------------
 
