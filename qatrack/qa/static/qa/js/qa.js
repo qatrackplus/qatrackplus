@@ -258,20 +258,18 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         this.skipped = false;
         this.set_skip = function(skipped){
             self.skipped = skipped;
-            self.skip.prop("checked",self.skipped);
+            self.skip.prop("checked", self.skipped);
         };
         this.skip.change(function(){
             self.skipped = self.skip.is(":checked");
             if (self.skipped){
                 if (comment_on_skip && !self.test_info.test.skip_without_comment){
-                    self.comment.show(600);
+                    show_comment();
                 }
                 if (self.test_info.test.type === QAUtils.BOOLEAN || self.test_info.test.type === QAUtils.UPLOAD){
                     self.set_value(null);
                 }
                 $.Topic("valueChanged").publish();
-            }else{
-                self.comment.hide(600);
             }
         });
 
@@ -285,17 +283,31 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 $('.hover').removeClass('hover');
             }
         );
+        function show_comment() {
+            self.comment.slideDown('fast');
+            self.showing_comment = true;
+            self.comment.find('.comment-bar').slideDown('fast');
+            self.comment.find('.comment-bar').addClass('in');
+            self.row.find('.comment-bar').addClass('in');
+        }
+        function hide_comment() {
+            self.comment.slideUp('fast');
+            self.showing_comment = false;
+            self.comment.find('.comment-bar').slideUp('fast');
+            self.comment.find('.comment-bar').removeClass('in');
+            self.row.find('.comment-bar').removeClass('in');
+        }
 
         this.show_comment = this.row.find("td.qa-showcmt a");
         this.comment_box = this.comment.find("textarea");
         this.comment_icon = this.row.find(".qa-showcmt i");
 
         this.show_comment.click(function(){
-            self.showing_comment = !self.showing_comment;
-            self.comment.toggle('fast');
-            self.comment.find('.comment-bar').slideToggle('fast');
-            self.comment.find('.comment-bar').toggleClass('in');
-            self.row.find('.comment-bar').toggleClass('in');
+            if (!self.showing_comment) {
+                show_comment();
+            } else  {
+                hide_comment();
+            }
             return false;
         });
         this.set_comment_icon = function(){
