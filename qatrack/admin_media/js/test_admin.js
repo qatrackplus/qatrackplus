@@ -11,7 +11,7 @@ function toggle_test_type(){
         $(".field-calculation_procedure, .field-choices, .field-display_image, .field-skip_without_comment").not(".errors").hide();
 
     }else if (val == "composite" || val === "scomposite" ){
-        $(".field-calculation_procedure, .field-hidden").show();
+        $(".field-calculation_procedure, .field-hidden, .field-display_image").show();
         $(".field-constant_value, .field-choices, .field-skip_without_comment").not(".errors").hide();
 
     }else if (val === "upload"){
