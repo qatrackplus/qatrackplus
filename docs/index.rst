@@ -10,9 +10,15 @@ Welcome to QATrack+'s documentation!
 About QATrack+
 --------------
 
-QATrack+ is a fully configurable, free, and open source (MIT License) web application for managing QA data for radiation therapy and medical imaging equipment. QATrack+ is now used in many hospitals and clinics around the world! Visit the QATrack+ homepage at http://qatrackplus.com
+QATrack+ is a fully configurable, free, and open source (MIT License) web
+application for managing QA data for radiation therapy and medical imaging
+equipment. QATrack+ is now used in many hospitals and clinics around the world!
+Visit the QATrack+ homepage at http://qatrackplus.com
 
-QATrack+ is deployable on most operating system/server/database platform combinations. It was developed in the popular Python programming language using the Django web framework so that QC data may be entered, reviewed, and analyzed using a web browser.
+QATrack+ is deployable on most operating system/server/database platform
+combinations. It was developed in the popular Python programming language using
+the Django web framework so that QC data may be entered, reviewed, and analyzed
+using a web browser.
 
 The main features include:
 
@@ -50,6 +56,55 @@ The main features include:
 * The flexibility to host on an intranet or www, requiring minimal resources
   from IT departments. Can optionally be managed within a physics department if
   permitted by local institution policies.
+
+
+Documentation for QATrack+ v0.2.7-v0.2.9
+========================================
+
+As of version 0.3.0 QATrack+ documentation is hosted at
+http://docs.qatrackplus.com. For versions prior to v0.3.0, please see the
+`QATrack+ Wiki on BitBucket
+<https://bitbucket.org/tohccmedphys/qatrackplus/wiki/>`__.
+
+
+
+Problems, Questions or Suggestions?
+===================================
+
+
+Bugs or Feature Requests
+------------------------
+
+If you have a bug to report or a feature to request please use the
+:issues:`BitBucket Issues <>` page.
+
+Mailing List, General Questions, Discussions or Support?
+--------------------------------------------------------
+
+If you have general questions, want to have an initial discussion about
+features or the way things work (basically anything that isn't a specific bug
+report or feature request) please use the :mailinglist:`Google QATrack+ Group
+Forum <>`.
+
+This forum is also a mailing list and it is highly recommended that you
+subscribe to email updates from the forum to get all the announcements about
+QATrack+ releases and discussions.
+
+Commercial Support and Hosting Services
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Commercial support and cloud hosting services for QATrack+ are now available
+from `Multi Leaf Consulting <https://multileaf.ca>`__.
+
+Email
+-----
+
+Want to discuss something directly with the QATrack+ team?  Please feel free to
+email directly:
+
+* Randy Taylor (QATrack+ lead developer): randy@multileaf.ca
+* Crystal Angers (TOHCC QATrack+ lead): cangers@toh.ca
+* Ryan Bottema (TOHCC QATrack+ developer): rbottema@toh.ca
 
 
 .. toctree::

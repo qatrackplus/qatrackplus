@@ -30,7 +30,7 @@ Details of the v0.3.0 release below:
 * A new :ref:`Parts <parts_user>` application for tracking spare parts, where
   they're located, how many are in inventory, and their vendors.
 
-* :ref:`Sublists <sublists_admin>` have been updated and improved and can now
+* :ref:`Sublists <qa_sublists>` have been updated and improved and can now
   have their order rearranged within the parent test list as well as optional
   visual emphasis when performing a test list.
 
@@ -45,7 +45,7 @@ Details of the v0.3.0 release below:
   <testpack_admin>` for exchanging test configurations with other QATrack+
   installations.
 
-* An :ref:`Application Programming Interface (API) <api_developer>` has been
+* An :ref:`Application Programming Interface (API) <qatrack_api>` has been
   added for allowing external applications and scripts to access and upload
   data to your QATrack+ server.
 

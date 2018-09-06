@@ -38,6 +38,8 @@ external documentation.
 The software also allows reviewers to easily differentiate between measurements
 performed as part of investigative work, or as part of routine QC testing.
 * optional and configurable email notification.
+* integrated Service Log for tracking service events and machine downtime
+* parts tracker for tracking spare parts on hand, part costs and vendors
 * the flexibility to host on an intranet or www, requiring minimal resources from IT
 departments. Can optionally be managed within a physics department if permitted by
 local institution policies.
@@ -46,53 +48,22 @@ local institution policies.
 
 ## Documentation & Release Notes
 
-The latest version is 0.2.9 Please review the
-[release_notes](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/v/0.2.9/release-notes.md)
+The latest version is 0.3.0 Please review the
+[release_notes](https://docs.qatrackplus.com/en/latest/release_notes.html)
 before installing or upgrading.
 
-The [documentation can be found
-online](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/Home) and is where you
-should start if you are interested in installing or helping develop QATrack+.
+The [documentation for versions 0.3.0+ can be found online](http://docs.qatrackplus.com)
+and is where you should start if you are interested in installing or helping
+develop QATrack+.
+
+Documentation for earlier versions of QATrack+ (v0.2.7-v0.2.9) can be found in
+the [QATrack+ Wiki on BitBucket](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/Home).
 
 ---
 
 ## Important notes regarding 3rd party code in QATrack+
 
-QATrack+ relies on a number of open source projects, a few of which are
-distributed along with QATrack+; licenses covering their usage and
-modification are either included along with the source code files or embeded
-directly in the source (or a url where you can find it).
-
-### Highcharts ###
-
-QATrack+ is distributed with the excellent
-[HighStock](http://www.highcharts.com/products/highstock) charting library.
-Highstock is free for personal & non-profit sites but is NOT free for
-commercial use. Please see the [HighStock license
-page](http://shop.highsoft.com/highstock.html#redist) for details.
-
-
-### Bootstrap & Glyphicons ###
-
-For look and feel QATrack+ uses the [Bootstrap](http://getbootstrap.com) html/js/css framework which
-comes with [Glyphicons](http://glyphicons.com/license/).
-
-### FontAwesome ###
-
-Most of the icons in QATrack+ are provided by [Font Awesome]( http://fortawesome.github.io/Font-Awesome/icons/).
-
-### jQuery ###
-
-The ubiquitous javscript library: [jQuery](http://jquery.com)
-
-### Lo-Dash ###
-
-A javascript utility library [Lo Dash](http://lodash.com/)
-
-### Data Tables ###
-
-[Data Tables](http://www.datatables.net/) is an excellent table plugin for jQuery.
-
-### jQuery File Upload Plugin ###
-
-[A plugin](https://github.com/blueimp/jQuery-File-Upload) for doing ajax uplods with jQuery.
+QATrack+ relies on a number of open source projects, many of which are
+distributed along with QATrack+; licenses covering their usage and modification
+are either included along with the source code files or embeded directly in the
+source (or a url where you can find it).
