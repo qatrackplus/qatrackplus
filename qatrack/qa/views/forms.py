@@ -249,6 +249,17 @@ class BaseTestListInstanceForm(forms.ModelForm):
     rtsqa_id = forms.IntegerField(required=False, widget=HiddenInput())
     # now handle saving of qa or service event and link rtsqa
 
+    tli_attachments = forms.FileField(
+        label="Attachments",
+        max_length=150,
+        required=False,
+        widget=forms.FileInput(attrs={
+            'multiple': '',
+            'class': 'file-upload',
+            'style': 'display:none',
+        })
+    )
+
     class Meta:
         model = models.TestListInstance
         exclude = ("day",)

@@ -78,10 +78,41 @@ class AttachmentAdminForm(forms.ModelForm):
                 self.initial['serviceevent'] = self.instance.serviceevent_id
 
 
+class TypeFilter(admin.SimpleListFilter):
+
+    title = _('Attachment Type')
+    parameter_name = "typefilter"
+
+    def lookups(self, request, model_admin):
+        return [
+            ("test", "Test"),
+            ("testlist", "TestList"),
+            ("testlistcycle", "TestListCycle"),
+            ("testinstance", "TestInstance"),
+            ("testlistinstance", "TestListInstance"),
+        ]
+
+    def queryset(self, request, queryset):
+
+        val = self.value()
+        if val:
+            return queryset.exclude(**{val: None})
+
+        return queryset
+
+
 class AttachmentAdmin(admin.ModelAdmin):
 
-    list_display = ("get_label", "owner", "type", "attachment", "comment",)
+    list_display = (
+        "get_label",
+        "owner",
+        "type",
+        "created",
+        "attachment",
+        "comment",
+    )
     form = AttachmentAdminForm
+    list_filter = [TypeFilter]
 
     def save_model(self, request, obj, form, change):
         """set user and modified date time"""

@@ -989,7 +989,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         return HttpResponseRedirect(self.get_success_url())
 
     def create_tli_attachments(self):
-        for idx, f in enumerate(self.request.FILES.getlist('tli-attachments')):
+        for idx, f in enumerate(self.request.FILES.getlist('tli_attachments')):
             Attachment.objects.create(
                 attachment=f,
                 comment="Uploaded %s by %s" % (timezone.now(), self.request.user.username),
@@ -1217,7 +1217,7 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         for attach in self.object.attachment_set.all():
             attach.delete()
 
-        for idx, f in enumerate(self.request.FILES.getlist('tli-attachments')):
+        for idx, f in enumerate(self.request.FILES.getlist('tli_attachments')):
             Attachment.objects.create(
                 attachment=f,
                 comment="Uploaded %s by %s" % (timezone.now(), self.request.user.username),

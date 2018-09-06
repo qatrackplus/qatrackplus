@@ -422,7 +422,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 var value = $.trim(self.inputs.find(":selected").text());
                 self.value = value !== "" ? value : null;
             }else if (tt === QAUtils.UPLOAD){
-                if (editing_tli && !this.initialized){
+                if (self.inputs.val() && !this.initialized){
                     var data = {
                         attachment_id: self.inputs.val(),
                         test_id: self.test_info.test.id,
@@ -564,19 +564,30 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                     "test_list_id": self.test_list_id,
                     "unit_id": self.unit_id,
                     "comments": JSON.stringify(get_comments())
+                },
+                accept: function(file, done) {
+                    if (file.name.length > 150) {
+                        self.set_value(null);
+                        self.status.removeClass("btn-primary btn-danger btn-success");
+                        done("Filename exceeds 150 characters!");
+                    }
+                    else { done(); }
                 }
 
             });
 
             self.dropzone.on('totaluploadprogress', function(progress) {
                 self.status.removeClass("btn-primary btn-danger btn-success btn-info");
-                self.status.addClass("btn-warning").text(progress + "%");
+                self.status.addClass("btn-warning").text(progress + "%").attr('title', 'Upload succeeded');
             });
 
             self.dropzone.on('error', function(file, data) {
+                if (!data){
+                    data = "Server Error";
+                }
                 self.set_value(null);
                 self.status.removeClass("btn-primary btn-danger btn-success");
-                self.status.addClass("btn-danger").text("Server Error");
+                self.status.addClass("btn-danger").text(data).attr('title', data);
             });
 
             self.dropzone.on('success', function(file, data) {
@@ -595,7 +606,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                         self.set_comment_icon();
                     }
                     self.status.addClass("btn-success").text("Success");
-                    self.status.attr("title", response_data.url);
+                    self.status.attr("title", response_data.attachment.url);
 
                     $.Topic("valueChanged").publish();
                 }
@@ -661,7 +672,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
 
         this.submit = $("#submit-qa");
 
-        this.attachInput = $("#tli-attachments");
+        this.attachInput = $("#id_tli_attachments");
 
         /***************************************************************/
         //set the intitial values, tolerances & refs for all of our tests
