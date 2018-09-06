@@ -47,7 +47,7 @@
             </div>
         </td>
         <td class="qa-name qa-showproc">
-          {%if test.procedure or test.description or test.attachment_set|length > 0 %}
+          {%if test.procedure or test.description or test.attachment_set.count %}
                 <a href="#" class="revealprocedure" title="Show/hide procedure & attachments for this test">{{test.name}}</a>
             {% else %}
                 {{test.name}}
@@ -109,7 +109,7 @@
 
 <tr class="qa-procedure no-hover row-{{ form.prefix }}">
     <td colspan="{% qa_table_colspan perms %}  class="" >
-        {% if form.unit_test_info.test.procedure or form.unit_test_info.test.description %}
+        {% if form.unit_test_info.test.procedure or form.unit_test_info.test.description or form.unit_test_info.test.attachment_set.count %}
             <div class="error-bar {% if form.errors %}in{% endif %}">
                 <div class="procedure-container procedure-bar">
                     <div class="qa-procedure-text">
