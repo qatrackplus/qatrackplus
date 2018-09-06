@@ -516,6 +516,9 @@ class CompositePerformer:
                     'comment': "",
                     'user_attached': [],
                 }
+                deps_not_complete = any(self.data['tests'][s] is None for s in self.all_dependencies[slug])
+                if deps_not_complete:
+                    results[slug]['error'] = None
             finally:
                 # clean up calculation context for next test
                 to_clean = ['result'] + [k for k in self.calculation_context.keys() if k not in self.context_keys]
@@ -581,12 +584,16 @@ class CompositePerformer:
     def set_dependencies(self):
         """figure out composite dependencies of composite tests"""
 
+        self.all_dependencies = {}
         self.dependencies = {}
         slugs = list(self.composite_tests.keys())
+        all_slugs = list(self.data['tests'].keys())
         for slug in slugs:
             tokens = utils.tokenize_composite_calc(self.composite_tests[slug])
-            dependencies = [s for s in slugs if s in tokens and s != slug]
-            self.dependencies[slug] = set(dependencies)
+            comp_dependencies = [s for s in slugs if s in tokens and s != slug]
+            self.dependencies[slug] = set(comp_dependencies)
+            all_dependencies = [s for s in all_slugs if s in tokens and s != slug]
+            self.all_dependencies[slug] = set(all_dependencies)
 
     def resolve_dependency_order(self):
         """

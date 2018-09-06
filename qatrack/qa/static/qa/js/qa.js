@@ -446,12 +446,16 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                                 self.set_value(null);
                                 self.status.addClass("btn-danger").text("Failed");
                                 self.status.attr("title", result.errors[0]);
-                                console.log(result.errors);
+                                if (window.console){
+                                    console.log(result.errors);
+                                }
                             }else{
                                 self.set_value(result);
                                 self.status.addClass("btn-success").text("Success");
                                 self.status.attr("title", result['url']);
-                                console.log(result);
+                                if (window.console){
+                                    console.log(result);
+                                }
                                 $.Topic("valueChanged").publish();
                             }
                         },
@@ -598,7 +602,9 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                     self.set_value(null);
                     self.status.addClass("btn-danger").text("Failed");
                     self.status.attr("title", response_data.errors[0]);
-                    console.log(response_data.errors);
+                    if (window.console){
+                        console.log(response_data.errors);
+                    }
                 } else {
                     self.set_value(response_data);
                     if (response_data.comment){
@@ -735,7 +741,9 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                             if (result.error){
                                 ti.status.attr("title", result.error);
                                 ti.status.addClass("btn-danger").text("Failed");
-                                console.log(result.error);
+                                if (window.console){
+                                    console.log(result.error);
+                                }
                             }else{
                                 ti.status.removeClass("btn-danger");
                                 ti.status.attr("title", "");
