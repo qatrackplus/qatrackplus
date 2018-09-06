@@ -18,8 +18,8 @@ body {
     border-top: 0;
 }
 .nav.navbar-nav > .dropdown > .dropdown-toggle {
-    border-left: 1px solid #222d32;
-    border-right: 1px solid #222d32;
+    border-left: 1px solid transparent;
+    border-right: 1px solid transparent;
 }
 .main-header {
     max-height: 50px;
@@ -39,6 +39,8 @@ body {
 .control-sidebar-dark .control-sidebar-menu > li > a:hover {
     background-color: #fff;
     color: #000;
+    border-left-color: #222d32;
+    border-right-color: #222d32;
 }
 .navbar-toggle {
     background-color: #222d32;
@@ -57,7 +59,6 @@ body {
     color: #fff;
 }
 .custom-nav {
-    display: inline-block;
     float: right;
     top: 0;
     right: 0;
@@ -72,7 +73,6 @@ body {
 .custom-nav .nav-button {
     padding: 10px;
     height: 50px;
-    display: inline-block;
     vertical-align: middle;
     line-height: 30px;
     float: right;
@@ -280,7 +280,7 @@ div.box {
     background-color: #323e46 !important;
 }
 .control-sidebar {
-    height: 100%; !important;
+    height: 100% !important;
 }
 .pagination > li:last-child > a,
 .pagination > li:last-child > span {
@@ -309,6 +309,16 @@ div.box {
     background-color: #f7f7f7;
     padding: 8px;
 }
+.box-comments .box-comment.err-comment {
+    background-color: #e76167;
+}
+.box-comments .box-comment.err-comment:hover {
+    background-color: #d86268;
+}
+.box-comments .box-comment.err-comment .comment-text .username,
+.box-comments .box-comment.err-comment .comment-text .comment {
+    color: #fff;
+}
 .box-comments .box-comment:hover {
     background-color: #f2f2f2;
 }
@@ -328,4 +338,48 @@ aside.main-sidebar {
 .main-header .sidebar-toggle:hover {
     background-color: #fff;
     color: #000;
+}
+.btn {
+    border-color: transparent !important;
+    box-shadow: 2px 2px 2px #ddd !important;
+    -moz-box-shadow: 2px 2px 2px #ddd !important;
+    -webkit-box-shadow: 2px 2px 2px #ddd !important;
+}
+.btn:focus {
+    border-color: #3c8dbc !important;
+}
+input.form-control:not([type='checkbox']):not([type='radio']):not([disabled]):not(.disabled),
+select.form-control:not([disabled]):not(.disabled),
+textarea.form-control:not([disabled]):not(.disabled) {
+    /*border: none !important;*/
+    box-shadow: 2px 2px 2px #ddd !important;
+    -moz-box-shadow: 2px 2px 2px #ddd !important;
+    -webkit-box-shadow: 2px 2px 2px #ddd !important;
+}
+
+.btn-group .btn {
+    box-shadow: none !important;
+    -moz-box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+}
+.btn-group .pull-right {
+    height: 100%;
+    display: inline-block;
+}
+.btn-group .pull-left {
+    display: inline-block;
+    overflow-x: hidden;
+    width: calc(100% - 25px);
+    width: -webkit-calc(100% - 25px); /** Safari 6, Chrome 19-25 **/
+    width: -moz-calc(100% - 25px);
+}
+.btn-group {
+    /*max-width: 100%;*/
+    white-space: nowrap;
+    box-shadow: 2px 2px 2px #ddd !important;
+    -moz-box-shadow: 2px 2px 2px #ddd !important;
+    -webkit-box-shadow: 2px 2px 2px #ddd !important;
+}
+.unit-btns .btn {
+    margin-bottom: 4px;
 }

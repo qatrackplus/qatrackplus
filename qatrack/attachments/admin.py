@@ -6,6 +6,7 @@ from django.utils.translation import ugettext as _, ugettext_lazy as _l
 
 from .models import Attachment
 from qatrack.qa import models as qa_models
+from qatrack.service_log import models as sl_models
 
 
 class AjaxModelChoiceField(forms.ModelChoiceField):
@@ -27,11 +28,12 @@ class AjaxModelChoiceField(forms.ModelChoiceField):
 
 class AttachmentAdminForm(forms.ModelForm):
 
-    test = AjaxModelChoiceField(qa_models.Test, required=False)
-    testlist = AjaxModelChoiceField(qa_models.TestList, required=False)
-    testlistcycle = AjaxModelChoiceField(qa_models.TestListCycle, required=False)
-    testinstance = AjaxModelChoiceField(qa_models.TestInstance, required=False)
-    testlistinstance = AjaxModelChoiceField(qa_models.TestListInstance, required=False)
+    test = AjaxModelChoiceField(qa_models.Test, required=False, label=_('Test'))
+    testlist = AjaxModelChoiceField(qa_models.TestList, required=False, label=_('Test List'))
+    testlistcycle = AjaxModelChoiceField(qa_models.TestListCycle, required=False, label=_('Test List Cycle'))
+    testinstance = AjaxModelChoiceField(qa_models.TestInstance, required=False, label=_('Test Instance'))
+    testlistinstance = AjaxModelChoiceField(qa_models.TestListInstance, required=False, label=_('Test List Instance'))
+    serviceevent = AjaxModelChoiceField(sl_models.ServiceEvent, required=False, label=_('Service Event'))
 
     class Meta:
         model = Attachment
@@ -71,12 +73,46 @@ class AttachmentAdminForm(forms.ModelForm):
             if self.instance.testlistinstance:
                 self.fields['testlistinstance'].choices = (('', '--------'),) + tuple(((tli.id, '(' + str(tli.id) + ') ' + tli.test_list.name) for tli in qa_models.TestListInstance.objects.filter(pk=self.instance.testlistinstance_id)))
                 self.initial['testlistinstance'] = self.instance.testlistinstance_id
+            if self.instance.serviceevent:
+                self.fields['serviceevent'].choices = (('', '--------'),) + tuple(((se.id, '(' + str(se.id) + ') ' + se.service_status.name) for se in sl_models.ServiceEvent.objects.filter(pk=self.instance.serviceevent_id)))
+                self.initial['serviceevent'] = self.instance.serviceevent_id
+
+
+class TypeFilter(admin.SimpleListFilter):
+
+    title = _('Attachment Type')
+    parameter_name = "typefilter"
+
+    def lookups(self, request, model_admin):
+        return [
+            ("test", "Test"),
+            ("testlist", "TestList"),
+            ("testlistcycle", "TestListCycle"),
+            ("testinstance", "TestInstance"),
+            ("testlistinstance", "TestListInstance"),
+        ]
+
+    def queryset(self, request, queryset):
+
+        val = self.value()
+        if val:
+            return queryset.exclude(**{val: None})
+
+        return queryset
 
 
 class AttachmentAdmin(admin.ModelAdmin):
 
-    list_display = ("get_label", "owner", "type", "attachment", "comment",)
+    list_display = (
+        "get_label",
+        "owner",
+        "type",
+        "created",
+        "attachment",
+        "comment",
+    )
     form = AttachmentAdminForm
+    list_filter = [TypeFilter]
 
     def save_model(self, request, obj, form, change):
         """set user and modified date time"""

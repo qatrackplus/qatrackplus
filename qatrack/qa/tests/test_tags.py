@@ -95,10 +95,7 @@ class TestRefTolSpan(TestCase):
     def test_percent(self):
         t = models.Test(type=models.NUMERICAL)
         r = models.Reference(value=1)
-        tol = models.Tolerance(
-            type=models.PERCENT,
-            act_low=-2, tol_low=-1, tol_high=1, act_high=2,
-        )
+        tol = utils.create_tolerance(tol_type=models.PERCENT, act_low=-2, tol_low=-1, tol_high=1, act_high=2)
         result = qa_tags.reference_tolerance_span(t, r, tol)
         self.assertIn("(-2.00%", result)
 

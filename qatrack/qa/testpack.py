@@ -61,7 +61,7 @@ def create_testpack(test_lists=None, cycles=None, extra_tests=None, description=
     objects = []
     indent = 2 if settings.DEBUG else None
     for qs in to_dump:
-        fields = qs.model.get_test_pack_fields()
+        fields = qs.model.get_testpack_fields()
         objects.append(
             serialize(
                 "json",
@@ -93,7 +93,7 @@ def create_testpack(test_lists=None, cycles=None, extra_tests=None, description=
     return {'meta': meta, 'objects': objects}
 
 
-def save_test_pack(pack, fp):
+def save_testpack(pack, fp):
     """
     Write input test pack to file like object fp. If fp is a string it
     will be written to a new file with the name/path given by fp.
@@ -105,7 +105,7 @@ def save_test_pack(pack, fp):
     json.dump(pack, fp, indent=2)
 
 
-def test_pack_object_names(serialized_pack):
+def testpack_object_names(serialized_pack):
     """Look in test pack and return names of test lists & test list cycles"""
 
     pack = deserialize_pack(serialized_pack)
@@ -130,8 +130,14 @@ def deserialize_pack(serialized_pack):
     return pack
 
 
-def add_test_pack(serialized_pack, user=None, test_names=None, test_list_names=None, cycle_names=None):
-    """Takes a serialized data pack and saves the deserialized objects to the db"""
+def add_testpack(serialized_pack, user=None, test_names=None, test_list_names=None, cycle_names=None):
+    """
+    Takes a serialized data pack and saves the deserialized objects to the db.
+
+
+    This function is a dumpster fire :(
+
+    """
 
     created = timezone.now()
     user = user or User.objects.earliest("pk")
@@ -188,19 +194,31 @@ def add_test_pack(serialized_pack, user=None, test_names=None, test_list_names=N
     existing = set(models.TestList.objects.values_list("slug", flat=True))
     test_lists_added = []
     tl_name_map = {}
+    sublists_required = []
+    if test_list_names:
+        test_list_slugs = [o['fields']['slug'] for o in objects['qa.testlist'] if o['fields']['name'] in test_list_names]
+        sublists_required = [
+            o['fields']['child'][0] for o in objects['qa.sublist']
+            if o['fields']['parent'][0] in test_list_slugs
+        ]
+
     for cdat in objects['qa.testlist']:
         fields = cdat['fields']
-        filtered = test_list_names is not None and fields['slug'] not in test_list_names
+        filtered = (
+            test_list_names is not None and
+            fields['name'] not in test_list_names and
+            fields['slug'] not in sublists_required
+        )
 
-        orig_name = fields['slug']
+        orig_slug = fields['slug']
         if fields['slug'] in existing:
-            valid_name = find_next_available(fields['slug'], existing)
+            valid_slug = find_next_available(fields['slug'], existing)
         else:
-            valid_name = orig_name
+            valid_slug = orig_slug
 
         if not filtered:
-            fields['slug'] = valid_name
-            tl_name_map[orig_name] = valid_name
+            fields['slug'] = valid_slug
+            tl_name_map[orig_slug] = valid_slug
             fields['created'] = created
             fields['created_by'] = user
             fields['modified'] = created
@@ -215,7 +233,7 @@ def add_test_pack(serialized_pack, user=None, test_names=None, test_list_names=N
     tlc_name_map = {}
     for cdat in objects['qa.testlistcycle']:
         fields = cdat['fields']
-        filtered = test_list_names is not None and fields['slug'] not in test_list_names
+        filtered = cycle_names is not None and fields['name'] not in cycle_names
 
         orig_name = fields['slug']
         if fields['slug'] in existing:
@@ -283,11 +301,11 @@ def find_next_available(name, existing):
     return name
 
 
-def add_test_pack_django(serialized_pack, user=None, test_names=None, test_list_names=None, cycle_names=None):
+def add_testpack_django(serialized_pack, user=None, test_names=None, test_list_names=None, cycle_names=None):
     """
     Takes a serialized data pack and saves the deserialized objects to the db
 
-    This is a much less efficient, but much simpler version of add_test_pack
+    This is a much less efficient, but much simpler version of add_testpack
     """
 
     modified = created = timezone.now()
@@ -332,10 +350,10 @@ def add_test_pack_django(serialized_pack, user=None, test_names=None, test_list_
     return added, total
 
 
-def load_test_pack(fp, user=None, test_names=None, test_list_names=None, cycle_names=None):
+def load_testpack(fp, user=None, test_names=None, test_list_names=None, cycle_names=None):
     """Takes a file like object or path and loads the test pack into the database."""
 
     if isinstance(fp, str):
         fp = open(fp, 'r', encoding="utf-8")
 
-    add_test_pack(fp.read(), user, test_names, test_list_names, cycle_names)
+    add_testpack(fp.read(), user, test_names, test_list_names, cycle_names)

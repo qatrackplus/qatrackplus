@@ -3,6 +3,7 @@
 {% load widget_tweaks %}
 {% load qa_tags %}
 {% load qatrack_tags %}
+{% load attach_tags %}
 {% load comments %}
 
 {% block head_title %}Service Event{% endblock %}
@@ -34,7 +35,7 @@
 
 {% block body %}
 
-    <form id="service-event-form" action="" method="post" novalidate>
+    <form id="service-event-form" action="" method="post" novalidate enctype="multipart/form-data">
         {% csrf_token %}
         <div class="max-width-lg">
             <div class="row">
@@ -119,7 +120,7 @@
                                         {{ field.errors }}
                                     {% endif %}
                                 {% endfor %}
-                                <input id="instance-id" type="hidden" readonly="readonly" value="{{ form.instance.pk }}">
+                                <input id="instance-id" type="hidden" readonly="readonly" value="{% if form.instance.pk %}{{ form.instance.pk }}{% endif %}">
                             </div>
                             <div class="row">
                                 <div id="required-fields" class="col-md-6 form-horizontal">
@@ -127,7 +128,8 @@
                                     {% for field in form.fieldsets.left_fields %}
                                         <div class="form-group {% if field.errors %}has-error{% endif %}" title="{{ field.help_text }}">
                                             <label for="{{ field.id_for_label }}" class="col-sm-4">
-                                                {{ field.label }}
+                                            {{ field.required }}
+                                                {{ field.label }}{% if field.field.required %} *{% endif %}
                                                 {% if field.help_text %}
                                                     <div class="help-block margin-0">{{ field.help_text }}</div>
                                                 {% endif %}
@@ -148,7 +150,7 @@
                                     {% for field in form.fieldsets.right_fields %}
                                         <div class="form-group {% if field.errors %}has-error{% endif %}" title="{{ field.help_text }}">
                                             <label for="{{ field.id_for_label }}" class="col-sm-4">
-                                                {{ field.label }}
+                                                {{ field.label }}{% if field.field.required %} *{% endif %}
                                                 {% if field.help_text %}
                                                     <div class="help-block margin-0">{{ field.help_text }}</div>
                                                 {% endif %}
@@ -170,7 +172,7 @@
                                         <div class="form-group {% if field.errors %}has-error{% endif %}" title="{{ field.help_text }}">
                                             <div class="col-sm-12">
                                                 <label for="{{ field.id_for_label }}" class="">
-                                                    <span>{{ field.label }}</span>
+                                                    <span>{{ field.label }}{% if field.field.required %} *{% endif %}</span>
                                                     {% if field.help_text %} - <span class="help-block margin-bottom-0 display-inline-block">{{ field.help_text }}</span>{% endif %}
                                                 </label>
                                                 {{ field }}
@@ -188,7 +190,7 @@
                                         <div class="form-group {% if field.errors %}has-error{% endif %}" title="{{ field.help_text }}">
                                             <div class="col-sm-12">
                                                 <label for="{{ field.id_for_label }}" class="">
-                                                    <span>{{ field.label }}</span>
+                                                    <span>{{ field.label }}{% if field.field.required %} *{% endif %}</span>
                                                     {% if field.help_text %} - <span class="help-block margin-bottom-0 display-inline-block">{{ field.help_text }}</span>{% endif %}
                                                 </label>
                                                 {{ field }}
@@ -336,10 +338,11 @@
                                             <thead>
                                                 <tr>
                                                     <th style="min-width: 200px;">Test List</th>
+                                                    <th>Completed</th>
                                                     <th>Pass/Fail</th>
                                                     <th>Review Status</th>
                                                     <th></th>
-                                                    <th>{% if perms.service_log.delete_returntoserviceqa %}Delete?{% endif %}</th>
+                                                    <th>{% if perms.service_log.delete_returntoserviceqa %}Delete{% endif %}</th>
                                                 </tr>
                                             </thead>
 
@@ -356,10 +359,11 @@
                                                                 <div class="help-block">{{ e }}</div>
                                                             {% endfor %}
                                                         </td>
-                                                            <td id="pass-fail-{{ f_form.prefix }}"></td>
-                                                            <td id="review-{{ f_form.prefix }}"></td>
-                                                            <td id="utc-actions-{{ f_form.prefix }}"></td>
-                                                            <td align="center">{% if perms.service_log.delete_returntoserviceqa and f_form.instance.pk %}{{ f_form.DELETE }}{% endif %}</td>
+                                                        <td id="work-completed-{{ f_form.prefix }}"></td>
+                                                        <td id="pass-fail-{{ f_form.prefix }}"></td>
+                                                        <td id="review-{{ f_form.prefix }}"></td>
+                                                        <td id="utc-actions-{{ f_form.prefix }}"></td>
+                                                        <td align="center">{% if perms.service_log.delete_returntoserviceqa and f_form.instance.pk %}{{ f_form.DELETE }}{% endif %}</td>
                                                     </tr>
                                                 {% endfor %}
 
@@ -430,9 +434,53 @@
                 </div>
             </div>
 
-            {% if USE_PARTS %}
-                <div class="row">
-                    <div class="col-md-12">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="box">
+                        <div class="box-header">
+                            <h3 class="box-title">
+                                <i class="fa fa-cog fa-fw" aria-hidden="true"></i>
+                                Attachments
+                            </h3>
+                        </div>
+                        <div class="box-body">
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    {% if perms.attachments.add_attachment %}
+                                        <table id="attach-table" class="table table-responsive table-condensed">
+                                            <thead>
+                                                <tr>
+                                                    <th>Filename</th>
+                                                    <th>Delete</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <input id="attach-delete-ids" name="attach-delete-ids" type="hidden">
+                                                {% if form.instance.id %}
+                                                    {% for attach in form.instance.attachment_set.all %}
+                                                        <tr>
+                                                            <td><i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>{{ attach | attachment_link }}</td>
+                                                            <td align="center"><input type="checkbox" name="attach-{{ attach.id }}-DELETE" id="attach-{{ attach.id }}-DELETE" class="attach-delete" value="{{ attach.id }}"></td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                {% endif %}
+                                            </tbody>
+                                            <tfoot id="se-attachment-names"></tfoot>
+                                        </table>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="box-footer">
+                            <label class="qa-input btn btn-default btn-sm btn-flat pull-right" title="Click to add attachments. (Hold Ctrl or Cmd in the dialog to include multiple attachments)">
+                                Browse <input id="se-attachments" class="file-upload" type="file" name="se-attachments" multiple style="display: none;"/>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                {% if USE_PARTS %}
+                    <div class="col-md-8">
                         <div class="box">
                             <div class="box-header">
                                 <h3 class="box-title">
@@ -458,6 +506,7 @@
                                             <tbody id="parts-used-tbody">
 
                                                 {% for pu_form in part_used_formset.forms %}
+
                                                     <tr id="{{ pu_form.prefix }}">
                                                         {{ pu_form.id }}
                                                         <td id="part-{{ pu_form.prefix }}" class="form-group align-top{% if pu_form.part.errors %} has-error{% endif %}" title="{{ pu_form.part.help_text }}">
@@ -498,20 +547,42 @@
                             </div>
                         </div>
                     </div>
-                </div>
-            {% endif %}
-
-            <div class="row">
-
+                {% endif %}
             </div>
 
             <div class="row">
                 <div class="col-md-12">
                     <button class="btn btn-flat btn-primary service-save pull-right">Save</button>
+                    {% if perms.service_log.delete_service_event and form.instance.id %}
+{#                        <div href="#" class="btn btn-flat btn-default service-delete pull-left" data-toggle="modal" data-target="#delete-modal">Delete</div>#}
+                        <a href="{% url 'se_delete' pk=form.instance.id %}" class="btn btn-flat btn-default service-delete pull-left">Delete</a>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </form>
+
+    <div id="tli_initiated_display_template" style="display: none;">
+        <div id="tli_initiated_display" class="col-md-12">
+            <span class="label-group">__pass-fail__</span>
+            <span class="label-group">__utc-rev__</span>
+            <div class="btn-group margin-left-5">
+                <a id="view-tli-btn"
+                   class="btn btn-default btn-xs btn-flat"
+                   href="{% url 'view_test_list_instance' %}__tli-id__"
+                   title="View test list"
+                >View</a>
+                <a class="btn btn-default btn-xs btn-flat new-tab-link"
+                   href="{% url 'view_test_list_instance' %}__tli-id__"
+                   target="_blank"
+                   title="New tab: view test list"
+                >
+                    <i class="fa fa-chevron-right" aria-hidden="true"></i>
+                </a>
+            </div>
+            <span class="pull-right">__utc-date__</span>
+        </div>
+    </div>
 
     <table style="display: none;">
         <tbody id="empty-hours-form">
@@ -534,6 +605,7 @@
                     {{ f_form.test_list_instance }}
                     {{ f_form.all_reviewed }}
                     <td class="form-group">{{ f_form.unit_test_collection }}</td>
+                    <td id="work-completed-rtsqa-__prefix__"></td>
                     <td id="pass-fail-rtsqa-__prefix__"></td>
                     <td id="review-rtsqa-__prefix__"></td>
                     <td id="utc-actions-rtsqa-__prefix__"></td>
@@ -560,22 +632,74 @@
     <div id="utc-actions-template" style="display: none;">
         <div class="__prefix__-hider" style="display: none;">
             {% if perms.qa.add_testlistinstance %}
-                <a title="Click to choose the performed return to service test list instance" id="select-tli-__prefix__" class="btn btn-default btn-xs btn-flat select-tli" data-link="{% url 'tli_select' %}/__utc-id__/__prefix__/">
+
+                <a id="select-tli-__prefix__"
+                   title="Click to choose the performed return to service test list instance"
+                   class="btn btn-default btn-xs btn-flat select-tli new-tab-link"
+                   data-link="{% url 'tli_select' %}/__utc-id__/__prefix__/"
+                >
                     Performed
+                    <i class="fa fa-chevron-right margin-left-5" aria-hidden="true"></i>
                 </a>
-                {% if form.instance.pk %}
-                    <a title="Click to perform this test list" href="{% url 'perform_qa' %}__utc-id__/?rtsqa=__rtsqa-id__&next={% url 'sl_edit' %}__se-id__/" class="btn btn-xs btn-default btn-flat perform-btn" {% comment %}target="Perform-__rtsqa-id__-__prefix__"{% endcomment %}>
-                        Perform
-                    </a>
-                {% endif %}
+{#                {% if form.instance.pk %}#}
+{#                    <div class="btn-group perform-btn">#}
+{#                        <a title="Click to perform this test list"#}
+{#                           href="{% url 'perform_qa' %}__utc-id__/?rtsqa=__rtsqa-id__&next={% url 'sl_edit' %}__se-id__/"#}
+{#                           class="btn btn-xs btn-default btn-flat"#}
+{#                        >#}
+{#                            Perform#}
+{#                        </a>#}
+{#                        <a class="btn btn-default btn-xs btn-flat new-tab-link"#}
+{#                           href="{% url 'perform_qa' %}__utc-id__/?rtsqa=__rtsqa-id__&next={% url 'sl_edit' %}__se-id__/"#}
+{#                           target="_blank"#}
+{#                           title="New tab: click to perform this test list"#}
+{#                        >#}
+{#                            <i class="fa fa-chevron-right" aria-hidden="true"></i>#}
+{#                        </a>#}
+{#                    </div>#}
+{#                {% endif %}#}
             {% endif %}
             {% if perms.qa.can_review %}
-                <a  title="Click to review this test list" id="__prefix__-review-btn" href="{% url 'review_test_list_instance' %}__tli-id__?next={% url 'sl_edit' %}__se-id__" class="btn btn-xs btn-default btn-flat review-btn __prefix__-hider" {% comment %}target="Review-__rtsqa-id__-__prefix__" {% endcomment %}style="display: none;">
-                    Review
-                </a>
+                <div id="__prefix__-review-btn" class="btn-group review-btn __prefix__-hider" style="display: none;">
+                    <a title="Click to review this test list"
+                       href="{% url 'review_test_list_instance' %}__tli-id__?next={% url 'sl_edit' %}__se-id__"
+                       class="btn btn-xs btn-default btn-flat"
+                    >
+                        Review
+                    </a>
+                    <a class="btn btn-default btn-xs btn-flat new-tab-link"
+                       href="{% url 'review_test_list_instance' %}__tli-id__?next={% url 'sl_edit' %}__se-id__"
+                       target="_blank"
+                       title="New tab: click to review this test list"
+                    >
+                        <i class="fa fa-chevron-right" aria-hidden="true"></i>
+                    </a>
+                </div>
             {% endif %}
         </div>
     </div>
 
+    <script id="attach-template" type="text/template">
+        <div class="col-sm-6">
+            <div class="row">
+                <div class="col-sm-6">
+                    <a target="_blank" href="<%= a.url %>">
+                        <img class="img-responsive" src="<%= a.url %>" alt="<%= a.name %>"/>
+                    </a>
+                </div>
+                <div class="col-sm-6">
+                    <dl>
+                        <dt>File</dt>
+                        <dd>
+                            <a target="_blank" href="<%= a.url %>"><%= a.name %></a>
+                        </dd>
+
+                        <dt>Size</dt>
+                        <dd><%= a.size %></dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </script>
 
 {% endblock body %}

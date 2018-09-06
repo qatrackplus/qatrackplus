@@ -16,7 +16,7 @@
 
 {% block extra_js %}
     {% autoescape off %}
-        {% listable view_name dom="<'row'<'col-sm-5'i><'col-sm-7'p>><'row'<'col-sm-12'tr>><'row'<'col-sm-5'><'col-sm-7'p>>" requirejs=True pagination_type='bootstrap3' css_table_class='table-hover table-condensed table-striped' css_input_class='btn-flat btn-sm input-sm full-width' auto_width=False %}
+        {% listable view_name dom="<'row'<'col-sm-5'i><'col-sm-7'p>><'row'<'col-sm-12'tr>><'row'<'col-sm-5'><'col-sm-7'p>>" requirejs=True pagination_type='bootstrap3' css_table_class='table-hover table-condensed table-custom-listable' css_input_class='btn-flat btn-sm input-sm full-width' auto_width=False %}
     {% endautoescape %}
 {% endblock %}
 
@@ -40,7 +40,7 @@
                             For Service Events Filtered Below...
                         </div>
                         <div class="col-md-12 margin-bottom-20">
-                            <span id="go_down_time" class="btn btn-default btn-flat btn-sm">Download Down Time Summary</span>
+                            <span id="go_down_time" class="btn btn-default btn-flat btn-sm">Download Up Time Summary</span>
                         </div>
                     </div>
                     {{ listable_table }}

@@ -1,3 +1,4 @@
+
 import csv
 
 from braces.views import LoginRequiredMixin, PermissionRequiredMixin
@@ -6,7 +7,8 @@ from django_comments.models import Comment
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.context_processors import PermWrapper
-from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.models import User, Permission
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
@@ -17,13 +19,15 @@ from django.http import JsonResponse, HttpResponseRedirect, Http404, HttpRespons
 from django.shortcuts import redirect
 from django.template.loader import get_template
 from django.utils.translation import ugettext as _
-from django.views.generic import TemplateView, DetailView
+from django.views.decorators.csrf import csrf_protect
+from django.views.generic import TemplateView, DetailView, DeleteView, FormView
 from django.views.generic.detail import SingleObjectTemplateResponseMixin
 from django.views.generic.edit import ModelFormMixin, ProcessFormView
 
 from listable.views import (
     BaseListableView, DATE_RANGE, SELECT_MULTI, SELECT,
-    TODAY, YESTERDAY, LAST_WEEK, THIS_WEEK, LAST_MONTH, THIS_MONTH, LAST_YEAR, THIS_YEAR
+    TODAY, YESTERDAY, LAST_WEEK, THIS_WEEK, LAST_7_DAYS, LAST_MONTH, THIS_MONTH, LAST_30_DAYS, LAST_YEAR, THIS_YEAR,
+    LAST_365_DAYS, YEAR_TO_DATE,
 )
 
 if settings.USE_PARTS:
@@ -36,6 +40,7 @@ from qatrack.qa.views.base import generate_review_status_context
 from qatrack.qa.views.review import UTCInstances
 from qatrack.qa.views.perform import ChooseUnit
 from qatrack.units import models as u_models
+from qatrack.attachments.models import Attachment
 
 
 def get_time_display(dt):
@@ -206,6 +211,9 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
 
     def get_context_data(self, *args, **kwargs):
         context_data = super(ServiceEventUpdateCreate, self).get_context_data(**kwargs)
+
+        self.request.session.set_expiry(settings.SESSION_COOKIE_AGE)
+
         if self.request.method == 'POST':
             qs = models.ServiceEvent.objects.filter(pk__in=self.request.POST.getlist('service_event_related_field'))
             context_data['se_statuses'] = {se.id: se.service_status.id for se in qs}
@@ -295,11 +303,42 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
             if settings.USE_PARTS:
                 context_data['part_used_formset'] = p_forms.PartUsedFormset(instance=self.object, prefix='parts')
 
+        context_data['attachments'] = self.object.attachment_set.all() if self.object else []
+
+        if self.request.GET.get('next'):
+            context_data['next_url'] = self.request.GET.get('next')
         return context_data
 
     def form_invalid(self, form):
         messages.add_message(self.request, messages.ERROR, _('Please correct the error below.'))
         return super().form_invalid(form)
+
+    def reset_status(self, form):
+
+        if not form.instance.service_status.is_review_required:
+            default = models.ServiceEventStatus.get_default()
+            form.instance.service_status = default
+            messages.add_message(self.request, messages.WARNING, _(
+                'Due to changes detected, service event %s status has been reset to %s' % (
+                    form.instance.id, default.name.lower()
+                )
+            ))
+            form.changed_data.append('service_status')
+            form.cleaned_data['service_status'] = default
+
+    def edit_se_attachments(self, service_event):
+        for idx, f in enumerate(self.request.FILES.getlist('se-attachments')):
+            Attachment.objects.create(
+                attachment=f,
+                comment="Uploaded %s by %s" % (timezone.now(), self.request.user.username),
+                label=f.name,
+                serviceevent=service_event,
+                created_by=self.request.user
+            )
+
+        a_ids = self.request.POST.get('attach-delete-ids').split(',')
+        if a_ids != ['']:
+            Attachment.objects.filter(id__in=self.request.POST.get('attach-delete-ids').split(',')).delete()
 
     def form_valid(self, form):
 
@@ -320,6 +359,9 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
             return self.render_to_response(context)
 
         new = form.instance.pk is None
+
+        if rtsqa_formset.has_changed():
+            self.reset_status(form)
 
         service_event = form.save()
         service_event_related = form.cleaned_data.get('service_event_related_field')
@@ -346,6 +388,8 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
                 site=get_current_site(self.request)
             )
             comment.save()
+
+        self.edit_se_attachments(service_event)
 
         for g_link in form.g_link_dict:
             if g_link in form.changed_data:
@@ -427,14 +471,14 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
 
                 pu_instance = p_form.instance
 
-                initial_p = None if is_new else p_form.initial['part']
+                initial_p = p_form.initial.get('part', None)
                 if delete:
                     current_p = p_form.initial['part']
                 else:
                     current_p = p_form.cleaned_data['part']
 
-                initial_s = p_form.initial['from_storage'] if 'from_storage' in p_form.initial else None
-                current_s = p_form.cleaned_data['from_storage'] if 'from_storage' in p_form.cleaned_data else None
+                initial_s = p_form.initial.get('from_storage', None)
+                current_s = p_form.cleaned_data.get('from_storage', None)
 
                 try:
                     current_psc = p_models.PartStorageCollection.objects.get(
@@ -452,7 +496,7 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
                     initial_psc = None
 
                 initial_qty = 0 if is_new else p_form.initial['quantity']
-                current_qty = p_form.cleaned_data['quantity'] if 'quantity' in p_form.cleaned_data else initial_qty
+                current_qty = p_form.cleaned_data.get('quantity', initial_qty)
                 change = current_qty - initial_qty
 
                 if delete and not is_new:
@@ -604,17 +648,8 @@ class UpdateServiceEvent(ServiceEventUpdateCreate):
             form.instance.user_modified_by = self.request.user
             form.instance.datetime_modified = timezone.now()
 
-            # If service status was not changed explicitly, but needs to be reset to default status due to other changes.
-            if not form.instance.service_status.is_review_required:
-                default = models.ServiceEventStatus.get_default()
-                form.instance.service_status = default
-                messages.add_message(self.request, messages.WARNING, _(
-                    'Due to changes detected, service event %s status has been reset to %s' % (
-                        form.instance.id, default.name
-                    )
-                ))
-                form.changed_data.append('service_status')
-                form.cleaned_data['service_status'] = default
+            # Check if service status was not changed explicitly, but needs to be reset to default status due to other changes.
+            self.reset_status(form)
 
         return super(UpdateServiceEvent, self).form_valid(form)
 
@@ -651,6 +686,57 @@ class DetailsServiceEvent(DetailView):
             raise Http404
 
 
+class DeleteServiceEvent(DeleteView, FormView, PermissionRequiredMixin):
+
+    permission_required = 'service_log.delete_serviceevent'
+    raise_exception = True
+    model = models.ServiceEvent
+    template_name = 'service_log/service_event_delete.html'
+    form_class = forms.ServiceEventDeleteForm
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = self.form_class(pk=self.object.id)
+        return context
+
+    def post(self, request, *args, **kwargs):
+        """
+        Handles POST requests, instantiating a form instance with the passed
+        POST variables and then checked for validity.
+        """
+        form = self.get_form()
+        if form.is_valid():
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
+
+    def form_valid(self, form):
+
+        self.object = self.get_object()
+
+        models.ServiceLog.objects.log_service_event_delete(
+            self.request.user,
+            self.object,
+            {'reason': form.cleaned_data['reason'], 'comment': form.cleaned_data['comment']}
+        )
+
+        success_url = self.get_success_url()
+        self.object.set_inactive()
+
+        messages.add_message(self.request, messages.INFO, 'Service event {} deleted'.format(self.object.id))
+
+        return HttpResponseRedirect(success_url)
+
+    def form_invalid(self, form):
+        messages.add_message(
+            self.request, messages.WARNING, 'Could not delete service event {}'.format(form.instance.id)
+        )
+        return reverse('sl_dash')
+
+    def get_success_url(self):
+        return reverse('sl_dash')
+
+
 class ServiceEventsBaseList(BaseListableView):
     """
     This view provides a base for any sort of listing of
@@ -673,6 +759,7 @@ class ServiceEventsBaseList(BaseListableView):
         'service_type__name',
         # 'problem_type__name',
         'problem_description',
+        'work_description',
         'service_status__name'
     )
 
@@ -696,7 +783,9 @@ class ServiceEventsBaseList(BaseListableView):
     }
 
     date_ranges = {
-        'datetime_service': [TODAY, YESTERDAY, LAST_WEEK, THIS_WEEK, LAST_MONTH, THIS_MONTH, THIS_YEAR]
+        'datetime_service': [
+            YESTERDAY, LAST_WEEK, LAST_7_DAYS, LAST_MONTH, LAST_30_DAYS, LAST_YEAR, LAST_365_DAYS, YEAR_TO_DATE
+        ]
     }
 
     search_fields = {
@@ -722,6 +811,7 @@ class ServiceEventsBaseList(BaseListableView):
             'datetime_service': get_template('service_log/table_context_datetime.html'),
             'service_status__name': get_template('service_log/service_event_status_label.html'),
             'problem_description': get_template('service_log/table_context_problem_description.html'),
+            'work_description': get_template('service_log/table_context_work_description.html'),
         }
 
     def get_icon(self):
@@ -809,6 +899,11 @@ class ServiceEventsBaseList(BaseListableView):
         c = {'problem_description': se.problem_description, 'request': self.request}
         return template.render(c)
 
+    def work_description(self, se):
+        template = self.templates['work_description']
+        c = {'work_description': se.work_description, 'request': self.request}
+        return template.render(c)
+
 
 class ReturnToServiceQABaseList(BaseListableView):
 
@@ -816,36 +911,40 @@ class ReturnToServiceQABaseList(BaseListableView):
     template_name = 'service_log/rtsqa_list.html'
     paginate_by = 50
 
-    order_by = ['-datetime_assigned']
+    order_by = ['-service_event__datetime_service']
     kwarg_filters = None
 
     fields = (
         'actions',
-        'datetime_assigned',
+        'service_event__datetime_service',
         'service_event__unit_service_area__unit__name',
         'unit_test_collection__name',
+        'test_list_instance__work_completed',
         'test_list_instance_pass_fail',
         'test_list_instance_review_status',
         'service_event__service_status__name'
     )
 
     headers = {
-        'datetime_assigned': _('Date Assigned'),
+        'service_event__datetime_service': _('Service Date'),
         'service_event__unit_service_area__unit__name': _('Unit'),
         'unit_test_collection__name': _('Test List'),
+        'test_list_instance__work_completed': _('Test List Completed'),
         'test_list_instance_pass_fail': _('Pass/Fail'),
         'test_list_instance_review_status': _('Review Status'),
         'service_event__service_status__name': _('Service Event Status')
     }
 
     widgets = {
-        'datetime_assigned': DATE_RANGE,
+        'service_event__datetime_service': DATE_RANGE,
         'service_event__unit_service_area__unit__name': SELECT_MULTI,
-        'service_event__service_status__name': SELECT_MULTI
+        'service_event__service_status__name': SELECT_MULTI,
+        'test_list_instance__work_completed': DATE_RANGE
     }
 
     date_ranges = {
-        'datetime_assigned': [TODAY, YESTERDAY, LAST_WEEK, THIS_WEEK, LAST_MONTH, THIS_MONTH, THIS_YEAR]
+        'service_event__datetime_service': [TODAY, YESTERDAY, LAST_WEEK, THIS_WEEK, LAST_MONTH, THIS_MONTH, THIS_YEAR],
+        'test_list_instance__work_completed': [TODAY, YESTERDAY, LAST_WEEK, THIS_WEEK, LAST_MONTH, THIS_MONTH, THIS_YEAR]
     }
 
     search_fields = {
@@ -864,12 +963,13 @@ class ReturnToServiceQABaseList(BaseListableView):
     select_related = (
         'service_event__unit_service_area__unit',
         'service_event__service_status',
-        'test_list_instance__reviewed_by'
+        'test_list_instance__reviewed_by',
+        'test_list_instance'
     )
 
     prefetch_related = (
-        "test_list_instance__testinstance_set",
-        "test_list_instance__testinstance_set__status",
+        'test_list_instance__testinstance_set',
+        'test_list_instance__testinstance_set__status',
         'unit_test_collection',
         'test_list_instance__comments'
     )
@@ -879,7 +979,8 @@ class ReturnToServiceQABaseList(BaseListableView):
         super(ReturnToServiceQABaseList, self).__init__(*args, **kwargs)
         self.templates = {
             'actions': get_template("service_log/table_context_rtsqa_actions.html"),
-            'datetime_assigned': get_template("service_log/table_context_datetime.html"),
+            'service_event__datetime_service': get_template("service_log/table_context_datetime.html"),
+            'test_list_instance__work_completed': get_template("service_log/table_context_tli_work_completed.html"),
             'test_list_instance_pass_fail': get_template("qa/pass_fail_status.html"),
             'test_list_instance_review_status': get_template("qa/review_status.html"),
             'service_event__service_status__name': get_template("service_log/service_event_status_label.html"),
@@ -890,8 +991,8 @@ class ReturnToServiceQABaseList(BaseListableView):
 
     def get_page_title(self, f=None):
         if not f:
-            return 'All RTS QA'
-        to_return = 'RTS QA'
+            return 'All Return To Service QA'
+        to_return = 'Return To Service QA'
         filters = f.split('_')
         for filt in filters:
             [key, val] = filt.split('-')
@@ -981,10 +1082,21 @@ class ReturnToServiceQABaseList(BaseListableView):
         c.update(generate_review_status_context(rtsqa.test_list_instance))
         return template.render(c)
 
-    def datetime_assigned(self, rtsqa):
-        template = self.templates['datetime_assigned']
-        c = {'datetime': rtsqa.datetime_assigned}
+    def service_event__datetime_service(self, rtsqa):
+        template = self.templates['service_event__datetime_service']
+        c = {'datetime': rtsqa.service_event.datetime_service}
         return template.render(c)
+
+    def test_list_instance__work_completed(self, rtsqa):
+        template = self.templates['test_list_instance__work_completed']
+        if rtsqa.test_list_instance:
+            c = {
+                'datetime_completed': rtsqa.test_list_instance.work_completed,
+                'datetime_started': rtsqa.test_list_instance.work_started,
+                'in_progress': rtsqa.test_list_instance.in_progress
+            }
+            return template.render(c)
+        return '----'
 
     def service_event__service_status__name(self, rtsqa):
         template = self.templates['service_event__service_status__name']
@@ -1009,6 +1121,7 @@ class TLISelect(UTCInstances):
         return template.render(c)
 
 
+@login_required
 def tli_statuses(request):
 
     try:
@@ -1021,7 +1134,9 @@ def tli_statuses(request):
             'pass_fail': tli.pass_fail_summary(),
             'review': tli.review_summary(),
             'datetime': timezone.localtime(tli.created),
-            'all_reviewed': int(tli.all_reviewed)
+            'all_reviewed': int(tli.all_reviewed),
+            'work_completed': timezone.localtime(tli.work_completed),
+            'in_progress': tli.in_progress
         },
         safe=False
     )
@@ -1070,8 +1185,8 @@ class ServiceEventDownTimesList(ServiceEventsBaseList):
         'unit_service_area__unit__active': _('Active'),
         'unit_service_area__service_area__name': _('Service Area'),
         # 'service_type__name': _('Service Type'),
-        'duration_service_time': _('Service Time'),
-        'duration_lost_time': _('Lost Time')
+        'duration_service_time': _('Service Time (hh:mm)'),
+        'duration_lost_time': _('Lost Time (hh:mm)')
     }
 
     widgets = {
@@ -1084,7 +1199,9 @@ class ServiceEventDownTimesList(ServiceEventsBaseList):
     }
 
     date_ranges = {
-        'datetime_service': [TODAY, YESTERDAY, LAST_WEEK, THIS_WEEK, LAST_MONTH, THIS_MONTH, LAST_YEAR, THIS_YEAR]
+        'datetime_service': [
+            YESTERDAY, LAST_WEEK, LAST_7_DAYS, LAST_MONTH, LAST_30_DAYS, LAST_YEAR, LAST_365_DAYS, YEAR_TO_DATE
+        ]
     }
 
     search_fields = {
@@ -1107,7 +1224,7 @@ class ServiceEventDownTimesList(ServiceEventsBaseList):
     )
 
     def get_page_title(self, f=None):
-        return 'Filter Service Events and View Down Time Summary'
+        return 'Filter Service Events and Up Time Summary'
 
     def duration_lost_time(self, se):
         duration = se.duration_lost_time
@@ -1128,6 +1245,7 @@ class ServiceEventDownTimesList(ServiceEventsBaseList):
             return '{}:{:02}'.format(hours, minutes)
 
 
+@login_required
 def handle_unit_down_time(request):
 
     se_qs = models.ServiceEvent.objects.select_related(
@@ -1139,7 +1257,8 @@ def handle_unit_down_time(request):
     if daterange:
         tz = timezone.get_current_timezone()
         date_from = timezone.datetime.strptime(daterange.split(' - ')[0], '%d %b %Y')
-        date_to = timezone.datetime.strptime(daterange.split(' - ')[1], '%d %b %Y') + timezone.timedelta(days=1)
+        date_to = timezone.datetime.strptime(daterange.split(' - ')[1], '%d %b %Y')
+        date_to = timezone.datetime(year=date_to.year, month=date_to.month, day=date_to.day, hour=23, minute=59, second=59)
         date_from = tz.localize(date_from)
         date_to = tz.localize(date_to)
         se_qs = se_qs.filter(datetime_service__gte=date_from, datetime_service__lte=date_to)
@@ -1147,7 +1266,10 @@ def handle_unit_down_time(request):
         date_from = date_from.date()
     else:
         date_from = None
-        date_to = timezone.datetime.now().date() + timezone.timedelta(days=1)
+        date_to = timezone.datetime.now().date()
+        date_to = timezone.datetime(year=date_to.year, month=date_to.month, day=date_to.day, hour=23, minute=59, second=59)
+        se_qs = se_qs.filter(datetime_service__lte=date_to)
+        date_to = date_to.date()
 
     service_areas = request.GET.getlist('service_area', False)
     if service_areas:
@@ -1182,18 +1304,18 @@ def handle_unit_down_time(request):
         units = units.filter(active=unit_active)
 
     response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="qatrack_parts_units_cost.csv"'
+    response['Content-Disposition'] = 'attachment; filename="qatrack_unit_uptime.csv"'
     response['Content-Type'] = 'text/csv; charset=utf-8'
 
     totals = OrderedDict({'potential': 0})
 
     writer = csv.writer(response)
     rows = [
-        ['Machine Stats: ' + (date_from.strftime('%d %b %Y') + ' to ' + date_to.strftime('%d %b %Y')) if daterange else 'Machine Stats: All time until ' + timezone.datetime.now().strftime('%d %b %Y')],
+        ['Up Time Report: ' + (date_from.strftime('%d %b %Y') + ' to ' + date_to.strftime('%d %b %Y')) if daterange else 'Up Time Report: All time until ' + timezone.datetime.now().strftime('%d %b %Y')],
         [''],
         [''],
         [''],
-        ['Unit Name', 'Unit Type', 'Potential Time (h)'],
+        ['Unit Name', 'Unit Type', 'Available Time Hrs'],
     ]
 
     all_service_types = models.ServiceType.objects.all()
@@ -1211,7 +1333,7 @@ def handle_unit_down_time(request):
     totals['total_num'] = 0
 
     if not service_areas:
-        rows[4].append('% Available')
+        rows[4].append('% Up Time')
         totals['available'] = 0
     else:
         rows[1] = ['For Service Areas: ', ''] + [sa for sa in service_areas]
@@ -1222,12 +1344,11 @@ def handle_unit_down_time(request):
     for u in units:
 
         service_events_unit_qs = se_qs.filter(unit_service_area__unit=u)
-
         potential_time = u.get_potential_time(date_from, date_to)
         unit_vals = [
             u.name,
             u.type.name,
-            potential_time
+            '{:.2f}'.format(potential_time) if potential_time > 0 else '0'
         ]
         totals['potential'] += potential_time
 
@@ -1241,8 +1362,8 @@ def handle_unit_down_time(request):
             lost = lost.total_seconds() / 3600 if lost else 0
 
             unit_vals.append(repairs)
-            unit_vals.append(service)
-            unit_vals.append(lost)
+            unit_vals.append('{:.2f}'.format(service))
+            unit_vals.append('{:.2f}'.format(lost))
 
             totals[t.name + '-repairs'] += repairs
             totals[t.name + '-service'] += service
@@ -1256,12 +1377,12 @@ def handle_unit_down_time(request):
 
         total_num = len(service_events_unit_qs)
 
-        unit_vals += [total_service_time, total_lost_time, total_num]
+        unit_vals += ['{:.2f}'.format(total_service_time), '{:.2f}'.format(total_lost_time), total_num]
 
         if not service_areas:
             available = ((potential_time - total_lost_time) / potential_time) * 100 if potential_time > 0 else 0
             totals['available'] += available
-            unit_vals.append(available)
+            unit_vals.append('{:.2f}'.format(available))
 
         totals['total_service'] += total_service_time
         totals['total_lost'] += total_lost_time
@@ -1269,8 +1390,14 @@ def handle_unit_down_time(request):
 
         rows.append(unit_vals)
 
+    for t in all_service_types:
+        totals[t.name + '-service'] = '{:.2f}'.format(totals[t.name + '-service'])
+        totals[t.name + '-lost'] = '{:.2f}'.format(totals[t.name + '-lost'])
+    totals['total_service'] = '{:.2f}'.format(totals['total_service'])
+    totals['total_lost'] = '{:.2f}'.format(totals['total_lost'])
+
     if not service_areas:
-        totals['available'] = (totals['available'] / len(units)) if len(units) is not 0 else 0
+        totals['available'] = '{:.2f}'.format(totals['available'] / len(units)) if len(units) is not 0 else 0
     rows += [[''], ['']]
     rows.append(['', 'Totals:'] + [str(totals[t]) for t in totals])
 

@@ -43,12 +43,9 @@ def item_val_to_string(item):
 
 def duration_string_hours_mins(duration):
 
-    seconds = duration.seconds
-    minutes = seconds // 60
-
-    hours = minutes // 60
-    minutes %= 60
-    hours %= 60
+    seconds = int(duration.total_seconds())
+    hours = seconds // 3600
+    minutes = (seconds - hours * 3600) // 60
 
     if seconds > 0 and minutes < 1 and hours == 0:
         return '00:01'
@@ -138,6 +135,12 @@ class HoursForm(forms.ModelForm):
     def clean_user_or_thirdparty(self):
 
         obj_type, obj_id = self.cleaned_data['user_or_thirdparty'].split('-')
+
+        for k1, v1 in self.data.items():
+            if '-user_or_thirdparty' in k1 and v1 != '':
+                for k2, v2 in self.data.items():
+                    if '-user_or_thirdparty' in k2 and k2 != k1 and v1 == v2:
+                        raise ValidationError('Duplicate hours user or third party')
 
         if obj_type == 'user':
             return User.objects.get(id=obj_id)
@@ -344,7 +347,7 @@ class ServiceEventForm(BetterModelForm):
         help_text=models.ServiceEvent._meta.get_field('duration_lost_time').help_text
     )
     service_event_related_field = ServiceEventMultipleField(
-        required=False, queryset=models.ServiceEvent.objects.none(), label=_('Service Events Related'),
+        required=False, queryset=models.ServiceEvent.objects.none(), label=_('Related Service Events'),
         help_text=models.ServiceEvent._meta.get_field('service_event_related').help_text
     )
     is_review_required = forms.BooleanField(required=False, label=_('Review required'))
@@ -598,7 +601,7 @@ class ServiceEventForm(BetterModelForm):
         for f in self.fields:
             classes = self.fields[f].widget.attrs.get('class', '')
             classes += ' form-control'
-            self.fields[f].widget.attrs.update({'class': classes})
+            self.fields[f].widget.attrs.update({'class': classes, 'autocomplete': 'off'})
 
         for f in ['is_review_required_fake', 'is_review_required']:
             classes = self.fields[f].widget.attrs.get('class', '')
@@ -656,6 +659,10 @@ class ServiceEventForm(BetterModelForm):
 
     def clean(self):
         super(ServiceEventForm, self).clean()
+
+        if not self.cleaned_data.get('unit_field'):
+            self.add_error('unit_field_fake', ValidationError('This field is required'))
+
         if 'initiated_utc_field' in self._errors:
             del self._errors['initiated_utc_field']
 
@@ -689,11 +696,23 @@ class ServiceEventForm(BetterModelForm):
 
         return self.cleaned_data
 
-    def clean_unit_field(self):
-        unit = self.cleaned_data['unit_field']
-        if not unit:
-            self.add_error('unit_field_fake', ValidationError('This field is required'))
-        return unit
-
     def clean_unit_field_fake(self):
         return self.cleaned_data.get('unit_field')
+
+
+class ServiceEventDeleteForm(forms.ModelForm):
+
+    reason = forms.ChoiceField(choices=settings.DELETE_REASONS)
+    comment = forms.CharField(max_length=255, widget=forms.Textarea(), required=False)
+
+    class Meta:
+
+        model = models.ServiceEvent
+        fields = ('id',)
+
+    def __init__(self, *args, **kwargs):
+        pk = kwargs.pop('pk', None)
+        super().__init__(*args, **kwargs)
+
+        self.fields['comment'].widget.attrs.update({'rows': 3, 'class': 'autosize form-control'})
+        self.fields['reason'].widget.attrs.update({'class': 'form-control'})

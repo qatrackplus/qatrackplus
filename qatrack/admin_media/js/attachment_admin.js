@@ -4,12 +4,16 @@ $(document).ready(function() {
         $test_list = $('#id_testlist'),
         $test_list_cycle = $('#id_testlistcycle'),
         $test_instance = $('#id_testinstance'),
-        $test_list_instance = $('#id_testlistinstance');
+        $test_list_instance = $('#id_testlistinstance'),
+        $service_event = $('#id_serviceevent');
 
     function format_selection(res) {
         return res.name || res.text;
     }
     function format_result(res) {
+        if (res.loading) {
+            return $('<div class="select2-result-repository">...searching</div>');
+        }
         return $('<div class="select2-result-repository">(' + res.id + ') ' + res.name + '</div>');
     }
     function set_data(params) {
@@ -45,7 +49,8 @@ $(document).ready(function() {
         placeholder: '-------',
         minimumInputLength: 1,
         templateResult: format_result,
-        templateSelection: format_selection
+        templateSelection: format_selection,
+        width: 300
     });
     $test_list.select2({
         ajax: {
@@ -59,7 +64,8 @@ $(document).ready(function() {
         placeholder: '-------',
         minimumInputLength: 1,
         templateResult: format_result,
-        templateSelection: format_selection
+        templateSelection: format_selection,
+        width: 300
     });
     $test_list_cycle.select2({
         ajax: {
@@ -73,7 +79,8 @@ $(document).ready(function() {
         placeholder: '-------',
         minimumInputLength: 1,
         templateResult: format_result,
-        templateSelection: format_selection
+        templateSelection: format_selection,
+        width: 300
     });
     $test_instance.select2({
         ajax: {
@@ -87,7 +94,8 @@ $(document).ready(function() {
         placeholder: '-------',
         minimumInputLength: 1,
         templateResult: format_result,
-        templateSelection: format_selection
+        templateSelection: format_selection,
+        width: 300
     });
     $test_list_instance.select2({
         ajax: {
@@ -101,7 +109,24 @@ $(document).ready(function() {
         placeholder: '-------',
         minimumInputLength: 1,
         templateResult: format_result,
-        templateSelection: format_selection
+        templateSelection: format_selection,
+        width: 300
+    });
+
+    $service_event.select2({
+        ajax: {
+            url: admin_urls.SERVICE_EVENT_SEARCHER,
+            data: set_data,
+            processResults: process_results,
+            cache: true,
+            delay: 500
+        },
+        allowClear: true,
+        placeholder: '-------',
+        minimumInputLength: 1,
+        templateResult: format_result,
+        templateSelection: format_selection,
+        width: 300
     });
 
 });

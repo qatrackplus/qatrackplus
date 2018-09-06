@@ -84,7 +84,7 @@ def render_log(service_log, user):
         'instance': service_log,
         'datetime_display': datetime_display,
         'user': get_user_name(service_log.user),
-        'can_view': user.has_perm('service_log.view_serviceevent')
+        'can_view': user.has_perm('service_log.view_serviceevent') and service_log.service_event.is_active
     }
     if service_log.log_type == sl_models.NEW_SERVICE_EVENT:
 
@@ -115,3 +115,8 @@ def render_log(service_log, user):
 
         context['extra_info'] = service_log.extra_info
         return get_template('service_log/log_rtsqa.html').render(context)
+
+    elif service_log.log_type == sl_models.DELETED_SERVICE_EVENT:
+
+        context['extra_info'] = service_log.extra_info
+        return get_template('service_log/log_service_event_deleted.html').render(context)

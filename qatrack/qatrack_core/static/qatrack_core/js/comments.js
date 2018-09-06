@@ -15,6 +15,7 @@ require(['jquery', 'moment', 'autosize'], function($, moment, autosize) {
         }
     });
 
+    var $err_comment = $('<div class="err-comment box-comment" style="display: none;"></div>');
     $post_comment.click(function () {
 
         if ($(this).hasClass('disabled')) {
@@ -27,6 +28,8 @@ require(['jquery', 'moment', 'autosize'], function($, moment, autosize) {
             data = $comment_form.find('select, textarea, input').serialize();
         }
 
+        $err_comment.hide().remove();
+
         $.ajax({
             data: data,
             url: QAURLs.AJAX_COMMENT,
@@ -36,8 +39,7 @@ require(['jquery', 'moment', 'autosize'], function($, moment, autosize) {
                 display_comment(res);
             },
             error: function (res) {
-                console.log(res);
-                console.log(res.responseJSON.message);
+                display_error(res)
             }
         })
     });
@@ -46,6 +48,20 @@ require(['jquery', 'moment', 'autosize'], function($, moment, autosize) {
 
         $comments.append(res.template);
         $($comments).find('#c' + res.c_id).slideDown('fast');
+    }
+    function display_error(res) {
+
+        var extra_string = '';
+        $.each(res.responseJSON.extra, function(k, v) {
+            extra_string += '<span class="comment">' + k + ': ' + v + '</span>';
+        });
+        $comments.append($err_comment);
+        $err_comment.html(
+            '<div class="comment-text"><span class="username">' + res.responseJSON.message +
+            '<span class="text-muted pull-right"><i class="fa fa-error"></i></span></span>' + extra_string +
+            '</div>'
+        );
+        $err_comment.slideDown('fast');
     }
 
 });

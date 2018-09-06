@@ -239,7 +239,7 @@
             <div class="row">
                 <div class="col-md-12">
                     <input name="submit" class="btn btn-flat btn-primary pull-right" type="submit" value="{% if form.instance.id %}Save{% else %}Add{% endif %} Part" />
-                    <input name="submit_add_another" class="btn btn-flat btn-primary pull-right margin-r-5" type="submit" value="{% if form.instance.id %}Save{% else %}Add{% endif %} Part and add another" />
+                    {% if not form.instance.id %}<input name="submit_add_another" class="btn btn-flat btn-primary pull-right margin-r-5" type="submit" value="Add Part and enter another" />{% endif %}
                 </div>
             </div>
         </div>

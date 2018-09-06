@@ -51,8 +51,15 @@ select.qa-input,
     height: 22px;
     padding: 0 4px;
     margin-bottom:0;
-    box-shadow: none;
-    border: 1px solid #d2d6de;
+    border: 1px solid #ddd;
+
+}
+input.qa-input:not([type="radio"]):not([readonly]),
+select.qa-input,
+.review-status select {
+    box-shadow: 2px 2px 2px #ddd !important;
+    -moz-box-shadow: 2px 2px 2px #ddd !important;
+    -webkit-box-shadow: 2px 2px 2px #ddd !important;
 }
 input.qa-input::-ms-clear {
     /* see bitbucket issue#106 */
@@ -154,6 +161,10 @@ tr.qa-comment div.comment-container div.comment-div textarea {
     resize: none;
     vertical-align: top;
     overflow: hidden !important;
+    box-shadow: 2px 2px 2px #ddd;
+    -moz-box-shadow: 2px 2px 2px #ddd;
+    -webkit-box-shadow: 2px 2px 2px #ddd;
+    border: 1px solid #ddd;
 }
 tr.qa-procedure div.procedure-container {
     display:none;

@@ -9,6 +9,7 @@ urlpatterns = [
     url(r'^create/$', views.CreateServiceEvent.as_view(), name='sl_new'),
     url(r'^edit(?:/(?P<pk>\d+))?/$', views.UpdateServiceEvent.as_view(), name="sl_edit"),
     url(r'^details(?:/(?P<pk>\d+))?/$', views.DetailsServiceEvent.as_view(), name="sl_details"),
+    url(r'^delete(?:/(?P<pk>\d+))?/$', views.DeleteServiceEvent.as_view(), name='se_delete'),
     url(r'^se(?:/(?P<f>\S+))?/$', views.ServiceEventsBaseList.as_view(), name="sl_list_all"),
     url(r'^rtsqa/(?P<f>\S+)?$', views.ReturnToServiceQABaseList.as_view(), name="rtsqa_list_all"),
     url(r'^se_searcher/$', views.se_searcher, name="se_searcher"),

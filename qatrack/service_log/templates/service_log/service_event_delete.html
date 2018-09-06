@@ -1,0 +1,98 @@
+{% extends "service_log/sl_base.html" %}
+
+{% load widget_tweaks %}
+{% load qa_tags %}
+{% load qatrack_tags %}
+{% load comments %}
+
+{% block head_title %}Service Event{% endblock %}
+
+{% block extra_css %}
+    {{ block.super }}
+    <link href="{{ STATIC_URL }}select2/css/select2.min.css?v={{ VERSION }}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}qatrack_core/css/tables.css?v={{ VERSION }}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}qatrack_core/css/custom-select2.css?v={{ VERSION }}" rel="stylesheet">
+{% endblock extra_css %}
+
+{% block extra_js %}
+{% endblock extra_js %}
+
+{% block require_javascript %}
+    require(['sl_se_delete']);
+{% endblock require_javascript %}
+
+{% block body %}
+
+    <form id="service-event-delete-form" action="" method="post" novalidate>
+        {% csrf_token %}
+        <div class="max-width-lg">
+            <div class="row margin-bottom-15">
+                <div class="col-md-3">
+                    <h4 class="no-margin-top">Delete Service Event {{ serviceevent.id }}</h4>
+                    {% service_status_label serviceevent.service_status size="14" %}
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="box box-default">
+
+{#                        <div class="box-header">#}
+{#                            <h4 class="box-title">Deleting will effect the following related items</h4>#}
+{#                        </div>#}
+
+                        <div class="box-body">
+
+
+
+
+                            <div class="row margin-bottom-15">
+                                <div class="col-sm-4">
+                                    <div class="form-group {% if form.reason.errors %}has-error{% endif %}" title="{{ form.reason.help_text }}">
+                                        <div class="col-sm-12">
+                                            <label for="{{ form.reason.id_for_label }}" class="">
+                                                <span>{{ form.reason.label }}{% if form.reason.field.required %} *{% endif %}</span>
+                                                {% if form.reason.help_text %} - <span class="help-block margin-bottom-0 display-inline-block">{{ form.reason.help_text }}</span>{% endif %}
+                                            </label>
+                                            {{ form.reason }}
+                                            {% for e in form.reason.errors %}
+                                                <div class="col-sm-12 help-block text-center">{{ e }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-8">
+                                    <div class="form-group {% if form.comment.errors %}has-error{% endif %}" title="{{ form.comment.help_text }}">
+                                        <div class="col-sm-12">
+                                            <label for="{{ form.comment.id_for_label }}" class="">
+                                                <span>{{ form.comment.label }}{% if form.comment.field.required %} *{% endif %}</span>
+                                                {% if form.comment.help_text %} - <span class="help-block margin-bottom-0 display-inline-block">{{ form.comment.help_text }}</span>{% endif %}
+                                            </label>
+                                            {{ form.comment }}
+                                            {% for e in form.comment.errors %}
+                                                <div class="col-sm-12 help-block text-center">{{ e }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-12">
+                                    {% if perms.service_log.delete_service_event %}
+                                        <div id="submit-delete" class="btn btn-flat btn-danger service-save pull-right">Delete</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+
+{% endblock body %}

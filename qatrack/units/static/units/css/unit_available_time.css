@@ -91,3 +91,18 @@ div.tooltip.acceptance-icon-tooltip {
     background: #bdd3dd;
 
 }
+.weekday-row {
+    margin-top: 10px;
+}
+.weekday-row > .row:nth-child(1) > div {
+    color: #555;
+    font-style: italic;
+    font-size: 11px;
+}
+.schedule-change-box {
+    border-bottom: 1px solid #ddd;
+    border-left: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+    border-top: none;
+    padding: 5px;
+}

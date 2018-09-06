@@ -18,7 +18,7 @@
 
         {% block style_base %}
             <link href="{{ STATIC_URL }}fontawsome/css/font-awesome.min.css?v={{ VERSION }}" rel="stylesheet">
-            <link href="{{ STATIC_URL }}bootstrap/css/bootstrap.css?v={{ VERSION }}" rel="stylesheet">
+            <link href="{{ STATIC_URL }}bootstrap/css/bootstrap.min.css?v={{ VERSION }}" rel="stylesheet">
             <link href="{{ STATIC_URL }}adminlte/css/admin-lte.css?v={{ VERSION }}" rel="stylesheet">
             <link href="{{ STATIC_URL }}adminlte/css/skins/skin-black-dark.css?v={{ VERSION }}" rel="stylesheet">
             <link href="{{ STATIC_URL }}qatrack_core/css/custom-adminlte.css?v={{ VERSION }}" rel="stylesheet">
@@ -60,6 +60,7 @@
                 UNIT_AVAIL_TIME: "{% url 'unit_available_time' %}",
                 HANDLE_UNIT_AVAILABLE_TIME: "{% url 'handle_unit_available_time' %}",
                 HANDLE_UNIT_AVAILABLE_TIME_EDIT: "{% url 'handle_unit_available_time_edit' %}",
+                DELETE_SCHEDULES: "{% url 'delete_schedules' %}",
                 HANDLE_UNIT_DOWN_TIME: "{% url 'handle_unit_down_time' %}",
                 AJAX_COMMENT: "{% url 'ajax_comment' %}",
                 UNIT_AT_DATA: "{% url 'get_unit_available_time_data' %}",
@@ -116,8 +117,6 @@
         <div class="wrapper">
 
             <header class="main-header">
-
-
 
                 <nav class="navbar navbar-static-top">
 {#                    <div class="pull-left">#}
@@ -330,7 +329,7 @@
                                                                 <i class="fa fa-wrench fa-stack-custom-main"></i>
                                                                 <i class="fa fa-plus fa-stack-custom-sub upper-left hover-sub-success"></i>
                                                             </i>
-                                                            Open New Service Event
+                                                            Enter New Service Event
                                                         </a></li>
                                                         <li><a href="{% url "sl_unit_new" %}" title="Create a new service event for a unit">
                                                             <i class="fa fa-cubes fa-lg fa-fw" aria-hidden="true"></i>
@@ -466,30 +465,30 @@
                                             </ul>
                                         </li>
                                     {% endif %}
-    {#                                <li class="dropdown">#}
-    {#                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">#}
-    {#                                        Issue Tracker#}
-    {#                                        <b class="caret"></b>#}
-    {#                                    </a>#}
-    {#                                    <ul class="dropdown-menu" role="menu">#}
-    {#                                        <li><a href="{% url "issue_list" %}" title="All Issues">#}
-    {#                                            <i class="fa fa-stack fa-fw fa-lg">#}
-    {#                                                <i class="fa fa-bug fa-stack-custom-sub upper-left"></i>#}
-    {#                                                <i class="fa fa-bug fa-stack-custom-main"></i>#}
-    {#                                                <i class="fa fa-bug fa-stack-custom-sub fa-rotate-90 lower-xxleft"></i>#}
-    {#                                            </i>#}
-    {#                                            All Issues#}
-    {#                                        </a></li>#}
-    {#                                        <li class="divider"></li>#}
-    {#                                        <li class="hover-parent"><a href="{% url "issue_new" %}" title="Create a new issue">#}
-    {#                                            <i class="fa fa-stack fa-fw fa-lg">#}
-    {#                                                <i class="fa fa-plus fa-stack-custom-sub upper-left hover-sub-success"></i>#}
-    {#                                                <i class="fa fa-bug fa-stack-custom-main"></i>#}
-    {#                                            </i>#}
-    {#                                            Create Issue#}
-    {#                                        </a></li>#}
-    {#                                    </ul>#}
-    {#                                </li>#}
+                                    <li class="dropdown">
+                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                            Issue Tracker
+                                            <b class="caret"></b>
+                                        </a>
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li><a href="{% url "issue_list" %}" title="All Issues">
+                                                <i class="fa fa-stack fa-fw fa-lg">
+                                                    <i class="fa fa-bug fa-stack-custom-sub upper-left"></i>
+                                                    <i class="fa fa-bug fa-stack-custom-main"></i>
+                                                    <i class="fa fa-bug fa-stack-custom-sub fa-rotate-90 lower-xxleft"></i>
+                                                </i>
+                                                All Issues
+                                            </a></li>
+                                            <li class="divider"></li>
+                                            <li class="hover-parent"><a href="{% url "issue_new" %}" title="Create a new issue">
+                                                <i class="fa fa-stack fa-fw fa-lg">
+                                                    <i class="fa fa-plus fa-stack-custom-sub upper-left hover-sub-success"></i>
+                                                    <i class="fa fa-bug fa-stack-custom-main"></i>
+                                                </i>
+                                                Create Issue
+                                            </a></li>
+                                        </ul>
+                                    </li>
                                 </ul>
 
 

@@ -1,4 +1,4 @@
-require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qautils', 'daterangepicker', 'felter', 'select2'], function ($, _, d3, moment) {
+require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'saveSvgAsPng', 'qautils', 'daterangepicker', 'felter', 'select2'], function ($, _, d3, moment) {
 
     var waiting_timeout = null;
     // var test_list_names;
@@ -10,11 +10,13 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             $test_lists = $('#test-lists'),
             $tests = $('#tests'),
             $show_events = $('#show_events'),
-            $service_event_container = $('#b-chart-options'),
-            $review_req_container = $('#review-container'),
+            $service_log_box = $('#service-log-box'),
+            $cc_chart_options = $("#cc-chart-options"),
             $status_selector = $('#status-selector'),
+            $service_type_selector = $('#service-type-selector'),
             $gen_chart = $('#gen-chart'),
-            $filter_box = d3.select('#filter-box'),
+            d3_filter_box = d3.select('#filter-box'),
+            $filter_box = $('#filter-box'),
             $filter_resizer = d3.select('#filter-resizer'),
             $chart_options = $('#chart-options'),
             d3chart_resizer = d3.select('#chart-resizer'),
@@ -26,6 +28,10 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             $combine_data = $('#combine-data'),
             $relative_diff = $('#relative-diff'),
             $review_required = $('#review-required');
+
+        var date_format = 'DD MMM YYYY';
+
+        var default_service_type_ids = $service_type_selector.val();
 
         var set_chart_height;
 
@@ -114,7 +120,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                         }
 
                         var data_filters = {units: units, frequencies: frequencies};
-                        console.log(this.element);
+
                         $.ajax({
                             type: "get",
                             url: QAURLs.CHART_DATA_URL + "testlists/",
@@ -224,24 +230,24 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             $gen_chart.prop('disabled', !$(this).val());
         });
 
-        $show_events.change(function() {
-            $(this).is(':checked') ? $review_req_container.slideDown('fast') : $review_req_container.slideUp('fast')
-        });
-
         $status_selector.select2({
+            minimumResultsForSearch: 10,
+            width: '100%'
+        });
+        $service_type_selector.select2({
             minimumResultsForSearch: 10,
             width: '100%'
         });
 
         var y;
-        var max_y_resize = $chart_options.height() + 13;
+        var max_y_resize = 425;
         var is_max = true;
         var dragResize = d3.drag()
             .on('start', function() {
                 y = d3.mouse(this)[1];
                 remove_tooltip_outter();
             }).on('drag', function() {
-                var h = $filter_box.node().offsetHeight;
+                var h = d3_filter_box.node().offsetHeight;
                 // Determine resizer position relative to resizable (parent)
                 var dy = d3.mouse(this)[1] - y;
 
@@ -249,7 +255,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 var new_h = d3.max([50, d3.min([max_y_resize, h + dy])]);
                 is_max = !(new_h < max_y_resize);
 
-                $filter_box.style('height', new_h + 'px');
+                d3_filter_box.style('height', new_h + 'px');
             });
 
         $filter_resizer.call(dragResize);
@@ -310,13 +316,13 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             linkedCalendars: false,
             opens: 'left',
             locale: {
-                format: 'DD-MM-YYYY'
+                format: date_format
             }
         });
 
         $("#control-chart-container, #instructions").hide();
 
-        $chart_type.change(switch_chart_type);
+        $chart_type.change(set_chart_options);
 
         $("#gen-chart").click(update_chart);
 
@@ -332,9 +338,9 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
         $("#data-table-wrapper").on('click', "#csv-export", export_csv);
 
         function set_filter_height() {
-            max_y_resize = $chart_options.height() + 13;
+            max_y_resize = 425;
             if (is_max) {
-                $filter_box.transition().style('height', max_y_resize + 'px');
+                d3_filter_box.transition().style('height', max_y_resize + 'px');
                 remove_tooltip_outter();
             }
         }
@@ -348,23 +354,26 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             // create_chart([{name:"",data:[[new Date().getTime(),0,0]]}]);
         }
 
-        function switch_chart_type() {
-            set_chart_options();
-            if ($chart_type.val() === 'control') {
-                $service_event_container.slideUp('fast');
-            } else {
-                $service_event_container.slideDown('fast');
-            }
-            $("#chart-container, #control-chart-container").toggle();
-        }
+        // function switch_chart_type() {
+        //     set_chart_options();
+        //     if ($chart_type.val() === 'control') {
+        //         $service_event_container.slideUp('fast');
+        //     } else {
+        //         $service_event_container.slideDown('fast');
+        //     }
+        //     $("#chart-container, #control-chart-container").toggle();
+        // }
 
         function set_chart_options() {
             if (basic_chart_selected()) {
-                $("#cc-chart-options").slideUp('fast', set_filter_height);
+                $cc_chart_options.slideUp('fast');
+                $service_log_box.slideDown('fast');
             } else {
-                $("#cc-chart-options").slideDown('fast', set_filter_height);
+                $cc_chart_options.slideDown('fast');
+                $service_log_box.slideUp('fast');
                 $relative_diff.attr("checked", false)
             }
+            set_filter_height();
         }
 
         function update_chart() {
@@ -426,7 +435,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 combine_data: $combine_data.is(":checked"),
                 relative: $relative_diff.is(":checked"),
                 show_events: $show_events.is(':checked'),
-                review_required: $review_required.is(':checked'),
+                service_types: $service_type_selector.val(),
                 chart_type: $chart_type.val(),
                 inactive_units: $units.data('felter').isFiltered('showInactiveUnits'),
                 inactive_test_lists: $test_lists.data('felter').isFiltered('showInactiveTestLists')
@@ -599,7 +608,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             var circle_radius = 3,
                 circle_radius_highlight = 4,
                 line_width = 1.5,
-                line_width_highlight = 2.5;
+                line_width_highlight = 3;
 
             var margin = {top: 20, right: 30, bottom: 140, left: 30},
                 margin2 = {top: chart_height - margin.bottom, right: 10, bottom: 20, left: 30},
@@ -702,7 +711,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 .attr("height", height);
 
             // find min and max X within date range
-            xScale.domain([moment(from, "DD-MM-YYYY").valueOf(), moment(to, "DD-MM-YYYY").endOf('day').valueOf()]);
+            xScale.domain([moment(from, date_format).valueOf(), moment(to, date_format).endOf('day').valueOf()]);
             var maxY = findMaxY(_data._series, xScale.domain());
             var minY = findMinY(_data._series, xScale.domain());
 
@@ -935,10 +944,21 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             var event_marker_points = '0,' + event_group_height + ' ' + event_group_height / 2 + ',0 ' + event_group_height + ',' + event_group_height;
             event.append('polygon')
                 .attr('stroke', function (d) {
-                    return d.rtsqas.length == 0 ? 'grey' : '#00c0ef'
+                    // return d.rtsqas.length === 0 ? 'grey' : '#00c0ef'
+                    return d.rtsqas.some(function(d2) {
+                        return _data._series.some(function(d3) {
+                            return d3.test_list.id === d2.test_list;
+                        });
+                    }) ? '#00c0ef' : 'grey';
                 })
                 .attr('fill', function (d) {
-                    return d.initiated_by == null ? 'none' : '#3c8dbc'
+
+                    if (d.initiated_by === '') {
+                        return 'none';
+                    } else if (_data._series.some(function(d2) { return d2.test_list.id === d.initiated_by.test_list_id; })) {
+                        return '#3c8dbc';
+                    }
+                    return 'none';
                 })
                 .attr('stroke-width', 1)
                 .attr('class', 'service-marker-icon')
@@ -964,7 +984,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 .attr('class', 'legend');
 
             legend.append('rect')
-                .attr("height", legendRowHeight * num_tests + 35)
+                .attr("height", legendRowHeight * num_tests + (_data._events.length > 0 ? legendRowHeight * 3 : 0) + 35)
                 .attr('width', 10)
                 .attr('id', 'legend-rect')
                 .style('fill', 'rgba(244, 244, 244, 0.8)')
@@ -979,9 +999,51 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     return 'translate(0,' + ((i + 1) * legendRowHeight - 8) + ')';
                 })
                 .attr('class', 'legend-row');
+            if (_data._events.length > 0) {
+                var legend_se_types = legend.selectAll('.legend-set-row')
+                    .data([
+                        {'name': 'Service Event', 'id': 0},
+                        {'name': 'Service Event with Initiating QA', 'id': 1},
+                        {'name': 'Service Event with Return To Service', 'id': 2}
+                    ])
+                    .enter().append('g')
+                    .attr('transform', function (d, i) {
+                        return 'translate(0,' + ((_data._series.length + i + 1) * legendRowHeight - 8) + ')';
+                    })
+                    .attr('class', 'legend-set-row');
+
+                legend_se_types.append('polygon')
+                    .attr('stroke', function (d) {
+                        return d.id === 2 ? '#00c0ef' : 'grey';
+                    })
+                    .attr('fill', function (d) {
+                        return d.id === 1 ? '#3c8dbc' : 'transparent';
+                    })
+                    .attr('stroke-width', 1)
+                    .attr('class', 'service-marker-icon')
+                    .attr('transform', 'translate(30, 0)')
+                    .attr('points', event_marker_points);
+
+                legend_se_types.append('text')
+                    .attr('x', 50)
+                    .attr('y', 12)
+                    // .attr('clip-path', 'url(#clip)')
+                    .text(function (d) {
+                        return d.name;
+                    })
+                    .style('font-size', 12);
+
+                legend_se_types.append('title').text(function(d) {
+                    switch(d.id) {
+                        case 0: return 'Service Event';
+                        case 1: return 'Service Event with Initiating QA';
+                        case 2: return 'Service Event with Return To Service';
+                    }
+                })
+            }
 
             // Legend series toggle
-            legend_entry.append('rect')
+            var legend_entry_toggle = legend_entry.append('rect')
                 .attr('width', 12)
                 .attr('height', 12)
                 .attr('x', 10)
@@ -1037,14 +1099,6 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
                 .on('mouseover', function (d) {
 
-                    if (!d.visible) {
-                        d3.select(this)
-                            .transition()
-                            .attr('fill', function (d) {
-                                return d.color;
-                            });
-                    }
-
                     if (d.visible) {
                         d3.select('#line_result_' + d.test_name.replace(/\W+/g, '_'))
                             .transition()
@@ -1054,25 +1108,17 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
                 .on('mouseout', function (d) {
 
-                    if (!d.visible) {
-                        d3.select(this)
-                            .transition()
-                            .attr('fill', '#ddd');
-                    }
-
                     if (d.visible) {
                         d3.select('#line_result_' + d.test_name.replace(/\W+/g, '_'))
                             .transition()
                             .attr('stroke-width', line_width);
-                        // d3.select(this)
-                        //     .transition()
-                        //     .attr('stroke', function(d) { return d.lines_visible ? d.color : null })
                     }
 
                 });
+            legend_entry_toggle.append('title').text('Toggle on/off line, symbols and plot​');
 
             // Legend ref/tol toggle
-            legend_entry.append('rect')
+            var legend_rt_rect = legend_entry.append('rect')
                 .attr('width', 15)
                 .attr('height', 15)
                 .attr('x', 30)
@@ -1091,17 +1137,11 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
                 .on('click', function (d, i, s) {
                     d.ref_tol_visible = !d.ref_tol_visible;
+                    d3.select(this).classed('hidden-toggle', !d.ref_tol_visible);
                     redrawMainContent();
                 })
 
                 .on('mouseover', function (d) {
-
-                    if (!d.ref_tol_visible && d.visible) {
-                        d3.select(this)
-                            .transition()
-                            .style('fill', 'rgba(0, 166, 90, 0.3)')
-                            .attr('stroke-width', 0.5);
-                    }
 
                     if (d.visible) {
 
@@ -1118,13 +1158,6 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
                 .on('mouseout', function (d) {
 
-                    if (!d.ref_tol_visible && d.visible) {
-                        d3.select(this)
-                            .transition()
-                            .attr('stroke-width', 0)
-                            .style('fill', '#ddd');
-                    }
-
                     if (d.visible) {
 
                         if (d.ref_tol_visible) {
@@ -1139,6 +1172,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     }
 
                 });
+            legend_rt_rect.append('title').text('Toggle on/off tolerances, references​');
 
             legend_entry.append('text')
                 .attr('x', 50)
@@ -1163,7 +1197,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 .attr('width', 40)
                 .attr('height', 14)
                 .attr('x', 5)
-                .attr('y', legendRowHeight * num_tests + 15)
+                .attr('y', legendRowHeight * (num_tests + (_data._events.length > 0 ? 3 : 0)) + 15)
                 .style('fill', '#3c8dbc')
                 .style('cursor', 'pointer')
                 .style('stroke', '#367fa9')
@@ -1184,25 +1218,18 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 .attr('width', 30)
                 .attr('height', 10)
                 .attr("x", 8)
-                .attr("y", legendRowHeight * num_tests + 25)
+                .attr("y", legendRowHeight * (num_tests + (_data._events.length > 0 ? 3 : 0)) + 25)
                 .style("pointer-events", "none")
                 .style('font', '10px sans-serif')
                 .style('fill', '#fff')
                 .text('\u25C0 show');
-            var legend_height = legendRowHeight * num_tests + 35;
+            var legend_height = legendRowHeight * (num_tests + (_data._events.length > 0 ? 3 : 0)) + 35;
             var cheatLine = svg.append('line')
                 .attr('x2', width + legend_collapse_width)
                 .attr('y2', 0)
                 .attr('x1', width + legend_collapse_width)
                 .attr('y1', legend_height)
                 .style('stroke', '#ddd');
-
-            ///////////////// Date display
-            var hoverDate = hoverLineGroup
-                .append('text')
-                .attr("class", "hover-text")
-                .attr("y", 20)
-                .attr("x", 10);
 
             // Add mouseover events for hover line.
             var old_x_closest,
@@ -1291,7 +1318,6 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 mainClip.transition().attr('width', width);
                 x_axis_elem.transition().call(xAxis);
                 yAxis.tickSizeInner(-width);
-                // hoverDate.transition().attr("x", width - 170);
 
             }
             /**
@@ -1452,8 +1478,6 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 d3.selectAll('.service-marker-icon')
                     .attr('stroke-width', 1);
 
-                hoverDate.text(null);
-
                 d3.select("#hover-line")
                     .style("opacity", 0);
 
@@ -1524,23 +1548,25 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     event_tooltip
                         .style('left', left + 'px')
                         .style('top', top + 'px')
-                        .html($('#se-tooltip-template').html()
+                        .html(
+                            $('#se-tooltip-template').html()
                                 .replace(/__se-id__/g, event_data.id)
                                 .replace(/__se-date__/g, format(event_data.x))
                                 .replace(/__se-wd__/g, event_data.work_description.replace(/"/g, "'"))
                                 .replace(/__se-pd__/g, event_data.problem_description.replace(/"/g, "'"))
                                 .replace(/__se-u__/g, event_data.unit.name)
                                 .replace(/__se-sa__/g, event_data.service_area.name)
-                                .replace(/__se-type__/g, QACharts.se_types[event_data.type])
+                                .replace(/__se-type__/g, event_data.type.name)
                         )
                         .transition()
                         .style('opacity', 1);
 
                     var tli_coords = [],
                         y_buffer = 20;
-                    if (event_data.initiated_by) {
 
-                        var initiated_circles = d3.selectAll('.tli_' + event_data.initiated_by);
+                    if (event_data.initiated_by !== '') {
+
+                        var initiated_circles = d3.selectAll('.tli_' + event_data.initiated_by.id);
 
                         if (initiated_circles.size() > 0) {
                             initiated_circles
@@ -1593,7 +1619,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                                 .style('top', y_pos + 'px')
                                 .html($('#tli-tooltip-template').html()
                                     .replace(/__tli-id__/g, initiated_data[0].test_list_instance_id)
-                                    .replace(/__tli-date__/g, moment(initiated_data.x).format('ddd, MMM D, YYYY, k:mm'))
+                                    .replace(/__tli-date__/g, moment(initiated_data[0].x).format('ddd, MMM D, YYYY, k:mm'))
                                     .replace(/__tli-tl-name__/g, initiated_name)
                                     .replace(/__tli-kind__/g, 'Initiating QA')
                                     .replace(/__show-in__/g, 'style="display: none"')
@@ -1664,7 +1690,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                             .style('top', y_pos + 'px')
                             .html($('#tli-tooltip-template').html()
                                 .replace(/__tli-id__/g, rtsqa_data[0].test_list_instance_id)
-                                .replace(/__tli-date__/g, moment(rtsqa_data.x).format('ddd, MMM D, YYYY, k:mm'))
+                                .replace(/__tli-date__/g, moment(rtsqa_data[0].x).format('ddd, MMM D, YYYY, k:mm'))
                                 .replace(/__tli-tl-name__/g, rtsqa_name)
                                 .replace(/__tli-kind__/g, 'Return To Service QA')
                                 .replace(/__show-in__/g, 'style="display: none"')
@@ -1764,7 +1790,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                         .replace(/__tli-id__/g, tli_data[0].test_list_instance_id)
                         .replace(/__tli-date__/g, moment(x).format('ddd, MMM D, YYYY, k:mm'))
                         .replace(/__tli-tl-name__/g, tli_name)
-                        .replace(/__tli-kind__/g, 'QA Session')
+                        .replace(/__tli-kind__/g, 'Test List')
                         .replace(/__show-in__/g, 'style="display: block"')
                     )
                     .on('click', toggleLock);
@@ -1787,8 +1813,6 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     .attr('x1', xScale2(x))
                     .attr('x2', xScale2(x))
                     .style('opacity', 0.3);
-
-                hoverDate.text(format(x));
             }
 
             //for brusher of the slider bar at the bottom
@@ -2089,6 +2113,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             var test_lists = get_filtered_option_values("test_lists", options);
             var date_range = get_filtered_option_values("date_range", options)[0];
             var statuses = get_filtered_option_values("statuses", options);
+            var service_types = get_filtered_option_values("service_types", options);
             var chart_type = get_filtered_option_values("chart_type", options)[0];
             var subgroup_size = get_filtered_option_values("subgroup_size", options)[0];
             var n_baseline_subgroups = get_filtered_option_values("n_baseline_subgroups", options)[0];
@@ -2096,7 +2121,6 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             var combine_data = get_filtered_option_values("combine_data", options)[0];
             var relative_diff = get_filtered_option_values("relative_diff", options)[0];
             var show_events = get_filtered_option_values("show_events", options)[0];
-            var review_required = get_filtered_option_values("review_required", options)[0];
             var inactive_units = get_filtered_option_values('inactive_units', options)[0];
             var inactive_test_lists = get_filtered_option_values('inactive_test_lists', options)[0];
 
@@ -2111,7 +2135,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             $test_lists.val(test_lists).change();
             $tests.val(tests).change();
 
-            $chart_type.val(chart_type);
+            $chart_type.val(chart_type ? chart_type : 'basic');
             if (chart_type === 'control') {
                 $chart_type.change();
                 $subgroup_size.val(subgroup_size);
@@ -2119,18 +2143,21 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 $include_fit.prop('checked', include_fit)
             } else {
                 $show_events.prop('checked', show_events);
-                $review_required.prop('checked', review_required);
                 if ($show_events.is(':checked')) {
-                    $review_req_container.show();
+                    $service_type_selector.val(service_types.length === 0 ? default_service_type_ids : service_types).change();
                 }
             }
             $combine_data.prop('checked', combine_data);
             $relative_diff.prop('checked', relative_diff);
-            $date_range.data('daterangepicker').setStartDate(moment(date_range.split('%20-%20')[0], 'DD-MM-YYYY').format('DD-MM-YYYY'));
-            $date_range.data('daterangepicker').setEndDate(moment(date_range.split('%20-%20')[1], 'DD-MM-YYYY').format('DD-MM-YYYY'));
-            $status_selector.val(statuses).change();
+            if (!date_range) {
+                $date_range.data('daterangepicker').setStartDate(moment().subtract(1, 'years').format(date_format));
+                $date_range.data('daterangepicker').setEndDate(moment().format(date_format));
+            } else {
+                $date_range.data('daterangepicker').setStartDate(moment(date_range.split('%20-%20')[0], date_format).format(date_format));
+                $date_range.data('daterangepicker').setEndDate(moment(date_range.split('%20-%20')[1], date_format).format(date_format));
+            }
+            $status_selector.val(statuses.length === 0 ? [1, 2] : statuses).change();
             $show_events.prop('checked', show_events);
-            $review_required.prop('checked', review_required);
 
             update_chart();
 
@@ -2161,6 +2188,9 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
         function export_csv() {
             downloadURL("./export/csv/?" + $.param(get_data_filters()));
         }
+
+        $('#filter-box').fadeTo(1500, 1);
+
     });
 
 });

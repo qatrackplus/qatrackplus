@@ -94,7 +94,7 @@ class TestImportExport(TestCase):
     def test_save_pack(self):
         pack = testpack.create_testpack(self.tlqs, self.tlcqs)
         fp = io.StringIO()
-        testpack.save_test_pack(pack, fp)
+        testpack.save_testpack(pack, fp)
         fp.seek(0)
         # check the accented character in test list 1 name was written
         assert "\\u00e9" in fp.read()
@@ -104,9 +104,9 @@ class TestImportExport(TestCase):
         nt = models.Test.objects.count()
         pack = testpack.create_testpack(self.tlqs, self.tlcqs)
         fp = io.StringIO()
-        testpack.save_test_pack(pack, fp)
+        testpack.save_testpack(pack, fp)
         fp.seek(0)
-        testpack.load_test_pack(fp)
+        testpack.load_testpack(fp)
         assert models.TestList.objects.count() == 2 * ntl
         assert models.Test.objects.count() == 2 * nt
 
@@ -117,9 +117,9 @@ class TestImportExport(TestCase):
         models.TestListCycle.objects.all().delete()
 
         fp = io.StringIO()
-        testpack.save_test_pack(pack, fp)
+        testpack.save_testpack(pack, fp)
         fp.seek(0)
-        testpack.load_test_pack(fp)
+        testpack.load_testpack(fp)
 
         assert models.TestList.objects.filter(name=self.tl1.name).exists()
         assert models.Test.objects.filter(name=self.t1.name).exists()
@@ -129,9 +129,9 @@ class TestImportExport(TestCase):
     def test_object_names(self):
         pack = testpack.create_testpack(self.tlqs, self.tlcqs)
         fp = io.StringIO()
-        testpack.save_test_pack(pack, fp)
+        testpack.save_testpack(pack, fp)
         fp.seek(0)
-        names = testpack.test_pack_object_names(fp.read())
+        names = testpack.testpack_object_names(fp.read())
         expected = {
             'test': [self.t1.name, self.t2.name, self.t3.name],
             'testlist': [self.tl1.name, self.tl2.name, self.tl3.name],
@@ -146,9 +146,9 @@ class TestImportExport(TestCase):
         models.TestListCycle.objects.all().delete()
 
         fp = io.StringIO()
-        testpack.save_test_pack(pack, fp)
+        testpack.save_testpack(pack, fp)
         fp.seek(0)
-        testpack.load_test_pack(fp, test_names=[self.t1.name], test_list_names=[self.tl1.name], cycle_names=[])
+        testpack.load_testpack(fp, test_names=[self.t1.name], test_list_names=[self.tl1.name], cycle_names=[])
 
         assert models.TestList.objects.count() == 1
         assert models.Test.objects.count() == 1
@@ -159,9 +159,9 @@ class TestImportExport(TestCase):
         pack = testpack.create_testpack(self.tlqs, self.tlcqs)
 
         fp = io.StringIO()
-        testpack.save_test_pack(pack, fp)
+        testpack.save_testpack(pack, fp)
         fp.seek(0)
-        testpack.load_test_pack(fp, user2)
+        testpack.load_testpack(fp, user2)
 
         assert models.TestList.objects.get(slug=self.tl1.slug).created_by != user2
 
@@ -169,9 +169,9 @@ class TestImportExport(TestCase):
         pack = testpack.create_testpack(self.tlqs, self.tlcqs)
 
         fp = io.StringIO()
-        testpack.save_test_pack(pack, fp)
+        testpack.save_testpack(pack, fp)
         fp.seek(0)
-        testpack.load_test_pack(fp, test_names=[self.t1.name], test_list_names=[self.tl1.name], cycle_names=[])
+        testpack.load_testpack(fp, test_names=[self.t1.name], test_list_names=[self.tl1.name], cycle_names=[])
 
         assert models.TestList.objects.filter(name__in=[self.tl2.name, self.tl3.name]).count() == 2
         assert models.Test.objects.filter(name__in=[self.t2.name, self.t3.name]).count() == 2
@@ -182,7 +182,7 @@ class TestImportExport(TestCase):
         extra_qs = models.Test.objects.filter(pk=extra.pk)
         pack = testpack.create_testpack(self.tlqs, self.tlcqs, extra_tests=extra_qs)
         fp = io.StringIO()
-        testpack.save_test_pack(pack, fp)
+        testpack.save_testpack(pack, fp)
         fp.seek(0)
         assert "extra test" in fp.read()
 
@@ -191,8 +191,8 @@ class TestImportExport(TestCase):
         extra_qs = models.Test.objects.filter(pk=extra.pk)
         pack = testpack.create_testpack(self.tlqs, self.tlcqs, extra_tests=extra_qs)
         fp = io.StringIO()
-        testpack.save_test_pack(pack, fp)
+        testpack.save_testpack(pack, fp)
         fp.seek(0)
         models.Test.objects.all().delete()
-        testpack.load_test_pack(fp, test_names=[extra.name], test_list_names=[], cycle_names=[])
+        testpack.load_testpack(fp, test_names=[extra.name], test_list_names=[], cycle_names=[])
         assert models.Test.objects.filter(name=extra.name).exists()

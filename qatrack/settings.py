@@ -15,7 +15,7 @@ ADMINS = (
     ('Admin Name', 'YOUR_EMAIL_ADDRESS_GOES_HERE'),
 )
 MANAGERS = ADMINS
-SEND_BROKEN_LINK_EMAILS = True
+SEND_BROKEN_LINK_EMAILS = False
 
 # -----------------------------------------------------------------------------
 # misc settings
@@ -151,15 +151,14 @@ if not os.path.isfile(SITE_SPECIFIC_CSS_PATH):
 # ------------------------------------------------------------------------------
 # Middleware
 MIDDLEWARE = [
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     # 'django.contrib.auth.middleware.RemoteUserMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'qatrack.middleware.login_required.LoginRequiredMiddleware',
-    'qatrack.middleware.maintain_filters.FilterPersistMiddleware',
+    # 'qatrack.middleware.login_required.LoginRequiredMiddleware',
+    # 'qatrack.middleware.maintain_filters.FilterPersistMiddleware',
 ]
 
 
@@ -178,6 +177,7 @@ TEMPLATES = [
         ],
         'APP_DIRS': True,
         'OPTIONS': {
+            'debug': False,
             'context_processors': [
                 # Insert your TEMPLATE_CONTEXT_PROCESSORS here or use this
                 # list if you haven't customized them:
@@ -215,7 +215,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.humanize',
     'django_extensions',
-    'debug_toolbar',
     'django_comments',
     'formtools',
     'tastypie',
@@ -226,6 +225,7 @@ INSTALLED_APPS = [
     'genericdropdown',
     # 'crispy_forms',
     'widget_tweaks',
+    'dynamic_raw_id',
     'qatrack.cache',
     'qatrack.accounts',
     'qatrack.units',
@@ -363,7 +363,7 @@ AD_CLEAN_USERNAME = None
 # the site admins on every HTTP 500 error.
 # See http://docs.djangoproject.com/en/dev/topics/logging for
 # more details on how to customize your logging configuration.
-LOGGING = {
+_LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'filters': {
@@ -399,15 +399,29 @@ LOGGING = {
             'backupCount': 26,  # how many backup file to keep, 10 days
             'formatter': 'verbose',
         },
+        'migrate': {
+            'level': 'INFO',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': os.path.join(LOG_ROOT, "migrate.log"),
+            'when': 'D',  # this specifies the interval
+            'interval': 7,  # defaults to 1, only necessary for other values
+            'backupCount': 26,  # how many backup file to keep, 10 days
+            'formatter': 'verbose',
+        },
     },
     'loggers': {
         'django': {
-            'handlers': ['file'],
+            'handlers': ['file', 'console'],
             'level': 'DEBUG',
             'propagate': True,
         },
+        'django.server': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
         'django.request': {
-            'handlers': ['mail_admins', 'file'],
+            'handlers': ['console', 'mail_admins', 'file'],
             'level': 'ERROR',
             'propagate': True,
         },
@@ -417,7 +431,7 @@ LOGGING = {
             'propagate': True,
         },
         'qatrack.migrations': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console', 'migrate'],
             'level': 'DEBUG',
             'propagate': True,
         },
@@ -491,8 +505,8 @@ DEFAULT_COLOURS = [
 ]
 DEFAULT_TEST_STATUS_COLOUR = 'rgba(243,156,18,1)'
 
-USE_SERVICE_LOG = False
-USE_PARTS = False
+USE_SERVICE_LOG = True
+USE_PARTS = True
 
 DEFAULT_AVAILABLE_TIMES = {
     'hours_sunday': datetime.timedelta(hours=0, minutes=0),
@@ -504,6 +518,9 @@ DEFAULT_AVAILABLE_TIMES = {
     'hours_saturday': datetime.timedelta(hours=0, minutes=0),
 }
 
+if os.path.exists('/root/.is_inside_docker'):
+    from .docker_settings import *  # NOQA
+
 # ------------------------------------------------------------------------------
 # local_settings contains anything that should be overridden
 # based on site specific requirements (e.g. deployment, development etc)
@@ -513,7 +530,12 @@ except ImportError:
     pass
 
 # Parts must be used with service log
-USE_PARTS = USE_PARTS and USE_SERVICE_LOG
+USE_PARTS = USE_PARTS or USE_SERVICE_LOG
+
+DELETE_REASONS = (
+    ('Duplicate', 'Duplicate'),
+    ('Invalid', 'Invalid')
+)
 
 if FORCE_SCRIPT_NAME:
     # Fix URL for Admin Views if FORCE_SCRIPT_NAME_SET in local_settings
@@ -529,3 +551,7 @@ SELENIUM_VIRTUAL_DISPLAY = False  # Set to True to use headless browser for test
 
 if any(['test' in v for v in sys.argv]):
     from .test_settings import *  # noqa
+
+if DEBUG:
+    INSTALLED_APPS.append('debug_toolbar')
+    MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')

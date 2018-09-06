@@ -6,10 +6,9 @@ in the admin. Starting point was http://djangosnippets.org/snippets/1053/
 function set_order(grouping){
     var order = 0;
     $(grouping).find('tr').each(function(i) {
-
         if ($(this).find("td[class^=field-] input").val() && !$(this).find("input[id$=DELETE]").is(":checked")){
             $(this).find('input[id$=order]').val(order);
-            order +=1;
+            order += 1;
         }else{
             $(this).find('input[id$=order]').val("");
         }
@@ -35,7 +34,7 @@ function sort_container(){
           ordera = 1000;
           if (a_is_sublist){
             // push empty sublists below empty tests
-            ordera += 1;
+            ordera = parseInt(ordera, 10) + 1;
           }
         }else{
             ordera = parseInt(ordera, 10);
@@ -46,7 +45,7 @@ function sort_container(){
           orderb = 1000;
           if (b_is_sublist){
             // push empty sublists below empty tests
-            orderb += 1;
+            orderb = parseInt(orderb, 10) + 1;
           }
         }else{
             orderb = parseInt(orderb, 10);
@@ -60,6 +59,7 @@ function sort_container(){
         }
         return 0;
     });
+    set_order(this);
     rows.detach().appendTo(table);
     $(table.find(".add-row").get()).detach().appendTo(table);
 

@@ -1,77 +1,52 @@
-div.daterangepicker.dropdown-menu {
-    border-radius: 0;
+
+
+div.daterangepicker div.drp-calendar.right {
+    display: none;
 }
-div.daterangepicker.dropdown-menu button {
-    border-radius: 0;
-    -webkit-box-shadow: none;
-    -moz-box-shadow: none;
-    box-shadow: none;
-    border-width: 1px;
+div.daterangepicker td.off.in-range {
+    background-color: #ebf4f8;
 }
-div.daterangepicker.dropdown-menu li {
-    background-color: #f4f4f4;
-    color: #444;
-    border-color: #ddd;
-    border-radius: 0;
-    -webkit-box-shadow: none;
-    -moz-box-shadow: none;
-    box-shadow: none;
-    border-width: 1px;
-}
-div.daterangepicker.dropdown-menu li.active {
+div.daterangepicker .ranges li.active,
+div.daterangepicker .drp-calendar td.active {
     background-color: #627585;
-    border-color: #546777;
-    color: #fff;
 }
-div.daterangepicker.dropdown-menu li.active:hover {
-    background-color: #546777;
-    border-color: #3d4c5b;
-}
-div.daterangepicker.dropdown-menu li:hover {
-    background-color: #e7e7e7;
-    border-color: #adadad;
-}
-body > div.daterangepicker.dropdown-menu > div.calendar > div.calendar-table > table > tbody > tr > td {
-    border-radius: 0;
-}
-body > div.daterangepicker.dropdown-menu > div.calendar > div.calendar-table > table > tbody > tr > td.active {
-    background-color: #546777;
-}
-.suppress-active > div.ranges > ul > li.active {
-    border-color: #ddd !important;
-    background-color: #f4f4f4 !important;
-    color: #444 !important;
-}
-.suppress-active > div.ranges > ul > li.active:hover {
-    border-color: #adadad !important;
-    background-color: #e7e7e7 !important;
-    color: #444 !important;
-}
-.daterange-div {
-    position: relative;
-    width: 100%
-}
-.daterange-inner {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: auto;
-    overflow: auto;
-    /*vertical-align: middle;*/
-}
-div.daterangepicker.dropdown-menu > div.calendar > div.daterangepicker_input > input {
-    border-radius: 0;
-}
-div.daterangepicker.dropdown-menu > div.calendar > div.calendar-table > table > thead th {
-    border-radius: 0;
-}
-div.daterangepicker.dropdown-menu .btn-success {
+div.daterangepicker.show-ranges button.applyBtn,
+div.daterangepicker.show-ranges button.cancelBtn {
     background-color: #f4f4f4;
-    border-color: #ddd;
-    color: #444;
+    color: #000;
+    font-weight: normal;
+    border: none !important;
+    border-radius: 0;
+    box-shadow: 2px 2px 2px #ddd !important;
+    -moz-box-shadow: 2px 2px 2px #ddd !important;
+    -webkit-box-shadow: 2px 2px 2px #ddd !important;
 }
-div.daterangepicker.dropdown-menu .btn-success:hover {
+div.daterangepicker.show-ranges button.applyBtn {
+    margin-left: 0;
+}
+div.daterangepicker.show-ranges button.applyBtn:hover,
+div.daterangepicker.show-ranges button.cancelBtn:hover {
     background-color: #e7e7e7;
     border-color: #adadad;
+}
+body > div.daterangepicker > div.drp-buttons {
+    display: block !important;
+    direction: rtl;
+    width: 100%;
+    text-align: left;
+}
+body > div.daterangepicker.ltr.show-ranges > div.drp-buttons > span.drp-selected {
+    display: none;
+}
+body > div.daterangepicker.ltr.show-ranges.show-calendar > div.drp-buttons > span {
+    display: inline-block;
+    margin-left: 10px;
+}
+span.drp-selected {
+    direction: ltr;
+}
+select.monthselect, select.yearselect {
+    border-color: #d2d6de;
+    font-weight: normal;
+    padding: 5px !important;
 }

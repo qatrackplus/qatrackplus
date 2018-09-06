@@ -67,7 +67,6 @@ class UnitFilter(filters.FilterSet):
             "install_date": '__all__',
             "date_acceptance": '__all__',
             "active": '__all__',
-            "restricted": '__all__',
         }
 
 

@@ -16,7 +16,7 @@
 
 {% block extra_js %}
     {% autoescape off %}
-        {% listable view_name dom="<'row'<'col-sm-5'i><'col-sm-7'p>><'row'<'col-sm-12'tr>><'row'<'col-sm-5'><'col-sm-7'p>>" requirejs=True pagination_type='bootstrap3' css_table_class='table-hover table-condensed' css_input_class='btn-flat btn-sm input-sm full-width' auto_width=False %}
+        {% listable view_name dom="<'row'<'col-sm-5'i><'col-sm-7'p>><'row'<'col-sm-12'tr>><'row'<'col-sm-5'><'col-sm-7'p>>" requirejs=True pagination_type='bootstrap3' css_table_class='table-hover table-condensed table-custom-listable' css_input_class='btn-flat btn-sm input-sm full-width' auto_width=False %}
     {% endautoescape %}
 {% endblock %}
 

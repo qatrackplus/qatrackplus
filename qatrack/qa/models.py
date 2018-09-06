@@ -600,7 +600,7 @@ class Category(models.Model):
         ordering = ("name",)
 
     @classmethod
-    def get_test_pack_fields(cls):
+    def get_testpack_fields(cls):
         exclude = ["id"]
         return [f.name for f in cls._meta.concrete_fields if f.name not in exclude]
 
@@ -785,7 +785,7 @@ class Test(models.Model):
             return list(zip(cs, cs))
 
     @classmethod
-    def get_test_pack_fields(cls):
+    def get_testpack_fields(cls):
         exclude = ["id", "modified", "modified_by", "created", "created_by"]
         return [f.name for f in cls._meta.concrete_fields if f.name not in exclude]
 
@@ -983,7 +983,7 @@ class TestListMembership(models.Model):
         default_permissions = ()
 
     @classmethod
-    def get_test_pack_fields(cls):
+    def get_testpack_fields(cls):
         exclude = ["id"]
         return [f.name for f in cls._meta.concrete_fields if f.name not in exclude]
 
@@ -1141,7 +1141,7 @@ class TestList(TestCollectionInterface):
         return borders
 
     @classmethod
-    def get_test_pack_fields(cls):
+    def get_testpack_fields(cls):
         exclude = ["id", "created", "created_by", "modified", "modified_by"]
         return [f.name for f in cls._meta.concrete_fields if f.name not in exclude]
 
@@ -1180,7 +1180,7 @@ class Sublist(models.Model):
         unique_together = ("parent", "child",)
 
     @classmethod
-    def get_test_pack_fields(cls):
+    def get_testpack_fields(cls):
         exclude = ["id"]
         return [f.name for f in cls._meta.concrete_fields if f.name not in exclude]
 
@@ -1940,7 +1940,7 @@ class TestListCycle(TestCollectionInterface):
         return [(d, "Day %d" % d) for d in days]
 
     @classmethod
-    def get_test_pack_fields(cls):
+    def get_testpack_fields(cls):
         exclude = ["id", "created", "created_by", "modified", "modified_by"]
         return [f.name for f in cls._meta.concrete_fields if f.name not in exclude]
 
@@ -1980,7 +1980,7 @@ class TestListCycleMembership(models.Model):
         # unique_together = (("order", "cycle"),)
 
     @classmethod
-    def get_test_pack_fields(cls):
+    def get_testpack_fields(cls):
         exclude = ["id"]
         return [f.name for f in cls._meta.concrete_fields if f.name not in exclude]
 
@@ -1992,7 +1992,7 @@ class TestListCycleMembership(models.Model):
         return "TestListCycleMembership(pk=%s)" % self.pk
 
 
-TEST_PACK_MODELS = [
+testpack_MODELS = [
     Category,
     Test,
     TestList,

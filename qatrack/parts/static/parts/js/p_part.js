@@ -80,7 +80,7 @@ require(['jquery', 'moment', 'autosize', 'select2', 'sl_utils', 'inputmask'], fu
                     } else {
                         for (var l in response.storage) {
                             if (response.storage[l][1] && response.storage[l][1].replace(/ /g, '') !== '') {
-                                location_select.append('<option value="' + response.storage[l][0] + '">' + response.storage[l][1] + '</option>');
+                                location_select.append('<option value="' + response.storage[l][0] + '" title="' + response.storage[l][2] + '">' + response.storage[l][1] + '</option>');
                             }
                         }
                     }

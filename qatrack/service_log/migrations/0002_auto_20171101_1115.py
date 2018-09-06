@@ -4,24 +4,27 @@ from __future__ import unicode_literals
 
 from django.conf import settings
 from django.db import migrations, models
-import django.db.models.deletion
+from django.db.models import ObjectDoesNotExist
 
 
 def fix_permissions(apps, schema):
 
-    Permission = apps.get_model('auth', 'Permission')
+    try:
+        Permission = apps.get_model('auth', 'Permission')
 
-    view_qaf = Permission.objects.get(codename='view_qafollowup')
-    perform_qaf = Permission.objects.get(codename='perform_qafollowup')
+        view_qaf = Permission.objects.get(codename='view_qafollowup')
+        perform_qaf = Permission.objects.get(codename='perform_qafollowup')
 
-    view_qaf.codename = 'view_returntoserviceqa'
-    perform_qaf.codename = 'perform_returntoserviceqa'
+        view_qaf.codename = 'view_returntoserviceqa'
+        perform_qaf.codename = 'perform_returntoserviceqa'
 
-    view_qaf.save()
-    perform_qaf.save()
+        view_qaf.save()
+        perform_qaf.save()
 
-    old_perms = Permission.objects.filter(codename__in=['add_qafollowup', 'change_qafollowup', 'delete_qafollowup'])
-    old_perms.delete()
+        old_perms = Permission.objects.filter(codename__in=['add_qafollowup', 'change_qafollowup', 'delete_qafollowup'])
+        old_perms.delete()
+    except ObjectDoesNotExist:
+        pass
 
 
 class Migration(migrations.Migration):

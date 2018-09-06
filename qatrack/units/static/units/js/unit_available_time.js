@@ -1,4 +1,4 @@
-require(['jquery', 'moment', 'd3', 'daterangepicker', 'select2', 'felter', 'sl_utils', 'inputmask', 'json2'], function ($, moment, d3) {
+require(['jquery', 'moment', 'd3', 'flatpickr', 'daterangepicker', 'select2', 'felter', 'sl_utils', 'inputmask', 'json2'], function ($, moment, d3) {
 
     var csrftoken = $("[name=csrfmiddlewaretoken]").val();
     function csrfSafeMethod(method) {
@@ -107,7 +107,6 @@ require(['jquery', 'moment', 'd3', 'daterangepicker', 'select2', 'felter', 'sl_u
 
     $(document).ready(function () {
 
-
         var $units = $('#units'),
             $year = $('#id_year_select'),
             $month = $('#id_month_select'),
@@ -116,19 +115,22 @@ require(['jquery', 'moment', 'd3', 'daterangepicker', 'select2', 'felter', 'sl_u
             $svg_container = $('#svg-container'),
             $open_edit_modal = $('#open_edit_modal'),
             $open_uat_modal = $('#open_uat_modal'),
+            $open_delete_modal = $('#open_delete_modal'),
             $insert_change_uat = $('#insert_change_uat'),
-            $delete_uat = $('#delete_uat'),
             $insert_change_edit = $('#insert_change_edit'),
-            $delete_edit = $('#delete_edit'),
+            $delete_go = $('#delete_go'),
+            $delete_cancel = $('#delete_cancel'),
             $name_input = $('#name_input'),
             $edit_input = $('#edit_input'),
+            $effective_date = $('#effective_date'),
             $hours_sunday = $('#id_hours_sunday'),
             $hours_monday = $('#id_hours_monday'),
             $hours_tuesday = $('#id_hours_tuesday'),
             $hours_wednesday = $('#id_hours_wednesday'),
             $hours_thursday = $('#id_hours_thursday'),
             $hours_friday = $('#id_hours_friday'),
-            $hours_saturday = $('#id_hours_saturday');
+            $hours_saturday = $('#id_hours_saturday'),
+            $num_days_selected = $('.num-days-selected');
 
         var unit_available_time_data = {},
             day_by_day_unit_hours,
@@ -141,13 +143,18 @@ require(['jquery', 'moment', 'd3', 'daterangepicker', 'select2', 'felter', 'sl_u
             last_day_displayed,
             days = [];
 
-        var chart_height = 600,
+        var chart_height = 650,
             chart_width = $svg_container.width() - 15;
 
         var color_scale = d3.scaleOrdinal(d3['schemeCategory20']);
         var unit_colours = {};
         $.each($units.find('option'), function(i, v) {
             unit_colours[$(v).val()] = color_scale(i);
+        });
+
+        $effective_date.flatpickr({
+            allowInput: true,
+            dateFormat: 'd M Y'
         });
 
         $year.select2({
@@ -215,6 +222,7 @@ require(['jquery', 'moment', 'd3', 'daterangepicker', 'select2', 'felter', 'sl_u
                     day_by_day_unit_hours = null;
                     $('#edit_error').html('');
                     update_calendar();
+                    reset_fields();
                 },
                 error: function(res) {
                     console.log(res);
@@ -223,17 +231,15 @@ require(['jquery', 'moment', 'd3', 'daterangepicker', 'select2', 'felter', 'sl_u
             })
         });
 
-        $delete_edit.click(function() {
+        $delete_go.click(function() {
 
             $('body').addClass('loading');
-            $('#available_edits_modal').modal('hide');
 
             var days = [];
             $.each(selected_days, function(i, v) {
                 days.push(v.valueOf());
             });
             var data = {
-                'delete': true,
                 units: selected_units,
                 days: days
             };
@@ -241,18 +247,25 @@ require(['jquery', 'moment', 'd3', 'daterangepicker', 'select2', 'felter', 'sl_u
             $.ajax({
                 type: 'POST',
                 data: data,
-                url: QAURLs.HANDLE_UNIT_AVAILABLE_TIME_EDIT,
+                url: QAURLs.DELETE_SCHEDULES,
                 success: function(res) {
+                    $('#delete_modal').modal('hide');
                     unit_available_time_data = res.unit_available_time_data;
                     day_by_day_unit_hours = null;
-                    $('#edit_error').html('');
+                    $('#delete_error').html('');
                     update_calendar();
+                    reset_fields();
                 },
                 error: function(res) {
                     console.log(res);
-                    $('#edit_error').html('Server error.');
+                    $('#delete_error').html('Server error.').slideDown('fast');
+                    $('body').removeClass('loading');
                 }
             })
+        });
+
+        $delete_cancel.click(function() {
+            $('#delete_modal').modal('hide');
         });
 
         $insert_change_uat.click(function() {
@@ -260,17 +273,14 @@ require(['jquery', 'moment', 'd3', 'daterangepicker', 'select2', 'felter', 'sl_u
             $('body').addClass('loading');
             $('#available_modal').modal('hide');
 
-            var days = [];
-            $.each(selected_days, function(i, v) {
-                days.push(v.valueOf());
-            });
+            var day = moment($effective_date.val(), 'DD MMM YYYY').valueOf();
 
             $.ajax({
                 type: 'POST',
                 url: QAURLs.HANDLE_UNIT_AVAILABLE_TIME,
                 data: {
                     units: selected_units,
-                    days: days,
+                    day: day,
                     'delete': false,
                     hours_sunday: $hours_sunday.val(),
                     hours_monday: $hours_monday.val(),
@@ -283,35 +293,7 @@ require(['jquery', 'moment', 'd3', 'daterangepicker', 'select2', 'felter', 'sl_u
                 success: function(res) {
                     unit_available_time_data = res.unit_available_time_data;
                     day_by_day_unit_hours = null;
-                    update_calendar();
-                },
-                error: function(res) {
-                    console.log(res);
-                }
-            })
-        });
-
-        $delete_uat.click(function() {
-
-            $('#available_modal').modal('hide');
-            $('body').addClass('loading');
-
-            var days = [];
-            $.each(selected_days, function(i, v) {
-                days.push(v.valueOf());
-            });
-
-            $.ajax({
-                type: 'POST',
-                url: QAURLs.HANDLE_UNIT_AVAILABLE_TIME,
-                data: {
-                    units: selected_units,
-                    'delete': true,
-                    days: days
-                },
-                success: function(res) {
-                    unit_available_time_data = res.unit_available_time_data;
-                    day_by_day_unit_hours = null;
+                    reset_fields();
                     update_calendar();
                 },
                 error: function(res) {
@@ -324,7 +306,7 @@ require(['jquery', 'moment', 'd3', 'daterangepicker', 'select2', 'felter', 'sl_u
             mainDivClass: 'col-md-12 form-control',
             selectAllClass: 'btn btn-flat btn-xs btn-default',
             // choiceDivClass: 'row',
-            label: 'Units',
+            label: 'Serviceable Units',
             initially_displayed: true,
             selectAll: true,
             selectNone: true,
@@ -351,6 +333,7 @@ require(['jquery', 'moment', 'd3', 'daterangepicker', 'select2', 'felter', 'sl_u
                     run_filter_when_selected: false,   // No, run filter when not selected
                     label: 'Show Inactive Units',
                     filter: function(obj_data) {
+                        console.log($(obj_data.$option).attr('data-active'));
                         return $(obj_data.$option).attr('data-active') === 'True';
                     }
                 }
@@ -370,6 +353,16 @@ require(['jquery', 'moment', 'd3', 'daterangepicker', 'select2', 'felter', 'sl_u
         while (day.isBefore(current_day.clone().endOf('week'))) {
             days.push(day.format('dddd'));
             day.add(1, 'days');
+        }
+
+        function reset_fields() {
+            var days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+            $.each(days, function(i, v) {
+                $('#id_hours_' + v).val(v === 'sunday' || v === 'saturday' ? '0000' : '0800');
+            });
+
+            $('#edit_input').val('');
+            $('#name_input').val('');
         }
 
         function set_calendar_days(_moment) {
@@ -401,7 +394,7 @@ require(['jquery', 'moment', 'd3', 'daterangepicker', 'select2', 'felter', 'sl_u
                             available_time_changed,
                             unit_name = unit_available_time_data[unit_id].name;
 
-                        if (uat_data.map(v => v.date_changed).indexOf(day_str) !== -1) {
+                        if (uat_data.map(function(v) {return v.date_changed}).indexOf(day_str) !== -1) {
                             available_time_changed = true;
                             var uat_details = $.grep(uat_data, function(v){ return v.date_changed === day_str; })[0];
                         } else {
@@ -543,10 +536,18 @@ require(['jquery', 'moment', 'd3', 'daterangepicker', 'select2', 'felter', 'sl_u
             });
         }
 
+        function display_num_selected_days() {
+            $num_days_selected.html(
+                'Currently ' + selected_days.length + ' day' + (selected_days.length === 1 ? '' : 's') + ' selected for ' + selected_units.length + ' unit' + (selected_units.length === 1 ? '' : 's')
+            );
+        }
+        $open_edit_modal.click(display_num_selected_days);
+        $open_delete_modal.click(display_num_selected_days);
+
         function disable_uat_btns() {
             $open_edit_modal.prop('disabled', selected_days.length === 0 || selected_units.length === 0);
             $open_uat_modal.prop('disabled', selected_units.length === 0 || selected_days.length === 0);
-            // $change_uat.prop('disabled', selected_units.length === 0);
+            $open_delete_modal.prop('disabled', selected_units.length === 0 || selected_days.length === 0);
         }
 
         function update_calendar() {
@@ -611,8 +612,7 @@ require(['jquery', 'moment', 'd3', 'daterangepicker', 'select2', 'felter', 'sl_u
                             selected_days = [day_data.day_moment];
                             recent_day_selected = day_data.day_moment;
                         }
-                    }
-                    else if (_shift_pressed && !_ctrl_pressed) {
+                    } else if (_shift_pressed && !_ctrl_pressed) {
 
                         $('.selected-day').removeClass('selected-day');
                         if (recent_day_selected) {
@@ -636,8 +636,7 @@ require(['jquery', 'moment', 'd3', 'daterangepicker', 'select2', 'felter', 'sl_u
                             selected_days.push(day_data.day_moment);
                             recent_day_selected = day_data.day_moment;
                         }
-                    }
-                    else if (!_shift_pressed && _ctrl_pressed) {
+                    } else if (!_shift_pressed && _ctrl_pressed) {
 
                         if (is_selected_day(day_data.day_moment)) {
                             selected_days = selected_days.filter(function(v) {
@@ -649,8 +648,7 @@ require(['jquery', 'moment', 'd3', 'daterangepicker', 'select2', 'felter', 'sl_u
                             recent_day_selected = day_data.day_moment;
                         }
 
-                    }
-                    else {  // Behaviour when shift and ctrl are both pressed TODO tweak this. okay for now
+                    } else {  // Behaviour when shift and ctrl are both pressed TODO tweak this. okay for now
                         $('.selected-day').removeClass('selected-day');
                         if (recent_day_selected) {
                             if (!recent_day_selected.isSame(day_data.day_moment, 'day')) {
@@ -679,6 +677,10 @@ require(['jquery', 'moment', 'd3', 'daterangepicker', 'select2', 'felter', 'sl_u
                     }
 
                     disable_uat_btns();
+
+                    $effective_date.val(
+                        selected_days.length > 0 ? selected_days.sort(function(a, b) { return a - b; })[0].format('DD MMM YYYY') : ''
+                    );
 
                     d3.selectAll('g.day-g')
                         .attr('class', function(d) {
@@ -714,9 +716,7 @@ require(['jquery', 'moment', 'd3', 'daterangepicker', 'select2', 'felter', 'sl_u
                     .data(function(d) {
                         return d.hours_data.filter(function(v) {
                             return v.day_edit_name && selected_units.indexOf(v.id) !== -1;
-                        }).map(
-                            v => v.day_edit_name
-                        ).filter(function(v, i, self) {
+                        }).map(function(v) {return v.day_edit_name; }).filter(function(v, i, self) {
                             return self.indexOf(v) === i;
                         });
                     });
