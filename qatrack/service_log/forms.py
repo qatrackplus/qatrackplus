@@ -122,9 +122,9 @@ class HoursForm(forms.ModelForm):
 
         self.fields['user_or_thirdparty'].choices = choices
 
-        self.fields['user_or_thirdparty'].widget.attrs.update({'class': 'select2'})
+        self.fields['user_or_thirdparty'].widget.attrs.update({'class': 'select2 user_or_thirdparty'})
         time_classes = self.fields['time'].widget.attrs.get('class', '')
-        time_classes += ' max-width-100 form-control'
+        time_classes += ' max-width-100 form-control user_thirdparty_time'
         self.fields['time'].widget.attrs.update({'class': time_classes})
 
         if self.instance.user:

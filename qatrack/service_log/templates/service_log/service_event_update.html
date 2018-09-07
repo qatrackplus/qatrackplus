@@ -278,7 +278,7 @@
 
                                             {% for h_form in hours_formset.forms %}
                                                 {% if h_form.instance.pk or not h_form.DELETE.widget.attrs.checked %}
-                                                    <tr id="{{ h_form.prefix }}">
+                                                    <tr id="{{ h_form.prefix }}" class="hours-row">
                                                         {{ h_form.id }}
                                                         <td class="form-group{% if h_form.user_or_thirdparty.errors %} has-error{% endif %}" >
                                                             {{ h_form.user_or_thirdparty }}
@@ -593,7 +593,7 @@
     <table style="display: none;">
         <tbody id="empty-hours-form">
             {% with hours_formset.empty_form as h_form %}
-                <tr id="hours-__prefix__">
+                <tr id="hours-__prefix__" class="hours-row">
                     {{ h_form.id }}
                     <td>{{ h_form.user_or_thirdparty }}</td>
                     <td>{{ h_form.time }}</td>
