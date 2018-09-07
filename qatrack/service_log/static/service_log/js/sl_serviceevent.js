@@ -402,14 +402,19 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
                 rtsqa_id = $('#id_' + prefix + '-id').val(),
                 se_id = $('#instance-id').val();
 
+            if ($(this).attr('oldvalue') !== utc_id) {
+                tli_id = '';
+            }
             $(this).attr('oldvalue', utc_id);
 
             if (utc_id === '' || (utc_id_old !== '' && utc_id_old !== utc_id)) {
                 $('#utc-actions-' + prefix).html('');
                 $('#pass-fail-' + prefix).html('');
                 $('#review-' + prefix).html('');
+                $('#work-completed-' + prefix).html('');
                 $('#id_' + prefix + '-test_list_instance').val('');
             }
+
             if (utc_id !== '') {
                 // add utc action btns
                 $('#utc-actions-' + prefix).html(
@@ -420,9 +425,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
                         .replace(/__se-id__/g, se_id)
                         .replace(/__rtsqa-id__/g, rtsqa_id)
                 );
-                // if (!rtsqa_id) {
-                //     $('#utc-actions-' + prefix).find('.perform-btn').remove();
-                // }
+
                 if (!tli_id) {
                     $('#utc-actions-' + prefix).find('div.btn-group.review-btn').removeClass(prefix + '-hider');
                 }
