@@ -360,9 +360,6 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
 
         new = form.instance.pk is None
 
-        if rtsqa_formset.has_changed():
-            self.reset_status(form)
-
         service_event = form.save()
         service_event_related = form.cleaned_data.get('service_event_related_field')
         try:
@@ -585,10 +582,12 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
 
         if is_new:
             models.ServiceLog.objects.log_new_service_event(self.request.user, form.instance)
+
         elif 'service_status' in form.changed_data:
             models.ServiceLog.objects.log_service_event_status(
                 self.request.user, form.instance, form.stringify_form_changes(), form.stringify_status_change()
             )
+
         elif form.has_changed():
             models.ServiceLog.objects.log_changed_service_event(
                 self.request.user, form.instance, form.stringify_form_changes()

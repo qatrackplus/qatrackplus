@@ -684,6 +684,7 @@ class ServiceEventForm(BetterModelForm):
             for k, v in self.data.items():
                 if k.startswith('rtsqa-') and k.endswith('-id'):
                     prefix = k.replace('-id', '')
+
                     if prefix + '-unit_test_collection' in self.data and self.data[prefix + '-unit_test_collection'] != '':
                         if prefix + '-DELETE' not in self.data or self.data[prefix + '-DELETE'] != 'on':
                             if self.data[prefix + '-test_list_instance'] == '':
@@ -694,6 +695,7 @@ class ServiceEventForm(BetterModelForm):
                         if prefix + '-DELETE' not in self.data or self.data[prefix + '-DELETE'] != 'on':
                             raize = True
                             break
+
             if raize:
                 self._errors['service_status'] = ValidationError(
                     'Cannot select status: Return to service qa must be performed and reviewed.'
