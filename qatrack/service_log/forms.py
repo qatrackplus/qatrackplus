@@ -377,6 +377,17 @@ class ServiceEventForm(BetterModelForm):
         help_text=_('Comments related to return to service')
     )
 
+    se_attachments = forms.FileField(
+        label="Attachments",
+        max_length=150,
+        required=False,
+        widget=forms.FileInput(attrs={
+            'multiple': '',
+            'class': 'file-upload',
+            'style': 'display:none',
+        })
+    )
+
     log_change_fields = (
         'test_list_instance_initiated_by', 'is_review_required', 'datetime_service', 'service_area_field',
         'service_type', 'service_event_related_field', 'problem_description', 'safety_precautions',

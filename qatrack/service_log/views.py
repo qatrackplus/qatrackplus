@@ -327,7 +327,7 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
             form.cleaned_data['service_status'] = default
 
     def edit_se_attachments(self, service_event):
-        for idx, f in enumerate(self.request.FILES.getlist('se-attachments')):
+        for idx, f in enumerate(self.request.FILES.getlist('se_attachments')):
             Attachment.objects.create(
                 attachment=f,
                 comment="Uploaded %s by %s" % (timezone.now(), self.request.user.username),

@@ -159,3 +159,6 @@ body.sidebar-mini.sidebar-collapse > div.wrapper > aside.main-sidebar > section.
 #attach-table {
     margin-bottom: 0;
 }
+h3.has-error {
+    color: #dd4b39;
+}

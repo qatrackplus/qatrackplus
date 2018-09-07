@@ -23,7 +23,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
             $service_save = $('.service-save'),
             $tli_display = $('<div class="row" style="display: none;"></div>'),
             $date_time = $('#id_datetime_service'),
-            $attachInput = $('#se-attachments'),
+            $attachInput = $('#id_se_attachments'),
             $attach_deletes = $('.attach-delete'),
             $attach_delete_ids = $('#attach-delete-ids'),
             $attach_names = $('#se-attachment-names');
