@@ -64,7 +64,14 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
             time_24hr: true,
             minuteIncrement: 1,
             dateFormat: 'd-m-Y H:i',
-            allowInput: true
+            allowInput: true,
+            onOpen: [
+                function(selectedDates, dateStr, instance) {
+                    if (dateStr === '') {
+                        instance.setDate(moment()._d);
+                    }
+                }
+            ]
         });
         
         $('.inputmask').inputmask('99:99', {numericInput: true, placeholder: "_", removeMaskOnSubmit: true});

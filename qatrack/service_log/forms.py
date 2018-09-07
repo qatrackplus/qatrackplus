@@ -538,7 +538,6 @@ class ServiceEventForm(BetterModelForm):
             # some data wasn't attempted to be submitted already
             if not is_bound:
                 self.initial['service_status'] = models.ServiceEventStatus.get_default()
-                self.initial['datetime_service'] = timezone.now()
 
         # if we are editing a saved instance
         else:
