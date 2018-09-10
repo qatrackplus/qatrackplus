@@ -94,6 +94,8 @@ required.
    Defining new Sites
 
 
+.. _units_def_new:
+
 Defining a new unit
 -------------------
 

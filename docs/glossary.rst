@@ -62,6 +62,11 @@ Glossary
         Event (beyond those doing the actual service work). See :ref:`Service
         Log <service_log>`.
 
+    Location
+
+        Parts storage :term:`Rooms` may have one or more locations (e.g. a
+        shelf, closet, cabinet etc) associated with them.
+
     Modality
 
         Treatment & diagnostic units may have multiple modalities assigned (for
@@ -81,16 +86,20 @@ Glossary
         As of QATrack+ v0.3.0 there is now a Parts application which can be
         used for tracking spare parts inventory. See :ref:`Parts <parts_user>`.
 
+    Parts Categories
+
+        Parts categories allow you to categorize parts by their function (e.g.
+        Linac, Table, Laser etc).
+
     Permissions
 
         The permissions assigned to Groups and Users control what functionality
         they have access to on the QATrack+ site.  See :ref:`Permissions
         <permissions_admin>`.
 
-    Parts Categories
+    QA Session
 
-        Parts categories allow you to categorize parts by their function (e.g.
-        Linac, Table, Laser etc).
+        See :term:`Test List Instance`.
 
     Reference
 
@@ -208,7 +217,7 @@ Glossary
     Test List Instance
 
         A Test List Instance is a single completed value of any given
-        :term:`Test List`.
+        :term:`Test List`. Also called a `QA Session`.
 
     Test Instance Status
 
@@ -235,7 +244,8 @@ Glossary
         :ref:`References & Tolerances <qa_ref_tols>`.
 
     Unit
-        A piece of equipment e.g. a linac, brachy suite, tomotherapy unit etc
+        A piece of equipment e.g. a linac, brachy suite, tomotherapy unit etc. You
+        may also want to define e.g.
 
     Unit Class
 
