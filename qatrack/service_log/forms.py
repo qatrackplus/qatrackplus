@@ -122,9 +122,9 @@ class HoursForm(forms.ModelForm):
 
         self.fields['user_or_thirdparty'].choices = choices
 
-        self.fields['user_or_thirdparty'].widget.attrs.update({'class': 'select2'})
+        self.fields['user_or_thirdparty'].widget.attrs.update({'class': 'select2 user_or_thirdparty'})
         time_classes = self.fields['time'].widget.attrs.get('class', '')
-        time_classes += ' max-width-100 form-control'
+        time_classes += ' max-width-100 form-control user_thirdparty_time'
         self.fields['time'].widget.attrs.update({'class': time_classes})
 
         if self.instance.user:
@@ -377,6 +377,17 @@ class ServiceEventForm(BetterModelForm):
         help_text=_('Comments related to return to service')
     )
 
+    se_attachments = forms.FileField(
+        label="Attachments",
+        max_length=150,
+        required=False,
+        widget=forms.FileInput(attrs={
+            'multiple': '',
+            'class': 'file-upload',
+            'style': 'display:none',
+        })
+    )
+
     log_change_fields = (
         'test_list_instance_initiated_by', 'is_review_required', 'datetime_service', 'service_area_field',
         'service_type', 'service_event_related_field', 'problem_description', 'safety_precautions',
@@ -527,7 +538,6 @@ class ServiceEventForm(BetterModelForm):
             # some data wasn't attempted to be submitted already
             if not is_bound:
                 self.initial['service_status'] = models.ServiceEventStatus.get_default()
-                self.initial['datetime_service'] = timezone.now()
 
         # if we are editing a saved instance
         else:
@@ -674,6 +684,7 @@ class ServiceEventForm(BetterModelForm):
             for k, v in self.data.items():
                 if k.startswith('rtsqa-') and k.endswith('-id'):
                     prefix = k.replace('-id', '')
+
                     if prefix + '-unit_test_collection' in self.data and self.data[prefix + '-unit_test_collection'] != '':
                         if prefix + '-DELETE' not in self.data or self.data[prefix + '-DELETE'] != 'on':
                             if self.data[prefix + '-test_list_instance'] == '':
@@ -684,6 +695,7 @@ class ServiceEventForm(BetterModelForm):
                         if prefix + '-DELETE' not in self.data or self.data[prefix + '-DELETE'] != 'on':
                             raize = True
                             break
+
             if raize:
                 self._errors['service_status'] = ValidationError(
                     'Cannot select status: Return to service qa must be performed and reviewed.'

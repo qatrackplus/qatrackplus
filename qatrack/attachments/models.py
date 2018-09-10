@@ -59,7 +59,7 @@ def move_tmp_file(attach, save=True, force=False, new_name=None):
 
 class Attachment(models.Model):
 
-    attachment = models.FileField(verbose_name=_("Attachment"), upload_to=get_upload_path)
+    attachment = models.FileField(verbose_name=_("Attachment"), upload_to=get_upload_path, max_length=255)
     label = models.CharField(verbose_name=_("Label"), max_length=255, blank=True)
     comment = models.TextField(verbose_name=_("Comment"), blank=True)
 

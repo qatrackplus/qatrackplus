@@ -157,8 +157,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     # 'django.contrib.auth.middleware.RemoteUserMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    # 'qatrack.middleware.login_required.LoginRequiredMiddleware',
-    # 'qatrack.middleware.maintain_filters.FilterPersistMiddleware',
+    'qatrack.middleware.login_required.LoginRequiredMiddleware',
+    'qatrack.middleware.maintain_filters.FilterPersistMiddleware',
 ]
 
 
@@ -285,10 +285,7 @@ CACHES = {
 # Session Settings
 SESSION_COOKIE_AGE = 14 * 24 * 60 * 60
 SESSION_SAVE_EVERY_REQUEST = True
-# SESSION_COOKIE_NAME = 'QaTrack'
-# SESSION_COOKIE_PATH = '/qatrack'
-# CSRF_COOKIE_PATH = '/qatrack'
-# CSRF_COOKIE_NAME = 'csrftoken-qatrack'
+
 
 # -----------------------------------------------------------------------------
 # Email and notification settings
@@ -415,8 +412,13 @@ _LOGGING = {
             'level': 'DEBUG',
             'propagate': True,
         },
+        'django.server': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
         'django.request': {
-            'handlers': ['mail_admins', 'file'],
+            'handlers': ['console', 'mail_admins', 'file'],
             'level': 'ERROR',
             'propagate': True,
         },

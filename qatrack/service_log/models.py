@@ -320,8 +320,10 @@ class ReturnToServiceQA(models.Model):
     objects = ReturnToServiceQAManager()
 
     class Meta:
-        permissions = (('view_returntoserviceqa', 'Can view return to service qa'),
-                       ('perform_returntoserviceqa', 'Can perform return to service qa'))
+        permissions = (
+            ('view_returntoserviceqa', 'Can view return to service qa'),
+            ('perform_returntoserviceqa', 'Can perform return to service qa')
+        )
         ordering = ['-datetime_assigned']
 
 

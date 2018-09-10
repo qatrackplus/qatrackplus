@@ -43,9 +43,4 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RunPython(remove_duplicate_tolerances),
-        migrations.AlterField(
-            model_name='tolerance',
-            name='name',
-            field=models.CharField(editable=False, max_length=255, unique=True),
-        ),
     ]

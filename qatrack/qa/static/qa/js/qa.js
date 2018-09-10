@@ -258,20 +258,18 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         this.skipped = false;
         this.set_skip = function(skipped){
             self.skipped = skipped;
-            self.skip.prop("checked",self.skipped);
+            self.skip.prop("checked", self.skipped);
         };
         this.skip.change(function(){
             self.skipped = self.skip.is(":checked");
             if (self.skipped){
                 if (comment_on_skip && !self.test_info.test.skip_without_comment){
-                    self.comment.show(600);
+                    show_comment();
                 }
                 if (self.test_info.test.type === QAUtils.BOOLEAN || self.test_info.test.type === QAUtils.UPLOAD){
                     self.set_value(null);
                 }
                 $.Topic("valueChanged").publish();
-            }else{
-                self.comment.hide(600);
             }
         });
 
@@ -285,17 +283,31 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 $('.hover').removeClass('hover');
             }
         );
+        function show_comment() {
+            self.comment.slideDown('fast');
+            self.showing_comment = true;
+            self.comment.find('.comment-bar').slideDown('fast');
+            self.comment.find('.comment-bar').addClass('in');
+            self.row.find('.comment-bar').addClass('in');
+        }
+        function hide_comment() {
+            self.comment.slideUp('fast');
+            self.showing_comment = false;
+            self.comment.find('.comment-bar').slideUp('fast');
+            self.comment.find('.comment-bar').removeClass('in');
+            self.row.find('.comment-bar').removeClass('in');
+        }
 
         this.show_comment = this.row.find("td.qa-showcmt a");
         this.comment_box = this.comment.find("textarea");
         this.comment_icon = this.row.find(".qa-showcmt i");
 
         this.show_comment.click(function(){
-            self.showing_comment = !self.showing_comment;
-            self.comment.toggle('fast');
-            self.comment.find('.comment-bar').slideToggle('fast');
-            self.comment.find('.comment-bar').toggleClass('in');
-            self.row.find('.comment-bar').toggleClass('in');
+            if (!self.showing_comment) {
+                show_comment();
+            } else  {
+                hide_comment();
+            }
             return false;
         });
         this.set_comment_icon = function(){
@@ -410,7 +422,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 var value = $.trim(self.inputs.find(":selected").text());
                 self.value = value !== "" ? value : null;
             }else if (tt === QAUtils.UPLOAD){
-                if (editing_tli && !this.initialized){
+                if (self.inputs.val() && !this.initialized){
                     var data = {
                         attachment_id: self.inputs.val(),
                         test_id: self.test_info.test.id,
@@ -434,12 +446,16 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                                 self.set_value(null);
                                 self.status.addClass("btn-danger").text("Failed");
                                 self.status.attr("title", result.errors[0]);
-                                console.log(result.errors);
+                                if (window.console){
+                                    console.log(result.errors);
+                                }
                             }else{
                                 self.set_value(result);
                                 self.status.addClass("btn-success").text("Success");
                                 self.status.attr("title", result['url']);
-                                console.log(result);
+                                if (window.console){
+                                    console.log(result);
+                                }
                                 $.Topic("valueChanged").publish();
                             }
                         },
@@ -552,19 +568,30 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                     "test_list_id": self.test_list_id,
                     "unit_id": self.unit_id,
                     "comments": JSON.stringify(get_comments())
+                },
+                accept: function(file, done) {
+                    if (file.name.length > 150) {
+                        self.set_value(null);
+                        self.status.removeClass("btn-primary btn-danger btn-success");
+                        done("Filename exceeds 150 characters!");
+                    }
+                    else { done(); }
                 }
 
             });
 
             self.dropzone.on('totaluploadprogress', function(progress) {
                 self.status.removeClass("btn-primary btn-danger btn-success btn-info");
-                self.status.addClass("btn-warning").text(progress + "%");
+                self.status.addClass("btn-warning").text(progress + "%").attr('title', 'Upload succeeded');
             });
 
             self.dropzone.on('error', function(file, data) {
+                if (!data){
+                    data = "Server Error";
+                }
                 self.set_value(null);
                 self.status.removeClass("btn-primary btn-danger btn-success");
-                self.status.addClass("btn-danger").text("Server Error");
+                self.status.addClass("btn-danger").text(data).attr('title', data);
             });
 
             self.dropzone.on('success', function(file, data) {
@@ -575,7 +602,9 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                     self.set_value(null);
                     self.status.addClass("btn-danger").text("Failed");
                     self.status.attr("title", response_data.errors[0]);
-                    console.log(response_data.errors);
+                    if (window.console){
+                        console.log(response_data.errors);
+                    }
                 } else {
                     self.set_value(response_data);
                     if (response_data.comment){
@@ -583,7 +612,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                         self.set_comment_icon();
                     }
                     self.status.addClass("btn-success").text("Success");
-                    self.status.attr("title", response_data.url);
+                    self.status.attr("title", response_data.attachment.url);
 
                     $.Topic("valueChanged").publish();
                 }
@@ -649,7 +678,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
 
         this.submit = $("#submit-qa");
 
-        this.attachInput = $("#tli-attachments");
+        this.attachInput = $("#id_tli_attachments");
 
         /***************************************************************/
         //set the intitial values, tolerances & refs for all of our tests
@@ -712,7 +741,9 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                             if (result.error){
                                 ti.status.attr("title", result.error);
                                 ti.status.addClass("btn-danger").text("Failed");
-                                console.log(result.error);
+                                if (window.console){
+                                    console.log(result.error);
+                                }
                             }else{
                                 ti.status.removeClass("btn-danger");
                                 ti.status.attr("title", "");

@@ -345,7 +345,7 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
             form.cleaned_data['service_status'] = default
 
     def edit_se_attachments(self, service_event):
-        for idx, f in enumerate(self.request.FILES.getlist('se-attachments')):
+        for idx, f in enumerate(self.request.FILES.getlist('se_attachments')):
             Attachment.objects.create(
                 attachment=f,
                 comment="Uploaded %s by %s" % (timezone.now(), self.request.user.username),
@@ -377,9 +377,6 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
             return self.render_to_response(context)
 
         new = form.instance.pk is None
-
-        if rtsqa_formset.has_changed():
-            self.reset_status(form)
 
         service_event = form.save()
         service_event_related = form.cleaned_data.get('service_event_related_field')
@@ -603,10 +600,12 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
 
         if is_new:
             models.ServiceLog.objects.log_new_service_event(self.request.user, form.instance)
+
         elif 'service_status' in form.changed_data:
             models.ServiceLog.objects.log_service_event_status(
                 self.request.user, form.instance, form.stringify_form_changes(), form.stringify_status_change()
             )
+
         elif form.has_changed():
             models.ServiceLog.objects.log_changed_service_event(
                 self.request.user, form.instance, form.stringify_form_changes()
