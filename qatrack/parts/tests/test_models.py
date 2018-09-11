@@ -30,12 +30,12 @@ class TestPart(TestCase):
 
     def setUp(self):
 
-        self.p_1 = sl_utils.create_part(alt_part_number='112358', description='13')
+        self.p_1 = sl_utils.create_part(alt_part_number='112358', name='13')
 
     def test_str(self):
         self.assertEqual(
             str(self.p_1),
-            '%s (%s) - %s' % (self.p_1.part_number, self.p_1.alt_part_number, self.p_1.description),
+            '%s (%s) - %s' % (self.p_1.part_number, self.p_1.alt_part_number, self.p_1.name),
         )
 
 

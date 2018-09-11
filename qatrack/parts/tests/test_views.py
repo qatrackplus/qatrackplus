@@ -29,7 +29,7 @@ class TestCreatePart(TestCase):
             'part_number': 'p001',
             'cost': '1',
             'quantity_min': 0,
-            'description': 'description',
+            'name': 'description',
             'alt_part_number': 'alt-num',
             'part_category': self.pc.id,
             'notes': 'This is a part',
@@ -94,7 +94,7 @@ class TestCreatePart(TestCase):
         data['part_number'] = ''
         data['cost'] = ''
         data['quantity_min'] = ''
-        data['description'] = ''
+        data['name'] = ''
 
         data['storage-TOTAL_FORMS'] = 1
         data['storage-0-quantity'] = 1
@@ -106,7 +106,7 @@ class TestCreatePart(TestCase):
 
         response = self.client.post(self.url, data=data)
 
-        for f in ['part_number', 'cost', 'quantity_min', 'description']:
+        for f in ['part_number', 'cost', 'quantity_min', 'name']:
             self.assertTrue(f in response.context_data['form'].errors)
 
         self.assertTrue('supplier' in response.context_data['supplier_formset'].forms[0].errors)
@@ -146,7 +146,7 @@ class TestEditPart(TestCase):
             'part_number': 'p001',
             'cost': '1',
             'quantity_min': 0,
-            'description': 'description',
+            'name': 'description',
             'alt_part_number': 'alt-num',
             'part_category': self.pc.id,
             'notes': 'This is a part',
@@ -208,13 +208,13 @@ class TestPartViews(TestCase):
         sl_utils.create_part(part_number='find_1', add_storage=True)
         sl_utils.create_part(part_number='find_2', add_storage=True)
         sl_utils.create_part(part_number='find_3', add_storage=True)
-        sl_utils.create_part(description='a part to find', add_storage=True)
-        sl_utils.create_part(description='a part to find', add_storage=True)
+        sl_utils.create_part(name='a part to find', add_storage=True)
+        sl_utils.create_part(name='a part to find', add_storage=True)
 
     def test_parts_searcher(self):
 
         parts_to_find = p_models.Part.objects.filter(
-            Q(part_number__icontains='find') | Q(description__icontains='find')
+            Q(part_number__icontains='find') | Q(name__icontains='find')
         )
         data = {'q': 'find'}
         response = self.client.get(reverse('parts_searcher'), data=data)

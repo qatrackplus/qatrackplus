@@ -149,6 +149,11 @@ class PartForm(BetterModelForm):
             ('hidden_fields', {
                 'fields': [],
             }),
+            ('name', {
+                'fields': [
+                    'name',
+                ],
+            }),
             ('required_fields', {
                 'fields': [
                     'part_number', 'cost', 'quantity_min'
@@ -159,9 +164,9 @@ class PartForm(BetterModelForm):
                     'alt_part_number', 'part_category', 'is_obsolete'
                 ]
             }),
-            ('description_and_notes', {
+            ('notes', {
                 'fields': [
-                    'description', 'notes'
+                    'notes'
                 ]
             })
         ]
@@ -175,12 +180,12 @@ class PartForm(BetterModelForm):
         for f in ['part_number', 'cost', 'quantity_min', 'alt_part_number', 'part_category']:
             self.fields[f].widget.attrs['class'] = 'form-control'
 
-        for f in ['description', 'notes']:
+        for f in ['name', 'notes']:
             self.fields[f].widget.attrs['class'] = 'form-control autosize'
             self.fields[f].widget.attrs['rows'] = 3
             self.fields[f].widget.attrs['cols'] = 4
 
-        for f in ['part_number', 'cost', 'quantity_min', 'description']:
+        for f in ['part_number', 'cost', 'quantity_min', 'name']:
             self.fields[f].widget.attrs['placeholder'] = 'required'
 
 

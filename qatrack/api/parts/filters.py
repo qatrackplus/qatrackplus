@@ -64,7 +64,7 @@ class PartFilter(filters.FilterSet):
         fields = {
             "part_number": "__all__",
             "alt_part_number": "__all__",
-            "description": "__all__",
+            "name": "__all__",
             "quantity_min": "__all__",
             "quantity_current": "__all__",
             "cost": "__all__",

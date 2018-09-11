@@ -191,7 +191,7 @@ def create_part_category(name=None):
     return pc
 
 
-def create_part(part_category=None, part_number=None, description='description', add_storage=False, quantity_min=0,
+def create_part(part_category=None, part_number=None, name='description', add_storage=False, quantity_min=0,
                 quantity_current=1, alt_part_number=None):
 
     if part_category is None:
@@ -200,7 +200,7 @@ def create_part(part_category=None, part_number=None, description='description',
         part_number = get_next_id(p_models.PartCategory.objects.order_by('id').last())
 
     p, _ = p_models.Part.objects.get_or_create(
-        part_category=part_category, part_number=part_number, description=description, quantity_min=quantity_min,
+        part_category=part_category, part_number=part_number, name=name, quantity_min=quantity_min,
         quantity_current=quantity_current, alt_part_number=alt_part_number
     )
 
