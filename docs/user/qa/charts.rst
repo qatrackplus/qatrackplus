@@ -30,12 +30,18 @@ lists/tests you would like to plot data for.
 
 There are a number of chart options which you can change:
 
--  Combine test data for unit: *Combine results for the same test from
-   different test lists into a single series*
--  Plot relative to reference values: *If selected, the absolute
-   difference is plotted for tests with absolute tolerances set or with
-   reference values of zero, otherwise the percent difference is
-   plotted.*
+- **Combine test data for unit**: Combine results for the same test from
+  different test lists into a single series
+
+- **Plot relative to reference values** If selected, the absolute difference is
+  plotted for tests with absolute tolerances set or with reference values of
+  zero, otherwise the percent difference is plotted.
+
+- **Show Service Events** If checked, then charts will show markers along the
+  x-axis for Service Events that occured on a Unit.
+
+- **Service Types** Select the types of Service Events you want to show on the
+  chart.
 
 To create an SPC choose the **Control Chart** option from the **Chart Options -
 Type:** dropdown.
@@ -48,7 +54,13 @@ button.
 
    Time Series Plot
 
-The time series plots are interactive and you can pan/zoom the data
+
+.. figure:: images/time_series_se.png
+   :alt: Time Series Plot showing a Service Event marker
+
+   Time Series Plot showing a Service Event marker
+
+The foo time series plots are interactive and you can pan/zoom the data
 using the sliders at the bottom of the chart.
 
 In order to save a time series chart to an image, click the `Save Chart` button
@@ -70,7 +82,7 @@ with other users.
 To save a control chart, right click and select *Save Image As*.
 
 Notes on Control Charts
------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 To specify where your baseline data comes from you can use the **Date
 Filters** under the **Generate Chart** button. For example if there was

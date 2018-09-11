@@ -24,7 +24,7 @@ of your units, correlate machine performance with service events and more.
 Initiating a new Service Event
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-There are two main ways to create a new Service Event record.
+There are three ways to create a new Service Event record.
 
 Enter a new Service Event
 .........................
@@ -145,7 +145,7 @@ Initiating a Service Event from A Test List
 ...........................................
 
 It is also possible to initiate a Service event when performing a Test List by
-selecting the `Initiate Service Event` (if you have the required
+selecting the `Initiate Service Event` checkbox (if you have the required
 :ref:`permissions <permissions_admin>`):
 
 
@@ -163,6 +163,24 @@ Instance you just performed.
    :alt: Service Event Initialized by a Test List Instance
 
    Service Event Initialized by a Test List Instance
+
+
+Initiating a Service Event from A Test List Instance
+....................................................
+
+is also possible to initiate a Service event when reviewing a Test List
+Instance by clicking the `Initiate Service Event` button (if you have the required
+:ref:`permissions <permissions_admin>`):
+
+
+.. figure:: images/sl_from_tl_review.png
+   :alt: Initiating a Service Event from a Test List Instance
+
+   Initiating a Service Event from a Test List Instance review
+
+which will take you to the `Create Service Event` page described above with the
+`Initiated By` field auto populated with the Test List Instance you were just
+reviewing.
 
 
 .. _service_log_dashboard:

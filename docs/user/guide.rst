@@ -11,3 +11,4 @@ Users Guide
 
    qa/guide
    service_log/guide
+   units/guide

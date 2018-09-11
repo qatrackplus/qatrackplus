@@ -124,9 +124,9 @@ class UnitAvailableTimeInline(admin.TabularInline):
 class UnitAdmin(admin.ModelAdmin):
 
     form = UnitFormAdmin
-    list_display = ['name', 'number', 'active', 'type', 'site']
+    list_display = ['name', 'number', 'active', 'type', 'site', 'is_serviceable']
     list_filter = ['active', 'site', 'modalities', 'type__unit_class']
-    list_editable = ['site']
+    list_editable = ['site', 'is_serviceable']
 
     if settings.USE_SERVICE_LOG:
         inlines = [UnitAvailableTimeInline]
