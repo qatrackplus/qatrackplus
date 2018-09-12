@@ -1,3 +1,5 @@
+VERSION=0.3.0
+
 cover :
 	py.test --reuse-db --cov-report term-missing --cov ./ ${args}
 
@@ -26,4 +28,9 @@ docs-autobuild:
 qatrack_daemon.conf:
 	sed 's/YOURUSERNAMEHERE/$(USER)/' deploy/apache24_daemon.conf > qatrack.conf
 
-.PHONY: test test_simple test_broker yapf flake8 help autobuild docs qatrack_daemon.conf
+schema:
+	python ./manage.py graph_models -a -g \
+		-X Issue,IssueStatus,IssueType,IssuePriority,IssueTag \
+		-o docs/developer/images/qatrack_schema_$(VERSION).svg
+
+.PHONY: test test_simple test_broker yapf flake8 help autobuild docs qatrack_daemon.conf schema
