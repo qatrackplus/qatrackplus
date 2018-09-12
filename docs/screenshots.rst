@@ -1,12 +1,21 @@
 Screenshots
 ===========
 
+.. note::
+    To view images in full size, right click and then open image in a new tab.
+
 
 .. figure:: images/perform_tl.png
    :alt: Example interface for performing QA
 
    Example interface for performing QA. Shown are numerical tests, boolean
    tests, and composite tests.
+
+
+.. figure:: images/picket_fence.png
+   :alt: Picket fence analysis using QATrack+ and pylinac
+
+   Picket fence analysis using QATrack+ and pylinac
 
 
 .. figure:: images/unreviewed.png
