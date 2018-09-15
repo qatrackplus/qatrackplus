@@ -99,6 +99,7 @@ class PartCategory(models.Model):
 
 class Part(models.Model):
 
+    name = models.CharField(help_text=_('Brief name describing this part'), max_length=255)
     part_category = models.ForeignKey(PartCategory, blank=True, null=True)
     suppliers = models.ManyToManyField(
         Supplier, blank=True, help_text=_('Suppliers of this part'), related_name='parts',
@@ -112,7 +113,6 @@ class Part(models.Model):
     alt_part_number = models.CharField(
         max_length=32, blank=True, null=True, verbose_name=_('Alternate part number')
     )
-    description = models.TextField(help_text=_('Brief description of this part'))
     quantity_min = models.PositiveIntegerField(
         default=0, help_text=_('Notify when the quantity of this part in storage falls below this number'),
     )
@@ -129,7 +129,7 @@ class Part(models.Model):
         ordering = ['part_number']
 
     def __str__(self):
-        return '%s%s - %s' % (self.part_number, ' (%s)' % self.alt_part_number if self.alt_part_number else '', self.description)
+        return '%s%s - %s' % (self.part_number, ' (%s)' % self.alt_part_number if self.alt_part_number else '', self.name)
 
     def set_quantity_current(self):
         qs = PartStorageCollection.objects.filter(part=self, storage__isnull=False)

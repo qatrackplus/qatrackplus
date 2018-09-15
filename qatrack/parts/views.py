@@ -35,9 +35,9 @@ from qatrack.service_log import models as s_models
 def parts_searcher(request):
     p_search = request.GET['q']
     parts = p_models.Part.objects\
-        .filter(Q(part_number__icontains=p_search) | Q(description__icontains=p_search)) \
+        .filter(Q(part_number__icontains=p_search) | Q(name__icontains=p_search)) \
         .order_by('part_number')[0:50]\
-        .values_list('id', 'part_number', 'alt_part_number', 'description', 'quantity_current')
+        .values_list('id', 'part_number', 'alt_part_number', 'name', 'quantity_current')
     return JsonResponse({'data': list(parts)}, safe=False)
 
 
@@ -202,8 +202,7 @@ class PartsList(BaseListableView):
 
     fields = (
         'actions',
-        'pk',
-        'description',
+        'name',
         'part_number',
         'quantity_current',
         'quantity_min',
@@ -212,8 +211,7 @@ class PartsList(BaseListableView):
 
     headers = {
         'actions': _('Actions'),
-        'pk': _('ID'),
-        'description': _('Description'),
+        'name': _('Name'),
         'part_number': _('Part Number'),
         'quantity_min': _('Min Quantity'),
         'quantity_current': _('In Storage'),
@@ -222,8 +220,7 @@ class PartsList(BaseListableView):
 
     widgets = {
         'actions': None,
-        'pk': TEXT,
-        'description': TEXT,
+        'name': TEXT,
         'part_number': TEXT,
         'quantity_min': None,
         'quantity_current': None,

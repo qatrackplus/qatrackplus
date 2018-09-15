@@ -12,8 +12,8 @@ if settings.USE_PARTS:
 
     class PartAdmin(admin.ModelAdmin):
 
-        list_display = ['part_number', 'quantity_min', 'quantity_current', 'description', 'cost']
-        search_fields = ['part_number', 'description']
+        list_display = ['name', 'part_number', 'quantity_min', 'quantity_current', 'cost']
+        search_fields = ['name', 'part_number', 'alt_part_number']
 
 
     class StorageInlineFormSet(forms.BaseInlineFormSet):

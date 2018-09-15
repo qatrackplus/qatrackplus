@@ -43,3 +43,4 @@ deploy/docker/user-data
 .vscode
 qatrack*.conf
 QATrackCherryPyServiceLocal.py
+emails/

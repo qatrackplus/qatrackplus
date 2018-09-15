@@ -1,8 +1,0 @@
-#listable-table-parts_list > thead > tr > th:nth-child(2),
-#listable-table-parts_list > tbody > tr > td:nth-child(2) {
-    width: 75px;
-}
-#listable-table-parts_list > thead > tr > th:nth-child(3),
-#listable-table-parts_list > tbody > tr > td:nth-child(3) {
-    max-width: 400px;
-}
