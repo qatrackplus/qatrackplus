@@ -31,6 +31,7 @@ On the next page you will be presented with a form for adding your new part:
 
 The fields are as follows:
 
+* **Name** Name describing what this part is.
 * **Part Number** The manufacturers identification number for this part.
 * **Alteranate Part Number** Alternate manufactures part number.
 * **Cost** Last known cost for this part.
@@ -38,7 +39,6 @@ The fields are as follows:
 * **Low Inventory Count** When the part inventory count falls below this
   number, a message will be shown to the user and the part will show up in the
   :ref:`Low Inventory Report <parts_low_inventory>`.
-* **Description** Description of what this part is.
 * **Notes (optional)** Any additional comments about this part type?
 * **Suppliers (optional)** List any known suppliers and optionally the supplier
   specific part number.
@@ -66,7 +66,7 @@ To view all existing parts select the `View All Parts` menu item from the
 
 
 from there you can click `Edit` or `Details` to edit the part item (adjust
-inventory numbers, part descriptions etc) or view the details of the part:
+inventory numbers, part name etc) or view the details of the part:
 
 
 .. figure:: images/view_part_details.png
