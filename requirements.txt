@@ -24,7 +24,7 @@ djangorestframework-filters==0.10.2
 django-tastypie==0.13.3
 django-widget-tweaks==1.4.1
 freezegun==0.3.9
-gunicorn==19.3.0; sys_platform=='linux'
+gunicorn==19.9.0; sys_platform=='linux'
 ipdb==0.10.3
 ipython==6.3.1
 markdown==2.6.11
