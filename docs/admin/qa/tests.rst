@@ -86,6 +86,8 @@ Category
 
 Choose the :ref:`Test Category <qa_categories>` that this test belongs to.
 
+.. _qa_test_types:
+
 Type
 ~~~~
 
