@@ -1,3 +1,5 @@
+.. _qa_perform:
+
 Performing a Test List
 ======================
 

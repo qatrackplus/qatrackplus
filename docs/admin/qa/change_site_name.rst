@@ -1,3 +1,5 @@
+.. _qa_admin_site_name:
+
 Changing The Site Name Displayed at the Top of Pages
 ====================================================
 

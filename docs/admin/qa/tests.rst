@@ -379,6 +379,7 @@ in a test value since the last time it was performed:
         diff = 100*(some_test - last_ti.value) / last_ti.value
 
 
+.. _dependency_resolution:
 
 Composite tests made up of other composite tests
 ------------------------------------------------

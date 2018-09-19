@@ -155,6 +155,33 @@ languages.  For discussion of how to mark templates and strings for translation
 please read the `Django docs on translation
 <https://docs.djangoproject.com/en/1.11/topics/i18n/translation/>`__.
 
+Tool Tips And User Hints
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Where possible all links, buttons and other "actionable" items should have a
+tooltip (via a `title` attribute or using one of the bootstrap tool tip
+libraries) which provides a concise description of what clicking the item will
+do. For example:
+
+.. code-block:: html
+
+    <a class="..."
+        title="Click this link to perform XYZ"
+        href="..."
+    >
+        Foo
+    </a>
+
+Other areas where tooltips are very useful is e.g. badges and labels where
+wording is abbreviated for display. For example:
+
+.. code-block:: html
+
+    <i class="fa fa-badge" title="There are 7 widgets for review">7<i>
+
+    <span title="This X has Y and Z for T">Foo baz qux</span>
+
+
 
 Formatting & Style Guide
 ------------------------
