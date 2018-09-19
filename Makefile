@@ -23,7 +23,7 @@ docs:
 	cd docs && make html
 
 docs-autobuild:
-	sphinx-autobuild docs docs/_build/html
+	sphinx-autobuild docs docs/_build/html -p 8008
 
 qatrack_daemon.conf:
 	sed 's/YOURUSERNAMEHERE/$(USER)/' deploy/apache24_daemon.conf > qatrack.conf
@@ -33,4 +33,7 @@ schema:
 		-X Issue,IssueStatus,IssueType,IssuePriority,IssueTag \
 		-o docs/developer/images/qatrack_schema_$(VERSION).svg
 
-.PHONY: test test_simple test_broker yapf flake8 help autobuild docs qatrack_daemon.conf schema
+run:
+	python ./manage.py runserver
+
+.PHONY: test test_simple test_broker yapf flake8 help autobuild docs qatrack_daemon.conf schema run

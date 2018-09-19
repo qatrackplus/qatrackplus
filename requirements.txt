@@ -25,8 +25,6 @@ django-tastypie==0.13.3
 django-widget-tweaks==1.4.1
 freezegun==0.3.9
 gunicorn==19.3.0; sys_platform=='linux'
-ipdb==0.10.3
-ipython==6.3.1
 markdown==2.6.11
 matplotlib==2.2.2
 numpy==1.14.2
@@ -34,7 +32,6 @@ pandas==0.23.0
 pep8==1.7.0
 pydicom==1.0.2
 pylinac==2.0.1
-pylint==1.6.4
 pynliner==0.8.0
 pytest-cov==2.5.1
 pytest-django==3.1.2
