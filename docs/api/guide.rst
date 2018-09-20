@@ -445,4 +445,8 @@ FAQ
   an invalid authorization token http header with your request. Check to ensure
   your auth token is set correctly.
 
+API Tutorial Example
+--------------------
 
+There is a tutorial on uploading image data for analysis via pylinac available
+here: :ref:`tutorial_pylinac_api`.

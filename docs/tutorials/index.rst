@@ -10,7 +10,6 @@ Tutorials
    step_by_step/index
    plots/index
    pylinac/index
-   python_api/index
    service_log/index
 
 

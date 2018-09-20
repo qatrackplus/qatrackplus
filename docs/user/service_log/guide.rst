@@ -14,3 +14,4 @@ documents linked below.
 
    service_log
    parts
+   ../../tutorials/service_log/index.rst
