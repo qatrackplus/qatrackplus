@@ -3,7 +3,7 @@ import requests
 
 root = "http://127.0.0.1/api"
 token_url = root + "/get-token/"
-resp = requests.post(token_url, {'username': 'randlet', 'password': '***REMOVED***'})
+resp = requests.post(token_url, {'username': 'randlet', 'password': 'clOsed'})
 api_token = resp.json()['token']
 
 # the request headers must include the API token

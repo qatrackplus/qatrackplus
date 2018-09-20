@@ -127,6 +127,7 @@ sets for groups are given below:.
 -  **qa \| unit test collection \| Can view TLI and UTC not visible to
    user's groups** *Allows a user to view all Test Lists regardless of
    their groups*
+-  **service_log \| hours \| Can have hours** *Allow tracking of users hours when involved with a Service Event*
 -  **service_log \| return to service qa \| Can perform return to service qa** *Allow user to perform qa linked to service events*
 -  **service_log \| return to service qa \| Can view existing return to service qa** *Allow user to view qa linked to service events*
 -  **service_log \| service event \| Can create service events** *Allows user to create new service events*
@@ -239,6 +240,7 @@ typical permission set might look like the following:
 -  qa \| unit test info \| Can add unit test info
 -  qa \| unit test info \| Can view Refs and Tols
 -  qa \| unit test info \| Can change unit test info
+-  service_log \| hours \| Can have hours
 -  service_log \| return to service qa \| Can perform return to service qa
 -  service_log \| return to service qa \| Can view existing return to service qa
 -  service_log \| service event \| Can create service events
