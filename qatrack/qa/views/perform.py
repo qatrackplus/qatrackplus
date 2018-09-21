@@ -814,7 +814,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         return template_utis
 
     def set_unit_test_infos(self):
-        """Find and order all :model:`qa.UniTestInfo` objects for tests to be performed"""
+        """Find and order all :model:`qa.UnitTestInfo` objects for tests to be performed"""
 
         utis = models.UnitTestInfo.objects.filter(
             unit=self.unit_test_col.unit,
