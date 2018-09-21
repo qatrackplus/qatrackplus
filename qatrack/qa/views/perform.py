@@ -1276,11 +1276,12 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
         template_utis = []
         for uti in self.unit_test_infos:
+            ref, tol = self.prev_ref_tols[uti.pk]
             template_utis.append({
                 "id": uti.pk,
                 "test": model_to_dict(uti.test),
-                "reference": model_to_dict(uti.reference) if uti.reference else None,
-                "tolerance": model_to_dict(uti.tolerance) if uti.tolerance else None,
+                "reference": model_to_dict(ref) if ref else None,
+                "tolerance": model_to_dict(tol) if tol else None,
             })
         return template_utis
 
@@ -1288,9 +1289,8 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
         context = super(EditTestListInstance, self).get_context_data(**kwargs)
         uti_pks = [f.instance.unit_test_info.pk for f in context["formset"]]
+        self.prev_ref_tols = {f.instance.unit_test_info.pk: (f.instance.reference, f.instance.tolerance) for f in context["formset"]}
         utis = models.UnitTestInfo.objects.filter(pk__in=uti_pks).select_related(
-            "reference",
-            "tolerance",
             "unit",
             "test__category",
         ).prefetch_related(
