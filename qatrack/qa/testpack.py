@@ -1,5 +1,6 @@
 from collections import Counter, defaultdict
 import json
+import uuid
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -84,10 +85,11 @@ def create_testpack(test_lists=None, cycles=None, extra_tests=None, description=
 
     meta = {
         'version': settings.VERSION,
-        'datetime': "%s" % timezone.now(),
+        'datetime': "%s" % (timezone.now().astimezone(timezone.utc)),
         'description': description,
         'contact': user,
         'name': name,
+        'id': str(uuid.uuid4()),
     }
 
     return {'meta': meta, 'objects': objects}

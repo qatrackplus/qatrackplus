@@ -1,9 +1,11 @@
+.. _qa_test_list_cycles:
+
 Configuring Test List Cycles
 ============================
 
-A **test list cycle** allows you to group multiple `test
-lists <test_lists.md>`__ into a single repeating cycle that can be
-assigned to a unit.
+A **test list cycle** allows you to group multiple :ref:`Test Lists
+<qa_test_lists>` into a single repeating cycle that can be assigned to a
+unit.
 
 For example, at our clinic, on a number of units, the therapists daily
 QA is on a repeating 2 or 4 day cycle where the actual tests they
@@ -121,3 +123,11 @@ then save the cycle.
    :alt: Removing a test list from a cycle
 
    Removing a test list from a cycle
+
+
+Attachments
+-----------
+
+You can add arbitrary attachments to a Test List Cycle (e.g. a PDF procedure
+for performing the Test Lists which make up the Cycle) by uploading them using
+the `Attachments` section at the bottom of the Test List Cycle configuration page.

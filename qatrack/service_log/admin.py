@@ -3,7 +3,14 @@ from django.conf import settings
 from django.contrib import admin
 from django.forms import ModelForm, ValidationError
 
-from .models import ServiceEventStatus, ServiceType, UnitServiceArea, ServiceArea, ThirdParty, GroupLinker
+from .models import (
+    GroupLinker,
+    ServiceArea,
+    ServiceEventStatus,
+    ServiceType,
+    ThirdParty,
+    UnitServiceArea,
+)
 
 
 class ServiceEventStatusFormAdmin(ModelForm):
@@ -64,9 +71,23 @@ class ServiceAreaAdmin(DeleteOnlyFromOwnFormAdmin):
     filter_horizontal = ("units",)
 
 
+class UnitServiceAreaAdmin(DeleteOnlyFromOwnFormAdmin):
+    list_display = ['__str__', 'notes']
+    list_filter = ['unit', 'service_area']
+    search_fields = ['unit__name', 'service_area__name']
+
+
+class GroupLinkerAdmin(DeleteOnlyFromOwnFormAdmin):
+    list_display = ['name', 'group', 'description', 'help_text']
+    list_filter = ['group']
+    search_fields = ['name', 'group__name']
+
+
 if settings.USE_SERVICE_LOG:
     admin.site.register(ServiceArea, ServiceAreaAdmin)
     admin.site.register(ServiceType, ServiceTypeAdmin)
     admin.site.register(ServiceEventStatus, ServiceEventStatusAdmin)
+    admin.site.register(UnitServiceArea, UnitServiceAreaAdmin)
+    admin.site.register(GroupLinker, GroupLinkerAdmin)
 
-    admin.site.register([ThirdParty, GroupLinker, UnitServiceArea], admin.ModelAdmin)
+    admin.site.register([ThirdParty], admin.ModelAdmin)

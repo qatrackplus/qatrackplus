@@ -6,11 +6,11 @@ from django.contrib.auth.models import Group, User
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.validators import RegexValidator
 from django.db import models
-from django.utils.translation import ugettext as _
 from django.utils import timezone
+from django.utils.translation import ugettext as _
 
 from qatrack.qa.models import TestListInstance, UnitTestCollection
-from qatrack.units.models import Unit, Vendor, NameNaturalKeyManager
+from qatrack.units.models import NameNaturalKeyManager, Unit, Vendor
 
 re_255 = '([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])'
 color_re = re.compile('^rgba\(' + re_255 + ',' + re_255 + ',' + re_255 + ',(0(\.[0-9][0-9]?)?|1)\)$')
@@ -98,8 +98,9 @@ class ServiceEventStatus(models.Model):
     )
     rts_qa_must_be_reviewed = models.BooleanField(
         default=True,
+        verbose_name=_("Return To Service (RTS) QA Must be Reviewed"),
         help_text=_(
-            'Service events with rts that has not been reviewed can not have this status selected if set to true.'
+            'Service events with Return To Service (RTS) QA that has not been reviewed can not have this status selected if set to true.'
         ),
     )
     description = models.TextField(

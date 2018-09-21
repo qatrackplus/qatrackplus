@@ -1,11 +1,10 @@
 import calendar
 
+from django.apps import apps
 from django.conf import settings
 from django.db import models
 from django.utils.timezone import datetime, timedelta
 from django.utils.translation import ugettext as _
-
-from django.apps import apps
 
 # from qatrack.qa.models import Frequency
 
@@ -156,7 +155,7 @@ class Unit(models.Model):
     """Radiation devices
     Stores a single radiation device (e.g. Linac, Tomo unit, Cyberkinfe etc.)
     """
-    type = models.ForeignKey(UnitType, on_delete=models.PROTECT)
+    type = models.ForeignKey(UnitType, verbose_name=_("Unit Type"), on_delete=models.PROTECT)
     site = models.ForeignKey(Site, null=True, blank=True, on_delete=models.PROTECT)
 
     number = models.PositiveIntegerField(null=False, unique=True, help_text=_('A unique number for this unit'))
@@ -165,8 +164,8 @@ class Unit(models.Model):
     location = models.CharField(max_length=256, null=True, blank=True, help_text=_('Optional location information'))
     install_date = models.DateField(null=True, blank=True, help_text=_('Optional install date'))
     date_acceptance = models.DateField(
+        verbose_name=_("Acceptance date"),
         help_text=_('Changing acceptance date will delete unit available times that occur before it'),
-        verbose_name=('Acceptance date')
     )
     active = models.BooleanField(default=True, help_text=_('Set to false if unit is no longer in use'))
     # restricted = models.BooleanField(default=False, help_text=_('Set to false to restrict unit from operation'))

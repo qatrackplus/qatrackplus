@@ -7,11 +7,6 @@ import traceback
 
 from braces.views import JSONResponseMixin, PermissionRequiredMixin
 import dateutil
-try:
-    import pydicom as dicom
-except:
-    import dicom
-
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.sites.shortcuts import get_current_site
@@ -28,6 +23,8 @@ from django.utils.translation import ugettext as _
 from django.views.generic import CreateView, TemplateView, View
 from django_comments.models import Comment
 import matplotlib
+from matplotlib.backends.backend_agg import FigureCanvasAgg
+from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import numpy
 import scipy
@@ -41,6 +38,14 @@ from qatrack.units.models import Site, Unit
 from . import forms
 from .. import models, signals, utils
 from .base import BaseEditTestListInstance, TestListInstances, UTCList, logger
+
+try:
+    import pydicom as dicom
+except:
+    import dicom
+
+
+
 
 DEFAULT_CALCULATION_CONTEXT = {
     "dicom": dicom,
@@ -152,6 +157,11 @@ class CompositeUtils:
             return qs.latest("work_completed")
         except models.TestInstance.DoesNotExist:
             return None
+
+    def get_figure(self):
+        fig = Figure()
+        canvas = FigureCanvasAgg(fig)
+        return fig
 
 
 def get_context_refs_tols(unit, tests):

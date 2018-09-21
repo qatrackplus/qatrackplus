@@ -1,3 +1,5 @@
+.. _qatrack_api:
+
 Using the QATrack+ API
 ======================
 
@@ -7,7 +9,7 @@ allow users to write their own applications for automating the completion of
 test lists. For example, you may want to write a script that runs every day
 (via a cron job or Windows Task Scheduler) which retrieves data from a hardware
 device used for daily output measurements and then uploads that data to
-QATrack+.  
+QATrack+.
 
 You are free to use any language which is capable of parsing/serializing JSON
 and making requests via http(s) but the examples below will use Python 3.x and
@@ -220,8 +222,8 @@ To process results in a loop:
         # do something with page data
 
 
-Filtering data
-..............
+Filtering and Ordering data
+...........................
 
 Data retrieved from the API can also be filtered so that only a subset of
 available results are included. For example, to retrieve all tests lists whose
@@ -239,8 +241,27 @@ UnitTestCollections whose Unit name is "Unit 1":
 
     resp = requests.get(root + '/qa/unittestcollections/?unit__name=Unit 1', headers=headers)
 
+Here's an example of getting :term:`Test Instance` data for a specific Test and Unit:
 
-QATrack+ uses Django-Rest-Framework-Filters for it's filtering so more information about the 
+.. code-block:: python
+
+    url = root + '/qa/testinstances/'
+    params = {
+        "unit_test_info__unit__name": "Unit Name",
+        "unit_test_info__test__name": "Test Name",
+        "ordering": "-work_completed",
+    }
+
+    resp = requests.get(url, params, headers=headers)
+    payload = resp.json()
+    data = [(x['work_completed'], x['value']) for x in payload['results']]
+
+
+Note the use of a dictionary of GET parameters here rather than placing them in
+the url directly. Both methods are more or less equivalent. This example also
+demonstrates how to order the data from your request using the `ordering` key.
+
+QATrack+ uses Django-Rest-Framework-Filters for it's filtering so more information about the
 filtering tools available an be found in  `DRFF's documentation <https://github.com/philipn/django-rest-framework-filters>`_.
 
 
@@ -346,15 +367,16 @@ A script that will find the above test list, and submit the data is shown here:
             }
         },
     }
-    
+
 
 A few things to note:
 
 * Some fields like `comment`, `in_progress`, and `attachments` are optional
 * The `tests` key is a dictionary of the form (`skipped` and `comment` keys are optional):
-.. code-block:: python
 
-    { 
+  .. code-block:: python
+
+    {
         'macro_name_1': {'value': <value>, 'skipped': True|False, 'comment': 'comment'},
         'macro_name_2': {...}
     }
@@ -389,7 +411,7 @@ test values should be a dictionary of the form `{'filename': 'some-file.name',
         }
     }
 
-Note that binary files must be base64 encoded!  
+Note that binary files must be base64 encoded!
 
 
 Attachments
@@ -417,13 +439,33 @@ Similar to File Upload test types, you can add arbitrary attachments to your Tes
 FAQ
 ---
 
-:The API returned status 403 with {'detail'\: 'You do not have permission to perform this action'}:
-    The user you are submitting your data with does not have permission to perform QA.  Add the user to a group
-    with the required permissions.
+- My site is using https and Apache and token authentication is not working:
+  You need to add
 
-:The API returned status 401 with {'detail'\: 'Authentication credentials not provided'}:
-    You forgot to include the authorization token http header with your request.
+  ::
 
-:The API returned status 401 with {'detail'\: 'Invalid token'}:
-    You included an invalid authorization token http header with your request. Check to ensure your auth token 
-    is set correctly.
+        # this can go in either server config, virtual host, directory or .htaccess
+        WSGIPassAuthorization On
+
+  to your Apache config. See:
+  http://www.django-rest-framework.org/api-guide/authentication/#apache-mod_wsgi-specific-configuration
+  for more details.
+
+- The API returned status 403 with {'detail'\: 'You do not have permission to
+  perform this action'}: The user you are submitting your data with does not
+  have permission to perform QA.  Add the user to a group with the required
+  permissions.
+
+- The API returned status 401 with {'detail'\: 'Authentication credentials not
+  provided'}: You forgot to include the authorization token http header with
+  your request.
+
+- The API returned status 401 with {'detail'\: 'Invalid token'}: You included
+  an invalid authorization token http header with your request. Check to ensure
+  your auth token is set correctly.
+
+API Tutorial Example
+--------------------
+
+There is a tutorial on uploading image data for analysis via pylinac available
+here: :ref:`tutorial_pylinac_api`.

@@ -1,9 +1,11 @@
+.. _qa_frequencies:
+
 Test List Frequencies
 =====================
 
-When a `test list is assigned to a unit <assign_to_unit.md>`__ you give
-it a frequency with which it should be performed. This frequency
-determines when a test list is show as being due/overdue on a unit.
+When a :ref:`test list is assigned to a unit <qa_assign_to_unit>` you give it a
+frequency with which it should be performed. This frequency determines when a
+test list is show as being due/overdue on a unit.
 
 Frequencies can be configured from the main admin page by clicking on
 the **Frequencis** link in the **QA** section.
@@ -21,10 +23,9 @@ frequencies.
 
    Monthly Frequency Example
 
-QATrack+ uses an "offset" system for deciding whether a test list is not
-due, due or overdue. If it has been less than *due interval* days since
-the last time a test list was performed the due date will be shown in
-green.
+QATrack+ currently uses an "offset" system for deciding whether a test list is
+not due, due or overdue. If it has been less than *due interval* days since the
+last time a test list was performed the due date will be shown in green.
 
 .. figure:: images/not_due.png
    :alt: Test list that is not yet due

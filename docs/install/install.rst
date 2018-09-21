@@ -22,6 +22,7 @@ be expensive!).
    :maxdepth: 1
    :caption: Officially Supported Platforms
 
+   upgrade
    linux
    win
 
@@ -49,7 +50,8 @@ described here:
 .. toctree::
    :maxdepth: 2
 
-   config.rst
+   config
+   active_directory
 
 
 
