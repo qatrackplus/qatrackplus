@@ -222,8 +222,8 @@ To process results in a loop:
         # do something with page data
 
 
-Filtering data
-..............
+Filtering and Ordering data
+...........................
 
 Data retrieved from the API can also be filtered so that only a subset of
 available results are included. For example, to retrieve all tests lists whose
@@ -241,6 +241,25 @@ UnitTestCollections whose Unit name is "Unit 1":
 
     resp = requests.get(root + '/qa/unittestcollections/?unit__name=Unit 1', headers=headers)
 
+Here's an example of getting :term:`Test Instance` data for a specific Test and Unit:
+
+.. code-block:: python
+
+    url = root + '/qa/testinstances/'
+    params = {
+        "unit_test_info__unit__name": "Unit Name",
+        "unit_test_info__test__name": "Test Name",
+        "ordering": "-work_completed",
+    }
+
+    resp = requests.get(url, params, headers=headers)
+    payload = resp.json()
+    data = [(x['work_completed'], x['value']) for x in payload['results']]
+
+
+Note the use of a dictionary of GET parameters here rather than placing them in
+the url directly. Both methods are more or less equivalent. This example also
+demonstrates how to order the data from your request using the `ordering` key.
 
 QATrack+ uses Django-Rest-Framework-Filters for it's filtering so more information about the
 filtering tools available an be found in  `DRFF's documentation <https://github.com/philipn/django-rest-framework-filters>`_.
