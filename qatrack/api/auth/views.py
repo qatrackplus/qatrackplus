@@ -1,5 +1,7 @@
 from django.contrib.auth.models import Group, Permission, User
 from rest_framework import viewsets
+from rest_framework.filters import OrderingFilter
+from rest_framework_filters import backends
 
 from qatrack.api.auth import filters
 from qatrack.api.auth.serializers import (
@@ -22,6 +24,9 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet, MultiSerializerMixin):
         'list': UserListSerializer,
     }
     filter_class = filters.UserFilter
+    filter_backends = (backends.DjangoFilterBackend, OrderingFilter,)
+    ordering_fields = ("username", "first_name", "last_name", "email", "is_staff", "is_active", "is_superuser",)
+    ordering = ("username",)
 
 
 class GroupViewSet(viewsets.ReadOnlyModelViewSet):
@@ -34,6 +39,7 @@ class GroupViewSet(viewsets.ReadOnlyModelViewSet):
         'list': GroupListSerializer,
     }
     filter_class = filters.GroupFilter
+    filter_backends = (backends.DjangoFilterBackend, OrderingFilter,)
 
 
 class PermissionViewSet(viewsets.ReadOnlyModelViewSet):
@@ -43,3 +49,4 @@ class PermissionViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Permission.objects.all().order_by('name')
     serializer_class = PermissionSerializer
     filter_class = filters.PermissionFilter
+    filter_backends = (backends.DjangoFilterBackend, OrderingFilter,)
