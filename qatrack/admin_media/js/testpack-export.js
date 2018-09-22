@@ -1,4 +1,4 @@
-var tables = ["testlistcycles", "testlists", "tests"];
+var tables = ["testlists", "testlistcycles", "tests"];
 var dataTables = {};
 
 function setSelected(type, selected){
@@ -13,7 +13,14 @@ function setSelected(type, selected){
     $("input[name="+type+"]").attr("value", val);
 }
 
+var columns = [];
+
 for (var i=0; i < tables.length; i++){
+    if (i === 0 || i === 1){
+        columns = [{width: "40%", "targets": 0}];
+    }else{
+        columns = [{width: "20%", "targets": 1}, {width: "10%", "targets": 2}, {width: "10%", "targets": 3}];
+    }
 
     dataTables[tables[i]] = $("#"+ tables[i] + "-table").dataTable({
         buttons: [
@@ -27,6 +34,8 @@ for (var i=0; i < tables.length; i++){
               }
             }
         ],
+        columnDefs: columns,
+        autoWidth: false,
         dom: 'Bfrtip',
         language: {
             buttons: {
@@ -48,3 +57,5 @@ for (var i=0; i < tables.length; i++){
           }
       }).column(0).visible(false);
 }
+
+
