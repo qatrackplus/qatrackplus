@@ -1,9 +1,8 @@
 import calendar
 
-from django.apps import apps
 from django.conf import settings
 from django.db import models
-from django.utils.timezone import datetime, timedelta
+from django.utils.timezone import timedelta
 from django.utils.translation import ugettext as _
 
 # from qatrack.qa.models import Frequency
@@ -170,7 +169,7 @@ class Unit(models.Model):
     active = models.BooleanField(default=True, help_text=_('Set to false if unit is no longer in use'))
     # restricted = models.BooleanField(default=False, help_text=_('Set to false to restrict unit from operation'))
     is_serviceable = models.BooleanField(
-        default=False, help_text=_('Set to true to enable this unit to be selectable in service events')
+        default=True, help_text=_('Set to true to enable this unit to be selectable in service events')
     )
 
     modalities = models.ManyToManyField(Modality)
@@ -208,7 +207,12 @@ class Unit(models.Model):
 
         uate_list = {str(uate.date): uate.hours for uate in self_uate_set}
 
-        val_list = self_uat_set.values('date_changed', 'hours_sunday', 'hours_monday', 'hours_tuesday', 'hours_wednesday', 'hours_thursday', 'hours_friday', 'hours_saturday')
+        val_list = self_uat_set.values(
+            'date_changed', 'hours_sunday', 'hours_monday', 'hours_tuesday',
+            'hours_wednesday', 'hours_thursday', 'hours_friday',
+            'hours_saturday',
+        )
+
         val_list_len = len(val_list)
         for i in range(val_list_len):
             next_date = val_list[i + 1]['date_changed'] - timedelta(days=1) if i < val_list_len - 1 else date_to
