@@ -11,21 +11,26 @@ and then performing the test both via the web interface and the QATrack+ API.
 Setting up the Test List
 ------------------------
 
-Log into QATrack+ and :ref:`navigate to the admin section <access_admin>`.
+Log into QATrack+ and :ref:`navigate to the admin section <access_admin_site>`.
 Create the following tests (if you haven't created a Test List before, go
-through the :ref:`step-by-step test list tutorial <tutorial_step_by_step`
+through the :ref:`step-by-step test list tutorial <tutorial_step_by_step>`
 before attempting this tutorial):
 
 #.  Name:
         Picket Fence upload & analysis
+
     Macro name:
         pf_upload_analysis
+
     Category:
         Choose existing Category or :ref:`create an Image Analysis category <qa_categories>`.
+
     Type:
         File Upload
+
     Display image:
         Ensure this field is checked off
+
     Calculation procedure:
 
         .. code-block:: python
@@ -44,7 +49,7 @@ before attempting this tutorial):
                 'max error': pf.max_error,
                 'number of pickets': pf.num_pickets,
                 'orientation': pf.orientation,
-                
+
             }
 
             # create a pylinac PDF and create an attachment with it
@@ -55,56 +60,76 @@ before attempting this tutorial):
             # convert the image to a png file so it can be displayed when performing the test list
             UTILS.write_file('pf-image.png', pf.image)
 
+
 #.  Name:
         PF orientation (Left-Right, Up-down)
+
     Macro name:
         pf_orientation
+
     Category:
         Choose existing Category
+
     Type:
         String Composite
+
     Calculation procedure:
 
         .. code-block:: python
 
             pf_orientation = pf_upload_analysis['orientation']
 
+
 #.  Name:
         PF pickets found (#)
+
     Macro name:
         pf_num_pickets
+
     Category:
         Choose existing Category
+
     Type:
         Composite
+
     Calculation procedure:
 
         .. code-block:: python
 
             pf_num_pickets = pf_upload_analysis['number of pickets']
 
+
 #.  Name:
         PF maximum leaf error (mm)
+
     Macro name:
         pf_maximum_error
+
     Category:
         Choose existing Category
+
     Type:
         Composite
+
     Calculation procedure:
 
         .. code-block:: python
 
             pf_maximum_error = pf_upload_analysis['max error']
 
+
 #.  Name:
         PF leaves % passing
+
     Macro name:
         pf_leaves_pct_passing
+
     Category:
         Choose existing Category
+
     Type:
         Composite
+
     Calculation procedure:
 
         .. code-block:: python
@@ -112,7 +137,7 @@ before attempting this tutorial):
             pf_leaves_pct_passing = pf_upload_analysis['percent passing']
 
 
-After you have created the Tests, create a Test List called `Picket Fence` that 
+After you have created the Tests, create a Test List called `Picket Fence` that
 consists of the 5 Tests we just created:
 
 
@@ -120,14 +145,14 @@ consists of the 5 Tests we just created:
     :alt: The Picket Fence Test List Definition
 
     The Picket Fence Test List Definition
-   
+
 Next :ref:`assign this test list to one or more Units <qa_assign_to_unit>`:
 
 
 .. figure:: images/assign_to_unit.png
     :alt: Assigning Picket Fence Test List to Unit
 
-    Assigning Picket Fence Test List to Unit    
+    Assigning Picket Fence Test List to Unit
 
 and :ref:`set References and Tolerances <qa_ref_tols>` on the `Maximum Leaf
 Error (mm)` and `PF leaves % passing` as shown below:
@@ -169,7 +194,7 @@ Click *Submit QA Results* and you are done!
 Performing the Test List via the API
 ------------------------------------
 
-As of version 0.3.0, :ref:`QATrack+ includes an API <_qatrack_api>` which
+As of version 0.3.0, :ref:`QATrack+ includes an API <qatrack_api>` which
 can be used for automating the entry of Test List data.  An example of
 using the API via a Python script is shown here, although the process should
 be similar in most other programming languages!
@@ -177,7 +202,7 @@ be similar in most other programming languages!
 Obtain an API token
 ~~~~~~~~~~~~~~~~~~~
 
-Before you can access the API, you need to have an API token which can either be 
+Before you can access the API, you need to have an API token which can either be
 created through the Admin section or retrieved programmaticaly:
 
 .. code-block:: python
@@ -201,7 +226,7 @@ we want to perform:
 
     import base64
     import requests
-    
+
     # the request headers must include the API token
     api_token = "YOUR API TOKEN HERE"
     headers = {"Authorization": "Token %s" % api_token}
