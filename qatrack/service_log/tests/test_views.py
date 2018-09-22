@@ -46,6 +46,7 @@ class TestURLS(TestCase):
             ('sl_list_all', {'f': 'id-%d' % se.id}, ''),
             ('rtsqa_list_all', {'f': 'id-%d' % se.id}, ''),
             ('se_searcher', {}, '?q=%d&unit_id=%d' % (se.id, u.id)),
+
             ('tli_select', {'pk': utc.id, 'form': 'a_form'}, ''),
             ('tli_statuses', {}, '?tli_id=%d' % tli.id),
             ('unit_sa_utc', {}, '?unit_id=%d' % u.id),
@@ -66,10 +67,7 @@ class TestURLS(TestCase):
         )
 
         for url, kwargs, q in url_names_200:
-            # try:
             self.assertTrue(self.returns_code(reverse(url, kwargs=kwargs) + q))
-            # except:
-                # import ipdb; ipdb.set_trace()  # yapf: disable  # noqa
 
         for url, kwargs, q in url_names_404:
             self.assertTrue(self.returns_code(reverse(url, kwargs=kwargs) + q, code=404))
@@ -732,7 +730,9 @@ class TestServiceLogViews(TestCase):
             'pass_fail': tli.pass_fail_summary(),
             'review': tli.review_summary(),
             'datetime': timezone.localtime(tli.created),
-            'all_reviewed': int(tli.all_reviewed)
+            'all_reviewed': int(tli.all_reviewed),
+            'work_completed': timezone.localtime(tli.work_completed),
+            'in_progress': tli.in_progress,
         }, cls=DjangoJSONEncoder))
 
         data = {'tli_id': tli.id}

@@ -2,12 +2,25 @@
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin.widgets import FilteredSelectMultiple
-from django.forms import ModelMultipleChoiceField, ModelForm
+from django.forms import ModelForm, ModelMultipleChoiceField
 from django.utils.translation import ugettext as _
 
+from qatrack.service_log.models import (
+    ServiceArea,
+    ServiceEvent,
+    UnitServiceArea,
+)
+
 from .forms import UnitAvailableTimeForm
-from .models import Modality, Site, Unit, UnitAvailableTime, UnitAvailableTimeEdit, UnitClass, UnitType, Vendor
-from qatrack.service_log.models import UnitServiceArea, ServiceArea, ServiceEvent
+from .models import (
+    Modality,
+    Site,
+    Unit,
+    UnitAvailableTime,
+    UnitClass,
+    UnitType,
+    Vendor,
+)
 
 
 class UnitFormAdmin(ModelForm):
@@ -111,9 +124,9 @@ class UnitAvailableTimeInline(admin.TabularInline):
 class UnitAdmin(admin.ModelAdmin):
 
     form = UnitFormAdmin
-    list_display = ['name', 'number', 'active', 'type', 'site']
+    list_display = ['name', 'number', 'active', 'type', 'site', 'is_serviceable']
     list_filter = ['active', 'site', 'modalities', 'type__unit_class']
-    list_editable = ['site']
+    list_editable = ['site', 'is_serviceable']
 
     if settings.USE_SERVICE_LOG:
         inlines = [UnitAvailableTimeInline]
@@ -150,6 +163,12 @@ class UnitTypeAdmin(admin.ModelAdmin):
         return "{}{}{}".format(vendor_name, obj.name, model)
 
 
+class ModalityAdmin(admin.ModelAdmin):
+
+    list_display = ["name"]
+
+
 admin.site.register(Unit, UnitAdmin)
 admin.site.register(UnitType, UnitTypeAdmin)
-admin.site.register([Modality, Site, UnitClass, Vendor], admin.ModelAdmin)
+admin.site.register(Modality, ModalityAdmin)
+admin.site.register([Site, UnitClass, Vendor], admin.ModelAdmin)

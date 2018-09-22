@@ -25,11 +25,11 @@ def create_user(is_staff=True, is_superuser=True, uname="user", pwd="password", 
     try:
         u = User.objects.get(username=uname)
     except:
-        u = User(
-            username=uname, is_staff=is_staff, is_superuser=is_superuser, email="test@example.com", is_active=is_active
-        )
-        u.set_password(pwd)
-        u.save()
+        if is_superuser:
+            u = User.objects.create_superuser(uname, "super@qatrackplus.com", pwd, is_staff=is_staff, is_active=is_active)
+        else:
+            u = User.objects.create_user(uname, "user@qatrackplus.com", password=pwd, is_staff=is_staff, is_active=is_active)
+    finally:
         u.user_permissions.add(Permission.objects.get(codename="add_testlistinstance"))
     return u
 

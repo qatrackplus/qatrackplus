@@ -1,46 +1,64 @@
 
+from collections import OrderedDict
 import csv
 
 from braces.views import LoginRequiredMixin, PermissionRequiredMixin
-from collections import OrderedDict
-from django_comments.models import Comment
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.context_processors import PermWrapper
 from django.contrib.auth.decorators import login_required, permission_required
-from django.contrib.auth.models import User, Permission
+from django.contrib.auth.models import Permission, User
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.urlresolvers import reverse, resolve
+from django.core.urlresolvers import resolve, reverse
 from django.db.models import Sum
 from django.forms.utils import timezone
-from django.http import JsonResponse, HttpResponseRedirect, Http404, HttpResponse
+from django.http import (
+    Http404,
+    HttpResponse,
+    HttpResponseRedirect,
+    JsonResponse,
+)
 from django.shortcuts import redirect
 from django.template.loader import get_template
 from django.utils.translation import ugettext as _
 from django.views.decorators.csrf import csrf_protect
-from django.views.generic import TemplateView, DetailView, DeleteView, FormView
+from django.views.generic import DeleteView, DetailView, FormView, TemplateView
 from django.views.generic.detail import SingleObjectTemplateResponseMixin
 from django.views.generic.edit import ModelFormMixin, ProcessFormView
-
+from django_comments.models import Comment
 from listable.views import (
-    BaseListableView, DATE_RANGE, SELECT_MULTI, SELECT,
-    TODAY, YESTERDAY, LAST_WEEK, THIS_WEEK, LAST_7_DAYS, LAST_MONTH, THIS_MONTH, LAST_30_DAYS, LAST_YEAR, THIS_YEAR,
-    LAST_365_DAYS, YEAR_TO_DATE,
+    DATE_RANGE,
+    LAST_7_DAYS,
+    LAST_30_DAYS,
+    LAST_365_DAYS,
+    LAST_MONTH,
+    LAST_WEEK,
+    LAST_YEAR,
+    SELECT,
+    SELECT_MULTI,
+    THIS_MONTH,
+    THIS_WEEK,
+    THIS_YEAR,
+    TODAY,
+    YEAR_TO_DATE,
+    YESTERDAY,
+    BaseListableView,
 )
+
+from qatrack.attachments.models import Attachment
+from qatrack.qa import models as qa_models
+from qatrack.qa.views.base import generate_review_status_context
+from qatrack.qa.views.perform import ChooseUnit
+from qatrack.qa.views.review import UTCInstances
+from qatrack.service_log import forms, models
+from qatrack.units import models as u_models
 
 if settings.USE_PARTS:
     from qatrack.parts import forms as p_forms
     from qatrack.parts import models as p_models
 
-from qatrack.service_log import models, forms
-from qatrack.qa import models as qa_models
-from qatrack.qa.views.base import generate_review_status_context
-from qatrack.qa.views.review import UTCInstances
-from qatrack.qa.views.perform import ChooseUnit
-from qatrack.units import models as u_models
-from qatrack.attachments.models import Attachment
 
 
 def get_time_display(dt):
@@ -327,7 +345,7 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
             form.cleaned_data['service_status'] = default
 
     def edit_se_attachments(self, service_event):
-        for idx, f in enumerate(self.request.FILES.getlist('se-attachments')):
+        for idx, f in enumerate(self.request.FILES.getlist('se_attachments')):
             Attachment.objects.create(
                 attachment=f,
                 comment="Uploaded %s by %s" % (timezone.now(), self.request.user.username),
@@ -336,7 +354,7 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
                 created_by=self.request.user
             )
 
-        a_ids = self.request.POST.get('attach-delete-ids').split(',')
+        a_ids = self.request.POST.get('attach-delete-ids', '').split(',')
         if a_ids != ['']:
             Attachment.objects.filter(id__in=self.request.POST.get('attach-delete-ids').split(',')).delete()
 
@@ -359,9 +377,6 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
             return self.render_to_response(context)
 
         new = form.instance.pk is None
-
-        if rtsqa_formset.has_changed():
-            self.reset_status(form)
 
         service_event = form.save()
         service_event_related = form.cleaned_data.get('service_event_related_field')
@@ -585,10 +600,12 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
 
         if is_new:
             models.ServiceLog.objects.log_new_service_event(self.request.user, form.instance)
+
         elif 'service_status' in form.changed_data:
             models.ServiceLog.objects.log_service_event_status(
                 self.request.user, form.instance, form.stringify_form_changes(), form.stringify_status_change()
             )
+
         elif form.has_changed():
             models.ServiceLog.objects.log_changed_service_event(
                 self.request.user, form.instance, form.stringify_form_changes()
@@ -1267,7 +1284,7 @@ def handle_unit_down_time(request):
     else:
         date_from = None
         date_to = timezone.datetime.now().date()
-        date_to = timezone.datetime(year=date_to.year, month=date_to.month, day=date_to.day, hour=23, minute=59, second=59)
+        date_to = timezone.datetime(year=date_to.year, month=date_to.month, day=date_to.day, hour=23, minute=59, second=59, tzinfo=timezone.get_current_timezone())
         se_qs = se_qs.filter(datetime_service__lte=date_to)
         date_to = date_to.date()
 

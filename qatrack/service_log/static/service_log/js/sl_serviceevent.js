@@ -10,6 +10,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
             $related_se = $('#id_service_event_related_field'),
             $service_status = $('#id_service_status'),
             $service_type = $('#id_service_type'),
+            $service_time = $('#id_duration_service_time'),
             $review_required = $('#id_is_review_required'),
             $review_required_fake = $('#id_is_review_required_fake'),
             $utc_initiated_by = $('#id_initiated_utc_field'),
@@ -23,8 +24,9 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
             $service_save = $('.service-save'),
             $tli_display = $('<div class="row" style="display: none;"></div>'),
             $date_time = $('#id_datetime_service'),
-            $attachInput = $('#se-attachments'),
+            $attachInput = $('#id_se_attachments'),
             $attach_deletes = $('.attach-delete'),
+            $user_or_thirdparty = $('.user_or_thirdparty'),
             $attach_delete_ids = $('#attach-delete-ids'),
             $attach_names = $('#se-attachment-names');
 
@@ -64,7 +66,14 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
             time_24hr: true,
             minuteIncrement: 1,
             dateFormat: 'd-m-Y H:i',
-            allowInput: true
+            allowInput: true,
+            onOpen: [
+                function(selectedDates, dateStr, instance) {
+                    if (dateStr === '') {
+                        instance.setDate(moment()._d);
+                    }
+                }
+            ]
         });
         
         $('.inputmask').inputmask('99:99', {numericInput: true, placeholder: "_", removeMaskOnSubmit: true});
@@ -224,6 +233,13 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
         });
         
         // Hours Formset --------------------------------------------------------------------------------------
+        function set_hours_time_to_service_time() {
+            var service_time_val = $service_time.val();
+            if (service_time_val !== '') {
+                $(this).closest('.hours-row').find('.user_thirdparty_time').val(service_time_val);
+            }
+        }
+        $user_or_thirdparty.change(set_hours_time_to_service_time);
         $('#add-hours').click(function() {
 
             var empty_hours_form = $('#empty-hours-form').html(),
@@ -231,11 +247,12 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
                 hours_index = $hours_index.val();
 
             $('#hours-tbody').append(empty_hours_form.replace(/__prefix__/g, hours_index));
-
-            $('#id_hours-' + hours_index + '-user_or_thirdparty').select2({
+            var $u_tp_select = $('#id_hours-' + hours_index + '-user_or_thirdparty');
+            $u_tp_select.select2({
                 minimumResultsForSearch: 10,
                 width: '100%'
             });
+            $u_tp_select.change(set_hours_time_to_service_time);
             $('#id_hours-' + hours_index + '-time').inputmask('99:99', {numericInput: true, placeholder: "_", removeMaskOnSubmit: true});
 
             $hours_index.val(parseInt(hours_index) + 1);
@@ -395,14 +412,19 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
                 rtsqa_id = $('#id_' + prefix + '-id').val(),
                 se_id = $('#instance-id').val();
 
+            if ($(this).attr('oldvalue') !== utc_id) {
+                tli_id = '';
+            }
             $(this).attr('oldvalue', utc_id);
 
             if (utc_id === '' || (utc_id_old !== '' && utc_id_old !== utc_id)) {
                 $('#utc-actions-' + prefix).html('');
                 $('#pass-fail-' + prefix).html('');
                 $('#review-' + prefix).html('');
+                $('#work-completed-' + prefix).html('');
                 $('#id_' + prefix + '-test_list_instance').val('');
             }
+
             if (utc_id !== '') {
                 // add utc action btns
                 $('#utc-actions-' + prefix).html(
@@ -413,9 +435,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
                         .replace(/__se-id__/g, se_id)
                         .replace(/__rtsqa-id__/g, rtsqa_id)
                 );
-                // if (!rtsqa_id) {
-                //     $('#utc-actions-' + prefix).find('.perform-btn').remove();
-                // }
+
                 if (!tli_id) {
                     $('#utc-actions-' + prefix).find('div.btn-group.review-btn').removeClass(prefix + '-hider');
                 }

@@ -79,6 +79,7 @@ class TestInfoForm(forms.ModelForm):
 
         for f in readonly:
             self.fields[f].widget.attrs['readonly'] = "readonly"
+            self.fields[f].widget.attrs['disabled'] = "disabled"
 
         if self.instance:
             tt = self.instance.test.type

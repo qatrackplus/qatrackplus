@@ -745,7 +745,9 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                                     console.log(result.error);
                                 }
                             }else{
-                                ti.status.removeClass("btn-danger");
+                                if (ti.test_status !== QAUtils.ACTION){
+                                    ti.status.removeClass("btn-danger");
+                                }
                                 ti.status.attr("title", "");
                             }
                         }

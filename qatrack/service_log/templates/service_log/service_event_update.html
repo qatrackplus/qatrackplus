@@ -278,7 +278,7 @@
 
                                             {% for h_form in hours_formset.forms %}
                                                 {% if h_form.instance.pk or not h_form.DELETE.widget.attrs.checked %}
-                                                    <tr id="{{ h_form.prefix }}">
+                                                    <tr id="{{ h_form.prefix }}" class="hours-row">
                                                         {{ h_form.id }}
                                                         <td class="form-group{% if h_form.user_or_thirdparty.errors %} has-error{% endif %}" >
                                                             {{ h_form.user_or_thirdparty }}
@@ -438,7 +438,7 @@
                 <div class="col-md-4">
                     <div class="box">
                         <div class="box-header">
-                            <h3 class="box-title">
+                            <h3 class="box-title{% if form.se_attachments.errors %} has-error{% endif %}">
                                 <i class="fa fa-cog fa-fw" aria-hidden="true"></i>
                                 Attachments
                             </h3>
@@ -446,7 +446,6 @@
                         <div class="box-body">
                             <div class="row">
                                 <div class="col-sm-12">
-                                    {% if perms.attachments.add_attachment %}
                                         <table id="attach-table" class="table table-responsive table-condensed">
                                             <thead>
                                                 <tr>
@@ -467,14 +466,21 @@
                                             </tbody>
                                             <tfoot id="se-attachment-names"></tfoot>
                                         </table>
-                                    {% endif %}
                                 </div>
                             </div>
                         </div>
                         <div class="box-footer">
-                            <label class="qa-input btn btn-default btn-sm btn-flat pull-right" title="Click to add attachments. (Hold Ctrl or Cmd in the dialog to include multiple attachments)">
-                                Browse <input id="se-attachments" class="file-upload" type="file" name="se-attachments" multiple style="display: none;"/>
-                            </label>
+
+                            {% if perms.attachments.add_attachment %}
+                                <div class="form-group{% if form.se_attachments.errors %} has-error{% endif %}">
+                                    {% for error in form.se_attachments.errors %}
+                                        <div class="col-sm-12 help-block text-center">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                                <label class="qa-input btn btn-default btn-sm btn-flat pull-right" title="Click to add attachments. (Hold Ctrl or Cmd in the dialog to include multiple attachments)">
+                                    Browse {{ form.se_attachments }}
+                                </label>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -587,7 +593,7 @@
     <table style="display: none;">
         <tbody id="empty-hours-form">
             {% with hours_formset.empty_form as h_form %}
-                <tr id="hours-__prefix__">
+                <tr id="hours-__prefix__" class="hours-row">
                     {{ h_form.id }}
                     <td>{{ h_form.user_or_thirdparty }}</td>
                     <td>{{ h_form.time }}</td>

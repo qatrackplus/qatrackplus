@@ -1,4 +1,6 @@
+
 from django.views.generic.base import TemplateView
+
 from qatrack.qa.models import PERMISSIONS
 
 

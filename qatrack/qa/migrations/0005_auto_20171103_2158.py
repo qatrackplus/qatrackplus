@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 from django.db import migrations, models
 
 from qatrack.qa.models import BOOLEAN
+from qatrack.qa.utils import get_or_create_bool_tols, get_or_create_internal_user
 
 
 def create_bool_tolerances(apps, schema):
@@ -12,26 +13,9 @@ def create_bool_tolerances(apps, schema):
     Tolerance = apps.get_model('qa', 'Tolerance')
     User = apps.get_model('auth', 'User')
 
-    try:
-        u = User.objects.get(username="QATrack+ Internal")
-    except User.DoesNotExist:
-        pwd = User.objects.make_random_password()
-        u = User.objects.create(username="QATrack+ Internal", password=pwd)
-        u.is_active = False
-        u.save()
+    get_or_create_internal_user(User)
 
-    warn, __ = Tolerance.objects.get_or_create(
-        type=BOOLEAN,
-        bool_warning_only=True,
-        created_by=u,
-        modified_by=u
-    )
-    act, __ = Tolerance.objects.get_or_create(
-        type=BOOLEAN,
-        bool_warning_only=False,
-        created_by=u,
-        modified_by=u
-    )
+    get_or_create_bool_tols(User, Tolerance)
 
 
 def delete_bool_tolerances(apps, schema):

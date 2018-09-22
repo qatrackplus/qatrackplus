@@ -7,11 +7,6 @@ import traceback
 
 from braces.views import JSONResponseMixin, PermissionRequiredMixin
 import dateutil
-try:
-    import pydicom as dicom
-except:
-    import dicom
-
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.sites.shortcuts import get_current_site
@@ -28,6 +23,8 @@ from django.utils.translation import ugettext as _
 from django.views.generic import CreateView, TemplateView, View
 from django_comments.models import Comment
 import matplotlib
+from matplotlib.backends.backend_agg import FigureCanvasAgg
+from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import numpy
 import scipy
@@ -41,6 +38,14 @@ from qatrack.units.models import Site, Unit
 from . import forms
 from .. import models, signals, utils
 from .base import BaseEditTestListInstance, TestListInstances, UTCList, logger
+
+try:
+    import pydicom as dicom
+except:
+    import dicom
+
+
+
 
 DEFAULT_CALCULATION_CONTEXT = {
     "dicom": dicom,
@@ -152,6 +157,11 @@ class CompositeUtils:
             return qs.latest("work_completed")
         except models.TestInstance.DoesNotExist:
             return None
+
+    def get_figure(self):
+        fig = Figure()
+        canvas = FigureCanvasAgg(fig)
+        return fig
 
 
 def get_context_refs_tols(unit, tests):
@@ -814,7 +824,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         return template_utis
 
     def set_unit_test_infos(self):
-        """Find and order all :model:`qa.UniTestInfo` objects for tests to be performed"""
+        """Find and order all :model:`qa.UnitTestInfo` objects for tests to be performed"""
 
         utis = models.UnitTestInfo.objects.filter(
             unit=self.unit_test_col.unit,
@@ -1276,11 +1286,12 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
         template_utis = []
         for uti in self.unit_test_infos:
+            ref, tol = self.prev_ref_tols[uti.pk]
             template_utis.append({
                 "id": uti.pk,
                 "test": model_to_dict(uti.test),
-                "reference": model_to_dict(uti.reference) if uti.reference else None,
-                "tolerance": model_to_dict(uti.tolerance) if uti.tolerance else None,
+                "reference": model_to_dict(ref) if ref else None,
+                "tolerance": model_to_dict(tol) if tol else None,
             })
         return template_utis
 
@@ -1288,9 +1299,8 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
         context = super(EditTestListInstance, self).get_context_data(**kwargs)
         uti_pks = [f.instance.unit_test_info.pk for f in context["formset"]]
+        self.prev_ref_tols = {f.instance.unit_test_info.pk: (f.instance.reference, f.instance.tolerance) for f in context["formset"]}
         utis = models.UnitTestInfo.objects.filter(pk__in=uti_pks).select_related(
-            "reference",
-            "tolerance",
             "unit",
             "test__category",
         ).prefetch_related(

@@ -59,6 +59,11 @@
                                         <i class="fa fa-power-off fa-fw danger" aria-hidden="true"></i>
                                         {% trans "Log Out" %}
                                     </a></li>
+                                {% else %}
+                                    <li {% block register_active %}{% endblock register_active %}><a href="{% url "registration_register" %}">
+                                        <i class="fa fa-user fa-fw " aria-hidden="true"></i>
+                                        {% trans "Register" %}
+                                    </a></li>
                                 {% endif %}
                             </ul>
                         </div>

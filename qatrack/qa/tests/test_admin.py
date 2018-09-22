@@ -16,6 +16,7 @@ from qatrack.qa import admin as qa_admin
 from qatrack.qa import models as qa_models
 from qatrack.qa.tests import utils as qa_utils
 from qatrack.service_log.tests import utils as sl_utils
+from qatrack.qa.utils import get_or_create_bool_tols, get_or_create_internal_user
 
 
 class TestSetReferencesAndTolerancesForm(TransactionTestCase):
@@ -692,6 +693,9 @@ class TestUnitTestInfoAdmin(TestCase):
         self.factory = RequestFactory()
         self.user = qa_utils.create_user(is_superuser=True, uname='user', pwd='pwd')
         self.client.login(username='user', password='pwd')
+
+        get_or_create_internal_user(qa_models.User)
+        get_or_create_bool_tols() # hack to work around tolerances being deleted somewhere (in another test?)
 
         self.site = AdminSite()
         self.u_1 = qa_utils.create_unit()

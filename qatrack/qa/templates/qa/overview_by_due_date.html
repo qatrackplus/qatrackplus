@@ -81,9 +81,9 @@ $(document).ready(function(){
         </div>
     </div>
 
-    <div class="row">
-        {% for key, display, utcs in due %}
-            <div class="col-md-6">
+    {% for key, display, utcs in due %}
+        <div class="row">
+            <div class="col-md-12">
                 <div class="box">
                     <div class="box-header">
     {#                    <i class="fa fa-calendar fa-fw box-title" aria-hidden="true"></i>#}
@@ -137,8 +137,8 @@ $(document).ready(function(){
                     </div>
                 </div>
             </div>
-        {% endfor %}
-    </div>
+        </div>
+    {% endfor %}
 
 {% endblock %}
 

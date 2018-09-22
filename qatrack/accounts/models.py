@@ -1,7 +1,8 @@
 from django.conf import settings
 
 from django.contrib.auth.models import User, Group
-from django.db.models.signals import post_save
+from django.core.exceptions import PermissionDenied
+from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 
 

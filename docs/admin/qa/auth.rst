@@ -1,9 +1,14 @@
+.. _qa_auth:
+
 Managing Users and Groups
 =========================
 
 Access to various QATrack+ features for users is defined based on which
 groups a user belongs to and which permissions have been assigned to
 their groups, or them specifically.
+
+
+.. _auth_groups:
 
 User Groups
 -----------
@@ -20,22 +25,29 @@ the next page. Give your group a name and then choose the permissions
 available to that group (permissions are described in more detail
 below). Once you are finished, click **Save**.
 
+.. figure:: images/create_group.png
+   :alt: Creating a new group
+
+   Creating a new group
+
+.. _auth_users:
+
 Users
 -----
 
-If you are using Active Directory for user authentication then new users
-will be automatically created the first time they log in. Otherwise if
-you are using the built in authentication system you will need to create
-users manually.
+If you are using :ref:`Active Directory <active_directory>` for user
+authentication then new users will be automatically created the first time they
+log in. Otherwise if you are using the built in authentication system you will
+need to create users manually.
 
 Creating a new user
 ~~~~~~~~~~~~~~~~~~~
 
-From the main admin page click on the **Users** link under the **Auth**
-section and then click **Add user**. On the next page fill out the
-username and password fields. (The user will be able to change their
-password to something different on their own later). Click **Save** when
-you are finished.
+From the main :ref:`admin page <access_admin_site>` click on the **Users** link
+under the **Auth** section and then click **Add user**. On the next page fill
+out the username and password fields. (The user will be able to change their
+password to something different on their own later). Click **Save** when you
+are finished.
 
 .. figure:: images/create_user.png
    :alt: Creating a new user
@@ -47,6 +59,11 @@ proper names, which groups the user belongs to and any permissions
 specific to that person (i.e. that are not already covered by the groups
 they are members of).
 
+.. figure:: images/create_user_2nd.png
+   :alt: Creating a new user - selecting permissions
+
+   Creating a new user and setting permissions
+
 Any user that has **Staff Status** checked on their user profile page
 will have access to the admin site.
 
@@ -55,6 +72,8 @@ granted to them without needing to explicitly specified.
 
 Permissions
 -----------
+
+.. _permissions_admin:
 
 The easiest method of managing permissions is to grant specific
 permissions to a group and then make users part of that group. The user
@@ -79,6 +98,9 @@ sets for groups are given below:.
 -  **qa \| test instance \| Can review & approve self-performed tests**
    *Allow a user to review their own test results (requires review
    permission as well)*
+-  **qa \| test instance \| Can review non visible test list instances**
+   *Allow a user to review test list instances that are not visible to
+   any of their groups*
 -  **qa \| test instance \| Can skip without comment** *Allows a user to
    skip tests without adding a comment*
 -  **qa \| test list instance \| Can add test list instance** *Required
@@ -86,6 +108,8 @@ sets for groups are given below:.
 -  **qa \| test list instance \| Can perform subset of tests** *Allows a
    user to perform only a subset of test categories when performing a
    test list*
+-  **qa \| test list instance \| Can save in progress** *Allows a
+   user to save test lists with the "In Progress" flag set*
 -  **qa \| test list instance \| Can view previously completed
    instances** *Allows a user to view (but not edit) previously
    completed test lists*
@@ -102,7 +126,17 @@ sets for groups are given below:.
    user to view the program overview page*
 -  **qa \| unit test collection \| Can view TLI and UTC not visible to
    user's groups** *Allows a user to view all Test Lists regardless of
-   their groups *
+   their groups*
+-  **service_log \| hours \| Can have hours** *Allow tracking of users hours when involved with a Service Event*
+-  **service_log \| return to service qa \| Can perform return to service qa** *Allow user to perform qa linked to service events*
+-  **service_log \| return to service qa \| Can view existing return to service qa** *Allow user to view qa linked to service events*
+-  **service_log \| service event \| Can create service events** *Allows user to create new service events*
+-  **service_log \| service event \| Can view service events** *Allows user to view existing service events*
+-  **service_log \| service event \| Can review service events** *Allows user to change status of service events to statuses with \'is review required = false\'.*
+-  **parts \| part \| Can add part** *Allows a user to enter new parts*
+-  **parts \| part \| Can view parts** *Allows a user to view existing parts*
+
+
 
 Minimal set of permissions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -206,3 +240,11 @@ typical permission set might look like the following:
 -  qa \| unit test info \| Can add unit test info
 -  qa \| unit test info \| Can view Refs and Tols
 -  qa \| unit test info \| Can change unit test info
+-  service_log \| hours \| Can have hours
+-  service_log \| return to service qa \| Can perform return to service qa
+-  service_log \| return to service qa \| Can view existing return to service qa
+-  service_log \| service event \| Can create service events
+-  service_log \| service event \| Can view service events
+-  service_log \| service event \| Can review service events
+-  parts \| part \| Can add part
+-  parts \| part \| Can view parts

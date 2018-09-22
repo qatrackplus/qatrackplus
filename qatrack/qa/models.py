@@ -1236,8 +1236,16 @@ class UnitTestCollection(models.Model):
     active = models.BooleanField(help_text=_("Uncheck to disable this test on this unit"), default=True, db_index=True)
 
     limit = Q(app_label='qa', model='testlist') | Q(app_label='qa', model='testlistcycle')
-    content_type = models.ForeignKey(ContentType, limit_choices_to=limit)
-    object_id = models.PositiveIntegerField()
+    content_type = models.ForeignKey(
+        ContentType,
+        limit_choices_to=limit,
+        verbose_name="Test List or Test List Cycle",
+        help_text="Choose whether to use a Test List or Test List Cycle",
+    )
+    object_id = models.PositiveIntegerField(
+        verbose_name="Tests collection",
+        help_text="Choose the tests collection object to assign to the unit",
+    )
     tests_object = GenericForeignKey("content_type", "object_id")
     objects = UnitTestListManager()
     name = models.CharField(max_length=255, db_index=True, default='', editable=False)

@@ -157,8 +157,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     # 'django.contrib.auth.middleware.RemoteUserMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    # 'qatrack.middleware.login_required.LoginRequiredMiddleware',
-    # 'qatrack.middleware.maintain_filters.FilterPersistMiddleware',
+    'qatrack.middleware.login_required.LoginRequiredMiddleware',
+    'qatrack.middleware.maintain_filters.FilterPersistMiddleware',
 ]
 
 
@@ -207,8 +207,8 @@ FIXTURE_DIRS = (
 # ------------------------------------------------------------------------------
 INSTALLED_APPS = [
     'django.contrib.admin',
-    'django.contrib.auth',
     'django.contrib.contenttypes',
+    'django.contrib.auth',
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.messages',
@@ -285,10 +285,7 @@ CACHES = {
 # Session Settings
 SESSION_COOKIE_AGE = 14 * 24 * 60 * 60
 SESSION_SAVE_EVERY_REQUEST = True
-# SESSION_COOKIE_NAME = 'QaTrack'
-# SESSION_COOKIE_PATH = '/qatrack'
-# CSRF_COOKIE_PATH = '/qatrack'
-# CSRF_COOKIE_NAME = 'csrftoken-qatrack'
+
 
 # -----------------------------------------------------------------------------
 # Email and notification settings
