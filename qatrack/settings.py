@@ -1,9 +1,9 @@
 # Django settings for qatrack project.
+import datetime
 import os
 import sys
 
 import matplotlib
-import datetime
 
 matplotlib.use("Agg")
 
@@ -552,3 +552,4 @@ if any(['test' in v for v in sys.argv]):
 if DEBUG:
     INSTALLED_APPS.append('debug_toolbar')
     MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
+    TEMPLATES[0]['OPTIONS']['debug'] = True

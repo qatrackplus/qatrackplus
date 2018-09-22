@@ -298,7 +298,7 @@
                                         <div class="col-sm-12">
                                             <div class="row">
                                                 <label class="col-md-8">
-                                                    {% if perms.service_log.add_serviceevent %}
+                                                    {% if perms.service_log.add_serviceevent and unit_test_collection.unit.is_serviceable %}
                                                         <div class="btn-group">
                                                             <a class="btn btn-default btn-xs btn-flat hover-parent"
                                                                title="Create new service event initiated by this list"
@@ -579,11 +579,11 @@
                                         </div>
 
                                         <div class="pull-right margin-r-5">
-                                            {% if perms.service_log.add_serviceevent %}
-                                            <label title="{{form.initiate_service.help_text}}" for="id_initiate_service" class="add-on" style="display: none;">
-                                                Initiate service event:
-                                            </label>
-                                            {{ form.initiate_service }}
+                                            {% if perms.service_log.add_serviceevent and unit_test_collection.unit.is_serviceable %}
+                                              <label title="{{form.initiate_service.help_text}}" for="id_initiate_service" class="add-on" style="display: none;">
+                                                  Initiate service event:
+                                              </label>
+                                              {{ form.initiate_service }}
                                             {% endif %}
                                         </div>
 
