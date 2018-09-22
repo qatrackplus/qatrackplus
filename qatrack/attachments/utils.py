@@ -2,8 +2,8 @@ import io
 import os
 
 from matplotlib.figure import Figure
+import pydicom
 import scipy.misc
-
 
 
 def imsave(obj, fname):
@@ -12,6 +12,14 @@ def imsave(obj, fname):
     data = io.BytesIO()
     try:
         scipy.misc.imsave(data, obj, format=fmt)
+        data.seek(0)
+        return data.read()
+    except:
+        pass
+
+    try:
+        pixels = pydicom.read_file(obj, force=True).pixel_array
+        scipy.misc.imsave(data, pixels, format=fmt)
         data.seek(0)
         return data.read()
     except:

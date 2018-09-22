@@ -586,12 +586,20 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             });
 
             self.dropzone.on('error', function(file, data) {
-                if (!data){
-                    data = "Server Error";
+                var btn_txt, tool_tip;
+                if (!data || !file){
+                    btn_txt = "Server Error";
+                    tool_tip = "Server Error";
+                }else if (file.xhr.status === 413){
+                    btn_txt = "File too large";
+                    tool_tip = "You may need to increase the maximum request size on your server";
+                }else{
+                    btn_txt = data;
+                    tool_tip = data;
                 }
                 self.set_value(null);
                 self.status.removeClass("btn-primary btn-danger btn-success");
-                self.status.addClass("btn-danger").text(data).attr('title', data);
+                self.status.addClass("btn-danger").text(btn_txt).attr('title', tool_tip);
             });
 
             self.dropzone.on('success', function(file, data) {
