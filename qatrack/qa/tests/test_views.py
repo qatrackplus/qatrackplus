@@ -309,8 +309,8 @@ class TestChartView(TestCase):
         request = self.factory.get(url)
         response = qatrack.qa.views.charts.get_test_lists_for_unit_frequencies(request)
         values = json.loads(response.content.decode("UTF-8"))
-        expected = {"test_lists": [tl.pk for tl in self.tls]}
-        self.assertDictEqual(values, expected)
+        expected = {tl.pk for tl in self.tls}
+        assert expected == set(values['test_lists'])
 
     def test_get_test_lists_for_unit_frequencies_filtered(self):
 

@@ -91,7 +91,7 @@ def to_precision(x, p):
             out.extend(m[e + 1:])
     else:
         out.append("0.")
-        out.extend(["0"]*-(e + 1))
+        out.extend(["0"] * -(e + 1))
         out.append(m)
 
     return "".join(out)
@@ -171,3 +171,41 @@ def check_query_count():  # pragma: nocover
             return inner
         return func
     return decorator
+
+
+def get_or_create_bool_tols(user_klass=None, tol_klass=None):
+
+    from qatrack.qa import models
+    user_klass = user_klass or models.User
+    tol_klass = tol_klass or models.Tolerance
+    user = user_klass.objects.get(username="QATrack+ Internal")
+
+    warn, __ = tol_klass.objects.get_or_create(
+        type=models.BOOLEAN,
+        bool_warning_only=True,
+        created_by=user,
+        modified_by=user
+    )
+    act, __ = tol_klass.objects.get_or_create(
+        type=models.BOOLEAN,
+        bool_warning_only=False,
+        created_by=user,
+        modified_by=user
+    )
+    return warn, act
+
+
+def get_or_create_internal_user(user_klass=None):
+
+    from qatrack.qa import models
+    user_klass = user_klass or models.User
+
+    try:
+        u = user_klass.objects.get(username="QATrack+ Internal")
+    except user_klass.DoesNotExist:
+        pwd = user_klass.objects.make_random_password()
+        u = user_klass.objects.create(username="QATrack+ Internal", password=pwd)
+        u.is_active = False
+        u.save()
+
+    return u

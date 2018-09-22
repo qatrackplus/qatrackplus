@@ -354,7 +354,7 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
                 created_by=self.request.user
             )
 
-        a_ids = self.request.POST.get('attach-delete-ids').split(',')
+        a_ids = self.request.POST.get('attach-delete-ids', '').split(',')
         if a_ids != ['']:
             Attachment.objects.filter(id__in=self.request.POST.get('attach-delete-ids').split(',')).delete()
 
@@ -1284,7 +1284,7 @@ def handle_unit_down_time(request):
     else:
         date_from = None
         date_to = timezone.datetime.now().date()
-        date_to = timezone.datetime(year=date_to.year, month=date_to.month, day=date_to.day, hour=23, minute=59, second=59)
+        date_to = timezone.datetime(year=date_to.year, month=date_to.month, day=date_to.day, hour=23, minute=59, second=59, tzinfo=timezone.get_current_timezone())
         se_qs = se_qs.filter(datetime_service__lte=date_to)
         date_to = date_to.date()
 
