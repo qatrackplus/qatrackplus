@@ -43,6 +43,7 @@ qatrack/assets
 qatrack/cache/cache_data
 qatrack/media/uploads
 qatrack/qa/static/css/site.css
+qatrack/qatrack_core/static/qatrack_core/css/site.css
 qatrack/static
 qatrack/wsgi.py
 questions_*
