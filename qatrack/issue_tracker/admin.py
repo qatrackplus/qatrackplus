@@ -36,9 +36,9 @@ class IssuePriorityStatusAdmin(admin.ModelAdmin):
             ),
         }
 
+if settings.USE_ISSUES:
 
-admin.site.register([i_models.IssueType], IssueTypeAdmin)
-admin.site.register([i_models.IssuePriority, i_models.IssueStatus], IssuePriorityStatusAdmin)
-admin.site.register([i_models.Issue], IssueAdmin)
-admin.site.register([i_models.IssueTag], IssueTagAdmin)
-
+    admin.site.register([i_models.IssueType], IssueTypeAdmin)
+    admin.site.register([i_models.IssuePriority, i_models.IssueStatus], IssuePriorityStatusAdmin)
+    admin.site.register([i_models.Issue], IssueAdmin)
+    admin.site.register([i_models.IssueTag], IssueTagAdmin)

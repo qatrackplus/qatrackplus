@@ -9,7 +9,7 @@ from django.dispatch import receiver
 from qatrack.qa.models import TestListInstance, UnitTestCollection
 from qatrack.units.models import Unit
 from qatrack.parts.models import PartUsed, PartStorageCollection
-from qatrack.service_log.models import ReturnToServiceQA, ServiceEvent, ServiceEventStatus, ServiceLog
+from qatrack.service_log.models import ReturnToServiceQA, ServiceEvent, ServiceEventStatus
 
 cache.delete(settings.CACHE_UNREVIEWED_COUNT)
 cache.delete(settings.CACHE_RTS_QA_COUNT)
@@ -106,7 +106,10 @@ def site(request):
 
     unreviewed_rts = cache.get(settings.CACHE_RTS_QA_COUNT)
     if unreviewed_rts is None:
-        unreviewed_rts = ReturnToServiceQA.objects.filter(test_list_instance__isnull=False, test_list_instance__all_reviewed=False).count()
+        unreviewed_rts = ReturnToServiceQA.objects.filter(
+            test_list_instance__isnull=False,
+            test_list_instance__all_reviewed=False
+        ).count()
         cache.set(settings.CACHE_RTS_QA_COUNT, unreviewed_rts)
 
     your_unreviewed = TestListInstance.objects.your_unreviewed_count(request.user)
@@ -123,7 +126,10 @@ def site(request):
 
     se_needing_review_count = cache.get('se_needing_review_count')
     if se_needing_review_count is None:
-        se_needing_review_count = ServiceEvent.objects.filter(service_status__in=ServiceEventStatus.objects.filter(is_review_required=True), is_review_required=True).count()
+        se_needing_review_count = ServiceEvent.objects.filter(
+            service_status__in=ServiceEventStatus.objects.filter(is_review_required=True),
+            is_review_required=True,
+        ).count()
         cache.set('se_needing_review_count', se_needing_review_count)
 
     in_progress_count = cache.get(settings.CACHE_IN_PROGRESS_COUNT)
@@ -147,6 +153,7 @@ def site(request):
         'DEBUG': settings.DEBUG,
         'USE_SERVICE_LOG': settings.USE_SERVICE_LOG,
         'USE_PARTS': settings.USE_PARTS,
+        'USE_ISSUES': settings.USE_ISSUES,
         'DEFAULT_SE_STATUS': default_se_status,
         'SE_NEEDING_REVIEW_COUNT': se_needing_review_count,
         'IN_PROGRESS': in_progress_count,

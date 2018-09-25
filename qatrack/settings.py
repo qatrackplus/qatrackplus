@@ -45,8 +45,8 @@ SITE_NAME = "QATrack+"
 # please do so here or in a local_settings.py file
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',  # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': os.path.join(PROJECT_ROOT, '..', 'db/default.db'),                      # Or path to database file if using sqlite3.
+        'ENGINE': 'django.db.backends.sqlite3',  # Add 'postgresql_psycopg2', 'mysql', 'sqlite3'
+        'NAME': os.path.join(PROJECT_ROOT, '..', 'db/default.db'),  # db name Or path to database file if using sqlite3.
         'USER': '',                      # Not used with sqlite3.
         'PASSWORD': '',                  # Not used with sqlite3.S
         'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
@@ -439,7 +439,10 @@ FORCE_SCRIPT_NAME = None
 
 # ------------------------------------------------------------------------------
 # QA Settings
-PAGINATE_DEFAULT = 50  # remember to change iDisplayLength in unittestcollection.js and testlistinstance.js if you change this
+
+# remember to change iDisplayLength in unittestcollection.js and
+# testlistinstance.js if you change this
+PAGINATE_DEFAULT = 50
 
 NHIST = 5  # number of historical test results to show when reviewing/performing qa
 
@@ -504,6 +507,7 @@ DEFAULT_TEST_STATUS_COLOUR = 'rgba(243,156,18,1)'
 
 USE_SERVICE_LOG = True
 USE_PARTS = True
+USE_ISSUES = False  # internal development issue tracker
 
 DEFAULT_AVAILABLE_TIMES = {
     'hours_sunday': datetime.timedelta(hours=0, minutes=0),
