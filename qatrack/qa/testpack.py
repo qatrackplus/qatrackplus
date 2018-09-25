@@ -130,7 +130,6 @@ def add_testpack(serialized_pack, user=None, test_keys=None, test_list_keys=None
         'testlists': list(map(tuple, test_list_keys)) if test_list_keys is not None else None,
         'testlistcycles': list(map(tuple, cycle_keys)) if cycle_keys is not None else None,
     }
-    1/0
 
     # this section deserialized all objects from the testpack, and populates
     # to_import with those objects which the user has requested be created
