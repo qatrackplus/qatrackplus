@@ -198,10 +198,10 @@
                                 <div class="row">
                                     <div class="col-md-12">
                                         <dl class="dl-horizontal">
-                                            {% if serviceevent.duration_service_time %}
+                                            {% if serviceevent.duration_service_time != None %}
                                                 <dt>Service time (hh:mm):</dt><dd><div>{{ serviceevent.duration_service_time|hour_min }}</div></dd>
                                             {% endif %}
-                                            {% if serviceevent.duration_lost_time %}
+                                            {% if serviceevent.duration_lost_time != None %}
                                                 <dt>Lost time (hh:mm):</dt><dd><div>{{ serviceevent.duration_lost_time|hour_min }}</div></dd>
                                             {% endif %}
                                         </dl>
