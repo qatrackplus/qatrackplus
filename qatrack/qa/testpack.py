@@ -5,6 +5,7 @@ import uuid
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.serializers import get_serializer
+from django.db.transaction import atomic
 from django.utils import timezone
 import pytest
 
@@ -106,6 +107,7 @@ def save_testpack(pack, fp):
     json.dump(pack, fp, indent=2)
 
 
+@atomic
 def add_testpack(serialized_pack, user=None, test_keys=None, test_list_keys=None, cycle_keys=None):
     """
     Takes a serialized data pack and saves the deserialized objects to the db.
@@ -126,8 +128,9 @@ def add_testpack(serialized_pack, user=None, test_keys=None, test_list_keys=None
     model_key_include_map = {
         'tests': list(map(tuple, test_keys)) if test_keys is not None else None,
         'testlists': list(map(tuple, test_list_keys)) if test_list_keys is not None else None,
-        'testlistcycles':  list(map(tuple, cycle_keys)) if cycle_keys is not None else None,
+        'testlistcycles': list(map(tuple, cycle_keys)) if cycle_keys is not None else None,
     }
+    1/0
 
     # this section deserialized all objects from the testpack, and populates
     # to_import with those objects which the user has requested be created
@@ -197,10 +200,7 @@ def add_testpack(serialized_pack, user=None, test_keys=None, test_list_keys=None
             obj.update(dict(zip(model.NK_FIELDS, nk_lookups[model_name][nk_vals])))
             to_create.append(model(**obj))
 
-        try:
-            model.objects.bulk_create(to_create)
-        except:
-            import ipdb; ipdb.set_trace()  # yapf: disable  # noqa
+        model.objects.bulk_create(to_create)
 
     # create mapping of natural keys (including freshly created) to object ids
     test_lists = models.TestList.objects.values_list("id", *models.TestList.NK_FIELDS)

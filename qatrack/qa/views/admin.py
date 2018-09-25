@@ -252,17 +252,20 @@ class ImportTestPack(FormView):
         extra_tests = json.loads(extra_tests) if extra_tests != "all" else None
 
         testpack = form.cleaned_data['testpack_data']
-        counts, totals = add_testpack(
-            testpack,
-            self.request.user,
-            test_keys=extra_tests,
-            test_list_keys=tls,
-            cycle_keys=cycles,
-        )
+        try:
+            counts, totals = add_testpack(
+                testpack,
+                self.request.user,
+                test_keys=extra_tests,
+                test_list_keys=tls,
+                cycle_keys=cycles,
+            )
+            count_msg = ", ".join("%d/%d %s's" % (counts[k], totals[k], k) for k in totals)
+            msg = "Test Pack import successfully: %s were imported." % count_msg
 
-        count_msg = ", ".join("%d/%d %s's" % (counts[k], totals[k], k) for k in totals)
-        msg = "Test Pack import successfully: %s were imported." % count_msg
-
-        messages.success(self.request, msg)
+            messages.success(self.request, msg)
+        except:
+            msg = "Sorry, but an error occured when trying to import your Testpack. Please file a bug report."
+            messages.error(self.request, msg)
 
         return super(ImportTestPack, self).form_valid(form)
