@@ -8,7 +8,7 @@ function setSelected(type, selected){
     if (all){
       val = "all";
     } else {
-      val = selected.join(",");
+      val = JSON.stringify(selected);
     }
     $("input[name="+type+"]").attr("value", val);
 }
@@ -43,7 +43,7 @@ for (var i=0; i < tables.length; i++){
           }
       }).show().DataTable().on('select deselect', function ( e, dt, type, indexes ) {
           if (type === 'row') {
-            var data = dt.rows({selected: true}).data().pluck(1).toArray();
+            var data = dt.rows({selected: true}).data().pluck(0).toArray();
             var type = $(dt.table().container()).attr("id").split("-")[0];
             setSelected(type, data);
           }
@@ -81,6 +81,7 @@ var converters = {
 
 
 function loadTestPack(tpk){
+
   var meta = tpk.meta;
   var version = parseVersion(meta.version);
 
@@ -88,24 +89,22 @@ function loadTestPack(tpk){
   $("#name").text(meta.name);
   $("#created-by").text(meta.contact);
   $("#description").text(meta.description);
-  var objects = {};
-  _.map(tpk.objects, function(o){
-    var data = JSON.parse(o);
-    if (data.length === 0 ||
-        !(data[0].model === "qa.test" || data[0].model === "qa.testlist" || data[0].model === "qa.testlistcycle")){
-      return;
-    }
-    var model = data[0].model.replace("qa.", "") + "s";
-    var table = dataTables[model];
-    table.clear();
-    objects[model] = [];
-    var converter = converters[model];
-    for (var i = 0; i < data.length; i++){
-      table.row.add([i].concat(converter(data[i])));
-    }
-    table.draw();
-    $("#"+model+"-table_wrapper .buttons-select-all").click();
+  var models = ["tests", "testlists", "testlistcycles"];
+  var model_map = {'tests': 'qa.test' , 'testlists': 'qa.testlist' , 'testlistcycles': 'qa.testlistcycle'};
+  var objects_to_imp = {'tests': [], 'test_lists': [], 'test_list_cycles': []};
+  _.each(models, function(model){
+        var objects = _.map(tpk.objects[model], function(o){return JSON.parse(o);});
+        var objects_to_imp = [];
+        var table = dataTables[model];
+        var converter = converters[model];
+        _.each(objects, function(model_objects){
+            table.row.add([model_objects.key].concat(converter(model_objects['object'])));
+        });
+        table.draw();
+        $("#"+model+"-table_wrapper .buttons-select-all").click();
+
   });
+
 }
 
 $("#id_testpack").on("change", function(e){

@@ -113,11 +113,17 @@ def testlist_json(request, source_unit, content_type):
     ctype = ContentType.objects.get(model=content_type)
 
     if ctype.name == 'test list':
-        utcs = models.UnitTestCollection.objects.filter(unit__pk=source_unit, content_type=ctype).values_list('object_id', flat=True)
+        utcs = models.UnitTestCollection.objects.filter(
+            unit__pk=source_unit,
+            content_type=ctype,
+        ).values_list('object_id', flat=True)
         testlists = list(models.TestList.objects.filter(pk__in=utcs).values_list('pk', 'name'))
         return HttpResponse(json.dumps(testlists), content_type='application/json')
     elif ctype.name == 'test list cycle':
-        utcs = models.UnitTestCollection.objects.filter(unit__pk=source_unit, content_type=ctype).values_list('object_id', flat=True)
+        utcs = models.UnitTestCollection.objects.filter(
+            unit__pk=source_unit,
+            content_type=ctype,
+        ).values_list('object_id', flat=True)
         testlistcycles = list(models.TestListCycle.objects.filter(pk__in=utcs).values_list('pk', 'name'))
         return HttpResponse(json.dumps(testlistcycles), content_type='application/json')
     else:
@@ -237,30 +243,21 @@ class ImportTestPack(FormView):
     def form_valid(self, form):
 
         tls = form.cleaned_data['testlists']
-        if tls == "all":
-            tls = None
-        else:
-            tls = tls.split(",")
+        tls = json.loads(tls) if tls != "all" else None
 
         cycles = form.cleaned_data['testlistcycles']
-        if cycles == "all":
-            cycles = None
-        else:
-            cycles = cycles.split(",")
+        cycles = json.loads(cycles) if cycles != "all" else None
 
         extra_tests = form.cleaned_data['tests']
-        if extra_tests == "all":
-            extra_tests = None
-        else:
-            extra_tests = extra_tests.split(",")
+        extra_tests = json.loads(extra_tests) if extra_tests != "all" else None
 
         testpack = form.cleaned_data['testpack_data']
         counts, totals = add_testpack(
             testpack,
             self.request.user,
-            test_names=extra_tests,
-            test_list_names=tls,
-            cycle_names=cycles,
+            test_keys=extra_tests,
+            test_list_keys=tls,
+            cycle_keys=cycles,
         )
 
         count_msg = ", ".join("%d/%d %s's" % (counts[k], totals[k], k) for k in totals)

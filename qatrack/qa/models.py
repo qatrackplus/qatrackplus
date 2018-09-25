@@ -19,6 +19,7 @@ from django.utils.translation import ugettext as _
 from django_comments.models import Comment
 
 from qatrack.qa import utils
+from qatrack.qa.testpack import TestPackMixin
 from qatrack.units.models import Unit
 
 # All available test types
@@ -266,8 +267,12 @@ class Frequency(models.Model):
     )
 
     nominal_interval = models.PositiveIntegerField(help_text=_("Nominal number of days between test completions"))
-    due_interval = models.PositiveIntegerField(help_text=_("How many days since last completed until a test with this frequency is shown as due"))
-    overdue_interval = models.PositiveIntegerField(help_text=_("How many days since last completed until a test with this frequency is shown as over due"))
+    due_interval = models.PositiveIntegerField(
+        help_text=_("How many days since last completed until a test with this frequency is shown as due")
+    )
+    overdue_interval = models.PositiveIntegerField(
+        help_text=_("How many days since last completed until a test with this frequency is shown as over due")
+    )
 
     objects = FrequencyManager()
 
@@ -335,12 +340,18 @@ class TestInstanceStatus(models.Model):
 
     export_by_default = models.BooleanField(
         default=True,
-        help_text=_("Check to indicate whether tests with this status should be exported by default (e.g. for graphing/control charts)"),
+        help_text=_(
+            "Check to indicate whether tests with this status should be exported by "
+            "default (e.g. for graphing/control charts)"
+        ),
     )
 
     valid = models.BooleanField(
         default=True,
-        help_text=_("If unchecked, data with this status will not be exported and the TestInstance will not be considered a valid completed Test")
+        help_text=_(
+            "If unchecked, data with this status will not be exported and "
+            "the TestInstance will not be considered a valid completed Test"
+        )
     )
 
     colour = models.CharField(default=settings.DEFAULT_TEST_STATUS_COLOUR, max_length=22, validators=[validate_color])
@@ -436,11 +447,35 @@ class Tolerance(models.Model):
 
     name = models.CharField(max_length=255, unique=True, editable=False)
 
-    type = models.CharField(max_length=20, help_text=_("Select whether this will be an absolute or relative tolerance criteria"), choices=TOL_TYPE_CHOICES)
-    act_low = models.FloatField(verbose_name=_("%s Low" % ACT_DISP), help_text=_("Value of lower %s level" % ACT_DISP), null=True, blank=True)
-    tol_low = models.FloatField(verbose_name=_("%s Low" % TOL_DISP), help_text=_("Value of lower %s level" % TOL_DISP), null=True, blank=True)
-    tol_high = models.FloatField(verbose_name=_("%s High" % TOL_DISP), help_text=_("Value of upper %s level" % TOL_DISP), null=True, blank=True)
-    act_high = models.FloatField(verbose_name=_("%s High" % ACT_DISP), help_text=_("Value of upper %s level" % ACT_DISP), null=True, blank=True)
+    type = models.CharField(
+        max_length=20,
+        help_text=_("Select whether this will be an absolute or relative tolerance criteria"),
+        choices=TOL_TYPE_CHOICES,
+    )
+    act_low = models.FloatField(
+        verbose_name=_("%s Low" % ACT_DISP),
+        help_text=_("Value of lower %s level" % ACT_DISP),
+        null=True,
+        blank=True,
+    )
+    tol_low = models.FloatField(
+        verbose_name=_("%s Low" % TOL_DISP),
+        help_text=_("Value of lower %s level" % TOL_DISP),
+        null=True,
+        blank=True,
+    )
+    tol_high = models.FloatField(
+        verbose_name=_("%s High" % TOL_DISP),
+        help_text=_("Value of upper %s level" % TOL_DISP),
+        null=True,
+        blank=True,
+    )
+    act_high = models.FloatField(
+        verbose_name=_("%s High" % ACT_DISP),
+        help_text=_("Value of upper %s level" % ACT_DISP),
+        null=True,
+        blank=True,
+    )
 
     mc_pass_choices = models.CharField(
         verbose_name=_("Multiple Choice %s Values" % OK_DISP),
@@ -517,7 +552,11 @@ class Tolerance(models.Model):
     def clean_tols(self):
         if self.type in (ABSOLUTE, PERCENT):
             if all([getattr(self, c) is None for c in (ACT_HIGH, ACT_LOW, TOL_HIGH, TOL_LOW,)]):
-                raise ValidationError({ACT_LOW: ["You must set at least one %s or %s level for this tolerance type" % (TOL_DISP, ACT_DISP)]})
+                raise ValidationError({
+                    ACT_LOW: [
+                        "You must set at least one %s or %s level for this tolerance type" % (TOL_DISP, ACT_DISP)
+                    ]
+                })
 
     def clean_fields(self, exclude=None):
         """extra validation for Tests"""
@@ -618,7 +657,7 @@ class TestManager(models.Manager):
         return self.get(name=name)
 
 
-class Test(models.Model):
+class Test(models.Model, TestPackMixin):
     """Test to be completed as part of a QA :model:`TestList`"""
 
     NK_FIELDS = ['name']
@@ -629,12 +668,23 @@ class Test(models.Model):
     name = models.CharField(max_length=255, help_text=_("Name for this test"), db_index=True, unique=True)
     slug = models.SlugField(
         verbose_name="Macro name", max_length=128,
-        help_text=_("A short variable name consisting of alphanumeric characters and underscores for this test (to be used in composite calculations). "),
+        help_text=_(
+            "A short variable name consisting of alphanumeric characters and "
+            "underscores for this test (to be used in composite calculations). "
+        ),
         db_index=True,
     )
-    description = models.TextField(help_text=_("A concise description of what this test is for (optional. You may use HTML markup)"), blank=True, null=True)
-    procedure = models.CharField(max_length=512, help_text=_("Link to document describing how to perform this test"), blank=True, null=True)
-
+    description = models.TextField(
+        help_text=_("A concise description of what this test is for (optional. You may use HTML markup)"),
+        blank=True,
+        null=True
+    )
+    procedure = models.CharField(
+        max_length=512,
+        help_text=_("Link to document describing how to perform this test"),
+        blank=True,
+        null=True,
+    )
     category = models.ForeignKey(Category, help_text=_("Choose a category for this test"))
     chart_visibility = models.BooleanField("Test item visible in charts?", default=True)
     auto_review = models.BooleanField(_("Allow auto review of this test?"), default=AUTO_REVIEW_DEFAULT)
@@ -645,9 +695,22 @@ class Test(models.Model):
     )
 
     hidden = models.BooleanField(_("Hidden"), help_text=_("Don't display this test when performing QA"), default=False)
-    skip_without_comment = models.BooleanField(_("Skip without comment"), help_text=_("Allow users to skip this test without a comment"), default=False)
-    display_image = models.BooleanField("Display image", help_text=_("Image uploads only: Show uploaded images under the testlist"), default=False)
-    choices = models.CharField(max_length=2048, help_text=_("Comma seperated list of choices for multiple choice test types"), null=True, blank=True)
+    skip_without_comment = models.BooleanField(
+        _("Skip without comment"),
+        help_text=_("Allow users to skip this test without a comment"),
+        default=False,
+    )
+    display_image = models.BooleanField(
+        "Display image",
+        help_text=_("Image uploads only: Show uploaded images under the testlist"),
+        default=False,
+    )
+    choices = models.CharField(
+        max_length=2048,
+        help_text=_("Comma seperated list of choices for multiple choice test types"),
+        null=True,
+        blank=True,
+    )
     constant_value = models.FloatField(help_text=_("Only required for constant value types"), null=True, blank=True)
 
     calculation_procedure = models.TextField(null=True, blank=True, help_text=_(
@@ -765,7 +828,9 @@ class Test(models.Model):
         if not self.slug:
             errors.append(_("All tests require a macro name"))
         elif not self.VARIABLE_RE.match(self.slug):
-            errors.append(_("Macro names must contain only letters, numbers and underscores and start with a letter or underscore"))
+            errors.append(_(
+                "Macro names must contain only letters, numbers and underscores and start with a letter or underscore"
+            ))
 
         if errors:
             raise ValidationError({"slug": errors})
@@ -788,6 +853,9 @@ class Test(models.Model):
     def get_testpack_fields(cls):
         exclude = ["id", "modified", "modified_by", "created", "created_by"]
         return [f.name for f in cls._meta.concrete_fields if f.name not in exclude]
+
+    def get_testpack_dependencies(self):
+        return [(Category, [self.category])]
 
     def natural_key(self):
         return (self.name,)
@@ -897,7 +965,13 @@ class UnitTestInfo(models.Model):
     unit = models.ForeignKey(Unit)
     test = models.ForeignKey(Test)
 
-    reference = models.ForeignKey(Reference, verbose_name=_("Current Reference"), null=True, blank=True, on_delete=models.SET_NULL)
+    reference = models.ForeignKey(
+        Reference,
+        verbose_name=_("Current Reference"),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
     tolerance = models.ForeignKey(Tolerance, null=True, blank=True, on_delete=models.SET_NULL)
 
     active = models.BooleanField(help_text=_("Uncheck to disable this test on this unit"), default=True, db_index=True)
@@ -951,9 +1025,21 @@ class UnitTestInfo(models.Model):
 class UnitTestInfoChange(models.Model):
 
     unit_test_info = models.ForeignKey(UnitTestInfo)
-    reference = models.ForeignKey(Reference, verbose_name=_("Old Reference"), null=True, blank=True, on_delete=models.SET_NULL)
+    reference = models.ForeignKey(
+        Reference,
+        verbose_name=_("Old Reference"),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
     reference_changed = models.BooleanField()
-    tolerance = models.ForeignKey(Tolerance, verbose_name=_("Old Tolerance"), null=True, blank=True, on_delete=models.SET_NULL)
+    tolerance = models.ForeignKey(
+        Tolerance,
+        verbose_name=_("Old Tolerance"),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
     tolerance_changed = models.BooleanField()
     comment = models.TextField(help_text=_("Reason for the change"))
     changed = models.DateTimeField(auto_now_add=True)
@@ -999,9 +1085,21 @@ class TestCollectionInterface(models.Model):
     """abstract base class for Tests collection (i.e. TestList's and TestListCycles"""
 
     name = models.CharField(max_length=255, db_index=True)
-    slug = models.SlugField(unique=True, help_text=_("A short unique name for use in the URL of this list"), db_index=True)
-    description = models.TextField(help_text=_("A concise description of this test checklist. (You may use HTML markup)"), null=True, blank=True)
-    javascript = models.TextField(help_text=_('Any extra javascript to run when loading perform page'), null=True, blank=True)
+    slug = models.SlugField(
+        unique=True,
+        help_text=_("A short unique name for use in the URL of this list"),
+        db_index=True,
+    )
+    description = models.TextField(
+        help_text=_("A concise description of this test checklist. (You may use HTML markup)"),
+        null=True,
+        blank=True,
+    )
+    javascript = models.TextField(
+        help_text=_('Any extra javascript to run when loading perform page'),
+        null=True,
+        blank=True,
+    )
 
     assigned_to = GenericRelation(
         "UnitTestCollection",
@@ -1049,12 +1147,16 @@ class TestListManager(models.Manager):
         return self.get(slug=slug)
 
 
-class TestList(TestCollectionInterface):
+class TestList(TestCollectionInterface, TestPackMixin):
     """Container for a collection of QA :model:`Test`s"""
 
     NK_FIELDS = ['slug']
 
-    tests = models.ManyToManyField("Test", help_text=_("Which tests does this list contain"), through=TestListMembership)
+    tests = models.ManyToManyField(
+        "Test",
+        help_text=_("Which tests does this list contain"),
+        through=TestListMembership,
+    )
 
     warning_message = models.CharField(
         max_length=255, help_text=_("Message given when a test value is out of tolerance"),
@@ -1097,6 +1199,16 @@ class TestList(TestCollectionInterface):
 
             self._ordered_tests = [x[-1] for x in sorted(tests, key=lambda y: y[:-1])]
         return self._ordered_tests
+
+    def ordered_members(self):
+        """Return list of tests and sublists sorted according to their order"""
+        members = {}
+        for sublist in self.get_children():
+            members[sublist.order] = sublist.child
+        for tlm in self.testlistmembership_set.all():
+            members[tlm.order] = tlm.test
+
+        return [t[1] for t in sorted(members.items())]
 
     def sublist_borders(self, tests=None):
         """Return indexes where visible marks should be shown for sublists
@@ -1145,6 +1257,17 @@ class TestList(TestCollectionInterface):
         exclude = ["id", "created", "created_by", "modified", "modified_by"]
         return [f.name for f in cls._meta.concrete_fields if f.name not in exclude]
 
+    def get_testpack_dependencies(self):
+        sublists = list(Sublist.objects.filter(parent=self).select_related("child"))
+        all_tests = list(self.all_tests())
+        return [
+            (Category, [s.category for s in all_tests]),
+            (Test, all_tests),
+            (TestListMembership, self.testlistmembership_set.all()),
+            (TestList, [sl.child for sl in sublists]),
+            (Sublist, sublists),
+        ]
+
     def natural_key(self):
         return (self.slug,)
 
@@ -1156,7 +1279,12 @@ class TestList(TestCollectionInterface):
         return "(%s) %s" % (self.pk, self.name)
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        super(TestList, self).save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
+        super(TestList, self).save(
+            force_insert=force_insert,
+            force_update=force_update,
+            using=using,
+            update_fields=update_fields,
+        )
         self.utcs.update(name=self.name)
 
 
@@ -1224,9 +1352,16 @@ class UnitTestCollection(models.Model):
         related_name='unittestcollections'
     )
     due_date = models.DateTimeField(help_text=_("Next time this item is due"), null=True, blank=True)
-    auto_schedule = models.BooleanField(help_text=_("If this is checked, due_date will be auto set based on the assigned frequency"), default=True)
+    auto_schedule = models.BooleanField(
+        help_text=_("If this is checked, due_date will be auto set based on the assigned frequency"),
+        default=True,
+    )
 
-    assigned_to = models.ForeignKey(Group, help_text=_("QA group that this test list should nominally be performed by"), null=True)
+    assigned_to = models.ForeignKey(
+        Group,
+        help_text=_("QA group that this test list should nominally be performed by"),
+        null=True,
+    )
     visible_to = models.ManyToManyField(
         Group,
         help_text=_("Select groups who will be able to see this test collection on this unit"),
@@ -1310,7 +1445,9 @@ class UnitTestCollection(models.Model):
         """ return last test_list_instance with all valid tests """
 
         try:
-            return self.testlistinstance_set.filter(in_progress=False).exclude(testinstance__status__valid=False).latest("work_completed")
+            return self.testlistinstance_set.filter(
+                in_progress=False,
+            ).exclude(testinstance__status__valid=False).latest("work_completed")
         except TestListInstance.DoesNotExist:
             pass
 
@@ -1323,7 +1460,9 @@ class UnitTestCollection(models.Model):
     def unreviewed_instances(self):
         """return a query set of all TestListInstances for this object that have not been fully reviewed"""
 
-        return self.testlistinstance_set.filter(testinstance__status__requires_review=True).distinct().select_related("test_list")
+        return self.testlistinstance_set.filter(
+            testinstance__status__requires_review=True,
+        ).distinct().select_related("test_list")
 
     def unreviewed_test_instances(self):
         """return query set of all TestInstances for this object"""
@@ -1411,7 +1550,12 @@ class UnitTestCollection(models.Model):
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         self.name = self.tests_object.name
-        super(UnitTestCollection, self).save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
+        super(UnitTestCollection, self).save(
+            force_insert=force_insert,
+            force_update=force_update,
+            using=using,
+            update_fields=update_fields,
+        )
 
 
 class TestInstanceManager(models.Manager):
@@ -1439,7 +1583,10 @@ class TestInstance(models.Model):
     pass_fail = models.CharField(max_length=20, choices=PASS_FAIL_CHOICES, editable=False, db_index=True)
 
     # values set by user
-    value = models.FloatField(help_text=_("For boolean Tests a value of 0 equals False and any non zero equals True"), null=True)
+    value = models.FloatField(
+        help_text=_("For boolean Tests a value of 0 equals False and any non zero equals True"),
+        null=True,
+    )
     string_value = models.CharField(max_length=MAX_STRING_VAL_LEN, null=True, blank=True)
 
     skipped = models.BooleanField(help_text=_("Was this test skipped for some reason (add comment)"), default=False)
@@ -1673,19 +1820,31 @@ class TestListInstance(models.Model):
     work_started = models.DateTimeField(db_index=True)
     work_completed = models.DateTimeField(default=timezone.now, db_index=True, null=True)
 
-    due_date = models.DateTimeField(null=True, blank=True, help_text=_('When was this session due when it was performed'))
+    due_date = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text=_('When was this session due when it was performed'),
+    )
 
     # comment = models.TextField(help_text=_("Add a comment to this set of tests"), null=True, blank=True)
     comments = GenericRelation(Comment, object_id_field='object_pk')
 
     in_progress = models.BooleanField(
-        help_text=_("Mark this session as still in progress so you can complete later (will not be submitted for review)"),
+        help_text=_(
+            "Mark this session as still in progress so you can complete later (will not be submitted for review)"
+        ),
         default=False,
         db_index=True,
     )
 
     reviewed = models.DateTimeField(null=True, blank=True)
-    reviewed_by = models.ForeignKey(User, editable=False, null=True, blank=True, related_name="test_list_instance_reviewer")
+    reviewed_by = models.ForeignKey(
+        User,
+        editable=False,
+        null=True,
+        blank=True,
+        related_name="test_list_instance_reviewer",
+    )
 
     all_reviewed = models.BooleanField(default=False)
 
@@ -1712,7 +1871,9 @@ class TestListInstance(models.Model):
     def pass_fail_status(self):
         """return string with pass fail status of this qa instance"""
         instances = list(self.testinstance_set.all())
-        statuses = [(status, display, [x for x in instances if x.pass_fail == status]) for status, display in PASS_FAIL_CHOICES]
+        statuses = [
+            (status, display, [x for x in instances if x.pass_fail == status]) for status, display in PASS_FAIL_CHOICES
+        ]
         return [x for x in statuses if len(x[2]) > 0]
 
     def pass_fail_summary(self):
@@ -1854,7 +2015,7 @@ class TestListCycleManager(models.Manager):
         return self.get(slug=slug)
 
 
-class TestListCycle(TestCollectionInterface):
+class TestListCycle(TestCollectionInterface, TestPackMixin):
     """
     A basic model for creating a collection of test lists that cycle
     based on the list that was last completed.
@@ -1904,7 +2065,7 @@ class TestListCycle(TestCollectionInterface):
             return None
 
     def all_lists(self):
-        """return queryset for all children lists of this cycle"""
+        """return queryset for all children lists of this cycle including sublists"""
         query = TestList.objects.none()
         for test_list in self.test_lists.all():
             query |= test_list.all_lists()
@@ -1912,7 +2073,7 @@ class TestListCycle(TestCollectionInterface):
         return query.distinct()
 
     def all_tests(self):
-        """return all test members of cycle members"""
+        """return all test members of cycle members (including sublists)"""
         query = Test.objects.none()
         for test_list in self.test_lists.all():
             query |= test_list.all_tests()
@@ -1952,6 +2113,29 @@ class TestListCycle(TestCollectionInterface):
         exclude = ["id", "created", "created_by", "modified", "modified_by"]
         return [f.name for f in cls._meta.concrete_fields if f.name not in exclude]
 
+    def get_testpack_dependencies(self):
+
+        all_lists = list(self.all_lists())
+
+        sublists = []
+        for tl in all_lists:
+            sublists += list(tl.sublist_set.all())
+
+        test_list_memberships = []
+        for tl in all_lists:
+            test_list_memberships += list(tl.testlistmembership_set.all())
+
+        all_tests = list(self.all_tests())
+
+        return [
+            (Category, [s.category for s in all_tests]),
+            (Test, all_tests),
+            (TestListMembership, test_list_memberships),
+            (TestList, all_lists),
+            (Sublist, sublists),
+            (TestListCycleMembership, self.testlistcyclemembership_set.all()),
+        ]
+
     def natural_key(self):
         return (self.slug,)
 
@@ -1959,7 +2143,12 @@ class TestListCycle(TestCollectionInterface):
         return _(self.name)
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        super(TestListCycle, self).save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
+        super(TestListCycle, self).save(
+            force_insert=force_insert,
+            force_update=force_update,
+            using=using,
+            update_fields=update_fields,
+        )
         self.utcs.update(name=self.name)
 
 
@@ -1998,13 +2187,3 @@ class TestListCycleMembership(models.Model):
 
     def __str__(self):
         return "TestListCycleMembership(pk=%s)" % self.pk
-
-
-testpack_MODELS = [
-    Category,
-    Test,
-    TestList,
-    TestListMembership,
-    TestListCycle,
-    TestListCycleMembership,
-]

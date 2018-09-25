@@ -1,7 +1,6 @@
 import io
 import json
 
-from django.core.serializers import deserialize
 from django.test import TestCase
 
 from qatrack.qa import models
@@ -64,12 +63,32 @@ class TestImportExport(TestCase):
         self.t1 = utils.create_test("t1")
         self.t2 = utils.create_test("t2")
         self.t3 = utils.create_test("t3")
+        self.t4 = utils.create_test("t4")
         utils.create_test_list_membership(self.tl1, self.t1)
         utils.create_test_list_membership(self.tl2, self.t2)
         utils.create_test_list_membership(self.tl3, self.t3)
 
         self.tlqs = models.TestList.objects.filter(pk=self.tl3.pk)
         self.tlcqs = models.TestListCycle.objects.filter(pk=self.tlc.pk)
+        self.extra = models.Test.objects.filter(pk=self.t4.pk)
+
+    def test_round_trip(self):
+        pack = json.dumps(testpack.create_testpack(
+            test_lists=self.tlqs,
+            cycles=self.tlcqs,
+            extra_tests=self.extra,
+        ))
+        models.Category.objects.all().delete()
+        models.TestListCycle.objects.all().delete()
+        models.TestList.objects.all().delete()
+        models.Test.objects.all().delete()
+        testpack.add_testpack(pack)
+
+        assert models.Test.objects.count() == 4
+        assert models.TestList.objects.count() == 3
+        assert models.TestListMembership.objects.count() == 3
+        assert models.TestListCycle.objects.count() == 1
+        assert models.TestListCycleMembership.objects.count() == 2
 
     def test_create_pack(self):
 
@@ -77,17 +96,20 @@ class TestImportExport(TestCase):
 
         assert 'meta' in pack
         assert 'objects' in pack
-        assert len(pack['objects']) == 7
 
         test_found = False
         list_found = False
-        for qs in pack['objects']:
-            for o in deserialize('json', qs):
-                if hasattr(o.object, "name"):
-                    if o.object.name == self.tl1.name:
-                        list_found = True
-                    elif o.object.name == self.t1.name:
+        for tl_dat in pack['objects']['testlists']:
+            tl = json.loads(tl_dat)
+            if tl['object']['fields']['name'] == self.tl3.name:
+                list_found = True
+
+            for o in tl['dependencies']:
+                try:
+                    if o['fields']['name'] == self.t3.name:
                         test_found = True
+                except KeyError:
+                    pass
 
         assert list_found and test_found
 
@@ -102,7 +124,7 @@ class TestImportExport(TestCase):
     def test_non_destructive_load(self):
         ntl = models.TestList.objects.count()
         nt = models.Test.objects.count()
-        pack = testpack.create_testpack(self.tlqs, self.tlcqs)
+        pack = testpack.create_testpack(self.tlqs, self.tlcqs, self.extra)
         fp = io.StringIO()
         testpack.save_testpack(pack, fp)
         fp.seek(0)
@@ -126,21 +148,8 @@ class TestImportExport(TestCase):
         assert models.TestListCycle.objects.filter(name=self.tlc.name).exists()
         assert self.tl1.name in models.TestListCycle.objects.values_list("test_lists__name", flat=True)
 
-    def test_object_names(self):
-        pack = testpack.create_testpack(self.tlqs, self.tlcqs)
-        fp = io.StringIO()
-        testpack.save_testpack(pack, fp)
-        fp.seek(0)
-        names = testpack.testpack_object_names(fp.read())
-        expected = {
-            'test': [self.t1.name, self.t2.name, self.t3.name],
-            'testlist': [self.tl1.name, self.tl2.name, self.tl3.name],
-            'testlistcycle': [self.tlc.name]
-        }
-        assert names == expected
-
     def test_selective_load(self):
-        pack = testpack.create_testpack(self.tlqs, self.tlcqs)
+        pack = testpack.create_testpack(models.TestList.objects.all(), self.tlcqs)
         models.TestList.objects.all().delete()
         models.Test.objects.all().delete()
         models.TestListCycle.objects.all().delete()
@@ -148,7 +157,7 @@ class TestImportExport(TestCase):
         fp = io.StringIO()
         testpack.save_testpack(pack, fp)
         fp.seek(0)
-        testpack.load_testpack(fp, test_names=[self.t1.name], test_list_names=[self.tl1.name], cycle_names=[])
+        testpack.load_testpack(fp, test_keys=[self.t1.natural_key()], test_list_keys=[self.tl1.natural_key()], cycle_keys=[])
 
         assert models.TestList.objects.count() == 1
         assert models.Test.objects.count() == 1
@@ -171,7 +180,7 @@ class TestImportExport(TestCase):
         fp = io.StringIO()
         testpack.save_testpack(pack, fp)
         fp.seek(0)
-        testpack.load_testpack(fp, test_names=[self.t1.name], test_list_names=[self.tl1.name], cycle_names=[])
+        testpack.load_testpack(fp, test_keys=[self.t1.natural_key()], test_list_keys=[self.tl1.natural_key()], cycle_keys=[])
 
         assert models.TestList.objects.filter(name__in=[self.tl2.name, self.tl3.name]).count() == 2
         assert models.Test.objects.filter(name__in=[self.t2.name, self.t3.name]).count() == 2
@@ -194,5 +203,20 @@ class TestImportExport(TestCase):
         testpack.save_testpack(pack, fp)
         fp.seek(0)
         models.Test.objects.all().delete()
-        testpack.load_testpack(fp, test_names=[extra.name], test_list_names=[], cycle_names=[])
+        testpack.load_testpack(fp, test_keys=[extra.natural_key()], test_list_keys=[], cycle_keys=[])
         assert models.Test.objects.filter(name=extra.name).exists()
+
+    def test_sublist(self):
+        tl5 = utils.create_test_list("tl5")
+        t5 =  utils.create_test("t5")
+        utils.create_test_list_membership(tl5, t5, order=0)
+        utils.create_sublist(tl5, self.tl1, order=2)
+        utils.create_sublist(tl5, self.tl2, order=3)
+        pack = json.dumps(testpack.create_testpack(test_lists=models.TestList.objects.filter(pk=tl5.pk)))
+        models.TestList.objects.all().delete()
+        models.Test.objects.all().delete()
+        assert models.Sublist.objects.count() == 0
+        testpack.add_testpack(pack, test_list_keys=[tl5.natural_key()])
+        assert models.Sublist.objects.count() == 2
+        assert models.TestList.objects.count() == 3
+        assert models.TestList.objects.get(name="tl5")
