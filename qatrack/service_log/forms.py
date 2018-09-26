@@ -18,7 +18,7 @@ from qatrack.units import models as u_models
 
 
 def get_user_name(user):
-    return user.username if not user.first_name or not user.last_name else user.first_name + ' ' + user.last_name
+    return user.username if not user.first_name or not user.last_name else '{} {}'.format(user.first_name, user.last_name)
 
 
 def item_val_to_string(item):
@@ -86,7 +86,7 @@ class UserModelChoiceField(forms.ModelChoiceField):
     title = ''
 
     def label_from_instance(self, user):
-        return user.username if not user.first_name or not user.last_name else user.last_name + ', ' + user.first_name
+        return user.username if not user.first_name or not user.last_name else '{} {}'.format(user.first_name, user.last_name)
 
 
 class HoursForm(forms.ModelForm):
@@ -115,7 +115,7 @@ class HoursForm(forms.ModelForm):
                 Q(user_permissions=perm, is_active=True)
             ).distinct().order_by('last_name')
         for user in users:
-            name = user.username if not user.first_name or not user.last_name else user.last_name + ', ' + user.first_name
+            name = user.username if not user.first_name or not user.last_name else '{} {}'.format(user.first_name, user.last_name)
             choices.append(('user-%s' % user.id, name))
         for tp in models.ThirdParty.objects.all():
             choices.append(('tp-%s' % tp.id, tp.get_full_name()))

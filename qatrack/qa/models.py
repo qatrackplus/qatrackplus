@@ -1769,6 +1769,12 @@ class TestInstance(models.Model):
         name = attachment.attachment.name.split("/")[-1]
         return '<a href="%s" title="%s">%s</a>' % (attachment.attachment.url, name, name)
 
+    def upload_name(self):
+        attachment = self.attachment_set.first()
+        if attachment is None:
+            return None
+        return attachment.attachment.name.split("/")[-1]
+
     def image_url(self):
 
         attachment = self.attachment_set.first()
