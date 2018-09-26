@@ -14,15 +14,36 @@ QATrack+ v0.3.0 Release Notes
 
 
 It's been two years since the release of QATrack+ v0.2.9 and this release marks
-the largest update to QATrack+ since the initial release in 2012.
+the largest update to QATrack+ since the initial release in 2012. Details of
+QATrack+ v0.3.0 are included below.
 
-Many thanks to Ryan Bottema at The Ottawa Hospital has for all his major
-contributions of code. He is responsible for the updated user interface and the
-implementation of the new Service Log app (with guidance from Crystal Angers
-and the rest of the Ottawa QATrack+ team). Thanks Ryan!
+Acknowledgements
+................
+
+Many thanks to Ryan Bottema & Crystal Angers at The Ottawa Hospital for all
+their work on the development and implementation of the new Service Log app
+(with guidance from the rest of the Ottawa QATrack+ team). 
+
+Thank you to `Simon Biggs <https://www.simonbiggs.net/#/>`__ for all his work
+on the new experimental Docker deployment method as well as ideas and
+discussions on many other features.
+
+Thanks to all of you who provided databases for testing the data model
+migration from 0.2.9 to 0.3.0. This helped catch a few DBMS specific migratino
+issues.
+
+A big thanks also goes out to the Canadian Nuclear Safety Commission! QATrack+
+was one of the recipients of the `2017 CSNC's Innovation Grant
+<https://www.comp-ocpm.ca/english/news/cnsc-innovation-fund-update.htm>`__
+which provided financial support for this release.
+
+Last but certainly not least, thank you to those of you who have submitted bug
+reports, made feature requests, and contributed to the many discussions on the
+mailing list.
 
 
-Details of the v0.3.0 release below:
+Details of the v0.3.0 release
+.............................
 
 * A new :ref:`Service Log <service_log_user>` application for tracking machine
   service events, machine down time, return to service, and more!
@@ -113,18 +134,13 @@ Details of the v0.3.0 release below:
 * The complete list of bugs/features can be found on `BitBucket
   <https://bitbucket.org/tohccmedphys/qatrackplus/issues?page=4&milestone=0.3.0>`_
 
+Upgrading to v0.3.0
+...................
 
 For instructions on upgrading to QATrack+ 0.3.0 please see the :ref:`Upgrading
 to QATrack+ 0.3.0 page <upgrade_029_030>`.
 
 
-Things we're still working on
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. todo:
-
-    Add things we're still working on section including tracking measurement
-    equipment and calibration factors etc.
 
 
 QATrack+ v0.2.9 Release Notes
