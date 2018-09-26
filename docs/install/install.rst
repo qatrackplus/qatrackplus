@@ -19,12 +19,12 @@ your clinic has the most expertise in and / or your budget (Microsoft tools can
 be expensive!).
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: Officially Supported Platforms
 
-   upgrade
    linux
    win
+   backup
 
 
 Note there is no official support for the platforms listed below.  That doesn't
@@ -52,6 +52,3 @@ described here:
 
    config
    active_directory
-
-
-

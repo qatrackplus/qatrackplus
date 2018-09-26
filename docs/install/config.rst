@@ -29,7 +29,7 @@ however, when you are experiencing issues getting your site deployed, setting:
     DEBUG = True
 
 will show you a detailed error traceback which can be used to diagnose any
-issues.  
+issues.
 
 .. danger::
 
@@ -72,12 +72,12 @@ the QATrack+ deployment documentation.
 
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.postgresql', 
-            'NAME': 'qatrack', 
-            'USER': 'qatrack',      
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'qatrack',
+            'USER': 'qatrack',
             'PASSWORD': 'qatrackpass',
-            'HOST': 'localhost',              
-            'PORT': '5432',             
+            'HOST': 'localhost',
+            'PORT': '5432',
         }
     }
 
@@ -251,7 +251,7 @@ warning message when a test is at action level.
 FORCE_SCRIPT_NAME, LOGIN_EXEMPT_URLS, LOGIN_REDIRECT_URL, LOGIN_URL
 ...................................................................
 
-If you deploy QATrack+ at a non root url (e.g. http://5.5.5.5/qatrack/) then you need to 
+If you deploy QATrack+ at a non root url (e.g. http://5.5.5.5/qatrack/) then you need to
 set these settings as follows:
 
 .. code-block:: python
@@ -294,7 +294,7 @@ requires `USE_PARTS = True`.
 
 
 SESSION Settings
-----------------
+~~~~~~~~~~~~~~~~
 
 These settings control how quickly users are automatically logged out of an
 active browser session.  `SESSION_COOKIE_AGE` specifies how long (in seconds) a

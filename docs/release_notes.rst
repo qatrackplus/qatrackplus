@@ -22,7 +22,7 @@ Acknowledgements
 
 Many thanks to Ryan Bottema & Crystal Angers at The Ottawa Hospital for all
 their work on the development and implementation of the new Service Log app
-(with guidance from the rest of the Ottawa QATrack+ team). 
+(with guidance from the rest of the Ottawa QATrack+ team).
 
 Thank you to `Simon Biggs <https://www.simonbiggs.net/#/>`__ for all his work
 on the new experimental Docker deployment method as well as ideas and
@@ -125,8 +125,8 @@ Details of the v0.3.0 release
 * Upload tests now have two context variables available `FILE` and `BIN_FILE`,
   the latter being a file instances opened in binary rather than text mode.
   Any existing upload tests that you have which assume a binary file type will
-  need to be updated to use `BIN_FILE`. More details in the :ref:`upgrade
-  instructions <upgrade_029_030>`.
+  need to be updated to use `BIN_FILE`. More details are available in the
+  v0.3.0 installation docs.
 
 * Mainstream support for Python 2 is ending in 2020 and as such QATrack+ has
   been updated to use Python 3.4-3.6.
@@ -134,13 +134,12 @@ Details of the v0.3.0 release
 * The complete list of bugs/features can be found on `BitBucket
   <https://bitbucket.org/tohccmedphys/qatrackplus/issues?page=4&milestone=0.3.0>`_
 
+
 Upgrading to v0.3.0
 ...................
 
-For instructions on upgrading to QATrack+ 0.3.0 please see the :ref:`Upgrading
-to QATrack+ 0.3.0 page <upgrade_029_030>`.
-
-
+For instructions on upgrading to QATrack+ 0.3.0 please see the installation
+docs for your platform.
 
 
 QATrack+ v0.2.9 Release Notes
