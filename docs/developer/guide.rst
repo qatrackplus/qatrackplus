@@ -42,7 +42,11 @@ git.
 You can download and install git from https://git-scm.com. After you have git
 installed it is recommended you go through a git tutorial to learn about git
 branches, commiting code and pull requests. There are many tutorials available
-online e.g. https://www.atlassian.com/git/tutorials, https://try.github.io/.
+online including a `tutorial by the Django team
+<https://dont-be-afraid-to-commit.readthedocs.io/en/latest/>`__ as well as
+tutorials on `BitBucket <https://www.atlassian.com/git/tutorials>`__ and
+`GitHub <https://try.github.io/>`__.
+
 
 BitBucket
 ~~~~~~~~~
