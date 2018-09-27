@@ -279,12 +279,6 @@ div.sublist-description {
     text-overflow: ellipsis;
     /*max-width: 0;*/
 }
-#perform-qa-table > tbody > tr.control-group.qa-valuerow > td.qa-name.qa-showproc {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 0;
-}
 
 #perform-qa-table > thead > tr > th.qa-history {
     width: 320px;
