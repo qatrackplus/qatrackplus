@@ -91,6 +91,7 @@ class TestURLS(TestCase):
             ("qa_by_unit_frequency", {"unit_number": "1", "frequency": "daily/ad-hoc"}),
         )  # YAPF:disable
 
+        import ipdb; ipdb.set_trace()  # yapf: disable  # noqa
         for url, kwargs in url_names:
             logger.info("\t > testing: " + url)
             self.assertTrue(self.returns_200(reverse(url, kwargs=kwargs)))

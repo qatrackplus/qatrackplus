@@ -1,6 +1,5 @@
 import json
 
-from django.contrib import admin
 from django.contrib.admin.sites import AdminSite
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages import constants, get_messages
@@ -11,12 +10,11 @@ from django.forms import HiddenInput, inlineformset_factory, modelform_factory
 from django.http import QueryDict
 from django.test import RequestFactory, TestCase, TransactionTestCase
 
-from qatrack.attachments import models as at_models
 from qatrack.qa import admin as qa_admin
 from qatrack.qa import models as qa_models
 from qatrack.qa.tests import utils as qa_utils
+from qatrack.qa.utils import get_bool_tols, get_internal_user
 from qatrack.service_log.tests import utils as sl_utils
-from qatrack.qa.utils import get_or_create_bool_tols, get_or_create_internal_user
 
 
 class TestSetReferencesAndTolerancesForm(TransactionTestCase):
@@ -216,7 +214,9 @@ class TestTestInstanceAdmin(TestCase):
         self.user = qa_utils.create_user(is_superuser=True, uname='user', pwd='pwd')
         self.client.login(username='user', password='pwd')
         qa_utils.create_test_instance()
-        self.url = reverse('admin:%s_%s_changelist' % (qa_models.TestInstance._meta.app_label, qa_models.TestInstance._meta.model_name))
+        self.url = reverse(
+            'admin:%s_%s_changelist' % (qa_models.TestInstance._meta.app_label, qa_models.TestInstance._meta.model_name)
+        )
 
     def test_list_page(self):
         self.client.get(self.url)
@@ -694,8 +694,8 @@ class TestUnitTestInfoAdmin(TestCase):
         self.user = qa_utils.create_user(is_superuser=True, uname='user', pwd='pwd')
         self.client.login(username='user', password='pwd')
 
-        get_or_create_internal_user(qa_models.User)
-        get_or_create_bool_tols() # hack to work around tolerances being deleted somewhere (in another test?)
+        get_internal_user()
+        get_bool_tols()  # hack to work around tolerances being deleted somewhere (in another test?)
 
         self.site = AdminSite()
         self.u_1 = qa_utils.create_unit()
@@ -775,8 +775,7 @@ class TestUnitTestInfoAdmin(TestCase):
             qa_models.UnitTestInfo, form=qa_admin.TestInfoForm, fields='__all__'
         )(instance=self.tli_3)
 
-        self.assertIsInstance\
-            (form.fields['reference_value'].widget, HiddenInput)
+        self.assertIsInstance(form.fields['reference_value'].widget, HiddenInput)
         self.assertListEqual(
             list(form.fields['tolerance'].queryset),
             list(qa_models.Tolerance.objects.filter(type=qa_models.MULTIPLE_CHOICE))
@@ -822,7 +821,7 @@ class TestUnitTestInfoAdmin(TestCase):
         }
         request.POST = QueryDict('', mutable=True)
         request.POST.update(data)
-        response = admin.set_multiple_references_and_tolerances(
+        admin.set_multiple_references_and_tolerances(
             request, qa_models.UnitTestInfo.objects.filter(id__in=[self.tli_1.id, self.tli_4.id])
         )
 
@@ -848,7 +847,7 @@ class TestUnitTestInfoAdmin(TestCase):
         }
         request.POST = QueryDict('', mutable=True)
         request.POST.update(data)
-        response = admin.set_multiple_references_and_tolerances(
+        admin.set_multiple_references_and_tolerances(
             request, qa_models.UnitTestInfo.objects.filter(id__in=[self.tli_2.id, self.tli_5.id])
         )
 
@@ -874,7 +873,7 @@ class TestUnitTestInfoAdmin(TestCase):
         }
         request.POST = QueryDict('', mutable=True)
         request.POST.update(data)
-        response = admin.set_multiple_references_and_tolerances(
+        admin.set_multiple_references_and_tolerances(
             request, qa_models.UnitTestInfo.objects.filter(id__in=[self.tli_3.id, self.tli_6.id])
         )
 

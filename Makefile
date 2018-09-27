@@ -7,7 +7,7 @@ test:
 	py.test ${args}
 
 test_simple:
-	py.test --reuse-db -m "not selenium" ${args}
+	py.test -m "not selenium" ${args}
 
 yapf:
 	yapf --verbose --in-place --recursive --parallel \
