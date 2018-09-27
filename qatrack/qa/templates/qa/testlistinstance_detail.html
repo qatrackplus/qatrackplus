@@ -30,6 +30,9 @@
             <div class="box">
                 <div class="box-header">
                     <h3 class="box-title">{{test_list_instance.work_completed|date}} {{test_list_instance.test_list.name}} Details</h3>
+                    {% if cycle_name %}
+                        <div><em>From cycle : {{ cycle_name }}</em></div>
+                    {% endif %}
                 </div>
 
                 <div class="box-body">

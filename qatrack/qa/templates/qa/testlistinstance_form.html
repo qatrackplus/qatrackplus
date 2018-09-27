@@ -428,6 +428,8 @@
                                     {% if last_instance %}
                                         <div><em>Last done: {% if last_day %}Day {{last_day}} ({{last_instance.test_list.name}}){% else %}New list{%endif%}</em></div>
                                     {% endif %}
+                                {% elif cycle_name %}
+                                    <div><em>From cycle : {{ cycle_name }}</em></div>
                                 {% endif %}
                             </div>
 

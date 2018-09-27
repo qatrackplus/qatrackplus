@@ -57,6 +57,9 @@ class TestListInstanceDetails(PermissionRequiredMixin, TestListInstanceMixin, De
         context['service_events_ib'] = se_ib
         self.all_tests = self.object.test_list.ordered_tests()
         context['borders'] = self.object.test_list.sublist_borders(self.all_tests)
+
+        if self.object.unit_test_collection.tests_object.__class__.__name__ == 'TestListCycle':
+            context['cycle_name'] = self.object.unit_test_collection.name
         return context
 
 

@@ -1328,6 +1328,9 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
         context["contacts"] = list(Contact.objects.all().order_by("name"))
 
+        if self.object.unit_test_collection.tests_object.__class__.__name__ == 'TestListCycle':
+            context['cycle_name'] = self.object.unit_test_collection.name
+
         return context
 
 

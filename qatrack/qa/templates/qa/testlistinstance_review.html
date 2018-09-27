@@ -215,6 +215,9 @@
                                     <i class="fa fa-search-plus fa-fw" aria-hidden="true"></i>
                                     Review {{tli.work_completed|date}} {{tli.test_list.name}}
                                 </h3>
+                                {% if cycle_name %}
+                                    <div><em>From cycle : {{ cycle_name }}</em></div>
+                                {% endif %}
                             </div>
 
                             <div class="box-body">
