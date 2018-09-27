@@ -248,9 +248,14 @@ class BaseChartView(View):
         # datetime strings coming in will be in local time, make sure they get
         # converted to utc
 
-        d_string = self.request.GET.get('date_range').replace('%20', ' ')
-        d_from = timezone.datetime.strptime(d_string.split(' - ')[0], '%d %b %Y')
-        d_to = timezone.datetime.strptime(d_string.split(' - ')[1], '%d %b %Y')
+        d_string = self.request.GET.get('date_range', '').replace('%20', ' ')
+
+        if d_string:
+            d_from = timezone.datetime.strptime(d_string.split(' - ')[0], '%d %b %Y')
+            d_to = timezone.datetime.strptime(d_string.split(' - ')[1], '%d %b %Y')
+        else:
+            d_from = default_from
+            d_to = default_to
 
         d_to = timezone.datetime(d_to.year, d_to.month, d_to.day, 23, 59, 59, tzinfo=timezone.get_current_timezone())
         d_from = timezone.datetime(d_from.year, d_from.month, d_from.day, tzinfo=timezone.get_current_timezone())
