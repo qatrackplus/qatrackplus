@@ -1058,6 +1058,9 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         in_progress = models.TestListInstance.objects.in_progress().filter(
             unit_test_collection=self.unit_test_col, test_list=self.test_list
         )
+
+        context['tests_object_type'] = self.unit_test_col.tests_object.__class__.__name__
+
         context["test_list"] = self.test_list
         context["in_progress"] = in_progress
         context["unit_test_infos"] = json.dumps(self.template_unit_test_infos())
