@@ -889,6 +889,11 @@ class ServiceEventsBaseList(BaseListableView):
 
         return qs
 
+    def get_table_id(self):
+
+        table_id = super().get_table_id()
+        return "%s-%s" % (table_id, self.kwarg_filters)
+
     def format_col(self, field, obj):
         col = super(ServiceEventsBaseList, self).format_col(field, obj)
         return col
@@ -1067,6 +1072,11 @@ class ReturnToServiceQABaseList(BaseListableView):
             qs = qs.filter(**query_kwargs)
 
         return qs
+
+    def get_table_id(self):
+
+        table_id = super().get_table_id()
+        return "%s-%s" % (table_id, self.kwarg_filters)
 
     def actions(self, rtsqa):
         template = self.templates['actions']

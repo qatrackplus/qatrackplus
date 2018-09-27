@@ -2,17 +2,6 @@
 {
     "model": "service_log.serviceeventstatus",
     "fields": {
-        "name": "Service Pending",
-        "is_default": true,
-        "is_review_required": true,
-        "rts_qa_must_be_reviewed": false,
-        "description": "Default service event status",
-        "colour": "rgba(210,214,222,1)"
-    }
-},
-{
-    "model": "service_log.serviceeventstatus",
-    "fields": {
         "name": "Service In Progress",
         "is_default": false,
         "is_review_required": true,
