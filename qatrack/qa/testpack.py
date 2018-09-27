@@ -3,19 +3,20 @@ import json
 import uuid
 
 from django.conf import settings
-from django.contrib.auth.models import User
 from django.core.serializers import get_serializer
 from django.db.transaction import atomic
 from django.utils import timezone
 import pytest
 
-from qatrack.qa import models
+from qatrack.qa.utils import get_internal_user
 
 pytestmark = pytest.mark.skip("This file doesn't actually have tests")
 
 
 def get_model_map():
     """wrap in function to prevent circular import"""
+
+    from qatrack.qa import models
 
     return {
         'qa.test': models.Test,
@@ -53,7 +54,9 @@ def create_testpack(test_lists=None, cycles=None, extra_tests=None, description=
     test pack will includ all objects they depend on.
     """
 
-    user = user or User.objects.get(username="QATrack+ Internal")
+    from qatrack.qa import models
+
+    user = user or get_internal_user()
     testpack = {}
 
     tests = (extra_tests or models.Test.objects.none()).select_related("category")
@@ -114,8 +117,10 @@ def add_testpack(serialized_pack, user=None, test_keys=None, test_list_keys=None
 
     """
 
+    from qatrack.qa import models
+
     created = timezone.now()
-    user = user or User.objects.get(username="QATrack+ Internal")
+    user = user or get_internal_user()
 
     # track # of objects added and total number of objects in testpack
     added = Counter()

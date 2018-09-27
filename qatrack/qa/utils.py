@@ -173,12 +173,12 @@ def check_query_count():  # pragma: nocover
     return decorator
 
 
-def get_or_create_bool_tols(user_klass=None, tol_klass=None):
+def get_bool_tols(user_klass=None, tol_klass=None):
 
     from qatrack.qa import models
     user_klass = user_klass or models.User
     tol_klass = tol_klass or models.Tolerance
-    user = user_klass.objects.get(username="QATrack+ Internal")
+    user = get_internal_user(user_klass)
 
     warn, __ = tol_klass.objects.get_or_create(
         type=models.BOOLEAN,
@@ -195,7 +195,7 @@ def get_or_create_bool_tols(user_klass=None, tol_klass=None):
     return warn, act
 
 
-def get_or_create_internal_user(user_klass=None):
+def get_internal_user(user_klass=None):
 
     from qatrack.qa import models
     user_klass = user_klass or models.User

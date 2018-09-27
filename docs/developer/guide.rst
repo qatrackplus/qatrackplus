@@ -4,8 +4,9 @@ Developers Guide
 
 .. toctree::
    :maxdepth: 3
-   :caption: Contents:
+   :caption: Developers Guide Contents:
 
+   self
    schema
 
 
@@ -18,7 +19,7 @@ started developing for the QATrack+ project will be given here.  That said,
 there are lots of steps involved which can be intimidating to newcomers
 (especially git!).  Try not to get discouraged and if you get stuck on anything
 or have questions about using git or contributing code then please post to the
-:mailinglist:`mailing list <>` so we can help you out! 
+:mailinglist:`mailing list <>` so we can help you out!
 
 In order to develop for QATrack+ you first need to make sure you have a few
 requirements installed.
@@ -159,6 +160,7 @@ languages.  For discussion of how to mark templates and strings for translation
 please read the `Django docs on translation
 <https://docs.djangoproject.com/en/1.11/topics/i18n/translation/>`__.
 
+
 Tool Tips And User Hints
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -275,20 +277,54 @@ suite from the root QATrack+ directory using the `py.test` command:
     rootdir: /home/randlet/projects/qatrack/qatrackplus, inifile: pytest.ini
     plugins: sugar-0.9.1, django-3.1.2, cov-2.5.1
 
-    qatrack/accounts/tests.py ✓✓✓                              
+    qatrack/accounts/tests.py ✓✓✓
 
 For more information on using py.test, refer to the `py.test documentation
 <https://pytest.org>`__.
 
-All new code you write should have tests written for it.  Any non trivial code
-you wish to contribute back to QATrack+ will require you to write tests
-for the code providing as high a code coverage as possible.  You can measure code coverage
-in the following way:
+.. important::
+
+    All new code you write should have tests written for it.  Any non trivial code
+    you wish to contribute back to QATrack+ will require you to write tests
+    for the code providing as high a code coverage as possible.  You can measure code coverage
+    in the following way:
+
+    .. code-block:: shell
+
+        make cover
+
+
+Writing Documentation
+~~~~~~~~~~~~~~~~~~~~~
+
+As well as writing tests for your new code, it will be extremely helpful for
+you to include documenation for the features you have built.  The documentation
+for QATrack+ is located in the `docs/` folder and is seperated into the
+following sections:
+
+#. **User guide:** Documentation for normal users of the QATrack+ installation.
+
+#. **Admin guide:** Documentation for users of QATrack+ who are responsible for
+   configuring and maintaining Test Lists, Units etc.
+
+#. **Tutorials:**  Complete examples of how to make use of QATrack+ features.
+
+#. **Install:** Documentation for the people responsible for installing,
+   upgrading, and otherwise maintaining the QATrack+ server.
+
+#. **Developers guide:** You are reading it :)
+
+Please browse through the docs and decide where is the most appropriate place
+to document your new feature.
+
+While writing documentation, you can view the documentation locally in your web
+browser (at http://127.0.0.1:8008) by running one of the following commands:
 
 .. code-block:: shell
 
-    make cover
-
+    make docs-autobuild
+    # -or-
+    sphinx-autobuild docs docs/_build/html -p 8008
 
 
 Copyright & Licensing
@@ -300,3 +336,33 @@ otherwies, by submitting code to the QATrack+ project you agree to have it
 distributed using the same `MIT license
 <https://bitbucket.org/tohccmedphys/qatrackplus/src/master/LICENSE>`__ as
 QATrack+ uses.
+
+
+I'm not a developer, how can I help out?
+----------------------------------------
+
+Not everyone has development experience or the desire to contribute code to
+QATrack+ but still wants to help the project out.  Here are a couple of ways
+that you can contribute to the QATrack+ project without doing any software
+development:
+
+* **Translations:** Starting in QATrack+ v0.3.1, QATrack+ will have the
+  infrastructure in place to support languages other than English.  We will be
+  making translation files available so that the community can create
+  translation files for their native languages. Please get in touch with
+  randy@multileaf.ca if you are able to help out with this task!
+
+* **Tutorials:** :ref:`Tutorials <tutorials>` are a great way for newcomers to
+  learn their way around QATrack+.  If you have an idea for a tutorial, we
+  would love to include it in our tutorials section!
+
+* **Mailing List:** QATrack+ has a :mailinglist:`mailing list <>` which
+  QATrack+ users and administrators may find useful for getting support and
+  discussing bugs and/or features. Join the list and chime in!
+
+* **Spread the word:** The QATrack+ community has grown primarily through word
+  of mouth. Please let others know about QATrack+ when discussing QA/QC
+  software :)
+
+* **Other:** Have any ideas for acquiring development funding for the QATrack+
+  project?  We'd love to hear them!

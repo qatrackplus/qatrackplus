@@ -7,7 +7,7 @@ test:
 	py.test ${args}
 
 test_simple:
-	py.test --reuse-db -m "not selenium" ${args}
+	py.test -m "not selenium" ${args}
 
 yapf:
 	yapf --verbose --in-place --recursive --parallel \
@@ -26,7 +26,11 @@ docs-autobuild:
 	sphinx-autobuild docs docs/_build/html -p 8008
 
 qatrack_daemon.conf:
-	sed 's/YOURUSERNAMEHERE/$(USER)/' deploy/apache24_daemon.conf > qatrack.conf
+	sudo sed 's/YOURUSERNAMEHERE/$(USER)/g' deploy/apache24_daemon.conf > qatrack.conf
+	sudo cp qatrack.conf /etc/apache2/sites-available/qatrack.conf
+	sudo ln -sf /etc/apache2/sites-available/qatrack.conf /etc/apache2/sites-enabled/qatrack.conf
+	sudo usermod -a -G $(USER) www-data
+	sudo service apache2 restart
 
 schema:
 	python ./manage.py graph_models -a -g \
