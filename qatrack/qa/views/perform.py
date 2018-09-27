@@ -1326,6 +1326,8 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
             context['top_divs_span'] += 1
         context['top_divs_span'] = int(12 / context['top_divs_span']) if context['top_divs_span'] > 0 else 12
 
+        context["contacts"] = list(Contact.objects.all().order_by("name"))
+
         return context
 
 
