@@ -381,14 +381,6 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 }
             }
 
-            if (tt === QAUtils.COMPOSITE || tt === QAUtils.STRING_COMPOSITE) {
-                if (_.isNull(value)){
-                    self.inputs.addClass('comp_not_done');
-                } else {
-                    self.inputs.removeClass('comp_not_done');
-                }
-            }
-
             var uploadAttached =  value && value.attachment;
             var uploadUserAttached = value && (value.user_attached && value.user_attached.length > 0);
             var compUserAttached = user_attached && user_attached.length > 0;

@@ -77,9 +77,6 @@ input[readonly].qa-input {
     background-color: #ddd;
     font-weight: 500;
 }
-input.comp_not_done {
-    background-color: #dddcae !important;
-}
 .qa-table td.qa-value,
 .qa-table th.qa-value{
     width: 110px;
