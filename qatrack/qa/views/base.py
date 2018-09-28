@@ -136,6 +136,9 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
         context["unit_test_collection"] = self.object.unit_test_collection
         context["current_day"] = self.object.day + 1
 
+        if self.object.unit_test_collection.tests_object.__class__.__name__ == 'TestListCycle':
+            context['cycle_name'] = self.object.unit_test_collection.name
+
         tests = [t.unit_test_info.test for t in test_instances]
         context['borders'] = self.object.test_list.sublist_borders(tests)
 
