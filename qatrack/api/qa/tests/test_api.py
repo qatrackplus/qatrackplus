@@ -1,6 +1,7 @@
 import base64
 import json
 import os
+import time
 
 from django.conf import settings
 from django.contrib.auth.models import Permission
@@ -74,7 +75,19 @@ class TestTestListInstanceAPI(APITestCase):
     def tearDown(self):
         for a in Attachment.objects.all():
             if os.path.isfile(a.attachment.path):
-                os.remove(a.attachment.path)
+                count = 0
+                while True:
+                    try:
+                        a.attachment.close()
+                        os.remove(a.attachment.path)
+                        break
+                    except PermissionError:
+
+                        if count == 2:
+                            break
+
+                        count += 1
+                        time.sleep(0.2)
 
     def test_create(self):
         response = self.client.post(self.create_url, self.data)

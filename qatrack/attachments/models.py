@@ -1,6 +1,9 @@
 import imghdr
+import logging
 import os
 import os.path
+import shutil
+import time
 from uuid import uuid4
 
 from django.conf import settings
@@ -13,6 +16,8 @@ from django.utils.translation import ugettext_lazy as _
 
 import qatrack.qa.models as qam
 import qatrack.service_log.models as slm
+
+logger = logging.getLogger('qatrack')
 
 
 def get_upload_path(instance, name):
@@ -48,7 +53,23 @@ def move_tmp_file(attach, save=True, force=False, new_name=None):
     if not os.path.exists(os.path.dirname(new_path)):
         os.makedirs(os.path.dirname(new_path))
 
-    os.rename(start_path, new_path)
+    # windows sometimes complains about the file being open
+    # in another process when deleting, so rather than moving the file
+    # we will copy and then remove the old file, ignoring errors which
+    # occur when deleting the file from the tmp location
+    shutil.copy(start_path, new_path)
+    count = 0
+    while True:
+        try:
+            attach.attachment.close()
+            os.remove(start_path)
+            break
+        except PermissionError:
+            if count == 2:
+                logging.error("Failed to remove %s when moving %s to %s." % (start_path, start_path, new_path))
+                break
+            count += 1
+            time.sleep(0.2)
 
     new_name = "uploads/" + '/'.join(name_parts)
     attach.attachment.name = new_name

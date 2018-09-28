@@ -27,7 +27,7 @@ docs-autobuild:
 
 qatrack_daemon.conf:
 	sudo sed 's/YOURUSERNAMEHERE/$(USER)/g' deploy/apache24_daemon.conf > qatrack.conf
-	sudo cp qatrack.conf /etc/apache2/sites-available/qatrack.conf
+	sudo mv qatrack.conf /etc/apache2/sites-available/qatrack.conf
 	sudo ln -sf /etc/apache2/sites-available/qatrack.conf /etc/apache2/sites-enabled/qatrack.conf
 	sudo usermod -a -G $(USER) www-data
 	sudo service apache2 restart
