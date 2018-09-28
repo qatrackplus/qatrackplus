@@ -2,12 +2,12 @@
 {
     "model": "service_log.serviceeventstatus",
     "fields": {
-        "name": "Service In Progress",
-        "is_default": false,
+        "name": "Service Pending",
+        "is_default": true,
         "is_review_required": true,
         "rts_qa_must_be_reviewed": false,
-        "description": "Work on service event is currently ongoing",
-        "colour": "rgba(0,192,239,1)"
+        "description": "Default service event status",
+        "colour": "rgba(210,214,222,1)"
     }
 },
 {
