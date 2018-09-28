@@ -1,4 +1,3 @@
-
 from collections import OrderedDict
 import csv
 
@@ -384,7 +383,7 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
             sers = models.ServiceEvent.objects.filter(pk__in=service_event_related)
         except ValueError:
             sers = []
-        service_event.service_event_related = sers
+        service_event.service_event_related.set(sers)
 
         if 'service_status' in form.changed_data:
             se_needing_review_count = models.ServiceEvent.objects.filter(

@@ -27,6 +27,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'saveSvgAsPng', 'qaut
             $include_fit = $('#include-fit'),
             $combine_data = $('#combine-data'),
             $relative_diff = $('#relative-diff'),
+            $control_chart_container = $("#control-chart-container"),
             $review_required = $('#review-required');
 
         var date_format = 'DD MMM YYYY';
@@ -328,11 +329,21 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'saveSvgAsPng', 'qaut
 
         $("#save-image").click(function(){
             var svg = $("svg");
-            if (svg.length === 0){
+            if (svg.length === 0 && $control_chart_container.find('img').length === 0){
                 return;
             }
-            // Get the d3js SVG element and save using saveSvgAsPng.js
-            saveSvgAsPng(svg.get(0), "plot.png", {scale: 1, backgroundColor: "#FFFFFF"});
+
+            if ($chart_type.val() === 'basic') {
+                // Get the d3js SVG element and save using saveSvgAsPng.js
+                saveSvgAsPng(svg.get(0), "plot.png", {scale: 1, backgroundColor: "#FFFFFF"});
+            } else {
+                var a = $("<a>")
+                    .attr("href", $control_chart_container.find('img').attr('src'))
+                    .attr("download", "control_plot.png")
+                    .appendTo("body");
+                a[0].click();
+                a.remove();
+            }
         });
 
         $("#data-table-wrapper").on('click', "#csv-export", export_csv);
@@ -377,6 +388,11 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'saveSvgAsPng', 'qaut
         }
 
         function update_chart() {
+
+            $control_chart_container.slideUp('fast');
+            if ($chart_type.val() === 'control') {
+                $('#chart > svg').remove();
+            }
             start_chart_update();
             set_chart_url();
             if (basic_chart_selected()) {
@@ -2029,28 +2045,29 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'saveSvgAsPng', 'qaut
         }
 
         function create_control_chart() {
-            $("#control-chart-container").find("img, div.please-wait, div.cc-error").remove();
-            $("#control-chart-container").append("<img/>");
-            $("#control-chart-container img").error(control_chart_error);
-            $("#control-chart-container").append(
+            $control_chart_container.slideDown('fast');
+            $control_chart_container.find("img, div.please-wait, div.cc-error").remove();
+            $control_chart_container.append("<img/>");
+            $control_chart_container.find('img').error(control_chart_error);
+            $control_chart_container.append(
                 '<div class="please-wait"><em>Please wait for control chart to be generated...this could take a few minutes.</em></div>'
             );
 
             waiting_timeout = setInterval(check_cc_loaded, 250);
             var chart_src_url = get_control_chart_url();
-            $("#control-chart-container img").attr("src", chart_src_url);
+            $control_chart_container.find('img').attr("src", chart_src_url);
         }
 
         function check_cc_loaded() {
-            if ($("#control-chart-container img").height() > 100) {
+            if ($control_chart_container.find('img').height() > 100) {
                 control_chart_finished();
             }
         }
 
         function control_chart_error() {
             control_chart_finished();
-            $("#control-chart-container img").remove();
-            $("#control-chart-container").append(
+            $control_chart_container.find('img').remove();
+            $control_chart_container.append(
                 '<div class="cc-error">Something went wrong while generating your control chart</div>'
             );
         }
@@ -2065,7 +2082,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'saveSvgAsPng', 'qaut
         function get_control_chart_url() {
             var filters = get_data_filters();
             var props = [
-                "width=" + ($("#control-chart-container").width() - 15),
+                "width=" + ($control_chart_container.width() - 15),
                 // "height=" + $("#chart").height(),
                 "height=" + 800,
                 "timestamp=" + new Date().getTime()
@@ -2153,8 +2170,9 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'saveSvgAsPng', 'qaut
                 $date_range.data('daterangepicker').setStartDate(moment().subtract(1, 'years').format(date_format));
                 $date_range.data('daterangepicker').setEndDate(moment().format(date_format));
             } else {
-                $date_range.data('daterangepicker').setStartDate(moment(date_range.split('%20-%20')[0], date_format).format(date_format));
-                $date_range.data('daterangepicker').setEndDate(moment(date_range.split('%20-%20')[1], date_format).format(date_format));
+                date_range = date_range.replace(/%20/g, ' ');
+                $date_range.data('daterangepicker').setStartDate(moment(date_range.split(' - ')[0], date_format).format(date_format));
+                $date_range.data('daterangepicker').setEndDate(moment(date_range.split(' - ')[1], date_format).format(date_format));
             }
             $status_selector.val(statuses.length === 0 ? [1, 2] : statuses).change();
             $show_events.prop('checked', show_events);

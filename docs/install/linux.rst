@@ -1,8 +1,11 @@
 Installing and Deploying QATrack+ on Ubuntu Linux
 =================================================
 
-*This guide assumes you have at least a basic level of familiarity with Linux
-and the command line.*
+
+.. note::
+
+    This guide assumes you have at least a basic level of familiarity with Linux
+    and the command line.
 
 .. contents::
     :local:
@@ -13,9 +16,9 @@ New Installation
 ----------------
 
 This guide is going to walk you through installing everything required to run
-QATrack+ on an Ubuntu 16.04 (Xenial Xerus) server with Python 3.5, Apache 2.4
-as the web server and PostgreSQL 9.5 (MySQL 5.5)  as the database. Installation
-instructions should be similar on other Linux systems.
+QATrack+ on an Ubuntu 18.04 LTS (Bionic Beaver) server with Python 3.6, Apache
+2.4 as the web server and PostgreSQL 10 (MySQL 5.5)  as the database.
+Installation instructions should be similar on other Linux systems.
 
 The steps we will be undertaking are:
 
@@ -23,46 +26,88 @@ The steps we will be undertaking are:
     :local:
 
 If you hit an error along the way, stop and figure out why the error is
-occuring before proceeding with the next step! 
+occuring before proceeding with the next step!
 
 Prerequisites
 .............
 
-You will need to have the `make` command available for this deployment. Install it as follows:
+
+Make sure your existing packages are up to date:
 
 .. code-block:: bash
 
-    sudo apt update
-    sudo apt install make
+    sudo apt-get update
+    sudo apt-get upgrade
+
+You will need to have the `make` command available for this deployment. Install
+it as follows:
+
+.. code-block:: bash
+
+    sudo apt-get install make
+
+
+Installing and configuring Git
+..............................
+
+QATrack+ uses the git version controls system.  Ensure you have git installed with
+the following command:
+
+.. code-block:: bash
+
+   sudo apt-get install git
+
+and then configure git (substituting your name and email address!)
+
+.. code-block:: bash
+
+   git config --global user.name "randlet"
+   git config --global user.email randy@multileaf.ca
+
+Check out the QATrack+ source code from BitBucket
+.................................................
+
+Now that we have git installed we can proceed to grab the latest version of
+QATrack+.  To checkout the code enter the following commands:
+
+.. code-block:: bash
+
+    mkdir -p ~/web
+    cd web
+    git clone https://bitbucket.org/tohccmedphys/qatrackplus.git
 
 
 Installing a Database System
 ............................
 
-It is highly recommended that you choose PostgreSQL for your database, however
-it is possible to use MySQL/MariaDB if you need to.
+It is *highly* recommended that you choose PostgreSQL for your database,
+however it is possible to use MySQL/MariaDB if you need to.
 
 Installing PostgreSQL
 ^^^^^^^^^^^^^^^^^^^^^
 
-To install PostgreSQL run the following commands:
+If you do not have an existing database server, you will need to install
+PostgreSQL locally. Run the following commands:
 
 .. code-block:: bash
 
-    sudo apt install postgresql libpq-dev postgresql-client postgresql-client-common
+    sudo apt-get install postgresql libpq-dev postgresql-client postgresql-client-common
 
-After that completes, we can create a new Postgres user (db/user/pwd = qatrackplus/qatrack/qatrackpass) as follows:
+After that completes, we can create a new Postgres user (db name/user/pwd =
+qatrackplus/qatrack/qatrackpass) as follows:
 
 .. code-block:: bash
 
+    cd ~/web/qatrackplus
     sudo -u postgres psql < db/postgres/create_db_and_role.sql
 
 
-Now edit /etc/postgresql/9.3/main/pg_hba.conf and scroll down to the
-bottom and change the two instances of `peer` to `md5` so it looks
-like:
+Now edit /etc/postgresql/10/main/pg_hba.conf (use your favourite editor, e.g.
+`sudo nano /etc/postgresql/10/main/pg_hba.conf`) and scroll down to the bottom
+and change the instances of `peer` to `md5` so it looks like:
 
 .. code-block:: bash
+
 
     # Database administrative login by Unix domain socket
     local   all             postgres                                md5
@@ -75,6 +120,11 @@ like:
     host    all             all             127.0.0.1/32            md5
     # IPv6 local connections:
     host    all             all             ::1/128                 md5
+    # Allow replication connections from localhost, by a user with the
+    # replication privilege.
+    local   replication     all                                     md5
+    host    replication     all             127.0.0.1/32            md5
+    host    replication     all             ::1/128                 md5
 
 and restart the pg server:
 
@@ -88,45 +138,16 @@ Installing MySQL
 
 .. code-block:: bash
 
-    sudo apt-get install mysql-server libmysqlclient-dev
+    sudo apt-get install build-essential python3-dev mysql-server libmysqlclient-dev
 
 
-Now we can create and configure a user and database for QATrack+:
-
-.. code-block:: bash
-
-    sudo -u postgres psql < db/mysql/create_db_and_role.sql
-
-
-Installing and configuring Git
-..............................
-
-QATrack+ uses the git version controls system.  Ensure you have git installed with
-the following command:
+Now we can create and configure a user (db name/user/pwd =
+qatrackplus/qatrack/qatrackpass) and database for QATrack+:
 
 .. code-block:: bash
 
-   sudo apt update
-   sudo apt install git
+    sudo mysql < db/mysql/create_db_and_role.sql
 
-and then configure git (substituting your name and email address!)
-
-.. code-block:: bash
-
-   git config --global user.name "randlet"
-   git config --global user.email randle.taylor@gmail.com
-
-Check out the QATrack+ source code from BitBucket
-.................................................
-
-Now that we have git installed we can proceed to grab the latest version of
-QATrack+.  To checkout the code enter the following commands:
-
-.. code-block:: bash
-
-    mkdir -p ~/web
-    cd web
-    git clone https://bitbucket.org/tohccmedphys/qatrackplus.git
 
 
 Check your Python version
@@ -153,7 +174,7 @@ the virtual environment run the following commands:
 
 .. code-block:: bash
 
-    sudo apt install python3-venv
+    sudo apt-get install python3-venv
     mkdir -p ~/venvs
     python3 -m venv ~/venvs/qatrack3
 
@@ -178,7 +199,7 @@ We will now install all the libraries required for QATrack+ with PostgresSQL:
 .. code-block:: bash
 
     cd ~/web/qatrackplus
-    pip install -r requirements.pgsql.txt
+    pip install -r requirements.postgres.txt
 
 or for MySQL:
 
@@ -221,21 +242,16 @@ Apache and mod_wsgi can be installed with the following commands:
 Now we can remove the default Apache config file and copy over the QATrack+ config
 file:
 
-.. note:
+.. danger::
 
-    If you already have other sites running using the 000-default.conf file you will
-    want to edit it to include the directives relevant to QATrack+ rather than deleting
-    it.  Seek help if you're unsure!
+    If you already have other sites running using the 000-default.conf file you
+    will want to edit it to include the directives relevant to QATrack+ rather
+    than deleting it.  Seek help if you're unsure!
 
 .. code-block:: bash
 
     make qatrack_daemon.conf
     sudo rm /etc/apache2/sites-enabled/000-default.conf
-    sudo cp ~/web/qatrackplus/qatrack.conf /etc/apache2/sites-available/qatrack.conf
-    sudo ln -s /etc/apache2/sites-available/qatrack.conf /etc/apache2/sites-enabled/qatrack.conf
-    sudo service apache2 restart
-    sudo usermod -a -G www-data $USER
-
 
 
 Final configuration of QATrack+
@@ -248,7 +264,7 @@ Create your `local_settings.py` file by copying the example from `deploy/local_s
 
 .. code-block:: bash
 
-    cp deploy/local_settings.py .
+    cp deploy/local_settings.py qatrack/local_settings.py
 
 then open the file in a text editor.  There are many available settings and
 they are documented within the example file and more completely on :ref:`the
@@ -283,7 +299,16 @@ database and install the default data:
     python manage.py migrate
     python manage.py loaddata fixtures/defaults/*/*
 
-and we also need to collect all our static media files in one location for
+You also need to create a super user so you can login and begin configuring
+your Test Lists:
+
+
+.. code-block:: bash
+
+    python manage.py createsuperuser
+
+
+and finally we need to collect all our static media files in one location for
 Apache to serve and then restart Apache:
 
 .. code-block:: bash
@@ -292,14 +317,21 @@ Apache to serve and then restart Apache:
     sudo service apache2 restart
 
 
+You should now be able to log into your server at http://yourserver/.
+
+
+Backup policy
+.............
+
+Now that you have your installation complete you should consider how you will
+automate your :ref:`backup of your QATrack+ installation <qatrack_backup>`.
+
 Last Word
 .........
 
 There are a lot of steps getting everything set up so don't be discouraged if
 everything doesn't go completely smoothly! If you run into trouble, please get
 in touch with me on the :mailinglist:`mailing list <>` and I can help you out.
-
-R. Taylor
 
 
 
@@ -308,7 +340,7 @@ Upgrading from version 0.2.8
 
 In order to upgrade from version 0.2.8 you must first uprade to version 0.2.9.
 If you hit an error along the way, stop and figure out why the error is
-occuring before proceeding with the next step! 
+occuring before proceeding with the next step!
 
 .. contents::
     :local:
@@ -327,8 +359,9 @@ As usual, you will first want to activate your virtual environment:
 Backing up your database
 ........................
 
-It is **extremely** important you back up your database before attempting
-to upgrade. You can either generate a json dump of your database (possibly slow!):
+It is **extremely** important you back up your database before attempting to
+upgrade. You can either generate a json dump of your database (possibly
+extremely slow!):
 
 .. code-block:: bash
 
@@ -381,7 +414,7 @@ Upgrading from version 0.2.9
 
 The steps below will guide you through upgrading a version 0.2.9 installation
 to 0.3.0.  If you hit an error along the way, stop and figure out why the error
-is occuring before proceeding with the next step! 
+is occuring before proceeding with the next step!
 
 .. contents::
     :local:
@@ -406,8 +439,9 @@ install Python 3 on your system (beyond the scope of this document).
 Backing up your database
 ........................
 
-It is **extremely** important you back up your database before attempting
-to upgrade. You can either generate a json dump of your database (possibly slow!):
+It is **extremely** important you back up your database before attempting to
+upgrade. You can either generate a json dump of your database (possibly
+extremely slow!):
 
 .. code-block:: bash
 
@@ -419,11 +453,11 @@ and/or by using your database to dump a backup file:
 
 .. code-block:: bash
 
-    pg_dump -U <username> --password <dbname> > backup-0.2.8-$(date -I).sql   # e.g. pg_dump -U qatrack --password qatrackdb > backup-0.2.9-$(date -I).sql
+    pg_dump -U <username> --password <dbname> > backup-0.2.9-$(date -I).sql   # e.g. pg_dump -U qatrack --password qatrackdb > backup-0.2.9-$(date -I).sql
 
     # or for MySQL
 
-    mysqldump --user <username> --password <dbname> > backup-$(date -I).sql  # e.g. mysqldump --user qatrack --password qatrackdb > backup-0.2.9-$(date -I).sql
+    mysqldump --user <username> --password <dbname> > backup-0.2.9-$(date -I).sql  # e.g. mysqldump --user qatrack --password qatrackdb > backup-0.2.9-$(date -I).sql
 
 
 Checking out version 0.3.0
@@ -444,9 +478,9 @@ We need to create a new virtual environment with the Python 3 interpreter:
 
 .. code-block:: bash
 
-    virtualenv -P $(which python3) ~/venvs/qatrack3
+    sudo apt-get install python3-venv
+    python3 -m venv ~/venvs/qatrack3
     source ~/venvs/qatrack3/bin/activate
-
 
 and we can then install the required python libraries:
 
@@ -473,8 +507,8 @@ During the migration above you may have noticed some warnings like:
 
     | Note: if any of the following tests process binary files (e.g. images, dicom files etc) rather than plain text, you must edit the calculation and replace 'FILE' with 'BIN_FILE'. Tests:
     |
-    | Test name 1 (test-1) 
-    | Test name 2 (test-2) 
+    | Test name 1 (test-1)
+    | Test name 2 (test-2)
     | ...
 
 This data is also available in the `logs/migrate.log` file.  Because the way
@@ -509,6 +543,7 @@ Update your Apache configuration
 
 Since we are now using a different Python virtual environment we need to update
 the `WSGIPythonHome` variable.  Open your Apache config file (either
+/etc/apach2/sites-available/qatrack.conf  or
 /etc/apache2/sites-available/default.conf or /etc/apache2/httpd.conf) and set
 the virtualenv path correctly:
 

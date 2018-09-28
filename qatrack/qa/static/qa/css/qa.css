@@ -72,7 +72,8 @@ a.qa-input {
     padding: 3px 10px;
     width: 100%;
 }
-input[disabled].qa-input, input[readonly].qa-input {
+input[disabled].qa-input,
+input[readonly].qa-input {
     background-color: #ddd;
     font-weight: 500;
 }
@@ -278,12 +279,6 @@ div.sublist-description {
     overflow: hidden;
     text-overflow: ellipsis;
     /*max-width: 0;*/
-}
-#perform-qa-table > tbody > tr.control-group.qa-valuerow > td.qa-name.qa-showproc {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 0;
 }
 
 #perform-qa-table > thead > tr > th.qa-history {

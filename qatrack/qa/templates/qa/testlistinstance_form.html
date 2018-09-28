@@ -423,8 +423,13 @@
                                     <i class="fa fa-pencil-square-o box-title" aria-hidden="true"></i>
                                     <h3 class="box-title">Perform {{unit_test_collection.unit.name}} : {{test_list.name}}</h3>
                                 {% endif %}
-                                {% if days and last_instance %}
-                                    <div><em>Last done: {% if last_day %}Day {{last_day}} ({{last_instance.test_list.name}}){% else %}New list{%endif%}</em></div>
+                                {% if days %}
+                                    <div><em>From cycle : {{ unit_test_collection.name }}</em></div>
+                                    {% if last_instance %}
+                                        <div><em>Last done: {% if last_day %}Day {{last_day}} ({{last_instance.test_list.name}}){% else %}New list{%endif%}</em></div>
+                                    {% endif %}
+                                {% elif cycle_name %}
+                                    <div><em>From cycle : {{ cycle_name }}</em></div>
                                 {% endif %}
                             </div>
 

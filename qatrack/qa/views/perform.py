@@ -1058,6 +1058,9 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         in_progress = models.TestListInstance.objects.in_progress().filter(
             unit_test_collection=self.unit_test_col, test_list=self.test_list
         )
+
+        context['tests_object_type'] = self.unit_test_col.tests_object.__class__.__name__
+
         context["test_list"] = self.test_list
         context["in_progress"] = in_progress
         context["unit_test_infos"] = json.dumps(self.template_unit_test_infos())
@@ -1322,6 +1325,11 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         if settings.USE_SERVICE_LOG and (context['form'].instance.pk or context['rtsqa_id'] is not None):
             context['top_divs_span'] += 1
         context['top_divs_span'] = int(12 / context['top_divs_span']) if context['top_divs_span'] > 0 else 12
+
+        context["contacts"] = list(Contact.objects.all().order_by("name"))
+
+        if self.object.unit_test_collection.tests_object.__class__.__name__ == 'TestListCycle':
+            context['cycle_name'] = self.object.unit_test_collection.name
 
         return context
 

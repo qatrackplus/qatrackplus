@@ -1,22 +1,23 @@
 
 import getpass
-import pyodbc
 import re
 import warnings
 
-from django_comments.models import Comment
 from django.conf import settings as qat_settings
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group, User
 from django.contrib.sites.models import Site
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.management.base import BaseCommand
 from django.db import IntegrityError
 from django.utils import timezone
+from django_comments.models import Comment
 
+import pyodbc
+from qatrack.parts import models as p_models
+from qatrack.qa import models as qa_models
+from qatrack.qa.utils import get_internal_user
 from qatrack.service_log import models as sl_models
 from qatrack.units import models as u_models
-from qatrack.qa import models as qa_models
-from qatrack.parts import models as p_models
 
 from ... import accel_migration_settings as amt_settings
 
@@ -706,7 +707,7 @@ class Command(BaseCommand):
             """
         )
         comment_site = Site.objects.exclude(domain='QATrack+TestDomain').first()
-        user_comments = User.objects.get(username='QATrack+ Internal')
+        user_comments = get_internal_user()
         while 1:
             row = self.iterating_cursor.fetchone()
             if not row:
@@ -1159,6 +1160,4 @@ class Command(BaseCommand):
         if qat_settings.USE_PARTS:
             self.parts_conn.commit()
         return True
-
-
 
