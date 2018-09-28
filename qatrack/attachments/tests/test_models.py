@@ -1,8 +1,8 @@
+import os
 from unittest import mock
 
 from django.conf import settings
 from django.test import TestCase
-import os
 
 from qatrack.attachments.models import Attachment
 from qatrack.qa import models as qam
@@ -56,9 +56,10 @@ class TestAttachment(TestCase):
         a = Attachment(testlist=qam.TestList(pk=1), attachment=mocka)
         assert a.can_finalize
 
-    @mock.patch("os.rename")
+    @mock.patch("shutil.copy")
+    @mock.patch("os.remove")
     @mock.patch("os.makedirs")
-    def test_move_from_tmp(self, makedirs, rename):
+    def test_move_from_tmp(self, makedirs, remove, copy):
         mocka = mock.Mock()
         name = "foo.bar"
         mocka.path = os.path.join(settings.TMP_UPLOAD_ROOT, name)
@@ -75,5 +76,6 @@ class TestAttachment(TestCase):
             os.path.join(settings.UPLOAD_ROOT, "testlist", "1"),
         )
 
-        assert rename.call_args[0] == expected_rename_from_to
+        assert copy.call_args[0] == expected_rename_from_to
+        assert remove.call_args[0] == (expected_rename_from_to[0],)
         assert makedirs.call_args[0] == expected_make_dirs
