@@ -103,7 +103,9 @@ qatrackplus/qatrack/qatrackpass) as follows:
 
 
 Now edit /etc/postgresql/10/main/pg_hba.conf (use your favourite editor, e.g.
-`sudo nano /etc/postgresql/10/main/pg_hba.conf`) and scroll down to the bottom
+`sudo nano /etc/postgresql/10/main/pg_hba.conf`, note, if you have a different
+version of Postgres installed, then you would need to change the 10 in that
+path e.g. /etc/postgresql/9.3/main/pg_hba.conf) and scroll down to the bottom
 and change the instances of `peer` to `md5` so it looks like:
 
 .. code-block:: bash
@@ -133,8 +135,8 @@ and restart the pg server:
     sudo service postgresql restart
 
 
-Installing MySQL
-^^^^^^^^^^^^^^^^
+Installing MySQL (only required if you prefer to use MySQL over Postgres)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: bash
 
@@ -174,7 +176,7 @@ the virtual environment run the following commands:
 
 .. code-block:: bash
 
-    sudo apt-get install python3-venv
+    sudo apt-get install python3-venv  # use python3.4-venv on Ubuntu 14.04
     mkdir -p ~/venvs
     python3 -m venv ~/venvs/qatrack3
 
@@ -232,6 +234,11 @@ similar to the following:
 Installing Apache web server and mod_wsgi
 .........................................
 
+.. warning::
+
+    If you are on Ubuntu 14.04 please complete this section then complete the
+    "Installing Apache on Ubuntu 14.04" section below!
+
 The next step to take is to install and configure the Apache web server.
 Apache and mod_wsgi can be installed with the following commands:
 
@@ -244,7 +251,7 @@ file:
 
 .. danger::
 
-    If you already have other sites running using the 000-default.conf file you
+    If you already have other sites running using the default config file you
     will want to edit it to include the directives relevant to QATrack+ rather
     than deleting it.  Seek help if you're unsure!
 
@@ -252,6 +259,52 @@ file:
 
     make qatrack_daemon.conf
     sudo rm /etc/apache2/sites-enabled/000-default.conf
+
+
+Installing Apache on Ubuntu 14.04
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The process for installing Apache on Ubuntu 14.04 is a bit more complicated. If
+you can upgrade to 18.04 it is recommended you do so. Otherwise, read on (ref
+https://askubuntu.com/a/569551).
+
+First uninstall the existing mod-wsgi-py3 package and make sure apache-dev is installed:
+
+.. code-block:: bash
+
+    sudo apt-get remove libapache2-mod-wsgi-py3
+    sudo apt-get install apache2-dev
+    source ~/venvs/qatrack3/bin/activate
+    pip install mod_wsgi
+
+Now install mod_wsgi into Apache:
+
+.. code-block:: bash
+
+    sudo ~/venvs/qatrack3/bin/mod_wsgi-express install-module
+
+which will result in two lines like:
+
+.. code-block:: bash
+
+    LoadModule wsgi_module "/usr/lib/apache2/modules/mod_wsgi-py34.cpython-34m.so"
+    WSGIPythonHome "/home/ubuntu/venvs/qatrack3"
+
+
+Write the first line to `/etc/apache2/mods-available/wsgi_express.load` and the
+second line to `/etc/apache2/mods-available/wsgi_express.conf`:
+
+.. code-block:: bash
+
+    echo 'LoadModule wsgi_module "/usr/lib/apache2/modules/mod_wsgi-py34.cpython-34m.so"' | sudo tee --append /etc/apache2/mods-available/wsgi_express.conf
+    echo 'WSGIPythonHome "/home/ubuntu/venvs/qatrack3"' | sudo tee --append /etc/apache2/mods-available/wsgi_express.load
+
+Now enable the wsgi_express module and restart Apache:
+
+.. code-block:: bash
+
+    sudo a2enmod wsgi_express
+    sudo service apache2 restart
 
 
 Final configuration of QATrack+

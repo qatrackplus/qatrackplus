@@ -28,7 +28,7 @@ gunicorn==19.9.0; sys_platform=='linux'
 markdown==2.6.11
 matplotlib==2.2.2
 numpy==1.14.2
-pandas==0.23.0
+pandas>=0.22.0,<0.24
 pep8==1.7.0
 pydicom==1.0.2
 pylinac==2.0.1
