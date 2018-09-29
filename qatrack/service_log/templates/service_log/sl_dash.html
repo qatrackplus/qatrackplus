@@ -61,13 +61,13 @@
                         <div class="row">
                             <div class="col-md-12">
                                 <label class="pull-left">{{ counts.se_default.status_name }}</label>
-                                <a href="{% url 'sl_list_all' %}?f=ss-{{ counts.se_default.id }}" class="pull-right btn btn-flat btn-xs btn-info left-btns">{{ counts.se_default.count }}</a>
+                                <a href="{% url 'sl_list_by_status' pk=counts.se_default.id %}" class="pull-right btn btn-flat btn-xs btn-info left-btns">{{ counts.se_default.count }}</a>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-12">
                                 <label class="pull-left">Needing Review</label>
-                                <a href="{% url 'sl_list_all' %}?f=ar-1_ss.ar-1" class="pull-right btn btn-flat btn-xs btn-info left-btns">{{ counts.se_needing_review }}</a>
+                                <a href="{% url 'sl_list_review_required' %}" class="pull-right btn btn-flat btn-xs btn-info left-btns">{{ counts.se_needing_review }}</a>
                             </div>
                         </div>
                     </div>

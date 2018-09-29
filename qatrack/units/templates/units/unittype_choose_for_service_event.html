@@ -16,22 +16,32 @@
                     <div class="box">
                         <div class="box-header">
                             <i class="fa fa-cube" aria-hidden="true"></i>
-                            <h3 class="box-title">Choose a Unit to Create a New Service Event for</h3>
-                            <p>Click a button to create a service event for one of the units below.</p>
+                            <h3 class="box-title">
+                              {% if new_se %}
+                                Choose a Unit to Create a New Service Event for
+                              {% else %}
+                                Choose a Unit to View Service Events for
+                              {% endif %}
+                            </h3>
+                            <p>
+                              {% if new_se %}
+                                Click a button to create a service event for one of the units below.
+                              {% else %}
+                                Click a button to view service events for one of the units below.
+                              {% endif %}
+                            </p>
                         </div>
                         <div class="box-body unit-btns">
                             {% for unit_type, units in unit_types%}
-
                                 <div class="row">
                                     <div class="col-sm-12">
-
                                         <h4 class="header-spacer">{{unit_type}}</h4>
                                         {% for unit in units %}
-                                            <a class="btn btn-default btn-flat" href="{% if new_se %}{% url "sl_new" %}?u={{ unit.unit__id }}{% else %}{% url 'sl_list_all' %}?f=u-{{ unit.unit__id }}{% endif %}">{{unit.unit__name}}</a>
+                                            <a class="btn btn-default btn-flat"
+                                               href="{% if new_se %}{% url "sl_new" %}?u={{ unit.unit__id }}{% else %}{% url 'sl_list_by_unit' unit_number=unit.unit__number %}">{{unit.unit__name}}{% endif %}</a>
                                         {% endfor %}
                                     </div>
                                 </div>
-
                             {% endfor %}
                         </div>
                         <div class="box-footer"></div>
@@ -41,8 +51,21 @@
         {% else %}
             <div class="row">
                 <div class="col-md-12">
-                    <h4><i class="fa fa-cube" aria-hidden="true"></i>Choose a Unit to Create a New Service Event for</h4>
-                    <p>Click a button to create a service event for one of the units below.</p>
+                    <h4>
+                      <i class="fa fa-cube" aria-hidden="true"></i>
+                      {% if new_se %}
+                        Choose a Unit to Create a New Service Event for
+                      {% else %}
+                        Choose a Unit to View Service Events for
+                      {% endif %}
+                    </h4>
+                    <p>
+                      {% if new_se %}
+                        Click a button to create a service event for one of the units below.
+                      {% else %}
+                        Click a button to view service events for one of the units below.
+                      {% endif %}
+                    </p>
                 </div>
             </div>
             <div class="row">
@@ -60,7 +83,7 @@
 
                                             <h4 class="header-spacer">{{ type }}</h4>
                                             {% for unit in units %}
-                                                <a class="btn btn-default btn-flat" href="{% if new_se %}{% url "sl_new" %}?u={{ unit.unit__id }}{% else %}{% url 'sl_list_all' %}?f=u-{{ unit.unit__id }}{% endif %}">{{unit.unit__name}}</a>
+                                            <a class="btn btn-default btn-flat" href="{% if new_se %}{% url "sl_new" %}?u={{ unit.unit__id }}{% else %}{% url 'sl_list_by_unit' unit_number=unit.unit__number %}{% endif %}">{{unit.unit__name}}</a>
                                             {% endfor %}
                                         </div>
                                     </div>

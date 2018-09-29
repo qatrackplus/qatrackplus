@@ -5,13 +5,13 @@ from braces.views import LoginRequiredMixin, PermissionRequiredMixin
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.context_processors import PermWrapper
-from django.contrib.auth.decorators import login_required, permission_required
-from django.contrib.auth.models import Permission, User
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import resolve, reverse
-from django.db.models import Sum
+from django.db.models import Q, Sum
 from django.forms.utils import timezone
 from django.http import (
     Http404,
@@ -19,10 +19,9 @@ from django.http import (
     HttpResponseRedirect,
     JsonResponse,
 )
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect
 from django.template.loader import get_template
 from django.utils.translation import ugettext as _
-from django.views.decorators.csrf import csrf_protect
 from django.views.generic import DeleteView, DetailView, FormView, TemplateView
 from django.views.generic.detail import SingleObjectTemplateResponseMixin
 from django.views.generic.edit import ModelFormMixin, ProcessFormView
@@ -57,7 +56,6 @@ from qatrack.units import models as u_models
 if settings.USE_PARTS:
     from qatrack.parts import forms as p_forms
     from qatrack.parts import models as p_models
-
 
 
 def get_time_display(dt):
@@ -834,76 +832,24 @@ class ServiceEventsBaseList(BaseListableView):
         return 'fa-wrench'
 
     def get_page_title(self, f=None):
-        if not f:
-            return 'All Service Events'
-        to_return = 'Service Events'
-        filters = f.split('_')
-        for filt in filters:
-            [key, val] = filt.split('-')
-            if key == 'ss':
-                to_return = to_return + ' - Status: ' + models.ServiceEventStatus.objects.get(pk=val).name
-            elif key == 'ar':
-                to_return = to_return + ' - Review is ' + ((not bool(int(val))) * 'not ') + 'required'
-            elif key == 'u':
-                to_return = to_return + ' - ' + u_models.Unit.objects.get(pk=val).name
-            elif key == 'id':
-                to_return = ' with IDs ' + val
-
-        return to_return
-
-    def get(self, request, *args, **kwargs):
-        if self.kwarg_filters is None:
-            self.kwarg_filters = kwargs.pop('f', None)
-        return super(ServiceEventsBaseList, self).get(request, *args, **kwargs)
+        return 'All Service Events'
 
     def get_context_data(self, *args, **kwargs):
         context = super(ServiceEventsBaseList, self).get_context_data(*args, **kwargs)
         current_url = resolve(self.request.path_info).url_name
         context['view_name'] = current_url
         context['icon'] = self.get_icon()
-        f = self.request.GET.get('f', False)
-        context['kwargs'] = {'f': f} if f else {}
-        context['page_title'] = self.get_page_title(f)
+        context['page_title'] = self.get_page_title()
         return context
-
-    def get_queryset(self):
-        qs = super(ServiceEventsBaseList, self).get_queryset()
-
-        if self.kwarg_filters is None:
-            self.kwarg_filters = self.request.GET.get('f', None)
-
-        if self.kwarg_filters is not None:
-            filters = self.kwarg_filters.split('_')
-            for filt in filters:
-                [key, val] = filt.split('-')
-                if key == 'ss':
-                    qs = qs.filter(service_status=val)
-                elif key == 'ar':
-                    qs = qs.filter(is_review_required=bool(int(val)))
-                elif key == 'ss.ar':
-                    qs = qs.filter(service_status__is_review_required=bool(int(val)))
-                elif key == 'u':
-                    qs = qs.filter(unit_service_area__unit_id=val)
-                elif key == 'id':
-                    qs = qs.filter(pk__in=val.split(','))
-
-        return qs
-
-    def get_table_id(self):
-
-        table_id = super().get_table_id()
-        return "%s-%s" % (table_id, self.kwarg_filters)
-
-    def format_col(self, field, obj):
-        col = super(ServiceEventsBaseList, self).format_col(field, obj)
-        return col
 
     def actions(self, se):
         template = self.templates['actions']
-        mext = reverse('sl_list_all') + (('?f=' + self.kwarg_filters) if self.kwarg_filters else '')
         perms = PermWrapper(self.request.user)
-        c = {'se': se, 'request': self.request, 'next': mext, 'perms': perms}
+        c = {'se': se, 'request': self.request, 'next': self.get_next(), 'perms': perms}
         return template.render(c)
+
+    def get_next(self):
+        return reverse('sl_list_all')
 
     def datetime_service(self, se):
         template = self.templates['datetime_service']
@@ -924,6 +870,90 @@ class ServiceEventsBaseList(BaseListableView):
         template = self.templates['work_description']
         c = {'work_description': se.work_description, 'request': self.request}
         return template.render(c)
+
+
+class ServiceEventsByStatusList(ServiceEventsBaseList):
+    """View to show Service Events with a given ServiceEventStatus"""
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        return qs.filter(service_status_id=self.kwargs['pk'])
+
+    def get_page_title(self, *args, **kwargs):
+        status = get_object_or_404(models.ServiceEventStatus, pk=self.kwargs['pk'])
+        return "Service Events - Status: %s" % (status.name)
+
+    def get_next(self):
+        return reverse('sl_list_by_status', kwargs={'pk': self.kwargs['pk']})
+
+
+class ServiceEventsReviewRequiredList(ServiceEventsBaseList):
+    """View to show Service Events with is_review_required or
+    service_status__is_review_required set to True"""
+
+    def get_page_title(self, *args):
+        return "Service Events Requiring Review"
+
+    def get_queryset(self):
+        qs = super().get_queryset().filter(Q(is_review_required=True) | Q(service_status__is_review_required=True))
+        return qs
+
+    def get_next(self):
+        return reverse('sl_list_review_required')
+
+
+class ServiceEventsInitiatedByList(ServiceEventsBaseList):
+    """View to show Service Events initiated by a TestListInstance."""
+
+    def get_page_title(self, *args):
+        tli = get_object_or_404(qa_models.TestListInstance, pk=self.kwargs['tli_pk'])
+        title = "%s %s - %s " % (
+            tli.unit_test_collection.unit, tli.unit_test_collection.name,
+            timezone.localtime(tli.work_completed).strftime('%b %m, %I:%M %p')
+        )
+        return "Service Events Initiated By %s" % (title)
+
+    def get_queryset(self):
+        tli = get_object_or_404(qa_models.TestListInstance, pk=self.kwargs['tli_pk'])
+        return tli.serviceevents_initiated.all()
+
+    def get_next(self):
+        return reverse('sl_list_initiated_by', kwargs={'tli_pk': self.kwargs['tli_pk']})
+
+
+class ServiceEventsReturnToServiceForList(ServiceEventsBaseList):
+    """View to show Service Events where a TestListInstance was performed as
+    return to service qa."""
+
+    def get_page_title(self, *args):
+        tli = get_object_or_404(qa_models.TestListInstance, pk=self.kwargs['tli_pk'])
+        title = "%s %s - %s " % (
+            tli.unit_test_collection.unit, tli.unit_test_collection.name,
+            timezone.localtime(tli.work_completed).strftime('%b %m, %I:%M %p')
+        )
+        return "Service Events with %s as Return To Service" % (title)
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        return qs.filter(returntoserviceqa__test_list_instance__pi=self.kwargs['tli_pk'])
+
+    def get_next(self):
+        return reverse('sl_list_return_to_service_for', kwargs={'tli_pk': self.kwargs['tli_pk']})
+
+
+class ServiceEventsByUnitList(ServiceEventsBaseList):
+    """View to show Service Events for a given unit."""
+
+    def get_page_title(self, *args):
+        unit = get_object_or_404(u_models.Unit, number=self.kwargs['unit_number'])
+        return "Service Events For %s" % (unit)
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        return qs.filter(unit_service_area__unit__number=self.kwargs['unit_number'])
+
+    def get_next(self):
+        return reverse('sl_list_by_unit', kwargs={'unit__number': self.kwargs['unit_number']})
 
 
 class ReturnToServiceQABaseList(BaseListableView):
