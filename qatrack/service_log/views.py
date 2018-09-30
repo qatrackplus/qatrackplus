@@ -11,7 +11,7 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import resolve, reverse
-from django.db.models import Q, Sum
+from django.db.models import Sum
 from django.forms.utils import timezone
 from django.http import (
     Http404,
@@ -897,7 +897,7 @@ class ServiceEventsReviewRequiredList(ServiceEventsBaseList):
         return "Service Events Requiring Review"
 
     def get_queryset(self):
-        qs = super().get_queryset().filter(Q(is_review_required=True) | Q(service_status__is_review_required=True))
+        qs = super().get_queryset().filter(is_review_required=True,  service_status__is_review_required=True)
         return qs
 
     def get_next(self):
