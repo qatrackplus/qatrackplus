@@ -162,7 +162,7 @@
                                                 </li>
                                                 {% if USE_SERVICE_LOG and perms.service_log.perform_returntoserviceqa %}
                                                     <li class="hover-parent">
-                                                        <a href="{% url 'rtsqa_list_all' %}?f=tli.in-1" title="View all incomplete return to service QA">
+                                                        <a href="{% url 'rtsqa_list_incomplete' %}" title="View all incomplete return to service QA">
                                                             <i class="fa fa-stack fa-lg fa-fw">
                                                                 <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
                 {#                                                <i class="fa fa-cube fa-stack-custom-sub lower-right text-gray"></i>#}
@@ -253,7 +253,7 @@
                                                         </a>
                                                     </li>
                                                     <li>
-                                                        <a href="{% url 'rtsqa_list_all' %}?f=tli.in-0_tli.ar-0" title="">
+                                                        <a href="{% url 'rtsqa_list_unreviewed' %}" title="">
                                                             <i class="fa fa-question-circle fa-lg fa-fw" aria-hidden="true"></i>
                                                             <span title="There are currently {{UNREVIEWED_RTS}} unreviewed return to service sessions" class="label {% if UNREVIEWED_RTS == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
                                                                 <span class="total-unreviewed-count">{{UNREVIEWED_RTS}}</span>
@@ -386,7 +386,7 @@
                                                         </a></li>
                                                     {% endif %}
                                                     {% if perms.service_log.perform_returntoserviceqa %}
-                                                        <li class="hover-parent"><a href="{% url 'rtsqa_list_all' %}?f=tli.in-1" title="View all incomplete return to service qa">
+                                                        <li class="hover-parent"><a href="{% url 'rtsqa_list_incomplete' %}" title="View all incomplete return to service qa">
                                                             <i class="fa fa-stack fa-lg fa-fw">
                                                                 <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
                                                                 <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-extra-left hover-sub-info"></i>
@@ -396,7 +396,7 @@
                                                     {% endif %}
                                                     {% if perms.qa.can_review %}
                                                         <li>
-                                                            <a href="{% url 'rtsqa_list_all' %}?f=tli.in-0_tli.ar-0" title="">
+                                                            <a href="{% url 'rtsqa_list_unreviewed' %}" title="">
                                                                 <i class="fa fa-question-circle fa-lg fa-fw" aria-hidden="true"></i>
                                                                 <span title="There are currently {{UNREVIEWED_RTS}} unreviewed return to service sessions" class="label {% if UNREVIEWED_RTS == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
                                                                     <span class="total-unreviewed-count">{{UNREVIEWED_RTS}}</span>

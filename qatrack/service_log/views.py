@@ -21,6 +21,7 @@ from django.http import (
 )
 from django.shortcuts import get_object_or_404, redirect
 from django.template.loader import get_template
+from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext as _
 from django.views.generic import DeleteView, DetailView, FormView, TemplateView
 from django.views.generic.detail import SingleObjectTemplateResponseMixin
@@ -47,6 +48,7 @@ from listable.views import (
 
 from qatrack.attachments.models import Attachment
 from qatrack.qa import models as qa_models
+from qatrack.qa.templatetags import qa_tags
 from qatrack.qa.views.base import generate_review_status_context
 from qatrack.qa.views.perform import ChooseUnit
 from qatrack.qa.views.review import UTCInstances
@@ -1041,79 +1043,24 @@ class ReturnToServiceQABaseList(BaseListableView):
         return 'fa-pencil-square-o'
 
     def get_page_title(self, f=None):
-        if not f:
-            return 'All Return To Service QA'
-        to_return = 'Return To Service QA'
-        filters = f.split('_')
-        for filt in filters:
-            [key, val] = filt.split('-')
-            if key == 'tli.in':
-                if bool(int(val)):
-                    to_return += ' - Incomplete'
-                else:
-                    to_return += ' - Complete'
-            elif key == 'tli.ar':
-                if bool(int(val)):
-                    to_return += ' - Reviewed'
-                else:
-                    to_return += ' - Not Reviewed'
-            elif key == 'ses.irr':
-                to_return += ' - Service Event Status Not: '
-                names = []
-                for s in models.ServiceEventStatus.objects.filter(is_review_required=False):
-                    names.append(s.name)
-                to_return += ','.join(names)
-
-        return to_return
-
-    def get(self, request, *args, **kwargs):
-        if self.kwarg_filters is None:
-            self.kwarg_filters = kwargs.pop('f', None)
-        return super(ReturnToServiceQABaseList, self).get(request, *args, **kwargs)
+        return 'All Return To Service QA'
 
     def get_context_data(self, *args, **kwargs):
         context = super(ReturnToServiceQABaseList, self).get_context_data(*args, **kwargs)
         current_url = resolve(self.request.path_info).url_name
         context['view_name'] = current_url
         context['icon'] = self.get_icon()
-        f = self.request.GET.get('f', False)
-        context['kwargs'] = {'f': f} if f else {}
-        context['page_title'] = self.get_page_title(f)
+        context['page_title'] = self.get_page_title()
         return context
-
-    def get_queryset(self):
-        qs = super(ReturnToServiceQABaseList, self).get_queryset()
-
-        if self.kwarg_filters is None:
-            self.kwarg_filters = self.request.GET.get('f', None)
-
-        if self.kwarg_filters is not None:
-            filters = self.kwarg_filters.split('_')
-            query_kwargs = {}
-            for filt in filters:
-                [key, val] = filt.split('-')
-                if key == 'tli.in':
-                    query_kwargs['test_list_instance__isnull'] = bool(int(val))
-                elif key == 'tli.ar':
-                    query_kwargs['test_list_instance__all_reviewed'] = bool(int(val))
-                elif key == 'ses.irr':
-                    query_kwargs['service_event__service_status__is_review_required'] = bool(int(val))
-
-            qs = qs.filter(**query_kwargs)
-
-        return qs
-
-    def get_table_id(self):
-
-        table_id = super().get_table_id()
-        return "%s-%s" % (table_id, self.kwarg_filters)
 
     def actions(self, rtsqa):
         template = self.templates['actions']
-        next = reverse('rtsqa_list_all') + (('?f=' + self.kwarg_filters) if self.kwarg_filters else '')
         perms = PermWrapper(self.request.user)
-        c = {'rtsqa': rtsqa, 'request': self.request, 'next': next, 'show_se_link': True, 'perms': perms}
+        c = {'rtsqa': rtsqa, 'request': self.request, 'next': self.get_next(), 'show_se_link': True, 'perms': perms}
         return template.render(c)
+
+    def get_next(self):
+        return reverse('rtsqa_list_all')
 
     def test_list_instance_pass_fail(self, rtsqa):
         template = self.templates['test_list_instance_pass_fail']
@@ -1158,6 +1105,52 @@ class ReturnToServiceQABaseList(BaseListableView):
         template = self.templates['service_event__service_status__name']
         c = {'colour': rtsqa.service_event.service_status.colour, 'name': rtsqa.service_event.service_status.name, 'request': self.request}
         return template.render(c)
+
+
+class ReturnToServiceQAIncompleteList(ReturnToServiceQABaseList):
+
+    def get_page_title(self):
+        return "Return to Service QA - Incomplete"
+
+    def get_queryset(self):
+        return super().get_queryset().filter(test_list_instance=None)
+
+    def get_next(self):
+        return reverse("rtsqa_list_incomplete")
+
+
+class ReturnToServiceQAUnreviewedList(ReturnToServiceQABaseList):
+
+    def get_page_title(self):
+        return "Return to Service QA - Unreviewed"
+
+    def get_queryset(self):
+        return super().get_queryset().filter(
+            test_list_instance__isnull=False,
+            test_list_instance__all_reviewed=False,
+        )
+
+    def get_next(self):
+        return reverse("rtsqa_list_unreviewed")
+
+
+class ReturnToServiceQAForEventList(ReturnToServiceQABaseList):
+
+    def get_page_title(self):
+        se = get_object_or_404(models.ServiceEvent, pk=self.kwargs['se_pk'])
+        description = "%s - %s %s" % (
+            se.unit_service_area,
+            timezone.localtime(se.datetime_service).strftime('%b %m, %I:%M %p'),
+            qa_tags.service_status_label(se.service_status),
+        )
+        return mark_safe("Return to Service QA - Service Event %d: %s" % (se.pk, description))
+
+    def get_queryset(self):
+        get_object_or_404(models.ServiceEvent, pk=self.kwargs['se_pk'])
+        return super().get_queryset().filter(service_event_id=self.kwargs['se_pk'])
+
+    def get_next(self):
+        return reverse("rtsqa_list_for_event", kwargs={'se_pk': self.kwargs['se_pk']})
 
 
 class TLISelect(UTCInstances):
