@@ -1,6 +1,7 @@
 -e git+https://github.com/django/django-formtools.git@bb97a8abd374c50991c0a9ce144f17e7322a0c48#egg=django-formtools
 -e git+https://github.com/randlet/django-genericdropdown.git@56dbaf6b4f518a3946e5e253fec85ede175f3727#egg=django_genericdropdown-master
 -e git+https://github.com/randlet/django-listable.git@c7b39f56b131fe533cbe666c4ca7628622379711#egg=django_listable
+CherryPy==18.0.1
 Django==1.11.15
 PyVirtualDisplay==0.2
 coreapi==2.3.3

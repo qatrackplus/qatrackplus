@@ -1,7 +1,7 @@
 #!python
+from cheroot.wsgi import Server as WSGIServer
+
 from qatrack import wsgi
-from cherrypy import wsgiserver
-server = wsgiserver.CherryPyWSGIServer(
-    ('127.0.0.1', 8080), wsgi.application
-)
+
+server = WSGIServer(('127.0.0.1', 8030), wsgi.application)
 server.start()
