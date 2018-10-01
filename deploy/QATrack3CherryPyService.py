@@ -54,7 +54,7 @@ class QATrack030Service(win32serviceutil.ServiceFramework):
 
     _svc_display_name_ = "QATrack 030 CherryPy Service"
 
-    _exe_path_ = os.path.join(os.environ['VIRTUAL_ENV'], 'Scripts', 'pythonservice.exe')
+    _exe_name_ = os.path.join(os.environ['VIRTUAL_ENV'], 'Scripts', 'pythonservice.exe')
 
     def SvcDoRun(self):
 

@@ -13,7 +13,8 @@
 .noseids
 .pytest_cache
 .vscode
-QATrackCherryPyServiceLocal.py
+./QATrack*ServiceLocal.py
+./cherrypy_deploy.py
 bin
 build
 cover/
