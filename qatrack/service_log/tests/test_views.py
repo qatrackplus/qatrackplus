@@ -1,19 +1,18 @@
 import json
 
 from django.conf import settings
-from django.contrib.auth.models import User, Permission
+from django.contrib.auth.models import Permission, User
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.urlresolvers import reverse
 from django.db.models import Q
-from django.test import TestCase, RequestFactory
+from django.test import RequestFactory, TestCase
 from django.utils import timezone
 
-from qatrack.service_log import models
-from qatrack.service_log import views
-from qatrack.qa.tests import utils as qa_utils
-from qatrack.qa import models as qa_models
-from qatrack.service_log.tests import utils as sl_utils
 from qatrack.parts import models as p_models
+from qatrack.qa import models as qa_models
+from qatrack.qa.tests import utils as qa_utils
+from qatrack.service_log import models, views
+from qatrack.service_log.tests import utils as sl_utils
 
 
 class TestURLS(TestCase):
@@ -43,8 +42,8 @@ class TestURLS(TestCase):
             ('sl_new', {}, ''),
             ('sl_edit', {'pk': se.id}, ''),
             ('sl_details', {'pk': se.id}, ''),
-            ('sl_list_all', {'f': 'id-%d' % se.id}, ''),
-            ('rtsqa_list_all', {'f': 'id-%d' % se.id}, ''),
+            ('sl_list_all', {}, ''),
+            ('rtsqa_list_for_event', {'se_pk': se.id}, ''),
             ('se_searcher', {}, '?q=%d&unit_id=%d' % (se.id, u.id)),
 
             ('tli_select', {'pk': utc.id, 'form': 'a_form'}, ''),

@@ -23,7 +23,7 @@ from qatrack.service_log.models import (
     ReturnToServiceQA,
     ServiceEvent,
     ServiceEventStatus,
-    ServiceLog
+    ServiceLog,
 )
 from qatrack.units.models import Unit
 
@@ -319,7 +319,7 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
         return models.TestListInstance.objects.unreviewed()
 
     def get_page_title(self):
-        return "Unreviewed Test Lists"
+        return "Unreviewed Test List Instances"
 
 
 class UnreviewedVisibleTo(Unreviewed):
@@ -330,7 +330,7 @@ class UnreviewedVisibleTo(Unreviewed):
         return models.TestListInstance.objects.your_unreviewed(self.request.user)
 
     def get_page_title(self):
-        return "Unreviewed Test Lists Visible To Your Groups"
+        return "Unreviewed Test List Instances Visible To Your Groups"
 
 
 class ChooseGroupVisibleTo(ListView):
@@ -354,7 +354,7 @@ class UnreviewedByVisibleToGroup(Unreviewed):
         return 'fa-users'
 
     def get_page_title(self):
-        return "Unreviewed Test Lists Visible To " + models.Group.objects.get(pk=self.kwargs['group']).name
+        return "Unreviewed Test List Instances Visible To " + models.Group.objects.get(pk=self.kwargs['group']).name
 
 
 class DueDateOverview(PermissionRequiredMixin, TemplateView):
