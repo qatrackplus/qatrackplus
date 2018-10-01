@@ -162,7 +162,7 @@
                                                 </li>
                                                 {% if USE_SERVICE_LOG and perms.service_log.perform_returntoserviceqa %}
                                                     <li class="hover-parent">
-                                                        <a href="{% url 'rtsqa_list_all' %}?f=tli.in-1" title="View all incomplete return to service QA">
+                                                        <a href="{% url 'rtsqa_list_incomplete' %}" title="View all incomplete return to service QA">
                                                             <i class="fa fa-stack fa-lg fa-fw">
                                                                 <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
                 {#                                                <i class="fa fa-cube fa-stack-custom-sub lower-right text-gray"></i>#}
@@ -253,7 +253,7 @@
                                                         </a>
                                                     </li>
                                                     <li>
-                                                        <a href="{% url 'rtsqa_list_all' %}?f=tli.in-0_tli.ar-0" title="">
+                                                        <a href="{% url 'rtsqa_list_unreviewed' %}" title="">
                                                             <i class="fa fa-question-circle fa-lg fa-fw" aria-hidden="true"></i>
                                                             <span title="There are currently {{UNREVIEWED_RTS}} unreviewed return to service sessions" class="label {% if UNREVIEWED_RTS == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
                                                                 <span class="total-unreviewed-count">{{UNREVIEWED_RTS}}</span>
@@ -347,7 +347,8 @@
                                                             View All Service Events
                                                         </a></li>
                                                         {% if DEFAULT_SE_STATUS %}
-                                                            <li class="hover-parent"><a href="{% url 'sl_list_all' %}?f=ss-{{ DEFAULT_SE_STATUS.id }}" title="View service events that are {{ DEFAULT_SE_STATUS.name }}">
+                                                            <li class="hover-parent">
+                                                              <a href="{% url 'sl_list_by_status' pk=DEFAULT_SE_STATUS.id %}" title="View service events that are {{ DEFAULT_SE_STATUS.name }}">
                                                                 <i class="fa fa-stack fa-lg fa-fw">
                                                                     <i class="fa fa-wrench fa-stack-custom-main hover-sub-not" style="color: {{ DEFAULT_SE_STATUS.colour }};"></i>
                                                                     <i class="fa fa-wrench fa-flip-horizontal left--5 fa-stack-custom-main hover-sub-not" style="color: {{ DEFAULT_SE_STATUS.colour }};"></i>
@@ -358,7 +359,8 @@
                                                         {% endif %}
                                                     {% endif %}
                                                     {% if perms.service_log.review_serviceevent %}
-                                                        <li class="hover-parent"><a href="{% url 'sl_list_all' %}?f=ar-1_ss.ar-1" title="View service events that are require review">
+                                                        <li class="hover-parent">
+                                                          <a href="{% url 'sl_list_review_required' %}" title="View service events that require review">
                                                             <i class="fa fa-stack fa-lg fa-fw">
                                                                 <i class="fa fa-wrench fa-stack-custom-main"></i>
                                                                 <i class="fa fa-exclamation fa-stack-custom-sub upper-left hover-sub-info"></i>
@@ -367,7 +369,8 @@
                                                                 <span class="total-unreviewed-count">{{SE_NEEDING_REVIEW_COUNT}}</span>
                                                             </span>
                                                             Service Events Needing Review
-                                                        </a></li>
+                                                          </a>
+                                                        </li>
                                                     {% endif %}
                                                 {% endif %}
                                                 {% if perms.qa.can_review or service_log.view_returntoserviceqa or perms.service_log.perform_returntoserviceqa %}
@@ -383,7 +386,7 @@
                                                         </a></li>
                                                     {% endif %}
                                                     {% if perms.service_log.perform_returntoserviceqa %}
-                                                        <li class="hover-parent"><a href="{% url 'rtsqa_list_all' %}?f=tli.in-1" title="View all incomplete return to service qa">
+                                                        <li class="hover-parent"><a href="{% url 'rtsqa_list_incomplete' %}" title="View all incomplete return to service qa">
                                                             <i class="fa fa-stack fa-lg fa-fw">
                                                                 <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
                                                                 <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-extra-left hover-sub-info"></i>
@@ -393,7 +396,7 @@
                                                     {% endif %}
                                                     {% if perms.qa.can_review %}
                                                         <li>
-                                                            <a href="{% url 'rtsqa_list_all' %}?f=tli.in-0_tli.ar-0" title="">
+                                                            <a href="{% url 'rtsqa_list_unreviewed' %}" title="">
                                                                 <i class="fa fa-question-circle fa-lg fa-fw" aria-hidden="true"></i>
                                                                 <span title="There are currently {{UNREVIEWED_RTS}} unreviewed return to service sessions" class="label {% if UNREVIEWED_RTS == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
                                                                     <span class="total-unreviewed-count">{{UNREVIEWED_RTS}}</span>

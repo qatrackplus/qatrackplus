@@ -43,10 +43,10 @@
                     <li><a title="Open new service event" href="{% url 'sl_new' %}">Open new service event</a></li>
                 {% endif %}
                 {% if perms.service_log.perform_returntoserviceqa %}
-                    <li><a title="View all incomplete RTS QA" href="{% url 'rtsqa_list_all' %}?f=tli.in-1">View all incomplete return to service QA</a></li>
+                    <li><a title="View all incomplete RTS QA" href="{% url 'rtsqa_list_incomplete' %}">View all incomplete return to service QA</a></li>
                 {% endif %}
                 {% if perms.qa.can_review %}
-                    <li><a title="View unreviewed RTS QA" href="{% url 'rtsqa_list_all' %}?f=tli.in-0_tli.ar-0">View unreviewed return to service QA</a></li>
+                    <li><a title="View unreviewed RTS QA" href="{% url 'rtsqa_list_unreviewed' %}">View unreviewed return to service QA</a></li>
                 {% endif %}
             </ul>
         {% endif %}

@@ -481,7 +481,7 @@ class TestListInstances(BaseListableView):
             'rtsqa_for_se': se_rtsqa,
             'num_rtsqa_se': len(se_rtsqa)
         }
-        return template.render(c)
+        return template.render(c, request=self.request)
 
     def work_completed(self, tli):
         template = self.templates['work_completed']
