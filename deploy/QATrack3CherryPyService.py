@@ -21,12 +21,14 @@ from qatrack import wsgi
 import win32service
 import win32serviceutil
 
+VENV_DIRECTORY = "C:/deploy/venvs/qatrack3/"
 DEPLOY_DIRECTORY = "C:/deploy/qatrackplus/"
 ERROR_LOG = os.path.join(DEPLOY_DIRECTORY, "logs", "cherry_py_err.log")
 STD_ERR = os.path.join(DEPLOY_DIRECTORY, "logs", "std_err.log")
 STD_OUT = os.path.join(DEPLOY_DIRECTORY, "logs", "std_out.log")
 sys.stdout = open(STD_OUT, 'a')
 sys.stderr = open(STD_ERR, 'a')
+os.environ["VIRTUAL_ENV"] = VENV_DIRECTORY
 
 
 def setup():
