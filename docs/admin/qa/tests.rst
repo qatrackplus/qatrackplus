@@ -268,25 +268,25 @@ When your script (calculation procedure) is executed, it has access to
 
 #. A UTILS object which is a collection of utility methods currently consisting of:
 
-    - **Utils.get_comment(** *macro_name* **)** gets the user set comment for the input
+    - **UTILS.get_comment(** *macro_name* **)** gets the user set comment for the input
 
-    - **Utils.set_comment(** "*your comment here*" **)** sets the comment for the current test
+    - **UTILS.set_comment(** "*your comment here*" **)** sets the comment for the current test
 
-    - **Utils.write_file(file_name, object)** attaches a file to the current
+    - **UTILS.write_file(file_name, object)** attaches a file to the current
       test (see below for an example). If you have :ref:`Display Image
       <qa_display_image>` checked for this test, and the object you pass to
       write file is "image like" (matplotlib axis, matplotlib figure, numpy
       array etc) then the object will be saved as an image file and displayed
       to the user.
 
-    - **Utils.previous_test_list_instance(include_in_progress=False)**
+    - **UTILS.previous_test_list_instance(include_in_progress=False)**
       retrieves the most recent :term:`Test List Instance` for the Test List
       currently being performed on this Unit.  If `include_in_progress=True`
       than Test List Instances which are marked as `In Progress` will be
       included, otherwise they will be excluded. If no previous Test Instance
       is found, `None` will be returned.
 
-    - **Utils.previous_test_instance(test, same_list_only=True,
+    - **UTILS.previous_test_instance(test, same_list_only=True,
       include_in_progress=False)** retrieves the most recent :term:`Test
       Instance` performed on this unit for the input `test`.  If
       `same_list_only=True` then only Test Instances's which were created as
