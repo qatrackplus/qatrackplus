@@ -85,7 +85,6 @@ check out the source code, use the following commands:
     mkdir C:\deploy
     cd C:\deploy
     git clone https://bitbucket.org/tohccmedphys/qatrackplus.git
-    cd qatrackplus
 
 
 
@@ -103,8 +102,8 @@ We're now ready to install all the libraries QATrack+ depends on.
 
 .. code-block:: console
 
-    cd C:\deploy\
     mkdir venvs
+    python -m pip install --upgrade pip
     python -m venv venvs\qatrack3
     .\venvs\qatrack3\Scripts\activate
     python -m pip install --upgrade pip
