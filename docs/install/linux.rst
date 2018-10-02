@@ -443,7 +443,7 @@ or generate a json dump of your database (possibly extremely slow!):
 .. code-block:: console
 
     cd ~/web/qatrackplus
-    python manage.py dumpdata > backup-0.2.8-$(date -I).json
+    python manage.py dumpdata --natural > backup-0.2.8-$(date -I).json
 
 
 Checking out version 0.2.9
@@ -534,7 +534,7 @@ or generate a json dump of your database (possibly extremely slow!):
 .. code-block:: console
 
     source ~/venvs/qatrack/bin/activate
-    python manage.py dumpdata > backup-0.2.9-$(date -I).json
+    python manage.py dumpdata --natural > backup-0.2.9-$(date -I).json
     deactivate
 
 
