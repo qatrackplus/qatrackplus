@@ -28,7 +28,8 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
             $attach_deletes = $('.attach-delete'),
             $user_or_thirdparty = $('.user_or_thirdparty'),
             $attach_delete_ids = $('#attach-delete-ids'),
-            $attach_names = $('#se-attachment-names');
+            $attach_names = $('#se-attachment-names'),
+            $all_inputs = $('input, select, textarea');
 
         $utc_initiated_by.parent().append($tli_display);
         $units_fake.val($units.val());
@@ -36,9 +37,24 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
         $service_save.one('click', function (event) {
             event.preventDefault();
             $service_event_form.submit();
+            $(window).off("beforeunload");
             $(this).prop('disabled', true);
         });
 
+        var changed = false;
+        $all_inputs.change(function() {
+            if ($(this).val()) {
+                changed = true;
+            }
+        });
+        if ($('.has-error').length > 0) {
+            changed = true;
+        }
+        $(window).bind("beforeunload", function(){
+            if (changed) {
+                return  "If you leave this page now you will lose all entered values.";
+            }
+        });
 
         // General fields ------------------------------------------------------------------------------
         autosize($('textarea.autosize'));
@@ -599,8 +615,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
                 }
             });
             $attach_delete_ids.val(deletes.join(','));
-        })
-
+        });
 
     });
 
