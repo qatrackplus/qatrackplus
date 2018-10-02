@@ -23,6 +23,9 @@ import win32serviceutil
 
 VENV_DIRECTORY = "C:/deploy/venvs/qatrack3/"
 DEPLOY_DIRECTORY = "C:/deploy/qatrackplus/"
+PORT = 8080
+
+
 ERROR_LOG = os.path.join(DEPLOY_DIRECTORY, "logs", "cherry_py_err.log")
 STD_ERR = os.path.join(DEPLOY_DIRECTORY, "logs", "std_err.log")
 STD_OUT = os.path.join(DEPLOY_DIRECTORY, "logs", "std_out.log")
@@ -72,7 +75,7 @@ class QATrack030Service(win32serviceutil.ServiceFramework):
                 'engine.autoreload.on': False,
                 'engine.SIGHUP': None,
                 'engine.SIGTERM': None,
-                'server.socket_port': 8030,
+                'server.socket_port': PORT,
             }
         })
 
