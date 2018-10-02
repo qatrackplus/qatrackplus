@@ -115,8 +115,8 @@ We're now ready to install all the libraries QATrack+ depends on.
 Checking everything is functional so far
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Lets take a minute and check everything is now functioning as it should. Run the
-QATrack+ test suite like so:
+Lets take a minute and check everything is now functioning as it should. Run
+the QATrack+ test suite like so:
 
 .. code-block:: console
 
@@ -372,14 +372,14 @@ Backing up your database
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 It is **extremely** important you back up your database before attempting to
-upgrade. It is recommended you use SQLServer Management Studo to dump a backup
-file, but you can also generate a json dump of your database (possibly
+upgrade. It is recommended you use SQLServer Management Studo to dump a
+backup file, but you can also generate a json dump of your database (possibly
 extremely slow!):
 
 .. code-block:: console
 
     cd C:\deploy\qatrackplus\
-    python manage.py dumpdata > backup-0.2.8-$(date -I).json
+    python manage.py dumpdata --natural > backup-0.2.8-$(date -I).json
 
 
 Checking out version 0.2.9
@@ -421,7 +421,27 @@ The next step is to migrate the 0.2.8 database schema to 0.2.9:
     python manage.py migrate
 
 Assuming that proceeds without errors you can proceed to `Upgrading from
-version 0.2.9` below.
+version 0.2.9` below. If you get an error in this step, you may need to
+adjust your local_settings.py file to include the `OPTIONS` key in your
+`DATABASES` setting:
+
+.. code-block:: python
+
+    DATABASES = {
+        'default': {
+            'ENGINE': 'sqlserver_ado',
+            'NAME': 'YOURDBNAME',
+            'USER': '',
+            'PASSWORD': '',
+            'HOST': '',      # leave blank unless using remote server or SQLExpress (use 127.0.0.1\\SQLExpress or COMPUTERNAME\\SQLExpress)
+            'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+            'OPTIONS': {
+                'provider': 'sqlncli11', # might need to use 'sqlncli10',
+                'use_legacy_date_fields': True,
+            }
+        }
+    }
+
 
 
 Upgrading from version 0.2.9
@@ -443,16 +463,18 @@ have one of those Python versions installed.  Instructions for installing
 Python 3.6 are :ref:`given above <install_py3_win>`. After installing Python 3
 open a new PowerShell window and verify Python3 is installed correctly:
 
-.. todo::
-
-    Check what happens if PYthon 2.7 is installed first and account for that
-    here!
 
 .. code-block:: console
 
     python -V
     # should result in e.g.
     Python 3.6.6
+
+
+.. note::
+
+    If your python version says 2.7.x then you need to edit your PATH
+    environment variable. Remove Python 2 paths and/or insert Python 3 paths.
 
 
 Backing up your database
@@ -467,7 +489,7 @@ extremely slow!):
 
 
     cd C:\deploy\qatrackplus\
-    python manage.py dumpdata > backup-0.2.8-$(date -I).json
+    python manage.py dumpdata --natural > backup-0.2.9-$(date -I).json
 
 
 Checking out version 0.3.0
@@ -506,11 +528,13 @@ We're now ready to install all the libraries QATrack+ depends on.
 Update your local_settings.py file
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Now is a good time to review your `local_settings.py` file. There are a few new
-settings that you may want to configure.  The settings are documented in
-:ref:`the settings page <qatrack-config>`. Most importantly you need to update
-your database driver to use `sql_server.pyodbc`. Open your local_settings.py
-file and set the DATABASES['default']['ENGINE'] key to `sql_server.pyodbc`:
+Now is a good time to review your `local_settings.py` file. There are a few
+new settings that you may want to configure.  The settings are documented in
+:ref:`the settings page <qatrack-config>`. Most importantly you need to
+update your database driver to use `sql_server.pyodbc`. Open your
+local_settings.py file and set the DATABASES['default']['ENGINE'] key to
+`sql_server.pyodbc`. If you had any `OPTIONS` keys set, you should remove
+those:
 
 
 .. code-block:: python
@@ -536,7 +560,7 @@ The next step is to update the v0.2.9 schema to v0.3.0:
 
 .. code-block:: console
 
-    python manage.py migrate --fake-iniital
+    python manage.py migrate --fake-initial
 
 
 Check the migration log
@@ -595,12 +619,16 @@ configuration dialogue).
     to a different port (e.g. 8008)
 
 
+Once you have verified everything is working correctly, you can either
+disable the automatic startup of your original QATrackCherryPyService, or
+delete the service entirely.
+
 
 IIS Changes
 ~~~~~~~~~~~
 
-Your existing IIS rewrite rules should not need to be modified, unless you have
-decided to run QATrack+ v0.3.0 on a different port.
+Unless you have decided to run QATrack+ v0.3.0 on a different port, your
+existing IIS rewrite rules should not need to be modified.
 
 
 Last Word
