@@ -32,6 +32,8 @@ STD_OUT = os.path.join(DEPLOY_DIRECTORY, "logs", "std_out.log")
 sys.stdout = open(STD_OUT, 'a')
 sys.stderr = open(STD_ERR, 'a')
 os.environ["VIRTUAL_ENV"] = VENV_DIRECTORY
+sys.path.append(VENV_DIRECTORY)
+sys.path.append(os.path.join(VENV_DIRECTORY, "Scripts"))
 
 
 def setup():
