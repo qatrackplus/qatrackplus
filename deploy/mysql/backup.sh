@@ -1,9 +1,13 @@
 #!/bin/bash
 
+# START CONFIGURATION ##############################################
+
 # set to absolute path of main directory of your QATrack+ deployment. Don't forget trailing slash
 QATRACK_DIR=
 
-# set to absolute path of where you want to keep your backups. Don't forget trailing slash
+# set to absolute path of where you want to keep your backups. Don't forget
+# the trailing slash!  Ideally this should be a remote/network disk rather
+# than a local one!
 BACKUP_DIR=
 
 # database name to backup
@@ -29,6 +33,8 @@ WEEKS_TO_KEEP=5
 
 # How many months to keep monthly backups
 MONTHS_TO_KEEP=12
+
+# END CONFIGURATION ################################################
 
 function perform_backups()
 {

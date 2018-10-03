@@ -13,6 +13,7 @@
 .noseids
 .pytest_cache
 .vscode
+/backup.sh
 /backups
 /QATrack*ServiceLocal.py
 /cherrypy_deploy.py

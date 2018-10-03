@@ -24,7 +24,6 @@ be expensive!).
 
    linux
    win
-   backup
 
 
 Note there is no official support for the platforms listed below.  That doesn't
@@ -52,3 +51,4 @@ described here:
 
    config
    active_directory
+   backup
