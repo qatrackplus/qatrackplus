@@ -29,7 +29,7 @@ before_script:
 before_install:
   - sudo apt-get update
   - sudo apt-get install make build-essential python3-dev python3-tk
-  - if [[ $DB == mysql ]]; then sudo apt-get install build-essential python3-dev mysql-client-core-5.5 mysql-server libmysqlclient-dev python3-tk; fi
+  - if [[ $DB == mysql ]]; then sudo apt-get install build-essential python3-dev mysql-server-5.5 mysql-server libmysqlclient-dev python3-tk; fi
   - if [[ $DB == postgres ]]; then sudo apt-get install postgresql libpq-dev postgresql-client postgresql-client-common; fi
   - wget https://github.com/mozilla/geckodriver/releases/download/v0.22.0/geckodriver-v0.22.0-linux64.tar.gz
   - mkdir geckodriver
@@ -38,15 +38,15 @@ before_install:
 
 install:
   - pip install --upgrade pip
-  - if [[ $DB == mysql ]]; then pip install -r requirements.mysql.txt; fi
+  - if [[ $DB == mysql ]]; then pip install -r requirements/mysql.txt; fi
   - if [[ $DB == mysql ]]; then cp deploy/mysql/local_settings.py qatrack/local_settings.py; fi
-  - if [[ $DB == postgres ]]; then pip install -r requirements.postgres.txt; fi
+  - if [[ $DB == postgres ]]; then pip install -r requirements/postgres.txt; fi
   - if [[ $DB == postgres ]]; then cp deploy/postgres/local_settings.py qatrack/local_settings.py; fi
-  - if [[ $DB == sqlite ]]; then pip install -r requirements.txt; fi
+  - if [[ $DB == sqlite ]]; then pip install -r requirements/base.txt; fi
   - if [[ $DB == sqlite ]]; then cp deploy/sqlite/local_settings.py qatrack/local_settings.py; fi
 
 script:
   - cat qatrack/local_settings.py
-  - if [[ $DB == sqlite ]]; then yes | pytest; fi
-  - if [[ $DB -eq mysql ]]; then yes | pytest -m "not selenium"; fi
+  - if [[ $DB == sqlite ]]; then yes | pytest; -m "not selenium"; fi
+  - if [[ $DB -eq sqlite ]]; then yes | pytest -m "not selenium"; fi
 
