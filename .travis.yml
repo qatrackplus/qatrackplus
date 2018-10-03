@@ -10,8 +10,8 @@ addons:
 
 python:
   - "3.4"
-  - "3.5"
-  - "3.6"
+    #- "3.5"
+    #- "3.6"
 
 env:
     #- DJANGO=1.11 DB=sqlite
@@ -48,5 +48,5 @@ install:
 script:
   - cat qatrack/local_settings.py
   - if [[ $DB == sqlite ]]; then yes | pytest -m "not selenium"; fi
-  - if [[ $DB -ne sqlite ]]; then yes | pytest -m "not selenium"; fi
+  - if [[ $DB -eq sqlite ]]; then yes | pytest -m "not selenium"; fi
 
