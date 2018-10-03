@@ -146,7 +146,7 @@ Installing MySQL (only required if you prefer to use MySQL over Postgres)
 
 .. code-block:: console
 
-    sudo apt-get install build-essential python3-dev mysql-server libmysqlclient-dev
+    sudo apt-get install build-essential python3-dev mysql-server libmysqlclient-dev python3-tk
 
 
 Now we can create and configure a user (db name/user/pwd =

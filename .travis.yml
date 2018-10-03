@@ -6,42 +6,38 @@ addons:
 python:
   - "3.4"
   - "3.5"
+  - "3.6"
 
 env:
-  - DJANGO=1.10 DB=sqlite
-  - DJANGO=1.10 DB=postgres
-  - DJANGO=1.10 DB=mysql
+  - DJANGO=1.11 DB=sqlite
+  - DJANGO=1.11 DB=postgres
+  - DJANGO=1.11 DB=mysql
 
 before_script:
-  - if [[ $DB == mysql ]]; then mysql -u root < deploy/mysql_create.sql; fi
+  - if [[ $DB == mysql ]]; then mysql -u root < deploy/mysql/create_db_and_role.sql; fi
   - if [[ $DB == mysql ]]; then mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root mysql; fi
-  - if [[ $DB == postgres ]]; then psql -c "create database qatrackplus;" -U postgres; fi
-  - if [[ $DB == postgres ]]; then psql -c "CREATE USER qatrackplus with PASSWORD 'qatrackplus';" -U postgres; fi
-  - if [[ $DB == postgres ]]; then psql -c "GRANT ALL PRIVILEGES ON DATABASE qatrackplus to qatrackplus;" -U postgres; fi
+  - if [[ $DB == postgres ]]; then psql -U postgres < deploy/postgres/create_db_and_role.sql; fi
   - "export DISPLAY=:99.0"
   - "sh -e /etc/init.d/xvfb start"
   - sleep 3 # give xvfb some time to start
 
 before_install:
   - sudo apt-get update
-  - sudo apt-get install build-essential gfortran
-  - sudo apt-get install python-dev
-  - sudo apt-get install libatlas-dev libatlas-base-dev liblapack-dev
-  - sudo apt-get install libpng12-dev libfreetype6 libfreetype6-dev
-  - sudo apt-get build-dep python-matplotlib
-  - sudo apt-get install -qq python-numpy python-scipy python-matplotlib
+  - sudo apt-get install make build-essential python3-dev python3-tk
+  - if [[ $DB == mysql ]]; then sudo apt-get install build-essential python3-dev mysql-server libmysqlclient-dev python3-tk; fi
+  - if [[ $DB == postgres ]]; then sudo apt-get install postgresql libpq-dev postgresql-client postgresql-client-common; fi
 
 install:
   - pip install --upgrade pip
-  - if [[ $DB == mysql ]]; then pip install -q mysqlclient; fi
-  - if [[ $DB == mysql ]]; then cp deploy/travis_mysql.py qatrack/local_settings.py; fi
-  - if [[ $DB == postgres ]]; then pip install -q psycopg2; fi
-  - if [[ $DB == postgres ]]; then cp deploy/travis_postgres.py qatrack/local_settings.py; fi
-  - if [[ $DB == sqlite ]]; then cp deploy/travis_sqlite.py qatrack/local_settings.py; fi
-  - pip install -r requirements/test.txt
+  - if [[ $DB == mysql ]]; then pip install -r requirements.mysql.txt; fi
+  - if [[ $DB == mysql ]]; then cp deploy/mysql/local_settings.py qatrack/local_settings.py; fi
+  - if [[ $DB == postgres ]]; then pip install -r requirements.postgres.txt; fi
+  - if [[ $DB == postgres ]]; then cp deploy/postgres/local_settings.py qatrack/local_settings.py; fi
+  - if [[ $DB == sqlite ]]; then pip install -r requirements.txt; fi
+  - if [[ $DB == sqlite ]]; then cp deploy/sqlite/local_settings.py qatrack/local_settings.py; fi
 
 script:
   - cat qatrack/local_settings.py
-  - if [[ $DB == mysql ]]; then yes | pytest -m "not selenium"; fi
-  - if [[ $DB -ne mysql ]]; then yes | pytest; fi
+  - if [[ $DB == sqlite ]]; then yes | pytest; fi
+  - if [[ $DB -eq mysql ]]; then yes | pytest -m "not selenium"; fi
 
