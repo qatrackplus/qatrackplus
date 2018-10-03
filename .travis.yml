@@ -1,8 +1,12 @@
+dist: trusty
+
 language: python
+
+services:
+    - mysql
 
 addons:
   firefox: latest
-  postgresql: "9.5"
 
 python:
   - "3.4"
@@ -10,8 +14,8 @@ python:
   - "3.6"
 
 env:
-  - DJANGO=1.11 DB=sqlite
-  - DJANGO=1.11 DB=postgres
+    #- DJANGO=1.11 DB=sqlite
+    #- DJANGO=1.11 DB=postgres
   - DJANGO=1.11 DB=mysql
 
 before_script:
@@ -25,8 +29,8 @@ before_script:
 before_install:
   - sudo apt-get update
   - sudo apt-get install make build-essential python3-dev python3-tk
-  - if [[ $DB == mysql ]]; then sudo apt-get install mysql-client-5.5 mysql-server-core-5.5 mysql-server-5.5 mysql-server libmysqlclient-dev; fi
-  - if [[ $DB == postgres ]]; then sudo apt-get install postgresql libpq-dev postgresql-client postgresql-client-common; fi
+  - if [[ $DB == mysql ]]; then sudo apt-get install libmysqlclient-dev; fi
+    #- if [[ $DB == postgres ]]; then sudo apt-get install postgresql-10 postgresql-client-10 postgresql libpq-dev postgresql-client postgresql-client-common; fi
   - wget https://github.com/mozilla/geckodriver/releases/download/v0.22.0/geckodriver-v0.22.0-linux64.tar.gz
   - mkdir geckodriver
   - tar -xzf geckodriver-v0.22.0-linux64.tar.gz -C geckodriver
