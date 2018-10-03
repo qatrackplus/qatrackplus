@@ -153,10 +153,11 @@ Copy the example local_settings file:
 
 .. code-block:: console
 
-    cp deploy\local_settings.py qatrack\local_settings.py
+    cp deploy\win\local_settings.py qatrack\local_settings.py
 
 
-and then edit it setting the DATABASES['default']['ENGINE'] key to sql_server.pyodbc
+and then edit it setting the `DATABASES['default']['ENGINE']` key to
+`sql_server.pyodbc`:
 
 
 .. code-block:: python
@@ -196,7 +197,7 @@ service (running on port 8080, see note below if you need to change the port).
 
 .. code-block:: console
 
-    cp deploy/QATrack3CherryPyService.py .
+    cp deploy\win\QATrack3CherryPyService.py .
     python QATrack3CherryPyService.py --startup=auto install
     python QATrack3CherryPyService.py start
 
@@ -263,7 +264,7 @@ Now right click on Sites and click Add Web Site
 
     Add a new web site
 
-Enter QATrack Static for the Site Name and "C:\deploy\qatrackplus\qatrack\" for
+Enter QATrack Static for the Site Name and "C:\\deploy\\qatrackplus\\qatrack\\" for
 the Physical Path then click OK and answer Yes to the warning.
 
 To test that setup worked correctly open a browser on your server and enter the
@@ -302,8 +303,6 @@ string and Stop processing of subsequent rules are checked.
 
 Your URL rewrites should look like the following (order is important!)
 
-![URL Rewrites](url_rules.png)
-
 .. figure:: images/url_rules.png
     :alt: URL Rewrite rules
 
@@ -329,8 +328,8 @@ What Next
 
 * Automate the :ref:`backup of your QATrack+ installation <qatrack_backup>`.
 
-* Read the :ref:`Administration Guide <admin_guide>`, `User Guide
-  <users_guide>`, and `Tutorials <tutorials>`.
+* Read the :ref:`Administration Guide <admin_guide>`, :ref:`User Guide
+  <users_guide>`, and :ref:`Tutorials <tutorials>`.
 
 
 Wrap Up
@@ -372,7 +371,7 @@ Backing up your database
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 It is **extremely** important you back up your database before attempting to
-upgrade. It is recommended you use SQLServer Management Studo to dump a
+upgrade. It is recommended you use SQLServer Management Studio to dump a
 backup file, but you can also generate a json dump of your database (possibly
 extremely slow!):
 
@@ -602,7 +601,7 @@ our new Python 3 CherryPy Windows Service:
 
 .. code-block:: console
 
-    cp deploy/QATrack3CherryPyService.py .
+    cp deploy\win\QATrack3CherryPyService.py .
     python QATrack3CherryPyService.py --startup=auto install
     python QATrack3CherryPyService.py start
 

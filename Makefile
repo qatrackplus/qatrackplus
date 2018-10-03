@@ -26,7 +26,7 @@ docs-autobuild:
 	sphinx-autobuild docs docs/_build/html -p 8008
 
 qatrack_daemon.conf:
-	sudo sed 's/YOURUSERNAMEHERE/$(USER)/g' deploy/apache24_daemon.conf > qatrack.conf
+	sudo sed 's/YOURUSERNAMEHERE/$(USER)/g' deploy/apache/apache24_daemon.conf > qatrack.conf
 	sudo mv qatrack.conf /etc/apache2/sites-available/qatrack.conf
 	sudo ln -sf /etc/apache2/sites-available/qatrack.conf /etc/apache2/sites-enabled/qatrack.conf
 	sudo usermod -a -G $(USER) www-data

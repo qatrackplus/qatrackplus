@@ -320,11 +320,13 @@ Final configuration of QATrack+
 Next we need to tell QATrack+ how to connect to our database and (optionally)
 set some configuration options for your installation.
 
-Create your `local_settings.py` file by copying the example from `deploy/local_settings.py`:
+Create your `local_settings.py` file by copying the example from `deploy/{postgres|mysql}/local_settings.py`:
 
 .. code-block:: console
 
-    cp deploy/local_settings.py qatrack/local_settings.py
+    cp deploy/postgres/local_settings.py qatrack/local_settings.py
+    # or #
+    cp deploy/mysql/local_settings.py qatrack/local_settings.py
 
 then open the file in a text editor.  There are many available settings and
 they are documented within the example file and more completely on :ref:`the
