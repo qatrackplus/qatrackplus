@@ -1,0 +1,4 @@
+-r base.txt
+django-pyodbc-azure==1.11.13.1
+pyreadline
+pywin32>=220

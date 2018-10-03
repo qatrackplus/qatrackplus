@@ -1,2 +1,2 @@
--r requirements.txt
+-r base.txt
 mysqlclient==1.3.12

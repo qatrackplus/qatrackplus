@@ -1,2 +1,2 @@
--r requirements.txt
+-r base.txt
 psycopg2-binary==2.7.5
