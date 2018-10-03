@@ -2,11 +2,7 @@ language: python
 
 addons:
   firefox: latest
-  postgresql: "10"
-  apt:
-      packages:
-          - postgresql-10
-          - postgresql-client-10
+  postgresql: "9.5"
 
 python:
   - "3.4"
@@ -29,7 +25,7 @@ before_script:
 before_install:
   - sudo apt-get update
   - sudo apt-get install make build-essential python3-dev python3-tk
-  - if [[ $DB == mysql ]]; then sudo apt-get install build-essential python3-dev mysql-server-5.5 mysql-server libmysqlclient-dev python3-tk; fi
+  - if [[ $DB == mysql ]]; then sudo apt-get install mysql-client-5.5 mysql-server-core-5.5 mysql-server-5.5 mysql-server libmysqlclient-dev; fi
   - if [[ $DB == postgres ]]; then sudo apt-get install postgresql libpq-dev postgresql-client postgresql-client-common; fi
   - wget https://github.com/mozilla/geckodriver/releases/download/v0.22.0/geckodriver-v0.22.0-linux64.tar.gz
   - mkdir geckodriver
@@ -47,6 +43,6 @@ install:
 
 script:
   - cat qatrack/local_settings.py
-  - if [[ $DB == sqlite ]]; then yes | pytest; -m "not selenium"; fi
-  - if [[ $DB -eq sqlite ]]; then yes | pytest -m "not selenium"; fi
+  - if [[ $DB == sqlite ]]; then yes | pytest -m "not selenium"; fi
+  - if [[ $DB -ne sqlite ]]; then yes | pytest -m "not selenium"; fi
 
