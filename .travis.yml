@@ -44,6 +44,7 @@ before_install:
 
 install:
   - pip install --upgrade pip
+  - pip install flaky
   - if [[ $DB == mysql ]]; then pip install -r requirements/mysql.txt; fi
   - if [[ $DB == mysql ]]; then cp deploy/mysql/local_settings.py qatrack/local_settings.py; fi
   - if [[ $DB == postgres ]]; then pip install -r requirements/postgres.txt; fi
@@ -54,7 +55,7 @@ install:
 script:
   - cat qatrack/local_settings.py
   - if [[ $DB == sqlite ]]; then yes | pytest -x -m "not selenium"; fi
-  - if [[ $DB == sqlite ]]; then yes | pytest -x -m "selenium"; fi
+  - if [[ $DB == sqlite ]]; then yes | pytest --force-flaky --max-runs=3 --min-passes=2 -m "selenium"; fi
   - if [[ $DB == postgres ]]; then yes | pytest -x -m "not selenium"; fi
   - if [[ $DB == mysql ]]; then yes | pytest -x -m "not selenium"; fi
 

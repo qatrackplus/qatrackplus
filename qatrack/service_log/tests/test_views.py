@@ -725,14 +725,17 @@ class TestServiceLogViews(TestCase):
         qa_utils.create_test_instance(test_list_instance=tli)
         qa_utils.create_test_instance(test_list_instance=tli)
 
-        expected = json.loads(json.dumps({
-            'pass_fail': tli.pass_fail_summary(),
-            'review': tli.review_summary(),
-            'datetime': timezone.localtime(tli.created),
-            'all_reviewed': int(tli.all_reviewed),
-            'work_completed': timezone.localtime(tli.work_completed),
-            'in_progress': tli.in_progress,
-        }, cls=DjangoJSONEncoder))
+        expected = json.loads(
+            json.dumps({
+                'pass_fail': tli.pass_fail_summary(),
+                'review': tli.review_summary(),
+                'datetime': timezone.localtime(tli.created).replace(microsecond=0),
+                'all_reviewed': int(tli.all_reviewed),
+                'work_completed': timezone.localtime(tli.work_completed).replace(microsecond=0),
+                'in_progress': tli.in_progress,
+            },
+                       cls=DjangoJSONEncoder)
+        )
 
         data = {'tli_id': tli.id}
 

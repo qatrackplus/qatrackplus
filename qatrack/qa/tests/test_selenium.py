@@ -7,9 +7,6 @@ from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.test import TestCase
 from django.utils import timezone
 import pytest
-
-from qatrack.qa import models
-from qatrack.service_log.tests import utils as sl_utils
 from selenium import webdriver
 from selenium.common.exceptions import (
     NoSuchElementException,
@@ -24,6 +21,9 @@ from selenium.webdriver.support import expected_conditions as e_c
 from selenium.webdriver.support.expected_conditions import staleness_of
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.wait import WebDriverWait
+
+from qatrack.qa import models
+from qatrack.service_log.tests import utils as sl_utils
 
 from . import utils
 
