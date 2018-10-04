@@ -40,5 +40,5 @@ build_script:
   - sqlcmd -S localhost,1433 -U sa -P Password12! -Q "CREATE DATABASE qatrackdb" -d "master"
 
 test_script:
-  - pytest -m "not selenium"
+  - pytest -x -m "not selenium"
 
