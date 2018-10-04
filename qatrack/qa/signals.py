@@ -27,9 +27,10 @@ testlist_complete = Signal(providing_args=["instance", "created"])
 
 
 def update_last_instances(test_list_instance):
+    utc = test_list_instance.unit_test_collection
     try:
         last_instance = models.TestListInstance.objects.complete().filter(
-            unit_test_collection=test_list_instance.unit_test_collection
+            unit_test_collection=utc
         ).latest("work_completed")
     except models.TestListInstance.DoesNotExist:
         last_instance = None
@@ -39,35 +40,13 @@ def update_last_instances(test_list_instance):
         # in that case it doesn't make sense to try to update anything
         return
 
-    cycle_ids = models.TestListCycle.objects.filter(
-        test_lists=test_list_instance.test_list
-    ).values_list("pk", flat=True)
-    cycle_ct = ContentType.objects.get_for_model(models.TestListCycle)
+    utc.last_instance = last_instance
+    due_date = utc.calc_due_date()
 
-    test_list_ids = [test_list_instance.test_list.pk]
-    list_ct = ContentType.objects.get_for_model(models.TestList)
-
-    to_update = [(cycle_ct, cycle_ids), (list_ct, test_list_ids)]
-
-    for ct, object_ids in to_update:
-
-        utcs = models.UnitTestCollection.objects.filter(
-            content_type=ct,
-            object_id__in=object_ids,
-            unit=test_list_instance.unit_test_collection.unit,
-        )
-
-        for utc in utcs:
-            utc.last_instance = last_instance
-            due_date = utc.calc_due_date()
-
-            # Use update here rather than just calling utc.save()
-            # since utc.save kicks off a bunch of other db queries
-            # due to the UnitTestCollection post_save signal
-            models.UnitTestCollection.objects.filter(pk=utc.pk).update(
-                due_date=due_date,
-                last_instance=last_instance,
-            )
+    models.UnitTestCollection.objects.filter(pk=utc.pk).update(
+        due_date=due_date,
+        last_instance=last_instance,
+    )
 
 
 def handle_se_statuses_post_tli_delete(test_list_instance):
