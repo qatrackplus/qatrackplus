@@ -16,7 +16,7 @@ class ActiveDirectoryGroupMembershipSSLBackend:
 
         debug = None
         if settings.AD_DEBUG_FILE and settings.AD_DEBUG:
-            debug = open(settings.AD_DEBUG_FILE, 'w')
+            debug = open(settings.AD_DEBUG_FILE, 'a')
             print("authenticate user %s" % username, file=debug)
 
         try:
@@ -42,6 +42,9 @@ class ActiveDirectoryGroupMembershipSSLBackend:
             if debug:
                 print("\tException occured ", file=debug)
                 print(e, file=debug)
+        if debug:
+            debug.close()
+
 
     def get_or_create_user(self, username, password):
         try:
@@ -101,6 +104,7 @@ class ActiveDirectoryGroupMembershipSSLBackend:
             user.save()
             if debug:
                 print("User created: %s" % username, file=debug)
+                debug.close()
         return user
 
     def get_user(self, user_id):
