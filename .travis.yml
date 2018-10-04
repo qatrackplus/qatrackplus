@@ -55,7 +55,7 @@ install:
 script:
   - cat qatrack/local_settings.py
   - if [[ $DB == sqlite ]]; then yes | pytest -x -m "not selenium"; fi
-  - if [[ $DB == sqlite ]]; then yes | pytest --force-flaky --max-runs=3 --min-passes=2 -m "selenium"; fi
+  - if [[ $DB == sqlite ]]; then yes | pytest --force-flaky --max-runs=3 --min-passes=1 -m "selenium"; fi
   - if [[ $DB == postgres ]]; then yes | pytest -x -m "not selenium"; fi
   - if [[ $DB == mysql ]]; then yes | pytest -x -m "not selenium"; fi
 
