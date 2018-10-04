@@ -33,7 +33,7 @@ install:
   - "python --version"
   - cmd: copy /Y deploy\win\appveyor_mssql.py qatrack\local_settings.py
   - python -m pip install --upgrade pip
-  - python -m pip install requirements\win.txt
+  - python -m pip install -r requirements\win.txt
 
 build_script:
     #- ps: deploy\sqlserver.ps1 SQL2008R2SP2
