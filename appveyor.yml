@@ -25,6 +25,9 @@ services:
     #- mssql2008r2sp2rs    # start SQL Server 2008 R2 SP2 Express and Reporting Services
 
 
+cache:
+  - '%LOCALAPPDATA%\pip\Cache'
+
 init:
   - "ECHO %PYTHON%"
 

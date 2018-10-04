@@ -3,6 +3,8 @@ dist: trusty
 
 language: python
 
+cache: pip
+
 services:
     - mysql
     - postgresql
