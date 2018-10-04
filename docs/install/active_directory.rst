@@ -13,46 +13,39 @@ Installation of python-ldap
 ---------------------------
 
 If you happen to be on a Windows system with Visual Studio installed, you
-should just be able to do `pip install python-ldap` and have the latest version
-of the python-ldap package installed.  Otherwise, download and run the
-appropriate python-ldap .msi installer from the `LDAP PyPi page
-<https://pypi.org/project/python-ldap/>`__.  Documentation for python-ldap 
-is avaialable on the web: https://www.python-ldap.org/en/latest/.
+should just be able to do `pip install pyldap` and have the latest version of
+the pyldap package installed.  Otherwise,  there are binaries available on this
+page: https://www.lfd.uci.edu/~gohlke/pythonlibs/#pyldap.  Download the binary
+relevant to your Python 3 installation (e.g.
+pyldap‑2.4.45‑cp36‑cp36m‑win_amd64.whl) and then pip install it:
+
+.. code-block:: console
+
+    pip install C:\path\to\pyldap‑2.4.45‑cp36‑cp36m‑win_amd64.whl
 
 
-That will install python-ldap to the main system Python installation, but
-assuming you're using virtualenv, you'll need to copy the LDAP package to your
-virtualenv.
+To confirm your installation is working, activate your virtual env
 
-Open a Git Bash shell and enter the following command (adjusting paths as
-required) to copy the ldap install to your virtual environment:
+.. code-block:: console
 
-`cp -r /c/Python36/lib/site-packages/ldap* /c/deploy/venvs/qatrack/lib/site-packages/`
-
-You can also feel free to use Windows Explorer or CMD to copy the files!
-
-To confirm your installation is working, activate your virtual env 
-
-`source /c/deploy/venvs/qatrack/Scripts/activate`
-
-and then type
-
-`python -c "import ldap; print ldap.__version__"` 
+    cd C:\deploy
+    .\venvs\qatrack3\scripts\activate
+    python -c "import ldap; print ldap.__version__"
 
 If that commands prints the ldap version then ldap is installed correctly.
+
 
 Configuring QATrack+ to use your Active Directory Server
 --------------------------------------------------------
 
-Copy the following lines to your local\_settings.py file:
+Copy the following lines to your `local_settings.py` file:
 
 .. code-block:: python
-
 
     #-----------------------------------------------------------------------------
     # Account settings
     # a list of group names to automatically add users to when they sign up
-    DEFAULT_GROUP_NAMES = ["Therapists"]  # Replace Therapists with whatever group name you want 
+    DEFAULT_GROUP_NAMES = ["Therapists"]  # Replace Therapists with whatever group name you want
 
     #-----------------------------------------------------------------------------
     # Authentication backend settings
@@ -62,7 +55,7 @@ Copy the following lines to your local\_settings.py file:
     )
 
     # active directory settings (not required if only using ModelBackend
-    AD_DNS_NAME = 'your.ad.server.yourhospital.com' 
+    AD_DNS_NAME = 'your.ad.server.yourhospital.com'
 
     # If using non-SSL use these
     AD_LDAP_PORT = 389
@@ -72,14 +65,14 @@ Copy the following lines to your local\_settings.py file:
     # AD_LDAP_PORT=636
     # AD_LDAP_URL='ldaps://%s:%s' % (AD_DNS_NAME,AD_LDAP_PORT)
 
-    AD_SEARCH_DN = "dc=yourdomain,dc=yourhospital,dc=com"  
+    AD_SEARCH_DN = "dc=yourdomain,dc=yourhospital,dc=com"
     AD_NT4_DOMAIN = "YOURDOMAIN"  # Network domain that AD server is part of
 
     AD_SEARCH_FIELDS = ['mail', 'givenName', 'sn', 'sAMAccountName', 'memberOf']
-    AD_MEMBERSHIP_REQ = []  
+    AD_MEMBERSHIP_REQ = []
 
-You will also obviously have to modify AD\_DNS\_NAME, AD\_SEARCH\_DN and
-AD\_NT4\_DOMAIN to suit your own Active Directory setup.  The copmlete set of
+You will also obviously have to modify `AD_DNS_NAME1, `AD_SEARCH_DN` and
+`AD_NT4_DOMAIN` to suit your own Active Directory setup.  The complete set of
 Active Directory settings are described here: :ref:`Active Directory Settings
 <settings_ad>`.
 
