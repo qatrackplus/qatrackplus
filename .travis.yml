@@ -13,8 +13,8 @@ addons:
 
 python:
   - "3.4"
-    #- "3.5"
-    #- "3.6"
+  - "3.5"
+  - "3.6"
 
 env:
   - DJANGO=1.11 DB=sqlite

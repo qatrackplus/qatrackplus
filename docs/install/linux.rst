@@ -45,12 +45,12 @@ Make sure your existing packages are up to date:
     sudo apt-get update
     sudo apt-get upgrade
 
-You will need to have the `make` command available for this deployment. Install
-it as follows:
+You will need to have the `make` command and a few other packages available for
+this deployment. Install install them as follows:
 
 .. code-block:: console
 
-    sudo apt-get install make
+    sudo apt-get install make build-essential python3-dev python3-tk
 
 
 Installing and configuring Git
@@ -146,7 +146,7 @@ Installing MySQL (only required if you prefer to use MySQL over Postgres)
 
 .. code-block:: console
 
-    sudo apt-get install build-essential python3-dev mysql-server libmysqlclient-dev python3-tk
+    sudo apt-get install mysql-server libmysqlclient-dev python3-tk
 
 
 Now we can create and configure a user (db name/user/pwd =
@@ -208,14 +208,14 @@ We will now install all the libraries required for QATrack+ with PostgresSQL:
 .. code-block:: console
 
     cd ~/web/qatrackplus
-    pip install -r requirements.postgres.txt
+    pip install -r requirements/postgres.txt
 
 or for MySQL:
 
 .. code-block:: console
 
     cd ~/web/qatrackplus
-    pip install -r requirements.mysql.txt
+    pip install -r requirements/mysql.txt
 
 
 Making sure everything is working up to this point
@@ -566,7 +566,7 @@ and we can then install the required python libraries:
 
 .. code-block:: console
 
-    pip install -r requirements.postgres.txt  # or requirements.mysql.txt
+    pip install -r requirements/postgres.txt  # or requirements/mysql.txt
 
 
 Migrate your database
