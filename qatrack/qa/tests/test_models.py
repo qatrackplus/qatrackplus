@@ -604,7 +604,7 @@ class TestTestListCycle(TestCase):
         utils.create_status()
 
         self.empty_cycle = utils.create_cycle(name="empty")
-        utc = utils.create_unit_test_collection(test_collection=self.empty_cycle, frequency=daily)
+        self.empty_utc = utils.create_unit_test_collection(test_collection=self.empty_cycle, frequency=daily)
 
         self.test_lists = [utils.create_test_list(name="test list %d" % i) for i in range(2)]
         self.tests = []
@@ -614,7 +614,9 @@ class TestTestListCycle(TestCase):
             self.tests.append(test)
         self.cycle = utils.create_cycle(test_lists=self.test_lists)
 
-        utc = utils.create_unit_test_collection(test_collection=self.cycle, frequency=daily, unit=utc.unit)
+        self.utc = utils.create_unit_test_collection(
+            test_collection=self.cycle, frequency=daily, unit=self.empty_utc.unit
+        )
 
     def test_get_list(self):
         for day, test_list in enumerate(self.test_lists):
@@ -654,6 +656,29 @@ class TestTestListCycle(TestCase):
         self.assertEqual(0, len(models.TestListCycle()))
         self.assertEqual(2, len(self.cycle))
         self.assertEqual(0, len(self.empty_cycle))
+
+    def test_update_last_instance(self):
+        """
+        When a test list instance is created for a test list that is part of more than one cycle
+        assigned to a unit, it only update the last_instance attribute of the UTC for which it was
+        performed.
+
+        i.e. Imagine a unit has assigned to it two Cycles, C1 (UTC1) & C2
+        (UTC2), and both contain test list TL.  Completeing TL as part of UTC1
+        should not update the last_instance attribute of UTC2.
+        """
+
+        cycle2 = utils.create_cycle(name="cyle2", test_lists=self.test_lists)
+        utc2 = utils.create_unit_test_collection(test_collection=cycle2, unit=self.utc.unit)
+
+        assert self.utc.last_instance is None
+        tli = utils.create_test_list_instance(unit_test_collection=utc2, work_completed=timezone.now(), day=0)
+
+        self.utc.refresh_from_db()
+        assert self.utc.last_instance is None
+
+        utc2.refresh_from_db()
+        assert utc2.last_instance.pk is tli.pk
 
 
 class TestUTCDueDates(TestCase):

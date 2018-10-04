@@ -1,18 +1,22 @@
 from collections import defaultdict
 
 from django.conf import settings
-from django.dispatch import receiver, Signal
-from django.db.models.signals import pre_save, post_save, pre_delete, post_delete
-
-from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
+from django.db.models.signals import (
+    post_delete,
+    post_save,
+    pre_delete,
+    pre_save,
+)
+from django.dispatch import Signal, receiver
 from django.utils import timezone
-
 from django_comments.models import Comment
 from django_comments.signals import comment_was_posted
 
-from . import models
 from qatrack.service_log import models as sl_models
+
+from . import models
 
 
 def loaded_from_fixture(kwargs):
