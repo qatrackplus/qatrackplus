@@ -108,8 +108,20 @@ We're now ready to install all the libraries QATrack+ depends on.
     .\venvs\qatrack3\Scripts\activate
     python -m pip install --upgrade pip
     cd qatrackplus
-    pip install -r requirements/win.txt
+    pip install -r requirements\win.txt
     python manage.py collectstatic
+
+.. warning::
+
+    If you are going to be using :ref:`Active Directory <active_directory>` for
+    authenticating your users, you need to install pyldap.  There are binaries
+    available on this page: https://www.lfd.uci.edu/~gohlke/pythonlibs/#pyldap.
+    Download the binary relevant to your Python 3 installation (e.g.
+    pyldap‑2.4.45‑cp36‑cp36m‑win_amd64.whl) and then pip install it:
+
+    .. code-block:: console
+
+        pip install C:\path\to\pyldap‑2.4.45‑cp36‑cp36m‑win_amd64.whl
 
 
 Checking everything is functional so far
@@ -520,8 +532,20 @@ We're now ready to install all the libraries QATrack+ depends on.
 
     cd C:\deploy\qatrackplus\
     python -m pip install --upgrade pip
-    pip install -r requirements/win.txt
+    pip install -r requirements\win.txt
     python manage.py collectstatic
+
+.. warning::
+
+    If you are going to be using :ref:`Active Directory <active_directory>` for
+    authenticating your users, you need to install pyldap.  There are binaries
+    available on this page: https://www.lfd.uci.edu/~gohlke/pythonlibs/#pyldap.
+    Download the binary relevant to your Python 3 installation (e.g.
+    pyldap‑2.4.45‑cp36‑cp36m‑win_amd64.whl) and then pip install it:
+
+    .. code-block:: console
+
+        pip install C:\path\to\pyldap‑2.4.45‑cp36‑cp36m‑win_amd64.whl
 
 
 Update your local_settings.py file
@@ -574,7 +598,7 @@ During the migration above you may have noticed some warnings like:
     | Test name 2 (test-2)
     | ...
 
-This data is also available in the `logs/migrate.log` file.  Because the way
+This data is also available in the `logs\migrate.log` file.  Because the way
 Python handles text encodings / files has changed in Python 3, you will
 need to update any upload test that handles binary data by changing the
 `FILE` reference in the calculation procedure to `BIN_FILE`. For example change:
