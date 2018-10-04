@@ -1,5 +1,4 @@
 build: false
-instance: SQL2014
 
 environment:
 
