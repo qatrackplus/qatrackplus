@@ -71,6 +71,9 @@ Copy the following lines to your `local_settings.py` file:
     AD_SEARCH_FIELDS = ['mail', 'givenName', 'sn', 'sAMAccountName', 'memberOf']
     AD_MEMBERSHIP_REQ = []
 
+    AD_DEBUG_FILE = "C:\deploy\qatrackplus\logs\ad_log.txt"
+    AD_DEBUG = False # set to True and restart QATrack+ CherryPy Service if you need to debug AD Connection
+
 You will also obviously have to modify `AD_DNS_NAME1, `AD_SEARCH_DN` and
 `AD_NT4_DOMAIN` to suit your own Active Directory setup.  The complete set of
 Active Directory settings are described here: :ref:`Active Directory Settings
