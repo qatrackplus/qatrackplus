@@ -12,6 +12,12 @@ meet your clinics needs.  The most important settings are explained below.
 These settings should be defined in a `local_settings.py` file in the main
 directory (same directory as `settings.py`)
 
+.. note::
+
+    Any time you change a setting in local_settings.py, you need to restart the
+    QATrack+ application either by restarting Apache or restarting the CherryPy
+    Windows Service.
+
 
 DEBUG Setting
 .............
@@ -290,7 +296,7 @@ USE_PARTS
 .........
 
 Set `USE_PARTS` to `False` in order to disable the Parts app (Service Log
-requires `USE_PARTS = True`.
+requires `USE_PARTS = True`).
 
 
 SESSION Settings

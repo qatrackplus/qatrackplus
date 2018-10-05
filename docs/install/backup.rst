@@ -65,7 +65,7 @@ directory:
     cd C:\deploy\qatrackplus
     cp deploy\win\backup.ps1 .
 
-Then edit the backup.ps1 file and set the configuration varibles appropriately.
+Then edit the backup.ps1 file and set the configuration variables appropriately.
 
 
 Next open the Task Scheduler and select `Create Task` in the `Action` menu.
@@ -78,8 +78,8 @@ On the `Triggers` tab click `New` and select `Daily` and choose the `Start`
 date and `Time` (e.g. 3am) and `Recur every` to `1` then click OK.
 
 Now go to the `Actions` tab and click `New` then enter `PowerShell.exe` in the
-`Program/Script` field and `C:\deploy\qatrackplus -ExecutionPolicy Bypass
-C:\deploy\qatrackplus\backup.ps1` in the `Add Arguments` field.
+`Program/Script` field and `C:\\deploy\\qatrackplus -ExecutionPolicy Bypass
+C:\\deploy\\qatrackplus\\backup.ps1` in the `Add Arguments` field.
 
 Now save your scheduled task and run it and manually to confirm it worked
 correctly.
