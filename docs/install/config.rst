@@ -287,6 +287,12 @@ Set `REVIEW_DIFF_COL = True` to include a difference column when reviewing test
 list results. This column shows the difference between a test value and its
 reference value.
 
+TESTPACK_TIMEOUT
+................
+
+Change the number of elapsed seconds before exporting a TestPack will time out.
+Default is 30.
+
 USE_SERVICE_LOG
 ...............
 

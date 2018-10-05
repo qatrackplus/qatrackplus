@@ -9,6 +9,7 @@ matplotlib.use("Agg")
 
 # -----------------------------------------------------------------------------
 DEBUG = False
+TEMPLATE_DBG = False
 
 # Who to email when server errors occur
 ADMINS = (
@@ -360,7 +361,7 @@ AD_CLEAN_USERNAME = None
 # the site admins on every HTTP 500 error.
 # See http://docs.djangoproject.com/en/dev/topics/logging for
 # more details on how to customize your logging configuration.
-_LOGGING = {
+LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'filters': {
@@ -421,6 +422,16 @@ _LOGGING = {
             'handlers': ['console', 'mail_admins', 'file'],
             'level': 'ERROR',
             'propagate': True,
+        },
+        'django.db.backends': {
+            'handlers': [],  # Quiet by default!
+            'propagate': False,
+            'level': 'DEBUG',
+        },
+        'django.template': {
+            'handlers': ['console', 'file'],
+            'propagate': True,
+            'level': 'WARNING',
         },
         'qatrack': {
             'handlers': ['console', 'file'],
@@ -519,6 +530,8 @@ DEFAULT_AVAILABLE_TIMES = {
     'hours_saturday': datetime.timedelta(hours=0, minutes=0),
 }
 
+TESTPACK_TIMEOUT = 30
+
 if os.path.exists('/root/.is_inside_docker'):
     from .docker_settings import *  # NOQA
 
@@ -529,6 +542,8 @@ try:
     from .local_settings import *  # NOQA
 except ImportError:
     pass
+
+TEMPLATES[0]['OPTIONS']['debug'] = TEMPLATE_DBG
 
 # Parts must be used with service log
 USE_PARTS = USE_PARTS or USE_SERVICE_LOG
@@ -556,4 +571,3 @@ if any(['test' in v for v in sys.argv]):
 if DEBUG:
     INSTALLED_APPS.append('debug_toolbar')
     MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
-    TEMPLATES[0]['OPTIONS']['debug'] = True

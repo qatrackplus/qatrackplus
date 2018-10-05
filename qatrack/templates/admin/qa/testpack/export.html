@@ -181,6 +181,13 @@
             {{ form.description.errors }}
           </div>
         </div>
+        {% if form.non_field_errors %}
+          <ul class="errorlist nonfield">
+            {% for error in form.non_field_errors %}
+              <li>{{ error }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
         <div class="submit-row">
           <input type="submit" value="Download" class="default">
         </div>
