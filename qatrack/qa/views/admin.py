@@ -245,20 +245,20 @@ class ImportTestPack(FormView):
         tls = form.cleaned_data['testlists']
         try:
             tls = json.loads(tls) if tls != "all" else None
-        except json.decoder.JSONDecodeError:
+        except ValueError:
             tls = None
 
         cycles = form.cleaned_data['testlistcycles']
         try:
             cycles = json.loads(cycles) if cycles != "all" else None
-        except json.decoder.JSONDecodeError:
+        except ValueError:
             cycles = None
 
         extra_tests = form.cleaned_data['tests']
         try:
             extra_tests = json.loads(extra_tests) if extra_tests != "all" else None
-        except json.decoder.JSONDecodeError:
-            cycles = None
+        except ValueError:
+            extra_tests = None
 
         testpack = form.cleaned_data['testpack_data']
         try:
