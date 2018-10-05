@@ -27,6 +27,7 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import numpy
+import pydicom as dicom
 import scipy
 
 from qatrack.attachments.models import Attachment
@@ -38,14 +39,6 @@ from qatrack.units.models import Site, Unit
 from . import forms
 from .. import models, signals, utils
 from .base import BaseEditTestListInstance, TestListInstances, UTCList, logger
-
-try:
-    import pydicom as dicom
-except:
-    import dicom
-
-
-
 
 DEFAULT_CALCULATION_CONTEXT = {
     "dicom": dicom,
