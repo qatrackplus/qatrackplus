@@ -24,7 +24,7 @@ if [ ! -f /root/.is_hub_image ]; then
     virtualenv deploy/docker/user-data/python-virtualenv
     source deploy/docker/user-data/python-virtualenv/bin/activate
 
-    pip install -r requirements/postgres.txt
+    pip install -r requirements/docker.txt
 else
     source /root/virtualenv/bin/activate
 fi

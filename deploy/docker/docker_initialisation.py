@@ -15,15 +15,14 @@
 """A set of utilities to manage the docker instance of qatrack
 """
 
-import os
 from glob import glob
-
-import numpy as np
+import os
 
 from django.contrib.auth.models import User
 from django.core.management import call_command
+import numpy as np
 
-from docker_utilities import wait_for_postrgres, QATRACK_DIRECTORY
+from docker_utilities import QATRACK_DIRECTORY, wait_for_postrgres
 
 FIXTURES_GLOB: str = os.path.join(QATRACK_DIRECTORY, "fixtures/defaults/*/*")
 
@@ -49,7 +48,7 @@ def initialisation():
 
         User.objects.create_superuser(admin_user, admin_email, admin_password)
 
-        fixtures = glob(FIXTURES_GLOB)
+        fixtures = sorted(glob(FIXTURES_GLOB))
         for fixture in fixtures:
             call_command('loaddata', fixture)
 
