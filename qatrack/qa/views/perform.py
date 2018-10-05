@@ -98,6 +98,7 @@ class CompositeUtils:
         return self.comments.get(slug, "")
 
     def write_file(self, fname, obj):
+
         fname = os.path.basename(fname)
         data = imsave(obj, fname)
         if data is None:
@@ -430,6 +431,7 @@ class Upload(JSONResponseMixin, View):
                 pass
 
         comments = self.get_json_data("comments")
+
         self.calculation_context.update({
             "FILE": open(self.attachment.attachment.path, "r"),
             "BIN_FILE": self.attachment.attachment,

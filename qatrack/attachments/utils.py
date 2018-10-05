@@ -1,6 +1,7 @@
 import io
 import os
 
+from PIL import Image
 from matplotlib.figure import Figure
 import pydicom
 import scipy.misc
@@ -15,7 +16,15 @@ def imsave(obj, fname):
         data.seek(0)
         return data.read()
     except:
-        pass
+        data.seek(0)
+
+    try:
+        im = Image.open(obj)
+        im.save(data, format=fmt)
+        data.seek(0)
+        return data.read()
+    except:
+        data.seek(0)
 
     try:
         pixels = pydicom.read_file(obj, force=True).pixel_array
@@ -70,7 +79,6 @@ def get_mpl_figure(obj):
 
 
 def to_bytes(obj, fname=None):
-
 
     if hasattr(obj, "read"):
         # read from file like objects for handling bytes/string below
