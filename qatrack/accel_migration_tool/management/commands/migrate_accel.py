@@ -993,7 +993,7 @@ class Command(BaseCommand):
                         # part_category=category,
                         part_number=row.part_number,
                         alt_part_number=row.alt_part_no,
-                        description=row.description,
+                        name=row.description,
                         quantity_min=row.qty_min,
                         cost=row.cost,
                         notes=row.comments,
