@@ -11,6 +11,3 @@ Tutorials
    plots/index
    pylinac/index
    service_log/index
-
-
-.. todo:: Write tutorials

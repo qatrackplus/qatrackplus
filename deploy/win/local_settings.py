@@ -5,10 +5,11 @@ DATABASES = {
     'default': {
         'ENGINE': 'sql_server.pyodbc',
         'NAME': 'qatrackplus',
-        'USER': '',
+        'USER': '',  # USER/PWD can usually be left blank if SQL server is running on the same server as QATrack+
         'PASSWORD': '',
-        'HOST': '',
-        'PORT': '',
+        'HOST':
+            '',  # leave blank unless using remote server or SQLExpress (use 127.0.0.1\\SQLExpress or COMPUTERNAME\\SQLExpress)
+        'PORT': '',  # Set to empty string for default. Not used with sqlite3.
     }
 }
 

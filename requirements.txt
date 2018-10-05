@@ -1,3 +1,2 @@
 # docker
--r requirements/postgres.txt
-gunicorn==19.9.0
+-r requirements/docker.txt

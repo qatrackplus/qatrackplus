@@ -1,5 +1,6 @@
 from collections import Counter, defaultdict
 import json
+import time
 import uuid
 
 from django.conf import settings
@@ -48,7 +49,7 @@ class TestPackMixin:
         raise NotImplementedError
 
 
-def create_testpack(test_lists=None, cycles=None, extra_tests=None, description="", user=None, name=""):
+def create_testpack(test_lists=None, cycles=None, extra_tests=None, description="", user=None, name="", timeout=0):
     """
     Take input test lists queryset and cycles queryset and generate a test pack from them.  The
     test pack will includ all objects they depend on.
@@ -57,17 +58,11 @@ def create_testpack(test_lists=None, cycles=None, extra_tests=None, description=
     from qatrack.qa import models
 
     user = user or get_internal_user()
-    testpack = {}
-
-    tests = (extra_tests or models.Test.objects.none()).select_related("category")
-    test_lists = (test_lists or models.TestList.objects.none())
-    cycles = cycles or models.TestListCycle.objects.none()
-
     testpack = {
         'objects': {
-            'tests': [t.to_testpack() for t in tests.select_related("category")],
-            'testlists': [tl.to_testpack() for tl in test_lists],
-            'testlistcycles': [tlc.to_testpack() for tlc in cycles],
+            'tests': [],
+            'testlists': [],
+            'testlistcycles': [],
         },
         'meta': {
             'version': settings.VERSION,
@@ -78,6 +73,32 @@ def create_testpack(test_lists=None, cycles=None, extra_tests=None, description=
             'id': str(uuid.uuid4()),
         },
     }
+
+    tests = (extra_tests or models.Test.objects.none()).select_related("category")
+    test_lists = (test_lists or models.TestList.objects.none())
+    cycles = cycles or models.TestListCycle.objects.none()
+
+    t0 = time.time()
+
+    def check_timeout():
+        delta = time.time() - t0
+        if timeout and timeout > 0 and delta > timeout:
+            raise RuntimeError(
+                "Sorry, exporting your TestPack timed out in %ds. Please reduce the "
+                "number of objects in the TestPack and try again" % (int(delta))
+            )
+
+    for t in tests:
+        testpack['objects']['tests'].append(t.to_testpack())
+        check_timeout()
+
+    for tl in test_lists:
+        testpack['objects']['testlists'].append(tl.to_testpack())
+        check_timeout()
+
+    for c in cycles:
+        testpack['objects']['testlists'].append(c.to_testpack())
+        check_timeout()
 
     return testpack
 

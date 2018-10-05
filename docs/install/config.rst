@@ -12,6 +12,12 @@ meet your clinics needs.  The most important settings are explained below.
 These settings should be defined in a `local_settings.py` file in the main
 directory (same directory as `settings.py`)
 
+.. note::
+
+    Any time you change a setting in local_settings.py, you need to restart the
+    QATrack+ application either by restarting Apache or restarting the CherryPy
+    Windows Service.
+
 
 DEBUG Setting
 .............
@@ -281,6 +287,12 @@ Set `REVIEW_DIFF_COL = True` to include a difference column when reviewing test
 list results. This column shows the difference between a test value and its
 reference value.
 
+TESTPACK_TIMEOUT
+................
+
+Change the number of elapsed seconds before exporting a TestPack will time out.
+Default is 30.
+
 USE_SERVICE_LOG
 ...............
 
@@ -290,7 +302,7 @@ USE_PARTS
 .........
 
 Set `USE_PARTS` to `False` in order to disable the Parts app (Service Log
-requires `USE_PARTS = True`.
+requires `USE_PARTS = True`).
 
 
 SESSION Settings

@@ -1,6 +1,7 @@
 import json
 
 from django import forms
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
@@ -165,6 +166,11 @@ class ExportTestPackForm(forms.Form):
             return models.Test.objects.filter(id__in=t.split(","))
         return models.Test.objects.none()
 
+    def clean(self):
+        if not any(self.data[t].strip() for t in ['tests', 'testlists', 'testlistcycles']):
+            raise ValidationError("You must select at least one Test, TestList, or TestListCycle for Export")
+        return super().clean()
+
 
 class ExportTestPack(FormView):
     """View for exporting a QATrack+ test pack"""
@@ -202,9 +208,19 @@ class ExportTestPack(FormView):
         desc = form.cleaned_data['description']
         user = self.request.user
         name = form.cleaned_data['name']
-        tp = create_testpack(
-            test_lists=tls, cycles=cycles, extra_tests=extra_tests, description=desc, user=user, name=name
-        )
+        try:
+            tp = create_testpack(
+                test_lists=tls,
+                cycles=cycles,
+                extra_tests=extra_tests,
+                description=desc,
+                user=user,
+                name=name,
+                timeout=settings.TESTPACK_TIMEOUT,
+            )
+        except RuntimeError as e:
+            form.add_error(None, ValidationError(str(e), code="timeout"))
+            return self.form_invalid(form)
 
         response = HttpResponse(json.dumps(tp), content_type='application/json')
         response['Content-Disposition'] = 'attachment; filename=%s' % (name + ".tpk")
@@ -274,7 +290,7 @@ class ImportTestPack(FormView):
 
             messages.success(self.request, msg)
         except:
-            msg = "Sorry, but an error occured when trying to import your Testpack. Please file a bug report."
+            msg = "Sorry, but an error occured when trying to import your TestPack. Please file a bug report."
             messages.error(self.request, msg)
 
         return super(ImportTestPack, self).form_valid(form)

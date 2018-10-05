@@ -7,10 +7,6 @@ Installing and Deploying QATrack+ on Ubuntu Linux
     This guide assumes you have at least a basic level of familiarity with
     Linux and the command line.
 
-    If you prefer to let someone else take care of your installation or upgrade
-    to v0.3.0, `Randy Taylor <mailto:randy@multileaf.ca>`__ offers a paid
-    upgrade service via `Multi Leaf Consulting <http://multileaf.ca>`__.
-
 
 .. contents::
     :local:
@@ -105,7 +101,7 @@ qatrackplus/qatrack/qatrackpass) as follows:
 .. code-block:: console
 
     cd ~/web/qatrackplus
-    sudo -u postgres psql < db/postgres/create_db_and_role.sql
+    sudo -u postgres psql < deploy/postgres/create_db_and_role.sql
 
 
 Now edit /etc/postgresql/10/main/pg_hba.conf (use your favourite editor, e.g.
@@ -146,15 +142,20 @@ Installing MySQL (only required if you prefer to use MySQL over Postgres)
 
 .. code-block:: console
 
-    sudo apt-get install mysql-server libmysqlclient-dev python3-tk
+    sudo apt-get install mysql-server libmysqlclient-dev
 
 
 Now we can create and configure a user (db name/user/pwd =
 qatrackplus/qatrack/qatrackpass) and database for QATrack+:
 
-.. code-block:: console
 
-    sudo mysql < db/mysql/create_db_and_role.sql
+.. code-block:: bash
+
+    # if you  set a password during mysql install
+    sudo mysql -u root -p < deploy/mysql/create_db_and_role.sql
+
+    # if you didn't
+    sudo mysql < deploy/mysql/create_db_and_role.sql
 
 
 Setting up our Python environment (including virtualenv)
@@ -203,7 +204,8 @@ It's also a good idea to upgrade `pip` the Python package installer:
 
     pip install --upgrade pip
 
-We will now install all the libraries required for QATrack+ with PostgresSQL:
+We will now install all the libraries required for QATrack+ with PostgresSQL
+(be patient, this can take a few minutes!):
 
 .. code-block:: console
 
@@ -235,6 +237,8 @@ similar to the following:
 
     Results (88.45s):
         440 passed
+          2 skipped
+         11 deselected
 
 
 
@@ -554,6 +558,13 @@ First we must check out the code for version 0.3.0:
 Create and activate your new virtual environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+If you currently have a virtualenv activated, deactivate it with the
+`deactivate` command:
+
+.. code-block:: console
+
+    deactivate
+
 We need to create a new virtual environment with the Python 3 interpreter:
 
 .. code-block:: console
@@ -577,6 +588,14 @@ The next step is to update the v0.2.9 schema to v0.3.0
 .. code-block:: console
 
     python manage.py migrate --fake-iniital
+
+and load some initial service log data:
+
+.. code-block:: console
+
+    python manage.py loaddata fixtures/defaults/units/*
+    python manage.py loaddata fixtures/defaults/service_log/*
+
 
 
 Check the migration log

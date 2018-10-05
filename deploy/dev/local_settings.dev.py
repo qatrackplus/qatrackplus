@@ -1,5 +1,6 @@
 # Set to True to enable debug mode (not safe for regular use!)
 DEBUG = True
+TEMPLATE_DBG = True
 
 DATABASES = {
     'default': {
@@ -11,4 +12,3 @@ DATABASES = {
         'PORT': '',
     }
 }
-

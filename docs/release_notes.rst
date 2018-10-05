@@ -22,7 +22,7 @@ Acknowledgements
 
 Many thanks to Ryan Bottema & Crystal Angers at The Ottawa Hospital for all
 their work on the development and implementation of the new Service Log app
-(with guidance from the rest of the Ottawa QATrack+ team).
+(with guidance and QA from the rest of the Ottawa QATrack+ team!).
 
 Thank you to `Simon Biggs <https://www.simonbiggs.net/#/>`__ for all his work
 on the new experimental Docker deployment method as well as ideas and
@@ -30,7 +30,8 @@ discussions on many other features.
 
 Thanks to all of you who provided databases for testing the data model
 migration from 0.2.9 to 0.3.0. This helped catch a few DBMS specific migratino
-issues.
+issues.  There were also a number of people who tested the migration / update
+procedure before this releae which is hugely appreciated!
 
 A big thanks also goes out to the Canadian Nuclear Safety Commission! QATrack+
 was one of the recipients of the `2017 CSNC's Innovation Grant

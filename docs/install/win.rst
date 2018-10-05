@@ -7,10 +7,6 @@ Installing and Deploying QATrack+ on Windows Server
     This guide assumes you have at least a basic level of familiarity with
     Windows Server, SQL Server Management Studio and the command line.
 
-    If you prefer to let someone else take care of your installation or upgrade
-    to v0.3.0, `Randy Taylor <mailto:randy@multileaf.ca>`__ offers a paid
-    upgrade service via `Multi Leaf Consulting <http://multileaf.ca>`__.
-
 
 New Installation
 ----------------
@@ -58,7 +54,7 @@ Installing Python 3
 ~~~~~~~~~~~~~~~~~~~
 
 Go to http://www.python.org/download/ and download the latest Python 3.6.X
-(3.6.6) at the time of writing.  Run the installer and on the first page, make
+(3.6.6 at the time of writing).  Run the installer and on the first page, make
 sure you click the `Add Python 3.6 to PATH` option before choosing "Customize
 Installation".
 
@@ -77,7 +73,7 @@ is important!) before clicking "Install".
 Checkout the latest release of QATrack+ source code from BitBucket
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Open a Windows PowerShell terminal and then create a directoryfor QATrack+ and
+Open a Windows PowerShell terminal and then create a directory for QATrack+ and
 check out the source code, use the following commands:
 
 .. code-block:: console
@@ -134,6 +130,16 @@ the QATrack+ test suite like so:
 
     py.test -m "not selenium"
 
+This should take a few minutes to run and should exit with output that looks
+similar to the following:
+
+.. code-block:: console
+
+    Results (88.45s):
+        440 passed
+          2 skipped
+         11 deselected
+
 
 Creating a database with SQL Server
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -180,10 +186,10 @@ and then edit it setting the `DATABASES['default']['ENGINE']` key to
         'default': {
             'ENGINE': 'sql_server.pyodbc',
             'NAME': 'qatrackplus',
-            'USER': '',
+            'USER': '',  # USER/PWD can usually be left blank if SQL server is running on the same server as QATrack+
             'PASSWORD': '',
-            'HOST': '',      # leave blank unless using remote server or SQLExpress (use 127.0.0.1\\SQLExpress or COMPUTERNAME\\SQLExpress)
-            'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+            'HOST': '', # leave blank unless using remote server or SQLExpress (use 127.0.0.1\\SQLExpress or COMPUTERNAME\\SQLExpress)
+            'PORT': '', # Set to empty string for default. Not used with sqlite3.
             'OPTIONS': {
             }
         }
@@ -191,7 +197,8 @@ and then edit it setting the `DATABASES['default']['ENGINE']` key to
 
     ALLOWED_HOSTS = ['127.0.0.1', 'localhost']  # See local settings docs
 
-We will configure our new MS SQL database from the command prompt:
+We will load some configuration data into our new database from the command
+prompt:
 
 .. code-block:: console
 
@@ -222,8 +229,8 @@ QATrackCherryPyService configuration dialogue).
 .. note::
 
     If you need to run QATrack+ on a different port, edit
-    C:\deploy\qatrackplus\QATrack3CherryPyService.py and set the PORT variable
-    to a different port (e.g. 8008)
+    C:\\deploy\\qatrackplus\\QATrack3CherryPyService.py and set the PORT
+    variable to a different port (e.g. 8008)
 
 
 Setting up IIS
@@ -304,7 +311,7 @@ Make sure `Stop processing of subsequent rules` is checked.
     Static URL Rewrite Rule
 
 When finished click Apply, then Back To Rules and then add another blank rule.
-Give it a name of QATrack Reverse Proxy, enter (.\*) for the Pattern and
+Give it a name of QATrack Reverse Proxy, enter ^(.\*) for the Pattern and
 http://localhost:8080/{R:1} for the Rewrite URL.  Make sure both Append query
 string and Stop processing of subsequent rules are checked.
 
@@ -418,7 +425,7 @@ update our virtual env:
 .. code-block:: console
 
     pip install --upgrade pip
-    pip install -r requirements/base.txt
+    pip install -r requirements\base.txt
 
 
 Migrate your database
@@ -499,7 +506,9 @@ extremely slow!):
 .. code-block:: console
 
 
-    cd C:\deploy\qatrackplus\
+    cd C:\deploy\
+    .\venvs\qatrack\bin\activate
+    cd qatrackplus\
     python manage.py dumpdata --natural > backup-0.2.9-$(date -I).json
 
 
@@ -516,6 +525,14 @@ First we must check out the code for version 0.3.0:
 
 Create and activate your new virtual environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you currently have a virtualenv activated, deactivate it with the
+`deactivate` command:
+
+.. code-block:: console
+
+    deactivate
+
 
 We need to create a new virtual environment with the Python 3 interpreter:
 
@@ -585,6 +602,12 @@ The next step is to update the v0.2.9 schema to v0.3.0:
 
     python manage.py migrate --fake-initial
 
+and load some initial service log data:
+
+.. code-block:: console
+
+    Get-ChildItem fixtures\defaults\units\*json | foreach {python manage.py loaddata $_.FullName}
+    Get-ChildItem fixtures\defaults\service_log\*json | foreach {python manage.py loaddata $_.FullName}
 
 Check the migration log
 .......................
@@ -638,8 +661,8 @@ configuration dialogue).
 .. note::
 
     If you need to run QATrack+ on a different port, edit
-    C:\deploy\qatrackplus\QATrack3CherryPyService.py and set the PORT variable
-    to a different port (e.g. 8008)
+    C:\\deploy\\qatrackplus\\QATrack3CherryPyService.py and set the PORT
+    variable to a different port (e.g. 8008)
 
 
 Once you have verified everything is working correctly, you can either

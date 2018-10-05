@@ -35,8 +35,6 @@ run into any issues.  Of course you can always look for help on the
    :maxdepth: 2
 
    docker
-   live_cd
-   mac
 
 
 Configuring your QATrack+ Instance
