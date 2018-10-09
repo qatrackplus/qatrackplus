@@ -923,9 +923,9 @@ class Command(BaseCommand):
                     try:
                         hours = sl_models.Hours.objects.get(service_event=service_event, user=user, third_party=third_party)
                         hours.time = timezone.timedelta(minutes=round(row.time * 60))
+                        hours.save()
                     except ObjectDoesNotExist:
                         hours = sl_models.Hours.objects.create(service_event=service_event, user=user, third_party=third_party, time=timezone.timedelta(minutes=round(row.time * 60)))
-                    hours.save()
 
                     self.updating_cursor.execute('update Workload set hours_id = ? where srn = ? and employee = ?', str(hours.id), str(row.srn), str(row.employee))
 
