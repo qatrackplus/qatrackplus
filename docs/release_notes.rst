@@ -7,11 +7,6 @@ QATrack+ v0.3.0 Release Notes
 
 .. _release_notes_030:
 
-.. note::
-
-    These are release notes for the upcoming release version 0.3.0 and will
-    continue to be modified leading up to the release.
-
 
 It's been two years since the release of QATrack+ v0.2.9 and this release marks
 the largest update to QATrack+ since the initial release in 2012. Details of
@@ -29,7 +24,7 @@ on the new experimental Docker deployment method as well as ideas and
 discussions on many other features.
 
 Thanks to all of you who provided databases for testing the data model
-migration from 0.2.9 to 0.3.0. This helped catch a few DBMS specific migratino
+migration from 0.2.9 to 0.3.0. This helped catch a few DBMS specific migration
 issues.  There were also a number of people who tested the migration / update
 procedure before this releae which is hugely appreciated!
 
