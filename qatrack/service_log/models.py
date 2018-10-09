@@ -457,9 +457,9 @@ def ensure_hours_unique(sender, instance, raw, using, update_fields, **kwargs):
     """Some DB's don't consider multiple rows which contain the same columns
     and include null to violate unique contraints so we do our own check"""
 
-    if instance.user is None:
+    if instance.id is None:
         try:
-            Hours.objects.get(service_event=instance.service_event, third_party=instance.third_party, user=None)
+            Hours.objects.get(service_event=instance.service_event, third_party=instance.third_party, user=instance.user)
         except Hours.DoesNotExist:
             pass
         else:
