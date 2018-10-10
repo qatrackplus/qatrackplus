@@ -639,6 +639,18 @@ to:
     # do something with data
 
 
+You may have also seen warnings like:
+
+
+    |  The test named 'yourtestname' with ID=1234 needs to be updated to be
+    |  compatible with Python 3.
+
+
+While most Test calculation procedures will be compatible with both Python 2
+and Python 3, there have been some syntactical changes in the language which
+may require you to update a calculation procedure to be Python 3 compatible.
+
+
 Update your CherryPy Service
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

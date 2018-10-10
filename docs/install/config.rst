@@ -19,6 +19,10 @@ directory (same directory as `settings.py`)
     Windows Service.
 
 
+Mandatory Settings
+~~~~~~~~~~~~~~~~~~
+
+
 DEBUG Setting
 .............
 
@@ -68,7 +72,7 @@ CherryPy or nginx):
 
 
 DATABASES Setting
-................
+.................
 
 The database setting is covered in more detail in the `Django documentation
 <https://docs.djangoproject.com/en/2.1/ref/settings/#databases>`__ as well as
@@ -995,7 +999,7 @@ In order to use the AD backend, you need to set the `AUTHENTICATION BACKENDS` se
     )
 
 General AD Settings
-...........
+...................
 
 
 .. code-block:: python
