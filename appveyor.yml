@@ -1,0 +1,47 @@
+build: false
+
+environment:
+
+  SQLSERVER_ENV_SQLSERVER_HOST: localhost
+  SQLSERVER_ENV_SQLSERVER_PORT: 1433
+  SQLSERVER_ENV_SQLSERVER_USER: sa
+  SQLSERVER_ENV_SQLSERVER_PASSWORD: Password12!
+  SQLSERVER_ENV_SQLSERVER_DATABASE: qatrackdb
+
+  matrix:
+      #- PYTHON: "C:\\Python34"
+      #- PYTHON: "C:\\Python34-x64"
+      #- PYTHON: "C:\\Python35"
+      #- PYTHON: "C:\\Python35-x64"
+    - PYTHON: "C:\\Python36"
+      #- PYTHON: "C:\\Python36-x64"
+
+services:
+    - mssql2014rs           # start SQL Server 2014 Express
+    #  - mssql2014rs         # start SQL Server 2014 Express and Reporting Services
+    #  - mssql2012sp1        # start SQL Server 2012 SP1 Express
+    #  - mssql2012sp1rs      # start SQL Server 2012 SP1 Express and Reporting Services
+    #  - mssql2008r2sp2      # start SQL Server 2008 R2 SP2 Express
+    #- mssql2008r2sp2rs    # start SQL Server 2008 R2 SP2 Express and Reporting Services
+
+
+cache:
+  - '%LOCALAPPDATA%\pip\Cache'
+
+init:
+  - "ECHO %PYTHON%"
+
+install:
+  - "set PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+  - "python --version"
+  - cmd: copy /Y deploy\win\appveyor_mssql.py qatrack\local_settings.py
+  - python -m pip install --upgrade pip
+  - python -m pip install -r requirements\win.txt
+
+build_script:
+    #- ps: deploy\sqlserver.ps1 SQL2008R2SP2
+  - sqlcmd -S localhost,1433 -U sa -P Password12! -Q "CREATE DATABASE qatrackdb" -d "master"
+
+test_script:
+  - pytest -x -m "not selenium"
+

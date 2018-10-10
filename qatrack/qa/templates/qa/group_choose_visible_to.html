@@ -1,0 +1,51 @@
+{% extends "site_base.html" %}
+
+{% block require_javascript %}
+{% endblock require_javascript %}
+
+{% block head_title %}Test List Instances by Visible To Group{% endblock %}
+
+{% block body %}
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box">
+                <div class="box-header">
+                    <i class="fa fa-users" aria-hidden="true"></i>
+                    <h3 class="box-title">Unreviewed QA By Visible to Group</h3>
+                    <p>Choose a group below to list unreviewed test list instances</p>
+                </div>
+                <div class="box-body pad">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h4>Your Groups</h4>
+                            <div class="btn-group btn-default btn-flat">
+                                {% for g in groups %}
+                                    {% if g in user.groups.all %}
+                                        <a class="btn btn-default btn-flat" href="{% url 'unreviewed_by_group' group=g.id %}">{{ g }}</a>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% if perms.qa.can_review_non_visible_tli %}
+                        <div class="row">
+                            <div class="col-md-12">
+                                <h4>Other Groups</h4>
+                                <div class="btn-group btn-default btn-flat">
+                                    {% for g in groups %}
+                                        {% if g not in user.groups.all %}
+                                            <a class="btn btn-default btn-flat" href="{% url 'unreviewed_by_group' group=g.id %}">{{ g }}</a>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="box-footer"></div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

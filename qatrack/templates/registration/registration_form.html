@@ -1,0 +1,83 @@
+{% extends "registration/base.html" %}
+
+{% load i18n %}
+{% load qatrack_tags %}
+
+{% block head_title %}{% trans "Sign Up" %}{% endblock %}
+
+{% block register_active %} class="active"{% endblock %}
+
+{% block account_box %}
+
+  <div class="box">
+
+      <div class="box-header">
+          <h3 class="box-title">
+                <span class="fa fa-stack fa-fw" aria-hidden="true">
+                  <i class="fa fa-lock fa-stack-custom-main"></i>
+                  <i class="fa fa-undo fa-stack-custom-sub primary"></i>
+              </span>
+              {% trans "Register" %}
+          </h3>
+          <p>{% trans "Register for a QATrack+ account" %}</p>
+      </div>
+
+      <div class="box-body">
+          {% if user.is_authenticated %}
+            <div class="alert alert-info">
+              <strong>{% trans "Note" %}</strong>:
+              {% blocktrans %}you are already logged in as {{ user }}.{% endblocktrans %}
+            </div>
+          {% else %}
+
+            <p>{% trans "Already have an account?" %} <a href="{% url 'auth_login' %}">{% trans "Log in" %}</a>!</p>
+
+            <form id="signup_form" method="post" action="{% url 'registration_register' %}" autocapitalize="off">
+              {% csrf_token %}
+
+              {% if form.non_field_errors %}
+                  <div class="alert alert-error">
+                      {% if form_error_title %}
+                          <strong>{{ form_error_title }}</strong>
+                      {% endif %}
+                      {% for error in form.non_field_errors %}
+                          {{ error }}<br />
+                      {% endfor %}
+                  </div>
+              {% endif %}
+
+              {% for field in form %}
+                  {% if field.is_hidden %}
+                      {{ field }}
+                  {% else %}
+                    <div class="form-group {% if field.errors %}has-error{% endif %}">
+                        {{ field|addcss_addplaceholder:"form-control" }}
+                        {% for error in field.errors %}
+                            <span class="help-block">{{ error }}</span>
+                        {% endfor %}
+                        {% if field.help_text %}
+                            <p class="help-block">{{ field.help_text|safe }}</p>
+                        {% endif %}
+                    </div>
+                  {% endif %}
+              {% endfor %}
+              {% if redirect_field_value %}
+                  <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+              {% endif %}
+              <div class="form-actions">
+                  <button type="submit" class="btn btn-primary btn-flat">{% trans "Sign up" %}</button>
+              </div>
+          </form>
+
+          {% endif %}
+      </div>
+  </div>
+{% endblock account_box %}
+
+{% block extra_body %}
+    <script type="text/javascript">
+        $(function(){
+            $("#id_username").focus();
+        });
+    </script>
+{% endblock %}

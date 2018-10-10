@@ -4,18 +4,20 @@ except ImportError:
     pass
 
 from django.conf import settings
-from django.contrib.auth.models import User
 from django.contrib.auth.backends import ModelBackend
+from django.contrib.auth.models import User
 
 
 # stripped down version of http://djangosnippets.org/snippets/901/
 class ActiveDirectoryGroupMembershipSSLBackend:
 
     def authenticate(self, username=None, password=None):
+        username = self.clean_username(username)
+
         debug = None
         if settings.AD_DEBUG_FILE and settings.AD_DEBUG:
-            debug = open(settings.AD_DEBUG_FILE, 'w')
-            print >>debug, "authenticate user %s" % username
+            debug = open(settings.AD_DEBUG_FILE, 'a')
+            print("authenticate user %s" % username, file=debug)
 
         try:
             if len(password) == 0:
@@ -23,23 +25,26 @@ class ActiveDirectoryGroupMembershipSSLBackend:
 
             # ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, settings.AD_CERT_FILE)
             if debug:
-                print >>debug, "\tinitialize..."
+                print("\tinitialize...", file=debug)
             l = ldap.initialize(settings.AD_LDAP_URL)
             l.set_option(ldap.OPT_PROTOCOL_VERSION, 3)
             binddn = "%s@%s" % (username, settings.AD_NT4_DOMAIN)
             if debug:
-                print >>debug, "\tbind..."
+                print("\tbind...", file=debug)
             l.simple_bind_s(binddn, password)
             l.unbind_s()
 
             if debug:
-                print >>debug, "\tsuccessfully authenticated: %s" % username
+                print("\tsuccessfully authenticated: %s" % username, file=debug)
             return self.get_or_create_user(username, password)
 
-        except Exception, e:
+        except Exception as e:
             if debug:
-                print >>debug, "\tException occured "
-                print >>debug, e
+                print("\tException occured ", file=debug)
+                print(e, file=debug)
+        if debug:
+            debug.close()
+
 
     def get_or_create_user(self, username, password):
         try:
@@ -47,30 +52,36 @@ class ActiveDirectoryGroupMembershipSSLBackend:
         except User.DoesNotExist:
 
             try:
+                print('--- Creating user ' + username + ' ---')
                 debug = None
                 if settings.AD_DEBUG_FILE and settings.AD_DEBUG:
                     debug = open(settings.AD_DEBUG_FILE, 'a')
-                    print >>debug, "create user %s" % username
+                    print("create user %s" % username, file=debug)
 
                 # ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, settings.AD_CERT_FILE)
                 ldap.set_option(ldap.OPT_REFERRALS, 0)  # DO NOT TURN THIS OFF OR SEARCH WON'T WORK!
 
                 # initialize
                 if debug:
-                    print >>debug, "\tinitialize..."
+                    print("\tinitialize...", file=debug)
                 l = ldap.initialize(settings.AD_LDAP_URL)
                 l.set_option(ldap.OPT_PROTOCOL_VERSION, 3)
 
                 # bind
                 if debug:
-                    print >>debug, "\tbind..."
+                    print("\tbind...", file=debug)
                 binddn = "%s@%s" % (username, settings.AD_NT4_DOMAIN)
                 l.bind_s(binddn, password)
 
                 # search
                 if debug:
-                    print >>debug, "\tsearch..."
-                result = l.search_ext_s(settings.AD_SEARCH_DN, ldap.SCOPE_SUBTREE, "%s=%s" % (settings.AD_LU_ACCOUNT_NAME, username), settings.AD_SEARCH_FIELDS)[0][1]
+                    print("\tsearch...", file=debug)
+                result = l.search_ext_s(
+                    settings.AD_SEARCH_DN,
+                    ldap.SCOPE_SUBTREE,
+                    "%s=%s" % (settings.AD_LU_ACCOUNT_NAME, username),
+                    settings.AD_SEARCH_FIELDS,
+                )[0][1]
 
                 # get personal info
                 mail = result.get(settings.AD_LU_MAIL, ["mail@example.com"])[0]
@@ -81,10 +92,10 @@ class ActiveDirectoryGroupMembershipSSLBackend:
 
                 user = User(username=username, first_name=first_name, last_name=last_name, email=mail)
 
-            except Exception, e:
+            except Exception as e:
                 if debug:
-                    print >>debug, "Exception:"
-                    print >>debug, e
+                    print("Exception:", file=debug)
+                    print(e, file=debug)
                 return None
 
             user.is_staff = False
@@ -92,7 +103,8 @@ class ActiveDirectoryGroupMembershipSSLBackend:
             user.set_password('ldap authenticated')
             user.save()
             if debug:
-                print >>debug, "User created: %s" % username
+                print("User created: %s" % username, file=debug)
+                debug.close()
         return user
 
     def get_user(self, user_id):
@@ -100,6 +112,21 @@ class ActiveDirectoryGroupMembershipSSLBackend:
             return User.objects.get(pk=user_id)
         except User.DoesNotExist:
             return None
+
+    def clean_username(self, username):
+        """
+        Performs any cleaning on the "username" prior to using it to get or
+        create the user object.  Returns the cleaned username.
+
+        By default, returns the username unchanged.
+        """
+        if settings.AD_CLEAN_USERNAME and callable(settings.AD_CLEAN_USERNAME):
+            return settings.AD_CLEAN_USERNAME(username)
+        return username.replace(
+            settings.CLEAN_USERNAME_STRING, ""
+        ).replace(
+            settings.AD_CLEAN_USERNAME_STRING, ""
+        )
 
 
 class WindowsIntegratedAuthenticationBackend(ModelBackend):
@@ -141,7 +168,9 @@ class WindowsIntegratedAuthenticationBackend(ModelBackend):
 
         By default, returns the username unchanged.
         """
-        return username.replace(settings.CLEAN_USERNAME_STRING, "")
+        if settings.AD_CLEAN_USERNAME and callable(settings.AD_CLEAN_USERNAME):
+            return settings.AD_CLEAN_USERNAME(username)
+        return username.replace(settings.CLEAN_USERNAME_STRING, "").replace(settings.AD_CLEAN_USERNAME_STRING, "")
 
     def configure_user(self, user):
         """
@@ -160,7 +189,12 @@ class WindowsIntegratedAuthenticationBackend(ModelBackend):
             l.bind_s(binddn, settings.AD_LDAP_PW)
 
             # search
-            result = l.search_ext_s(settings.AD_SEARCH_DN, ldap.SCOPE_SUBTREE, "%s=%s" % (settings.AD_LU_ACCOUNT_NAME, user), settings.AD_SEARCH_FIELDS)[0][1]
+            result = l.search_ext_s(
+                settings.AD_SEARCH_DN,
+                ldap.SCOPE_SUBTREE,
+                "%s=%s" % (settings.AD_LU_ACCOUNT_NAME, user),
+                settings.AD_SEARCH_FIELDS,
+            )[0][1]
             l.unbind_s()
 
             # get personal info

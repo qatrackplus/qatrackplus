@@ -1,0 +1,52 @@
+
+
+div.daterangepicker div.drp-calendar.right {
+    display: none;
+}
+div.daterangepicker td.off.in-range {
+    background-color: #ebf4f8;
+}
+div.daterangepicker .ranges li.active,
+div.daterangepicker .drp-calendar td.active {
+    background-color: #627585;
+}
+div.daterangepicker.show-ranges button.applyBtn,
+div.daterangepicker.show-ranges button.cancelBtn {
+    background-color: #f4f4f4;
+    color: #000;
+    font-weight: normal;
+    border: none !important;
+    border-radius: 0;
+    box-shadow: 2px 2px 2px #ddd !important;
+    -moz-box-shadow: 2px 2px 2px #ddd !important;
+    -webkit-box-shadow: 2px 2px 2px #ddd !important;
+}
+div.daterangepicker.show-ranges button.applyBtn {
+    margin-left: 0;
+}
+div.daterangepicker.show-ranges button.applyBtn:hover,
+div.daterangepicker.show-ranges button.cancelBtn:hover {
+    background-color: #e7e7e7;
+    border-color: #adadad;
+}
+body > div.daterangepicker > div.drp-buttons {
+    display: block !important;
+    direction: rtl;
+    width: 100%;
+    text-align: left;
+}
+body > div.daterangepicker.ltr.show-ranges > div.drp-buttons > span.drp-selected {
+    display: none;
+}
+body > div.daterangepicker.ltr.show-ranges.show-calendar > div.drp-buttons > span {
+    display: inline-block;
+    margin-left: 10px;
+}
+span.drp-selected {
+    direction: ltr;
+}
+select.monthselect, select.yearselect {
+    border-color: #d2d6de;
+    font-weight: normal;
+    padding: 5px !important;
+}

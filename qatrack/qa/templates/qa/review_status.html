@@ -1,0 +1,22 @@
+{% if show_dash and not instance %}
+    ----
+{% else %}
+    <span class="label-group">
+        {% for display, status in statuses.items %}
+            <span {% if not status.requires_review %} title="Reviewed {{ status.reviewed }} by {{ status.reviewed_by }}."{% endif %} class="label" style="background-color: {{ status.colour }};">
+                {% if show_icons %}
+                    {% if status.requires_review %}
+                        <i class="fa fa-question-circle"></i>
+                    {% elif not status.valid %}
+                        <i class="fa fa-minus-circle"></i>
+                    {% endif %}
+                {% endif %}
+                {{ status.count }} {% if show_labels %}{{ display }} {% endif %}
+            </span>
+        {% endfor %}
+        {% if comments %}
+            <span class="label label-info">{{ comments }} <i class="fa fa-comment"></i></span>
+        {% endif %}
+    </span>
+{% endif %}
+

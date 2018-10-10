@@ -1,26 +1,33 @@
 import collections
 
-from django.conf import settings
-from django.template import Context
-from django.template.loader import get_template
 from django import template
+from django.conf import settings
+from django.template.loader import get_template
 from django.utils.safestring import mark_safe
 
 import qatrack.qa.models as models
+
 register = template.Library()
 
 
 @register.simple_tag
-def qa_value_form(form, test_list, include_history=False, include_ref_tols=False, test_info=None):
+def qa_value_form(form, test_list, perms, test_info=None, unit_test_collection=None):
     template = get_template("qa/qavalue_form.html")
-    c = Context({
+    c = {
         "form": form,
+        "perms": perms,
         "test_list": test_list,
         "test_info": test_info,
-        "include_history": include_history,
-        "include_ref_tols": include_ref_tols,
-    })
+        'unit_test_collection': unit_test_collection
+    }
     return template.render(c)
+
+
+@register.simple_tag
+def qa_table_colspan(perms, offset=0):
+    perms_to_check = ['can_view_ref_tol', 'can_view_history']
+    span = 6 - offset + sum(1 for p in perms_to_check if perms['qa'][p])
+    return "%d" % (span)
 
 
 @register.simple_tag
@@ -39,7 +46,16 @@ def reference_tolerance_span(test, ref, tol):
 
     tsd = settings.TEST_STATUS_DISPLAY
     if tol.type == models.MULTIPLE_CHOICE:
-        return mark_safe('<span><abbr title="%s Values: %s;  %s Values: %s; All other choices are failing"><em>Mult. Choice</em></abbr></span>' % (tsd['ok'], ", ".join(tol.pass_choices()), tsd['tolerance'], ', '.join(tol.tol_choices())))
+        params = (
+            tsd['ok'],
+            ", ".join(tol.pass_choices()),
+            tsd['tolerance'],
+            ', '.join(tol.tol_choices())
+        )
+        return mark_safe((
+            '<span><abbr title="%s Values: %s;  %s Values: %s; All other choices are failing">'
+            '<em>Choice</em></abbr></span>'
+        ) % params)
 
     tsds = settings.TEST_STATUS_DISPLAY_SHORT
     if tol.type == models.ABSOLUTE:
@@ -69,7 +85,8 @@ def tolerance_for_reference(tol, ref):
         return mark_safe('<span><em>N/A</em></span>')
 
     if tol.type == models.MULTIPLE_CHOICE:
-        return mark_safe('<span>%s: %s</br>  %s: %s</br> All others fail</span>' % (tsd['ok'], ", ".join(tol.pass_choices()), tsd['tolerance'], ', '.join(tol.tol_choices())))
+        params = (tsd['ok'], ", ".join(tol.pass_choices()), tsd['tolerance'], ', '.join(tol.tol_choices()))
+        return mark_safe('<span>%s: %s</br>  %s: %s</br> All others fail</span>' % params)
 
     tols = tol.tolerances_for_value(ref.value)
     for key in tols:
@@ -77,31 +94,38 @@ def tolerance_for_reference(tol, ref):
     tols["ok_disp"] = tsd['ok']
     tols["tol_disp"] = tsd['ok']
     tols["act_disp"] = tsd['action']
-    return mark_safe('<span>%(ok_disp)s: Between %(tol_low)s &amp; %(tol_high)s</br> %(tol_disp)s Between %(act_low)s &amp; %(act_high)s</br> %(act_disp)s: < %(act_low)s or > %(act_high)s</span>' % tols)
+    return mark_safe(
+        '<span>%(ok_disp)s: Between %(tol_low)s &amp; %(tol_high)s</br> '
+        '%(tol_disp)s Between %(act_low)s &amp; %(act_high)s</br> '
+        '%(act_disp)s: < %(act_low)s or > %(act_high)s</span>' % tols
+    )
 
 
 @register.simple_tag
-def history_display(history, unit, test_list, test):
+def history_display(history, unit, test_list, test, frequency=None):
     template = get_template("qa/history.html")
-    c = Context({
+    c = {
         "history": history,
         "unit": unit,
         "test_list": test_list,
         "test": test,
         "show_icons": settings.ICON_SETTINGS['SHOW_STATUS_ICONS_HISTORY'],
-    })
+        'frequency': frequency
+    }
     return template.render(c)
 
 
 @register.filter
 def as_pass_fail_status(test_list_instance, show_label=True):
     template = get_template("qa/pass_fail_status.html")
-    statuses_to_exclude = [models.NO_TOL]
-    c = Context({
+    # statuses_to_exclude = [models.NO_TOL]
+    statuses_to_exclude = ['no_tol']
+    c = {
         "instance": test_list_instance,
         "exclude": statuses_to_exclude,
         "show_label": show_label,
-    })
+        'show_icons': True
+    }
     return template.render(c)
 
 
@@ -115,19 +139,21 @@ def as_review_status(test_list_instance):
         statuses[ti.status.name]["requires_review"] = ti.status.requires_review
         statuses[ti.status.name]["reviewed_by"] = test_list_instance.reviewed_by
         statuses[ti.status.name]["reviewed"] = test_list_instance.reviewed
+        statuses[ti.status.name]["colour"] = ti.status.colour
         if ti.comment:
             comment_count += 1
-    if test_list_instance.comment:
-        comment_count += 1
+    # if test_list_instance.comment:
+    #     comment_count += 1
+    comment_count += test_list_instance.comments.count()
     template = get_template("qa/review_status.html")
-    c = Context({"statuses": dict(statuses), "comments": comment_count, "show_icons": settings.ICON_SETTINGS['SHOW_REVIEW_ICONS']})
+    c = {"statuses": dict(statuses), "comments": comment_count, "show_icons": settings.ICON_SETTINGS['SHOW_REVIEW_ICONS']}
     return template.render(c)
 
 
 @register.filter(expects_local_time=True)
 def as_due_date(unit_test_collection):
     template = get_template("qa/due_date.html")
-    c = Context({"unit_test_collection": unit_test_collection, "show_icons": settings.ICON_SETTINGS["SHOW_DUE_ICONS"]})
+    c = {"unit_test_collection": unit_test_collection, "show_icons": settings.ICON_SETTINGS["SHOW_DUE_ICONS"]}
     return template.render(c)
 
 
@@ -153,4 +179,32 @@ def as_data_attributes(unit_test_collection):
         "unit_number": utc.unit.number,
     }
 
-    return " ".join(['data-%s=%s' % (k, v) for k, v in attrs.items() if v])
+    return " ".join(['data-%s=%s' % (k, v) for k, v in list(attrs.items()) if v])
+
+
+@register.filter
+def hour_min(duration):
+    total_seconds = int(duration.total_seconds())
+    hours = total_seconds // 3600
+    minutes = (total_seconds % 3600) // 60
+    return '{:0>2}:{:0>2}'.format(hours, minutes)
+
+
+@register.simple_tag
+def service_status_label(status, size=None):
+    template = get_template('service_log/service_event_status_label.html')
+    return template.render({
+        'colour': status.colour,
+        'name': status.name,
+        'size': '10.5' if size is None else size
+    })
+
+
+@register.simple_tag
+def service_event_btn(event, size='xs'):
+    template = get_template('service_log/service_event_btn.html')
+    return template.render({
+        'colour': event.service_status.colour,
+        'id': event.id,
+        'size': size
+    })

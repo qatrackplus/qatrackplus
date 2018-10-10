@@ -1,19 +1,31 @@
+from contextlib import contextmanager
+from functools import wraps
 import time
-import utils
 
 from django.conf import settings
+from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.test import TestCase
-from django.test.testcases import LiveServerTestCase
-from selenium.common.exceptions import NoSuchElementException
+from django.utils import timezone
+import pytest
 from selenium import webdriver
+from selenium.common.exceptions import (
+    NoSuchElementException,
+    WebDriverException,
+)
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support import expected_conditions as e_c
-from selenium.webdriver.support.select import Select
-from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
+from selenium.webdriver.remote.command import Command
+from selenium.webdriver.remote.webelement import WebElement
+from selenium.webdriver.support import expected_conditions as e_c
+from selenium.webdriver.support.expected_conditions import staleness_of
+from selenium.webdriver.support.ui import Select
+from selenium.webdriver.support.wait import WebDriverWait
 
 from qatrack.qa import models
+from qatrack.service_log.tests import utils as sl_utils
+
+from . import utils
 
 objects = {
     'Group': {
@@ -94,7 +106,8 @@ objects = {
     },
     'Unit': {
         'name': 'TestUnit',
-        'number': '1'
+        'number': '1',
+        'date_acceptance': timezone.now().strftime('%Y-%m-%d')
     },
     'Frequency': {
         'name': 'TestFrequency',
@@ -144,7 +157,49 @@ objects = {
 }
 
 
-class SeleniumTests(TestCase, LiveServerTestCase):
+# From http://stackoverflow.com/a/20559494
+def retry_if_exception(ex, max_retries, sleep_time=None, reraise=True):
+    def outer(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            assert max_retries > 0
+            x = max_retries
+            while x:
+                try:
+                    return func(*args, **kwargs)
+                except:
+                    x -= 1
+                    if x == 0 and reraise:
+                        raise
+                if sleep_time is not None:
+                    time.sleep(sleep_time)
+        return wrapper
+    return outer
+
+
+@retry_if_exception(WebDriverException, 5, sleep_time=1)
+def WebElement_click(self):
+    """
+    Monkey patches the element click command to work around issue with
+    later versions of webdrivers that won't click on an element if it
+    is not in view
+    """
+    self.parent.execute_script("arguments[0].scrollIntoView();", self)
+    return self._execute(Command.CLICK_ELEMENT)
+WebElement.click = WebElement_click
+
+
+orig_send_keys = WebElement.send_keys
+@retry_if_exception(WebDriverException, 5, sleep_time=1)
+def WebElement_send_keys(self, keys):
+    """Monky patch send_keys to ensure element is in view"""
+    self.parent.execute_script("arguments[0].scrollIntoView();", self)
+    return orig_send_keys(self, keys)
+WebElement.send_keys = WebElement_send_keys
+
+
+@pytest.mark.selenium
+class SeleniumTests(TestCase, StaticLiveServerTestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -166,12 +221,34 @@ class SeleniumTests(TestCase, LiveServerTestCase):
             ff_profile = FirefoxProfile()
             cls.driver = webdriver.Firefox(ff_profile)
 
-        cls.driver.maximize_window()
+        orig_find_element = cls.driver.find_element
+
+        @retry_if_exception(WebDriverException, 5, sleep_time=1)
+        def WebElement_find_element(*args, **kwargs):
+            """Monky patch find element to allow retries"""
+            return orig_find_element(*args, **kwargs)
+        cls.driver.find_element = WebElement_find_element
+
+        cls.driver.set_page_load_timeout(5)
         cls.driver.implicitly_wait(5)
+
+        cls.maximize()
+        cls.wait = WebDriverWait(cls.driver, 5)
 
         super(SeleniumTests, cls).setUpClass()
 
-        cls.wait = WebDriverWait(cls.driver, 5)
+    @classmethod
+    def maximize(cls):
+
+        if getattr(settings, 'SELENIUM_VIRTUAL_DISPLAY', False):
+            for i in range(5):
+                try:
+                    cls.driver.maximize_window()
+                    return
+                except WebDriverException:
+                    time.sleep(1)
+
+        cls.driver.set_window_size(1920, 1080)
 
     @classmethod
     def tearDownClass(cls):
@@ -181,11 +258,26 @@ class SeleniumTests(TestCase, LiveServerTestCase):
         super(SeleniumTests, cls).tearDownClass()
 
     def load_main(self):
-        self.driver.get(self.live_server_url)
+        self.open("")
         self.wait.until(e_c.presence_of_element_located((By.CSS_SELECTOR, "head > title")))
 
+    @contextmanager
+    def wait_for_page_load(self, timeout=10):
+        old_page = self.driver.find_element_by_tag_name('html')
+        yield
+        WebDriverWait(self.driver, timeout).until(
+            staleness_of(old_page)
+        )
+
+    @retry_if_exception(Exception, 5, sleep_time=1)
+    def open(self, url):
+        with self.wait_for_page_load():
+            self.driver.execute_script(
+                "window.location.href='%s%s'" % (self.live_server_url, url)
+            )
+
     def load_admin(self):
-        self.driver.get(self.live_server_url + '/admin/')
+        self.open("/admin/")
         try:
             self.driver.find_element_by_id('id_username').send_keys(self.user.username)
             self.driver.find_element_by_id('id_password').send_keys(self.password)
@@ -201,14 +293,18 @@ class SeleniumTests(TestCase, LiveServerTestCase):
         self.user = utils.create_user(pwd=self.password)
 
     def wait_for_success(self):
-        self.wait.until(e_c.presence_of_element_located((By.XPATH, '//ul[@class = "messagelist"]/li[@class = "success"]')))
+        self.wait.until(
+            e_c.presence_of_element_located(
+                (By.XPATH, '//ul[@class = "messagelist"]/li[@class = "success"]')
+            )
+        )
 
     def test_admin_category(self):
 
         self.load_admin()
-        self.driver.find_element_by_link_text('Categories').click()
-        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Add category')))
-        self.driver.find_element_by_link_text('Add category').click()
+        self.driver.find_element_by_xpath('//a[@href="/admin/qa/category/"]').click()
+        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'ADD CATEGORY')))
+        self.driver.find_element_by_link_text('ADD CATEGORY').click()
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
         self.driver.find_element_by_id('id_name').send_keys(objects['Category']['name'])
         self.driver.find_element_by_id('id_slug').send_keys(objects['Category']['slug'])
@@ -224,8 +320,8 @@ class SeleniumTests(TestCase, LiveServerTestCase):
             utils.create_category(name=objects['Category']['name'], slug=objects['Category']['slug'], description=objects['Category']['description'])
 
         self.driver.find_element_by_link_text('Tests').click()
-        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Add test')))
-        self.driver.find_element_by_link_text('Add test').click()
+        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'ADD TEST')))
+        self.driver.find_element_by_link_text('ADD TEST').click()
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
         # for i in range(len(objects['Tests'])):
 
@@ -265,15 +361,15 @@ class SeleniumTests(TestCase, LiveServerTestCase):
 
         self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Test lists')))
         self.driver.find_element_by_link_text('Test lists').click()
-        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Add test list')))
-        self.driver.find_element_by_link_text('Add test list').click()
+        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'ADD TEST LIST')))
+        self.driver.find_element_by_link_text('ADD TEST LIST').click()
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
         self.driver.find_element_by_id('id_name').send_keys(objects['TestList']['name'])
         self.driver.find_element_by_link_text('Add another Test List Membership').click()
         self.driver.find_element_by_link_text('Add another Test List Membership').click()
         self.driver.find_element_by_link_text('Add another Test List Membership').click()
-        for i in range(0, 8):
-            self.driver.find_element_by_id('id_testlistmembership_set-' + str(i) + '-test').send_keys(str(i + 1))
+        for i, pk in enumerate(models.Test.objects.values_list("pk", flat=True)):
+            self.driver.find_element_by_id('id_testlistmembership_set-' + str(i) + '-test').send_keys(str(pk))
         self.driver.find_element_by_name('_save').click()
         self.wait_for_success()
 
@@ -282,8 +378,8 @@ class SeleniumTests(TestCase, LiveServerTestCase):
         self.load_admin()
         self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Modalities')))
         self.driver.find_element_by_link_text('Modalities').click()
-        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Add modality')))
-        self.driver.find_element_by_link_text('Add modality').click()
+        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'ADD MODALITY')))
+        self.driver.find_element_by_link_text('ADD MODALITY').click()
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
         self.driver.find_element_by_id('id_name').send_keys(objects['Modality']['name'])
         self.driver.find_element_by_name('_save').click()
@@ -294,8 +390,8 @@ class SeleniumTests(TestCase, LiveServerTestCase):
         self.load_admin()
         self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Unit types')))
         self.driver.find_element_by_link_text('Unit types').click()
-        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Add unit type')))
-        self.driver.find_element_by_link_text('Add unit type').click()
+        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'ADD UNIT TYPE')))
+        self.driver.find_element_by_link_text('ADD UNIT TYPE').click()
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
         self.driver.find_element_by_id('id_name').send_keys(objects['UnitType']['name'])
         self.driver.find_element_by_id('id_vendor').send_keys(objects['UnitType']['vendor'])
@@ -305,21 +401,35 @@ class SeleniumTests(TestCase, LiveServerTestCase):
     def test_admin_unit(self):
 
         if not utils.exists('units', 'UnitType', 'name', objects['UnitType']['name']):
-            utils.create_unit_type(name=objects['UnitType']['name'], vendor=objects['UnitType']['vendor'])
+            utils.create_unit_type(
+                name=objects['UnitType']['name'], vendor=utils.create_vendor(objects['UnitType']['vendor'])
+            )
 
         if not utils.exists('units', 'Modality', 'name', objects['Modality']['name']):
             utils.create_modality(name=objects['Modality']['name'])
 
+        sl_utils.create_service_area()
+
         self.load_admin()
         self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Units')))
-        self.driver.find_elements_by_link_text('Units')[1].click()
-        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Add unit')))
-        self.driver.find_element_by_link_text('Add unit').click()
+        self.driver.find_elements_by_link_text('Units')[0].click()
+        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'ADD UNIT')))
+        self.driver.find_element_by_link_text('ADD UNIT').click()
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
         self.driver.find_element_by_id('id_name').send_keys(objects['Unit']['name'])
         self.driver.find_element_by_id('id_number').send_keys(objects['Unit']['number'])
+        self.driver.find_element_by_id('id_date_acceptance').send_keys(objects['Unit']['date_acceptance'])
+        if settings.USE_SERVICE_LOG:
+            self.driver.find_element_by_css_selector('#id_service_areas_add_all_link').click()
         Select(self.driver.find_element_by_id("id_type")).select_by_index(1)
-        self.driver.find_element_by_id('id_modalities_add_all_link').click()
+        # self.driver.find_element_by_id('id_modalities_add_all_link').click()
+        # self.driver.find_element_by_id('id_hours_monday').send_keys('800')
+        # self.driver.find_element_by_id('id_hours_tuesday').send_keys('800')
+        # self.driver.find_element_by_id('id_hours_wednesday').send_keys('800')
+        # self.driver.find_element_by_id('id_hours_thursday').send_keys('800')
+        # self.driver.find_element_by_id('id_hours_friday').send_keys('800')
+        # self.driver.find_element_by_id('id_hours_saturday').send_keys('800')
+        # self.driver.find_element_by_id('id_hours_sunday').send_keys('800')
         self.driver.find_element_by_name('_save').click()
         self.wait_for_success()
 
@@ -328,8 +438,8 @@ class SeleniumTests(TestCase, LiveServerTestCase):
         self.load_admin()
         self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Frequencies')))
         self.driver.find_element_by_link_text('Frequencies').click()
-        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Add frequency')))
-        self.driver.find_element_by_link_text('Add frequency').click()
+        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'ADD FREQUENCY')))
+        self.driver.find_element_by_link_text('ADD FREQUENCY').click()
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
         self.driver.find_element_by_id('id_name').send_keys(objects['Frequency']['name'])
         self.driver.find_element_by_id('id_nominal_interval').send_keys(objects['Frequency']['nominal_interval'])
@@ -355,13 +465,17 @@ class SeleniumTests(TestCase, LiveServerTestCase):
         self.load_admin()
         self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Assign Test Lists to Units')))
         self.driver.find_element_by_link_text('Assign Test Lists to Units').click()
-        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Add unit test collection')))
-        self.driver.find_element_by_link_text('Add unit test collection').click()
+        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'ADD UNIT TEST COLLECTION')))
+        self.driver.find_element_by_link_text('ADD UNIT TEST COLLECTION').click()
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_unit')))
+
         Select(self.driver.find_element_by_id("id_unit")).select_by_index(1)
         Select(self.driver.find_element_by_id("id_frequency")).select_by_index(1)
         Select(self.driver.find_element_by_id("id_assigned_to")).select_by_index(1)
         Select(self.driver.find_element_by_id("id_content_type")).select_by_index(1)
+        self.driver.find_element_by_css_selector('#id_visible_to_from > option:nth-child(1)').click()
+        self.driver.find_element_by_css_selector('#id_visible_to_add_link').click()
+
         time.sleep(2)
 
         self.driver.find_element_by_id('select2-generic_object_id-container').click()
@@ -375,8 +489,8 @@ class SeleniumTests(TestCase, LiveServerTestCase):
         self.load_admin()
         self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Tolerances')))
         self.driver.find_element_by_link_text('Tolerances').click()
-        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Add tolerance')))
-        self.driver.find_element_by_link_text('Add tolerance').click()
+        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'ADD TOLERANCE')))
+        self.driver.find_element_by_link_text('ADD TOLERANCE').click()
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_type')))
         Select(self.driver.find_element_by_id("id_type")).select_by_index(1)
         self.driver.find_element_by_id('id_act_low').send_keys(objects['absoluteTolerance']['act_low'])
@@ -455,10 +569,10 @@ class SeleniumTests(TestCase, LiveServerTestCase):
     def test_admin_statuses(self):
 
         self.load_admin()
-        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Statuses')))
-        self.driver.find_element_by_link_text('Statuses').click()
-        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Add test instance status')))
-        self.driver.find_element_by_link_text('Add test instance status').click()
+        self.wait.until(e_c.presence_of_element_located((By.XPATH, "//a[contains(@href,'testinstancestatus')]")))
+        self.driver.find_element_by_xpath("//a[contains(@href,'testinstancestatus')]").click()
+        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'ADD TEST INSTANCE STATUS')))
+        self.driver.find_element_by_link_text('ADD TEST INSTANCE STATUS').click()
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
         self.driver.find_element_by_id('id_name').send_keys('testStatus')
         self.driver.find_element_by_id('id_is_default').click()
@@ -505,7 +619,11 @@ class SeleniumTests(TestCase, LiveServerTestCase):
         # self.assertTrue(self.driver.find_element_by_xpath('//*[@id="perform-qa-table"]/tbody/tr[13]/td[5]').text == 'ACT(6.0%)')
         basic.send_keys(Keys.BACKSPACE, '5')
         boolean.click()
-        self.wait.until(e_c.presence_of_element_located((By.XPATH, '//*[@id="perform-qa-table"]/tbody/tr[13]/td[5][contains(text(), "TOL(5.0%)")]')))
+        self.wait.until(
+            e_c.presence_of_element_located(
+                (By.XPATH, '//*[@id="perform-qa-table"]/tbody/tr[13]/td[5][contains(text(), "TOL(5.0%)")]')
+            )
+        )
         # self.assertTrue(self.driver.find_element_by_xpath('//*[@id="perform-qa-table"]/tbody/tr[13]/td[5]').text == 'TOL(5.0%)')
         basic.send_keys(Keys.BACKSPACE, Keys.BACKSPACE, Keys.BACKSPACE)
         boolean.click()
@@ -514,17 +632,23 @@ class SeleniumTests(TestCase, LiveServerTestCase):
         multi = self.driver.find_element_by_id('id_form-2-string_value')
         multi.click()
         multi.send_keys(Keys.ARROW_DOWN, Keys.ENTER)
-        self.assertTrue(self.driver.find_element_by_xpath('//*[@id="perform-qa-table"]/tbody/tr[7]/td[5]').text == 'ACT')
+        self.assertTrue(
+            self.driver.find_element_by_xpath('//*[@id="perform-qa-table"]/tbody/tr[7]/td[5]').text == 'ACT'
+        )
         multi.click()
         multi.send_keys(Keys.ARROW_DOWN, Keys.ENTER)
-        self.assertTrue(self.driver.find_element_by_xpath('//*[@id="perform-qa-table"]/tbody/tr[7]/td[5]').text == 'TOL')
+        self.assertTrue(
+            self.driver.find_element_by_xpath('//*[@id="perform-qa-table"]/tbody/tr[7]/td[5]').text == 'TOL'
+        )
         multi.click()
         multi.send_keys(Keys.ARROW_DOWN, Keys.ENTER)
         self.assertTrue(self.driver.find_element_by_xpath('//*[@id="perform-qa-table"]/tbody/tr[7]/td[5]').text == 'OK')
 
         self.driver.find_element_by_id('id_form-5-string_value').send_keys('a string')
         boolean.click()
-        self.wait.until(e_c.text_to_be_present_in_element_value((By.ID, 'id_form-6-string_value'), 'a string composite'))
+        self.wait.until(
+            e_c.text_to_be_present_in_element_value((By.ID, 'id_form-6-string_value'), 'a string composite')
+        )
 
         self.driver.find_element_by_id('id_form-7-skipped').click()
 
@@ -542,4 +666,8 @@ class SeleniumTests(TestCase, LiveServerTestCase):
 
         self.driver.find_element_by_xpath('//button[@type = "submit"]').click()
 
-        self.wait.until(e_c.presence_of_element_located((By.XPATH, '//td[contains(text(), "No data available in table")]')))
+        self.wait.until(
+            e_c.presence_of_element_located(
+                (By.XPATH, '//td[contains(text(), "No data available in table")]')
+            )
+        )

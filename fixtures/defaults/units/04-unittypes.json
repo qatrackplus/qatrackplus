@@ -1,0 +1,223 @@
+[
+{
+    "model": "units.unittype",
+    "fields": {
+        "vendor": [
+            "Accuray"
+        ],
+        "unit_class": [
+            "Linac"
+        ],
+        "name": "Cyberknife",
+        "model": null
+    }
+},
+{
+    "model": "units.unittype",
+    "fields": {
+        "vendor": [
+            "Accuray"
+        ],
+        "unit_class": [
+            "Linac"
+        ],
+        "name": "Tomotherapy",
+        "model": "Hi-Art"
+    }
+},
+{
+    "model": "units.unittype",
+    "fields": {
+        "vendor": [
+            "Accuray"
+        ],
+        "unit_class": [
+            "Linac"
+        ],
+        "name": "Tomotherapy",
+        "model": "TomoHD"
+    }
+},
+{
+    "model": "units.unittype",
+    "fields": {
+        "vendor": [
+            "Accuray"
+        ],
+        "unit_class": [
+            "Linac"
+        ],
+        "name": "Tomotherapy",
+        "model": "Corvus"
+    }
+},
+{
+    "model": "units.unittype",
+    "fields": {
+        "vendor": [
+            "Elekta"
+        ],
+        "unit_class": [
+            "Linac"
+        ],
+        "name": "Precise",
+        "model": null
+    }
+},
+{
+    "model": "units.unittype",
+    "fields": {
+        "vendor": [
+            "Elekta"
+        ],
+        "unit_class": [
+            "Linac"
+        ],
+        "name": "Synergy",
+        "model": "S"
+    }
+},
+{
+    "model": "units.unittype",
+    "fields": {
+        "vendor": [
+            "Elekta"
+        ],
+        "unit_class": [
+            "Linac"
+        ],
+        "name": "Synergy",
+        "model": null
+    }
+},
+{
+    "model": "units.unittype",
+    "fields": {
+        "vendor": [
+            "Pantak"
+        ],
+        "unit_class": [
+            "Orthovoltage"
+        ],
+        "name": "Therapax-300",
+        "model": null
+    }
+},
+{
+    "model": "units.unittype",
+    "fields": {
+        "vendor": [
+            "Elekta"
+        ],
+        "unit_class": [
+            "Linac"
+        ],
+        "name": "Axesse",
+        "model": null
+    }
+},
+{
+    "model": "units.unittype",
+    "fields": {
+        "vendor": [
+            "Elekta"
+        ],
+        "unit_class": [
+            "Linac"
+        ],
+        "name": "Agility",
+        "model": null
+    }
+},
+{
+    "model": "units.unittype",
+    "fields": {
+        "vendor": [
+            "Varian"
+        ],
+        "unit_class": [
+            "Linac"
+        ],
+        "name": "TrueBeam",
+        "model": null
+    }
+},
+{
+    "model": "units.unittype",
+    "fields": {
+        "vendor": [
+            "Varian"
+        ],
+        "unit_class": [
+            "Linac"
+        ],
+        "name": "Clinac",
+        "model": null
+    }
+},
+{
+    "model": "units.unittype",
+    "fields": {
+        "vendor": [
+            "Varian"
+        ],
+        "unit_class": [
+            "Linac"
+        ],
+        "name": "Trilogy",
+        "model": null
+    }
+},
+{
+    "model": "units.unittype",
+    "fields": {
+        "vendor": [
+            "Varian"
+        ],
+        "unit_class": [
+            "Linac"
+        ],
+        "name": "Novalis",
+        "model": null
+    }
+},
+{
+    "model": "units.unittype",
+    "fields": {
+        "vendor": [
+            "Varian"
+        ],
+        "unit_class": [
+            "Linac"
+        ],
+        "name": "EDGE",
+        "model": null
+    }
+},
+{
+    "model": "units.unittype",
+    "fields": {
+        "vendor": [
+            "Siemens"
+        ],
+        "unit_class": [
+            "Linac"
+        ],
+        "name": "Primus",
+        "model": null
+    }
+},
+{
+    "model": "units.unittype",
+    "fields": {
+        "vendor": [
+            "Siemens"
+        ],
+        "unit_class": [
+            "Linac"
+        ],
+        "name": "Oncor",
+        "model": null
+    }
+}
+]

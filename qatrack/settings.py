@@ -1,27 +1,31 @@
 # Django settings for qatrack project.
-import django.conf.global_settings as DEFAULT_SETTINGS
+import datetime
 import os
 import sys
 
+import matplotlib
+
+matplotlib.use("Agg")
 
 # -----------------------------------------------------------------------------
-# Debug settings - remember to set both DEBUG & TEMPLATE_DEBUG to false when
-# deploying (either here or in local_settings.py)
-DEBUG = True
-TEMPLATE_DEBUG = True
+DEBUG = False
+TEMPLATE_DBG = False
 
 # Who to email when server errors occur
 ADMINS = (
     ('Admin Name', 'YOUR_EMAIL_ADDRESS_GOES_HERE'),
 )
 MANAGERS = ADMINS
-SEND_BROKEN_LINK_EMAILS = True
+SEND_BROKEN_LINK_EMAILS = False
 
 # -----------------------------------------------------------------------------
 # misc settings
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
+LOG_ROOT = os.path.join(PROJECT_ROOT, "..", "logs")
+if not os.path.isdir(LOG_ROOT):
+    os.mkdir(LOG_ROOT)
 
-VERSION = "0.2.9.1"
+VERSION = "0.3.0"
 BUG_REPORT_URL = "https://bitbucket.org/tohccmedphys/qatrackplus/issues/new"
 FEATURE_REQUEST_URL = BUG_REPORT_URL
 
@@ -42,8 +46,8 @@ SITE_NAME = "QATrack+"
 # please do so here or in a local_settings.py file
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',  # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': os.path.join(PROJECT_ROOT, '..', 'db/default.db'),                      # Or path to database file if using sqlite3.
+        'ENGINE': 'django.db.backends.sqlite3',  # Add 'postgresql_psycopg2', 'mysql', 'sqlite3'
+        'NAME': os.path.join(PROJECT_ROOT, '..', 'db/default.db'),  # db name Or path to database file if using sqlite3.
         'USER': '',                      # Not used with sqlite3.
         'PASSWORD': '',                  # Not used with sqlite3.S
         'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
@@ -99,6 +103,7 @@ DEFAULT_WARNING_MESSAGE = "Do not treat"
 #  Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
 MEDIA_ROOT = os.path.join(PROJECT_ROOT, "media")
+TMP_UPLOAD_PATH = os.path.join("uploads", "tmp")
 UPLOAD_ROOT = os.path.join(MEDIA_ROOT, "uploads")
 TMP_UPLOAD_ROOT = os.path.join(UPLOAD_ROOT, "tmp")
 for d in (MEDIA_ROOT, UPLOAD_ROOT, TMP_UPLOAD_ROOT):
@@ -127,8 +132,8 @@ STATICFILES_DIRS = (
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
     os.path.join(PROJECT_ROOT, "admin_media"),
+    # os.path.join(PROJECT_ROOT, 'static/'),
 )
-
 # List of finder classes that know how to find static files in
 # various locations.
 STATICFILES_FINDERS = (
@@ -138,7 +143,7 @@ STATICFILES_FINDERS = (
 )
 
 # add a site specific css file if one doesn't already exist
-SITE_SPECIFIC_CSS_PATH = os.path.join(PROJECT_ROOT, "qa", "static", "css", "site.css")
+SITE_SPECIFIC_CSS_PATH = os.path.join(PROJECT_ROOT, "qatrack_core", "static", "qatrack_core", "css", "site.css")
 if not os.path.isfile(SITE_SPECIFIC_CSS_PATH):
     with open(SITE_SPECIFIC_CSS_PATH, 'w') as f:
         f.write("/* You can place any site specific css in this file*/\n")
@@ -146,7 +151,7 @@ if not os.path.isfile(SITE_SPECIFIC_CSS_PATH):
 
 # ------------------------------------------------------------------------------
 # Middleware
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -155,43 +160,41 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'qatrack.middleware.login_required.LoginRequiredMiddleware',
     'qatrack.middleware.maintain_filters.FilterPersistMiddleware',
-)
-
-# for django-debug-toolbar
-INTERNAL_IPS = ('127.0.0.1',)
+]
 
 
 # login required middleware settings
-LOGIN_EXEMPT_URLS = [r"^accounts/", ]
+LOGIN_EXEMPT_URLS = [r"^accounts/", r"api/*"]
 ACCOUNT_ACTIVATION_DAYS = 7
 LOGIN_REDIRECT_URL = '/qa/unit/'
 LOGIN_URL = "/accounts/login/"
 
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [
+            os.path.join(PROJECT_ROOT, 'templates'),
+            'genericdropdown/templates',
+        ],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'debug': False,
+            'context_processors': [
+                # Insert your TEMPLATE_CONTEXT_PROCESSORS here or use this
+                # list if you haven't customized them:
+                'django.contrib.auth.context_processors.auth',
+                'django.template.context_processors.debug',
+                'django.template.context_processors.i18n',
+                'django.template.context_processors.media',
+                'django.template.context_processors.request',
+                'django.template.context_processors.static',
+                'django.template.context_processors.tz',
+                'django.contrib.messages.context_processors.messages',
 
-# ------------------------------------------------------------------------------
-# Template settings
-# List of callables that know how to import templates from various sources.
-TEMPLATE_LOADERS = (
-    # ('django.template.loaders.cached.Loader', (
-    'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.app_directories.Loader',
-    # )),
-    #     'django.template.loaders.eggs.Loader',
-)
-
-TEMPLATE_DIRS = (
-    # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
-    os.path.join(PROJECT_ROOT, "templates"),
-    os.path.join(PROJECT_ROOT, "theme_bootstrap", "templates"),
-    "genericdropdown/templates",
-)
-
-TEMPLATE_CONTEXT_PROCESSORS = list(DEFAULT_SETTINGS.TEMPLATE_CONTEXT_PROCESSORS)
-TEMPLATE_CONTEXT_PROCESSORS += [
-    'django.core.context_processors.request',
-    "qatrack.context_processors.site",
+                'qatrack.context_processors.site',
+            ],
+        },
+    },
 ]
 
 # ------------------------------------------------------------------------------
@@ -205,35 +208,66 @@ FIXTURE_DIRS = (
 # ------------------------------------------------------------------------------
 INSTALLED_APPS = [
     'django.contrib.admin',
-    'django.contrib.auth',
     'django.contrib.contenttypes',
-    'django.contrib.formtools',
+    'django.contrib.auth',
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
-
+    'django_extensions',
+    'django_comments',
+    'formtools',
     'tastypie',
+    'django_filters',
+    'rest_framework',
+    'rest_framework.authtoken',
     'listable',
     'genericdropdown',
-
+    # 'crispy_forms',
+    'widget_tweaks',
+    'dynamic_raw_id',
     'qatrack.cache',
     'qatrack.accounts',
     'qatrack.units',
     'qatrack.qa',
-    'qatrack.theme_bootstrap',
+    'qatrack.qatrack_core',
     'qatrack.notifications',
     'qatrack.contacts',
-
-    'south',
+    'qatrack.issue_tracker',
+    'qatrack.service_log',
+    'qatrack.parts',
+    'qatrack.attachments',
     'admin_views',
 ]
+
+# ----------------------------------------------------------------------------
+# API settings
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication', 'rest_framework.authentication.SessionAuthentication'
+    ),
+    # Use Django's standard `django.contrib.auth` permissions
+    'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.DjangoModelPermissions'],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 100,
+    'DATETIME_INPUT_FORMATS': ["%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M"],
+    'TEST_REQUEST_DEFAULT_FORMAT': 'json',
+    'DEFAULT_FILTER_BACKENDS': (
+        'rest_framework_filters.backends.DjangoFilterBackend',
+    ),
+}
+
+
 # -----------------------------------------------------------------------------
 # Cache settings
 
 CACHE_UNREVIEWED_COUNT = 'unreviewed-count'
 CACHE_QA_FREQUENCIES = 'qa-frequencies'
+CACHE_RTS_QA_COUNT = 'unreviewed-rts-qa'
+CACHE_IN_PROGRESS_COUNT = 'in-progress-count'
+
 MAX_CACHE_TIMEOUT = 24 * 60 * 60  # 24hours
 
 CACHE_LOCATION = os.path.join(PROJECT_ROOT, "cache", "cache_data")
@@ -253,11 +287,12 @@ CACHES = {
 SESSION_COOKIE_AGE = 14 * 24 * 60 * 60
 SESSION_SAVE_EVERY_REQUEST = True
 
+
 # -----------------------------------------------------------------------------
 # Email and notification settings
 EMAIL_NOTIFICATION_USER = None
 EMAIL_NOTIFICATION_PWD = None
-EMAIL_NOTIFICATION_TEMPLATE = "notification_email.txt"
+EMAIL_NOTIFICATION_TEMPLATE = "notification_email.html"
 EMAIL_NOTIFICATION_SENDER = "qatrack"
 # use either a static subject or a customizable template
 # EMAIL_NOTIFICATION_SUBJECT = "QATrack+ Test Status Notification"
@@ -313,7 +348,11 @@ AD_MEMBERSHIP_REQ = []  # eg ["*TOHCC - All Staff | Tout le personnel  - CCLHO"]
 AD_DEBUG_FILE = None
 AD_DEBUG = False
 
-CLEAN_USERNAME_STRING = ''
+CLEAN_USERNAME_STRING = AD_CLEAN_USERNAME_STRING = ''
+
+# define a function called AD_CLEAN_USERNAME in local_settings.py if you
+# wish to clean usernames before sending to ldap server
+AD_CLEAN_USERNAME = None
 
 # ------------------------------------------------------------------------------
 # Logging Settings
@@ -330,6 +369,15 @@ LOGGING = {
             '()': 'django.utils.log.RequireDebugFalse'
         }
     },
+    'formatters': {
+        'verbose': {
+            'format': "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
+            'datefmt': "%d/%b/%Y %H:%M:%S"
+        },
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        },
+    },
     'handlers': {
         'mail_admins': {
             'level': 'ERROR',
@@ -340,16 +388,58 @@ LOGGING = {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',
         },
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': os.path.join(LOG_ROOT, "debug.log"),
+            'when': 'D',  # this specifies the interval
+            'interval': 7,  # defaults to 1, only necessary for other values
+            'backupCount': 26,  # how many backup file to keep, 10 days
+            'formatter': 'verbose',
+        },
+        'migrate': {
+            'level': 'INFO',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': os.path.join(LOG_ROOT, "migrate.log"),
+            'when': 'D',  # this specifies the interval
+            'interval': 7,  # defaults to 1, only necessary for other values
+            'backupCount': 26,  # how many backup file to keep, 10 days
+            'formatter': 'verbose',
+        },
     },
     'loggers': {
-
+        'django': {
+            'handlers': ['file', 'console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'django.server': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
         'django.request': {
-            'handlers': ['mail_admins'],
+            'handlers': ['console', 'mail_admins', 'file'],
             'level': 'ERROR',
             'propagate': True,
         },
-        'qatrack.console': {
-            'handlers': ['console'],
+        'django.db.backends': {
+            'handlers': [],  # Quiet by default!
+            'propagate': False,
+            'level': 'DEBUG',
+        },
+        'django.template': {
+            'handlers': ['console', 'file'],
+            'propagate': True,
+            'level': 'WARNING',
+        },
+        'qatrack': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'qatrack.migrations': {
+            'handlers': ['console', 'migrate'],
             'level': 'DEBUG',
             'propagate': True,
         },
@@ -360,7 +450,10 @@ FORCE_SCRIPT_NAME = None
 
 # ------------------------------------------------------------------------------
 # QA Settings
-PAGINATE_DEFAULT = 50  # remember to change iDisplayLength in unittestcollection.js and testlistinstance.js if you change this
+
+# remember to change iDisplayLength in unittestcollection.js and
+# testlistinstance.js if you change this
+PAGINATE_DEFAULT = 50
 
 NHIST = 5  # number of historical test results to show when reviewing/performing qa
 
@@ -370,6 +463,9 @@ ICON_SETTINGS = {
     'SHOW_STATUS_ICONS_REVIEW': True,
     'SHOW_STATUS_ICONS_HISTORY': False,
     'SHOW_REVIEW_ICONS': True,
+    'SHOW_REVIEW_LABELS_LISTING': True,
+    'SHOW_STATUS_LABELS_LISTING': True,
+    'SHOW_STATUS_LABELS_REVIEW': True,
     'SHOW_DUE_ICONS': True,
 }
 
@@ -402,13 +498,60 @@ TEST_STATUS_DISPLAY_SHORT = {
     'no_tol': "NO TOL",
 }
 
+DEFAULT_COLOURS = [
+    'rgba(60,141,188,1)',
+    'rgba(0,192,239,1)',
+    'rgba(0,166,90,1)',
+    'rgba(0,166,90,1)',
+    'rgba(243,156,18,1)',
+    'rgba(245,105,84,1)',
+    'rgba(210,214,222,1)',
+    'rgba(0,31,63,1)',
+    'rgba(240,245,2,1)',
+    'rgba(57,204,204,1)',
+    'rgba(96,92,168,1)',
+    'rgba(216,27,96,1)',
+    'rgba(1,255,112,1)',
+    'rgba(17,17,17,1)',
+]
+DEFAULT_TEST_STATUS_COLOUR = 'rgba(243,156,18,1)'
+
+USE_SERVICE_LOG = True
+USE_PARTS = True
+USE_ISSUES = False  # internal development issue tracker
+
+DEFAULT_AVAILABLE_TIMES = {
+    'hours_sunday': datetime.timedelta(hours=0, minutes=0),
+    'hours_monday': datetime.timedelta(hours=8, minutes=0),
+    'hours_tuesday': datetime.timedelta(hours=8, minutes=0),
+    'hours_wednesday': datetime.timedelta(hours=8, minutes=0),
+    'hours_thursday': datetime.timedelta(hours=8, minutes=0),
+    'hours_friday': datetime.timedelta(hours=8, minutes=0),
+    'hours_saturday': datetime.timedelta(hours=0, minutes=0),
+}
+
+TESTPACK_TIMEOUT = 30
+
+if os.path.exists('/root/.is_inside_docker'):
+    from .docker_settings import *  # NOQA
+
 # ------------------------------------------------------------------------------
 # local_settings contains anything that should be overridden
 # based on site specific requirements (e.g. deployment, development etc)
 try:
-    from local_settings import *  # NOQA
+    from .local_settings import *  # NOQA
 except ImportError:
     pass
+
+TEMPLATES[0]['OPTIONS']['debug'] = TEMPLATE_DBG
+
+# Parts must be used with service log
+USE_PARTS = USE_PARTS or USE_SERVICE_LOG
+
+DELETE_REASONS = (
+    ('Duplicate', 'Duplicate'),
+    ('Invalid', 'Invalid')
+)
 
 if FORCE_SCRIPT_NAME:
     # Fix URL for Admin Views if FORCE_SCRIPT_NAME_SET in local_settings
@@ -418,11 +561,13 @@ if FORCE_SCRIPT_NAME:
 # ------------------------------------------------------------------------------
 # Testing settings
 
-SELENIUM_VIRTUAL_DISPLAY = False # Set to True to use headless browser for testing (requires xvfb)
-SELENIUM_USE_CHROME = False # Set to True to use Chrome instead of FF (requires ChromeDriver)
-SELENIUM_CHROME_PATH = '' # Set full path of Chromedriver binary if SELENIUM_USE_CHROME == True
+SELENIUM_USE_CHROME = False  # Set to True to use Chrome instead of FF (requires ChromeDriver)
+SELENIUM_CHROME_PATH = ''  # Set full path of Chromedriver binary if SELENIUM_USE_CHROME == True
+SELENIUM_VIRTUAL_DISPLAY = False  # Set to True to use headless browser for testing (requires xvfb)
 
+if any(['test' in v for v in sys.argv]):
+    from .test_settings import *  # noqa
 
-if 'test' in sys.argv:
-
-    from test_settings import * # noqa
+if DEBUG:
+    INSTALLED_APPS.append('debug_toolbar')
+    MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')

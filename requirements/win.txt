@@ -1,4 +1,4 @@
-pywin32>=217
-django-mssql>=1.5.1,<1.6
-CherryPy==8.1.0
-
+-r base.txt
+django-pyodbc-azure==1.11.13.1
+pyreadline
+pywin32>=220

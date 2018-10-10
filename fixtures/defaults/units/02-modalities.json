@@ -1,0 +1,158 @@
+[
+{
+    "model": "units.modality",
+    "fields": {
+        "name": "6MV Photon"
+    }
+},
+{
+    "model": "units.modality",
+    "fields": {
+        "name": "10MV Photon"
+    }
+},
+{
+    "model": "units.modality",
+    "fields": {
+        "name": "15MV Photon"
+    }
+},
+{
+    "model": "units.modality",
+    "fields": {
+        "name": "18MV Photon"
+    }
+},
+{
+    "model": "units.modality",
+    "fields": {
+        "name": "6MV FFF Photon"
+    }
+},
+{
+    "model": "units.modality",
+    "fields": {
+        "name": "10MV FFF Photon"
+    }
+},
+{
+    "model": "units.modality",
+    "fields": {
+        "name": "6MeV Electron"
+    }
+},
+{
+    "model": "units.modality",
+    "fields": {
+        "name": "9MeV Electron"
+    }
+},
+{
+    "model": "units.modality",
+    "fields": {
+        "name": "11MeV Electron"
+    }
+},
+{
+    "model": "units.modality",
+    "fields": {
+        "name": "12MeV Electron"
+    }
+},
+{
+    "model": "units.modality",
+    "fields": {
+        "name": "13MeV Electron"
+    }
+},
+{
+    "model": "units.modality",
+    "fields": {
+        "name": "15MeV Electron"
+    }
+},
+{
+    "model": "units.modality",
+    "fields": {
+        "name": "17MeV Electron"
+    }
+},
+{
+    "model": "units.modality",
+    "fields": {
+        "name": "Ir192 HDR"
+    }
+},
+{
+    "model": "units.modality",
+    "fields": {
+        "name": "100kV Photon"
+    }
+},
+{
+    "model": "units.modality",
+    "fields": {
+        "name": "120kV Photon"
+    }
+},
+{
+    "model": "units.modality",
+    "fields": {
+        "name": "150kV Photon"
+    }
+},
+{
+    "model": "units.modality",
+    "fields": {
+        "name": "200kV Photon"
+    }
+},
+{
+    "model": "units.modality",
+    "fields": {
+        "name": "300kV Photon"
+    }
+},
+{
+    "model": "units.modality",
+    "fields": {
+        "name": "380kV Photon"
+    }
+},
+{
+    "model": "units.modality",
+    "fields": {
+        "name": "1.25MV Photon (Cobalt)"
+    }
+},
+{
+    "model": "units.modality",
+    "fields": {
+        "name": "6MeV HDTSE"
+    }
+},
+{
+    "model": "units.modality",
+    "fields": {
+        "name": "9MeV HDTSE"
+    }
+},
+{
+    "model": "units.modality",
+    "fields": {
+        "name": "18MeV Electron"
+    }
+},
+{
+    "model": "units.modality",
+    "fields": {
+        "name": "20MeV Electron"
+    }
+},
+{
+    "model": "units.modality",
+    "fields": {
+        "name": "22MeV Electron"
+    }
+}
+]

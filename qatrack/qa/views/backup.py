@@ -1,4 +1,4 @@
-from urllib import urlencode
+from urllib.parse import urlencode
 
 from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
@@ -105,7 +105,7 @@ class PaperForms(ListView):
         if self.request.GET.get("include_inactive", "False") != "True":
             qs = qs.filter(active=True)
 
-        return qs.select_related("unit", "testlist").prefetch_related("tests_object")
+        return qs.select_related("unit").prefetch_related("tests_object")
 
     def set_utc_all_lists(self, utcs):
 

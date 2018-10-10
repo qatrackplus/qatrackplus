@@ -1,12 +1,11 @@
 from django.conf import settings
 from django.test import TestCase
+
 from qatrack.qa import models
+from qatrack.qa.templatetags import qa_tags
 from qatrack.qa.views import forms
 
-from qatrack.qa.templatetags import qa_tags
-
-
-import utils
+from . import utils
 
 
 class TestTags(TestCase):
@@ -20,12 +19,18 @@ class TestTags(TestCase):
 
     def test_qa_value_form(self):
         form = forms.CreateTestInstanceForm()
-        rendered = qa_tags.qa_value_form(form, self.unit_test_list.tests_object)
-        self.assertIsInstance(rendered, basestring)
+        perms = {
+            'qa': {
+                'can_view_history': False,
+                'can_view_ref_tol': False,
+            }
+        }
+        rendered = qa_tags.qa_value_form(form, self.unit_test_list.tests_object, perms)
+        self.assertIsInstance(rendered, str)
 
     def test_due_date(self):
         rendered = qa_tags.as_due_date(self.unit_test_list)
-        self.assertIsInstance(rendered, basestring)
+        self.assertIsInstance(rendered, str)
 
     def test_as_pass_fail_status(self):
 
@@ -33,11 +38,11 @@ class TestTags(TestCase):
             unit_test_collection=self.unit_test_list
         )
         rendered = qa_tags.as_pass_fail_status(tli)
-        self.assertIsInstance(rendered, basestring)
+        self.assertIsInstance(rendered, str)
 
     def test_as_data_attributes(self):
         rendered = qa_tags.as_data_attributes(self.unit_test_list)
-        self.assertIsInstance(rendered, basestring)
+        self.assertIsInstance(rendered, str)
 
     def test_as_review_status(self):
         tli = utils.create_test_list_instance(unit_test_collection=self.unit_test_list)
@@ -90,10 +95,7 @@ class TestRefTolSpan(TestCase):
     def test_percent(self):
         t = models.Test(type=models.NUMERICAL)
         r = models.Reference(value=1)
-        tol = models.Tolerance(
-            type=models.PERCENT,
-            act_low=-2, tol_low=-1, tol_high=1, act_high=2,
-        )
+        tol = utils.create_tolerance(tol_type=models.PERCENT, act_low=-2, tol_low=-1, tol_high=1, act_high=2)
         result = qa_tags.reference_tolerance_span(t, r, tol)
         self.assertIn("(-2.00%", result)
 

@@ -1,0 +1,38 @@
+<span class="">
+    <button id="csv-export" class="btn btn-flat btn-primary btn-mini "><i class="icon-download icon-large"></i> Save as csv</button>
+</span>
+
+<table class="table table-hover table-condensed data-table">
+    <thead>
+        <tr>
+            {% for header in headers %}
+                <th class="header border-left-primary border-right-primary" colspan="3">{{header}}</th>
+            {% endfor %}
+        </tr>
+        <tr>
+            {% for header in headers %}
+                <th class="border-left-primary">Date</th>
+                <th>Value</th>
+                <th class="border-right-primary">Ref</th>
+            {% endfor %}
+        </tr>
+
+    </thead>
+    <tbody>
+        {% for row in rows %}
+            <tr>
+                {% for da,val,ref in row %}
+                    <td class="date border-left-primary">{{da}}</td>
+                    <td class="number">{{val}}</td>
+                    <td class="number border-right-primary">{{ref}}</td>
+                {% endfor  %}
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="3"><em>No data found</em></td>
+            </tr>
+        {% endfor %}
+    </tbody>
+
+</table>
+

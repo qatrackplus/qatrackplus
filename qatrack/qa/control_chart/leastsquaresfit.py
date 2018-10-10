@@ -2,7 +2,7 @@
 # routines for fitting histograms
 
 import numpy as np
-import matplotlib.mlab as mlab
+import scipy.stats
 from scipy.optimize import curve_fit
 
 np.seterr("ignore")
@@ -47,5 +47,5 @@ def gauss_pdf(x, norm, mu, sigma):
     if any(np.isnan([norm, mu, sigma])) or any(np.isnan(x)):
         return np.NaN
 
-    GaussPdf = norm * mlab.normpdf(x, mu, sigma)
+    GaussPdf = norm * scipy.stats.norm.pdf(x, mu, sigma)
     return GaussPdf

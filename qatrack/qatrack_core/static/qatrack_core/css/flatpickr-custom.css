@@ -1,0 +1,23 @@
+
+.flatpickr-day {
+    border-radius: 0 !important;
+}
+.flatpickr-day.selected {
+    background-color: #627585 !important;
+    border-color: #627585 !important;
+}
+span.flatpickr-day.disabled {
+    opacity: 0.6 !important;
+}
+.flatpickr-day.nextMonthDay {
+    color: #393939 !important;
+    font-weight: normal;
+}
+.flatpickr-day {
+    font-weight: bold;
+}
+div.flatpickr-calendar {
+    box-shadow: 2px 6px 4px rgba(53, 124, 165, .25);
+    border: 1px solid #bbb;
+    border-radius: 0;
+}

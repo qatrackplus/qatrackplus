@@ -3,7 +3,7 @@ from django.db import models
 from django.contrib.auth.models import Group
 
 # this import has to be here so that the signal handlers get registered
-import handlers  # NOQA
+from . import handlers  # NOQA
 
 
 TOLERANCE = 10
@@ -20,9 +20,9 @@ WARNING_LEVELS = (
 
 class NotificationSubscription(models.Model):
 
-    group = models.ForeignKey(Group, unique=True)
+    group = models.OneToOneField(Group)
 
     warning_level = models.IntegerField(choices=WARNING_LEVELS)
 
-    def __unicode__(self):
+    def __str__(self):
         return "<NotificationSubscription(%s)>" % self.group.name

@@ -1,0 +1,297 @@
+#chart {
+    min-width: 300px;
+}
+
+#instructions-container {
+    padding: 2px 14px 2px 14px;
+    margin-bottom:3px;
+    min-height:14px;
+}
+
+#chart-options hr{
+    margin: 4px;
+}
+#chart-options .title {
+    font-weight: bold;
+}
+#chart-options .title > div {
+    margin-bottom: 5px;
+}
+
+div.chart-option-header {
+    background-color: #bebebe;
+}
+
+/*.control-container {*/
+    /*position:relative;*/
+    /*margin:5px 0;*/
+    /*padding: 10px 5px 5px 5px;*/
+    /*border:1px solid #DDD;*/
+    /*background-color:#F9F9F9;*/
+    /*-webkit-border-radius:4px;*/
+    /*-moz-border-radius:4px;*/
+    /*border-radius:4px;*/
+/*}*/
+/*.control-container:after{*/
+    /*position:absolute;*/
+    /*top:-1px;*/
+    /*left:-1px;*/
+    /*padding:3px;*/
+    /*font-size:12px;*/
+    /*font-weight:bold;*/
+    /*background-color:whiteSmoke;*/
+    /*border:1px solid #DDD;*/
+    /*-webkit-border-radius: 4px 0 4px 0;*/
+    /*-moz-border-radius: 4px 0 4px 0;*/
+    /*border-radius: 4px 0 4px 0;*/
+/*}*/
+/*.control-container label {*/
+    /*display: block;*/
+    /*padding-left: 15px;*/
+    /*text-indent: -15px;*/
+    /*white-space: nowrap;*/
+    /*font-weight: normal;*/
+    /*font-size: 13px;*/
+/*}*/
+/*.control-container label:hover {*/
+    /*background-color: #e1e3e9;*/
+/*}*/
+/*.control-container label > input {*/
+    /*width: 13px;*/
+    /*height: 13px;*/
+    /*padding: 0;*/
+    /*margin:0 !important;*/
+    /*vertical-align: bottom;*/
+    /*position: relative !important;*/
+    /*top: -1px;*/
+    /**overflow: hidden;*/
+/*}*/
+#chart-type-container {
+    border: 1px solid #d2d6de;
+    margin-top: 5px;
+    padding: 5px 10px 0 10px;
+}
+.options {
+    border-bottom: solid #ddd 1px;
+}
+
+input.date-only-input{
+    width:70px;
+}
+
+.please-wait {
+  margin-bottom: 2px;
+  border: 1px solid #e5e5e5;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+}
+#chart-actions {
+    padding-top: 5px;
+}
+.checkbox-container {
+    overflow-x: hidden;
+    overflow-y: hidden;
+}
+.checkbox-container:hover {
+    overflow-y: auto;
+}
+#status-checkboxes {
+    height: 50px;
+}
+.faded {
+    opacity: 1e-6;
+    transition: opacity 200ms ease-in-out;
+}
+.not-faded {
+    opacity: 1;
+    transition: opacity 200ms ease-in-out;
+}
+#chart-options {
+    border: 1px solid #ddd;
+    padding: 0;
+}
+.chart-options-subbox:not(#cc-chart-options) {
+    padding-top: 5px;
+}
+.chart-options-subbox:not(:nth-child(1)):not(#cc-chart-options) {
+    border-top: 1px solid #ddd;
+}
+.chart-options-subbox > .row {
+    margin: 0;
+}
+.chart-options-subbox > .row > .col-sm-12 {
+    padding: 0;
+}
+.chart-options-subbox > .row > .col-sm-12 > .form-group {
+    margin: 0 0 10px 0;
+}
+.chart-options-subbox .title {
+    padding: 0 5px 5px 5px;
+}
+/*.test-filter{*/
+    /*height:262px;*/
+    /*padding-top: 5px;*/
+/*}*/
+/*#test {*/
+    /*height: 233px;*/
+    /*padding-top: 5px;*/
+/*}*/
+
+.link-buttons {
+    border-left: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+    margin-left: 15px;
+    height: 55px;
+    padding: 0;
+}
+/**********************************************/
+/* Trending data table                        */
+tr.col-group th{
+    border-bottom:1px solid #ddd;
+    text-align:center;
+}
+#data-container {
+    padding-top:20px;
+}
+#data-container .well{
+    overflow-x:auto;
+}
+table.data-table{
+    width:auto;
+}
+.table > tbody > tr > td {
+    border: none;
+}
+table tr td.border-right-primary,
+table tr th.border-right-primary {
+    border-right: 1px solid #ddd;
+}
+table tr td.border-left-primary,
+table tr th.border-left-primary {
+    border-left: 1px solid #ddd;
+}
+table tr:last-child td {
+    border-bottom: 1px solid #ddd;
+}
+table thead tr:first-child th {
+    border-top: 1px solid #ddd !important;
+}
+.data-table th{
+    text-align:center;
+    max-width:100px;
+}
+.data-table td{
+}
+.data-table td.date{
+    width:170px;
+}
+.data-table td.number{
+    text-align:right;
+}
+#csv-export {
+    margin: 5px;
+}
+#filter-box {
+    position: relative;
+    overflow-y: scroll;
+    /*overflow-x: hidden;*/
+}
+#filter-resizer,
+#chart-resizer {
+    cursor: ns-resize;
+}
+#filter-resizer:hover,
+#chart-resizer:hover {
+    background-color: #d9dadd;
+}
+
+/************************************************/
+/* D3 */
+.y.axis .tick line {
+    stroke: #ddd;
+    /*shape-rendering: crispEdges;*/
+}
+.line {
+    fill: none;
+    /*stroke-width: 1.5px;*/
+}
+.legend-box {
+    cursor: pointer;
+}
+#mouse-tracker,
+.context .brush {
+    stroke: #E6E7E8;
+    stroke-width: 1px;
+}
+rect.handle {
+    width: 6px;
+    /*stroke: #888;*/
+    visibility: hidden;
+}
+.hover-line {
+    stroke: #E6E7E8;
+    fill: none;
+    stroke-width: 1px;
+    left: 10px;
+    shape-rendering: crispEdges;
+    /*opacity: 1e-6;*/
+}
+.hover-text {
+    stroke: none;
+    font-size: 12px;
+    font-weight: bold;
+    color: #222;
+    fill: #222;
+}
+.tooltip {
+    font-weight: normal;
+}
+.brush .extent {
+    stroke: #FFF;
+    shape-rendering: crispEdges;
+}
+rect.selection {
+    stroke: #222222;
+}
+.hidden {
+    display: none;
+}
+.ok {
+    fill: #00a65a;
+}
+.tol {
+    fill: #f39c12;
+}
+line.horizontalGrid {
+    fill: none;
+    shape-rendering: crispEdges;
+    /*stroke: #bbb;*/
+    stroke-width: 1px;
+}
+.se-tooltip-main {
+    width: 165px;
+}
+rect.toggle-series-box {
+    opacity: 0.7;
+}
+rect.toggle-series-box:hover {
+    opacity: 1;
+}
+rect.toggle-ref-tol-box {
+    opacity: 0.7;
+}
+rect.toggle-ref-tol-box:hover {
+    opacity: 1;
+}
+rect.toggle-ref-tol-box.hidden-toggle {
+    fill: #ddd !important;
+    stroke: #ccc !important;
+}
+.se-type {
+    max-width: 100px;
+    overflow-x: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}

@@ -1,0 +1,38 @@
+[
+{
+    "model": "service_log.servicetype",
+    "fields": {
+        "name": "Minor",
+        "is_review_required": false,
+        "is_active": true,
+        "description": "Anything that is not part of a routine schedule and requires intervention without parts replacement."
+    }
+},
+{
+    "model": "service_log.servicetype",
+    "fields": {
+        "name": "Preventive",
+        "is_review_required": false,
+        "is_active": true,
+        "description": "Anything that is recommended by the manufacturer for routine (e.g. daily, weekly, monthly, quarterly and annual) maintenance and is on a schedule."
+    }
+},
+{
+    "model": "service_log.servicetype",
+    "fields": {
+        "name": "Extensive",
+        "is_review_required": true,
+        "is_active": true,
+        "description": "Any repair that is not part of a routine schedule and involves the replacement of parts. In addition, any action that involves changes to ANY operating parameter (i.e. steering coils, gun current, readout calibration, etc.)."
+    }
+},
+{
+    "model": "service_log.servicetype",
+    "fields": {
+        "name": "Safety Systems",
+        "is_review_required": true,
+        "is_active": true,
+        "description": "Any repair that involves a CNSC regulated safety system. Examples are in-room monitors, room interlocks, prim alert, etc."
+    }
+}
+]

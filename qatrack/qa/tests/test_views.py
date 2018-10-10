@@ -1,36 +1,42 @@
-from urllib import urlencode
-
-from django.conf import settings
-from django.contrib.auth.models import User, Group
-from django.core.urlresolvers import reverse
-from django.test import TestCase
-from django.test.client import RequestFactory
-from django.test.utils import setup_test_environment
-from django.utils import unittest, timezone
-from qatrack.qa import models, views
-from qatrack.qa.views import forms
-
 import calendar
-import qatrack.qa.views.perform
-import qatrack.qa.views.charts
-import qatrack.qa.views.review
-import qatrack.qa.views.base
-import qatrack.qa.views.backup
-import django.forms
+import glob
 import json
 import os
-import glob
 import random
-import StringIO
-import utils
+from urllib.parse import urlencode
 
+from django.conf import settings
+from django.contrib.auth.models import Group, User
+from django.contrib.sites.shortcuts import get_current_site
+from django.core.urlresolvers import reverse
+import django.forms
+from django.test import TestCase
+from django.test.client import RequestFactory
+from django.utils import timezone
+from django_comments.models import Comment
+from freezegun import freeze_time
+
+from qatrack.attachments.models import Attachment
+from qatrack.qa import models, views
+from qatrack.qa.views import forms
+import qatrack.qa.views.backup
+import qatrack.qa.views.base
+import qatrack.qa.views.charts
+import qatrack.qa.views.perform
+import qatrack.qa.views.review
+from qatrack.units import models as u_models
+
+from . import utils
 
 logger = qatrack.qa.views.base.logger
 
 
 class MockUser(object):
+
     def has_perm(self, *args):
         return True
+
+
 superuser = MockUser()
 
 
@@ -51,15 +57,16 @@ class TestURLS(TestCase):
 
         utils.create_status()
         u1 = utils.create_unit(number=1, name="u1")
-        utils.create_unit(number=2, name="u2", )
+        utils.create_unit(
+            number=2,
+            name="u2",
+        )
         utc = utils.create_unit_test_collection(unit=u1)
         tli = utils.create_test_list_instance(unit_test_collection=utc)
 
         url_names = (
             ("home", {}),
-
             ("all_lists", {}),
-
             ("charts", {}),
             ("chart_data", {}),
             ("control_chart", {}),
@@ -72,26 +79,20 @@ class TestURLS(TestCase):
             ("choose_review_unit", {}),
             ("review_by_unit", {"unit_number": "1"}),
             ("review_by_unit", {"unit_number": "1/2"}),
-
             ("complete_instances", {}),
-
             ("review_test_list_instance", {"pk": "%d" % tli.pk}),
-
             ("unreviewed", {}),
-
             ("in_progress", {}),
-
             ("edit_tli", {"pk": "%d" % (tli.pk)}),
             ("choose_unit", {}),
             ("perform_qa", {"pk": "%d" % utc.pk}),
             ("qa_by_unit", {"unit_number": "1"}),
             ("qa_by_frequency", {"frequency": "daily/ad-hoc"}),
             ("qa_by_unit_frequency", {"unit_number": "1", "frequency": "daily/ad-hoc"}),
-        )
+        )  # YAPF:disable
 
         for url, kwargs in url_names:
             logger.info("\t > testing: " + url)
-
             self.assertTrue(self.returns_200(reverse(url, kwargs=kwargs)))
 
     def test_login(self):
@@ -99,11 +100,6 @@ class TestURLS(TestCase):
 
     def test_login_redirect(self):
         self.assertTrue(self.returns_200(settings.LOGIN_REDIRECT_URL))
-
-    def test_composite(self):
-        url = reverse("composite")
-
-        self.assertTrue(self.returns_200(url, method="post"))
 
     def test_perform(self):
         utils.create_status()
@@ -243,12 +239,7 @@ class TestControlImage(TestCase):
 
         # generate some data that the control chart fit function won't be able to fit
         for x in range(10):
-            utils.create_test_instance(
-                tli,
-                value=x,
-                status=status,
-                unit_test_info=uti
-            )
+            utils.create_test_instance(tli, value=x, status=status, unit_test_info=uti)
 
         request = self.factory.get(url)
         request.user = superuser
@@ -284,12 +275,7 @@ class TestControlImage(TestCase):
         qatrack.qa.control_chart.control_chart.display = mock_display
         # generate some data that the control chart fit function won't be able to fit
         for x in range(10):
-            utils.create_test_instance(
-                tli,
-                value=x,
-                status=status,
-                unit_test_info=uti
-            )
+            utils.create_test_instance(tli, value=x, status=status, unit_test_info=uti)
 
         request = self.factory.get(url)
         request.user = superuser
@@ -322,16 +308,16 @@ class TestChartView(TestCase):
         url = reverse("charts_testlists")
         request = self.factory.get(url)
         response = qatrack.qa.views.charts.get_test_lists_for_unit_frequencies(request)
-        values = json.loads(response.content)
-        expected = {"test_lists": [tl.pk for tl in self.tls]}
-        self.assertDictEqual(values, expected)
+        values = json.loads(response.content.decode("UTF-8"))
+        expected = {tl.pk for tl in self.tls}
+        assert expected == set(values['test_lists'])
 
     def test_get_test_lists_for_unit_frequencies_filtered(self):
 
-        url = reverse("charts_testlists")+"?units[]=%d" % (self.units[0].pk)
+        url = reverse("charts_testlists") + "?units[]=%d" % (self.units[0].pk)
         request = self.factory.get(url)
         response = qatrack.qa.views.charts.get_test_lists_for_unit_frequencies(request)
-        values = json.loads(response.content)
+        values = json.loads(response.content.decode("UTF-8"))
         expected = {"test_lists": [self.tls[0].pk]}
         self.assertDictEqual(values, expected)
 
@@ -340,32 +326,25 @@ class TestChartView(TestCase):
         url = reverse("charts_tests")
         request = self.factory.get(url)
         response = qatrack.qa.views.charts.get_tests_for_test_lists(request)
-        values = json.loads(response.content)
+        values = json.loads(response.content.decode("UTF-8"))
         expected = {"tests": [t.pk for t in self.tests]}
         self.assertDictEqual(values, expected)
 
     def test_get_tests_for_test_lists_filtered(self):
 
-        url = reverse("charts_tests")+"?test_lists[]=%d" % (self.tls[0].pk)
+        url = reverse("charts_tests") + "?test_lists[]=%d" % (self.tls[0].pk)
         request = self.factory.get(url)
         response = qatrack.qa.views.charts.get_tests_for_test_lists(request)
-        values = json.loads(response.content)
+        values = json.loads(response.content.decode("UTF-8"))
         expected = {"tests": [self.tests[0].pk]}
         self.assertDictEqual(values, expected)
 
     def test_instance_to_point_relative_with_none_tol(self):
 
         ref = qatrack.qa.models.Reference(value=100)
-        tol = utils.create_tolerance(
-            tol_type=models.PERCENT,
-            tol_low=None,
-            tol_high=None
-        )
-        ti = qatrack.qa.models.TestInstance(
-            reference=ref,
-            tolerance=tol,
-            value=100
-        )
+        tol = utils.create_tolerance(tol_type=models.PERCENT, tol_low=None, tol_high=None)
+        ti = qatrack.qa.models.TestInstance(reference=ref, tolerance=tol, value=100)
+        ti.test_list_instance = qatrack.qa.models.TestListInstance()
         ti.value_display = lambda: str(ti.value)
         view = views.charts.BaseChartView()
         point = view.test_instance_to_point(ti, relative=True)
@@ -392,7 +371,9 @@ class TestChartData(TestCase):
         utils.create_test_list_membership(self.tl2, self.test1)
 
         self.utc1 = utils.create_unit_test_collection(test_collection=self.tl1)
-        self.utc2 = utils.create_unit_test_collection(unit=self.utc1.unit, test_collection=self.tl2, frequency=self.utc1.frequency)
+        self.utc2 = utils.create_unit_test_collection(
+            unit=self.utc1.unit, test_collection=self.tl2, frequency=self.utc1.frequency
+        )
 
         self.uti1 = models.UnitTestInfo.objects.get(test=self.test1)
         self.uti1.reference = ref
@@ -407,22 +388,28 @@ class TestChartData(TestCase):
         self.NPOINTS = 10
         for x in range(self.NPOINTS):
             tli = utils.create_test_list_instance(unit_test_collection=self.utc1)
-            ti = utils.create_test_instance(value=1., status=self.status, unit_test_info=self.uti1, test_list_instance=tli)
+            ti = utils.create_test_instance(
+                value=1., status=self.status, unit_test_info=self.uti1, test_list_instance=tli
+            )
             ti.reference = ref
             ti.tolerance = tol
             ti.save()
 
             tli2 = utils.create_test_list_instance(unit_test_collection=self.utc2)
-            ti2 = utils.create_test_instance(value=1., status=self.status, unit_test_info=self.uti1, test_list_instance=tli2)
+            ti2 = utils.create_test_instance(
+                value=1., status=self.status, unit_test_info=self.uti1, test_list_instance=tli2
+            )
             ti2.reference = ref
             ti2.tolerance = per_tol
             ti2.save()
 
-            if x < self.NPOINTS/2:
+            if x < self.NPOINTS // 2:
                 # create less points for one tests to ensure tabulation routines
                 # can handle data sets of different lengths
                 tli2 = utils.create_test_list_instance(unit_test_collection=self.utc2)
-                ti2 = utils.create_test_instance(value=1.5, status=self.status, unit_test_info=self.uti2, test_list_instance=tli2)
+                ti2 = utils.create_test_instance(
+                    value=1.5, status=self.status, unit_test_info=self.uti2, test_list_instance=tli2
+                )
                 ti2.reference = ref
                 ti2.tolerance = per_tol
                 ti2.save()
@@ -437,9 +424,13 @@ class TestChartData(TestCase):
             "statuses[]": [self.status.pk],
         }
         resp = self.client.get(self.url, data=data)
-        data = json.loads(resp.content)
-        expected = [1.]*self.NPOINTS
-        actual = [x['value'] for x in data['data']['unit - tl1 :: test1']]
+        data = json.loads(resp.content.decode("UTF-8"))
+        expected = [1.] * self.NPOINTS
+        unit_name = self.utc1.unit.name
+        tli_name = self.tl1.name
+        actual = [
+            x['value'] for x in data['plot_data']['series']['%s - %s :: test1' % (unit_name, tli_name)]['series_data']
+        ]
         self.assertListEqual(actual, expected)
 
     def test_basic_data_relative(self):
@@ -451,9 +442,15 @@ class TestChartData(TestCase):
             "relative": "true",
         }
         resp = self.client.get(self.url, data=data)
-        data = json.loads(resp.content)
-        expected = [50.]*(self.NPOINTS/2)
-        actual = [x['value'] for x in data['data']['unit - tl2 :: test2 (relative to ref)']]
+        data = json.loads(resp.content.decode("UTF-8"))
+        expected = [50.] * (self.NPOINTS // 2)
+        unit_name = self.utc1.unit.name
+        tl2_name = self.tl2.name
+        actual = [
+            x['value']
+            for x in data['plot_data']['series']['%s - %s :: test2 (relative to ref)' % (unit_name,
+                                                                                         tl2_name)]['series_data']
+        ]
         self.assertListEqual(actual, expected)
 
     def test_basic_data_combined(self):
@@ -465,9 +462,10 @@ class TestChartData(TestCase):
             "combine_data": "true"
         }
         resp = self.client.get(self.url, data=data)
-        data = json.loads(resp.content)
-        expected = [1.]*(2*self.NPOINTS)
-        actual = [x['value'] for x in data['data']['unit :: test1']]
+        data = json.loads(resp.content.decode("UTF-8"))
+        expected = [1.] * (2 * self.NPOINTS)
+        unit_name = self.utc1.unit.name
+        actual = [x['value'] for x in data['plot_data']['series']['%s :: test1' % unit_name]['series_data']]
         self.assertListEqual(actual, expected)
 
     def test_export_csv_view(self):
@@ -481,7 +479,7 @@ class TestChartData(TestCase):
         }
         resp = self.client.get(url, data=data)
         expected_nlines = 2 + 10 + 1  # 2 header  + 10 rows data + 1 blank
-        self.assertTrue(len(resp.content.split('\n')), expected_nlines)
+        self.assertTrue(len(resp.content.decode("UTF-8").split('\n')), expected_nlines)
 
         self.assertEqual(resp.get('Content-Disposition'), 'attachment; filename="qatrackexport.csv"')
 
@@ -493,33 +491,43 @@ class TestComposite(TestCase):
         self.view = views.perform.CompositeCalculation.as_view()
         self.url = reverse("composite")
 
+        self.user = utils.create_user()
+        self.unit = utils.create_unit()
+        self.test_list = utils.create_test_list()
         self.t1 = utils.create_test(name="test1")
         self.t2 = utils.create_test(name="test2")
         self.tc = utils.create_test(name="testc", test_type=models.COMPOSITE)
         self.tc.calculation_procedure = "result = test1 + test2"
         self.tc.save()
+        for t in [self.t1, self.t2, self.tc]:
+            utils.create_test_list_membership(self.test_list, t)
+            utils.create_unit_test_info(test=t, unit=self.unit)
 
     def test_composite(self):
 
         data = {
-            u'qavalues': {"testc": "", "test1": 1, "test2": 2},
-            u'composite_ids': [u'%d' % self.tc.pk],
-            u'meta': {},
+            'tests': {
+                "testc": "",
+                "test1": 1,
+                "test2": 2
+            },
+            'meta': {},
+            'test_list_id': self.test_list.id,
+            'unit_id': self.unit.id,
         }
-        request = self.factory.post(
-            self.url,
-            content_type='application/json',
-            data=json.dumps(data)
-        )
+        request = self.factory.post(self.url, content_type='application/json', data=json.dumps(data))
+        request.user = self.user
         response = self.view(request)
-        values = json.loads(response.content)
+        values = json.loads(response.content.decode("UTF-8"))
 
         expected = {
             "errors": [],
             "results": {
                 "testc": {
                     "value": 3.0,
-                    "error": None
+                    "error": None,
+                    "user_attached": [],
+                    "comment": None,
                 }
             },
             "success": True
@@ -529,88 +537,134 @@ class TestComposite(TestCase):
     def test_invalid_values(self):
 
         data = {
-            u'composite_ids': [u'%d' % self.tc.pk],
-            u'meta': {},
+            'test_list_id': self.test_list.id,
+            'unit_id': self.unit.id,
+            'meta': {},
         }
 
         request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
+        request.user = self.user
         response = self.view(request)
-        values = json.loads(response.content)
+        values = json.loads(response.content.decode("UTF-8"))
 
-        expected = {
-            "errors": ['Invalid QA Values'],
-            "success": False
-        }
+        expected = {"errors": ['Invalid QA Values'], "success": False}
         self.assertDictEqual(values, expected)
 
     def test_invalid_number(self):
 
         data = {
-            u'qavalues': {
-                "testc": {"name": "testc", "current_value": ""}, "test1": {"name": "test1", "current_value": 1}, "test2": {"name": "test2", "current_value": "abc"}
+            'tests': {
+                "testc": {
+                    "name": "testc",
+                    "current_value": ""
+                },
+                "test1": {
+                    "name": "test1",
+                    "current_value": 1
+                },
+                "test2": {
+                    "name": "test2",
+                    "current_value": "abc"
+                }
             },
-            u'composite_ids': [u'%d' % self.tc.pk],
-            u'meta': {},
+            'test_list_id': self.test_list.id,
+            'unit_id': self.unit.id,
+            'meta': {},
         }
 
         request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
+        request.user = self.user
         response = self.view(request)
 
-        values = json.loads(response.content)
+        values = json.loads(response.content.decode("UTF-8"))
 
         expected = {
-            "errors": [],
-            "success": True,
+            'errors': [],
             'results': {
                 'testc': {
-                    'error': u'Invalid Test', u'value': None
+                    'error': (
+                        'Invalid Test Procedure: testc", line 2, in '
+                        'testc\n'
+                        'TypeError: unsupported operand type(s) for +: '
+                        "'dict' and 'dict'\n"
+                    ),
+                    'user_attached': [],
+                    "comment": "",
+                    'value':
+                        None
                 }
             },
+            'success': True
         }
+        self.assertDictEqual(values, expected)
+
+    def test_missing_test_list_id(self):
+        request = self.factory.post(self.url, content_type="application/json", data=json.dumps({}))
+        request.user = self.user
+        response = self.view(request)
+        values = json.loads(response.content.decode("UTF-8"))
+        expected = {"errors": ["Invalid or missing test_list_id"], "success": False}
+        self.assertDictEqual(values, expected)
+
+    def test_missing_unit_id(self):
+        data = {'test_list_id': self.test_list.id}
+        request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
+        request.user = self.user
+        response = self.view(request)
+        values = json.loads(response.content.decode("UTF-8"))
+        expected = {"errors": ["Invalid or missing unit_id"], "success": False}
         self.assertDictEqual(values, expected)
 
     def test_invalid_composite(self):
 
+        self.tc.delete()
         data = {
-            u'qavalues': {"testc": "", "test1": 1, "test2": "abc"},
-            u'composite_ids': [],
-            u'meta': '{}',
+            'tests': {
+                "test1": 1,
+                "test2": "abc"
+            },
+            'meta': '{}',
+            'test_list_id': self.test_list.id,
+            'unit_id': self.unit.id,
         }
 
         request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
+        request.user = self.user
         response = self.view(request)
-        values = json.loads(response.content)
+        values = json.loads(response.content.decode("UTF-8"))
 
-        expected = {
-            "errors": ["No Valid Composite ID's"],
-            "success": False
-        }
+        expected = {"errors": ["No Valid Composite ID's"], "success": False}
         self.assertDictEqual(values, expected)
 
     def test_no_composite(self):
 
+        self.tc.delete()
         data = {
-            u'qavalues': {"testc": "", "test1": 1, "test2": 2},
-            u'meta': '{}',
+            'tests': {
+                "test1": 1,
+                "test2": 2
+            },
+            'test_list_id': self.test_list.id,
+            'unit_id': self.unit.id,
+            'meta': '{}',
         }
 
         request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
+        request.user = self.user
         response = self.view(request)
-        values = json.loads(response.content)
+        values = json.loads(response.content.decode("UTF-8"))
 
-        expected = {
-            "errors": ["No Valid Composite ID's"],
-            "success": False
-        }
+        expected = {"errors": ["No Valid Composite ID's"], "success": False}
         self.assertDictEqual(values, expected)
 
     def test_invalid_json(self):
 
-        data = '{"qavalues": {"testc"}, u"meta": {}, }'
+        data = '{"tests": {"testc"}, u"meta": {}, }'
 
         request = self.factory.post(self.url, content_type="application/json", data=data)
+        request.user = self.user
         response = self.view(request)
-        values = json.loads(response.content)
+        values = json.loads(response.content.decode("UTF-8"))
 
         self.assertEqual(values["success"], False)
 
@@ -620,23 +674,36 @@ class TestComposite(TestCase):
         self.tc.save()
 
         data = {
-            u'qavalues': {"testc": "", "test1": 1, "test2": 2},
-            u'composite_ids': [u'%d' % self.tc.pk],
-            u'meta': {},
+            'tests': {
+                "testc": "",
+                "test1": 1,
+                "test2": 2
+            },
+            'test_list_id': self.test_list.id,
+            'unit_id': self.unit.id,
+            'meta': {},
         }
 
         request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
+        request.user = self.user
         response = self.view(request)
-        values = json.loads(response.content)
+        values = json.loads(response.content.decode("UTF-8"))
+
         expected = {
-            "errors": [],
-            "results": {
-                "testc": {
-                    "value": None,
-                    "error": "Invalid Test",
+            'errors': [],
+            'results': {
+                'testc': {
+                    'error': (
+                        'Invalid Test Procedure: testc", line 2, in '
+                        'testc\n'
+                        "NameError: name 'foo' is not defined\n"
+                    ),
+                    'user_attached': [],
+                    "comment": "",
+                    'value': None,
                 }
             },
-            "success": True
+            'success': True
         }
         self.assertDictEqual(values, expected)
 
@@ -649,35 +716,45 @@ class TestComposite(TestCase):
         self.cyclic2 = utils.create_test(name="cyclic2", test_type=models.COMPOSITE)
         self.cyclic2.calculation_procedure = "result = cyclic1 + test1"
         self.cyclic2.save()
+        utils.create_test_list_membership(self.test_list, self.cyclic1)
+        utils.create_test_list_membership(self.test_list, self.cyclic2)
 
         data = {
-            u'qavalues': {"testc": "", "cyclic1": "", "cyclic2": "", "test1": 1, "test2": 2},
-            u'composite_ids': [u'%d' % t for t in (self.tc.pk, self.cyclic1.pk, self.cyclic2.pk)],
-            u'meta': {},
+            'tests': {
+                "testc": "",
+                "cyclic1": "",
+                "cyclic2": "",
+                "test1": 1,
+                "test2": 2
+            },
+            'test_list_id': self.test_list.id,
+            'unit_id': self.unit.id,
+            'meta': {},
         }
 
         request = self.factory.post(self.url, content_type="application/json", data=json.dumps(data))
+        request.user = self.user
         response = self.view(request)
-        values = json.loads(response.content)
+        values = json.loads(response.content.decode("UTF-8"))
 
         expected = {
             'errors': [],
-            u'results': {
+            'results': {
                 'cyclic1': {
-                    'error': u'Cyclic test dependency',
+                    'error': 'Cyclic test dependency',
                     'value': None
                 },
                 'cyclic2': {
-                    'error': u'Cyclic test dependency',
-                    u'value': None
+                    'error': 'Cyclic test dependency',
+                    'value': None
                 },
                 'testc': {
                     'error': None,
-                    'value': 3.0
+                    'value': 3.0,
+                    "user_attached": [],
+                    "comment": None,
                 }
             },
-
-
             'success': True,
         }
         self.assertDictEqual(values, expected)
@@ -724,7 +801,10 @@ class TestPerformQA(TestCase):
         with open(self.filepath, "w") as f:
             f.write("")
 
-        self.tests = [self.t_simple, self.t_const, self.t_comp, self.t_mult, self.t_bool, self.t_string, self.t_upload, self.t_string_comp]
+        self.tests = [
+            self.t_simple, self.t_const, self.t_comp, self.t_mult, self.t_bool, self.t_string, self.t_upload,
+            self.t_string_comp
+        ]
 
         for idx, test in enumerate(self.tests):
             utils.create_test_list_membership(self.test_list, test, idx)
@@ -732,9 +812,7 @@ class TestPerformQA(TestCase):
         group = Group(name="foo")
         group.save()
 
-        self.unit_test_list = utils.create_unit_test_collection(
-            test_collection=self.test_list
-        )
+        self.unit_test_list = utils.create_unit_test_collection(test_collection=self.test_list)
 
         self.unit_test_infos = []
         for test in self.tests:
@@ -771,13 +849,11 @@ class TestPerformQA(TestCase):
         for idx in idxs:
             if not self.tests[idx].type == models.STRING_COMPOSITE:
                 self.assertEqual(
-                    response.context["formset"].forms[idx].fields["value"].widget.attrs["readonly"],
-                    "readonly"
+                    response.context["formset"].forms[idx].fields["value"].widget.attrs["readonly"], "readonly"
                 )
             else:
                 self.assertEqual(
-                    response.context["formset"].forms[idx].fields["string_value"].widget.attrs["readonly"],
-                    "readonly"
+                    response.context["formset"].forms[idx].fields["string_value"].widget.attrs["readonly"], "readonly"
                 )
 
     def test_bool_widget(self):
@@ -814,11 +890,29 @@ class TestPerformQA(TestCase):
         # user is redirected if form submitted successfully
         self.assertEqual(response.status_code, 302)
 
+    def test_perform_in_progress_no_data(self):
+        """Test list should be allowed to be saved with no data if it is in progress"""
+        data = {
+            "work_started": "11-07-2012 00:09",
+            "status": self.status.pk,
+            "form-TOTAL_FORMS": len(self.tests),
+            "form-INITIAL_FORMS": len(self.tests),
+            "form-MAX_NUM_FORMS": "",
+            "in_progress": True,
+        }
+
+        response = self.client.post(self.url, data=data)
+
+        self.assertTrue(1, models.TestListInstance.objects.in_progress().count())
+        self.assertTrue(len(self.tests), models.TestInstance.objects.in_progress().count())
+        # user is redirected if form submitted successfully
+        self.assertEqual(response.status_code, 302)
+
     def set_form_data(self, data):
         for test_idx, uti in enumerate(self.unit_test_infos):
             if uti.test.type == models.UPLOAD:
                 data["form-%d-string_value" % test_idx] = self.filename
-            if uti.test.type in (models.STRING, ):
+            if uti.test.type in (models.STRING,):
                 data["form-%d-string_value" % test_idx] = "test"
             else:
                 data["form-%d-value" % test_idx] = 1
@@ -858,7 +952,6 @@ class TestPerformQA(TestCase):
 
     def test_perform_invalid_work_started(self):
         data = {
-
             "work_completed": "11-07-2050 00:10",
             "work_started": "11-07-2050 00:09",
             "status": self.status.pk,
@@ -888,7 +981,7 @@ class TestPerformQA(TestCase):
 
         # user is redirected if form submitted successfully
         self.assertEqual(response.status_code, 302)
-        self.assertEqual("http://testserver/", response._headers['location'][1])
+        self.assertEqual("/", response['location'])
 
     def test_perform_valid_redirect_non_statff(self):
         data = {
@@ -1076,12 +1169,15 @@ class TestPerformQA(TestCase):
         self.assertEqual(response.context["current_day"], 1)
         self.assertEqual(response.context["last_day"], None)
 
-        utils.create_test_list_instance(unit_test_collection=utc, test_list=tl1, day=0)
+        work_completed = timezone.now()
+        utils.create_test_list_instance(unit_test_collection=utc, test_list=tl1, day=0, work_completed=work_completed)
         response = self.client.get(url)
         self.assertEqual(response.context["current_day"], 2)
         self.assertEqual(response.context["last_day"], 1)
 
-        utils.create_test_list_instance(unit_test_collection=utc, test_list=tl2, day=1)
+        work_completed += timezone.timedelta(days=1)
+        utils.create_test_list_instance(unit_test_collection=utc, test_list=tl2, day=1, work_completed=work_completed)
+
         response = self.client.get(url)
         self.assertEqual(response.context["current_day"], 1)
         self.assertEqual(response.context["last_day"], 2)
@@ -1122,50 +1218,83 @@ class TestAJAXUpload(TestCase):
         self.test = utils.create_test('test upload')
         self.test.type = models.UPLOAD
         self.test.calculation_procedure = """
+
 import json
 result = json.load(FILE)
 """
         self.test.save()
 
-        self.test_file = StringIO.StringIO("""
-{
-    "foo": 1.2,
-    "bar": [1, 2, 3, 4],
-    "baz": {
-        "baz1": "test"
-    }
-}
-""")
+        self.test_list = utils.create_test_list()
+        utils.create_test_list_membership(self.test_list, self.test)
 
-        self.test_file.name = "TESTRUNNER_test_file"
+        fname = os.path.join(os.path.dirname(__file__), "TESTRUNNER_test_file.json")
+        self.test_file = open(fname, "r")
         self.unit_test_info = utils.create_unit_test_info(test=self.test)
         self.client.login(username="user", password="password")
 
     def tearDown(self):
         import glob
         for f in glob.glob(os.path.join(settings.TMP_UPLOAD_ROOT, "TESTRUNNER*")):
-            os.remove(f)
+            try:
+                os.remove(f)
+            except PermissionError as e:
+                print(">>> Could not delete %s because %s" % (f, e))
+
+        for a in Attachment.objects.all():
+            if os.path.isfile(a.attachment.path):
+                try:
+                    os.remove(a.attachment.path)
+                except PermissionError as e:
+                    print(">>> Could not delete %s because %s" % (a, e))
 
     def test_upload_fname_exists(self):
-        response = self.client.post(self.url, {"test_id": self.test.pk, "upload": self.test_file, "meta": "{}"})
-        data = json.loads(response.content)
-        self.assertTrue(os.path.exists(os.path.join(settings.TMP_UPLOAD_ROOT)), data["temp_file_name"])
+        response = self.client.post(
+            self.url, {
+                "test_id": self.test.pk,
+                "upload": self.test_file,
+                "unit_id": self.unit_test_info.unit.id,
+                "test_list_id": self.test_list.id,
+                "meta": "{}",
+            }
+        )
+        data = json.loads(response.content.decode("UTF-8"))
+        self.assertTrue(os.path.exists(os.path.join(settings.TMP_UPLOAD_ROOT)), data['attachment']["name"])
 
     def test_invalid_test_id(self):
-        response = self.client.post(self.url, {"test_id": 200, "upload": self.test_file, "meta": "{}"})
-        data = json.loads(response.content)
+        response = self.client.post(self.url, {
+            "test_id": 200,
+            "upload": self.test_file,
+            "unit_id": self.unit_test_info.unit.id,
+            "test_list_id": self.test_list.id,
+            "meta": "{}"
+        })
+        data = json.loads(response.content.decode("UTF-8"))
         self.assertEqual(data["errors"][0], "Test with that ID does not exist")
 
     def test_invalid_test(self):
         self.test.calculation_procedure = "result = 1/0"
         self.test.save()
-        response = self.client.post(self.url, {"test_id": self.test.pk, "upload": self.test_file, "meta": "{}"})
-        data = json.loads(response.content)
+        response = self.client.post(
+            self.url, {
+                "test_id": self.test.pk,
+                "upload": self.test_file,
+                "meta": "{}",
+                "unit_id": self.unit_test_info.unit.id,
+                "test_list_id": self.test_list.id,
+            }
+        )
+        data = json.loads(response.content.decode("UTF-8"))
         self.assertIn("Invalid Test", data["errors"][0])
 
     def test_upload_results(self):
-        response = self.client.post(self.url, {"test_id": self.test.pk, "upload": self.test_file, "meta": "{}"})
-        data = json.loads(response.content)
+        response = self.client.post(self.url, {
+            "test_id": self.test.pk,
+            "upload": self.test_file,
+            "meta": "{}",
+            "unit_id": self.unit_test_info.unit.id,
+            "test_list_id": self.test_list.id,
+        })
+        data = json.loads(response.content.decode("UTF-8"))
         self.assertEqual(data["result"]["baz"]["baz1"], "test")
 
 
@@ -1253,9 +1382,7 @@ class TestEditTestListInstance(TestCase):
 
         self.status.requires_review = False
         self.status.save()
-        self.base_data.update({
-            "status": self.status.pk
-        })
+        self.base_data.update({"status": self.status.pk})
 
         self.client.post(self.url, data=self.base_data)
 
@@ -1272,9 +1399,7 @@ class TestEditTestListInstance(TestCase):
 
     def test_in_progress(self):
 
-        self.base_data.update({
-            "in_progress": True
-        })
+        self.base_data.update({"in_progress": True})
 
         self.client.post(self.url, data=self.base_data)
         ntests = models.Test.objects.count()
@@ -1283,12 +1408,26 @@ class TestEditTestListInstance(TestCase):
         self.client.post(self.url, data=self.base_data)
         self.assertEqual(models.TestInstance.objects.in_progress().count(), 0)
 
+    def test_in_progress_no_data(self):
+
+        data = {
+            "work_completed": "11-07-2012 00:10",
+            "work_started": "11-07-2012 00:09",
+            "status": self.status.pk,
+            "testinstance_set-TOTAL_FORMS": "2",
+            "testinstance_set-INITIAL_FORMS": "2",
+            "testinstance_set-MAX_NUM_FORMS": "",
+            "testinstance_set-0-id": self.ti.pk,
+            "testinstance_set-1-id": self.tib.pk,
+            "in_progress": True,
+        }
+        self.client.post(self.url, data=data)
+        ntests = models.Test.objects.count()
+        self.assertEqual(models.TestInstance.objects.in_progress().count(), ntests)
+
     def test_no_work_completed(self):
 
-        self.base_data.update({
-            "testinstance_set-0-value": 88,
-            "work_completed": ""
-        })
+        self.base_data.update({"testinstance_set-0-value": 88, "work_completed": ""})
 
         response = self.client.post(self.url, data=self.base_data)
 
@@ -1430,6 +1569,7 @@ class TestReviewTestListInstance(TestCase):
         self.assertFalse(tli.all_reviewed)
 
 
+@freeze_time("2018-01-26 23:00")
 class TestDueDateOverView(TestCase):
 
     def setUp(self):
@@ -1474,7 +1614,9 @@ class TestDueDateOverView(TestCase):
         self.today = now
         self.friday = self.today + timezone.timedelta(days=(4 - self.today.weekday()) % 7)
         self.next_friday = self.friday + timezone.timedelta(days=7)
-        self.month_end = timezone.make_aware(timezone.datetime(now.year, now.month, calendar.mdays[now.month]), timezone.get_current_timezone())
+        self.month_end = timezone.make_aware(
+            timezone.datetime(now.year, now.month, calendar.mdays[now.month]), timezone.get_current_timezone()
+        )
         self.next_month_start = self.month_end + timezone.timedelta(days=1)
 
     def test_overdue(self):
@@ -1482,23 +1624,23 @@ class TestDueDateOverView(TestCase):
         self.utc.due_date = self.today - timezone.timedelta(days=1)
         self.utc.save()
         response = self.client.get(self.url)
-        self.assertListEqual(response.context_data["due"][0][1], [self.utc])
+        self.assertListEqual(response.context_data["due"][0][2], [self.utc])
 
     def test_due_this_week(self):
         self.utc.due_date = self.friday
         self.utc.save()
         response = self.client.get(self.url)
         if self.today == self.friday:
-            self.assertListEqual(response.context_data["due"][0][1], [self.utc])
+            self.assertListEqual(response.context_data["due"][0][2], [self.utc])
         else:
-            self.assertListEqual(response.context_data["due"][1][1], [self.utc])
+            self.assertListEqual(response.context_data["due"][1][2], [self.utc])
 
     def test_due_next_week(self):
 
         self.utc.due_date = self.friday + timezone.timedelta(days=3)
         self.utc.save()
         response = self.client.get(self.url)
-        self.assertListEqual(response.context_data["due"][2][1], [self.utc])
+        self.assertListEqual(response.context_data["due"][2][2], [self.utc])
 
     def test_due_this_month(self):
 
@@ -1507,7 +1649,7 @@ class TestDueDateOverView(TestCase):
             # test only makes sense if not near end of month
             self.utc.save()
             response = self.client.get(self.url)
-            self.assertListEqual(response.context_data["due"][3][1], [self.utc])
+            self.assertListEqual(response.context_data["due"][3][2], [self.utc])
 
     def test_due_next_month(self):
 
@@ -1515,7 +1657,7 @@ class TestDueDateOverView(TestCase):
         self.utc.save()
 
         response = self.client.get(self.url)
-        self.assertListEqual(response.context_data["due"][4][1], [self.utc])
+        self.assertListEqual(response.context_data["due"][4][2], [self.utc])
 
 
 class TestPaperFormRequest(TestCase):
@@ -1612,15 +1754,17 @@ class TestPaperForms(TestCase):
 
     def test_get(self):
 
-        q = urlencode({
-
-            "unit": models.Unit.objects.values_list("pk", flat=True),
-            "frequency": models.Frequency.objects.filter(due_interval__lte=7).values_list("pk", flat=True),
-            "category": models.Category.objects.values_list("pk", flat=True),
-            "assigned_to": Group.objects.values_list("pk", flat=True),
-            "include_refs": True,
-            "include_inactive": False,
-        }, doseq=True)
+        q = urlencode(
+            {
+                "unit": models.Unit.objects.values_list("pk", flat=True),
+                "frequency": models.Frequency.objects.filter(due_interval__lte=7).values_list("pk", flat=True),
+                "category": models.Category.objects.values_list("pk", flat=True),
+                "assigned_to": Group.objects.values_list("pk", flat=True),
+                "include_refs": True,
+                "include_inactive": False,
+            },
+            doseq=True,
+        )
 
         response = self.client.get(self.url + "?" + q)
         self.assertEqual(response.status_code, 200)
@@ -1635,9 +1779,11 @@ class TestPaperForms(TestCase):
         uti1.save()
 
         unit = utils.create_unit(number=2)
-        utc2 = utils.create_unit_test_collection(unit=unit, test_collection=self.test_list, frequency=self.frequencies['daily'])
+        utc2 = utils.create_unit_test_collection(
+            unit=unit, test_collection=self.test_list, frequency=self.frequencies['daily']
+        )
         ref2 = utils.create_reference(value=2)
-        tol2 = utils.create_tolerance()
+        tol2 = tol1
         uti2 = models.UnitTestInfo.objects.get(test=self.test, unit=unit)
         uti2.reference = ref2
         uti2.tolerance = tol2
@@ -1651,6 +1797,137 @@ class TestPaperForms(TestCase):
         self.assertEqual(utcs[1].all_lists[0].utis[0].reference, ref2)
 
 
-if __name__ == "__main__":
-    setup_test_environment()
-    unittest.main()
+class TestUnitAvailableTime(TestCase):
+
+    def setUp(self):
+        utils.create_user(is_superuser=True, uname='user', pwd='pwd')
+        self.client.login(username='user', password='pwd')
+        self.get_url = reverse('unit_available_time')
+        self.post_url = reverse('handle_unit_available_time')
+        self.delete_url = reverse('delete_schedules')
+        utils.create_unit()
+        utils.create_unit()
+        utils.create_unit()
+
+    def test_unit_available_time_change(self):
+
+        response = self.client.get(self.get_url)
+
+        timestamp = int((timezone.now() + timezone.timedelta(days=7)).timestamp() * 1000)
+        unit_ids = [u.id for u in response.context['units']]
+
+        data = {
+            'units[]': unit_ids,
+            'hours_monday': '08:00',
+            'hours_tuesday': '_8:00',
+            'hours_wednesday': '_8:00',
+            'hours_thursday': '08:00',
+            'hours_friday': '08:00',
+            'hours_saturday': '08:00',
+            'hours_sunday': '08:00',
+            'day': timestamp,
+            'days[]': [timestamp]
+        }
+        date = timezone.datetime.fromtimestamp(timestamp / 1000, timezone.utc).date()
+        len_uat_before = len(u_models.UnitAvailableTime.objects.filter(unit_id__in=unit_ids, date_changed=date))
+
+        self.client.post(self.post_url, data=data)
+        len_uat_after = len(u_models.UnitAvailableTime.objects.filter(unit_id__in=unit_ids, date_changed=date))
+        self.assertEqual(len(unit_ids), len_uat_after - len_uat_before)
+
+        self.client.post(self.delete_url, data=data)
+        len_uat_after = len(u_models.UnitAvailableTime.objects.filter(unit_id__in=unit_ids, date_changed=date))
+        self.assertEqual(0, len_uat_after)
+
+
+class TestUnitAvailableTimeEdit(TestCase):
+
+    def setUp(self):
+        utils.create_user(is_superuser=True, uname='user', pwd='pwd')
+        self.client.login(username='user', password='pwd')
+        self.get_url = reverse('unit_available_time')
+        self.post_url = reverse('handle_unit_available_time_edit')
+        self.delete_url = reverse('delete_schedules')
+        utils.create_unit()
+        utils.create_unit()
+        utils.create_unit()
+
+    def test_handle_unit_available_time_edit(self):
+
+        response = self.client.get(self.get_url)
+
+        timestamp = int((timezone.now() + timezone.timedelta(days=7)).timestamp() * 1000)
+        unit_ids = [u.id for u in response.context['units']]
+
+        data = {
+            'units[]': unit_ids,
+            'hours_mins': '_8:00',
+            'days[]': [timestamp],
+            'name': 'uate_test'
+        }
+
+        date = timezone.datetime.fromtimestamp(timestamp / 1000, timezone.utc).date()
+        len_uate_before = len(u_models.UnitAvailableTimeEdit.objects.filter(unit_id__in=unit_ids, date=date))
+        self.client.post(self.post_url, data=data)
+        len_uate_after = len(u_models.UnitAvailableTimeEdit.objects.filter(unit_id__in=unit_ids, date=date))
+        self.assertEqual(len(unit_ids), len_uate_after - len_uate_before)
+
+        self.client.post(self.delete_url, data=data)
+        len_uate_after = len(u_models.UnitAvailableTimeEdit.objects.filter(unit_id__in=unit_ids, date=date))
+        self.assertEqual(0, len_uate_after)
+
+
+class TestReviewStatusContext(TestCase):
+
+    def setUp(self):
+
+        self.user = utils.create_user(is_superuser=True, uname='user', pwd='pwd')
+        self.client.login(username='user', password='pwd')
+        self.factory = RequestFactory()
+
+        self.u_1 = utils.create_unit()
+        self.tl_1 = utils.create_test_list()
+        self.t_1 = utils.create_test()
+        self.t_2 = utils.create_test()
+        self.t_3 = utils.create_test()
+        utils.create_test_list_membership(test_list=self.tl_1, test=self.t_1)
+        utils.create_test_list_membership(test_list=self.tl_1, test=self.t_2)
+        utils.create_test_list_membership(test_list=self.tl_1, test=self.t_3)
+        self.utc_1 = utils.create_unit_test_collection(test_collection=self.tl_1, unit=self.u_1)
+        self.tli_1 = utils.create_test_list_instance(test_list=self.tl_1)
+        self.uti_1 = models.UnitTestInfo.objects.get(unit=self.u_1, test=self.t_1)
+        self.uti_2 = models.UnitTestInfo.objects.get(unit=self.u_1, test=self.t_2)
+        self.uti_3 = models.UnitTestInfo.objects.get(unit=self.u_1, test=self.t_3)
+        utils.create_test_instance(test_list_instance=self.tli_1, unit_test_info=self.uti_1)
+        utils.create_test_instance(test_list_instance=self.tli_1, unit_test_info=self.uti_2)
+        utils.create_test_instance(test_list_instance=self.tli_1, unit_test_info=self.uti_3)
+
+        Comment(
+            submit_date=timezone.now(),
+            user=self.user,
+            content_object=self.tli_1,
+            comment='TestList comment',
+            site=get_current_site(self.factory.get(reverse('perform_qa')))
+        ).save()
+
+        Comment(
+            submit_date=timezone.now(),
+            user=self.user,
+            content_object=self.t_1,
+            comment='Test comment',
+            site=get_current_site(self.factory.get(reverse('perform_qa')))
+        ).save()
+
+    def test_none_tli(self):
+        self.assertEqual({}, views.base.generate_review_status_context(None))
+
+    def test_valid(self):
+        context = views.base.generate_review_status_context(self.tli_1)
+        self.assertEqual(1, context['comments'])
+        for ti in self.tli_1.testinstance_set.all():
+            self.assertEqual(
+                self.tli_1.testinstance_set.filter(status=ti.status).count(),
+                context['statuses'][ti.status.name]['count']
+            )
+            self.assertEqual(ti.status.valid, context['statuses'][ti.status.name]['valid'])
+            self.assertEqual(ti.status.requires_review, context['statuses'][ti.status.name]['requires_review'])

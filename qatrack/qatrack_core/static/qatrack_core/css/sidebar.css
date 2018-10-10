@@ -1,0 +1,116 @@
+
+.main-header .sidebar-toggle:before {
+  content: none;
+}
+.sidebar-menu > li.primary:hover > a,
+.sidebar-menu > li.active.primary > a,
+.nav-stacked > li.active.primary > a {
+    border-left-color: #3c8dbc;
+}
+.sidebar-menu > li.info:hover > a,
+.sidebar-menu > li.active.info > a,
+.nav-stacked > li.active.info > a {
+    border-left-color: #00c0ef;
+}
+.sidebar-menu > li.danger:hover > a,
+.sidebar-menu > li.active.danger > a,
+.nav-stacked > li.active.danger > a {
+    border-left-color: #dd4b39;
+}
+.sidebar-menu > li.warning:hover > a,
+.sidebar-menu > li.active.warning > a,
+.nav-stacked > li.active.warning > a {
+    border-left-color: #f39c12;
+}
+.sidebar-menu > li.success:hover > a,
+.sidebar-menu > li.active.success > a,
+.nav-stacked > li.active.success > a {
+    border-left-color: #00a65a;
+}
+.sidebar-menu > li.default:hover > a,
+.sidebar-menu > li.active.default > a,
+.nav-stacked > li.active.default > a {
+    border-left-color: #d2d6de;
+}
+section.sidebar > ul > li.treeview > ul > li > a.has-icheck {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+section.sidebar > ul > li.treeview > ul > li > a.has-icheck > div {
+    /*vertical-align: top;*/
+    pointer-events: none;
+}
+section.sidebar > ul > li.treeview > ul > li > a.has-icheck > label {
+    max-width: 175px;
+    text-align: left;
+    white-space: normal;
+    padding-top: 0.3em;
+    pointer-events: none;
+}
+body.sidebar-collapse > div.wrapper > aside.main-sidebar > section.sidebar > ul > li.treeview > ul > li > a.has-icheck > label {
+    max-width: 135px;
+}
+.sidebar-menu > li.divider {
+    background-color: rgb(26, 34, 38);
+    height: 20px;
+}
+/* Allow for divs to behave like spans in sidebar */
+.sidebar-mini.sidebar-collapse .sidebar-menu > li:hover > a > div {
+    display: block !important;
+    position: absolute;
+    width: 180px;
+    left: 50px;
+    /*top: 0;*/
+    margin-left: -3px;
+    padding: 12px 5px 12px 20px;
+    background-color: inherit;
+}
+.sidebar-mini.sidebar-collapse .sidebar-menu > li > a > div {
+    display: none !important;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+}
+
+/*.sidebar-mini.sidebar-collapse .sidebar-form {*/
+    /*display: block;*/
+/*}*/
+/*section.sidebar > ul > li > a > .sidebar-form {*/
+    /*margin: 0;*/
+    /*border: 0;*/
+    /*max-width: 185px;*/
+    /*display: inline-block;*/
+/*}*/
+/*section.sidebar > ul > li > a > .sidebar-form > * {*/
+    /*padding: 0;*/
+/*}*/
+
+/* custom li view */
+.custom-view > a > i.fa {
+    vertical-align: top;
+    margin-top: 0.3em;
+}
+.sidebar-mini.sidebar-collapse .sidebar-menu > li.custom-view:hover > a > div {
+    padding: 12px 5px 12px 5px;
+}
+.custom-view > a > .container-fluid > .row {
+    margin: 0;
+}
+
+/* datepicker stuff */
+/*.daterangepicker.dropdown-menu.show-calendar {*/
+    /*position: fixed;*/
+    /*!*left: 35px !important;*!*/
+    /*!*top: 275px !important;*!*/
+/*}*/
+/*.sidebar-mini.sidebar-collapse .daterangepicker.dropdown-menu.show-calendar {*/
+    /*!*left: 50px !important;*!*/
+    /*!*top: 245px !important;*!*/
+/*}*/
+/*.daterangepicker  > .calendar > .calendar-table > table > tbody > tr >td.start-date {*/
+    /*border-top-left-radius: 16px;*/
+    /*border-bottom-left-radius: 16px;*/
+/*}*/
+/*.daterangepicker > .calendar > .calendar-table > table > tbody > tr > td.end-date {*/
+    /*border-top-right-radius: 16px;*/
+    /*border-bottom-right-radius: 16px;*/
+/*}*/

@@ -42,8 +42,8 @@
 {% block breadcrumbs %}
 <div class="breadcrumbs">
 <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
-&rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ app_label|capfirst|escape }}</a>
-&rsaquo; {% if has_change_permission %}<a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>{% else %}{{ opts.verbose_name_plural|capfirst }}{% endif %}
+&rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{% if app_label == 'sites' %}Websites{% else %}{{ app_label|capfirst|escape }}{% endif %}</a>
+&rsaquo; {% if has_change_permission %}<a href="{% url opts|admin_urlname:'changelist' %}">{% if app_label == 'sites' and opts.verbose_name_plural == 'sites' %}Websites{% else %}{{ opts.verbose_name_plural|capfirst }}{% endif %}</a>{% else %}{{ opts.verbose_name_plural|capfirst }}{% endif %}
 &rsaquo; {% if add %}{% trans 'Add' %} {{ opts.verbose_name }}{% else %}{{ original|truncatewords:"18" }}{% endif %}
 </div>
 {% endblock %}
@@ -54,13 +54,13 @@
 {% if change %}{% if not is_popup %}
   <ul class="object-tools">
     {% block object-tools-items %}
-    <li><a href="history/" class="historylink">{% trans "History" %}</a></li>
-    {% if has_absolute_url %}<li><a href="../../../r/{{ content_type_id }}/{{ object_id }}/" class="viewsitelink">{% trans "View on site" %}</a></li>{% endif%}
+    <li><a href="{% url opts|admin_urlname:'history' adminform.form.instance.pk %}" class="historylink">{% trans "History" %}</a></li>
+    {% if has_absolute_url %}<li><a href="{% firstof original.get_absolute_url absolute_url %}" class="viewsitelink">{% trans "View on site" %}</a></li>{% endif %}
     {% endblock %}
   </ul>
 {% endif %}{% endif %}
 {% endblock %}
-<form {% if has_file_field %}enctype="multipart/form-data" {% endif %}action="{{ form_url }}" method="post" id="{{ opts.module_name }}_form">{% csrf_token %}{% block form_top %}{% endblock %}
+<form {% if has_file_field %}enctype="multipart/form-data" {% endif %}action="{{ form_url }}" method="post" id="{{ opts.module_name }}_form" novalidate="novalidate">{% csrf_token %}{% block form_top %}{% endblock %}
 <div>
 {% if is_popup %}<input type="hidden" name="_popup" value="1" />{% endif %}
 {% if save_on_top %}{% block submit_buttons_top %}{% submit_row %}{% endblock %}{% endif %}
@@ -89,7 +89,7 @@
 
 {% block submit_buttons_bottom %}{% submit_row %}{% endblock %}
 
-{% if adminform and add %}
+{% if adminform and add and adminform.first_field.id_for_label %}
    <script type="text/javascript">document.getElementById("{{ adminform.first_field.id_for_label }}").focus();</script>
 {% endif %}
 

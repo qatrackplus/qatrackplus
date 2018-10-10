@@ -4,9 +4,9 @@ import datetime
 import numpy as np
 import matplotlib.gridspec as gridspec
 import matplotlib.dates
-import leastsquaresfit as lsqfit
-import maximumlikelihoodfit as mlefit
-import histogram as htg
+from . import leastsquaresfit as lsqfit
+from . import maximumlikelihoodfit as mlefit
+from . import histogram as htg
 
 from matplotlib.ticker import NullFormatter
 from matplotlib.font_manager import FontProperties
@@ -135,7 +135,7 @@ def display(fig, x, sgSize, baseline, dates=None, fit=False):
     """
 
     if dates is None:
-        dates = range(len(x))
+        dates = list(range(len(x)))
         use_dates = False
     else:
         use_dates = True

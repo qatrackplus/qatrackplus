@@ -1,57 +1,52 @@
 [
-    {
-        "pk": 1, 
-        "model": "qa.frequency", 
-        "fields": {
-            "overdue_interval": 1, 
-            "nominal_interval": 1, 
-            "name": "Daily", 
-            "due_interval": 1, 
-            "slug": "daily"
-        }
-    }, 
-    {
-        "pk": 2, 
-        "model": "qa.frequency", 
-        "fields": {
-            "overdue_interval": 9, 
-            "nominal_interval": 7, 
-            "name": "Weekly", 
-            "due_interval": 7, 
-            "slug": "weekly"
-        }
-    }, 
-    {
-        "pk": 3, 
-        "model": "qa.frequency", 
-        "fields": {
-            "overdue_interval": 35, 
-            "nominal_interval": 28, 
-            "name": "Monthly", 
-            "due_interval": 28, 
-            "slug": "monthly"
-        }
-    }, 
-    {
-        "pk": 4, 
-        "model": "qa.frequency", 
-        "fields": {
-            "overdue_interval": 210, 
-            "nominal_interval": 180, 
-            "name": "Semi Annual", 
-            "due_interval": 180, 
-            "slug": "semi-annual"
-        }
-    }, 
-    {
-        "pk": 5, 
-        "model": "qa.frequency", 
-        "fields": {
-            "overdue_interval": 420, 
-            "nominal_interval": 365, 
-            "name": "Annual", 
-            "due_interval": 300, 
-            "slug": "annual"
-        }
+{
+    "model": "qa.frequency",
+    "fields": {
+        "name": "Daily",
+        "slug": "daily",
+        "nominal_interval": 1,
+        "due_interval": 1,
+        "overdue_interval": 1
     }
+},
+{
+    "model": "qa.frequency",
+    "fields": {
+        "name": "Weekly",
+        "slug": "weekly",
+        "nominal_interval": 7,
+        "due_interval": 7,
+        "overdue_interval": 9
+    }
+},
+{
+    "model": "qa.frequency",
+    "fields": {
+        "name": "Monthly",
+        "slug": "monthly",
+        "nominal_interval": 28,
+        "due_interval": 28,
+        "overdue_interval": 35
+    }
+},
+{
+    "model": "qa.frequency",
+    "fields": {
+        "name": "Semi Annual",
+        "slug": "semi-annual",
+        "nominal_interval": 180,
+        "due_interval": 180,
+        "overdue_interval": 210
+    }
+},
+{
+    "model": "qa.frequency",
+    "fields": {
+        "name": "Annual",
+        "slug": "annual",
+        "nominal_interval": 365,
+        "due_interval": 300,
+        "overdue_interval": 420
+    }
+}
 ]

@@ -7,5 +7,5 @@ class Contact(models.Model):
     number = models.CharField(max_length=256)
     description = models.TextField()
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s : %s " % (self.name, self.number)

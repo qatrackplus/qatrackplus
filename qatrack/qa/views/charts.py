@@ -1,25 +1,30 @@
 import collections
+import io
 import itertools
 import json
 import textwrap
 
+from braces.views import JSONResponseMixin, PermissionRequiredMixin
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 from django.db.models import Count
 from django.http import HttpResponse
-from django.template import Context
 from django.template.loader import get_template
 from django.utils import timezone
 from django.views.generic import TemplateView, View
-
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 import numpy
 
-from .. import models
 from qatrack.qa.control_chart import control_chart
-from qatrack.units.models import Unit
 from qatrack.qa.utils import SetEncoder
-from braces.views import JSONResponseMixin, PermissionRequiredMixin
+from qatrack.service_log import models as sl_models
+from qatrack.units.models import Unit
+
+from .. import models
+
+numpy.seterr(all='raise')
+
 
 
 JSON_CONTENT_TYPE = "application/json"
@@ -39,11 +44,12 @@ def get_test_lists_for_unit_frequencies(request):
 
     if not frequencies:
         frequencies = list(models.Frequency.objects.values_list("pk", flat=True)) + [None]
-    include_inactive = request.GET.get("inactive") == "true"
+    #
+    # include_inactive = request.GET.get("inactive") == "true"
 
-    active = None if include_inactive else True
+    # active = None if include_inactive else True
 
-    test_lists = models.get_utc_tl_ids(active=active, units=units, frequencies=frequencies)
+    test_lists = models.get_utc_tl_ids(units=units, frequencies=frequencies)
 
     json_context = json.dumps({"test_lists": test_lists})
 
@@ -58,6 +64,16 @@ def get_tests_for_test_lists(request):
     for pk in test_lists:
         tl = models.TestList.objects.get(pk=pk)
         tests.extend([t.pk for t in tl.ordered_tests() if t.chart_visibility])
+
+        # also include tests that are no longer part of this test list
+        inactive_tests = models.TestInstance.objects.filter(
+            test_list_instance__test_list__pk=pk,
+            unit_test_info__test__chart_visibility=True
+        ).values_list(
+            "unit_test_info__test__pk",
+            flat=True
+        ).distinct()
+        tests.extend(inactive_tests)
 
     json_context = json.dumps({"tests": tests})
     return HttpResponse(json_context, content_type=JSON_CONTENT_TYPE)
@@ -87,18 +103,48 @@ class ChartView(PermissionRequiredMixin, TemplateView):
         now = timezone.now().astimezone(timezone.get_current_timezone()).date()
 
         c = {
-            "from_date": now - timezone.timedelta(days=365),
-            "to_date": now + timezone.timedelta(days=1),
-            "frequencies": models.Frequency.objects.all(),
-            "tests": self.tests,
-            "test_lists": self.test_lists,
-            "categories": models.Category.objects.all(),
-            "statuses": models.TestInstanceStatus.objects.all(),
-            "units": Unit.objects.values("pk", "name"),
-            "unit_frequencies": json.dumps(self.unit_frequencies, cls=SetEncoder)
+            'from_date': now - timezone.timedelta(days=365),
+            'to_date': now + timezone.timedelta(days=1),
+            'frequencies': models.Frequency.objects.all(),
+            'tests': self.tests,
+            'test_lists': self.test_lists,
+            'categories': models.Category.objects.all(),
+            'statuses': models.TestInstanceStatus.objects.all(),
+            'service_types': sl_models.ServiceType.objects.all(),
+            'units': Unit.objects.values('pk', 'name', 'active'),
+            'unit_frequencies': json.dumps(self.unit_frequencies, cls=SetEncoder),
+            'active_unit_test_list': self.get_active_test_lists()
         }
         context.update(c)
         return context
+
+    def get_active_test_lists(self):
+
+        utc_tl_active = models.UnitTestCollection.objects.filter(
+            active=True,
+            content_type=ContentType.objects.get_for_model(models.TestList)
+        )
+
+        to_return = {}
+        for utc in utc_tl_active:
+            if utc.unit_id not in to_return:
+                to_return[utc.unit_id] = [utc.object_id]
+            else:
+                to_return[utc.unit_id].append(utc.object_id)
+
+        utc_tlc_active = models.UnitTestCollection.objects.filter(
+            active=True,
+            content_type=ContentType.objects.get_for_model(models.TestListCycle)
+        )
+
+        for utc in utc_tlc_active:
+            for tlcm in models.TestListCycleMembership.objects.filter(cycle_id=utc.object_id):
+                if utc.unit_id not in to_return:
+                    to_return[utc.unit_id] = [tlcm.test_list_id]
+                else:
+                    to_return[utc.unit_id].append(tlcm.test_list_id)
+
+        return to_return
 
     def set_unit_frequencies(self):
 
@@ -110,21 +156,22 @@ class ChartView(PermissionRequiredMixin, TemplateView):
 
         self.unit_frequencies = collections.defaultdict(set)
         for u, f in unit_frequencies:
-            f = f or 0 # use 0 id for ad hoc frequencies
+            f = f or 0  # use 0 id for ad hoc frequencies
             self.unit_frequencies[u].add(f)
 
     def set_test_lists(self):
         """self.test_lists is set to all test lists that have been completed
         one or more times"""
 
-        self.test_lists = models.TestList.objects.annotate(
-            instance_count=Count("testlistinstance")
-        ).filter(
-            instance_count__gt=0
-        ).order_by(
+        self.test_lists = models.TestList.objects.order_by(
             "name"
         ).values(
             "pk", "description", "name",
+        ).annotate(
+            instance_count=Count("testlistinstance"),
+        ).filter(
+            instance_count__gt=0,
+            # testlistmembership__test__chart_visibility=True
         )
 
     def set_tests(self):
@@ -149,7 +196,7 @@ class BaseChartView(View):
 
         self.get_plot_data()
         headers, rows = self.create_data_table()
-        resp = self.render_to_response({"data": self.plot_data, "headers": headers, "rows": rows})
+        resp = self.render_to_response({"plot_data": self.plot_data, "headers": headers, "rows": rows})
         return resp
 
     def create_data_table(self):
@@ -165,9 +212,9 @@ class BaseChartView(View):
         r = lambda ref: ref if ref is not None else ""
 
         # collect all data in 'date/value/ref triplets
-        for name, points in self.plot_data.iteritems():
+        for name, data in self.plot_data['series'].items():
             headers.append(name)
-            col = [(p["display_date"], p["display"], r(p["orig_reference"])) for p in points]
+            col = [(p["display_date"], p["display"], r(p["orig_reference"])) for p in data['series_data']]
             cols.append(col)
             max_len = max(len(col), max_len)
 
@@ -186,30 +233,34 @@ class BaseChartView(View):
 
     def render_table(self, headers, rows):
 
-        context = Context({
+        context = {
             "ncols": 3 * len(rows[0]) if rows else 0,
             "rows": rows,
             "headers": headers
-        })
+        }
         template = get_template("qa/qa_data_table.html")
 
         return template.render(context)
 
-    def get_date(self, key, default):
+    def get_date(self, default_to, default_from):
         """take date from GET data and convert it to utc"""
 
         # datetime strings coming in will be in local time, make sure they get
         # converted to utc
 
-        try:
-            d = timezone.datetime.strptime(self.request.GET.get(key), settings.SIMPLE_DATE_FORMAT)
-        except:
-            d = default
+        d_string = self.request.GET.get('date_range', '').replace('%20', ' ')
 
-        if timezone.is_naive(d):
-            d = timezone.make_aware(d, timezone.get_current_timezone())
+        if d_string:
+            d_from = timezone.datetime.strptime(d_string.split(' - ')[0], '%d %b %Y')
+            d_to = timezone.datetime.strptime(d_string.split(' - ')[1], '%d %b %Y')
+        else:
+            d_from = default_from
+            d_to = default_to
 
-        return d.astimezone(timezone.utc)
+        d_to = timezone.datetime(d_to.year, d_to.month, d_to.day, 23, 59, 59, tzinfo=timezone.get_current_timezone())
+        d_from = timezone.datetime(d_from.year, d_from.month, d_from.day, tzinfo=timezone.get_current_timezone())
+
+        return [d_from.astimezone(timezone.utc), d_to.astimezone(timezone.utc)]
 
     def convert_date(self, date):
         """by default we assume date is being used by javascript, so convert to ISO"""
@@ -227,6 +278,7 @@ class BaseChartView(View):
             use_percent = has_percent_tol or (has_no_tol and ref_is_not_zero)
 
             if use_percent:
+
                 value = 100 * (ti.value - ti.reference.value) / ti.reference.value
                 ref_value = 0.
             else:
@@ -244,6 +296,8 @@ class BaseChartView(View):
             "display": ti.value_display() if not ti.skipped else "",
             "reference": ref_value,
             "orig_reference": ti.reference.value if ti.reference else None,
+            'test_instance_id': ti.id,
+            'test_list_instance': {'date': ti.test_list_instance.created, 'id': ti.test_list_instance.id}
 
         }
 
@@ -263,11 +317,17 @@ class BaseChartView(View):
     def get_plot_data(self):
         """Retrieve all :model:`qa.TestInstance` data requested."""
 
-        self.plot_data = {}
+        self.plot_data = {
+            'series': {},
+            'events': []
+        }
 
         now = timezone.now()
-        from_date = self.get_date("from_date", now - timezone.timedelta(days=365))
-        to_date = self.get_date("to_date", now)
+        dates = self.get_date(now, now - timezone.timedelta(days=365))
+
+        from_date = dates[0]
+        to_date = dates[1]
+
         combine_data = self.request.GET.get("combine_data") == "true"
         relative = self.request.GET.get("relative") == "true"
 
@@ -275,6 +335,10 @@ class BaseChartView(View):
         test_lists = self.request.GET.getlist("test_lists[]", [])
         units = self.request.GET.getlist("units[]", [])
         statuses = self.request.GET.getlist("statuses[]", [])
+        service_types = self.request.GET.getlist("service_types[]", [])
+
+        show_events = self.request.GET.get('show_events') == 'true' and settings.USE_SERVICE_LOG
+        # se_types = self.request.GET.getlist('service_types[]', [])
 
         if not (tests and test_lists and units and statuses):
             return
@@ -283,6 +347,9 @@ class BaseChartView(View):
         test_lists = models.TestList.objects.filter(pk__in=test_lists)
         units = Unit.objects.filter(pk__in=units)
         statuses = models.TestInstanceStatus.objects.filter(pk__in=statuses)
+        service_types = sl_models.ServiceType.objects.filter(pk__in=service_types)
+
+        # test_list_names = {tl.id: tl.name for tl in test_lists}
 
         if not combine_data:
             # retrieve test instances for every possible permutation of the
@@ -297,12 +364,18 @@ class BaseChartView(View):
                     work_completed__lte=to_date,
                 ).select_related(
                     "reference", "tolerance", "unit_test_info__test", "unit_test_info__unit", "status",
+                    'test_list_instance', 'test_list_instance__test_list'
                 ).order_by(
                     "work_completed"
                 )
                 if tis:
+                    # tli = tis.first().test_list_instance
                     name = "%s - %s :: %s%s" % (u.name, tl.name, t.name, " (relative to ref)" if relative else "")
-                    self.plot_data[name] = [self.test_instance_to_point(ti, relative=relative) for ti in tis]
+                    self.plot_data['series'][name] = {
+                        'series_data': [self.test_instance_to_point(ti, relative=relative) for ti in tis],
+                        'unit': {'name': u.name, 'id': u.id},
+                        'test_list': {'name': tl.name, 'id': tl.id},
+                    }
         else:
             # retrieve test instances for every possible permutation of the
             # requested test & units
@@ -314,13 +387,60 @@ class BaseChartView(View):
                     work_completed__gte=from_date,
                     work_completed__lte=to_date,
                 ).select_related(
-                    "reference", "tolerance", "unit_test_info__test", "unit_test_info__unit", "status",
+                    "reference", "tolerance", "unit_test_info__test", "unit_test_info__unit", "status", 'test_list_instance'
                 ).order_by(
                     "work_completed"
                 )
                 if tis:
+                    tli = tis.first().test_list_instance
                     name = "%s :: %s%s" % (u.name, t.name, " (relative to ref)" if relative else "")
-                    self.plot_data[name] = [self.test_instance_to_point(ti, relative=relative) for ti in tis]
+                    self.plot_data['series'][name] = {
+                        'series_data': [self.test_instance_to_point(ti, relative=relative) for ti in tis],
+                        'unit': {'name': u.name, 'id': u.id},
+                        'test_list': {'name': tli.test_list.name, 'id': tli.test_list.id},
+                        # 'test_list_instance': {'date': tli.created, 'id': tli.id}
+                    }
+
+        if show_events:
+
+            ses = sl_models.ServiceEvent.objects.filter(
+                unit_service_area__unit__in=units,
+                datetime_service__gte=from_date,
+                datetime_service__lte=to_date,
+                service_type__in=service_types
+            ).select_related(
+                'unit_service_area__unit', 'unit_service_area__service_area', 'service_type', 'test_list_instance_initiated_by'
+            ).prefetch_related(
+                'returntoserviceqa_set',
+                'returntoserviceqa_set__test_list_instance'
+            ).order_by('datetime_service')
+
+            for se in ses:
+                rtsqas = se.returntoserviceqa_set.all()
+
+                self.plot_data['events'].append({
+                    'date': timezone.localtime(se.datetime_service),
+                    'id': se.id,
+                    'type': {'id': se.service_type_id, 'name': se.service_type.name},
+                    'is_review_required': se.is_review_required,
+                    'initiated_by': {
+                        'id': se.test_list_instance_initiated_by_id,
+                        'test_list_id': se.test_list_instance_initiated_by.test_list_id
+                    } if se.test_list_instance_initiated_by_id else '',
+                    'rtsqas': [
+                        {
+                            'id': rtsqa.id,
+                            'test_list_instance': rtsqa.test_list_instance_id,
+                            'test_list': rtsqa.test_list_instance.test_list_id if rtsqa.test_list_instance else ''
+                        } for rtsqa in rtsqas
+                    ],
+                    'work_description': se.work_description,
+                    'problem_description': se.problem_description,
+                    'unit': {'id': se.unit_service_area.unit_id, 'name': se.unit_service_area.unit.name},
+                    'service_area': {'id': se.unit_service_area.service_area_id, 'name': se.unit_service_area.service_area.name},
+                })
+
+        # self.plot_data['test_list_names'] = test_list_names
 
     def render_to_response(self, context):
         context['table'] = self.render_table(context['headers'], context['rows'])
@@ -361,9 +481,6 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
 
         super(ControlChartImage, self).get_plot_data()
 
-        if self.plot_data:
-            self.plot_data = dict([self.plot_data.popitem()])
-
     def render_to_response(self, context):
         """Create a png image and write the control chart image to it"""
 
@@ -376,10 +493,11 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
         canvas = FigureCanvas(fig)
         dates, data = [], []
 
-        if context["data"] and context["data"].values():
-            name, points = context["data"].items()[0]
+        if context["plot_data"]['series'] and list(context["plot_data"]['series'].values()):
+            name, series = list(context["plot_data"]['series'].items())[0]
+            points = series['series_data']
             if points:
-                dates, data = zip(*[(ti["date"], ti["value"]) for ti in points])
+                dates, data = list(zip(*[(ti["date"], ti["value"]) for ti in points if ti['value'] is not None]))
 
         n_baseline_subgroups = self.get_number_from_request("n_baseline_subgroups", 2, dtype=int)
         n_baseline_subgroups = max(2, n_baseline_subgroups)
@@ -390,22 +508,22 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
 
         include_fit = self.request.GET.get("fit_data", "") == "true"
 
-        response = HttpResponse(content_type="image/png")
+        buf = io.BytesIO()
         if n_baseline_subgroups < 1 or n_baseline_subgroups > len(data) / subgroup_size:
             fig.text(0.1, 0.9, "Not enough data for control chart", fontsize=20)
-            canvas.print_png(response)
+            fig.savefig(buf, format="png")
         else:
             try:
                 control_chart.display(fig, numpy.array(data), subgroup_size, n_baseline_subgroups, fit=include_fit, dates=dates)
                 fig.autofmt_xdate()
-                canvas.print_png(response)
-            except (RuntimeError, OverflowError) as e:  # pragma: nocover
+                fig.savefig(buf, format="png")
+            except (RuntimeError, OverflowError, TypeError) as e:  # pragma: nocover
                 fig.clf()
                 msg = "There was a problem generating your control chart:\n%s" % str(e)
                 fig.text(0.1, 0.9, "\n".join(textwrap.wrap(msg, 40)), fontsize=12)
-                canvas.print_png(response)
+                fig.savefig(buf, format="png")
 
-        return response
+        return HttpResponse(buf.getvalue(), content_type="image/png")
 
 
 class ExportCSVView(PermissionRequiredMixin, JSONResponseMixin, BaseChartView):

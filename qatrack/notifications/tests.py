@@ -1,8 +1,10 @@
-from django.test import TestCase
 from django.core import mail
+from django.test import TestCase
+
 from qatrack.qa import models, signals
 import qatrack.qa.tests.utils as utils
-from .models import NotificationSubscription, TOLERANCE
+
+from .models import TOLERANCE, NotificationSubscription
 
 
 class TestEmailSent(TestCase):
@@ -13,6 +15,10 @@ class TestEmailSent(TestCase):
 
         self.ref = models.Reference(type=models.NUMERICAL, value=100.)
         self.tol = models.Tolerance(type=models.PERCENT, act_low=-3, tol_low=-2, tol_high=2, act_high=3)
+        self.ref.created_by = utils.create_user()
+        self.tol.created_by = utils.create_user()
+        self.ref.modified_by = utils.create_user()
+        self.tol.modified_by = utils.create_user()
         self.values = [None, None, 96, 97, 100, 100]
 
         self.statuses = [utils.create_status(name="status%d" % x, slug="status%d" % x) for x in range(len(self.values))]
@@ -33,6 +39,11 @@ class TestEmailSent(TestCase):
         user.email = "example@example.com"
         user.save()
 
+        self.inactive_user = models.User.objects.create_user('inactive', 'a@b.com', 'password')
+        self.inactive_user.groups.add(self.group)
+        self.inactive_user.is_active = False
+        self.inactive_user.save()
+
     def create_test_list_instance(self):
         utc = self.unit_test_collection
 
@@ -45,9 +56,12 @@ class TestEmailSent(TestCase):
             ti.tolerance = self.tol
             if i == 0:
                 ti.skipped = True
-            elif i == 1:
+            if i == 1:
                 ti.tolerance = None
                 ti.reference = None
+            else:
+                ti.reference.save()
+                ti.tolerance.save()
 
             ti.save()
         tli.save()
@@ -59,6 +73,13 @@ class TestEmailSent(TestCase):
         notification.save()
         signals.testlist_complete.send(sender=self, instance=self.test_list_instance, created=True)
         self.assertEqual(len(mail.outbox), 1)
+
+    def test_inactive_not_included(self):
+
+        notification = NotificationSubscription(group=self.group, warning_level=TOLERANCE)
+        notification.save()
+        signals.testlist_complete.send(sender=self, instance=self.test_list_instance, created=True)
+        self.assertNotIn(self.inactive_user.email, mail.outbox[0].recipients())
 
     def test_email_not_sent(self):
         # no failing tests so

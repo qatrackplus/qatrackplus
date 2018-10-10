@@ -10,8 +10,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.conf import settings
 
 from .. import models
-
-
+from qatrack.service_log import models as sl_models
+from qatrack.service_log.forms import ServiceEventMultipleField
 from qatrack.qa import utils
 
 BOOL_CHOICES = [(0, "No"), (1, "Yes")]
@@ -107,6 +107,19 @@ class TestInstanceWidgetsMixin(object):
         elif self.unit_test_info.test.type in (models.STRING_COMPOSITE,):
             self.fields["string_value"].widget.attrs["readonly"] = "readonly"
 
+    @property
+    def attachments_to_process(self):
+        from qatrack.attachments.models import Attachment
+        to_process = []
+
+        uti_pk = self.unit_test_info.pk
+
+        user_attached = [x for x in self.cleaned_data.get("user_attached", "").split(",") if x]
+        for aid in user_attached:
+            to_process.append((uti_pk, Attachment.objects.get(pk=aid)))
+
+        return to_process
+
 
 class CreateTestInstanceForm(TestInstanceWidgetsMixin, forms.Form):
 
@@ -115,6 +128,8 @@ class CreateTestInstanceForm(TestInstanceWidgetsMixin, forms.Form):
 
     skipped = forms.BooleanField(required=False, help_text=_("Was this test skipped for some reason (add comment)"))
     comment = forms.CharField(widget=forms.Textarea, required=False, help_text=_("Show or hide comment field"))
+
+    user_attached = forms.CharField(widget=forms.HiddenInput, required=False)
 
     def __init__(self, *args, **kwargs):
         super(CreateTestInstanceForm, self).__init__(*args, **kwargs)
@@ -172,9 +187,11 @@ class CreateTestInstanceFormSet(UserFormsetMixin, BaseTestInstanceFormSet):
 
 class UpdateTestInstanceForm(TestInstanceWidgetsMixin, forms.ModelForm):
 
+    user_attached = forms.CharField(widget=forms.HiddenInput, required=False)
+
     class Meta:
         model = models.TestInstance
-        fields = ("value", "string_value", "skipped", "comment",)
+        fields = ("value", "string_value", "skipped", "comment", "user_attached",)
 
     def __init__(self, *args, **kwargs):
 
@@ -184,6 +201,7 @@ class UpdateTestInstanceForm(TestInstanceWidgetsMixin, forms.ModelForm):
         self.unit_test_info = self.instance.unit_test_info
         self.set_value_widget()
         self.disable_read_only_fields()
+        self.fields["comment"].widget.attrs["rows"] = 2
 
     def get_test_info(self):
         return {
@@ -227,30 +245,61 @@ class BaseTestListInstanceForm(forms.ModelForm):
 
     modified = forms.DateTimeField(required=False)
 
+    service_events = ServiceEventMultipleField(queryset=sl_models.ServiceEvent.objects.none(), required=False)
+    rtsqa_id = forms.IntegerField(required=False, widget=HiddenInput())
+    # now handle saving of qa or service event and link rtsqa
+
+    tli_attachments = forms.FileField(
+        label="Attachments",
+        max_length=150,
+        required=False,
+        widget=forms.FileInput(attrs={
+            'multiple': '',
+            'class': 'file-upload',
+            'style': 'display:none',
+        })
+    )
+
     class Meta:
         model = models.TestListInstance
         exclude = ("day",)
 
     def __init__(self, *args, **kwargs):
+
+        self.unit = kwargs.pop('unit', None)
+        self.rtsqa_id = kwargs.pop('rtsqa', None)
+
         super(BaseTestListInstanceForm, self).__init__(*args, **kwargs)
 
-        for field in ("work_completed", "work_started"):
+        for field in ('work_completed', 'work_started'):
             self.fields[field].widget = forms.widgets.DateTimeInput()
 
             self.fields[field].widget.format = settings.INPUT_DATE_FORMATS[0]
             self.fields[field].input_formats = settings.INPUT_DATE_FORMATS
             self.fields[field].widget.attrs["title"] = settings.DATETIME_HELP
-            self.fields[field].widget.attrs["class"] = "input-medium"
+            self.fields[field].widget.attrs['class'] = 'form-control'
             self.fields[field].help_text = settings.DATETIME_HELP
 
-        self.fields["status"].widget.attrs["class"] = "input-medium"
-
+        self.fields["status"].widget.attrs["class"] = "form-control select2"
         self.fields["work_completed"].widget.attrs["placeholder"] = "optional"
+        self.fields['service_events'].widget.attrs.update({'class': 'select2'})
 
-        self.fields["comment"].widget.attrs["rows"] = "4"
-        self.fields["comment"].widget.attrs["class"] = "pull-right"
-        self.fields["comment"].widget.attrs["placeholder"] = "Add comment about this set of tests"
-        self.fields["comment"].widget.attrs.pop("cols")
+        if self.instance.pk and settings.USE_SERVICE_LOG:
+            se_ids = []
+            rtsqa_ids = []
+            for rtsqa in self.instance.rtsqa_for_tli.all():
+                se_ids.append(rtsqa.service_event_id)
+                rtsqa_ids.append(rtsqa.id)
+            self.initial['rtsqa_id'] = ','.join(str(x) for x in rtsqa_ids)
+            se_qs = sl_models.ServiceEvent.objects.filter(pk__in=se_ids)
+            self.fields['service_events'].queryset = se_qs
+            self.initial['service_events'] = se_qs
+
+        elif self.rtsqa_id and settings.USE_SERVICE_LOG:
+            rtsqa = sl_models.ReturnToServiceQA.objects.get(pk=self.rtsqa_id)
+            self.fields['service_events'].queryset = sl_models.ServiceEvent.objects.filter(pk=rtsqa.service_event.id)
+            self.initial['service_events'] = sl_models.ServiceEvent.objects.filter(pk=rtsqa.service_event.id)
+            self.initial['rtsqa_id'] = sl_models.ReturnToServiceQA.objects.get(pk=self.rtsqa_id).id
 
     def clean(self):
         """validate the work_completed & work_started values"""
@@ -265,13 +314,16 @@ class BaseTestListInstanceForm(forms.ModelForm):
         work_completed = cleaned_data.get("work_completed")
 
         # keep previous work completed date if present
-        if not work_completed and self.instance:
-            work_completed = self.instance.work_completed
+        if not work_completed:
+            if not self.instance.pk:
+                work_completed = timezone.now().astimezone(timezone.get_current_timezone())
+            else:
+                work_completed = self.instance.work_completed
             cleaned_data["work_completed"] = work_completed
 
         if work_started and work_completed:
             if work_completed == work_started:
-                cleaned_data["work_started"] -= timezone.timedelta(minutes=1)
+                cleaned_data["work_completed"] = timezone.now().astimezone(timezone.get_current_timezone())
             elif work_completed < work_started:
                 self._errors["work_started"] = self.error_class(["Work started date/time can not be after work completed date/time"])
                 del cleaned_data["work_started"]
@@ -288,9 +340,15 @@ class BaseTestListInstanceForm(forms.ModelForm):
 class CreateTestListInstanceForm(BaseTestListInstanceForm):
     """form for doing qa test list"""
 
+    comment = forms.CharField(widget=forms.Textarea, required=False)
+    initiate_service = forms.BooleanField(help_text=_('Initiate service event'), required=False)
+
     def __init__(self, *args, **kwargs):
         super(CreateTestListInstanceForm, self).__init__(*args, **kwargs)
-        self.fields["work_started"].initial = timezone.localtime(timezone.now()).strftime(settings.INPUT_DATE_FORMATS[0])
+        self.fields['work_started'].initial = timezone.localtime(timezone.now()).strftime(settings.INPUT_DATE_FORMATS[0])
+        self.fields['comment'].widget.attrs['rows'] = '3'
+        self.fields['comment'].widget.attrs['placeholder'] = 'Add comment about this set of tests'
+        self.fields['comment'].widget.attrs['class'] = 'autosize form-control'
 
 
 class UpdateTestListInstanceForm(BaseTestListInstanceForm):
@@ -328,40 +386,3 @@ class ReviewTestListInstanceForm(forms.ModelForm):
         if self.instance.created_by == self.user and not self.user.has_perm('qa.can_review_own_tests'):
             raise ValidationError("You do not have the required permission to review your own tests.")
         return cleaned_data
-
-
-class SetReferencesAndTolerancesForm(forms.Form):
-    """Form for copying references and tolerances from TestList Unit 'x' to TestList Unit 'y' """
-
-    source_unit = forms.ModelChoiceField(queryset=models.Unit.objects.all())
-    content_type = forms.ChoiceField((('', '---------'), ('testlist', 'TestList'), ('testlistcycle', 'TestListCycle')))
-
-    # Populate the source testlist field
-    source_testlist = forms.ChoiceField([], label='Source testlist(cycle)')
-
-    # Populate the dest_unit field
-    dest_unit = forms.ModelChoiceField(queryset=models.Unit.objects.all())
-
-    def __init__(self, *args, **kwargs):
-
-        super(SetReferencesAndTolerancesForm, self).__init__(*args, **kwargs)
-
-        testlistchoices = models.TestList.objects.all().order_by("name").values_list("pk", 'name')
-        testlistcyclechoices = models.TestListCycle.objects.all().order_by("name").values_list("pk", 'name')
-        choices = [('', '---------')] + list(testlistchoices) + list(testlistcyclechoices)
-
-        self.fields['source_testlist'].choices = choices
-
-    def save(self):
-        source_unit = self.cleaned_data.get("source_unit")
-        source_testlist = self.cleaned_data.get("source_testlist")
-        dest_unit = self.cleaned_data.get("dest_unit")
-        ctype = ContentType.objects.get(model=self.cleaned_data.get("content_type"))
-
-        try:
-            source_utc = models.UnitTestCollection.objects.get(
-                unit=source_unit, object_id=source_testlist, content_type=ctype
-            )
-        except models.UnitTestCollection.DoesNotExist:
-            raise ValidationError(_('Invalid value'), code='invalid')
-        source_utc.copy_references(dest_unit)

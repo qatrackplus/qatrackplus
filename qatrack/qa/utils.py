@@ -1,13 +1,11 @@
+import io
 import json
 import math
-import StringIO
-import tokenize
 import token
+import tokenize
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
-
-import models
 
 
 class SetEncoder(json.JSONEncoder):
@@ -20,10 +18,12 @@ class SetEncoder(json.JSONEncoder):
 
 def qs_extra_for_utc_name():
 
-        ct_tl = ContentType.objects.get_for_model(models.TestList)
-        ct_tlc = ContentType.objects.get_for_model(models.TestListCycle)
+    from qatrack.qa import models
 
-        extraq = """
+    ct_tl = ContentType.objects.get_for_model(models.TestList)
+    ct_tlc = ContentType.objects.get_for_model(models.TestListCycle)
+
+    extraq = """
          CASE
             WHEN content_type_id = {0}
                 THEN (SELECT name AS utc_name from qa_testlist WHERE object_id = qa_testlist.id )
@@ -32,18 +32,9 @@ def qs_extra_for_utc_name():
          END
          """.format(ct_tl.pk, ct_tlc.pk)
 
-        extraq_lower = """
-         CASE
-            WHEN content_type_id = {0}
-                THEN (SELECT LOWER(name) as utc_name_lower from qa_testlist WHERE object_id = qa_testlist.id )
-            WHEN content_type_id = {1}
-                THEN (SELECT LOWER(name) as utc_name_lower from qa_testlistcycle WHERE object_id = qa_testlistcycle.id)
-         END
-         """.format(ct_tl.pk, ct_tlc.pk)
-
-        return {
-            "select": {'utc_name': extraq, 'utc_name_lower': extraq_lower },
-        }
+    return {
+        "select": {'utc_name': extraq}
+    }
 
 
 def to_precision(x, p):
@@ -100,7 +91,7 @@ def to_precision(x, p):
             out.extend(m[e + 1:])
     else:
         out.append("0.")
-        out.extend(["0"]*-(e + 1))
+        out.extend(["0"] * -(e + 1))
         out.append(m)
 
     return "".join(out)
@@ -108,7 +99,7 @@ def to_precision(x, p):
 
 def tokenize_composite_calc(calc_procedure):
     """tokenize a calculation procedure"""
-    tokens = tokenize.generate_tokens(StringIO.StringIO(calc_procedure).readline)
+    tokens = tokenize.generate_tokens(io.StringIO(calc_procedure).readline)
     return [t[token.NAME] for t in tokens if t[token.NAME]]
 
 
@@ -159,8 +150,10 @@ def almost_equal(a, b, significant=7):
 
 
 def check_query_count():  # pragma: nocover
-    """ A useful debugging decorator for checking the number of queries
-    a function is making"""
+    """
+    A useful debugging decorator for checking the number of queries a function
+    is making
+    """
 
     from django.db import connection
     import time
@@ -173,8 +166,46 @@ def check_query_count():  # pragma: nocover
                 ret = func(self, *args, **kwargs)
                 t2 = time.time()
                 final_queries = len(connection.queries)
-                print "****QUERIES****", final_queries - initial_queries, "in %.3f ms" % (t2 - t1)
+                print("****QUERIES****", final_queries - initial_queries, "in %.3f ms" % (t2 - t1))
                 return ret
             return inner
         return func
     return decorator
+
+
+def get_bool_tols(user_klass=None, tol_klass=None):
+
+    from qatrack.qa import models
+    user_klass = user_klass or models.User
+    tol_klass = tol_klass or models.Tolerance
+    user = get_internal_user(user_klass)
+
+    warn, __ = tol_klass.objects.get_or_create(
+        type=models.BOOLEAN,
+        bool_warning_only=True,
+        created_by=user,
+        modified_by=user
+    )
+    act, __ = tol_klass.objects.get_or_create(
+        type=models.BOOLEAN,
+        bool_warning_only=False,
+        created_by=user,
+        modified_by=user
+    )
+    return warn, act
+
+
+def get_internal_user(user_klass=None):
+
+    from qatrack.qa import models
+    user_klass = user_klass or models.User
+
+    try:
+        u = user_klass.objects.get(username="QATrack+ Internal")
+    except user_klass.DoesNotExist:
+        pwd = user_klass.objects.make_random_password()
+        u = user_klass.objects.create(username="QATrack+ Internal", password=pwd)
+        u.is_active = False
+        u.save()
+
+    return u

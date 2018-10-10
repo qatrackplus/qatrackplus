@@ -1,0 +1,108 @@
+svg {
+    border: solid 1px #bbbbbb;
+    background-color: white;
+}
+g.day_heading_container {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+text.day-heading {
+    stroke: none;
+    fill: #666666;
+    font-family: 'Source Sans Pro', sans-serif;
+}
+rect.day-rect {
+    stroke: #dddddd;
+    stroke-width: '1';
+    shape-rendering: 'crispEdges';
+    fill: white;
+}
+rect.bar-rect {
+    stroke: none;
+}
+/*rect.bar-rect.changed {*/
+    /*stroke: #3b6884;*/
+    /*stroke-width: 2;*/
+/*}*/
+/*rect.bar-rect.changed:hover {*/
+    /*stroke: #000000;*/
+/*}*/
+g.day-g.current-month > text {
+    font-weight: bold;
+}
+g.day-g.current-month > rect.day-rect {
+    fill: #e9eef4;
+}
+g.day-g.selected-day > rect.day-rect {
+    fill: #c1c6cc;
+}
+text.day-num {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    pointer-events: none;
+}
+text.day-label {
+    font-size: 10px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    pointer-events: none;
+}
+div.tooltip {
+    position: absolute;
+    text-align: center;
+    border: 0;
+    border-radius: 2px;
+    pointer-events: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    padding: 2px;
+    font: 12px sans-serif;
+    height: auto;
+}
+div.tooltip.hours-tooltip {
+    width: 60px;
+    background: #d9dadd;
+}
+text.icon-label {
+    stroke: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+text.icon-label.uat-change-icon {
+    font: 15px sans-serif;
+    font-weight: bolder;
+    pointer-events: none;
+}
+text.icon-label.acceptance-icon {
+    font: 12px sans-serif;
+}
+div.tooltip.acceptance-icon-tooltip {
+    width: 80px;
+    background: #bdd3dd;
+
+}
+.weekday-row {
+    margin-top: 10px;
+}
+.weekday-row > .row:nth-child(1) > div {
+    color: #555;
+    font-style: italic;
+    font-size: 11px;
+}
+.schedule-change-box {
+    border-bottom: 1px solid #ddd;
+    border-left: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+    border-top: none;
+    padding: 5px;
+}

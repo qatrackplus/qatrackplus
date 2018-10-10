@@ -1,29 +1,35 @@
 from django.contrib.auth.models import User, Group, Permission
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import get_model
+from django.apps import apps
 from django.utils import timezone
 
 from qatrack.qa import models
-from qatrack.units.models import Unit, UnitType, Modality, PHOTON
+from qatrack.units.models import Unit, UnitType, Modality, PHOTON, Vendor
+
+
+def get_next_id(obj):
+    if obj is None:
+        return 1
+    return obj.id + 1
 
 
 def exists(app, model, field, value):
-    a_model = get_model(app, model)
+    a_model = apps.get_model(app, model)
     results = a_model.objects.filter(**{field: value})
     if len(results) > 0:
         return True
     return False
 
 
-def create_user(is_staff=True, is_superuser=True, uname="user", pwd="password"):
+def create_user(is_staff=True, is_superuser=True, uname="user", pwd="password", is_active=True):
     try:
         u = User.objects.get(username=uname)
     except:
-        u = User(
-            username=uname, is_staff=is_staff, is_superuser=is_superuser
-        )
-        u.set_password(pwd)
-        u.save()
+        if is_superuser:
+            u = User.objects.create_superuser(uname, "super@qatrackplus.com", pwd, is_staff=is_staff, is_active=is_active)
+        else:
+            u = User.objects.create_user(uname, "user@qatrackplus.com", password=pwd, is_staff=is_staff, is_active=is_active)
+    finally:
         u.user_permissions.add(Permission.objects.get(codename="add_testlistinstance"))
     return u
 
@@ -34,7 +40,13 @@ def create_category(name="cat", slug="cat", description="cat"):
     return c
 
 
-def create_status(name="status", slug="status", is_default=True, requires_review=True):
+def create_status(name=None, slug=None, is_default=True, requires_review=True):
+
+    if name is None:
+        name = 'status_%04d' % get_next_id(models.TestInstanceStatus.objects.order_by('id').last())
+    if slug is None:
+        slug = 'status_%04d' % get_next_id(models.TestInstanceStatus.objects.order_by('id').last())
+
     status = models.TestInstanceStatus(name=name, slug=slug, is_default=is_default, requires_review=requires_review)
     status.save()
     return status
@@ -43,7 +55,7 @@ def create_status(name="status", slug="status", is_default=True, requires_review
 def create_test(name=None, test_type=models.SIMPLE, choices=None, procedure=None, constant_value=None):
     user = create_user()
     if name is None or models.Test.objects.filter(name=name).count() > 0:
-        name = "test%d" % models.Test.objects.count()
+        name = "test_%d" % models.Test.objects.count()
     test = models.Test(
         name=name,
         slug=name,
@@ -60,7 +72,10 @@ def create_test(name=None, test_type=models.SIMPLE, choices=None, procedure=None
     return test
 
 
-def create_test_list(name="test_list"):
+def create_test_list(name=None):
+
+    if name is None:
+        name = 'test_list_%04d' % get_next_id(models.TestList.objects.order_by('id').last())
     user = create_user()
     test_list = models.TestList(
         name=name,
@@ -99,7 +114,11 @@ def create_test_list_instance(unit_test_collection=None, work_completed=None, cr
     return tli
 
 
-def create_cycle(test_lists=None, name="cycle"):
+def create_cycle(test_lists=None, name=None):
+
+    if name is None:
+        name = 'test_list_cycle_%04d' % get_next_id(models.TestListCycle.objects.order_by('id').last())
+
     user = create_user()
     cycle = models.TestListCycle(
         name=name,
@@ -120,13 +139,23 @@ def create_cycle(test_lists=None, name="cycle"):
     return cycle
 
 
-def create_test_list_membership(test_list, test, order=0):
+def create_test_list_membership(test_list=None, test=None, order=0):
+
+    if test_list is None:
+        test_list = create_test_list()
+    if test is None:
+        test = create_test()
+
     tlm = models.TestListMembership(test_list=test_list, test=test, order=order)
     tlm.save()
     return tlm
 
 
-def create_test_instance(test_list_instance, unit_test_info=None, value=1., created_by=None, work_completed=None, status=None):
+def create_test_instance(test_list_instance=None, unit_test_info=None, value=1., created_by=None, work_completed=None, status=None):
+
+    if test_list_instance is None:
+        test_list_instance = create_test_list_instance()
+
     if unit_test_info is None:
         unit_test_info = create_unit_test_info()
 
@@ -168,15 +197,38 @@ def create_modality(energy=6, particle=PHOTON, name=None):
     return m
 
 
-def create_unit_type(name="utype", vendor="vendor", model="model"):
+def create_vendor(name=None):
+
+    if name is None:
+        name = 'vendor_%04d' % get_next_id(Vendor.objects.order_by('id').last())
+
+    v, _ = Vendor.objects.get_or_create(name=name)
+
+    return v
+
+
+def create_unit_type(name=None, vendor=None, model="model"):
+
+    if name is None:
+        name = 'unit_type_%04d' % get_next_id(UnitType.objects.order_by('id').last())
+    if vendor is None:
+        vendor = create_vendor()
     ut, _ = UnitType.objects.get_or_create(name=name, vendor=vendor, model=model)
     ut.save()
     return ut
 
 
-def create_unit(name="unit", number=1):
-    u = Unit(name=name, number=number)
-    u.type = create_unit_type()
+def create_unit(name=None, number=None, tipe=None):
+
+    if name is None:
+        name = 'unit_%04d' % get_next_id(models.Unit.objects.order_by('id').last())
+    if number is None:
+        last = models.Unit.objects.order_by('number').last()
+        number = last.number + 1 if last else 0
+    if tipe is None:
+        tipe = create_unit_type()
+
+    u = Unit(name=name, number=number, date_acceptance=timezone.now(), type=tipe, is_serviceable=True)
     u.save()
     u.modalities.add(create_modality())
     u.save()
@@ -195,8 +247,9 @@ def create_reference(name="ref", ref_type=models.NUMERICAL, value=1, created_by=
     return r
 
 
-def create_tolerance(tol_type=models.ABSOLUTE, act_low=-2, tol_low=-1, tol_high=1, act_high=2,
-        created_by=None, mc_pass_choices=None, mc_tol_choices=None):
+def create_tolerance(tol_type=models.ABSOLUTE, act_low=-2, tol_low=-1, tol_high=1, act_high=2, created_by=None,
+                     mc_pass_choices=None, mc_tol_choices=None):
+
     if created_by is None:
         created_by = create_user()
 
@@ -222,14 +275,19 @@ def create_tolerance(tol_type=models.ABSOLUTE, act_low=-2, tol_low=-1, tol_high=
     return tol
 
 
-def create_group(name="group"):
+def create_group(name=None):
+    if name is None:
+        name = 'group_%04d' % get_next_id(Group.objects.order_by('id').last())
     g = Group(name=name)
     g.save()
     g.permissions.add(Permission.objects.get(codename="add_testlistinstance"))
     return g
 
 
-def create_frequency(name="freq", slug="freq", nom=1, due=1, overdue=1):
+def create_frequency(name=None, slug=None, nom=1, due=1, overdue=1):
+    if name is None or slug is None:
+        name = 'frequency_%04d' % get_next_id(models.Frequency.objects.order_by('id').last())
+        slug = name
     f = models.Frequency(
         name=name, slug=slug,
         nominal_interval=nom, due_interval=due, overdue_interval=overdue
@@ -261,7 +319,7 @@ def create_unit_test_info(unit=None, test=None, assigned_to=None, ref=None, tol=
     return uti
 
 
-def create_unit_test_collection(unit=None, frequency=None, test_collection=None, assigned_to=None, null_frequency=False):
+def create_unit_test_collection(unit=None, frequency=None, test_collection=None, assigned_to=None, null_frequency=False, active=True):
 
     if unit is None:
         unit = create_unit()
@@ -280,11 +338,12 @@ def create_unit_test_collection(unit=None, frequency=None, test_collection=None,
         object_id=test_collection.pk,
         content_type=ContentType.objects.get_for_model(test_collection),
         frequency=frequency,
-        assigned_to=assigned_to
+        assigned_to=assigned_to,
+        active=active
     )
 
     utc.save()
-    utc.visible_to = Group.objects.all()
+    utc.visible_to.add(*Group.objects.all())
     utc.save()
     return utc
 
@@ -292,3 +351,19 @@ def create_unit_test_collection(unit=None, frequency=None, test_collection=None,
 def datetimes_same(date1, date2, nminutes=1):
     """return whether date1 and date2 are the same within nminutes minutes"""
     return abs(date1 - date2) <= timezone.timedelta(minutes=nminutes)
+
+
+def create_sublist(parent_test_list=None, child_test_list=None, order=1):
+
+    if parent_test_list is None:
+        parent_test_list = create_test_list()
+    if child_test_list is None:
+        child_test_list = create_test_list()
+
+    s = models.Sublist(
+        parent=parent_test_list,
+        child=child_test_list,
+        order=order
+    )
+    s.save()
+    return s

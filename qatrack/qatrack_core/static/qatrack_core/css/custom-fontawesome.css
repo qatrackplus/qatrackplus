@@ -1,0 +1,93 @@
+.fa-in-input {
+    float: right;
+    margin-right: 6px;
+    margin-top: -20px;
+    position: relative;
+    z-index: 2;
+}
+
+.fa.primary {
+    color: #3c8dbc;
+}
+.fa.info {
+    color: #00c0ef;
+}
+.fa.danger {
+    color: #dd4b39;
+}
+.fa.warning {
+    color: #f39c12;
+}
+.fa.success {
+    color: #00a65a;
+}
+.fa.default {
+    color: #d2d6de;
+}
+
+.fa-stack-custom-sub {
+    position: absolute;
+    /*width: 50%;*/
+    /*height: 50%;*/
+    right: 0;
+    top: -5px;
+    font-size: 80%;
+}
+.fa-stack-custom-sub.lower-left {
+    right: auto;
+    top: auto;
+    left: -5px;
+    bottom: 0;
+}
+.fa-stack-custom-sub.lower-extra-left {
+    right: auto;
+    top: auto;
+    left: -5px;
+    bottom: 0;
+}
+.fa-stack-custom-sub.lower-xxleft {
+    right: auto;
+    top: auto;
+    left: -10px;
+    bottom: -3px;
+}
+.fa-stack-custom-sub.lower-right {
+    right: 0;
+    top: auto;
+    left: auto;
+    bottom: 0;
+}
+.fa-stack-custom-sub.upper-left {
+    right: auto;
+    left: -5px;
+}
+.fa-stack-custom-sub.upper-0 {
+    right: auto;
+    left: 0px;
+}
+.fa.larger {
+    width: 150%;
+    height: 150%;
+}
+.fa-stack-custom-main {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    text-align: center;
+}
+.fa-stack.fa-fw {
+    width: 1.2857142857142858em;
+    height: 1em;
+    /*line-height: inherit;*/
+}
+ul.timeline > li > i.fa-stack > .fa-stack-custom-main {
+    left: 3px;
+    top: 9px;
+}
+ul.timeline > li > i.fa-stack > .fa-stack-custom-sub.upper-left {
+    left: 3px;
+    top: 5px;
+}
+.down-2 {
+    top: 1.5px;
+}

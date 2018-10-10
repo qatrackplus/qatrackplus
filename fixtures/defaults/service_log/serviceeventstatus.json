@@ -1,0 +1,57 @@
+[
+{
+    "model": "service_log.serviceeventstatus",
+    "fields": {
+        "name": "Service Pending",
+        "is_default": true,
+        "is_review_required": true,
+        "rts_qa_must_be_reviewed": false,
+        "description": "Default service event status",
+        "colour": "rgba(210,214,222,1)"
+    }
+},
+{
+    "model": "service_log.serviceeventstatus",
+    "fields": {
+        "name": "Service Complete",
+        "is_default": false,
+        "is_review_required": true,
+        "rts_qa_must_be_reviewed": false,
+        "description": "Work on service event is complete. Awaiting review if required",
+        "colour": "rgba(60,141,188,1)"
+    }
+},
+{
+    "model": "service_log.serviceeventstatus",
+    "fields": {
+        "name": "Approved",
+        "is_default": false,
+        "is_review_required": false,
+        "rts_qa_must_be_reviewed": true,
+        "description": "Return to service has been performed and reviewed. Physics has reviewed and approved service event",
+        "colour": "rgba(0,166,90,1)"
+    }
+},
+{
+    "model": "service_log.serviceeventstatus",
+    "fields": {
+        "name": "Rejected",
+        "is_default": false,
+        "is_review_required": false,
+        "rts_qa_must_be_reviewed": false,
+        "description": "Physics has reviewed rejected service event",
+        "colour": "rgba(221,75,57,1)"
+    }
+},
+{
+    "model": "service_log.serviceeventstatus",
+    "fields": {
+        "name": "Test Data",
+        "is_default": false,
+        "is_review_required": false,
+        "rts_qa_must_be_reviewed": false,
+        "description": "",
+        "colour": "rgba(243,247,10,1)"
+    }
+}
+]

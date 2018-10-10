@@ -1,0 +1,15 @@
+{% load qa_tags %}
+{% if action == "perform" and perms.qa.add_testlistinstance %}
+    <a class="btn btn-default btn-xs btn-flat"
+      href="{% url 'perform_qa' utc.pk %}?day=next&next={{request.path|cut:"data/"}}"
+      title="Perform {{ utc.name }} for Unit {{ utc.unit.name }}">
+      Perform
+    </a>
+{% elif action == "review" and perms.qa.can_view_history %}
+    <a class="btn btn-default btn-xs btn-flat"
+      href="{% url 'review_utc' utc.pk %}?next={{request.path|cut:"data/"}}"
+      title="Review historical data for {{ utc.name }} from Unit {{ utc.unit.name }}"
+      >
+      History
+    </a>
+{% endif %}

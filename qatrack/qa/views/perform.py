@@ -1,39 +1,52 @@
 import collections
+from functools import reduce
 import json
 import math
 import os
-import shutil
-import imghdr
+import traceback
 
-
+from braces.views import JSONResponseMixin, PermissionRequiredMixin
 import dateutil
-import dicom
-import numpy
-import scipy
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.sites.shortcuts import get_current_site
+from django.core.cache import cache
+from django.core.files.base import ContentFile
 from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.forms.models import model_to_dict
-from django.http import HttpResponseRedirect, Http404
+from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
-from django.views.generic import View, CreateView, TemplateView
+from django.template.defaultfilters import filesizeformat
 from django.utils import timezone
 from django.utils.translation import ugettext as _
+from django.views.generic import CreateView, TemplateView, View
+from django_comments.models import Comment
+import matplotlib
+from matplotlib.backends.backend_agg import FigureCanvasAgg
+from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
+import numpy
+import pydicom as dicom
+import scipy
+
+from qatrack.attachments.models import Attachment
+from qatrack.attachments.utils import imsave, to_bytes
+from qatrack.contacts.models import Contact
+from qatrack.service_log import models as sl_models
+from qatrack.units.models import Site, Unit
 
 from . import forms
-from .. import models, utils, signals
+from .. import models, signals, utils
 from .base import BaseEditTestListInstance, TestListInstances, UTCList, logger
-from qatrack.contacts.models import Contact
-from qatrack.units.models import Unit
-
-from braces.views import JSONResponseMixin, PermissionRequiredMixin
 
 DEFAULT_CALCULATION_CONTEXT = {
-    "math": math,
-    "scipy": scipy,
-    "numpy": numpy,
     "dicom": dicom,
+    "pydicom": dicom,
+    "math": math,
+    "numpy": numpy,
+    "matplotlib": matplotlib,
+    "scipy": scipy,
 }
 
 
@@ -44,37 +57,260 @@ def process_procedure(procedure):
     :view:`qa.perform.CompositeCalculation` views.
 
     """
-
     return "\n".join(["from __future__ import division", procedure, "\n"]).replace('\r', '\n')
 
 
-def process_file_upload_form(ti_form, test_list_instance):
-    """
-    Check if test instance form is file upload and move the file out of
-    tmp directory if it is
-    """
+def set_attachment_owners(test_list_instance, attachments):
 
-    upload_to_process = (
-        ti_form.unit_test_info.test.is_upload()
-        and not ti_form.cleaned_data["skipped"]
-        and ti_form.cleaned_data["string_value"].strip()
+    tis = test_list_instance.testinstance_set.select_related("unit_test_info")
+    for uti_id, attachment in attachments:
+        for ti in tis:
+            if ti.unit_test_info.pk == uti_id:
+                attachment.testinstance = ti
+                attachment.save()
+
+
+def attachment_info(attachment):
+    return {
+        'attachment_id': attachment.id,
+        'name': os.path.basename(attachment.attachment.name),
+        'size': filesizeformat(attachment.attachment.size),
+        'url': attachment.attachment.url,
+        'is_image': attachment.is_image,
+    }
+
+
+class CompositeUtils:
+
+    def __init__(self, user, unit, test_list, meta, context, comments):
+        self.context = context
+        self.context['__user_attached__'] = []
+        self.user = user
+        self.unit = unit
+        self.meta = meta
+        self.test_list = test_list
+        self.comments = comments
+
+    def set_comment(self, comment):
+        self.context["__comment__"] = comment
+
+    def get_comment(self, slug):
+        return self.comments.get(slug, "")
+
+    def write_file(self, fname, obj):
+
+        fname = os.path.basename(fname)
+        data = imsave(obj, fname)
+        if data is None:
+            data = to_bytes(obj, fname)
+
+        f = ContentFile(data, fname)
+
+        attachment = Attachment(
+            attachment=f,
+            comment=_("Composite created file"),
+            created_by=self.user,
+        )
+        attachment.save()
+
+        self.context["__user_attached__"].append(attachment_info(attachment))
+
+    def previous_test_list_instance(self, include_in_progress=False):
+        before = self.meta.get("work_started", self.meta.get("work_completed")) or timezone.now()
+        qs = models.TestListInstance.objects.filter(
+            test_list=self.test_list,
+            unit_test_collection__unit=self.unit,
+            work_completed__lt=before,
+        )
+        if not include_in_progress:
+            qs = qs.exclude(in_progress=True)
+
+        try:
+            return qs.latest("work_completed")
+        except models.TestListInstance.DoesNotExist:
+            return None
+
+    def previous_test_instance(self, test, same_list_only=True, include_in_progress=False):
+        try:
+            slug = test.slug
+        except AttributeError:
+            slug = test
+
+        before = self.meta.get("work_started", self.meta.get("work_completed")) or timezone.now()
+        qs = models.TestInstance.objects.filter(
+            unit_test_info__test__slug=slug,
+            unit_test_info__unit=self.unit,
+            work_completed__lt=before,
+        )
+        if same_list_only:
+            qs = qs.filter(test_list_instance__test_list=self.test_list)
+        if not include_in_progress:
+            qs = qs.exclude(test_list_instance__in_progress=True)
+
+        try:
+            return qs.latest("work_completed")
+        except models.TestInstance.DoesNotExist:
+            return None
+
+    def get_figure(self):
+        fig = Figure()
+        canvas = FigureCanvasAgg(fig)
+        return fig
+
+
+def get_context_refs_tols(unit, tests):
+
+    utis = models.UnitTestInfo.objects.filter(
+        unit=unit,
+        test_id__in=tests.values_list("id"),
+        active=True,
+    ).select_related("reference", "test", "tolerance",).values(
+        "test__slug",
+        "reference__value",
+        "tolerance__type",
+        "tolerance__mc_tol_choices",
+        "tolerance__mc_pass_choices",
+        "tolerance__act_high",
+        "tolerance__act_low",
+        "tolerance__tol_high",
+        "tolerance__tol_low",
     )
+    refs = {}
+    tols = {}
+    tol_keys = ["act_high", "act_low", "tol_high", "tol_low", "mc_pass_choices", "mc_tol_choices", "type"]
+    for uti in utis:
+        slug = uti["test__slug"]
+        refs[slug] = uti['reference__value']
+        tols[slug] = {k: uti["tolerance__%s" % k] for k in tol_keys}
 
-    if upload_to_process:
-        fname = ti_form.cleaned_data["string_value"]
-        src = os.path.join(settings.TMP_UPLOAD_ROOT, fname)
+    return refs, tols
 
-        if not os.path.exists(src):
-            # has already been moved (i.e. we are completing an
-            # in progress list or editing an already complete list
-            return
 
-        d = os.path.join(settings.UPLOAD_ROOT, "%s" % test_list_instance.pk)
-        if not os.path.exists(d):
-            os.mkdir(d)
+class UploadHandler:
 
-        dest = os.path.join(settings.UPLOAD_ROOT, d, fname)
-        shutil.move(src, dest)
+    def __init__(self, user, data, fp):
+        self.user = user
+        self.data = data
+        self.file = fp
+
+    def process(self):
+        """process file, apply calculation procedure and return results"""
+
+        try:
+            self.test_list = models.TestList.objects.get(pk=self.data["test_list_id"])
+            self.all_tests = self.test_list.all_tests()
+        except (KeyError, models.TestList.DoesNotExist):
+            return {"success": False, "errors": ["Invalid or missing test_list_id"]}
+
+        try:
+            self.unit = Unit.objects.get(pk=self.data["unit_id"])
+        except (KeyError, Unit.DoesNotExist):
+            return {"success": False, "errors": ["Invalid or missing unit_id"]}
+
+        try:
+            if self.data.get('attachment_id'):
+                self.reprocess()
+            else:
+                self.handle_upload()
+
+            results = self.run_calc()
+        except Exception:
+            msg = traceback.format_exc(limit=5, chain=True)
+            results = {
+                'success': False,
+                'errors': [msg],
+                "result": None,
+                "user_attached": [],
+            }
+
+        return results
+
+    def reprocess(self):
+        self.attach_id = self.data.get("attachment_id")
+        try:
+            self.attachment = Attachment.objects.get(pk=self.attach_id)
+        except Attachment.DoesNotExist:
+            self.attachment = None
+
+    def run_calc(self):
+
+        self.set_calculation_context()
+
+        results = {
+            'attachment_id': self.attachment.id,
+            'attachment': attachment_info(self.attachment),
+            'success': False,
+            'errors': [],
+            "result": None,
+            "comment": "",
+            "user_attached": [],
+        }
+
+        if self.attachment is None:
+            results["errors"] = ["Original file not found. Please re-upload."]
+            return results
+
+        try:
+            test = models.Test.objects.get(pk=self.data.get("test_id"))
+            code = compile(process_procedure(test.calculation_procedure), "__QAT+COMP_%s.py" % test.slug, "exec")
+            exec(code, self.calculation_context)
+            key = "result" if "result" in self.calculation_context else test.slug
+            results["result"] = self.calculation_context[key]
+            results["success"] = True
+            results["user_attached"] = list(self.calculation_context.get("__user_attached__", []))
+            results["comment"] = self.calculation_context.get("__comment__")
+        except models.Test.DoesNotExist:
+            results["errors"].append("Test with that ID does not exist")
+        except Exception:
+            msg = traceback.format_exc(
+                limit=5, chain=True
+            ).split("__QAT+COMP_")[-1].replace("<module>", "Test: %s" % test.name)
+            results["errors"].append("Invalid Test Procedure: %s" % msg)
+
+        return results
+
+    def handle_upload(self):
+        """read incoming file and save tmp file to disk ready for processing"""
+
+        comment = "Uploaded %s by %s" % (timezone.now(), self.user.username)
+        self.attachment = Attachment.objects.create(
+            attachment=self.file,
+            label=self.file.name,
+            comment=comment,
+            created_by=self.user,
+        )
+
+    def set_calculation_context(self):
+        """set up the environment that the composite test will be calculated in"""
+
+        self.calculation_context = {}
+
+        meta_data = self.data["meta"]
+        refs, tols = get_context_refs_tols(self.unit, self.all_tests)
+
+        for d in ("work_completed", "work_started"):
+            try:
+                meta_data[d] = dateutil.parser.parse(meta_data[d])
+            except (KeyError, AttributeError, TypeError):
+                pass
+
+        comments = self.data["comments"]
+        self.calculation_context.update({
+            "FILE": open(self.attachment.attachment.path, "r"),
+            "BIN_FILE": self.attachment.attachment,
+            "META": meta_data,
+            "REFS": refs,
+            "TOLS": tols,
+            "UTILS": CompositeUtils(
+                self.user,
+                self.unit,
+                self.test_list,
+                meta_data,
+                self.calculation_context,
+                comments,
+            ),
+        })
+        self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
 
 
 class Upload(JSONResponseMixin, View):
@@ -85,111 +321,137 @@ class Upload(JSONResponseMixin, View):
 
     def post(self, *args, **kwargs):
         """process file, apply calculation procedure and return results"""
-        if self.request.POST.get('filename'):
-            self.reprocess()
-        else:
-            self.handle_upload()
 
-        return self.run_calc()
+        try:
+            self.test_list = models.TestList.objects.get(pk=self.get_json_data("test_list_id"))
+            self.all_tests = self.test_list.all_tests()
+        except (models.TestList.DoesNotExist):
+            return self.render_json_response({"success": False, "errors": ["Invalid or missing test_list_id"]})
+
+        try:
+            self.unit = Unit.objects.get(pk=self.get_json_data("unit_id"))
+        except (Unit.DoesNotExist):
+            return self.render_json_response({"success": False, "errors": ["Invalid or missing unit_id"]})
+
+        try:
+            if self.request.POST.get('attachment_id'):
+                self.reprocess()
+            else:
+                self.handle_upload()
+
+            resp = self.run_calc()
+        except Exception:
+            msg = traceback.format_exc(limit=5, chain=True)
+            results = {
+                'success': False,
+                'errors': [msg],
+                "result": None,
+                "user_attached": [],
+            }
+            resp = self.render_json_response(results)
+        """
+        At the end of any view which may use mpl.pyplot to generate a plot
+        we need to clean the figure, to attempt to  prevent any crosstalk
+        between plots.
+
+        Generally people should use the OO interface to MPL rather than
+        pyplot, because pyplot is not threadsafe.
+        """
+        plt.clf()
+        return resp
 
     def reprocess(self):
-        tli = self.request.POST.get("test_list_instance")
-        self.file_name = self.request.POST.get("filename")
+        self.attach_id = self.request.POST.get("attachment_id")
         try:
-            self.upload = open(os.path.join(settings.UPLOAD_ROOT, "%s" % tli, self.file_name), "r+b")
-        except IOError:
-            self.upload = None
+            self.attachment = Attachment.objects.get(pk=self.attach_id)
+        except Attachment.DoesNotExist:
+            self.attachment = None
 
     def run_calc(self):
+
         self.set_calculation_context()
 
         results = {
-            'temp_file_name': self.file_name,
-            'is_image': self.is_image(),
+            'attachment_id': self.attachment.id,
+            'attachment': attachment_info(self.attachment),
             'success': False,
             'errors': [],
             "result": None,
+            "comment": "",
+            "user_attached": [],
         }
 
-        if self.upload is None:
+        if self.attachment is None:
             results["errors"] = ["Original file not found. Please re-upload."]
             return self.render_json_response(results)
 
         try:
             test = models.Test.objects.get(pk=self.request.POST.get("test_id"))
-            code = compile(process_procedure(test.calculation_procedure), "<string>", "exec")
-            exec code in self.calculation_context
+            code = compile(process_procedure(test.calculation_procedure), "__QAT+COMP_%s.py" % test.slug, "exec")
+            exec(code, self.calculation_context)
             key = "result" if "result" in self.calculation_context else test.slug
             results["result"] = self.calculation_context[key]
             results["success"] = True
+            results["user_attached"] = list(self.calculation_context.get("__user_attached__", []))
+            results["comment"] = self.calculation_context.get("__comment__")
         except models.Test.DoesNotExist:
             results["errors"].append("Test with that ID does not exist")
-        except Exception, e:
-            results["errors"].append("Invalid Test Procedure: %s" % e)
+        except Exception:
+            msg = traceback.format_exc(
+                limit=5, chain=True
+            ).split("__QAT+COMP_")[-1].replace("<module>", "Test: %s" % test.name)
+            results["errors"].append("Invalid Test Procedure: %s" % msg)
 
         return self.render_json_response(results)
-
-    @staticmethod
-    def get_upload_name(session_id, unit_test_info, name):
-        """construct a unique file name for uploaded file"""
-
-        name = name.rsplit(".", 1)
-        if len(name) == 1:
-            name.append("")
-        name, ext = name
-
-        name_parts = (
-            name,
-            unit_test_info,
-            "%s" % (timezone.now().date(),),
-            session_id[:6],
-        )
-        return "_".join(name_parts) + "." + ext
 
     def handle_upload(self):
         """read incoming file and save tmp file to disk ready for processing"""
 
-        self.file_name = self.get_upload_name(
-            self.request.COOKIES.get('sessionid'),
-            self.request.POST.get("test_id"),
-            self.request.FILES.get("upload").name,
+        comment = "Uploaded %s by %s" % (timezone.now(), self.request.user.username)
+        f = self.request.FILES.get('upload')
+        self.attachment = Attachment.objects.create(
+            attachment=f,
+            label=f.name,
+            comment=comment,
+            created_by=self.request.user,
         )
-
-        self.upload = open(os.path.join(settings.TMP_UPLOAD_ROOT, self.file_name), "w+b")
-
-        for chunk in self.request.FILES.get("upload").chunks():
-            self.upload.write(chunk)
-
-        # rewind to beginning of file so it  can be read correctly by calc procedure
-        self.upload.seek(0)
 
     def set_calculation_context(self):
         """set up the environment that the composite test will be calculated in"""
 
-        meta_data = self.get_json_data("meta")
+        self.calculation_context = {}
 
-        for d in ("work_completed", "work_started",):
+        meta_data = self.get_json_data("meta")
+        refs, tols = get_context_refs_tols(self.unit, self.all_tests)
+
+        for d in ("work_completed", "work_started"):
             try:
                 meta_data[d] = dateutil.parser.parse(meta_data[d])
-            except (KeyError, AttributeError):
+            except (KeyError, AttributeError, TypeError):
                 pass
 
-        refs = self.get_json_data("refs")
-        tols = self.get_json_data("tols")
+        comments = self.get_json_data("comments")
 
-        self.calculation_context = {
-            "FILE": self.upload,
+        self.calculation_context.update({
+            "FILE": open(self.attachment.attachment.path, "r"),
+            "BIN_FILE": self.attachment.attachment,
             "META": meta_data,
             "REFS": refs,
             "TOLS": tols,
-        }
+            "UTILS": CompositeUtils(
+                self.request.user,
+                self.unit,
+                self.test_list,
+                meta_data,
+                self.calculation_context,
+                comments,
+            ),
+        })
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
 
     def get_json_data(self, name):
         """return python data from GET json data"""
-        data = self.request.POST
-
-        json_string = data.get(name)
+        json_string = self.request.POST.get(name)
         if not json_string:
             return
 
@@ -198,36 +460,34 @@ class Upload(JSONResponseMixin, View):
         except (KeyError, ValueError):
             return
 
-    def is_image(self):
-        """check if the uploaded file is an image"""
-        return self.upload and imghdr.what(self.upload.name)
 
+class CompositePerformer:
 
-class CompositeCalculation(JSONResponseMixin, View):
-    """validate all qa tests in the request for the :model:`TestList` with id test_list_id"""
+    def __init__(self, user, data):
+        self.user = user
+        self.data = data
 
-    def get_json_data(self, name):
-        """return python data from GET json data"""
-
-        json_string = self.request.body
-        if not json_string:
-            return
+    def calculate(self):
+        """calculate and return all composite values"""
 
         try:
-            return json.loads(json_string)[name]
-        except (KeyError, ValueError):
-            return
+            self.test_list = models.TestList.objects.get(pk=self.data["test_list_id"])
+            self.all_tests = self.test_list.all_tests()
+        except (KeyError, models.TestList.DoesNotExist):
+            return {"success": False, "errors": ["Invalid or missing test_list_id"]}
 
-    def post(self, *args, **kwargs):
-        """calculate and return all composite values"""
+        try:
+            self.unit = Unit.objects.get(pk=self.data["unit_id"])
+        except (KeyError, Unit.DoesNotExist):
+            return {"success": False, "errors": ["Invalid or missing unit_id"]}
 
         self.set_composite_test_data()
         if not self.composite_tests:
-            return self.render_json_response({"success": False, "errors": ["No Valid Composite ID's"]})
+            return {"success": False, "errors": ["No Valid Composite ID's"]}
 
         self.set_calculation_context()
-        if not self.calculation_context:
-            return self.render_json_response({"success": False, "errors": ["Invalid QA Values"]})
+        if not self.calculation_context or list(self.calculation_context.keys()) == ["write_file"]:
+            return {"success": False, "errors": ["Invalid QA Values"]}
 
         self.set_dependencies()
         self.resolve_dependency_order()
@@ -241,32 +501,45 @@ class CompositeCalculation(JSONResponseMixin, View):
             raw_procedure = self.composite_tests[slug]
             procedure = process_procedure(raw_procedure)
             try:
-                code = compile(procedure, "<string>", "exec")
-                exec code in self.calculation_context
+                code = compile(procedure, "__QAT+COMP_%s" % slug, "exec")
+                exec(code, self.calculation_context)
                 key = "result" if "result" in self.calculation_context else slug
                 result = self.calculation_context[key]
 
-                results[slug] = {'value': result, 'error': None}
+                results[slug] = {
+                    'value': result,
+                    'error': None,
+                    'user_attached': list(self.calculation_context.get("__user_attached__", [])),
+                    'comment': self.calculation_context.get("__comment__"),
+                }
                 self.calculation_context[slug] = result
             except Exception:
-                results[slug] = {'value': None, 'error': "Invalid Test"}
+                msg = traceback.format_exc(limit=5, chain=True).split("__QAT+COMP_")[-1].replace("<module>", slug)
+                results[slug] = {
+                    'value': None,
+                    'error': "Invalid Test Procedure: %s" % msg,
+                    'comment': "",
+                    'user_attached': [],
+                }
+                deps_not_complete = any(self.data['tests'][s] is None for s in self.all_dependencies[slug])
+                if deps_not_complete:
+                    results[slug]['error'] = None
             finally:
-                if "result" in self.calculation_context:
-                    del self.calculation_context["result"]
+                # clean up calculation context for next test
+                to_clean = ['result'] + [k for k in self.calculation_context.keys() if k not in self.context_keys]
+                to_clean = set([k for k in to_clean if k in self.calculation_context])
+                for k in to_clean:
+                    del self.calculation_context[k]
 
-        return self.render_json_response({"success": True, "errors": [], "results": results})
+                del self.calculation_context['__user_attached__'][:]
+
+        return {"success": True, "errors": [], "results": results}
 
     def set_composite_test_data(self):
         """retrieve calculation procs for all composite tests"""
 
-        composite_ids = self.get_json_data("composite_ids")
-
-        if composite_ids is None:
-            self.composite_tests = {}
-            return
-
-        composite_tests = models.Test.objects.filter(
-            pk__in=composite_ids
+        composite_tests = self.all_tests.filter(
+            type__in=models.COMPOSITE_TYPES,
         ).values_list("slug", "calculation_procedure")
 
         self.composite_tests = dict(composite_tests)
@@ -274,43 +547,58 @@ class CompositeCalculation(JSONResponseMixin, View):
     def set_calculation_context(self):
         """set up the environment that the composite test will be calculated in"""
 
-        values = self.get_json_data("qavalues")
-        meta_data = self.get_json_data("meta")
+        self.calculation_context = {}
+        values = self.data.get("tests")
+        meta_data = self.data.get("meta")
 
-        for d in ("work_completed", "work_started",):
+        for d in ("work_completed", "work_started"):
             try:
                 meta_data[d] = dateutil.parser.parse(meta_data[d])
-            except (KeyError, AttributeError):
+            except (TypeError, KeyError, AttributeError):
                 pass
 
         if values is None:
-            self.calculation_context = {}
             return
 
-        refs = self.get_json_data("refs")
-        tols = self.get_json_data("tols")
+        refs, tols = get_context_refs_tols(self.unit, self.all_tests)
 
-        self.calculation_context = {
+        comments = self.data.get("comments", {})
+        self.calculation_context.update({
             "META": meta_data,
             "REFS": refs,
             "TOLS": tols,
-        }
+            "UTILS": CompositeUtils(
+                self.user,
+                self.unit,
+                self.test_list,
+                meta_data,
+                self.calculation_context,
+                comments,
+            ),
+        })
 
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
 
-        for slug, val in values.iteritems():
+        self.context_keys = list(self.calculation_context.keys())
+
+        for slug, val in values.items():
+            self.context_keys.append(slug)
             if slug not in self.composite_tests:
                 self.calculation_context[slug] = val
 
     def set_dependencies(self):
         """figure out composite dependencies of composite tests"""
 
+        self.all_dependencies = {}
         self.dependencies = {}
-        slugs = self.composite_tests.keys()
+        slugs = list(self.composite_tests.keys())
+        all_slugs = list(self.data['tests'].keys())
         for slug in slugs:
             tokens = utils.tokenize_composite_calc(self.composite_tests[slug])
-            dependencies = [s for s in slugs if s in tokens and s != slug]
-            self.dependencies[slug] = set(dependencies)
+            comp_dependencies = [s for s in slugs if s in tokens and s != slug]
+            self.dependencies[slug] = set(comp_dependencies)
+            all_dependencies = [s for s in all_slugs if s in tokens and s != slug]
+            self.all_dependencies[slug] = set(all_dependencies)
 
     def resolve_dependency_order(self):
         """
@@ -327,27 +615,47 @@ class CompositeCalculation(JSONResponseMixin, View):
 
         #
         data = dict(self.dependencies)
-        for k, v in data.items():
+        for k, v in list(data.items()):
             v.discard(k)  # Ignore self dependencies
-        extra_items_in_deps = reduce(set.union, data.values()) - set(data.keys())
+        extra_items_in_deps = reduce(set.union, list(data.values())) - set(data.keys())
         data.update(dict((item, set()) for item in extra_items_in_deps))
         deps = []
         while True:
-            ordered = set(item for item, dep in data.items() if not dep)
+            ordered = set(item for item, dep in list(data.items()) if not dep)
             if not ordered:
                 break
             deps.extend(list(sorted(ordered)))
-            data = dict((item, (dep - ordered)) for item, dep in data.items() if item not in ordered)
+            data = dict((item, (dep - ordered)) for item, dep in list(data.items()) if item not in ordered)
 
         self.calculation_order = deps
-        self.cyclic_tests = data.keys()
+        self.cyclic_tests = list(data.keys())
+
+
+class CompositeCalculation(JSONResponseMixin, View):
+    """validate all qa tests in the request for the :model:`TestList` with id test_list_id"""
+
+    def post(self, *args, **kwargs):
+        """calculate and return all composite values"""
+
+        json_string = self.request.body.decode("UTF-8")
+        if not json_string:
+            data = {}
+        try:
+            data = json.loads(json_string)
+        except (ValueError):
+            data = {}
+
+        result = CompositePerformer(self.request.user, data).calculate()
+        return self.render_json_response(result)
 
 
 class ChooseUnit(TemplateView):
     """View for selecting a unit to perform QA on"""
 
-    template_name = "units/unittype_list.html"
+    template_name = 'units/unittype_list.html'
     active_only = True
+    split_sites = True
+    unit_serviceable_only = False
 
     def get_context_data(self, *args, **kwargs):
         """
@@ -365,18 +673,75 @@ class ChooseUnit(TemplateView):
         q = models.UnitTestCollection.objects.by_visibility(groups)
 
         if self.active_only:
-            q = q.filter(active=True)
+            q = q.filter(active=True, unit__active=True)
+        if self.unit_serviceable_only:
+            q = q.filter(unit__is_serviceable=True)
 
-        units_ordering = "unit__%s" % (settings.ORDER_UNITS_BY,)
-        q = q.values("unit", "unit__type__name", "unit__name", "unit__number").order_by(units_ordering).distinct()
+        units_ordering = 'unit__%s' % (settings.ORDER_UNITS_BY,)
 
-        unit_types = collections.defaultdict(list)
-        for unit in q:
-            unit_types[unit["unit__type__name"]].append(unit)
+        if Site.objects.all().exists() and self.split_sites:
 
-        ordered = sorted(unit_types.items(), key=lambda x: min([u[units_ordering] for u in x[1]]))
+            unit_site_types = {}
+            for s in Site.objects.all():
+                unit_site_types[s.name] = collections.defaultdict(list)
+            if q.filter(unit__site__isnull=True).exists():
+                unit_site_types['zzzNonezzz'] = collections.defaultdict(list)
 
-        context["unit_types"] = ordered
+            q = q.values(
+                'unit',
+                'unit__type__name',
+                'unit__name',
+                'unit__number',
+                'unit__id',
+                'unit__site__name',
+            ).order_by(units_ordering).distinct()
+
+            freq_qs = models.Frequency.objects.prefetch_related('unittestcollections__unit').all()
+
+            for unit in q:
+                unit['frequencies'] = freq_qs.filter(
+                    unittestcollections__unit_id=unit['unit__id'],
+                ).distinct().values(
+                    'slug',
+                    'name',
+                )
+
+                if unit['unit__site__name']:
+                    unit_site_types[unit['unit__site__name']][unit['unit__type__name']].append(unit)
+                else:
+                    unit_site_types['zzzNonezzz'][unit['unit__type__name']].append(unit)
+
+            ordered = {}
+            for s in unit_site_types:
+                ordered[s] = sorted(
+                    list(unit_site_types[s].items()), key=lambda x: min([u[units_ordering] for u in x[1]])
+                )
+
+            ordered = collections.OrderedDict(sorted(ordered.items(), key=lambda s: s[0]))
+
+            context['split_sites'] = True
+
+            split_by = 12 / len(ordered)
+            if split_by < 3:
+                split_by = 3
+            context['split_by'] = int(split_by)
+
+        else:
+            q = q.values('unit', 'unit__type__name', 'unit__name', 'unit__number',
+                         'unit__id').order_by(units_ordering).distinct()
+            freq_qs = models.Frequency.objects.prefetch_related('unittestcollections__unit').all()
+
+            unit_types = collections.defaultdict(list)
+            for unit in q:
+                unit['frequencies'] = freq_qs.filter(unittestcollections__unit_id=unit['unit__id']).distinct().values(
+                    'slug', 'name'
+                )
+                unit_types[unit["unit__type__name"]].append(unit)
+
+            ordered = sorted(list(unit_types.items()), key=lambda x: min([u[units_ordering] for u in x[1]]))
+            context['split_sites'] = False
+
+        context['unit_types'] = ordered
 
         return context
 
@@ -393,6 +758,13 @@ class PerformQA(PermissionRequiredMixin, CreateView):
     form_class = forms.CreateTestListInstanceForm
     model = models.TestListInstance
 
+    def get_form_kwargs(self):
+        k = super(PerformQA, self).get_form_kwargs()
+        self.set_unit_test_collection()
+        k['unit'] = self.unit_test_col.unit
+        k['rtsqa'] = self.request.GET.get('rtsqa', False)
+        return k
+
     def set_test_lists(self):
         """
         Set the :model:`qa.TestList` and the day that are to be performed.
@@ -402,26 +774,21 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
         requested_day = self.get_requested_day_to_perform()
         self.actual_day, self.test_list = self.unit_test_col.get_list(requested_day)
-
         if self.test_list is None:
             raise Http404
 
-        self.all_lists = [self.test_list] + list(self.test_list.sublists.order_by("name"))
-
     def set_all_tests(self):
         """Find all tests to be performed, including tests from sublists"""
-
-        self.all_tests = []
-        for test_list in self.all_lists:
-            tests = test_list.tests.all().order_by("testlistmembership__order")
-            self.all_tests.extend(tests)
+        self.all_tests = self.test_list.ordered_tests()
 
     def set_unit_test_collection(self):
         """Set the requested :model:`qa.UnitTestCollection` to be performed."""
 
         self.unit_test_col = get_object_or_404(
             models.UnitTestCollection.objects.select_related(
-                "unit", "frequency", "last_instance"
+                "unit",
+                "frequency",
+                "last_instance",
             ).filter(
                 active=True,
                 visible_to__in=self.request.user.groups.all(),
@@ -452,7 +819,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         return template_utis
 
     def set_unit_test_infos(self):
-        """Find and order all :model:`qa.UniTestInfo` objects for tests to be performed"""
+        """Find and order all :model:`qa.UnitTestInfo` objects for tests to be performed"""
 
         utis = models.UnitTestInfo.objects.filter(
             unit=self.unit_test_col.unit,
@@ -461,10 +828,9 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         ).select_related(
             "reference",
             "test__category",
-            "test__pk",
             "tolerance",
             "unit",
-        )
+        ).prefetch_related("test__attachment_set")
 
         # make sure utis are correctly ordered
         uti_tests = [x.test for x in utis]
@@ -510,8 +876,9 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         context = self.get_context_data()
         formset = context["formset"]
 
-        for ti_form in formset:
-            ti_form.in_progress = form.instance.in_progress
+        in_progress = form.cleaned_data['in_progress']
+        for f in formset:
+            f.in_progress = in_progress
 
         if not formset.is_valid():
             context["form"] = form
@@ -520,6 +887,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         status = self.get_test_status(form)
 
         self.object = form.save(commit=False)
+        self.object.due_date = self.unit_test_col.due_date
         self.object.test_list = self.test_list
         self.object.unit_test_collection = self.unit_test_col
         self.object.created_by = self.request.user
@@ -534,16 +902,30 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         self.object.day = self.actual_day
 
         # save here so pk is set when saving test instances
-        # and save below to get due deate set ocrrectly
+        # and save below to get due date set correctly
         self.object.save()
+
+        self.create_tli_attachments()
 
         to_save = []
 
+        attachments = []
+
+        if form.cleaned_data['comment']:
+            comment = Comment(
+                submit_date=timezone.now(),
+                user=self.request.user,
+                content_object=self.object,
+                comment=form.cleaned_data['comment'],
+                site=get_current_site(self.request)
+            )
+            comment.save()
+
         for delta, ti_form in enumerate(formset):
 
-            process_file_upload_form(ti_form, self.object)
-
             now = self.object.created + timezone.timedelta(milliseconds=delta)
+
+            attachments.extend(ti_form.attachments_to_process)
 
             ti = models.TestInstance(
                 value=ti_form.cleaned_data.get("value", None),
@@ -569,23 +951,66 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
         models.TestInstance.objects.bulk_create(to_save)
 
+        set_attachment_owners(self.object, attachments)
+
         # set due date to account for any non default statuses
         self.object.unit_test_collection.set_due_date()
 
-        self.object.update_all_reviewed()
+        if settings.USE_SERVICE_LOG:
+            # service_events = form.cleaned_data.get('service_events', False)
+            rtsqa_id = form.cleaned_data['rtsqa_id']
+
+            # is there an existing rtsqa being linked?
+            if rtsqa_id:
+                rtsqa = sl_models.ReturnToServiceQA.objects.get(pk=rtsqa_id)
+                rtsqa.test_list_instance = self.object
+                rtsqa.save()
+
+                sl_models.ServiceLog.objects.log_rtsqa_changes(self.request.user, rtsqa.service_event)
+
+                # If tli needs review, update 'Unreviewed RTS QA' counter
+                if not self.object.all_reviewed:
+                    cache.delete(settings.CACHE_RTS_QA_COUNT)
+
+            changed_se = self.object.update_all_reviewed()
+
+            if len(changed_se) > 0:
+                messages.add_message(
+                    request=self.request,
+                    level=messages.INFO,
+                    message='Changed status of service event(s) %s to "%s".' %
+                    (', '.join(str(x) for x in changed_se), sl_models.ServiceEventStatus.get_default().name)
+                )
 
         if not self.object.in_progress:
             # TestListInstance & TestInstances have been successfully create, fire signal
             # to inform any listeners (e.g notifications.handlers.email_no_testlist_save)
-            signals.testlist_complete.send(sender=self, instance=self.object, created=False)
+            try:
+                signals.testlist_complete.send(sender=self, instance=self.object, created=False)
+            except:
+                messages.add_message(
+                    request=self.request, message='Error sending notification email.', level=messages.ERROR
+                )
 
         # let user know request succeeded and return to unit list
         messages.success(self.request, _("Successfully submitted %s " % self.object.test_list.name))
 
+        if settings.USE_SERVICE_LOG and form.cleaned_data['initiate_service']:
+            return HttpResponseRedirect('%s?ib=%s' % (reverse('sl_new'), self.object.id))
+
         return HttpResponseRedirect(self.get_success_url())
 
-    def get_context_data(self, **kwargs):
+    def create_tli_attachments(self):
+        for idx, f in enumerate(self.request.FILES.getlist('tli_attachments')):
+            Attachment.objects.create(
+                attachment=f,
+                comment="Uploaded %s by %s" % (timezone.now(), self.request.user.username),
+                label=f.name,
+                testlistinstance=self.object,
+                created_by=self.request.user
+            )
 
+    def get_context_data(self, **kwargs):
         context = super(PerformQA, self).get_context_data(**kwargs)
 
         # explicity refresh session expiry to prevent situation where a session
@@ -598,14 +1023,16 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             return context
 
         # setup our test list, tests, current day etc
-        self.set_unit_test_collection()
+        # self.set_unit_test_collection()
         self.set_test_lists()
         self.set_last_day()
         self.set_all_tests()
         self.set_unit_test_infos()
 
         if self.request.method == "POST":
-            formset = forms.CreateTestInstanceFormSet(self.request.POST, self.request.FILES, unit_test_infos=self.unit_test_infos, user=self.request.user)
+            formset = forms.CreateTestInstanceFormSet(
+                self.request.POST, self.request.FILES, unit_test_infos=self.unit_test_infos, user=self.request.user
+            )
         else:
             formset = forms.CreateTestInstanceFormSet(unit_test_infos=self.unit_test_infos, user=self.request.user)
 
@@ -617,15 +1044,51 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         context['current_day'] = self.actual_day + 1
         context["last_instance"] = self.unit_test_col.last_instance
         context['last_day'] = self.last_day
+        context['borders'] = self.test_list.sublist_borders(self.all_tests)
 
         ndays = len(self.unit_test_col.tests_object)
         if ndays > 1:
             context['days'] = self.unit_test_col.tests_object.days_display()
 
+        in_progress = models.TestListInstance.objects.in_progress().filter(
+            unit_test_collection=self.unit_test_col, test_list=self.test_list
+        )
+
+        context['tests_object_type'] = self.unit_test_col.tests_object.__class__.__name__
+
         context["test_list"] = self.test_list
+        context["in_progress"] = in_progress
         context["unit_test_infos"] = json.dumps(self.template_unit_test_infos())
         context["unit_test_collection"] = self.unit_test_col
         context["contacts"] = list(Contact.objects.all().order_by("name"))
+
+        rtsqa_id = None
+        if settings.USE_SERVICE_LOG:
+            rtsqa_id = self.request.GET.get('rtsqa', None)
+            if rtsqa_id:
+                rtsqa = sl_models.ReturnToServiceQA.objects.get(pk=rtsqa_id)
+                context['se_statuses'] = {rtsqa.service_event.id: rtsqa.service_event.service_status.id}
+                context['rtsqa_id'] = rtsqa_id
+                context['rtsqa_for_se'] = rtsqa.service_event
+
+        context['attachments'] = (
+            context['test_list'].attachment_set.all() |
+            self.unit_test_col.tests_object.attachment_set.all()
+        )
+
+        context['top_divs_span'] = 0
+        has_perms = (
+            self.request.user.has_perm('qa.can_review') or
+            self.request.user.has_perm('qa.can_review_own_tests') or
+            self.request.user.has_perm('qa.can_override_date')
+        )
+        if has_perms:
+            context['top_divs_span'] += 1
+        if len(context['attachments']) > 0:
+            context['top_divs_span'] += 1
+        if settings.USE_SERVICE_LOG and rtsqa_id is not None:
+            context['top_divs_span'] += 1
+        context['top_divs_span'] = int(12 / context['top_divs_span']) if context['top_divs_span'] > 0 else 12
 
         return context
 
@@ -669,14 +1132,16 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
     formset_class = forms.UpdateTestInstanceFormSet
 
     def form_valid(self, form):
-        context = self.get_context_data()
-        formset = context["formset"]
 
-        for ti_form in formset:
-            ti_form.in_progress = self.object.in_progress
+        self.form = form
+
+        context = self.get_context_data(form=form)
+        formset = context["formset"]
 
         if formset.is_valid():
             self.object = form.save(commit=False)
+
+            initially_requires_reviewed = not self.object.all_reviewed
 
             status_pk = None
             if "status" in form.fields:
@@ -687,17 +1152,48 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
             for ti_form in formset:
 
-                process_file_upload_form(ti_form, self.object)
-
                 ti = ti_form.save(commit=False)
+
                 self.update_test_instance(ti)
+
+                ti.attachment_set.clear()
+
+                for uti_pk, attachment in ti_form.attachments_to_process:
+                    attachment.testinstance = ti
+                    attachment.save()
 
             self.object.unit_test_collection.set_due_date()
 
-            self.object.update_all_reviewed()
+            # # service_events = form.cleaned_data.get('service_events', False)
+            # rtsqa_id = self.request.GET.get('rtsqa', False)
+            #
+            # if rtsqa_id:
+            #     rtsqa = sl_models.ReturnToServiceQA.objects.get(pk=rtsqa_id)
+            #     rtsqa.test_list_instance = self.object
+            #     rtsqa.save()
+            if settings.USE_SERVICE_LOG:
+                changed_se = self.object.update_all_reviewed()
+
+                if len(changed_se) > 0:
+                    messages.add_message(
+                        request=self.request,
+                        level=messages.INFO,
+                        message='Changed status of service event(s) %s to "%s".' %
+                        (', '.join(str(x) for x in changed_se), sl_models.ServiceEventStatus.get_default().name)
+                    )
+                if initially_requires_reviewed != self.object.all_reviewed:
+                    for se in sl_models.ServiceEvent.objects.filter(returntoserviceqa__test_list_instance=self.object):
+                        sl_models.ServiceLog.objects.log_rtsqa_changes(self.request.user, se)
 
             if not self.object.in_progress:
-                signals.testlist_complete.send(sender=self, instance=self.object, created=False)
+                try:
+                    signals.testlist_complete.send(sender=self, instance=self.object, created=False)
+                except:
+                    messages.add_message(
+                        request=self.request,
+                        message='Error sending notification email.',
+                        level=messages.ERROR,
+                    )
 
             # let user know request succeeded and return to unit list
             messages.success(self.request, _("Successfully submitted %s " % self.object.test_list.name))
@@ -720,14 +1216,30 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
             self.object.reviewed_by = None
             self.object.all_reviewed = False
         else:
-            self.reviewed = now
-            self.reviewed_by = self.request.user
+            self.object.reviewed = now
+            self.object.reviewed_by = self.request.user
             self.object.all_reviewed = True
 
         if self.object.work_completed is None:
             self.object.work_completed = now
 
         self.object.save()
+
+        if self.request.FILES:
+            self.update_attachments()
+
+    def update_attachments(self):
+        for attach in self.object.attachment_set.all():
+            attach.delete()
+
+        for idx, f in enumerate(self.request.FILES.getlist('tli_attachments')):
+            Attachment.objects.create(
+                attachment=f,
+                comment="Uploaded %s by %s" % (timezone.now(), self.request.user.username),
+                label=f.name,
+                testlistinstance=self.object,
+                created_by=self.request.user
+            )
 
     def set_status_object(self, status_pk):
 
@@ -772,19 +1284,48 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
         template_utis = []
         for uti in self.unit_test_infos:
+            ref, tol = self.prev_ref_tols[uti.pk]
             template_utis.append({
                 "id": uti.pk,
                 "test": model_to_dict(uti.test),
-                "reference": model_to_dict(uti.reference) if uti.reference else None,
-                "tolerance": model_to_dict(uti.tolerance) if uti.tolerance else None,
+                "reference": model_to_dict(ref) if ref else None,
+                "tolerance": model_to_dict(tol) if tol else None,
             })
         return template_utis
 
     def get_context_data(self, **kwargs):
 
         context = super(EditTestListInstance, self).get_context_data(**kwargs)
-        self.unit_test_infos = [f.instance.unit_test_info for f in context["formset"]]
+        uti_pks = [f.instance.unit_test_info.pk for f in context["formset"]]
+        self.prev_ref_tols = {f.instance.unit_test_info.pk: (f.instance.reference, f.instance.tolerance) for f in context["formset"]}
+        utis = models.UnitTestInfo.objects.filter(pk__in=uti_pks).select_related(
+            "unit",
+            "test__category",
+        ).prefetch_related(
+            "test__attachment_set",
+        )
+        self.unit_test_infos = list(sorted(utis, key=lambda x: uti_pks.index(x.pk)))
+
         context["unit_test_infos"] = json.dumps(self.template_unit_test_infos())
+
+        context['attachments'] = context['test_list'].attachment_set.all(
+        ) | self.object.unit_test_collection.tests_object.attachment_set.all()
+
+        context['top_divs_span'] = 0
+        if self.request.user.has_perm('qa.can_review') or self.request.user.has_perm(
+                'qa.can_review_own_tests') or self.request.user.has_perm('qa.can_override_date'):
+            context['top_divs_span'] += 1
+        if len(context['attachments']) > 0:
+            context['top_divs_span'] += 1
+        if settings.USE_SERVICE_LOG and (context['form'].instance.pk or context['rtsqa_id'] is not None):
+            context['top_divs_span'] += 1
+        context['top_divs_span'] = int(12 / context['top_divs_span']) if context['top_divs_span'] > 0 else 12
+
+        context["contacts"] = list(Contact.objects.all().order_by("name"))
+
+        if self.object.unit_test_collection.tests_object.__class__.__name__ == 'TestListCycle':
+            context['cycle_name'] = self.object.unit_test_collection.name
+
         return context
 
 
@@ -806,6 +1347,9 @@ class InProgress(TestListInstances):
 
     def get_queryset(self):
         return models.TestListInstance.objects.in_progress()
+
+    def get_icon(self):
+        return 'fa-play'
 
     def get_page_title(self):
         return "In Progress Test Lists"
@@ -857,9 +1401,7 @@ class UnitList(UTCList):
     def get_queryset(self):
         """filter queryset by frequency"""
         qs = super(UnitList, self).get_queryset()
-        self.units = Unit.objects.filter(
-            number__in=self.kwargs["unit_number"].split("/")
-        )
+        self.units = Unit.objects.filter(number__in=self.kwargs["unit_number"].split("/"))
         return qs.filter(unit__in=self.units)
 
     def get_page_title(self):

@@ -1,0 +1,72 @@
+div.cheeky {
+    background-color: #f4f4f4;
+    transition: background-color 0.5s;
+    cursor: pointer;
+    padding: 6px 12px;
+    border: 1px solid transparent;
+    height: 34px;
+    user-select: none;
+     box-shadow: 2px 2px 2px #ddd !important;
+    -moz-box-shadow: 2px 2px 2px #ddd !important;
+    -webkit-box-shadow: 2px 2px 2px #ddd !important;
+}
+div.cheeky:hover {
+    background-color: #e7e7e7;
+    /*border-color: #adadad;*/
+}
+div.cheeky > div.cheeky-checkbox {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    width: 15px;
+    height: 15px;
+    display: inline-block;
+    margin-top: 3px;
+    text-align: right;
+}
+div.cheeky > div.cheeky-checkbox * {
+    display: none;
+    position: absolute;
+}
+div.cheeky > div.cheeky-label {
+    color: #000;
+    transition: color 0.5s;
+    display: inline-block;
+    text-align: left;
+    vertical-align: top;
+}
+input.cheeky-element,
+label.cheeky-orig-label {
+    display: none;
+}
+
+div.cheeky.checked {
+    background-color: #424f57;
+    transition: background-color 0.5s;
+}
+div.cheeky.checked > div.cheeky-label {
+    color: #fff;
+    transition: color 0.5s;
+}
+div.cheeky.checked:hover {
+    background-color: #323e46;
+}
+div.cheeky.checked > div.cheeky-checkbox * {
+    display: block;
+}
+
+div.cheeky.disabled {
+    cursor: not-allowed;
+    background-color: #E1ECF4;
+}
+div.cheeky.checked.warning {
+    background-color: #f39c12;
+}
+div.cheeky.checked.warning:hover {
+    background-color: #e08e0b;
+}
+div.cheeky.checked.info {
+    background-color: #627585;
+}
+div.cheeky.checked.info:hover {
+    background-color: #4e6070;
+}

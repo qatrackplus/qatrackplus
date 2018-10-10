@@ -7,7 +7,17 @@
     max-height: 300px;
     overflow-y: scroll;
 }
+.smooth-border {
+    border-width: 2px;
+    border-radius: 4px;
+    color: black;
+    border-style: solid;
+    padding: 2px;
+}
 </style>
+{% endblock %}
+{% block extrahead %}
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 {% endblock %}
 {% block title %}{{ title }} | {% trans 'QATrack+ Admin Site' %}{% endblock %}
 
@@ -23,20 +33,34 @@
 
 {{ block.super }}
 <script>
-if (window.django){
-    django.jQuery(function(){
 
-      django.jQuery("form").submit(function() {
+    var admin_urls = {
+        TEST_SEARCHER: "{% url 'test_searcher' %}",
+        TEST_LIST_SEARCHER: "{% url 'test_list_searcher' %}",
+        TEST_LIST_CYCLE_SEARCHER: "{% url 'test_list_cycle_searcher' %}",
+        TEST_INSTANCE_SEARCHER: "{% url 'test_instance_searcher' %}",
+        TEST_LIST_INSTANCE_SEARCHER: "{% url 'test_list_instance_searcher' %}",
+        SERVICE_EVENT_SEARCHER: "{% url 'service_event_searcher' %}"
+    };
 
-            if (this.beenSubmitted){
-              return false;
-            }else{
-              django.jQuery(this).find("input[type=submit]").val("Submitting...");
-              this.beenSubmitted = true;
-            }
-          });
+    if (window.django){
+        django.jQuery(function(){
 
-    });
-}
+            django.jQuery("form").submit(function() {
+
+                if (this.beenSubmitted){
+                    return false;
+                } else {
+                    django.jQuery(this).find("input[type=submit]").val("Submitting...");
+                    this.beenSubmitted = true;
+                }
+
+            });
+        });
+    }
+
+    window.DYNAMIC_RAW_ID_MOUNT_URL = "{% url "admin:index" %}";
+
+
 </script>
 {% endblock footer %}

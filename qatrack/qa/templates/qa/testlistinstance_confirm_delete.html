@@ -1,0 +1,103 @@
+{% extends "site_base.html" %}
+{#{% load staticfiles %}#}
+{% load qa_tags %}
+{% load comments %}
+
+{% block head_title %}{{test_list_instance.work_completed|date}} {{test_list_instance.test_list.name}} Details{% endblock %}
+
+{% block extra_css %}
+    <link href="{{ STATIC_URL }}qatrack_core/css/tables.css?v={{VERSION}}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}qa/css/qa.css?v={{VERSION}}" rel="stylesheet">
+{% endblock extra_css %}
+
+{% block extra_js %}
+{% endblock %}
+
+{% block require_javascript %}
+{% endblock require_javascript %}
+
+{% block body %}
+    <div class="row">
+        <div class="col-md-12">
+
+            <div class="box">
+                <div class="box-header">
+                    <h3 class="box-title">Delete {{ object.work_completed|date}} {{ object.test_list.name }}</h3>
+                </div>
+
+                <div class="box-body">
+
+                    <div class="row">
+                      <div class="col-lg-8 col-md-10 col-sm-12">
+                        <dl>
+                          <dt>Test list</dt>
+                          <dd>{{ object.test_list }}</dd>
+
+                          <dt>Unit</dt>
+                          <dd>{{ object.unit_test_collection.unit }}</dd>
+
+                          <dt>Work Completed</dt>
+                          <dd>{{ object.work_completed }}</dd>
+
+                          <dt>Performed By</dt>
+                          <dd>{{ object.created_by }}</dd>
+                        </dl>
+                        <p>
+                          The following objects will be affected:
+                        </p>
+                        <table class="table table-striped table-condensed">
+                          <thead>
+                            <tr>
+                              <th>Object Type</th>
+                              <th>Description</th>
+                              <th>Will be Deleted ?</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr class="danger">
+                              <td>Test List Instance</td>
+                              <td>{{ object.work_completed|date }} {{ object.test_list.name }}</td>
+                              <td><strong>Yes</strong></td>
+                            </tr>
+                            <tr class="danger">
+                              <td>Test Instances</td>
+                              <td>A total of {{ object.testinstance_set.count }} Test Instances</td>
+                              <td><strong>Yes</strong></td>
+                            </tr>
+                            {% if USE_SERVICE_LOG %}
+                                {% for rts in object.rtsqa_for_tli.all %}
+                                  <tr class="warning">
+                                    <td>Return To Service QA Assignment</td>
+                                    <td>{{ rts.unit_test_collection.name }} assigned by {{ rts.user_assigned_by }} on {{ rts.datetime_assigned }}</td>
+                                    <td>No</td>
+                                  </tr>
+                                {% endfor %}
+                                {% for se in object.serviceevents_initiated.all %}
+                                  <tr class="warning">
+                                    <td>Service Event</td>
+                                    <td>Area: {{ se.unit_service_area }}, Type: {{ se.service_type.name }}, Service Date {{ se.datetime_service |date }}</td>
+                                    <td>No</td>
+                                  </tr>
+                                {% endfor %}
+                            {% endif %}
+                          </tbody>
+                        </table>
+                        <form class="form form-horizontal text-right" action="" method="post">{% csrf_token %}
+                          <p>
+                            Are you sure you want to
+                            <strong>permanently</strong> delete {{ object.test_list.name }} from
+                            {{ object.work_completed|date }}?
+                          </p>
+                          <button class="btn btn-danger btn-flat" type="submit"><i class="fa fa-trash-o"></i> Delete</button>
+                          <a href="{{ request.META.HTTP_REFERER }}" class="btn btn-default btn-flat">
+                            <i class="fa fa-ban"></i> Cancel
+                          </a>
+                        </form>
+                      </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

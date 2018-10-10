@@ -1,0 +1,71 @@
+{% load qa_tags %}
+{% if select %}
+    <a id="select-{{ instance.pk }}" class="btn btn-default btn-xs btn-flat" onclick="QAURLs.returnYourChoice('{{ f_form }}', {{ instance.pk }})">Select</a>
+{% else %}
+    {% if perms.qa.can_review %}
+        <a class="btn btn-default btn-xs btn-flat"
+          href="{% url 'review_test_list_instance' instance.pk %}?next={{request.path|cut:"data/"}}"
+          title="Click to review Test List Instance {{ instance.test_list.name }} from {{ instance.work_completed }}"
+          >
+          Review
+        </a>
+    {% elif perms.qa.can_view_completed %}
+        <a class="btn btn-default btn-xs btn-flat"
+          href="{% url 'view_test_list_instance' instance.pk %}?next={{request.path|cut:"data/"}}"
+          title="Click to view Test List Instance {{ instance.test_list.name }} from {{ instance.work_completed }}"
+          >
+          View
+        </a>
+    {% endif %}
+    {% if instance.in_progress and perms.qa.add_testlistinstance %}
+        <a class="btn btn-default btn-xs btn-flat"
+          href="{% url 'continue_tli' pk=instance.pk %}?next={{request.path|cut:"data/"}}"
+          title="Click to continue In-Progress Test List Instance {{ instance.test_list.name }} started on {{ instance.work_started }}"
+        >Continue</a>
+    {% elif perms.qa.change_testlistinstance %}
+        <a class="btn btn-default btn-xs btn-flat"
+          href="{% url 'edit_tli' pk=instance.pk %}?next={{request.path|cut:"data/"}}"
+          title="Click to edit Test List Instance {{ instance.test_list.name }} initially completed on {{ instance.work_completed }}"
+        >
+          Edit
+        </a>
+    {% endif %}
+    {% if USE_SERVICE_LOG and perms.service_log.view_serviceevent %}
+        {% if show_initiate_se %}
+            {% if num_initiated_se == 1 %}
+                <a class="btn btn-info btn-xs btn-flat"
+                  title="View service event initiated by this list"
+                  href="{% url 'sl_details' pk=initiated_se.first.pk %}?next={{request.path|cut:"data/"}}" >
+                  <i class="fa fa-wrench fa-fw"></i>
+                </a>
+            {% elif num_initiated_se > 1 %}
+                <a class="btn btn-info btn-xs btn-flat"
+                  title="View list of service events initiated by this list"
+                  href="{% url 'sl_list_initiated_by' tli_pk=instance.pk %}?next={{request.path|cut:"data/"}}">
+                  <i class="fa fa-wrench fa-fw"></i>
+                </a>
+            {% endif %}
+        {% endif %}
+        {% if show_rtsqa_se %}
+            {% if  num_rtsqa_se == 1 %}
+                <a class="btn btn-info btn-xs btn-flat hover-parent"
+                  title="View service event that this qa is a return to service for"
+                  href="{% url 'sl_details' pk=rtsqa_for_se.0.pk %}?next={{request.path|cut:"data/"}}">
+                    <i class="fa fa-stack fa-fw">
+                        <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
+                        <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-left hover-sub-info"></i>
+                    </i>
+                </a>
+            {% elif num_rtsqa_se > 1 %}
+                <a class="btn btn-info btn-xs btn-flat hover-parent"
+                  title="View list of service events that this qa is a return to service for"
+                  href="{% url 'sl_list_return_to_service_for' tli_pk=instance.pk%}?next={{request.path|cut:"data/"}}">
+                    <i class="fa fa-stack fa-fw">
+                        <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
+                        <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-left hover-sub-primary"></i>
+                    </i>
+                </a>
+            {% endif %}
+        {% endif %}
+    {% endif %}
+{% endif %}

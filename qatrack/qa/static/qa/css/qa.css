@@ -1,0 +1,502 @@
+
+/*QA Status Spans                                 */
+.no_tol {
+    background-color:#00c0ef;
+}
+.ok {
+    background-color:#00a65a;
+}
+.action {
+    background-color:#dd4b39;
+}
+.tolerance {
+    background-color: #f39c12;
+}
+.not_done {
+    background-color: #b5bbc8;
+}
+
+#contacts dt{
+    width:inherit;
+    *width:250px;
+}
+#contacts dd{
+    margin-left:0;
+    /*width:150px;*/
+}
+
+/* perform table */
+tr.qa-valuerow,
+tr.qa-valuerow td {
+    min-height: 27px !important;
+}
+
+/* Test columns */
+.qa-name {
+    min-width:300px;
+    text-align:left;
+    vertical-align: middle !important;
+}
+th.qa-name div{
+/* hack to fix IE7 min-width*/
+    width:400px;
+    height:1px;
+}
+input.qa-input:not([type="radio"]),
+select.qa-input,
+.review-status select {
+    width: 100%;
+    text-align:right;
+    min-width: 115px;
+    height: 22px;
+    padding: 0 4px;
+    margin-bottom:0;
+    border: 1px solid #ddd;
+
+}
+input.qa-input:not([type="radio"]):not([readonly]),
+select.qa-input,
+.review-status select {
+    box-shadow: 2px 2px 2px #ddd !important;
+    -moz-box-shadow: 2px 2px 2px #ddd !important;
+    -webkit-box-shadow: 2px 2px 2px #ddd !important;
+}
+input.qa-input::-ms-clear {
+    /* see bitbucket issue#106 */
+    display: none;
+}
+.qa-value.upload-button {
+    height: 100%;
+}
+a.qa-input {
+    padding: 3px 10px;
+    width: 100%;
+}
+input[disabled].qa-input,
+input[readonly].qa-input {
+    background-color: #ddd;
+    font-weight: 500;
+}
+.qa-table td.qa-value,
+.qa-table th.qa-value{
+    width: 110px;
+    text-align:center;
+    padding: 0;
+    vertical-align: middle;
+}
+.qa-skip {
+    width:34px;
+    text-align: center;
+    vertical-align: middle !important;
+}
+.qa-status{
+    /*width: 90px;*/
+    overflow-x:hidden;
+    border: none !important;
+    min-width: 70px;
+    text-align: center;
+    vertical-align: middle !important;
+}
+td.qa-status {
+    font-size: smaller;
+}
+.qa-status > i {
+    margin-top:3px;
+    margin-left:1px;
+}
+.qa-showcmt{
+    width: 70px;
+    overflow:hidden;
+    text-align:center;
+}
+.qa-reference {
+    width:80px;
+    text-align: right;
+}
+.qa-history{
+    min-width: 320px;
+}
+th.qa-history .label {
+    color: black;
+}
+th.qa-history div{
+/* hack to fix IE7 min-width*/
+    width:310px;
+    height:1px;
+}
+.history-value,
+.history-label {
+    display: inline-block;
+    width: 56px;
+    text-align: right;
+    margin-right: 1px; /*fix ie inline block bug*/
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    padding: 3px 4px;
+    vertical-align: middle;
+    font-size: 12px;
+}
+.history-value > i, .pass-fail > i {
+    margin-top:2px;
+}
+
+.history-label {
+    font-size:0.9em;
+}
+
+/* qa table extra rows */
+tr .callout {
+    margin: 10px 0;
+}
+tr.qa-comment div.comment-container {
+    display: none;
+}
+tr.qa-comment div.comment-container div.comment-div {
+    padding: 10px;
+    width: 100%;
+    border-bottom: 1px solid #eeeeee;
+}
+tr.qa-comment div.comment-container div.comment-div textarea {
+    width: 100%;
+    resize: none;
+    vertical-align: top;
+    overflow: hidden !important;
+    box-shadow: 2px 2px 2px #ddd;
+    -moz-box-shadow: 2px 2px 2px #ddd;
+    -webkit-box-shadow: 2px 2px 2px #ddd;
+    border: 1px solid #ddd;
+}
+tr.qa-procedure div.procedure-container {
+    display:none;
+}
+tr.qa-procedure div.procedure-container div.qa-procedure-text {
+    width: 100%;
+    padding: 10px;
+    border-top: 1px solid #eeeeee;
+}
+tr.qa-error div.error-container div.qa-error-text {
+    width: 100%;
+    padding: 10px;
+    border-top: 1px solid #eeeeee;
+    color: #dd4b39;
+}
+tr.qa-error > td {
+    padding-left: 0 !important;
+    padding-bottom: 0 !important;
+}
+#perform-qa-table > tbody > tr > td .null-bar {
+    border-left: 3px solid transparent;
+}
+#perform-qa-table > tbody > tr > td .procedure-bar {
+    border-left: 3px solid transparent;
+    -webkit-transition: border-color 0.5s; /* Safari */
+    transition: border-color 0.5s;
+}
+#perform-qa-table > tbody > tr > td .procedure-bar.in {
+    border-left: 3px solid #00c0ef;
+    -webkit-transition: border-color 0.5s; /* Safari */
+    transition: border-color 0.5s;
+}
+td .comment-bar {
+    border-left: 3px solid transparent;
+    -webkit-transition: border-color 0.5s; /* Safari */
+    transition: border-color 0.5s;
+    height: 100%;
+    top: 0;
+}
+td .comment-bar.in {
+    border-left: 3px solid #3c8dbc;
+    -webkit-transition: border-left 0.5s; /* Safari */
+    transition: border-left 0.5s;
+}
+td.test-name {
+    font-weight: 700;
+}
+.bar-container {
+    padding: 0 !important;
+    height: 100%;
+    top: 0;
+}
+#review-table > tbody,
+#perform-qa-table > tbody {
+  border: 0;
+}
+#review-table > tbody.sublist,
+#perform-qa-table > tbody.sublist {
+  border-top: 3px solid #CCC;
+  border-bottom: 3px solid #CCC;
+}
+
+#review-table tr.sublist,
+#review-table tr.end-sublist,
+#perform-qa-table tr.sublist,
+#perform-qa-table tr.end-sublist {
+  border-top: 3px solid #ccc;
+  font-style: italic;
+}
+
+div.sublist-description {
+  display: none;
+}
+
+#review-table > tbody.first,
+#perform-qa-table > tbody.first {
+  border-top: 2px solid #ddd;
+}
+#review-table > tbody.sublist::before,
+#perform-qa-table > tbody.sublist::before {
+  content: attr(data-sublist);
+  position: relative;
+  left: 15px;
+  top: 0;
+  font-size: 12px;
+  font-weight: bold;
+}
+#perform-qa-table > tbody > tr > td .error-bar {
+    border-left: 3px solid transparent;
+    -webkit-transition: border-color 0.5s; /* Safari */
+    transition: border-color 0.5s;
+}
+#perform-qa-table > tbody > tr > td .error-bar.in {
+    border-left: 3px solid #dd4b39;
+    -webkit-transition: border-left 0.5s; /* Safari */
+    transition: border-left 0.5s;
+}
+
+#perform-qa-table > thead > tr > th.qa-category {
+    width: 120px;
+    vertical-align: middle !important;
+}
+#perform-qa-table > tbody > tr > td.qa-category {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 0;
+}
+#perform-qa-table > tbody > tr > td.qa-category div {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    /*max-width: 0;*/
+}
+
+#perform-qa-table > thead > tr > th.qa-history {
+    width: 320px;
+}
+
+
+#perform-qa-table > tbody > tr > td.qa-category > .error-bar {
+    height: 100%;
+    top:0;
+}
+#perform-qa-table, #review-table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+#perform-qa-table td, #review-table td {
+    border-image: none !important;
+    border: none !important;
+}
+/*#perform-qa-table .qa-valuerow td {*/
+    /*border-bottom: 1px solid #eeeeee !important;*/
+/*}*/
+#perform-qa-table > tbody > tr.hover {
+    background-color: #eeeeee;
+}
+#perform-qa-table > tbody > tr.qa-procedure {
+    /*display: none;*/
+    border-bottom: 1px solid #eeeeee !important;
+}
+tr.qa-comment {
+    display: none;
+}
+tr.qa-procedure,
+tr.qa-procedure td,
+tr.qa-comment,
+tr.qa-comment td {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden;
+    border-width: 0 !important;
+}
+
+.qa-image {
+    width: 100%;
+    max-width: 1200px;
+    width: auto;
+    height: auto;
+}
+
+.qa-image-box {
+    padding: 5px;
+    margin: 10px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    width: auto;
+    height: auto;
+    display: inline-block;
+    vertical-align: top;
+}
+.datetime-clear {
+    cursor: pointer;
+    display: none;
+}
+.datetime-clear:hover {
+    color: #bb6666;
+}
+
+
+/* admin options */
+
+#box-admin .box-body > .row {
+    display: table;
+    width: 100%;
+}
+/*#box-admin div.left-border {*/
+    /*display: table-cell;*/
+    /*float: none;*/
+/*}*/
+#box-admin .box-body > .row .row {
+    margin-top: 4px;
+}
+#box-admin .box-body > .row {
+    padding: 0 10px;
+}
+#box-admin .box-body input,
+#box-admin .box-body select {
+    width: 100%;
+}
+#qa-tli-comment {
+    padding: 0 !important;
+}
+#qa-tli-comment textarea {
+    width:100%;
+    resize: none;
+    vertical-align: top;
+    overflow: hidden !important;
+}
+#box-perform .box-footer {
+    min-height: 40px;
+}
+body .box-header h3.do-not-treat,
+body .box-footer h3.do-not-treat {
+    display: none;
+    margin: 0;
+    color: #fff;
+}
+
+/* review testlist */
+td.review-value,
+th.review-value {
+    width:60px;
+    text-align:center;
+}
+td.review-value span {
+    display: inline-block;
+    width: 60px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+td.review-status,
+th.review-status{
+    width: 185px;
+}
+td.review-selected,
+th.review-selected{
+    width: 40px;
+    text-align: center;
+}
+td.review-diff,
+th.review-diff,
+td.review-ref,
+th.review-ref {
+    width: 60px;
+    text-align: right;
+}
+
+
+/* QA Overview */
+.count-box {
+    min-height: 128px;
+}
+.testlist-link {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 0;
+    width: 60%;
+}
+.testlist-last-status {
+    text-align: right;
+    min-width: 90px;
+}
+.testlist-last-status,
+.testlist-link,
+.testlist-due-date {
+    padding: 0;
+}
+.overview-table {
+    width: 100%;
+}
+.overview-table.units th:last-child {
+    text-align: right;
+}
+.due-status-lists {
+    overflow-y:scroll;
+    overflow-x: hidden;
+    height:400px;
+}
+.due-status-container {
+
+    height:450px;
+}
+.pad-r-10 {
+    padding-right: 10px;
+}
+.status-boxes {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    vertical-align: bottom;
+}
+
+/* Remove spinners on number inputs */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+#listable-table-unreviewed > thead > tr > th:nth-child(1),
+#listable-table-unreviewed > tbody > tr > td:nth-child(1) {
+    min-width: 160px;
+}
+#listable-table-review_utc > tbody > tr > td:nth-child(1),
+#listable-table-unreviewed > tbody > tr > td:nth-child(1),
+#listable-table-unreviewed_visible_to > tbody > tr > td:nth-child(1),
+#listable-table-unreviewed_by_group > tbody > tr > td:nth-child(1),
+#listable-table-review_utc > tbody > tr > td:nth-child(5),
+#listable-table-unreviewed > tbody > tr > td:nth-child(5),
+#listable-table-unreviewed_visible_to > tbody > tr > td:nth-child(5),
+#listable-table-unreviewed_by_group > tbody > tr > td:nth-child(5) {
+    width: 160px !important;
+}
+row.procedure-open > td:nth-child(1) {
+    border-left: 3px solid #00ff00;
+}
+td.qa-category.bar-container {
+    height: inherit;
+}
+td.qa-category .error-bar,
+td.qa-category .procedure-bar,
+td.qa-category .comment-bar {
+    height: inherit;
+}
+#perform-qa-table tr {
+    height: 1px;
+}

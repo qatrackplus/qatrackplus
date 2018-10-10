@@ -1,0 +1,101 @@
+table.table {
+    width: 100%;
+}
+
+table.dataTable tr td.sorting_1 {
+    background-color: #d2d6de;
+    border-color: transparent;
+}
+table.dataTable tr td.sorting_2 {
+    background-color: #dde1e9;
+    border-color: transparent;
+}
+table.dataTable tr td.sorting_3 {
+    background-color: #e8ecf4;
+    border-color: transparent;
+}
+table.dataTable.table-hover > tbody > tr:hover > td.sorting_1 {
+    background-color: #cdd1d9;
+}
+table.dataTable.table-hover > tbody > tr:hover > td.sorting_2 {
+    background-color: #d6dae2;
+}
+table.dataTable.table-hover > tbody > tr:hover > td.sorting_3 {
+    background-color: #e0e4ec;
+}
+
+.table-condensed > thead > tr > th,
+.table-condensed > tbody > tr > th,
+.table-condensed > tfoot > tr > th,
+.table-condensed > thead > tr > td,
+.table-condensed > tbody > tr > td,
+.table-condensed > tfoot > tr > td {
+    padding: 2px;
+}
+
+table.table thead .sorting,
+table.table thead .sorting_asc,
+table.table thead .sorting_desc {
+    cursor: pointer;
+	*cursor: hand;
+}
+
+table.table thead .sorting:before {
+    content: '\f07d';
+    font-family: FontAwesome;
+    padding-right: 8px;
+}
+table.table thead .sorting_asc:before {
+    content: '\f160';
+    font-family: FontAwesome;
+    padding-right: 8px;
+}
+table.table thead .sorting_desc:before {
+    content: '\f161';
+    font-family: FontAwesome;
+    padding-right: 8px;
+}
+
+table.table > thead > tr > th > span > div > ul > li.active > a,
+.dataTables_wrapper > div > div > div > ul > li.active > a {
+    background-color: #4c5961;
+}
+table.table > thead > tr > th > span > div > ul > li.active > a:hover,
+.dataTables_wrapper > div > div > div > ul > li.active > a:hover {
+    background-color: #424f57;
+}
+
+.pagination > .active > a,
+.pagination > .active > span,
+.pagination > .active > a:hover,
+.pagination > .active > span:hover,
+.pagination > .active > a:focus,
+.pagination > .active > span:focus {
+    /*background-color: #605ca8;*/
+    background-color: #424f57;
+    border-color: #313d45;
+}
+
+.full-width, .filter_column, .filter_column > div.btn-group {
+    width: 100% !important;
+    /*min-width: 100px;*/
+    box-sizing: border-box;
+    -webkit-box-sizing:border-box;
+    -moz-box-sizing: border-box;
+}
+
+.pagination {
+    margin: 0;
+    float: right;
+}
+table.table-hover tr.no-hover:hover {
+    background-color: inherit;
+}
+table.table-valign-middle > tbody > tr > td,
+table.table-valign-middle > thead > tr > td,
+table.table-valign-middle > tfoot > tr > td {
+    vertical-align: middle;
+}
+.table > tbody > tr > td {
+    border-top-color: transparent;
+}

@@ -1,7 +1,9 @@
 # taken from from django.http import HttpResponseRedirect
-from django.http import HttpResponseRedirect
-from django.conf import settings
 from re import compile
+from urllib.parse import quote
+
+from django.conf import settings
+from django.http import HttpResponseRedirect
 
 EXEMPT_URLS = [compile(settings.LOGIN_URL.lstrip('/'))]
 if hasattr(settings, 'LOGIN_EXEMPT_URLS'):
@@ -18,15 +20,15 @@ class LoginRequiredMiddleware:
     Requires authentication middleware and template context processors to be
     loaded. You'll get an error if they aren't.
     """
-    def process_request(self, request):
-        assert hasattr(request, 'user'), "The Login Required middleware\
- requires authentication middleware to be installed. Edit your\
- MIDDLEWARE_CLASSES setting to insert\
- 'django.contrib.auth.middlware.AuthenticationMiddleware'. If that doesn't\
- work, ensure your TEMPLATE_CONTEXT_PROCESSORS setting includes\
- 'django.core.context_processors.auth'."
-        if not request.user.is_authenticated():
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+
+        if not request.user.is_authenticated:
             path = request.path_info.lstrip('/')
             if not any(m.match(path) for m in EXEMPT_URLS):
-                login_url = "%s?next=%s"%(settings.LOGIN_URL, request.path)
+                login_url = "%s?next=%s" % (settings.LOGIN_URL, quote(request.get_full_path()))
                 return HttpResponseRedirect(login_url)
+        return self.get_response(request)

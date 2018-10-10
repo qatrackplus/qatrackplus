@@ -1,0 +1,54 @@
+{% extends "site_base.html" %}
+{#{% load staticfiles %}#}
+{% load qa_tags %}
+{% load listable %}
+
+{% block head_title %}{{page_title}}{% endblock %}
+
+{% block extra_css %}
+{#    {% autoescape off %}{% listable_css %}{% endautoescape %}#}
+    <link href="{{ STATIC_URL }}datepicker/css/bootstrap-datepicker.min.css?v={{VERSION}}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}multiselect/css/bootstrap.multiselect.css?v={{VERSION}}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}daterangepicker/css/daterangepicker.css?v={{VERSION}}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}qatrack_core/css/custom-daterangepicker.css?v={{ VERSION }}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}qatrack_core/css/tables.css?v={{VERSION}}" rel="stylesheet">
+    <link href="{{ STATIC_URL }}qa/css/qa.css?v={{VERSION}}" rel="stylesheet">
+{% endblock extra_css %}
+
+{% block extra_js %}
+    {% autoescape off %}
+        {% listable view_name dom="<'row'<'col-sm-5'i><'col-sm-7'p>><'row'<'col-sm-12'tr>><'row'<'col-sm-5'><'col-sm-7'p>>" requirejs=True pagination_type='bootstrap3' css_table_class='table-hover table-condensed table-custom-listable' css_input_class='btn-flat btn-sm input-sm full-width' auto_width=False %}
+    {% endautoescape %}
+{% endblock %}
+
+{% block require_javascript %}
+    require(['listable']);
+{% endblock require_javascript %}
+
+{% block body %}
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box">
+                <div class="box-header">
+                    <i class="fa {{ icon }} fa-fw" aria-hidden="true"></i>
+                    <h3 class="box-title">{{page_title}}</h3>
+                    {% if action == "perform" %}
+                        <a class="pull-right" href="{% url "choose_unit" %}" title="return to unit selection">&larr; Back to Unit Selection Page</a>
+                    {% else %}
+                        <a class="pull-right" href="{% url "choose_review_unit" %}" title="return to unit selection">&larr; Back to Unit Review Selection Page</a>
+                    {% endif %}
+                </div>
+                <div class="box-body pad">
+
+
+                    {{ listable_table }}
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock body %}
+

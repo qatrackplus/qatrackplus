@@ -4,29 +4,32 @@ from django.conf import settings
 # based on http://code.djangoproject.com/ticket/3777#comment:4
 
 
-class FilterPersistMiddleware(object):
+class FilterPersistMiddleware:
 
-    def process_request(self, request):
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
 
         if '/admin/' not in request.path:
-            return None
+            return self.get_response(request)
 
-        if 'HTTP_REFERER' not in request.META:
-            return None
+        if not request.META.get('HTTP_REFERER', ""):
+            return self.get_response(request)
 
         popup = 'popup=1' in request.META['QUERY_STRING']
         path = request.path
         path = path[path.find('/admin'):len(path)]
         query_string = request.META['QUERY_STRING']
         if "prefilter=true" in query_string:
-            return None
+            return self.get_response(request)
         session = request.session
 
         if session.get('redirected', False):  # so that we dont loop once redirected
             del session['redirected']
-            return None
+            return self.get_response(request)
 
-        referrer = request.META['HTTP_REFERER'].split('?')[0]
+        referrer = request.META.get('HTTP_REFERER', "").split('?')[0]
         referrer = referrer[referrer.find('/admin'):len(referrer)]
         key = 'key' + path.replace('/', '_')
 
@@ -38,7 +41,7 @@ class FilterPersistMiddleware(object):
             if query_string == '':  # Filter is empty, delete it
                 if session.get(key, False):
                     del session[key]
-                return None
+                return self.get_response(request)
             request.session[key] = query_string
         else:  # We are are coming from another page, restore filter if available
 
@@ -49,4 +52,5 @@ class FilterPersistMiddleware(object):
                 request.session['redirected'] = True
 
                 return http.HttpResponseRedirect(redirect_to)
-        return None
+
+        return self.get_response(request)

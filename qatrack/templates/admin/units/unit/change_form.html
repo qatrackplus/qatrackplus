@@ -1,0 +1,17 @@
+{% extends "admin/change_form.html" %}
+
+{% block extrahead %}
+
+    {{ block.super }}
+
+    <script>
+        (function($) {
+
+            $(document).ready(function ($) {
+                jQuery('.duration').inputmask('99:99', {numericInput: true, removeMaskOnSubmit: true});
+            });
+
+        })(django.jQuery);
+    </script>
+{% endblock extrahead %}
+

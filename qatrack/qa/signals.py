@@ -1,10 +1,22 @@
-from django.dispatch import receiver, Signal
-from django.db.models.signals import pre_save, post_save, post_delete
+from collections import defaultdict
 
-from django.core.exceptions import ValidationError
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
+from django.db.models.signals import (
+    post_delete,
+    post_save,
+    pre_delete,
+    pre_save,
+)
+from django.dispatch import Signal, receiver
+from django.utils import timezone
+from django_comments.models import Comment
+from django_comments.signals import comment_was_posted
 
-import models
+from qatrack.service_log import models as sl_models
+
+from . import models
 
 
 def loaded_from_fixture(kwargs):
@@ -15,9 +27,10 @@ testlist_complete = Signal(providing_args=["instance", "created"])
 
 
 def update_last_instances(test_list_instance):
+    utc = test_list_instance.unit_test_collection
     try:
         last_instance = models.TestListInstance.objects.complete().filter(
-            unit_test_collection=test_list_instance.unit_test_collection
+            unit_test_collection=utc
         ).latest("work_completed")
     except models.TestListInstance.DoesNotExist:
         last_instance = None
@@ -27,35 +40,25 @@ def update_last_instances(test_list_instance):
         # in that case it doesn't make sense to try to update anything
         return
 
-    cycle_ids = models.TestListCycle.objects.filter(
-        test_lists=test_list_instance.test_list
-    ).values_list("pk", flat=True)
-    cycle_ct = ContentType.objects.get_for_model(models.TestListCycle)
+    utc.last_instance = last_instance
+    due_date = utc.calc_due_date()
 
-    test_list_ids = [test_list_instance.test_list.pk]
-    list_ct = ContentType.objects.get_for_model(models.TestList)
+    models.UnitTestCollection.objects.filter(pk=utc.pk).update(
+        due_date=due_date,
+        last_instance=last_instance,
+    )
 
-    to_update = [(cycle_ct, cycle_ids), (list_ct, test_list_ids)]
 
-    for ct, object_ids in to_update:
+def handle_se_statuses_post_tli_delete(test_list_instance):
 
-        utcs = models.UnitTestCollection.objects.filter(
-            content_type=ct,
-            object_id__in=object_ids,
-            unit=test_list_instance.unit_test_collection.unit,
-        )
+    se_rtsqa_qs = sl_models.ServiceEvent.objects.filter(
+        returntoserviceqa__test_list_instance=test_list_instance, service_status__is_review_required=False
+    )
+    se_ib_qs = test_list_instance.serviceevents_initiated.filter(service_status__is_review_required=False)
+    default_ses = sl_models.ServiceEventStatus.get_default()
 
-        for utc in utcs:
-            utc.last_instance = last_instance
-            due_date = utc.calc_due_date()
-
-            # Use update here rather than just calling utc.save()
-            # since utc.save kicks off a bunch of other db queries
-            # due to the UnitTestCollection post_save signal
-            models.UnitTestCollection.objects.filter(pk=utc.pk).update(
-                due_date=due_date,
-                last_instance=last_instance,
-            )
+    se_rtsqa_qs.update(service_status=default_ses)
+    se_ib_qs.update(service_status=default_ses)
 
 
 def get_or_create_unit_test_info(unit, test, assigned_to=None, active=True):
@@ -77,25 +80,23 @@ def find_assigned_unit_test_collections(collection):
     the units that it is a part of
     """
 
-    all_parents = {
-        ContentType.objects.get_for_model(collection): [collection],
-    }
+    all_parents = defaultdict(list)
+    all_parents[ContentType.objects.get_for_model(collection)] = [collection]
 
-    parent_types = [x._meta.module_name + "_set" for x in models.TestCollectionInterface.__subclasses__()]
+    parent_types = [x._meta.model_name + "_set" for x in models.TestCollectionInterface.__subclasses__() + [models.Sublist]]
 
     for parent_type in parent_types:
 
         if hasattr(collection, parent_type):
             parents = getattr(collection, parent_type).all()
             if parents.count() > 0:
+                if parents[0]._meta.model_name == "sublist":
+                    parents = [x.parent for x in parents]
                 ct = ContentType.objects.get_for_model(parents[0])
-                try:
-                    all_parents[ct].extend(list(parents))
-                except KeyError:
-                    all_parents[ct] = list(parents)
+                all_parents[ct].extend(list(parents))
 
     assigned_utcs = []
-    for ct, objects in all_parents.items():
+    for ct, objects in list(all_parents.items()):
         utcs = models.UnitTestCollection.objects.filter(
             object_id__in=[x.pk for x in objects],
             content_type=ct,
@@ -153,6 +154,12 @@ def on_test_list_instance_saved(*args, **kwargs):
         update_last_instances(kwargs["instance"])
 
 
+@receiver(pre_delete, sender=models.TestListInstance)
+def pre_test_list_instance_deleted(*args, **kwargs):
+    """update last_instance if available"""
+    handle_se_statuses_post_tli_delete(kwargs["instance"])
+
+
 @receiver(post_delete, sender=models.TestListInstance)
 def on_test_list_instance_deleted(*args, **kwargs):
     """update last_instance if available"""
@@ -178,6 +185,16 @@ def test_added_to_list(*args, **kwargs):
         update_unit_test_infos(kwargs["instance"].test_list)
 
 
+@receiver(post_save, sender=models.Sublist)
+def sublist_added_to_list(*args, **kwargs):
+    """
+    Sublist was added to a list. Find all units this list
+    is performed on and create UnitTestInfo for the Unit, Test pair.
+    """
+    if (not loaded_from_fixture(kwargs)):
+        update_unit_test_infos(kwargs["instance"].parent)
+
+
 @receiver(post_save, sender=models.TestList)
 def test_list_saved(*args, **kwargs):
     """TestList was saved. Recreate any UTI's that may have been deleted in past"""
@@ -193,3 +210,20 @@ def test_list_added_to_cycle(*args, **kwargs):
     """
     if (not loaded_from_fixture(kwargs)):
         update_unit_test_infos(kwargs["instance"].test_list)
+
+
+if settings.USE_SERVICE_LOG:
+    @receiver(comment_was_posted, sender=Comment)
+    def check_approved_statuses(*args, **kwargs):
+
+        if 'edit_tli' in kwargs and kwargs['edit_tli']:
+            tli_id = kwargs['comment'].object_pk
+            tli = models.TestListInstance.objects.get(pk=tli_id)
+
+            default_status = sl_models.ServiceEventStatus.get_default()
+            for f in tli.rtsqa_for_tli.all():
+                if not f.service_event.service_status.is_review_required:
+                    f.service_event.service_status = default_status
+                    f.service_event.datetime_status_changed = timezone.now()
+                    f.service_event.user_status_changed_by = None
+                    f.service_event.save()
