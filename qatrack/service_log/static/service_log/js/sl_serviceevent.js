@@ -36,8 +36,8 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
 
         $service_save.one('click', function (event) {
             event.preventDefault();
-            $service_event_form.submit();
             $(window).off("beforeunload");
+            $service_event_form.submit();
             $(this).prop('disabled', true);
         });
 
