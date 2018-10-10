@@ -18,7 +18,7 @@ def check_calcs(apps, schema):
     for t in Test.objects.filter(type__in=CALCULATED_TYPES):
         try:
             ast.parse(t.calculation_procedure)
-        except SyntaxError:
+        except:
             msg = (
                 "The calculation procedure of the test named '%s' with ID=%d "
                 "needs to be updated to be compatible with Python 3."
