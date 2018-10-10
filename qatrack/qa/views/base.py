@@ -9,11 +9,6 @@ from django.db.models import Q
 from django.template.loader import get_template
 from django.utils.translation import ugettext as _
 from django.views.generic import UpdateView
-
-from qatrack.contacts.models import Contact
-from qatrack.qa import models, utils
-
-from braces.views import PrefetchRelatedMixin, SelectRelatedMixin
 from listable.views import (
     DATE_RANGE,
     LAST_14_DAYS,
@@ -208,7 +203,6 @@ class UTCList(BaseListableView):
     }
 
     order_fields = {
-        "utc_name_lower": "utc_name",
         "actions": False,
         "frequency__name": "frequency__due_interval",
         "unit__name": "unit__number",
@@ -313,16 +307,11 @@ class UTCList(BaseListableView):
 
         if field == 'frequency__name':
             filters = [(NONEORNULL, 'Ad Hoc') if f == (NONEORNULL, 'None') else f for f in filters]
-        elif field == 'frequency__name':
-            filters = [(NONEORNULL, 'Ad Hoc') if f == (NONEORNULL, 'None') else f for f in filters]
 
         return filters
 
     def frequency__name(self, utc):
         return utc.frequency.name if utc.frequency else 'Ad Hoc'
-
-    def utc_name_lower(self, utc):
-        return utc.utc_name
 
     def actions(self, utc):
         template = self.templates['actions']
