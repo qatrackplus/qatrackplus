@@ -479,9 +479,10 @@ class TestListInstances(BaseListableView):
             'num_initiated_se': len(se_ib),
             'show_rtsqa_se': True,
             'rtsqa_for_se': se_rtsqa,
-            'num_rtsqa_se': len(se_rtsqa)
+            'num_rtsqa_se': len(se_rtsqa),
+            'USE_SERVICE_LOG': settings.USE_SERVICE_LOG
         }
-        return template.render(c, request=self.request)
+        return template.render(c)
 
     def work_completed(self, tli):
         template = self.templates['work_completed']
