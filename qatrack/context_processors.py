@@ -120,19 +120,16 @@ def site(request):
 
     unreviewed_user_counts = cache.get(settings.CACHE_UNREVIEWED_COUNT_USER)
     if unreviewed_user_counts is None:
-        print("HERE")
         your_unreviewed = TestListInstance.objects.your_unreviewed_count(request.user)
         unreviewed_user_counts = {request.user.pk: your_unreviewed}
         cache.set(settings.CACHE_UNREVIEWED_COUNT_USER, unreviewed_user_counts)
     else:
         try:
             your_unreviewed = unreviewed_user_counts[request.user.pk]
-            print("THHERE")
         except KeyError:
             your_unreviewed = TestListInstance.objects.your_unreviewed_count(request.user)
             unreviewed_user_counts[request.user.pk] = your_unreviewed
             cache.set(settings.CACHE_UNREVIEWED_COUNT_USER, unreviewed_user_counts)
-            print("EVERYWHERE")
 
     default_se_status = cache.get('default-se-status')
     if default_se_status is None:
