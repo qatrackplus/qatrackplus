@@ -937,7 +937,7 @@ class ServiceEventsReturnToServiceForList(ServiceEventsBaseList):
 
     def get_queryset(self):
         qs = super().get_queryset()
-        return qs.filter(returntoserviceqa__test_list_instance__pi=self.kwargs['tli_pk'])
+        return qs.filter(returntoserviceqa__test_list_instance__id=self.kwargs['tli_pk'])
 
     def get_next(self):
         return reverse('sl_list_return_to_service_for', kwargs={'tli_pk': self.kwargs['tli_pk']})

@@ -48,18 +48,18 @@
         {% endif %}
         {% if show_rtsqa_se %}
             {% if  num_rtsqa_se == 1 %}
-                <a class="btn btn-info btn-xs btn-flat hover-parent"
-                  title="View service event that this qa is a return to service for"
-                  href="{% url 'sl_details' pk=rtsqa_for_se.0.pk %}?next={{request.path|cut:"data/"}}">
+                <a class="btn btn-default btn-xs btn-flat hover-parent"
+                   title="View service event that this qa is a return to service for"
+                   href="{% url 'sl_details' pk=rtsqa_for_se.0.pk %}?next={{request.path|cut:"data/"}}">
                     <i class="fa fa-stack fa-fw">
                         <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
                         <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-left hover-sub-info"></i>
                     </i>
                 </a>
             {% elif num_rtsqa_se > 1 %}
-                <a class="btn btn-info btn-xs btn-flat hover-parent"
-                  title="View list of service events that this qa is a return to service for"
-                  href="{% url 'sl_list_return_to_service_for' tli_pk=instance.pk%}?next={{request.path|cut:"data/"}}">
+                <a class="btn btn-default btn-xs btn-flat hover-parent"
+                   title="View list of service events that this qa is a return to service for"
+                   href="{% url 'sl_list_return_to_service_for' tli_pk=instance.pk%}?next={{request.path|cut:"data/"}}">
                     <i class="fa fa-stack fa-fw">
                         <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
                         <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-left hover-sub-primary"></i>
