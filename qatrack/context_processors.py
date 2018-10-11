@@ -17,6 +17,7 @@ from qatrack.service_log.models import (
 from qatrack.units.models import Unit
 
 cache.delete(settings.CACHE_UNREVIEWED_COUNT)
+cache.delete(settings.CACHE_UNREVIEWED_COUNT_USER)
 cache.delete(settings.CACHE_RTS_QA_COUNT)
 cache.delete('default-se-status')
 cache.delete('se_needing_review_count')
@@ -53,9 +54,9 @@ def update_part_quantity(*args, **kwargs):
 def update_unreviewed_cache(*args, **kwargs):
     """When a test list is completed invalidate the unreviewed counts"""
     cache.delete(settings.CACHE_UNREVIEWED_COUNT)
+    cache.delete(settings.CACHE_UNREVIEWED_COUNT_USER)
     cache.delete(settings.CACHE_RTS_QA_COUNT)
     cache.delete(settings.CACHE_IN_PROGRESS_COUNT)
-    cache.delete(settings.CACHE_UNREVIEWED_COUNT_USER)
 
 
 @receiver(post_save, sender=ReturnToServiceQA)
