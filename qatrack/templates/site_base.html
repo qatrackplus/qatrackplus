@@ -191,9 +191,15 @@
                                             <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                                                 Review Data
                                                 {% if perms.qa.can_review %}
-                                                    <span title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
-                                                        <span class="total-unreviewed-count">{{UNREVIEWED}}</span>
-                                                    </span>
+                                                    {% if perms.qa.can_review_non_visible_tli %}
+                                                        <span title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                                                            <span class="total-unreviewed-count">{{UNREVIEWED}}</span>
+                                                        </span>
+                                                    {% else %}
+                                                        <span title="There are currently {{ USERS_UNREVIEWED|lookup:user.id}} QA Sessions waiting to be reviewed" class="label {% if USERS_UNREVIEWED|lookup:user.id == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                                                            <span class="total-unreviewed-count">{{ USERS_UNREVIEWED|lookup:user.id}}</span>
+                                                        </span>
+                                                    {% endif %}
                                                 {% endif %}
                                                 <b class="caret"></b>
                                             </a>
@@ -245,24 +251,14 @@
                                                                 Unreviewed - All Groups
                                                             </a>
                                                         </li>
-                                                    {% else %}
-                                                        <li class="disabled">
-                                                            <div title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed">
-                                                                <i class="fa fa-question-circle fa-lg fa-fw" aria-hidden="true"></i>
-                                                                <span title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
-                                                                    <span class="total-unreviewed-count">{{UNREVIEWED}}</span>
-                                                                </span>
-                                                                Unreviewed - All Groups
-                                                            </div>
-                                                        </li>
                                                     {% endif %}
                                                     <li>
-                                                        <a href="{% url  "unreviewed_visible_to" %}" title="There are currently {{YOUR_UNREVIEWED}} QA Sessions visible to your groups waiting to be reviewed">
+                                                        <a href="{% url  "unreviewed_visible_to" %}" title="There are currently {{ USERS_UNREVIEWED|lookup:user.id}} QA Sessions waiting to be reviewed (QA for groups you belong to)">
                                                             <i class="fa fa-question-circle fa-lg fa-fw" aria-hidden="true"></i>
-                                                            <span title="There are currently {{YOUR_UNREVIEWED}} QA Sessions visible to your groups waiting to be reviewed" class="label {% if YOUR_UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
-                                                                <span class="total-unreviewed-count">{{YOUR_UNREVIEWED}}</span>
+                                                            <span title="There are currently {{ USERS_UNREVIEWED|lookup:user.id}} QA Sessions visible to your groups waiting to be reviewed" class="label {% if YOUR_UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                                                                <span class="total-unreviewed-count">{{ USERS_UNREVIEWED|lookup:user.id}}</span>
                                                             </span>
-                                                            Unreviewed Visible To Your Groups
+                                                            Unreviewed{% if perms.qa.can_review_non_visible_tli %} - Your Groups{% endif %}
                                                         </a>
                                                     </li>
                                                     <li>

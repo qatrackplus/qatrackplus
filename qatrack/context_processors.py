@@ -1,9 +1,10 @@
 import json
 from django.core.cache import cache
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
 from django.db.models import ObjectDoesNotExist
-from django.db.models.signals import post_save, post_delete, pre_delete
+from django.db.models.signals import post_save, post_delete, pre_delete, pre_save
 from django.dispatch import receiver
 
 from qatrack.qa.models import TestListInstance, UnitTestCollection
@@ -12,11 +13,12 @@ from qatrack.parts.models import PartUsed, PartStorageCollection
 from qatrack.service_log.models import ReturnToServiceQA, ServiceEvent, ServiceEventStatus
 
 cache.delete(settings.CACHE_UNREVIEWED_COUNT)
+cache.delete(settings.CACHE_UNREVIEWED_COUNT_USER_DICT)
 cache.delete(settings.CACHE_RTS_QA_COUNT)
-cache.delete('default-se-status')
-cache.delete('se_needing_review_count')
+cache.delete(settings.CACHE_DEFAULT_SE_STATUS)
+cache.delete(settings.CACHE_SE_NEEDING_REVIEW_COUNT)
 cache.delete(settings.CACHE_IN_PROGRESS_COUNT)
-cache.delete('service-status-colours')
+cache.delete(settings.CACHE_SERVICE_STATUS_COLOURS)
 
 
 @receiver(pre_delete, sender=PartUsed)
@@ -50,6 +52,14 @@ def update_unreviewed_cache(*args, **kwargs):
     cache.delete(settings.CACHE_UNREVIEWED_COUNT)
     cache.delete(settings.CACHE_RTS_QA_COUNT)
     cache.delete(settings.CACHE_IN_PROGRESS_COUNT)
+    cache.delete(settings.CACHE_UNREVIEWED_COUNT_USER_DICT)
+
+
+@receiver(pre_save, sender=User)
+def update_unreviewed_user_cache(*args, **kwargs):
+    """When a test list is completed invalidate the unreviewed counts"""
+    if kwargs['instance'].id is None:
+        cache.delete(settings.CACHE_UNREVIEWED_COUNT_USER_DICT)
 
 
 @receiver(post_save, sender=ReturnToServiceQA)
@@ -63,8 +73,8 @@ def update_rts_cache(*args, **kwargs):
 @receiver(post_delete, sender=ServiceEventStatus)
 def update_se_cache(*args, **kwargs):
     """When a service status is changed invalidate the default and review count"""
-    cache.delete('default-se-status')
-    cache.delete('se_needing_review_count')
+    cache.delete(settings.CACHE_DEFAULT_SE_STATUS)
+    cache.delete(settings.CACHE_SE_NEEDING_REVIEW_COUNT)
 
 
 @receiver(post_save, sender=UnitTestCollection)
@@ -75,7 +85,7 @@ def update_active_unit_test_collections_for_unit_utc(*args, **kwargs):
         unit=unit,
         active=True
     ).order_by('name')
-    cache.set('active_unit_test_collections_for_unit_%s' % unit.id, qs)
+    cache.set(settings.CACHE_ACTIVE_UTCS_FOR_UNIT_.format(unit.id), qs)
 
 
 @receiver(post_save, sender=Unit)
@@ -86,14 +96,14 @@ def update_active_unit_test_collections_for_unit(*args, **kwargs):
         unit=unit,
         active=True
     ).order_by('name')
-    cache.set('active_unit_test_collections_for_unit_%s' % unit.id, qs)
+    cache.set(settings.CACHE_ACTIVE_UTCS_FOR_UNIT_.format(unit.id), qs)
 
 
 @receiver(post_save, sender=ServiceEventStatus)
 @receiver(post_delete, sender=ServiceEventStatus)
 def update_colours(*args, **kwargs):
     service_status_colours = {ses.name: ses.colour for ses in ServiceEventStatus.objects.all()}
-    cache.set('service-status-colours', service_status_colours)
+    cache.set(settings.CACHE_SERVICE_STATUS_COLOURS, service_status_colours)
 
 
 def site(request):
@@ -112,25 +122,28 @@ def site(request):
         ).count()
         cache.set(settings.CACHE_RTS_QA_COUNT, unreviewed_rts)
 
-    your_unreviewed = TestListInstance.objects.your_unreviewed_count(request.user)
+    users_unreviewed = cache.get(settings.CACHE_UNREVIEWED_COUNT_USER_DICT)
+    if users_unreviewed is None:
+        users_unreviewed = TestListInstance.objects.user_unreviewed_counts()
+        cache.set(settings.CACHE_UNREVIEWED_COUNT_USER_DICT, users_unreviewed)
 
-    default_se_status = cache.get('default-se-status')
+    default_se_status = cache.get(settings.CACHE_DEFAULT_SE_STATUS)
     if default_se_status is None:
         default_se_status = ServiceEventStatus.get_default()
-        cache.set('default-se-status', default_se_status)
+        cache.set(settings.CACHE_DEFAULT_SE_STATUS, default_se_status)
 
-    service_status_colours = cache.get('service-status-colours')
+    service_status_colours = cache.get(settings.CACHE_SERVICE_STATUS_COLOURS)
     if service_status_colours is None:
         service_status_colours = {ses.name: ses.colour for ses in ServiceEventStatus.objects.all()}
-        cache.set('service-status-colours', service_status_colours)
+        cache.set(settings.CACHE_SERVICE_STATUS_COLOURS, service_status_colours)
 
-    se_needing_review_count = cache.get('se_needing_review_count')
+    se_needing_review_count = cache.get(settings.CACHE_SE_NEEDING_REVIEW_COUNT)
     if se_needing_review_count is None:
         se_needing_review_count = ServiceEvent.objects.filter(
             service_status__in=ServiceEventStatus.objects.filter(is_review_required=True),
             is_review_required=True,
         ).count()
-        cache.set('se_needing_review_count', se_needing_review_count)
+        cache.set(settings.CACHE_SE_NEEDING_REVIEW_COUNT, se_needing_review_count)
 
     in_progress_count = cache.get(settings.CACHE_IN_PROGRESS_COUNT)
     if in_progress_count is None:
@@ -145,7 +158,7 @@ def site(request):
         'FEATURE_REQUEST_URL': settings.FEATURE_REQUEST_URL,
         'UNREVIEWED': unreviewed,
         'UNREVIEWED_RTS': unreviewed_rts,
-        'YOUR_UNREVIEWED': your_unreviewed,
+        'USERS_UNREVIEWED': users_unreviewed,
         'ICON_SETTINGS': settings.ICON_SETTINGS,
         'ICON_SETTINGS_JSON': json.dumps(settings.ICON_SETTINGS),
         'TEST_STATUS_SHORT_JSON': json.dumps(settings.TEST_STATUS_DISPLAY_SHORT),

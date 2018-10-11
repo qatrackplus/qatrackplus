@@ -267,6 +267,11 @@ CACHE_UNREVIEWED_COUNT = 'unreviewed-count'
 CACHE_QA_FREQUENCIES = 'qa-frequencies'
 CACHE_RTS_QA_COUNT = 'unreviewed-rts-qa'
 CACHE_IN_PROGRESS_COUNT = 'in-progress-count'
+CACHE_UNREVIEWED_COUNT_USER_DICT = 'unreviewed-count-users'
+CACHE_DEFAULT_SE_STATUS = 'default-se-status'
+CACHE_SE_NEEDING_REVIEW_COUNT = 'se_needing_review_count'
+CACHE_SERVICE_STATUS_COLOURS = 'service-status-colours'
+CACHE_ACTIVE_UTCS_FOR_UNIT_ = 'active_utcs_for_unit_{}'
 
 MAX_CACHE_TIMEOUT = 24 * 60 * 60  # 24hours
 

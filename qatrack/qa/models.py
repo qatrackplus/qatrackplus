@@ -1811,6 +1811,12 @@ class TestListInstanceManager(models.Manager):
     def complete(self):
         return self.get_queryset().filter(in_progress=False).order_by("-work_completed")
 
+    def user_unreviewed_counts(self):
+        return {
+            u.id: self.unreviewed().filter(unit_test_collection__visible_to__in=u.groups.all()).distinct().count()
+            for u in User.objects.filter(is_active=True)
+        }
+
 
 class TestListInstance(models.Model):
     """Container for a collection of QA :model:`TestInstance`s
