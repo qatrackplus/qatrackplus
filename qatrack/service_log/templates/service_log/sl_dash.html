@@ -95,7 +95,7 @@
                                 <label title="Toggle return to service" for="rts_toggle" class="add-on" style="display: none;">
                                     Show return to service
                                 </label>
-                                <input id="rts_toggle" type="checkbox" checked="checked"/>
+                                <input id="rts_toggle" type="checkbox"/>
                             </div>
                         </div>
                     </div>
@@ -108,78 +108,6 @@
                                     {% for log in recent_logs %}
                                         {% render_log log user %}
                                     {% endfor %}
-{#                                        <li class="time-label">#}
-{#                                            <span class="bg-gray">#}
-{#                                                {{ val.display }}#}
-{#                                            </span>#}
-{#                                        </li>#}
-
-{#                                        {% for obj in val.objs %}#}
-{#                                            <li class="{{ obj.class }}">#}
-{#                                                {% if obj.class == 'se_new' %}#}
-{#                                                    <i class="fa fa-stack bg-dark-gray">#}
-{#                                                        <i class="fa fa-wrench fa-stack-custom-main fa-lg"></i>#}
-{#                                                        <i class="fa fa-plus fa-stack-custom-sub upper-left success"></i>#}
-{#                                                    </i>#}
-{#                                                {% elif obj.class == 'se_edit' %}#}
-{#                                                    <i class="fa fa-stack bg-dark-gray">#}
-{#                                                        <i class="fa fa-wrench fa-stack-custom-main fa-lg"></i>#}
-{#                                                        <i class="fa fa-pencil fa-stack-custom-sub fa-flip-horizontal upper-left primary"></i>#}
-{#                                                    </i>#}
-{#                                                {% elif obj.class == 'se_status' %}#}
-{#                                                    <i class="fa fa-stack bg-dark-gray">#}
-{#                                                        <i class="fa fa-wrench fa-stack-custom-main fa-lg"></i>#}
-{#                                                        <i class="fa fa-exclamation fa-stack-custom-sub upper-left status_colour" data-colour="{{ obj.instance.service_status.colour }}"></i>#}
-{#                                                        <i class="fa fa-wrench fa-lg status_colour" data-colour="{{ obj.instance.service_status.colour }}"></i>#}
-{#                                                    </i>#}
-{#                                                {% elif obj.class == 'rtsqa_new' %}#}
-{#                                                    <i class="fa fa-stack bg-dark-gray">#}
-{#                                                        <i class="fa fa-pencil-square-o fa-stack-custom-main fa-lg"></i>#}
-{#                                                        <i class="fa fa-plus fa-stack-custom-sub upper-left success"></i>#}
-{#                                                    </i>#}
-{#                                                {% elif obj.class == 'rtsqa_complete' %}#}
-{#                                                    <i class="fa fa-stack bg-dark-gray">#}
-{#                                                        <i class="fa fa-pencil-square-o fa-stack-custom-main fa-lg"></i>#}
-{#                                                        <i class="fa fa-check fa-stack-custom-sub upper-left info"></i>#}
-{#                                                    </i>#}
-{#                                                {% else %}#}
-{#                                                    <i class="fa fa-question bg-default"></i>#}
-{#                                                {% endif %}#}
-{#                                                <div class="timeline-item">#}
-{#                                                    <span class="time"><i class="fa fa-clock-o"></i> {{ obj.time }}</span>#}
-{#                                                    <h3 class="timeline-header header-{{ obj.class }}"#}
-{#                                                        {% if obj.class == 'rtsqa_new' or obj.class == 'rtsqa_complete' %}onclick="window.location='{% url 'sl_details' pk=obj.instance.service_event.id %}'"#}
-{#                                                        {% else %}onclick="window.location='{% url 'sl_details' pk=obj.instance.id %}'"#}
-{#                                                        {% endif %}>#}
-{#                                                        <div class="pull-right margin-right-20 label label-default">#}
-{#                                                            {% if obj.class == 'se_new' or obj.class == 'se_edit' or obj.class == 'se_status' %}#}
-{#                                                                {{ obj.instance.unit_service_area.unit }}#}
-{#                                                            {% else %}#}
-{#                                                                {{ obj.instance.service_event.unit_service_area.unit }}#}
-{#                                                            {% endif %}#}
-{#                                                        </div>#}
-{#                                                        {{ obj.msg }}#}
-{#                                                        {% if obj.class == 'se_status' %}#}
-{#                                                            {% service_status_label obj.instance.service_status %}#}
-{#                                                            <span class="label status_colour" data-bgcolour="{{ obj.instance.service_status.colour }}">{{ obj.instance.service_status }}</span>#}
-{#                                                        {% endif %}#}
-{#                                                    </h3>#}
-{##}
-{#                                                    {% if obj.class == 'rtsqa_complete' %}#}
-{#                                                        <div class="timeline-body">#}
-{#                                                            <span>Pass/Fails: {% include "qa/pass_fail_status.html" with instance=obj.instance.test_list_instance show_icons=True %}</span>#}
-{#                                                            <span class="margin-l-20">Review Statuses: {% include "qa/review_status.html" with instance=obj.instance.test_list_instance show_icons=True statuses=obj.statuses_dict.statuses %}</span>#}
-{#                                                        </div>#}
-{#                                                    {% endif %}#}
-{##}
-{#                                                    <div class="timeline-footer">#}
-{#                                                        #}
-{#                                                    </div>#}
-{#                                                </div>#}
-{#                                            </li>#}
-{#                                        {% endfor %}#}
-
-{#                                    {% endfor %}#}
 
                                 </ul>
                             </div>
