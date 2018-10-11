@@ -264,6 +264,7 @@ REST_FRAMEWORK = {
 # Cache settings
 
 CACHE_UNREVIEWED_COUNT = 'unreviewed-count'
+CACHE_UNREVIEWED_COUNT_USER = 'unreviewed-count-user'
 CACHE_QA_FREQUENCIES = 'qa-frequencies'
 CACHE_RTS_QA_COUNT = 'unreviewed-rts-qa'
 CACHE_IN_PROGRESS_COUNT = 'in-progress-count'

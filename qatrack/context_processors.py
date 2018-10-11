@@ -1,15 +1,20 @@
 import json
-from django.core.cache import cache
+
 from django.conf import settings
 from django.contrib.sites.models import Site
+from django.core.cache import cache
 from django.db.models import ObjectDoesNotExist
-from django.db.models.signals import post_save, post_delete, pre_delete
+from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
 
+from qatrack.parts.models import PartStorageCollection, PartUsed
 from qatrack.qa.models import TestListInstance, UnitTestCollection
+from qatrack.service_log.models import (
+    ReturnToServiceQA,
+    ServiceEvent,
+    ServiceEventStatus,
+)
 from qatrack.units.models import Unit
-from qatrack.parts.models import PartUsed, PartStorageCollection
-from qatrack.service_log.models import ReturnToServiceQA, ServiceEvent, ServiceEventStatus
 
 cache.delete(settings.CACHE_UNREVIEWED_COUNT)
 cache.delete(settings.CACHE_RTS_QA_COUNT)
@@ -50,6 +55,7 @@ def update_unreviewed_cache(*args, **kwargs):
     cache.delete(settings.CACHE_UNREVIEWED_COUNT)
     cache.delete(settings.CACHE_RTS_QA_COUNT)
     cache.delete(settings.CACHE_IN_PROGRESS_COUNT)
+    cache.delete(settings.CACHE_UNREVIEWED_COUNT_USER)
 
 
 @receiver(post_save, sender=ReturnToServiceQA)
@@ -112,7 +118,21 @@ def site(request):
         ).count()
         cache.set(settings.CACHE_RTS_QA_COUNT, unreviewed_rts)
 
-    your_unreviewed = TestListInstance.objects.your_unreviewed_count(request.user)
+    unreviewed_user_counts = cache.get(settings.CACHE_UNREVIEWED_COUNT_USER)
+    if unreviewed_user_counts is None:
+        print("HERE")
+        your_unreviewed = TestListInstance.objects.your_unreviewed_count(request.user)
+        unreviewed_user_counts = {request.user.pk: your_unreviewed}
+        cache.set(settings.CACHE_UNREVIEWED_COUNT_USER, unreviewed_user_counts)
+    else:
+        try:
+            your_unreviewed = unreviewed_user_counts[request.user.pk]
+            print("THHERE")
+        except KeyError:
+            your_unreviewed = TestListInstance.objects.your_unreviewed_count(request.user)
+            unreviewed_user_counts[request.user.pk] = your_unreviewed
+            cache.set(settings.CACHE_UNREVIEWED_COUNT_USER, unreviewed_user_counts)
+            print("EVERYWHERE")
 
     default_se_status = cache.get('default-se-status')
     if default_se_status is None:
