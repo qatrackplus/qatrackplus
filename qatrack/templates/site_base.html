@@ -200,23 +200,36 @@
 
                                             <ul class="dropdown-menu" role="menu">
                                                 {% if perms.qa.can_review or perms.qa.can_view_overview %}
-                                                <li class="nav-header">QA Program Status</li>
-                                                <li>
-                                                    <a href="{% url "overview" %}" title="View a summary of the status of the QA program">
-                                                        <i class="fa fa-globe fa-lg fa-fw" aria-hidden="true"></i>
-                                                        Overview - All
-                                                    </a>
-                                                    <a href="{% url "overview_user" %}" title="View a summary of the status of the QA program">
-                                                        <i class="fa fa-globe fa-lg fa-fw" aria-hidden="true"></i>
-                                                        Overview - Your Groups
-                                                    </a>
-                                                </li>
-                                                <li>
-                                                    <a href="{% url "overview_due_dates" %}" title="View a summary of the status of the QA program">
-                                                        <i class="fa fa-calendar-check-o fa-lg fa-fw" aria-hidden="true"></i>
-                                                        By Due Status
-                                                    </a>
-                                                </li>
+                                                    <li class="nav-header">QA Program Status</li>
+                                                    {% if perms.qa.can_review_non_visible_tli %}
+                                                        <li>
+                                                            <a href="{% url "overview" %}" title="View a summary of the status of the QA program">
+                                                                <i class="fa fa-globe fa-lg fa-fw" aria-hidden="true"></i>
+                                                                Overview - All
+                                                            </a>
+                                                        </li>
+                                                    {% endif %}
+                                                    <li>
+                                                        <a href="{% url "overview_user" %}" title="View a summary of the status of the QA program (QA for groups you belong to)">
+                                                            <i class="fa fa-globe fa-lg fa-fw" aria-hidden="true"></i>
+                                                            Overview{% if perms.qa.can_review_non_visible_tli %} - Your Groups{% endif %}
+                                                        </a>
+                                                    </li>
+
+                                                    {% if perms.qa.can_review_non_visible_tli %}
+                                                        <li>
+                                                            <a href="{% url "overview_due_dates" %}" title="View QA grouped by due date">
+                                                                <i class="fa fa-calendar-check-o fa-lg fa-fw" aria-hidden="true"></i>
+                                                                By Due Status - All
+                                                            </a>
+                                                        </li>
+                                                    {% endif %}
+                                                    <li>
+                                                        <a href="{% url "overview_due_dates_user" %}" title="View QA for groups you belong to (QA for groups you belong to)">
+                                                            <i class="fa fa-calendar-check-o fa-lg fa-fw" aria-hidden="true"></i>
+                                                            By Due Status{% if perms.qa.can_review_non_visible_tli %} - Your Groups{% endif %}
+                                                        </a>
+                                                    </li>
                                                 {% endif %}
                                                 {% if perms.qa.can_review %}
                                                     <li class="divider"></li>
@@ -302,7 +315,6 @@
                                                             <i class="fa fa-file fa-lg fa-fw" aria-hidden="true"></i>
                                                             Your Groups Inactive Test Lists
                                                         </a></li>
-
                                                     {% endif %}
                                                 {% endif %}
                                             </ul>

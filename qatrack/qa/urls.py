@@ -64,6 +64,7 @@ urlpatterns = [
     url(r"^review/overview-user/$", review.Overview.as_view(), name="overview_user"),
     url(r"^review/overview-objects/$", review.OverviewObjects.as_view(), name="overview_objects"),
     url(r"^review/due-dates/$", review.DueDateOverview.as_view(), name="overview_due_dates"),
+    url(r"^review/due-dates-user/$", review.DueDateOverviewUser.as_view(), name="overview_due_dates_user"),
 
     # review utc's
     url(r"^review/all/$", review.UTCReview.as_view(), name="review_all"),

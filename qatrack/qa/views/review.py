@@ -361,7 +361,7 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
     """View which :model:`qa.UnitTestCollection` are overdue & coming due"""
 
     template_name = "qa/overview_by_due_date.html"
-    permission_required = ["qa.can_review", "qa.can_view_overview"]
+    permission_required = ["qa.can_review", "qa.can_view_overview", 'qa.can_review_non_visible_tli']
     raise_exception = True
 
     DUE_DISPLAY_ORDER = (
@@ -382,8 +382,7 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
 
         qs = models.UnitTestCollection.objects.filter(
             active=True,
-            unit__active=True,
-            visible_to__in=self.request.user.groups.all(),
+            unit__active=True
         ).select_related(
             "last_instance",
             "frequency",
@@ -448,7 +447,16 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
         context["due"] = ordered_due_lists
         context["units"] = sorted(units)
         context["freqs"] = sorted(freqs)
+        context['user_groups'] = '-user' in self.request.path
         return context
+
+
+class DueDateOverviewUser(DueDateOverview):
+
+    permission_required = ["qa.can_review", "qa.can_view_overview"]
+
+    def get_queryset(self):
+        return super().get_queryset().filter(visible_to__in=self.request.user.groups.all())
 
 
 class Overview(PermissionRequiredMixin, TemplateView):
@@ -471,6 +479,7 @@ class Overview(PermissionRequiredMixin, TemplateView):
         if '-user' in self.request.path:
             context['title'] += ' For Your Groups'
             context['msg'] = 'Overview of current QA status (visible to your groups) on all units'
+            context['user_groups'] = True
         return context
 
 
