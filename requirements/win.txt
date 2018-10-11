@@ -1,4 +1,5 @@
 -r base.txt
+CherryPy==18.0.1
 django-pyodbc-azure==1.11.13.1
 pyreadline
 pywin32>=220

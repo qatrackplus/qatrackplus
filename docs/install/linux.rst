@@ -597,7 +597,6 @@ and load some initial service log data:
     python manage.py loaddata fixtures/defaults/service_log/*
 
 
-
 Check the migration log
 .......................
 
@@ -609,6 +608,8 @@ During the migration above you may have noticed some warnings like:
     | Test name 1 (test-1)
     | Test name 2 (test-2)
     | ...
+
+
 
 This data is also available in the `logs/migrate.log` file.  Because the way
 Python handles text encodings / files has changed in Python 3, you will
@@ -626,6 +627,18 @@ to:
 
     data = BIN_FILE.read()
     # do something with data
+
+
+You may have also seen warnings like:
+
+
+    |  The test named 'yourtestname' with ID=1234 needs to be updated to be
+    |  compatible with Python 3.
+
+
+While most Test calculation procedures will be compatible with both Python 2
+and Python 3, there have been some syntactical changes in the language which
+may require you to update a calculation procedure to be Python 3 compatible.
 
 
 Update your local_settings.py file
@@ -667,3 +680,32 @@ Last Word
 There are a lot of steps getting everything set up so don't be discouraged if
 everything doesn't go completely smoothly! If you run into trouble, please get
 in touch on the :mailinglist:`mailing list <>`.
+
+Appendix 1: Hosting QATrack+ at a non-root URL
+----------------------------------------------
+
+If you want to host QATrack+ somewhere other than the root of your server (e.g.
+you want to host the QATrack+ application at http://myserver/qatrackplus/), you
+will need to ensure mod_rewrite is enabled:
+
+.. code-block:: console
+
+    sudo a2enmod rewrite
+    sudo service apache2 restart
+
+and you will need to include the following lines in your qatrack/local_settings.py file
+
+.. code-block:: python
+
+    FORCE_SCRIPT_NAME = "/qatrackplus"
+    LOGIN_EXEMPT_URLS = [r"^qatrackplus/accounts/", r"qatrackplus/api/*"]
+    LOGIN_REDIRECT_URL = "/qatrackplus/qa/unit/"
+    LOGIN_URL = "/qatrackplus/accounts/login/"
+
+and edit `/etc/apache/sites-available/qatrack.conf` so that the WSGIScriptAlias
+is set correctly:
+
+.. code-block:: apache
+
+    WSGIScriptAlias /qatrackplus /home/YOURUSERNAMEHERE/web/qatrackplus/qatrack/wsgi.py
+
