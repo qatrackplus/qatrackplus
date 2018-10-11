@@ -91,7 +91,7 @@ Ensure you have python3 installed correctly and on your PATH by running:
 
 .. code-block:: console
 
-    python -V
+    python --version
     # should print e.g. Python 3.6.6
 
 We're now ready to install all the libraries QATrack+ depends on.
@@ -101,7 +101,7 @@ We're now ready to install all the libraries QATrack+ depends on.
     mkdir venvs
     python -m pip install --upgrade pip
     python -m venv venvs\qatrack3
-    .\venvs\qatrack3\Scripts\activate
+    .\venvs\qatrack3\Scripts\Activate.ps1
     python -m pip install --upgrade pip
     cd qatrackplus
     pip install -r requirements\win.txt
@@ -383,7 +383,12 @@ virtual environment:
 .. code-block:: console
 
     cd C:\deploy\
-    .\venvs\qatrack\bin\activate
+    .\venvs\qatrack\bin\Activate.ps1
+
+    # or if you are using git bash then you need to do
+
+    cd /c/deploy/
+    source ./venvs/qatrack/bin/activate
 
 
 Backing up your database
@@ -484,7 +489,7 @@ open a new PowerShell window and verify Python3 is installed correctly:
 
 .. code-block:: console
 
-    python -V
+    python --version
     # should result in e.g.
     Python 3.6.6
 
@@ -507,7 +512,7 @@ extremely slow!):
 
 
     cd C:\deploy\
-    .\venvs\qatrack\bin\activate
+    .\venvs\qatrack\bin\Activate.ps1
     cd qatrackplus\
     python manage.py dumpdata --natural > backup-0.2.9-$(date -I).json
 
@@ -541,7 +546,7 @@ We need to create a new virtual environment with the Python 3 interpreter:
     cd C:\deploy
     python -m pip install --upgrade pip
     python -m venv .\venvs\qatrack3
-    .\venvs\qatrack3\Scripts\activate
+    .\venvs\qatrack3\Scripts\Activate.ps1
 
 We're now ready to install all the libraries QATrack+ depends on.
 
