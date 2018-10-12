@@ -42,6 +42,12 @@ th.qa-name div{
     width:400px;
     height:1px;
 }
+
+input.qa-input[type="radio"]{
+  margin-top: -1px;
+  vertical-align: middle;
+}
+
 input.qa-input:not([type="radio"]),
 select.qa-input,
 .review-status select {
@@ -74,7 +80,7 @@ a.qa-input {
 }
 input[disabled].qa-input,
 input[readonly].qa-input {
-    background-color: #ddd;
+    background-color: #EEB;
     font-weight: 500;
 }
 .qa-table td.qa-value,
@@ -114,7 +120,7 @@ td.qa-status {
     text-align: right;
 }
 .qa-history{
-    min-width: 320px;
+    min-width: 325px;
 }
 th.qa-history .label {
     color: black;
@@ -282,12 +288,12 @@ div.sublist-description {
 }
 
 #perform-qa-table > thead > tr > th.qa-history {
-    width: 320px;
+    width: 325px;
 }
 
 
 #perform-qa-table > tbody > tr > td.qa-category > .error-bar {
-    height: 100%;
+    height: 24px;
     top:0;
 }
 #perform-qa-table, #review-table {
