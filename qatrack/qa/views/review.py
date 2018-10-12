@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.db.models import Q
-from django.http import Http404, HttpResponseRedirect
+from django.http import Http404, HttpResponseRedirect, JsonResponse
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django.views.generic import (
@@ -76,6 +76,9 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
     formset_class = forms.ReviewTestInstanceFormSet
     template_name_suffix = "_review"
 
+    rtsqa_form = None
+    from_se = False
+
     def get_form_kwargs(self):
         kwargs = super(ReviewTestListInstance, self).get_form_kwargs()
         kwargs['user'] = self.request.user
@@ -135,7 +138,7 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
             if settings.USE_SERVICE_LOG:
                 changed_se = test_list_instance.update_service_event_statuses()
-                if len(changed_se) > 0:
+                if len(changed_se) > 0 and self.from_se:
                     messages.add_message(
                         request=self.request, level=messages.INFO,
                         message='Changed status of service event(s) %s to "%s".' % (
@@ -151,6 +154,9 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         test_list_instance.unit_test_collection.set_due_date()
 
         # let user know request succeeded and return to unit list
+        if self.from_se:
+            return JsonResponse({'rtsqa_form': self.rtsqa_form, 'tli_id': test_list_instance.id})
+
         messages.add_message(
             request=self.request, message=_("Successfully updated %s " % self.object.test_list.name),
             level=messages.SUCCESS
@@ -170,6 +176,12 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         tests = [f.instance.unit_test_info.test for f in context['formset']]
         context['borders'] = self.object.test_list.sublist_borders(tests)
         context['cycle_ct'] = ContentType.objects.get_for_model(models.TestListCycle).id
+
+        self.rtsqa_form = self.kwargs.get('rtsqa_form')
+        self.from_se = self.rtsqa_form is not None
+        context['rtsqa_form'] = self.rtsqa_form
+        context['from_se'] = self.from_se
+
         return context
 
 

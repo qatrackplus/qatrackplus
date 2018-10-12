@@ -282,6 +282,13 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
                 w.focus();
             });
         }
+        function set_review_tli() {
+            var $review_tli = $('.review-tli');
+            $review_tli.off('click').click(function (event) {
+                var w = window.open($(this).attr('data-link'), '_blank', 'scrollbars=no,menubar=no,height=900,width=1200,resizable=yes,toolbar=yes,status=no');
+                w.focus();
+            });
+        }
         displayTLI = function (prefix, data, returnValue) {
             var $pass_fail_label_group = $('<span class="label-group ' + prefix + '-hider" style="display: none;"></span>');
             for (var status in data['pass_fail']) {
@@ -348,6 +355,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
                 $('.' + prefix + '-hider').fadeIn('fast');
                 $('#id_' + prefix + '-unit_test_collection').change();
             }
+            set_review_tli();
 
         };
         setSearchResult = function (form, returnValue) {
@@ -362,6 +370,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
             } else {
                 $('#id_' + form + '-test_list_instance').val(returnValue);
             }
+
             if (returnValue) {
                 $.ajax({
                     url: QAURLs.TLI_STATUSES,
@@ -399,6 +408,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
         });
 
         set_select_tli();
+        set_review_tli();
         $('#add-rtsqa').click(function() {
 
             var empty_rtsqa_form = $('#empty-rtsqa-form').html(),

@@ -54,6 +54,20 @@ require(['jquery', 'sl_utils', 'comments'], function($) {
                 }
             );
         });
+		var $form = $('#qa-review');
+		$('#submit-review-ajax').one('click', function () {
+
+			var data = $form.serialize();
+
+			$.ajax({
+				type: 'POST',
+				url: QAURLs.TLI_REVIEW + '/' + rtsqa_form + '/' + tli_id + '/',
+				data: data,
+				success: function (res) {
+					QAURLs.returnYourChoice(res.rtsqa_form, res.tli_id);
+				}
+			});
+		});
 
 	});
 });
