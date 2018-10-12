@@ -647,38 +647,23 @@
                     Performed
                     <i class="fa fa-chevron-right margin-left-5" aria-hidden="true"></i>
                 </a>
-{#                {% if form.instance.pk %}#}
-{#                    <div class="btn-group perform-btn">#}
-{#                        <a title="Click to perform this test list"#}
-{#                           href="{% url 'perform_qa' %}__utc-id__/?rtsqa=__rtsqa-id__&next={% url 'sl_edit' %}__se-id__/"#}
-{#                           class="btn btn-xs btn-default btn-flat"#}
-{#                        >#}
-{#                            Perform#}
-{#                        </a>#}
-{#                        <a class="btn btn-default btn-xs btn-flat new-tab-link"#}
-{#                           href="{% url 'perform_qa' %}__utc-id__/?rtsqa=__rtsqa-id__&next={% url 'sl_edit' %}__se-id__/"#}
-{#                           target="_blank"#}
-{#                           title="New tab: click to perform this test list"#}
-{#                        >#}
-{#                            <i class="fa fa-chevron-right" aria-hidden="true"></i>#}
-{#                        </a>#}
-{#                    </div>#}
-{#                {% endif %}#}
             {% endif %}
             {% if perms.qa.can_review %}
                 <div id="__prefix__-review-btn" class="btn-group review-btn __prefix__-hider" style="display: none;">
-                    <a title="Click to review this test list"
-                       href="{% url 'review_test_list_instance' %}__tli-id__?next={% url 'sl_edit' %}__se-id__"
-                       class="btn btn-xs btn-default btn-flat"
-                    >
-                        Review
-                    </a>
-                    <a class="btn btn-default btn-xs btn-flat new-tab-link"
-                       href="{% url 'review_test_list_instance' %}__tli-id__?next={% url 'sl_edit' %}__se-id__"
-                       target="_blank"
+{#                    <a title="Click to review this test list"#}
+{#                       href="{% url 'review_test_list_instance' %}__tli-id__?next={% url 'sl_edit' %}__se-id__"#}
+{#                       class="btn btn-xs btn-default btn-flat"#}
+{#                    >#}
+{#                    </a>#}
+                    <a id="review-tli-__prefix__"
+                       class="btn btn-default btn-xs btn-flat review-tli new-tab-link"
+{#                       href="{% url 'review_test_list_instance' %}__tli-id__?next={% url 'sl_edit' %}__se-id__"#}
+                       data-link="{% url 'review_test_list_instance' %}/__prefix__/__tli-id__/"
+{#                       target="_blank"#}
                        title="New tab: click to review this test list"
                     >
-                        <i class="fa fa-chevron-right" aria-hidden="true"></i>
+                        Review
+                        <i class="fa fa-chevron-right margin-left-5" aria-hidden="true"></i>
                     </a>
                 </div>
             {% endif %}

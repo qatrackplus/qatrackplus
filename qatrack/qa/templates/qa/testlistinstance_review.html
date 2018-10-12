@@ -16,6 +16,17 @@
     require(['qareview']);
 {% endblock require_javascript %}
 
+{% block extra_js %}
+    {% if from_se %}
+        <script type="text/javascript">
+            var rtsqa_form = "{{ rtsqa_form|safe }}";
+            var from_se = "{{ from_se|safe }}" === "True";
+            var tli_id = "{{ test_list_instance.id|safe }}";
+
+        </script>
+    {% endif %}
+{% endblock extra_js %}
+
 {% block body %}
     {% with tli=test_list_instance %}
         <form class="review-test-list" id="qa-review" method="POST" action="">
@@ -375,20 +386,17 @@
                                                       {% endwith %}
                                                     {% endif %}
                                                 {% endfor %}
-                                            <tbody>
+                                                {% if tli.attachment_set.exists %}
+                                                    <tr>
+                                                        <td><strong>Attachments</strong></td>
 
-                                                <tr>
-                                                    <td><strong>Attachments</strong></td>
-
-                                                    <td id="tli-attachment-names" colspan="{% qa_table_colspan perms offset=2 %}">
-
-                                                        {% if test_list_instance and test_list_instance.attachment_set.exists %}
+                                                        <td id="tli-attachment-names" colspan="{% qa_table_colspan perms offset=2 %}">
                                                             {% for attach in test_list_instance.attachment_set.all %}
                                                                 <i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>{{ attach | attachment_link }}
                                                             {% endfor %}
-                                                        {% endif %}
-                                                    </td>
-                                                </tr>
+                                                        </td>
+                                                    </tr>
+                                                {% endif %}
                                             </tbody>
                                         </table>
                                     </div>
@@ -396,48 +404,62 @@
                                 <div class="row pad"></div>
                                 <div class="row">
                                     <div class="col-md-12">
+                                        {% if from_se %}
 
-                                        {% if perms.qa.can_review %}
-                                            <button type="submit"
-                                                    class="btn btn-primary btn-flat pull-right margin-r-5"
-                                                    title="Click to update the test instance statuses"
-                                              >
-                                              <i class="fa fa-save"></i>
-                                              Update Test Statuses
-                                            </button>
-                                        {% endif %}
-                                        {% if instance.in_progress %}
-                                            <a class="btn btn-primary btn-flat pull-right margin-r-5"
-                                              title="Continue this list"
-                                              href="{%url 'continue_tli' pk=test_list_instance.pk%}?next={{request.get_full_path}}"
-                                            >
-                                              <i class="fa fa-play"></i>
-                                              Continue
-                                            </a>
-                                        {% elif perms.qa.change_testlistinstance %}
-                                            <a class="btn btn-default btn-flat pull-right margin-r-5"
-                                              title="Edit this list"
-                                              href="{%url 'edit_tli' pk=test_list_instance.pk%}?next={{request.get_full_path}}" >
-                                              <i class="fa fa-edit"></i>
-                                              Edit
-                                            </a>
-                                        {% endif %}
-                                        {% if perms.qa.can_view_history %}
-                                            <a class="btn btn-default btn-flat margin-r-5 pull-right"
-                                               href="{% url 'review_utc' test_list_instance.unit_test_collection_id %}"
-                                               title="Click to view other instances of {{ test_list_instance.test_list.name }} on {{ test_list_instance.unit_test_collection.unit.name }}"
-                                              >
-                                              <i class="fa fa-list"></i>
-                                              History
-                                            </a>
-                                        {% endif %}
-                                        {% if perms.qa.delete_testlistinstance %}
-                                          <a class="btn btn-danger btn-flat margin-r-5"
-                                            title="This will redirect you to the admin site where you can permanently delete this qa session"
-                                            href="{% url 'delete_test_list_instance' pk=test_list_instance.pk %}?next={{ request.META.HTTP_REFERER }}">
-                                            <i class="fa fa-trash-o"></i>
-                                            Delete
-                                          </a>
+                                            {% if perms.qa.can_review %}
+                                                <button id="submit-review-ajax"
+                                                        class="btn btn-primary btn-flat pull-right margin-r-5"
+                                                        title="Click to update the test instance statuses"
+                                                  >
+                                                  <i class="fa fa-save"></i>
+                                                  Update Statuses
+                                                </button>
+                                            {% endif %}
+
+                                        {% else %}
+                                            {% if perms.qa.can_review %}
+                                                <button id="submit-review"
+                                                        type="submit"
+                                                        class="btn btn-primary btn-flat pull-right margin-r-5"
+                                                        title="Click to update the test instance statuses"
+                                                  >
+                                                  <i class="fa fa-save"></i>
+                                                  Update Test Statuses
+                                                </button>
+                                            {% endif %}
+                                            {% if instance.in_progress %}
+                                                <a class="btn btn-primary btn-flat pull-right margin-r-5"
+                                                  title="Continue this list"
+                                                  href="{%url 'continue_tli' pk=test_list_instance.pk%}?next={{request.get_full_path}}"
+                                                >
+                                                  <i class="fa fa-play"></i>
+                                                  Continue
+                                                </a>
+                                            {% elif perms.qa.change_testlistinstance %}
+                                                <a class="btn btn-default btn-flat pull-right margin-r-5"
+                                                  title="Edit this list"
+                                                  href="{%url 'edit_tli' pk=test_list_instance.pk%}?next={{request.get_full_path}}" >
+                                                  <i class="fa fa-edit"></i>
+                                                  Edit
+                                                </a>
+                                            {% endif %}
+                                            {% if perms.qa.can_view_history %}
+                                                <a class="btn btn-default btn-flat margin-r-5 pull-right"
+                                                   href="{% url 'review_utc' test_list_instance.unit_test_collection_id %}"
+                                                   title="Click to view other instances of {{ test_list_instance.test_list.name }} on {{ test_list_instance.unit_test_collection.unit.name }}"
+                                                  >
+                                                  <i class="fa fa-list"></i>
+                                                  History
+                                                </a>
+                                            {% endif %}
+                                            {% if perms.qa.delete_testlistinstance %}
+                                              <a class="btn btn-danger btn-flat margin-r-5"
+                                                title="This will redirect you to the admin site where you can permanently delete this qa session"
+                                                href="{% url 'delete_test_list_instance' pk=test_list_instance.pk %}?next={{ request.META.HTTP_REFERER }}">
+                                                <i class="fa fa-trash-o"></i>
+                                                Delete
+                                              </a>
+                                            {% endif %}
                                         {% endif %}
 
 
