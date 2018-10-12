@@ -386,20 +386,17 @@
                                                       {% endwith %}
                                                     {% endif %}
                                                 {% endfor %}
-                                            <tbody>
+                                                {% if tli.attachment_set.exists %}
+                                                    <tr>
+                                                        <td><strong>Attachments</strong></td>
 
-                                                <tr>
-                                                    <td><strong>Attachments</strong></td>
-
-                                                    <td id="tli-attachment-names" colspan="{% qa_table_colspan perms offset=2 %}">
-
-                                                        {% if test_list_instance and test_list_instance.attachment_set.exists %}
+                                                        <td id="tli-attachment-names" colspan="{% qa_table_colspan perms offset=2 %}">
                                                             {% for attach in test_list_instance.attachment_set.all %}
                                                                 <i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>{{ attach | attachment_link }}
                                                             {% endfor %}
-                                                        {% endif %}
-                                                    </td>
-                                                </tr>
+                                                        </td>
+                                                    </tr>
+                                                {% endif %}
                                             </tbody>
                                         </table>
                                     </div>

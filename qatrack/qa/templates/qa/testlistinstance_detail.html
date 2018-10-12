@@ -341,6 +341,17 @@
                                         {% endif %}
 
                                     {% endfor %}
+                                    {% if test_list_instance.attachment_set.exists %}
+                                        <tr>
+                                            <td><strong>Attachments</strong></td>
+
+                                            <td id="tli-attachment-names" colspan="{% qa_table_colspan perms offset=2 %}">
+                                                {% for attach in test_list_instance.attachment_set.all %}
+                                                    <i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>{{ attach | attachment_link }}
+                                                {% endfor %}
+                                            </td>
+                                        </tr>
+                                    {% endif %}
                                 </tbody>
                             </table>
                             {% endwith %}
@@ -407,21 +418,21 @@
                         <div class="col-md-12 padding-top-20">
                             {% get_comment_form for test_list_instance as form %}
 
-                                <form id="comment-form" method="post">
-                                    {% csrf_token %}
-                                    <input id="id_name" maxlength="50" name="name" type="hidden" required="" value="{{ user.username }}">
-                                    {{ form.object_pk }}
-                                    {{ form.content_type }}
-                                    {{ form.security_hash }}
-                                    {{ form.timestamp }}
-                                    <textarea cols="40" id="id_comment" maxlength="3000" name="comment" rows="3" required="" placeholder="Add comment" class="margin-bottom-20 form-control autosize"></textarea>
+                            <form id="comment-form" method="post">
+                                {% csrf_token %}
+                                <input id="id_name" maxlength="50" name="name" type="hidden" required="" value="{{ user.username }}">
+                                {{ form.object_pk }}
+                                {{ form.content_type }}
+                                {{ form.security_hash }}
+                                {{ form.timestamp }}
+                                <textarea cols="40" id="id_comment" maxlength="3000" name="comment" rows="3" required="" placeholder="Add comment" class="margin-bottom-20 form-control autosize"></textarea>
 
-                                </form>
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <button id="post-comment" class="btn btn-flat btn-info btn-sm pull-right" disabled="disabled">Post Comment</button>
-                                    </div>
+                            </form>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <button id="post-comment" class="btn btn-flat btn-info btn-sm pull-right" disabled="disabled">Post Comment</button>
                                 </div>
+                            </div>
                         </div>
                     </div>
                 </div>
