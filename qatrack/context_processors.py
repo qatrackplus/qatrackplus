@@ -1,19 +1,23 @@
 import json
-from django.core.cache import cache
+
 from django.conf import settings
-from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
+from django.core.cache import cache
 from django.db.models import ObjectDoesNotExist
-from django.db.models.signals import post_save, post_delete, pre_delete, pre_save
+from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
 
+from qatrack.parts.models import PartStorageCollection, PartUsed
 from qatrack.qa.models import TestListInstance, UnitTestCollection
+from qatrack.service_log.models import (
+    ReturnToServiceQA,
+    ServiceEvent,
+    ServiceEventStatus,
+)
 from qatrack.units.models import Unit
-from qatrack.parts.models import PartUsed, PartStorageCollection
-from qatrack.service_log.models import ReturnToServiceQA, ServiceEvent, ServiceEventStatus
 
 cache.delete(settings.CACHE_UNREVIEWED_COUNT)
-cache.delete(settings.CACHE_UNREVIEWED_COUNT_USER_DICT)
+cache.delete(settings.CACHE_UNREVIEWED_COUNT_USER)
 cache.delete(settings.CACHE_RTS_QA_COUNT)
 cache.delete(settings.CACHE_DEFAULT_SE_STATUS)
 cache.delete(settings.CACHE_SE_NEEDING_REVIEW_COUNT)
@@ -50,16 +54,9 @@ def update_part_quantity(*args, **kwargs):
 def update_unreviewed_cache(*args, **kwargs):
     """When a test list is completed invalidate the unreviewed counts"""
     cache.delete(settings.CACHE_UNREVIEWED_COUNT)
+    cache.delete(settings.CACHE_UNREVIEWED_COUNT_USER)
     cache.delete(settings.CACHE_RTS_QA_COUNT)
     cache.delete(settings.CACHE_IN_PROGRESS_COUNT)
-    cache.delete(settings.CACHE_UNREVIEWED_COUNT_USER_DICT)
-
-
-@receiver(pre_save, sender=User)
-def update_unreviewed_user_cache(*args, **kwargs):
-    """When a test list is completed invalidate the unreviewed counts"""
-    if kwargs['instance'].id is None:
-        cache.delete(settings.CACHE_UNREVIEWED_COUNT_USER_DICT)
 
 
 @receiver(post_save, sender=ReturnToServiceQA)
@@ -122,10 +119,18 @@ def site(request):
         ).count()
         cache.set(settings.CACHE_RTS_QA_COUNT, unreviewed_rts)
 
-    users_unreviewed = cache.get(settings.CACHE_UNREVIEWED_COUNT_USER_DICT)
-    if users_unreviewed is None:
-        users_unreviewed = TestListInstance.objects.user_unreviewed_counts()
-        cache.set(settings.CACHE_UNREVIEWED_COUNT_USER_DICT, users_unreviewed)
+    unreviewed_user_counts = cache.get(settings.CACHE_UNREVIEWED_COUNT_USER)
+    if unreviewed_user_counts is None:
+        your_unreviewed = TestListInstance.objects.your_unreviewed_count(request.user)
+        unreviewed_user_counts = {request.user.pk: your_unreviewed}
+        cache.set(settings.CACHE_UNREVIEWED_COUNT_USER, unreviewed_user_counts)
+    else:
+        try:
+            your_unreviewed = unreviewed_user_counts[request.user.pk]
+        except KeyError:
+            your_unreviewed = TestListInstance.objects.your_unreviewed_count(request.user)
+            unreviewed_user_counts[request.user.pk] = your_unreviewed
+            cache.set(settings.CACHE_UNREVIEWED_COUNT_USER, unreviewed_user_counts)
 
     default_se_status = cache.get(settings.CACHE_DEFAULT_SE_STATUS)
     if default_se_status is None:
@@ -158,7 +163,7 @@ def site(request):
         'FEATURE_REQUEST_URL': settings.FEATURE_REQUEST_URL,
         'UNREVIEWED': unreviewed,
         'UNREVIEWED_RTS': unreviewed_rts,
-        'USERS_UNREVIEWED': users_unreviewed,
+        'USERS_UNREVIEWED': your_unreviewed,
         'ICON_SETTINGS': settings.ICON_SETTINGS,
         'ICON_SETTINGS_JSON': json.dumps(settings.ICON_SETTINGS),
         'TEST_STATUS_SHORT_JSON': json.dumps(settings.TEST_STATUS_DISPLAY_SHORT),

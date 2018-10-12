@@ -56,8 +56,10 @@
         <td class="qa-value" title="{{form.value.help_text|safe}}" >
             {% if test.is_boolean %}
                 <div class="row">
-                    <div class="col-xs-6">{{form.value.0}}</div>
-                    <div class="col-xs-6">{{form.value.1}}</div>
+                    <div class="col-xs-12">
+                      <span class="pull-left">{{form.value.0}}</span>
+                      <span class="pull-right">{{form.value.1}}</span>
+                    </div>
                 </div>
             {% elif test.is_upload %}
                 <span class="upload-button">
