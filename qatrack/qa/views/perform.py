@@ -154,7 +154,7 @@ class CompositeUtils:
 
     def get_figure(self):
         fig = Figure()
-        canvas = FigureCanvasAgg(fig)
+        FigureCanvasAgg(fig)
         return fig
 
 
@@ -1297,7 +1297,9 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
         context = super(EditTestListInstance, self).get_context_data(**kwargs)
         uti_pks = [f.instance.unit_test_info.pk for f in context["formset"]]
-        self.prev_ref_tols = {f.instance.unit_test_info.pk: (f.instance.reference, f.instance.tolerance) for f in context["formset"]}
+        self.prev_ref_tols = {
+            f.instance.unit_test_info.pk: (f.instance.reference, f.instance.tolerance) for f in context["formset"]
+        }
         utis = models.UnitTestInfo.objects.filter(pk__in=uti_pks).select_related(
             "unit",
             "test__category",
