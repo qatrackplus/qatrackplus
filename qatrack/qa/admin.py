@@ -17,7 +17,6 @@ from django.utils import timezone
 from django.utils.html import escape
 from django.utils.text import Truncator
 from django.utils.translation import ugettext as _
-
 from dynamic_raw_id.admin import DynamicRawIDMixin
 from dynamic_raw_id.widgets import DynamicRawIDWidget
 
@@ -139,6 +138,11 @@ class TestInfoForm(forms.ModelForm):
         return self.cleaned_data
 
 
+def test_name(obj):
+    return obj.test.name
+test_name.admin_order_field = "test__name"
+
+
 def test_type(obj):
     for tt, display in models.TEST_TYPE_CHOICES:
         if obj.test.type == tt:
@@ -211,10 +215,11 @@ class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
         "comment",
         "history",
     )
-    list_display = ["test", "unit", test_type, "reference", "tolerance"]
+
+    list_display = [test_name, "unit", test_type, "reference", "tolerance"]
     list_filter = [ActiveUnitTestInfoFilter, "unit", "test__category", "test__testlistmembership__test_list"]
     readonly_fields = ("reference", "test", "unit", "history")
-    search_fields = ("test__name", "test__slug", "unit__name",)
+    search_fields = ("test__name", "test__slug", "unit__name")
     # list_select_related = ['reference', 'tolerance', 'test', 'unit']
 
     def redirect_to(self, *args, **kwargs):
