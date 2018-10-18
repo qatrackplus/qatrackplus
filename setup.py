@@ -25,7 +25,7 @@ setup(
     author_email='randy@multileaf.ca',
     dependency_links=[
         "git+https://github.com/django/django-formtools.git@bb97a8abd374c50991c0a9ce144f17e7322a0c48#egg=django-formtools",
-        "git+https://github.com/randlet/django-genericdropdown.git@2117e449977ba9387941eb94e37d82208e53c1ad#egg=django-genericdropdown",
+        "git+https://github.com/randlet/django-genericdropdown.git@2117e449977ba9387941eb94e37d82208e53c1ad#egg=django-genericdropdown-0.1",
         "git+https://github.com/randlet/django-listable.git@efff32a4ceaa795d5b1a32dc75decacef3de90e8#egg=django_listable",
     ],
     build_requires=[
