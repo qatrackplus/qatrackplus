@@ -153,10 +153,10 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         # Set utc due dates
         test_list_instance.unit_test_collection.set_due_date()
 
-        # let user know request succeeded and return to unit list
         if self.from_se:
             return JsonResponse({'rtsqa_form': self.rtsqa_form, 'tli_id': test_list_instance.id})
 
+        # let user know request succeeded and return to unit list
         messages.add_message(
             request=self.request, message=_("Successfully updated %s " % self.object.test_list.name),
             level=messages.SUCCESS
