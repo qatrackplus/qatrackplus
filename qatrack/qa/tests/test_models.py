@@ -3,6 +3,7 @@ from unittest import mock
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
+from django.db.utils import IntegrityError
 from django.test import TestCase
 from django.utils import timezone
 from django_comments.models import Comment
@@ -167,6 +168,10 @@ class TestTolerance(TestCase):
         t = utils.create_tolerance(mc_pass_choices="a,b,c", mc_tol_choices="d,e", tol_type=models.MULTIPLE_CHOICE)
         self.assertEqual(t.name, "M.C.(%s=a:b:c, %s=d:e)" % (settings.TEST_STATUS_DISPLAY['ok'], settings.TEST_STATUS_DISPLAY['tolerance']))
 
+    def test_no_duplicates(self):
+        utils.create_tolerance(act_high=2, act_low=-2, tol_high=1, tol_low=-1, tol_type=models.PERCENT)
+        with self.assertRaises(IntegrityError):
+            utils.create_tolerance(act_high=2, act_low=-2, tol_high=1, tol_low=-1, tol_type=models.PERCENT)
 
 class TestCategory(TestCase):
     pass
