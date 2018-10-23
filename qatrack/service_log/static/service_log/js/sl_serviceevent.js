@@ -285,7 +285,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
         function set_review_tli() {
             var $review_tli = $('.review-tli');
             $review_tli.off('click').click(function (event) {
-                var w = window.open($(this).attr('data-link'), '_blank', 'scrollbars=no,menubar=no,height=900,width=1200,resizable=yes,toolbar=yes,status=no');
+                var w = window.open($(this).attr('data-link'), '_blank', 'menubar=no,height=900,width=1200,resizable=yes,toolbar=yes,status=no');
                 w.focus();
             });
         }
