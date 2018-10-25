@@ -491,7 +491,12 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'saveSvgAsPng', 'qaut
                 error: function (error) {
                     finished_chart_update();
                     if (typeof console != "undefined") {
-                        console.log(error)
+                        console.log(error);
+                        if (error.responseText.indexOf('Too many parameters were provided in this RPC request') !== -1) {
+                            displayChartError('Error generating results, query too large. Try fewer units, tests, service types etc.');
+                        } else {
+                            displayChartError('Error generating results.')
+                        }
                     }
                 }
             });
@@ -503,6 +508,33 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'saveSvgAsPng', 'qaut
             d3.select("svg").remove();
             create_chart(data_to_plot);
             update_data_table(data);
+        }
+
+        function displayChartError(error_msg) {
+
+            d3.select("svg").remove();
+
+            var chart_width = $('#chart').width() - 15,
+                chart_height = 40,
+                margin = {top: 20, right: 30, bottom: 140, left: 30}
+
+            var svg = d3.select("#chart")
+                .append("svg")
+                .attr("width", chart_width)
+                .attr("height", chart_height) //height + margin.top + margin.bottom
+                .style('border', 'solid 1px #bbb')
+                .style("background-color", "white")
+                .append("g")
+                .attr("width", chart_width - margin.left)
+                .attr("height", chart_height - margin.top)
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            svg.append("text")
+                .style('fill', 'red')
+                .text(error_msg);
+
+            update_data_table({'table': ''});
+            $("#chart-url").val('');
         }
 
         function convert_data_to_chart_series(data) {
