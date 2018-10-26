@@ -27,7 +27,8 @@ numpy<=1.15.2
 pandas>=0.22.0,<0.25
 pep8==1.7.0
 pydicom==1.1.0
-pylinac==2.1.0.1
+pylinac==2.1.0.1; python_version < '3.6'
+pylinac==2.2.0; python_version >= '3.6'
 pynliner==0.8.0
 pytest-cov==2.5.1
 pytest-django==3.1.2
