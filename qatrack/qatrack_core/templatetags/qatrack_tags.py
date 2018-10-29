@@ -78,7 +78,7 @@ def render_log(service_log, user):
     elif service_log.datetime.date() == today - timezone.timedelta(days=1):
         datetime_display = '%s %s' % (_('Yesterday'), timezone.localtime(service_log.datetime).strftime('%I:%M %p'))
     else:
-        datetime_display = timezone.localtime(service_log.datetime).strftime('%b %m, %I:%M %p')
+        datetime_display = timezone.localtime(service_log.datetime).strftime('%b %d, %I:%M %p')
 
     context = {
         'instance': service_log,
