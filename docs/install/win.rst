@@ -204,7 +204,7 @@ prompt:
 
     python manage.py migrate
     python manage.py createsuperuser
-    Get-ChildItem fixtures\defaults\*\*json | foreach {python manage.py loaddata $_.FullName}
+    Get-ChildItem .\fixtures\defaults\*\*json | foreach {python manage.py loaddata $_.FullName}
 
 
 Configuring CherryPy to Serve QATrack+
@@ -611,8 +611,8 @@ and load some initial service log data:
 
 .. code-block:: console
 
-    Get-ChildItem fixtures\defaults\units\*json | foreach {python manage.py loaddata $_.FullName}
-    Get-ChildItem fixtures\defaults\service_log\*json | foreach {python manage.py loaddata $_.FullName}
+    Get-ChildItem .\fixtures\defaults\units\*json | foreach {python manage.py loaddata $_.FullName}
+    Get-ChildItem .\fixtures\defaults\service_log\*json | foreach {python manage.py loaddata $_.FullName}
 
 Check the migration log
 .......................

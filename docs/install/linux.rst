@@ -144,6 +144,13 @@ Installing MySQL (only required if you prefer to use MySQL over Postgres)
 
     sudo apt-get install mysql-server libmysqlclient-dev
 
+.. note::
+
+    You should use the InnoDB storage engine for MySQL.  If you are using MySQL
+    >= 5.5.5 then it uses InnoDB by default, otherwise if you are using MySQL <
+    5.5.5 you need to set the default storage engine to InnoDB:
+    https://dev.mysql.com/doc/refman/5.5/en/storage-engine-setting.html
+
 
 Now we can create and configure a user (db name/user/pwd =
 qatrackplus/qatrack/qatrackpass) and database for QATrack+:
@@ -483,6 +490,14 @@ update our virtual env:
 Migrate your database
 ~~~~~~~~~~~~~~~~~~~~~
 
+.. note::
+
+    You should use the InnoDB storage engine for MySQL.  If you are using MySQL
+    >= 5.5.5 then it uses InnoDB by default, otherwise if you are using MySQL <
+    5.5.5 you need to set the default storage engine to InnoDB:
+    https://dev.mysql.com/doc/refman/5.5/en/storage-engine-setting.html
+
+
 The next step is to migrate the 0.2.8 database schema to 0.2.9:
 
 .. code-block:: console
@@ -582,6 +597,13 @@ and we can then install the required python libraries:
 
 Migrate your database
 ~~~~~~~~~~~~~~~~~~~~~
+
+.. note::
+
+    You should use the InnoDB storage engine for MySQL.  If you are using MySQL
+    >= 5.5.5 then it uses InnoDB by default, otherwise if you are using MySQL <
+    5.5.5 you need to set the default storage engine to InnoDB:
+    https://dev.mysql.com/doc/refman/5.5/en/storage-engine-setting.html
 
 The next step is to update the v0.2.9 schema to v0.3.0
 
