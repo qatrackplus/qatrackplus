@@ -43,7 +43,6 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
 
         var changed = false;
         $all_inputs.change(function() {
-            console.log(this);
             if ($(this).val()) {
                 changed = true;
             }

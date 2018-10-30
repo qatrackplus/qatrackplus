@@ -454,7 +454,6 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-{#                                            <input id="attach-delete-ids" name="attach-delete-ids" type="hidden">#}
                                             {{ form.se_attachments_delete_ids }}
                                             {% if form.instance.id %}
                                                 {% for attach in form.instance.attachment_set.all %}
