@@ -107,7 +107,8 @@ body.sidebar-mini.sidebar-collapse > div.wrapper > aside.main-sidebar > section.
     margin-left: 20px;
 }
 
-.timeline-custom > li > .timeline-item.deleted * {
+.timeline-custom > li > .timeline-item.deleted *,
+.timeline-custom > li > .timeline-item .deleted * {
     color: #bbb;
 }
 .timeline-custom > li > .timeline-item.deleted .label {
@@ -129,8 +130,9 @@ body.sidebar-mini.sidebar-collapse > div.wrapper > aside.main-sidebar > section.
 .dash-change.item {
     border-bottom: 1px solid transparent;
 }
-.dash-change.item.hover:hover {
-    border-bottom: 1px solid rgba(192, 198, 206, 0.6);
+.dash-change.item.hover:hover,
+.dash-change.item.hover:hover div {
+    color: #0d8dda;
 }
 .timeline-header span.label.smooth-border {
     font-size: 10px;
