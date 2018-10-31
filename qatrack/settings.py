@@ -544,12 +544,14 @@ if os.path.exists('/root/.is_inside_docker'):
 # ------------------------------------------------------------------------------
 # local_settings contains anything that should be overridden
 # based on site specific requirements (e.g. deployment, development etc)
+
+TEMPLATES[0]['OPTIONS']['debug'] = TEMPLATE_DBG
+
 try:
     from .local_settings import *  # NOQA
 except ImportError:
     pass
 
-TEMPLATES[0]['OPTIONS']['debug'] = TEMPLATE_DBG
 
 # Parts must be used with service log
 USE_PARTS = USE_PARTS or USE_SERVICE_LOG

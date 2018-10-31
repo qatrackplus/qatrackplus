@@ -12,6 +12,7 @@ from django.utils.encoding import force_text
 from django.utils.translation import ugettext as _
 from form_utils.forms import BetterModelForm
 
+from qatrack.attachments.models import Attachment
 from qatrack.service_log import models
 from qatrack.qa import models as qa_models
 from qatrack.units import models as u_models
@@ -125,7 +126,7 @@ class HoursForm(forms.ModelForm):
         self.fields['user_or_thirdparty'].widget.attrs.update({'class': 'select2 user_or_thirdparty'})
         time_classes = self.fields['time'].widget.attrs.get('class', '')
         time_classes += ' max-width-100 form-control user_thirdparty_time'
-        self.fields['time'].widget.attrs.update({'class': time_classes})
+        self.fields['time'].widget.attrs.update({'class': time_classes, 'autocomplete': 'off'})
 
         if self.instance.user:
             self.initial['user_or_thirdparty'] = 'user-' + str(self.instance.user.id)
@@ -387,6 +388,7 @@ class ServiceEventForm(BetterModelForm):
             'style': 'display:none',
         })
     )
+    se_attachments_delete_ids = forms.CharField(widget=forms.HiddenInput(), required=False)
 
     log_change_fields = (
         'test_list_instance_initiated_by', 'is_review_required', 'datetime_service', 'service_area_field',
@@ -606,7 +608,7 @@ class ServiceEventForm(BetterModelForm):
         for f in ['duration_service_time', 'duration_lost_time']:
             classes = self.fields[f].widget.attrs.get('class', '')
             classes += ' max-width-100'
-            self.fields[f].widget.attrs.update({'class': classes})
+            self.fields[f].widget.attrs.update({'class': classes, 'autocomplete': 'off'})
 
         for f in self.fields:
             classes = self.fields[f].widget.attrs.get('class', '')
@@ -640,13 +642,28 @@ class ServiceEventForm(BetterModelForm):
 
         return name, new, old
 
-    def stringify_form_changes(self):
+    def stringify_form_changes(self, request):
 
         form_strings = {}
         for ch in self.changed_data:
             if ch in self.log_change_fields or 'group_linker' in ch:
                 name, new, old = self.strigify_form_item(ch)
                 form_strings[name] = {'new': new, 'old': old}
+
+        if 'se_attachments' in self.changed_data:
+
+            added_a = []
+            for idx, f in enumerate(request.FILES.getlist('se_attachments')):
+                added_a.append(str(f))
+            form_strings['a_added'] = {'new': added_a, 'old': ''}
+
+        a_delete_ids = self.cleaned_data.get('se_attachments_delete_ids').split(',')
+        if a_delete_ids != ['']:
+            attachments = Attachment.objects.filter(id__in=a_delete_ids)
+            deleted_a = []
+            for a in attachments:
+                deleted_a.append(a.label)
+            form_strings['a_deleted'] = {'new': '', 'old': deleted_a}
 
         return form_strings
 

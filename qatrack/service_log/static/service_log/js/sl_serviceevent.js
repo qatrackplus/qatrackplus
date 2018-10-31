@@ -27,7 +27,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
             $attachInput = $('#id_se_attachments'),
             $attach_deletes = $('.attach-delete'),
             $user_or_thirdparty = $('.user_or_thirdparty'),
-            $attach_delete_ids = $('#attach-delete-ids'),
+            $attach_delete_ids = $('#id_se_attachments_delete_ids'),
             $attach_names = $('#se-attachment-names'),
             $all_inputs = $('input, select, textarea');
 

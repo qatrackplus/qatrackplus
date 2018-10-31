@@ -397,6 +397,7 @@ class ServiceLogManager(models.Manager):
             user=user,
             service_event=instance,
             log_type=NEW_SERVICE_EVENT,
+            datetime=timezone.now() - timezone.timedelta(seconds=1)  # Cheat to always show create logs before rtsqa logs created at same time
         )
 
     def log_changed_service_event(self, user, instance, extra_info):
