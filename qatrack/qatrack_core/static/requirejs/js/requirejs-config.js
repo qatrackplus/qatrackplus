@@ -16,6 +16,9 @@ require.config({
         cheekycheck: siteConfig.STATIC_URL + 'cheekycheck/js/cheekycheck',
         d3: siteConfig.STATIC_URL + 'd3/js/d3',
         saveSvgAsPng: siteConfig.STATIC_URL + 'd3/js/saveSvgAsPng',
+        canvg: siteConfig.STATIC_URL + 'd3/js/canvg',
+        rgbcolor: siteConfig.STATIC_URL + 'd3/js/rgbcolor.min',
+        'stackblur-canvas': siteConfig.STATIC_URL + 'd3/js/stackblur.min',
         datatables: siteConfig.STATIC_URL + 'listable/js/jquery.dataTables.min',
         'datatables.bootstrap': siteConfig.STATIC_URL + 'listable/js/jquery.dataTables.bootstrap',
         'datatables.columnFilter': siteConfig.STATIC_URL + 'listable/js/jquery.dataTables.columnFilter',
@@ -122,6 +125,14 @@ require.config({
         },
         multiselect: {
             deps: ['jquery', 'bootstrap']
+        },
+        saveSvgAsPng: {
+            deps: ['canvg'],
+            exports: 'saveSvgAsPng'
+        },
+        canvg: {
+            exports: 'canvg',
+            deps: ['rgbcolor', 'stackblur-canvas']
         },
         slimscroll: {
             deps: ['jquery']

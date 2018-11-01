@@ -1,4 +1,4 @@
-require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'saveSvgAsPng', 'qautils', 'daterangepicker', 'felter', 'select2'], function ($, _, d3, moment) {
+require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qautils', 'daterangepicker', 'felter', 'select2'], function ($, _, d3, moment, saveSvgAsPng) {
 
     var waiting_timeout = null;
     // var test_list_names;
@@ -335,7 +335,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'saveSvgAsPng', 'qaut
 
             if ($chart_type.val() === 'basic') {
                 // Get the d3js SVG element and save using saveSvgAsPng.js
-                saveSvgAsPng(svg.get(0), "plot.png", {scale: 1, backgroundColor: "#FFFFFF"});
+                saveSvgAsPng.saveSvgAsPng(svg.get(0), "plot.png", {scale: 1, backgroundColor: "#FFFFFF", canvg: window.canvg});
             } else {
                 var a = $("<a>")
                     .attr("href", $control_chart_container.find('img').attr('src'))
