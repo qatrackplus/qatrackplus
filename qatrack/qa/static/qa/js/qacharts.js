@@ -485,18 +485,25 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 contentType: "application/json",
                 dataType: "json",
                 success: function (result, status, jqXHR) {
-                    finished_chart_update();
-                    callback(result);
+                    if (!result.success) {
+                        console.log(result.error_type);
+                        if (result.error_type === 'too_many_parameters') {
+                            displayChartError('Error generating results, query too large. Try fewer units, deselecting service events, smaller date range etc.');
+                        } else {
+                            displayChartError('Error generating results.');
+                        }
+                        console.log(result.error);
+                    } else {
+                        finished_chart_update();
+                        callback(result);
+                    }
                 },
                 error: function (error) {
                     finished_chart_update();
                     if (typeof console != "undefined") {
                         console.log(error);
-                        if (error.responseText.indexOf('Too many parameters were provided in this RPC request') !== -1) {
-                            displayChartError('Error generating results, query too large. Try fewer units, tests, service types etc.');
-                        } else {
-                            displayChartError('Error generating results.')
-                        }
+                        displayChartError('Error generating results.');
+
                     }
                 }
             });

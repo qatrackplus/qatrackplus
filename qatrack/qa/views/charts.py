@@ -8,6 +8,7 @@ from braces.views import JSONResponseMixin, PermissionRequiredMixin
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Count
+from django.db.utils import ProgrammingError
 from django.http import HttpResponse
 from django.template.loader import get_template
 from django.utils import timezone
@@ -194,9 +195,12 @@ class BaseChartView(View):
 
     def get(self, request):
 
-        self.get_plot_data()
+        try:
+            self.get_plot_data()
+        except ProgrammingError as e:
+            return self.render_json_response({'success': False, 'error': str(e), 'error_type': 'too_many_parameters'})
         headers, rows = self.create_data_table()
-        resp = self.render_to_response({"plot_data": self.plot_data, "headers": headers, "rows": rows})
+        resp = self.render_to_response({'success': True, "plot_data": self.plot_data, "headers": headers, "rows": rows})
         return resp
 
     def create_data_table(self):
