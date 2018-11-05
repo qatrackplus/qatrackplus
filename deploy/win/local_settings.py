@@ -16,6 +16,11 @@ DATABASES = {
 # Change XX.XXX.XXX.XX to your servers IP address or * (less secure)!
 ALLOWED_HOSTS = ['XX.XXX.XXX.XX']
 
+# needs to be set to True when running behind reverse proxy (normal deploy)
+# set to False when not running behind reverse proxy
+# Use True for e.g. CherryPy/IIS and False for Apache/mod_wsgi
+USE_X_FORWARDED_HOST = True
+
 # Set to False to disable the Service Log functionality
 USE_SERVICE_LOG = True
 
