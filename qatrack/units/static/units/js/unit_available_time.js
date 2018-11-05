@@ -24,7 +24,7 @@ require(['jquery', 'moment', 'd3', 'flatpickr', 'daterangepicker', 'select2', 'f
             _shift_pressed = true;
     });
 
-    $(document).keyup(function(){
+    $(document).keyup(function(event){
         if (event.which == '17')
             _ctrl_pressed = false;
         else if (event.which == '16')
@@ -333,7 +333,6 @@ require(['jquery', 'moment', 'd3', 'flatpickr', 'daterangepicker', 'select2', 'f
                     run_filter_when_selected: false,   // No, run filter when not selected
                     label: 'Show Inactive Units',
                     filter: function(obj_data) {
-                        console.log($(obj_data.$option).attr('data-active'));
                         return $(obj_data.$option).attr('data-active') === 'True';
                     }
                 }
@@ -372,7 +371,7 @@ require(['jquery', 'moment', 'd3', 'flatpickr', 'daterangepicker', 'select2', 'f
             update_calendar();
         }
         set_calendar_days(current_day);
-        
+
         function create_day_objects() {
 
             if (!$.isEmptyObject(unit_available_time_data)) {
