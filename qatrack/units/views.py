@@ -1,18 +1,18 @@
-
 import json
 
 from braces.views import PermissionRequiredMixin
 from django.conf import settings
 from django.contrib.auth.decorators import login_required, permission_required
-from django.contrib.auth.models import User, Permission
-from django.utils import timezone
+from django.contrib.auth.models import Permission, User
 from django.db.models import ObjectDoesNotExist
 from django.http import JsonResponse
+from django.utils import timezone
 from django.views.decorators.csrf import csrf_protect
-from django.views.generic import TemplateView, CreateView
+from django.views.generic import CreateView, TemplateView
+import pytz
 
-from qatrack.units import models as u_models
 from qatrack.units import forms
+from qatrack.units import models as u_models
 
 
 def get_unit_available_time_data(request):
@@ -56,8 +56,10 @@ class UnitAvailableTimeChange(PermissionRequiredMixin, TemplateView):
 def handle_unit_available_time(request):
 
     units = request.POST.getlist('units[]')
+    tz = request.POST.get("tz", settings.TIME_ZONE)
+    tz = pytz.timezone(tz)
     day = request.POST.get('day')
-    day = timezone.datetime.fromtimestamp(int(day) / 1000, timezone.utc).date() if day else None
+    day = timezone.datetime.fromtimestamp(int(day) / 1000, tz).date() if day else None
 
     uats = u_models.UnitAvailableTime.objects.filter(unit__in=units, date_changed=day).select_related('unit')
 
@@ -98,7 +100,9 @@ def handle_unit_available_time_edit(request):
 
     delete = request.POST.get('delete', False) == 'true'
     units = [u_models.Unit.objects.get(id=u_id) for u_id in request.POST.getlist('units[]', [])]
-    days = [timezone.datetime.fromtimestamp(int(d) / 1000, timezone.utc).date() for d in request.POST.getlist('days[]', [])]
+    tz = request.POST.get("tz", settings.TIME_ZONE)
+    tz = pytz.timezone(tz)
+    days = [timezone.datetime.fromtimestamp(int(d) / 1000, tz).date() for d in request.POST.getlist('days[]', [])]
 
     hours_mins = request.POST.get('hours_mins', None)
     if hours_mins:
@@ -129,7 +133,9 @@ def handle_unit_available_time_edit(request):
 def delete_schedules(request):
 
     unit_ids = request.POST.getlist('units[]', [])
-    days = [timezone.datetime.fromtimestamp(int(d) / 1000, timezone.utc).date() for d in request.POST.getlist('days[]', [])]
+    tz = request.POST.get("tz", settings.TIME_ZONE)
+    tz = pytz.timezone(tz)
+    days = [timezone.datetime.fromtimestamp(int(d) / 1000, tz).date() for d in request.POST.getlist('days[]', [])]
 
     u_models.UnitAvailableTime.objects.filter(
         unit_id__in=unit_ids,
