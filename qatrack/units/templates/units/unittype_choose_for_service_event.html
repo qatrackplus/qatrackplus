@@ -38,7 +38,7 @@
                                         <h4 class="header-spacer">{{unit_type}}</h4>
                                         {% for unit in units %}
                                             <a class="btn btn-default btn-flat"
-                                               href="{% if new_se %}{% url "sl_new" %}?u={{ unit.unit__id }}{% else %}{% url 'sl_list_by_unit' unit_number=unit.unit__number %}">{{unit.unit__name}}{% endif %}</a>
+                                               href="{% if new_se %}{% url "sl_new" %}?u={{ unit.unit__id }}{% else %}{% url 'sl_list_by_unit' unit_number=unit.unit__number %}{% endif %}">{{unit.unit__name}}</a>
                                         {% endfor %}
                                     </div>
                                 </div>
