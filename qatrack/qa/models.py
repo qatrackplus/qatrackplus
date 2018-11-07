@@ -507,6 +507,8 @@ class Tolerance(models.Model):
     modified_date = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(User, editable=False, related_name="tolerance_modifiers")
 
+    objects = ToleranceManager()
+
     class Meta:
 
         ordering = ["type", "act_low", "tol_low", "tol_high", "act_high"]
