@@ -436,7 +436,7 @@ class Reference(models.Model):
 class ToleranceManager(models.Manager):
 
     def get_by_natural_key(self, name):
-        return (self.name,)
+        return self.get(name=name)
 
 
 class Tolerance(models.Model):
