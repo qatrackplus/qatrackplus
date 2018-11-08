@@ -186,6 +186,10 @@ input[type="number"] {
     max-width: 1200px;
     margin: auto;
 }
+.max-width-md {
+    max-width: 900px;
+    margin: auto;
+}
 .bg-dark-gray {
     background-color: #222d32;
     color: #b8c7ce;
