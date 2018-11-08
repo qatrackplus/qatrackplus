@@ -582,7 +582,11 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
 
             self.dropzone.on('totaluploadprogress', function(progress) {
                 self.status.removeClass("btn-primary btn-danger btn-success btn-info");
-                self.status.addClass("btn-warning").text(progress.toFixed(0) + "%").attr('title', 'Upload succeeded');
+                if (progress.toFixed(0) === "100"){
+                    self.status.addClass("btn-warning").text("Processing...").attr('title', 'Processing upload');
+                }else{
+                    self.status.addClass("btn-warning").text(progress.toFixed(0) + "%").attr('title', 'Uploading file');
+                }
             });
 
             self.dropzone.on('error', function(file, data) {
