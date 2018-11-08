@@ -1,4 +1,4 @@
-require(['jquery', 'moment', 'd3', 'flatpickr', 'daterangepicker', 'select2', 'felter', 'sl_utils', 'inputmask', 'json2'], function ($, moment, d3) {
+require(['jquery', 'moment_timezone', 'd3', 'flatpickr', 'daterangepicker', 'select2', 'felter', 'sl_utils', 'inputmask', 'json2'], function ($, moment, d3) {
 
     var csrftoken = $("[name=csrfmiddlewaretoken]").val();
     function csrfSafeMethod(method) {
@@ -14,6 +14,8 @@ require(['jquery', 'moment', 'd3', 'flatpickr', 'daterangepicker', 'select2', 'f
         }
     });
 
+    var tz = moment.tz.guess();
+
     var _ctrl_pressed = false,
         _shift_pressed = false;
 
@@ -24,7 +26,7 @@ require(['jquery', 'moment', 'd3', 'flatpickr', 'daterangepicker', 'select2', 'f
             _shift_pressed = true;
     });
 
-    $(document).keyup(function(){
+    $(document).keyup(function(event){
         if (event.which == '17')
             _ctrl_pressed = false;
         else if (event.which == '16')
@@ -210,7 +212,8 @@ require(['jquery', 'moment', 'd3', 'flatpickr', 'daterangepicker', 'select2', 'f
                 units: selected_units,
                 days: days,
                 hours_mins: $edit_input.val(),
-                name: $name_input.val()
+                name: $name_input.val(),
+                tz: tz
             };
 
             $.ajax({
@@ -228,7 +231,7 @@ require(['jquery', 'moment', 'd3', 'flatpickr', 'daterangepicker', 'select2', 'f
                     console.log(res);
                     $('#edit_error').html('Server error.');
                 }
-            })
+            });
         });
 
         $delete_go.click(function() {
@@ -241,7 +244,8 @@ require(['jquery', 'moment', 'd3', 'flatpickr', 'daterangepicker', 'select2', 'f
             });
             var data = {
                 units: selected_units,
-                days: days
+                days: days,
+                tz: tz
             };
 
             $.ajax({
@@ -288,7 +292,8 @@ require(['jquery', 'moment', 'd3', 'flatpickr', 'daterangepicker', 'select2', 'f
                     hours_wednesday: $hours_wednesday.val(),
                     hours_thursday: $hours_thursday.val(),
                     hours_friday: $hours_friday.val(),
-                    hours_saturday: $hours_saturday.val()
+                    hours_saturday: $hours_saturday.val(),
+                    tz: tz
                 },
                 success: function(res) {
                     unit_available_time_data = res.unit_available_time_data;
@@ -333,7 +338,6 @@ require(['jquery', 'moment', 'd3', 'flatpickr', 'daterangepicker', 'select2', 'f
                     run_filter_when_selected: false,   // No, run filter when not selected
                     label: 'Show Inactive Units',
                     filter: function(obj_data) {
-                        console.log($(obj_data.$option).attr('data-active'));
                         return $(obj_data.$option).attr('data-active') === 'True';
                     }
                 }
@@ -372,7 +376,7 @@ require(['jquery', 'moment', 'd3', 'flatpickr', 'daterangepicker', 'select2', 'f
             update_calendar();
         }
         set_calendar_days(current_day);
-        
+
         function create_day_objects() {
 
             if (!$.isEmptyObject(unit_available_time_data)) {
@@ -518,12 +522,12 @@ require(['jquery', 'moment', 'd3', 'flatpickr', 'daterangepicker', 'select2', 'f
                     unit_available_time_data = res.unit_available_time_data;
                     update_calendar();
                     // update_calendar();  // Can't figure put why this needs to be called twice on load.
-                    set_calendar_days(current_day)
+                    set_calendar_days(current_day);
                 },
                 error: function(res) {
                     console.log(res);
                 }
-            })
+            });
         }
 
         function is_current_month(_moment) {

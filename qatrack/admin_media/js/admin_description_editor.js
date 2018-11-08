@@ -15,6 +15,8 @@ $(document).ready(function() {
         var descriptionEditor = ace.edit("description-editor");
         var descriptionSession = descriptionEditor.getSession();
         var preview = $("#description-preview");
+        preview.css('white-space', 'pre-wrap');
+        preview.css('clear', 'both');
         preview.html(description.val());
 
         descriptionEditor.setValue(description.val());
