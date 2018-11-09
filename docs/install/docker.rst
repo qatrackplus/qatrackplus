@@ -48,12 +48,6 @@ To simplify this guide all installation will be done via the chocolatey package
 manager. To install chocoletey run the following in a command prompt with
 administrative privileges.
 
-.. figure:: https://www.howtogeek.com/wp-content/uploads/2016/12/ximg_585a0e5711605.png
-    :alt: Administrator Privileges
-
-    Administrator Privileges
-
-
 .. code-block:: console
 
     @"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))" && SET "PATH=%PATH%;%ALLUSERSPROFILE%\chocolatey\bin"
@@ -74,7 +68,10 @@ Reboot your machine.
 
 Run the newly created `Docker for Windows` icon that has appeared on the
 desktop. If prompted to approve the request to enable Hyper-V. Thise will once
-again reboot your computer.
+again reboot your computer. Depending on your user priveledges you may need to
+add your user account to `docker-users`
+(https://github.com/docker/for-win/issues/868#issuecomment-352279510) at this
+point.
 
 You should not need to click this icon again.
 
@@ -170,6 +167,7 @@ following:
 On other systems follow the instructions at
 https://www.atlassian.com/git/tutorials/install-git.
 
+
 Installing QATrack+
 -------------------
 
@@ -234,11 +232,18 @@ Wait until you see something like the following within your terminal:
 Once the `Listening at: http://0.0.0.0:8000` line is visible go to
 http://localhost in your computer's browser to see the server.
 
-Default login is username `admin`, password `admin`. You should change this
-through the QATrack+ admin interface once you have first logged in.
+If you go to the website too early you will see the following error. This
+is not an issue, it just means that the QATrack+ server has not yet finished
+initialising. The first time QATrack+ starts up initialisation can take about
+10 minutes depending on your internet connection.
 
-With all default settings within Docker left as is, this will now automatically
-start the server each time the computer is turned on.
+.. figure:: images/502_error.png
+    :alt: Error visible while server is starting up
+
+Default login is username `admin`, password `admin`. Once you have logged in
+as admin go to http://localhost/admin/auth/user/2/password/ to change the admin
+password to something more secure.
+
 
 Setting up copying backups from local machine to remote server on Windows
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -309,19 +314,6 @@ to use a port that is different to port 80. For example, if `80:80` was changed
 to `8080:80` then you would need to type http://localhost:8080 within your
 browser to see QATrack+. After editing `docker-compose.yml` you need to rerun
 `docker-compose up`.
-
-Using a docker-hub image instead of building your own
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-If you don't wish to customise the python-virtual environment being used by the
-server, and if you want to not have to build your own docker image you may use
-the prebuilt automated builds off of `Docker Hub
-<https://hub.docker.com/r/simonbiggs/qatrack/builds/>`.
-
-To do this change your directory to the subdirectory `hub/0.3.0.dev` and then
-run `docker-compose up`. This will now also download the django portion of
-QATrack+ from Docker Hub with the pip dependencies already included within the
-image.
 
 Making the backup management store its files on a network share
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
