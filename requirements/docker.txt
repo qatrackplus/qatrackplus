@@ -1,2 +1,2 @@
--r base.txt
+-r postgres.txt
 gunicorn==19.9.0; sys_platform=='linux'
