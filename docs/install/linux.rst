@@ -609,7 +609,7 @@ The next step is to update the v0.2.9 schema to v0.3.0
 
 .. code-block:: console
 
-    python manage.py migrate --fake-iniital
+    python manage.py migrate --fake-initial
 
 and load some initial service log data:
 
