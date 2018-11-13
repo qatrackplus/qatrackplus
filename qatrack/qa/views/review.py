@@ -435,6 +435,7 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
 
         units = set()
         freqs = set()
+        groups = set()
 
         for utc in qs:
             due_date = utc.due_date.astimezone(tz).date()
@@ -452,6 +453,7 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
 
             units.add(str(utc.unit))
             freqs.add(str(utc.frequency or "Ad-Hoc"))
+            groups.add(str(utc.assigned_to))
 
         ordered_due_lists = []
         for key, display in self.DUE_DISPLAY_ORDER:
@@ -459,7 +461,9 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
         context["due"] = ordered_due_lists
         context["units"] = sorted(units)
         context["freqs"] = sorted(freqs)
+        context["groups"] = sorted(groups)
         context['user_groups'] = '-user' in self.request.path
+
         return context
 
 

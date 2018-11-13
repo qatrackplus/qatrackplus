@@ -25,7 +25,7 @@ LOG_ROOT = os.path.join(PROJECT_ROOT, "..", "logs")
 if not os.path.isdir(LOG_ROOT):
     os.mkdir(LOG_ROOT)
 
-VERSION = "0.3.0.5"
+VERSION = "0.3.0.6"
 BUG_REPORT_URL = "https://bitbucket.org/tohccmedphys/qatrackplus/issues/new"
 FEATURE_REQUEST_URL = BUG_REPORT_URL
 

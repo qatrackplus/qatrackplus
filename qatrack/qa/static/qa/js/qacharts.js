@@ -312,6 +312,8 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     moment()
                 ]
             },
+
+            showDropdowns: true,
             startDate: moment().subtract(365, 'days'),
             endDate: moment(),
             linkedCalendars: false,
