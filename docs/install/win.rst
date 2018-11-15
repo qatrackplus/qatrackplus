@@ -527,8 +527,8 @@ First we must check out the code for version 0.3.0:
 
 .. code-block:: console
 
-    git checkout master
-    git pull origin master
+    git fetch origin
+    git checkout v0.3.0.6
 
 
 Create and activate your new virtual environment
