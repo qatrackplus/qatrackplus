@@ -68,7 +68,7 @@ def get_user_name(user):
 
 
 @register.simple_tag(name='render_log')
-def render_log(service_log, user):
+def render_log(service_log, user, link=True, show_rtsqa=False):
     today = timezone.now().date()
     if service_log.datetime.date() == today:
         if timezone.now() - service_log.datetime < timezone.timedelta(hours=1):
@@ -78,13 +78,14 @@ def render_log(service_log, user):
     elif service_log.datetime.date() == today - timezone.timedelta(days=1):
         datetime_display = '%s %s' % (_('Yesterday'), timezone.localtime(service_log.datetime).strftime('%I:%M %p'))
     else:
-        datetime_display = timezone.localtime(service_log.datetime).strftime('%b %m, %I:%M %p')
+        datetime_display = timezone.localtime(service_log.datetime).strftime('%b %d, %I:%M %p')
 
     context = {
         'instance': service_log,
         'datetime_display': datetime_display,
         'user': get_user_name(service_log.user),
-        'can_view': user.has_perm('service_log.view_serviceevent') and service_log.service_event.is_active
+        'can_view': user.has_perm('service_log.view_serviceevent') and service_log.service_event.is_active and link,
+        'show_rtsqa': show_rtsqa
     }
     if service_log.log_type == sl_models.NEW_SERVICE_EVENT:
 

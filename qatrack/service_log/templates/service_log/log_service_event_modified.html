@@ -22,11 +22,37 @@
                         <div class="col-xs-4">New Value</div>
                     </div>
                     {% for key, val in extra_info.items %}
-                        <div class="dash-change item row{% if extra_info.items|length > 1 %} hover{% endif %} ">
-                            <div class="col-xs-2">{{ key }}</div>
-                            <div class="col-xs-4">{{ val.old }}</div>
-                            <div class="col-xs-4">{{ val.new }}</div>
-                        </div>
+                        {% if key == 'a_deleted' %}
+                            <div class="dash-change item row hover deleted">
+                                <div class="col-xs-2">Attachments deleted</div>
+                                <div class="col-xs-4">
+                                    {% for d in val.old %}
+                                        <div class="row">
+                                            <div class="col-xs-12">{{ d }}</div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                <div class="col-xs-4"></div>
+                            </div>
+                        {% elif key == 'a_added' %}
+                            <div class="dash-change item row hover">
+                                <div class="col-xs-2">Attachments added</div>
+                                <div class="col-xs-4"></div>
+                                <div class="col-xs-4">
+                                    {% for a in val.new %}
+                                        <div class="row">
+                                            <div class="col-xs-12">{{ a }}</div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="dash-change item row hover">
+                                <div class="col-xs-2">{{ key }}</div>
+                                <div class="col-xs-4">{{ val.old }}</div>
+                                <div class="col-xs-4">{{ val.new }}</div>
+                            </div>
+                        {% endif %}
                     {% endfor %}
                 {% endif %}
             </div>

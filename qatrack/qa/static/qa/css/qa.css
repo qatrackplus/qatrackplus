@@ -161,7 +161,6 @@ tr.qa-comment div.comment-container {
 tr.qa-comment div.comment-container div.comment-div {
     padding: 10px;
     width: 100%;
-    border-bottom: 1px solid #eeeeee;
 }
 tr.qa-comment div.comment-container div.comment-div textarea {
     width: 100%;
@@ -179,7 +178,6 @@ tr.qa-procedure div.procedure-container {
 tr.qa-procedure div.procedure-container div.qa-procedure-text {
     width: 100%;
     padding: 10px;
-    border-top: 1px solid #eeeeee;
 }
 tr.qa-error div.error-container div.qa-error-text {
     width: 100%;
@@ -293,7 +291,7 @@ div.sublist-description {
 
 
 #perform-qa-table > tbody > tr > td.qa-category > .error-bar {
-    height: 24px;
+    height: calc(100% + 2px);
     top:0;
 }
 #perform-qa-table, #review-table {

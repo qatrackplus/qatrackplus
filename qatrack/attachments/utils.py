@@ -9,30 +9,43 @@ import scipy.misc
 
 def imsave(obj, fname):
 
+    def reseek(obj, data):
+        try:
+            obj.seek(0)
+        except:
+            pass
+        try:
+            data.seek(0)
+        except:
+            pass
+
     fmt = os.path.splitext(fname)[-1].strip('.')
     data = io.BytesIO()
     try:
         scipy.misc.imsave(data, obj, format=fmt)
-        data.seek(0)
+        reseek(obj, data)
         return data.read()
     except:
-        data.seek(0)
+        reseek(obj, data)
 
     try:
         im = Image.open(obj)
         im.save(data, format=fmt)
-        data.seek(0)
+        reseek(obj, data)
         return data.read()
     except:
-        data.seek(0)
+        reseek(obj, data)
 
     try:
-        pixels = pydicom.read_file(obj, force=True).pixel_array
+        try:
+            pixels = obj.pixel_array
+        except AttributeError:
+            pixels = pydicom.read_file(obj, force=True).pixel_array
         scipy.misc.imsave(data, pixels, format=fmt)
-        data.seek(0)
+        reseek(obj, data)
         return data.read()
     except:
-        pass
+        reseek(obj, data)
 
 
 def figure_to_bytes(obj, fname):

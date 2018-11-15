@@ -32,7 +32,8 @@ $(document).ready(function(){
         {% for unit in units %}
         {value: "{{ unit }}", label: "{{ unit }}" }{% if not forloop.last %},{% endif %}
         {% endfor %}
-      ]
+      ],
+      bRegex: true
     },
     {type: "text"},
     {
@@ -42,7 +43,18 @@ $(document).ready(function(){
         {% for freq in freqs %}
         {value: "{{ freq }}", label: "{{ freq }}"}{% if not forloop.last %},{% endif %}
         {% endfor %}
-      ]
+      ],
+      bRegex: true
+    },
+    {
+      type: "select",
+      multiple: "multiple",
+      values: [
+        {% for group in groups %}
+            {value: "{{ group }}", label: "{{ group }}"}{% if not forloop.last %},{% endif %}
+        {% endfor %}
+      ],
+      bRegex: true
     }
   ];
   $(".overview-table").each(function(i, e){
@@ -50,7 +62,7 @@ $(document).ready(function(){
     var Listable = {
         "DOM": "<'row'<'col-sm-5'i><'col-sm-7'p>><'row'<'col-sm-12'tr>><'row'<'col-sm-5'><'col-sm-7'p>>",
         "autoWidth": false,
-        "columnDefs": [null, null, {'sType': "span-timestamp"}, null],
+        "columnDefs": [null, null, {'sType': "span-timestamp"}, null, null],
         "columnFilterDefs": filters,
         "cookie": "dt-" + i +"_" + id + "_",
         "cookiePrefix": "dt-" + i + "_",
@@ -105,12 +117,14 @@ $(document).ready(function(){
                                                 <th><b>Unit</b></th>
                                                 <th><b>Due Date</b></th>
                                                 <th><b>Freq</b></th>
+                                                <th><b>Assigned To</b></th>
                                             </tr>
                                             <tr>
                                                 <th><b>Name</b></th>
                                                 <th><b>Unit</b></th>
                                                 <th><b>Due Date</b></th>
                                                 <th><b>Freq</b></th>
+                                                <th><b>Assigned To</b></th>
                                             </tr>
                                         </thead>
 
@@ -127,7 +141,10 @@ $(document).ready(function(){
                                                         {{utc|as_due_date}}
                                                     </td>
                                                     <td >
-                                                        <abbr title="Assigned to {{utc.assigned_to.name}}">{% firstof utc.frequency.name "Ad-Hoc" %}</abbr>
+                                                        {% firstof utc.frequency.name "Ad-Hoc" %}
+                                                    </td>
+                                                    <td>
+                                                        {{ utc.assigned_to.name }}
                                                     </td>
                                                 </tr>
                                             {% endfor %}

@@ -144,7 +144,7 @@ class SLDashboard(TemplateView):
         context['counts'] = self.get_counts()
         context['recent_logs'] = models.ServiceLog.objects.select_related(
             'user', 'service_event', 'service_event__unit_service_area__unit'
-        )[:40]
+        )[:60]
 
         return context
 
@@ -353,9 +353,9 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
                 created_by=self.request.user
             )
 
-        a_ids = self.request.POST.get('attach-delete-ids', '').split(',')
+        a_ids = self.request.POST.get('se_attachments_delete_ids', '').split(',')
         if a_ids != ['']:
-            Attachment.objects.filter(id__in=self.request.POST.get('attach-delete-ids').split(',')).delete()
+            Attachment.objects.filter(id__in=a_ids).delete()
 
     def form_valid(self, form):
 
@@ -402,8 +402,6 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
                 site=get_current_site(self.request)
             )
             comment.save()
-
-        self.edit_se_attachments(service_event)
 
         for g_link in form.g_link_dict:
             if g_link in form.changed_data:
@@ -586,6 +584,7 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
                         initial_p.set_quantity_current()
 
         self.generate_logs(new, form, rtsqa_formset)
+        self.edit_se_attachments(service_event)
         return HttpResponseRedirect(self.get_success_url())
 
     def get_success_url(self):
@@ -602,12 +601,12 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
 
         elif 'service_status' in form.changed_data:
             models.ServiceLog.objects.log_service_event_status(
-                self.request.user, form.instance, form.stringify_form_changes(), form.stringify_status_change()
+                self.request.user, form.instance, form.stringify_form_changes(self.request), form.stringify_status_change()
             )
 
         elif form.has_changed():
             models.ServiceLog.objects.log_changed_service_event(
-                self.request.user, form.instance, form.stringify_form_changes()
+                self.request.user, form.instance, form.stringify_form_changes(self.request)
             )
 
         if rtsqa_formset.has_changed():
@@ -640,6 +639,11 @@ class CreateServiceEvent(ServiceEventUpdateCreate):
 
 
 class UpdateServiceEvent(ServiceEventUpdateCreate):
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        context['service_logs'] = models.ServiceLog.objects.filter(service_event=self.object)
+        return context
 
     def form_valid(self, form):
 
@@ -692,6 +696,8 @@ class DetailsServiceEvent(DetailView):
         context_data['parts_used'] = p_models.PartUsed.objects.filter(service_event=self.object)
         context_data['request'] = self.request
         context_data['g_links'] = models.GroupLinkerInstance.objects.filter(service_event=self.object)
+
+        context_data['service_logs'] = models.ServiceLog.objects.filter(service_event=self.object)
 
         return context_data
 

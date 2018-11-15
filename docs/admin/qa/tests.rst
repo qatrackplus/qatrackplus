@@ -251,6 +251,48 @@ When your script (calculation procedure) is executed, it has access to
 #. REFS & TOLS variables which are dictionaries of reference and
    tolerance values for all of the tests.
 
+    - REFS is a dictionary of form `{macro_name: ref_value'}` e.g.
+
+    .. code-block:: python
+
+        REFS = {
+            'mytest': 100,
+            'someothertest': 1.234,
+        }
+
+    - TOLS is a dictionary of form `{macro_name: tolerances}` where `tolerances` itself is a dictionary of form:
+
+    .. code-block:: python
+
+        {
+            'act_low': act_low_val,
+            'tol_low': tol_low_val,
+            'tol_high': tol_high_val,
+            'act_high': act_high_val,
+            'mc_pass_choices': passing_vals,
+            'mc_tol_choices': tolerance_vals,
+            'type': tolerance_type
+        }`
+
+    e.g.
+
+    .. code-block:: python
+
+        TOLS = {
+            'mytest': {
+                'type': "absolute" # or
+                'act_low': -3,
+                'tol_low': -2,
+                'tol_high': 2,
+                'act_high': 3,
+            },
+            'someothertest': {
+                'type': "multchoice" # or
+                'mc_pass_choices': "pass_val_1,pass_val_2",
+                'mc_tol_choices': "tol_val_1,tol_val_2",
+            },
+        }
+
 #. A META object which is a dictionary of some potentially useful
    information about the test list currently being performed including:
 

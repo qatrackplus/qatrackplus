@@ -308,6 +308,13 @@ USE_PARTS
 Set `USE_PARTS` to `False` in order to disable the Parts app (Service Log
 requires `USE_PARTS = True`).
 
+USE_X_FORWARDED_HOST
+....................
+
+Set `USE_X_FORWARDED_HOST = True` when running QATrack+ behind a reverse proxy
+and set to False for whenever you are not running behind a reverse proxy e.g.
+Set to True for CherryPy/IIS and False for Apache/mod_wsgi or development work.
+
 
 SESSION Settings
 ~~~~~~~~~~~~~~~~

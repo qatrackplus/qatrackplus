@@ -25,7 +25,7 @@ LOG_ROOT = os.path.join(PROJECT_ROOT, "..", "logs")
 if not os.path.isdir(LOG_ROOT):
     os.mkdir(LOG_ROOT)
 
-VERSION = "0.3.0.3"
+VERSION = "0.3.0.6"
 BUG_REPORT_URL = "https://bitbucket.org/tohccmedphys/qatrackplus/issues/new"
 FEATURE_REQUEST_URL = BUG_REPORT_URL
 
@@ -294,6 +294,11 @@ SESSION_COOKIE_AGE = 14 * 24 * 60 * 60
 SESSION_SAVE_EVERY_REQUEST = True
 
 
+# needs to be set to True when running behind reverse proxy (normal deploy)
+# set to False when not running behind reverse proxy
+# Use True for e.g. CherryPy/IIS and False for Apache/mod_wsgi
+USE_X_FORWARDED_HOST = False
+
 # -----------------------------------------------------------------------------
 # Email and notification settings
 EMAIL_NOTIFICATION_USER = None
@@ -544,12 +549,14 @@ if os.path.exists('/root/.is_inside_docker'):
 # ------------------------------------------------------------------------------
 # local_settings contains anything that should be overridden
 # based on site specific requirements (e.g. deployment, development etc)
+
+TEMPLATES[0]['OPTIONS']['debug'] = TEMPLATE_DBG
+
 try:
     from .local_settings import *  # NOQA
 except ImportError:
     pass
 
-TEMPLATES[0]['OPTIONS']['debug'] = TEMPLATE_DBG
 
 # Parts must be used with service log
 USE_PARTS = USE_PARTS or USE_SERVICE_LOG
