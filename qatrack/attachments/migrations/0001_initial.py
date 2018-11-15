@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
             name='Attachment',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('attachment', models.FileField(upload_to=qatrack.attachments.models.get_upload_path, verbose_name='Attachment')),
+                ('attachment', models.FileField(max_length=255, upload_to=qatrack.attachments.models.get_upload_path, verbose_name='Attachment')),
                 ('label', models.CharField(blank=True, max_length=255, verbose_name='Label')),
                 ('comment', models.TextField(blank=True, verbose_name='Comment')),
                 ('created', models.DateTimeField(auto_now_add=True)),
