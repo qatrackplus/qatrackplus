@@ -107,7 +107,7 @@
                                        </dl>
                                     </div>
                                     <div class="col-md-4">
-                                        {% if USE_SERVICE_LOG %}
+                                        {% if USE_SERVICE_LOG and not from_se %}
                                             <div class="row">
                                                 <label class="col-md-8">
                                                     {% if perms.service_log.add_serviceevent %}
@@ -408,11 +408,11 @@
 
                                             {% if perms.qa.can_review %}
                                                 <button id="submit-review-ajax"
-                                                        class="btn btn-primary btn-flat pull-right margin-r-5"
-                                                        title="Click to update the test instance statuses"
-                                                  >
-                                                  <i class="fa fa-save"></i>
-                                                  Update Statuses
+                                                     class="btn btn-primary btn-flat pull-right margin-r-5"
+                                                     title="Click to update the test instance statuses"
+                                                >
+                                                    <i class="fa fa-save"></i>
+                                                    Update Statuses
                                                 </button>
                                             {% endif %}
 
@@ -422,9 +422,9 @@
                                                         type="submit"
                                                         class="btn btn-primary btn-flat pull-right margin-r-5"
                                                         title="Click to update the test instance statuses"
-                                                  >
-                                                  <i class="fa fa-save"></i>
-                                                  Update Test Statuses
+                                                >
+                                                    <i class="fa fa-save"></i>
+                                                    Update Test Statuses
                                                 </button>
                                             {% endif %}
                                             {% if instance.in_progress %}

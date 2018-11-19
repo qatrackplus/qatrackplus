@@ -254,6 +254,35 @@
                         </div>
                     </div>
                 {% endif %}
+
+                {% if serviceevent.attachment_set.all|length > 0 %}
+                    <div class="box">
+                        <div class="box-header">
+                            <h3 class="box-title">
+                                <i class="fa fa-cog fa-fw" aria-hidden="true"></i>
+                                Attachments
+                            </h3>
+                        </div>
+                        <div class="box-body">
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    {% if perms.attachments.add_attachment %}
+                                        <table id="attach-table" class="table table-responsive table-condensed">
+                                            <tbody>
+
+                                                {% for attach in serviceevent.attachment_set.all %}
+                                                    <tr><td><i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>{{ attach | attachment_link }}</td></tr>
+                                                {% endfor %}
+                                            </tbody>
+                                            <tfoot id="se-attachment-names"></tfoot>
+                                        </table>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
             </div>
 
             <div class="col-md-8">
@@ -371,42 +400,8 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <div class="row">
-            <div class="col-md-4">
-                {% if serviceevent.attachment_set.all|length > 0 %}
-                    <div class="box">
-                        <div class="box-header">
-                            <h3 class="box-title">
-                                <i class="fa fa-cog fa-fw" aria-hidden="true"></i>
-                                Attachments
-                            </h3>
-                        </div>
-                        <div class="box-body">
-                            <div class="row">
-                                <div class="col-sm-12">
-                                    {% if perms.attachments.add_attachment %}
-                                        <table id="attach-table" class="table table-responsive table-condensed">
-                                            <tbody>
-
-                                                {% for attach in serviceevent.attachment_set.all %}
-                                                    <tr><td><i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>{{ attach | attachment_link }}</td></tr>
-                                                {% endfor %}
-                                            </tbody>
-                                            <tfoot id="se-attachment-names"></tfoot>
-                                        </table>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                {% endif %}
-            </div>
-
-            {% if USE_PARTS and parts_used|length > 0 %}
-                <div class="col-md-8">
+                {% if USE_PARTS and parts_used|length > 0 %}
                     <div class="box">
                         <div class="box-header">
                             <h3 class="box-title">
@@ -450,8 +445,9 @@
                             </div>
                         </div>
                     </div>
-                </div>
-            {% endif %}
+                {% endif %}
+
+            </div>
         </div>
 
         <div class="row">
@@ -459,6 +455,29 @@
                 {% if perms.service_log.change_serviceevent %}
                     <a class="btn btn-flat btn-default pull-right" href="{% url "sl_edit" serviceevent.id %}">Edit</a>
                 {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="max-width-lg margin-top-30">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="box">
+                    <div class="box-header">
+                        <h4 class="box-title">Service Log For Service Event {{ form.instance.id }} </h4>
+                    </div>
+                    <div class="box-body">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <ul class="timeline timeline-custom">
+                                    {% for log in service_logs %}
+                                        {% render_log log user False True %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

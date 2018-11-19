@@ -582,7 +582,11 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
 
             self.dropzone.on('totaluploadprogress', function(progress) {
                 self.status.removeClass("btn-primary btn-danger btn-success btn-info");
-                self.status.addClass("btn-warning").text(progress + "%").attr('title', 'Upload succeeded');
+                if (progress.toFixed(0) === "100"){
+                    self.status.addClass("btn-warning").text("Processing...").attr('title', 'Processing upload');
+                }else{
+                    self.status.addClass("btn-warning").text(progress.toFixed(0) + "%").attr('title', 'Uploading file');
+                }
             });
 
             self.dropzone.on('error', function(file, data) {
@@ -590,7 +594,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 if (!data || !file){
                     btn_txt = "Server Error";
                     tool_tip = "Server Error";
-                }else if (file.xhr.status === 413){
+                }else if (file.xhr && file.xhr.status === 413){
                     btn_txt = "File too large";
                     tool_tip = "You may need to increase the maximum request size on your server";
                 }else{

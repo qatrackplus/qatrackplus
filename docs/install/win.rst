@@ -204,7 +204,7 @@ prompt:
 
     python manage.py migrate
     python manage.py createsuperuser
-    Get-ChildItem fixtures\defaults\*\*json | foreach {python manage.py loaddata $_.FullName}
+    Get-ChildItem .\fixtures\defaults\*\*json | foreach {python manage.py loaddata $_.FullName}
 
 
 Configuring CherryPy to Serve QATrack+
@@ -312,8 +312,11 @@ Make sure `Stop processing of subsequent rules` is checked.
 
 When finished click Apply, then Back To Rules and then add another blank rule.
 Give it a name of QATrack Reverse Proxy, enter ^(.\*) for the Pattern and
-http://localhost:8080/{R:1} for the Rewrite URL.  Make sure both Append query
-string and Stop processing of subsequent rules are checked.
+http://localhost:8080/{R:1} for the Rewrite URL.  In the Server Variables
+section add a new Server Variable with the Name=HTTP\_X\_FORWARDED\_HOST and
+the Value=yourservername.com (replace yourservername with whatever your domain
+is!).  Finally, make sure both Append query string and Stop processing of
+subsequent rules are checked.
 
 .. figure:: images/reverse_proxy.png
     :alt: URL Rewrite Reverse Proxy
@@ -524,8 +527,8 @@ First we must check out the code for version 0.3.0:
 
 .. code-block:: console
 
-    git checkout master
-    git pull origin master
+    git fetch origin
+    git checkout v0.3.0.6
 
 
 Create and activate your new virtual environment
@@ -611,8 +614,8 @@ and load some initial service log data:
 
 .. code-block:: console
 
-    Get-ChildItem fixtures\defaults\units\*json | foreach {python manage.py loaddata $_.FullName}
-    Get-ChildItem fixtures\defaults\service_log\*json | foreach {python manage.py loaddata $_.FullName}
+    Get-ChildItem .\fixtures\defaults\units\*json | foreach {python manage.py loaddata $_.FullName}
+    Get-ChildItem .\fixtures\defaults\service_log\*json | foreach {python manage.py loaddata $_.FullName}
 
 Check the migration log
 .......................
@@ -690,8 +693,17 @@ delete the service entirely.
 IIS Changes
 ~~~~~~~~~~~
 
-Unless you have decided to run QATrack+ v0.3.0 on a different port, your
-existing IIS rewrite rules should not need to be modified.
+If you plan on using the QATrack+ API, you will want to modify your reverse
+proxy url rewrite and add a new Server Variable.  Open up IIS and navigate
+to your reverse proxy rewrite rule and then in the Server Variables
+section add a new Server Variable with the Name=HTTP\_X\_FORWARDED\_HOST and
+the Value=yourservername.com (replace yourservername with whatever your domain
+is!).
+
+.. figure:: images/reverse_proxy.png
+    :alt: URL Rewrite Reverse Proxy
+
+    URL Rewrite Reverse Proxy
 
 
 Last Word

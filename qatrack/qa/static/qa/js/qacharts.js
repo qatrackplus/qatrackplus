@@ -1,4 +1,4 @@
-require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'saveSvgAsPng', 'qautils', 'daterangepicker', 'felter', 'select2'], function ($, _, d3, moment) {
+require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qautils', 'daterangepicker', 'felter', 'select2'], function ($, _, d3, moment, saveSvgAsPng) {
 
     var waiting_timeout = null;
     // var test_list_names;
@@ -312,6 +312,8 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'saveSvgAsPng', 'qaut
                     moment()
                 ]
             },
+
+            showDropdowns: true,
             startDate: moment().subtract(365, 'days'),
             endDate: moment(),
             linkedCalendars: false,
@@ -335,7 +337,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'saveSvgAsPng', 'qaut
 
             if ($chart_type.val() === 'basic') {
                 // Get the d3js SVG element and save using saveSvgAsPng.js
-                saveSvgAsPng(svg.get(0), "plot.png", {scale: 1, backgroundColor: "#FFFFFF"});
+                saveSvgAsPng.saveSvgAsPng(svg.get(0), "plot.png", {scale: 1, backgroundColor: "#FFFFFF", canvg: window.canvg});
             } else {
                 var a = $("<a>")
                     .attr("href", $control_chart_container.find('img').attr('src'))
@@ -485,13 +487,25 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'saveSvgAsPng', 'qaut
                 contentType: "application/json",
                 dataType: "json",
                 success: function (result, status, jqXHR) {
-                    finished_chart_update();
-                    callback(result);
+                    if (!result.success) {
+                        console.log(result.error_type);
+                        if (result.error_type === 'too_many_parameters') {
+                            displayChartError('Error generating results, query too large. Try fewer units, deselecting service events, smaller date range etc.');
+                        } else {
+                            displayChartError('Error generating results.');
+                        }
+                        console.log(result.error);
+                    } else {
+                        finished_chart_update();
+                        callback(result);
+                    }
                 },
                 error: function (error) {
                     finished_chart_update();
                     if (typeof console != "undefined") {
-                        console.log(error)
+                        console.log(error);
+                        displayChartError('Error generating results.');
+
                     }
                 }
             });
@@ -503,6 +517,33 @@ require(['jquery', 'lodash', 'd3', 'moment', 'slimscroll', 'saveSvgAsPng', 'qaut
             d3.select("svg").remove();
             create_chart(data_to_plot);
             update_data_table(data);
+        }
+
+        function displayChartError(error_msg) {
+
+            d3.select("svg").remove();
+
+            var chart_width = $('#chart').width() - 15,
+                chart_height = 40,
+                margin = {top: 20, right: 30, bottom: 140, left: 30}
+
+            var svg = d3.select("#chart")
+                .append("svg")
+                .attr("width", chart_width)
+                .attr("height", chart_height) //height + margin.top + margin.bottom
+                .style('border', 'solid 1px #bbb')
+                .style("background-color", "white")
+                .append("g")
+                .attr("width", chart_width - margin.left)
+                .attr("height", chart_height - margin.top)
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            svg.append("text")
+                .style('fill', 'red')
+                .text(error_msg);
+
+            update_data_table({'table': ''});
+            $("#chart-url").val('');
         }
 
         function convert_data_to_chart_series(data) {

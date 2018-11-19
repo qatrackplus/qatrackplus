@@ -93,6 +93,8 @@
 
 {% block body %}
 
+    <div {% if not perms.qa.can_view_history %}class="max-width-md"{% endif %}>
+
     <form class="nosubmit form-inline" id="qa-form" method="POST" action="" autocomplete="off" enctype="multipart/form-data" >
         {% csrf_token %}
 
@@ -488,8 +490,8 @@
                                                         {% endfor %}
                                                     <div></div></th>
                                                 {% endif %}
-                                            {% else %}
-                                                <th>&nbsp;<div></div></th>
+{#                                            {% else %}#}
+{#                                                <th>&nbsp;<div></div></th>#}
                                             {% endif %}
                                         </tr>
                                     </thead>
@@ -697,6 +699,7 @@
         </div>
     </form>
     {% endif %}
+    </div>
 
 
 

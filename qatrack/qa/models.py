@@ -436,7 +436,7 @@ class Reference(models.Model):
 class ToleranceManager(models.Manager):
 
     def get_by_natural_key(self, name):
-        return (self.name,)
+        return self.get(name=name)
 
 
 class Tolerance(models.Model):
@@ -506,6 +506,8 @@ class Tolerance(models.Model):
     # who last modified this tolerance
     modified_date = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(User, editable=False, related_name="tolerance_modifiers")
+
+    objects = ToleranceManager()
 
     class Meta:
 

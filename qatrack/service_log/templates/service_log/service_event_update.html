@@ -446,26 +446,26 @@
                         <div class="box-body">
                             <div class="row">
                                 <div class="col-sm-12">
-                                        <table id="attach-table" class="table table-responsive table-condensed">
-                                            <thead>
-                                                <tr>
-                                                    <th>Filename</th>
-                                                    <th>Delete</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <input id="attach-delete-ids" name="attach-delete-ids" type="hidden">
-                                                {% if form.instance.id %}
-                                                    {% for attach in form.instance.attachment_set.all %}
-                                                        <tr>
-                                                            <td><i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>{{ attach | attachment_link }}</td>
-                                                            <td align="center"><input type="checkbox" name="attach-{{ attach.id }}-DELETE" id="attach-{{ attach.id }}-DELETE" class="attach-delete" value="{{ attach.id }}"></td>
-                                                        </tr>
-                                                    {% endfor %}
-                                                {% endif %}
-                                            </tbody>
-                                            <tfoot id="se-attachment-names"></tfoot>
-                                        </table>
+                                    <table id="attach-table" class="table table-responsive table-condensed">
+                                        <thead>
+                                            <tr>
+                                                <th>Filename</th>
+                                                <th>Delete</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {{ form.se_attachments_delete_ids }}
+                                            {% if form.instance.id %}
+                                                {% for attach in form.instance.attachment_set.all %}
+                                                    <tr>
+                                                        <td><i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>{{ attach | attachment_link }}</td>
+                                                        <td align="center"><input type="checkbox" name="attach-{{ attach.id }}-DELETE" id="attach-{{ attach.id }}-DELETE" class="attach-delete" value="{{ attach.id }}"></td>
+                                                    </tr>
+                                                {% endfor %}
+                                            {% endif %}
+                                        </tbody>
+                                        <tfoot id="se-attachment-names"></tfoot>
+                                    </table>
                                 </div>
                             </div>
                         </div>
@@ -567,6 +567,31 @@
             </div>
         </div>
     </form>
+
+    {% if form.instance.id %}
+        <div class="max-width-lg margin-top-30">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="box">
+                        <div class="box-header">
+                            <h4 class="box-title">Service Log For Service Event {{ form.instance.id }} </h4>
+                        </div>
+                        <div class="box-body">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <ul class="timeline timeline-custom">
+                                        {% for log in service_logs %}
+                                            {% render_log log user False True %}
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
 
     <div id="tli_initiated_display_template" style="display: none;">
         <div id="tli_initiated_display" class="col-md-12">

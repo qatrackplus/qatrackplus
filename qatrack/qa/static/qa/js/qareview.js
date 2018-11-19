@@ -55,7 +55,8 @@ require(['jquery', 'sl_utils', 'comments'], function($) {
             );
         });
 		var $form = $('#qa-review');
-		$('#submit-review-ajax').one('click', function () {
+		$('#submit-review-ajax').one('click', function (e) {
+			e.preventDefault();
 
 			var data = $form.serialize();
 
@@ -67,6 +68,7 @@ require(['jquery', 'sl_utils', 'comments'], function($) {
 					QAURLs.returnYourChoice(res.rtsqa_form, res.tli_id);
 				}
 			});
+			return false;
 		});
 
 	});

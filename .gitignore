@@ -1,3 +1,5 @@
+.eggs
+*.egg-info
 *.db
 *.debug
 *.log
