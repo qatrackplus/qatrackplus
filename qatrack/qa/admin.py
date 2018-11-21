@@ -992,10 +992,32 @@ class FrequencyAdmin(admin.ModelAdmin):
 
     list_display = (
         "name",
-        "recurrences",
-        "nominal_interval",
+        "get_recurrences",
         "overdue_interval",
     )
+
+    def save_model(self, request, obj, form, change):
+        """set user and modified date time"""
+        if not obj.pk:
+            from_ = timezone.datetime(2012, 1, 1, tzinfo=timezone.get_current_timezone())
+            obj.recurrences.dtstart = from_
+        super().save_model(request, obj, form, change)
+
+    def get_recurrences(self, obj):
+        rules = str(obj.recurrences).replace("RRULE:", "").split("\n")[1:]
+        processed = []
+        for rule in rules:
+            if rule.startswith("EXDATE") or rule.startswith("RDATE"):
+                date = rule.split(":")[-1]
+                date = "%s-%s-%s" % (date[:4], date[4:6], date[6:8])
+                inc = "Exclude" if rule.startswith("EXDATE") else "Include"
+                rule = "%s: %s" % (inc, date)
+
+            processed.append(rule)
+
+        return "<br/>".join(processed)
+    get_recurrences.short_description = "Recurrences"
+    get_recurrences.allow_tags = True
 
 
 class StatusAdmin(admin.ModelAdmin):

@@ -279,7 +279,9 @@ class Frequency(models.Model):
     )
 
     overdue_interval = models.PositiveIntegerField(
-        help_text=_("How many days after the due date should a test with this frequency be shown as overdue")
+        help_text=_(
+            "How many days after the due date should a test with this frequency be shown as overdue. (Use 0 if it should show as overdue the day after it is due)"
+        )
     )
 
     objects = FrequencyManager()
