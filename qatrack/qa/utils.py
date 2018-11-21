@@ -6,6 +6,7 @@ import tokenize
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
+from django.utils import timezone
 
 
 class SetEncoder(json.JSONEncoder):
@@ -209,3 +210,21 @@ def get_internal_user(user_klass=None):
         u.save()
 
     return u
+
+
+def calc_due_date(completed, frequency):
+
+    if frequency is None:
+        return None
+
+    return frequency.recurrences.after(completed, dtstart=completed)
+
+
+def calc_nominal_interval(frequency):
+    """Calculate avg number of days between tests for ordering purposes"""
+    occurences = frequency.recurrences.occurrences(
+        dtstart=timezone.datetime(2012, 1, 1, tzinfo=timezone.utc),
+        dtend=timezone.datetime(2013, 1, 1, tzinfo=timezone.utc),
+    )
+    deltas = [(t2 - t1).total_seconds() / (60 * 60 * 24) for t1, t2 in zip(occurences, occurences[1:])]
+    return sum(deltas) / len(deltas)

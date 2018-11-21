@@ -92,12 +92,17 @@ class TestInfoForm(forms.ModelForm):
                 for p in ['add', 'change', 'delete']:
                     setattr(tolf.widget, 'can_%s_related' % p, False)
                 if not self.instance.tolerance:
-                    self.initial["tolerance"] = models.Tolerance.objects.get(type=models.BOOLEAN, bool_warning_only=False)
+                    self.initial["tolerance"] = models.Tolerance.objects.get(
+                        type=models.BOOLEAN,
+                        bool_warning_only=False,
+                    )
             elif tt == models.MULTIPLE_CHOICE or self.instance.test.is_string_type():
                 self.fields["reference_value"].widget = forms.HiddenInput()
-                self.fields['tolerance'].queryset = self.fields['tolerance'].queryset.filter(type=models.MULTIPLE_CHOICE)
+                qs = self.fields['tolerance'].queryset.filter(type=models.MULTIPLE_CHOICE)
+                self.fields['tolerance'].queryset = qs
             else:
-                self.fields['tolerance'].queryset = self.fields['tolerance'].queryset.exclude(type=models.MULTIPLE_CHOICE)
+                qs = self.fields['tolerance'].queryset.exclude(type=models.MULTIPLE_CHOICE)
+                self.fields['tolerance'].queryset = qs
 
             if tt != models.MULTIPLE_CHOICE and self.instance.reference:
                 if tt == models.BOOLEAN:
@@ -123,7 +128,9 @@ class TestInfoForm(forms.ModelForm):
         if (self.instance.test.type == models.MULTIPLE_CHOICE or
                 self.instance.test.is_string_type()) and self.cleaned_data.get("tolerance"):
             if self.cleaned_data["tolerance"].type != models.MULTIPLE_CHOICE:
-                raise forms.ValidationError(_("You can't use a non-multiple choice tolerance with a multiple choice or string test"))
+                raise forms.ValidationError(
+                    _("You can't use a non-multiple choice tolerance with a multiple choice or string test")
+                )
         else:
             if "reference_value" not in self.cleaned_data:
                 return self.cleaned_data
@@ -133,21 +140,23 @@ class TestInfoForm(forms.ModelForm):
             tol = self.cleaned_data.get("tolerance")
             if tol is not None:
                 if ref_value == 0 and tol.type == models.PERCENT:
-                    raise forms.ValidationError(_("Percentage based tolerances can not be used with reference value of zero (0)"))
+                    raise forms.ValidationError(
+                        _("Percentage based tolerances can not be used with reference value of zero (0)")
+                    )
 
         return self.cleaned_data
 
 
 def test_name(obj):
     return obj.test.name
-test_name.admin_order_field = "test__name"
+test_name.admin_order_field = "test__name"  # noqa: E305
 
 
 def test_type(obj):
     for tt, display in models.TEST_TYPE_CHOICES:
         if obj.test.type == tt:
             return display
-test_type.admin_order_field = "test__type"
+test_type.admin_order_field = "test__type"  # noqa: E305
 
 
 class SetMultipleReferencesAndTolerancesForm(forms.Form):
@@ -305,7 +314,8 @@ class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
         else:
             form = SetMultipleReferencesAndTolerancesForm(initial={'contenttype': None})
 
-        # if selected tests are NOT multiple choice or boolean, select all the tolerances which are NOT multiple choice or boolean
+        # if selected tests are NOT multiple choice or boolean,
+        # select all the tolerances which are NOT multiple choice or boolean
         if has_num:
             tolerances = models.Tolerance.objects.exclude(type="multchoice")
             form.fields["tolerance"].queryset = tolerances
@@ -418,9 +428,11 @@ class TestListAdminForm(forms.ModelForm):
 
         duplicates = list(set([sn for sn in slugs if slugs.count(sn) > 1]))
         if duplicates:
-            raise forms.ValidationError(
-                "The following test macro names are duplicated (either in this test list or one of its sublists) :: " + ",".join(duplicates)
+            msg = (
+                "The following test macro names are duplicated (either in this test list or one of its sublists) :: " +
+                ",".join(duplicates)
             )
+            raise forms.ValidationError(msg)
 
         return self.cleaned_data
 
@@ -448,15 +460,13 @@ class SublistInlineFormSet(forms.models.BaseInlineFormSet):
             # something else went wrong already
             return {}
 
-        children = [f.instance.child for f in self.forms if hasattr(f.instance, 'child') and not f.cleaned_data["DELETE"]]
+        children = [f.instance.child for f in self.forms if hasattr(f.instance, 'child') and not f.cleaned_data["DELETE"]]  # noqa: E501
         if self.instance and self.instance in children:
-            raise forms.ValidationError("A test list can not be its own child. Please remove Sublist ID %d and try again" % (self.instance.pk))
+            raise forms.ValidationError(
+                "A test list can not be its own child. Please remove Sublist ID %d and try again" % (self.instance.pk)
+            )
 
         return self.cleaned_data
-
-
-def test_name(obj):
-    return obj.test.name
 
 
 def macro_name(obj):
@@ -511,8 +521,8 @@ class TestListMembershipInline(DynamicRawIDMixin, admin.TabularInline):
             return ''
 
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
-        # copied from django.contrib.admin.wigets (and dynamic_raw_id admin.py) so we can override the label_for_value function
-        # for the test raw id widget
+        # copied from django.contrib.admin.wigets (and dynamic_raw_id admin.py)
+        # so we can override the label_for_value function for the test raw id widget
         db = kwargs.get('using')
         if db_field.name == "test":
             rel = db_field.remote_field if VERSION[0] == 2 else db_field.rel
@@ -721,7 +731,10 @@ class TestForm(forms.ModelForm):
         user_changing_type = self.instance.type != cleaned_data.get("type")
         has_history = models.TestInstance.objects.filter(unit_test_info__test=self.instance).exists()
         if user_changing_type and has_history:
-            msg = "You can't change the test type of a test that has already been performed. Revert to '%s' before saving."
+            msg = (
+                "You can't change the test type of a test that has already been performed. "
+                "Revert to '%s' before saving."
+            )
             ttype_index = [ttype for ttype, label in models.TEST_TYPE_CHOICES].index(self.instance.type)
             ttype_label = models.TEST_TYPE_CHOICES[ttype_index][1]
             self.add_error('type', forms.ValidationError(msg % ttype_label))
@@ -789,13 +802,15 @@ class TestAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, admin.ModelAdmin):
         super(TestAdmin, self).save_model(request, obj, form, change)
 
     def obj_created(self, obj):
-        return '<abbr title="Created by %s">%s</abbr>' % (obj.created_by, obj.created.strftime(settings.INPUT_DATE_FORMATS[0]))
+        fmt = '<abbr title="Created by %s">%s</abbr>'
+        return fmt % (obj.created_by, obj.created.strftime(settings.INPUT_DATE_FORMATS[0]))
     obj_created.admin_order_field = "created"
     obj_created.allow_tags = True
     obj_created.short_description = "Created"
 
     def obj_modified(self, obj):
-        return '<abbr title="Modified by %s">%s</abbr>' % (obj.modified_by, obj.modified.strftime(settings.INPUT_DATE_FORMATS[0]))
+        fmt = '<abbr title="Modified by %s">%s</abbr>'
+        return fmt % (obj.modified_by, obj.modified.strftime(settings.INPUT_DATE_FORMATS[0]))
     obj_modified.admin_order_field = "modified"
     obj_modified.allow_tags = True
     obj_modified.short_description = "Modified"
@@ -803,19 +818,19 @@ class TestAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, admin.ModelAdmin):
 
 def unit_name(obj):
     return obj.unit.name
-unit_name.admin_order_field = "unit__name"
+unit_name.admin_order_field = "unit__name"  # noqa: E305
 unit_name.short_description = "Unit"
 
 
 def freq_name(obj):
     return obj.frequency.name if obj.frequency else "Ad Hoc"
-freq_name.admin_order_field = "frequency__name"
+freq_name.admin_order_field = "frequency__name"  # noqa: E305
 freq_name.short_description = "Frequency"
 
 
 def assigned_to_name(obj):
     return obj.assigned_to.name
-assigned_to_name.admin_order_field = "assigned_to__name"
+assigned_to_name.admin_order_field = "assigned_to__name"  # noqa: E305
 assigned_to_name.short_description = "Assigned To"
 
 
@@ -977,8 +992,8 @@ class FrequencyAdmin(admin.ModelAdmin):
 
     list_display = (
         "name",
+        "recurrences",
         "nominal_interval",
-        "due_interval",
         "overdue_interval",
     )
 
@@ -1018,7 +1033,7 @@ class StatusAdmin(admin.ModelAdmin):
 
 def utc_unit_name(obj):
     return obj.unit_test_collection.unit.name
-utc_unit_name.admin_order_field = "unit_test_collection__unit__name"
+utc_unit_name.admin_order_field = "unit_test_collection__unit__name"  # noqa: E305
 utc_unit_name.short_description = "Unit"
 
 
@@ -1048,7 +1063,15 @@ class TestListInstanceAdmin(SaveInlineAttachmentUserMixin, admin.ModelAdmin):
 
 class TestInstanceAdmin(SaveInlineAttachmentUserMixin, admin.ModelAdmin):
 
-    list_display = ["__str__", "test_list_instance", "test_name", "unit_name", "test_list_name", "work_completed", "created_by"]
+    list_display = [
+        "__str__",
+        "test_list_instance",
+        "test_name",
+        "unit_name",
+        "test_list_name",
+        "work_completed",
+        "created_by",
+    ]
     inlines = [get_attachment_inline("testinstance")]
 
     def get_queryset(self, request):
@@ -1091,7 +1114,8 @@ class ToleranceForm(forms.ModelForm):
             params = forms.model_to_dict(self.instance)
             params.pop("id")
             if models.Tolerance.objects.filter(**params).count() > 0:
-                self._update_errors({forms.models.NON_FIELD_ERRORS: ["Duplicate Tolerance. A Tolerance with these values already exists"]})
+                errs = ["Duplicate Tolerance. A Tolerance with these values already exists"]
+                self._update_errors({forms.models.NON_FIELD_ERRORS: errs})
 
 
 class ToleranceAdmin(BasicSaveUserAdmin):

@@ -1,14 +1,15 @@
 from urllib.parse import urlencode
 
+from django import forms
 from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
 from django.utils.translation import ugettext as _
-from django.views.generic import ListView, FormView
-from django import forms
+from django.views.generic import FormView, ListView
+
+from qatrack.units.models import Unit
 
 from .. import models
-from qatrack.units.models import Unit
 
 
 class PaperBackupRequestForm(forms.Form):
@@ -60,7 +61,7 @@ class PaperFormRequest(FormView):
         if self.request.method == "GET":
             return {
                 "units": Unit.objects.values_list("pk", flat=True),
-                "frequencies": models.Frequency.objects.filter(due_interval__lte=7).values_list("pk", flat=True),
+                "frequencies": models.Frequency.objects.filter(nominal_interval__lte=7).values_list("pk", flat=True),
                 "test_categories": models.Category.objects.values_list("pk", flat=True),
                 "assigned_to": Group.objects.values_list("pk", flat=True),
                 "include_refs": True,

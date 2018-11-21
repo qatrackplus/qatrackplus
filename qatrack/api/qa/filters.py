@@ -14,7 +14,6 @@ class FrequencyFilter(filters.FilterSet):
             "name": "__all__",
             "slug": "__all__",
             "nominal_interval": "__all__",
-            "due_interval": "__all__",
             "overdue_interval": "__all__",
         }
 

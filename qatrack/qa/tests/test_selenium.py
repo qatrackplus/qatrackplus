@@ -442,11 +442,14 @@ class SeleniumTests(TestCase, StaticLiveServerTestCase):
         self.driver.find_element_by_link_text('ADD FREQUENCY').click()
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
         self.driver.find_element_by_id('id_name').send_keys(objects['Frequency']['name'])
-        self.driver.find_element_by_id('id_nominal_interval').send_keys(objects['Frequency']['nominal_interval'])
-        self.driver.find_element_by_id('id_due_interval').send_keys(objects['Frequency']['due_interval'])
+        self.driver.find_element_by_class_name("recurrence-label").click()
+        self.driver.find_elements_by_css_selector(".weekly td")[0].click()
+        self.driver.find_elements_by_css_selector(".weekly td")[2].click()
+        self.driver.find_elements_by_css_selector(".weekly td")[4].click()
         self.driver.find_element_by_id('id_overdue_interval').send_keys(objects['Frequency']['overdue_interval'])
         self.driver.find_element_by_name('_save').click()
         self.wait_for_success()
+        assert models.Frequency.objects.get(name=objects['Frequency']['name']).nominal_interval < 3
 
     def test_admin_unittestcollection(self):
 

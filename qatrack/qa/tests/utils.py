@@ -1,10 +1,11 @@
-from django.contrib.auth.models import User, Group, Permission
-from django.contrib.contenttypes.models import ContentType
 from django.apps import apps
+from django.contrib.auth.models import Group, Permission, User
+from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
+import recurrence
 
 from qatrack.qa import models
-from qatrack.units.models import Unit, UnitType, Modality, PHOTON, Vendor
+from qatrack.units.models import PHOTON, Modality, Unit, UnitType, Vendor
 
 
 def get_next_id(obj):
@@ -26,9 +27,13 @@ def create_user(is_staff=True, is_superuser=True, uname="user", pwd="password", 
         u = User.objects.get(username=uname)
     except:
         if is_superuser:
-            u = User.objects.create_superuser(uname, "super@qatrackplus.com", pwd, is_staff=is_staff, is_active=is_active)
+            u = User.objects.create_superuser(
+                uname, "super@qatrackplus.com", pwd, is_staff=is_staff, is_active=is_active
+            )
         else:
-            u = User.objects.create_user(uname, "user@qatrackplus.com", password=pwd, is_staff=is_staff, is_active=is_active)
+            u = User.objects.create_user(
+                uname, "user@qatrackplus.com", password=pwd, is_staff=is_staff, is_active=is_active
+            )
     finally:
         u.user_permissions.add(Permission.objects.get(codename="add_testlistinstance"))
     return u
@@ -88,7 +93,9 @@ def create_test_list(name=None):
     return test_list
 
 
-def create_test_list_instance(unit_test_collection=None, work_completed=None, created_by=None, test_list=None, day=0, in_progress=False):
+def create_test_list_instance(
+    unit_test_collection=None, work_completed=None, created_by=None, test_list=None, day=0, in_progress=False
+):
     if unit_test_collection is None:
         unit_test_collection = create_unit_test_collection()
     if test_list is None:
@@ -151,7 +158,9 @@ def create_test_list_membership(test_list=None, test=None, order=0):
     return tlm
 
 
-def create_test_instance(test_list_instance=None, unit_test_info=None, value=1., created_by=None, work_completed=None, status=None):
+def create_test_instance(
+    test_list_instance=None, unit_test_info=None, value=1., created_by=None, work_completed=None, status=None
+):
 
     if test_list_instance is None:
         test_list_instance = create_test_list_instance()
@@ -284,13 +293,18 @@ def create_group(name=None):
     return g
 
 
-def create_frequency(name=None, slug=None, nom=1, due=1, overdue=1):
+def create_frequency(name=None, slug=None, due=1, overdue=1):
     if name is None or slug is None:
         name = 'frequency_%04d' % get_next_id(models.Frequency.objects.order_by('id').last())
         slug = name
+
+    rule = recurrence.Rule(freq=recurrence.DAILY, interval=due)
+
     f = models.Frequency(
-        name=name, slug=slug,
-        nominal_interval=nom, due_interval=due, overdue_interval=overdue
+        name=name,
+        slug=slug,
+        recurrences=recurrence.Recurrence(rrules=[rule], dtstart=timezone.datetime(2012, 1, 1, tzinfo=timezone.utc)),
+        overdue_interval=overdue
     )
     f.save()
     return f
@@ -319,7 +333,9 @@ def create_unit_test_info(unit=None, test=None, assigned_to=None, ref=None, tol=
     return uti
 
 
-def create_unit_test_collection(unit=None, frequency=None, test_collection=None, assigned_to=None, null_frequency=False, active=True):
+def create_unit_test_collection(
+    unit=None, frequency=None, test_collection=None, assigned_to=None, null_frequency=False, active=True
+):
 
     if unit is None:
         unit = create_unit()

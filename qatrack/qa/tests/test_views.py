@@ -1593,7 +1593,7 @@ class TestDueDateOverView(TestCase):
         )
         self.frequencies = {}
         for t, s, nom, due, overdue in intervals:
-            f = utils.create_frequency(name=t, slug=s, nom=nom, due=due, overdue=overdue)
+            f = utils.create_frequency(name=t, slug=s, due=due, overdue=overdue)
             self.frequencies[s] = f
 
         self.utc = utils.create_unit_test_collection(test_collection=self.test_list)
@@ -1680,7 +1680,7 @@ class TestPaperFormRequest(TestCase):
         )
         self.frequencies = {}
         for t, s, nom, due, overdue in intervals:
-            f = utils.create_frequency(name=t, slug=s, nom=nom, due=due, overdue=overdue)
+            f = utils.create_frequency(name=t, slug=s, due=due, overdue=overdue)
             self.frequencies[s] = f
 
         self.utc = utils.create_unit_test_collection(test_collection=self.test_list)
@@ -1704,7 +1704,7 @@ class TestPaperFormRequest(TestCase):
     def test_post(self):
         data = {
             "units": models.Unit.objects.values_list("pk", flat=True),
-            "frequencies": models.Frequency.objects.filter(due_interval__lte=7).values_list("pk", flat=True),
+            "frequencies": models.Frequency.objects.filter(nominal_interval__lte=7).values_list("pk", flat=True),
             "test_categories": models.Category.objects.values_list("pk", flat=True),
             "assigned_to": Group.objects.values_list("pk", flat=True),
             "include_refs": True,
@@ -1735,7 +1735,7 @@ class TestPaperForms(TestCase):
         )
         self.frequencies = {}
         for t, s, nom, due, overdue in intervals:
-            f = utils.create_frequency(name=t, slug=s, nom=nom, due=due, overdue=overdue)
+            f = utils.create_frequency(name=t, slug=s, due=due, overdue=overdue)
             self.frequencies[s] = f
 
         self.utc = utils.create_unit_test_collection(test_collection=self.test_list)
@@ -1757,7 +1757,7 @@ class TestPaperForms(TestCase):
         q = urlencode(
             {
                 "unit": models.Unit.objects.values_list("pk", flat=True),
-                "frequency": models.Frequency.objects.filter(due_interval__lte=7).values_list("pk", flat=True),
+                "frequency": models.Frequency.objects.filter(nominal_interval__lte=7).values_list("pk", flat=True),
                 "category": models.Category.objects.values_list("pk", flat=True),
                 "assigned_to": Group.objects.values_list("pk", flat=True),
                 "include_refs": True,
@@ -1826,7 +1826,8 @@ class TestUnitAvailableTime(TestCase):
             'hours_saturday': '08:00',
             'hours_sunday': '08:00',
             'day': timestamp,
-            'days[]': [timestamp]
+            'days[]': [timestamp],
+            'tz': "utc",
         }
         date = timezone.datetime.fromtimestamp(timestamp / 1000, timezone.utc).date()
         len_uat_before = len(u_models.UnitAvailableTime.objects.filter(unit_id__in=unit_ids, date_changed=date))
@@ -1863,7 +1864,8 @@ class TestUnitAvailableTimeEdit(TestCase):
             'units[]': unit_ids,
             'hours_mins': '_8:00',
             'days[]': [timestamp],
-            'name': 'uate_test'
+            'name': 'uate_test',
+            'tz': "utc",
         }
 
         date = timezone.datetime.fromtimestamp(timestamp / 1000, timezone.utc).date()
