@@ -55,3 +55,4 @@ qatrack/wsgi.py
 questions_*
 src/*.egg-info
 tmp/
+db/

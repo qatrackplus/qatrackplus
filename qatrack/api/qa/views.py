@@ -1,3 +1,5 @@
+from django.db.models import Q
+from django.http import JsonResponse
 from django.utils import timezone
 from rest_framework import status, views, viewsets
 from rest_framework.filters import OrderingFilter
@@ -174,3 +176,39 @@ class TestListCycleMembershipViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = serializers.TestListCycleMembershipSerializer
     filter_class = filters.TestListCycleMembershipFilter
     filter_backends = (backends.DjangoFilterBackend, OrderingFilter,)
+
+
+def test_searcher(request):
+    q = request.GET.get('q')
+    tests = models.Test.objects.filter(Q(id__icontains=q) | Q(name__icontains=q)).values('id', 'name')[0:50]
+    return JsonResponse({'items': list(tests)})
+
+
+def test_list_searcher(request):
+    q = request.GET.get('q')
+    testlists = models.TestList.objects.filter(Q(id__icontains=q) | Q(name__icontains=q)).values('id', 'name')[0:50]
+    return JsonResponse({'items': list(testlists)})
+
+
+def test_list_cycle_searcher(request):
+    q = request.GET.get('q')
+    testlistcycles = models.TestListCycle.objects.filter(
+        Q(id__icontains=q) | Q(name__icontains=q),
+    ).values('id', 'name')[0:50]
+    return JsonResponse({'items': list(testlistcycles)})
+
+
+def test_instance_searcher(request):
+    q = request.GET.get('q')
+    testinstance = models.TestInstance.objects.filter(
+        Q(id__icontains=q) | Q(unit_test_info__test__name__icontains=q),
+    ).values('id', 'unit_test_info__test__name')[0:50]
+    return JsonResponse({'items': list(testinstance), 'name': 'unit_test_info__test__name'})
+
+
+def test_list_instance_searcher(request):
+    q = request.GET.get('q')
+    testlistinstance = models.TestListInstance.objects.filter(
+        Q(id__icontains=q) | Q(test_list__name__icontains=q),
+    ).values('id', 'test_list__name')[0:50]
+    return JsonResponse({'items': list(testlistinstance), 'name': 'test_list__name'})

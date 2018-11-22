@@ -1,31 +1,8 @@
-from django.conf.urls import include, url
-from tastypie.api import Api
+from django.conf.urls import url
 
 import qatrack.qa.views.admin
-from qatrack.qa import api
 
 from .views import admin, backup, base, charts, perform, review
-
-v1_api = Api(api_name="v1")
-resources = [
-    api.TestListResource(),
-    api.TestResource(),
-    api.TestInstanceResource(),
-    api.TestListInstanceResource(),
-    api.ValueResource(),
-    api.FrequencyResource(),
-    api.StatusResource(),
-    api.ReferenceResource(),
-    api.CategoryResource(),
-    api.ToleranceResource(),
-    api.UnitResource(),
-    api.ModalityResource(),
-    api.UnitTypeResource(),
-    api.GroupResource(),
-]
-for resource in resources:
-    v1_api.register(resource)
-
 
 urlpatterns = [
     # CUSTOM ADMIN PAGES
@@ -49,9 +26,6 @@ urlpatterns = [
 
     # view for uploads via ajax
     url(r"^upload/$", perform.Upload.as_view(), name="upload"),
-
-    # api urls
-    url(r"^api/", include(v1_api.urls)),
     url(r"^charts/$", charts.ChartView.as_view(), name="charts"),
     url(r"^charts/export/csv/$", charts.ExportCSVView.as_view(), name="charts_export_csv"),
     url(r"^charts/data/$", charts.BasicChartData.as_view(), name="chart_data"),
@@ -123,10 +97,4 @@ urlpatterns = [
     url(r"^frequency/(?P<frequency>[/\w-]+?)/$", perform.FrequencyList.as_view(), name="qa_by_frequency"),
     url(r"^backup/$", backup.PaperFormRequest.as_view(), name="qa_paper_forms_request"),
     url(r"^backup/paper/$", backup.PaperForms.as_view(), name="qa_paper_forms"),
-    url(r"^searcher/test/$", api.test_searcher, name='test_searcher'),
-    url(r"^searcher/test_list/$", api.test_list_searcher, name='test_list_searcher'),
-    url(r"^searcher/test_list_cycle/$", api.test_list_cycle_searcher, name='test_list_cycle_searcher'),
-    url(r"^searcher/test_instance/$", api.test_instance_searcher, name='test_instance_searcher'),
-    url(r"^searcher/test_list_instance/$", api.test_list_instance_searcher, name='test_list_instance_searcher'),
-    url(r"^searcher/service_event/$", api.service_event_searcher, name='service_event_searcher'),
 ]

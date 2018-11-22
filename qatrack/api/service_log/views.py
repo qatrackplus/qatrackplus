@@ -1,3 +1,5 @@
+from django.db.models import Q
+from django.http import JsonResponse
 from rest_framework import viewsets
 from rest_framework.filters import OrderingFilter
 from rest_framework_filters import backends
@@ -74,3 +76,16 @@ class GroupLinkerInstanceViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = serializers.GroupLinkerInstanceSerializer
     filter_class = filters.GroupLinkerInstanceFilter
     filter_backends = (backends.DjangoFilterBackend, OrderingFilter,)
+
+
+def service_event_searcher(request):
+    q = request.GET.get('q')
+    serviceevent = models.ServiceEvent.objects.filter(Q(id__icontains=q))[0:50]
+    return JsonResponse({
+        'items': [{
+            'id': se.id,
+            'display': '{} - Created on {}'.format(se.service_status.name, se.datetime_service.strftime('%b %d, %Y'))
+        } for se in serviceevent],
+        'name':
+            'display'
+    })
