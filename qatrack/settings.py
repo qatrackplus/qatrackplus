@@ -224,6 +224,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'listable',
     'genericdropdown',
+    'recurrence',
     # 'crispy_forms',
     'widget_tweaks',
     'dynamic_raw_id',

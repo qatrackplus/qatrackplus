@@ -204,7 +204,7 @@ class UTCList(BaseListableView):
 
     order_fields = {
         "actions": False,
-        "frequency__name": "frequency__due_interval",
+        "frequency__name": "frequency__nominal_interval",
         "unit__name": "unit__number",
         "last_instance_pass_fail": False,
         "last_instance_review_status": False,
@@ -392,7 +392,7 @@ class TestListInstances(BaseListableView):
     order_fields = {
         "actions": False,
         "unit_test_collection__unit__name": "unit_test_collection__unit__number",
-        "unit_test_collection__frequency__name": "unit_test_collection__frequency__due_interval",
+        "unit_test_collection__frequency__name": "unit_test_collection__frequency__nominal_interval",
         "review_status": False,
         "pass_fail": False,
     }

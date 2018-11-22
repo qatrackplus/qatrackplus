@@ -17,6 +17,7 @@ from django.db.models import Count, Q
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django_comments.models import Comment
+from recurrence.fields import RecurrenceField
 
 from qatrack.qa import utils
 from qatrack.qa.testpack import TestPackMixin
@@ -266,12 +267,21 @@ class Frequency(models.Model):
         help_text=_("Unique identifier made of lowercase characters and underscores for this frequency")
     )
 
-    nominal_interval = models.PositiveIntegerField(help_text=_("Nominal number of days between test completions"))
-    due_interval = models.PositiveIntegerField(
-        help_text=_("How many days since last completed until a test with this frequency is shown as due")
+    recurrences = RecurrenceField(
+        verbose_name=_("Recurrences"),
+        help_text=_("Define the recurrence rules for this frequency"),
+        default="",
     )
+
+    nominal_interval = models.PositiveIntegerField(
+        editable=False,
+        help_text=_("Nominal number of days between test completions (for internal ordering purposes)")
+    )
+
     overdue_interval = models.PositiveIntegerField(
-        help_text=_("How many days since last completed until a test with this frequency is shown as over due")
+        help_text=_(
+            "How many days after the due date should a test with this frequency be shown as overdue. (Use 0 if it should show as overdue the day after it is due)"
+        )
     )
 
     objects = FrequencyManager()
@@ -283,15 +293,9 @@ class Frequency(models.Model):
             ("can_choose_frequency", "Choose QA by Frequency"),
         )
 
-    def nominal_delta(self):
-        """return datetime delta for nominal interval"""
-        if self.nominal_interval is not None:
-            return timezone.timedelta(days=self.nominal_interval)
-
-    def due_delta(self):
-        """return datetime delta for nominal interval"""
-        if self.due_interval is not None:
-            return timezone.timedelta(days=self.due_interval)
+    def save(self, *args, **kwargs):
+        self.nominal_interval = utils.calc_nominal_interval(self)
+        super().save(*args, **kwargs)
 
     def natural_key(self):
         return (self.slug,)
@@ -1408,7 +1412,7 @@ class UnitTestCollection(models.Model):
                 # Done before but no valid lists
                 return timezone.now()
             elif last_valid is not None and last_valid.work_completed:
-                return last_valid.work_completed + self.frequency.due_delta()
+                return utils.calc_due_date(last_valid.work_completed, self.frequency)
 
         # return existing due date (could be None)
         return self.due_date
@@ -1436,7 +1440,7 @@ class UnitTestCollection(models.Model):
             return NOT_DUE
 
         if self.frequency is not None:
-            overdue = due + timezone.timedelta(days=self.frequency.overdue_interval - self.frequency.due_interval)
+            overdue = due + timezone.timedelta(days=self.frequency.overdue_interval)
         else:
             overdue = due + timezone.timedelta(days=1)
 

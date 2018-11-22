@@ -16,6 +16,7 @@ django-dynamic-raw-id==2.4
 django-extensions==1.7.4
 django-filter==1.1.0
 django-form-utils==1.0.3
+django-recurrence==1.8.0
 django-registration==2.1.2
 djangorestframework==3.7.7
 djangorestframework-filters==0.10.2post0
