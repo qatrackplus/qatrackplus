@@ -178,7 +178,8 @@ TEMPLATES = [
         ],
         'APP_DIRS': True,
         'OPTIONS': {
-            'debug': False,
+            'debug':
+                False,
             'context_processors': [
                 # Insert your TEMPLATE_CONTEXT_PROCESSORS here or use this
                 # list if you haven't customized them:
@@ -190,7 +191,6 @@ TEMPLATES = [
                 'django.template.context_processors.static',
                 'django.template.context_processors.tz',
                 'django.contrib.messages.context_processors.messages',
-
                 'qatrack.context_processors.site',
             ],
         },
@@ -218,13 +218,13 @@ INSTALLED_APPS = [
     'django_extensions',
     'django_comments',
     'formtools',
-    'tastypie',
     'django_filters',
     'rest_framework',
     'rest_framework.authtoken',
     'listable',
     'genericdropdown',
     'recurrence',
+    'report_builder',
     # 'crispy_forms',
     'widget_tweaks',
     'dynamic_raw_id',
