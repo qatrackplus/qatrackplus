@@ -224,7 +224,6 @@ INSTALLED_APPS = [
     'listable',
     'genericdropdown',
     'recurrence',
-    'report_builder',
     # 'crispy_forms',
     'widget_tweaks',
     'dynamic_raw_id',
