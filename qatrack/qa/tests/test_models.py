@@ -43,7 +43,7 @@ class TestFrequency(TestCase):
         )
         for t, s, nom, due, overdue in intervals:
             f = utils.create_frequency(name=t, slug=s, due=due, overdue=overdue)
-            assert 1 <= f.nominal_interval <= nom
+            assert 1 <= round(f.nominal_interval) <= round(nom)
 
 
 class TestStatus(TestCase):

@@ -290,7 +290,7 @@ class ImportTestPack(FormView):
 
             messages.success(self.request, msg)
         except:
-            msg = "Sorry, but an error occured when trying to import your TestPack. Please file a bug report."
+            msg = "Sorry, but an error occurred when trying to import your TestPack. Please file a bug report."
             messages.error(self.request, msg)
 
         return super(ImportTestPack, self).form_valid(form)

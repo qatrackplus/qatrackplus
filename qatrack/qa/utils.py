@@ -1,3 +1,5 @@
+import calendar
+import datetime
 import io
 import json
 import math
@@ -222,9 +224,35 @@ def calc_due_date(completed, frequency):
 
 def calc_nominal_interval(frequency):
     """Calculate avg number of days between tests for ordering purposes"""
-    occurences = frequency.recurrences.occurrences(
-        dtstart=timezone.datetime(2012, 1, 1, tzinfo=timezone.utc),
-        dtend=timezone.datetime(2013, 1, 1, tzinfo=timezone.utc),
+    tz = timezone.get_current_timezone()
+    occurrences = frequency.recurrences.occurrences(
+        dtstart=tz.localize(timezone.datetime(2012, 1, 1)),
+        dtend=end_of_day(tz.localize(timezone.datetime(2012, 12, 31))),
     )
-    deltas = [(t2 - t1).total_seconds() / (60 * 60 * 24) for t1, t2 in zip(occurences, occurences[1:])]
+    deltas = [(t2 - t1).total_seconds() / (60 * 60 * 24) for t1, t2 in zip(occurrences, occurrences[1:])]
     return sum(deltas) / len(deltas)
+
+
+def date_to_datetime(date):
+    """If passed a date object will return an equivalent datetime at 00:00 in the current timezone"""
+    if isinstance(date, datetime.date):
+        return timezone.get_current_timezone().localize(timezone.datetime(date.year, date.month, date.day))
+    return date
+
+
+def start_of_day(dt):
+    """convert datetime to start of day in current timezone"""
+    return dt.replace(hour=0, minute=0, second=0, microsecond=0)
+
+
+def end_of_day(dt):
+    """convert datetime to end of day in current timezone"""
+    return dt.replace(hour=23, minute=59, second=59, microsecond=999999)
+
+
+def month_start_and_end(year, month):
+    """Return start, end tuple of datetimes representing the start and end of input year/month"""
+    tz = timezone.get_current_timezone()
+    start = tz.localize(timezone.datetime(year, month, 1))
+    end = tz.localize(timezone.datetime(year, month, calendar.monthrange(year, month)[1]))
+    return start, end

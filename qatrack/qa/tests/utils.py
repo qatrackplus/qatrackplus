@@ -303,7 +303,10 @@ def create_frequency(name=None, slug=None, due=1, overdue=1):
     f = models.Frequency(
         name=name,
         slug=slug,
-        recurrences=recurrence.Recurrence(rrules=[rule], dtstart=timezone.datetime(2012, 1, 1, tzinfo=timezone.utc)),
+        recurrences=recurrence.Recurrence(
+            rrules=[rule],
+            dtstart=timezone.get_current_timezone().localize(timezone.datetime(2012, 1, 1)),
+        ),
         overdue_interval=overdue
     )
     f.save()

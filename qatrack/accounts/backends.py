@@ -40,7 +40,7 @@ class ActiveDirectoryGroupMembershipSSLBackend:
 
         except Exception as e:
             if debug:
-                print("\tException occured ", file=debug)
+                print("\tException occurred ", file=debug)
                 print(e, file=debug)
         if debug:
             debug.close()
