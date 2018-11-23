@@ -17,7 +17,6 @@ from django.utils import timezone
 from django.utils.html import escape
 from django.utils.text import Truncator
 from django.utils.translation import ugettext as _
-
 from dynamic_raw_id.admin import DynamicRawIDMixin
 from dynamic_raw_id.widgets import DynamicRawIDWidget
 
@@ -402,11 +401,11 @@ class TestListAdminForm(forms.ModelForm):
         return slug
 
     def clean(self):
-        retest = re.compile("testlistmembership_set-\d+-test")
+        retest = re.compile("^testlistmembership_set-\d+-test$")
         test_ids = [x[1] for x in self.data.items() if retest.findall(x[0]) and x[1]]
         slugs = list(models.Test.objects.filter(id__in=test_ids).values_list("slug", flat=True))
 
-        rechild = re.compile("children-\d+-child")
+        rechild = re.compile("^children-\d+-child$")
         child_ids = [x[1] for x in self.data.items() if rechild.findall(x[0]) and x[1]]
         for tl in models.TestList.objects.filter(id__in=child_ids):
             slugs.extend(tl.all_tests().values_list("slug", flat=True))
