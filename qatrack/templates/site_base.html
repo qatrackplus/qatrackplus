@@ -111,10 +111,14 @@
         </script>
         {% block extra_js %}{% endblock extra_js %}
 
+        {# some packages use extra_head some use head_extra :p #}
+        {% block extra_head %}{% endblock extra_head %}
+        {% block head_extra %}{% endblock head_extra %}
     </head>
 
     <body class="skin-black-dark fixed {% block body_class %}layout-top-nav{% endblock body_class %} preload">
         <div class="wrapper">
+          {% block nav %}
 
             <header class="main-header">
 
@@ -526,6 +530,7 @@
 
                 </nav>
             </header>
+            {% endblock nav %}
 
             {% block main_sidebar %}
             {% endblock main_sidebar %}
@@ -539,8 +544,10 @@
                     </div>
                 {% endfor %}
                 </div>
-                <div class="content">
+                <div class="{% block content_class %}content{% endblock content_class %}">
                     {% block body %}
+                    {% endblock %}
+                    {% block content %}
                     {% endblock %}
                 </div>
 

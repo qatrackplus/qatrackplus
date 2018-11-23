@@ -7,14 +7,22 @@ require.config({
         return 'v=' + siteConfig.VERSION;
     }()),
     baseUrl: siteConfig.STATIC_URL,
+    packages: [{
+        name: "codemirror",
+        location: siteConfig.STATIC_URL + "codemirror",
+        main: "lib/codemirror"
+    }],
     paths: {
+
         // Third party:
         admin_lte: siteConfig.STATIC_URL + 'adminlte/js/admin-lte',
         admin_lte_config: siteConfig.STATIC_URL + 'adminlte/js/admin-lte-config',
         autosize: siteConfig.STATIC_URL + 'autosize/js/autosize.min',
         bootstrap: siteConfig.STATIC_URL + 'bootstrap/js/bootstrap.min',
         cheekycheck: siteConfig.STATIC_URL + 'cheekycheck/js/cheekycheck',
+        codemirror: siteConfig.STATIC_URL + 'codemirror/lib/codemirror',
         d3: siteConfig.STATIC_URL + 'd3/js/d3',
+        explorer: siteConfig.STATIC_URL + 'explorer/explorer',
         saveSvgAsPng: siteConfig.STATIC_URL + 'd3/js/saveSvgAsPng',
         canvg: siteConfig.STATIC_URL + 'd3/js/canvg',
         rgbcolor: siteConfig.STATIC_URL + 'd3/js/rgbcolor.min',
@@ -26,18 +34,23 @@ require.config({
         'datatables.sort': siteConfig.STATIC_URL + 'listable/js/jquery.dataTables.sort',
         datepicker: siteConfig.STATIC_URL + 'datepicker/js/bootstrap-datepicker.min',
         daterangepicker: siteConfig.STATIC_URL + 'daterangepicker/js/daterangepicker',
+        dropzone: siteConfig.STATIC_URL + 'dropzone/js/dropzone-amd-module',
         felter: siteConfig.STATIC_URL + 'felter/js/felter',
         flatpickr: siteConfig.STATIC_URL + 'flatpickr/js/flatpickr.min',
-        dropzone: siteConfig.STATIC_URL + 'dropzone/js/dropzone-amd-module',
+        floatthead: siteConfig.STATIC_URL + 'floatthead/js/jquery.floatThead.min',
         icheck: siteConfig.STATIC_URL + 'icheck/js/icheck.min',
         inputmask: siteConfig.STATIC_URL + 'inputmask/js/jquery.inputmask.bundle.min',
         jquery: siteConfig.STATIC_URL + 'jquery/js/jquery.min',
         'jquery-ui': siteConfig.STATIC_URL + 'jqueryui/js/jquery-ui.min',
+        'jquery-ui-sql': siteConfig.STATIC_URL + 'explorer/jquery-ui.min',
+        'jquery-cookie': siteConfig.STATIC_URL + 'jquerycookie/js/jquery.cookie.min',
         json2: siteConfig.STATIC_URL + 'json2/js/json2',
+        list: siteConfig.STATIC_URL + 'list/js/list.min',
         listable: siteConfig.STATIC_URL + 'listable/js/listable',
         lodash: siteConfig.STATIC_URL + 'lodash/js/lodash',
         moment: siteConfig.STATIC_URL + 'moment/js/moment.min',
         moment_timezone: siteConfig.STATIC_URL + 'moment/js/moment-timezone-with-data.min',
+        pivottable: siteConfig.STATIC_URL + 'pivottable/',
         multiselect: siteConfig.STATIC_URL + 'multiselect/js/bootstrap.multiselect',
         select2: siteConfig.STATIC_URL + 'select2/js/select2.min',
         slimscroll: siteConfig.STATIC_URL + 'slimscroll/js/jquery.slimscroll.min',
@@ -83,6 +96,9 @@ require.config({
         bootstrap: {
             deps: ['jquery']
         },
+        codemirror: {
+            exports: 'CodeMirror'
+        },
         datatables: {
             deps: ['jquery'],
             exports: 'dataTable'
@@ -106,8 +122,24 @@ require.config({
             exports: 'DateRangePicker',
             deps: ['jquery', 'moment']
         },
+        explorer: {
+            deps: [
+                'jquery',
+                'jquery-ui-sql',
+                'bootstrap',
+                'jquery-cookie',
+                'lodash',
+                'list',
+                'codemirror',
+                'floatthead',
+                'pivottable/pivot.min'
+            ]
+        },
         flatpickr: {
             exports: 'Flatpickr'
+        },
+        floatthead: {
+            deps: ['jquery']
         },
         icheck: {
             deps: ['jquery']
@@ -118,6 +150,9 @@ require.config({
         jquery: {
             exports: '$'
         },
+        "jquery-cookie": {
+            deps: ['jquery']
+        },
         listable: {
             deps: ['jquery', 'datatables', 'datatables.columnFilter', 'datatables.searchPlugins', 'datatables.sort', 'datatables.bootstrap', 'multiselect', 'datepicker', 'daterangepicker']
         },
@@ -127,6 +162,10 @@ require.config({
         multiselect: {
             deps: ['jquery', 'bootstrap']
         },
+        'pivottable/pivot': ['jquery', 'jqueryui'],
+/*        'pivottable/d3_renderers': ['pivottable/pivot', 'd3'],
+        'pivottable/c3_renderers': ['pivottable/pivot', 'c3'],
+        */
         saveSvgAsPng: {
             deps: ['canvg'],
             exports: 'saveSvgAsPng'

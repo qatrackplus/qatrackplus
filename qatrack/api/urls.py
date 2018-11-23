@@ -10,7 +10,7 @@ schema_view = get_schema_view(title='QATrack+ API')
 urlpatterns = [
     url(r'^$', views.all_api_roots, name="api-root"),
     url(r'^get-token/', auth_views.obtain_auth_token, name="get-token"),
-    url(r'^authorize/', include('rest_framework.urls', namespace='rest_framework')),
+    #    url(r'^authorize/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^attachments/', include('qatrack.api.attachments.urls')),
     url(r'^auth/', include('qatrack.api.auth.urls')),
     url(r'^contenttypes/', include('qatrack.api.contenttypes.urls')),

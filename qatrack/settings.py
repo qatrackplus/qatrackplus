@@ -9,7 +9,6 @@ matplotlib.use("Agg")
 
 # -----------------------------------------------------------------------------
 DEBUG = False
-TEMPLATE_DBG = False
 
 # Who to email when server errors occur
 ADMINS = (
@@ -224,8 +223,6 @@ INSTALLED_APPS = [
     'listable',
     'genericdropdown',
     'recurrence',
-    'report_builder',
-    # 'crispy_forms',
     'widget_tweaks',
     'dynamic_raw_id',
     'qatrack.cache',
@@ -259,6 +256,8 @@ REST_FRAMEWORK = {
         'rest_framework_filters.backends.DjangoFilterBackend',
     ),
 }
+
+
 
 
 # -----------------------------------------------------------------------------
@@ -528,6 +527,7 @@ DEFAULT_COLOURS = [
 ]
 DEFAULT_TEST_STATUS_COLOUR = 'rgba(243,156,18,1)'
 
+USE_SQL_REPORTS = False
 USE_SERVICE_LOG = True
 USE_PARTS = True
 USE_ISSUES = False  # internal development issue tracker
@@ -544,6 +544,15 @@ DEFAULT_AVAILABLE_TIMES = {
 
 TESTPACK_TIMEOUT = 30
 
+
+# SQL Explorer Settings
+
+EXPLORER_CONNECTIONS = {'Default': 'readonly'}
+EXPLORER_DEFAULT_CONNECTION = 'readonly'
+EXPLORER_SCHEMA_INCLUDE_TABLE_PREFIXES = ['auth_', 'qa', 'service_log', 'units', 'parts']
+EXPLORER_SCHEMA_EXCLUDE_TABLE_PREFIXES = ['authtoken']
+
+
 if os.path.exists('/root/.is_inside_docker'):
     from .docker_settings import *  # NOQA
 
@@ -551,12 +560,12 @@ if os.path.exists('/root/.is_inside_docker'):
 # local_settings contains anything that should be overridden
 # based on site specific requirements (e.g. deployment, development etc)
 
-TEMPLATES[0]['OPTIONS']['debug'] = TEMPLATE_DBG
-
 try:
     from .local_settings import *  # NOQA
 except ImportError:
     pass
+
+TEMPLATES[0]['OPTIONS']['debug'] = DEBUG
 
 
 # Parts must be used with service log
@@ -585,3 +594,9 @@ if any(['test' in v for v in sys.argv]):
 if DEBUG:
     INSTALLED_APPS.append('debug_toolbar')
     MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
+
+if USE_SQL_REPORTS:
+    INSTALLED_APPS += [
+        'explorer',
+        'xlsxwriter',
+    ]

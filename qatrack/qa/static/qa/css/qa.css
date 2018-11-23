@@ -494,7 +494,7 @@ row.procedure-open > td:nth-child(1) {
     border-left: 3px solid #00ff00;
 }
 td.qa-category.bar-container {
-    height: inherit;
+/*    height: inherit;*/ /* this causes cateogires to be hidden in FF */
 }
 td.qa-category .error-bar,
 td.qa-category .procedure-bar,

@@ -2,11 +2,15 @@ from django.conf import settings
 from django.conf.urls import include, url
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.contrib.staticfiles.templatetags.staticfiles import static as static_url
+from django.contrib.staticfiles.templatetags.staticfiles import \
+    static as static_url
 from django.views.generic.base import RedirectView, TemplateView
 
+from model_report import report
 
 admin.autodiscover()
+
+report.autodiscover()
 
 
 favicon_view = RedirectView.as_view(url=static_url("qatrack_core/img/favicon.ico"), permanent=True)
@@ -42,6 +46,11 @@ if settings.USE_PARTS:
 
 if settings.USE_ISSUES:
     urlpatterns += [url(r'^issues/', include('qatrack.issue_tracker.urls'))]
+
+if settings.USE_SQL_REPORTS:
+    urlpatterns += [url(r'^reports/sql/', include('explorer.urls'))]
+
+urlpatterns += [url(r'^reports/', include('model_report.urls'))]
 
 if settings.DEBUG:
     import debug_toolbar
