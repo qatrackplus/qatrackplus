@@ -2,9 +2,11 @@ import io
 import json
 
 from django.test import TestCase
+from django.utils import timezone
+import pytz
+import recurrence
 
-from qatrack.qa import models
-from qatrack.qa import testpack
+from qatrack.qa import models, testpack
 from qatrack.qa import utils as qautils
 from qatrack.qa.tests import utils
 
@@ -157,7 +159,12 @@ class TestImportExport(TestCase):
         fp = io.StringIO()
         testpack.save_testpack(pack, fp)
         fp.seek(0)
-        testpack.load_testpack(fp, test_keys=[self.t1.natural_key()], test_list_keys=[self.tl1.natural_key()], cycle_keys=[])
+        testpack.load_testpack(
+            fp,
+            test_keys=[self.t1.natural_key()],
+            test_list_keys=[self.tl1.natural_key()],
+            cycle_keys=[],
+        )
 
         assert models.TestList.objects.count() == 1
         assert models.Test.objects.count() == 1
@@ -180,7 +187,12 @@ class TestImportExport(TestCase):
         fp = io.StringIO()
         testpack.save_testpack(pack, fp)
         fp.seek(0)
-        testpack.load_testpack(fp, test_keys=[self.t1.natural_key()], test_list_keys=[self.tl1.natural_key()], cycle_keys=[])
+        testpack.load_testpack(
+            fp,
+            test_keys=[self.t1.natural_key()],
+            test_list_keys=[self.tl1.natural_key()],
+            cycle_keys=[],
+        )
 
         assert models.TestList.objects.filter(name__in=[self.tl2.name, self.tl3.name]).count() == 2
         assert models.Test.objects.filter(name__in=[self.t2.name, self.t3.name]).count() == 2
@@ -208,7 +220,7 @@ class TestImportExport(TestCase):
 
     def test_sublist(self):
         tl5 = utils.create_test_list("tl5")
-        t5 =  utils.create_test("t5")
+        t5 = utils.create_test("t5")
         utils.create_test_list_membership(tl5, t5, order=0)
         utils.create_sublist(tl5, self.tl1, order=2)
         utils.create_sublist(tl5, self.tl2, order=3)
@@ -220,3 +232,96 @@ class TestImportExport(TestCase):
         assert models.Sublist.objects.count() == 2
         assert models.TestList.objects.count() == 3
         assert models.TestList.objects.get(name="tl5")
+
+
+class TestCalcDueDate:
+
+    def create_frequency(self, name, slug, nom=1, due=1, overdue=1):
+
+        rule = recurrence.Rule(freq=recurrence.DAILY, interval=due)
+        f = models.Frequency(
+            name=name,
+            slug=slug,
+            recurrences=recurrence.Recurrence(
+                rrules=[rule], dtstart=timezone.datetime(2012, 1, 1, tzinfo=timezone.utc)
+            ),
+            overdue_interval=overdue
+        )
+        return f
+
+    def make_dt(self, dt, tz=pytz.timezone("America/Toronto")):
+        return tz.localize(dt)
+
+    @property
+    def mwf(self):
+        rule = recurrence.Rule(
+            freq=recurrence.WEEKLY,
+            byday=[recurrence.MO, recurrence.WE, recurrence.FR],
+        )
+        return models.Frequency(
+            name="MWF",
+            slug="mwf",
+            recurrences=recurrence.Recurrence(
+                rrules=[rule],
+                dtstart=timezone.datetime(2012, 1, 1, tzinfo=timezone.utc),
+            ),
+            overdue_interval=1,
+        )
+
+    def day_of_month(self, day=1):
+        rule = recurrence.Rule(freq=recurrence.MONTHLY, bymonthday=day)
+        return models.Frequency(
+            name="MWF",
+            slug="mwf",
+            recurrences=recurrence.Recurrence(
+                rrules=[rule],
+                dtstart=timezone.datetime(2012, 1, 1, tzinfo=timezone.utc),
+            ),
+            overdue_interval=1,
+        )
+
+    def test_adhoc(self):
+        assert qautils.calc_due_date(timezone.now(), None) is None
+
+    def test_daily(self):
+        daily = self.create_frequency("Daily", "daily", nom=1, due=1, overdue=1)
+        seven_am_today = self.make_dt(timezone.datetime(2018, 11, 20, 7, 0))
+        seven_am_tmrw = self.make_dt(timezone.datetime(2018, 11, 21, 7, 0))
+        assert qautils.calc_due_date(seven_am_today, daily).date() == seven_am_tmrw.date()
+
+    def test_monthly(self):
+        monthly = self.create_frequency("Monthly", "monthly", nom=28, due=28, overdue=35)
+        seven_am_today = self.make_dt(timezone.datetime(2018, 11, 20, 7, 0))
+        seven_am_4wks = self.make_dt(timezone.datetime(2018, 12, 18, 7, 0))
+        assert qautils.calc_due_date(seven_am_today, monthly).date() == seven_am_4wks.date()
+
+    def test_annual(self):
+        annual = self.create_frequency("Annual", "annual", nom=365, due=300, overdue=420)
+        seven_am_today = self.make_dt(timezone.datetime(2018, 11, 20, 7, 0))
+        seven_am_300_days = self.make_dt(timezone.datetime(2019, 9, 16, 7, 0))
+        assert qautils.calc_due_date(seven_am_today, annual).date() == seven_am_300_days.date()
+
+    def test_mwf_perf_monday(self):
+        seven_am_monday = self.make_dt(timezone.datetime(2018, 11, 19, 7, 0))
+        seven_am_wed = self.make_dt(timezone.datetime(2018, 11, 21, 7, 0))
+        assert qautils.calc_due_date(seven_am_monday, self.mwf) == seven_am_wed
+
+    def test_mwf_perf_tuesday(self):
+        seven_am_monday = self.make_dt(timezone.datetime(2018, 11, 20, 7, 0))
+        seven_am_wed = self.make_dt(timezone.datetime(2018, 11, 21, 7, 0))
+        assert qautils.calc_due_date(seven_am_monday, self.mwf) == seven_am_wed
+
+    def test_mwf_perf_sat(self):
+        seven_am_monday = self.make_dt(timezone.datetime(2018, 11, 24, 7, 0))
+        seven_am_wed = self.make_dt(timezone.datetime(2018, 11, 26, 7, 0))
+        assert qautils.calc_due_date(seven_am_monday, self.mwf) == seven_am_wed
+
+    def test_first_of_month(self):
+        today = self.make_dt(timezone.datetime(2018, 11, 20, 7, 0))
+        next_month = self.make_dt(timezone.datetime(2018, 12, 1, 7, 0))
+        assert qautils.calc_due_date(today, self.day_of_month(1)) == next_month
+
+    def test_first_of_month_performed_first_of_month(self):
+        today = self.make_dt(timezone.datetime(2018, 11, 1, 7, 0))
+        next_month = self.make_dt(timezone.datetime(2018, 12, 1, 7, 0))
+        assert qautils.calc_due_date(today, self.day_of_month(1)).date() == next_month.date()

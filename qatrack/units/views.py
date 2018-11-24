@@ -1,14 +1,12 @@
-import json
-
 from braces.views import PermissionRequiredMixin
 from django.conf import settings
-from django.contrib.auth.decorators import login_required, permission_required
-from django.contrib.auth.models import Permission, User
+from django.contrib.auth.decorators import permission_required
+from django.contrib.auth.models import Permission
 from django.db.models import ObjectDoesNotExist
 from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_protect
-from django.views.generic import CreateView, TemplateView
+from django.views.generic import TemplateView
 import pytz
 
 from qatrack.units import forms
@@ -84,7 +82,7 @@ def handle_unit_available_time(request):
                 date_changed=day,
                 hours_monday=timezone.timedelta(hours=int(hours['monday'][0]), minutes=int(hours['monday'][1])),
                 hours_tuesday=timezone.timedelta(hours=int(hours['tuesday'][0]), minutes=int(hours['tuesday'][1])),
-                hours_wednesday=timezone.timedelta(hours=int(hours['wednesday'][0]), minutes=int(hours['wednesday'][1])),
+                hours_wednesday=timezone.timedelta(hours=int(hours['wednesday'][0]), minutes=int(hours['wednesday'][1])),  # noqa: E501
                 hours_thursday=timezone.timedelta(hours=int(hours['thursday'][0]), minutes=int(hours['thursday'][1])),
                 hours_friday=timezone.timedelta(hours=int(hours['friday'][0]), minutes=int(hours['friday'][1])),
                 hours_saturday=timezone.timedelta(hours=int(hours['saturday'][0]), minutes=int(hours['saturday'][1])),
@@ -98,7 +96,6 @@ def handle_unit_available_time(request):
 @csrf_protect
 def handle_unit_available_time_edit(request):
 
-    delete = request.POST.get('delete', False) == 'true'
     units = [u_models.Unit.objects.get(id=u_id) for u_id in request.POST.getlist('units[]', [])]
     tz = request.POST.get("tz", settings.TIME_ZONE)
     tz = pytz.timezone(tz)

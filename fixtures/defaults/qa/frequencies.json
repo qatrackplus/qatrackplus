@@ -1,52 +1,90 @@
 [
 {
     "model": "qa.frequency",
+    "pk": 1,
     "fields": {
         "name": "Daily",
         "slug": "daily",
+        "recurrences": "DTSTART:20120101T051800Z\nRRULE:FREQ=DAILY",
         "nominal_interval": 1,
-        "due_interval": 1,
-        "overdue_interval": 1
+        "overdue_interval": 0
     }
 },
 {
     "model": "qa.frequency",
+    "pk": 2,
     "fields": {
         "name": "Weekly",
         "slug": "weekly",
-        "nominal_interval": 7,
-        "due_interval": 7,
-        "overdue_interval": 9
+        "recurrences": "DTSTART:20120101T051800Z\nRRULE:FREQ=DAILY;INTERVAL=7",
+        "nominal_interval": 6,
+        "overdue_interval": 2
     }
 },
 {
     "model": "qa.frequency",
+    "pk": 3,
     "fields": {
         "name": "Monthly",
         "slug": "monthly",
-        "nominal_interval": 28,
-        "due_interval": 28,
-        "overdue_interval": 35
+        "recurrences": "DTSTART:20120101T051800Z\nRRULE:FREQ=DAILY;INTERVAL=28",
+        "nominal_interval": 26,
+        "overdue_interval": 7
     }
 },
 {
     "model": "qa.frequency",
+    "pk": 4,
     "fields": {
         "name": "Semi Annual",
         "slug": "semi-annual",
-        "nominal_interval": 180,
-        "due_interval": 180,
-        "overdue_interval": 210
+        "recurrences": "DTSTART:20120101T051800Z\nRRULE:FREQ=DAILY;INTERVAL=180",
+        "nominal_interval": 122,
+        "overdue_interval": 30
     }
 },
 {
     "model": "qa.frequency",
+    "pk": 5,
     "fields": {
         "name": "Annual",
         "slug": "annual",
-        "nominal_interval": 365,
-        "due_interval": 300,
-        "overdue_interval": 420
+        "recurrences": "DTSTART:20120101T051800Z\nRRULE:FREQ=DAILY;INTERVAL=300",
+        "nominal_interval": 183,
+        "overdue_interval": 55
+    }
+},
+{
+    "model": "qa.frequency",
+    "pk": 6,
+    "fields": {
+        "name": "M-W-F",
+        "slug": "mwf",
+        "recurrences": "DTSTART:20120101T051800Z\nRRULE:FREQ=WEEKLY;BYDAY=MO,WE,FR\nRDATE:20181109T050000Z\nEXDATE:20181121T050000Z\nEXDATE:20181123T050000Z\nEXDATE:20181101T050000Z",
+        "nominal_interval": 2,
+        "overdue_interval": 0
+    }
+},
+{
+    "model": "qa.frequency",
+    "pk": 7,
+    "fields": {
+        "name": "TU-TH",
+        "slug": "tu-th",
+        "recurrences": "DTSTART:20120101T051800Z\nRRULE:FREQ=WEEKLY;BYDAY=TU,TH\nEXDATE:20181129T050000Z",
+        "nominal_interval": 3,
+        "overdue_interval": 0
+    }
+},
+{
+    "model": "qa.frequency",
+    "pk": 8,
+    "fields": {
+        "name": "First Monday of Month",
+        "slug": "first-monday-month",
+        "recurrences": "DTSTART:20120101T051800Z\nRRULE:FREQ=MONTHLY;BYDAY=1MO",
+        "nominal_interval": 28,
+        "overdue_interval": 4
     }
 }
 ]

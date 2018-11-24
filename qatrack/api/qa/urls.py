@@ -1,9 +1,7 @@
 from django.conf.urls import include, url
-from django.views.decorators.csrf import csrf_exempt
 from rest_framework import routers
 
 from qatrack.api.qa import views
-from qatrack.qa.views import perform
 
 router = routers.DefaultRouter()
 
@@ -31,5 +29,11 @@ urlpatterns = [
     # view for uploads via api
     url(r"^upload/$", views.Upload.as_view(), name="api.upload"),
 
+    # search urls
+    url(r"^searcher/test/$", views.test_searcher, name='test_searcher'),
+    url(r"^searcher/test_list/$", views.test_list_searcher, name='test_list_searcher'),
+    url(r"^searcher/test_list_cycle/$", views.test_list_cycle_searcher, name='test_list_cycle_searcher'),
+    url(r"^searcher/test_instance/$", views.test_instance_searcher, name='test_instance_searcher'),
+    url(r"^searcher/test_list_instance/$", views.test_list_instance_searcher, name='test_list_instance_searcher'),
     url(r'^', include(router.urls)),
 ]
