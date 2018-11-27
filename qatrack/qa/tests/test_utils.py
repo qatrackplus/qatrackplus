@@ -237,6 +237,7 @@ class TestImportExport(TestCase):
 class TestCalcDueDate:
 
     def create_frequency(self, name, slug, nom=1, due=1, overdue=1):
+        """helper function for creating frequency objects (not saved to DB)"""
 
         rule = recurrence.Rule(freq=recurrence.DAILY, interval=due)
         f = models.Frequency(
@@ -250,10 +251,12 @@ class TestCalcDueDate:
         return f
 
     def make_dt(self, dt, tz=pytz.timezone("America/Toronto")):
+        """return a tz localized datetime from dt"""
         return tz.localize(dt)
 
     @property
     def mwf(self):
+        """Generate a MWF frequency"""
         rule = recurrence.Rule(
             freq=recurrence.WEEKLY,
             byday=[recurrence.MO, recurrence.WE, recurrence.FR],
@@ -268,7 +271,25 @@ class TestCalcDueDate:
             overdue_interval=1,
         )
 
+    @property
+    def wed(self):
+        """Generate a MWF frequency"""
+        rule = recurrence.Rule(
+            freq=recurrence.WEEKLY,
+            byday=[recurrence.WE],
+        )
+        return models.Frequency(
+            name="Wed",
+            slug="wed",
+            recurrences=recurrence.Recurrence(
+                rrules=[rule],
+                dtstart=timezone.datetime(2012, 1, 1, tzinfo=timezone.utc),
+            ),
+            overdue_interval=1,
+        )
+
     def day_of_month(self, day=1):
+        """Generate a frequency to be performed on the specific day of month"""
         rule = recurrence.Rule(freq=recurrence.MONTHLY, bymonthday=day)
         return models.Frequency(
             name="MWF",
@@ -281,47 +302,99 @@ class TestCalcDueDate:
         )
 
     def test_adhoc(self):
+        """Null frequency should result in a null due date"""
         assert qautils.calc_due_date(timezone.now(), None) is None
 
     def test_daily(self):
+        """Daily frequency when performed today should result in due date one day in future"""
         daily = self.create_frequency("Daily", "daily", nom=1, due=1, overdue=1)
         seven_am_today = self.make_dt(timezone.datetime(2018, 11, 20, 7, 0))
         seven_am_tmrw = self.make_dt(timezone.datetime(2018, 11, 21, 7, 0))
         assert qautils.calc_due_date(seven_am_today, daily).date() == seven_am_tmrw.date()
 
     def test_monthly(self):
+        """Monthly frequency when performed today should result in due date 28 days in future"""
         monthly = self.create_frequency("Monthly", "monthly", nom=28, due=28, overdue=35)
         seven_am_today = self.make_dt(timezone.datetime(2018, 11, 20, 7, 0))
         seven_am_4wks = self.make_dt(timezone.datetime(2018, 12, 18, 7, 0))
         assert qautils.calc_due_date(seven_am_today, monthly).date() == seven_am_4wks.date()
 
     def test_annual(self):
+        """Annual frequency when performed today should result in due date 300 days in future"""
         annual = self.create_frequency("Annual", "annual", nom=365, due=300, overdue=420)
         seven_am_today = self.make_dt(timezone.datetime(2018, 11, 20, 7, 0))
         seven_am_300_days = self.make_dt(timezone.datetime(2019, 9, 16, 7, 0))
         assert qautils.calc_due_date(seven_am_today, annual).date() == seven_am_300_days.date()
 
     def test_mwf_perf_monday(self):
+        """With a MWF test performed on a Monday, the due date should be set to Wed"""
         seven_am_monday = self.make_dt(timezone.datetime(2018, 11, 19, 7, 0))
         seven_am_wed = self.make_dt(timezone.datetime(2018, 11, 21, 7, 0))
         assert qautils.calc_due_date(seven_am_monday, self.mwf) == seven_am_wed
 
     def test_mwf_perf_tuesday(self):
-        seven_am_monday = self.make_dt(timezone.datetime(2018, 11, 20, 7, 0))
+        """With a MWF test performed on a Tuesday, the due date should be set to Wed"""
+        seven_am_tues = self.make_dt(timezone.datetime(2018, 11, 20, 7, 0))
         seven_am_wed = self.make_dt(timezone.datetime(2018, 11, 21, 7, 0))
-        assert qautils.calc_due_date(seven_am_monday, self.mwf) == seven_am_wed
+        assert qautils.calc_due_date(seven_am_tues, self.mwf) == seven_am_wed
 
     def test_mwf_perf_sat(self):
-        seven_am_monday = self.make_dt(timezone.datetime(2018, 11, 24, 7, 0))
-        seven_am_wed = self.make_dt(timezone.datetime(2018, 11, 26, 7, 0))
-        assert qautils.calc_due_date(seven_am_monday, self.mwf) == seven_am_wed
+        """With a MWF test performed on a Sat, the due date should be set to Wed"""
+        seven_am_sat = self.make_dt(timezone.datetime(2018, 11, 24, 7, 0))
+        seven_am_mon = self.make_dt(timezone.datetime(2018, 11, 26, 7, 0))
+        assert qautils.calc_due_date(seven_am_sat, self.mwf) == seven_am_mon
 
     def test_first_of_month(self):
+        """With a first of month test performed in the middle of the month, the
+        due date should be set to first of next month"""
         today = self.make_dt(timezone.datetime(2018, 11, 20, 7, 0))
         next_month = self.make_dt(timezone.datetime(2018, 12, 1, 7, 0))
         assert qautils.calc_due_date(today, self.day_of_month(1)) == next_month
 
     def test_first_of_month_performed_first_of_month(self):
+        """With a first of month test performed on the first of the month, the
+        due date should be set to first of next month"""
         today = self.make_dt(timezone.datetime(2018, 11, 1, 7, 0))
         next_month = self.make_dt(timezone.datetime(2018, 12, 1, 7, 0))
         assert qautils.calc_due_date(today, self.day_of_month(1)).date() == next_month.date()
+
+    def test_first_of_month_performed_day_before(self):
+        """
+        If a Test List is performed on e.g. the 31st, the due date should be
+        advanced to the next month, not the next day
+        """
+        today = self.make_dt(timezone.datetime(2018, 11, 30, 7, 0))
+        expected_due_date = self.make_dt(timezone.datetime(2019, 1, 1, 7, 0))
+        assert qautils.calc_due_date(today, self.day_of_month(1)).date() == expected_due_date.date()
+
+    def test_wed_of_week_performed_mon(self):
+        """If a Test List is due every Wed and performed on a Mon, the due date should be
+        advanced 2 days forward, not the next day (obviously depends on config or frequency!)
+        """
+        mon = self.make_dt(timezone.datetime(2018, 11, 26, 7, 0))
+        expected_due_date = self.make_dt(timezone.datetime(2018, 11, 28, 7, 0))
+        assert qautils.calc_due_date(mon, self.wed).date() == expected_due_date.date()
+
+    def test_wed_of_week_performed_tues(self):
+        """If a Test List is due every Wed and performed on a Tues, the due date should be
+        advanced 8 days forward, not the next day
+        """
+        tue = self.make_dt(timezone.datetime(2018, 11, 27, 7, 0))
+        expected_due_date = self.make_dt(timezone.datetime(2018, 12, 5, 7, 0))
+        assert qautils.calc_due_date(tue, self.wed).date() == expected_due_date.date()
+
+    def test_wed_of_week_performed_wed(self):
+        """If a Test List is due every Wed and performed on a Wed, the due date should be
+        advanced 7 days forward
+        """
+        wed = self.make_dt(timezone.datetime(2018, 11, 28, 7, 0))
+        expected_due_date = self.make_dt(timezone.datetime(2018, 12, 5, 7, 0))
+        assert qautils.calc_due_date(wed, self.wed).date() == expected_due_date.date()
+
+    def test_wed_of_week_performed_thurs(self):
+        """If a Test List is due every Wed and performed on a Wed, the due date should be
+        advanced 7 days forward
+        """
+        thu = self.make_dt(timezone.datetime(2018, 11, 29, 7, 0))
+        expected_due_date = self.make_dt(timezone.datetime(2018, 12, 5, 7, 0))
+        assert qautils.calc_due_date(thu, self.wed).date() == expected_due_date.date()
