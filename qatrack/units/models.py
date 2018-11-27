@@ -106,7 +106,10 @@ class UnitType(models.Model):
         ordering = ("vendor__name", "name",)
 
     def natural_key(self):
-        return (self.name, self.model) + self.vendor.natural_key() + self.unit_class.natural_key()
+        vendor = self.vendor.natural_key() if self.vendor else ()
+        unit_class = self.unit_class.natural_key() if self.unit_class else ()
+        return (self.name, self.model) + vendor + unit_class
+
     natural_key.dependencies = ["units.vendor", "units.unitclass"]
 
     def __str__(self):
