@@ -81,7 +81,7 @@ class Site(models.Model):
 
 class UnitTypeManager(models.Manager):
 
-    def get_by_natural_key(self, name, model, vendor_name, unitclass_name):
+    def get_by_natural_key(self, name, model, vendor_name=None, unitclass_name=None):
         return self.get(name=name, model=model, vendor__name=vendor_name, unit_class__name=unitclass_name)
 
 
@@ -109,7 +109,6 @@ class UnitType(models.Model):
         vendor = self.vendor.natural_key() if self.vendor else ()
         unit_class = self.unit_class.natural_key() if self.unit_class else ()
         return (self.name, self.model) + vendor + unit_class
-
     natural_key.dependencies = ["units.vendor", "units.unitclass"]
 
     def __str__(self):
