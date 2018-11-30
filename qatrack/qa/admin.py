@@ -989,6 +989,13 @@ class TestListCycleAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, admin.Mod
 class FrequencyAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
     model = models.Frequency
+    fields = (
+        "name",
+        "slug",
+        "window_start",
+        "window_end",
+        "recurrences",
+    )
 
     list_display = (
         "name",
@@ -996,6 +1003,21 @@ class FrequencyAdmin(admin.ModelAdmin):
         "window_start",
         "window_end",
     )
+
+    class Media:
+        js = (
+            settings.STATIC_URL + "js/jquery-1.7.1.min.js",
+            settings.STATIC_URL + "js/jquery-ui.min.js",
+            settings.STATIC_URL + "moment/js/moment.min.js",
+            settings.STATIC_URL + "moment/js/moment-timezone-with-data.min.js",
+            settings.STATIC_URL + "rrule/js/rrule-tz.min.js",
+            settings.STATIC_URL + "d3/js/d3-3.5.6.min.js",
+            settings.STATIC_URL + "cal-heatmap/js/cal-heatmap.min.js",
+            settings.STATIC_URL + "js/frequency_admin.js",
+        )
+        css = {
+            'all': [settings.STATIC_URL + "cal-heatmap/css/cal-heatmap.css"],
+        }
 
     def save_model(self, request, obj, form, change):
         """set user and modified date time"""

@@ -102,6 +102,13 @@ Hovering over any due date will show the test lists current QC window:
 Example Frequencies
 -------------------
 
+A weekly every Wednesday frequency, which also demonstrates the viewing of
+the recurrence rules on a calendar.
+
+.. figure:: images/freq_everywed.png
+   :alt: Every Wednesday Frequency
+
+   Every Wednesday frequency configuration
 
 A "classic" daily frequency that sets the due date to tomorrow, no matter what
 day it is performed on:
@@ -123,7 +130,7 @@ is set to Wed with a window of 2 days on either side. :
 
 A frequency for tests that must be performed the first Monday of every other month.
 
-.. figure:: images/freq_firstmondayoeveryothermonth.png
+.. figure:: images/freq_firstmondayeveryothermonth.png
    :alt: First monday of every other month configuration
 
    First monday of every other month configuration
