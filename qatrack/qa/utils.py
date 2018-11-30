@@ -214,12 +214,58 @@ def get_internal_user(user_klass=None):
     return u
 
 
-def calc_due_date(completed, frequency):
+def calc_due_date(completed, due_date, frequency):
+    """Calculate the next due date after completed for input frequency. If
+    completed is prior to qc window the due date return will be the same as
+    input due_date."""
 
     if frequency is None:
         return None
 
-    return frequency.recurrences.after(completed, dtstart=completed)
+    is_classic_offset = frequency.window_start is None
+    if is_classic_offset or due_date is None:
+        return frequency.recurrences.after(completed, dtstart=completed)
+
+    if due_date is None:
+        return calc_initial_due_date(completed, frequency)
+
+    if should_update_schedule(completed, due_date, frequency):
+        return frequency.recurrences.after(due_date, dtstart=due_date)
+
+    return due_date
+
+
+def calc_initial_due_date(completed, frequency):
+    """if due date is None, check whether completed date falls within the
+    window for the next occurence. If it does return second occurence,
+    otherwise return next occurence."""
+
+    next_occurence = frequency.recurrences.after(completed, dtstart=completed)
+    if should_update_schedule(completed, next_occurence, frequency):
+        return frequency.recurrences.after(next_occurence, dtstart=next_occurence)
+    return next_occurence
+
+
+def qc_window(due_date, frequency):
+    """Calculate the qc window around due_date for given frequency"""
+
+    #    assert False, "need to use day start and end I think"
+    if frequency is None or due_date is None:
+        return (None, None)
+
+    start = None
+    if frequency.window_start is not None:
+        start = start_of_day(due_date - timezone.timedelta(days=frequency.window_start))
+
+    end = end_of_day(due_date + timezone.timedelta(days=frequency.window_end))
+
+    return (start, end)
+
+
+def should_update_schedule(date, due_date, frequency):
+    """Return true if date falls after start of qc_window for due_date"""
+    start, end = qc_window(due_date, frequency)
+    return start is None or start <= date
 
 
 def calc_nominal_interval(frequency):
@@ -241,13 +287,15 @@ def date_to_datetime(date):
 
 
 def start_of_day(dt):
-    """convert datetime to start of day in current timezone"""
-    return dt.replace(hour=0, minute=0, second=0, microsecond=0)
+    """convert datetime to start of day in local timezone"""
+    tz = timezone.get_current_timezone()
+    return dt.astimezone(tz).replace(hour=0, minute=0, second=0, microsecond=0)
 
 
 def end_of_day(dt):
-    """convert datetime to end of day in current timezone"""
-    return dt.replace(hour=23, minute=59, second=59, microsecond=999999)
+    """convert datetime to end of day in local timezone"""
+    tz = timezone.get_current_timezone()
+    return dt.astimezone(tz).replace(hour=23, minute=59, second=59, microsecond=999999)
 
 
 def month_start_and_end(year, month):

@@ -993,7 +993,8 @@ class FrequencyAdmin(admin.ModelAdmin):
     list_display = (
         "name",
         "get_recurrences",
-        "overdue_interval",
+        "window_start",
+        "window_end",
     )
 
     def save_model(self, request, obj, form, change):

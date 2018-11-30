@@ -81,6 +81,7 @@ INPUT_DATE_FORMATS = (
     "%d-%m-%y %H:%M", "%d/%m/%y %H:%M",
 )
 SIMPLE_DATE_FORMAT = "%d-%m-%Y"
+MONTH_ABBR_DATE_FORMAT = "%d %b %Y"
 DATETIME_HELP = "Format DD-MM-YY hh:mm (hh:mm is 24h time e.g. 31-05-12 14:30)"
 
 # Language code for this installation. All choices can be found here:
@@ -550,13 +551,13 @@ if os.path.exists('/root/.is_inside_docker'):
 # local_settings contains anything that should be overridden
 # based on site specific requirements (e.g. deployment, development etc)
 
-TEMPLATES[0]['OPTIONS']['debug'] = TEMPLATE_DBG
-
 try:
     from .local_settings import *  # NOQA
 except ImportError:
     pass
 
+
+TEMPLATES[0]['OPTIONS']['debug'] = DEBUG
 
 # Parts must be used with service log
 USE_PARTS = USE_PARTS or USE_SERVICE_LOG
