@@ -1,4 +1,9 @@
-<span class="label due-status {{unit_test_collection.due_status}}" data-timestamp="{{unit_test_collection.due_date|date:"U"}}">
+{% load qa_tags %}
+<span
+  {% if unit_test_collection.due_date %}title="QC window: {{ unit_test_collection | as_qc_window }}"{% endif %}
+  class="label due-status {{unit_test_collection.due_status}}"
+  data-timestamp="{{unit_test_collection.due_date|date:"U"}}"
+>
     {% with unit_test_collection.due_status as status %}
         {% if show_icons %}
             {% if status == 'tolerance' %}

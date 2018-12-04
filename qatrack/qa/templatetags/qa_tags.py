@@ -3,9 +3,10 @@ import collections
 from django import template
 from django.conf import settings
 from django.template.loader import get_template
+from django.utils import timezone
 from django.utils.safestring import mark_safe
 
-import qatrack.qa.models as models
+from qatrack.qa import models, utils
 
 register = template.Library()
 
@@ -79,7 +80,9 @@ def tolerance_for_reference(tol, ref):
     tsd = settings.TEST_STATUS_DISPLAY
     if ref and ref.type == models.BOOLEAN:
         expected = ref.value_display()
-        return mark_safe('<span>%s: %s; %s: %s</span>' % (tsd['ok'], expected, tsd['action'], "Yes" if expected == "No" else "No"))
+        return mark_safe(
+            '<span>%s: %s; %s: %s</span>' % (tsd['ok'], expected, tsd['action'], "Yes" if expected == "No" else "No")
+        )
 
     if not tol:
         return mark_safe('<span><em>N/A</em></span>')
@@ -146,7 +149,11 @@ def as_review_status(test_list_instance):
     #     comment_count += 1
     comment_count += test_list_instance.comments.count()
     template = get_template("qa/review_status.html")
-    c = {"statuses": dict(statuses), "comments": comment_count, "show_icons": settings.ICON_SETTINGS['SHOW_REVIEW_ICONS']}
+    c = {
+        "statuses": dict(statuses),
+        "comments": comment_count,
+        "show_icons": settings.ICON_SETTINGS['SHOW_REVIEW_ICONS'],
+    }
     return template.render(c)
 
 
@@ -157,12 +164,32 @@ def as_due_date(unit_test_collection):
     return template.render(c)
 
 
+@register.filter(expects_local_time=True)
+def as_qc_window(unit_test_collection):
+
+    tz = timezone.get_current_timezone()
+    start, end = utils.qc_window(unit_test_collection.due_date, unit_test_collection.frequency)
+    if start:
+        start = start.astimezone(tz).strftime(settings.MONTH_ABBR_DATE_FORMAT)
+
+    if end:
+        end = end.strftime(settings.MONTH_ABBR_DATE_FORMAT)
+
+    if start:
+        return "%s - %s" % (start, end)
+    elif unit_test_collection.due_date:
+        start = unit_test_collection.due_date.astimezone(tz).strftime(settings.MONTH_ABBR_DATE_FORMAT)
+        return "%s - %s" % (start, end)
+
+    return ""
+
+
 @register.filter(is_safe=True, expects_local_time=True)
 def as_time_delta(time_delta):
     hours, remainder = divmod(time_delta.seconds, 60 * 60)
     minutes, seconds = divmod(remainder, 60)
     return '%dd %dh %dm %ds' % (time_delta.days, hours, minutes, seconds)
-as_time_delta.safe = True
+as_time_delta.safe = True  # noqa: E305
 
 
 @register.filter

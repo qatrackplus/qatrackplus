@@ -752,7 +752,7 @@ class TestUTCDueDates(TestCase):
 
     def test_modified_to_invalid(self):
         # test case where utc with history was created with valid status and
-        # later changed to have invlaid status
+        # later changed to have invalid status
 
         # first create valid history
         now = timezone.now()
@@ -760,23 +760,25 @@ class TestUTCDueDates(TestCase):
         utils.create_test_instance(tli1, unit_test_info=self.uti_hist, status=self.valid_status)
         tli1.save()
 
+        self.utc_hist.refresh_from_db()
+
         # now create 2nd valid history
-        orig_due_date = qautils.calc_due_date(now, self.utc_hist.frequency)
+        orig_due_date = self.utc_hist.due_date
         tli2 = utils.create_test_list_instance(unit_test_collection=self.utc_hist, work_completed=orig_due_date)
         ti2 = utils.create_test_instance(tli2, unit_test_info=self.uti_hist, status=self.valid_status)
         tli2.save()
 
+        self.utc_hist.refresh_from_db()
         self.utc_hist = models.UnitTestCollection.objects.get(pk=self.utc_hist.pk)
-        expected = qautils.calc_due_date(orig_due_date, self.utc_hist.frequency)
+        expected = orig_due_date + timezone.timedelta(days=1)
         assert self.utc_hist.due_date.date() == expected.date()
 
         # now mark ti2 as invali
         ti2.status = self.invalid_status
         ti2.save()
 
-        self.utc_hist = models.UnitTestCollection.objects.get(pk=self.utc_hist.pk)
+        self.utc_hist.refresh_from_db()
         self.utc_hist.set_due_date()
-
         assert self.utc_hist.due_date.date() == orig_due_date.date()
 
     def test_modified_to_valid(self):

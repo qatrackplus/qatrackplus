@@ -43,8 +43,8 @@ Glossary
 
     Frequency
 
-        Frequency is the time interval which a test list is to be performed at
-        (e.g. Daily, Monthly, Annual etc). See :ref:`Frequency
+        Frequency is the time schedule with which a test list is to be
+        performed (e.g. Daily, Monthly, Annual etc). See :ref:`Frequency
         <qa_frequencies>`.
 
     Groups

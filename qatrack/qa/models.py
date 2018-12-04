@@ -278,9 +278,24 @@ class Frequency(models.Model):
         help_text=_("Nominal number of days between test completions (for internal ordering purposes)")
     )
 
-    overdue_interval = models.PositiveIntegerField(
+    window_start = models.PositiveIntegerField(
+        verbose_name=_("QC Window Start"),
+        null=True,
+        blank=True,
         help_text=_(
-            "How many days after the due date should a test with this frequency be shown as overdue. (Use 0 if it should show as overdue the day after it is due)"
+            "Number of days before a Test List is due that its QC Window starts. "
+            "QC performed prior to the QC window start will not cause a change in due date. "
+            "Leave blank to use the classical 'offset' method where the due date is advanced "
+            "every time QC is performed"
+        ),
+    )
+
+    window_end = models.PositiveIntegerField(
+        verbose_name=_("QC Window End"),
+        help_text=_(
+            "Number of days after a Test List is due that its QC Window ends. "
+            "After the QC window ends the Test List will be shown as overdue."
+            "(Use 0 if it should show as overdue the day after it is due)"
         )
     )
 
@@ -1406,13 +1421,13 @@ class UnitTestCollection(models.Model):
     def calc_due_date(self):
         """return the next due date of this Unit/TestList pair """
 
-        if self.auto_schedule and self.frequency is not None:
+        if self.auto_schedule and self.frequency:
             last_valid = self.last_valid_instance()
-            if last_valid is None and self.last_instance is not None:
+            if not last_valid and self.last_instance:
                 # Done before but no valid lists
                 return timezone.now()
-            elif last_valid is not None and last_valid.work_completed:
-                return utils.calc_due_date(last_valid.work_completed, self.frequency)
+            elif (last_valid and last_valid.work_completed):
+                return utils.calc_due_date(last_valid.work_completed, self.due_date, self.frequency)
 
         # return existing due date (could be None)
         return self.due_date
@@ -1440,7 +1455,7 @@ class UnitTestCollection(models.Model):
             return NOT_DUE
 
         if self.frequency is not None:
-            overdue = due + timezone.timedelta(days=self.frequency.overdue_interval)
+            overdue = due + timezone.timedelta(days=self.frequency.window_end)
         else:
             overdue = due + timezone.timedelta(days=1)
 
