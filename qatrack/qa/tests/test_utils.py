@@ -300,7 +300,7 @@ class TestCalcDueDate:
 
     def test_daily_offset_due_today_before_due_time(self):
         """Daily frequency when performed today should result in due date one day in future"""
-        daily = utils.create_frequency(interval=1)
+        daily = utils.create_frequency(name="d", slug="d", interval=1, save=False)
         six_am_today = self.make_dt(timezone.datetime(2018, 11, 20, 6, 0))
         due = six_am_today + timezone.timedelta(hours=1)
         six_am_tmrw = self.make_dt(timezone.datetime(2018, 11, 21, 6, 0))
@@ -308,7 +308,7 @@ class TestCalcDueDate:
 
     def test_daily_offset_due_today_after_due_time(self):
         """Daily frequency when performed today should result in due date one day in future"""
-        daily = utils.create_frequency(interval=1)
+        daily = utils.create_frequency(name="d", slug="d", interval=1, save=False)
         eight_am_today = self.make_dt(timezone.datetime(2018, 11, 20, 8, 0))
         due = eight_am_today - timezone.timedelta(hours=1)
         eight_am_tmrw = self.make_dt(timezone.datetime(2018, 11, 21, 8, 0))
@@ -316,7 +316,7 @@ class TestCalcDueDate:
 
     def test_daily_offset_due_today_equal_due_time(self):
         """Daily frequency when performed today should result in due date one day in future"""
-        daily = utils.create_frequency(interval=1)
+        daily = utils.create_frequency(name="d", slug="d", interval=1, save=False)
         seven_am_today = self.make_dt(timezone.datetime(2018, 11, 20, 7, 0))
         due = seven_am_today
         seven_am_tmrw = self.make_dt(timezone.datetime(2018, 11, 21, 7, 0))
@@ -324,21 +324,21 @@ class TestCalcDueDate:
 
     def test_daily_offset_due_yesterday(self):
         """Daily frequency when performed today should result in due date one day in future"""
-        daily = utils.create_frequency(interval=1)
+        daily = utils.create_frequency(name="d", slug="d", interval=1, save=False)
         seven_am_today = self.make_dt(timezone.datetime(2018, 11, 20, 7, 0))
         due = self.make_dt(timezone.datetime(2018, 11, 19, 7, 0))
         seven_am_tmrw = self.make_dt(timezone.datetime(2018, 11, 21, 7, 0))
         assert qautils.calc_due_date(seven_am_today, due, daily).date() == seven_am_tmrw.date()
 
     def test_daily_offset_due_tomorrow(self):
-        daily = utils.create_frequency(interval=1)
+        daily = utils.create_frequency(name="d", slug="d", interval=1, save=False)
         seven_am_today = self.make_dt(timezone.datetime(2018, 11, 20, 7, 0))
         seven_am_tmrw = self.make_dt(timezone.datetime(2018, 11, 21, 7, 0))
         assert qautils.calc_due_date(seven_am_today, seven_am_tmrw, daily).date() == seven_am_tmrw.date()
 
     def test_monthly_offset(self):
         """Monthly frequency when performed today should result in due date 28 days in future"""
-        monthly = utils.create_frequency(interval=28)
+        monthly = utils.create_frequency(name="d", slug="d", interval=28, save=False)
         seven_am_today = self.make_dt(timezone.datetime(2018, 11, 20, 7, 0))
         due_date = timezone.now()  # arbitrary
         seven_am_4wks = self.make_dt(timezone.datetime(2018, 12, 18, 7, 0))
@@ -346,7 +346,7 @@ class TestCalcDueDate:
 
     def test_annual_offset(self):
         """Annual frequency when performed today should result in due date 300 days in future"""
-        annual = utils.create_frequency(interval=300)
+        annual = utils.create_frequency(name="d", slug="d", interval=300, save=False)
         seven_am_today = self.make_dt(timezone.datetime(2018, 11, 20, 7, 0))
         due_date = self.make_dt(timezone.datetime(2018, 12, 20, 7, 0))  # arbitrary
         seven_am_300_days = self.make_dt(timezone.datetime(2019, 9, 16, 7, 0))

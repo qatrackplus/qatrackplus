@@ -1593,7 +1593,7 @@ class TestDueDateOverView(TestCase):
         )
         self.frequencies = {}
         for t, s, nom, due, overdue in intervals:
-            f = utils.create_frequency(name=t, slug=s, due=due, overdue=overdue)
+            f = utils.create_frequency(name=t, slug=s, interval=due, window_end=overdue)
             self.frequencies[s] = f
 
         self.utc = utils.create_unit_test_collection(test_collection=self.test_list)
@@ -1680,7 +1680,7 @@ class TestPaperFormRequest(TestCase):
         )
         self.frequencies = {}
         for t, s, nom, due, overdue in intervals:
-            f = utils.create_frequency(name=t, slug=s, due=due, overdue=overdue)
+            f = utils.create_frequency(name=t, slug=s, interval=due, window_end=overdue)
             self.frequencies[s] = f
 
         self.utc = utils.create_unit_test_collection(test_collection=self.test_list)
@@ -1735,7 +1735,7 @@ class TestPaperForms(TestCase):
         )
         self.frequencies = {}
         for t, s, nom, due, overdue in intervals:
-            f = utils.create_frequency(name=t, slug=s, due=due, overdue=overdue)
+            f = utils.create_frequency(name=t, slug=s, interval=due, window_end=overdue)
             self.frequencies[s] = f
 
         self.utc = utils.create_unit_test_collection(test_collection=self.test_list)
