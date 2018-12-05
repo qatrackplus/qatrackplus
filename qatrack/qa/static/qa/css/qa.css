@@ -453,8 +453,7 @@ th.review-ref {
     height:400px;
 }
 .due-status-container {
-
-    height:450px;
+    max-height:450px;
 }
 .pad-r-10 {
     padding-right: 10px;
