@@ -1,8 +1,6 @@
-from collections import defaultdict
-
 from django.conf import settings
-from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 from django.db.models.signals import (
     post_delete,
     post_save,
@@ -75,34 +73,73 @@ def get_or_create_unit_test_info(unit, test, assigned_to=None, active=True):
     return uti
 
 
+def testlistcycle_utcs(cycle):
+    """
+    Return all utcs which are assigned one of the above cycles
+    Note: test list cycles can only be assigned directly to a UTC
+    """
+    if not cycle:
+        return []
+
+    parents = models.UnitTestCollection.objects.filter(
+        object_id=cycle.pk,
+        content_type__app_label='qa',
+        content_type__model='testlistcycle',
+    ).select_related("unit", "assigned_to")
+    return list(parents)
+
+
+def testlist_utcs(test_list):
+    """Test list can be assigned to a Unit by being:
+    a) directly assigned to a UTC
+    b) as a sublist of a test list assigned to a UTC
+    c) as part of a TLC assigned to a UTC
+    d) as a sublist of a test list which is part of a TLC assigned to a UTC
+    """
+
+    test_lists = []
+    cycles = []
+
+    # case a)
+    test_lists.append(test_list.pk)
+
+    # case b)
+    for sublist in test_list.sublist_set.all():
+        test_lists.append(sublist.parent.pk)
+
+        # case d
+        cycles += list(sublist.parent.testlistcycle_set.values_list('pk', flat=True))
+
+    # case c)
+    cycles += list(test_list.testlistcycle_set.values_list('pk', flat=True))
+
+    utcs_tl = models.UnitTestCollection.objects.filter(
+        Q(
+            object_id__in=test_lists,
+            content_type__app_label='qa',
+            content_type__model='testlist',
+        ) | Q(
+            object_id__in=cycles,
+            content_type__app_label='qa',
+            content_type__model='testlistcycle',
+        )
+    ).select_related("unit", "assigned_to")
+
+    return list(utcs_tl)
+
+
 def find_assigned_unit_test_collections(collection):
     """take a test collection (eg test list, sub list or test list cycle) and return
     the units that it is a part of
     """
 
-    all_parents = defaultdict(list)
-    all_parents[ContentType.objects.get_for_model(collection)] = [collection]
-
-    parent_types = [x._meta.model_name + "_set" for x in models.TestCollectionInterface.__subclasses__() + [models.Sublist]]
-
-    for parent_type in parent_types:
-
-        if hasattr(collection, parent_type):
-            parents = getattr(collection, parent_type).all()
-            if parents.count() > 0:
-                if parents[0]._meta.model_name == "sublist":
-                    parents = [x.parent for x in parents]
-                ct = ContentType.objects.get_for_model(parents[0])
-                all_parents[ct].extend(list(parents))
-
-    assigned_utcs = []
-    for ct, objects in list(all_parents.items()):
-        utcs = models.UnitTestCollection.objects.filter(
-            object_id__in=[x.pk for x in objects],
-            content_type=ct,
-        ).select_related("unit", "assigned_to")
-        assigned_utcs.extend(utcs)
-    return list(set(assigned_utcs))
+    model_name = collection._meta.model_name
+    if model_name == "testlist":
+        return testlist_utcs(collection)
+    elif model_name == "testlistcycle":
+        return testlistcycle_utcs(collection)
+    else:
+        raise TypeError("Model type %s is not handled by find_assigned_unit_test_collections" % model_name)
 
 
 def update_unit_test_infos(collection):
@@ -143,7 +180,9 @@ def on_test_save(*args, **kwargs):
 
         for ua in unit_assignments:
             if ua.reference and ua.reference.value not in (0., 1.,):
-                raise ValidationError("Can't change test type to %s while this test is still assigned to %s with a non-boolean reference" % (test.type, ua.unit.name))
+                raise ValidationError(
+                    "Can't change test type to %s while this test is still assigned to "
+                    "%s with a non-boolean reference" % (test.type, ua.unit.name))
 
 
 @receiver(post_save, sender=models.TestListInstance)
