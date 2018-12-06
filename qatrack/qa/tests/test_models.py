@@ -1222,6 +1222,37 @@ class TestSignals(TestCase):
         self.assertEqual(len(utis), 4)
         self.assertListEqual(tests, [x.test for x in utis])
 
+    def test_sublist_in_cycle_changed(self):
+
+        # create 2 test lisets
+        test_lists = [utils.create_test_list(name="test list %d" % i) for i in range(2)]
+        for i, test_list in enumerate(test_lists):
+            test = utils.create_test(name="test %d" % i)
+            utils.create_test_list_membership(test_list, test)
+
+        # create another test list and add it to the first test list
+        sub_test = utils.create_test(name="sub")
+        sub_list = utils.create_test_list(name="sublist")
+        utils.create_test_list_membership(sub_list, sub_test)
+        models.Sublist.objects.create(parent=test_lists[0], child=sub_list, order=0)
+
+        cycle1 = utils.create_cycle(test_lists=test_lists)
+
+        utc = utils.create_unit_test_collection(test_collection=cycle1)
+
+        utis = list(models.UnitTestInfo.objects.order_by("test_id"))
+
+        # should be 3 unit test infos
+        assert len(utis) == 3
+
+        # now add a new test to the sublist
+        sub_test2 = utils.create_test(name="sub2")
+        utils.create_test_list_membership(sub_list, sub_test2)
+
+        # should now be 4 utis
+        utis = list(models.UnitTestInfo.objects.order_by("test_id"))
+        assert len(utis) == 4
+
 
 class TestTestInstance(TestCase):
 
