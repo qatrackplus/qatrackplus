@@ -515,6 +515,7 @@
 
                         {% if user.is_authenticated %}
                             <div id="control-sidebar-btn" class="nav-button" href="#">{{ request.user.username }} :: <i class="fa fa-gears fa-fw"></i></div>
+                            <input type="hidden" id="username" value="{{ request.user.username }}"/>
                         {% else %}
                             <div id="control-sidebar-btn" class="nav-button" href="#"><i class="fa fa-gears fa-fw"></i></div>
                         {% endif %}
