@@ -25,7 +25,7 @@ LOG_ROOT = os.path.join(PROJECT_ROOT, "..", "logs")
 if not os.path.isdir(LOG_ROOT):
     os.mkdir(LOG_ROOT)
 
-VERSION = "0.3.0.8"
+VERSION = "0.3.0.9"
 BUG_REPORT_URL = "https://bitbucket.org/tohccmedphys/qatrackplus/issues/new"
 FEATURE_REQUEST_URL = BUG_REPORT_URL
 
@@ -555,7 +555,6 @@ try:
     from .local_settings import *  # NOQA
 except ImportError:
     pass
-
 
 TEMPLATES[0]['OPTIONS']['debug'] = DEBUG
 

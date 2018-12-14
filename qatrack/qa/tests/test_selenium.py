@@ -278,12 +278,9 @@ class SeleniumTests(TestCase, StaticLiveServerTestCase):
 
     def load_admin(self):
         self.open("/admin/")
-        try:
-            self.driver.find_element_by_id('id_username').send_keys(self.user.username)
-            self.driver.find_element_by_id('id_password').send_keys(self.password)
-            self.driver.find_element_by_css_selector('button').click()
-        except NoSuchElementException:
-            pass
+        self.driver.find_element_by_id('id_username').send_keys(self.user.username)
+        self.driver.find_element_by_id('id_password').send_keys(self.password)
+        self.driver.find_element_by_css_selector('button').click()
 
         self.wait.until(e_c.presence_of_element_located((By.CSS_SELECTOR, "head > title")))
 

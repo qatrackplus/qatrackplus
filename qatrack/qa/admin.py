@@ -703,7 +703,7 @@ class TestListAdmin(AdminViews, SaveUserMixin, SaveInlineAttachmentUserMixin, ad
 
     class Media:
         js = (
-            settings.STATIC_URL + "js/jquery-1.7.1.min.js",
+            settings.STATIC_URL + "js/jquery-ui.init.js",
             settings.STATIC_URL + "js/jquery-ui.min.js",
             settings.STATIC_URL + "js/m2m_drag_admin_testlist.js",
             settings.STATIC_URL + "js/admin_description_editor.js",
@@ -941,7 +941,7 @@ class UnitTestCollectionAdmin(admin.ModelAdmin):
 
     class Media:
         js = (
-            settings.STATIC_URL + "js/jquery-1.7.1.min.js",
+            settings.STATIC_URL + "js/jquery-ui.init.js",
             settings.STATIC_URL + "js/jquery-ui.min.js",
             settings.STATIC_URL + "js/select2.min.js",
         )
@@ -970,7 +970,7 @@ class TestListCycleAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, admin.Mod
 
     class Media:
         js = (
-            settings.STATIC_URL + "js/jquery-1.7.1.min.js",
+            settings.STATIC_URL + "js/jquery-ui.init.js",
             settings.STATIC_URL + "js/jquery-ui.min.js",
             settings.STATIC_URL + "js/collapsed_stacked_inlines.js",
             settings.STATIC_URL + "js/m2m_drag_admin.js",
