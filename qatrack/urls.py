@@ -3,8 +3,9 @@ from django.conf.urls import include, url
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.staticfiles.templatetags.staticfiles import static as static_url
-from django.views.generic.base import RedirectView, TemplateView
+from django.views.generic.base import RedirectView
 
+from qatrack.qatrack_core.views import homepage
 
 admin.autodiscover()
 
@@ -14,7 +15,7 @@ touch_view = RedirectView.as_view(url=static_url("qatrack_core/img/apple-touch-i
 
 
 urlpatterns = [
-    url(r'^$', TemplateView.as_view(template_name="homepage.html"), name="home"),
+    url(r'^$', homepage, name="home"),
     url(r'^accounts/', include('qatrack.accounts.urls')),
     url(r'^qa/', include('qatrack.qa.urls')),
     url(r'^units/', include('qatrack.units.urls')),
