@@ -22,8 +22,6 @@ SEND_BROKEN_LINK_EMAILS = False
 # misc settings
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 LOG_ROOT = os.path.join(PROJECT_ROOT, "..", "logs")
-if not os.path.isdir(LOG_ROOT):
-    os.mkdir(LOG_ROOT)
 
 VERSION = "0.3.0.9"
 BUG_REPORT_URL = "https://bitbucket.org/tohccmedphys/qatrackplus/issues/new"
@@ -105,11 +103,6 @@ DEFAULT_WARNING_MESSAGE = "Do not treat"
 # Example: "/home/media/media.lawrence.com/media/"
 MEDIA_ROOT = os.path.join(PROJECT_ROOT, "media")
 TMP_UPLOAD_PATH = os.path.join("uploads", "tmp")
-UPLOAD_ROOT = os.path.join(MEDIA_ROOT, "uploads")
-TMP_UPLOAD_ROOT = os.path.join(UPLOAD_ROOT, "tmp")
-for d in (MEDIA_ROOT, UPLOAD_ROOT, TMP_UPLOAD_ROOT):
-    if not os.path.isdir(d):
-        os.mkdir(d)
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
@@ -278,16 +271,6 @@ CACHE_ACTIVE_UTCS_FOR_UNIT_ = 'active_utcs_for_unit_{}'
 MAX_CACHE_TIMEOUT = 24 * 60 * 60  # 24hours
 
 CACHE_LOCATION = os.path.join(PROJECT_ROOT, "cache", "cache_data")
-if not os.path.isdir(CACHE_LOCATION):
-    os.mkdir(CACHE_LOCATION)
-
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': CACHE_LOCATION,
-        'TIMEOUT': MAX_CACHE_TIMEOUT,
-    }
-}
 
 # -----------------------------------------------------------------------------
 # Session Settings
@@ -532,6 +515,11 @@ USE_SERVICE_LOG = True
 USE_PARTS = True
 USE_ISSUES = False  # internal development issue tracker
 
+DELETE_REASONS = (
+    ('Duplicate', 'Duplicate'),
+    ('Invalid', 'Invalid')
+)
+
 DEFAULT_AVAILABLE_TIMES = {
     'hours_sunday': datetime.timedelta(hours=0, minutes=0),
     'hours_monday': datetime.timedelta(hours=8, minutes=0),
@@ -561,10 +549,35 @@ TEMPLATES[0]['OPTIONS']['debug'] = DEBUG
 # Parts must be used with service log
 USE_PARTS = USE_PARTS or USE_SERVICE_LOG
 
-DELETE_REASONS = (
-    ('Duplicate', 'Duplicate'),
-    ('Invalid', 'Invalid')
-)
+
+# ------------------------------------------------------------------------------
+# Directory availability & dependent paths
+
+# Make any paths available that are not already created
+# Also set file paths that are dependent on other settings which may be overridden
+# in local_settings.py
+
+UPLOAD_ROOT = os.path.join(MEDIA_ROOT, "uploads")
+TMP_UPLOAD_ROOT = os.path.join(UPLOAD_ROOT, "tmp")
+
+if not os.path.isdir(LOG_ROOT):
+    os.mkdir(LOG_ROOT)
+
+for d in (MEDIA_ROOT, UPLOAD_ROOT, TMP_UPLOAD_ROOT):
+    if not os.path.isdir(d):
+        os.mkdir(d)
+
+if not os.path.isdir(CACHE_LOCATION):
+    os.mkdir(CACHE_LOCATION)
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': CACHE_LOCATION,
+        'TIMEOUT': MAX_CACHE_TIMEOUT,
+    }
+}
+
 
 if FORCE_SCRIPT_NAME:
     # Fix URL for Admin Views if FORCE_SCRIPT_NAME_SET in local_settings
