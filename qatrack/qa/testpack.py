@@ -97,7 +97,7 @@ def create_testpack(test_lists=None, cycles=None, extra_tests=None, description=
         check_timeout()
 
     for c in cycles:
-        testpack['objects']['testlists'].append(c.to_testpack())
+        testpack['objects']['testlistcycles'].append(c.to_testpack())
         check_timeout()
 
     return testpack
@@ -244,6 +244,7 @@ def add_testpack(serialized_pack, user=None, test_keys=None, test_list_keys=None
     for mname, parent_attr, parent_model, parent_objs, child_attr, child_model, child_objs in m2ms:
 
         to_create = []
+        seen = set()
         model = model_map[mname]
 
         for obj in to_import[mname]:
@@ -257,6 +258,9 @@ def add_testpack(serialized_pack, user=None, test_keys=None, test_list_keys=None
             obj['%s_id' % child_attr] = child_objs[child_key]
             del obj[parent_attr]
             del obj[child_attr]
+            if tuple(obj.items()) in seen:
+                continue
+            seen.add(tuple(obj.items()))
 
             to_create.append(model(**obj))
 

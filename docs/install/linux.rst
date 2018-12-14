@@ -264,6 +264,18 @@ Apache and mod_wsgi can be installed with the following commands:
 
     sudo apt-get install apache2 apache2-dev libapache2-mod-wsgi-py3 python3-dev
 
+
+Next, lets make sure Apache can write to our logs and media directory:
+
+.. code-block:: console
+
+    sudo usermod -a -G www-data $USER
+    mkdir -p logs
+    touch logs/{migrate,debug}.log
+    chmod ug+rwx logs
+    chmod ug+rwx qatrack/media
+    chmod a+rw logs/{migrate,debug}.log
+
 Now we can remove the default Apache config file and copy over the QATrack+ config
 file:
 
@@ -567,7 +579,7 @@ First we must check out the code for version 0.3.0:
 .. code-block:: console
 
     git fetch origin
-    git checkout v0.3.0.6
+    git checkout v0.3.0.8
 
 
 Create and activate your new virtual environment
@@ -674,6 +686,16 @@ documented in :ref:`the settings page <qatrack-config>`.
 Update your Apache configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+First, lets make sure Apache can write to our logs and media directory:
+
+.. code-block:: console
+
+    sudo usermod -a -G www-data $USER
+    mkdir -p logs
+    touch logs/{migrate,debug}.log
+    chmod ug+rwx logs
+    chmod ug+rwx qatrack/media
+    chmod a+rw logs/{migrate,debug}.log
 
 Since we are now using a different Python virtual environment we need to update
 the `WSGIPythonHome` variable.  Open your Apache config file (either
