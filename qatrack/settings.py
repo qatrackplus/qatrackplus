@@ -25,7 +25,7 @@ LOG_ROOT = os.path.join(PROJECT_ROOT, "..", "logs")
 if not os.path.isdir(LOG_ROOT):
     os.mkdir(LOG_ROOT)
 
-VERSION = "0.3.0.8"
+VERSION = "0.3.0.9"
 BUG_REPORT_URL = "https://bitbucket.org/tohccmedphys/qatrackplus/issues/new"
 FEATURE_REQUEST_URL = BUG_REPORT_URL
 
@@ -550,13 +550,13 @@ if os.path.exists('/root/.is_inside_docker'):
 # local_settings contains anything that should be overridden
 # based on site specific requirements (e.g. deployment, development etc)
 
-TEMPLATES[0]['OPTIONS']['debug'] = TEMPLATE_DBG
 
 try:
     from .local_settings import *  # NOQA
 except ImportError:
     pass
 
+TEMPLATES[0]['OPTIONS']['debug'] = DEBUG
 
 # Parts must be used with service log
 USE_PARTS = USE_PARTS or USE_SERVICE_LOG
