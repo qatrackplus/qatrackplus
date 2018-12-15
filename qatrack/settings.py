@@ -160,7 +160,7 @@ MIDDLEWARE = [
 # login required middleware settings
 LOGIN_EXEMPT_URLS = [r"^accounts/", r"api/*"]
 ACCOUNT_ACTIVATION_DAYS = 7
-LOGIN_REDIRECT_URL = '/qa/unit/'
+LOGIN_REDIRECT_URL = '/qc/unit/'
 LOGIN_URL = "/accounts/login/"
 
 TEMPLATES = [

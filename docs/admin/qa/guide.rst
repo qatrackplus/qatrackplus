@@ -1,4 +1,4 @@
-Tests and Other QA
+Tests and Other QC
 ==================
 
 

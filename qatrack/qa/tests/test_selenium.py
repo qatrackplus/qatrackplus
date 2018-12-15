@@ -590,7 +590,7 @@ class SeleniumTests(TestCase, StaticLiveServerTestCase):
         self.load_main()
 
         # Perform test
-        self.driver.find_element_by_link_text('Choose a Unit to perform QA for').click()
+        self.driver.find_element_by_link_text('Choose a Unit to perform QC for').click()
         self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'TestUnit')))
         self.driver.find_element_by_link_text('TestUnit').click()
         self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Perform')))

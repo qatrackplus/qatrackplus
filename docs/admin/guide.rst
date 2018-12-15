@@ -38,7 +38,7 @@ idea to begin by doing some initial configuration.
 #. `Configure the Service Log app <service_log/guide.html>`__ (optional)
 #. `Configure the Units app <units/guide.html>`__
 #. `Define some Groups and Users <qa/auth.html>`__
-#. :ref:`Configure the QA app <initial_qa_config>`
+#. :ref:`Configure the QC app <initial_qa_config>`
 
 
 Admin Guide Contents

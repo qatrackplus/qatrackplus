@@ -1060,7 +1060,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 var legend_se_types = legend.selectAll('.legend-set-row')
                     .data([
                         {'name': 'Service Event', 'id': 0},
-                        {'name': 'Service Event with Initiating QA', 'id': 1},
+                        {'name': 'Service Event with Initiating QC', 'id': 1},
                         {'name': 'Service Event with Return To Service', 'id': 2}
                     ])
                     .enter().append('g')
@@ -1093,7 +1093,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 legend_se_types.append('title').text(function(d) {
                     switch(d.id) {
                         case 0: return 'Service Event';
-                        case 1: return 'Service Event with Initiating QA';
+                        case 1: return 'Service Event with Initiating QC';
                         case 2: return 'Service Event with Return To Service';
                     }
                 })
@@ -1678,7 +1678,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                                     .replace(/__tli-id__/g, initiated_data[0].test_list_instance_id)
                                     .replace(/__tli-date__/g, moment(initiated_data[0].x).format('ddd, MMM D, YYYY, k:mm'))
                                     .replace(/__tli-tl-name__/g, initiated_name)
-                                    .replace(/__tli-kind__/g, 'Initiating QA')
+                                    .replace(/__tli-kind__/g, 'Initiating QC')
                                     .replace(/__show-in__/g, 'style="display: none"')
                                 );
 
@@ -1749,7 +1749,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                                 .replace(/__tli-id__/g, rtsqa_data[0].test_list_instance_id)
                                 .replace(/__tli-date__/g, moment(rtsqa_data[0].x).format('ddd, MMM D, YYYY, k:mm'))
                                 .replace(/__tli-tl-name__/g, rtsqa_name)
-                                .replace(/__tli-kind__/g, 'Return To Service QA')
+                                .replace(/__tli-kind__/g, 'Return To Service QC')
                                 .replace(/__show-in__/g, 'style="display: none"')
                             );
 

@@ -4,7 +4,7 @@ Test Statuses
 =============
 
 Every test instance that is created has a status assigned to it (and
-hence there must be at least one status defined before doing QA).
+hence there must be at least one status defined before doing QC).
 
 These statuses allow you to flag tests for review, indicate whether a
 test result is valid or not and whether or not a test result should be

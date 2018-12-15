@@ -15,18 +15,18 @@
     {% if perms.qa.add_testlistinstance %}
       <div class="box box-solid box-info">
         <div class="box-header">
-          <h3 class="box-title">{% trans "Perform QA" %}</h3>
+          <h3 class="box-title">{% trans "Perform QC" %}</h3>
         </div>
           <a class="list-group-item" title="{% trans "Choose a Unit to perform qa on" %}" href="{% url 'choose_unit' %}">
-            <i class="fa fa-cubes fa-lg fa-fw"></i> {% trans "Choose a unit to perform QA for" %}
+            <i class="fa fa-cubes fa-lg fa-fw"></i> {% trans "Choose a unit to perform QC for" %}
           </a>
           <a class="list-group-item" title="{% trans "View available test lists to perform" %}" href="{% url 'all_lists' %}">
             <i class="fa fa-pencil-square fa-lg fa-fw"></i> {% trans "View all test lists available to perform" %}
           </a>
-          <a class="list-group-item" href="{% url "in_progress" %}" title="{% trans "Resume a QA session currently in progress" %}">
+          <a class="list-group-item" href="{% url "in_progress" %}" title="{% trans "Resume a QC session currently in progress" %}">
             <i class="fa fa-play fa-lg fa-fw" aria-hidden="true"></i>
             {% trans "Continue an In Progress Test List Instance" %}
-            <span title="{% blocktrans %}There are currently {{IN_PROGRESS}} QA Sessions saved in progress{% endblocktrans %}" class="label {% if IN_PROGRESS == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+            <span title="{% blocktrans %}There are currently {{IN_PROGRESS}} QC Sessions saved in progress{% endblocktrans %}" class="label {% if IN_PROGRESS == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
                 <span class="total-in-progress-count">{{ IN_PROGRESS }}</span>
             </span>
           </a>
@@ -36,21 +36,21 @@
     {% if perms.qa.can_review or perms.qa.can_view_completed %}
       <div class="box box-solid box-info">
         <div class="box-header">
-          <h3 class="box-title">{% trans "Review QA" %}</h3>
+          <h3 class="box-title">{% trans "Review QC" %}</h3>
         </div>
         {% if perms.qa.can_review %}
           <a class="list-group-item" title="{% trans "Choose a Unit to review QC for" %}" href="{% url 'choose_review_unit' %}">
-            <i class="fa fa-cubes fa-lg fa-fw"></i> {% trans "Choose a unit to review QA for" %}
+            <i class="fa fa-cubes fa-lg fa-fw"></i> {% trans "Choose a unit to review QC for" %}
           </a>
           <a class="list-group-item" title="{% trans "Review data" %}" href="{% url 'unreviewed' %}">
             <i class="fa fa-question-circle fa-lg fa-fw" aria-hidden="true"></i>
-            {% trans "View QA data awaiting review" %}
+            {% trans "View QC data awaiting review" %}
             {% if perms.qa.can_review_non_visible_tli %}
-              <span title="There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+              <span title="There are currently {{UNREVIEWED}} QC Sessions waiting to be reviewed" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
                 <span class="total-unreviewed-count">{{UNREVIEWED}}</span>
               </span>
             {% else %}
-              <span class="fa fa-lg fa-fw" title="There are currently {{ USERS_UNREVIEWED }} QA Sessions waiting to be reviewed" class="label {% if USERS_UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+              <span class="fa fa-lg fa-fw" title="There are currently {{ USERS_UNREVIEWED }} QC Sessions waiting to be reviewed" class="label {% if USERS_UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
                 <span class="total-unreviewed-count">{{ USERS_UNREVIEWED }}</span>
               </span>
             {% endif %}
@@ -92,18 +92,18 @@
             </a>
           {% endif %}
           {% if perms.service_log.perform_returntoserviceqa %}
-            <a class="list-group-item" title="{% trans "View all incomplete RTS QA" %}" href="{% url 'rtsqa_list_incomplete' %}">
+            <a class="list-group-item" title="{% trans "View all incomplete RTS QC" %}" href="{% url 'rtsqa_list_incomplete' %}">
               <i class="fa fa-stack fa-lg fa-fw">
                 <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
                 <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-extra-left hover-sub-info"></i>
               </i>
-              {% trans "View all incomplete return to service QA" %}
+              {% trans "View all incomplete return to service QC" %}
             </a>
           {% endif %}
           {% if perms.qa.can_review %}
-            <a class="list-group-item" title="{% trans "View unreviewed RTS QA" %}" href="{% url 'rtsqa_list_unreviewed' %}">
+            <a class="list-group-item" title="{% trans "View unreviewed RTS QC" %}" href="{% url 'rtsqa_list_unreviewed' %}">
               <i class="fa fa-question-circle fa-lg fa-fw" aria-hidden="true"></i>
-              {% trans "View unreviewed return to service QA" %}
+              {% trans "View unreviewed return to service QC" %}
             </a>
           {% endif %}
         </div>

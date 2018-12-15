@@ -547,7 +547,7 @@ class TestComposite(TestCase):
         response = self.view(request)
         values = json.loads(response.content.decode("UTF-8"))
 
-        expected = {"errors": ['Invalid QA Values'], "success": False}
+        expected = {"errors": ['Invalid QC Values'], "success": False}
         self.assertDictEqual(values, expected)
 
     def test_invalid_number(self):
@@ -1004,7 +1004,7 @@ class TestPerformQA(TestCase):
 
         # user is redirected if form submitted successfully
         self.assertEqual(response.status_code, 302)
-        self.assertIn("qa/unit/%d" % self.unit_test_list.unit.number, response._headers['location'][1])
+        self.assertIn("qc/unit/%d" % self.unit_test_list.unit.number, response._headers['location'][1])
 
     def test_perform_invalid(self):
         data = {

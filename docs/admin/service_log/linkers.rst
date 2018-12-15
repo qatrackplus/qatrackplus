@@ -7,7 +7,7 @@ When creating or editing a new :term:`Service Event` users have the opportunity
 to list who is involved in the Service Event. This is accomplished via `Group
 Linkers`.
 
-For example, if therapists perform morning QA in your clinic and runs into an
+For example, if therapists perform morning QC in your clinic and runs into an
 issue where a Service Event is initiated, you may want to create Group linkers
 for `Therapist who reported issue` and `Physicist reported to`. Then when
 initiating a Service Event the user would be presented with dropdowns to choose

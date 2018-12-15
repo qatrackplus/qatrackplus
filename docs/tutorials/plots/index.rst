@@ -38,7 +38,7 @@ Configuring the Tests
 ~~~~~~~~~~~~~~~~~~~~~
 
 :ref:`Navigate to the admin section <access_admin_site>` of the site and click
-on the `Tests` item in the `QA` section.
+on the `Tests` item in the `QC` section.
 
 
 .. figure:: tests_admin.png
@@ -140,8 +140,8 @@ Then click `Save`
 Settting up the Test List
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Navigate back to the `Home` or `QA` page of the Admin area and then create a
-new Test List by clicking the `Test List` link in the `QA` section and then
+Navigate back to the `Home` or `QC` page of the Admin area and then create a
+new Test List by clicking the `Test List` link in the `QC` section and then
 clicking the `Add Test List` button.
 
 Give your test list the name `Line fit example` or similar, then in the `Test
@@ -174,8 +174,8 @@ Then click `Save`.
 Assigning the Test List to a Unit
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Navigate back to the `Home` or `QA` page of the Admin area and then assign the
-Test List by clicking the `Assign Test Lists to Units` link in the `QA` section
+Navigate back to the `Home` or `QC` page of the Admin area and then assign the
+Test List by clicking the `Assign Test Lists to Units` link in the `QC` section
 and then click the `Add Unit Test Collection` button at the top right.
 
 Fill out the required fields:

@@ -32,13 +32,13 @@ Glossary
     Category
 
         Categories define the type of test users are performing. Test Lists can
-        be filtered by Test Category when performing QA. See :ref:`Categories
+        be filtered by Test Category when performing QC. See :ref:`Categories
         <qa_categories>`.
 
     Contacts
 
         Contacts are phone numbers that can be displayed to users when
-        performing QA in case they run into any issues and need to call for
+        performing QC in case they run into any issues and need to call for
         help. See :ref:`Contacts <qa_contacts>`.
 
     Frequency
@@ -94,16 +94,16 @@ Glossary
     Permissions
 
         The permissions assigned to Groups and Users control what functionality
-        they have access to on the QATrack+ site.  See :ref:`Permissions
+        they have access to on the QCTrack+ site.  See :ref:`Permissions
         <permissions_admin>`.
 
-    QA Session
+    QC Session
 
         See :term:`Test List Instance`.
 
     Reference
 
-        The value which :term:`Test Instance` are compared to when performing QA
+        The value which :term:`Test Instance` are compared to when performing QC
         to determine whether they are within tolerance and action levels. See
         :ref:`References & Tolerances <qa_ref_tols>`.
 
@@ -112,18 +112,18 @@ Glossary
         Rooms are used in the :term:`Parts` app for keeping track of where
         spare parts are located.
 
-    Return To Service QA
+    Return To Service QC
 
         Test Lists that must be performed after a :term:`Service Event` before
         a :term:`Unit` can be released for clinical service.
 
     RTS
 
-       See :term:`Return to Service QA`
+       See :term:`Return to Service QC`
 
-    RTS QA
+    RTS QC
 
-       See :term:`Return to Service QA`
+       See :term:`Return to Service QC`
 
     Service Area
 
@@ -143,7 +143,7 @@ Glossary
     Service Event Status
 
         The status of a :term:`Service Event`. Service Event Status's indicate whether
-        review of the Service Event is required and whether Return To Service QA must
+        review of the Service Event is required and whether Return To Service QC must
         be reviewed. Example Service Event Status's include:
         - Service Pending
         - Service In Progress
@@ -217,7 +217,7 @@ Glossary
     Test List Instance
 
         A Test List Instance is a single completed value of any given
-        :term:`Test List`. Also called a `QA Session`.
+        :term:`Test List`. Also called a `QC Session`.
 
     Test Instance Status
 

@@ -13,11 +13,21 @@ admin.autodiscover()
 favicon_view = RedirectView.as_view(url=static_url("qatrack_core/img/favicon.ico"), permanent=True)
 touch_view = RedirectView.as_view(url=static_url("qatrack_core/img/apple-touch-icon.png"), permanent=True)
 
+class QAToQC(RedirectView):
+
+    permanent = True
+    query_string = True
+
+    def get_redirect_url(self, *args, **kwargs):
+        url = super().get_redirect_url(*args, **kwargs)
+        return "/qc/%s" % kwargs['terms']
 
 urlpatterns = [
     url(r'^$', homepage, name="home"),
     url(r'^accounts/', include('qatrack.accounts.urls')),
-    url(r'^qa/', include('qatrack.qa.urls')),
+    url(r'^qa/(?P<terms>.*)$', QAToQC.as_view()),
+    url(r'^qc/', include('qatrack.qa.urls')),
+    #url(r'^qa/', include('qatrack.qa.urls', namespace="qa")),
     url(r'^units/', include('qatrack.units.urls')),
     url(r'^core/', include('qatrack.qatrack_core.urls')),
 

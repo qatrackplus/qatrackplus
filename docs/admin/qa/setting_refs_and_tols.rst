@@ -115,7 +115,7 @@ another. This is quite handy when you have the same test list assigned
 to multiple units with the same reference values set.
 
 From the main admin page click on the ``Copy References & Tolerances``
-link in the QA section.
+link in the QC section.
 
 .. figure:: images/setting_refs_and_tols/copy_ref_tols.png
    :alt: Copy ref tols link

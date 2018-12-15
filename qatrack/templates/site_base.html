@@ -150,20 +150,20 @@
 
                     <ul class="dropdown-menu" role="menu">
                       <li>
-                        <a href="{% url "choose_unit" %}" title="{% trans "Choose a Unit To Perform QA On" %}">
+                        <a href="{% url "choose_unit" %}" title="{% trans "Choose a Unit To Perform QC On" %}">
                           <i class="fa fa-cubes fa-lg fa-fw" aria-hidden="true"></i>
                           {% trans "Choose Unit" %}
                         </a>
                       </li>
                       <li>
-                        <a href="{% url "all_lists" %}" title="{% trans "View all available QA Lists" %}">
+                        <a href="{% url "all_lists" %}" title="{% trans "View all available QC Lists" %}">
                           <i class="fa fa-pencil-square-o fa-lg fa-fw" aria-hidden="true"></i>
-                          {% trans "All QA" %}
+                          {% trans "All QC" %}
                         </a>
                       </li>
                       {% if USE_SERVICE_LOG and perms.service_log.perform_returntoserviceqa %}
                         <li class="hover-parent">
-                          <a href="{% url 'rtsqa_list_incomplete' %}" title="{% trans "View all incomplete return to service QA" %}">
+                          <a href="{% url 'rtsqa_list_incomplete' %}" title="{% trans "View all incomplete return to service QC" %}">
                             <i class="fa fa-stack fa-lg fa-fw">
                               <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
                               <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-extra-left hover-sub-info"></i>
@@ -174,9 +174,9 @@
                       {% endif %}
                       <li class="divider"></li>
                       <li>
-                        <a href="{% url "in_progress" %}" title="{% trans "Resume a QA session currently in progress" %}">
+                        <a href="{% url "in_progress" %}" title="{% trans "Resume a QC session currently in progress" %}">
                           <i class="fa fa-play fa-lg fa-fw" aria-hidden="true"></i>
-                          <span title="{% blocktrans %}There are currently {{IN_PROGRESS}} QA Sessions saved in progress{% endblocktrans %}" class="label {% if IN_PROGRESS == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                          <span title="{% blocktrans %}There are currently {{IN_PROGRESS}} QC Sessions saved in progress{% endblocktrans %}" class="label {% if IN_PROGRESS == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
                             <span class="total-in-progress-count">{{ IN_PROGRESS }}</span>
                           </span>
                           {% trans "In Progress" %}
@@ -193,14 +193,14 @@
                       {% if perms.qa.can_review %}
                         {% if perms.qa.can_review_non_visible_tli %}
                           <span
-                            title="{% blocktrans %}There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed{% endblocktrans %}"
+                            title="{% blocktrans %}There are currently {{UNREVIEWED}} QC Sessions waiting to be reviewed{% endblocktrans %}"
                             class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper"
                           >
                             <span class="total-unreviewed-count">{{UNREVIEWED}}</span>
                           </span>
                         {% else %}
                           <span
-                            title="{% blocktrans %}There are currently {{ USERS_UNREVIEWED }} QA Sessions waiting to be reviewed{% endblocktrans %}"
+                            title="{% blocktrans %}There are currently {{ USERS_UNREVIEWED }} QC Sessions waiting to be reviewed{% endblocktrans %}"
                             class="label {% if USERS_UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper"
                           >
                             <span class="total-unreviewed-count">{{ USERS_UNREVIEWED }}</span>
@@ -213,11 +213,11 @@
                     <ul class="dropdown-menu" role="menu">
                       {% if perms.qa.can_review or perms.qa.can_view_overview %}
 
-                        <li class="nav-header">{% trans "QA Program Status" %}</li>
+                        <li class="nav-header">{% trans "QC Program Status" %}</li>
 
                         {% if perms.qa.can_review_non_visible_tli %}
                           <li>
-                            <a href="{% url "overview" %}" title="{% trans "View a summary of the status of the QA program" %}">
+                            <a href="{% url "overview" %}" title="{% trans "View a summary of the status of the QC program" %}">
                               <i class="fa fa-globe fa-lg fa-fw" aria-hidden="true"></i>
                               {% trans "Overview - All" %}
                             </a>
@@ -225,7 +225,7 @@
                         {% endif %}
 
                         <li>
-                          <a href="{% url "overview_user" %}" title="{% trans "View a summary of the status of the QA program (QA for groups you belong to)" %}">
+                          <a href="{% url "overview_user" %}" title="{% trans "View a summary of the status of the QC program (QC for groups you belong to)" %}">
                             <i class="fa fa-globe fa-lg fa-fw" aria-hidden="true"></i>
                             {% trans "Overview" %}{% if perms.qa.can_review_non_visible_tli %} - {% trans "Your Groups" %}{% endif %}
                           </a>
@@ -233,7 +233,7 @@
 
                         {% if perms.qa.can_review_non_visible_tli %}
                           <li>
-                            <a href="{% url "overview_due_dates" %}" title="{% trans "View QA grouped by due date" %}">
+                            <a href="{% url "overview_due_dates" %}" title="{% trans "View QC grouped by due date" %}">
                               <i class="fa fa-calendar-check-o fa-lg fa-fw" aria-hidden="true"></i>
                               {% trans "By Due Status - All" %}
                             </a>
@@ -241,7 +241,7 @@
                         {% endif %}
 
                         <li>
-                          <a href="{% url "overview_due_dates_user" %}" title="{% trans "View QA for groups you belong to (QA for groups you belong to)" %}">
+                          <a href="{% url "overview_due_dates_user" %}" title="{% trans "View QC for groups you belong to (QC for groups you belong to)" %}">
                             <i class="fa fa-calendar-check-o fa-lg fa-fw" aria-hidden="true"></i>
                             {% trans "By Due Status" %}{% if perms.qa.can_review_non_visible_tli %} - {% trans "Your Groups" %}{% endif %}
                           </a>
@@ -253,13 +253,13 @@
 
                         <li class="divider"></li>
 
-                        <li class="nav-header">QA Sessions</li>
+                        <li class="nav-header">QC Sessions</li>
 
                         {% if perms.qa.can_review_non_visible_tli %}
                           <li>
-                            <a href="{% url  "unreviewed" %}" title="{% blocktrans %}There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed {% endblocktrans %}">
+                            <a href="{% url  "unreviewed" %}" title="{% blocktrans %}There are currently {{UNREVIEWED}} QC Sessions waiting to be reviewed {% endblocktrans %}">
                               <i class="fa fa-question-circle fa-lg fa-fw" aria-hidden="true"></i>
-                              <span title="{% blocktrans %}There are currently {{UNREVIEWED}} QA Sessions waiting to be reviewed {% endblocktrans %}" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                              <span title="{% blocktrans %}There are currently {{UNREVIEWED}} QC Sessions waiting to be reviewed {% endblocktrans %}" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
                                   <span class="total-unreviewed-count">{{UNREVIEWED}}</span>
                               </span>
                               {% trans "Unreviewed - All Groups" %}
@@ -267,10 +267,10 @@
                           </li>
                         {% endif %}
                         <li>
-                          <a href="{% url  "unreviewed_visible_to" %}" title="{% blocktrans %}There are currently {{ USERS_UNREVIEWED }} QA Sessions waiting to be reviewed (QA for groups you belong to){% endblocktrans %}">
+                          <a href="{% url  "unreviewed_visible_to" %}" title="{% blocktrans %}There are currently {{ USERS_UNREVIEWED }} QC Sessions waiting to be reviewed (QC for groups you belong to){% endblocktrans %}">
                             <i class="fa fa-question-circle fa-lg fa-fw" aria-hidden="true"></i>
                             <span
-                              title="{% blocktrans %}There are currently {{ USERS_UNREVIEWED }} QA Sessions visible to your groups waiting to be reviewed{% endblocktrans %}"
+                              title="{% blocktrans %}There are currently {{ USERS_UNREVIEWED }} QC Sessions visible to your groups waiting to be reviewed{% endblocktrans %}"
                               class="label {% if USERS_UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper"
                             >
                               <span class="total-unreviewed-count">{{ USERS_UNREVIEWED }}</span>
@@ -438,7 +438,7 @@
 
                           <li class="divider"></li>
 
-                          <li class="nav-header">Return To Service QA</li>
+                          <li class="nav-header">{% trans "Return To Service QC" %}</li>
                             {% if perms.service_log.view_returntoserviceqa %}
                               <li class="hover-parent">
                                 <a href="{% url "rtsqa_list_all" %}" title="{% trans "View all return to service qa" %}">

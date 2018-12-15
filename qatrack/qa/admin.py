@@ -52,7 +52,7 @@ class BasicSaveUserAdmin(SaveUserMixin, admin.ModelAdmin):
 
 
 class CategoryAdmin(admin.ModelAdmin):
-    """QA categories admin"""
+    """QC categories admin"""
     prepopulated_fields = {'slug': ('name',)}
     list_display = (
         "name",

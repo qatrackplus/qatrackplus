@@ -67,7 +67,7 @@
                             {% if USE_SERVICE_LOG %}
                                 {% for rts in object.rtsqa_for_tli.all %}
                                   <tr class="warning">
-                                    <td>Return To Service QA Assignment</td>
+                                    <td>Return To Service QC Assignment</td>
                                     <td>{{ rts.unit_test_collection.name }} assigned by {{ rts.user_assigned_by }} on {{ rts.datetime_assigned }}</td>
                                     <td>No</td>
                                   </tr>

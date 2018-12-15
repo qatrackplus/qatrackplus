@@ -104,7 +104,7 @@ sets for groups are given below:.
 -  **qa \| test instance \| Can skip without comment** *Allows a user to
    skip tests without adding a comment*
 -  **qa \| test list instance \| Can add test list instance** *Required
-   for all users who will be performing QA*
+   for all users who will be performing QC*
 -  **qa \| test list instance \| Can perform subset of tests** *Allows a
    user to perform only a subset of test categories when performing a
    test list*
@@ -115,8 +115,8 @@ sets for groups are given below:.
    completed test lists*
 -  **qa \| test list instance \| Can change test list instance** *Allows
    a user to edit previously completed test results*
--  **qa \| frequency \| Choose QA by Frequency** *Allows a user to
-   access different frequencies of QA to perform*
+-  **qa \| frequency \| Choose QC by Frequency** *Allows a user to
+   access different frequencies of QC to perform*
 -  **qa \| test list instance \| Can override date** *Enables a user to
    override the default date and time for a test list instance*
 -  **qa \| unit test info \| Can view Refs and Tols** *Enables the
@@ -141,7 +141,7 @@ sets for groups are given below:.
 Minimal set of permissions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A fairly minimal set of permissions for performing QA (e.g. for a
+A fairly minimal set of permissions for performing QC (e.g. for a
 therapist) is:
 
 -  qa \| test list instance \| Can add test list instance
@@ -155,17 +155,17 @@ therapist) is:
    Minimal set of permissions
 
 This set of permissions will allow a user to access and perform daily &
-weekly QA and optionally view previously comleted test lists.
+weekly QC and optionally view previously comleted test lists.
 
 Permissions for performing and viewing test history
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-For users who will be performing lots of QA but will not be reviewing
+For users who will be performing lots of QC but will not be reviewing
 and approving data or configuring new tests and test lists (e.g. a
 Physics Technologist), the list of permissions might look like the
 following:
 
--  qa \| frequency \| Choose QA by Frequency
+-  qa \| frequency \| Choose QC by Frequency
 -  qa \| test instance \| Can chart test history
 -  qa \| test instance \| Can view test history
 -  qa \| test list instance \| Can add test list instance
@@ -183,7 +183,7 @@ following:
 Fairly complete set of permissions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-For a user who will be performing QA, reviewing and approving data and
+For a user who will be performing QC, reviewing and approving data and
 configuring new tests and test lists and groups (e.g. a Physicist), a
 typical permission set might look like the following:
 
@@ -199,7 +199,7 @@ typical permission set might look like the following:
 -  qa \| category \| Can add category
 -  qa \| category \| Can change category
 -  qa \| frequency \| Can add frequency
--  qa \| frequency \| Choose QA by Frequency
+-  qa \| frequency \| Choose QC by Frequency
 -  qa \| frequency \| Can change frequency
 -  qa \| reference \| Can add reference
 -  qa \| reference \| Can change reference
