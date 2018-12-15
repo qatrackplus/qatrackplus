@@ -10,11 +10,10 @@
 
     <div class="page-header text-center">
       <h1>{% trans "Welcome to QATrack+" %}</h1>
-      <h1><small>{{ SITE_NAME }}</small></h1>
     </div>
 
     {% if perms.qa.add_testlistinstance %}
-      <div class="box box-solid box-primary">
+      <div class="box box-solid box-info">
         <div class="box-header">
           <h3 class="box-title">{% trans "Perform QA" %}</h3>
         </div>
@@ -35,7 +34,7 @@
     {% endif %}
 
     {% if perms.qa.can_review or perms.qa.can_view_completed %}
-      <div class="box box-solid box-primary">
+      <div class="box box-solid box-info">
         <div class="box-header">
           <h3 class="box-title">{% trans "Review QA" %}</h3>
         </div>
@@ -69,7 +68,7 @@
 
     {% if USE_SERVICE_LOG %}
       {% if perms.service_log.view_serviceevent or perms.service_log.add_serviceevent or perms.service_log.perform_returntoserviceqa or perms.qa.can_review %}
-        <div class="box box-solid box-primary">
+        <div class="box box-solid box-info">
           <div class="box-header">
             <h3 class="box-title">{% trans "Service Log" %}</h3>
           </div>
