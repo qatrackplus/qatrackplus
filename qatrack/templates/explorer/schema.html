@@ -1,0 +1,98 @@
+{% extends "explorer/base.html" %}
+{% load i18n %}
+
+{% block nav %}{% endblock %}
+
+{% block body_class %}iframe{% endblock %}
+{% block main_sidebar %}{% endblock main_sidebar %}
+{% block container_class %}{% endblock container_class %}
+{% block content_class %}{% endblock content_class %}
+
+{% block extra_css %}
+
+<style>
+  .iframe .content-wrapper {
+    padding: 10px;
+    background: white;
+  }
+</style>
+{% endblock extra_css %}
+
+{% block sql_explorer_content_takeover %}
+<div class="schema-wrapper">
+  <h4 class="text-center">{% trans "Schema" %}</h4>
+  <div id="tables">
+    <p class="text-center">
+      <input class="search" placeholder="{% trans "Search" %}" />
+    </p>
+    <div class="row">
+      <div class="col-xs-6 text-center">
+        <a class="btn btn-sm btn-info" id="collapse_all">{% trans "Collapse All" %}</a>
+      </div>
+      <div class="col-xs-6 text-center">
+        <a class="btn btn-sm btn-info" id="expand_all">{% trans "Expand All" %}</a>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-12">
+        {# note this ul must retain the 'list' class in order for list.js to work #}
+        <ul class="list list-unstyled" style="padding: 0; margin-top:10px;">
+          {% for m in schema %}
+            <li>
+              <div class="panel panel-default">
+                <div class="panel-heading schema-header">
+                  <h4 class="name panel-title" style="display: inline-block">{{ m.0 }}</h4>
+                </div>
+                <div class="table-responsive schema-table">
+                  <table class="table table-condensed table-hover">
+                    <thead>
+                    </thead>
+                    <tbody>
+                      {% for c in m.1 %}
+                        <tr>
+                          <td width="50%"><code>{{ c.0 }}</code></td>
+                          <!-- This will show the type of the column as well -->
+                          <td width="50%" class="text-muted"><small>{{ c.1 }}</small></td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block sql_explorer_footer %}{% endblock %}
+
+{% block sql_explorer_scripts %}
+    function SearchFocus() {
+      if (!$(window.parent.document.getElementById("schema_frame")).hasClass('no-autofocus')) {
+          $(".search").focus();
+      }
+    }
+
+    var options = {
+        valueNames: [ 'name', 'app' ],
+        handlers: { 'updated': [SearchFocus] }
+    };
+
+    var tableList = new List('tables', options);
+
+    $('#collapse_all').click(function(){
+        $('.schema-table').hide();
+    });
+
+    $('#expand_all').click(function(){
+        $('.schema-table').show();
+    });
+
+    $('.schema-header').click(function(){
+        $(this).parent().find('.schema-table').toggle();
+    });
+
+{% endblock %}

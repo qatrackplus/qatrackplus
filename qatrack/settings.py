@@ -509,7 +509,6 @@ DEFAULT_COLOURS = [
 ]
 DEFAULT_TEST_STATUS_COLOUR = 'rgba(243,156,18,1)'
 
-USE_SQL_REPORTS = False
 USE_SERVICE_LOG = True
 USE_PARTS = True
 USE_ISSUES = False  # internal development issue tracker
@@ -534,10 +533,21 @@ TESTPACK_TIMEOUT = 30
 
 # SQL Explorer Settings
 
+USE_SQL_REPORTS = False
+
 EXPLORER_CONNECTIONS = {'Default': 'readonly'}
 EXPLORER_DEFAULT_CONNECTION = 'readonly'
 EXPLORER_SCHEMA_INCLUDE_TABLE_PREFIXES = ['auth_', 'qa', 'service_log', 'units', 'parts']
 EXPLORER_SCHEMA_EXCLUDE_TABLE_PREFIXES = ['authtoken']
+EXPLORER_ENABLE_TASKS = False
+
+
+def EXPLORER_PERMISSION_CHANGE(user):
+    return user.has_perm("qa.can_create_sql_reports")
+
+
+def EXPLORER_PERMISSION_VIEW(user):
+    return user.has_perm("qa.can_run_sql_reports")
 
 
 if os.path.exists('/root/.is_inside_docker'):

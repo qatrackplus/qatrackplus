@@ -119,6 +119,7 @@
 
     <div class="wrapper">
 
+      {% block nav %}
       <header class="main-header">
 
         <nav class="navbar navbar-static-top">
@@ -519,7 +520,7 @@
                   {% endif %}
                 {% endif %}
 
-                {% if perms.qa.can_view_charts or USE_SERVICE_LOG and user.is_staff %}
+                {% if perms.qa.can_create_sql_reports or perms.qa.can_run_sql_reports or perms.qa.can_view_charts or USE_SERVICE_LOG and user.is_staff %}
                   <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                       {% trans "Trends and Analysis" %}
@@ -532,6 +533,14 @@
                           <a href="{% url "charts" %}" title="{% trans "Charts" %}">
                             <i class="fa fa-line-chart fa-fw fa-lg"></i>
                             {% trans "Charts" %}
+                          </a>
+                        </li>
+                      {% endif %}
+                      {% if perms.qa.can_run_sql_reports or perms.qa.can_create_sql_reports %}
+                        <li>
+                          <a href="{% url "explorer_index" %}" title="{% trans "SQL Query Tool" %}">
+                            <i class="fa fa-search fa-fw fa-lg"></i>
+                            {% trans "Query Tool" %}
                           </a>
                         </li>
                       {% endif %}
@@ -610,6 +619,8 @@
         </nav>
 
       </header>
+
+      {% endblock nav %}
 
       {% block main_sidebar %}
       {% endblock main_sidebar %}
