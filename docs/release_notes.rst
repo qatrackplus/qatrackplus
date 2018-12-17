@@ -17,6 +17,11 @@ Details of the v0.3.1 release
 * A new :ref:`Query Tool <qa_query_tool>` has been added for advanced query and
   reporting.
 
+* QA -> QC:  In most places in the UI the initials QA have been replaced by QC to
+  reflect the fact that data collected in QATrack+ is QC data. This has been an
+  annoyance since I first made the labeling error in the original version of
+  QATrack+.
+
 
 QATrack+ v0.3.0 Release Notes
 -----------------------------

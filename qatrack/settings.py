@@ -621,3 +621,8 @@ if USE_SQL_REPORTS:
         'explorer',
         'xlsxwriter',
     ]
+
+    # use default database when testing
+    if any('py.test' in arg for arg in sys.argv):
+        EXPLORER_CONNECTIONS = {'Default': 'default'}
+        EXPLORER_DEFAULT_CONNECTION = 'default'
