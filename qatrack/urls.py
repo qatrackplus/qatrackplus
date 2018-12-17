@@ -4,9 +4,10 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.staticfiles.templatetags.staticfiles import \
     static as static_url
-from django.views.generic.base import RedirectView, TemplateView
+from django.views.generic.base import RedirectView
 
 from model_report import report
+from qatrack.qatrack_core.views import homepage
 
 admin.autodiscover()
 
@@ -17,10 +18,20 @@ favicon_view = RedirectView.as_view(url=static_url("qatrack_core/img/favicon.ico
 touch_view = RedirectView.as_view(url=static_url("qatrack_core/img/apple-touch-icon.png"), permanent=True)
 
 
+class QAToQC(RedirectView):
+
+    permanent = True
+    query_string = True
+
+    def get_redirect_url(self, *args, **kwargs):
+        return "/qc/%s" % kwargs['terms']
+
+
 urlpatterns = [
-    url(r'^$', TemplateView.as_view(template_name="homepage.html"), name="home"),
+    url(r'^$', homepage, name="home"),
     url(r'^accounts/', include('qatrack.accounts.urls')),
-    url(r'^qa/', include('qatrack.qa.urls')),
+    url(r'^qa/(?P<terms>.*)$', QAToQC.as_view()),
+    url(r'^qc/', include('qatrack.qa.urls')),
     url(r'^units/', include('qatrack.units.urls')),
     url(r'^core/', include('qatrack.qatrack_core.urls')),
 
@@ -48,9 +59,7 @@ if settings.USE_ISSUES:
     urlpatterns += [url(r'^issues/', include('qatrack.issue_tracker.urls'))]
 
 if settings.USE_SQL_REPORTS:
-    urlpatterns += [url(r'^reports/sql/', include('explorer.urls'))]
-
-urlpatterns += [url(r'^reports/', include('model_report.urls'))]
+    urlpatterns += [url(r'^reports/', include('explorer.urls'))]
 
 if settings.DEBUG:
     import debug_toolbar

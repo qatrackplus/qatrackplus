@@ -125,7 +125,7 @@ PERMISSIONS = (
             ),
             (
                 'qa.can_choose_frequency',
-                'Choose QA by frequency',
+                'Choose QC by frequency',
                 'Allows user to pre-emptively filter test lists based on frequency.',
             ),
             (
@@ -258,7 +258,7 @@ class FrequencyManager(models.Manager):
 
 
 class Frequency(models.Model):
-    """Frequencies for performing QA tasks with configurable due dates"""
+    """Frequencies for performing QC tasks with configurable due dates"""
 
     name = models.CharField(max_length=50, unique=True, help_text=_("Display name for this frequency"))
 
@@ -278,9 +278,24 @@ class Frequency(models.Model):
         help_text=_("Nominal number of days between test completions (for internal ordering purposes)")
     )
 
-    overdue_interval = models.PositiveIntegerField(
+    window_start = models.PositiveIntegerField(
+        verbose_name=_("QC Window Start"),
+        null=True,
+        blank=True,
         help_text=_(
-            "How many days after the due date should a test with this frequency be shown as overdue. (Use 0 if it should show as overdue the day after it is due)"
+            "Number of days before a Test List is due that its QC Window starts. "
+            "QC performed prior to the QC window start will not cause a change in due date. "
+            "Leave blank to use the classical 'offset' method where the due date is advanced "
+            "every time QC is performed"
+        ),
+    )
+
+    window_end = models.PositiveIntegerField(
+        verbose_name=_("QC Window End"),
+        help_text=_(
+            "Number of days after a Test List is due that its QC Window ends. "
+            "After the QC window ends the Test List will be shown as overdue."
+            "(Use 0 if it should show as overdue the day after it is due)"
         )
     )
 
@@ -290,7 +305,7 @@ class Frequency(models.Model):
         verbose_name_plural = "frequencies"
         ordering = ("nominal_interval",)
         permissions = (
-            ("can_choose_frequency", "Choose QA by Frequency"),
+            ("can_choose_frequency", "Choose QC by Frequency"),
         )
 
     def save(self, *args, **kwargs):
@@ -319,7 +334,7 @@ class StatusManager(models.Manager):
 
 
 class TestInstanceStatus(models.Model):
-    """Configurable statuses for QA Tests"""
+    """Configurable statuses for QC Tests"""
 
     name = models.CharField(max_length=50, help_text=_("Display name for this status type"), unique=True)
     slug = models.SlugField(
@@ -402,7 +417,7 @@ class AutoReviewRule(models.Model):
 
 
 class Reference(models.Model):
-    """Reference values for various QA :model:`Test`s"""
+    """Reference values for various QC :model:`Test`s"""
 
     name = models.CharField(max_length=255, help_text=_("Enter a short name for this reference"))
     type = models.CharField(max_length=15, choices=REF_TYPE_CHOICES, default=NUMERICAL)
@@ -664,7 +679,7 @@ class TestManager(models.Manager):
 
 
 class Test(models.Model, TestPackMixin):
-    """Test to be completed as part of a QA :model:`TestList`"""
+    """Test to be completed as part of a QC :model:`TestList`"""
 
     NK_FIELDS = ['name']
 
@@ -700,7 +715,7 @@ class Test(models.Model, TestPackMixin):
         help_text=_("Indicate if this test is a %s" % (','.join(x[1].title() for x in TEST_TYPE_CHOICES)))
     )
 
-    hidden = models.BooleanField(_("Hidden"), help_text=_("Don't display this test when performing QA"), default=False)
+    hidden = models.BooleanField(_("Hidden"), help_text=_("Don't display this test when performing QC"), default=False)
     skip_without_comment = models.BooleanField(
         _("Skip without comment"),
         help_text=_("Allow users to skip this test without a comment"),
@@ -984,7 +999,7 @@ class UnitTestInfo(models.Model):
 
     assigned_to = models.ForeignKey(
         Group,
-        help_text=_("QA group that this test list should nominally be performed by"),
+        help_text=_("QC group that this test list should nominally be performed by"),
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
@@ -1155,7 +1170,7 @@ class TestListManager(models.Manager):
 
 
 class TestList(TestCollectionInterface, TestPackMixin):
-    """Container for a collection of QA :model:`Test`s"""
+    """Container for a collection of QC :model:`Test`s"""
 
     NK_FIELDS = ['slug']
 
@@ -1366,7 +1381,7 @@ class UnitTestCollection(models.Model):
 
     assigned_to = models.ForeignKey(
         Group,
-        help_text=_("QA group that this test list should nominally be performed by"),
+        help_text=_("QC group that this test list should nominally be performed by"),
         null=True,
     )
     visible_to = models.ManyToManyField(
@@ -1406,13 +1421,13 @@ class UnitTestCollection(models.Model):
     def calc_due_date(self):
         """return the next due date of this Unit/TestList pair """
 
-        if self.auto_schedule and self.frequency is not None:
+        if self.auto_schedule and self.frequency:
             last_valid = self.last_valid_instance()
-            if last_valid is None and self.last_instance is not None:
+            if not last_valid and self.last_instance:
                 # Done before but no valid lists
                 return timezone.now()
-            elif last_valid is not None and last_valid.work_completed:
-                return utils.calc_due_date(last_valid.work_completed, self.frequency)
+            elif (last_valid and last_valid.work_completed):
+                return utils.calc_due_date(last_valid.work_completed, self.due_date, self.frequency)
 
         # return existing due date (could be None)
         return self.due_date
@@ -1440,7 +1455,7 @@ class UnitTestCollection(models.Model):
             return NOT_DUE
 
         if self.frequency is not None:
-            overdue = due + timezone.timedelta(days=self.frequency.overdue_interval)
+            overdue = due + timezone.timedelta(days=self.frequency.window_end)
         else:
             overdue = due + timezone.timedelta(days=1)
 
@@ -1625,7 +1640,7 @@ class TestInstance(models.Model):
         # ordering = ("work_completed",)
         get_latest_by = "work_completed"
         permissions = (
-            ("can_view_history", "Can see test history when performing QA"),
+            ("can_view_history", "Can see test history when performing QC"),
             ("can_view_charts", "Can view charts of test history"),
             ("can_review", "Can review & approve tests"),
             ("can_skip_without_comment", "Can skip tests without comment"),
@@ -1825,7 +1840,7 @@ class TestListInstanceManager(models.Manager):
 
 
 class TestListInstance(models.Model):
-    """Container for a collection of QA :model:`TestInstance`s
+    """Container for a collection of QC :model:`TestInstance`s
 
     When a user completes a test list, a collection of :model:`TestInstance`s
     are created.  TestListInstance acts as a containter for the collection

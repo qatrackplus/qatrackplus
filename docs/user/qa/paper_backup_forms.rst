@@ -1,4 +1,4 @@
-Paper Backup QA Forms
+Paper Backup QC Forms
 =====================
 
 As of version 0.2.7 QATrack+ has a tool for generating (primitive) paper

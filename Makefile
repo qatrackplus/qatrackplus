@@ -1,4 +1,6 @@
-VERSION=0.3.0
+VERSION=0.3.1
+DATETIME=$(shell date '+%Y-%m-%d_%H-%M-%S')
+
 
 cover :
 	py.test --reuse-db --cov-report term-missing --cov ./ ${args}
@@ -8,6 +10,11 @@ test:
 
 test_simple:
 	py.test -m "not selenium" ${args}
+
+dumpdata:
+	python manage.py dumpdata \
+		-v1 --indent=2 --natural-foreign --natural-primary \
+		--output qatrack-dump-$(DATETIME).json
 
 yapf:
 	yapf --verbose --in-place --recursive --parallel \

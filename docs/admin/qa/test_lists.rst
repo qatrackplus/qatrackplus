@@ -4,7 +4,7 @@ Configuring Test Lists
 ======================
 
 To edit existing test lists or create new test lists click on the **Test
-Lists** in the **QA** section on the main admin page.
+Lists** in the **QC** section on the main admin page.
 
 Create a new test list by clicking the **Add Test List** link on the
 **Test Lists** admin page. The fields for defining a new test list are
@@ -34,14 +34,14 @@ Warning Message
 ---------------
 
 Use this field to define the message shown when a test within this test
-is at Action level. If the message is left blank The default is ("Do not
-treat").
+is at Action level. If the message is left blank, the default is "Do not
+treat".
 
 Javascript
 ----------
 
 You can enter arbitrary Javascript snippets here, and they will be injected
-into the page when perfo
+into the page when performing the test list.
 
 .. figure:: images/javascript.png
    :alt: Javascript injection
@@ -52,16 +52,14 @@ into the page when perfo
 Test List Members
 -----------------
 
-Test List's are composed from :term:`Test` s and/or other Test Lists, called
-:term:`Sublist`\s.
-
-In order to add a test to your test list, click the magnifying glass
+Test lists comprise :term:`Test`\s and/or other Test Lists, called
+:term:`Sublist`\s. In order to add a test to your test list, click the magnifying glass
 beside the first text box under the **Test** header.
 
 .. figure:: images/search_for_test.png
    :alt: search for test
 
-   search for test
+   Search for a test
 
 This will bring up a dialogue box that you can use to search for the
 test you want to add (or create a new one).
@@ -105,7 +103,7 @@ of the page, you will see the name of your test next to its id number.
 Continue to add tests in this fashion (you can add many tests without
 saving in between) until you have added all the required tests.
 
-When you are finished click \*\*Save and continue editing\* and confirm
+When you are finished click **Save and continue editing** and confirm
 that all your tests are present. See the section below for instructions
 on how to reorder the tests if required.
 

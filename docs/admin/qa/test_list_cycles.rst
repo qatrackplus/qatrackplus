@@ -8,7 +8,7 @@ A **test list cycle** allows you to group multiple :ref:`Test Lists
 unit.
 
 For example, at our clinic, on a number of units, the therapists daily
-QA is on a repeating 2 or 4 day cycle where the actual tests they
+QC is on a repeating 2 or 4 day cycle where the actual tests they
 perform vary slightly by day. A test list cycle allows us to handle this
 situation without the therapists having to keep track of which day was
 done last.

@@ -7,8 +7,8 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models.signals import pre_save
-from django.dispatch import receiver
 from django.db.utils import IntegrityError
+from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 
@@ -101,9 +101,9 @@ class ServiceEventStatus(models.Model):
     )
     rts_qa_must_be_reviewed = models.BooleanField(
         default=True,
-        verbose_name=_("Return To Service (RTS) QA Must be Reviewed"),
+        verbose_name=_("Return To Service (RTS) QC Must be Reviewed"),
         help_text=_(
-            'Service events with Return To Service (RTS) QA that has not been reviewed '
+            'Service events with Return To Service (RTS) QC that has not been reviewed '
             'can not have this status selected if set to true.'
         ),
     )

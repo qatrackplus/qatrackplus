@@ -1049,7 +1049,7 @@ class ReturnToServiceQABaseList(BaseListableView):
         return 'fa-pencil-square-o'
 
     def get_page_title(self, f=None):
-        return 'All Return To Service QA'
+        return 'All Return To Service QC'
 
     def get_context_data(self, *args, **kwargs):
         context = super(ReturnToServiceQABaseList, self).get_context_data(*args, **kwargs)
@@ -1116,7 +1116,7 @@ class ReturnToServiceQABaseList(BaseListableView):
 class ReturnToServiceQAIncompleteList(ReturnToServiceQABaseList):
 
     def get_page_title(self):
-        return "Return to Service QA - Incomplete"
+        return "Return to Service QC - Incomplete"
 
     def get_queryset(self):
         return super().get_queryset().filter(test_list_instance=None)
@@ -1128,7 +1128,7 @@ class ReturnToServiceQAIncompleteList(ReturnToServiceQABaseList):
 class ReturnToServiceQAUnreviewedList(ReturnToServiceQABaseList):
 
     def get_page_title(self):
-        return "Return to Service QA - Unreviewed"
+        return "Return to Service QC - Unreviewed"
 
     def get_queryset(self):
         return super().get_queryset().filter(
@@ -1149,7 +1149,7 @@ class ReturnToServiceQAForEventList(ReturnToServiceQABaseList):
             timezone.localtime(se.datetime_service).strftime('%b %m, %I:%M %p'),
             qa_tags.service_status_label(se.service_status),
         )
-        return mark_safe("Return to Service QA - Service Event %d: %s" % (se.pk, description))
+        return mark_safe("Return to Service QC - Service Event %d: %s" % (se.pk, description))
 
     def get_queryset(self):
         get_object_or_404(models.ServiceEvent, pk=self.kwargs['se_pk'])

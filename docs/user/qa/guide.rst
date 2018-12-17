@@ -1,4 +1,4 @@
-Performing and reviewing QA
+Performing and reviewing QC
 ===========================
 
 

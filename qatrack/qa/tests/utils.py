@@ -293,12 +293,12 @@ def create_group(name=None):
     return g
 
 
-def create_frequency(name=None, slug=None, due=1, overdue=1):
+def create_frequency(name=None, slug=None, interval=1, window_end=1, save=True):
     if name is None or slug is None:
         name = 'frequency_%04d' % get_next_id(models.Frequency.objects.order_by('id').last())
         slug = name
 
-    rule = recurrence.Rule(freq=recurrence.DAILY, interval=due)
+    rule = recurrence.Rule(freq=recurrence.DAILY, interval=interval)
 
     f = models.Frequency(
         name=name,
@@ -307,9 +307,11 @@ def create_frequency(name=None, slug=None, due=1, overdue=1):
             rrules=[rule],
             dtstart=timezone.get_current_timezone().localize(timezone.datetime(2012, 1, 1)),
         ),
-        overdue_interval=overdue
+        window_start=None,
+        window_end=window_end,
     )
-    f.save()
+    if save:
+        f.save()
     return f
 
 

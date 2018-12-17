@@ -1,10 +1,10 @@
-Deleting A QA Session (Test List Instance)
+Deleting A QC Session (Test List Instance)
 ==========================================
 
 **Warning** *Deleted items are irretrievable! If you are unsure of what
 you are doing please ask someone for assistance.*
 
-Navigate to the review page of the QA session you would like to delete and at
+Navigate to the review page of the QC session you would like to delete and at
 the bottom left of the page click the red **Delete** button (if the button is
 deactivated, you don't have the required permissions to delete items).
 

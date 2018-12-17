@@ -176,7 +176,7 @@ class UTCList(BaseListableView):
 
     action = "perform"
     action_display = "Perform"
-    page_title = "All QA"
+    page_title = "All QC"
     active_only = True
     inactive_only = False
     visible_only = True

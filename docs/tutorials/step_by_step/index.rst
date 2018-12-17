@@ -89,7 +89,7 @@ Click on the `example.com` entry under the **Domain name** column header.
     :alt: The example.com site object
 
     The example.com site object
-    
+
 and then set the relevant fields (ask your admin if you're not sure of
 the domain name to use) and click **Save** when you're finished.
 
@@ -112,7 +112,7 @@ top rather than **example.com**.
 In the next step of this tutorial we will configure a new Unit.
 
 
-Creating a new Unit 
+Creating a new Unit
 -------------------
 
 In order to prevent duplicating information here, please follow the
@@ -129,12 +129,12 @@ button in the top right.
 Set the **Name** field to `Physics` and choose the following set of permissions:
 
 * **attachments | attachment | Can add attachment**
-* **qa | frequency | Choose QA by Frequency**
+* **qa | frequency | Choose QC by Frequency**
 * **qa | test instance | Can review &amp; approve tests**
 * **qa | test instance | Can review &amp; approve self-performed tests**
 * **qa | test instance | Can skip tests without comment**
 * **qa | test instance | Can view charts of test history**
-* **qa | test instance | Can see test history when performing QA**
+* **qa | test instance | Can see test history when performing QC**
 * **qa | test list instance | Can add test list instance**
 * **qa | test list instance | Can override date**
 * **qa | test list instance | Can perform subset of tests**
@@ -156,14 +156,14 @@ Set the **Name** field to `Physics` and choose the following set of permissions:
 
 Your group should look like the following:
 
-.. figure:: images/physics_group.png 
+.. figure:: images/physics_group.png
     :alt: Defining a physics group
 
     Defining a physics group
 
 Click **Save** and you will now see your new group in the listings page.
 
-.. figure:: images/group_listing.png 
+.. figure:: images/group_listing.png
     :alt: Group listings
 
     Group listings
@@ -172,7 +172,7 @@ The last step for this section is to add yourself to the `Physics` group.
 Visit your user profile by going to the **Users** section under the **Auth**
 section and clicking on your username.
 
-.. figure:: images/edit_user.png 
+.. figure:: images/edit_user.png
     :alt: Choose a user to edit
 
     Choose a user to edit
@@ -180,7 +180,7 @@ section and clicking on your username.
 On the next page find the **Groups** field and add *Physics* to the `Chosen
 Groups` list.
 
-.. figure:: images/select_group.png 
+.. figure:: images/select_group.png
     :alt: selecting a group
 
     selecting a group
@@ -195,7 +195,7 @@ which will be the default :term:`Test Instance Status` given to test data when
 they are performed and second an `Approved` status that can be applied to the
 tests after they have been reviewed.
 
-From the main admin page click on the **Statuses** link under the **QA**
+From the main admin page click on the **Statuses** link under the **QC**
 section and click the **Add test instance status** button in the top right.
 
 Give the status a **Name** of `Unreviewed`, a **Slug** of `unreviewed` and a
@@ -203,7 +203,7 @@ description of `Default status for tests which have just been completed.`.
 Next, check off the **Is default** checkbox and then click **Save and add
 another**.
 
-.. figure:: images/unreviewed.png 
+.. figure:: images/unreviewed.png
     :alt: Unreviewed status
 
     Unreviewed status
@@ -214,7 +214,7 @@ checkbox. You should also select a new colour for the status (e.g. green for
 Approved). Click **Save** when you're finished.
 
 
-.. figure:: images/approved.png 
+.. figure:: images/approved.png
     :alt: Approved status
 
     Approved status
@@ -225,20 +225,20 @@ this time leave the **Is default** box unchecked and also uncheck the
 colour for the status (e.g. red for Rejected). Click **Save** when you're
 finished.
 
-.. figure:: images/rejected.png 
+.. figure:: images/rejected.png
     :alt: Rejected status
 
     Rejected status
 
 You should now see your three statuses in the listing.
 
-.. figure:: images/test_statuses.png 
+.. figure:: images/test_statuses.png
     :alt: Test status listings
 
     Test status listings
 
 Now that we have done the initial configuration we can begin to cover test and
-test list configuration. 
+test list configuration.
 
 Creating a new Test List
 ------------------------
@@ -261,7 +261,7 @@ corrections such as P\_pol, P\_ion etc are ignored for simplicity):
 * Ndw for converting our ion chamber reading to dose (constant value)
 * Dose (the final result we are interested in - a composite calculation)
 
-To create the tests, visit the **Tests** link under the **QA** section from the
+To create the tests, visit the **Tests** link under the **QC** section from the
 main admin page and then click on **Add test** in the top right hand corner.
 
 Give our first test the name *Temperature °C* and the macro name of
@@ -353,7 +353,7 @@ In the next step of the tutorial we will group these tests into a test list.
 Creating the Test List
 ~~~~~~~~~~~~~~~~~~~~~~
 
-To create the test list, visit the **Test Lists** link under the **QA** section
+To create the test list, visit the **Test Lists** link under the **QC** section
 from the main admin page and then click on **Add test list** in the top right
 hand corner.
 
@@ -391,7 +391,7 @@ In this part of the tutorial we will assign our test list to a unit and ensure
 that it is functioning correctly on the main site.
 
 To assign the test list to a unit, visit the **Assign Test Lists to Units**
-link under the **QA** section from the main admin page and then click on **Add
+link under the **QC** section from the main admin page and then click on **Add
 unit test collection** in the top right hand corner.
 
 Select the *Test Unit* from the **Unit:** dropdown, and then create a new
@@ -421,8 +421,8 @@ When you're finished click **Save**.  We can now set a reference and tolerance v
 for the dose calculated by our Test List.
 
 To assign the test list to a unit, visit the **Set References and Tolerances**
-link under the **QA** section from the main admin page and then click on the
-**Dose** link for the `Test Unit`. 
+link under the **QC** section from the main admin page and then click on the
+**Dose** link for the `Test Unit`.
 
 Create a new Tolerance by clicking the green cross beside the Tolerance field.
 Select *Percentage* for the Type and set `Action Low = -3`, `Tolerance Low =
@@ -443,7 +443,7 @@ Performing the Test List
 ------------------------
 
 Visit the main site (you can click the *QATrack+ administration* header at the
-top of the admin page) and select the *Choose Unit* link from the *Perform QA*
+top of the admin page) and select the *Choose Unit* link from the *Perform QC*
 dropdown at the top of the page.  On the next page choose the *Monthly* option
 from the *Test Unit* drop down.
 
@@ -486,7 +486,7 @@ is because we haven't set reference values and tolerance/action levels for
 these tests. For more information on Reference & Tolerance values see
 :ref:`here <qa_ref_tols>`.
 
-You may now click `Submit QA Results` and you will be returned to the previous
+You may now click `Submit QC Results` and you will be returned to the previous
 page.  You should notice at the top of the page that there is now an indication
 that there is 1 unreviewed Test List Instance:
 
@@ -495,12 +495,12 @@ that there is 1 unreviewed Test List Instance:
     :alt: Visual indicators of review queue
 
     Visual indicators of review queue
-   
+
 
 Reviewing the Data
 ------------------
 
-Periodically whoever is responsible for ensuring QA has been completed
+Periodically whoever is responsible for ensuring QC has been completed
 satisfactorily should go through all unreviewed Test List Instances and update
 their status to either **Approved** or **Rejected** (note rejected is to be
 used if a Test was performed incorrectly, not if it was performed correctly but
@@ -524,7 +524,7 @@ and then click `Update Test Statuses`.
     :alt: Reviewing a test list
 
     Reviewing a test list
-   
+
 That Test List instance will now be removed from the Unreviewed queue. Note
 that it is also possible to :ref:`automate review and approval
 <qa_auto_review>`.

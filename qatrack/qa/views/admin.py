@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
+from django.http import JsonResponse
 from django.shortcuts import HttpResponse, HttpResponseRedirect
 from django.utils.translation import ugettext as _
 from django.views.generic import FormView
@@ -294,3 +295,9 @@ class ImportTestPack(FormView):
             messages.error(self.request, msg)
 
         return super(ImportTestPack, self).form_valid(form)
+
+
+def recurrence_examples(request):
+
+    dates = []
+    return JsonResponse({'dates': dates})

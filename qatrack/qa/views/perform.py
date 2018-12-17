@@ -314,7 +314,7 @@ class UploadHandler:
 
 
 class Upload(JSONResponseMixin, View):
-    """View for handling AJAX upload requests when performing QA"""
+    """View for handling AJAX upload requests when performing QC"""
 
     # use html for IE8's sake :(
     content_type = "text/html"
@@ -487,7 +487,7 @@ class CompositePerformer:
 
         self.set_calculation_context()
         if not self.calculation_context or list(self.calculation_context.keys()) == ["write_file"]:
-            return {"success": False, "errors": ["Invalid QA Values"]}
+            return {"success": False, "errors": ["Invalid QC Values"]}
 
         self.set_dependencies()
         self.resolve_dependency_order()
@@ -650,7 +650,7 @@ class CompositeCalculation(JSONResponseMixin, View):
 
 
 class ChooseUnit(TemplateView):
-    """View for selecting a unit to perform QA on"""
+    """View for selecting a unit to perform QC on"""
 
     template_name = 'units/unittype_list.html'
     active_only = True
@@ -968,7 +968,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
                 sl_models.ServiceLog.objects.log_rtsqa_changes(self.request.user, rtsqa.service_event)
 
-                # If tli needs review, update 'Unreviewed RTS QA' counter
+                # If tli needs review, update 'Unreviewed RTS QC' counter
                 if not self.object.all_reviewed:
                     cache.delete(settings.CACHE_RTS_QA_COUNT)
 

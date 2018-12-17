@@ -159,7 +159,7 @@ To override the default settings, copy the following Python dictionary to your
   is performing a test list.
 
 * `SHOW_STATUS_ICONS_LISTING` controls whether icons are shown on listings
-  pages which show the results of the last QA session. (Default True)
+  pages which show the results of the last QC session. (Default True)
 
 * `SHOW STATUS_ICONS_REVIEW` controls whether the icons are shown when a user
   is reviewing a test list. (Default True)
@@ -276,7 +276,7 @@ NHIST
 .....
 
 Adjusts the number of historical test results to show when reviewing/performing
-QA. Default is `NHIST = 5`.
+QC. Default is `NHIST = 5`.
 
 ORDER_UNITS_BY
 ..............

@@ -19,6 +19,7 @@ urlpatterns = [
     ),
     url(r'^admin/export_testpack/$', admin.ExportTestPack.as_view(), name="qa_export_testpack"),
     url(r'^admin/import_testpack/$', admin.ImportTestPack.as_view(), name="qa_import_testpack"),
+    url(r'^admin/recurrences/$', admin.recurrence_examples, name="qa_recurrences"),
     url(r"^$", base.UTCList.as_view(), name="all_lists"),
 
     # view for composite calculations via ajax
