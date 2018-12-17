@@ -9,6 +9,14 @@ DATABASES = {
         'PASSWORD': 'qatrackpass',  # Not used with sqlite3.
         'HOST': '',  # Set to empty string for localhost. Not used with sqlite3.
         'PORT': '',  # Set to empty string for default. Not used with sqlite3.
+    },
+    'readonly': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',  # Add 'postgresql_psycopg2', 'mysql', 'sqlite3'
+        'NAME': 'qatrackplus',                      # Or path to database file if using sqlite3.
+        'USER': 'qatrack_reports',                      # Not used with sqlite3.
+        'PASSWORD': 'qatrackpass',                  # Not used with sqlite3.
+        'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
+        'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
     }
 }
 
@@ -21,6 +29,8 @@ USE_SERVICE_LOG = True
 # Set to False to disable the Parts Log functionality
 USE_PARTS = True
 
+# Set to False to disable the SQL Query Tool
+USE_SQL_REPORTS =  True
 
 # If you host your QATrack+ instance at a non root url (e.g. 12.345.678.9/qatrack)
 # then you need to uncomment (and possibly modify) the following settings

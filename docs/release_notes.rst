@@ -1,6 +1,22 @@
 Release Notes
 =============
 
+QATrack+ v0.3.1 Release Notes
+-----------------------------
+
+.. _release_notes_031:
+
+
+Acknowledgements
+................
+
+
+Details of the v0.3.1 release
+.............................
+
+* A new :ref:`Query Tool <qa_query_tool>` has been added for advanced query and
+  reporting.
+
 
 QATrack+ v0.3.0 Release Notes
 -----------------------------

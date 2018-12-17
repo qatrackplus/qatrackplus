@@ -1,3 +1,5 @@
+import os
+import re
 # -*- coding: utf-8 -*-
 #
 # Configuration file for the Sphinx documentation builder.
@@ -24,9 +26,12 @@ copyright = '2018 QATrack+ Contributors'
 author = 'Randle Taylor, Ryan Bottema & Contributors'
 
 # The short X.Y version
-version = '0.3.0'
+settingsf = open(os.path.join("..", 'qatrack', 'settings.py'), 'r')
+
+version = re.findall("""VERSION\s+=\s+['"]+(.*)['"]""", settingsf.read())[0]
+
 # The full version, including alpha/beta/rc tags
-release = 'v0.3.0 beta'
+release = version
 
 
 # -- General configuration ---------------------------------------------------

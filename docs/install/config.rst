@@ -83,8 +83,16 @@ the QATrack+ deployment documentation.
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'qatrack',
+            'NAME': 'qatrackplus',
             'USER': 'qatrack',
+            'PASSWORD': 'qatrackpass',
+            'HOST': 'localhost',
+            'PORT': '5432',
+        },
+        'readonly': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'qatrackplus',
+            'USER': 'qatrack_reports',
             'PASSWORD': 'qatrackpass',
             'HOST': 'localhost',
             'PORT': '5432',
@@ -307,6 +315,11 @@ USE_PARTS
 
 Set `USE_PARTS` to `False` in order to disable the Parts app (Service Log
 requires `USE_PARTS = True`).
+
+USE_SQL_REPORTS
+...............
+
+Set `USE_SQL_REPORTS` to `False` in order to disable the SQL Query tool
 
 USE_X_FORWARDED_HOST
 ....................

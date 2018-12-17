@@ -157,12 +157,28 @@ click New Login...  Set the login name to 'qatrack', select SQL Server
 Authentication. Enter 'qatrackpass' (or whatever you like) for the password
 fields and uncheck Enforce Password Policy. Click OK.
 
+Again in the Object Explorer frame, right click on the main Security folder and
+click New Login...  Set the login name to 'qatrack_reports', select SQL Server
+Authentication. Enter 'qatrackpass' (or whatever you like) for the password
+fields and uncheck Enforce Password Policy. Click OK.
+
+
 Back in the Object Explorer frame, expand the qatrackdb database,
 right click on Security and select New->User.
 
 Enter 'qatrack' as the User name and Login name and then in the
 Database Role Membership (or Owned Schemas) region select 'db_datawriter', 'db_datareader' and
 'db_owner'.  Click OK.
+
+
+Now add the readonly database user for the query tool. In the Object
+Explorer frame, expand the qatrackdb database, right click on Security and
+select New->User.
+
+Enter 'qatrack_reports' as the User name and Login name and then in the
+Database Role Membership (or Owned Schemas) region select 'db_datareader'.
+Click OK.
+
 
 Configuring QATrack+ to use your new database
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -190,6 +206,16 @@ and then edit it setting the `DATABASES['default']['ENGINE']` key to
             'PASSWORD': '',
             'HOST': '', # leave blank unless using remote server or SQLExpress (use 127.0.0.1\\SQLExpress or COMPUTERNAME\\SQLExpress)
             'PORT': '', # Set to empty string for default. Not used with sqlite3.
+            'OPTIONS': {
+            }
+        },
+        'readonly': {
+            'ENGINE': 'sql_server.pyodbc',
+            'NAME': 'qatrackplus',
+            'USER': 'qatrack_reports',
+            'PASSWORD': 'qatrackpass',
+            'HOST': '',
+            'PORT': '',
             'OPTIONS': {
             }
         }
@@ -364,143 +390,21 @@ Windows stack it will likely work for you too.  Please post on the
 :mailinglist:`QATrack+ Google Group <>` if you get stuck!
 
 
-Upgrading from version 0.2.8
+Upgrading from versions less than 0.3.0
+---------------------------------------
+
+You must first upgrade to v0.3.0 before upgrading to v0.3.1.
+
+
+Upgrading from version 0.3.0
 ----------------------------
 
-In order to upgrade from version 0.2.8 you must first uprade to version 0.2.9.
-If you hit an error along the way, stop and figure out why the error is
-occuring before proceeding with the next step!  If you want assistance with the
-process, please post to to the :mailinglist:`Mailing List <>`.
-
-.. contents::
-    :local:
-
-
-Open A Terminal & Activate your virtual environment
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-We will use Powershell for this, but feel free to use Git Bash (or plain old
-CMD) if you prefer.  Open a Powershell window and and activate your existing
-virtual environment:
-
-.. code-block:: console
-
-    cd C:\deploy\
-    .\venvs\qatrack\bin\Activate.ps1
-
-    # or if you are using git bash then you need to do
-
-    cd /c/deploy/
-    source ./venvs/qatrack/bin/activate
-
-
-Backing up your database
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-It is **extremely** important you back up your database before attempting to
-upgrade. It is recommended you use SQLServer Management Studio to dump a
-backup file, but you can also generate a json dump of your database (possibly
-extremely slow!):
-
-.. code-block:: console
-
-    cd C:\deploy\qatrackplus\
-    python manage.py dumpdata --natural > backup-0.2.8-$(date -I).json
-
-
-Checking out version 0.2.9
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-First we must check out the code for version 0.2.9:
-
-.. code-block:: console
-
-    git fetch origin
-    git checkout v0.2.9.1
-
-.. warning::
-
-    If you get any errors using git (e.g. trying to check out v0.2.9.1) that
-    you don't know how to handle, please stop and get help!
-
-
-Update your existing virtual environment
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-There were a number of changes in dependencies for version 0.2.9 so we need to
-update our virtual env:
-
-.. code-block:: console
-
-    pip install --upgrade pip
-    pip install -r requirements\base.txt
-
-
-Migrate your database
-~~~~~~~~~~~~~~~~~~~~~
-
-The next step is to migrate the 0.2.8 database schema to 0.2.9:
-
-.. code-block:: console
-
-    python manage.py syncdb
-    python manage.py migrate
-
-Assuming that proceeds without errors you can proceed to `Upgrading from
-version 0.2.9` below. If you get an error in this step, you may need to
-adjust your local_settings.py file to include the `OPTIONS` key in your
-`DATABASES` setting:
-
-.. code-block:: python
-
-    DATABASES = {
-        'default': {
-            'ENGINE': 'sqlserver_ado',
-            'NAME': 'YOURDBNAME',
-            'USER': '',
-            'PASSWORD': '',
-            'HOST': '',      # leave blank unless using remote server or SQLExpress (use 127.0.0.1\\SQLExpress or COMPUTERNAME\\SQLExpress)
-            'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
-            'OPTIONS': {
-                'provider': 'sqlncli11', # might need to use 'sqlncli10',
-                'use_legacy_date_fields': True,
-            }
-        }
-    }
-
-
-
-Upgrading from version 0.2.9
-----------------------------
-
-The steps below will guide you through upgrading a version 0.2.9 installation
-to 0.3.0.  If you hit an error along the way, stop and figure out why the error
+The steps below will guide you through upgrading a version 0.3.0 installation
+to 0.3.1.  If you hit an error along the way, stop and figure out why the error
 is occuring before proceeding with the next step!
 
 .. contents::
     :local:
-
-Verifying your Python 3 version
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Unlike QATrack+ v0.2.9 which runs on Python 2.7, QATrack+ 0.3.0 only runs on
-Python version 3.5 or 3.6 (and probably 3.4!).  You will need to ensure you
-have one of those Python versions installed.  Instructions for installing
-Python 3.6 are :ref:`given above <install_py3_win>`. After installing Python 3
-open a new PowerShell window and verify Python3 is installed correctly:
-
-
-.. code-block:: console
-
-    python --version
-    # should result in e.g.
-    Python 3.6.6
-
-
-.. note::
-
-    If your python version says 2.7.x then you need to edit your PATH
-    environment variable. Remove Python 2 paths and/or insert Python 3 paths.
 
 
 Backing up your database
@@ -517,38 +421,29 @@ extremely slow!):
     cd C:\deploy\
     .\venvs\qatrack\bin\Activate.ps1
     cd qatrackplus\
-    python manage.py dumpdata --natural > backup-0.2.9-$(date -I).json
+    python manage.py dumpdata --natural > backup-0.3.0-$(date -I).json
 
 
-Checking out version 0.3.0
+Checking out version 0.3.1
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-First we must check out the code for version 0.3.0:
+First we must check out the code for version 0.3.1:
 
 .. code-block:: console
 
     git fetch origin
-    git checkout v0.3.0.9
+    git checkout v0.3.1
 
 
-Create and activate your new virtual environment
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Activate your virtual environment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you currently have a virtualenv activated, deactivate it with the
+If you don't currently have a virtualenv activated, activate it with the
 `deactivate` command:
 
 .. code-block:: console
 
-    deactivate
-
-
-We need to create a new virtual environment with the Python 3 interpreter:
-
-.. code-block:: console
-
     cd C:\deploy
-    python -m pip install --upgrade pip
-    python -m venv .\venvs\qatrack3
     .\venvs\qatrack3\Scripts\Activate.ps1
 
 We're now ready to install all the libraries QATrack+ depends on.
@@ -559,18 +454,6 @@ We're now ready to install all the libraries QATrack+ depends on.
     python -m pip install --upgrade pip
     pip install -r requirements\win.txt
     python manage.py collectstatic
-
-.. warning::
-
-    If you are going to be using :ref:`Active Directory <active_directory>` for
-    authenticating your users, you need to install pyldap.  There are binaries
-    available on this page: https://www.lfd.uci.edu/~gohlke/pythonlibs/#pyldap.
-    Download the binary relevant to your Python 3 installation (e.g.
-    pyldap‑2.4.45‑cp36‑cp36m‑win_amd64.whl) and then pip install it:
-
-    .. code-block:: console
-
-        pip install C:\path\to\pyldap‑2.4.45‑cp36‑cp36m‑win_amd64.whl
 
 
 Update your local_settings.py file
@@ -597,6 +480,16 @@ those:
             'PORT': '',
             'OPTIONS': {
             }
+        },
+        'readonly': {
+            'ENGINE': 'sql_server.pyodbc',
+            'NAME': 'yourdatabasename',
+            'USER': 'qatrack_reports',
+            'PASSWORD': 'qatrackpass',
+            'HOST': '',
+            'PORT': '',
+            'OPTIONS': {
+            }
         }
     }
 
@@ -604,106 +497,18 @@ those:
 Migrate your database
 ~~~~~~~~~~~~~~~~~~~~~
 
-The next step is to update the v0.2.9 schema to v0.3.0:
+The next step is to update the v0.3.0 schema to v0.3.1:
 
 .. code-block:: console
 
     python manage.py migrate --fake-initial
 
-and load some initial service log data:
 
-.. code-block:: console
+Restart your CherryPy Service
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Get-ChildItem .\fixtures\defaults\units\*json | foreach {python manage.py loaddata $_.FullName}
-    Get-ChildItem .\fixtures\defaults\service_log\*json | foreach {python manage.py loaddata $_.FullName}
-
-Check the migration log
-.......................
-
-During the migration above you may have noticed some warnings like:
-
-
-    | Note: if any of the following tests process binary files (e.g. images, dicom files etc) rather than plain text, you must edit the calculation and replace 'FILE' with 'BIN_FILE'. Tests:
-    |
-    | Test name 1 (test-1)
-    | Test name 2 (test-2)
-    | ...
-
-This data is also available in the `logs\migrate.log` file.  Because the way
-Python handles text encodings / files has changed in Python 3, you will
-need to update any upload test that handles binary data by changing the
-`FILE` reference in the calculation procedure to `BIN_FILE`. For example change:
-
-.. code-block:: python
-
-    data = FILE.read()
-    # do something with data
-
-to:
-
-.. code-block:: python
-
-    data = BIN_FILE.read()
-    # do something with data
-
-
-You may have also seen warnings like:
-
-
-    |  The test named 'yourtestname' with ID=1234 needs to be updated to be
-    |  compatible with Python 3.
-
-
-While most Test calculation procedures will be compatible with both Python 2
-and Python 3, there have been some syntactical changes in the language which
-may require you to update a calculation procedure to be Python 3 compatible.
-
-
-Update your CherryPy Service
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-First, stop your existing `QATrack CherryPy Service` using the `Services`
-Windows application. Then back in your PowerShell window you can install
-our new Python 3 CherryPy Windows Service:
-
-.. code-block:: console
-
-    cp deploy\win\QATrack3CherryPyService.py .
-    python QATrack3CherryPyService.py --startup=auto install
-    python QATrack3CherryPyService.py start
-
-
-Your QATrack+ v0.3.0 installation is now running as a Windows Service on port
-8080 (see note below).  You may also wish to configure the service to email you
-in the event of a crash (see the Recovery tab of the QATrackCherryPyService
-configuration dialogue).
-
-.. note::
-
-    If you need to run QATrack+ on a different port, edit
-    C:\\deploy\\qatrackplus\\QATrack3CherryPyService.py and set the PORT
-    variable to a different port (e.g. 8008)
-
-
-Once you have verified everything is working correctly, you can either
-disable the automatic startup of your original QATrackCherryPyService, or
-delete the service entirely.
-
-
-IIS Changes
-~~~~~~~~~~~
-
-If you plan on using the QATrack+ API, you will want to modify your reverse
-proxy url rewrite and add a new Server Variable.  Open up IIS and navigate
-to your reverse proxy rewrite rule and then in the Server Variables
-section add a new Server Variable with the Name=HTTP\_X\_FORWARDED\_HOST and
-the Value=yourservername.com (replace yourservername with whatever your domain
-is!).
-
-.. figure:: images/reverse_proxy.png
-    :alt: URL Rewrite Reverse Proxy
-
-    URL Rewrite Reverse Proxy
+Restart your existing `QATrack CherryPy Service` using the `Services`
+Windows application.
 
 
 Last Word

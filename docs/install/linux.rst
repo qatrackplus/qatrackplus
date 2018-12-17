@@ -102,6 +102,7 @@ qatrackplus/qatrack/qatrackpass) as follows:
 
     cd ~/web/qatrackplus
     sudo -u postgres psql < deploy/postgres/create_db_and_role.sql
+    sudo -u postgres psql < deploy/postgres/create_ro_db_and_role.sql
 
 
 Now edit /etc/postgresql/10/main/pg_hba.conf (use your favourite editor, e.g.
@@ -160,9 +161,11 @@ qatrackplus/qatrack/qatrackpass) and database for QATrack+:
 
     # if you  set a password during mysql install
     sudo mysql -u root -p < deploy/mysql/create_db_and_role.sql
+    sudo mysql -u root -p < deploy/mysql/create_ro_db_and_role.sql
 
     # if you didn't
     sudo mysql < deploy/mysql/create_db_and_role.sql
+    sudo mysql < deploy/mysql/create_ro_db_and_role.sql
 
 
 Setting up our Python environment (including virtualenv)
@@ -370,11 +373,19 @@ required):
             'PASSWORD': 'qatrackpass',                  # Not used with sqlite3.
             'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
             'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+        },
+        'readonly': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': 'qatrackplus',
+            'USER': 'qatrack_reports',
+            'PASSWORD': 'qatrackpass',
+            'HOST': '',
+            'PORT': '',
         }
     }
 
 
-    ALLOWED_HOSTS = ['XX.XXX.XXX.XX']  # Set to your server IP address (or *)!
+    ALLOWED_HOSTS = ['XX.XXX.XXX.XX']  # Set to your server IP address or hostname (or *)!
 
 Once you have got those settings done, we can now create the tables in our
 database and install the default data:
@@ -427,126 +438,22 @@ in touch with me on the :mailinglist:`mailing list <>` and I can help you out.
 
 
 
-Upgrading from version 0.2.8
+Upgrading from versions less than 0.3.0
+---------------------------------------
+
+You must first upgrade to v0.3.0 before upgrading to v0.3.1.
+
+
+Upgrading from version 0.3.0
 ----------------------------
 
-In order to upgrade from version 0.2.8 you must first uprade to version 0.2.9.
-If you hit an error along the way, stop and figure out why the error is
-occuring before proceeding with the next step!  If you want assistance with the
-process, please post to to the :mailinglist:`Mailing List <>`.
-
-.. contents::
-    :local:
-
-
-Activate your virtual environment
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-As usual, you will first want to activate your existing virtual environment:
-
-.. code-block:: console
-
-    source ~/venvs/qatrack/bin/activate
-
-
-Backing up your database
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-It is **extremely** important you back up your database before attempting to
-upgrade. You can either use your database to dump a backup file:
-
-.. code-block:: console
-
-    pg_dump -U <username> --password <dbname> > backup-0.2.8-$(date -I).sql   # e.g. pg_dump -U qatrack --password qatrackdb > backup-0.2.8-$(date -I).sql
-
-    # or for MySQL
-
-    mysqldump --user <username> --password <dbname> > backup-0.2.8-$(date -I).sql  # e.g. mysqldump --user qatrack --password qatrackdb > backup-0.2.8-$(date -I).sql
-
-or generate a json dump of your database (possibly extremely slow!):
-
-.. code-block:: console
-
-    cd ~/web/qatrackplus
-    python manage.py dumpdata --natural > backup-0.2.8-$(date -I).json
-
-
-Checking out version 0.2.9
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-First we must check out the code for version 0.2.9:
-
-.. code-block:: console
-
-    git fetch origin
-    git checkout v0.2.9.1
-
-.. warning::
-
-    If you get any errors using git (e.g. trying to check out v0.2.9.1) that
-    you don't know how to handle, please stop and get help!
-
-
-Update your existing virtual environment
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-There were a number of changes in dependencies for version 0.2.9 so we need to
-update our virtual env:
-
-.. code-block:: console
-
-    pip install --upgrade pip
-    pip install -r requirements/base.txt
-
-
-Migrate your database
-~~~~~~~~~~~~~~~~~~~~~
-
-.. note::
-
-    You should use the InnoDB storage engine for MySQL.  If you are using MySQL
-    >= 5.5.5 then it uses InnoDB by default, otherwise if you are using MySQL <
-    5.5.5 you need to set the default storage engine to InnoDB:
-    https://dev.mysql.com/doc/refman/5.5/en/storage-engine-setting.html
-
-
-The next step is to migrate the 0.2.8 database schema to 0.2.9:
-
-.. code-block:: console
-
-    python manage.py syncdb
-    python manage.py migrate
-
-Assuming that proceeds without errors you can proceed to `Upgrading from
-version 0.2.9` below.
-
-
-Upgrading from version 0.2.9
-----------------------------
-
-The steps below will guide you through upgrading a version 0.2.9 installation
-to 0.3.0.  If you hit an error along the way, stop and figure out why the error
+The steps below will guide you through upgrading a version 0.3.0 installation
+to 0.3.1.  If you hit an error along the way, stop and figure out why the error
 is occuring before proceeding with the next step!
 
 .. contents::
     :local:
 
-Verifying your Python 3 version
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Unlike QATrack+ v0.2.9 which runs on Python 2.7, QATrack+ 0.3.0 only runs on
-Python version 3.5 or 3.6 (and probably 3.4!).  You will need to ensure you have one of those
-Python versions installed:
-
-.. code-block:: console
-
-    python3 -V
-    # should result in e.g.
-    Python 3.5.2
-
-If you don't see either Python 3.4.X, 3.5.X or, 3.6.X then you will need to
-install Python 3 on your system (beyond the scope of this document).
-
 
 Backing up your database
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -556,123 +463,88 @@ upgrade. You can either use your database to dump a backup file:
 
 .. code-block:: console
 
-    pg_dump -U <username> --password <dbname> > backup-0.2.9-$(date -I).sql   # e.g. pg_dump -U qatrack --password qatrackdb > backup-0.2.9-$(date -I).sql
+    pg_dump -U <username> --password <dbname> > backup-0.3.0-$(date -I).sql   # e.g. pg_dump -U qatrack --password qatrackdb > backup-0.3.0-$(date -I).sql
 
     # or for MySQL
 
-    mysqldump --user <username> --password <dbname> > backup-0.2.9-$(date -I).sql  # e.g. mysqldump --user qatrack --password qatrackdb > backup-0.2.9-$(date -I).sql
+    mysqldump --user <username> --password <dbname> > backup-0.3.0-$(date -I).sql  # e.g. mysqldump --user qatrack --password qatrackdb > backup-0.3.0-$(date -I).sql
 
 or generate a json dump of your database (possibly extremely slow!):
 
 .. code-block:: console
 
     source ~/venvs/qatrack/bin/activate
-    python manage.py dumpdata --natural > backup-0.2.9-$(date -I).json
+    python manage.py dumpdata --natural > backup-0.3.0-$(date -I).json
     deactivate
 
 
-Checking out version 0.3.0
+Checking out version 0.3.1
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-First we must check out the code for version 0.3.0:
+First we must check out the code for version 0.3.1:
 
 .. code-block:: console
 
     git fetch origin
-    git checkout v0.3.0.9
+    git checkout v0.3.1
 
 
-Create and activate your new virtual environment
+Activate your new virtual environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you currently have a virtualenv activated, deactivate it with the
-`deactivate` command:
+We need to first activate our virtual environment:
 
 .. code-block:: console
 
-    deactivate
-
-We need to create a new virtual environment with the Python 3 interpreter:
-
-.. code-block:: console
-
-    sudo apt-get install python3-venv
-    python3 -m venv ~/venvs/qatrack3
     source ~/venvs/qatrack3/bin/activate
 
 and we can then install the required python libraries:
 
 .. code-block:: console
 
+    pip install --upgrade pip
     pip install -r requirements/postgres.txt  # or requirements/mysql.txt
+    python manage.py collectstatic
 
 
 Migrate your database
 ~~~~~~~~~~~~~~~~~~~~~
 
-.. note::
-
-    You should use the InnoDB storage engine for MySQL.  If you are using MySQL
-    >= 5.5.5 then it uses InnoDB by default, otherwise if you are using MySQL <
-    5.5.5 you need to set the default storage engine to InnoDB:
-    https://dev.mysql.com/doc/refman/5.5/en/storage-engine-setting.html
-
-The next step is to update the v0.2.9 schema to v0.3.0
+The next step is to update the v0.3.0 schema to v0.3.1
 
 .. code-block:: console
 
     python manage.py migrate --fake-initial
 
-and load some initial service log data:
 
-.. code-block:: console
+Enabling the SQL Query Tool
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    python manage.py loaddata fixtures/defaults/units/*
-    python manage.py loaddata fixtures/defaults/service_log/*
+.. note::
 
-
-Check the migration log
-.......................
-
-During the migration above you may have noticed some warnings like:
+    The steps below assume you are using a database named 'qatrackplus'. If not
+    you will need to adjust the commands found in the .sql files below.
 
 
-    | Note: if any of the following tests process binary files (e.g. images, dicom files etc) rather than plain text, you must edit the calculation and replace 'FILE' with 'BIN_FILE'. Tests:
-    |
-    | Test name 1 (test-1)
-    | Test name 2 (test-2)
-    | ...
+If you want to use the new SQL query tool then you need to create a readonly
+database user. For postgres:
+
+.. code-block:: bash
+
+    sudo -u postgres psql < deploy/postgres/create_ro_db_and_role.sql
+
+and for MySQL:
+
+.. code-block:: bash
+
+    # if you  set a password during mysql install
+    sudo mysql -u root -p < deploy/mysql/create_ro_db_and_role.sql
+
+    # if you didn't
+    sudo mysql < deploy/mysql/create_ro_db_and_role.sql
 
 
-
-This data is also available in the `logs/migrate.log` file.  Because the way
-Python handles text encodings / files has changed in Python 3, you will
-need to update any upload test that handles binary data by changing the
-`FILE` reference in the calculation procedure to `BIN_FILE`. For example change:
-
-.. code-block:: python
-
-    data = FILE.read()
-    # do something with data
-
-to:
-
-.. code-block:: python
-
-    data = BIN_FILE.read()
-    # do something with data
-
-
-You may have also seen warnings like:
-
-
-    |  The test named 'yourtestname' with ID=1234 needs to be updated to be
-    |  compatible with Python 3.
-
-
-While most Test calculation procedures will be compatible with both Python 2
-and Python 3, there have been some syntactical changes in the language which
-may require you to update a calculation procedure to be Python 3 compatible.
+and then add `USE_SQL_REPORTS = True` to your local_settings.py file.
 
 
 Update your local_settings.py file
@@ -682,36 +554,10 @@ Now is a good time to review your `local_settings.py` file. There are
 a few new settings that you may want to configure.  The settings are
 documented in :ref:`the settings page <qatrack-config>`.
 
+Restart Apache
+~~~~~~~~~~~~~~
 
-Update your Apache configuration
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-First, lets make sure Apache can write to our logs and media directory:
-
-.. code-block:: console
-
-    sudo usermod -a -G www-data $USER
-    mkdir -p logs
-    touch logs/{migrate,debug}.log
-    chmod ug+rwx logs
-    chmod ug+rwx qatrack/media
-    chmod a+rw logs/{migrate,debug}.log
-
-Since we are now using a different Python virtual environment we need to update
-the `WSGIPythonHome` variable.  Open your Apache config file (either
-/etc/apach2/sites-available/qatrack.conf  or
-/etc/apache2/sites-available/default.conf or /etc/apache2/httpd.conf) and set
-the virtualenv path correctly:
-
-.. code-block:: apache
-
-    WSGIPythonHome /home/YOURUSERNAME/venvs/qatrack3
-
-    # or for daemon mode
-
-    WSGIDaemonProcess qatrackplus python-home=/home/YOURUSERNAMEHERE/venvs/qatrack3 python-path=/home/YOURUSERNAMEHERE/web/qatrackplus
-
-and then restart Apache:
+The last step is to restart Apache:
 
 .. code-block:: console
 

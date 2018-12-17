@@ -12,6 +12,8 @@ DATABASES = {
     }
 }
 
+DATABASES['readonly'] = DATABASES['default']
+
 # Change XX.XXX.XXX.XX to your servers IP address or * (less secure)!
 ALLOWED_HOSTS = ['XX.XXX.XXX.XX']
 
@@ -21,6 +23,8 @@ USE_SERVICE_LOG = True
 # Set to False to disable the Parts Log functionality
 USE_PARTS = True
 
+# Set to False to disable the SQL Query Tool
+USE_SQL_REPORTS =  True
 
 # If you host your QATrack+ instance at a non root url (e.g. 12.345.678.9/qatrack)
 # then you need to uncomment (and possibly modify) the following settings

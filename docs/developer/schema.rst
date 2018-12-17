@@ -1,3 +1,5 @@
+.. _dev_schema:
+
 QATrack+ v0.3.0 Database Schema
 ===============================
 

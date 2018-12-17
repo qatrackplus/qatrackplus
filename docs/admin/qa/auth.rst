@@ -93,6 +93,10 @@ sets for groups are given below:.
    view historical data alongside a test when performing a test list.*
 -  **qa \| test instance \| Can view charts of test history** *Allows a
    user to plot charts of historical data*
+-  **qa \| test instance \| Can run SQL Data Reports** *Allows a
+   user to run previously defined SQL queries*
+-  **qa \| test instance \| Can run SQL Data Reports** *Gives user the
+   ability to create and run raw SQL queries on your data*
 -  **qa \| test instance \| Can review tests** *Allow a user to perform
    review & approval functions*
 -  **qa \| test instance \| Can review & approve self-performed tests**
@@ -208,6 +212,8 @@ typical permission set might look like the following:
 -  qa \| test instance \| Can add test instance
 -  qa \| test instance \| Can review tests
 -  qa \| test instance \| Can chart test history
+-  qa \| test instance \| Can Run SQL Reports
+-  qa \| test instance \| Can Create SQL Reports
 -  qa \| test instance \| Can view test history
 -  qa \| test instance \| Can change test instance
 -  qa \| test instance \| Can delete test instance
