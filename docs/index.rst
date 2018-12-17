@@ -1,7 +1,8 @@
-.. QATrack+ documentation master file, created by
-   sphinx-quickstart on Mon Jun  4 22:03:51 2018.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+.. danger::
+
+   This document is for version 0.3.1 which has not been released yet!  See
+   https://docs.qatrackplus.com/en/latest/ for documentation of the latest
+   release.
 
 Welcome to QATrack+'s documentation!
 ====================================
