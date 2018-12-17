@@ -664,7 +664,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             cycle_day: parseInt($("#cycle-day-number").val()),
             work_completed: QAUtils.parse_date($("#id_work_completed").val()),
             work_started: QAUtils.parse_date($("#id_work_started").val()),
-            username: $("#username").text()
+            username: $("#username").val()
         };
 
         return meta;

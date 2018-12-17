@@ -61,9 +61,9 @@ On the main form, fill in the following fields:
   Events` input will become active and you can search and select one or more
   related service events.
 
-* **Initiated By** If this service event is occuring as a result of a :term:`QA
+* **Initiated By** If this service event is occuring as a result of a :term:`QC
   Session` (e.g. a failing test) you can create a link between this Service
-  Event and that QA Session. After you select a Unit, the `Initiated By`
+  Event and that QC Session. After you select a Unit, the `Initiated By`
   dropdown will be activated and show you a list of :term:`Test List`\s
   associated with the selected unit. After selecting the `Test List` you will
   be shown a popup window to select the related :term:`Test List Instance`.
@@ -112,20 +112,20 @@ who was involved in performing this Service Event and how long it took.
 
 .. _service_log_rts:
 
-The next form allows you to specify what :term:`Return To Service QA` (RTS QA)
+The next form allows you to specify what :term:`Return To Service QC` (RTS QC)
 needs to be performed before the Unit can be released for clinical use again.
 
 * **Test List**  Select one or more `Test List`\s that must be performed as RTS
-  QA.  Once you have select the Test List, you can click the `Performed` button
-  to select a completed `Test List Instance` service as RTS QA, or more likely,
+  QC.  Once you have select the Test List, you can click the `Performed` button
+  to select a completed `Test List Instance` service as RTS QC, or more likely,
   if it has not been performed, yet, this can be selected later.
 
-* **Comments** Add any relevant comments about RTS QA here.
+* **Comments** Add any relevant comments about RTS QC here.
 
 .. figure:: images/seform_3.png
-   :alt: Return to service QA
+   :alt: Return to service QC
 
-   Return to service QA
+   Return to service QC
 
 
 Lastly there are two forms you can use to a) Specify the Parts used in the
@@ -154,7 +154,7 @@ selecting the `Initiate Service Event` checkbox (if you have the required
 
    Initiating a Service Event from a Test List
 
-after submitting the QA you will be taken to the `Create Service Event` page
+after submitting the QC you will be taken to the `Create Service Event` page
 described above with the `Initiated By` field auto populated with the Test List
 Instance you just performed.
 
@@ -190,7 +190,7 @@ Service Log Dashboard
 
 The `Service Log Dashboard` provides you with an overview of the current status
 of all Service Events, including which events need review, which events have
-:term:`Return to Service QA` incomplete or unreviewed and a list of recent
+:term:`Return to Service QC` incomplete or unreviewed and a list of recent
 activities.
 
 .. figure:: images/sl_dashboard.png
@@ -201,12 +201,12 @@ activities.
 
 .. _service_log_rtsqa:
 
-Return To Service QA
+Return To Service QC
 --------------------
 
-Integral to the Service Log app is the concept of Return to Service QA (RTS QA)
+Integral to the Service Log app is the concept of Return to Service QC (RTS QC)
 which is to say, :term:`Test List`\s that must be performed before the Unit can
-be released for clinical use after a Service Event. To view which RTS QA is
+be released for clinical use after a Service Event. To view which RTS QC is
 pending, select the `View All Incomplete Return To Service` menu item from the
 `Service Log` menu, or click on the `Incomplete` button on the Service Log
 dashboard.
@@ -223,25 +223,25 @@ dashboard.
 
    Return To Service Button
 
-This will take you to a listing of incomplete RTS QA.
+This will take you to a listing of incomplete RTS QC.
 
 .. figure:: images/rts_list.png
    :alt: Return To Service List
 
    Return To Service List
 
-To perform an RTS QA Test List, click the `Perform` button and perform the Test
+To perform an RTS QC Test List, click the `Perform` button and perform the Test
 List. After performing the Test List, the resulting Test List Instance will be
 placed in the `Unreviewed Return To Service` queue which you can view using the
 `Unreviewed Return To Service` menu item in the Service Log menu.
 
 .. figure:: images/rts_review_menu.png
-   :alt: Return To Service RTS QA Review Menu
+   :alt: Return To Service RTS QC Review Menu
 
-   Return To Service RTS QA Review Menu
+   Return To Service RTS QC Review Menu
 
 Selecting that menu will take you the listing of all unreviewed return to
-service QA from where you can :ref:`review the data using the usual routine
+service QC from where you can :ref:`review the data using the usual routine
 <qa_review>`.
 
 .. _service_log_review:
@@ -249,7 +249,7 @@ service QA from where you can :ref:`review the data using the usual routine
 Reviewing Service Events
 ------------------------
 
-After all required RTS QA has been performed, you will want to review your
+After all required RTS QC has been performed, you will want to review your
 Service Event.  Select the `Service Events Needing Review` menu item from the
 Service Log menu:
 

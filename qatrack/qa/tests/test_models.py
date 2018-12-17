@@ -9,7 +9,6 @@ from django.utils import timezone
 from django_comments.models import Comment
 
 from qatrack.qa import models
-from qatrack.qa import utils as qautils
 
 from . import utils
 
@@ -28,7 +27,7 @@ class TestFrequencyManager(TestCase):
             ("Monthly", "monthly", 28, 28, 7),
         )
         for t, s, nom, due, overdue in intervals:
-            utils.create_frequency(name=t, slug=s, due=due, overdue=overdue)
+            utils.create_frequency(name=t, slug=s, interval=due, window_end=overdue)
         self.assertEqual([(x[1], x[0]) for x in intervals], list(models.Frequency.objects.frequency_choices()))
 
 
@@ -42,7 +41,7 @@ class TestFrequency(TestCase):
             ("Monthly", "monthly", 28, 28, 7),
         )
         for t, s, nom, due, overdue in intervals:
-            f = utils.create_frequency(name=t, slug=s, due=due, overdue=overdue)
+            f = utils.create_frequency(name=t, slug=s, interval=due, window_end=overdue)
             assert 1 <= round(f.nominal_interval) <= round(nom)
 
 
@@ -617,7 +616,7 @@ class TestTestListCycle(TestCase):
     def setUp(self):
         super(TestTestListCycle, self).setUp()
 
-        daily = utils.create_frequency(due=1, overdue=0)
+        daily = utils.create_frequency(interval=1, window_end=0)
         utils.create_status()
 
         self.empty_cycle = utils.create_cycle(name="empty")
@@ -723,8 +722,8 @@ class TestUTCDueDates(TestCase):
         )
         self.invalid_status.save()
 
-        self.daily = utils.create_frequency(name="daily", slug="daily", due=1, overdue=0)
-        self.monthly = utils.create_frequency(name="monthly", slug="monthly", due=28, overdue=7)
+        self.daily = utils.create_frequency(name="daily", slug="daily", interval=1, window_end=0)
+        self.monthly = utils.create_frequency(name="monthly", slug="monthly", interval=28, window_end=7)
         self.utc_hist = utils.create_unit_test_collection(test_collection=test_list, frequency=self.daily)
         self.uti_hist = models.UnitTestInfo.objects.get(test=test, unit=self.utc_hist.unit)
 
@@ -752,7 +751,7 @@ class TestUTCDueDates(TestCase):
 
     def test_modified_to_invalid(self):
         # test case where utc with history was created with valid status and
-        # later changed to have invlaid status
+        # later changed to have invalid status
 
         # first create valid history
         now = timezone.now()
@@ -760,23 +759,25 @@ class TestUTCDueDates(TestCase):
         utils.create_test_instance(tli1, unit_test_info=self.uti_hist, status=self.valid_status)
         tli1.save()
 
+        self.utc_hist.refresh_from_db()
+
         # now create 2nd valid history
-        orig_due_date = qautils.calc_due_date(now, self.utc_hist.frequency)
+        orig_due_date = self.utc_hist.due_date
         tli2 = utils.create_test_list_instance(unit_test_collection=self.utc_hist, work_completed=orig_due_date)
         ti2 = utils.create_test_instance(tli2, unit_test_info=self.uti_hist, status=self.valid_status)
         tli2.save()
 
+        self.utc_hist.refresh_from_db()
         self.utc_hist = models.UnitTestCollection.objects.get(pk=self.utc_hist.pk)
-        expected = qautils.calc_due_date(orig_due_date, self.utc_hist.frequency)
+        expected = orig_due_date + timezone.timedelta(days=1)
         assert self.utc_hist.due_date.date() == expected.date()
 
         # now mark ti2 as invali
         ti2.status = self.invalid_status
         ti2.save()
 
-        self.utc_hist = models.UnitTestCollection.objects.get(pk=self.utc_hist.pk)
+        self.utc_hist.refresh_from_db()
         self.utc_hist.set_due_date()
-
         assert self.utc_hist.due_date.date() == orig_due_date.date()
 
     def test_modified_to_valid(self):
@@ -838,7 +839,7 @@ class TestUTCDueDates(TestCase):
             test = utils.create_test(name="test %d" % i)
             utils.create_test_list_membership(test_list, test)
         cycle = utils.create_cycle(test_lists=test_lists)
-        daily = utils.create_frequency(due=1, overdue=0)
+        daily = utils.create_frequency(interval=1, window_end=0)
         status = utils.create_status()
         utc = utils.create_unit_test_collection(test_collection=cycle, frequency=daily, unit=self.utc_hist.unit)
 
@@ -891,7 +892,7 @@ class TestUnitTestCollection(TestCase):
     def test_daily_due_status(self):
         now = timezone.now()
 
-        daily = utils.create_frequency(due=1, overdue=0)
+        daily = utils.create_frequency(interval=1, window_end=0)
 
         utc = utils.create_unit_test_collection(frequency=daily)
 
@@ -908,7 +909,7 @@ class TestUnitTestCollection(TestCase):
     def test_weekly_due_status(self):
         now = timezone.now()
 
-        weekly = utils.create_frequency(due=7, overdue=2)
+        weekly = utils.create_frequency(interval=7, window_end=2)
         utc = utils.create_unit_test_collection(frequency=weekly)
 
         self.assertEqual(models.NO_DUE_DATE, utc.due_status())
@@ -937,7 +938,7 @@ class TestUnitTestCollection(TestCase):
         """
 
         with timezone.override("America/Toronto"):
-            weekly = utils.create_frequency(due=7, overdue=2)
+            weekly = utils.create_frequency(interval=7, window_end=2)
             utc = utils.create_unit_test_collection(frequency=weekly)
             utc.set_due_date(utc_2am() + timezone.timedelta(hours=12))
             utc = models.UnitTestCollection.objects.get(pk=utc.pk)
@@ -1250,6 +1251,37 @@ class TestSignals(TestCase):
         # test list on its own
         self.assertEqual(len(utis), 4)
         self.assertListEqual(tests, [x.test for x in utis])
+
+    def test_sublist_in_cycle_changed(self):
+
+        # create 2 test lisets
+        test_lists = [utils.create_test_list(name="test list %d" % i) for i in range(2)]
+        for i, test_list in enumerate(test_lists):
+            test = utils.create_test(name="test %d" % i)
+            utils.create_test_list_membership(test_list, test)
+
+        # create another test list and add it to the first test list
+        sub_test = utils.create_test(name="sub")
+        sub_list = utils.create_test_list(name="sublist")
+        utils.create_test_list_membership(sub_list, sub_test)
+        models.Sublist.objects.create(parent=test_lists[0], child=sub_list, order=0)
+
+        cycle1 = utils.create_cycle(test_lists=test_lists)
+
+        utc = utils.create_unit_test_collection(test_collection=cycle1)
+
+        utis = list(models.UnitTestInfo.objects.order_by("test_id"))
+
+        # should be 3 unit test infos
+        assert len(utis) == 3
+
+        # now add a new test to the sublist
+        sub_test2 = utils.create_test(name="sub2")
+        utils.create_test_list_membership(sub_list, sub_test2)
+
+        # should now be 4 utis
+        utis = list(models.UnitTestInfo.objects.order_by("test_id"))
+        assert len(utis) == 4
 
 
 class TestTestInstance(TestCase):

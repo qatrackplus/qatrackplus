@@ -52,7 +52,7 @@ class BasicSaveUserAdmin(SaveUserMixin, admin.ModelAdmin):
 
 
 class CategoryAdmin(admin.ModelAdmin):
-    """QA categories admin"""
+    """QC categories admin"""
     prepopulated_fields = {'slug': ('name',)}
     list_display = (
         "name",
@@ -703,7 +703,7 @@ class TestListAdmin(AdminViews, SaveUserMixin, SaveInlineAttachmentUserMixin, ad
 
     class Media:
         js = (
-            settings.STATIC_URL + "js/jquery-1.7.1.min.js",
+            settings.STATIC_URL + "js/jquery-ui.init.js",
             settings.STATIC_URL + "js/jquery-ui.min.js",
             settings.STATIC_URL + "js/m2m_drag_admin_testlist.js",
             settings.STATIC_URL + "js/admin_description_editor.js",
@@ -941,7 +941,7 @@ class UnitTestCollectionAdmin(admin.ModelAdmin):
 
     class Media:
         js = (
-            settings.STATIC_URL + "js/jquery-1.7.1.min.js",
+            settings.STATIC_URL + "js/jquery-ui.init.js",
             settings.STATIC_URL + "js/jquery-ui.min.js",
             settings.STATIC_URL + "js/select2.min.js",
         )
@@ -970,7 +970,7 @@ class TestListCycleAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, admin.Mod
 
     class Media:
         js = (
-            settings.STATIC_URL + "js/jquery-1.7.1.min.js",
+            settings.STATIC_URL + "js/jquery-ui.init.js",
             settings.STATIC_URL + "js/jquery-ui.min.js",
             settings.STATIC_URL + "js/collapsed_stacked_inlines.js",
             settings.STATIC_URL + "js/m2m_drag_admin.js",
@@ -989,12 +989,35 @@ class TestListCycleAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, admin.Mod
 class FrequencyAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
     model = models.Frequency
+    fields = (
+        "name",
+        "slug",
+        "window_start",
+        "window_end",
+        "recurrences",
+    )
 
     list_display = (
         "name",
         "get_recurrences",
-        "overdue_interval",
+        "window_start",
+        "window_end",
     )
+
+    class Media:
+        js = (
+            settings.STATIC_URL + "js/jquery-1.7.1.min.js",
+            settings.STATIC_URL + "js/jquery-ui.min.js",
+            settings.STATIC_URL + "moment/js/moment.min.js",
+            settings.STATIC_URL + "moment/js/moment-timezone-with-data.min.js",
+            settings.STATIC_URL + "rrule/js/rrule-tz.min.js",
+            settings.STATIC_URL + "d3/js/d3-3.5.6.min.js",
+            settings.STATIC_URL + "cal-heatmap/js/cal-heatmap.min.js",
+            settings.STATIC_URL + "js/frequency_admin.js",
+        )
+        css = {
+            'all': [settings.STATIC_URL + "cal-heatmap/css/cal-heatmap.css"],
+        }
 
     def save_model(self, request, obj, form, change):
         """set user and modified date time"""

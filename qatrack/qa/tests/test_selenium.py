@@ -113,7 +113,7 @@ objects = {
         'name': 'TestFrequency',
         'nominal_interval': '2',
         'due_interval': '3',
-        'overdue_interval': '4'
+        'window_end': '4'
     },
     'UnitTestCollection': {
 
@@ -278,12 +278,9 @@ class SeleniumTests(TestCase, StaticLiveServerTestCase):
 
     def load_admin(self):
         self.open("/admin/")
-        try:
-            self.driver.find_element_by_id('id_username').send_keys(self.user.username)
-            self.driver.find_element_by_id('id_password').send_keys(self.password)
-            self.driver.find_element_by_css_selector('button').click()
-        except NoSuchElementException:
-            pass
+        self.driver.find_element_by_id('id_username').send_keys(self.user.username)
+        self.driver.find_element_by_id('id_password').send_keys(self.password)
+        self.driver.find_element_by_css_selector('button').click()
 
         self.wait.until(e_c.presence_of_element_located((By.CSS_SELECTOR, "head > title")))
 
@@ -446,7 +443,7 @@ class SeleniumTests(TestCase, StaticLiveServerTestCase):
         self.driver.find_elements_by_css_selector(".weekly td")[0].click()
         self.driver.find_elements_by_css_selector(".weekly td")[2].click()
         self.driver.find_elements_by_css_selector(".weekly td")[4].click()
-        self.driver.find_element_by_id('id_overdue_interval').send_keys(objects['Frequency']['overdue_interval'])
+        self.driver.find_element_by_id('id_window_end').send_keys(objects['Frequency']['window_end'])
         self.driver.find_element_by_name('_save').click()
         self.wait_for_success()
         assert models.Frequency.objects.get(name=objects['Frequency']['name']).nominal_interval < 3
@@ -593,7 +590,7 @@ class SeleniumTests(TestCase, StaticLiveServerTestCase):
         self.load_main()
 
         # Perform test
-        self.driver.find_element_by_link_text('Choose a Unit to perform QA for').click()
+        self.driver.find_element_by_link_text('Choose a Unit to perform QC for').click()
         self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'TestUnit')))
         self.driver.find_element_by_link_text('TestUnit').click()
         self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Perform')))

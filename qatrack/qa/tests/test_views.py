@@ -547,7 +547,7 @@ class TestComposite(TestCase):
         response = self.view(request)
         values = json.loads(response.content.decode("UTF-8"))
 
-        expected = {"errors": ['Invalid QA Values'], "success": False}
+        expected = {"errors": ['Invalid QC Values'], "success": False}
         self.assertDictEqual(values, expected)
 
     def test_invalid_number(self):
@@ -1004,7 +1004,7 @@ class TestPerformQA(TestCase):
 
         # user is redirected if form submitted successfully
         self.assertEqual(response.status_code, 302)
-        self.assertIn("qa/unit/%d" % self.unit_test_list.unit.number, response._headers['location'][1])
+        self.assertIn("qc/unit/%d" % self.unit_test_list.unit.number, response._headers['location'][1])
 
     def test_perform_invalid(self):
         data = {
@@ -1593,7 +1593,7 @@ class TestDueDateOverView(TestCase):
         )
         self.frequencies = {}
         for t, s, nom, due, overdue in intervals:
-            f = utils.create_frequency(name=t, slug=s, due=due, overdue=overdue)
+            f = utils.create_frequency(name=t, slug=s, interval=due, window_end=overdue)
             self.frequencies[s] = f
 
         self.utc = utils.create_unit_test_collection(test_collection=self.test_list)
@@ -1680,7 +1680,7 @@ class TestPaperFormRequest(TestCase):
         )
         self.frequencies = {}
         for t, s, nom, due, overdue in intervals:
-            f = utils.create_frequency(name=t, slug=s, due=due, overdue=overdue)
+            f = utils.create_frequency(name=t, slug=s, interval=due, window_end=overdue)
             self.frequencies[s] = f
 
         self.utc = utils.create_unit_test_collection(test_collection=self.test_list)
@@ -1735,7 +1735,7 @@ class TestPaperForms(TestCase):
         )
         self.frequencies = {}
         for t, s, nom, due, overdue in intervals:
-            f = utils.create_frequency(name=t, slug=s, due=due, overdue=overdue)
+            f = utils.create_frequency(name=t, slug=s, interval=due, window_end=overdue)
             self.frequencies[s] = f
 
         self.utc = utils.create_unit_test_collection(test_collection=self.test_list)

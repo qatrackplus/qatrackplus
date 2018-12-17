@@ -4,7 +4,7 @@ Auto Review
 ===========
 
 To configure Auto Review rules visit the Admin section of your QATrack+
-site and select the ``Auto review rules`` link under the QA section.
+site and select the ``Auto review rules`` link under the QC section.
 
 Auto review rules allow you to automatically assign a :ref:`Test Status
 <qa_statuses>` based on whether the test is passing, at tolerance or failing

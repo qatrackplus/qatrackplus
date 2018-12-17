@@ -8,16 +8,16 @@ assigned a `Status <../../admin/qa/statuses.html>`__ that indicates what type
 of data the test is and whether or not it requires further review. If any Test
 Instance within a :term:`Test List Instance` is assigned a Status which
 requires review, then the Test List Instance is placed in an :term:`Unreviewed
-Queue` so that periodically a physicist may manually review and approve the QA
+Queue` so that periodically a physicist may manually review and approve the QC
 data being generated. (It is also possible to skip the Unreviewed Queue and
 manual review step using `Auto Review Rules
 <../../admin/qa/auto_review.html>`__).
 
-Details on how to review QA data and/or update the status of a set of tests are
+Details on how to review QC data and/or update the status of a set of tests are
 given below.
 
 
-Reviewing QA Data
+Reviewing QC Data
 -----------------
 
 The number of test lists with unreviewed tests is displayed at the top
@@ -37,10 +37,10 @@ Data** dropdown menu at the top of the page.
 
    Unreviewed menu option
 
-You will then be presented with a list of QA sessions awaiting review.
+You will then be presented with a list of QC sessions awaiting review.
 This list can be filtered/sorted by unit, frequency, date or user.
 
-Click on the **Review** button of the QA session that you want to review
+Click on the **Review** button of the QC session that you want to review
 and you can then change the status of the tests as described below.
 
 .. figure:: images/unreviewed_listing.png
@@ -48,7 +48,7 @@ and you can then change the status of the tests as described below.
 
    Unreviewed listing
 
-Repeat those steps for all the QA sessions that you would like to
+Repeat those steps for all the QC sessions that you would like to
 review.
 
 Changing the status of test data

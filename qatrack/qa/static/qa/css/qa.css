@@ -448,13 +448,12 @@ th.review-ref {
     text-align: right;
 }
 .due-status-lists {
-    overflow-y:scroll;
+    overflow-y: scroll;
     overflow-x: hidden;
-    height:400px;
+    max-height: 400px;
 }
 .due-status-container {
-
-    height:450px;
+    max-height:450px;
 }
 .pad-r-10 {
     padding-right: 10px;

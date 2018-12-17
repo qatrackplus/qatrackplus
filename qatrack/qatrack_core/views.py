@@ -4,11 +4,16 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.http import JsonResponse
 from django.template.loader import render_to_string
+from django.shortcuts import render
 from django.utils.html import escape
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_POST
 from django_comments import signals as dc_signals
 from django_comments.forms import CommentForm
+
+
+def homepage(request):
+    return render(request, "homepage.html", {})
 
 
 class CustomCommentForm(CommentForm):

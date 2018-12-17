@@ -476,7 +476,7 @@ class DueDateOverviewUser(DueDateOverview):
 
 
 class Overview(PermissionRequiredMixin, TemplateView):
-    """Overall status of the QA Program"""
+    """Overall status of the QC Program"""
 
     template_name = "qa/overview.html"
     permission_required = ["qa.can_review", "qa.can_view_overview"]
@@ -491,10 +491,10 @@ class Overview(PermissionRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super(Overview, self).get_context_data()
         context['title'] = 'Qa Program Overview'
-        context['msg'] = 'Overview of current QA status on all units'
+        context['msg'] = 'Overview of current QC status on all units'
         if '-user' in self.request.path:
             context['title'] += ' For Your Groups'
-            context['msg'] = 'Overview of current QA status (visible to your groups) on all units'
+            context['msg'] = 'Overview of current QC status (visible to your groups) on all units'
             context['user_groups'] = True
         return context
 

@@ -91,7 +91,7 @@ Then install the development libraries:
 
 .. code-block:: shell
 
-    pip install -r requirements.dev.txt
+    pip install -r requirements/dev.txt
 
 
 Creating your development database

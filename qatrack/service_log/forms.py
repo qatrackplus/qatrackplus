@@ -1,10 +1,9 @@
-
 from django import forms
+from django.conf import settings
+from django.contrib.auth.models import Permission, User
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
-from django.conf import settings
-from django.contrib.auth.models import User, Permission
 from django.db.models import Field, ObjectDoesNotExist, Q, QuerySet
 from django.utils import timezone
 from django.utils.dateparse import parse_duration
@@ -13,8 +12,8 @@ from django.utils.translation import ugettext as _
 from form_utils.forms import BetterModelForm
 
 from qatrack.attachments.models import Attachment
-from qatrack.service_log import models
 from qatrack.qa import models as qa_models
+from qatrack.service_log import models
 from qatrack.units import models as u_models
 
 
@@ -363,7 +362,7 @@ class ServiceEventForm(BetterModelForm):
 
     initiated_utc_field = forms.ModelChoiceField(
         required=False, queryset=qa_models.UnitTestCollection.objects.none(), label='Initiated By',
-        help_text=_('Was there a QA session that initiated this service event?')
+        help_text=_('Was there a QC session that initiated this service event?')
     )
     service_type = forms.ModelChoiceField(
         queryset=models.ServiceType.objects.filter(is_active=True), label=_('Service type'),
@@ -560,7 +559,7 @@ class ServiceEventForm(BetterModelForm):
             rtsqa_exisits = models.ReturnToServiceQA.objects.filter(service_event=self.instance).exists()
             if self.instance.test_list_instance_initiated_by or rtsqa_exisits:
                 self.fields['unit_field_fake'].widget.attrs.update({
-                   'title': 'Cannot change Unit once "Initiated By" or any "RTS QA" have been added',
+                   'title': 'Cannot change Unit once "Initiated By" or any "RTS QC" have been added',
                 })
 
             if self.instance.service_type.is_review_required:
@@ -693,7 +692,7 @@ class ServiceEventForm(BetterModelForm):
         if 'initiated_utc_field' in self._errors:
             del self._errors['initiated_utc_field']
 
-        # Check for incomplete and unreviewed RTS QA if status.rts_qa_must_be_reviewed = True
+        # Check for incomplete and unreviewed RTS QC if status.rts_qa_must_be_reviewed = True
         if 'service_status' not in self.cleaned_data:
             raise ValidationError(_('This field is required.'), code='required')
         if self.cleaned_data['service_status'].rts_qa_must_be_reviewed:

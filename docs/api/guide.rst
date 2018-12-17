@@ -453,7 +453,7 @@ FAQ
 
 - The API returned status 403 with {'detail'\: 'You do not have permission to
   perform this action'}: The user you are submitting your data with does not
-  have permission to perform QA.  Add the user to a group with the required
+  have permission to perform QC.  Add the user to a group with the required
   permissions.
 
 - The API returned status 401 with {'detail'\: 'Authentication credentials not

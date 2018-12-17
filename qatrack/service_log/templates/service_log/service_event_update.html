@@ -324,13 +324,13 @@
                                     <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
                                     <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-extra-left info"></i>
                                 </i>
-                                Return To Service QA
+                                Return To Service QC
                             </h3>
                         </div>
                         <div class="box-body">
                             {{ rtsqa_formset.management_form }}
                             {% if perms.service_log.add_returntoserviceqa or rtsqa_formset.forms|length > 0 %}
-                                <div class="subheading-divider">Return To Service QA Required</div>
+                                <div class="subheading-divider">Return To Service QC Required</div>
                                 <div class="row">
                                     <div class="col-md-12">
 
@@ -372,7 +372,7 @@
                                             {% if perms.service_log.add_returntoserviceqa %}
                                                 <tfoot>
                                                     <tr><td colspan="5">
-                                                        <div id="add-rtsqa" class="btn btn-sm btn-flat btn-default pull-right" title="Add another RTS QA object.">Add</div>
+                                                        <div id="add-rtsqa" class="btn btn-sm btn-flat btn-default pull-right" title="Add another RTS QC object.">Add</div>
                                                     </td></tr>
                                                 </tfoot>
                                             {% endif %}

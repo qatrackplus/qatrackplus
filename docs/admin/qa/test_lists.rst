@@ -4,7 +4,7 @@ Configuring Test Lists
 ======================
 
 To edit existing test lists or create new test lists click on the **Test
-Lists** in the **QA** section on the main admin page.
+Lists** in the **QC** section on the main admin page.
 
 Create a new test list by clicking the **Add Test List** link on the
 **Test Lists** admin page. The fields for defining a new test list are

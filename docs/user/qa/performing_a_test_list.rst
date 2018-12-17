@@ -7,7 +7,7 @@ Selecting a test list
 ---------------------
 
 To perform a test list, first login to QATrack+ and then select the
-**Choose Unit** option from the **Perform QA** dropdown menu.
+**Choose Unit** option from the **Perform QC** dropdown menu.
 
 .. figure:: images/choose_unit_menu.png
    :alt: Choose Unit Menu Option
@@ -34,7 +34,7 @@ On the next page, all the test lists with the chosen frequency will be
 displayed along with relevant information about the last time that test
 list was performed and when the test list is next due on this unit.
 
-Click on the **Perform QA** button next to the list that you would like
+Click on the **Perform QC** button next to the list that you would like
 to complete.
 
 .. figure:: images/choose_test_list.png
@@ -77,7 +77,7 @@ Adding comments
 
 You may add either test specific comments by clicking on the speech
 bubble beside the test or you can add a general comment for the whole
-test list by entering the comment in the text box below the `Submit QA Results` button.
+test list by entering the comment in the text box below the `Submit QC Results` button.
 
 `Adding comments to a test list <add_comment.png>`__
 
@@ -124,7 +124,7 @@ Attaching Files to your session
 
 .. _attaching_files:
 
-When performing QA, you may attach arbitrary documents to the test list before
+When performing QC, you may attach arbitrary documents to the test list before
 submitting (e.g.  a PDF report from some external software).
 
 In order to do this, simply click the `Browse` button and select the files you
@@ -156,7 +156,7 @@ Saving a test list to complete it later
 
 If for some reason you need to finish a test list at a later time, you
 can click the **Mark this list as still in progress** checkbox next to
-the **Submit QA Results** button. When this box is checked, the test
+the **Submit QC Results** button. When this box is checked, the test
 list will not be considered complete and will not be marked for review.
 
 .. figure:: images/save_for_later.png
@@ -180,7 +180,7 @@ and then clicking **Continue** on your saved result.
    Continue an in progress test list
 
 When performing a test list, the left hand drawer menu will also show any In
-Progress QA sessions for the current test list.
+Progress QC sessions for the current test list.
 
 .. figure:: images/in_progress_sidebar.png
    :alt: Continue an in progress test list from the sidebar

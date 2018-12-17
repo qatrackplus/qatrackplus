@@ -4,7 +4,7 @@ Tests
 =====
 
 To access existing tests or to configure a new test, click on the
-**Tests** link in the **QA** section on the the main admin page.
+**Tests** link in the **QC** section on the the main admin page.
 
 Create a new test by clicking the **Add Test** link in the top right
 hand page of the **Tests** admin page.  The individual fields for
@@ -53,7 +53,7 @@ Description
 ~~~~~~~~~~~
 
 The description field is the text that is shown when a user clicks on
-the test name while performing QA.  This description can be made up of
+the test name while performing QC.  This description can be made up of
 plain text or html.  An example showing an html description is shown
 below along with the way it looks when displayed on the test list
 page.
@@ -74,7 +74,7 @@ Procedure
 
 The procedure allows you to insert a URL to a more detailed procedure
 available elsewhere.  A link to that URL will be shown when the user
-clicks on the test name while performing QA as shown below.
+clicks on the test name while performing QC as shown below.
 
 .. figure:: images/procedure_link.png
    :alt: Detailed procedure link
