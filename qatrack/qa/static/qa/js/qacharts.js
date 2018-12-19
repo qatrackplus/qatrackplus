@@ -137,7 +137,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
                                 finished_chart_update();
                                 if (typeof console != "undefined") {
-                                    console.log(error)
+                                    console.log(error);
                                 }
                             }
                         });
@@ -172,7 +172,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
                                 finished_chart_update();
                                 if (typeof console != "undefined") {
-                                    console.log(error)
+                                    console.log(error);
                                 }
                             }
                         });
@@ -216,10 +216,9 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                                 }
                             },
                             error: function (error) {
-
                                 console.log(error);
                             }
-                        })
+                        });
 
                     },
                     is_ajax: true
@@ -254,7 +253,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
                 // Avoid negative or really small widths
                 var new_h = d3.max([50, d3.min([max_y_resize, h + dy])]);
-                is_max = !(new_h < max_y_resize);
+                is_max = new_h >= max_y_resize;
 
                 d3_filter_box.style('height', new_h + 'px');
             });
@@ -384,7 +383,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             } else {
                 $cc_chart_options.slideDown('fast');
                 $service_log_box.slideUp('fast');
-                $relative_diff.attr("checked", false)
+                $relative_diff.attr("checked", false);
             }
             set_filter_height();
         }
@@ -421,10 +420,10 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             $.each(filters, function (key, values) {
                 if (_.isArray(values)) {
                     $.each(values, function (idx, value) {
-                        options.push(key + QAUtils.OPTION_DELIM + value)
+                        options.push(key + QAUtils.OPTION_DELIM + value);
                     });
                 } else if (!_.isEmpty(values) || values === true) {
-                    options.push(key + QAUtils.OPTION_DELIM + values)
+                    options.push(key + QAUtils.OPTION_DELIM + values);
                 }
             });
 
@@ -525,7 +524,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
             var chart_width = $('#chart').width() - 15,
                 chart_height = 40,
-                margin = {top: 20, right: 30, bottom: 140, left: 30}
+                margin = {top: 20, right: 30, bottom: 140, left: 30};
 
             var svg = d3.select("#chart")
                 .append("svg")
@@ -626,7 +625,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 var e_data = v;
                 e_data.x = moment(v.date).valueOf();
                 e_data.visible = true;
-                events.push(e_data)
+                events.push(e_data);
             });
 
             _data._series = series;
@@ -635,7 +634,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             return _data;
         }
 
-        function remove_tooltip_outter() {};
+        function remove_tooltip_outter() {}
 
         function create_chart(_data) {
 
@@ -711,7 +710,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     return yScale(d.y);
                 })
                 .defined(function (d) {
-                    return d.y != null;
+                    return d.y !== null;
                 });
 
             var line2 = d3.line()
@@ -723,7 +722,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     return yScale2(d.y);
                 })
                 .defined(function (d) {
-                    return d.y != null;
+                    return d.y !== null;
                 });
 
             var area = d3.area()
@@ -875,7 +874,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 .attr('class', 'area ok')
                 .style("pointer-events", "none")
                 .attr("id", function (d) {
-                    return "area_ok_" + d.test_name.replace(/\W+/g, "_")
+                    return "area_ok_" + d.test_name.replace(/\W+/g, "_");
                 })
                 .attr("d", function (d) {
                     return d.visible && d.ref_tol_visible ? area(d.area_data_ok) : null; // If array key "visible" = true then draw line, if not then don't
@@ -891,7 +890,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 .attr('class', 'area tol')
                 .style("pointer-events", "none")
                 .attr("id", function (d) {
-                    return "area_upper_tol_" + d.test_name.replace(/\W+/g, "_")
+                    return "area_upper_tol_" + d.test_name.replace(/\W+/g, "_");
                 })
                 .attr("d", function (d) {
                     return d.visible && d.ref_tol_visible ? area(d.area_data_upper_tol) : null; // If array key "visible" = true then draw line, if not then don't
@@ -907,7 +906,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 .attr('class', 'area tol')
                 .style("pointer-events", "none")
                 .attr("id", function (d) {
-                    return "area_lower_tol_" + d.test_name.replace(/\W+/g, "_")
+                    return "area_lower_tol_" + d.test_name.replace(/\W+/g, "_");
                 })
                 .attr("d", function (d) {
                     return d.visible && d.ref_tol_visible ? area(d.area_data_lower_tol) : null; // If array key "visible" = true then draw line, if not then don't
@@ -941,7 +940,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 .enter().append('circle')
             // .style("pointer-events", "none") // Stop line interferring with cursor
                 .attr('id', function (d) {
-                    return 'ti_' + d.test_instance_id
+                    return 'ti_' + d.test_instance_id;
                 })
                 .attr('class', function (d, i, s) {
                     return 'tli_' + d.test_list_instance_id + ' tl_' + s[i].parentNode.__data__.test_list.id;
@@ -958,8 +957,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     return yScale(d.y);
                 })
                 .attr("r", circle_radius)
-                .attr("fill", "white").attr("fill-opacity", .5)
-
+                .attr("fill", "white").attr("fill-opacity", 0.5)
                 .on('mousemove', mousemove);
 
             var test_reference = test.append('g')
@@ -995,7 +993,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 })
                 .attr('class', 'service-marker')
                 .attr('transform', function (d) {
-                    return 'translate(' + (xScale(d.x) - event_group_height / 2) + ',' + 0 + ')'
+                    return 'translate(' + (xScale(d.x) - event_group_height / 2) + ',' + 0 + ')';
                 });
 
             var event_marker_points = '0,' + event_group_height + ' ' + event_group_height / 2 + ',0 ' + event_group_height + ',' + event_group_height;
@@ -1096,7 +1094,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                         case 1: return 'Service Event with Initiating QC';
                         case 2: return 'Service Event with Return To Service';
                     }
-                })
+                });
             }
 
             // Legend series toggle
@@ -1109,7 +1107,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     return d.visible ? d.color : '#F1F1F2';
                 })
                 .attr('id', function (d, i) {
-                    return 'tsb_' + i
+                    return 'tsb_' + i;
                 })
                 .attr('class', 'toggle-series-box')
                 .attr('stroke', function (d) {
@@ -1189,7 +1187,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 })
                 .attr('class', 'toggle-ref-tol-box')
                 .attr('id', function (d, i) {
-                    return 'trtb_' + i
+                    return 'trtb_' + i;
                 })
 
                 .on('click', function (d, i, s) {
@@ -1481,7 +1479,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     event_group.selectAll('.service-marker')
                         .transition()
                         .attr('transform', function (d) {
-                            return 'translate(' + (xScale(d.x) - event_group_height / 2) + ',' + 0 + ')'
+                            return 'translate(' + (xScale(d.x) - event_group_height / 2) + ',' + 0 + ')';
                         });
                 }
 
@@ -1490,7 +1488,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     .transition()
                     .style('opacity', function (d) {
                         return d.visible ? 1 : 0.2;
-                    })
+                    });
             }
 
             function mousemove() {
@@ -1502,7 +1500,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     var x0 = xScale.invert(mouse_x),
                         x_closest;
 
-                    if ($show_events.is(':checked') && mouse_y > d3.select(this).attr('height') * .91) {
+                    if ($show_events.is(':checked') && mouse_y > d3.select(this).attr('height') * 0.91) {
 
                         x_closest = findClosestEvent(x0);
 
@@ -1694,7 +1692,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
                         var rtsqa_circles = d3.selectAll('.tli_' + f.test_list_instance);
 
-                        if (rtsqa_circles.size() == 0) {
+                        if (rtsqa_circles.size() === 0) {
                             continue;
                         }
                         _i++;
@@ -1794,7 +1792,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     .attr('r', circle_radius_highlight)
                     .attr('stroke-width', 2);
 
-                if (ti_circles.size() == 0) {
+                if (ti_circles.size() === 0) {
                     return;
                 }
 
@@ -1891,7 +1889,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 var maxXValues = data.map(function(d) {
                     return d3.max(d.line_data_test_results, function (value) {
                         return value.x;
-                    })
+                    });
                 });
                 return d3.max(maxXValues) || 0;
             }
@@ -1900,7 +1898,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 var minXValues = data.map(function(d) {
                     return d3.min(d.line_data_test_results, function (value) {
                         return value.x;
-                    })
+                    });
                 });
                 return d3.min(minXValues) || 0;
             }
@@ -1936,7 +1934,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                                 else {
                                     return null;
                                 }
-                            })
+                            });
                         }
                         return maxY;
                     }
@@ -1976,7 +1974,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                                 else {
                                     return Infinity;
                                 }
-                            })
+                            });
                         }
                         return minY;
                     }
@@ -1990,7 +1988,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
                 var best_x = 0, best_dist = Infinity,
                     bi_left = d3.bisector(function (d) {
-                        return d.x
+                        return d.x;
                     }).left;
 
                 d3.map(_data._series).each(function (val) {
@@ -2002,13 +2000,13 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                             d1,
                             d2;
 
-                        if (i == 0 || (v[i - 1].x < x_min_max[0])) {
+                        if (i === 0 || (v[i - 1].x < x_min_max[0])) {
                             d1 = Infinity;
                         }
                         else {
                             d1 = x - v[i - 1].x;
                         }
-                        if (i == v.length || (v[i].x > x_min_max[1])) {
+                        if (i === v.length || (v[i].x > x_min_max[1])) {
                             d2 = Infinity;
                         }
                         else {
@@ -2061,7 +2059,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     {type: 'all', text: 'All'}
                 ],
                 selected: prev_selection || 4
-            }
+            };
         }
 
         function get_legend_options() {
@@ -2072,7 +2070,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     layout: "vertical",
                     enabled: true,
                     verticalAlign: "middle"
-                }
+                };
             }
             return legend;
         }
@@ -2198,7 +2196,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 $chart_type.change();
                 $subgroup_size.val(subgroup_size);
                 $n_baseline_subgroups.val(n_baseline_subgroups);
-                $include_fit.prop('checked', include_fit)
+                $include_fit.prop('checked', include_fit);
             } else {
                 $show_events.prop('checked', show_events);
                 if ($show_events.is(':checked')) {

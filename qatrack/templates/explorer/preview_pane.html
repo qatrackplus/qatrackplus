@@ -122,12 +122,19 @@
                       <span class="panel-title">{% trans "Pivot" %}</span>
                     </div>
                     <div class="col-md-6 text-right">
-                      <small><a id="pivot-bookmark" data-baseurl="{% url "explorer_playground" %}?querylog_id={{ ql_id }}" href="#"><i class="glyphicon glyphicon-link"></i></a></small>
+                      <button id="save-image" class="btn btn-primary btn-xs">{% trans "Save Image" %}</button>
+                      <a id="pivot-bookmark" data-baseurl="{% url "explorer_playground" %}?querylog_id={{ ql_id }}" href="#"><i class="glyphicon glyphicon-link"></i></a>
                     </div>
                   </div>
                 </div>
-                <div class="overflow-wrapper">
-                  <div class="pivot-table"></div>
+                <div class="panel-body">
+                  <div class="row">
+                    <div class="col-sm-12 pivot-table-col">
+                      <div class="overflow-wrapper">
+                        <div class="pivot-table"></div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

@@ -5,9 +5,13 @@
 {% block head_title %}{% if query %} - {{ query.title }}{% elif title %} - {{ title }}{% endif %}{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'codemirror/lib/codemirror.css' %}" />
-    <link rel="stylesheet" href="{% static 'pivottable/css/pivot.min.css' %}" />
-    <link rel="stylesheet" href="{% static 'explorer/explorer.css' %}" />
+    <link rel="stylesheet" href="{% static 'select2/css/select2.min.css' %}?v={{ VERSION }}" />
+    <link rel="stylesheet" href="{% static 'codemirror/lib/codemirror.css' %}?v={{ VERSION }}" />
+    <link rel="stylesheet" href="{% static 'pivottable/css/pivot.min.css' %}?v={{ VERSION }}" />
+    <link rel="stylesheet" href="{% static 'c3/css/c3.min.css' %}?v={{VERSION}}" />
+    <link rel="stylesheet" href="{% static 'explorer/explorer.css' %}?v={{ VERSION }}" />
+    <link rel="stylesheet" href="{% static 'explorer/css/qat-explorer.css' %}?v={{ VERSION }}" />
+    <link rel="stylesheet" href="{% static 'explorer/js/qat-explorer.js' %}?v={{ VERSION }}" />
     <link rel="stylesheet" href="{% static 'qatrack_core/css/sidebar.css' %}?v={{VERSION}}" />
 {% endblock extra_css %}
 
@@ -67,7 +71,7 @@
 {% block body %}
   {% block sql_explorer_content_takeover %}
     <div id="wrap" class="wrap">
-      <div class="{% block container_class %}container{% endblock container_class %}">
+      <div class="{% block container_class %}container-fluid{% endblock container_class %}">
           <div class="starter-template">
           {% block sql_explorer_content %}{% endblock %}
           </div>

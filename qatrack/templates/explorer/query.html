@@ -87,7 +87,7 @@
               {% if params %}
                 {% include 'explorer/params.html' %}
               {% endif %}
-              <textarea class="form-control" {% if not can_change %} readonly disabled {% endif %} cols="40" id="id_sql" name="sql" rows="20">{{ form.sql.value|default_if_none:"" }}</textarea>
+              <textarea class="form-control" {% if not can_change %} readonly disabled {% endif %} cols="40" id="id_sql" name="sql" rows="1">{{ form.sql.value|default_if_none:"" }}</textarea>
             </div>
           </div>
 

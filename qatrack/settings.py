@@ -626,3 +626,8 @@ if USE_SQL_REPORTS:
     if any('py.test' in arg for arg in sys.argv):
         EXPLORER_CONNECTIONS = {'Default': 'default'}
         EXPLORER_DEFAULT_CONNECTION = 'default'
+    elif 'readonly' not in DATABASES:
+        raise ValueError(
+            "Missing 'readonly' connection information. Either set "
+            "USE_SQL_REPORTS = False or set up readonly database connection"
+        )

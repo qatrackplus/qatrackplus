@@ -22,7 +22,9 @@ require.config({
         cheekycheck: siteConfig.STATIC_URL + 'cheekycheck/js/cheekycheck',
         codemirror: siteConfig.STATIC_URL + 'codemirror/lib/codemirror',
         d3: siteConfig.STATIC_URL + 'd3/js/d3',
+        c3: siteConfig.STATIC_URL + 'c3/js/c3.min',
         explorer: siteConfig.STATIC_URL + 'explorer/explorer',
+        qatexplorer: siteConfig.STATIC_URL + 'explorer/js/qat-explorer',
         saveSvgAsPng: siteConfig.STATIC_URL + 'd3/js/saveSvgAsPng',
         canvg: siteConfig.STATIC_URL + 'd3/js/canvg',
         rgbcolor: siteConfig.STATIC_URL + 'd3/js/rgbcolor.min',
@@ -132,7 +134,10 @@ require.config({
                 'list',
                 'codemirror',
                 'floatthead',
-                'pivottable/pivot.min'
+                'pivottable/pivot.min',
+                'pivottable/d3_renderers.min',
+                'pivottable/c3_renderers.min',
+                'qatexplorer'
             ]
         },
         flatpickr: {
@@ -163,9 +168,8 @@ require.config({
             deps: ['jquery', 'bootstrap']
         },
         'pivottable/pivot': ['jquery', 'jqueryui'],
-/*        'pivottable/d3_renderers': ['pivottable/pivot', 'd3'],
+        'pivottable/d3_renderers': ['pivottable/pivot', 'd3'],
         'pivottable/c3_renderers': ['pivottable/pivot', 'c3'],
-        */
         saveSvgAsPng: {
             deps: ['canvg'],
             exports: 'saveSvgAsPng'
