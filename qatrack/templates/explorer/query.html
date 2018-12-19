@@ -125,30 +125,33 @@
             </div>
           </div>
       </form>
+      {% include 'explorer/preview_pane.html' %}
+      <div class="row">
+        <div class="col-md-6">
+          {% if query and can_change and tasks_enabled %}
+          {{ form.snapshot }} {% trans "Snapshot" %}
+          {% endif %}
+        </div>
+        <div class="col-md-6 text-right">
+          <small>
+            {% if query.avg_duration %}
+              {% blocktrans with query_avg_duration=query.avg_duration|floatformat:2 user_email=form.created_by_user_email created_time=form.created_at_time %}
+                Avg. execution: {{ query_avg_duration }}ms. Query created by {{ created_by_user_email }} on {{ created_time }}.
+              {% endblocktrans %}
+            {% endif %}
+          </small>
+        </div>
+      </div>
     </div>
   </div>
+
+
   <div id="schema" style="display: none;">
-      <iframe src="" height="665px" style="border: 1px solid #CCC;" frameBorder="0" id="schema_frame"></iframe>
+    <iframe src="" height="665px" style="border: 1px solid #CCC;" frameBorder="0" id="schema_frame"></iframe>
   </div>
+
 </div>
 
-{% include 'explorer/preview_pane.html' %}
-<div class="row">
-  <div class="col-md-6">
-    {% if query and can_change and tasks_enabled %}
-    {{ form.snapshot }} {% trans "Snapshot" %}
-    {% endif %}
-  </div>
-  <div class="col-md-6 text-right">
-    <small>
-      {% if query.avg_duration %}
-        {% blocktrans with query_avg_duration=query.avg_duration|floatformat:2 user_email=form.created_by_user_email created_time=form.created_at_time %}
-          Avg. execution: {{ query_avg_duration }}ms. Query created by {{ created_by_user_email }} on {{ created_time }}.
-        {% endblocktrans %}
-      {% endif %}
-    </small>
-  </div>
-</div>
 {% endblock %}
 
 {% block sql_explorer_scripts %}

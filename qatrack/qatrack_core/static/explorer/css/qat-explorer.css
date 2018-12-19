@@ -2,6 +2,23 @@
   margin-right: 10px;
 }
 
+.pvtCols::before {
+  content: "Columns";
+  padding: 10px;
+  font-weight: bold;
+  border-right: 1px solid #CCC;
+}
+
+.pvtRows::before {
+  padding: 3px;
+  content: "Rows";
+  display: block;
+  font-weight: bold;
+  text-align: center;
+  border-bottom: 1px solid #CCC;
+}
+
+
 .pvtUi .form-control {
   display: inline-block;
 }
@@ -23,6 +40,7 @@
   display: inline-block;
   border-radius: 0;
   border-top: 0;
+  padding: 7px;
 }
 
 .pvtUnused .pvtAttr,

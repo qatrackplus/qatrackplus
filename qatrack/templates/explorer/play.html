@@ -80,12 +80,12 @@
         </div>
         <input type="hidden" value="{% trans "Playground Query" %}" name="title" />
     </form>
+    {% include 'explorer/preview_pane.html' %}
   </div>
   <div id="schema" style="display: none;">
     <iframe src="about:blank" height="828px" frameBorder="0" id="schema_frame"></iframe>
   </div>
 </div>
-{% include 'explorer/preview_pane.html' %}
 
 {% endblock %}
 

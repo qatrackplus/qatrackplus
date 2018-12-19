@@ -170,6 +170,7 @@ require.config({
         'pivottable/pivot': ['jquery', 'jqueryui'],
         'pivottable/d3_renderers': ['pivottable/pivot', 'd3'],
         'pivottable/c3_renderers': ['pivottable/pivot', 'c3'],
+        'pivottable/export_renderers': ['pivottable/pivot'],
         saveSvgAsPng: {
             deps: ['canvg'],
             exports: 'saveSvgAsPng'

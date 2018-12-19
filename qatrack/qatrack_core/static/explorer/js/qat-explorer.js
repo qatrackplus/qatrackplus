@@ -1,30 +1,21 @@
 require(['jquery', 'lodash', 'saveSvgAsPng', 'select2'], function ($, _, saveSvgAsPng, select2) {
 
-    function onElementInserted(containerSelector, elementSelector, callback) {
+    function downloadCSV(csv, filename) {
 
-        var onMutationsObserved = function(mutations) {
-            mutations.forEach(function(mutation) {
-                if (mutation.addedNodes.length) {
-                    var elements = $(mutation.addedNodes).find(elementSelector);
-                    for (var i = 0, len = elements.length; i < len; i++) {
-                        callback(elements[i]);
-                    }
-                }
-            });
-        };
+        var csvFile;
+        var downloadLink;
 
-        var target = $(containerSelector)[0];
-        var config = { childList: true, subtree: true };
-        var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
-        var observer = new MutationObserver(onMutationsObserved);
-        observer.observe(target, config);
+        csvFile = new Blob([csv], {type: "text/csv"});
 
+        downloadLink = document.createElement("a");
+        downloadLink.download = filename;
+        downloadLink.href = window.URL.createObjectURL(csvFile);
+        downloadLink.style.display = "none";
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
     }
-    /*
-    onElementInserted('body', '.pvtAttrDropdown', function(element) {
-        $(element).addClass("form-control");
-    });
-    */
+
+
     $(".pvtAggregator").on("change", function(){
         setTimeout(function(){
             $(".pvtAttrDropdown").addClass("form-control");
@@ -50,4 +41,23 @@ require(['jquery', 'lodash', 'saveSvgAsPng', 'select2'], function ($, _, saveSvg
             }
         });
     });
+
+    $("#export-csv").click(function(){
+
+        var csv = [];
+        var rows = document.querySelectorAll(".pvtTable tr");
+
+        for (var i = 0; i < rows.length; i++) {
+            var row = [], cols = rows[i].querySelectorAll("td, th");
+
+            for (var j = 0; j < cols.length; j++)
+                row.push(cols[j].innerText);
+
+            csv.push(row.join(","));
+        }
+
+        // Download CSV file
+        downloadCSV(csv.join("\n"), "export.csv");
+    });
+
 });

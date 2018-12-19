@@ -122,7 +122,8 @@
                       <span class="panel-title">{% trans "Pivot" %}</span>
                     </div>
                     <div class="col-md-6 text-right">
-                      <button id="save-image" class="btn btn-primary btn-xs">{% trans "Save Image" %}</button>
+                      <button id="export-csv" class="btn btn-primary btn-xs"><i class="fa fa-download"></i> {% trans "Export to CSV" %}</button>
+                      <button id="save-image" class="btn btn-primary btn-xs"><i class="fa fa-picture-o"></i> {% trans "Save Image" %}</button>
                       <a id="pivot-bookmark" data-baseurl="{% url "explorer_playground" %}?querylog_id={{ ql_id }}" href="#"><i class="glyphicon glyphicon-link"></i></a>
                     </div>
                   </div>

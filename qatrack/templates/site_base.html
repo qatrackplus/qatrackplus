@@ -641,11 +641,13 @@
         </div>
 
         <div class="bottom-banner">
-          QATrack+ v{{ VERSION }} |
-          © 2011 The Ottawa Hospital Cancer Center |
-          <a href="http://docs.qatrackplus.com/en/latest/user/guide.html" target="_blank">
-            {% trans "Documentation" %}
-          </a>
+          {% block bottom_banner %}
+            QATrack+ v{{ VERSION }} |
+            © 2011 The Ottawa Hospital Cancer Center |
+            <a href="http://docs.qatrackplus.com/en/latest/user/guide.html" target="_blank">
+              {% trans "Documentation" %}
+            </a>
+          {% endblock bottom_banner %}
         </div>
       </div>
 
