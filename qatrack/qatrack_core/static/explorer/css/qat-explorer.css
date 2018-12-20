@@ -2,6 +2,9 @@
   margin-right: 10px;
 }
 
+.pvtCols {
+  width: 99%;
+}
 .pvtCols::before {
   content: "Columns";
   padding: 10px;
@@ -83,12 +86,10 @@
 .pvtUi td:nth-child(1) {
 }
 
-.pvtUi td:nth-child(3) {
+.pivot-table > .pvtUi > table tbodytable tbody  td:nth-child(3) {
   width: 99%;
 }
 
-.pvtUi tr:nth-child(2) td:nth-child(2) {
-}
 
 .pvtRendererArea {
   padding: 0;
