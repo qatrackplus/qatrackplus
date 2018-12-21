@@ -43,3 +43,4 @@ reportlab==3.5.8
 requests==2.18.4
 scipy<=1.1.0
 selenium==3.11.0
+XlsxWriter==1.1.2
