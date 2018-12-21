@@ -6,12 +6,9 @@ from django.contrib.staticfiles.templatetags.staticfiles import \
     static as static_url
 from django.views.generic.base import RedirectView
 
-from model_report import report
 from qatrack.qatrack_core.views import homepage
 
 admin.autodiscover()
-
-report.autodiscover()
 
 
 favicon_view = RedirectView.as_view(url=static_url("qatrack_core/img/favicon.ico"), permanent=True)
