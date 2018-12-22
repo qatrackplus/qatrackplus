@@ -270,6 +270,14 @@ MAX_CACHE_TIMEOUT = 24 * 60 * 60  # 24hours
 
 CACHE_LOCATION = os.path.join(PROJECT_ROOT, "cache", "cache_data")
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': CACHE_LOCATION,
+        'TIMEOUT': MAX_CACHE_TIMEOUT,
+    }
+}
+
 # -----------------------------------------------------------------------------
 # Session Settings
 SESSION_COOKIE_AGE = 14 * 24 * 60 * 60
@@ -402,7 +410,7 @@ LOGGING = {
     },
     'loggers': {
         'django': {
-            'handlers': ['file', 'console'],
+            'handlers': ['file', 'console', 'mail_admins'],
             'level': 'DEBUG',
             'propagate': True,
         },
@@ -422,12 +430,12 @@ LOGGING = {
             'level': 'DEBUG',
         },
         'django.template': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console', 'file', 'mail_admins'],
             'propagate': True,
             'level': 'WARNING',
         },
         'qatrack': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console', 'file', 'mail_admins'],
             'level': 'DEBUG',
             'propagate': True,
         },
@@ -586,16 +594,9 @@ for d in (MEDIA_ROOT, UPLOAD_ROOT, TMP_UPLOAD_ROOT):
     if not os.path.isdir(d):
         os.mkdir(d)
 
-if not os.path.isdir(CACHE_LOCATION):
+IS_FILE_CACHE = CACHES['default']['BACKEND'] = 'django.core.cache.backends.filebased.FileBasedCache'
+if IS_FILE_CACHE and not os.path.isdir(CACHE_LOCATION):
     os.mkdir(CACHE_LOCATION)
-
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': CACHE_LOCATION,
-        'TIMEOUT': MAX_CACHE_TIMEOUT,
-    }
-}
 
 
 if FORCE_SCRIPT_NAME:
