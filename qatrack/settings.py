@@ -594,7 +594,7 @@ for d in (MEDIA_ROOT, UPLOAD_ROOT, TMP_UPLOAD_ROOT):
     if not os.path.isdir(d):
         os.mkdir(d)
 
-IS_FILE_CACHE = CACHES['default']['BACKEND'] = 'django.core.cache.backends.filebased.FileBasedCache'
+IS_FILE_CACHE = CACHES['default']['BACKEND'] == 'django.core.cache.backends.filebased.FileBasedCache'
 if IS_FILE_CACHE and not os.path.isdir(CACHE_LOCATION):
     os.mkdir(CACHE_LOCATION)
 
