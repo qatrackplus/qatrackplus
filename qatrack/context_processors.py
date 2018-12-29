@@ -169,6 +169,7 @@ def site(request):
         'TEST_STATUS_SHORT_JSON': json.dumps(settings.TEST_STATUS_DISPLAY_SHORT),
         'REVIEW_DIFF_COL': settings.REVIEW_DIFF_COL,
         'DEBUG': settings.DEBUG,
+        'USE_SQL_REPORTS': settings.USE_SQL_REPORTS,
         'USE_SERVICE_LOG': settings.USE_SERVICE_LOG,
         'USE_PARTS': settings.USE_PARTS,
         'USE_ISSUES': settings.USE_ISSUES,

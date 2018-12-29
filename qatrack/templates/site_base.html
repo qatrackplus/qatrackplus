@@ -35,7 +35,8 @@
             STATIC_URL: '{{ STATIC_URL }}',
             DEBUG: '{{ DEBUG }}',
             USE_SERVICE_LOG: '{{ USE_SERVICE_LOG }}',
-            USE_PARTS: '{{ USE_PARTS }}'
+            USE_PARTS: '{{ USE_PARTS }}',
+            USE_SQL_REPORTS: '{{ USE_PARTS }}'
         };
 
         var QAURLs = {
@@ -536,13 +537,15 @@
                           </a>
                         </li>
                       {% endif %}
-                      {% if perms.qa.can_run_sql_reports or perms.qa.can_create_sql_reports %}
-                        <li>
-                          <a href="{% url "explorer_index" %}" title="{% trans "SQL Query Tool" %}">
-                            <i class="fa fa-search fa-fw fa-lg"></i>
-                            {% trans "Query Tool" %}
-                          </a>
-                        </li>
+                      {% if USE_SQL_REPORTS %}
+                        {% if perms.qa.can_run_sql_reports or perms.qa.can_create_sql_reports %}
+                          <li>
+                            <a href="{% url "explorer_index" %}" title="{% trans "SQL Query Tool" %}">
+                              <i class="fa fa-search fa-fw fa-lg"></i>
+                              {% trans "Query Tool" %}
+                            </a>
+                          </li>
+                        {% endif %}
                       {% endif %}
                       {% if perms.qa.can_view_charts and USE_SERVICE_LOG and user.is_staff %}
                         <li class="divider"></li>
