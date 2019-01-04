@@ -13,7 +13,6 @@ from django.db import models
 from django.utils import timezone
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
-
 import qatrack.qa.models as qam
 import qatrack.service_log.models as slm
 
@@ -162,7 +161,10 @@ class Attachment(models.Model):
     @property
     def is_image(self):
 
-        img = imghdr.what(self.attachment) is not None
+        try:
+            img = imghdr.what(self.attachment) is not None
+        except FileNotFoundError:
+            return False
         ext = os.path.splitext(self.attachment.name)[1].strip(".")
         displayable = ["jpg", "jpeg", "png", "svg", "bmp", "gif"]
         force = ext in displayable
