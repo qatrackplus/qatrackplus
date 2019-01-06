@@ -24,6 +24,7 @@ require.config({
         d3: siteConfig.STATIC_URL + 'd3/js/d3',
         c3: siteConfig.STATIC_URL + 'c3/js/c3.min',
         explorer: siteConfig.STATIC_URL + 'explorer/explorer',
+        'explorer.queryList': siteConfig.STATIC_URL + 'explorer/query-list',
         qatexplorer: siteConfig.STATIC_URL + 'explorer/js/qat-explorer',
         saveSvgAsPng: siteConfig.STATIC_URL + 'd3/js/saveSvgAsPng',
         canvg: siteConfig.STATIC_URL + 'd3/js/canvg',

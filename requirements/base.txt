@@ -1,7 +1,7 @@
 -e git+https://github.com/django/django-formtools.git@bb97a8abd374c50991c0a9ce144f17e7322a0c48#egg=django-formtools
 -e git+https://github.com/randlet/django-genericdropdown.git@56dbaf6b4f518a3946e5e253fec85ede175f3727#egg=django_genericdropdown-master
 -e git+https://github.com/randlet/django-listable.git@efff32a4ceaa795d5b1a32dc75decacef3de90e8#egg=django_listable
--e git+https://github.com/randlet/django-sql-explorer.git@b3c009bb64df34bf9e77d8c25ee0c7072a3dcbd4#egg=django-sql-explorer
+-e git+https://github.com/randlet/django-sql-explorer.git@815032b721907fca15fbe34aec69cc0bb5238e79#egg=django-sql-explorer
 Django==1.11.15
 PyVirtualDisplay==0.2
 beautifulsoup4==4.6.0
