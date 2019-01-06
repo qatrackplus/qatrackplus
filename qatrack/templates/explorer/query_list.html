@@ -2,6 +2,8 @@
 {% load staticfiles %}
 {% load i18n %}
 
+{% block head_title %}{% trans "SQL Query List" %}{% endblock head_title %}
+
 
 {% block sql_explorer_navlinks %}
   {% if can_change %}

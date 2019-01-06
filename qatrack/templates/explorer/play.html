@@ -3,6 +3,8 @@
 {% load explorer_tags %}
 {% load i18n %}
 
+{% block head_title %}{% trans "SQL Query Playground" %}{% endblock head_title %}
+
 {% block sql_explorer_navlinks %}
     {% if can_change %}
     <li><a href="{% url "query_create" %}">{% trans "New Query" %}</a></li>
