@@ -1,3 +1,4 @@
+{% load i18n %}
 
 <li class="se_log" style="display: list-item;">
 
@@ -12,7 +13,9 @@
             <div class="pull-right margin-right-20 label label-default">
                 {{ instance.service_event.unit_service_area.unit.name }}
             </div>
-            {{ user }} created service event {{ instance.service_event_id }}
+            {% blocktrans with service_event_id=instance.service_event_id %}
+              {{ user }} created service event {{ service_event_id }}
+            {% endblocktrans %}
         </h3>
     </div>
 </li>

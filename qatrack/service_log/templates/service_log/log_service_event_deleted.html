@@ -1,32 +1,35 @@
-
+{% load i18n %}
 
 <li class="se_log" style="display: list-item;">
 
-    <i class="fa fa-stack">
-        <i class="fa fa-wrench fa-stack-custom-main fa-lg"></i>
-        <i class="fa fa-times fa-stack-custom-sub upper-left danger"></i>
-    </i>
+  <i class="fa fa-stack">
+    <i class="fa fa-wrench fa-stack-custom-main fa-lg"></i>
+    <i class="fa fa-times fa-stack-custom-sub upper-left danger"></i>
+  </i>
 
-    <div class="timeline-item deleted">
-        <span class="time"><i class="fa fa-clock-o"></i>&nbsp;{{ datetime_display }}</span>
-        <h3 class="timeline-header header-se_del">
-            <div class="pull-right margin-right-20 label label-default">
-                {{ instance.service_event.unit_service_area.unit.name }}
-            </div>
-            <div class="margin-bottom-10">{{ user }} deleted service event {{ instance.service_event_id }}</div>
-            <div class="padding-left-10">
+  <div class="timeline-item deleted">
+    <span class="time"><i class="fa fa-clock-o"></i>&nbsp;{{ datetime_display }}</span>
+    <h3 class="timeline-header header-se_del">
+      <div class="pull-right margin-right-20 label label-default">
+          {{ instance.service_event.unit_service_area.unit.name }}
+      </div>
+      <div class="margin-bottom-10">
+        {% blocktrans with service_event_id=instance.service_event_id %}
+          {{ user }} deleted service event {{ service_event_id }}
+        {% endblocktrans %}
+      </div>
+      <div class="padding-left-10">
 
+        <div class="dash-change title row">
+          <div class="col-xs-3">{% trans "Reason" %}</div>
+          <div class="col-xs-9">{% trans "Comment" %}</div>
+        </div>
 
-                <div class="dash-change title row">
-                    <div class="col-xs-3">Reason</div>
-                    <div class="col-xs-9">Comment</div>
-                </div>
-
-                <div class="dash-change item row">
-                    <div class="col-xs-3">{{ extra_info.reason }}</div>
-                    <div class="col-xs-9">{{ extra_info.comment }}</div>
-                </div>
-            </div>
-        </h3>
-    </div>
+        <div class="dash-change item row">
+          <div class="col-xs-3">{{ extra_info.reason }}</div>
+          <div class="col-xs-9">{{ extra_info.comment }}</div>
+        </div>
+      </div>
+    </h3>
+  </div>
 </li>

@@ -1,5 +1,6 @@
 {% extends "service_log/sl_base.html" %}
 
+{% load i18n %}
 {% load qa_tags %}
 {% load listable %}
 
@@ -26,30 +27,29 @@
 
 {% block body %}
 
-    <div class="row">
-        <div class="col-md-12">
-            <div class="box">
-                <div class="box-header">
-                    <i class="fa {{ icon }} fa-fw" aria-hidden="true"></i>
-                    <h3 class="box-title">{{page_title}}</h3>
-
-                </div>
-                <div class="box-body pad">
-                    <div class="row">
-                        <div class="col-md-12">
-                            For units selected below...
-                        </div>
-                        <div class="col-md-12 margin-bottom-20">
-                            <span id="parts_units_cost_summary" class="btn btn-info btn-flat btn-sm">Parts Costs Reports</span>
-                            {% if perms.units.change_unitavailabletime %}
-                                <span id="units_change_available_time" class="btn btn-info btn-flat btn-sm">Change Available Times</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                    {{ listable_table }}
-                </div>
-            </div>
+<div class="row">
+  <div class="col-md-12">
+    <div class="box">
+      <div class="box-header">
+        <i class="fa {{ icon }} fa-fw" aria-hidden="true"></i>
+        <h3 class="box-title">{{page_title}}</h3>
+      </div>
+      <div class="box-body pad">
+        <div class="row">
+          <div class="col-md-12">
+            {% trans "For units selected below..." %}
+          </div>
+          <div class="col-md-12 margin-bottom-20">
+              <span id="parts_units_cost_summary" class="btn btn-info btn-flat btn-sm">{% trans "Parts Costs Reports" %}</span>
+              {% if perms.units.change_unitavailabletime %}
+              <span id="units_change_available_time" class="btn btn-info btn-flat btn-sm">{% trans "Change Available Times" %}</span>
+              {% endif %}
+          </div>
         </div>
+          {{ listable_table }}
+      </div>
     </div>
+  </div>
+</div>
 
 {% endblock body %}

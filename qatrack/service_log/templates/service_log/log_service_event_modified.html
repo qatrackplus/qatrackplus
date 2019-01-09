@@ -1,61 +1,65 @@
-
+{% load i18n %}
 
 <li class="se_log" style="display: list-item;">
 
-    <i class="fa fa-stack">
-        <i class="fa fa-wrench fa-stack-custom-main fa-lg"></i>
-        <i class="fa fa-pencil fa-stack-custom-sub fa-flip-horizontal upper-left primary"></i>
-    </i>
+  <i class="fa fa-stack">
+    <i class="fa fa-wrench fa-stack-custom-main fa-lg"></i>
+    <i class="fa fa-pencil fa-stack-custom-sub fa-flip-horizontal upper-left primary"></i>
+  </i>
 
-    <div class="timeline-item{% if can_view %} can-view{% elif not instance.service_event.is_active %} deleted{% endif %}">
-        <span class="time"><i class="fa fa-clock-o"></i>&nbsp;{{ datetime_display }}</span>
-        <h3 class="timeline-header header-se_new"{% if can_view %} onclick="window.location='{% url 'sl_details' pk=instance.service_event.id %}'"{% endif %}>
-            <div class="pull-right margin-right-20 label label-default">
-                {{ instance.service_event.unit_service_area.unit.name }}
-            </div>
-            <div class="margin-bottom-10">{{ user }} modified service event {{ instance.service_event_id }}</div>
-            <div class="padding-left-10">
-                {% if extra_info.items|length > 0 %}
-                    <div class="dash-change title row">
-                        <div class="col-xs-2">Field Changed</div>
-                        <div class="col-xs-4">Old Value</div>
-                        <div class="col-xs-4">New Value</div>
+  <div class="timeline-item{% if can_view %} can-view{% elif not instance.service_event.is_active %} deleted{% endif %}">
+    <span class="time"><i class="fa fa-clock-o"></i>&nbsp;{{ datetime_display }}</span>
+    <h3 class="timeline-header header-se_new"{% if can_view %} onclick="window.location='{% url 'sl_details' pk=instance.service_event.id %}'"{% endif %}>
+      <div class="pull-right margin-right-20 label label-default">
+          {{ instance.service_event.unit_service_area.unit.name }}
+      </div>
+      <div class="margin-bottom-10">
+        {% blocktrans with username=user service_event_id=instance.service_event_id %}
+          {{ username }} modified service event {{ service_event_id }}
+        {% endblocktrans %}
+      </div>
+      <div class="padding-left-10">
+        {% if extra_info.items|length > 0 %}
+          <div class="dash-change title row">
+            <div class="col-xs-2">{% trans "Field Changed" %}</div>
+            <div class="col-xs-4">{% trans "Old Value" %}</div>
+            <div class="col-xs-4">{% trans "New Value" %}</div>
+          </div>
+          {% for key, val in extra_info.items %}
+            {% if key == 'a_deleted' %}
+              <div class="dash-change item row hover deleted">
+                <div class="col-xs-2">{% trans "Attachments deleted" %}</div>
+                <div class="col-xs-4">
+                  {% for d in val.old %}
+                    <div class="row">
+                      <div class="col-xs-12">{{ d }}</div>
                     </div>
-                    {% for key, val in extra_info.items %}
-                        {% if key == 'a_deleted' %}
-                            <div class="dash-change item row hover deleted">
-                                <div class="col-xs-2">Attachments deleted</div>
-                                <div class="col-xs-4">
-                                    {% for d in val.old %}
-                                        <div class="row">
-                                            <div class="col-xs-12">{{ d }}</div>
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                                <div class="col-xs-4"></div>
-                            </div>
-                        {% elif key == 'a_added' %}
-                            <div class="dash-change item row hover">
-                                <div class="col-xs-2">Attachments added</div>
-                                <div class="col-xs-4"></div>
-                                <div class="col-xs-4">
-                                    {% for a in val.new %}
-                                        <div class="row">
-                                            <div class="col-xs-12">{{ a }}</div>
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                        {% else %}
-                            <div class="dash-change item row hover">
-                                <div class="col-xs-2">{{ key }}</div>
-                                <div class="col-xs-4">{{ val.old }}</div>
-                                <div class="col-xs-4">{{ val.new }}</div>
-                            </div>
-                        {% endif %}
-                    {% endfor %}
-                {% endif %}
-            </div>
-        </h3>
-    </div>
+                  {% endfor %}
+                </div>
+                <div class="col-xs-4"></div>
+              </div>
+            {% elif key == 'a_added' %}
+              <div class="dash-change item row hover">
+                <div class="col-xs-2">{% trans "Attachments added" %}</div>
+                <div class="col-xs-4"></div>
+                <div class="col-xs-4">
+                  {% for a in val.new %}
+                    <div class="row">
+                      <div class="col-xs-12">{{ a }}</div>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            {% else %}
+              <div class="dash-change item row hover">
+                <div class="col-xs-2">{{ key }}</div>
+                <div class="col-xs-4">{{ val.old }}</div>
+                <div class="col-xs-4">{{ val.new }}</div>
+              </div>
+            {% endif %}
+          {% endfor %}
+        {% endif %}
+      </div>
+    </h3>
+  </div>
 </li>

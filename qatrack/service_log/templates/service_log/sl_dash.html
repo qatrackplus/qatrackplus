@@ -1,13 +1,14 @@
 {% extends "service_log/sl_base.html" %}
 
+{% load i18n %}
 {% load qa_tags %}
 {% load qatrack_tags %}
 
-{% block head_title %}Service Log Dashboard{% endblock %}
+{% block head_title %}{% trans "Service Log Dashboard" %}{% endblock %}
 
 {% block extra_css %}
-    {{ block.super }}
-    <link href="{{ STATIC_URL }}cheekycheck/css/cheekycheck.css?v={{ VERSION }}" rel="stylesheet">
+  {{ block.super }}
+  <link href="{{ STATIC_URL }}cheekycheck/css/cheekycheck.css?v={{ VERSION }}" rel="stylesheet">
 {% endblock extra_css %}
 
 {% block require_javascript %}
@@ -16,127 +17,125 @@
     });
 {% endblock require_javascript %}
 
-{#{% block body_class %}sidebar-mini sidebar-collapse loading{% endblock body_class %}#}
-
 {% block body %}
 
-    <div class="max-width-lg">
-        <div class="row">
-            <div class="col-md-4">
-                <div class="box">
+<div class="max-width-lg">
+  <div class="row">
+    <div class="col-md-4">
+      <div class="box">
 
-                    <div class="box-header">
-                        <h3 class="box-title">
-                            Return To Service QC
-                        </h3>
-                    </div>
-
-                    <div class="box-body">
-                        <div class="row">
-                            <div class="col-md-12">
-                                <label class="pull-left">Incomplete</label>
-                                <a href="{% url 'rtsqa_list_incomplete' %}" class="pull-right btn btn-flat btn-xs btn-info left-btns">{{ counts.qa_not_complete }}</a>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <label class="pull-left">Unreviewed</label>
-                                <a href="{% url 'rtsqa_list_unreviewed' %}" class="pull-right btn btn-flat btn-xs btn-info left-btns">{{ counts.qa_not_reviewed }}</a>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="box">
-
-                    <div class="box-header">
-                        <h3 class="box-title">
-                            Service Events
-                        </h3>
-                    </div>
-                    <div class="box-body">
-                        <div class="row">
-                            <div class="col-md-12">
-                                <label class="pull-left">{{ counts.se_default.status_name }}</label>
-                                <a href="{% url 'sl_list_by_status' pk=counts.se_default.id %}" class="pull-right btn btn-flat btn-xs btn-info left-btns">{{ counts.se_default.count }}</a>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <label class="pull-left">Needing Review</label>
-                                <a href="{% url 'sl_list_review_required' %}" class="pull-right btn btn-flat btn-xs btn-info left-btns">{{ counts.se_needing_review }}</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="box-header">
+          <h3 class="box-title">{% trans "Return To Service QC" %}</h3>
         </div>
 
-        <div class="row">
+        <div class="box-body">
+          <div class="row">
             <div class="col-md-12">
-                <div class="box">
-
-                    <div class="box-header">
-                        <h3 class="box-title">
-                            <i class="fa fa-th fa-fw" aria-hidden="true"></i>
-                            Recent Service Log Activity
-                        </h3>
-                        <div class="box-tools pull-right">
-                            <div class="pull-right">
-                                <label title="Toggle service events" for="se_toggle" class="add-on" style="display: none;">
-                                    Show service events
-                                </label>
-                                <input id="se_toggle" type="checkbox" checked="checked"/>
-                            </div>
-                            <div class="pull-right margin-right-5">
-                                <label title="Toggle return to service" for="rts_toggle" class="add-on" style="display: none;">
-                                    Show return to service
-                                </label>
-                                <input id="rts_toggle" type="checkbox"/>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="box-body">
-                        <div class="row">
-                            <div class="col-md-12">
-                                <ul class="timeline timeline-custom">
-
-                                    {% for log in recent_logs %}
-                                        {% render_log log user %}
-                                    {% endfor %}
-
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+              <label class="pull-left">{% trans "Incomplete" %}</label>
+              <a href="{% url 'rtsqa_list_incomplete' %}" class="pull-right btn btn-flat btn-xs btn-info left-btns">{{ counts.qa_not_complete }}</a>
             </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+              <label class="pull-left">{% trans "Unreviewed" %}</label>
+              <a href="{% url 'rtsqa_list_unreviewed' %}" class="pull-right btn btn-flat btn-xs btn-info left-btns">{{ counts.qa_not_reviewed }}</a>
+            </div>
+          </div>
+
         </div>
+      </div>
     </div>
+
+    <div class="col-md-4">
+      <div class="box">
+
+        <div class="box-header">
+          <h3 class="box-title">{% trans "Service Events" %}</h3>
+        </div>
+        <div class="box-body">
+          <div class="row">
+            <div class="col-md-12">
+              <label class="pull-left">{{ counts.se_default.status_name }}</label>
+              <a href="{% url 'sl_list_by_status' pk=counts.se_default.id %}" class="pull-right btn btn-flat btn-xs btn-info left-btns">{{ counts.se_default.count }}</a>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+              <label class="pull-left">{% trans "Needing Review" %}</label>
+                <a href="{% url 'sl_list_review_required' %}" class="pull-right btn btn-flat btn-xs btn-info left-btns">{{ counts.se_needing_review }}</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-12">
+      <div class="box">
+
+        <div class="box-header">
+          <h3 class="box-title">
+              <i class="fa fa-th fa-fw" aria-hidden="true"></i>
+              {% trans "Recent Service Log Activity" %}
+          </h3>
+          <div class="box-tools pull-right">
+            <div class="pull-right">
+              <label title="Toggle service events" for="se_toggle" class="add-on" style="display: none;">
+                {% trans "Show service events" %}
+              </label>
+              <input id="se_toggle" type="checkbox" checked="checked"/>
+            </div>
+            <div class="pull-right margin-right-5">
+              <label title="Toggle return to service" for="rts_toggle" class="add-on" style="display: none;">
+                {% trans "Show return to service" %}
+              </label>
+              <input id="rts_toggle" type="checkbox"/>
+            </div>
+          </div>
+        </div>
+
+        <div class="box-body">
+          <div class="row">
+            <div class="col-md-12">
+              <ul class="timeline timeline-custom">
+
+                  {% for log in recent_logs %}
+                      {% render_log log user %}
+                  {% endfor %}
+
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 {% endblock body %}
 
 {% block loading_modal %}
-    <div class="loading-modal ">
-        <div class="center">
-            <div>
-                <span class="loading-logo">QAT</span>
-                <i class="fa fa-fw fa-plus fa-spin fa-2x info"></i>
-            </div>
-            <div>
-                <b>
-                {% if test_list_instance %}
-                    Loading {{test_list_instance.unit_test_collection.unit.name}} : {{test_list_instance.test_list.name}}
-                {% else %}
-                    Loading {{unit_test_collection.unit.name}} : {{test_list.name}}
-                {% endif %}
-                </b>
-            </div>
-
-        </div>
+<div class="loading-modal ">
+  <div class="center">
+    <div>
+      <span class="loading-logo">QAT</span>
+      <i class="fa fa-fw fa-plus fa-spin fa-2x info"></i>
     </div>
+    <div>
+      <b>
+        {% if test_list_instance %}
+          {% blocktrans with unit_name=test_list_instance.unit_test_collection.unit.name test_list_name=test_list_instance.test_list.name %}
+            Loading {{ unit_name }} : {{ test_list_name }}
+          {% endblocktrans %}
+        {% else %}
+          {% blocktrans with unit_name=unit_test_collection.unit.name test_list_name=test_list.name %}
+            Loading {{ unit_name }} : {{ test_list_name }}
+          {% endblocktrans %}
+        {% endif %}
+      </b>
+    </div>
+
+  </div>
+</div>
 {% endblock loading_modal %}

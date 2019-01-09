@@ -1,7 +1,8 @@
+{% load i18n %}
 
 {% if in_progress %}
-    <abbr title="Started {{ datetime_started }} by {{ created_by }}"><em>In Progress</em></abbr>
+  <abbr title="{% blocktrans %}Started {{ datetime_started }} by {{ created_by }}{% endblocktrans %}"><em>{% trans "In Progress" %}</em></abbr>
 {% else %}
-    <div>{{ datetime_completed }}</div>
+  <div>{{ datetime_completed }}</div>
 {% endif %}
 
