@@ -14,7 +14,7 @@ from qatrack.api.auth.serializers import (
 from qatrack.api.serializers import MultiSerializerMixin
 
 
-class UserViewSet(viewsets.ReadOnlyModelViewSet, MultiSerializerMixin):
+class UserViewSet(MultiSerializerMixin, viewsets.ReadOnlyModelViewSet):
     """
     API endpoint that allows users to be viewed.
     """
@@ -29,7 +29,7 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet, MultiSerializerMixin):
     ordering = ("username",)
 
 
-class GroupViewSet(viewsets.ReadOnlyModelViewSet):
+class GroupViewSet(MultiSerializerMixin, viewsets.ReadOnlyModelViewSet):
     """
     API endpoint that allows groups to be viewed.
     """

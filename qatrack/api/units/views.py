@@ -7,7 +7,7 @@ from qatrack.api.units import filters, serializers
 from qatrack.units import models
 
 
-class UnitViewSet(viewsets.ReadOnlyModelViewSet, MultiSerializerMixin):
+class UnitViewSet(MultiSerializerMixin, viewsets.ReadOnlyModelViewSet):
     queryset = models.Unit.objects.all().order_by('number')
     serializer_class = serializers.UnitSerializer
     action_serializers = {
